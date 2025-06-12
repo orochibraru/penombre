@@ -1,51 +1,29 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Accordion from '$lib/components/ui/accordion/index.js';
+	import data from './data.js';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import AppSidebar from '$lib/components/app-sidebar.svelte';
+	import SiteHeader from '$lib/components/site-header.svelte';
+	import SectionCards from '$lib/components/section-cards.svelte';
+	import ChartAreaInteractive from '$lib/components/chart-area-interactive.svelte';
+	import DataTable from '$lib/components/data-table.svelte';
 </script>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
-
-<Button>Click me</Button>
-
-<Accordion.Root type="single" class="w-full sm:max-w-[70%]" value="item-1">
-	<Accordion.Item value="item-1">
-		<Accordion.Trigger>Product Information</Accordion.Trigger>
-		<Accordion.Content class="flex flex-col gap-4 text-balance">
-			<p>
-				Our flagship product combines cutting-edge technology with sleek design. Built with premium
-				materials, it offers unparalleled performance and reliability.
-			</p>
-			<p>
-				Key features include advanced processing capabilities, and an intuitive user interface
-				designed for both beginners and experts.
-			</p>
-		</Accordion.Content>
-	</Accordion.Item>
-	<Accordion.Item value="item-2">
-		<Accordion.Trigger>Shipping Details</Accordion.Trigger>
-		<Accordion.Content class="flex flex-col gap-4 text-balance">
-			<p>
-				We offer worldwide shipping through trusted courier partners. Standard delivery takes 3-5
-				business days, while express shipping ensures delivery within 1-2 business days.
-			</p>
-			<p>
-				All orders are carefully packaged and fully insured. Track your shipment in real-time
-				through our dedicated tracking portal.
-			</p>
-		</Accordion.Content>
-	</Accordion.Item>
-	<Accordion.Item value="item-3">
-		<Accordion.Trigger>Return Policy</Accordion.Trigger>
-		<Accordion.Content class="flex flex-col gap-4 text-balance">
-			<p>
-				We stand behind our products with a comprehensive 30-day return policy. If you&apos;re not
-				completely satisfied, simply return the item in its original condition.
-			</p>
-			<p>
-				Our hassle-free return process includes free return shipping and full refunds processed
-				within 48 hours of receiving the returned item.
-			</p>
-		</Accordion.Content>
-	</Accordion.Item>
-</Accordion.Root>
+<Sidebar.Provider
+	style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
+>
+	<AppSidebar variant="inset" />
+	<Sidebar.Inset>
+		<SiteHeader />
+		<div class="flex flex-1 flex-col">
+			<div class="@container/main flex flex-1 flex-col gap-2">
+				<div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+					<SectionCards />
+					<div class="px-4 lg:px-6">
+						<ChartAreaInteractive />
+					</div>
+					<DataTable {data} />
+				</div>
+			</div>
+		</div>
+	</Sidebar.Inset>
+</Sidebar.Provider>
