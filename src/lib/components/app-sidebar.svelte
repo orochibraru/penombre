@@ -23,14 +23,14 @@
 
 	const data = {
 		user: {
-			name: 'shadcn',
-			email: 'm@example.com',
+			name: 'Nicolas Boyer',
+			email: 'nicolas.boyer@gmail.com',
 			avatar: '/avatars/shadcn.jpg'
 		},
 		navMain: [
 			{
 				title: 'Dashboard',
-				url: '#',
+				url: '/',
 				icon: DashboardIcon
 			},
 			{

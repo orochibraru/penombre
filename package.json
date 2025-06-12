@@ -66,6 +66,7 @@
 	},
 	"dependencies": {
 		"drizzle-orm": "^0.40.0",
+		"mode-watcher": "^1.0.8",
 		"postgres": "^3.4.5"
 	},
 	"pnpm": {
