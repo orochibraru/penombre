@@ -6,3 +6,5 @@
 pnpm i
 pnpm dev
 ```
+
+Built with [Shadcn Svelte](https://shadcn-svelte.com/)
