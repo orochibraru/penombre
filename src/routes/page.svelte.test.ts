@@ -6,6 +6,8 @@ import Page from './+page.svelte';
 describe('/+page.svelte', () => {
 	test('should render h1', () => {
 		render(Page);
-		expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+		const h1 = screen.getByRole('heading', { level: 1 })
+		expect(h1).toBeInTheDocument();
+		expect(h1).toContain('Hello')
 	});
 });
