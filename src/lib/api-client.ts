@@ -1,39 +1,35 @@
-import { awsParams } from '$lib/aws';
 import { impersonatingParam } from '$lib/rbac';
-import type { API } from '$lib/server/api/server';
+import type { API } from '$lib/server/api';
 import { treaty } from '@elysiajs/eden';
 import { Log } from '@kitql/helpers';
 
 const logger = new Log('API Client');
 
 export function getApiClient(url: URL, locals: App.Locals) {
-    const headers = new Headers();
-    if (locals.awsEnvironment) {
-        headers.append(awsParams.environmentHeader, locals.awsEnvironment);
-    }
+	const headers = new Headers();
 
-    if (locals.impersonating === true) {
-        headers.append(`x-${impersonatingParam}`, 'true');
-    }
+	if (locals.impersonating === true) {
+		headers.append(`x-${impersonatingParam}`, 'true');
+	}
 
-    headers.append('Authorization', `Bearer ${locals.bearerToken}`);
-    headers.append('Cache-Control', 'max-age=3600, must-revalidate');
+	headers.append('Authorization', `Bearer ${locals.bearerToken}`);
+	headers.append('Cache-Control', 'max-age=3600, must-revalidate');
 
-    const controller = new AbortController();
+	const controller = new AbortController();
 
-    const cancelRequest = setTimeout(() => {
-        logger.info('Aborting request.');
-        controller.abort();
-    }, 10000);
+	const cancelRequest = setTimeout(() => {
+		logger.info('Aborting request.');
+		controller.abort();
+	}, 10000);
 
-    const client = treaty<API>(url.origin, {
-        headers,
-        fetch: {
-            signal: controller.signal
-        }
-    });
+	const client = treaty<API>(url.origin, {
+		headers,
+		fetch: {
+			signal: controller.signal
+		}
+	});
 
-    clearTimeout(cancelRequest);
+	clearTimeout(cancelRequest);
 
-    return client;
+	return client;
 }
