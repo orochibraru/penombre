@@ -1,37 +1,37 @@
 <script lang="ts">
-	import TrendingUpIcon from "@tabler/icons-svelte/icons/trending-up";
-	import { scaleUtc } from "d3-scale";
-	import { curveNatural } from "d3-shape";
-	import { AreaChart } from "layerchart";
+	import TrendingUpIcon from '@tabler/icons-svelte/icons/trending-up';
+	import { scaleUtc } from 'd3-scale';
+	import { curveNatural } from 'd3-shape';
+	import { AreaChart } from 'layerchart';
 
-import { Button } from "$lib/components/ui/button/index.js";
-	import * as Chart from "$lib/components/ui/chart/index.js";
-		import * as Drawer from "$lib/components/ui/drawer/index.js";
-	import { Input } from "$lib/components/ui/input/index.js";
-	import { Label } from "$lib/components/ui/label/index.js";
-	import * as Select from "$lib/components/ui/select/index.js";
-	import { Separator } from "$lib/components/ui/separator/index.js";
-	import { IsMobile } from "$lib/hooks/is-mobile.svelte.js";
-	import type { Schema } from "./schemas.js";
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Chart from '$lib/components/ui/chart/index.js';
+	import * as Drawer from '$lib/components/ui/drawer/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import * as Select from '$lib/components/ui/select/index.js';
+	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
+	import type { Schema } from './schemas.js';
 
 	const chartData = [
-		{ date: new Date("2024-01-01"), desktop: 186, mobile: 80 },
-		{ date: new Date("2024-02-01"), desktop: 305, mobile: 200 },
-		{ date: new Date("2024-03-01"), desktop: 237, mobile: 120 },
-		{ date: new Date("2024-04-01"), desktop: 73, mobile: 190 },
-		{ date: new Date("2024-05-01"), desktop: 209, mobile: 130 },
-		{ date: new Date("2024-06-01"), desktop: 214, mobile: 140 },
+		{ date: new Date('2024-01-01'), desktop: 186, mobile: 80 },
+		{ date: new Date('2024-02-01'), desktop: 305, mobile: 200 },
+		{ date: new Date('2024-03-01'), desktop: 237, mobile: 120 },
+		{ date: new Date('2024-04-01'), desktop: 73, mobile: 190 },
+		{ date: new Date('2024-05-01'), desktop: 209, mobile: 130 },
+		{ date: new Date('2024-06-01'), desktop: 214, mobile: 140 }
 	];
 
 	const chartConfig = {
 		desktop: {
-			label: "Desktop",
-			color: "var(--primary)",
+			label: 'Desktop',
+			color: 'var(--primary)'
 		},
 		mobile: {
-			label: "Mobile",
-			color: "var(--primary)",
-		},
+			label: 'Mobile',
+			color: 'var(--primary)'
+		}
 	} satisfies Chart.ChartConfig;
 
 	const isMobile = new IsMobile();
@@ -43,7 +43,7 @@ import { Button } from "$lib/components/ui/button/index.js";
 	let reviewer = $state(item.reviewer);
 </script>
 
-<Drawer.Root direction={isMobile.current ? "bottom" : "right"}>
+<Drawer.Root direction={isMobile.current ? 'bottom' : 'right'}>
 	<Drawer.Trigger>
 		{#snippet child({ props })}
 			<Button variant="link" class="text-foreground w-fit px-0 text-left" {...props}>
@@ -66,35 +66,35 @@ import { Button } from "$lib/components/ui/button/index.js";
 						yDomain={[0, 600]}
 						series={[
 							{
-								key: "mobile",
-								label: "Mobile",
-								color: chartConfig.mobile.color,
+								key: 'mobile',
+								label: 'Mobile',
+								color: chartConfig.mobile.color
 							},
 							{
-								key: "desktop",
-								label: "Desktop",
-								color: chartConfig.desktop.color,
-							},
+								key: 'desktop',
+								label: 'Desktop',
+								color: chartConfig.desktop.color
+							}
 						]}
 						seriesLayout="stack"
 						props={{
 							area: {
 								curve: curveNatural,
-								"fill-opacity": 0.4,
-								line: { class: "stroke-1" },
-								motion: "tween",
+								'fill-opacity': 0.4,
+								line: { class: 'stroke-1' },
+								motion: 'tween'
 							},
 							xAxis: {
-								format: (v) => v.toLocaleDateString("en-US", { month: "short" }),
+								format: (v) => v.toLocaleDateString('en-US', { month: 'short' })
 							},
-							yAxis: { ticks: [0, 300, 600] },
+							yAxis: { ticks: [0, 300, 600] }
 						}}
 					>
 						{#snippet tooltip()}
 							<Chart.Tooltip
 								labelFormatter={(v: Date) => {
-									return v.toLocaleDateString("en-US", {
-										month: "long",
+									return v.toLocaleDateString('en-US', {
+										month: 'long'
 									});
 								}}
 								indicator="dot"
@@ -104,13 +104,13 @@ import { Button } from "$lib/components/ui/button/index.js";
 				</Chart.Container>
 				<Separator />
 				<div class="grid gap-2">
-					<div class="flex gap-2 font-medium leading-none">
+					<div class="flex gap-2 leading-none font-medium">
 						Trending up by 5.2% this month
 						<TrendingUpIcon class="size-4" />
 					</div>
 					<div class="text-muted-foreground">
-						Showing total visitors for the last 6 months. This is just some random text
-						to test the layout. It spans multiple lines and should wrap around.
+						Showing total visitors for the last 6 months. This is just some random text to test the
+						layout. It spans multiple lines and should wrap around.
 					</div>
 				</div>
 				<Separator />
@@ -125,18 +125,12 @@ import { Button } from "$lib/components/ui/button/index.js";
 						<Label for="type">Type</Label>
 						<Select.Root type="single" bind:value={type}>
 							<Select.Trigger id="type" class="w-full">
-								{type ?? "Select a type"}
+								{type ?? 'Select a type'}
 							</Select.Trigger>
 							<Select.Content>
-								<Select.Item value="Table of Contents"
-									>Table of Contents</Select.Item
-								>
-								<Select.Item value="Executive Summary"
-									>Executive Summary</Select.Item
-								>
-								<Select.Item value="Technical Approach">
-									Technical Approach
-								</Select.Item>
+								<Select.Item value="Table of Contents">Table of Contents</Select.Item>
+								<Select.Item value="Executive Summary">Executive Summary</Select.Item>
+								<Select.Item value="Technical Approach">Technical Approach</Select.Item>
 								<Select.Item value="Design">Design</Select.Item>
 								<Select.Item value="Capabilities">Capabilities</Select.Item>
 								<Select.Item value="Focus Documents">Focus Documents</Select.Item>
@@ -149,7 +143,7 @@ import { Button } from "$lib/components/ui/button/index.js";
 						<Label for="status">Status</Label>
 						<Select.Root type="single" bind:value={status}>
 							<Select.Trigger id="status" class="w-full">
-								{status ?? "Select a status"}
+								{status ?? 'Select a status'}
 							</Select.Trigger>
 							<Select.Content>
 								<Select.Item value="Done">Done</Select.Item>
@@ -173,7 +167,7 @@ import { Button } from "$lib/components/ui/button/index.js";
 					<Label for="reviewer">Reviewer</Label>
 					<Select.Root type="single" bind:value={reviewer}>
 						<Select.Trigger id="reviewer" class="w-full">
-							{reviewer ?? "Select a reviewer"}
+							{reviewer ?? 'Select a reviewer'}
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Item value="Eddie Lake">Eddie Lake</Select.Item>

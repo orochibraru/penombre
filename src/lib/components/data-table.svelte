@@ -1,74 +1,73 @@
 <script lang="ts" module>
 	export const columns: ColumnDef<Schema>[] = [
 		{
-			id: "drag",
+			id: 'drag',
 			header: () => null,
-			cell: ({ row }) => renderSnippet(DragHandle, { id: row.original.id }),
+			cell: ({ row }) => renderSnippet(DragHandle, { id: row.original.id })
 		},
 		{
-			id: "select",
+			id: 'select',
 			header: ({ table }) =>
 				renderComponent(DataTableCheckbox, {
 					checked: table.getIsAllPageRowsSelected(),
-					indeterminate:
-						table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
+					indeterminate: table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
 					onCheckedChange: (value) => table.toggleAllPageRowsSelected(!!value),
-					"aria-label": "Select all",
+					'aria-label': 'Select all'
 				}),
 			cell: ({ row }) =>
 				renderComponent(DataTableCheckbox, {
 					checked: row.getIsSelected(),
 					onCheckedChange: (value) => row.toggleSelected(!!value),
-					"aria-label": "Select row",
+					'aria-label': 'Select row'
 				}),
 			enableSorting: false,
-			enableHiding: false,
+			enableHiding: false
 		},
 		{
-			accessorKey: "header",
-			header: "Header",
+			accessorKey: 'header',
+			header: 'Header',
 			cell: ({ row }) => renderComponent(DataTableCellViewer, { item: row.original }),
-			enableHiding: false,
+			enableHiding: false
 		},
 		{
-			accessorKey: "type",
-			header: "Section Type",
-			cell: ({ row }) => renderSnippet(DataTableType, { row }),
+			accessorKey: 'type',
+			header: 'Section Type',
+			cell: ({ row }) => renderSnippet(DataTableType, { row })
 		},
 		{
-			accessorKey: "status",
-			header: "Status",
-			cell: ({ row }) => renderSnippet(DataTableStatus, { row }),
+			accessorKey: 'status',
+			header: 'Status',
+			cell: ({ row }) => renderSnippet(DataTableStatus, { row })
 		},
 		{
-			accessorKey: "target",
+			accessorKey: 'target',
 			header: () =>
 				renderSnippet(
 					createRawSnippet(() => ({
-						render: () => '<div class="w-full text-right">Target</div>',
+						render: () => '<div class="w-full text-right">Target</div>'
 					}))
 				),
-			cell: ({ row }) => renderSnippet(DataTableTarget, { row }),
+			cell: ({ row }) => renderSnippet(DataTableTarget, { row })
 		},
 		{
-			accessorKey: "limit",
+			accessorKey: 'limit',
 			header: () =>
 				renderSnippet(
 					createRawSnippet(() => ({
-						render: () => '<div class="w-full text-right">Limit</div>',
+						render: () => '<div class="w-full text-right">Limit</div>'
 					}))
 				),
-			cell: ({ row }) => renderSnippet(DataTableLimit, { row }),
+			cell: ({ row }) => renderSnippet(DataTableLimit, { row })
 		},
 		{
-			accessorKey: "reviewer",
-			header: "Reviewer",
-			cell: ({ row }) => renderComponent(DataTableReviewer, { row }),
+			accessorKey: 'reviewer',
+			header: 'Reviewer',
+			cell: ({ row }) => renderComponent(DataTableReviewer, { row })
 		},
 		{
-			id: "actions",
-			cell: () => renderSnippet(DataTableActions),
-		},
+			id: 'actions',
+			cell: () => renderSnippet(DataTableActions)
+		}
 	];
 </script>
 
@@ -86,9 +85,9 @@
 		type Row,
 		type RowSelectionState,
 		type SortingState,
-		type VisibilityState,
-	} from "@tanstack/table-core";
-	import type { Schema } from "./schemas.js";
+		type VisibilityState
+	} from '@tanstack/table-core';
+	import type { Schema } from './schemas.js';
 	import {
 		useSensors,
 		MouseSensor,
@@ -98,46 +97,46 @@
 		type DragEndEvent,
 		type UniqueIdentifier,
 		DndContext,
-		closestCenter,
-	} from "@dnd-kit-svelte/core";
+		closestCenter
+	} from '@dnd-kit-svelte/core';
 	import {
 		arrayMove,
 		SortableContext,
 		useSortable,
-		verticalListSortingStrategy,
-	} from "@dnd-kit-svelte/sortable";
-	import { restrictToVerticalAxis } from "@dnd-kit-svelte/modifiers";
-	import { createSvelteTable } from "$lib/components/ui/data-table/data-table.svelte.js";
-	import * as Tabs from "$lib/components/ui/tabs/index.js";
-	import * as Table from "$lib/components/ui/table/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-	import { Button } from "$lib/components/ui/button/index.js";
-	import * as Select from "$lib/components/ui/select/index.js";
-	import { Label } from "$lib/components/ui/label/index.js";
-	import { Badge } from "$lib/components/ui/badge/index.js";
-	import { Input } from "$lib/components/ui/input/index.js";
+		verticalListSortingStrategy
+	} from '@dnd-kit-svelte/sortable';
+	import { restrictToVerticalAxis } from '@dnd-kit-svelte/modifiers';
+	import { createSvelteTable } from '$lib/components/ui/data-table/data-table.svelte.js';
+	import * as Tabs from '$lib/components/ui/tabs/index.js';
+	import * as Table from '$lib/components/ui/table/index.js';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Select from '$lib/components/ui/select/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import {
 		FlexRender,
 		renderComponent,
-		renderSnippet,
-	} from "$lib/components/ui/data-table/index.js";
-	import LayoutColumnsIcon from "@tabler/icons-svelte/icons/layout-columns";
-	import GripVerticalIcon from "@tabler/icons-svelte/icons/grip-vertical";
-	import ChevronDownIcon from "@tabler/icons-svelte/icons/chevron-down";
-	import PlusIcon from "@tabler/icons-svelte/icons/plus";
-	import ChevronsLeftIcon from "@tabler/icons-svelte/icons/chevrons-left";
-	import ChevronLeftIcon from "@tabler/icons-svelte/icons/chevron-left";
-	import ChevronRightIcon from "@tabler/icons-svelte/icons/chevron-right";
-	import ChevronsRightIcon from "@tabler/icons-svelte/icons/chevrons-right";
-	import CircleCheckFilledIcon from "@tabler/icons-svelte/icons/circle-check-filled";
-	import LoaderIcon from "@tabler/icons-svelte/icons/loader";
-	import DotsVerticalIcon from "@tabler/icons-svelte/icons/dots-vertical";
-	import { toast } from "svelte-sonner";
-	import DataTableCheckbox from "./data-table-checkbox.svelte";
-	import DataTableCellViewer from "./data-table-cell-viewer.svelte";
-	import { createRawSnippet } from "svelte";
-	import DataTableReviewer from "./data-table-reviewer.svelte";
-	import { CSS } from "@dnd-kit-svelte/utilities";
+		renderSnippet
+	} from '$lib/components/ui/data-table/index.js';
+	import LayoutColumnsIcon from '@tabler/icons-svelte/icons/layout-columns';
+	import GripVerticalIcon from '@tabler/icons-svelte/icons/grip-vertical';
+	import ChevronDownIcon from '@tabler/icons-svelte/icons/chevron-down';
+	import PlusIcon from '@tabler/icons-svelte/icons/plus';
+	import ChevronsLeftIcon from '@tabler/icons-svelte/icons/chevrons-left';
+	import ChevronLeftIcon from '@tabler/icons-svelte/icons/chevron-left';
+	import ChevronRightIcon from '@tabler/icons-svelte/icons/chevron-right';
+	import ChevronsRightIcon from '@tabler/icons-svelte/icons/chevrons-right';
+	import CircleCheckFilledIcon from '@tabler/icons-svelte/icons/circle-check-filled';
+	import LoaderIcon from '@tabler/icons-svelte/icons/loader';
+	import DotsVerticalIcon from '@tabler/icons-svelte/icons/dots-vertical';
+	import { toast } from 'svelte-sonner';
+	import DataTableCheckbox from './data-table-checkbox.svelte';
+	import DataTableCellViewer from './data-table-cell-viewer.svelte';
+	import { createRawSnippet } from 'svelte';
+	import DataTableReviewer from './data-table-reviewer.svelte';
+	import { CSS } from '@dnd-kit-svelte/utilities';
 
 	let { data }: { data: Schema[] } = $props();
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
@@ -176,7 +175,7 @@
 			},
 			get columnFilters() {
 				return columnFilters;
-			},
+			}
 		},
 		getRowId: (row) => row.id.toString(),
 		enableRowSelection: true,
@@ -187,40 +186,40 @@
 		getFacetedUniqueValues: getFacetedUniqueValues(),
 		getFilteredRowModel: getFilteredRowModel(),
 		onPaginationChange: (updater) => {
-			if (typeof updater === "function") {
+			if (typeof updater === 'function') {
 				pagination = updater(pagination);
 			} else {
 				pagination = updater;
 			}
 		},
 		onSortingChange: (updater) => {
-			if (typeof updater === "function") {
+			if (typeof updater === 'function') {
 				sorting = updater(sorting);
 			} else {
 				sorting = updater;
 			}
 		},
 		onColumnFiltersChange: (updater) => {
-			if (typeof updater === "function") {
+			if (typeof updater === 'function') {
 				columnFilters = updater(columnFilters);
 			} else {
 				columnFilters = updater;
 			}
 		},
 		onColumnVisibilityChange: (updater) => {
-			if (typeof updater === "function") {
+			if (typeof updater === 'function') {
 				columnVisibility = updater(columnVisibility);
 			} else {
 				columnVisibility = updater;
 			}
 		},
 		onRowSelectionChange: (updater) => {
-			if (typeof updater === "function") {
+			if (typeof updater === 'function') {
 				rowSelection = updater(rowSelection);
 			} else {
 				rowSelection = updater;
 			}
-		},
+		}
 	});
 
 	function handleDragEnd(event: DragEndEvent) {
@@ -234,36 +233,36 @@
 
 	let views = [
 		{
-			id: "outline",
-			label: "Outline",
-			badge: 0,
+			id: 'outline',
+			label: 'Outline',
+			badge: 0
 		},
 		{
-			id: "past-performance",
-			label: "Past Performance",
-			badge: 3,
+			id: 'past-performance',
+			label: 'Past Performance',
+			badge: 3
 		},
 		{
-			id: "key-personnel",
-			label: "Key Personnel",
-			badge: 2,
+			id: 'key-personnel',
+			label: 'Key Personnel',
+			badge: 2
 		},
 		{
-			id: "focus-documents",
-			label: "Focus Documents",
-			badge: 0,
-		},
+			id: 'focus-documents',
+			label: 'Focus Documents',
+			badge: 0
+		}
 	];
 
-	let view = $state("outline");
-	let viewLabel = $derived(views.find((v) => view === v.id)?.label ?? "Select a view");
+	let view = $state('outline');
+	let viewLabel = $derived(views.find((v) => view === v.id)?.label ?? 'Select a view');
 </script>
 
 <Tabs.Root value="outline" class="w-full flex-col justify-start gap-6">
 	<div class="flex items-center justify-between px-4 lg:px-6">
 		<Label for="view-selector" class="sr-only">View</Label>
 		<Select.Root type="single" bind:value={view}>
-			<Select.Trigger class="@4xl/main:hidden flex w-fit" size="sm" id="view-selector">
+			<Select.Trigger class="flex w-fit @4xl/main:hidden" size="sm" id="view-selector">
 				{viewLabel}
 			</Select.Trigger>
 			<Select.Content>
@@ -273,7 +272,7 @@
 			</Select.Content>
 		</Select.Root>
 		<Tabs.List
-			class="**:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex hidden"
+			class="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex"
 		>
 			{#each views as view (view.id)}
 				<Tabs.Trigger value={view.id}>
@@ -299,7 +298,7 @@
 				<DropdownMenu.Content align="end" class="w-56">
 					{#each table
 						.getAllColumns()
-						.filter((col) => typeof col.accessorFn !== "undefined" && col.getCanHide()) as column (column.id)}
+						.filter((col) => typeof col.accessorFn !== 'undefined' && col.getCanHide()) as column (column.id)}
 						<DropdownMenu.CheckboxItem
 							class="capitalize"
 							checked={column.getIsVisible()}
@@ -371,8 +370,7 @@
 					<Select.Root
 						type="single"
 						bind:value={
-							() => `${table.getState().pagination.pageSize}`,
-							(v) => table.setPageSize(Number(v))
+							() => `${table.getState().pagination.pageSize}`, (v) => table.setPageSize(Number(v))
 						}
 					>
 						<Select.Trigger size="sm" class="w-20" id="rows-per-page">
@@ -452,8 +450,8 @@
 			e.preventDefault();
 			toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
 				loading: `Saving ${row.original.header}`,
-				success: "Done",
-				error: "Error",
+				success: 'Done',
+				error: 'Error'
 			});
 		}}
 	>
@@ -472,8 +470,8 @@
 			e.preventDefault();
 			toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
 				loading: `Saving ${row.original.header}`,
-				success: "Done",
-				error: "Error",
+				success: 'Done',
+				error: 'Error'
 			});
 		}}
 	>
@@ -496,7 +494,7 @@
 
 {#snippet DataTableStatus({ row }: { row: Row<Schema> })}
 	<Badge variant="outline" class="text-muted-foreground px-1.5">
-		{#if row.original.status === "Done"}
+		{#if row.original.status === 'Done'}
 			<CircleCheckFilledIcon class="fill-green-500 dark:fill-green-400" />
 		{:else}
 			<LoaderIcon />
@@ -527,17 +525,15 @@
 
 {#snippet DraggableRow({ row }: { row: Row<Schema> })}
 	{@const { transform, transition, node, isDragging } = useSortable({
-		id: () => row.original.id,
+		id: () => row.original.id
 	})}
 
 	<Table.Row
-		data-state={row.getIsSelected() && "selected"}
+		data-state={row.getIsSelected() && 'selected'}
 		data-dragging={isDragging.current}
 		bind:ref={node.current}
 		class="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-		style="transition: {transition.current}; transform: {CSS.Transform.toString(
-			transform.current
-		)}"
+		style="transition: {transition.current}; transform: {CSS.Transform.toString(transform.current)}"
 	>
 		{#each row.getVisibleCells() as cell (cell.id)}
 			<Table.Cell>
