@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import CameraIcon from '@tabler/icons-svelte/icons/camera';
 	import ChartBarIcon from '@tabler/icons-svelte/icons/chart-bar';
 	import DashboardIcon from '@tabler/icons-svelte/icons/dashboard';
@@ -14,12 +15,11 @@
 	import SearchIcon from '@tabler/icons-svelte/icons/search';
 	import SettingsIcon from '@tabler/icons-svelte/icons/settings';
 	import UsersIcon from '@tabler/icons-svelte/icons/users';
+	import type { ComponentProps } from 'svelte';
 	import NavDocuments from './nav-documents.svelte';
 	import NavMain from './nav-main.svelte';
 	import NavSecondary from './nav-secondary.svelte';
 	import NavUser from './nav-user.svelte';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import type { ComponentProps } from 'svelte';
 
 	const data = {
 		user: {

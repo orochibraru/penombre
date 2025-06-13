@@ -1,0 +1,48 @@
+<script lang="ts">
+	import { navigating } from '$app/state';
+	import { cubicOut } from 'svelte/easing';
+	import { Tween } from 'svelte/motion';
+	import { fade } from 'svelte/transition';
+
+	let showLoadingBar = $state(false);
+
+	const progress = new Tween(0, {
+		duration: 400,
+		easing: cubicOut
+	});
+
+	async function handleNavigate() {
+		if (navigating) {
+			showLoadingBar = true;
+			progress.target = 0;
+
+			const updater = setInterval(() => {
+				progress.target = progress.current + 0.05;
+			}, 100);
+
+			await navigating.complete;
+			clearInterval(updater);
+
+			progress.target = 1;
+			setTimeout(() => {
+				showLoadingBar = false;
+				progress.target = 0;
+			}, 500);
+		}
+	}
+
+	$effect(() => {
+		if (navigating.to) {
+			void handleNavigate();
+		}
+	});
+</script>
+
+{#if showLoadingBar}
+	<div
+		class="bg-background fixed top-0 z-50 h-[4px] w-full transition-all will-change-transform"
+		transition:fade
+	>
+		<div class="bg-primary-500 h-full" style="width: {progress.current * 100}%"></div>
+	</div>
+{/if}

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { cn, type WithElementRef, type WithoutChildren } from "$lib/utils.js";
-	import type { HTMLAttributes } from "svelte/elements";
-	import { getPayloadConfigFromPayload, useChart, type TooltipPayload } from "./chart-utils.js";
-	import { getTooltipContext, Tooltip as TooltipPrimitive } from "layerchart";
+	import { type WithElementRef, type WithoutChildren, cn } from "$lib/utils.js";
+	import { Tooltip as TooltipPrimitive, getTooltipContext } from "layerchart";
 	import type { Snippet } from "svelte";
+	import type { HTMLAttributes } from "svelte/elements";
+	import { type TooltipPayload, getPayloadConfigFromPayload, useChart } from "./chart-utils.js";
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	function defaultFormatter(value: any, _payload: TooltipPayload[]) {

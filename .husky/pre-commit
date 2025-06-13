@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NODE_OPTIONS="--experimental-strip-types" lint-staged --config lint-staged.config.ts
