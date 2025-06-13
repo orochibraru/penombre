@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { route } from '$lib/ROUTES';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import CameraIcon from '@tabler/icons-svelte/icons/camera';
 	import ChartBarIcon from '@tabler/icons-svelte/icons/chart-bar';
@@ -30,12 +31,12 @@
 		navMain: [
 			{
 				title: 'Dashboard',
-				url: '/',
+				url: route('/'),
 				icon: DashboardIcon
 			},
 			{
 				title: 'Lifecycle',
-				url: '#',
+				url: route('/lifecycle'),
 				icon: ListDetailsIcon
 			},
 			{
@@ -147,7 +148,7 @@
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:!p-1.5">
 					{#snippet child({ props })}
-						<a href="##" {...props}>
+						<a href={route('/')} {...props}>
 							<InnerShadowTopIcon class="!size-5" />
 							<span class="text-base font-semibold">Opendrive.</span>
 						</a>

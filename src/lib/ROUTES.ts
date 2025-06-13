@@ -10,6 +10,8 @@
  */
 const PAGES = {
   "/": `/`,
+  "/lifecycle": `/lifecycle`,
+  "/sign-out": `/sign-out`,
   "/auth/sign-in": `/auth/sign-in`,
   "/auth/sign-up": `/auth/sign-up`
 }
@@ -18,7 +20,18 @@ const PAGES = {
  * SERVERS
  */
 const SERVERS = {
-  
+  "GET /api/[...paths]": (params: { paths: (string | number)[] }) => {
+    return `/api/${params['paths']?.join('/')}`
+  },
+  "POST /api/[...paths]": (params: { paths: (string | number)[] }) => {
+    return `/api/${params['paths']?.join('/')}`
+  },
+  "PUT /api/[...paths]": (params: { paths: (string | number)[] }) => {
+    return `/api/${params['paths']?.join('/')}`
+  },
+  "DELETE /api/[...paths]": (params: { paths: (string | number)[] }) => {
+    return `/api/${params['paths']?.join('/')}`
+  }
 }
 
 /**
@@ -140,9 +153,9 @@ export function route<T extends keyof AllTypes>(key: T, ...params: any[]): strin
 * ```
 */
 export type KIT_ROUTES = {
-  PAGES: { '/': never, '/auth/sign-in': never, '/auth/sign-up': never }
-  SERVERS: Record<string, never>
+  PAGES: { '/': never, '/lifecycle': never, '/sign-out': never, '/auth/sign-in': never, '/auth/sign-up': never }
+  SERVERS: { 'GET /api/[...paths]': 'paths', 'POST /api/[...paths]': 'paths', 'PUT /api/[...paths]': 'paths', 'DELETE /api/[...paths]': 'paths' }
   ACTIONS: Record<string, never>
   LINKS: Record<string, never>
-  Params: Record<string, never>
+  Params: { 'paths': never }
 }

@@ -8,3 +8,7 @@ pnpm dev
 ```
 
 Built with [Shadcn Svelte](https://shadcn-svelte.com/)
+
+## DB
+
+![DB Diagram](./docs/db-diagram.svg 'DB Diagram')

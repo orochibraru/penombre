@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { route } from '$lib/ROUTES';
 	import Darkmode from '$lib/components/darkmode.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
@@ -11,17 +13,28 @@
 	<div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
 		<Sidebar.Trigger class="-ml-1" />
 		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
-		<h1 class="text-base font-medium">Documents</h1>
+		<h1 class="text-base font-medium">Dashboard</h1>
 		<div class="ml-auto flex items-center gap-2">
 			<Darkmode />
-			<Button
-				href="/auth/sign-in"
-				variant="ghost"
-				size="sm"
-				class="dark:text-foreground hidden sm:flex"
-			>
-				Auth
-			</Button>
+			{#if page.data.session}
+				<Button
+					href={route('/sign-out')}
+					variant="ghost"
+					size="sm"
+					class="dark:text-foreground hidden sm:flex"
+				>
+					Sign out
+				</Button>
+			{:else}
+				<Button
+					href={route('/auth/sign-in')}
+					variant="ghost"
+					size="sm"
+					class="dark:text-foreground hidden sm:flex"
+				>
+					Auth
+				</Button>
+			{/if}
 		</div>
 	</div>
 </header>

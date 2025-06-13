@@ -1,10 +1,10 @@
+import { RbacOperations } from '$lib/auth';
 import { authMiddleware } from '$lib/server/api/middleware';
 import {
     internalServerErrorSchema,
     notFoundSchema,
     unauthorizedSchema
 } from '$lib/server/api/schemas';
-import { RbacOperations } from '$lib/server/auth';
 import bearer from '@elysiajs/bearer';
 import { Log } from '@kitql/helpers';
 import { Elysia, type Static, t } from 'elysia';

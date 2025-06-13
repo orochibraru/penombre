@@ -1,7 +1,7 @@
 import { route } from '$lib/ROUTES';
+import { AuthService } from '$lib/auth';
 import type { User } from '$lib/auth-utils';
 import { impersonatingParam } from '$lib/rbac';
-import { AuthService } from '$lib/server/auth';
 
 export const publicPaths = ['/api/v1/docs', '/api/v1/ping'];
 

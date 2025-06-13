@@ -1,7 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 
+import type { AuthService } from '$lib/auth';
 import type { User } from '$lib/auth-utils';
-import type { AuthService } from '$lib/server/auth';
 import type NodeCache from 'node-cache';
 
 // for information about these interfaces
@@ -9,8 +9,6 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			user?: User;
-			auth: AuthService;
 			error: string;
 			errorId: string;
 			errorStackTrace: string;
