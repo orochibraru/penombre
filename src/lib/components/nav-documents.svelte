@@ -14,7 +14,7 @@
 </script>
 
 <Sidebar.Group class="group-data-[collapsible=icon]:hidden">
-	<Sidebar.GroupLabel>Documents</Sidebar.GroupLabel>
+	<Sidebar.GroupLabel>Main</Sidebar.GroupLabel>
 	<Sidebar.Menu>
 		{#each items as item (item.name)}
 			<Sidebar.MenuItem>

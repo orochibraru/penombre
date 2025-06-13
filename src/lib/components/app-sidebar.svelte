@@ -2,20 +2,16 @@
 	import { route } from '$lib/ROUTES';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import CameraIcon from '@tabler/icons-svelte/icons/camera';
-	import ChartBarIcon from '@tabler/icons-svelte/icons/chart-bar';
 	import DashboardIcon from '@tabler/icons-svelte/icons/dashboard';
 	import DatabaseIcon from '@tabler/icons-svelte/icons/database';
 	import FileAiIcon from '@tabler/icons-svelte/icons/file-ai';
 	import FileDescriptionIcon from '@tabler/icons-svelte/icons/file-description';
 	import FileWordIcon from '@tabler/icons-svelte/icons/file-word';
-	import FolderIcon from '@tabler/icons-svelte/icons/folder';
 	import HelpIcon from '@tabler/icons-svelte/icons/help';
 	import InnerShadowTopIcon from '@tabler/icons-svelte/icons/inner-shadow-top';
-	import ListDetailsIcon from '@tabler/icons-svelte/icons/list-details';
 	import ReportIcon from '@tabler/icons-svelte/icons/report';
 	import SearchIcon from '@tabler/icons-svelte/icons/search';
 	import SettingsIcon from '@tabler/icons-svelte/icons/settings';
-	import UsersIcon from '@tabler/icons-svelte/icons/users';
 	import type { ComponentProps } from 'svelte';
 	import NavDocuments from './nav-documents.svelte';
 	import NavMain from './nav-main.svelte';
@@ -28,77 +24,50 @@
 			email: 'nicolas.boyer@gmail.com',
 			avatar: '/avatars/shadcn.jpg'
 		},
-		navMain: [
-			{
-				title: 'Dashboard',
-				url: route('/'),
-				icon: DashboardIcon
-			},
-			{
-				title: 'Lifecycle',
-				url: route('/lifecycle'),
-				icon: ListDetailsIcon
-			},
-			{
-				title: 'Analytics',
-				url: '#',
-				icon: ChartBarIcon
-			},
-			{
-				title: 'Projects',
-				url: '#',
-				icon: FolderIcon
-			},
-			{
-				title: 'Team',
-				url: '#',
-				icon: UsersIcon
-			}
-		],
 		navClouds: [
 			{
 				title: 'Capture',
 				icon: CameraIcon,
 				isActive: true,
-				url: '#',
+				url: route('/'),
 				items: [
 					{
 						title: 'Active Proposals',
-						url: '#'
+						url: route('/')
 					},
 					{
 						title: 'Archived',
-						url: '#'
+						url: route('/')
 					}
 				]
 			},
 			{
 				title: 'Proposal',
 				icon: FileDescriptionIcon,
-				url: '#',
+				url: '/',
 				items: [
 					{
 						title: 'Active Proposals',
-						url: '#'
+						url: route('/')
 					},
 					{
 						title: 'Archived',
-						url: '#'
+						url: route('/')
 					}
 				]
 			},
 			{
 				title: 'Prompts',
 				icon: FileAiIcon,
-				url: '#',
+				url: route('/'),
 				items: [
 					{
 						title: 'Active Proposals',
-						url: '#'
+						url: route('/')
 					},
 					{
 						title: 'Archived',
-						url: '#'
+						url: route('/')
 					}
 				]
 			}
@@ -106,35 +75,30 @@
 		navSecondary: [
 			{
 				title: 'Settings',
-				url: '#',
+				url: route('/'),
 				icon: SettingsIcon
 			},
 			{
 				title: 'Get Help',
-				url: '#',
+				url: route('/'),
 				icon: HelpIcon
 			},
 			{
 				title: 'Search',
-				url: '#',
+				url: route('/'),
 				icon: SearchIcon
 			}
 		],
 		documents: [
 			{
-				name: 'Data Library',
-				url: '#',
+				name: 'Dashboard',
+				url: route('/'),
+				icon: DashboardIcon
+			},
+			{
+				name: 'Lifecycle',
+				url: route('/lifecycle'),
 				icon: DatabaseIcon
-			},
-			{
-				name: 'Reports',
-				url: '#',
-				icon: ReportIcon
-			},
-			{
-				name: 'Word Assistant',
-				url: '#',
-				icon: FileWordIcon
 			}
 		]
 	};
@@ -158,7 +122,6 @@
 		</Sidebar.Menu>
 	</Sidebar.Header>
 	<Sidebar.Content>
-		<NavMain items={data.navMain} />
 		<NavDocuments items={data.documents} />
 		<NavSecondary items={data.navSecondary} class="mt-auto" />
 	</Sidebar.Content>
