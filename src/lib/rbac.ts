@@ -1,4 +1,4 @@
-export const ADMIN_USERS = ['BOYERN2', 'MCKINNA1', 'SEANTC', 'DOUGLAK1']; // Janus Maintainers
+export const ADMIN_USERS = ['NBOYER'];
 
 export enum RbacOperations {
 	DELETE_POOL = 'delete_pool',

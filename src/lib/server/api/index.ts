@@ -34,7 +34,7 @@ export const router = new Elysia({ prefix: '/api/v1' })
 			},
 			documentation: {
 				info: {
-					title: 'Janus API',
+					title: 'Opendrive API',
 					version: packageJson.version
 				},
 				tags: [
