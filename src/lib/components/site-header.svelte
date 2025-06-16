@@ -1,10 +1,17 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { route } from '$lib/ROUTES';
+	import { authClient } from '$lib/auth-client';
 	import Darkmode from '$lib/components/darkmode.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+
+	async function handleSignOut() {
+		await authClient.signOut();
+		goto('/', { invalidateAll: true });
+	}
 </script>
 
 <header
@@ -18,9 +25,9 @@
 			<Darkmode />
 			{#if page.data.session}
 				<Button
-					href={route('/sign-out')}
 					variant="ghost"
 					size="sm"
+					onclick={() => handleSignOut()}
 					class="dark:text-foreground hidden sm:flex"
 				>
 					Sign out
