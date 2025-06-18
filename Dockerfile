@@ -37,3 +37,12 @@ EXPOSE 3000
 ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
 
 CMD ["node", "/app/build/index.js"]
+
+FROM base AS db-migrate
+ENV NODE_ENV=production
+
+COPY --from=builder /app/scripts /app/scripts
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/drizzle /app/drizzle
+
+CMD [ "tsx", "/app/scripts/db/migrate.ts" ]

@@ -1,0 +1,116 @@
+name: Docker
+
+on:
+  push:
+    # tags:
+    #   - 'v*'
+    branches:
+      - main
+
+env:
+  CONTEXT: homelab
+  COMPOSE_FILE: compose.prod.yaml
+  STACK: opendrive
+  LOG_LEVEL: debug
+  TAG: ${{ github.sha }}
+  IMAGE: git.ombrage.space/opendrive/app
+  TZ: Europe/Paris
+
+permissions:
+  contents: 'write'
+  id-token: 'write'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    name: 'Docker build & Push'
+    steps:
+      - name: Login to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: git.ombrage.space
+          username: salokain
+          password: ${{ secrets.PACKAGES_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: actions/checkout@v4
+
+      - shell: bash
+        run: docker buildx bake --push
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [docker]
+    name: Deploy
+    steps:
+      - uses: actions/checkout@v4
+
+      - shell: bash
+        name: Create ssh directory
+        run: mkdir --parents $HOME/.ssh
+
+      - shell: bash
+        name: Setup SSH
+        run: |
+          if [ -z "$SSH_AGENT_PID" ]; then
+            eval $(ssh-agent)
+            echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
+            echo "SSH_AGENT_PID=SSH_AGENT_PID" >> $GITHUB_ENV
+          fi
+
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" > ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh-add -
+
+      - name: Login to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: git.ombrage.space
+          username: salokain
+          password: ${{ secrets.PACKAGES_TOKEN }}
+
+      - shell: bash
+        name: Setup Context
+        run: |
+          docker context create --docker "host=ssh://${{ secrets.SSH_USERNAME}}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PORT }}" "${{ env.CONTEXT }}"
+
+      - name: Pull the latest images
+        shell: bash
+        run: docker compose pull
+
+      - name: Dry Run Compose
+        shell: bash
+        run: docker compose up -d --remove-orphans --dry-run || exit 1
+
+      - shell: bash
+        name: Copy stack
+        run: |
+          apt update
+          apt install -y rsync
+          docker compose -f ${{ env.COMPOSE_FILE }} config > compose.yaml
+          mkdir -p /home/${{ secrets.SSH_USERNAME}}/stacks/${{ env.STACK }}
+          rsync --mkpath -avzh -e "ssh -p ${{ secrets.SSH_PORT }}" --progress "compose.yaml" "${{ secrets.SSH_USERNAME}}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USERNAME}}/stacks/${{ env.STACK }}/compose.yaml"
+
+      - name: Pull the latest images
+        shell: bash
+        run: docker --context "${{ env.CONTEXT }}" compose pull
+
+      - name: Dry Run Compose
+        shell: bash
+        run: docker --context "${{ env.CONTEXT }}" compose up -d --remove-orphans --dry-run || exit 1
+
+      - shell: bash
+        name: Start the Containers
+        run: docker --context "${{ env.CONTEXT }}" compose up -d --remove-orphans || exit 1
+
+      - shell: bash
+        name: Cleanup
+        run: |
+          rm ~/.ssh/id_rsa

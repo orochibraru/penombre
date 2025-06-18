@@ -1,0 +1,75 @@
+services:
+  app:
+    image: git.ombrage.space/opendrive/app:${TAG-latest}
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - 3000
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
+      retries: 5
+      timeout: 3s
+      interval: 2s
+      start_period: 2s
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL-debug}
+      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-postgres}
+      - ORIGIN=https://drive.ombrage.space
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.opendrive-app.rule=Host(`drive.ombrage.space`)
+      - traefik.http.routers.opendrive-app.entrypoints=websecure
+      - traefik.http.routers.opendrive-app.tls.certResolver=letsencrypt
+      # - traefik.http.routers.opendrive-app.middlewares=traefik-forward-auth
+      - traefik.http.services.opendrive-app.loadbalancer.server.port=3000
+      - homepage.group=Media
+      - homepage.name=Opendrive
+      - homepage.icon=nextcloud.svg
+      - homepage.href=https://drive.ombrage.space
+      - homepage.description=Storatge management
+
+  db-migrator:
+    image: git.ombrage.space/opendrive/db-migrator:latest
+    pull_policy: always
+    restart: 'no'
+    networks:
+      - proxy
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-postgres}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    pull_policy: always
+    networks:
+      - proxy
+    ports:
+      - 5432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
+      - POSTGRES_DB=${POSTGRES_DB-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ['CMD-SHELL', "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-postgres}'"]
+      interval: 3s
+      timeout: 10s
+      retries: 5
+      start_period: 3s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  proxy:
+    external: true
