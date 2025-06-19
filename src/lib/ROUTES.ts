@@ -10,7 +10,13 @@
  */
 const PAGES = {
 	'/': `/`,
-	'/lifecycle': `/lifecycle`,
+	'/account': `/account`,
+	'/recent': `/recent`,
+	'/settings': `/settings`,
+	'/shared': `/shared`,
+	'/starred': `/starred`,
+	'/sync': `/sync`,
+	'/trash': `/trash`,
 	'/auth/sign-in': `/auth/sign-in`,
 	'/auth/sign-up': `/auth/sign-up`
 };
@@ -153,7 +159,18 @@ export function route<T extends keyof AllTypes>(key: T, ...params: any[]): strin
  * ```
  */
 export type KIT_ROUTES = {
-	PAGES: { '/': never; '/lifecycle': never; '/auth/sign-in': never; '/auth/sign-up': never };
+	PAGES: {
+		'/': never;
+		'/account': never;
+		'/recent': never;
+		'/settings': never;
+		'/shared': never;
+		'/starred': never;
+		'/sync': never;
+		'/trash': never;
+		'/auth/sign-in': never;
+		'/auth/sign-up': never;
+	};
 	SERVERS: {
 		'GET /api/[...paths]': 'paths';
 		'POST /api/[...paths]': 'paths';

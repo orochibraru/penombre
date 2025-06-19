@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { route } from '$lib/ROUTES';
+	import { authClient } from '$lib/auth-client';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -7,10 +10,20 @@
 	import LogoutIcon from '@tabler/icons-svelte/icons/logout';
 	import NotificationIcon from '@tabler/icons-svelte/icons/notification';
 	import UserCircleIcon from '@tabler/icons-svelte/icons/user-circle';
+	import type { User } from 'better-auth';
 
-	let { user }: { user: { name: string; email: string; avatar: string } } = $props();
+	type Props = {
+		user: User;
+	};
+
+	let { user }: Props = $props();
 
 	const sidebar = Sidebar.useSidebar();
+
+	async function handleSignOut() {
+		await authClient.signOut();
+		goto('/', { invalidateAll: true });
+	}
 </script>
 
 <Sidebar.Menu>
@@ -24,7 +37,7 @@
 						class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 					>
 						<Avatar.Root class="size-8 rounded-lg grayscale">
-							<Avatar.Image src={user.avatar} alt={user.name} />
+							<Avatar.Image src={user.image} alt={user.name} />
 							<Avatar.Fallback class="rounded-lg">NB</Avatar.Fallback>
 						</Avatar.Root>
 						<div class="grid flex-1 text-left text-sm leading-tight">
@@ -46,7 +59,7 @@
 				<DropdownMenu.Label class="p-0 font-normal">
 					<div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 						<Avatar.Root class="size-8 rounded-lg">
-							<Avatar.Image src={user.avatar} alt={user.name} />
+							<Avatar.Image src={user.image} alt={user.name} />
 							<Avatar.Fallback class="rounded-lg">CN</Avatar.Fallback>
 						</Avatar.Root>
 						<div class="grid flex-1 text-left text-sm leading-tight">
@@ -60,22 +73,17 @@
 				<DropdownMenu.Separator />
 				<DropdownMenu.Group>
 					<DropdownMenu.Item>
-						<UserCircleIcon />
-						Account
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<CreditCardIcon />
-						Billing
-					</DropdownMenu.Item>
-					<DropdownMenu.Item>
-						<NotificationIcon />
-						Notifications
+						{#snippet child({ props })}
+							<a href={route('/account')} {...props}>
+								<UserCircleIcon />
+								<span>Account</span>
+							</a>
+						{/snippet}
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => handleSignOut()}>
 					<LogoutIcon />
-					Log out
+					Sign out
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>

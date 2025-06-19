@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onNavigate } from '$app/navigation';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { type WithElementRef, cn } from '$lib/utils.js';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -32,6 +33,10 @@
 			// This sets the cookie to keep the sidebar state.
 			document.cookie = `${SIDEBAR_COOKIE_NAME}=${open}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
 		}
+	});
+
+	onNavigate(() => {
+		sidebar.setOpenMobile(false);
 	});
 </script>
 
