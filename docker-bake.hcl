@@ -1,5 +1,5 @@
 variable "REGISTRY" {
-  default = "git.ombrage.space/opendrive"
+  default = "git.ombrage.space/salokain/opendrive"
 }
 
 variable "TAG" {
