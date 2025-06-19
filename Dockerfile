@@ -40,6 +40,7 @@ CMD ["node", "/app/build/index.js"]
 
 FROM base AS db-migrate
 ENV NODE_ENV=production
+ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
 
 COPY --from=builder /app/scripts /app/scripts
 COPY --from=builder /app/node_modules /app/node_modules
