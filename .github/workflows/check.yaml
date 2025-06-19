@@ -23,32 +23,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-
-      - name: Use Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-          cache: 'pnpm'
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: pnpm install --ignore-scripts
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Lint
-        run: pnpm run lint
+        run: bun run lint
 
       - name: Verify Formatting
-        run: pnpm run format:check
+        run: bun run format:check
 
       - name: Look for circular dependencies
-        run: pnpm run circular
+        run: bun run circular
 
       - name: Run TypeScript check
-        run: pnpm run check
+        run: bun run check
 
       - name: Build the app
-        run: pnpm run build
+        run: bun run build
