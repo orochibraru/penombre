@@ -1,6 +1,6 @@
 services:
   app:
-    image: git.ombrage.space/opendrive/app:${TAG-latest}
+    image: git.ombrage.space/salokain/opendrive/app:${TAG-latest}
     pull_policy: always
     restart: unless-stopped
     ports:
@@ -33,7 +33,7 @@ services:
       - homepage.description=Storatge management
 
   db-migrator:
-    image: git.ombrage.space/opendrive/db-migrator:latest
+    image: git.ombrage.space/salokain/opendrive/db-migrator:latest
     pull_policy: always
     restart: 'no'
     networks:
