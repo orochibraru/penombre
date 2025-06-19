@@ -61,16 +61,24 @@ jobs:
       - shell: bash
         name: Setup SSH
         run: |
+          echo "Initializing SSH Agent"
           if [ -z "$SSH_AGENT_PID" ]; then
             eval $(ssh-agent)
+            echo "Initializing Socket"
             echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
+            echo "Initializing PID"
             echo "SSH_AGENT_PID=SSH_AGENT_PID" >> $GITHUB_ENV
           fi
 
+          echo "Setting up Private Key"
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "Setting up Public Key"
           echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+          echo "Setting permissions"
           chmod 600 ~/.ssh/id_rsa
+          echo "Scanning key"
           ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" > ~/.ssh/known_hosts
+          echo "Adding key"
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh-add -
 
       - name: Login to the Container registry
