@@ -79,7 +79,7 @@ jobs:
           echo "Scanning key"
           ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" > ~/.ssh/known_hosts
           echo "Adding key"
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh-add -
+          cat ~/.ssh/id_rsa | ssh-add -
 
       - name: Login to the Container registry
         uses: docker/login-action@v3
