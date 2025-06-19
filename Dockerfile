@@ -10,6 +10,10 @@ WORKDIR /app
 # Build Stage
 FROM base AS builder
 
+ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
+ENV OAUTH_CLIENT_ID=123
+ENV OAUTH_CLIENT_SECRET=abc456
+
 COPY package.json ./
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
