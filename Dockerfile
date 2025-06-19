@@ -3,6 +3,8 @@ FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS base
 
 WORKDIR /app
 
+RUN apk add --no-cache curl bash ca-certificates wget
+
 # Build Stage
 FROM base AS builder
 
