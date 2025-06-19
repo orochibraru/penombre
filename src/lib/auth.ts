@@ -1,4 +1,4 @@
-import { OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from './server/db/index';
@@ -9,8 +9,8 @@ export const auth = betterAuth({
 	}),
 	socialProviders: {
 		github: {
-			clientId: OAUTH_CLIENT_ID as string,
-			clientSecret: OAUTH_CLIENT_SECRET as string
+			clientId: env.OAUTH_CLIENT_ID as string,
+			clientSecret: env.OAUTH_CLIENT_SECRET as string
 		}
 	}
 });
