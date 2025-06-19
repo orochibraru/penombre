@@ -13,7 +13,7 @@ env:
   STACK: opendrive
   LOG_LEVEL: debug
   TAG: ${{ github.sha }}
-  IMAGE: git.ombrage.space/opendrive/app
+  IMAGE: git.ombrage.space/salokain/opendrive/app
   TZ: Europe/Paris
 
 permissions:
