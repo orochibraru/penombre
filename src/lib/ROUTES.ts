@@ -17,8 +17,7 @@ const PAGES = {
 	'/starred': `/starred`,
 	'/sync': `/sync`,
 	'/trash': `/trash`,
-	'/auth/sign-in': `/auth/sign-in`,
-	'/auth/sign-up': `/auth/sign-up`
+	'/auth/sign-in': `/auth/sign-in`
 };
 
 /**
@@ -169,7 +168,6 @@ export type KIT_ROUTES = {
 		'/sync': never;
 		'/trash': never;
 		'/auth/sign-in': never;
-		'/auth/sign-up': never;
 	};
 	SERVERS: {
 		'GET /api/[...paths]': 'paths';

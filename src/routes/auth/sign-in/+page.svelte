@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { route } from '$lib/ROUTES';
 	import { authClient } from '$lib/auth-client';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import { title } from '$lib/store/title';
 	import BrandGithub from '@tabler/icons-svelte/icons/brand-github';
+
+	$title = 'Sign in';
 
 	let loading: boolean = $state(false);
 </script>
@@ -36,10 +38,7 @@
 				</Button>
 			</div>
 			{#if !loading}
-				<div class="mt-4 text-center text-sm">
-					Don't have an account?
-					<a href={route('/auth/sign-up')} class="underline"> Sign up </a>
-				</div>
+				<div class="mt-4 text-center text-sm">Don't have an account? Too bad.</div>
 			{/if}
 		</Card.Content>
 	</Card.Root>
