@@ -1,53 +1,49 @@
 # syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM node:23-alpine AS base
-
-RUN apk add --no-cache curl bash ca-certificates wget
-
-RUN npm i -g pnpm tsx drizzle-kit
+FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS base
 
 WORKDIR /app
 
 # Build Stage
 FROM base AS builder
 
-ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
-ENV OAUTH_CLIENT_ID=123
-ENV OAUTH_CLIENT_SECRET=abc456
-
 COPY package.json ./
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
+RUN bun install --frozen-lockfile --ignore-scripts
 
 COPY . .
 
-RUN --mount=type=cache,id=vitebuild,target=/node_modules/.vite pnpm exec svelte-kit sync && pnpm run build
+RUN bunx svelte-kit sync && bun run build
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prune --production --ignore-scripts
+# Prod deps
+FROM base AS prod-dependencies
+
+COPY package.json ./
+COPY bun.lock ./
+
+RUN bun install --frozen-lockfile --production
 
 # Run Stage
 FROM base AS runner
 
+COPY --from=builder /app/build /app
+COPY --from=prod-dependencies /app/node_modules /app/node_modules
+COPY --from=prod-dependencies /app/package.json /app/package.json
 COPY --from=builder /app/drizzle /app/drizzle
-COPY --from=builder /app/scripts /app/scripts
-COPY --from=builder /app/build /app/build
-COPY --from=builder /app/node_modules /app/node_modules
-
-ENV NODE_ENV=production
 
 HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "curl", "-f", "http://localhost:3000" ]
 
-EXPOSE 3000
+EXPOSE 3000/tcp
 
-ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
+USER bun
 
-CMD ["node", "/app/build/index.js"]
+CMD ["bun", "."]
 
 FROM base AS db-migrate
-ENV NODE_ENV=production
-ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
 
+RUN bun i -g drizzle-kit drizzle-orm dotenv 
+
+COPY --from=prod-dependencies /app/node_modules /app/node_modules
 COPY --from=builder /app/scripts /app/scripts
-COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/drizzle /app/drizzle
 
-CMD [ "tsx", "/app/scripts/db/migrate.ts" ]
+CMD [ "bun", "/app/scripts/db/migrate.ts" ]

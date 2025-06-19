@@ -1,10 +1,8 @@
-import { config } from 'dotenv';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-config();
 
 async function main() {
-	const dbUrl = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/opendrive';
+	const dbUrl = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@0.0.0.0:5432/opendrive';
 	console.log('Initializing drizzle on', dbUrl);
 	const db = drizzle(dbUrl);
 

@@ -4,10 +4,10 @@
  */
 export default {
 	'*': [
-		'pnpm run lint:fix',
-		'pnpm run check',
-		'pnpm run circular',
-		'pnpm run format',
-		'pnpm db:diagram'
+		'bun run lint:fix',
+		'bun run check',
+		'bun run circular',
+		'bun run format',
+		'bun db:diagram'
 	]
 };

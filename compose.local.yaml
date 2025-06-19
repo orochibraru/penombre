@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    pull_policy: always
+    restart: 'no'
+    ports:
+      - 3000:3000
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
+      retries: 5
+      timeout: 3s
+      interval: 2s
+      start_period: 2s
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL-debug}
+      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-postgres}
+      - ORIGIN=http://localhost:3000
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+  db-migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: db-migrate
+    pull_policy: always
+    restart: 'no'
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-postgres}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - 5432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
+      - POSTGRES_DB=${POSTGRES_DB-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ['CMD-SHELL', "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-postgres}'"]
+      interval: 3s
+      timeout: 10s
+      retries: 5
+      start_period: 3s
+
+volumes:
+  postgres_data:
+    driver: local

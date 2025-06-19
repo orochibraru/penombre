@@ -11,14 +11,14 @@ env:
   CONTEXT: homelab
   COMPOSE_FILE: compose.prod.yaml
   STACK: opendrive
-  OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
-  OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
   BETTER_AUTH_URL: https://drive.ombrage.space
-  BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
   DATABASE_URL: postgres://postgres:postgres@localhost:5432/opendrive
   LOG_LEVEL: debug
   TAG: ${{ github.sha }}
   TZ: Europe/Paris
+  OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+  OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
+  BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
 
 permissions:
   contents: 'write'

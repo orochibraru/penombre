@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ -x pnpm ]; then
-    pnpm install
+if [ -x bun ]; then
+    bun install
 fi
