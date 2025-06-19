@@ -30,7 +30,7 @@ jobs:
         with:
           registry: git.ombrage.space
           username: salokain
-          password: ${{ secrets.PACKAGES_TOKEN }}
+          password: ${{ secrets.GITEA_TOKEN }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
