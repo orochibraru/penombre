@@ -5,32 +5,29 @@ import swagger from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
 
-const betterAuth = new Elysia({ name: "better-auth" })
-	.mount(auth.handler)
-	.macro({
-		auth: {
-			async resolve({ status, request: { headers } }) {
-				const session = await auth.api.getSession({
-					headers,
-				});
+const betterAuth = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro({
+	auth: {
+		async resolve({ status, request: { headers } }) {
+			const session = await auth.api.getSession({
+				headers
+			});
 
-				if (!session) return status(401);
+			if (!session) return status(401);
 
-				return {
-					user: session.user,
-					session: session.session,
-				};
-			},
-		},
-	});
+			return {
+				user: session.user,
+				session: session.session
+			};
+		}
+	}
+});
 
 export const router = new Elysia({ prefix: '/api/v1' })
 	.use(cors())
 	.use(betterAuth)
-	.get("/user", ({ user }) => user, {
-		auth: true,
+	.get('/user', ({ user }) => user, {
+		auth: true
 	})
-	.derive({})
 	.get('/ping', () => 'PONG!', {
 		detail: {
 			tags: ['General'],
