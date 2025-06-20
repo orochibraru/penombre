@@ -3,7 +3,6 @@ import {
 	notFoundSchema,
 	unauthorizedSchema
 } from '$lib/server/api/schemas';
-import bearer from '@elysiajs/bearer';
 import { Log } from '@kitql/helpers';
 import { Elysia, type Static, t } from 'elysia';
 
@@ -57,7 +56,6 @@ export const filesRouter = new Elysia({
 	}
 }).group('/files', (app) =>
 	app
-		.use(bearer())
 		.model({
 			File: fileSummarySchema,
 			FileList: t.Array(fileSummarySchema),

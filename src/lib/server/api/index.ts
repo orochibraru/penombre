@@ -1,21 +1,36 @@
 import { auth } from '$lib/auth';
 import { filesRouter } from '$lib/server/api/routers/files';
-import { bearer } from '@elysiajs/bearer';
 import { cors } from '@elysiajs/cors';
 import swagger from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
 
-export const router = new Elysia({ prefix: '/api/v1' })
-	.use(
-		cors({
-			origin: 'http://localhost:3001',
-			methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-			credentials: true,
-			allowedHeaders: ['Content-Type', 'Authorization']
-		})
-	)
+const betterAuth = new Elysia({ name: "better-auth" })
 	.mount(auth.handler)
+	.macro({
+		auth: {
+			async resolve({ status, request: { headers } }) {
+				const session = await auth.api.getSession({
+					headers,
+				});
+
+				if (!session) return status(401);
+
+				return {
+					user: session.user,
+					session: session.session,
+				};
+			},
+		},
+	});
+
+export const router = new Elysia({ prefix: '/api/v1' })
+	.use(cors())
+	.use(betterAuth)
+	.get("/user", ({ user }) => user, {
+		auth: true,
+	})
+	.derive({})
 	.get('/ping', () => 'PONG!', {
 		detail: {
 			tags: ['General'],
@@ -28,7 +43,6 @@ export const router = new Elysia({ prefix: '/api/v1' })
 			]
 		}
 	})
-	.use(bearer())
 	.use(filesRouter)
 	.use(
 		swagger({
