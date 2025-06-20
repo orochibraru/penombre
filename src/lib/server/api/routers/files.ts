@@ -6,7 +6,7 @@ import {
 import { Log } from '@kitql/helpers';
 import { Elysia, type Static, t } from 'elysia';
 
-const logger = new Log('PoolsRouter');
+const logger = new Log('FilesRouter');
 
 export const fileSummarySchema = t.Object({
 	id: t.String({ default: 'random-uuid' }),
@@ -91,7 +91,7 @@ export const filesRouter = new Elysia({
 			{
 				detail: {
 					summary: 'List Files',
-					description: 'Fetches all pools for the selected aws environment'
+					description: 'Fetches all files'
 				},
 				response: {
 					200: 'FileList',
@@ -117,8 +117,8 @@ export const filesRouter = new Elysia({
 			},
 			{
 				detail: {
-					summary: 'Create a pool client',
-					description: 'Creates a single client for a single pool in the selected aws environment'
+					summary: 'Create a file',
+					description: 'Creates a single file'
 				},
 				body: 'CreateFile',
 				response: {

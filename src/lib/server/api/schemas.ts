@@ -1,13 +1,19 @@
 import { t } from 'elysia';
 
-export const unauthorizedSchema = t.Unknown({ description: 'Unauthorized' });
+export const unauthorizedSchema = t.Unknown({
+	description: 'Unauthorized',
+	default: 'Unauthorized'
+});
 
-export const notFoundSchema = t.Unknown({ description: 'Not Found' });
-export const deletedSchema = t.Unknown({ description: 'Deleted' });
+export const notFoundSchema = t.Unknown({ description: 'Not Found', default: 'Not Found' });
+export const deletedSchema = t.Unknown({ description: 'Deleted', default: 'Deleted' });
 
-export const internalServerErrorSchema = t.Unknown({ description: 'Internal Server Error' });
+export const internalServerErrorSchema = t.Unknown({
+	description: 'Internal Server Error',
+	default: 'Internal Server Error'
+});
 export const badRequestErrorSchema = t.Object({
-	message: t.String({ description: 'Error details' })
+	message: t.String({ description: 'Error details', default: 'Bad Request' })
 });
 
 enum ErrorLocations {

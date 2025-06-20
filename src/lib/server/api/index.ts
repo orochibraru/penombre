@@ -1,8 +1,10 @@
 import { auth } from '$lib/auth';
 import { filesRouter } from '$lib/server/api/routers/files';
+import { unauthorizedSchema } from '$lib/server/api/schemas';
 import { cors } from '@elysiajs/cors';
 import swagger from '@elysiajs/swagger';
-import { Elysia } from 'elysia';
+import { date } from 'drizzle-orm/mysql-core';
+import { Elysia, t } from 'elysia';
 import packageJson from '../../../../package.json';
 
 const betterAuth = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro({
@@ -25,8 +27,28 @@ const betterAuth = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro
 export const router = new Elysia({ prefix: '/api/v1' })
 	.use(cors())
 	.use(betterAuth)
+	.model({
+		User: t.Object({
+			id: t.String({ default: '123' }),
+			name: t.String({ default: 'John Doe' }),
+			email: t.String({ default: 'm@domain.com' }),
+			emailVerified: t.Boolean({ default: false }),
+			image: t.String({ default: 'http://example.com/image.png' }),
+			createdAt: t.Date({ default: new Date() }),
+			updatedAt: t.Date({ default: new Date() })
+		})
+	})
 	.get('/user', ({ user }) => user, {
-		auth: true
+		auth: true,
+		detail: {
+			tags: ['General'],
+			summary: 'User information',
+			description: 'User details (if logged in).'
+		},
+		response: {
+			200: 'User',
+			401: unauthorizedSchema
+		}
 	})
 	.get('/ping', () => 'PONG!', {
 		detail: {
@@ -57,7 +79,7 @@ export const router = new Elysia({ prefix: '/api/v1' })
 				},
 				tags: [
 					{ name: 'General', description: 'Utility endpoints' },
-					{ name: 'Pools', description: 'User Pool Endpoints' }
+					{ name: 'Files', description: 'User Pool Endpoints' }
 				],
 				components: {
 					securitySchemes: {

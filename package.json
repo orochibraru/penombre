@@ -20,7 +20,7 @@
 		"circular": "bun scripts/madge.ts",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
-		"db:generate": "drizzle-kit generate",
+		"db:generate": "bunx @better-auth/cli generate --y --output src/lib/server/db/schema/auth.ts && drizzle-kit generate",
 		"db:migrate": "bun scripts/db/migrate.ts",
 		"db:diagram": "bun scripts/db/diagram.ts && dbml-renderer -i ./docs/db-diagram.dbml -o docs/db-diagram.svg",
 		"db:studio": "drizzle-kit studio"

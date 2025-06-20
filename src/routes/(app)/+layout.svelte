@@ -101,7 +101,7 @@
 	<Sidebar.Inset>
 		<SiteHeader />
 		<div class="flex flex-1 flex-col">
-			<div class="@container/main flex flex-1 flex-col gap-2">
+			<div class="main-container @container/main flex flex-1 flex-col gap-2">
 				{@render children()}
 			</div>
 		</div>
