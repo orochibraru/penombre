@@ -24,17 +24,17 @@ const PAGES = {
  * SERVERS
  */
 const SERVERS = {
-	'GET /api/[...paths]': (params: { paths: (string | number)[] }) => {
-		return `/api/${params['paths']?.join('/')}`;
+	'GET /api/v1/[...paths]': (params: { paths: (string | number)[] }) => {
+		return `/api/v1/${params['paths']?.join('/')}`;
 	},
-	'POST /api/[...paths]': (params: { paths: (string | number)[] }) => {
-		return `/api/${params['paths']?.join('/')}`;
+	'POST /api/v1/[...paths]': (params: { paths: (string | number)[] }) => {
+		return `/api/v1/${params['paths']?.join('/')}`;
 	},
-	'PUT /api/[...paths]': (params: { paths: (string | number)[] }) => {
-		return `/api/${params['paths']?.join('/')}`;
+	'PUT /api/v1/[...paths]': (params: { paths: (string | number)[] }) => {
+		return `/api/v1/${params['paths']?.join('/')}`;
 	},
-	'DELETE /api/[...paths]': (params: { paths: (string | number)[] }) => {
-		return `/api/${params['paths']?.join('/')}`;
+	'DELETE /api/v1/[...paths]': (params: { paths: (string | number)[] }) => {
+		return `/api/v1/${params['paths']?.join('/')}`;
 	}
 };
 
@@ -170,10 +170,10 @@ export type KIT_ROUTES = {
 		'/auth/sign-in': never;
 	};
 	SERVERS: {
-		'GET /api/[...paths]': 'paths';
-		'POST /api/[...paths]': 'paths';
-		'PUT /api/[...paths]': 'paths';
-		'DELETE /api/[...paths]': 'paths';
+		'GET /api/v1/[...paths]': 'paths';
+		'POST /api/v1/[...paths]': 'paths';
+		'PUT /api/v1/[...paths]': 'paths';
+		'DELETE /api/v1/[...paths]': 'paths';
 	};
 	ACTIONS: Record<string, never>;
 	LINKS: Record<string, never>;

@@ -10,6 +10,7 @@
 		title: string;
 		url: string;
 		icon: Icon | typeof IconType;
+		target?: string;
 	};
 
 	type Props = WithoutChildren<ComponentProps<typeof Sidebar.Group>> & {
@@ -18,10 +19,6 @@
 	};
 
 	let { title, items, ...restProps }: Props = $props();
-
-	$effect(() => {
-		console.log(page.url.pathname);
-	});
 
 	function isActive(item: Item) {
 		if (page.url.pathname === '/' && item.url === '/') {
@@ -44,7 +41,7 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton isActive={isActive(item)}>
 						{#snippet child({ props })}
-							<a href={item.url} {...props}>
+							<a href={item.url} target={item.target ?? '_self'} {...props}>
 								<item.icon />
 								<span>{item.title}</span>
 							</a>

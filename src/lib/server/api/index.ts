@@ -1,14 +1,12 @@
 import { filesRouter } from '$lib/server/api/routers/files';
 import { bearer } from '@elysiajs/bearer';
 import { cors } from '@elysiajs/cors';
-import { serverTiming } from '@elysiajs/server-timing';
 import swagger from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
 
 export const router = new Elysia({ prefix: '/api/v1' })
 	.use(cors())
-	.use(serverTiming())
 	.get('/ping', () => 'PONG!', {
 		detail: {
 			tags: ['General'],
