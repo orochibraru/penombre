@@ -11,6 +11,7 @@
 const PAGES = {
 	'/': `/`,
 	'/account': `/account`,
+	'/api-docs': `/api-docs`,
 	'/recent': `/recent`,
 	'/settings': `/settings`,
 	'/shared': `/shared`,
@@ -161,6 +162,7 @@ export type KIT_ROUTES = {
 	PAGES: {
 		'/': never;
 		'/account': never;
+		'/api-docs': never;
 		'/recent': never;
 		'/settings': never;
 		'/shared': never;

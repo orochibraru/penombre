@@ -55,7 +55,7 @@
 			},
 			{
 				title: 'API',
-				url: '/api/v1/docs',
+				url: route('/api-docs'),
 				icon: PlugIcon
 			},
 			{

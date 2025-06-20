@@ -9,132 +9,44 @@ import { Elysia, type Static, t } from 'elysia';
 
 const logger = new Log('PoolsRouter');
 
-export const fileListSchema = t.Object({
-	Id: t.Optional(t.String({ default: 'region-pool-id' })),
-	Name: t.Optional(t.String({ default: 'example-user-pool' })),
-	CreationDate: t.Optional(t.Date({ default: new Date() })),
-	LastModifiedDate: t.Optional(t.Date({ default: new Date() })),
-	LambdaConfig: t.Optional(
-		t.Object({
-			PostAuthentication: t.Optional(t.String({ default: 'arn:some-arn' })),
-			PreTokenGeneration: t.Optional(t.String({ default: 'arn:some-arn' })),
-			PreTokenGenerationConfig: t.Optional(
-				t.Object({
-					LambdaArn: t.Optional(t.String({ default: 'arn:some-arn' })),
-					LambdaVersion: t.Optional(t.String({ default: 'V1_0' }))
-				})
-			)
-		})
-	)
+export const fileSummarySchema = t.Object({
+	id: t.String({ default: 'random-uuid' }),
+	name: t.String({ default: 'file-name' }),
+	creationDate: t.Date({ default: new Date() }),
+	lastModifiedDate: t.Date({ default: new Date() })
 });
-export type FileList = Static<typeof fileListSchema>;
+export type FileList = Static<typeof fileSummarySchema>[];
 
 export const fileDetailsSchema = t.Object({
-	Id: t.Optional(t.String({ default: 'region-pool-id' })),
-	Name: t.Optional(t.String({ default: 'example-user-pool' })),
-	CreationDate: t.Optional(t.Date({ default: new Date() })),
-	LastModifiedDate: t.Optional(t.Date({ default: new Date() })),
-	LambdaConfig: t.Optional(
-		t.Object({
-			PostAuthentication: t.Optional(t.String({ default: 'arn:some-arn' })),
-			PreTokenGeneration: t.Optional(t.String({ default: 'arn:some-arn' })),
-			PreTokenGenerationConfig: t.Optional(
-				t.Object({
-					LambdaArn: t.Optional(t.String({ default: 'arn:some-arn' })),
-					LambdaVersion: t.Optional(t.String({ default: 'V1_0' }))
-				})
-			)
-		})
-	),
-	UserPoolTags: t.Optional(t.Record(t.String(), t.String())),
-	EstimatedNumberOfUsers: t.Optional(t.Numeric()),
-	Domain: t.Optional(t.String()),
-	EmailVerificationSubject: t.Optional(t.String()),
-	EmailVerificationMessage: t.Optional(t.String()),
-	Arn: t.Optional(t.String()),
-	SmsVerificationMessage: t.Optional(t.String()),
-	Policies: t.Optional(t.Unknown()),
-	SchemaAttributes: t.Optional(t.Unknown()),
-	AutoVerifiedAttributes: t.Optional(t.Unknown()),
-	AliasAttributes: t.Optional(t.Unknown()),
-	UsernameAttributes: t.Optional(t.Unknown()),
-
-	VerificationMessageTemplate: t.Optional(t.Unknown()),
-
-	SmsAuthenticationMessage: t.Optional(t.Unknown()),
-	UserAttributeUpdateSettings: t.Optional(t.Unknown()),
-	DeviceConfiguration: t.Optional(t.Unknown()),
-	EmailConfiguration: t.Optional(t.Unknown()),
-	SmsConfiguration: t.Optional(t.Unknown()),
-	SmsConfigurationFailure: t.Optional(t.Unknown()),
-	EmailConfigurationFailure: t.Optional(t.Unknown()),
-	CustomDomain: t.Optional(t.Unknown()),
-	AdminCreateUserConfig: t.Optional(t.Unknown()),
-	UserPoolAddOns: t.Optional(t.Unknown()),
-	UsernameConfiguration: t.Optional(t.Unknown()),
-	AccountRecoverySetting: t.Optional(t.Unknown())
+	id: t.String({ default: 'random-uuid' }),
+	name: t.String({ default: 'folder-name' }),
+	size: t.Number({ default: '123' }),
+	creationDate: t.Date({ default: new Date() }),
+	lastModifiedDate: t.Date({ default: new Date() })
 });
 
 export type FileDetails = Static<typeof fileDetailsSchema>;
 
 export const folderDetailsSchema = t.Object({
-	AllowedOAuthFlows: t.Optional(t.Array(t.String())),
-	AllowedOAuthFlowsUserPoolClient: t.Optional(t.Boolean()),
-	AllowedOAuthScopes: t.Optional(t.Array(t.String({ default: 'openid' }))),
-	AuthSessionValidity: t.Optional(t.Numeric()),
-	CallbackURLs: t.Optional(t.Array(t.String())),
-	ClientId: t.Optional(t.String({ default: 'random-client-id' })),
-	ClientName: t.Optional(t.String({ default: 'my-app-client' })),
-	ClientSecret: t.Optional(t.String()),
-	CreationDate: t.Optional(t.Date({ default: new Date() })),
-	EnablePropagateAdditionalUserContextData: t.Optional(t.Boolean()),
-	EnableTokenRevocation: t.Optional(t.Boolean()),
-	LastModifiedDate: t.Optional(t.Optional(t.Date({ default: new Date() }))),
-	LogoutURLs: t.Optional(t.Array(t.String())),
-	SupportedIdentityProviders: t.Optional(t.Array(t.String({ default: 'roche' }))),
-	RefreshTokenValidity: t.Optional(t.Numeric()),
-	IdTokenValidity: t.Optional(t.Numeric()),
-	AccessTokenValidity: t.Optional(t.Numeric()),
-	ReadAttributes: t.Optional(t.Array(t.String())),
-	WriteAttributes: t.Optional(t.Array(t.String())),
-	DefaultRedirectURI: t.Optional(t.String()),
-	TokenValidityUnits: t.Optional(
-		t.Object({
-			AccessToken: t.Optional(t.String()),
-			IdToken: t.Optional(t.String()),
-			RefreshToken: t.Optional(t.String())
-		})
-	),
-	UserPoolId: t.Optional(t.String({ default: 'region-pool-id' })),
-	AnalyticsConfiguration: t.Optional(
-		t.Object({
-			ApplicationId: t.Optional(t.String()),
-			ApplicationArn: t.Optional(t.String()),
-			RoleArn: t.Optional(t.String()),
-			ExternalId: t.Optional(t.String()),
-			UserDataShared: t.Optional(t.Boolean())
-		})
-	)
+	id: t.String({ default: 'random-uuid' }),
+	name: t.String({ default: 'folder-name' }),
+	creationDate: t.Date({ default: new Date() }),
+	lastModifiedDate: t.Date({ default: new Date() })
 });
 
 export type FolderDetails = Static<typeof folderDetailsSchema>;
 
 export const folderFilesSummarySchema = t.Object({
-	ClientId: t.Optional(t.String({ default: 'random-client-id' })),
-	ClientName: t.Optional(t.String({ default: 'my-app-client' })),
-	UserPoolId: t.Optional(t.String({ default: 'region-pool-id' }))
+	id: t.String({ default: 'random-uuid' }),
+	name: t.String({ default: 'folder-name' }),
+	creationDate: t.Date({ default: new Date() }),
+	lastModifiedDate: t.Date({ default: new Date() })
 });
 
 export type FolderFilesSummary = Static<typeof folderFilesSummarySchema>;
 
 export const createFileSchema = t.Object({
-	name: t.String({ minLength: 3 }),
-	description: t.String({ minLength: 20 }),
-	contacts: t.Array(t.String()),
-	generateSecret: t.Boolean(),
-	scopes: t.Array(t.String()),
-	loginUrls: t.Array(t.String()),
-	logoutUrls: t.Array(t.String())
+	name: t.String({ minLength: 3 })
 });
 
 export type CreateFileSchema = Static<typeof createFileSchema>;
@@ -147,8 +59,8 @@ export const filesRouter = new Elysia({
 	app
 		.use(bearer())
 		.model({
-			File: fileListSchema,
-			FileList: t.Array(fileListSchema),
+			File: fileSummarySchema,
+			FileList: t.Array(fileSummarySchema),
 			FileDetails: fileDetailsSchema,
 			CreateFile: createFileSchema,
 			FolderFilesSummary: folderFilesSummarySchema,
@@ -158,7 +70,21 @@ export const filesRouter = new Elysia({
 			'/',
 			async ({ error }) => {
 				try {
-					return 'file list';
+					const objs: FileList = [
+						{
+							id: '1',
+							name: 'test',
+							creationDate: new Date(),
+							lastModifiedDate: new Date()
+						},
+						{
+							id: '2',
+							name: 'test 2',
+							creationDate: new Date(),
+							lastModifiedDate: new Date()
+						}
+					];
+					return objs;
 				} catch (e) {
 					logger.error('Failed to list files', e);
 					return error(500, undefined);
@@ -181,15 +107,11 @@ export const filesRouter = new Elysia({
 			'/',
 			async ({ params, error, body }) => {
 				try {
-					const client = {
-						ClientName: body.name,
-						GenerateSecret: body.generateSecret,
-						LogoutURLs: body.logoutUrls,
-						CallbackURLs: body.loginUrls,
-						AllowedOAuthScopes: body.scopes
+					const file: CreateFileSchema = {
+						name: body.name
 					};
 
-					return client;
+					return file;
 				} catch (e) {
 					logger.error(`Failed to create file ${body.name}`, e);
 					return error(500, undefined);

@@ -1,3 +1,4 @@
+import { auth } from '$lib/auth';
 import { filesRouter } from '$lib/server/api/routers/files';
 import { bearer } from '@elysiajs/bearer';
 import { cors } from '@elysiajs/cors';
@@ -6,7 +7,15 @@ import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
 
 export const router = new Elysia({ prefix: '/api/v1' })
-	.use(cors())
+	.use(
+		cors({
+			origin: 'http://localhost:3001',
+			methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+			credentials: true,
+			allowedHeaders: ['Content-Type', 'Authorization']
+		})
+	)
+	.mount(auth.handler)
 	.get('/ping', () => 'PONG!', {
 		detail: {
 			tags: ['General'],
