@@ -56,8 +56,7 @@
 			{
 				title: 'API',
 				url: '/api/v1/docs',
-				icon: PlugIcon,
-				target: '_blank'
+				icon: PlugIcon
 			},
 			{
 				title: 'Sync',

@@ -10,7 +10,6 @@
 		title: string;
 		url: string;
 		icon: Icon | typeof IconType;
-		target?: string;
 	};
 
 	type Props = WithoutChildren<ComponentProps<typeof Sidebar.Group>> & {
@@ -41,7 +40,7 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton isActive={isActive(item)}>
 						{#snippet child({ props })}
-							<a href={item.url} target={item.target ?? '_self'} {...props}>
+							<a href={item.url} {...props}>
 								<item.icon />
 								<span>{item.title}</span>
 							</a>
