@@ -8,10 +8,10 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://0.0.0.0:3000']
+      test: ['CMD', 'curl', '-f', 'http://0.0.0.0:3000/api/v1/ping']
       retries: 5
       timeout: 3s
-      interval: 2s
+      interval: 10s
       start_period: 2s
     environment:
       - LOG_LEVEL=${LOG_LEVEL-debug}
@@ -22,6 +22,7 @@ services:
       - BETTER_AUTH_URL=https://drive.ombrage.space
     networks:
       - proxy
+      - opendrive
     labels:
       - traefik.enable=true
       - traefik.http.routers.opendrive-app.rule=Host(`drive.ombrage.space`)
@@ -40,7 +41,7 @@ services:
     pull_policy: always
     restart: 'no'
     networks:
-      - proxy
+      - opendrive
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}
     depends_on:
@@ -52,7 +53,7 @@ services:
     restart: unless-stopped
     pull_policy: always
     networks:
-      - proxy
+      - opendrive
     ports:
       - 5432
     environment:
@@ -76,3 +77,5 @@ volumes:
 networks:
   proxy:
     external: true
+  opendrive:
+    external: false

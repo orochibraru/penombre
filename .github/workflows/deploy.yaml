@@ -12,7 +12,7 @@ env:
   COMPOSE_FILE: compose.prod.yaml
   STACK: opendrive
   BETTER_AUTH_URL: https://drive.ombrage.space
-  DATABASE_URL: postgres://postgres:postgres@localhost:5432/opendrive
+  DATABASE_URL: postgres://postgres:postgres@db:5432/opendrive
   LOG_LEVEL: debug
   TAG: ${{ github.sha }}
   TZ: Europe/Paris
