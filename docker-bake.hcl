@@ -10,7 +10,7 @@ variable "TAG" {
 }
 
 group "default" {
-  targets = ["app", "db-migrator"]
+  targets = ["app"]
 }
 
 
@@ -22,14 +22,4 @@ target "app" {
   cache-from = ["type=gha,scope=app"]
   cache-to = ["type=gha,mode=max,scope=app"]
   target = "runner"
-}
-
-target "db-migrator" {
-  context    = "."
-  dockerfile = "./Dockerfile"
-  tags       = ["${REGISTRY}/db-migrator:latest","${REGISTRY}/db-migrator:${TAG}"]
-  platforms = ["linux/amd64", "linux/arm64/v8"]
-  cache-from = ["type=gha,scope=db-migrator"]
-  cache-to = ["type=gha,mode=max,scope=db-migrator"]
-  target = "db-migrate"
 }
