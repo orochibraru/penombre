@@ -3,6 +3,8 @@ name: Check
 on:
   workflow_call:
   push:
+    branches-ignore:
+      - main
 
 env:
   PNPM_VERSION: 10.11.0
@@ -46,6 +48,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compose
+      - name: Compose Build
         shell: bash
-        run: docker compose -f compose.local.yaml up --build -d --wait --remove-orphans --dry-run || exit 1
+        run: docker compose -f compose.local.yaml build
+
+      - name: Compose Pull
+        shell: bash
+        run: docker compose -f compose.local.yaml pull
+
+      - name: Compose Dry Run
+        shell: bash
+        run: docker compose -f compose.local.yaml up -d --wait --remove-orphans --dry-run || exit 1

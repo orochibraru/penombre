@@ -63,14 +63,14 @@ export const router = new Elysia({ prefix: '/api/v1' })
 			try {
 				await db.execute(sql`select 1`);
 			} catch (e) {
-				logger.error(e);
+				logger.error('Database service is unreachable.');
 				throw new Error('Database service is unreachable.');
 			}
 
 			try {
 				await storage.listBuckets();
 			} catch (e) {
-				logger.error(e);
+				logger.error('Storage service is unreachable.');
 				throw new Error('Storage service is unreachable.');
 			}
 

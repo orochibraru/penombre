@@ -116,11 +116,11 @@ jobs:
 
       - name: Dry Run Compose
         shell: bash
-        run: docker --context "${{ env.CONTEXT }}" compose up -d --remove-orphans --dry-run || exit 1
+        run: docker --context "${{ env.CONTEXT }}" compose up -d --wait --remove-orphans --dry-run || exit 1
 
       - shell: bash
         name: Start the Containers
-        run: docker --context "${{ env.CONTEXT }}" compose up -d --remove-orphans || exit 1
+        run: docker --context "${{ env.CONTEXT }}" compose up -d --wait --remove-orphans || exit 1
 
       - shell: bash
         name: Cleanup

@@ -5,6 +5,11 @@ services:
       dockerfile: Dockerfile
       target: runner
     pull_policy: always
+    depends_on:
+      minio:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     restart: unless-stopped
     ports:
       - 3000:3000
@@ -23,18 +28,6 @@ services:
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
       - MINIO_ENDPOINT=minio
-  db-migrator:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: db-migrate
-    pull_policy: always
-    restart: 'no'
-    environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}
-    depends_on:
-      db:
-        condition: service_healthy
 
   minio:
     image: quay.io/minio/minio

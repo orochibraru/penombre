@@ -3,6 +3,11 @@ services:
     image: git.ombrage.space/salokain/opendrive/app:${TAG-latest}
     pull_policy: always
     restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     ports:
       - 3000
     extra_hosts:
@@ -36,18 +41,6 @@ services:
       - homepage.icon=nextcloud.svg
       - homepage.href=https://drive.ombrage.space
       - homepage.description=Storatge management
-
-  db-migrator:
-    image: git.ombrage.space/salokain/opendrive/db-migrator:latest
-    pull_policy: always
-    restart: 'no'
-    networks:
-      - opendrive
-    environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}
-    depends_on:
-      db:
-        condition: service_healthy
 
   minio:
     image: quay.io/minio/minio
