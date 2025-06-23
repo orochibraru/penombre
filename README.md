@@ -3,8 +3,10 @@
 ## Getting started
 
 ```bash
-pnpm i
-pnpm dev
+bun i
+docker compose up
+bun run db:migrate
+bun run dev
 ```
 
 Built with [Shadcn Svelte](https://shadcn-svelte.com/)
