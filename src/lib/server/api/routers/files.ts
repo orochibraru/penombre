@@ -103,7 +103,7 @@ export const filesRouter = new Elysia({
 		)
 		.post(
 			'/',
-			async ({ params, error, body }) => {
+			async ({ error, body }) => {
 				try {
 					const file: CreateFileSchema = {
 						name: body.name

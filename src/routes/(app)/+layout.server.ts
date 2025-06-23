@@ -1,5 +1,5 @@
-import { route } from '$lib/ROUTES';
 import { auth } from '$lib/auth';
+import { route } from '$lib/ROUTES';
 import { StorageService } from '$lib/server/storage';
 import { redirect } from '@sveltejs/kit';
 

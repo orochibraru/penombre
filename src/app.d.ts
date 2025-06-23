@@ -1,7 +1,4 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
-
-import type { AuthService } from '$lib/auth';
-import type { User } from '$lib/auth-utils';
 import type NodeCache from 'node-cache';
 
 // for information about these interfaces

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { title } from '$lib/store/title';
+
 	$title = 'API docs';
 
 	function iframeLoaded() {

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { route } from '$lib/ROUTES';
-	import NavUser from '$lib/components/nav-user.svelte';
 	import Nav, { type NavItem } from '$lib/components/nav.svelte';
+	import NavUser from '$lib/components/nav-user.svelte';
 	import SiteHeader from '$lib/components/site-header.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
 	import {
 		ClockFadingIcon,
@@ -104,7 +104,7 @@
 <Sidebar.Provider
 	style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
 >
-	<Sidebar.Root collapsible="offcanvas" variant="inset">
+	<Sidebar.Root collapsible="icon" variant="inset">
 		<Sidebar.Header>
 			<Sidebar.Menu>
 				<Sidebar.MenuItem>

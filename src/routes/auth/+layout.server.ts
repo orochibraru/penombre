@@ -1,5 +1,5 @@
-import { route } from '$lib/ROUTES';
 import { auth } from '$lib/auth';
+import { route } from '$lib/ROUTES';
 import { redirect } from '@sveltejs/kit';
 
 export const load = async ({ request }) => {

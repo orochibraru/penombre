@@ -45,7 +45,9 @@ const SERVERS = {
 /**
  * ACTIONS
  */
-const ACTIONS = {};
+const ACTIONS = {
+	'default /': `/`
+};
 
 /**
  * LINKS
@@ -181,7 +183,7 @@ export type KIT_ROUTES = {
 		'PUT /api/v1/[...paths]': 'paths';
 		'DELETE /api/v1/[...paths]': 'paths';
 	};
-	ACTIONS: Record<string, never>;
+	ACTIONS: { 'default /': never };
 	LINKS: Record<string, never>;
 	Params: { category: never; paths: never };
 };

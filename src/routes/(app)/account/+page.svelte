@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { title } from '$lib/store/title';
+
 	$title = 'Account';
 
 	const { data } = $props();

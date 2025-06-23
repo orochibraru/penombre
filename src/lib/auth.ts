@@ -38,7 +38,7 @@ export const auth = betterAuth({
 	},
 	plugins: [
 		emailOTP({
-			async sendVerificationOTP({ email, otp, type }) {
+			async sendVerificationOTP() {
 				// Implement the sendVerificationOTP method to send the OTP to the user's email address
 			}
 		})

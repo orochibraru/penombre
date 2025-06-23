@@ -3,7 +3,7 @@
 	import TopLoadingbar from '$lib/components/top-loading-bar.svelte';
 	import { title } from '$lib/store/title';
 	import { ModeWatcher } from 'mode-watcher';
-	import { Toaster } from 'svelte-french-toast';
+	import { Toaster } from 'svelte-sonner';
 
 	let { children } = $props();
 </script>
@@ -14,5 +14,7 @@
 
 <TopLoadingbar />
 <ModeWatcher />
+
 {@render children?.()}
-<Toaster position="top-right" />
+
+<Toaster position="top-right" richColors closeButton />

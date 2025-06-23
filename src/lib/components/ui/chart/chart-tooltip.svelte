@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { type WithElementRef, type WithoutChildren, cn } from '$lib/utils.js';
-	import { Tooltip as TooltipPrimitive, getTooltipContext } from 'layerchart';
+	import { cn, type WithElementRef, type WithoutChildren } from '$lib/utils.js';
+	import { getTooltipContext, Tooltip as TooltipPrimitive } from 'layerchart';
 	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
-	import { type TooltipPayload, getPayloadConfigFromPayload, useChart } from './chart-utils.js';
+	import { getPayloadConfigFromPayload, type TooltipPayload, useChart } from './chart-utils.js';
 
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	function defaultFormatter(value: any, _payload: TooltipPayload[]) {

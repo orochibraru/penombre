@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 import { auth } from '$lib/auth';
-import { Log, green } from '@kitql/helpers';
-import { type Handle, type HandleServerError, error } from '@sveltejs/kit';
+import { green, Log } from '@kitql/helpers';
+import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import NodeCache from 'node-cache';

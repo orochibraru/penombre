@@ -1,40 +1,35 @@
 # syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM oven/bun:1-alpine AS base
+FROM --platform=$BUILDPLATFORM node:22-alpine AS base
 
 WORKDIR /app
 
 RUN apk add --no-cache curl bash ca-certificates wget
+
+RUN npm i -g pnpm tsx drizzle-kit dotenv
 
 # Build Stage
 FROM base AS builder
 
 COPY package.json ./
 
-RUN bun install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
 
 COPY . .
 
-RUN bunx svelte-kit sync && bun run build
+RUN --mount=type=cache,id=vitebuild,target=/node_modules/.vite pnpm exec svelte-kit sync && pnpm run build
 
-# Prod deps
-FROM base AS prod-dependencies
-
-COPY package.json ./
-COPY bun.lock ./
-
-RUN bun install --frozen-lockfile --production
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prune --production --ignore-scripts
 
 # Run Stage
 FROM base AS runner
 
-RUN bun i -g drizzle-kit drizzle-orm dotenv 
-
-COPY --from=builder /app/build /app
-COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
-COPY --from=prod-dependencies /app/node_modules /app/node_modules
-COPY --from=prod-dependencies /app/package.json /app/package.json
-COPY --from=builder /app/scripts /app/scripts
 COPY --from=builder /app/drizzle /app/drizzle
+COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
+COPY --from=builder /app/scripts /app/scripts
+COPY --from=builder /app/build /app/build
+COPY --from=builder /app/node_modules /app/node_module
+
+ENV NODE_ENV=production
 
 RUN chmod +x /app/entrypoint.sh
 
@@ -42,8 +37,8 @@ HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "cu
 
 EXPOSE 3000/tcp
 
-USER bun
+USER node
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
 
-CMD ["bun", "."]
+CMD ["node", "/app/build/index.js"]

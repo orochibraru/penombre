@@ -1,9 +1,4 @@
 <script lang="ts">
-	import TrendingUpIcon from '@tabler/icons-svelte/icons/trending-up';
-	import { scaleUtc } from 'd3-scale';
-	import { curveNatural } from 'd3-shape';
-	import { AreaChart } from 'layerchart';
-
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Chart from '$lib/components/ui/chart/index.js';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
@@ -12,6 +7,10 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
+	import TrendingUpIcon from '@tabler/icons-svelte/icons/trending-up';
+	import { scaleUtc } from 'd3-scale';
+	import { curveNatural } from 'd3-shape';
+	import { AreaChart } from 'layerchart';
 	import type { DataItem } from './schemas.js';
 
 	const chartData = [

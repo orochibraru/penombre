@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type WithoutChildrenOrChild, cn } from '$lib/utils.js';
+	import { cn, type WithoutChildrenOrChild } from '$lib/utils.js';
 	import CircleIcon from '@lucide/svelte/icons/circle';
 	import { RadioGroup as RadioGroupPrimitive } from 'bits-ui';
 

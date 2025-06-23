@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
 	import { page } from '$app/state';
-	import { route } from '$lib/ROUTES';
 	import { Button } from '$lib/components/ui/button';
+	import { route } from '$lib/ROUTES';
 </script>
 
 <div class="flex h-screen flex-col items-center justify-center gap-2 p-5">

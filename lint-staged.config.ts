@@ -3,8 +3,8 @@
  * @type {import('lint-staged').Configuration}
  */
 export default {
-	'*': ['bun run format'],
-	'*.{ts,svelte}': ['bun run lint:fix', 'bun run check'],
-	'package.json': ['bun run circular'],
-	'drizzle/*': ['bun db:diagram']
+	'*': ['pnpm run format'],
+	'*.{ts,svelte}': ['pnpm run lint:fix', 'pnpm run check'],
+	'package.json': ['pnpm run circular'],
+	'drizzle/*': ['pnpm db:diagram']
 };

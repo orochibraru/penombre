@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { route } from '$lib/ROUTES';
 	import { authClient } from '$lib/auth-client';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { route } from '$lib/ROUTES';
 	import CreditCardIcon from '@tabler/icons-svelte/icons/credit-card';
 	import DotsVerticalIcon from '@tabler/icons-svelte/icons/dots-vertical';
 	import LogoutIcon from '@tabler/icons-svelte/icons/logout';
