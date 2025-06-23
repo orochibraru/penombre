@@ -5,7 +5,7 @@ WORKDIR /app
 
 RUN apk add --no-cache curl bash ca-certificates wget
 
-RUN npm i -g pnpm tsx drizzle-kit dotenv
+RUN npm i -g pnpm tsx drizzle-kit drizzle-orm dotenv 
 
 # Build Stage
 FROM base AS builder
