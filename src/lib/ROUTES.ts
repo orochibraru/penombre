@@ -12,6 +12,9 @@ const PAGES = {
 	'/': `/`,
 	'/account': `/account`,
 	'/api-docs': `/api-docs`,
+	'/categories/[category]': (params: { category: string | number }) => {
+		return `/categories/${params['category']}`;
+	},
 	'/recent': `/recent`,
 	'/settings': `/settings`,
 	'/shared': `/shared`,
@@ -163,6 +166,7 @@ export type KIT_ROUTES = {
 		'/': never;
 		'/account': never;
 		'/api-docs': never;
+		'/categories/[category]': 'category';
 		'/recent': never;
 		'/settings': never;
 		'/shared': never;
@@ -179,5 +183,5 @@ export type KIT_ROUTES = {
 	};
 	ACTIONS: Record<string, never>;
 	LINKS: Record<string, never>;
-	Params: { paths: never };
+	Params: { category: never; paths: never };
 };

@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { route } from '$lib/ROUTES';
 	import NavUser from '$lib/components/nav-user.svelte';
-	import Nav from '$lib/components/nav.svelte';
+	import Nav, { type NavItem } from '$lib/components/nav.svelte';
 	import SiteHeader from '$lib/components/site-header.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { title } from '$lib/store/title';
 	import {
 		ClockFadingIcon,
+		FileIcon,
 		FolderIcon,
 		FolderSyncIcon,
+		ImageIcon,
+		MusicIcon,
 		PlugIcon,
 		SettingsIcon,
 		StarIcon,
@@ -19,8 +22,12 @@
 
 	const { children, data } = $props();
 
-	const nav = {
-		main: [
+	type NavMenus = {
+		[key: string]: NavItem[];
+	};
+
+	const nav: NavMenus = {
+		general: [
 			{
 				title: 'My Drive',
 				url: route('/'),
@@ -47,21 +54,44 @@
 				icon: TrashIcon
 			}
 		],
-		secondary: [
+		categories: [
+			{
+				title: 'Music',
+				url: route('/categories/[category]', {
+					category: 'music'
+				}),
+				icon: MusicIcon
+			},
+			{
+				title: 'Documents',
+				url: route('/categories/[category]', {
+					category: 'documents'
+				}),
+				icon: FileIcon
+			},
+			{
+				title: 'Images',
+				url: route('/categories/[category]', {
+					category: 'images'
+				}),
+				icon: ImageIcon
+			}
+		],
+		help: [
 			{
 				title: 'Settings',
 				url: route('/settings'),
 				icon: SettingsIcon
 			},
 			{
-				title: 'API',
-				url: route('/api-docs'),
-				icon: PlugIcon
-			},
-			{
 				title: 'Sync',
 				url: route('/sync'),
 				icon: FolderSyncIcon
+			},
+			{
+				title: 'API',
+				url: route('/api-docs'),
+				icon: PlugIcon
 			}
 		]
 	};
@@ -90,8 +120,9 @@
 			</Sidebar.Menu>
 		</Sidebar.Header>
 		<Sidebar.Content>
-			<Nav title="General" items={nav.main} />
-			<Nav title="Help" items={nav.secondary} class="mt-auto" />
+			<Nav title="General" items={nav.general} />
+			<Nav title="Categories" items={nav.categories} />
+			<Nav title="Help" items={nav.help} class="mt-auto" />
 		</Sidebar.Content>
 		<Sidebar.Footer>
 			<NavUser user={data.user} />
@@ -101,7 +132,7 @@
 	<Sidebar.Inset>
 		<SiteHeader />
 		<div class="flex flex-1 flex-col">
-			<div class="main-container @container/main flex flex-1 flex-col gap-2">
+			<div class="main-container @container/main flex flex-1 flex-col gap-5 p-5">
 				{@render children()}
 			</div>
 		</div>

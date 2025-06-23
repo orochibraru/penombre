@@ -1,11 +1,18 @@
 import { auth } from '$lib/auth';
 import { filesRouter } from '$lib/server/api/routers/files';
 import { unauthorizedSchema } from '$lib/server/api/schemas';
+import { db } from '$lib/server/db';
+import { StorageService } from '$lib/server/storage';
 import { cors } from '@elysiajs/cors';
 import swagger from '@elysiajs/swagger';
-import { date } from 'drizzle-orm/mysql-core';
+import { Log } from '@kitql/helpers';
+import { sql } from 'drizzle-orm';
 import { Elysia, t } from 'elysia';
 import packageJson from '../../../../package.json';
+
+const logger = new Log('API');
+
+const storage = new StorageService();
 
 const betterAuth = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro({
 	auth: {
@@ -50,18 +57,38 @@ export const router = new Elysia({ prefix: '/api/v1' })
 			401: unauthorizedSchema
 		}
 	})
-	.get('/ping', () => 'PONG!', {
-		detail: {
-			tags: ['General'],
-			summary: 'Healthcheck',
-			description: 'Shoudl respond "PONG!"',
-			security: [
-				{
-					bearerAuth: []
-				}
-			]
+	.get(
+		'/ping',
+		async () => {
+			try {
+				await db.execute(sql`select 1`);
+			} catch (e) {
+				logger.error(e);
+				throw new Error('Database service is unreachable.');
+			}
+
+			try {
+				await storage.listBuckets();
+			} catch (e) {
+				logger.error(e);
+				throw new Error('Storage service is unreachable.');
+			}
+
+			return 'PONG!';
+		},
+		{
+			detail: {
+				tags: ['General'],
+				summary: 'Healthcheck',
+				description: 'Shoudl respond "PONG!"',
+				security: [
+					{
+						bearerAuth: []
+					}
+				]
+			}
 		}
-	})
+	)
 	.use(filesRouter)
 	.use(
 		swagger({

@@ -12,7 +12,7 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
-	import type { Schema } from './schemas.js';
+	import type { DataItem } from './schemas.js';
 
 	const chartData = [
 		{ date: new Date('2024-01-01'), desktop: 186, mobile: 80 },
@@ -36,24 +36,24 @@
 
 	const isMobile = new IsMobile();
 
-	let { item }: { item: Schema } = $props();
+	let { item }: { item: DataItem } = $props();
 
-	let type = $state(item.type);
+	let label = $state(item.category);
 	let status = $state(item.status);
-	let reviewer = $state(item.reviewer);
+	let title = $state(item.title);
 </script>
 
 <Drawer.Root direction={isMobile.current ? 'bottom' : 'right'}>
 	<Drawer.Trigger>
 		{#snippet child({ props })}
 			<Button variant="link" class="text-foreground w-fit px-0 text-left" {...props}>
-				{item.header}
+				{item.title}
 			</Button>
 		{/snippet}
 	</Drawer.Trigger>
 	<Drawer.Content>
 		<Drawer.Header class="gap-1">
-			<Drawer.Title>{item.header}</Drawer.Title>
+			<Drawer.Title>{item.title}</Drawer.Title>
 			<Drawer.Description>Showing total visitors for the last 6 months</Drawer.Description>
 		</Drawer.Header>
 		<div class="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
@@ -118,14 +118,14 @@
 			<form class="flex flex-col gap-4">
 				<div class="flex flex-col gap-3">
 					<Label for="header">Header</Label>
-					<Input id="header" value={item.header} />
+					<Input id="header" value={item.title} />
 				</div>
 				<div class="grid grid-cols-2 gap-4">
 					<div class="flex flex-col gap-3">
 						<Label for="type">Type</Label>
-						<Select.Root type="single" bind:value={type}>
+						<Select.Root type="single" bind:value={label}>
 							<Select.Trigger id="type" class="w-full">
-								{type ?? 'Select a type'}
+								{label ?? 'Select a type'}
 							</Select.Trigger>
 							<Select.Content>
 								<Select.Item value="Table of Contents">Table of Contents</Select.Item>
@@ -155,19 +155,19 @@
 				</div>
 				<div class="grid grid-cols-2 gap-4">
 					<div class="flex flex-col gap-3">
-						<Label for="target">Target</Label>
-						<Input id="target" value={item.target} />
+						<Label for="target">Label</Label>
+						<Input id="target" value={item.category} />
 					</div>
 					<div class="flex flex-col gap-3">
-						<Label for="limit">Limit</Label>
-						<Input id="limit" value={item.limit} />
+						<Label for="limit">Status</Label>
+						<Input id="limit" value={item.status} />
 					</div>
 				</div>
 				<div class="flex flex-col gap-3">
 					<Label for="reviewer">Reviewer</Label>
-					<Select.Root type="single" bind:value={reviewer}>
+					<Select.Root type="single" bind:value={title}>
 						<Select.Trigger id="reviewer" class="w-full">
-							{reviewer ?? 'Select a reviewer'}
+							{title ?? 'Select a reviewer'}
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Item value="Eddie Lake">Eddie Lake</Select.Item>

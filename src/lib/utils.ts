@@ -1,3 +1,4 @@
+import { browser } from '$app/environment';
 import clsx, { type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -36,6 +37,10 @@ export function prettierName(name?: string): string {
 	return nameSplit.join(' ');
 }
 
+export function toSnake(input: string) {
+	return input.replaceAll(' ', '-').toLowerCase();
+}
+
 /**
  * Capitalizes the first letter of a given string.
  *
@@ -49,20 +54,22 @@ export function capitalizeFirstLetter(val: string): string {
 	return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
-export const sha256 = async (value: string) => {
-	return await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-};
-
-export const generateNonce = async () => {
-	const hash = await sha256(crypto.getRandomValues(new Uint32Array(4)).toString());
-	// https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
-	const hashArray = Array.from(new Uint8Array(hash));
-	return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WithoutChild<T> = T extends { child?: unknown } ? Omit<T, 'child'> : T;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WithoutChildren<T> = T extends { children?: unknown } ? Omit<T, 'children'> : T;
 export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
+
+export function prettyDate(date: Date) {
+	if (!browser) {
+		return date.toLocaleString();
+	}
+	return date.toLocaleString(navigator.language, {
+		day: '2-digit',
+		month: 'short',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit'
+	});
+}

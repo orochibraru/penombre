@@ -20,6 +20,7 @@ services:
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
       - BETTER_AUTH_URL=https://drive.ombrage.space
+      - MINIO_ENDPOINT=minio
     networks:
       - proxy
       - opendrive
@@ -48,6 +49,27 @@ services:
       db:
         condition: service_healthy
 
+  minio:
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    pull_policy: always
+    networks:
+      - opendrive
+    environment:
+      - MINIO_ROOT_USER=opendrive
+      - MINIO_ROOT_PASSWORD=opendrive
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://0.0.0.0:9000/minio/health/live']
+      retries: 5
+      timeout: 3s
+      interval: 10s
+      start_period: 2s
+    ports:
+      - 9000
+    command: server /data
+    volumes:
+      - minio_data:/data
+
   db:
     image: postgres:17
     restart: unless-stopped
@@ -72,6 +94,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  minio_data:
     driver: local
 
 networks:

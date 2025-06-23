@@ -10,9 +10,9 @@
 >
 	<Card.Root class="@container/card">
 		<Card.Header>
-			<Card.Description>Total Revenue</Card.Description>
+			<Card.Description>Total Files</Card.Description>
 			<Card.Title class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-				$1,250.00
+				467
 			</Card.Title>
 			<Card.Action>
 				<Badge variant="outline">

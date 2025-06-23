@@ -99,7 +99,7 @@ jobs:
 
       - name: Dry Run Compose
         shell: bash
-        run: docker compose up -d --remove-orphans --dry-run || exit 1
+        run: docker compose up -d --wait --remove-orphans --dry-run || exit 1
 
       - shell: bash
         name: Copy stack

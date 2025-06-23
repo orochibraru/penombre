@@ -1,3 +1,11 @@
+<script lang="ts" module>
+	export type NavItem = {
+		title: string;
+		url: string;
+		icon: Icon | typeof IconType;
+	};
+</script>
+
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -6,20 +14,14 @@
 	import type { Icon } from '@tabler/icons-svelte';
 	import type { ComponentProps } from 'svelte';
 
-	type Item = {
-		title: string;
-		url: string;
-		icon: Icon | typeof IconType;
-	};
-
 	type Props = WithoutChildren<ComponentProps<typeof Sidebar.Group>> & {
 		title: string;
-		items: Item[];
+		items: NavItem[];
 	};
 
 	let { title, items, ...restProps }: Props = $props();
 
-	function isActive(item: Item) {
+	function isActive(item: NavItem) {
 		if (page.url.pathname === '/' && item.url === '/') {
 			return true;
 		}

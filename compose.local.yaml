@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
       target: runner
     pull_policy: always
-    restart: 'no'
+    restart: unless-stopped
     ports:
       - 3000:3000
     extra_hosts:
@@ -22,6 +22,7 @@ services:
       - ORIGIN=http://localhost:3000
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - MINIO_ENDPOINT=minio
   db-migrator:
     build:
       context: .
@@ -34,6 +35,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  minio:
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      - MINIO_ROOT_USER=opendrive
+      - MINIO_ROOT_PASSWORD=opendrive
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://0.0.0.0:9000/minio/health/live']
+      retries: 5
+      timeout: 3s
+      interval: 10s
+      start_period: 2s
+    ports:
+      - 9000
+    command: server /data
+    volumes:
+      - minio_data:/data
 
   db:
     image: postgres:17
@@ -57,4 +77,6 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  minio_data:
     driver: local

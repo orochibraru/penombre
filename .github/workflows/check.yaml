@@ -14,12 +14,9 @@ env:
   BETTER_AUTH_URL: http://localhost:5173
 
 jobs:
-  node:
-    name: 'Node'
+  bun:
+    name: 'Bun'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [22]
     steps:
       - uses: actions/checkout@v4
 
@@ -42,3 +39,13 @@ jobs:
 
       - name: Build the app
         run: bun run build
+
+  docker-dry:
+    name: 'Docker dry run'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compose
+        shell: bash
+        run: docker compose -f compose.local.yaml up --build -d --wait --remove-orphans --dry-run || exit 1
