@@ -58,4 +58,4 @@ jobs:
 
       - name: Compose Dry Run
         shell: bash
-        run: docker compose -f compose.local.yaml up -d --wait --remove-orphans --dry-run || exit 1
+        run: docker compose -f compose.local.yaml up -d --wait --remove-orphans --dry-run

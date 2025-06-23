@@ -99,7 +99,7 @@ jobs:
 
       - name: Dry Run Compose
         shell: bash
-        run: docker compose up -d --wait --remove-orphans --dry-run || docker compose logs && exit 1
+        run: docker compose up -d --wait --remove-orphans --dry-run
 
       - shell: bash
         name: Copy stack
@@ -116,11 +116,11 @@ jobs:
 
       - name: Dry Run Compose
         shell: bash
-        run: docker --context "${{ env.CONTEXT }}" compose up -d --wait --remove-orphans --dry-run || exit 1
+        run: docker --context "${{ env.CONTEXT }}" compose up -d --wait --remove-orphans --dry-run
 
       - shell: bash
         name: Start the Containers
-        run: docker --context "${{ env.CONTEXT }}" compose up -d --wait --remove-orphans || exit 1
+        run: docker --context "${{ env.CONTEXT }}" compose up -d --wait --remove-orphans
 
       - shell: bash
         name: Cleanup
