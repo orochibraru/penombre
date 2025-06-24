@@ -5,8 +5,7 @@ WORKDIR /app
 
 RUN apk add --no-cache curl bash ca-certificates wget
 
-RUN npm i -g pnpm tsx drizzle-kit drizzle-orm dotenv 
-
+RUN npm i -g pnpm tsx
 
 # Build Stage
 FROM base AS builder
@@ -24,12 +23,13 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prune --production --igno
 # Run Stage
 FROM base AS runner
 
+COPY --from=builder /app/scripts /app/scripts
 COPY --from=builder /app/drizzle /app/drizzle
 COPY --from=builder /app/drizzle.config.ts /app/drizzle.config.ts
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
-COPY --from=builder /app/scripts /app/scripts
 COPY --from=builder /app/build /app/build
 COPY --from=builder /app/node_modules /app/node_module
+COPY --from=builder /app/package.json /app/package.json
 
 ENV NODE_ENV=production
 

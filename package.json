@@ -19,7 +19,7 @@
 		"circular": "tsx scripts/madge.ts",
 		"db:generate": "pnpm exec @better-auth/cli generate --y --output src/lib/server/db/schema/auth.ts && drizzle-kit generate",
 		"db:migrate": "tsx scripts/db/migrate.ts",
-		"db:diagram": "tsx scripts/db/diagram.ts && dbml-renderer -i ./docs/db-diagram.dbml -o docs/db-diagram.svg",
+		"db:diagram": "tsx scripts/db-diagram.ts && dbml-renderer -i ./docs/db-diagram.dbml -o docs/db-diagram.svg",
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {

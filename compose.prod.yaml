@@ -1,7 +1,6 @@
 services:
   app:
     image: git.ombrage.space/salokain/opendrive/app:${TAG-latest}
-    pull_policy: always
     restart: unless-stopped
     depends_on:
       minio:
@@ -45,7 +44,6 @@ services:
   minio:
     image: quay.io/minio/minio
     restart: unless-stopped
-    pull_policy: always
     networks:
       - opendrive
     environment:

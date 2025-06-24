@@ -4,7 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
-    pull_policy: always
     depends_on:
       minio:
         condition: service_healthy
@@ -32,7 +31,6 @@ services:
   minio:
     image: quay.io/minio/minio
     restart: unless-stopped
-    pull_policy: always
     environment:
       - MINIO_ROOT_USER=opendrive
       - MINIO_ROOT_PASSWORD=opendrive
