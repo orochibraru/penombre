@@ -7,6 +7,7 @@ RUN apk add --no-cache curl bash ca-certificates wget
 
 RUN npm i -g pnpm tsx drizzle-kit drizzle-orm dotenv 
 
+
 # Build Stage
 FROM base AS builder
 
@@ -24,6 +25,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prune --production --igno
 FROM base AS runner
 
 COPY --from=builder /app/drizzle /app/drizzle
+COPY --from=builder /app/drizzle.config.ts /app/drizzle.config.ts
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /app/scripts /app/scripts
 COPY --from=builder /app/build /app/build
@@ -33,7 +35,7 @@ ENV NODE_ENV=production
 
 RUN chmod +x /app/entrypoint.sh
 
-HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "curl", "-f", "http://localhost:3000" ]
+HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "curl", "-f", "http://localhost:3000/api/v1/ping" ]
 
 EXPOSE 3000/tcp
 
