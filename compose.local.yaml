@@ -29,7 +29,7 @@ services:
       - MINIO_ENDPOINT=minio
 
   minio:
-    image: quay.io/minio/minio
+    image: minio/minio
     restart: unless-stopped
     environment:
       - MINIO_ROOT_USER=opendrive
@@ -49,7 +49,6 @@ services:
   db:
     image: postgres:17
     restart: unless-stopped
-    pull_policy: always
     ports:
       - 5432
     environment:

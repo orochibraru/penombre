@@ -16,20 +16,23 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
 
 COPY . .
 
-RUN --mount=type=cache,id=vitebuild,target=/node_modules/.vite pnpm exec svelte-kit sync && pnpm run build
+
+RUN --mount=type=cache,id=vitebuild,target=/node_modules/.vite pnpm run build
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prune --production --ignore-scripts
+
+RUN tsx /app/scripts/build-migration.ts
 
 # Run Stage
 FROM base AS runner
 
-COPY --from=builder /app/scripts /app/scripts
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/dist/migrate.js /app/migrate.js
 COPY --from=builder /app/drizzle /app/drizzle
 COPY --from=builder /app/drizzle.config.ts /app/drizzle.config.ts
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /app/build /app/build
-COPY --from=builder /app/node_modules /app/node_module
-COPY --from=builder /app/package.json /app/package.json
 
 ENV NODE_ENV=production
 
