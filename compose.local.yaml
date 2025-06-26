@@ -15,7 +15,7 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/v1/ping']
       retries: 5
       timeout: 3s
       interval: 10s
