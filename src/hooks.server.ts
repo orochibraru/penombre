@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { auth } from '$lib/auth';
+import { StorageService } from '$lib/server/services/storage';
 import { green, Log } from '@kitql/helpers';
 import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
@@ -45,13 +46,34 @@ export const handleError: HandleServerError = ({ error, event }) => {
 	};
 };
 
-const generalHandler: Handle = async ({ event, resolve }) => {
+const preHandler: Handle = async ({ event, resolve }) => {
 	if (!cache) {
 		return error(500, 'Failed to init cache');
 	}
 	event.locals.cache = cache;
 	logger.info(`${green(event.request.method)} ${event.url.href}`);
 	event.locals.cacheBypass = !!env.CACHE_BYPASS;
+
+	return resolve(event);
+};
+
+const postHandler: Handle = async ({ event, resolve }) => {
+	if (!event.locals.user) {
+		const authStatus = await auth.api.getSession({
+			headers: event.request.headers
+		});
+
+		if (authStatus) {
+			const { user } = authStatus;
+			event.locals.user = user;
+		}
+	}
+
+	const storage = new StorageService();
+
+	storage.setUser(event.locals.user);
+
+	event.locals.storage = storage;
 
 	return resolve(event);
 };
@@ -63,7 +85,7 @@ const authHandler: Handle = async ({ event, resolve }) => {
 	return svelteKitHandler({ event, resolve, auth });
 };
 
-export const handle: Handle = sequence(generalHandler, authHandler);
+export const handle: Handle = sequence(preHandler, authHandler, postHandler);
 
 function kill(reason: string) {
 	if (killing) {

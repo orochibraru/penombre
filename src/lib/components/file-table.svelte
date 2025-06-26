@@ -1,9 +1,9 @@
 <script lang="ts" module>
-	export const columns: ColumnDef<DataItem>[] = [
+	export const columns: ColumnDef<BucketObject>[] = [
 		{
 			id: 'drag',
 			header: () => null,
-			cell: ({ row }) => renderSnippet(DragHandle, { id: row.original.id })
+			cell: () => renderSnippet(DragHandle, { id: generateUuid() })
 		},
 		{
 			id: 'select',
@@ -24,20 +24,15 @@
 			enableHiding: false
 		},
 		{
-			accessorKey: 'title',
-			header: 'Title',
-			cell: ({ row }) => renderComponent(DataTableCellViewer, { item: row.original }),
+			accessorKey: 'name',
+			header: 'Name',
+			cell: ({ row }) => renderSnippet(DataTableName, { row }),
 			enableHiding: false
 		},
 		{
-			accessorKey: 'category',
-			header: 'Category',
-			cell: ({ row }) => renderSnippet(DataTableCategory, { row })
-		},
-		{
-			accessorKey: 'status',
-			header: 'Status',
-			cell: ({ row }) => renderSnippet(DataTableStatus, { row })
+			accessorKey: 'tags',
+			header: 'Tags',
+			cell: ({ row }) => renderSnippet(DataTableTags, { row })
 		},
 		{
 			accessorKey: 'size',
@@ -50,13 +45,8 @@
 			cell: ({ row }) => renderSnippet(DataTableSize, { row })
 		},
 		{
-			accessorKey: 'createdAt',
-			header: 'Created At',
-			cell: ({ row }) => renderSnippet(DataTableCreatedAt, { row })
-		},
-		{
-			accessorKey: 'lastUpdated',
-			header: 'Last updated',
+			accessorKey: 'lastModified',
+			header: 'Last modified',
 			cell: ({ row }) => renderSnippet(DataTableLastUpdated, { row })
 		},
 		{
@@ -82,7 +72,6 @@
 		type SortingState,
 		type VisibilityState
 	} from '@tanstack/table-core';
-	import type { DataItem } from './schemas.js';
 	import {
 		useSensors,
 		MouseSensor,
@@ -108,38 +97,56 @@
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
 	import {
 		FlexRender,
 		renderComponent,
 		renderSnippet
 	} from '$lib/components/ui/data-table/index.js';
-	import LayoutColumnsIcon from '@tabler/icons-svelte/icons/layout-columns';
-	import GripVerticalIcon from '@tabler/icons-svelte/icons/grip-vertical';
-	import ChevronDownIcon from '@tabler/icons-svelte/icons/chevron-down';
-	import ChevronsLeftIcon from '@tabler/icons-svelte/icons/chevrons-left';
-	import ChevronLeftIcon from '@tabler/icons-svelte/icons/chevron-left';
-	import ChevronRightIcon from '@tabler/icons-svelte/icons/chevron-right';
-	import ChevronsRightIcon from '@tabler/icons-svelte/icons/chevrons-right';
-	import CircleCheckFilledIcon from '@tabler/icons-svelte/icons/circle-check-filled';
-	import LoaderIcon from '@tabler/icons-svelte/icons/loader';
-	import DotsVerticalIcon from '@tabler/icons-svelte/icons/dots-vertical';
-	import { toast } from 'svelte-sonner';
 	import DataTableCheckbox from './data-table-checkbox.svelte';
-	import DataTableCellViewer from './data-table-cell-viewer.svelte';
 	import { createRawSnippet } from 'svelte';
 	import { CSS } from '@dnd-kit-svelte/utilities';
-	import { prettyDate } from '$lib/utils';
+	import { humanFileSize, prettyDate, generateUuid } from '$lib/utils';
+	import {
+		ChevronLeftIcon,
+		ChevronRightIcon,
+		ChevronsLeftIcon,
+		ChevronsRightIcon,
+		CopyIcon,
+		EllipsisVerticalIcon,
+		FileIcon,
+		FolderIcon,
+		FolderInputIcon,
+		GripVerticalIcon,
+		ShareIcon,
+		SquarePenIcon,
+		StarIcon,
+		TrashIcon
+	} from '@lucide/svelte';
+	import type { BucketObject } from '$lib/server/services/storage';
+	import { PaginationHelper, type PaginationParams } from '$lib/pagination';
+	import { page } from '$app/state';
 
 	type Props = {
-		data: DataItem[];
+		data: BucketObject[];
+		count: number;
 		title?: string;
 		showPagination?: boolean;
+		paginationParams?: PaginationParams;
 	};
 
-	let { title, data, showPagination = true }: Props = $props();
+	let {
+		title,
+		data,
+		count,
+		showPagination = true,
+		paginationParams = $bindable({ page: 1, limit: 20 })
+	}: Props = $props();
 
-	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
+	let pagination = $state<PaginationState>({
+		pageIndex: paginationParams.page - 1,
+		pageSize: paginationParams.limit
+	});
+
 	let sorting = $state<SortingState>([]);
 	let columnFilters = $state<ColumnFiltersState>([]);
 	let rowSelection = $state<RowSelectionState>({});
@@ -153,7 +160,7 @@
 		useSensor(KeyboardSensor, {})
 	);
 
-	const dataIds: UniqueIdentifier[] = $derived(data.map((item) => item.id));
+	const dataIds: UniqueIdentifier[] = $derived(data.map(() => generateUuid()));
 
 	const table = createSvelteTable({
 		get data() {
@@ -177,7 +184,7 @@
 				return columnFilters;
 			}
 		},
-		getRowId: (row) => row.id.toString(),
+		getRowId: () => generateUuid(),
 		enableRowSelection: true,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
@@ -230,6 +237,8 @@
 			data = arrayMove(data, oldIndex, newIndex);
 		}
 	}
+
+	const paginationHelper = new PaginationHelper({ url: page.url });
 </script>
 
 <!-- Filters -->
@@ -240,38 +249,6 @@
 				{title}
 			</h3>
 		{/if}
-	</div>
-
-	<div class="flex items-center gap-2">
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger>
-				{#snippet child({ props })}
-					<Button variant="outline" size="sm" {...props}>
-						<LayoutColumnsIcon />
-						<span class="hidden lg:inline">Customize Columns</span>
-						<span class="lg:hidden">Columns</span>
-						<ChevronDownIcon />
-					</Button>
-				{/snippet}
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="end" class="w-56">
-				{#each table
-					.getAllColumns()
-					.filter((col) => typeof col.accessorFn !== 'undefined' && col.getCanHide()) as column (column.id)}
-					<DropdownMenu.CheckboxItem
-						class="capitalize"
-						checked={column.getIsVisible()}
-						onCheckedChange={(value) => column.toggleVisibility(!!value)}
-					>
-						{column.id}
-					</DropdownMenu.CheckboxItem>
-				{/each}
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
-		<!-- <Button variant="outline" size="sm">
-				<PlusIcon />
-				<span class="hidden lg:inline">Add Section</span>
-			</Button> -->
 	</div>
 </div>
 
@@ -333,6 +310,10 @@
 					bind:value={
 						() => `${table.getState().pagination.pageSize}`, (v) => table.setPageSize(Number(v))
 					}
+					onValueChange={(e) => {
+						console.log('limit', e);
+						paginationHelper.set({ limit: Number.parseInt(e), page: paginationParams.page });
+					}}
 				>
 					<Select.Trigger size="sm" class="w-20" id="rows-per-page">
 						{table.getState().pagination.pageSize}
@@ -348,14 +329,14 @@
 			</div>
 			<div class="flex w-fit items-center justify-center text-sm font-medium">
 				Page {table.getState().pagination.pageIndex + 1} of
-				{table.getPageCount()}
+				{paginationHelper.getPageCount({ count })}
 			</div>
 			<div class="ml-auto flex items-center gap-2 lg:ml-0">
 				<Button
 					variant="outline"
 					class="hidden h-8 w-8 p-0 lg:flex"
 					onclick={() => table.setPageIndex(0)}
-					disabled={!table.getCanPreviousPage()}
+					disabled={table.getState().pagination.pageIndex === 0}
 				>
 					<span class="sr-only">Go to first page</span>
 					<ChevronsLeftIcon />
@@ -365,7 +346,7 @@
 					class="size-8"
 					size="icon"
 					onclick={() => table.previousPage()}
-					disabled={!table.getCanPreviousPage()}
+					disabled={table.getState().pagination.pageIndex === 0}
 				>
 					<span class="sr-only">Go to previous page</span>
 					<ChevronLeftIcon />
@@ -375,7 +356,8 @@
 					class="size-8"
 					size="icon"
 					onclick={() => table.nextPage()}
-					disabled={!table.getCanNextPage()}
+					disabled={table.getState().pagination.pageIndex ===
+						paginationHelper.getPageCount({ count })}
 				>
 					<span class="sr-only">Go to next page</span>
 					<ChevronRightIcon />
@@ -385,7 +367,8 @@
 					class="hidden size-8 lg:flex"
 					size="icon"
 					onclick={() => table.setPageIndex(table.getPageCount() - 1)}
-					disabled={!table.getCanNextPage()}
+					disabled={table.getState().pagination.pageIndex ===
+						paginationHelper.getPageCount({ count })}
 				>
 					<span class="sr-only">Go to last page</span>
 					<ChevronsRightIcon />
@@ -395,45 +378,50 @@
 	</div>
 {/if}
 
-{#snippet DataTableCategory({ row }: { row: Row<DataItem> })}
-	<div class="w-32">
-		<Badge variant="outline" class="text-muted-foreground px-1.5">
-			{row.original.category}
-		</Badge>
-	</div>
-{/snippet}
-
-{#snippet DataTableStatus({ row }: { row: Row<DataItem> })}
-	<Badge variant="outline" class="text-muted-foreground px-1.5">
-		{#if row.original.status === 'Done'}
-			<CircleCheckFilledIcon class="fill-green-500 dark:fill-green-400" />
+{#snippet DataTableName({ row }: { row: Row<BucketObject> })}
+	<div class="flex items-center gap-2">
+		{#if row.original.Key?.endsWith('/')}
+			<FolderIcon class="h-4 w-4" />
+			<button>{row.original.Key.replace('/', '')}</button>
 		{:else}
-			<LoaderIcon />
+			<!-- {@const meta = row.original.}
+			{#if meta}
+				{@const ct = (meta as Record<string, string> | undefined)?.['content-type']}
+				{#if ct === 'application/pdf'}
+					<FileIcon class="h-4 w-4" />
+				{:else if ct?.startsWith('audio')}
+					<FileMusicIcon class="h-4 w-4" />
+				{/if}
+			{/if} -->
+			<FileIcon class="h-4 w-4" />
+			<p>{row.original.Key}</p>
 		{/if}
-		{row.original.status}
-	</Badge>
+	</div>
 {/snippet}
 
-{#snippet DataTableSize({ row }: { row: Row<DataItem> })}
+{#snippet DataTableTags({ row }: { row: Row<BucketObject> })}
+	<div class="w-32">
+		<Badge variant="outline" class="text-muted-foreground px-1.5">
+			<!-- {row.original.tags && row.original.tags.length > 0 ? row.original.tags.join(',') : 'No tags'} -->
+			No tags
+		</Badge>
+	</div>
+{/snippet}
+
+{#snippet DataTableSize({ row }: { row: Row<BucketObject> })}
 	<div class="text-right">
-		{row.original.size} mb
+		{humanFileSize(row.original.Size as number)}
 	</div>
 {/snippet}
 
-{#snippet DataTableCreatedAt({ row }: { row: Row<DataItem> })}
-	<div class="w-32">
-		<Badge variant="outline" class="text-muted-foreground px-1.5">
-			{prettyDate(row.original.createdAt)}
-		</Badge>
-	</div>
-{/snippet}
-
-{#snippet DataTableLastUpdated({ row }: { row: Row<DataItem> })}
-	<div class="w-32">
-		<Badge variant="outline" class="text-muted-foreground px-1.5">
-			{prettyDate(row.original.lastUpdated)}
-		</Badge>
-	</div>
+{#snippet DataTableLastUpdated({ row }: { row: Row<BucketObject> })}
+	{#if row.original.LastModified}
+		<div class="w-32">
+			<Badge variant="outline" class="text-muted-foreground px-1.5">
+				{prettyDate(row.original.LastModified)}
+			</Badge>
+		</div>
+	{/if}
 {/snippet}
 
 {#snippet DataTableActions()}
@@ -441,24 +429,40 @@
 		<DropdownMenu.Trigger class="data-[state=open]:bg-muted text-muted-foreground flex size-8">
 			{#snippet child({ props })}
 				<Button variant="ghost" size="icon" {...props}>
-					<DotsVerticalIcon />
+					<EllipsisVerticalIcon />
 					<span class="sr-only">Open menu</span>
 				</Button>
 			{/snippet}
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content align="end" class="w-32">
-			<DropdownMenu.Item>Edit</DropdownMenu.Item>
-			<DropdownMenu.Item>Make a copy</DropdownMenu.Item>
-			<DropdownMenu.Item>Favorite</DropdownMenu.Item>
+			<DropdownMenu.Item>
+				<FolderInputIcon />
+				Move
+			</DropdownMenu.Item>
+			<DropdownMenu.Item>
+				<CopyIcon />
+				Duplicate
+			</DropdownMenu.Item>
+			<DropdownMenu.Item>
+				<StarIcon />
+				Star
+			</DropdownMenu.Item>
+			<DropdownMenu.Item>
+				<ShareIcon />
+				Share
+			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
-			<DropdownMenu.Item variant="destructive">Delete</DropdownMenu.Item>
+			<DropdownMenu.Item variant="destructive">
+				<TrashIcon />
+				Delete
+			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 {/snippet}
 
-{#snippet DraggableRow({ row }: { row: Row<DataItem> })}
+{#snippet DraggableRow({ row }: { row: Row<BucketObject> })}
 	{@const { transform, transition, node, isDragging } = useSortable({
-		id: () => row.original.id
+		id: () => generateUuid()
 	})}
 
 	<Table.Row
@@ -476,7 +480,7 @@
 	</Table.Row>
 {/snippet}
 
-{#snippet DragHandle({ id }: { id: number })}
+{#snippet DragHandle({ id }: { id: string })}
 	{@const { attributes, listeners } = useSortable({ id: () => id })}
 
 	<Button

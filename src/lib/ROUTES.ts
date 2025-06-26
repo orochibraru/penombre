@@ -21,6 +21,7 @@ const PAGES = {
 	'/starred': `/starred`,
 	'/sync': `/sync`,
 	'/trash': `/trash`,
+	'/upload': `/upload`,
 	'/auth/sign-in': `/auth/sign-in`
 };
 
@@ -46,7 +47,7 @@ const SERVERS = {
  * ACTIONS
  */
 const ACTIONS = {
-	'default /': `/`
+	'default /upload': `/upload`
 };
 
 /**
@@ -175,6 +176,7 @@ export type KIT_ROUTES = {
 		'/starred': never;
 		'/sync': never;
 		'/trash': never;
+		'/upload': never;
 		'/auth/sign-in': never;
 	};
 	SERVERS: {
@@ -183,7 +185,7 @@ export type KIT_ROUTES = {
 		'PUT /api/v1/[...paths]': 'paths';
 		'DELETE /api/v1/[...paths]': 'paths';
 	};
-	ACTIONS: { 'default /': never };
+	ACTIONS: { 'default /upload': never };
 	LINKS: Record<string, never>;
 	Params: { category: never; paths: never };
 };

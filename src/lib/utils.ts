@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import clsx, { type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * A version of clsx that uses tailwind-merge to merge classes.
@@ -62,9 +63,6 @@ export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
 
 export function prettyDate(date: Date) {
-	if (!browser) {
-		return date.toLocaleString();
-	}
 	return date.toLocaleString(navigator.language, {
 		day: '2-digit',
 		month: 'short',
@@ -72,4 +70,40 @@ export function prettyDate(date: Date) {
 		hour: '2-digit',
 		minute: '2-digit'
 	});
+}
+
+const registeredUuids: string[] = [];
+
+export function generateUuid() {
+	const generated = uuidv4();
+
+	if (registeredUuids.find((id) => id === generated)) {
+		return uuidv4();
+	}
+
+	registeredUuids.push;
+
+	return generated;
+}
+
+export function humanFileSize(bytes: number, si = false, dp = 1) {
+	const thresh = si ? 1000 : 1024;
+
+	if (Math.abs(bytes) < thresh) {
+		return `${bytes} B`;
+	}
+
+	const units = si
+		? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+		: ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+	let u = -1;
+	const r = 10 ** dp;
+	let size = bytes;
+
+	do {
+		size /= thresh;
+		++u;
+	} while (Math.round(Math.abs(size) * r) / r >= thresh && u < units.length - 1);
+
+	return `${size.toFixed(dp)} ${units[u]}`;
 }

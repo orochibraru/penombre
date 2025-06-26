@@ -1,6 +1,5 @@
 <script lang="ts">
-	import DataTable from '$lib/components/data-table.svelte';
-	import tableData from '$lib/data/fake';
+	import DataTable from '$lib/components/file-table.svelte';
 	import { title } from '$lib/store/title';
 	import { capitalizeFirstLetter } from '$lib/utils';
 
@@ -12,5 +11,5 @@
 </script>
 
 <div>
-	<DataTable data={tableData} />
+	<DataTable data={[]} count={0} />
 </div>

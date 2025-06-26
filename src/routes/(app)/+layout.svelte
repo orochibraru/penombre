@@ -2,11 +2,13 @@
 	import Nav, { type NavItem } from '$lib/components/nav.svelte';
 	import NavUser from '$lib/components/nav-user.svelte';
 	import SiteHeader from '$lib/components/site-header.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
 	import {
 		ClockFadingIcon,
+		CloudUploadIcon,
 		FileIcon,
 		FolderIcon,
 		FolderSyncIcon,
@@ -116,6 +118,14 @@
 							</a>
 						{/snippet}
 					</Sidebar.MenuButton>
+				</Sidebar.MenuItem>
+			</Sidebar.Menu>
+			<Sidebar.Menu>
+				<Sidebar.MenuItem class="flex items-center gap-2">
+					<Button href={route('/upload')} class="w-full">
+						<span>Upload</span>
+						<CloudUploadIcon class="h-5 w-5" />
+					</Button>
 				</Sidebar.MenuItem>
 			</Sidebar.Menu>
 		</Sidebar.Header>

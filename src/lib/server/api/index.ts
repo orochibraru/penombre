@@ -2,7 +2,7 @@ import { auth } from '$lib/auth';
 import { filesRouter } from '$lib/server/api/routers/files';
 import { unauthorizedSchema } from '$lib/server/api/schemas';
 import { db } from '$lib/server/db';
-import { StorageService } from '$lib/server/storage';
+import { StorageService } from '$lib/server/services/storage';
 import { cors } from '@elysiajs/cors';
 import swagger from '@elysiajs/swagger';
 import { Log } from '@kitql/helpers';
