@@ -23,6 +23,8 @@ const betterAuth = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro
 
 			if (!session) return status(401);
 
+			storage.setUser(session.user);
+
 			return {
 				user: session.user,
 				session: session.session

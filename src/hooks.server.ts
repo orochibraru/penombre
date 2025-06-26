@@ -71,7 +71,9 @@ const postHandler: Handle = async ({ event, resolve }) => {
 
 	const storage = new StorageService();
 
-	storage.setUser(event.locals.user);
+	if (event.locals.user) {
+		storage.setUser(event.locals.user);
+	}
 
 	event.locals.storage = storage;
 

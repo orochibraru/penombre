@@ -70,3 +70,7 @@ jobs:
       - name: Compose Dry Run
         shell: bash
         run: docker compose -f compose.local.yaml up -d --wait --remove-orphans --dry-run
+
+      - name: Compose cleanup
+        shell: bash
+        run: docker compose -f compose.local.yaml down -v

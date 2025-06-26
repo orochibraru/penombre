@@ -13,6 +13,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write --log-level warn .",
+		"test": "vitest run",
 		"format:check": "prettier --check --log-level warn .",
 		"lint": "biome check ./src/**/*.ts",
 		"lint:fix": "biome check --fix ./src/**/*.ts",
@@ -54,7 +55,8 @@
 		"tsx": "^4.20.3",
 		"typescript": "^5.8.3",
 		"vite": "npm:rolldown-vite@^7.0.1",
-		"vite-plugin-kit-routes": "^1.0.2"
+		"vite-plugin-kit-routes": "^1.0.2",
+		"vitest": "^3.2.4"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.837.0",
