@@ -38,7 +38,7 @@ ENV NODE_ENV=production
 
 RUN chmod +x /app/entrypoint.sh
 
-HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "curl", "-f", "http://localhost:3000/api/v1/ping" ]
+HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "curl", "-f", "http://localhost:3000" ]
 
 EXPOSE 3000/tcp
 
