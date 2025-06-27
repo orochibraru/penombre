@@ -1,8 +1,4 @@
-import {
-	DockerComposeEnvironment,
-	type StartedDockerComposeEnvironment,
-	Wait
-} from 'testcontainers';
+import { DockerComposeEnvironment, type StartedDockerComposeEnvironment } from 'testcontainers';
 import { migrateDb } from './scripts/migrate-lib';
 
 let environment: StartedDockerComposeEnvironment;
@@ -11,9 +7,13 @@ export async function setup() {
 	const composeFilePath = './';
 	const composeFile = 'compose.test.yaml';
 	console.log('Starting containers');
-	environment = await new DockerComposeEnvironment(composeFilePath, composeFile)
-		.withWaitStrategy('postgres-1', Wait.forHealthCheck())
-		.up();
+	environment = await new DockerComposeEnvironment(composeFilePath, composeFile).up();
+
+	const db = environment.getContainer('db-1');
+	const minio = environment.getContainer('minio-1');
+
+	console.debug('DB Port', db.getFirstMappedPort());
+	console.debug('Minio Port', minio.getFirstMappedPort());
 
 	// Migrate DB
 	await migrateDb();
