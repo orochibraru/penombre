@@ -8,16 +8,10 @@ export default defineConfig({
 	test: {
 		hookTimeout: 30000,
 		setupFiles: ['./setup-tests.ts'],
-		projects: [
-			{
-				extends: './vite.config.mjs',
-				test: {
-					name: 'server',
-					environment: 'node',
-					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
-				}
-			}
-		]
+		globals: true,
+		name: 'server',
+		environment: 'node',
+		include: ['src/**/*.{test,spec}.{js,ts}'],
+		exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
 	}
 });

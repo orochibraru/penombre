@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    ports:
+      - 5434:5432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
+      - POSTGRES_DB=${POSTGRES_DB-opendrive}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ['CMD-SHELL', "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'"]
+      interval: 3s
+      timeout: 10s
+      retries: 5
+      start_period: 3s
+
+  minio:
+    image: quay.io/minio/minio
+    restart: unless-stopped
+    environment:
+      - MINIO_ROOT_USER=opendrive
+      - MINIO_ROOT_PASSWORD=opendrive
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://0.0.0.0:9000/minio/health/live']
+      retries: 5
+      timeout: 3s
+      interval: 10s
+      start_period: 2s
+    ports:
+      - 9045:9000
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+volumes:
+  postgres_data:
+    driver: local
+  minio_data:
+    driver: local

@@ -24,7 +24,7 @@ services:
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
       - BETTER_AUTH_URL=https://drive.ombrage.space
-      - MINIO_ENDPOINT=minio
+      - MINIO_URL=http://minio:9000
     networks:
       - proxy
       - opendrive

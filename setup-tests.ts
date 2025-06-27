@@ -9,7 +9,7 @@ let environment: StartedDockerComposeEnvironment;
 
 export async function setup() {
 	const composeFilePath = './';
-	const composeFile = 'compose.yaml';
+	const composeFile = 'compose.test.yaml';
 	console.log('Starting containers');
 	environment = await new DockerComposeEnvironment(composeFilePath, composeFile)
 		.withWaitStrategy('postgres-1', Wait.forHealthCheck())
@@ -22,5 +22,5 @@ export async function setup() {
 export async function teardown() {
 	console.log('Killing containers');
 
-	await environment.down();
+	await environment.down({ removeVolumes: true });
 }

@@ -34,6 +34,7 @@ export const router = new Elysia()
 						await client.send(new ListBucketsCommand());
 					} catch {
 						logger.error('Storage service is unreachable.');
+						logger.error(StorageService.getConfig());
 						throw new Error('Storage service is unreachable.');
 					}
 

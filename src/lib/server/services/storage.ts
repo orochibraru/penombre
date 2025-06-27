@@ -1,4 +1,5 @@
 import { dev } from '$app/environment';
+import { env } from '$env/dynamic/private';
 import { toSnake } from '$lib/utils';
 import {
 	type _Object,
@@ -21,13 +22,15 @@ export class StorageService extends S3Client {
 	public bucket: string;
 
 	static getConfig(): S3ClientConfig {
+		const prodUrl = env.MINIO_URL ?? 'http://minio:9000';
+		const devUrl = env.MINIO_URL ?? 'http://0.0.0.0:9000';
 		return {
 			region: 'us-east-1',
 			credentials: {
 				accessKeyId: 'opendrive',
 				secretAccessKey: 'opendrive'
 			},
-			endpoint: dev ? 'http://0.0.0.0:9000' : 'http://minio:9000'
+			endpoint: dev ? devUrl : prodUrl
 		};
 	}
 

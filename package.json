@@ -13,7 +13,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write --log-level warn .",
-		"test": "vitest run && npm run test:unit -- --run",
+		"test": "node --env-file=test.env ./node_modules/vitest/vitest.mjs run",
 		"format:check": "prettier --check --log-level warn .",
 		"lint": "biome check ./src/**/*.ts",
 		"lint:fix": "biome check --fix ./src/**/*.ts && pnpm format",
@@ -21,8 +21,7 @@
 		"db:generate": "pnpm exec @better-auth/cli generate --y --output src/lib/server/db/schema/auth.ts && drizzle-kit generate",
 		"db:migrate": "tsx scripts/migrate.ts",
 		"db:diagram": "tsx scripts/db-diagram.ts && dbml-renderer -i ./docs/db-diagram.dbml -o docs/db-diagram.svg",
-		"db:studio": "drizzle-kit studio",
-		"test:unit": "vitest"
+		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.5",
