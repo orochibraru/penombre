@@ -5,7 +5,7 @@ import { setup, teardown } from '../../../../setup-tests';
 
 const api = treaty(router);
 
-describe('API', () => {
+describe('/api', () => {
 	beforeAll(async () => {
 		await setup();
 	});
@@ -20,5 +20,11 @@ describe('API', () => {
 		expect(error).toBeNull();
 
 		expect(data).toBe('PONG!');
+	});
+
+	it('/v1/files requires auth', async () => {
+		const { error } = await api.api.v1.files.get();
+
+		expect(error).toBeTruthy();
 	});
 });
