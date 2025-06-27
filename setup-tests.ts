@@ -12,6 +12,13 @@ export async function setup() {
 		.withDatabase('opendrive')
 		.withUsername('postgres')
 		.withPassword('postgres')
+		.withHealthCheck({
+			test: ['CMD-SHELL', "sh -c 'pg_isready -U postgres -d opendrive'"],
+			interval: 3,
+			timeout: 10,
+			retries: 5,
+			startPeriod: 5
+		})
 		.start();
 
 	console.debug(postgresContainer.getConnectionUri());

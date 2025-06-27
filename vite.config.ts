@@ -6,6 +6,7 @@ import { kitRoutes } from 'vite-plugin-kit-routes';
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), kitRoutes()],
 	test: {
+		hookTimeout: 30000,
 		setupFiles: ['./setup-tests.ts'],
 		projects: [
 			{
