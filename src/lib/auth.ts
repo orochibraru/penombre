@@ -1,20 +1,19 @@
 import { env } from '$env/dynamic/private';
+import { apiBasePath } from '$lib/auth-client';
 import { StorageService } from '$lib/server/services/storage';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { createAuthMiddleware, emailOTP } from 'better-auth/plugins';
+import { createAuthMiddleware, emailOTP, openAPI } from 'better-auth/plugins';
 import { db } from './server/db/index';
 
-const storage = new StorageService();
-
 export const auth = betterAuth({
-	basePath: '/auth/api',
+	basePath: apiBasePath,
 	hooks: {
 		after: createAuthMiddleware(async (ctx) => {
 			if (ctx.path.startsWith('/callback/')) {
 				const user = ctx.context.newSession?.user;
 				if (user) {
-					storage.setUser(user);
+					const storage = new StorageService(user);
 					await storage.ensureUserBucket();
 				}
 			}
@@ -27,6 +26,9 @@ export const auth = betterAuth({
 		enabled: false
 	},
 	plugins: [
+		openAPI({
+			disableDefaultReference: true
+		}),
 		emailOTP({
 			async sendVerificationOTP() {
 				// Implement the sendVerificationOTP method to send the OTP to the user's email address

@@ -66,7 +66,6 @@
 		getSortedRowModel,
 		type ColumnDef,
 		type ColumnFiltersState,
-		type PaginationState,
 		type Row,
 		type RowSelectionState,
 		type SortingState,
@@ -94,8 +93,6 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import {
 		FlexRender,
@@ -107,10 +104,6 @@
 	import { CSS } from '@dnd-kit-svelte/utilities';
 	import { humanFileSize, prettyDate, generateUuid } from '$lib/utils';
 	import {
-		ChevronLeftIcon,
-		ChevronRightIcon,
-		ChevronsLeftIcon,
-		ChevronsRightIcon,
 		CopyIcon,
 		EllipsisVerticalIcon,
 		FileIcon,
@@ -118,34 +111,17 @@
 		FolderInputIcon,
 		GripVerticalIcon,
 		ShareIcon,
-		SquarePenIcon,
 		StarIcon,
 		TrashIcon
 	} from '@lucide/svelte';
 	import type { BucketObject } from '$lib/server/services/storage';
-	import { PaginationHelper, type PaginationParams } from '$lib/pagination';
-	import { page } from '$app/state';
 
 	type Props = {
 		data: BucketObject[];
-		count: number;
 		title?: string;
-		showPagination?: boolean;
-		paginationParams?: PaginationParams;
 	};
 
-	let {
-		title,
-		data,
-		count,
-		showPagination = true,
-		paginationParams = $bindable({ page: 1, limit: 20 })
-	}: Props = $props();
-
-	let pagination = $state<PaginationState>({
-		pageIndex: paginationParams.page - 1,
-		pageSize: paginationParams.limit
-	});
+	let { title, data }: Props = $props();
 
 	let sorting = $state<SortingState>([]);
 	let columnFilters = $state<ColumnFiltersState>([]);
@@ -168,9 +144,6 @@
 		},
 		columns,
 		state: {
-			get pagination() {
-				return pagination;
-			},
 			get sorting() {
 				return sorting;
 			},
@@ -192,13 +165,6 @@
 		getFacetedRowModel: getFacetedRowModel(),
 		getFacetedUniqueValues: getFacetedUniqueValues(),
 		getFilteredRowModel: getFilteredRowModel(),
-		onPaginationChange: (updater) => {
-			if (typeof updater === 'function') {
-				pagination = updater(pagination);
-			} else {
-				pagination = updater;
-			}
-		},
 		onSortingChange: (updater) => {
 			if (typeof updater === 'function') {
 				sorting = updater(sorting);
@@ -237,20 +203,18 @@
 			data = arrayMove(data, oldIndex, newIndex);
 		}
 	}
-
-	const paginationHelper = new PaginationHelper({ url: page.url });
 </script>
 
 <!-- Filters -->
-<div class="mb-2 flex items-center justify-between">
-	<div>
-		{#if title}
+{#if title}
+	<div class="mb-2 flex items-center justify-between">
+		<div>
 			<h3 class="text-xl font-medium">
 				{title}
 			</h3>
-		{/if}
+		</div>
 	</div>
-</div>
+{/if}
 
 <!-- Table -->
 <div class="overflow-hidden rounded-lg border">
@@ -294,89 +258,6 @@
 		</Table.Root>
 	</DndContext>
 </div>
-
-<!-- Pagination -->
-{#if showPagination}
-	<div class="mt-5 flex items-center justify-between px-4">
-		<div class="text-muted-foreground hidden flex-1 text-sm lg:flex">
-			{table.getFilteredSelectedRowModel().rows.length} of
-			{table.getFilteredRowModel().rows.length} row(s) selected.
-		</div>
-		<div class="flex w-full items-center gap-8 lg:w-fit">
-			<div class="hidden items-center gap-2 lg:flex">
-				<Label for="rows-per-page" class="text-sm font-medium">Rows per page</Label>
-				<Select.Root
-					type="single"
-					bind:value={
-						() => `${table.getState().pagination.pageSize}`, (v) => table.setPageSize(Number(v))
-					}
-					onValueChange={(e) => {
-						console.log('limit', e);
-						paginationHelper.set({ limit: Number.parseInt(e), page: paginationParams.page });
-					}}
-				>
-					<Select.Trigger size="sm" class="w-20" id="rows-per-page">
-						{table.getState().pagination.pageSize}
-					</Select.Trigger>
-					<Select.Content side="top">
-						{#each [10, 20, 30, 40, 50] as pageSize (pageSize)}
-							<Select.Item value={pageSize.toString()}>
-								{pageSize}
-							</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</div>
-			<div class="flex w-fit items-center justify-center text-sm font-medium">
-				Page {table.getState().pagination.pageIndex + 1} of
-				{paginationHelper.getPageCount({ count })}
-			</div>
-			<div class="ml-auto flex items-center gap-2 lg:ml-0">
-				<Button
-					variant="outline"
-					class="hidden h-8 w-8 p-0 lg:flex"
-					onclick={() => table.setPageIndex(0)}
-					disabled={table.getState().pagination.pageIndex === 0}
-				>
-					<span class="sr-only">Go to first page</span>
-					<ChevronsLeftIcon />
-				</Button>
-				<Button
-					variant="outline"
-					class="size-8"
-					size="icon"
-					onclick={() => table.previousPage()}
-					disabled={table.getState().pagination.pageIndex === 0}
-				>
-					<span class="sr-only">Go to previous page</span>
-					<ChevronLeftIcon />
-				</Button>
-				<Button
-					variant="outline"
-					class="size-8"
-					size="icon"
-					onclick={() => table.nextPage()}
-					disabled={table.getState().pagination.pageIndex ===
-						paginationHelper.getPageCount({ count })}
-				>
-					<span class="sr-only">Go to next page</span>
-					<ChevronRightIcon />
-				</Button>
-				<Button
-					variant="outline"
-					class="hidden size-8 lg:flex"
-					size="icon"
-					onclick={() => table.setPageIndex(table.getPageCount() - 1)}
-					disabled={table.getState().pagination.pageIndex ===
-						paginationHelper.getPageCount({ count })}
-				>
-					<span class="sr-only">Go to last page</span>
-					<ChevronsRightIcon />
-				</Button>
-			</div>
-		</div>
-	</div>
-{/if}
 
 {#snippet DataTableName({ row }: { row: Row<BucketObject> })}
 	<div class="flex items-center gap-2">

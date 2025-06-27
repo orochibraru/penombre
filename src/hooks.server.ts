@@ -4,7 +4,6 @@ import { StorageService } from '$lib/server/services/storage';
 import { green, Log } from '@kitql/helpers';
 import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { svelteKitHandler } from 'better-auth/svelte-kit';
 import NodeCache from 'node-cache';
 
 const logger = new Log('Hooks');
@@ -58,36 +57,24 @@ const preHandler: Handle = async ({ event, resolve }) => {
 };
 
 const postHandler: Handle = async ({ event, resolve }) => {
-	if (!event.locals.user) {
-		const authStatus = await auth.api.getSession({
-			headers: event.request.headers
-		});
+	const authStatus = await auth.api.getSession({
+		headers: event.request.headers
+	});
 
-		if (authStatus) {
-			const { user } = authStatus;
-			event.locals.user = user;
-		}
+	if (!authStatus) {
+		return resolve(event);
 	}
 
-	const storage = new StorageService();
+	event.locals.user = authStatus.user;
 
-	if (event.locals.user) {
-		storage.setUser(event.locals.user);
-	}
+	const storage = new StorageService(event.locals.user);
 
 	event.locals.storage = storage;
 
 	return resolve(event);
 };
 
-/**
- * Initialize the Auth Service and assign it to the app's locals
- */
-const authHandler: Handle = async ({ event, resolve }) => {
-	return svelteKitHandler({ event, resolve, auth });
-};
-
-export const handle: Handle = sequence(preHandler, authHandler, postHandler);
+export const handle: Handle = sequence(preHandler, postHandler);
 
 function kill(reason: string) {
 	if (killing) {

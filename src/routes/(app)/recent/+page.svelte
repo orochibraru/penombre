@@ -8,5 +8,5 @@
 </script>
 
 <div>
-	<DataTable data={data.files.list} count={data.files.count} showPagination={false} />
+	<DataTable data={data.files.list} />
 </div>

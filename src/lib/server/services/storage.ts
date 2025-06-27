@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/private';
+import { dev } from '$app/environment';
 import type { PaginationParams } from '$lib/pagination';
 import { toSnake } from '$lib/utils';
 import {
@@ -7,9 +7,7 @@ import {
 	ListBucketsCommand,
 	ListObjectsV2Command,
 	PutObjectCommand,
-	paginateListObjectsV2,
-	S3Client,
-	S3ServiceException
+	S3Client
 } from '@aws-sdk/client-s3';
 import { Log } from '@kitql/helpers';
 import type { User } from 'better-auth';
@@ -19,22 +17,19 @@ const logger = new Log('StorageService');
 export type BucketObject = _Object;
 
 export class StorageService extends S3Client {
-	private user?: User;
-	public bucket = 'opendrive';
+	private user: User;
+	public bucket: string;
 
-	constructor() {
-		const endpoint = env.MINIO_ENDPOINT ?? '0.0.0.0';
+	constructor(user: User) {
 		super({
 			region: 'us-east-1',
 			credentials: {
 				accessKeyId: 'opendrive',
 				secretAccessKey: 'opendrive'
 			},
-			endpoint: `http://${endpoint}:9000`
+			endpoint: dev ? 'http://0.0.0.0:9000' : 'http://minio:9000'
 		});
-	}
 
-	public setUser(user: User) {
 		this.user = user;
 		this.bucket = this.getUserBucketName();
 	}
@@ -73,17 +68,12 @@ export class StorageService extends S3Client {
 		}
 	}
 
-	public getUserBucketName(user?: User) {
-		const userInstance = this.user || user;
-		if (!userInstance) {
-			throw new Error('Please set the user first.');
-		}
-
-		return toSnake(userInstance.name);
+	public getUserBucketName() {
+		return toSnake(this.user.name);
 	}
 
 	public async upload(file: File) {
-		const browserStream = await file.stream();
+		const browserStream = file.stream();
 		const reader = browserStream.getReader();
 		const chunks: Uint8Array[] = [];
 		let done = false;
@@ -107,21 +97,7 @@ export class StorageService extends S3Client {
 		}
 	}
 
-	public async listObjects(
-		{
-			folder,
-			pagination
-		}: {
-			folder: string;
-			pagination: PaginationParams;
-		} = {
-			folder: '',
-			pagination: {
-				page: 1,
-				limit: 20
-			}
-		}
-	): Promise<{
+	public async listObjects({ folder = '' }: { folder: string }): Promise<{
 		list: BucketObject[];
 		count: number;
 	}> {
@@ -165,20 +141,14 @@ export class StorageService extends S3Client {
 			});
 
 			// Return the 5 most recent files
-			const list = sortedObjects.slice(pagination.page - 1, pagination.limit);
-			return { list, count: allObjects.length };
+			return { list: sortedObjects, count: sortedObjects.length };
 		} catch (error) {
 			console.error('Error listing and sorting S3 objects:', error);
 			throw error;
 		}
 	}
 
-	public async listRecentObjects(
-		params: PaginationParams = {
-			page: 1,
-			limit: 20
-		}
-	): Promise<{
+	public async listRecentObjects(): Promise<{
 		list: BucketObject[];
 		count: number;
 	}> {
@@ -213,8 +183,7 @@ export class StorageService extends S3Client {
 			});
 
 			// Return the 5 most recent files
-			const list = sortedObjects.slice(params.page - 1, params.limit);
-			return { list, count: allObjects.length };
+			return { list: sortedObjects, count: sortedObjects.length };
 		} catch (error) {
 			console.error('Error listing and sorting S3 objects:', error);
 			throw error;

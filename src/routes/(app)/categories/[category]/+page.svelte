@@ -11,5 +11,5 @@
 </script>
 
 <div>
-	<DataTable data={[]} count={0} />
+	<DataTable data={[]} />
 </div>

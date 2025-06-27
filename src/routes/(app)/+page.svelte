@@ -9,9 +9,5 @@
 </script>
 
 <section>
-	<FileTable
-		data={data.files.list}
-		count={data.files.count}
-		paginationParams={{ page: 1, limit: 20 }}
-	/>
+	<FileTable data={data.files.list} />
 </section>
