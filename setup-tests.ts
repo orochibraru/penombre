@@ -15,6 +15,17 @@ export async function setup() {
 	console.debug('DB Port', db.getFirstMappedPort());
 	console.debug('Minio Port', minio.getFirstMappedPort());
 
+	const dbLogs = await db.logs();
+	const minioLogs = await minio.logs();
+
+	minioLogs.on('data', (data) => {
+		console.debug(data);
+	});
+
+	dbLogs.on('data', (data) => {
+		console.debug(data);
+	});
+
 	// Migrate DB
 	await migrateDb();
 }
