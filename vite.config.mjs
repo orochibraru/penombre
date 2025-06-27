@@ -10,7 +10,7 @@ export default defineConfig({
 		setupFiles: ['./setup-tests.ts'],
 		projects: [
 			{
-				extends: './vite.config.ts',
+				extends: './vite.config.mjs',
 				test: {
 					name: 'server',
 					environment: 'node',
