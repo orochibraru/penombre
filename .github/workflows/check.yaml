@@ -9,7 +9,8 @@ on:
 env:
   PNPM_VERSION: 10.11.0
   TZ: Europe/Paris
-  DATABASE_URL: postgres://postgres:postgres@localhost:5432/opendrive
+  DATABASE_URL: postgres://postgres:postgres@localhost:5434/opendrive
+  MINIO_URL: http://0.0.0.0:9045
   OAUTH_CLIENT_ID: 123
   OAUTH_CLIENT_SECRET: acb456
   BETTER_AUTH_SECRET: very_secret_secret
@@ -17,8 +18,8 @@ env:
   NODE_VERSION: 22
 
 jobs:
-  node:
-    name: 'Node'
+  checks:
+    name: 'Checks'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,6 +53,27 @@ jobs:
 
       - name: Build the app
         run: pnpm run build
+
+  tests:
+    name: 'Tests'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run tests
         run: pnpm run test
