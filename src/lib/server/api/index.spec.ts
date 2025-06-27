@@ -5,7 +5,7 @@ import { setup, teardown } from '../../../../setup-tests';
 
 const api = treaty(router);
 
-describe('API', async () => {
+describe('API', () => {
 	beforeAll(async () => {
 		await setup();
 	});

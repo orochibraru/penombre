@@ -1,47 +1,32 @@
 import { GenericContainer, type StartedTestContainer } from 'testcontainers';
-import { migrateDb } from './scripts/migrate';
-import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { migrateDb } from './scripts/migrate-lib';
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 
-let postgresContainer: StartedTestContainer;
+let postgresContainer: StartedPostgreSqlContainer;
 let minioContainer: StartedTestContainer;
 
 export async function setup() {
-	try {
-		console.debug('Starting postgres container..');
-		postgresContainer = await new PostgreSqlContainer('postgres:17')
-			.withExposedPorts(5173)
-			.withDatabase('opendrive')
-			.withUsername('postgres')
-			.withPassword('postgres')
-			.start();
-	} catch (e) {
-		console.error(e);
-		throw e;
-	}
+	console.debug('Starting postgres container..');
+	postgresContainer = await new PostgreSqlContainer('postgres:17')
+		.withExposedPorts(5173)
+		.withDatabase('opendrive')
+		.withUsername('postgres')
+		.withPassword('postgres')
+		.start();
 
-	// // Migrate DB
-	// try {
-	//     await migrateDb()
-	// }
-	// catch (e) {
-	//     console.error("Failed to migrate db")
-	//     console.error(e)
-	//     throw e;
-	// }
+	console.debug(postgresContainer.getConnectionUri());
 
-	try {
-		console.debug('Starting minio container..');
-		minioContainer = await new GenericContainer('minio/minio')
-			.withExposedPorts(9000)
-			.withEnvironment({
-				MINIO_ROOT_USER: 'opendrive',
-				MINIO_ROOT_PASSWORD: 'opendrive'
-			})
-			.start();
-	} catch (e) {
-		console.error(e);
-		throw e;
-	}
+	// Migrate DB
+	await migrateDb();
+
+	console.debug('Starting minio container..');
+	minioContainer = await new GenericContainer('minio/minio')
+		.withExposedPorts(9000)
+		.withEnvironment({
+			MINIO_ROOT_USER: 'opendrive',
+			MINIO_ROOT_PASSWORD: 'opendrive'
+		})
+		.start();
 
 	console.debug(minioContainer.getName());
 	console.debug(postgresContainer.getName());

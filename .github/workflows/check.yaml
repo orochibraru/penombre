@@ -53,6 +53,9 @@ jobs:
       - name: Build the app
         run: pnpm run build
 
+      - name: Run tests
+        run: pnpm run test
+
   docker-dry:
     name: 'Docker dry run'
     runs-on: ubuntu-latest
