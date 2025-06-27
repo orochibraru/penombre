@@ -9,12 +9,12 @@ on:
 env:
   PNPM_VERSION: 10.11.0
   TZ: Europe/Paris
-  DATABASE_URL: postgres://postgres:postgres@localhost:5434/opendrive
+  DATABASE_URL: postgres://postgres:postgres@0.0.0.0:5434/opendrive
   MINIO_URL: http://0.0.0.0:9045
   OAUTH_CLIENT_ID: 123
   OAUTH_CLIENT_SECRET: acb456
   BETTER_AUTH_SECRET: very_secret_secret
-  BETTER_AUTH_URL: http://localhost:5173
+  BETTER_AUTH_URL: http://0.0.0.0:5173
   NODE_VERSION: 22
 
 jobs:
@@ -74,6 +74,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Sync
+        run: pnpm exec svelte-kit sync
 
       - name: Run tests
         run: pnpm run test
