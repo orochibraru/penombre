@@ -1,11 +1,20 @@
 import { router } from '$lib/server/api';
 import { treaty } from '@elysiajs/eden';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { setup, teardown } from '../../../../setup-tests';
 
 const api = treaty(router);
 
-describe('Elysia', () => {
-	it('returns a response', async () => {
+describe('API', async () => {
+	beforeAll(async () => {
+		await setup();
+	});
+
+	afterAll(async () => {
+		await teardown();
+	});
+
+	it('/v1/ping', async () => {
 		const { data, error } = await api.api.v1.ping.get();
 
 		expect(error).toBeNull();

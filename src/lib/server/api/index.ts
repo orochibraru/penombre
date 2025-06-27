@@ -9,6 +9,7 @@ import { Log } from '@kitql/helpers';
 import { sql } from 'drizzle-orm';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
+import { ListBucketsCommand, S3Client } from '@aws-sdk/client-s3';
 
 const logger = new Log('API');
 
@@ -17,6 +18,35 @@ export const router = new Elysia()
 	.use(betterAuth)
 	.group('/api/v1', (app) => {
 		return app
+			.get(
+				'/ping',
+				async () => {
+					try {
+						await db.execute(sql`select 1`);
+					} catch {
+						logger.error('Database service is unreachable.');
+						throw new Error('Database service is unreachable.');
+					}
+
+					const client = new S3Client(StorageService.getConfig());
+
+					try {
+						await client.send(new ListBucketsCommand());
+					} catch {
+						logger.error('Storage service is unreachable.');
+						throw new Error('Storage service is unreachable.');
+					}
+
+					return 'PONG!';
+				},
+				{
+					detail: {
+						tags: ['General'],
+						summary: 'Healthcheck',
+						description: 'Should respond "PONG!"'
+					}
+				}
+			)
 			.derive(async ({ status, request: { headers } }) => {
 				const session = await auth.api.getSession({
 					headers
@@ -26,34 +56,6 @@ export const router = new Elysia()
 				const storage = new StorageService(session.user);
 				return { storage };
 			})
-			.get(
-				'/ping',
-				async ({ storage }) => {
-					try {
-						await db.execute(sql`select 1`);
-					} catch {
-						logger.error('Database service is unreachable.');
-						throw new Error('Database service is unreachable.');
-					}
-
-					try {
-						await storage.listBuckets();
-					} catch {
-						logger.error('Storage service is unreachable.');
-						throw new Error('Storage service is unreachable.');
-					}
-
-					return 'PONG!';
-				},
-				{
-					auth: false,
-					detail: {
-						tags: ['General'],
-						summary: 'Healthcheck',
-						description: 'Should respond "PONG!"'
-					}
-				}
-			)
 			.use(filesRouter);
 	})
 	.use(

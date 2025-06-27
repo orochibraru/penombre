@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 
-async function main() {
+export async function migrateDb() {
 	const dbUrl = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@0.0.0.0:5432/opendrive';
 	console.log('Initializing drizzle on', dbUrl);
 	const db = drizzle(dbUrl);
@@ -18,7 +18,7 @@ async function main() {
 	}
 }
 
-void main().then(() => {
+void migrateDb().then(() => {
 	console.log('Database migrated.');
 	process.exit(0);
 });

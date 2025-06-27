@@ -1,5 +1,4 @@
 import { dev } from '$app/environment';
-import type { PaginationParams } from '$lib/pagination';
 import { toSnake } from '$lib/utils';
 import {
 	type _Object,
@@ -7,7 +6,8 @@ import {
 	ListBucketsCommand,
 	ListObjectsV2Command,
 	PutObjectCommand,
-	S3Client
+	S3Client,
+	type S3ClientConfig
 } from '@aws-sdk/client-s3';
 import { Log } from '@kitql/helpers';
 import type { User } from 'better-auth';
@@ -20,15 +20,19 @@ export class StorageService extends S3Client {
 	private user: User;
 	public bucket: string;
 
-	constructor(user: User) {
-		super({
+	static getConfig(): S3ClientConfig {
+		return {
 			region: 'us-east-1',
 			credentials: {
 				accessKeyId: 'opendrive',
 				secretAccessKey: 'opendrive'
 			},
 			endpoint: dev ? 'http://0.0.0.0:9000' : 'http://minio:9000'
-		});
+		};
+	}
+
+	constructor(user: User) {
+		super(StorageService.getConfig());
 
 		this.user = user;
 		this.bucket = this.getUserBucketName();
