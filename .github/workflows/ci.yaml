@@ -10,7 +10,7 @@ env:
   PNPM_VERSION: 10.11.0
   TZ: Europe/Paris
   DATABASE_URL: postgres://postgres:postgres@service-db:5432/opendrive
-  MINIO_URL: http://service-storage:9000
+  MINIO_URL: http://service-s3:9000
   OAUTH_CLIENT_ID: 123
   OAUTH_CLIENT_SECRET: acb456
   BETTER_AUTH_SECRET: very_secret_secret
@@ -75,7 +75,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      service-storage:
+      service-s3:
         # Docker Hub image
         image: minio/minio
         # Provide the password for postgres
@@ -85,7 +85,12 @@ jobs:
         ports:
           - 9000
         # Set health checks to wait until postgres has started
-        options: server /data
+        options: >-
+          --health-cmd "curl -f http://0.0.0.0:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          server /data
     steps:
       - uses: actions/checkout@v4
 
