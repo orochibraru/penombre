@@ -40,6 +40,8 @@ export const router = new Elysia()
 						const err = `Storage service is unreachable at ${storageConfig.endpoint}`;
 						logger.error(err);
 						logger.error(storageConfig);
+						const healthReq = await fetch(`${storageConfig.endpoint}/minio/health/live`);
+						logger.error(healthReq);
 						throw new Error(err);
 					}
 
