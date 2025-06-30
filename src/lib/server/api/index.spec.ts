@@ -1,7 +1,7 @@
 import { router } from '$lib/server/api';
 import { treaty } from '@elysiajs/eden';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { setup, teardown } from '../../../../setup-tests';
+import { setup, teardown } from '../../../../tests/setup';
 
 const api = treaty(router);
 

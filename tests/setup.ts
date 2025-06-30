@@ -3,13 +3,13 @@ import {
 	Wait,
 	type StartedDockerComposeEnvironment
 } from 'testcontainers';
-import { migrateDb } from './scripts/migrate-lib';
+import { migrateDb } from '../scripts/migrate-lib';
 
 let environment: StartedDockerComposeEnvironment;
 
 export async function setup() {
 	const composeFilePath = './';
-	const composeFile = 'compose.test.yaml';
+	const composeFile = 'compose.yaml';
 	console.log('Starting containers');
 	environment = await new DockerComposeEnvironment(composeFilePath, composeFile)
 		.withWaitStrategy('db-1', Wait.forHealthCheck())

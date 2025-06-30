@@ -7,7 +7,7 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), kitRoutes()],
 	test: {
 		hookTimeout: 30000,
-		setupFiles: ['./setup-tests.ts'],
+		setupFiles: ['./tests/setup.ts'],
 		globals: true,
 		name: 'server',
 		environment: 'node',
