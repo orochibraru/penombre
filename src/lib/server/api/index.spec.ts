@@ -7,11 +7,15 @@ const api = treaty(router);
 
 describe('/api', () => {
 	beforeAll(async () => {
-		await setup();
+		if (!process.env.CI) {
+			await setup();
+		}
 	});
 
 	afterAll(async () => {
-		await teardown();
+		if (!process.env.CI) {
+			await teardown();
+		}
 	});
 
 	it('/v1/ping', async () => {

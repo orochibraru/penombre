@@ -57,6 +57,36 @@ jobs:
   tests:
     name: 'Tests'
     runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: opendrive
+        ports:
+          - 5434:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd "pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      minio:
+        # Docker Hub image
+        image: quay.io/minio/minio
+        # Provide the password for postgres
+        env:
+          MINIO_ROOT_USER: opendrive
+          MINIO_ROOT_PASSWORD: opendrive
+        ports:
+          - 9045:9000
+        # Set health checks to wait until postgres has started
+        options: >-
+          server /data
     steps:
       - uses: actions/checkout@v4
 
@@ -79,7 +109,7 @@ jobs:
         run: pnpm exec svelte-kit sync
 
       - name: Docker network
-        run: docker network create gitea_opendrive_tests || true
+        run: pnpm run db:migrate
 
       - name: Run tests
         run: pnpm run test
