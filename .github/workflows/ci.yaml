@@ -77,7 +77,7 @@ jobs:
           --health-retries 5
       service-storage:
         # Docker Hub image
-        image: quay.io/minio/minio
+        image: minio/minio
         # Provide the password for postgres
         env:
           MINIO_ROOT_USER: opendrive
@@ -85,8 +85,7 @@ jobs:
         ports:
           - 9000
         # Set health checks to wait until postgres has started
-        options: >-
-          server /data
+        options: server /data
     steps:
       - uses: actions/checkout@v4
 

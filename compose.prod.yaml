@@ -42,7 +42,7 @@ services:
       - homepage.description=Storatge management
 
   minio:
-    image: quay.io/minio/minio
+    image: minio/minio
     restart: unless-stopped
     networks:
       - opendrive
