@@ -77,11 +77,13 @@ jobs:
           --health-retries 5
       service-s3:
         # Docker Hub image
-        image: minio/minio
+        image: lazybit/minio
         # Provide the password for postgres
         env:
           MINIO_ROOT_USER: opendrive
           MINIO_ROOT_PASSWORD: opendrive
+        volumes:
+          - minio_data:/data
         ports:
           - 9000
         # Set health checks to wait until postgres has started
@@ -90,7 +92,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          server /data
     steps:
       - uses: actions/checkout@v4
 
