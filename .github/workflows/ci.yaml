@@ -9,8 +9,8 @@ on:
 env:
   PNPM_VERSION: 10.11.0
   TZ: Europe/Paris
-  DATABASE_URL: postgres://postgres:postgres@0.0.0.0:5434/opendrive
-  MINIO_URL: http://0.0.0.0:9045
+  DATABASE_URL: postgres://postgres:postgres@service-db:5434/opendrive
+  MINIO_URL: http://service-storage:9045
   OAUTH_CLIENT_ID: 123
   OAUTH_CLIENT_SECRET: acb456
   BETTER_AUTH_SECRET: very_secret_secret
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       # Label used to access the service container
-      postgres:
+      service-db:
         # Docker Hub image
         image: postgres
         # Provide the password for postgres
@@ -75,7 +75,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      minio:
+      service-storage:
         # Docker Hub image
         image: quay.io/minio/minio
         # Provide the password for postgres
