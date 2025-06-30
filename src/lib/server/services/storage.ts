@@ -20,25 +20,29 @@ export type BucketObject = _Object;
 export class StorageService extends S3Client {
 	private user: User;
 	public bucket: string;
+	public serverUrl: string;
 
 	static getConfig(): S3ClientConfig {
 		const prodUrl = env.MINIO_URL ?? 'http://minio:9000';
 		const devUrl = env.MINIO_URL ?? 'http://0.0.0.0:9000';
+		const serverUrl = dev ? devUrl : prodUrl;
 		return {
 			region: 'us-east-1',
 			credentials: {
 				accessKeyId: 'opendrive',
 				secretAccessKey: 'opendrive'
 			},
-			endpoint: dev ? devUrl : prodUrl
+			endpoint: serverUrl
 		};
 	}
 
 	constructor(user: User) {
-		super(StorageService.getConfig());
+		const config = StorageService.getConfig();
+		super(config);
 
 		this.user = user;
 		this.bucket = this.getUserBucketName();
+		this.serverUrl = config.endpoint?.toString() ?? '';
 	}
 
 	public async createUserBucket() {

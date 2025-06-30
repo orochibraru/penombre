@@ -8,7 +8,7 @@ import { migrateDb } from '../scripts/migrate-lib';
 let environment: StartedDockerComposeEnvironment;
 
 export async function setup() {
-	const composeFilePath = './';
+	const composeFilePath = './tests/';
 	const composeFile = 'compose.yaml';
 	console.log('Starting containers');
 	environment = await new DockerComposeEnvironment(composeFilePath, composeFile)

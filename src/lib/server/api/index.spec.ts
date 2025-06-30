@@ -8,12 +8,14 @@ const api = treaty(router);
 describe('/api', () => {
 	beforeAll(async () => {
 		if (!process.env.CI) {
+			console.debug('Running in CI');
 			await setup();
 		}
 	});
 
 	afterAll(async () => {
 		if (!process.env.CI) {
+			console.debug('Running in CI');
 			await teardown();
 		}
 	});

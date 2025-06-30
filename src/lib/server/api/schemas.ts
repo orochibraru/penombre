@@ -8,6 +8,11 @@ export const unauthorizedSchema = t.Unknown({
 export const notFoundSchema = t.Unknown({ description: 'Not Found', default: 'Not Found' });
 export const deletedSchema = t.Unknown({ description: 'Deleted', default: 'Deleted' });
 
+export const pongSchema = t.String({
+	description: 'Should respond "PONG!"',
+	default: 'PONG!'
+});
+
 export const internalServerErrorSchema = t.Unknown({
 	description: 'Internal Server Error',
 	default: 'Internal Server Error'

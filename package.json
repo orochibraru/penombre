@@ -15,7 +15,7 @@
 		"format": "prettier --write --log-level warn .",
 		"format:check": "prettier --check --log-level warn .",
 		"test": "node --env-file=./tests/test.env ./node_modules/vitest/vitest.mjs run",
-		"test:ci": "CI=true node --env-file=./tests/test.ci.env ./node_modules/vitest/vitest.mjs run",
+		"test:ci": "CI=true vitest run",
 		"lint": "biome check ./src/**/*.ts",
 		"lint:fix": "biome check --fix ./src/**/*.ts && pnpm format",
 		"circular": "tsx scripts/circular.ts",

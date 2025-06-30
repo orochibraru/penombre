@@ -1,7 +1,7 @@
 import { auth } from '$lib/auth';
 import { betterAuth, OpenAPI } from '$lib/server/api/auth';
 import { filesRouter } from '$lib/server/api/routers/files';
-import { db } from '$lib/server/db';
+import { db, dbUrl } from '$lib/server/db';
 import { StorageService } from '$lib/server/services/storage';
 import { cors } from '@elysiajs/cors';
 import swagger from '@elysiajs/swagger';
@@ -10,6 +10,7 @@ import { sql } from 'drizzle-orm';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
 import { ListBucketsCommand, S3Client } from '@aws-sdk/client-s3';
+import { internalServerErrorSchema, pongSchema } from '$lib/server/api/schemas';
 
 const logger = new Log('API');
 
@@ -24,18 +25,22 @@ export const router = new Elysia()
 					try {
 						await db.execute(sql`select 1`);
 					} catch {
-						logger.error('Database service is unreachable.');
-						throw new Error('Database service is unreachable.');
+						const err = `Database service is unreachable at ${dbUrl}`;
+						logger.error(err);
+						throw new Error(err);
 					}
 
-					const client = new S3Client(StorageService.getConfig());
+					const storageConfig = StorageService.getConfig();
+
+					const client = new S3Client(storageConfig);
 
 					try {
 						await client.send(new ListBucketsCommand());
 					} catch {
-						logger.error('Storage service is unreachable.');
-						logger.error(StorageService.getConfig());
-						throw new Error('Storage service is unreachable.');
+						const err = `Storage service is unreachable at ${storageConfig.endpoint}`;
+						logger.error(err);
+						logger.error(storageConfig);
+						throw new Error(err);
 					}
 
 					return 'PONG!';
@@ -45,6 +50,10 @@ export const router = new Elysia()
 						tags: ['General'],
 						summary: 'Healthcheck',
 						description: 'Should respond "PONG!"'
+					},
+					response: {
+						200: pongSchema,
+						500: internalServerErrorSchema
 					}
 				}
 			)

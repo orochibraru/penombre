@@ -36,7 +36,7 @@ services:
       start_period: 2s
     ports:
       - 9045:9000
-    command: server /data --console-address ":9001"
+    command: server /data
     volumes:
       - minio_data:/data
 
@@ -48,3 +48,4 @@ volumes:
 
 networks:
   gitea_opendrive_tests:
+    driver: bridge
