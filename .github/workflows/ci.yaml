@@ -81,7 +81,7 @@ jobs:
 
       minio:
         # Docker Hub image
-        image: lazybit/minio
+        image: bitnami/minio
         # Provide the password for postgres
         env:
           MINIO_ROOT_USER: ${{ env.AWS_ACCESS_KEY_ID }}

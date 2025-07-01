@@ -21,7 +21,7 @@ services:
       start_period: 3s
 
   minio:
-    image: minio/minio
+    image: bitnami/minio
     restart: unless-stopped
     networks:
       - gitea_opendrive_tests
@@ -36,7 +36,6 @@ services:
       start_period: 2s
     ports:
       - 9045:9000
-    command: server /data
     volumes:
       - minio_data:/data
 

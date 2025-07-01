@@ -42,7 +42,7 @@ services:
       - homepage.description=Storatge management
 
   minio:
-    image: minio/minio
+    image: bitnami/minio
     restart: unless-stopped
     networks:
       - opendrive
@@ -57,7 +57,6 @@ services:
       start_period: 2s
     ports:
       - 9000
-    command: server /data
     volumes:
       - minio_data:/data
 

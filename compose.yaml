@@ -19,7 +19,7 @@ services:
       start_period: 3s
 
   minio:
-    image: minio/minio
+    image: bitnami/minio
     restart: unless-stopped
     environment:
       - MINIO_ROOT_USER=opendrive
@@ -32,8 +32,6 @@ services:
       start_period: 2s
     ports:
       - 9000:9000
-      - 9001:9001
-    command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
 
