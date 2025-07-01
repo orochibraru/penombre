@@ -19,12 +19,12 @@ services:
       start_period: 2s
     environment:
       - LOG_LEVEL=${LOG_LEVEL-debug}
-      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}
-      - ORIGIN=https://drive.ombrage.space
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
-      - BETTER_AUTH_URL=https://drive.ombrage.space
+      - BETTER_AUTH_URL=${URL-http://localhost:3000}
+      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}
       - MINIO_URL=http://minio:9000
+      - ORIGIN=${URL-http://localhost:3000}
     networks:
       - proxy
       - opendrive
