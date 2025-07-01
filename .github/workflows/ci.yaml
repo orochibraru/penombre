@@ -9,7 +9,7 @@ on:
 env:
   PNPM_VERSION: 10.11.0
   TZ: Europe/Paris
-  DATABASE_URL: postgres://postgres:postgres@0.0.0.0:5434/opendrive
+  DATABASE_URL: postgres://postgres:postgres@postgres:5434/opendrive
   MINIO_URL: http://0.0.0.0:9008
   OAUTH_CLIENT_ID: 123
   OAUTH_CLIENT_SECRET: acb456
