@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:17
+    image: bitnami/postgresql:17
     restart: unless-stopped
     ports:
       - 5432:5432
@@ -33,7 +33,7 @@ services:
     ports:
       - 9000:9000
     volumes:
-      - minio_data:/data
+      - minio_data:/bitnami/minio/data
 
 volumes:
   postgres_data:

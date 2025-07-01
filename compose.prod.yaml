@@ -58,10 +58,10 @@ services:
     ports:
       - 9000
     volumes:
-      - minio_data:/data
+      - minio_data:/bitnami/minio/data
 
   db:
-    image: postgres:17
+    image: bitnami/postgresql:17
     restart: unless-stopped
     networks:
       - opendrive
