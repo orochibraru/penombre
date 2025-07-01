@@ -61,7 +61,7 @@ services:
       - minio_data:/bitnami/minio/data
 
   db:
-    image: bitnami/postgresql:17
+    image: postgres
     restart: unless-stopped
     networks:
       - opendrive
