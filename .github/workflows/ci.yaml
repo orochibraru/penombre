@@ -9,7 +9,7 @@ on:
 env:
   PNPM_VERSION: 10.11.0
   TZ: Europe/Paris
-  DATABASE_URL: postgres://postgres:postgres@postgres:5434/opendrive
+  DATABASE_URL: postgres://postgres:postgres@service-db:5434/opendrive
   MINIO_URL: http://0.0.0.0:9008
   OAUTH_CLIENT_ID: 123
   OAUTH_CLIENT_SECRET: acb456
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       # Label used to access the service container
-      postgres:
+      service-db:
         # Docker Hub image
         image: postgres
         # Provide the password for postgres
@@ -70,7 +70,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_DB: opendrive
         ports:
-          - 5434:5432
+          - 5432
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd "pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}"
