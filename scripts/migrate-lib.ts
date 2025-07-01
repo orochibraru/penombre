@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 
 export async function migrateDb() {
-	const dbUrl = process.env.DATABASE_URL;
+	const dbUrl = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@0.0.0.0:5432/opendrive';
 	if (!dbUrl) {
 		throw new Error('Missing DATABASE_URL');
 	}

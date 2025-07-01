@@ -32,7 +32,8 @@ export class StorageService extends S3Client {
 				accessKeyId: 'opendrive',
 				secretAccessKey: 'opendrive'
 			},
-			endpoint: serverUrl
+			endpoint: serverUrl,
+			disableHostPrefix: true
 		};
 	}
 
@@ -49,7 +50,8 @@ export class StorageService extends S3Client {
 		logger.info('Creating user bucket...');
 
 		const cmd = new CreateBucketCommand({
-			Bucket: this.bucket
+			Bucket: this.bucket,
+			ACL: 'private'
 		});
 
 		try {
