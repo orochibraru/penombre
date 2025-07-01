@@ -1,7 +1,7 @@
 import { auth } from '$lib/auth';
 import { betterAuth, OpenAPI } from '$lib/server/api/auth';
 import { filesRouter } from '$lib/server/api/routers/files';
-import { db } from '$lib/server/db';
+import { db, dbUrl } from '$lib/server/db';
 import { StorageService } from '$lib/server/services/storage';
 import { cors } from '@elysiajs/cors';
 import swagger from '@elysiajs/swagger';
@@ -9,6 +9,8 @@ import { Log } from '@kitql/helpers';
 import { sql } from 'drizzle-orm';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
+import { ListBucketsCommand, S3Client } from '@aws-sdk/client-s3';
+import { internalServerErrorSchema, pongSchema } from '$lib/server/api/schemas';
 
 const logger = new Log('API');
 
@@ -17,6 +19,44 @@ export const router = new Elysia()
 	.use(betterAuth)
 	.group('/api/v1', (app) => {
 		return app
+			.get(
+				'/ping',
+				async () => {
+					try {
+						await db.execute(sql`select 1`);
+					} catch {
+						const err = `Database service is unreachable at ${dbUrl}`;
+						logger.error(err);
+						throw new Error(err);
+					}
+
+					const storageConfig = StorageService.getConfig();
+
+					const client = new S3Client(storageConfig);
+
+					try {
+						await client.send(new ListBucketsCommand());
+					} catch {
+						const err = `Storage service is unreachable at ${storageConfig.endpoint}`;
+						logger.error(err);
+						logger.error(storageConfig);
+						throw new Error(err);
+					}
+
+					return 'PONG!';
+				},
+				{
+					detail: {
+						tags: ['General'],
+						summary: 'Healthcheck',
+						description: 'Should respond "PONG!"'
+					},
+					response: {
+						200: pongSchema,
+						500: internalServerErrorSchema
+					}
+				}
+			)
 			.derive(async ({ status, request: { headers } }) => {
 				const session = await auth.api.getSession({
 					headers
@@ -26,34 +66,6 @@ export const router = new Elysia()
 				const storage = new StorageService(session.user);
 				return { storage };
 			})
-			.get(
-				'/ping',
-				async ({ storage }) => {
-					try {
-						await db.execute(sql`select 1`);
-					} catch {
-						logger.error('Database service is unreachable.');
-						throw new Error('Database service is unreachable.');
-					}
-
-					try {
-						await storage.listBuckets();
-					} catch {
-						logger.error('Storage service is unreachable.');
-						throw new Error('Storage service is unreachable.');
-					}
-
-					return 'PONG!';
-				},
-				{
-					auth: false,
-					detail: {
-						tags: ['General'],
-						summary: 'Healthcheck',
-						description: 'Should respond "PONG!"'
-					}
-				}
-			)
 			.use(filesRouter);
 	})
 	.use(

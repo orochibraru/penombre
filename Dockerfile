@@ -16,7 +16,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
 
 COPY . .
 
-
 RUN --mount=type=cache,id=vitebuild,target=/node_modules/.vite pnpm run build
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prune --production --ignore-scripts

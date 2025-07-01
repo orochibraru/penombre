@@ -1,5 +1,5 @@
 import { dev } from '$app/environment';
-import type { PaginationParams } from '$lib/pagination';
+import { env } from '$env/dynamic/private';
 import { toSnake } from '$lib/utils';
 import {
 	type _Object,
@@ -7,7 +7,8 @@ import {
 	ListBucketsCommand,
 	ListObjectsV2Command,
 	PutObjectCommand,
-	S3Client
+	S3Client,
+	type S3ClientConfig
 } from '@aws-sdk/client-s3';
 import { Log } from '@kitql/helpers';
 import type { User } from 'better-auth';
@@ -19,19 +20,29 @@ export type BucketObject = _Object;
 export class StorageService extends S3Client {
 	private user: User;
 	public bucket: string;
+	public serverUrl: string;
 
-	constructor(user: User) {
-		super({
+	static getConfig(): S3ClientConfig {
+		const prodUrl = env.MINIO_URL ?? 'http://minio:9000';
+		const devUrl = env.MINIO_URL ?? 'http://0.0.0.0:9000';
+		const serverUrl = dev ? devUrl : prodUrl;
+		return {
 			region: 'us-east-1',
 			credentials: {
 				accessKeyId: 'opendrive',
 				secretAccessKey: 'opendrive'
 			},
-			endpoint: dev ? 'http://0.0.0.0:9000' : 'http://minio:9000'
-		});
+			endpoint: serverUrl
+		};
+	}
+
+	constructor(user: User) {
+		const config = StorageService.getConfig();
+		super(config);
 
 		this.user = user;
 		this.bucket = this.getUserBucketName();
+		this.serverUrl = config.endpoint?.toString() ?? '';
 	}
 
 	public async createUserBucket() {
