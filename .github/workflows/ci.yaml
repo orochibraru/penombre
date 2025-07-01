@@ -96,6 +96,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ping minio
+        run: |
+          apt update
+          apt install curl -y
+          curl -vf http://service-minio:9000/minio/health/live
+
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
