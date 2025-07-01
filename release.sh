@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-pnpm exec changelogen@latest --release
+pnpm exec changelogen --release
