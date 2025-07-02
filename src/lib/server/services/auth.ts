@@ -1,13 +1,13 @@
 import { env } from '$env/dynamic/private';
-import { apiBasePath } from '$lib/auth-client';
+import { authBasePath } from '$lib/client/auth';
 import { StorageService } from '$lib/server/services/storage';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware, emailOTP, openAPI } from 'better-auth/plugins';
-import { db } from './server/db/index';
+import { db } from '../db/index';
 
 export const auth = betterAuth({
-	basePath: apiBasePath,
+	basePath: authBasePath,
 	hooks: {
 		after: createAuthMiddleware(async (ctx) => {
 			if (ctx.path.startsWith('/callback/')) {

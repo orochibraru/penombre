@@ -1,4 +1,4 @@
-import { auth } from '$lib/auth';
+import { auth } from '$lib/server/services/auth';
 import { route } from '$lib/ROUTES';
 import { redirect } from '@sveltejs/kit';
 

@@ -8,13 +8,20 @@
 		type FileDropZoneProps
 	} from '$lib/components/ui/file-drop-zone';
 	import { route } from '$lib/ROUTES';
-	import { XIcon } from '@lucide/svelte';
+	import { FileWarningIcon, XIcon } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { filesProxy, superForm } from 'sveltekit-superforms';
 	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import { schema } from './schema';
+	import { page } from '$app/state';
+	import { title } from '$lib/store/title';
+	import type { CustomReq } from './model';
+	import { cn } from '$lib/utils';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 
 	let { data } = $props();
+
+	$title = 'Upload';
 
 	const superform = superForm(data.form, {
 		validators: valibotClient(schema)
@@ -24,8 +31,23 @@
 
 	const loading = $derived($submitting || $delayed);
 
+	const requests: CustomReq[] = $state([]);
+
 	message.subscribe((message) => {
 		if (message) {
+			if (message.length > 0) {
+				// is array
+				for (const msg of message) {
+					requests.push(msg);
+				}
+			}
+			if (page.status > 204) {
+				toast.error(message.text, {
+					description: 'Failed to upload some attachments.'
+				});
+				return;
+			}
+
 			toast.success(message.text, {
 				description: 'Your attachments were uploaded.'
 			});
@@ -60,21 +82,51 @@
 			<input name="attachments" type="file" bind:files={$files} class="hidden" />
 			<div class="mb-5 flex flex-col gap-3">
 				{#each Array.from($files) as file, i (file.name)}
-					<div class="flex place-items-center justify-between gap-3 rounded-xl border p-3">
-						<div class="flex flex-col">
-							<span class="text-sm">{file.name}</span>
-							<span class="text-muted-foreground text-xs">{displaySize(file.size)}</span>
-						</div>
-						<Button
-							variant="outline"
-							size="icon"
-							onclick={() => {
-								// we use set instead of an assignment since it accepts a File[]
-								files.set([...Array.from($files).slice(0, i), ...Array.from($files).slice(i + 1)]);
-							}}
+					{@const hasError = requests.find((req) => req.file === file.name && req.error === true)}
+					<div>
+						<div
+							class={cn(
+								'flex place-items-center justify-between gap-3 rounded-xl border p-3',
+								hasError ? 'border-red-600' : ''
+							)}
 						>
-							<XIcon />
-						</Button>
+							<div class="flex flex-col">
+								<div class="flex items-center gap-2">
+									<span class="text-sm">{file.name}</span>
+									{#if hasError}
+										<p class="text-xs text-red-600">Failed to upload.</p>
+									{/if}
+								</div>
+								<span class="text-muted-foreground text-xs">{displaySize(file.size)}</span>
+							</div>
+							<div class="flex items-center gap-2">
+								{#if hasError}
+									<Tooltip.Provider>
+										<Tooltip.Root>
+											<Tooltip.Trigger>
+												<FileWarningIcon class="text-red-600" />
+											</Tooltip.Trigger>
+											<Tooltip.Content>
+												<p>Failed to upload this item.</p>
+											</Tooltip.Content>
+										</Tooltip.Root>
+									</Tooltip.Provider>
+								{/if}
+								<Button
+									variant="outline"
+									size="icon"
+									onclick={() => {
+										// we use set instead of an assignment since it accepts a File[]
+										files.set([
+											...Array.from($files).slice(0, i),
+											...Array.from($files).slice(i + 1)
+										]);
+									}}
+								>
+									<XIcon />
+								</Button>
+							</div>
+						</div>
 					</div>
 				{/each}
 			</div>

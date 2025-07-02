@@ -1,8 +1,8 @@
-import { auth } from '$lib/auth';
+import { auth } from '$lib/server/services/auth';
 import { route } from '$lib/ROUTES';
 import { redirect } from '@sveltejs/kit';
 
-export const load = async ({ request }) => {
+export const load = async ({ request, locals }) => {
 	const authStatus = await auth.api.getSession({
 		headers: request.headers
 	});
@@ -15,6 +15,7 @@ export const load = async ({ request }) => {
 
 	return {
 		user,
-		session
+		session,
+		token: locals.authCookie
 	};
 };

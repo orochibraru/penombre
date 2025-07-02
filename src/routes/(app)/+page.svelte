@@ -9,5 +9,5 @@
 </script>
 
 <section>
-	<FileTable data={data.files.list} />
+	<FileTable data={data.files} />
 </section>

@@ -1,18 +1,18 @@
-import { auth } from '$lib/auth';
+import { auth } from '$lib/server/services/auth';
 import { authMacro, OpenAPI } from '$lib/server/api/auth';
 import { filesRouter } from '$lib/server/api/routers/storage';
 import { db, dbUrl } from '$lib/server/db';
 import { StorageService } from '$lib/server/services/storage';
 import { cors } from '@elysiajs/cors';
 import swagger from '@elysiajs/swagger';
-import { Log } from '@kitql/helpers';
+import { Logger } from '$lib/logger';
 import { sql } from 'drizzle-orm';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
 import { ListBucketsCommand, S3Client } from '@aws-sdk/client-s3';
 import { internalServerErrorSchema, pongSchema } from '$lib/server/api/schemas';
 
-const logger = new Log('API');
+const logger = new Logger('API');
 
 export const router = new Elysia()
 	.use(cors())

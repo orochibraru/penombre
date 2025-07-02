@@ -90,6 +90,7 @@
 		"nanoid": "^5.1.5",
 		"node-cache": "^5.1.2",
 		"paneforge": "1.0.0",
+		"picocolors": "^1.1.1",
 		"postgres": "^3.4.7",
 		"svelte-sonner": "^1.0.5",
 		"sveltekit-superforms": "^2.27.1",

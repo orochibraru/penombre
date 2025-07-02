@@ -8,5 +8,5 @@
 </script>
 
 <div>
-	<DataTable data={data.files.list} />
+	<DataTable data={data.files} />
 </div>

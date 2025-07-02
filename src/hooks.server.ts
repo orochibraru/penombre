@@ -1,18 +1,16 @@
 import { env } from '$env/dynamic/private';
-import { auth } from '$lib/auth';
-import { StorageService } from '$lib/server/services/storage';
-import { green, Log } from '@kitql/helpers';
+import { auth } from '$lib/server/services/auth';
 import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import NodeCache from 'node-cache';
+import { Logger } from '$lib/logger';
 
-const logger = new Log('Hooks');
+const logger = new Logger('Hooks');
 let killing = false;
 
 let cache: NodeCache | null;
 
 export const init = () => {
-	logger.info('Initializing cache...');
 	cache = new NodeCache();
 };
 
@@ -50,13 +48,8 @@ const preHandler: Handle = async ({ event, resolve }) => {
 		return error(500, 'Failed to init cache');
 	}
 	event.locals.cache = cache;
-	logger.info(`${green(event.request.method)} ${event.url.href}`);
 	event.locals.cacheBypass = !!env.CACHE_BYPASS;
 
-	return resolve(event);
-};
-
-const postHandler: Handle = async ({ event, resolve }) => {
 	const authStatus = await auth.api.getSession({
 		headers: event.request.headers
 	});
@@ -67,14 +60,42 @@ const postHandler: Handle = async ({ event, resolve }) => {
 
 	event.locals.user = authStatus.user;
 
-	const storage = new StorageService(event.locals.user);
+	event.locals.authCookie = event.request.headers.get('cookie') ?? '';
 
-	event.locals.storage = storage;
+	event.locals.logger = new Logger('Pages');
 
 	return resolve(event);
 };
 
-export const handle: Handle = sequence(preHandler, postHandler);
+const logHandler: Handle = async ({ event, resolve }) => {
+	const startTime: Date = new Date();
+
+	logger.http({
+		req: event.request,
+		res: new Response(),
+		duration: 0,
+		path: event.url.pathname,
+		type: 'pre'
+	});
+
+	const resolution = await resolve(event);
+
+	const endTime: Date = new Date();
+
+	const duration: number = endTime.getTime() - startTime.getTime();
+
+	logger.http({
+		req: event.request,
+		res: resolution,
+		duration,
+		path: event.url.pathname,
+		type: 'post'
+	});
+
+	return resolution;
+};
+
+export const handle: Handle = sequence(logHandler, preHandler);
 
 function kill(reason: string) {
 	if (killing) {

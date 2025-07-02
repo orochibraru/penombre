@@ -1,5 +1,5 @@
-import { auth } from '$lib/auth';
-import { apiBasePath } from '$lib/auth-client';
+import { auth } from '$lib/server/services/auth';
+import { authBasePath } from '$lib/client/auth';
 import Elysia from 'elysia';
 
 export const authMacro = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro({
@@ -25,7 +25,7 @@ const getSchema = async () => {
 };
 
 export const OpenAPI = {
-	getPaths: (prefix = apiBasePath) =>
+	getPaths: (prefix = authBasePath) =>
 		getSchema().then(({ paths }) => {
 			const reference: typeof paths = Object.create(null);
 

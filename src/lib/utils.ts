@@ -63,7 +63,7 @@ export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
 
 export function prettyDate(date: Date) {
-	return date.toLocaleString(navigator.language, {
+	return new Date(date).toLocaleString(navigator.language, {
 		day: '2-digit',
 		month: 'short',
 		year: 'numeric',
@@ -87,6 +87,9 @@ export function generateUuid() {
 }
 
 export function humanFileSize(bytes: number, si = false, dp = 1) {
+	if (bytes === 0) {
+		return null;
+	}
 	const thresh = si ? 1000 : 1024;
 
 	if (Math.abs(bytes) < thresh) {

@@ -7,5 +7,5 @@
 </script>
 
 <div>
-	<DataTable data={[]} />
+	<DataTable data={{ count: 0, list: [] }} />
 </div>

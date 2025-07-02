@@ -5,6 +5,11 @@ export const unauthorizedSchema = t.Unknown({
 	default: 'Unauthorized'
 });
 
+export const createdSchema = t.Unknown({
+	description: 'Created',
+	default: 'Created'
+});
+
 export const notFoundSchema = t.Unknown({ description: 'Not Found', default: 'Not Found' });
 export const deletedSchema = t.Unknown({ description: 'Deleted', default: 'Deleted' });
 
