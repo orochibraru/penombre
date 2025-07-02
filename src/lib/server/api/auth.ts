@@ -2,7 +2,7 @@ import { auth } from '$lib/auth';
 import { apiBasePath } from '$lib/auth-client';
 import Elysia from 'elysia';
 
-export const betterAuth = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro({
+export const authMacro = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro({
 	auth: {
 		async resolve({ status, request: { headers } }) {
 			const session = await auth.api.getSession({

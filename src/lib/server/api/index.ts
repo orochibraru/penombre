@@ -1,6 +1,6 @@
 import { auth } from '$lib/auth';
-import { betterAuth, OpenAPI } from '$lib/server/api/auth';
-import { filesRouter } from '$lib/server/api/routers/files';
+import { authMacro, OpenAPI } from '$lib/server/api/auth';
+import { filesRouter } from '$lib/server/api/routers/storage';
 import { db, dbUrl } from '$lib/server/db';
 import { StorageService } from '$lib/server/services/storage';
 import { cors } from '@elysiajs/cors';
@@ -16,7 +16,7 @@ const logger = new Log('API');
 
 export const router = new Elysia()
 	.use(cors())
-	.use(betterAuth)
+	.use(authMacro)
 	.group('/api/v1', (app) => {
 		return app
 			.get(
@@ -84,9 +84,9 @@ export const router = new Elysia()
 					version: packageJson.version
 				},
 				tags: [
-					{ name: 'General', description: 'Utility endpoints' },
-					{ name: 'Files', description: 'File Operations Endpoints' },
-					{ name: 'Better Auth', description: 'Auth Endpoints' }
+					{ name: 'General', description: 'Utility' },
+					{ name: 'Storage', description: 'Storage Operations' },
+					{ name: 'Better Auth', description: 'Auth' }
 				],
 				components: {
 					...(await OpenAPI.components),

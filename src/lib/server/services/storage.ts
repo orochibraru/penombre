@@ -32,6 +32,7 @@ export class StorageService extends S3Client {
 				accessKeyId: 'opendrive',
 				secretAccessKey: 'opendrive'
 			},
+			forcePathStyle: true,
 			endpoint: serverUrl,
 			disableHostPrefix: true
 		};
@@ -99,7 +100,11 @@ export class StorageService extends S3Client {
 		const cmd = new PutObjectCommand({
 			Bucket: this.bucket,
 			Body: contents,
-			Key: file.name
+			Key: file.name,
+			ContentType: file.type,
+			Metadata: {
+				'Content-Type': file.type
+			}
 		});
 
 		try {
