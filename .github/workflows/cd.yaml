@@ -13,7 +13,7 @@ env:
   STACK: opendrive
   URL: https://drive.ombrage.space
   REGISTRY: git.ombrage.space
-  IMAGE: salokain/opendrive
+  IMAGE: opendrive/opendrive
   LOG_LEVEL: debug
   TAG: ${{ github.sha }}
   TZ: Europe/Paris

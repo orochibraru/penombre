@@ -1,6 +1,6 @@
 services:
   app:
-    image: git.ombrage.space/salokain/opendrive:${TAG-latest}
+    image: git.ombrage.space/opendrive/opendrive:${TAG-latest}
     ports:
       - 3000
     extra_hosts:

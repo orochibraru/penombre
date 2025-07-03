@@ -80,7 +80,7 @@
 
 ## v0.0.4
 
-[compare changes](https://git.ombrage.space/salokain/opendrive/compare/v0.0.3...v0.0.4)
+[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v0.0.3...v0.0.4)
 
 ### 🩹 Fixes
 
