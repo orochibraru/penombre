@@ -54,12 +54,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - shell: bash
-        name: Create ssh directory
-        run: mkdir --parents $HOME/.ssh
-
-      - shell: bash
         name: Setup SSH
         run: |
+          mkdir --parents $HOME/.ssh
           echo "Initializing SSH Agent"
           if [ -z "$SSH_AGENT_PID" ]; then
             eval $(ssh-agent)
@@ -94,32 +91,11 @@ jobs:
 
       - name: Pull the latest images
         shell: bash
-        run: docker compose pull
-
-      - name: Dry Run Compose
-        shell: bash
-        run: docker compose up -d --wait --remove-orphans --dry-run
-
-      - shell: bash
-        name: Copy stack
-        run: |
-          apt update
-          apt install -y rsync
-          docker compose -f ${{ env.COMPOSE_FILE }} config > compose.yaml
-          mkdir -p /home/${{ secrets.SSH_USERNAME}}/stacks/${{ env.STACK }}
-          rsync --mkpath -avzh -e "ssh -p ${{ secrets.SSH_PORT }}" --progress "compose.yaml" "${{ secrets.SSH_USERNAME}}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USERNAME}}/stacks/${{ env.STACK }}/compose.yaml"
-
-      - name: Pull the latest images
-        shell: bash
-        run: docker --context "${{ env.CONTEXT }}" compose pull
-
-      - name: Dry Run Compose
-        shell: bash
-        run: docker --context "${{ env.CONTEXT }}" compose up -d --wait --remove-orphans --dry-run
+        run: docker --context "${{ env.CONTEXT }}" compose -f compose.prod.yaml pull
 
       - shell: bash
         name: Start the Containers
-        run: docker --context "${{ env.CONTEXT }}" compose up -d --wait --remove-orphans
+        run: docker --context "${{ env.CONTEXT }}" stack deploy --detach=false --compose-file compose.prod.yaml opendrive
 
       - shell: bash
         name: Cleanup
