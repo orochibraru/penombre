@@ -16,7 +16,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
 
 COPY . .
 
-RUN --mount=type=cache,id=vitebuild-$BUILDPLATFORM-opendrive,target=/node_modules/.vite pnpm run build
+RUN --mount=type=cache,id=vitebuild-opendrive,target=/node_modules/.vite pnpm run build
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prune --production --ignore-scripts
 
