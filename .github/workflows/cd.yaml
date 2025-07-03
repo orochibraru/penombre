@@ -12,6 +12,8 @@ env:
   COMPOSE_FILE: compose.prod.yaml
   STACK: opendrive
   URL: https://drive.ombrage.space
+  REGISTRY: git.ombrage.space
+  IMAGE: salokain/opendrive
   LOG_LEVEL: debug
   TAG: ${{ github.sha }}
   TZ: Europe/Paris
@@ -43,8 +45,11 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - shell: bash
-        run: docker buildx bake --push
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${REGISTRY}/${IMAGE}:${TAG},${REGISTRY}/${IMAGE}:latest
 
   deploy:
     runs-on: ubuntu-latest

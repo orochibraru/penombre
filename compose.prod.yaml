@@ -1,6 +1,6 @@
 services:
   app:
-    image: git.ombrage.space/salokain/opendrive/app:${TAG-latest}
+    image: git.ombrage.space/salokain/opendrive:${TAG-latest}
     ports:
       - 3000
     extra_hosts:
@@ -29,11 +29,6 @@ services:
         - traefik.http.routers.opendrive-app.tls.certResolver=letsencrypt
         - traefik.http.routers.opendrive-app.middlewares=traefik-forward-auth
         - traefik.http.services.opendrive-app.loadbalancer.server.port=3000
-        - homepage.group=Media
-        - homepage.name=Opendrive
-        - homepage.icon=nextcloud.svg
-        - homepage.href=https://drive.ombrage.space
-        - homepage.description=Storage management
 
   minio:
     image: bitnami/minio
