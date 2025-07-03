@@ -49,6 +49,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
+          platform: linux/arm64,linux/amd64
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.TAG }},${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
 
   deploy:
