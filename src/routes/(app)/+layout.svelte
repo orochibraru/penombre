@@ -1,8 +1,13 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
+	import { bridge } from '$lib/client/api';
 	import Nav, { type NavItem } from '$lib/components/nav.svelte';
 	import NavUser from '$lib/components/nav-user.svelte';
 	import SiteHeader from '$lib/components/site-header.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Input } from '$lib/components/ui/input';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
@@ -22,12 +27,7 @@
 		UsersIcon
 	} from '@lucide/svelte';
 	import InnerShadowTopIcon from '@tabler/icons-svelte/icons/inner-shadow-top';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
-	import { bridge } from '$lib/client/api';
-	import { page } from '$app/state';
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
 
 	const { children, data } = $props();
 

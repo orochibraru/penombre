@@ -1,16 +1,16 @@
-import { auth } from '$lib/server/services/auth';
+import { Logger } from '$lib/logger';
 import { authMacro, OpenAPI } from '$lib/server/api/auth';
 import { filesRouter } from '$lib/server/api/routers/storage';
+import { internalServerErrorSchema, pongSchema } from '$lib/server/api/schemas';
 import { db, dbUrl } from '$lib/server/db';
+import { auth } from '$lib/server/services/auth';
 import { StorageService } from '$lib/server/services/storage';
+import { ListBucketsCommand, S3Client } from '@aws-sdk/client-s3';
 import { cors } from '@elysiajs/cors';
 import swagger from '@elysiajs/swagger';
-import { Logger } from '$lib/logger';
 import { sql } from 'drizzle-orm';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
-import { ListBucketsCommand, S3Client } from '@aws-sdk/client-s3';
-import { internalServerErrorSchema, pongSchema } from '$lib/server/api/schemas';
 
 const logger = new Logger('API');
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import PageTitle from '$lib/components/page-title.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import {
@@ -7,17 +8,16 @@
 		FileDropZone,
 		type FileDropZoneProps
 	} from '$lib/components/ui/file-drop-zone';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { route } from '$lib/ROUTES';
+	import { title } from '$lib/store/title';
+	import { cn } from '$lib/utils';
 	import { FileWarningIcon, XIcon } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { filesProxy, superForm } from 'sveltekit-superforms';
 	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import { schema } from './schema';
-	import { page } from '$app/state';
-	import { title } from '$lib/store/title';
 	import type { CustomReq } from './model';
-	import { cn } from '$lib/utils';
-	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { schema } from './schema';
 
 	let { data } = $props();
 

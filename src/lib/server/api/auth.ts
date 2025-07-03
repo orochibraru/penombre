@@ -1,5 +1,5 @@
-import { auth } from '$lib/server/services/auth';
 import { authBasePath } from '$lib/client/auth';
+import { auth } from '$lib/server/services/auth';
 import Elysia from 'elysia';
 
 export const authMacro = new Elysia({ name: 'better-auth' }).mount(auth.handler).macro({

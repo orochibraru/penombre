@@ -5,7 +5,7 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { getPayloadConfigFromPayload, type TooltipPayload, useChart } from './chart-utils.js';
 
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	// biome-ignore lint/suspicious/noExplicitAny: this is a formatter
 	function defaultFormatter(value: any, _payload: TooltipPayload[]) {
 		return `${value}`;
 	}
@@ -32,7 +32,7 @@
 		labelKey?: string;
 		hideIndicator?: boolean;
 		labelClassName?: string;
-		labelFormatter?: // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		labelFormatter?: // biome-ignore lint/suspicious/noExplicitAny: this is still a formatter
 		((value: any, payload: TooltipPayload[]) => string | number | Snippet) | null;
 		formatter?: Snippet<
 			[

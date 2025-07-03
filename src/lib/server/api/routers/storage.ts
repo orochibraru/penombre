@@ -1,3 +1,4 @@
+import { Logger } from '$lib/logger';
 import { authMacro } from '$lib/server/api/auth';
 import {
 	createdSchema,
@@ -11,7 +12,6 @@ import {
 	S3ObjectSchema,
 	StorageService
 } from '$lib/server/services/storage';
-import { Logger } from '$lib/logger';
 import { Elysia, t } from 'elysia';
 
 const logger = new Logger('FilesRouter');

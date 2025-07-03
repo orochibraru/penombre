@@ -1,8 +1,10 @@
 <script lang="ts">
-	import * as Table from '$lib/components/ui/table/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as ContextMenu from '$lib/components/ui/context-menu';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import * as Table from '$lib/components/ui/table/index.js';
+	import type { ObjectList } from '$lib/server/services/storage';
 	import { humanFileSize, prettyDate } from '$lib/utils';
 	import {
 		CopyIcon,
@@ -10,13 +12,11 @@
 		FileIcon,
 		FolderIcon,
 		FolderInputIcon,
+		type Icon as IconType,
 		ShareIcon,
 		StarIcon,
-		TrashIcon,
-		type Icon as IconType
+		TrashIcon
 	} from '@lucide/svelte';
-	import type { ObjectList } from '$lib/server/services/storage';
-	import * as ContextMenu from '$lib/components/ui/context-menu';
 
 	type Props = {
 		data: ObjectList;

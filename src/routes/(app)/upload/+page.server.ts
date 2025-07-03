@@ -1,8 +1,8 @@
+import { bridge } from '$lib/client/api';
 import { fail, message, setError, superValidate } from 'sveltekit-superforms';
 import { valibot } from 'sveltekit-superforms/adapters';
-import { schema } from './schema';
-import { bridge } from '$lib/client/api';
 import type { CustomReq } from './model';
+import { schema } from './schema';
 
 export const load = async () => {
 	return {

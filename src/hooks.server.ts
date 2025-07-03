@@ -1,9 +1,9 @@
 import { env } from '$env/dynamic/private';
+import { Logger } from '$lib/logger';
 import { auth } from '$lib/server/services/auth';
 import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import NodeCache from 'node-cache';
-import { Logger } from '$lib/logger';
 
 const logger = new Logger('Hooks');
 let killing = false;

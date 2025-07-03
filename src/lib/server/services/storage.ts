@@ -1,5 +1,6 @@
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
+import { Logger } from '$lib/logger';
 import { toSnake } from '$lib/utils';
 import {
 	CreateBucketCommand,
@@ -9,7 +10,6 @@ import {
 	S3Client,
 	type S3ClientConfig
 } from '@aws-sdk/client-s3';
-import { Logger } from '$lib/logger';
 import type { User } from 'better-auth';
 import { type Static, t } from 'elysia';
 

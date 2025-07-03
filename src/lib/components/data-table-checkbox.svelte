@@ -4,7 +4,7 @@
 
 	let {
 		checked = false,
-		// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+		// biome-ignore lint/suspicious/noAssignInExpressions: issoké
 		onCheckedChange = (v) => (checked = v),
 		...restProps
 	}: ComponentProps<typeof Checkbox> = $props();
