@@ -7,5 +7,5 @@ await esbuild.build({
 	target: 'node18',
 	outfile: 'dist/migrate.js',
 	format: 'esm',
-	external: ['pg-native']
+	external: ['drizzle-orm/postgres-js']
 });
