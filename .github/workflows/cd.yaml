@@ -98,7 +98,7 @@ jobs:
 
       - shell: bash
         name: Start the Containers
-        run: docker --context "${{ env.CONTEXT }}" stack deploy --detach=false --compose-file compose.prod.yaml opendrive
+        run: docker --context "${{ env.CONTEXT }}" stack deploy --with-registry-auth --detach=false --compose-file compose.prod.yaml opendrive
 
       - shell: bash
         name: Cleanup
