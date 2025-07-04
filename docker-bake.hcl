@@ -1,4 +1,4 @@
-variable "REGISTRY" {
+variable "IMAGE" {
   default = "git.ombrage.space/opendrive/opendrive"
 }
 
@@ -18,7 +18,7 @@ group "default" {
 target "app" {
   context    = "."
   dockerfile = "./Dockerfile"
-  tags       = ["${REGISTRY}:latest","${REGISTRY}:${TAG}"]
+  tags       = ["${IMAGE}:latest","${IMAGE}:${TAG}"]
   platforms = ["linux/amd64", "linux/arm64/v8"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]
