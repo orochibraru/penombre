@@ -19,7 +19,7 @@ target "app" {
   context    = "."
   dockerfile = "./Dockerfile"
   tags       = ["${REGISTRY}:latest","${REGISTRY}:${TAG}"]
-  platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm"]
+  platforms = ["linux/amd64", "linux/arm64/v8"]
   cache-from = ["type=gha,scope=app"]
   cache-to = ["type=gha,mode=max,scope=app"]
 }
