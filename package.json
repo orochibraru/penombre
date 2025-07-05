@@ -1,7 +1,7 @@
 {
 	"name": "opendrive",
 	"private": true,
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"type": "module",
 	"packageManager": "pnpm@10.11.0",
 	"scripts": {

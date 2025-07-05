@@ -1,5 +1,99 @@
 # Changelog
 
+## v0.0.6
+
+### 🚀 Enhancements
+
+- Init (81dbd85)
+- Template dashboard (b64b000)
+- Auth pages (8e991a2)
+- Accent color (eca58a1)
+- Darkmode (b1c3b9d)
+- Api (cdd43eb)
+- Auth (5383bb3)
+- Deploy sequence (7c46cc1)
+- Better sidebar (cd49be0)
+- Gitea secret (008efe0)
+- Db url (9b96d9e)
+- Ssh ci verbose (98b1ad7)
+- Page titles (288d409)
+- Traefik oauth (163925d)
+- Minio base (#2)
+- Logs on dry run exit (56616ec)
+- New build tool (78c77cf)
+- Disabled hostname prefix on s3 (#33)
+- Swarm (#37)
+- Platform (dd3b100)
+- More cpu archs (68e3aab)
+
+### 🔥 Performance
+
+- Format before lint (eb35962)
+
+### 🩹 Fixes
+
+- All ts/lint issues (a033f58)
+- Ci (13645cb)
+- Nav (5b79848)
+- Prettier ignore (510ccd1)
+- Api paths (0d91378)
+- Registry url (77cab64)
+- Bake config registry (c5d252e)
+- Package token (a0e6740)
+- Deploy vars (d3ed520)
+- Dynamic oauth vars env (c20545d)
+- Db url (b38ae19)
+- Db url (4e82011)
+- Ssh stage (39e3228)
+- Compose image (0405176)
+- Check action (2f62db2)
+- Formatting (cee2105)
+- Prod deps & env vars (a0c7bfb)
+- Docker apk deps (83b42c3)
+- Lint staged & login errors + api render (add7538)
+- Package name (a6c5264)
+- Nav links (ec2d40c)
+- Db schema (3cb105d)
+- Lockfile (4892054)
+- Types (c2d218f)
+- Db schema (74d44a9)
+- Db url in ci & healtcheck (bd01c56)
+- Bake config (815fd76)
+- Dry-run flow (b3d0b7a)
+- Build (246d4c6)
+- Vite cache key (f7a8c04)
+- Lint (69ef027)
+- Env vars (6628bd6)
+- Dockerfile (109ba6a)
+- Buildplatform (f2c719e)
+- Platforms (6caeebf)
+- Build migration script (2256b21)
+- Bake arch (4f5d539)
+- Remove v7 (30b8e71)
+- Registry auth on deploy (718569d)
+- Removed legacy qemu (9fa1ce8)
+- Bake action (fd99d70)
+- Bake image tag (9c520e4)
+- Cache mode (8501a3d)
+
+### 💅 Refactors
+
+- Switched ssh add method (a2d0bc5)
+- Registry (31b1613)
+
+### 📖 Documentation
+
+- Shadcn (cbcc100)
+
+### 🏡 Chore
+
+- Formatted (65778d8)
+- Correct deps version (78b53b4)
+
+### ❤️ Contributors
+
+- Nicolas Boyer <boyer63nicolas@gmail.com>
+
 ## v0.0.5
 
 ### 🚀 Enhancements
