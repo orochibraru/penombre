@@ -9,7 +9,6 @@ export function bridge(url: URL, token: string) {
 	const controller = new AbortController();
 
 	const cancelRequest = setTimeout(() => {
-		console.info('Aborting request.');
 		controller.abort();
 	}, 10000);
 

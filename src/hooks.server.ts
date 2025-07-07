@@ -5,7 +5,8 @@ import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import NodeCache from 'node-cache';
 
-const logger = new Logger('Hooks');
+const logger = new Logger('Service::Hooks');
+const apiLogger = new Logger('Service::API');
 let killing = false;
 
 let cache: NodeCache | null;
@@ -62,19 +63,30 @@ const preHandler: Handle = async ({ event, resolve }) => {
 
 	event.locals.authCookie = event.request.headers.get('cookie') ?? '';
 
-	event.locals.logger = new Logger('Pages');
+	event.locals.logger = new Logger('Service::Pages');
 
 	return resolve(event);
 };
 
 const logHandler: Handle = async ({ event, resolve }) => {
+	let logHandler: Logger = logger;
+
+	if (event.url.pathname.includes('.well-known')) {
+		// Noise
+		return resolve(event);
+	}
+
+	if (event.url.pathname.startsWith('/api')) {
+		logHandler = apiLogger;
+	}
+
 	const startTime: Date = new Date();
 
-	logger.http({
+	logHandler.http({
 		req: event.request,
 		res: new Response(),
 		duration: 0,
-		path: event.url.pathname,
+		url: event.url,
 		type: 'pre'
 	});
 
@@ -84,11 +96,11 @@ const logHandler: Handle = async ({ event, resolve }) => {
 
 	const duration: number = endTime.getTime() - startTime.getTime();
 
-	logger.http({
+	logHandler.http({
 		req: event.request,
 		res: resolution,
 		duration,
-		path: event.url.pathname,
+		url: event.url,
 		type: 'post'
 	});
 

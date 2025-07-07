@@ -7,10 +7,12 @@
 	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
 	import { cn } from '$lib/utils.js';
+	import { GithubIcon } from '@lucide/svelte';
 	import GalleryVerticalEndIcon from '@lucide/svelte/icons/gallery-vertical-end';
-	import BrandGithub from '@tabler/icons-svelte/icons/brand-github';
 
 	$title = 'Sign in';
+
+	const { data } = $props();
 
 	const id = $props.id();
 
@@ -50,53 +52,59 @@
 						</Alert.Root>
 					{/if}
 					<div class="grid gap-6">
-						<fieldset disabled={loading} class="grid gap-6">
-							<div class="grid gap-3">
-								<Label for="email-{id}">Email</Label>
-								<Input id="email-{id}" type="email" placeholder="m@example.com" required />
+						{#if data.passwordlessReady}
+							<fieldset disabled={loading} class="grid gap-6">
+								<div class="grid gap-3">
+									<Label for="email-{id}">Email</Label>
+									<Input id="email-{id}" type="email" placeholder="m@example.com" required />
+								</div>
+								<Button {loading} type="submit" class="w-full">
+									{#if loading}
+										Signing in...
+									{:else}
+										Sign in
+									{/if}
+								</Button>
+							</fieldset>
+						{/if}
+						{#if data.passwordlessReady && data.oauthReady}
+							<div
+								class="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t"
+							>
+								<span class="bg-background text-muted-foreground relative z-10 px-2"> Or </span>
 							</div>
-							<Button {loading} type="submit" class="w-full">
+						{/if}
+						{#if data.oauthReady}
+							<Button
+								variant="outline"
+								class="w-full"
+								{loading}
+								onclick={async () => {
+									loading = true;
+									try {
+										const res = await authClient.signIn.social({
+											provider: 'github'
+										});
+
+										if (res.error) {
+											console.error(res.error);
+											error = true;
+											loading = false;
+										}
+									} catch (e) {
+										console.error(e);
+										loading = false;
+									}
+								}}
+							>
 								{#if loading}
 									Signing in...
 								{:else}
-									Sign in
+									Sign in with Github
 								{/if}
+								<GithubIcon />
 							</Button>
-						</fieldset>
-						<div
-							class="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t"
-						>
-							<span class="bg-background text-muted-foreground relative z-10 px-2"> Or </span>
-						</div>
-						<Button
-							variant="outline"
-							class="w-full"
-							{loading}
-							onclick={async () => {
-								loading = true;
-								try {
-									const res = await authClient.signIn.social({
-										provider: 'github'
-									});
-
-									if (res.error) {
-										console.error(res.error);
-										error = true;
-										loading = false;
-									}
-								} catch (e) {
-									console.error(e);
-									loading = false;
-								}
-							}}
-						>
-							<BrandGithub />
-							{#if loading}
-								Signing in...
-							{:else}
-								Sign in with Github
-							{/if}
-						</Button>
+						{/if}
 					</div>
 					<div class="text-center text-sm">Don&apos;t have an account? Too bad.</div>
 				</form>

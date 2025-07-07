@@ -2,16 +2,16 @@
 	export type NavItem = {
 		title: string;
 		url: string;
-		icon: Icon | typeof IconType;
+		icon: typeof IconType;
+		accentColor?: 'indigo' | 'orange' | 'pink';
 	};
 </script>
 
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import type { WithoutChildren } from '$lib/utils.js';
+	import { cn, type WithoutChildren } from '$lib/utils.js';
 	import { type Icon as IconType } from '@lucide/svelte';
-	import type { Icon } from '@tabler/icons-svelte';
 	import type { ComponentProps } from 'svelte';
 
 	type Props = WithoutChildren<ComponentProps<typeof Sidebar.Group>> & {
@@ -26,7 +26,7 @@
 			return true;
 		}
 
-		if (page.url.pathname !== '/' && item.url.startsWith(page.url.pathname)) {
+		if (page.url.pathname.startsWith(item.url)) {
 			return true;
 		}
 
@@ -39,11 +39,19 @@
 	<Sidebar.GroupContent>
 		<Sidebar.Menu>
 			{#each items as item (item.title)}
+				{@const Icon = item.icon}
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton isActive={isActive(item)}>
 						{#snippet child({ props })}
 							<a href={item.url} {...props}>
-								<item.icon />
+								<Icon
+									class={cn(
+										'h-4.5 w-4.5',
+										item.accentColor === 'indigo' ? 'text-indigo-400' : '',
+										item.accentColor === 'orange' ? 'text-orange-400' : '',
+										item.accentColor === 'pink' ? 'text-pink-400' : ''
+									)}
+								/>
 								<span>{item.title}</span>
 							</a>
 						{/snippet}

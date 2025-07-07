@@ -1,13 +1,8 @@
 <script lang="ts">
-	import FileTable from '$lib/components/file-table.svelte';
-
-	import { title } from '$lib/store/title';
-
-	$title = 'My Drive';
-
-	let { data } = $props();
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 </script>
 
-<section>
-	<FileTable data={data.files} />
-</section>
+<div class="flex h-full w-full flex-col items-center justify-center gap-3">
+	<h1 class="text-2xl font-bold">You're being redirected</h1>
+	<Spinner size={8} />
+</div>

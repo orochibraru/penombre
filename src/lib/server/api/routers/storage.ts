@@ -1,26 +1,32 @@
 import { Logger } from '$lib/logger';
 import { authMacro } from '$lib/server/api/auth';
 import {
+	badRequestErrorSchema,
 	createdSchema,
+	deletedSchema,
 	internalServerErrorSchema,
 	notFoundSchema,
 	unauthorizedSchema
 } from '$lib/server/api/schemas';
 import {
+	allowedFileCategories,
+	type FileCategories,
 	S3BucketSchema,
 	S3ObjectList,
 	S3ObjectSchema,
 	StorageService
 } from '$lib/server/services/storage';
-import { Elysia, t } from 'elysia';
+import { Elysia, file, t } from 'elysia';
 
-const logger = new Logger('FilesRouter');
+const logger = new Logger('API::Storage');
 
-const UploadSchema = t.File();
+const UploadSchema = t.Object({
+	file: t.File()
+});
 
 const CreateFolderSchema = t.String();
 
-export const filesRouter = new Elysia({
+export const storageRouter = new Elysia({
 	detail: {
 		tags: ['Storage']
 	}
@@ -60,7 +66,6 @@ export const filesRouter = new Elysia({
 						response: {
 							200: 'BucketList',
 							403: unauthorizedSchema,
-							404: notFoundSchema,
 							500: internalServerErrorSchema
 						}
 					}
@@ -70,10 +75,19 @@ export const filesRouter = new Elysia({
 				return app
 					.get(
 						'/',
-						async ({ status, user }) => {
+						async ({ status, user, query }) => {
 							const storage = new StorageService(user);
+							const folder = query.folder ?? '';
+
+							if (query.folder) {
+								const exists = await storage.itemExists(query.folder);
+								if (!exists) {
+									return status(404, `Folder ${query.folder} does not exist.`);
+								}
+							}
+
 							try {
-								const objects = await storage.listObjects({ folder: '' });
+								const objects = await storage.listObjects({ folderPath: folder });
 								return objects;
 							} catch (e) {
 								logger.error('Failed to list objects', e);
@@ -82,6 +96,11 @@ export const filesRouter = new Elysia({
 						},
 						{
 							auth: true,
+							query: t.Optional(
+								t.Object({
+									folder: t.Optional(t.String())
+								})
+							),
 							storage: true,
 							detail: {
 								summary: 'List objects',
@@ -89,18 +108,25 @@ export const filesRouter = new Elysia({
 							},
 							response: {
 								200: 'ObjectList',
-								403: unauthorizedSchema,
 								404: notFoundSchema,
+								403: unauthorizedSchema,
 								500: internalServerErrorSchema
 							}
 						}
 					)
 					.get(
-						'/recent',
-						async ({ status, user }) => {
+						'/:category',
+						async ({ status, user, params }) => {
 							const storage = new StorageService(user);
+
+							if (!allowedFileCategories.includes(params.category)) {
+								return status(400, { message: `Invalid category ${params.category}` });
+							}
+
 							try {
-								const objects = await storage.listRecentObjects();
+								const objects = await storage.listWithoutFolders({
+									category: params.category as FileCategories
+								});
 								return objects;
 							} catch (e) {
 								logger.error('Failed to list recent objects', e);
@@ -116,8 +142,8 @@ export const filesRouter = new Elysia({
 							},
 							response: {
 								200: 'ObjectList',
+								400: badRequestErrorSchema,
 								403: unauthorizedSchema,
-								404: notFoundSchema,
 								500: internalServerErrorSchema
 							}
 						}
@@ -127,7 +153,7 @@ export const filesRouter = new Elysia({
 						async ({ status, body, user }) => {
 							const storage = new StorageService(user);
 							try {
-								await storage.upload(body);
+								await storage.upload(body.file);
 								return 'Uploaded';
 							} catch (e) {
 								logger.error('Failed to upload object', e);
@@ -136,7 +162,6 @@ export const filesRouter = new Elysia({
 						},
 						{
 							auth: true,
-							parse: 'multipart/form-data',
 							detail: {
 								summary: 'Upload an object',
 								description: 'Uploads a single object'
@@ -145,18 +170,17 @@ export const filesRouter = new Elysia({
 							response: {
 								201: createdSchema,
 								403: unauthorizedSchema,
-								404: notFoundSchema,
 								500: internalServerErrorSchema
 							}
 						}
 					)
-					.post(
-						'/folder',
-						async ({ status, body, user }) => {
+					.delete(
+						'/',
+						async ({ status, user, query }) => {
 							const storage = new StorageService(user);
 							try {
-								await storage.createFolder(body);
-								return 'Created';
+								await storage.deleteItem(query.item);
+								return 'Deleted';
 							} catch (e) {
 								logger.error('Failed to upload object', e);
 								return status(500, 'Failed to upload object');
@@ -164,53 +188,47 @@ export const filesRouter = new Elysia({
 						},
 						{
 							auth: true,
-							body: 'CreateFolder',
+							query: t.Object({
+								item: t.String()
+							}),
 							detail: {
-								summary: 'Create a folder',
-								description: 'Creates a single folder'
+								summary: 'Delete a folder',
+								description: 'Deletes a folder and all of its contents.'
 							},
 							response: {
-								201: createdSchema,
+								203: deletedSchema,
 								403: unauthorizedSchema,
-								404: notFoundSchema,
 								500: internalServerErrorSchema
 							}
 						}
 					)
-					.group('/:folder', (app) => {
-						return app
-							.derive(async ({ params, status }) => {
-								logger.debug(`Folder ${params.folder}`);
-								if (!params.folder) {
-									return status(404, undefined);
+					.group('/folder', (app) => {
+						return app.post(
+							'/',
+							async ({ status, body, user }) => {
+								const storage = new StorageService(user);
+								try {
+									await storage.createFolder(body);
+									return 'Created';
+								} catch (e) {
+									logger.error('Failed to upload object', e);
+									return status(500, 'Failed to upload object');
 								}
-							})
-							.get(
-								'/',
-								async ({ params, status, user }) => {
-									const storage = new StorageService(user);
-									try {
-										const objs = await storage.listObjects({ folder: params.folder });
-										return objs;
-									} catch (e) {
-										logger.error('Failed to list objects', e);
-										return status(500, undefined);
-									}
+							},
+							{
+								auth: true,
+								body: 'CreateFolder',
+								detail: {
+									summary: 'Create a folder',
+									description: 'Creates a single folder'
 								},
-								{
-									auth: true,
-									detail: {
-										summary: 'Get objects in a dir',
-										description: 'Fetches objects in a dir'
-									},
-									response: {
-										200: 'ObjectList',
-										403: unauthorizedSchema,
-										404: notFoundSchema,
-										500: internalServerErrorSchema
-									}
+								response: {
+									201: createdSchema,
+									403: unauthorizedSchema,
+									500: internalServerErrorSchema
 								}
-							);
+							}
+						);
 					});
 			})
 	);

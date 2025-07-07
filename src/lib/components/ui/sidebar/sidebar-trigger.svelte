@@ -17,12 +17,12 @@
 	const sidebar = useSidebar();
 </script>
 
-<Button
+<button
 	data-sidebar="trigger"
 	data-slot="sidebar-trigger"
 	variant="ghost"
 	size="icon"
-	class={cn('size-7', className)}
+	class={cn('size-5', className)}
 	type="button"
 	onclick={(e) => {
 		onclick?.(e);
@@ -30,6 +30,6 @@
 	}}
 	{...restProps}
 >
-	<PanelLeftIcon class="h-6 w-6" />
+	<PanelLeftIcon class="h-5 w-5" />
 	<span class="sr-only">Toggle Sidebar</span>
-</Button>
+</button>

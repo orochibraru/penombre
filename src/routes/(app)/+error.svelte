@@ -2,4 +2,4 @@
 	import ErrorPage from '$lib/components/error-page.svelte';
 </script>
 
-<ErrorPage />
+<ErrorPage normalHeight />

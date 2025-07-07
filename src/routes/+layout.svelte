@@ -12,9 +12,9 @@
 	<title>Opendrive - {$title}</title>
 </svelte:head>
 
-<TopLoadingbar />
 <ModeWatcher />
 
-{@render children?.()}
+<TopLoadingbar />
+{@render children()}
 
 <Toaster position="top-right" richColors closeButton />

@@ -13,7 +13,7 @@ env:
   STACK: opendrive
   URL: https://drive.ombrage.space
   IMAGE: git.ombrage.space/opendrive/opendrive
-  LOG_LEVEL: debug
+  LOG_LEVEL: error
   TAG: ${{ github.sha }}
   TZ: Europe/Paris
   OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}

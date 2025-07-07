@@ -6,6 +6,18 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware, emailOTP, openAPI } from 'better-auth/plugins';
 import { db } from '../db/index';
 
+export function oAuthReady(): boolean {
+	let ready = true;
+	const requiredOauthVars = ['OAUTH_CLIENT_ID', 'OAUTH_CLIENT_SECRET'];
+	for (const envVar of requiredOauthVars) {
+		if (!env[envVar]) {
+			ready = false;
+		}
+	}
+
+	return ready;
+}
+
 export const auth = betterAuth({
 	basePath: authBasePath,
 	hooks: {

@@ -13,7 +13,7 @@
 <li
 	bind:this={ref}
 	data-slot="breadcrumb-item"
-	class={cn('inline-flex items-center gap-1.5', className)}
+	class={cn('text-foreground inline-flex items-center gap-1.5 text-base', className)}
 	{...restProps}
 >
 	{@render children?.()}

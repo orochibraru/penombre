@@ -28,8 +28,8 @@ describe('/api', () => {
 		expect(data).toBe('PONG!');
 	});
 
-	it('/v1/storag/objects requires auth', async () => {
-		const { error } = await api.api.v1.storage.objects.get();
+	it('/v1/storage/objects requires auth', async () => {
+		const { error } = await api.api.v1.storage.objects.get({ query: {} });
 
 		expect(error).toBeTruthy();
 	});

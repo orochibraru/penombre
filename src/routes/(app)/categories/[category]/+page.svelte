@@ -11,5 +11,5 @@
 </script>
 
 <div>
-	<DataTable data={{ count: 0, list: [] }} />
+	<DataTable data={data.files} />
 </div>

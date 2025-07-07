@@ -1,5 +1,10 @@
 import { t } from 'elysia';
 
+export const simplisticSchema = t.Unknown({
+	description: 'OK',
+	default: 'OK'
+});
+
 export const unauthorizedSchema = t.Unknown({
 	description: 'Unauthorized',
 	default: 'Unauthorized'

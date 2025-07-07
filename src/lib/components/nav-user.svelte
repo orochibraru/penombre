@@ -5,11 +5,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { route } from '$lib/ROUTES';
-	import CreditCardIcon from '@tabler/icons-svelte/icons/credit-card';
-	import DotsVerticalIcon from '@tabler/icons-svelte/icons/dots-vertical';
-	import LogoutIcon from '@tabler/icons-svelte/icons/logout';
-	import NotificationIcon from '@tabler/icons-svelte/icons/notification';
-	import UserCircleIcon from '@tabler/icons-svelte/icons/user-circle';
+	import { EllipsisVerticalIcon, LogOutIcon, UserCircleIcon } from '@lucide/svelte';
 	import type { User } from 'better-auth';
 
 	type Props = {
@@ -46,7 +42,7 @@
 								{user.email}
 							</span>
 						</div>
-						<DotsVerticalIcon class="ml-auto size-4" />
+						<EllipsisVerticalIcon class="ml-auto size-4" />
 					</Sidebar.MenuButton>
 				{/snippet}
 			</DropdownMenu.Trigger>
@@ -82,7 +78,7 @@
 					</DropdownMenu.Item>
 				</DropdownMenu.Group>
 				<DropdownMenu.Item onclick={() => handleSignOut()}>
-					<LogoutIcon />
+					<LogOutIcon />
 					Sign out
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>

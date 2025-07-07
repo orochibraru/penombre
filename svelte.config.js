@@ -3,7 +3,12 @@ import adapter from '@sveltejs/adapter-node';
 
 const config = {
 	preprocess: vitePreprocess(),
-	kit: { adapter: adapter() }
+	kit: {
+		adapter: adapter(),
+		csrf: {
+			checkOrigin: false
+		}
+	}
 };
 
 export default config;

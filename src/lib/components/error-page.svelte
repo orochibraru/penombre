@@ -3,9 +3,27 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { route } from '$lib/ROUTES';
+	import { title } from '$lib/store/title';
+	import { cn } from '$lib/utils';
+	import { onMount } from 'svelte';
+
+	type Props = {
+		normalHeight: boolean;
+	};
+
+	const { normalHeight = false }: Props = $props();
+
+	onMount(() => {
+		$title = 'Oops';
+	});
 </script>
 
-<div class="flex h-screen flex-col items-center justify-center gap-2 p-5">
+<div
+	class={cn(
+		'flex flex-col items-center justify-center gap-2 p-5',
+		normalHeight ? 'h-full' : 'h-screen'
+	)}
+>
 	<div class="flex flex-col gap-5 p-5 text-center">
 		<h1 class="text-center text-[5rem] font-bold text-gray-700">{page.status ?? 500}</h1>
 

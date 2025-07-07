@@ -1,6 +1,6 @@
 import { Logger } from '$lib/logger';
 import { authMacro, OpenAPI } from '$lib/server/api/auth';
-import { filesRouter } from '$lib/server/api/routers/storage';
+import { storageRouter } from '$lib/server/api/routers/storage';
 import { internalServerErrorSchema, pongSchema } from '$lib/server/api/schemas';
 import { db, dbUrl } from '$lib/server/db';
 import { auth } from '$lib/server/services/auth';
@@ -12,11 +12,18 @@ import { sql } from 'drizzle-orm';
 import { Elysia } from 'elysia';
 import packageJson from '../../../../package.json';
 
-const logger = new Logger('API');
+const logger = new Logger('API::Root');
 
 export const router = new Elysia()
 	.use(cors())
 	.use(authMacro)
+	.onError(({ code, error }) => {
+		if (error instanceof Error) {
+			logger.error(`An error occured in the API, code: ${code.toString()}`, error.cause);
+		} else {
+			logger.error(`An error occured in the API, code: ${code.toString()}. Cause:`, error);
+		}
+	})
 	.group('/api/v1', (app) => {
 		return app
 			.get(
@@ -66,7 +73,7 @@ export const router = new Elysia()
 				const storage = new StorageService(session.user);
 				return { storage };
 			})
-			.use(filesRouter);
+			.use(storageRouter);
 	})
 	.use(
 		swagger({

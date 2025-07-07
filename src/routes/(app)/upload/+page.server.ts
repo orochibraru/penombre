@@ -29,9 +29,8 @@ export const actions = {
 				file: file.name,
 				error: false,
 				fullfilled: false,
-				errorMessage: '',
 				promise: api.v1.storage.objects
-					.post(file)
+					.post({ file })
 					.then((res) => {
 						const reqItem = requests.find((req) => req.file === file.name);
 						if (!reqItem) {
@@ -41,9 +40,10 @@ export const actions = {
 						reqItem.fullfilled = true;
 
 						if (res.error) {
-							logger.error(res.error);
 							reqItem.error = true;
 							reqItem.errorMessage = JSON.stringify(res.error.value);
+							logger.error(res.error);
+							logger.error(requests);
 						}
 					})
 					.catch((e) => {
@@ -67,11 +67,14 @@ export const actions = {
 		try {
 			await Promise.all(requests.map((req) => req.promise));
 
-			if (requests.map((req) => req.error).length > 0) {
+			const errors = requests.filter((req) => req.error === true);
+
+			if (errors.length > 0) {
 				const marshaled = requests.map((req) => {
 					delete req.promise;
 					return req;
 				});
+
 				return message(form, marshaled, {
 					status: 500
 				});

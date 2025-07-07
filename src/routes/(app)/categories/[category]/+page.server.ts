@@ -1,15 +1,24 @@
+import { bridge } from '$lib/client/api';
+import { allowedFileCategories } from '$lib/server/services/storage';
 import { error } from '@sveltejs/kit';
 
-const availableCategories = ['music', 'documents', 'images'];
-
-export const load = ({ params }) => {
+export const load = async ({ params, locals, url }) => {
 	const category = params.category;
 
-	if (!availableCategories.includes(category)) {
+	if (!allowedFileCategories.includes(category)) {
 		return error(400, `Unable to resolve category ${category}`);
 	}
 
-	return {
-		category
-	};
+	const { api } = bridge(url, locals.authCookie);
+
+	const { data, error: err } = await api.v1.storage.objects({ category }).get();
+
+	if (err) {
+		locals.logger.error(err);
+		const val = err.value as string;
+
+		return error(err.status, val);
+	}
+
+	return { files: data, category };
 };

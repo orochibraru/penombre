@@ -1,15 +1,23 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
+	import { bridge } from '$lib/client/api';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as ContextMenu from '$lib/components/ui/context-menu';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import { route } from '$lib/ROUTES';
 	import type { ObjectList } from '$lib/server/services/storage';
-	import { humanFileSize, prettyDate } from '$lib/utils';
+	import { capitalizeFirstLetter, cn, humanFileSize, prettyDate } from '$lib/utils';
 	import {
 		CopyIcon,
 		EllipsisVerticalIcon,
 		FileIcon,
+		FileImageIcon,
+		FileMusicIcon,
 		FolderIcon,
 		FolderInputIcon,
 		type Icon as IconType,
@@ -17,6 +25,7 @@
 		StarIcon,
 		TrashIcon
 	} from '@lucide/svelte';
+	import { toast } from 'svelte-sonner';
 
 	type Props = {
 		data: ObjectList;
@@ -25,46 +34,86 @@
 
 	let { title, data }: Props = $props();
 
+	let confirmDeleteOpen: boolean = $state(false);
+	let itemPendingDeletion: string = $state('');
+	let deletingItem: boolean = $state(false);
+
 	type ActionItem = {
 		title: string;
 		icon: typeof IconType;
+		action: (key: string) => void;
 	};
+
+	const { api } = bridge(page.url, page.data.token);
+
+	async function handleDeleteItem() {
+		deletingItem = true;
+		const promise = api.v1.storage.objects
+			.delete(null, { query: { item: itemPendingDeletion } })
+			.then(async ({ error }) => {
+				if (error) {
+					console.error(error);
+					deletingItem = false;
+					throw error;
+				}
+
+				await invalidateAll();
+				confirmDeleteOpen = false;
+				deletingItem = false;
+			});
+
+		toast.promise(promise, {
+			loading: 'Deleting item',
+			success: 'Item deleted',
+			error: 'Failed to delete item'
+		});
+	}
 
 	const actionItems: ActionItem[] = [
 		{
 			title: 'Move',
-			icon: FolderInputIcon
+			icon: FolderInputIcon,
+			action: () => []
 		},
 		{
 			title: 'Duplicate',
-			icon: CopyIcon
+			icon: CopyIcon,
+			action: () => []
 		},
 		{
 			title: 'Star',
-			icon: StarIcon
+			icon: StarIcon,
+			action: () => []
 		},
 		{
 			title: 'Share',
-			icon: ShareIcon
+			icon: ShareIcon,
+			action: () => []
 		},
 		{
 			title: 'Delete',
-			icon: TrashIcon
+			icon: TrashIcon,
+			action: async (item: string) => {
+				itemPendingDeletion = page.params.path ? `${page.params.path}/${item}` : item;
+				console.log(itemPendingDeletion);
+				confirmDeleteOpen = true;
+			}
 		}
 	];
 
 	type TableHeadItem = {
 		title: string;
 		colSpan: number;
+		end?: boolean;
 	};
 
 	const columns: TableHeadItem[] = [
 		{
 			title: 'Name',
-			colSpan: 2
+			colSpan: 8
 		},
 		{
-			title: 'Tags',
+			title: 'Category',
 			colSpan: 1
 		},
 		{
@@ -77,15 +126,18 @@
 		},
 		{
 			title: 'Actions',
-			colSpan: 1
+			colSpan: 1,
+			end: true
 		}
 	];
+
+	const iconSize = 'h-5 w-5';
 </script>
 
-{#snippet DataTableActions()}
+{#snippet DataTableActions(key: string)}
 	{#each actionItems as actionItem}
 		{@const Icon = actionItem.icon}
-		<ContextMenu.Item>
+		<ContextMenu.Item onclick={() => actionItem.action(key)}>
 			<Icon />
 			{actionItem.title}
 		</ContextMenu.Item>
@@ -109,91 +161,124 @@
 		<Table.Header class="bg-muted sticky top-0 z-10">
 			<Table.Row>
 				{#each columns as headItem}
-					<Table.Head colspan={headItem.colSpan}>
+					<Table.Head colspan={headItem.colSpan} class={cn(headItem.end ? 'text-right' : '')}>
 						{headItem.title}
 					</Table.Head>
 				{/each}
 			</Table.Row>
 		</Table.Header>
-		<Table.Body class="**:data-[slot=table-cell]:first:w-8">
+		<Table.Body>
 			{#if data.count > 0}
 				{#each data.list as item}
-					<ContextMenu.Root>
-						<ContextMenu.Trigger class="col-span-2" style="display: contents;">
-							<Table.Row>
-								<Table.Cell colspan={2}>
+					<Table.Row>
+						<ContextMenu.Root>
+							<ContextMenu.Trigger style="display: contents;">
+								<Table.Cell colspan={8}>
 									<div class="flex items-center gap-2">
 										{#if item.Key.endsWith('/')}
-											<FolderIcon class="h-4 w-4" />
-											<button>{item.Key.replace('/', '')}</button>
+											{@const folder = item.Key.replace('/', '')}
+											<FolderIcon class={cn(iconSize, 'text-indigo-600')} fill="#1447e6" />
+											<a
+												href={route('/browse/[...path]', {
+													path: page.params.path ? [page.params.path, folder] : [folder]
+												})}
+											>
+												{folder}
+											</a>
 										{:else}
-											<!-- {@const meta = item.}
-											{#if meta}
-												{@const ct = (meta as Record<string, string> | undefined)?.['content-type']}
-												{#if ct === 'application/pdf'}
-													<FileIcon class="h-4 w-4" />
-												{:else if ct?.startsWith('audio')}
-													<FileMusicIcon class="h-4 w-4" />
+											{#if item.ContentType}
+												{#if item.ContentType === 'application/pdf'}
+													<FileIcon class={cn(iconSize, 'text-indigo-400')} />
+												{:else if item.ContentType.startsWith('audio')}
+													<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
+												{:else if item.ContentType.startsWith('image')}
+													<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
+												{:else}
+													<FileIcon class={iconSize} />
 												{/if}
-											{/if} -->
-											<FileIcon class="h-4 w-4" />
+											{:else}
+												<FileIcon class={iconSize} />
+											{/if}
 											<p>{item.Key}</p>
 										{/if}
 									</div>
 								</Table.Cell>
-								<Table.Cell>
-									<div class="w-32">
-										<Badge variant="outline" class="text-muted-foreground px-1.5">
-											<!-- {row.original.tags && row.original.tags.length > 0 ? row.original.tags.join(',') : 'No tags'} -->
-											No tags
-										</Badge>
-									</div>
+								<Table.Cell colspan={1} class="w-32">
+									<Badge variant="outline" class="text-muted-foreground px-1.5">
+										{item.Metadata?.category
+											? capitalizeFirstLetter(item.Metadata.category)
+											: 'No category'}
+									</Badge>
 								</Table.Cell>
-								<Table.Cell>
-									<div class="text-right">
-										{humanFileSize(item.Size as number)}
-									</div>
+								<Table.Cell colspan={1} class="w-32">
+									<p>
+										{humanFileSize(item.Size as number) ?? '-'}
+									</p>
 								</Table.Cell>
-								<Table.Cell>
+								<Table.Cell colspan={1} class="w-32">
 									{#if item.LastModified}
 										{prettyDate(item.LastModified)}
 									{/if}
 								</Table.Cell>
-								<Table.Cell>
-									<DropdownMenu.Root>
-										<DropdownMenu.Trigger
-											class="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-										>
-											{#snippet child({ props })}
-												<Button variant="ghost" size="icon" {...props}>
-													<EllipsisVerticalIcon />
-													<span class="sr-only">Open menu</span>
-												</Button>
-											{/snippet}
-										</DropdownMenu.Trigger>
-										<DropdownMenu.Content align="end">
-											{#each actionItems as actionItem}
-												{@const Icon = actionItem.icon}
-												<DropdownMenu.Item>
-													<Icon />
-													{actionItem.title}
-												</DropdownMenu.Item>
-											{/each}
-										</DropdownMenu.Content>
-									</DropdownMenu.Root>
+								<Table.Cell colspan={1} class="w-32">
+									<div class="flex w-full items-center justify-end">
+										<DropdownMenu.Root>
+											<DropdownMenu.Trigger
+												class="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+											>
+												{#snippet child({ props })}
+													<Button variant="ghost" size="icon" {...props}>
+														<EllipsisVerticalIcon />
+														<span class="sr-only">Open menu</span>
+													</Button>
+												{/snippet}
+											</DropdownMenu.Trigger>
+											<DropdownMenu.Content align="end">
+												{#each actionItems as actionItem}
+													{@const Icon = actionItem.icon}
+													<DropdownMenu.Item onclick={() => actionItem.action(item.Key)}>
+														<Icon />
+														{actionItem.title}
+													</DropdownMenu.Item>
+												{/each}
+											</DropdownMenu.Content>
+										</DropdownMenu.Root>
+									</div>
 								</Table.Cell>
-							</Table.Row>
-						</ContextMenu.Trigger>
-						<ContextMenu.Content class="w-52">
-							{@render DataTableActions()}
-						</ContextMenu.Content>
-					</ContextMenu.Root>
+							</ContextMenu.Trigger>
+							<ContextMenu.Content class="w-52">
+								{@render DataTableActions(item.Key)}
+							</ContextMenu.Content>
+						</ContextMenu.Root>
+					</Table.Row>
 				{/each}
 			{:else}
 				<Table.Row>
-					<Table.Cell colspan={columns.length} class="h-24 text-center">No results.</Table.Cell>
+					<Table.Cell colspan={12} class="h-24 text-center">No results.</Table.Cell>
 				</Table.Row>
 			{/if}
 		</Table.Body>
 	</Table.Root>
 </div>
+
+<AlertDialog.Root bind:open={confirmDeleteOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+			<AlertDialog.Description>
+				This action cannot be undone. This will permanently delete this item from your storage
+				device.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={() => handleDeleteItem()} disabled={deletingItem}>
+				{#if deletingItem}
+					<Spinner />
+				{:else}
+					Continue
+				{/if}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

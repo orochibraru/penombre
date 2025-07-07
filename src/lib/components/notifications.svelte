@@ -24,7 +24,10 @@
 {/snippet}
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger class={buttonVariants({ variant: 'outline', size: 'icon' })}>
+	<DropdownMenu.Trigger
+		class={buttonVariants({ variant: 'outline', size: 'icon' })}
+		title="Show notifications"
+	>
 		<BellIcon class="h-[1.2rem] w-[1.2rem]" />
 		<span class="sr-only">Show Notifications</span>
 	</DropdownMenu.Trigger>
