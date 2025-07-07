@@ -22,5 +22,4 @@ target "app" {
   platforms = ["linux/amd64", "linux/arm64/v8"]
   cache-from = ["type=registry,ref=${IMAGE}:cache"]
   cache-to = ["type=registry,ref=${IMAGE}:cache"]
-  output = ["type=docker"]
 }
