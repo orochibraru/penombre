@@ -20,6 +20,6 @@ target "app" {
   dockerfile = "./Dockerfile"
   tags       = ["${IMAGE}:latest","${IMAGE}:${TAG}"]
   platforms = ["linux/amd64", "linux/arm64/v8"]
-  cache-from = ["type=registry,ref=${IMAGE}:cache"]
-  cache-to = ["type=registry,ref=${IMAGE}:cache"]
+  cache-from = ["type=gha,scope=opendrive"]
+  cache-to = ["type=gha,scope=opendrive,mode=max"]
 }
