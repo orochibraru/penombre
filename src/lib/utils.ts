@@ -113,3 +113,7 @@ export function humanFileSize(bytes: number, si = false, dp = 1) {
 
 	return `${size.toFixed(dp)} ${units[u]}`;
 }
+
+export function secondsToMinutes(seconds: number) {
+	return new Date(seconds * 1000).toISOString().slice(14, 19);
+}

@@ -11,12 +11,13 @@ import {
 import {
 	allowedFileCategories,
 	type FileCategories,
+	ObjectUrlSchema,
 	S3BucketSchema,
-	S3ObjectList,
+	S3ObjectListSchema,
 	S3ObjectSchema,
 	StorageService
 } from '$lib/server/services/storage';
-import { Elysia, file, t } from 'elysia';
+import { Elysia, t } from 'elysia';
 
 const logger = new Logger('API::Storage');
 
@@ -33,9 +34,10 @@ export const storageRouter = new Elysia({
 })
 	.model({
 		UploadObject: UploadSchema,
+		ObjectUrl: ObjectUrlSchema,
 		CreateFolder: CreateFolderSchema,
 		Object: S3ObjectSchema,
-		ObjectList: S3ObjectList,
+		ObjectList: S3ObjectListSchema,
 		Bucket: S3BucketSchema,
 		BucketList: t.Array(S3BucketSchema)
 	})
@@ -142,6 +144,39 @@ export const storageRouter = new Elysia({
 							},
 							response: {
 								200: 'ObjectList',
+								400: badRequestErrorSchema,
+								403: unauthorizedSchema,
+								500: internalServerErrorSchema
+							}
+						}
+					)
+					.get(
+						'/url',
+						async ({ status, user, query }) => {
+							const storage = new StorageService(user);
+
+							try {
+								const url = await storage.createPresignedUrl({
+									item: query.item
+								});
+								return url;
+							} catch (e) {
+								logger.error('Failed to get presigned url', e);
+								return status(500, 'Failed to get presigned url');
+							}
+						},
+						{
+							auth: true,
+							storage: true,
+							query: t.Object({
+								item: t.String()
+							}),
+							detail: {
+								summary: 'Get an item url',
+								description: 'Fetches a presigned url for an item.'
+							},
+							response: {
+								200: 'ObjectUrl',
 								400: badRequestErrorSchema,
 								403: unauthorizedSchema,
 								500: internalServerErrorSchema

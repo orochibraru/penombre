@@ -7,6 +7,7 @@ import {
 	type CommonPrefix,
 	CreateBucketCommand,
 	DeleteObjectsCommand,
+	GetObjectCommand,
 	HeadObjectCommand,
 	ListBucketsCommand,
 	ListObjectsV2Command,
@@ -14,8 +15,10 @@ import {
 	S3Client,
 	type S3ClientConfig
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { User } from 'better-auth';
 import { type Static, t } from 'elysia';
+import { type IAudioMetadata, parseBlob } from 'music-metadata';
 
 const logger = new Logger('Service::Storage');
 
@@ -75,14 +78,17 @@ export const S3BucketSchema = t.Object({
 	})
 });
 
-export const S3ObjectList = t.Object({
+export const S3ObjectListSchema = t.Object({
 	count: t.Number(),
 	list: t.Array(S3ObjectSchema)
 });
 
+export const ObjectUrlSchema = t.String();
+
 export type ObjectItem = Static<typeof S3ObjectSchema>;
-export type ObjectList = Static<typeof S3ObjectList>;
+export type ObjectList = Static<typeof S3ObjectListSchema>;
 export type Bucket = Static<typeof S3BucketSchema>;
+export type ObjectUrl = Static<typeof ObjectUrlSchema>;
 
 export class StorageService extends S3Client {
 	private user: User;
@@ -256,6 +262,17 @@ export class StorageService extends S3Client {
 	 * @throws {Error} If there is an error uploading the file.
 	 */
 	public async upload(file: File): Promise<void> {
+		const isMusic = file.type.startsWith('audio/');
+		let additionalMetadata: IAudioMetadata | null = null;
+
+		if (isMusic) {
+			try {
+				const metadata = await parseBlob(file);
+				additionalMetadata = metadata;
+			} catch (error) {
+				logger.error('Error parsing metadata:', error);
+			}
+		}
 		const browserStream = file.stream();
 		const reader = browserStream.getReader();
 		const chunks: Uint8Array[] = [];
@@ -273,7 +290,14 @@ export class StorageService extends S3Client {
 			Key: name,
 			ContentType: file.type,
 			Metadata: {
-				Category: this.determineCategory(file) ?? ''
+				Category: this.determineCategory(file) ?? '',
+				MusicTrackNumber: additionalMetadata?.common.track.no?.toString() ?? '',
+				MusicTrackArtist: additionalMetadata?.common.track.of?.toString() ?? '',
+				MusicSampleRate: additionalMetadata?.format.sampleRate?.toString() ?? '',
+				MusicBitRate: additionalMetadata?.format.bitrate?.toString() ?? '',
+				MusicCodec: additionalMetadata?.format.codec?.toString() ?? '',
+				MusicLossLess: additionalMetadata?.format.lossless?.toString() ?? '',
+				MusicDuration: additionalMetadata?.format.duration?.toString() ?? ''
 			}
 		});
 
@@ -317,6 +341,48 @@ export class StorageService extends S3Client {
 		}
 	}
 
+	/**
+	 * Generates a presigned URL for downloading an item from the user's bucket.
+	 *
+	 * @param item The path to the item to generate a presigned URL for.
+	 * @param expiresIn The number of seconds the presigned URL should be valid for. Defaults to one hour.
+	 * @returns A promise that resolves to a string containing the presigned URL.
+	 */
+	public async createPresignedUrl({
+		item,
+		expiresIn = 3600
+	}: {
+		item: string;
+		expiresIn?: number;
+	}): Promise<string> {
+		try {
+			const command = new GetObjectCommand({
+				Bucket: this.bucket,
+				Key: item
+			});
+
+			const url = await getSignedUrl(this, command, { expiresIn });
+			return url;
+		} catch (error) {
+			console.error('Error creating presigned URL:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Given a filename, finds an available filename by incrementing the number
+	 * in parentheses at the end of the filename (if present).
+	 *
+	 * If the original filename does not exist, the original filename is returned.
+	 * If the original filename exists, the method will try to find an available
+	 * filename by incrementing the number in the filename. For example, if the
+	 * filename is "photo.jpg" and "photo (1).jpg" exists, the method will try
+	 * "photo (2).jpg", then "photo (3).jpg", and so on, until it finds an
+	 * available filename.
+	 *
+	 * @param originalName The original filename to find an available name for.
+	 * @returns A promise that resolves to the available filename.
+	 */
 	public async incrementItemName(originalName: string) {
 		const originalFileExists = await this.itemExists(originalName);
 

@@ -2,9 +2,9 @@
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { bridge } from '$lib/client/api';
-	import Nav, { type NavItem } from '$lib/components/nav.svelte';
-	import NavUser from '$lib/components/nav-user.svelte';
-	import SiteHeader from '$lib/components/site-header.svelte';
+	import SiteHeader from '$lib/components/layout/header.svelte';
+	import Nav, { type NavItem } from '$lib/components/layout/nav.svelte';
+	import NavUser from '$lib/components/layout/user-menu.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';

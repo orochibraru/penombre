@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import Darkmode from '$lib/components/darkmode.svelte';
-	import Notifications from '$lib/components/notifications.svelte';
+	import Notifications from '$lib/components/layout/notifications.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
 </script>
 
@@ -18,23 +16,15 @@
 
 		<Breadcrumb.Root>
 			<Breadcrumb.List>
-				{#if page.data.folders}
-					{#each page.data.folders as folder}
-						{@const index = page.data.folders.indexOf(folder)}
-						{#if index !== page.data.folders.length && index !== 0}
+				{#if page.data.crumbs}
+					{#each page.data.crumbs as crumb}
+						{@const index = page.data.crumbs.indexOf(crumb)}
+						{#if index !== page.data.crumbs.length && index !== 0}
 							<Breadcrumb.Separator />
 						{/if}
 						<Breadcrumb.Item>
-							<Breadcrumb.Link
-								href={route('/browse/[...path]', {
-									path: [
-										page.data.folders
-											.splice(index + 1, page.data.folders.length - (index + 1))
-											.join('/')
-									]
-								})}
-							>
-								{folder}
+							<Breadcrumb.Link href={crumb.href}>
+								{crumb.title}
 							</Breadcrumb.Link>
 						</Breadcrumb.Item>
 					{/each}
@@ -46,7 +36,6 @@
 			</Breadcrumb.List>
 		</Breadcrumb.Root>
 		<div class="ml-auto flex items-center gap-2">
-			<Darkmode />
 			<Notifications />
 		</div>
 	</div>

@@ -11,7 +11,13 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { route } from '$lib/ROUTES';
 	import type { ObjectList } from '$lib/server/services/storage';
-	import { capitalizeFirstLetter, cn, humanFileSize, prettyDate } from '$lib/utils';
+	import {
+		capitalizeFirstLetter,
+		cn,
+		humanFileSize,
+		prettyDate,
+		secondsToMinutes
+	} from '$lib/utils';
 	import {
 		CopyIcon,
 		EllipsisVerticalIcon,
@@ -131,6 +137,19 @@
 		}
 	];
 
+	async function openItem(item: string) {
+		const { data: presignedUrl, error } = await api.v1.storage.objects.url.get({ query: { item } });
+		if (error || !presignedUrl) {
+			toast.error('Failed to open this file.');
+			return;
+		}
+
+		const newTab = window.open(new URL(presignedUrl), '_blank');
+		if (newTab) {
+			newTab.focus();
+		}
+	}
+
 	const iconSize = 'h-5 w-5';
 </script>
 
@@ -186,20 +205,31 @@
 												{folder}
 											</a>
 										{:else}
-											{#if item.ContentType}
-												{#if item.ContentType === 'application/pdf'}
-													<FileIcon class={cn(iconSize, 'text-indigo-400')} />
-												{:else if item.ContentType.startsWith('audio')}
-													<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
-												{:else if item.ContentType.startsWith('image')}
-													<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
+											<button onclick={() => openItem(item.Key)} class="flex items-center gap-2">
+												{#if item.ContentType}
+													{#if item.ContentType === 'application/pdf'}
+														<FileIcon class={cn(iconSize, 'text-indigo-400')} />
+													{:else if item.ContentType.startsWith('audio')}
+														<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
+													{:else if item.ContentType.startsWith('image')}
+														<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
+													{:else}
+														<FileIcon class={iconSize} />
+													{/if}
 												{:else}
 													<FileIcon class={iconSize} />
 												{/if}
-											{:else}
-												<FileIcon class={iconSize} />
-											{/if}
-											<p>{item.Key}</p>
+												<div>
+													<p>{item.Key}</p>
+												</div>
+												{#if item.Metadata?.category === 'music'}
+													{#if item.Metadata.musicduration}
+														<Badge variant="outline" class="text-muted-foreground px-1.5 text-xs">
+															{secondsToMinutes(Number.parseFloat(item.Metadata.musicduration))}
+														</Badge>
+													{/if}
+												{/if}
+											</button>
 										{/if}
 									</div>
 								</Table.Cell>

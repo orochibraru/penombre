@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import PageTitle from '$lib/components/page-title.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		displaySize,
@@ -69,7 +68,6 @@
 </script>
 
 <section>
-	<PageTitle>Upload Files</PageTitle>
 	<form method="POST" enctype="multipart/form-data" use:enhance class="flex w-full flex-col gap-2">
 		<fieldset disabled={loading}>
 			<FileDropZone
