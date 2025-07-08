@@ -16,8 +16,8 @@ services:
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
       - BETTER_AUTH_URL=${URL-http://localhost:3000}
-      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}
-      - MINIO_URL=http://minio:9000
+      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@opendrive-db:5432/${POSTGRES_DB-opendrive}
+      - MINIO_URL=http://opendrive-minio:9000
       - ORIGIN=${URL-http://localhost:3000}
     networks:
       - proxy-swarm
@@ -30,7 +30,7 @@ services:
         - traefik.http.routers.opendrive-app.middlewares=traefik-forward-auth
         - traefik.http.services.opendrive-app.loadbalancer.server.port=3000
 
-  minio:
+  opendrive-minio:
     image: bitnami/minio
     networks:
       - proxy-swarm
@@ -48,7 +48,7 @@ services:
     volumes:
       - minio_data:/bitnami/minio/data
 
-  db:
+  opendrive-db:
     image: postgres
     networks:
       - proxy-swarm
