@@ -7,7 +7,7 @@ on:
       - main
 
 env:
-  PNPM_VERSION: 10.11.0
+  PNPM_VERSION: 10.12.4
   TZ: Europe/Paris
   DATABASE_URL: postgres://postgres:postgres@service-db:5432/opendrive
   MINIO_URL: http://minio:9000

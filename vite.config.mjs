@@ -2,9 +2,17 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import { kitRoutes } from 'vite-plugin-kit-routes';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit(), kitRoutes()],
+	plugins: [
+		sentryVitePlugin({
+			telemetry: false
+		}),
+		tailwindcss(),
+		sveltekit(),
+		kitRoutes()
+	],
 	test: {
 		hookTimeout: 30000,
 		setupFiles: ['./tests/setup.ts'],

@@ -1,9 +1,21 @@
+import { building, dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 import { Logger } from '$lib/logger';
+import { SENTRY_DSN } from '$lib/otel';
 import { auth } from '$lib/server/services/auth';
+import * as Sentry from '@sentry/sveltekit';
+import { handleErrorWithSentry, sentryHandle } from '@sentry/sveltekit';
 import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import NodeCache from 'node-cache';
+
+if (!building) {
+	Sentry.init({
+		dsn: SENTRY_DSN,
+		environment: dev ? 'development' : 'production',
+		tracesSampleRate: 1.0
+	});
+}
 
 const logger = new Logger('Service::Hooks');
 const apiLogger = new Logger('Service::API');
@@ -15,7 +27,7 @@ export const init = () => {
 	cache = new NodeCache();
 };
 
-export const handleError: HandleServerError = ({ error, event }) => {
+const errorHandler: HandleServerError = ({ error, event }) => {
 	const errorId = crypto.randomUUID();
 
 	event.locals.error = error?.toString() ?? '';
@@ -43,6 +55,8 @@ export const handleError: HandleServerError = ({ error, event }) => {
 		errorId
 	};
 };
+
+export const handleError = handleErrorWithSentry(errorHandler);
 
 const preHandler: Handle = async ({ event, resolve }) => {
 	if (!cache) {
@@ -107,7 +121,7 @@ const logHandler: Handle = async ({ event, resolve }) => {
 	return resolution;
 };
 
-export const handle: Handle = sequence(logHandler, preHandler);
+export const handle: Handle = sequence(sentryHandle(), logHandler, preHandler);
 
 function kill(reason: string) {
 	if (killing) {
