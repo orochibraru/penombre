@@ -1,23 +1,4 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
-	import { bridge } from '$lib/client/api';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as ContextMenu from '$lib/components/ui/context-menu';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import Spinner from '$lib/components/ui/Spinner.svelte';
-	import * as Table from '$lib/components/ui/table/index.js';
-	import { route } from '$lib/ROUTES';
-	import type { ObjectList } from '$lib/server/services/storage';
-	import {
-		capitalizeFirstLetter,
-		cn,
-		humanFileSize,
-		prettyDate,
-		secondsToMinutes
-	} from '$lib/utils';
 	import {
 		CopyIcon,
 		EllipsisVerticalIcon,
@@ -32,6 +13,26 @@
 		TrashIcon
 	} from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
+	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
+	import { bridge } from '$lib/client/api';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as ContextMenu from '$lib/components/ui/context-menu';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import * as Table from '$lib/components/ui/table/index.js';
+	import { route } from '$lib/ROUTES';
+	import type { ObjectItem, ObjectList } from '$lib/server/services/storage';
+	import { musicSourceUrl } from '$lib/store/music';
+	import {
+		capitalizeFirstLetter,
+		cn,
+		humanFileSize,
+		prettyDate,
+		secondsToMinutes
+	} from '$lib/utils';
 
 	type Props = {
 		data: ObjectList;
@@ -101,7 +102,6 @@
 			icon: TrashIcon,
 			action: async (item: string) => {
 				itemPendingDeletion = page.params.path ? `${page.params.path}/${item}` : item;
-				console.log(itemPendingDeletion);
 				confirmDeleteOpen = true;
 			}
 		}
@@ -137,10 +137,17 @@
 		}
 	];
 
-	async function openItem(item: string) {
-		const { data: presignedUrl, error } = await api.v1.storage.objects.url.get({ query: { item } });
+	async function openItem(item: ObjectItem) {
+		const proxyurl = `${page.url.protocol}//${page.url.host}`;
+		const { data: presignedUrl, error } = await api.v1.storage.objects.url.get({
+			query: { item: item.Key, hostname: proxyurl }
+		});
 		if (error || !presignedUrl) {
 			toast.error('Failed to open this file.');
+			return;
+		}
+		if (item.ContentType?.startsWith('audio')) {
+			$musicSourceUrl = presignedUrl;
 			return;
 		}
 
@@ -205,7 +212,7 @@
 												{folder}
 											</a>
 										{:else}
-											<button onclick={() => openItem(item.Key)} class="flex items-center gap-2">
+											<button onclick={() => openItem(item)} class="flex items-center gap-2">
 												{#if item.ContentType}
 													{#if item.ContentType === 'application/pdf'}
 														<FileIcon class={cn(iconSize, 'text-indigo-400')} />

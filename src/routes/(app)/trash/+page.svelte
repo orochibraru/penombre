@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { TrashIcon } from '@lucide/svelte';
 	import DataTable from '$lib/components/file-table.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { title } from '$lib/store/title';
-	import { TrashIcon } from '@lucide/svelte';
 
 	const { data } = $props();
 	$title = 'Trash';

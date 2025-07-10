@@ -1,9 +1,9 @@
 <script lang="ts">
 	import '../app.css';
-	import TopLoadingbar from '$lib/components/layout/top-loading-bar.svelte';
-	import { title } from '$lib/store/title';
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from 'svelte-sonner';
+	import TopLoadingbar from '$lib/components/layout/top-loading-bar.svelte';
+	import { title } from '$lib/store/title';
 
 	let { children } = $props();
 </script>

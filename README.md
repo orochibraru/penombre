@@ -13,7 +13,7 @@ Built with [Shadcn Svelte](https://shadcn-svelte.com/)
 
 ## DB
 
-![DB Diagram](./docs/db-diagram.svg 'DB Diagram')
+![DB Diagram](./diagrams/db-diagram.svg 'DB Diagram')
 
 ## Build docker
 

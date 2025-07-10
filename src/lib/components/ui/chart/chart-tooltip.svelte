@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { cn, type WithElementRef, type WithoutChildren } from '$lib/utils.js';
 	import { getTooltipContext, Tooltip as TooltipPrimitive } from 'layerchart';
 	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
+	import { cn, type WithElementRef, type WithoutChildren } from '$lib/utils.js';
 	import { getPayloadConfigFromPayload, type TooltipPayload, useChart } from './chart-utils.js';
 
 	// biome-ignore lint/suspicious/noExplicitAny: this is a formatter

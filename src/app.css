@@ -123,3 +123,13 @@
 		cursor: pointer;
 	}
 }
+
+@layer utilities {
+	.music-player {
+		width: 100%;
+
+		@variant lg {
+			width: calc(100% - var(--sidebar-width));
+		}
+	}
+}

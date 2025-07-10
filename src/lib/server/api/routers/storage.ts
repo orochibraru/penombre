@@ -1,3 +1,4 @@
+import { Elysia, t } from 'elysia';
 import { Logger } from '$lib/logger';
 import { authMacro } from '$lib/server/api/auth';
 import {
@@ -17,7 +18,6 @@ import {
 	S3ObjectSchema,
 	StorageService
 } from '$lib/server/services/storage';
-import { Elysia, t } from 'elysia';
 
 const logger = new Logger('API::Storage');
 
@@ -157,7 +157,8 @@ export const storageRouter = new Elysia({
 
 							try {
 								const url = await storage.createPresignedUrl({
-									item: query.item
+									item: query.item,
+									hostname: query.hostname
 								});
 								return url;
 							} catch (e) {
@@ -169,7 +170,8 @@ export const storageRouter = new Elysia({
 							auth: true,
 							storage: true,
 							query: t.Object({
-								item: t.String()
+								item: t.String(),
+								hostname: t.String()
 							}),
 							detail: {
 								summary: 'Get an item url',

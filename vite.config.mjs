@@ -5,6 +5,9 @@ import { kitRoutes } from 'vite-plugin-kit-routes';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig({
+	server: {
+		host: '0.0.0.0'
+	},
 	plugins: [
 		sentryVitePlugin({
 			telemetry: false
@@ -20,6 +23,9 @@ export default defineConfig({
 		name: 'server',
 		environment: 'node',
 		include: ['src/**/*.{test,spec}.{js,ts}'],
-		exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+		exclude: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+		deps: {
+			inline: ['@sveltejs/kit']
+		}
 	}
 });

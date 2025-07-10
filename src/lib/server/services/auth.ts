@@ -1,9 +1,9 @@
-import { env } from '$env/dynamic/private';
-import { authBasePath } from '$lib/client/auth';
-import { StorageService } from '$lib/server/services/storage';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { createAuthMiddleware, emailOTP, openAPI } from 'better-auth/plugins';
+import { env } from '$env/dynamic/private';
+import { authBasePath } from '$lib/client/auth';
+import { StorageService } from '$lib/server/services/storage';
 import { db } from '../db/index';
 
 export function oAuthReady(): boolean {

@@ -1,5 +1,5 @@
-import type { API } from '$lib/server/api';
 import { treaty } from '@elysiajs/eden';
+import type { API } from '$lib/server/api';
 
 export function bridge(url: URL, token: string) {
 	const headers = new Headers();

@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { FileWarningIcon, XIcon } from '@lucide/svelte';
+	import { toast } from 'svelte-sonner';
+	import { filesProxy, superForm } from 'sveltekit-superforms';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
@@ -11,10 +15,6 @@
 	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
 	import { cn } from '$lib/utils';
-	import { FileWarningIcon, XIcon } from '@lucide/svelte';
-	import { toast } from 'svelte-sonner';
-	import { filesProxy, superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { CustomReq } from './model';
 	import { schema } from './schema';
 
@@ -42,13 +42,13 @@
 			}
 			if (page.status > 204) {
 				toast.error(message.text, {
-					description: 'Failed to upload some attachments.'
+					description: 'Failed to schedule some attachments.'
 				});
 				return;
 			}
 
 			toast.success(message.text, {
-				description: 'Your attachments were uploaded.'
+				description: 'Your attachments are sheduled for upload.'
 			});
 
 			goto(route('/'));

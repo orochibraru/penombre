@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { GithubIcon } from '@lucide/svelte';
+	import GalleryVerticalEndIcon from '@lucide/svelte/icons/gallery-vertical-end';
 	import { authClient } from '$lib/client/auth';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -7,8 +9,6 @@
 	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
 	import { cn } from '$lib/utils.js';
-	import { GithubIcon } from '@lucide/svelte';
-	import GalleryVerticalEndIcon from '@lucide/svelte/icons/gallery-vertical-end';
 
 	$title = 'Sign in';
 

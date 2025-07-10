@@ -1,6 +1,6 @@
+import { error } from '@sveltejs/kit';
 import { bridge } from '$lib/client/api';
 import { route } from '$lib/ROUTES';
-import { error } from '@sveltejs/kit';
 
 type Crumb = {
 	title: string;

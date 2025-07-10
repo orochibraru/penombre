@@ -1,6 +1,6 @@
+import { blue, cyan, gray, green, magenta, red, white, yellow } from '@kitql/helpers';
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
-import { blue, cyan, gray, green, magenta, red, white, yellow } from '@kitql/helpers';
 
 const logFormats = ['console', 'json'];
 export type LogFormats = 'console' | 'json';
@@ -84,8 +84,8 @@ export class Logger {
 		if (this.logFormat === 'console') {
 			if (type === 'pre') {
 				return console.info(
-					this.prettyPrefix,
-					`[${blue(`${url.protocol.replace(':', '').toUpperCase()}::${req.method}`)}] ${url.pathname}${url.search}`
+					`[${blue(`${url.protocol.replace(':', '').toUpperCase()}::${req.method}`)}] ${url.pathname}${url.search}`,
+					this.prettyPrefix
 				);
 			}
 
@@ -102,8 +102,8 @@ export class Logger {
 			}
 
 			return console.info(
-				this.prettyPrefix,
-				`[${color(`${url.protocol.replace(':', '').toUpperCase()}::${req.method}`)}] ${color(res.status.toString())} ${statusText} ${url.pathname}${url.search} ${gray(`[${duration}ms]`)}`
+				`[${color(`${url.protocol.replace(':', '').toUpperCase()}::${req.method}`)}] ${color(res.status.toString())} ${statusText} ${url.pathname}${url.search} ${gray(`[${duration}ms]`)}`,
+				this.prettyPrefix
 			);
 		}
 
@@ -140,8 +140,8 @@ export class Logger {
 
 		if (this.logFormat === 'console') {
 			return console.log(
-				this.prettyPrefix,
 				blue(`[LEVEL::${LOG_LEVELS.INFO}]`),
+				this.prettyPrefix,
 				input,
 				...optionalParams
 			);
@@ -175,8 +175,8 @@ export class Logger {
 
 		if (this.logFormat === 'console') {
 			return console.log(
-				this.prettyPrefix,
 				yellow(`[LEVEL::${LOG_LEVELS.WARN}]`),
+				this.prettyPrefix,
 				input,
 				...optionalParams
 			);
@@ -206,8 +206,8 @@ export class Logger {
 
 		if (this.logFormat === 'console') {
 			return console.error(
+				red(`[LEVEL::${LOG_LEVELS.ERROR}]`),
 				this.prettyPrefix,
-				`${red(`[LEVEL::${LOG_LEVELS.ERROR}]`)}`,
 				err,
 				...optionalParams
 			);
@@ -237,8 +237,8 @@ export class Logger {
 		if (this.logFormat === 'console') {
 			console.log();
 			return console.log(
-				this.prettyPrefix,
 				cyan(`[LEVEL::${LOG_LEVELS.DEBUG}]`),
+				this.prettyPrefix,
 				input,
 				...optionalParams
 			);

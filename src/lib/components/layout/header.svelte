@@ -1,10 +1,20 @@
 <script lang="ts">
+	import { CloudUploadIcon, FolderPlusIcon } from '@lucide/svelte';
 	import { page } from '$app/state';
+	import Activity from '$lib/components/layout/activity.svelte';
 	import Notifications from '$lib/components/layout/notifications.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
+	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
+
+	type Props = {
+		newFolderOpen: boolean;
+	};
+
+	let { newFolderOpen = $bindable(false) }: Props = $props();
 </script>
 
 <header
@@ -37,6 +47,24 @@
 		</Breadcrumb.Root>
 		<div class="ml-auto flex items-center gap-2">
 			<Notifications />
+			<Activity />
+			<div class="flex items-center gap-2">
+				<Button href={route('/upload')} class="h-full text-sm">
+					Upload
+					<CloudUploadIcon />
+				</Button>
+				<Button
+					variant="outline"
+					class="h-full text-sm"
+					type="button"
+					onclick={() => {
+						newFolderOpen = true;
+					}}
+				>
+					New Folder
+					<FolderPlusIcon class="h-5 w-5" />
+				</Button>
+			</div>
 		</div>
 	</div>
 </header>

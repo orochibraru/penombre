@@ -3,9 +3,9 @@
 -->
 
 <script lang="ts">
-	import { cn } from '$lib/utils';
 	import { UploadIcon } from '@lucide/svelte';
 	import { useId } from 'bits-ui';
+	import { cn } from '$lib/utils';
 	import { displaySize } from '.';
 	import type { FileDropZoneProps, FileRejectedReason } from './types';
 

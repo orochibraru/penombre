@@ -1,5 +1,5 @@
-import { bridge } from '$lib/client/api';
 import { error } from '@sveltejs/kit';
+import { bridge } from '$lib/client/api';
 
 export const load = async ({ locals, url }) => {
 	const { api } = bridge(url, locals.authCookie);

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { navigating } from '$app/state';
 	import { cubicOut } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
 	import { fade } from 'svelte/transition';
+	import { navigating } from '$app/state';
 
 	let showLoadingBar = $state(false);
 

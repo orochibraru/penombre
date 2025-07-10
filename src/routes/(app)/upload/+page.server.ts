@@ -1,7 +1,10 @@
-import { bridge } from '$lib/client/api';
-import { fail, message, setError, superValidate } from 'sveltekit-superforms';
+import { createHash, randomBytes } from 'node:crypto';
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fail, message, superValidate } from 'sveltekit-superforms';
 import { valibot } from 'sveltekit-superforms/adapters';
-import type { CustomReq } from './model';
+import { uploadQueue } from '$lib/server/queues';
+import { getTempDir } from '$lib/server/upload';
 import { schema } from './schema';
 
 export const load = async () => {
@@ -11,80 +14,29 @@ export const load = async () => {
 };
 
 export const actions = {
-	default: async ({ request, locals, url }) => {
+	default: async ({ request }) => {
 		const form = await superValidate(request, valibot(schema));
-
-		const { logger } = locals;
 
 		if (!form.valid) {
 			return fail(400, { form });
 		}
-
-		const { api } = bridge(url, locals.authCookie);
-
-		const requests: CustomReq[] = [];
+		const tempDir = getTempDir();
 
 		for (const file of form.data.attachments) {
-			requests.push({
-				file: file.name,
-				error: false,
-				fullfilled: false,
-				promise: api.v1.storage.objects
-					.post({ file })
-					.then((res) => {
-						const reqItem = requests.find((req) => req.file === file.name);
-						if (!reqItem) {
-							throw new Error('Cannot find req item!');
-						}
+			const hash = createHash('sha256');
+			const bufferArray = await file.arrayBuffer();
+			const buffer = Buffer.from(bufferArray);
+			hash.update(buffer);
+			const originalChecksum = hash.digest('hex');
+			const uniqueSuffix = randomBytes(16).toString('hex');
+			const uniqueFileName = `${Date.now()}-${uniqueSuffix}-${file.name}`;
+			const tempFilePath = path.join(tempDir, uniqueFileName);
+			await writeFile(tempFilePath, Buffer.from(buffer));
+			const originalFileName = file.name;
 
-						reqItem.fullfilled = true;
-
-						if (res.error) {
-							reqItem.error = true;
-							reqItem.errorMessage = JSON.stringify(res.error.value);
-							logger.error(res.error);
-							logger.error(requests);
-						}
-					})
-					.catch((e) => {
-						logger.error(e);
-						const reqItem = requests.find((req) => req.file === file.name);
-						if (!reqItem) {
-							throw new Error('Cannot find req item!');
-						}
-
-						reqItem.fullfilled = true;
-						reqItem.error = true;
-						if (e.message) {
-							reqItem.errorMessage = e.message;
-						} else {
-							reqItem.errorMessage = 'Unexpected error.';
-						}
-					})
-			});
+			uploadQueue.add(file.name, { tempFilePath, originalChecksum, originalFileName });
 		}
 
-		try {
-			await Promise.all(requests.map((req) => req.promise));
-
-			const errors = requests.filter((req) => req.error === true);
-
-			if (errors.length > 0) {
-				const marshaled = requests.map((req) => {
-					delete req.promise;
-					return req;
-				});
-
-				return message(form, marshaled, {
-					status: 500
-				});
-			}
-
-			return message(form, 'Posted!');
-		} catch (e) {
-			logger.error(e);
-			setError(form, 'Failed to upload some files.');
-			return fail(400, { form });
-		}
+		return message(form, 'Posted!');
 	}
 };

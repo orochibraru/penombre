@@ -64,6 +64,14 @@ services:
       retries: 5
       start_period: 3s
 
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    restart: unless-stopped
+    ulimits:
+      memlock: -1
+
 volumes:
   postgres_data:
     driver: local

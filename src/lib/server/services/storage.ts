@@ -1,7 +1,3 @@
-import { dev } from '$app/environment';
-import { env } from '$env/dynamic/private';
-import { Logger } from '$lib/logger';
-import { toSnake } from '$lib/utils';
 import {
 	type _Object,
 	type CommonPrefix,
@@ -19,6 +15,10 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { User } from 'better-auth';
 import { type Static, t } from 'elysia';
 import { type IAudioMetadata, parseBlob } from 'music-metadata';
+import { dev } from '$app/environment';
+import { env } from '$env/dynamic/private';
+import { Logger } from '$lib/logger';
+import { toSnake } from '$lib/utils';
 
 const logger = new Logger('Service::Storage');
 
@@ -85,6 +85,12 @@ export const S3ObjectListSchema = t.Object({
 
 export const ObjectUrlSchema = t.String();
 
+export function getMinioUrl() {
+	const prodUrl = env.MINIO_URL ?? 'http://minio:9000';
+	const devUrl = env.MINIO_URL ?? 'http://0.0.0.0:9000';
+	return dev ? devUrl : prodUrl;
+}
+
 export type ObjectItem = Static<typeof S3ObjectSchema>;
 export type ObjectList = Static<typeof S3ObjectListSchema>;
 export type Bucket = Static<typeof S3BucketSchema>;
@@ -105,9 +111,6 @@ export class StorageService extends S3Client {
 	 * @returns {S3ClientConfig} The configuration object for the S3 client.
 	 */
 	static getConfig(): S3ClientConfig {
-		const prodUrl = env.MINIO_URL ?? 'http://minio:9000';
-		const devUrl = env.MINIO_URL ?? 'http://0.0.0.0:9000';
-		const serverUrl = dev ? devUrl : prodUrl;
 		return {
 			region: 'us-east-1',
 			credentials: {
@@ -115,7 +118,7 @@ export class StorageService extends S3Client {
 				secretAccessKey: 'opendrive'
 			},
 			forcePathStyle: true,
-			endpoint: serverUrl,
+			endpoint: getMinioUrl(),
 			disableHostPrefix: true
 		};
 	}
@@ -273,6 +276,8 @@ export class StorageService extends S3Client {
 				logger.error('Error parsing metadata:', error);
 			}
 		}
+		const name = await this.incrementItemName(file.name);
+
 		const browserStream = file.stream();
 		const reader = browserStream.getReader();
 		const chunks: Uint8Array[] = [];
@@ -282,7 +287,6 @@ export class StorageService extends S3Client {
 			if (value) chunks.push(value);
 			done = doneReading;
 		}
-		const name = await this.incrementItemName(file.name);
 		const contents = Buffer.concat(chunks);
 		const cmd = new PutObjectCommand({
 			Bucket: this.bucket,
@@ -350,9 +354,11 @@ export class StorageService extends S3Client {
 	 */
 	public async createPresignedUrl({
 		item,
+		hostname,
 		expiresIn = 3600
 	}: {
 		item: string;
+		hostname: string;
 		expiresIn?: number;
 	}): Promise<string> {
 		try {
@@ -361,7 +367,8 @@ export class StorageService extends S3Client {
 				Key: item
 			});
 
-			const url = await getSignedUrl(this, command, { expiresIn });
+			let url = await getSignedUrl(this, command, { expiresIn });
+			url = url.replace(getMinioUrl(), hostname);
 			return url;
 		} catch (error) {
 			console.error('Error creating presigned URL:', error);

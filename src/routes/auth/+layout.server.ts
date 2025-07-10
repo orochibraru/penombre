@@ -1,6 +1,6 @@
+import { redirect } from '@sveltejs/kit';
 import { route } from '$lib/ROUTES';
 import { auth } from '$lib/server/services/auth';
-import { redirect } from '@sveltejs/kit';
 
 export const load = async ({ request }) => {
 	const session = await auth.api.getSession({

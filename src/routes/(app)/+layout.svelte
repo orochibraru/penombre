@@ -1,16 +1,4 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
-	import { bridge } from '$lib/client/api';
-	import SiteHeader from '$lib/components/layout/header.svelte';
-	import Nav, { type NavItem } from '$lib/components/layout/nav.svelte';
-	import NavUser from '$lib/components/layout/user-menu.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { route } from '$lib/ROUTES';
-	import { title } from '$lib/store/title';
 	import {
 		ClockFadingIcon,
 		CloudUploadIcon,
@@ -28,6 +16,21 @@
 		UsersIcon
 	} from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
+	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
+	import { bridge } from '$lib/client/api';
+	import SiteHeader from '$lib/components/layout/header.svelte';
+	import Nav, { type NavItem } from '$lib/components/layout/nav.svelte';
+	import NavUser from '$lib/components/layout/user-menu.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Input } from '$lib/components/ui/input';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { route } from '$lib/ROUTES';
+	import { title } from '$lib/store/title';
+	import 'player.style/tailwind-audio';
+	import MusicPlayer from '$lib/components/layout/music-player.svelte';
+	import { musicSourceUrl } from '$lib/store/music';
 
 	const { children, data } = $props();
 
@@ -172,30 +175,15 @@
 	</Sidebar.Root>
 
 	<Sidebar.Inset>
-		<SiteHeader />
+		<SiteHeader bind:newFolderOpen />
 		<div class="flex flex-1 flex-col pb-20">
 			<div class="main-container @container/main flex flex-1 flex-col gap-5 p-5">
 				{@render children()}
 			</div>
 		</div>
-		{#if page.url.pathname.startsWith('/browse')}
-			<div class="fixed right-3 bottom-3 lg:right-10 lg:bottom-5">
-				<div class="flex flex-col items-end gap-2">
-					<Button href={route('/upload')}>
-						Upload
-						<CloudUploadIcon />
-					</Button>
-					<Button
-						variant="outline"
-						type="button"
-						onclick={() => {
-							newFolderOpen = true;
-						}}
-					>
-						New Folder
-						<FolderPlusIcon class="h-5 w-5" />
-					</Button>
-				</div>
+		{#if $musicSourceUrl}
+			<div class="music-player lg:music-player-lg fixed right-0 bottom-0">
+				<MusicPlayer sourceUrl={$musicSourceUrl} />
 			</div>
 		{/if}
 	</Sidebar.Inset>

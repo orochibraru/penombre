@@ -1,6 +1,6 @@
+import { error } from '@sveltejs/kit';
 import { bridge } from '$lib/client/api';
 import { allowedFileCategories } from '$lib/server/services/storage';
-import { error } from '@sveltejs/kit';
 
 export const load = async ({ params, locals, url }) => {
 	const category = params.category;

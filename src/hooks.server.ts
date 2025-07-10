@@ -1,18 +1,24 @@
-import { building, dev } from '$app/environment';
-import { env } from '$env/dynamic/private';
-import { Logger } from '$lib/logger';
-import { SENTRY_DSN } from '$lib/otel';
-import { auth } from '$lib/server/services/auth';
+import { createHash } from 'node:crypto';
+import { readFile, unlink } from 'node:fs/promises';
 import * as Sentry from '@sentry/sveltekit';
 import { handleErrorWithSentry, sentryHandle } from '@sentry/sveltekit';
-import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import NodeCache from 'node-cache';
+import type { Worker } from 'bullmq';
+import mime from 'mime-types';
+import { building, dev } from '$app/environment';
+import { bridge } from '$lib/client/api';
+import { Logger } from '$lib/logger';
+import { SENTRY_DSN } from '$lib/otel';
+import { type UploadQueueJob, uploadQueue } from '$lib/server/queues';
+import { auth } from '$lib/server/services/auth';
+import { getMinioUrl } from '$lib/server/services/storage';
+import { toSnake } from '$lib/utils';
 
-if (!building) {
+if (!building && !dev) {
 	Sentry.init({
 		dsn: SENTRY_DSN,
-		environment: dev ? 'development' : 'production',
+		environment: 'production',
 		tracesSampleRate: 1.0
 	});
 }
@@ -21,13 +27,12 @@ const logger = new Logger('Service::Hooks');
 const apiLogger = new Logger('Service::API');
 let killing = false;
 
-let cache: NodeCache | null;
+let worker: Worker<UploadQueueJob> | null;
 
-export const init = () => {
-	cache = new NodeCache();
-};
-
-const errorHandler: HandleServerError = ({ error, event }) => {
+const errorHandler: HandleServerError = ({ error, event, status }) => {
+	if (status === 404) {
+		return;
+	}
 	const errorId = crypto.randomUUID();
 
 	event.locals.error = error?.toString() ?? '';
@@ -39,19 +44,19 @@ const errorHandler: HandleServerError = ({ error, event }) => {
 
 	event.locals.errorId = errorId;
 
-	const typedError = error as Error;
+	logger.error(errorId, event.url, status, error);
 
-	logger.error(JSON.stringify(typedError));
-	logger.error({
-		url: event.request.url,
-		message: typedError.message,
-		errorId,
-		stackTrace: typedError.stack,
-		date: new Date().toISOString()
+	Sentry.captureException(error, {
+		extra: {
+			event,
+			errorId,
+			status
+		}
 	});
 
 	return {
-		message: `An unexpected error occurred: ${typedError.message}`,
+		message: `An unexpected error occurred: ${JSON.stringify(error)}`,
+		status,
 		errorId
 	};
 };
@@ -59,12 +64,6 @@ const errorHandler: HandleServerError = ({ error, event }) => {
 export const handleError = handleErrorWithSentry(errorHandler);
 
 const preHandler: Handle = async ({ event, resolve }) => {
-	if (!cache) {
-		return error(500, 'Failed to init cache');
-	}
-	event.locals.cache = cache;
-	event.locals.cacheBypass = !!env.CACHE_BYPASS;
-
 	const authStatus = await auth.api.getSession({
 		headers: event.request.headers
 	});
@@ -79,13 +78,78 @@ const preHandler: Handle = async ({ event, resolve }) => {
 
 	event.locals.logger = new Logger('Service::Pages');
 
+	const { api } = bridge(event.url, event.locals.authCookie);
+
+	if (!worker) {
+		worker = uploadQueue.setWorker(async (job) => {
+			const jobData = job.data as UploadQueueJob;
+			try {
+				job.updateProgress(10);
+				uploadQueue.logger.debug(jobData);
+				const fileBuffer = await readFile(jobData.tempFilePath);
+				const mimeType = mime.lookup(jobData.tempFilePath) || 'application/octet-stream';
+
+				uploadQueue.logger.info(`Veryfing file integrity for ${jobData.originalFileName}`);
+
+				const hash = createHash('sha256');
+				hash.update(fileBuffer);
+				const readChecksum = hash.digest('hex');
+
+				if (jobData.originalChecksum !== readChecksum) {
+					throw new Error('File corruption detected! Checksums do not match.');
+				}
+
+				uploadQueue.logger.info(`Integrity verified for ${jobData.originalFileName}`);
+
+				uploadQueue.logger.info(`Uploading ${jobData.originalFileName} (${mimeType})`);
+
+				const file = new File([fileBuffer], jobData.originalFileName, { type: mimeType });
+
+				const { data, error } = await api.v1.storage.objects.post({ file });
+
+				job.updateProgress(100);
+				if (error) {
+					throw error;
+				}
+
+				job.updateProgress(100);
+				return data;
+			} catch (e) {
+				uploadQueue.logger.error(e);
+				throw e;
+			} finally {
+				await unlink(jobData.tempFilePath);
+			}
+		});
+	}
+
+	if (worker && !worker.isRunning()) {
+		try {
+			worker.run();
+		} catch (e) {
+			event.locals.logger.error('Failed to restart upload queue worker', e);
+		}
+	}
+
+	// Proxy for signed urls
+	const userBucket = toSnake(event.locals.user.name);
+	if (event.url.pathname.startsWith(`/${userBucket}/`)) {
+		const internalUrl = new URL(event.url.pathname + event.url.search, getMinioUrl());
+
+		return event.fetch(internalUrl, {
+			headers: event.request.headers,
+			method: event.request.method,
+			body: event.request.body
+		});
+	}
+
 	return resolve(event);
 };
 
 const logHandler: Handle = async ({ event, resolve }) => {
 	let logHandler: Logger = logger;
 
-	if (event.url.pathname.includes('.well-known')) {
+	if (event.url.pathname.includes('.well-known') || event.url.pathname.startsWith('/dev-sw')) {
 		// Noise
 		return resolve(event);
 	}

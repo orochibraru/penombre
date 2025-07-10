@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { type Icon as IconType, MonitorIcon, MoonIcon, SunIcon } from '@lucide/svelte';
+	import { setMode, userPrefersMode } from 'mode-watcher';
 	import { Label } from '$lib/components/ui/label';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
 	import { title } from '$lib/store/title';
-	import { type Icon as IconType, MonitorIcon, MoonIcon, SunIcon } from '@lucide/svelte';
-	import { setMode, userPrefersMode } from 'mode-watcher';
 
 	$title = 'Settings';
 

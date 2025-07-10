@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!src/lib/ROUTES.ts", "!src/lib/paraglide"]
+		"includes": ["**", "!src/lib/ROUTES.ts", "!src/lib/paraglide", "!src/app.css"]
 	},
 	"formatter": {
 		"enabled": false

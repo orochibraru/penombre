@@ -1,6 +1,9 @@
-import { route } from '$lib/ROUTES';
-import { auth } from '$lib/server/services/auth';
 import { redirect } from '@sveltejs/kit';
+import { dev } from '$app/environment';
+import { route } from '$lib/ROUTES';
+import { uploadQueue } from '$lib/server/queues';
+import { auth } from '$lib/server/services/auth';
+import { getMinioUrl } from '$lib/server/services/storage';
 
 export const load = async ({ request, locals }) => {
 	const authStatus = await auth.api.getSession({
@@ -13,9 +16,15 @@ export const load = async ({ request, locals }) => {
 
 	const { user, session } = authStatus;
 
+	const jobs = await uploadQueue.listJobs();
+
+	// await uploadQueue.cleanup()
+
 	return {
 		user,
 		session,
-		token: locals.authCookie
+		token: locals.authCookie,
+		jobs,
+		minioUrl: getMinioUrl()
 	};
 };

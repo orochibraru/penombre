@@ -18,6 +18,7 @@ services:
       - BETTER_AUTH_URL=${URL-http://localhost:3000}
       - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}
       - MINIO_URL=http://minio:9000
+      - REDIS_HOST=opendrive-redis
       - ORIGIN=${URL-http://localhost:3000}
     networks:
       - proxy-swarm
@@ -68,6 +69,15 @@ services:
       timeout: 10s
       retries: 5
       start_period: 3s
+
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ulimits:
+      memlock: -1
+    networks:
+      - opendrive
 
 volumes:
   postgres_data:
