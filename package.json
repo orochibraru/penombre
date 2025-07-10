@@ -34,7 +34,6 @@
 		"@dnd-kit-svelte/sortable": "^0.0.8",
 		"@dnd-kit-svelte/utilities": "^0.0.8",
 		"@lucide/svelte": "^0.525.0",
-		"@sentry/vite-plugin": "^3.5.0",
 		"@softwaretechnik/dbml-renderer": "^1.0.31",
 		"@sveltejs/adapter-node": "^5.2.13",
 		"@sveltejs/kit": "^2.22.3",

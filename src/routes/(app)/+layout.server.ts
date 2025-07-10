@@ -1,5 +1,4 @@
 import { redirect } from '@sveltejs/kit';
-import { dev } from '$app/environment';
 import { route } from '$lib/ROUTES';
 import { uploadQueue } from '$lib/server/queues';
 import { auth } from '$lib/server/services/auth';
@@ -16,7 +15,9 @@ export const load = async ({ request, locals }) => {
 
 	const { user, session } = authStatus;
 
-	const jobs = await uploadQueue.listJobs();
+	const queue = uploadQueue();
+
+	const jobs = await queue?.listJobs();
 
 	// await uploadQueue.cleanup()
 

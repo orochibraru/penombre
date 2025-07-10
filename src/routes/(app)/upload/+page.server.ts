@@ -14,7 +14,7 @@ export const load = async () => {
 };
 
 export const actions = {
-	default: async ({ request }) => {
+	default: async ({ request, locals }) => {
 		const form = await superValidate(request, valibot(schema));
 
 		if (!form.valid) {
@@ -34,7 +34,14 @@ export const actions = {
 			await writeFile(tempFilePath, Buffer.from(buffer));
 			const originalFileName = file.name;
 
-			uploadQueue.add(file.name, { tempFilePath, originalChecksum, originalFileName });
+			const queue = uploadQueue();
+
+			queue?.add(file.name, {
+				tempFilePath,
+				originalChecksum,
+				originalFileName,
+				user: locals.user
+			});
 		}
 
 		return message(form, 'Posted!');

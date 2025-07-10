@@ -8,12 +8,13 @@
 	} from '@lucide/svelte';
 	import { type JobJson } from 'bullmq';
 	import { page } from '$app/state';
+	import Button from '$lib/components/ui/button/button.svelte';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 </script>
 
 {#snippet alert({ job }: { job: JobJson })}
-	<div class="flex w-full items-center justify-between gap-5">
+	<div class="flex w-full items-center justify-between gap-5" id="job-{job.id}">
 		<div class="w-full">
 			<div class="flex w-full items-center gap-2">
 				{#if !job.finishedOn}
@@ -39,7 +40,9 @@
 				</div>
 			</div>
 		</div>
-		<XIcon class="ml-auto" />
+		<Button variant="outline" size="sm">
+			<XIcon class="ml-auto" />
+		</Button>
 	</div>
 {/snippet}
 

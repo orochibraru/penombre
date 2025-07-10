@@ -49,7 +49,32 @@ export class QueueService<DataType> extends Queue<DataType> {
 		this.concurrency = args.concurrency;
 	}
 
-	public setWorker(callback: (job: Job) => void) {
+	/**
+	 * Sets up a worker to process jobs in the queue.
+	 *
+	 * The callback function will be executed for each job in the queue.
+	 * The callback function will receive a Job object as an argument, which is an object containing
+	 * the id, name, and data of the job.
+	 *
+	 * The callback function should return a Promise that resolves when the job is completed.
+	 *
+	 * The worker will execute the callback function for each job in the queue.
+	 *
+	 * The worker will also set up event listeners for the following events:
+	 *
+	 * - stalled: Called when the worker is stalled.
+	 * - closed: Called when the worker is closed.
+	 * - failed: Called when a job fails.
+	 * - resumed: Called when the worker is resumed.
+	 * - drained: Called when the queue is drained.
+	 * - progress: Called when a job is processed.
+	 *
+	 * The worker will log information to the console when events occur.
+	 *
+	 * @param {Function} callback - The callback function to execute for each job.
+	 * @returns {Worker} The worker instance.
+	 */
+	public setWorker(callback: (job: Job<DataType>) => void): Worker<DataType> {
 		const worker = new Worker<DataType>(
 			this.name,
 			async (job) => {
