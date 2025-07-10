@@ -23,25 +23,34 @@ export const actions = {
 		const tempDir = getTempDir();
 
 		for (const file of form.data.attachments) {
-			const hash = createHash('sha256');
-			const bufferArray = await file.arrayBuffer();
-			const buffer = Buffer.from(bufferArray);
-			hash.update(buffer);
-			const originalChecksum = hash.digest('hex');
-			const uniqueSuffix = randomBytes(16).toString('hex');
-			const uniqueFileName = `${Date.now()}-${uniqueSuffix}-${file.name}`;
-			const tempFilePath = path.join(tempDir, uniqueFileName);
-			await writeFile(tempFilePath, Buffer.from(buffer));
-			const originalFileName = file.name;
+			try {
+				const hash = createHash('sha256');
+				const bufferArray = await file.arrayBuffer();
+				const buffer = Buffer.from(bufferArray);
+				hash.update(buffer);
+				const originalChecksum = hash.digest('hex');
+				const uniqueSuffix = randomBytes(16).toString('hex');
+				const uniqueFileName = `${Date.now()}-${uniqueSuffix}-${file.name}`;
+				const tempFilePath = path.join(tempDir, uniqueFileName);
+				await writeFile(tempFilePath, Buffer.from(buffer));
+				const originalFileName = file.name;
 
-			const queue = uploadQueue();
+				const queue = uploadQueue();
 
-			queue?.add(file.name, {
-				tempFilePath,
-				originalChecksum,
-				originalFileName,
-				user: locals.user
-			});
+				queue?.add(file.name, {
+					tempFilePath,
+					originalChecksum,
+					originalFileName,
+					user: locals.user
+				});
+			} catch (e) {
+				locals.logger.error('Failed to queue file', file.name);
+				if (e instanceof Error) {
+					return fail(500, { message: e.message });
+				}
+
+				return fail(500, { message: 'An unexpected error occurred.' });
+			}
 		}
 
 		return message(form, 'Posted!');
