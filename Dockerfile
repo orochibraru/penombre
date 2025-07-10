@@ -41,7 +41,11 @@ HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "cu
 
 EXPOSE 3000/tcp
 
+RUN chown -R node:node /app
+
 USER node
+
+RUN mkdir /app/temp
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
 
