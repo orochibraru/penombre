@@ -27,6 +27,8 @@ services:
       - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
       - MINIO_URL=http://minio:9000
+      - BODY_SIZE_LIMIT=Infinity
+      - REDIS_HOST=redis
 
   minio:
     image: bitnami/minio

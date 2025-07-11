@@ -34,6 +34,7 @@ COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /app/build /app/build
 
 ENV NODE_ENV=production
+ENV BODY_SIZE_LIMIT=Infinity
 
 RUN chmod +x /app/entrypoint.sh
 

@@ -20,6 +20,7 @@ services:
       - MINIO_URL=http://minio:9000
       - REDIS_HOST=redis
       - ORIGIN=${URL-http://localhost:3000}
+      - BODY_SIZE_LIMIT=Infinity
     networks:
       - proxy-swarm
       - opendrive
