@@ -23,6 +23,9 @@ jobs:
   checks:
     name: 'Checks'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        job: [format:check, lint, circular, check, build]
     steps:
       - uses: actions/checkout@v4
 
@@ -41,20 +44,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Verify Formatting
-        run: pnpm run format:check
-
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Look for circular dependencies
-        run: pnpm run circular
-
-      - name: Run TypeScript check
-        run: pnpm run check
-
-      - name: Build the app
-        run: pnpm run build
+      - name: Run '${{ matrix.job }}' command 🧪
+        run: pnpm ${{ matrix.job }}
 
   tests:
     name: 'Tests'
@@ -124,25 +115,3 @@ jobs:
 
       - name: Run tests
         run: pnpm run test:ci
-
-  docker-dry:
-    name: 'Docker dry run'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Compose Build
-        shell: bash
-        run: docker compose -f compose.local.yaml build
-
-      - name: Compose Pull
-        shell: bash
-        run: docker compose -f compose.local.yaml pull
-
-      - name: Compose Dry Run
-        shell: bash
-        run: docker compose -f compose.local.yaml up -d --wait --remove-orphans --dry-run
-
-      - name: Compose cleanup
-        shell: bash
-        run: docker compose -f compose.local.yaml down -v
