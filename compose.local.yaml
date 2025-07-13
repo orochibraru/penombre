@@ -67,7 +67,7 @@ services:
       start_period: 3s
 
   redis:
-    image: bitnami/redis:8
+    image: bitnami/redis:8.0
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     restart: unless-stopped
