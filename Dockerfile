@@ -5,14 +5,19 @@ WORKDIR /app
 
 RUN apk add --no-cache curl bash ca-certificates wget
 
-RUN npm i -g pnpm tsx
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN corepack enable
+
+RUN pnpm i -g tsx
 
 # Build Stage
 FROM base AS builder
 
 COPY package.json ./
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts --prefer-offline
 
 COPY . .
 

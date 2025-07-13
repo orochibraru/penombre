@@ -31,7 +31,7 @@ services:
       - REDIS_HOST=redis
 
   minio:
-    image: bitnami/minio
+    image: bitnami/minio:2025
     restart: unless-stopped
     environment:
       - MINIO_ROOT_USER=opendrive
@@ -48,7 +48,7 @@ services:
       - minio_data:/bitnami/minio/data
 
   db:
-    image: postgres
+    image: postgres:17-alpine
     restart: unless-stopped
     ports:
       - 5432
@@ -67,7 +67,7 @@ services:
       start_period: 3s
 
   redis:
-    image: bitnami/redis:latest
+    image: bitnami/redis:8
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     restart: unless-stopped

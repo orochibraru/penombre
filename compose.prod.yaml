@@ -34,7 +34,7 @@ services:
         - traefik.http.services.opendrive-app.loadbalancer.server.port=3000
 
   minio:
-    image: bitnami/minio
+    image: bitnami/minio:2025
     networks:
       - opendrive
     environment:
@@ -52,7 +52,7 @@ services:
       - minio_data:/bitnami/minio/data
 
   db:
-    image: postgres
+    image: postgres:17-alpine
     networks:
       - opendrive
     ports:
@@ -72,7 +72,7 @@ services:
       start_period: 3s
 
   redis:
-    image: bitnami/redis:latest
+    image: bitnami/redis:8
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ulimits:
