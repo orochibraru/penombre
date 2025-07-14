@@ -182,9 +182,7 @@
 			</div>
 		</div>
 		{#if $musicSourceUrl}
-			<div class="music-player lg:music-player-lg fixed right-0 bottom-0">
-				<MusicPlayer sourceUrl={$musicSourceUrl} />
-			</div>
+			<MusicPlayer sourceUrl={$musicSourceUrl} />
 		{/if}
 	</Sidebar.Inset>
 </Sidebar.Provider>

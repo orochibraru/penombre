@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fail, message, superValidate } from 'sveltekit-superforms';
 import { valibot } from 'sveltekit-superforms/adapters';
-import { uploadQueue } from '$lib/server/queues';
+import { type UploadQueueJob, uploadQueue } from '$lib/server/queues';
 import { getTempDir } from '$lib/server/upload';
 import { schema } from './schema';
 
@@ -22,6 +22,15 @@ export const actions = {
 		}
 		const tempDir = getTempDir();
 
+		type QueueJob = {
+			name: string;
+			data: UploadQueueJob;
+		}[];
+
+		const queueJobs: QueueJob = [];
+
+		const filePromises: Promise<void>[] = [];
+
 		for (const file of form.data.attachments) {
 			try {
 				const hash = createHash('sha256');
@@ -32,16 +41,19 @@ export const actions = {
 				const uniqueSuffix = randomBytes(16).toString('hex');
 				const uniqueFileName = `${Date.now()}-${uniqueSuffix}-${file.name}`;
 				const tempFilePath = path.join(tempDir, uniqueFileName);
-				await writeFile(tempFilePath, Buffer.from(buffer));
+				const writeJob = writeFile(tempFilePath, Buffer.from(buffer));
 				const originalFileName = file.name;
 
-				const queue = uploadQueue();
+				filePromises.push(writeJob);
 
-				queue?.add(file.name, {
-					tempFilePath,
-					originalChecksum,
-					originalFileName,
-					user: locals.user
+				queueJobs.push({
+					name: file.name,
+					data: {
+						user: locals.user,
+						tempFilePath,
+						originalChecksum,
+						originalFileName
+					}
 				});
 			} catch (e) {
 				locals.logger.error('Failed to queue file', file.name);
@@ -51,6 +63,22 @@ export const actions = {
 
 				return fail(500, { message: 'An unexpected error occurred.' });
 			}
+		}
+
+		try {
+			await Promise.all(filePromises);
+		} catch (e) {
+			locals.logger.error('Failed to write temp files', e);
+			return fail(500, { message: 'Failed to write temporary files.' });
+		}
+
+		const queue = uploadQueue();
+
+		try {
+			await queue?.addBulk(queueJobs);
+		} catch (e) {
+			locals.logger.error(e);
+			return fail(500, { message: 'Failed to queue some jobs' });
 		}
 
 		return message(form, 'Posted!');

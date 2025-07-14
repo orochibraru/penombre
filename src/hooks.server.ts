@@ -1,22 +1,11 @@
-import * as Sentry from '@sentry/sveltekit';
-import { handleErrorWithSentry, sentryHandle } from '@sentry/sveltekit';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { building, dev } from '$app/environment';
+import { building } from '$app/environment';
 import { Logger } from '$lib/logger';
-import { SENTRY_DSN } from '$lib/otel';
 import { auth } from '$lib/server/services/auth';
 import { getMinioUrl } from '$lib/server/services/storage';
 import { uploadWorker } from '$lib/server/workers';
 import { toSnake } from '$lib/utils';
-
-if (!building && !dev) {
-	Sentry.init({
-		dsn: SENTRY_DSN,
-		environment: 'production',
-		tracesSampleRate: 1.0
-	});
-}
 
 const logger = new Logger('Service::Hooks');
 const apiLogger = new Logger('Service::API');
@@ -36,7 +25,7 @@ export const init = () => {
 	}
 };
 
-const errorHandler: HandleServerError = ({ error, event, status }) => {
+export const handleError: HandleServerError = ({ error, event, status }) => {
 	if (status === 404) {
 		return;
 	}
@@ -53,22 +42,12 @@ const errorHandler: HandleServerError = ({ error, event, status }) => {
 
 	logger.error(errorId, event.url, status, error);
 
-	Sentry.captureException(error, {
-		extra: {
-			event,
-			errorId,
-			status
-		}
-	});
-
 	return {
 		message: `An unexpected error occurred: ${JSON.stringify(error)}`,
 		status,
 		errorId
 	};
 };
-
-export const handleError = handleErrorWithSentry(errorHandler);
 
 const preHandler: Handle = async ({ event, resolve }) => {
 	const authStatus = await auth.api.getSession({
@@ -139,7 +118,7 @@ const logHandler: Handle = async ({ event, resolve }) => {
 	return resolution;
 };
 
-export const handle: Handle = sequence(sentryHandle(), logHandler, preHandler);
+export const handle: Handle = sequence(logHandler, preHandler);
 
 function kill(reason: string) {
 	if (killing) {

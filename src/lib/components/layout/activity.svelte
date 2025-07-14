@@ -54,7 +54,7 @@
 		<ActivityIcon class="h-[1.2rem] w-[1.2rem]" />
 		<span class="sr-only">Show Notifications</span>
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content align="end">
+	<DropdownMenu.Content align="end" class="max-h-90 overflow-y-auto">
 		{#if page.data.jobs}
 			{@const jobs = page.data.jobs as JobJson[]}
 			{#each jobs as job}
