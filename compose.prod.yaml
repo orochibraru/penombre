@@ -30,7 +30,6 @@ services:
         - traefik.http.routers.opendrive-app.rule=Host(`drive.ombrage.space`)
         - traefik.http.routers.opendrive-app.entrypoints=websecure
         - traefik.http.routers.opendrive-app.tls.certResolver=letsencrypt
-        - traefik.http.routers.opendrive-app.middlewares=traefik-forward-auth
         - traefik.http.services.opendrive-app.loadbalancer.server.port=3000
 
   minio:
