@@ -8,6 +8,7 @@
 		FolderIcon,
 		FolderInputIcon,
 		type Icon as IconType,
+		PencilLineIcon,
 		ShareIcon,
 		StarIcon,
 		TrashIcon
@@ -24,7 +25,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { route } from '$lib/ROUTES';
 	import type { ObjectItem, ObjectList } from '$lib/server/services/storage';
-	import { musicSourceUrl } from '$lib/store/music';
+	import { playableMusic } from '$lib/store/music';
 	import {
 		capitalizeFirstLetter,
 		cn,
@@ -76,6 +77,11 @@
 	}
 
 	const actionItems: ActionItem[] = [
+		{
+			title: 'Rename',
+			icon: PencilLineIcon,
+			action: () => []
+		},
 		{
 			title: 'Move',
 			icon: FolderInputIcon,
@@ -146,7 +152,10 @@
 			return;
 		}
 		if (item.ContentType?.startsWith('audio')) {
-			$musicSourceUrl = presignedUrl;
+			$playableMusic = {
+				title: item.Key,
+				source: presignedUrl
+			};
 			return;
 		}
 

@@ -30,7 +30,6 @@
 	import { title } from '$lib/store/title';
 	import 'player.style/tailwind-audio';
 	import MusicPlayer from '$lib/components/layout/music-player.svelte';
-	import { musicSourceUrl } from '$lib/store/music';
 
 	const { children, data } = $props();
 
@@ -176,14 +175,12 @@
 
 	<Sidebar.Inset>
 		<SiteHeader bind:newFolderOpen />
-		<div class="flex flex-1 flex-col pb-20">
+		<div class="flex flex-1 flex-col pb-26">
 			<div class="main-container @container/main flex flex-1 flex-col gap-5 p-5">
 				{@render children()}
 			</div>
 		</div>
-		{#if $musicSourceUrl}
-			<MusicPlayer sourceUrl={$musicSourceUrl} />
-		{/if}
+		<MusicPlayer />
 	</Sidebar.Inset>
 </Sidebar.Provider>
 

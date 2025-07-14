@@ -1,3 +1,8 @@
 import { type Writable, writable } from 'svelte/store';
 
-export const musicSourceUrl: Writable<string> = writable('');
+export type PlayableMusic = {
+	title: string;
+	source: string;
+} | null;
+
+export const playableMusic: Writable<PlayableMusic> = writable();

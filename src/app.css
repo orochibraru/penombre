@@ -12,7 +12,7 @@
 	--card-foreground: oklch(0.141 0.005 285.823);
 	--popover: oklch(1 0 0);
 	--popover-foreground: oklch(0.141 0.005 285.823);
-	--primary: oklch(60.488% 0.19949 267.279);
+	--primary: oklch(53.706% 0.26452 294.163);
 	--primary-foreground: oklch(0.985 0 0);
 	--secondary: oklch(0.967 0.001 286.375);
 	--secondary-foreground: oklch(0.21 0.006 285.885);
@@ -46,7 +46,7 @@
 	--card-foreground: oklch(0.985 0 0);
 	--popover: oklch(0.21 0.006 285.885);
 	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(60.488% 0.19949 267.279);
+	--primary: oklch(53.706% 0.26452 294.163);
 	--primary-foreground: oklch(100% 0.00011 271.152);
 	--secondary: oklch(0.274 0.006 286.033);
 	--secondary-foreground: oklch(0.985 0 0);
@@ -126,10 +126,10 @@
 
 @layer utilities {
 	.music-player {
-		width: 100%;
+		width: calc(100% - 2.5rem);
 
 		@variant lg {
-			width: calc(100% - var(--sidebar-width));
+			width: calc(100% - (var(--sidebar-width) + 2rem));
 		}
 	}
 }
