@@ -82,8 +82,8 @@
 								onclick={async () => {
 									loading = true;
 									try {
-										const res = await authClient.signIn.social({
-											provider: 'github'
+										const res = await authClient.signIn.oauth2({
+											providerId: 'pocket-id'
 										});
 
 										if (res.error) {
@@ -100,7 +100,7 @@
 								{#if loading}
 									Signing in...
 								{:else}
-									Sign in with Github
+									Sign in with Pocket ID
 								{/if}
 								<GithubIcon />
 							</Button>
