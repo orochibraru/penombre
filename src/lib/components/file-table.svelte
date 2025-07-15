@@ -13,13 +13,17 @@
 		StarIcon,
 		TrashIcon
 	} from '@lucide/svelte';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { bridge } from '$lib/client/api';
+	import BottomAction from '$lib/components/layout/bottom-action.svelte';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
+	import * as ContextMenu from '$lib/components/ui/context-menu/index';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
@@ -41,22 +45,51 @@
 
 	let { title, data }: Props = $props();
 
+	type AugmentedItem = ObjectItem & {
+		checked: boolean;
+	};
+
+	type AugmentedList = AugmentedItem[];
+
+	let augmentedList: AugmentedList = $state([]);
+	let allSelected: boolean = $state(false);
+	let indeterminate: boolean = $state(false);
+	let actionableItem: AugmentedItem | undefined = $state(undefined);
 	let confirmDeleteOpen: boolean = $state(false);
-	let itemPendingDeletion: string = $state('');
 	let deletingItem: boolean = $state(false);
 
-	type ActionItem = {
+	function augmentList() {
+		augmentedList = data.list.map((item) => {
+			return {
+				checked: false,
+				...item
+			};
+		});
+	}
+
+	onMount(() => {
+		augmentList();
+	});
+
+	type ItemAction = {
 		title: string;
 		icon: typeof IconType;
-		action: (key: string) => void;
+		action: (item: AugmentedItem) => void;
 	};
 
 	const { api } = bridge(page.url, page.data.token);
 
 	async function handleDeleteItem() {
+		if (!actionableItem) {
+			return;
+		}
+
 		deletingItem = true;
+		const itemPath = page.params.path
+			? `${page.params.path}/${actionableItem.Key}`
+			: actionableItem.Key;
 		const promise = api.v1.storage.objects
-			.delete(null, { query: { item: itemPendingDeletion } })
+			.delete(null, { query: { item: itemPath } })
 			.then(async ({ error }) => {
 				if (error) {
 					console.error(error);
@@ -65,6 +98,7 @@
 				}
 
 				await invalidateAll();
+				augmentList();
 				confirmDeleteOpen = false;
 				deletingItem = false;
 			});
@@ -76,7 +110,7 @@
 		});
 	}
 
-	const actionItems: ActionItem[] = [
+	const itemActions: ItemAction[] = [
 		{
 			title: 'Rename',
 			icon: PencilLineIcon,
@@ -105,8 +139,8 @@
 		{
 			title: 'Delete',
 			icon: TrashIcon,
-			action: async (item: string) => {
-				itemPendingDeletion = page.params.path ? `${page.params.path}/${item}` : item;
+			action: async (item: AugmentedItem) => {
+				actionableItem = item;
 				confirmDeleteOpen = true;
 			}
 		}
@@ -152,6 +186,7 @@
 			return;
 		}
 		if (item.ContentType?.startsWith('audio')) {
+			$playableMusic = null;
 			$playableMusic = {
 				title: item.Key,
 				source: presignedUrl
@@ -165,8 +200,29 @@
 		}
 	}
 
+	function toggleSelectAll(checked: boolean) {
+		augmentedList = augmentedList.map((item) => ({ ...item, checked: checked }));
+	}
+
+	$effect(() => {
+		allSelected = augmentedList.length > 0 && augmentedList.every((item) => item.checked);
+		indeterminate = !allSelected && augmentedList.some((item) => item.checked);
+	});
+
+	let actionsOpen = $derived(indeterminate || allSelected);
+
 	const iconSize = 'h-5 w-5';
 </script>
+
+{#snippet DataTableActions(item: AugmentedItem)}
+	{#each itemActions as itemAction}
+		{@const Icon = itemAction.icon}
+		<ContextMenu.Item onclick={() => itemAction.action(item)}>
+			<Icon />
+			{itemAction.title}
+		</ContextMenu.Item>
+	{/each}
+{/snippet}
 
 <!-- Filters -->
 {#if title}
@@ -184,6 +240,13 @@
 	<Table.Root>
 		<Table.Header class="bg-muted sticky top-0 z-10">
 			<Table.Row>
+				<Table.Head colspan={1} class="max-w-4">
+					<Checkbox
+						onCheckedChange={(e) => toggleSelectAll(e)}
+						checked={allSelected}
+						bind:indeterminate
+					/>
+				</Table.Head>
 				{#each columns as headItem}
 					<Table.Head colspan={headItem.colSpan} class={cn(headItem.end ? 'text-right' : '')}>
 						{headItem.title}
@@ -193,48 +256,58 @@
 		</Table.Header>
 		<Table.Body>
 			{#if data.count > 0}
-				{#each data.list as item}
+				{#each augmentedList as item}
 					<Table.Row>
+						<Table.Cell class="w-4">
+							<Checkbox bind:checked={item.checked} />
+						</Table.Cell>
 						<Table.Cell colspan={8}>
-							<div class="flex items-center gap-2">
-								{#if item.Key.endsWith('/')}
-									{@const folder = item.Key.replace('/', '')}
-									<FolderIcon class={cn(iconSize, 'text-indigo-600')} fill="#1447e6" />
-									<a
-										href={route('/browse/[...path]', {
-											path: page.params.path ? [page.params.path, folder] : [folder]
-										})}
-									>
-										{folder}
-									</a>
-								{:else}
-									<button onclick={() => openItem(item)} class="flex items-center gap-2">
-										{#if item.ContentType}
-											{#if item.ContentType === 'application/pdf'}
-												<FileIcon class={cn(iconSize, 'text-indigo-400')} />
-											{:else if item.ContentType.startsWith('audio')}
-												<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
-											{:else if item.ContentType.startsWith('image')}
-												<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
-											{:else}
-												<FileIcon class={iconSize} />
-											{/if}
+							<ContextMenu.Root>
+								<ContextMenu.Trigger style="display: contents;">
+									<div class="flex items-center gap-2">
+										{#if item.Key.endsWith('/')}
+											{@const folder = item.Key.replace('/', '')}
+											<FolderIcon class={cn(iconSize, 'text-indigo-600')} fill="#1447e6" />
+											<a
+												href={route('/browse/[...path]', {
+													path: page.params.path ? [page.params.path, folder] : [folder]
+												})}
+											>
+												{folder}
+											</a>
 										{:else}
-											<FileIcon class={iconSize} />
+											<button onclick={() => openItem(item)} class="flex items-center gap-2">
+												{#if item.ContentType}
+													{#if item.ContentType === 'application/pdf'}
+														<FileIcon class={cn(iconSize, 'text-indigo-400')} />
+													{:else if item.ContentType.startsWith('audio')}
+														<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
+													{:else if item.ContentType.startsWith('image')}
+														<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
+													{:else}
+														<FileIcon class={iconSize} />
+													{/if}
+												{:else}
+													<FileIcon class={iconSize} />
+												{/if}
+												<div>
+													<p>{item.Key}</p>
+												</div>
+												{#if item.Metadata?.category === 'music'}
+													{#if item.Metadata.musicduration}
+														<Badge variant="outline" class="text-muted-foreground px-1.5 text-xs">
+															{secondsToMinutes(Number.parseFloat(item.Metadata.musicduration))}
+														</Badge>
+													{/if}
+												{/if}
+											</button>
 										{/if}
-										<div>
-											<p>{item.Key}</p>
-										</div>
-										{#if item.Metadata?.category === 'music'}
-											{#if item.Metadata.musicduration}
-												<Badge variant="outline" class="text-muted-foreground px-1.5 text-xs">
-													{secondsToMinutes(Number.parseFloat(item.Metadata.musicduration))}
-												</Badge>
-											{/if}
-										{/if}
-									</button>
-								{/if}
-							</div>
+									</div>
+								</ContextMenu.Trigger>
+								<ContextMenu.Content class="w-52">
+									{@render DataTableActions(item)}
+								</ContextMenu.Content>
+							</ContextMenu.Root>
 						</Table.Cell>
 						<Table.Cell colspan={1} class="w-32">
 							<Badge variant="outline" class="text-muted-foreground px-1.5">
@@ -267,11 +340,11 @@
 										{/snippet}
 									</DropdownMenu.Trigger>
 									<DropdownMenu.Content align="end">
-										{#each actionItems as actionItem}
-											{@const Icon = actionItem.icon}
-											<DropdownMenu.Item onclick={() => actionItem.action(item.Key)}>
+										{#each itemActions as itemAction}
+											{@const Icon = itemAction.icon}
+											<DropdownMenu.Item onclick={() => itemAction.action(item)}>
 												<Icon />
-												{actionItem.title}
+												{itemAction.title}
 											</DropdownMenu.Item>
 										{/each}
 									</DropdownMenu.Content>
@@ -294,8 +367,8 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 			<AlertDialog.Description>
-				This action cannot be undone. This will permanently delete this item from your storage
-				device.
+				This action cannot be undone. This will permanently delete <b>{actionableItem?.Key}</b> from
+				your storage device.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
@@ -310,3 +383,17 @@
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
+
+<BottomAction title="File actions" bind:open={actionsOpen}>
+	<div class="flex w-full items-center gap-2 pb-5">
+		{#each itemActions as itemAction}
+			{#if itemAction.title !== 'Rename'}
+				{@const Icon = itemAction.icon}
+				<Button variant="outline" size="sm">
+					<Icon />
+					{itemAction.title}
+				</Button>
+			{/if}
+		{/each}
+	</div>
+</BottomAction>

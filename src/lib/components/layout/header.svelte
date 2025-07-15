@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { CloudUploadIcon, FolderPlusIcon } from '@lucide/svelte';
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import Activity from '$lib/components/layout/activity.svelte';
+	import NewFolder from '$lib/components/layout/new-folder.svelte';
 	import Notifications from '$lib/components/layout/notifications.svelte';
+	import Upload from '$lib/components/layout/upload.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator/index.js';
@@ -12,9 +15,10 @@
 
 	type Props = {
 		newFolderOpen: boolean;
+		uploadOpen: boolean;
 	};
 
-	let { newFolderOpen = $bindable(false) }: Props = $props();
+	let { newFolderOpen = $bindable(false), uploadOpen = $bindable(false) }: Props = $props();
 </script>
 
 <header
@@ -49,22 +53,30 @@
 			<Notifications />
 			<Activity />
 			<div class="flex items-center gap-2">
-				<Button href={route('/upload')} class="h-full text-sm">
-					Upload
-					<CloudUploadIcon />
-				</Button>
 				<Button
 					variant="outline"
-					class="h-full text-sm"
 					type="button"
 					onclick={() => {
 						newFolderOpen = true;
 					}}
 				>
-					New Folder
-					<FolderPlusIcon class="h-5 w-5" />
+					<span class="hidden md:block">New Folder</span>
+					<FolderPlusIcon class="h-[1.2rem] w-[1.2rem]" />
+				</Button>
+				<Button
+					variant="default"
+					type="button"
+					onclick={() => {
+						uploadOpen = true;
+					}}
+				>
+					<span class="hidden md:block">Upload</span>
+					<CloudUploadIcon class="h-[1.2rem] w-[1.2rem]" />
 				</Button>
 			</div>
 		</div>
 	</div>
 </header>
+
+<NewFolder bind:open={newFolderOpen} />
+<Upload bind:open={uploadOpen} />

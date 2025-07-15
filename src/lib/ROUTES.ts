@@ -25,7 +25,6 @@ const PAGES = {
 	'/starred': `/starred`,
 	'/sync': `/sync`,
 	'/trash': `/trash`,
-	'/upload': `/upload`,
 	'/auth/sign-in': `/auth/sign-in`
 };
 
@@ -33,6 +32,12 @@ const PAGES = {
  * SERVERS
  */
 const SERVERS = {
+	'POST /api/int/upload': `/api/int/upload`,
+	'GET /api/int/upload': `/api/int/upload`,
+	'DELETE /api/int/upload': `/api/int/upload`,
+	'DELETE /api/int/upload/[jobId]': (params: { jobId: string | number }) => {
+		return `/api/int/upload/${params['jobId']}`;
+	},
 	'GET /api/v1/[...paths]': (params: { paths: (string | number)[] }) => {
 		return `/api/v1/${params['paths']?.join('/')}`;
 	},
@@ -50,9 +55,7 @@ const SERVERS = {
 /**
  * ACTIONS
  */
-const ACTIONS = {
-	'default /upload': `/upload`
-};
+const ACTIONS = {};
 
 /**
  * LINKS
@@ -182,16 +185,19 @@ export type KIT_ROUTES = {
 		'/starred': never;
 		'/sync': never;
 		'/trash': never;
-		'/upload': never;
 		'/auth/sign-in': never;
 	};
 	SERVERS: {
+		'POST /api/int/upload': never;
+		'GET /api/int/upload': never;
+		'DELETE /api/int/upload': never;
+		'DELETE /api/int/upload/[jobId]': 'jobId';
 		'GET /api/v1/[...paths]': 'paths';
 		'POST /api/v1/[...paths]': 'paths';
 		'PUT /api/v1/[...paths]': 'paths';
 		'DELETE /api/v1/[...paths]': 'paths';
 	};
-	ACTIONS: { 'default /upload': never };
+	ACTIONS: Record<string, never>;
 	LINKS: Record<string, never>;
-	Params: { path: never; category: never; paths: never };
+	Params: { path: never; category: never; jobId: never; paths: never };
 };

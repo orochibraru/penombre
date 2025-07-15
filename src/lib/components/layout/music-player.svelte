@@ -1,14 +1,7 @@
 <script lang="ts">
-	import {
-		PauseIcon,
-		PlayIcon,
-		Volume1Icon,
-		Volume2Icon,
-		VolumeXIcon,
-		XIcon
-	} from '@lucide/svelte';
-	import { fade, slide } from 'svelte/transition';
+	import { PauseIcon, PlayIcon, Volume1Icon, Volume2Icon, VolumeXIcon } from '@lucide/svelte';
 	import { dev } from '$app/environment';
+	import BottomAction from '$lib/components/layout/bottom-action.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { Progress } from '$lib/components/ui/progress/index.js';
@@ -19,12 +12,44 @@
 		$playableMusic = null;
 	}
 
-	let player: HTMLAudioElement | undefined = $state(undefined);
+	let player: HTMLAudioElement;
 
 	let paused = $state(!!dev);
 	let currentTime = $state(0);
 	let duration = $state(0);
 	let volume = $state(1);
+
+	$effect(() => {
+		const music = $playableMusic;
+
+		// Make sure the player element has been created before we try to use it.
+		if (player && music?.source) {
+			// Only update the source if it's different from the current one.
+			// This prevents unnecessary reloads if the effect is re-triggered.
+			if (player.src !== music.source) {
+				player.src = music.source;
+				// `load()` tells the audio element to fetch the new source.
+				player.load();
+				if (!dev) {
+					// `play()` returns a promise, which we should handle.
+					player.play().catch((error) => {
+						console.error('Autoplay was prevented:', error);
+						// If autoplay fails, update the UI to show the paused state.
+						paused = true;
+					});
+				}
+			}
+		} else if (player) {
+			// If there's no music, pause the player and clear the source.
+			player.pause();
+			player.src = '';
+
+			// Reset the state for the UI
+			currentTime = 0;
+			duration = 0;
+			paused = true;
+		}
+	});
 
 	const formatTime = (time: number) => {
 		if (Number.isNaN(time)) return '00:00';
@@ -55,63 +80,54 @@
 	}
 </script>
 
-{#if $playableMusic}
-	<div
-		class="music-player lg:music-player-lg bg-sidebar/50 fixed right-5 bottom-5 rounded-xl border p-3 backdrop-blur-sm"
-		transition:slide
-	>
-		<div class="mb-2 flex items-center justify-between">
-			<p class="font-medium">{$playableMusic.title}</p>
-			<Button variant="ghost" title="Close" onclick={() => clearCurrent()}>
-				<XIcon />
-			</Button>
+<BottomAction
+	open={$playableMusic !== null}
+	title={$playableMusic?.title ?? ''}
+	callback={() => clearCurrent()}
+>
+	<div class="flex w-full items-center gap-2">
+		<div class="flex items-center justify-between gap-2">
+			{#if paused}
+				<Button onclick={() => player?.play()} title="Play">
+					<PlayIcon />
+				</Button>
+			{:else}
+				<Button onclick={() => player?.pause()} title="Pause">
+					<PauseIcon />
+				</Button>
+			{/if}
+			<p class="text-xs text-nowrap">{formatTime(currentTime)} / {formatTime(duration)}</p>
 		</div>
-
-		<div class="flex items-center gap-2">
-			<div class="flex items-center justify-between gap-2">
-				{#if paused}
-					<Button onclick={() => player?.play()} title="Play">
-						<PlayIcon />
-					</Button>
-				{:else}
-					<Button onclick={() => player?.pause()} title="Pause">
-						<PauseIcon />
-					</Button>
-				{/if}
-				<p class="text-xs text-nowrap">{formatTime(currentTime)} / {formatTime(duration)}</p>
-			</div>
-			<Progress value={currentTime} max={duration} class="w-full cursor-pointer" onclick={seek} />
-			<Popover.Root>
-				<Popover.Trigger title="Change Volume">
-					<Button variant="outline">
-						{#if volume === 1}
-							<Volume2Icon />
-						{:else if volume > 0 && volume < 1}
-							<Volume1Icon />
-						{:else if volume === 0}
-							<VolumeXIcon />
-						{/if}
-					</Button>
-				</Popover.Trigger>
-				<Popover.Content class="w-10">
-					<Slider type="single" orientation="vertical" bind:value={volume} max={1} step={0.01} />
-				</Popover.Content>
-			</Popover.Root>
-		</div>
-
-		<audio
-			class="sr-only w-full rounded-none"
-			bind:this={player}
-			id="music-player"
-			bind:paused
-			bind:currentTime
-			bind:duration
-			bind:volume
-			title={$playableMusic.title}
-			src={$playableMusic.source}
-			playsinline
-			autoplay={!dev}
-			crossorigin="anonymous"
-		></audio>
+		<Progress value={currentTime} max={duration} class="w-full cursor-pointer" onclick={seek} />
+		<Popover.Root>
+			<Popover.Trigger title="Change Volume">
+				<Button variant="outline">
+					{#if volume === 1}
+						<Volume2Icon />
+					{:else if volume > 0 && volume < 1}
+						<Volume1Icon />
+					{:else if volume === 0}
+						<VolumeXIcon />
+					{:else}
+						<VolumeXIcon />
+					{/if}
+				</Button>
+			</Popover.Trigger>
+			<Popover.Content class="w-10">
+				<Slider type="single" orientation="vertical" bind:value={volume} max={1} step={0.01} />
+			</Popover.Content>
+		</Popover.Root>
 	</div>
-{/if}
+
+	<audio
+		id="music-player"
+		class="sr-only w-full rounded-none"
+		title={$playableMusic?.title}
+		playsinline
+		bind:this={player}
+		bind:paused
+		bind:currentTime
+		bind:duration
+		bind:volume
+	></audio>
+</BottomAction>

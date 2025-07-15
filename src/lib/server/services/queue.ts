@@ -1,4 +1,4 @@
-import { type Job, type JobJson, Queue, Worker } from 'bullmq';
+import { type Job, type JobJson, Queue, QueueEvents, Worker } from 'bullmq';
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 import { Logger } from '$lib/logger';
@@ -120,26 +120,6 @@ export class QueueService<DataType> extends Queue<DataType> {
 	}
 
 	/**
-	 * Cleans up all jobs in the queue by removing each one.
-	 * Logs the start and end of the cleanup process.
-	 * Skips jobs without an id.
-	 */
-	public async cleanup(): Promise<void> {
-		this.logger.info('Cleaning up jobs');
-		const jobs = await this.getJobs();
-
-		for (const job of jobs) {
-			if (!job.id) {
-				continue;
-			}
-
-			await this.remove(job.id);
-		}
-
-		this.logger.info('Finished cleaning up jobs');
-	}
-
-	/**
 	 * Retrieves and lists all jobs in the queue.
 	 * The jobs are mapped to include only their id, name, and progress.
 	 * The resulting list is sorted by job id in ascending order.
@@ -154,13 +134,17 @@ export class QueueService<DataType> extends Queue<DataType> {
 		});
 
 		const sorted = mapped.sort((a, b) => {
-			if (!a.id || !b.id) {
+			if (!a.timestamp || !b.timestamp) {
 				return -1;
 			}
 
-			return a.id.localeCompare(b.id);
+			return b.timestamp - a.timestamp;
 		});
 
 		return sorted;
+	}
+
+	public getEvents() {
+		return new QueueEvents(this.name, { connection: redisConnection });
 	}
 }

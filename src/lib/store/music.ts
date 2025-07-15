@@ -5,4 +5,4 @@ export type PlayableMusic = {
 	source: string;
 } | null;
 
-export const playableMusic: Writable<PlayableMusic> = writable();
+export const playableMusic: Writable<PlayableMusic> = writable(null);

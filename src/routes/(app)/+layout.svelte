@@ -1,10 +1,8 @@
 <script lang="ts">
 	import {
 		ClockFadingIcon,
-		CloudUploadIcon,
 		FileIcon,
 		FolderIcon,
-		FolderPlusIcon,
 		FolderSyncIcon,
 		HardDriveIcon,
 		ImageIcon,
@@ -15,16 +13,10 @@
 		TrashIcon,
 		UsersIcon
 	} from '@lucide/svelte';
-	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
-	import { page } from '$app/state';
-	import { bridge } from '$lib/client/api';
+
 	import SiteHeader from '$lib/components/layout/header.svelte';
 	import Nav, { type NavItem } from '$lib/components/layout/nav.svelte';
 	import NavUser from '$lib/components/layout/user-menu.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Input } from '$lib/components/ui/input';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
@@ -33,35 +25,8 @@
 
 	const { children, data } = $props();
 
-	let newFolderLoading: boolean = $state(false);
 	let newFolderOpen: boolean = $state(false);
-	let newFolderName: string = $state('New Folder');
-	let newFolderError: string = $state('');
-
-	async function handleNewFolder() {
-		const { api } = bridge(page.url, data.token);
-
-		newFolderLoading = true;
-
-		const folderPath = page.params.path ? `${page.params.path}/${newFolderName}` : newFolderName;
-
-		const promise = api.v1.storage.objects.folder.post(folderPath).then(async ({ error }) => {
-			newFolderLoading = false;
-			if (error) {
-				console.error(error);
-				throw error;
-			}
-
-			await invalidateAll();
-			newFolderOpen = false;
-		});
-
-		toast.promise(promise, {
-			loading: 'Creating folder',
-			success: 'Folder created',
-			error: 'Failed to create folder'
-		});
-	}
+	let uploadOpen: boolean = $state(false);
 
 	type NavMenus = {
 		[key: string]: NavItem[];
@@ -174,7 +139,7 @@
 	</Sidebar.Root>
 
 	<Sidebar.Inset>
-		<SiteHeader bind:newFolderOpen />
+		<SiteHeader bind:newFolderOpen bind:uploadOpen />
 		<div class="flex flex-1 flex-col pb-26">
 			<div class="main-container @container/main flex flex-1 flex-col gap-5 p-5">
 				{@render children()}
@@ -183,43 +148,3 @@
 		<MusicPlayer />
 	</Sidebar.Inset>
 </Sidebar.Provider>
-
-<Dialog.Root bind:open={newFolderOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Create a new folder</Dialog.Title>
-			<Dialog.Description>
-				This will create a new folder in the current directory.
-			</Dialog.Description>
-		</Dialog.Header>
-		<form
-			onsubmit={async (e) => {
-				e.preventDefault();
-				await handleNewFolder();
-			}}
-			style="display: contents;"
-		>
-			<div class="flex flex-col gap-1">
-				<Input
-					required
-					type="text"
-					bind:value={newFolderName}
-					placeholder="Folder name"
-					class="w-full"
-					aria-invalid={newFolderError !== ''}
-				/>
-				{#if newFolderError}
-					<p class="text-xs text-red-600">
-						{newFolderError}
-					</p>
-				{/if}
-			</div>
-			<Dialog.Footer>
-				<Button onclick={() => (newFolderOpen = false)} variant="outline" type="button">
-					Cancel
-				</Button>
-				<Button bind:loading={newFolderLoading} type="submit">Create</Button>
-			</Dialog.Footer>
-		</form>
-	</Dialog.Content>
-</Dialog.Root>

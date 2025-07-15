@@ -1,6 +1,8 @@
 import { redirect } from '@sveltejs/kit';
+import { superValidate } from 'sveltekit-superforms';
+import { valibot } from 'sveltekit-superforms/adapters';
 import { route } from '$lib/ROUTES';
-import { uploadQueue } from '$lib/server/queues';
+import { uploadSchema } from '$lib/schemas/upload';
 import { auth } from '$lib/server/services/auth';
 import { getMinioUrl } from '$lib/server/services/storage';
 
@@ -15,17 +17,11 @@ export const load = async ({ request, locals }) => {
 
 	const { user, session } = authStatus;
 
-	const queue = uploadQueue();
-
-	const jobs = await queue?.listJobs();
-
-	// await uploadQueue.cleanup()
-
 	return {
 		user,
 		session,
 		token: locals.authCookie,
-		jobs,
-		minioUrl: getMinioUrl()
+		minioUrl: getMinioUrl(),
+		uploadForm: await superValidate({}, valibot(uploadSchema))
 	};
 };

@@ -43,7 +43,7 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton isActive={isActive(item)}>
 						{#snippet child({ props })}
-							<a href={item.url} {...props}>
+							<a href={item.url} {...props} title={item.title}>
 								<Icon
 									class={cn(
 										'h-4.5 w-4.5',
