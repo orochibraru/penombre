@@ -3,7 +3,7 @@
 		title: string;
 		url: string;
 		icon: typeof IconType;
-		accentColor?: 'indigo' | 'orange' | 'pink';
+		accentColor?: 'indigo' | 'orange' | 'pink' | 'green';
 	};
 </script>
 
@@ -43,13 +43,25 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton isActive={isActive(item)}>
 						{#snippet child({ props })}
-							<a href={item.url} {...props} title={item.title}>
+							<a
+								href={item.url}
+								{...props}
+								class={cn(
+									props.class as string,
+									item.accentColor === 'indigo' ? 'data-[active=true]:text-indigo-500' : '',
+									item.accentColor === 'orange' ? 'data-[active=true]:text-orange-500' : '',
+									item.accentColor === 'pink' ? 'data-[active=true]:text-pink-500' : '',
+									item.accentColor === 'green' ? 'data-[active=true]:text-green-500' : ''
+								)}
+								title={item.title}
+							>
 								<Icon
 									class={cn(
 										'h-4.5 w-4.5',
-										item.accentColor === 'indigo' ? 'text-indigo-400' : '',
-										item.accentColor === 'orange' ? 'text-orange-400' : '',
-										item.accentColor === 'pink' ? 'text-pink-400' : ''
+										item.accentColor === 'indigo' ? 'text-indigo-500' : '',
+										item.accentColor === 'orange' ? 'text-orange-500' : '',
+										item.accentColor === 'pink' ? 'text-pink-500' : '',
+										item.accentColor === 'green' ? 'text-green-500' : ''
 									)}
 								/>
 								<span>{item.title}</span>

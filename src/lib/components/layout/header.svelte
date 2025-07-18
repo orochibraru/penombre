@@ -1,22 +1,21 @@
 <script lang="ts">
 	import { CloudUploadIcon, FolderPlusIcon } from '@lucide/svelte';
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import Activity from '$lib/components/layout/activity.svelte';
-	import NewFolder from '$lib/components/layout/new-folder.svelte';
+	import NewFolder from '$lib/components/layout/dialogs/new-folder.svelte';
+	import Upload from '$lib/components/layout/dialogs/upload.svelte';
 	import Notifications from '$lib/components/layout/notifications.svelte';
-	import Upload from '$lib/components/layout/upload.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
 
 	type Props = {
 		newFolderOpen: boolean;
 		uploadOpen: boolean;
 	};
+
+	let uploadLoading: boolean = $state(false);
 
 	let { newFolderOpen = $bindable(false), uploadOpen = $bindable(false) }: Props = $props();
 </script>
@@ -51,7 +50,6 @@
 		</Breadcrumb.Root>
 		<div class="ml-auto flex items-center gap-2">
 			<Notifications />
-			<Activity />
 			<div class="flex items-center gap-2">
 				<Button
 					variant="outline"
@@ -60,18 +58,24 @@
 						newFolderOpen = true;
 					}}
 				>
-					<span class="hidden md:block">New Folder</span>
 					<FolderPlusIcon class="h-[1.2rem] w-[1.2rem]" />
+					<span class="hidden md:block">New Folder</span>
 				</Button>
 				<Button
 					variant="default"
 					type="button"
+					loading={uploadLoading}
 					onclick={() => {
 						uploadOpen = true;
 					}}
 				>
-					<span class="hidden md:block">Upload</span>
-					<CloudUploadIcon class="h-[1.2rem] w-[1.2rem]" />
+					{#if !uploadLoading}
+						<CloudUploadIcon class="h-[1.2rem] w-[1.2rem]" />
+						<span class="hidden md:block">Upload</span>
+					{:else}
+						<CloudUploadIcon class="h-[1.2rem] w-[1.2rem] lg:hidden" />
+						<span class="hidden md:block">Uploading</span>
+					{/if}
 				</Button>
 			</div>
 		</div>
@@ -79,4 +83,4 @@
 </header>
 
 <NewFolder bind:open={newFolderOpen} />
-<Upload bind:open={uploadOpen} />
+<Upload bind:open={uploadOpen} bind:loading={uploadLoading} />

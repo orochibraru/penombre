@@ -10,7 +10,7 @@ type Crumb = {
 export const load = async ({ locals, url, params }) => {
 	const { api } = bridge(url, locals.authCookie);
 
-	const { data, error: err } = await api.v1.storage.objects.get({
+	const { data: files, error: err } = await api.v1.storage.objects.get({
 		query: {
 			folder: params.path
 		}
@@ -26,6 +26,10 @@ export const load = async ({ locals, url, params }) => {
 
 	const crumbs: Crumb[] = [];
 	const chain: string[] = [];
+	crumbs.push({
+		title: 'My Drive',
+		href: route('/browse')
+	});
 	for (const folder of folders) {
 		crumbs.push({
 			title: folder,
@@ -37,7 +41,7 @@ export const load = async ({ locals, url, params }) => {
 	}
 
 	return {
-		files: data,
+		files,
 		title: folders[folders.length - 1],
 		folders,
 		crumbs

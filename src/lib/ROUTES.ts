@@ -32,12 +32,6 @@ const PAGES = {
  * SERVERS
  */
 const SERVERS = {
-	'POST /api/int/upload': `/api/int/upload`,
-	'GET /api/int/upload': `/api/int/upload`,
-	'DELETE /api/int/upload': `/api/int/upload`,
-	'DELETE /api/int/upload/[jobId]': (params: { jobId: string | number }) => {
-		return `/api/int/upload/${params['jobId']}`;
-	},
 	'GET /api/v1/[...paths]': (params: { paths: (string | number)[] }) => {
 		return `/api/v1/${params['paths']?.join('/')}`;
 	},
@@ -188,10 +182,6 @@ export type KIT_ROUTES = {
 		'/auth/sign-in': never;
 	};
 	SERVERS: {
-		'POST /api/int/upload': never;
-		'GET /api/int/upload': never;
-		'DELETE /api/int/upload': never;
-		'DELETE /api/int/upload/[jobId]': 'jobId';
 		'GET /api/v1/[...paths]': 'paths';
 		'POST /api/v1/[...paths]': 'paths';
 		'PUT /api/v1/[...paths]': 'paths';
@@ -199,5 +189,5 @@ export type KIT_ROUTES = {
 	};
 	ACTIONS: Record<string, never>;
 	LINKS: Record<string, never>;
-	Params: { path: never; category: never; jobId: never; paths: never };
+	Params: { path: never; category: never; paths: never };
 };

@@ -1,6 +1,7 @@
 import clsx, { type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { v4 as uuidv4 } from 'uuid';
+import type { ObjectItem } from '$lib/server/services/storage';
 
 /**
  * A version of clsx that uses tailwind-merge to merge classes.
@@ -117,3 +118,9 @@ export function humanFileSize(bytes: number, si = false, dp = 1) {
 export function secondsToMinutes(seconds: number) {
 	return new Date(seconds * 1000).toISOString().slice(14, 19);
 }
+
+export type AugmentedItem = ObjectItem & {
+	checked: boolean;
+};
+
+export type AugmentedList = AugmentedItem[];

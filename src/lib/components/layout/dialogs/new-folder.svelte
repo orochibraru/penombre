@@ -13,9 +13,10 @@
 
 	let { open = $bindable(false) }: Props = $props();
 
+	const defaultFolderName = 'New Folder';
+
 	let newFolderError: string = $state('');
-	let newFolderName: string = $state('New Folder');
-	let newFolderOpen: boolean = $state(false);
+	let newFolderName: string = $state(defaultFolderName);
 	let newFolderLoading: boolean = $state(false);
 
 	async function handleNewFolder() {
@@ -32,8 +33,9 @@
 				throw error;
 			}
 
+			open = false;
+			newFolderName = defaultFolderName;
 			await invalidateAll();
-			newFolderOpen = false;
 		});
 
 		toast.promise(promise, {
@@ -75,9 +77,7 @@
 				{/if}
 			</div>
 			<Dialog.Footer>
-				<Button onclick={() => (newFolderOpen = false)} variant="outline" type="button">
-					Cancel
-				</Button>
+				<Button onclick={() => (open = false)} variant="outline" type="button">Cancel</Button>
 				<Button bind:loading={newFolderLoading} type="submit">Create</Button>
 			</Dialog.Footer>
 		</form>

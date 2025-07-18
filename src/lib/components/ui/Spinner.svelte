@@ -4,9 +4,10 @@
 
 	interface Props {
 		size?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+		class?: string;
 	}
 
-	const { size = 5 }: Props = $props();
+	const { size = 5, class: className = '' }: Props = $props();
 
 	function getClasses() {
 		switch (size) {
@@ -36,4 +37,4 @@
 	}
 </script>
 
-<LoaderCircleIcon class={cn('animate-spin', getClasses())} />
+<LoaderCircleIcon class={cn('animate-spin', getClasses(), className)} />

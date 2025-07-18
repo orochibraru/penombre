@@ -61,3 +61,15 @@ export const validationErrorWrapperSchema = t.Object({
 	found: t.Record(t.String(), t.String()),
 	errors: t.Array(validationErrorSchema)
 });
+
+export const BareBonesFileSchema = t.Object({
+	name: t.String(),
+	type: t.String(),
+	metadata: t.Any()
+});
+
+export const UploadedFileSchema = t.Object({
+	file: BareBonesFileSchema,
+	finalName: t.String(),
+	presignedUrl: t.String()
+});

@@ -84,25 +84,24 @@ export class Logger {
 		if (this.logFormat === 'console') {
 			if (type === 'pre') {
 				return console.info(
-					`[${blue(`${url.protocol.replace(':', '').toUpperCase()}::${req.method}`)}] ${url.pathname}${url.search}`,
+					blue(`[${url.protocol.replace(':', '').toUpperCase()}::${req.method}]`),
+					`${url.pathname}${url.search}`,
 					this.prettyPrefix
 				);
 			}
 
 			let color: (str: string) => string;
-			let statusText = 'OK';
 
+			color = green;
 			if (res.status > 307) {
 				// Error
 				color = red;
-				statusText = res.statusText;
-			} else {
-				// Normal
-				color = green;
 			}
 
 			return console.info(
-				`[${color(`${url.protocol.replace(':', '').toUpperCase()}::${req.method}`)}] ${color(res.status.toString())} ${statusText} ${url.pathname}${url.search} ${gray(`[${duration}ms]`)}`,
+				color(`[${url.protocol.replace(':', '').toUpperCase()}::${req.method}]`),
+				color(res.status.toString()),
+				`${url.pathname}${url.search} ${gray(`[${duration}ms]`)}`,
 				this.prettyPrefix
 			);
 		}

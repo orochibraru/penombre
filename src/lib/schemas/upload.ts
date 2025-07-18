@@ -1,7 +1,8 @@
 import * as v from 'valibot';
 
 export const uploadSchema = v.object({
-	attachments: v.pipe(v.array(v.pipe(v.file())), v.minLength(1))
+	attachments: v.pipe(v.array(v.pipe(v.file())), v.minLength(1)),
+	rootFolder: v.string()
 });
 
 export type UploadSchema = v.InferInput<typeof uploadSchema>;

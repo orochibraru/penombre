@@ -2,11 +2,13 @@ import { Elysia, t } from 'elysia';
 import { Logger } from '$lib/logger';
 import { authMacro } from '$lib/server/api/auth';
 import {
+	BareBonesFileSchema,
 	badRequestErrorSchema,
 	createdSchema,
 	deletedSchema,
 	internalServerErrorSchema,
 	notFoundSchema,
+	UploadedFileSchema,
 	unauthorizedSchema
 } from '$lib/server/api/schemas';
 import {
@@ -22,7 +24,8 @@ import {
 const logger = new Logger('API::Storage');
 
 const UploadSchema = t.Object({
-	file: t.File()
+	file: BareBonesFileSchema,
+	folder: t.Optional(t.String())
 });
 
 const CreateFolderSchema = t.String();
@@ -34,6 +37,7 @@ export const storageRouter = new Elysia({
 })
 	.model({
 		UploadObject: UploadSchema,
+		UploadedResponse: UploadedFileSchema,
 		ObjectUrl: ObjectUrlSchema,
 		CreateFolder: CreateFolderSchema,
 		Object: S3ObjectSchema,
@@ -158,7 +162,7 @@ export const storageRouter = new Elysia({
 							try {
 								const url = await storage.createPresignedUrl({
 									item: query.item,
-									hostname: query.hostname
+									proxyurl: query.proxyurl
 								});
 								return url;
 							} catch (e) {
@@ -171,7 +175,7 @@ export const storageRouter = new Elysia({
 							storage: true,
 							query: t.Object({
 								item: t.String(),
-								hostname: t.String()
+								proxyurl: t.String()
 							}),
 							detail: {
 								summary: 'Get an item url',
@@ -185,13 +189,45 @@ export const storageRouter = new Elysia({
 							}
 						}
 					)
+					.get(
+						'/object',
+						async ({ status, user, query }) => {
+							const storage = new StorageService(user);
+
+							try {
+								const object = await storage.getObject(query);
+								return object;
+							} catch (e) {
+								logger.error(`Failed to get object ${query.key} (folder: ${query.folder})`, e);
+								return status(500, `Failed to get object ${query.key} (folder: ${query.folder})`);
+							}
+						},
+						{
+							auth: true,
+							storage: true,
+							query: t.Object({
+								key: t.String(),
+								folder: t.Optional(t.String())
+							}),
+							detail: {
+								summary: 'Get an item url',
+								description: 'Fetches a presigned url for an item.'
+							},
+							response: {
+								200: 'Object',
+								400: badRequestErrorSchema,
+								403: unauthorizedSchema,
+								500: internalServerErrorSchema
+							}
+						}
+					)
 					.post(
 						'/',
-						async ({ status, body, user }) => {
+						async ({ status, body, query, user }) => {
 							const storage = new StorageService(user);
 							try {
-								await storage.upload(body.file);
-								return 'Uploaded';
+								const res = await storage.upload(body.file, query.proxyurl, body.folder);
+								return res;
 							} catch (e) {
 								logger.error('Failed to upload object', e);
 								return status(500, 'Failed to upload object');
@@ -204,8 +240,11 @@ export const storageRouter = new Elysia({
 								description: 'Uploads a single object'
 							},
 							body: 'UploadObject',
+							query: t.Object({
+								proxyurl: t.String()
+							}),
 							response: {
-								201: createdSchema,
+								201: UploadedFileSchema,
 								403: unauthorizedSchema,
 								500: internalServerErrorSchema
 							}

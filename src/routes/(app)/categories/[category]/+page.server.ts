@@ -11,7 +11,7 @@ export const load = async ({ params, locals, url }) => {
 
 	const { api } = bridge(url, locals.authCookie);
 
-	const { data, error: err } = await api.v1.storage.objects({ category }).get();
+	const { data: files, error: err } = await api.v1.storage.objects({ category }).get();
 
 	if (err) {
 		locals.logger.error(err);
@@ -20,5 +20,5 @@ export const load = async ({ params, locals, url }) => {
 		return error(err.status, val);
 	}
 
-	return { files: data, category };
+	return { files, category };
 };

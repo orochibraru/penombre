@@ -9,9 +9,16 @@
 		children: Snippet;
 		open: boolean;
 		callback?: () => void;
+		showCloseButton?: boolean;
 	};
 
-	let { title, children, open = $bindable(false), callback }: Props = $props();
+	let {
+		title,
+		children,
+		open = $bindable(false),
+		callback,
+		showCloseButton = true
+	}: Props = $props();
 </script>
 
 {#if open}
@@ -21,19 +28,21 @@
 	>
 		<div class="mb-2 flex items-center justify-between">
 			<p class="font-medium">{title}</p>
-			<Button
-				variant="ghost"
-				title="Close"
-				onclick={() => {
-					if (callback) {
-						return callback();
-					}
+			{#if showCloseButton}
+				<Button
+					variant="ghost"
+					title="Close"
+					onclick={() => {
+						if (callback) {
+							return callback();
+						}
 
-					open = false;
-				}}
-			>
-				<XIcon />
-			</Button>
+						open = false;
+					}}
+				>
+					<XIcon />
+				</Button>
+			{/if}
 		</div>
 
 		<div class="overflow-x-auto">

@@ -32,7 +32,7 @@
 						size="lg"
 						class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground border"
 					>
-						<Avatar.Root class="size-8 rounded-lg grayscale">
+						<Avatar.Root class="size-8 rounded-lg">
 							<Avatar.Image src={user.image} alt={user.name} />
 							<Avatar.Fallback class="rounded-lg">NB</Avatar.Fallback>
 						</Avatar.Root>

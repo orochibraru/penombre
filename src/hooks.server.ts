@@ -1,29 +1,13 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
+import { error, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { building } from '$app/environment';
 import { Logger } from '$lib/logger';
 import { auth } from '$lib/server/services/auth';
 import { getMinioUrl } from '$lib/server/services/storage';
-import { uploadWorker } from '$lib/server/workers';
 import { toSnake } from '$lib/utils';
 
 const logger = new Logger('Service::Hooks');
 const apiLogger = new Logger('Service::API');
 let killing = false;
-
-export const init = () => {
-	if (!building) {
-		const uploadWorkerInstance = uploadWorker();
-
-		if (uploadWorkerInstance && !uploadWorkerInstance.isRunning()) {
-			try {
-				uploadWorkerInstance.run();
-			} catch (e) {
-				logger.error('Failed to start upload worker', e);
-			}
-		}
-	}
-};
 
 export const handleError: HandleServerError = ({ error, event, status }) => {
 	if (status === 404) {
@@ -67,13 +51,28 @@ const preHandler: Handle = async ({ event, resolve }) => {
 	// Proxy for signed urls
 	const userBucket = toSnake(event.locals.user.name);
 	if (event.url.pathname.startsWith(`/${userBucket}/`)) {
-		const internalUrl = new URL(event.url.pathname + event.url.search, getMinioUrl());
+		const minioUrl = getMinioUrl();
+		const internalUrl = new URL(event.url.pathname + event.url.search, minioUrl);
 
-		return event.fetch(internalUrl, {
-			headers: event.request.headers,
-			method: event.request.method,
-			body: event.request.body
-		});
+		const headers = new Headers(event.request.headers);
+		headers.delete('connection');
+
+		try {
+			// Make the fetch request to the external service
+			const proxyResponse = await fetch(internalUrl.toString(), {
+				method: event.request.method,
+				headers: headers,
+				body: event.request.body, // Forward the request body
+				// @ts-ignore
+				duplex: 'half' // Needed for streaming request bodies (e.g., POST requests)
+			});
+
+			// Return the response from the external service directly
+			return proxyResponse;
+		} catch (err) {
+			console.error('Proxy request failed:', err);
+			throw error(500, 'Failed to proxy request.');
+		}
 	}
 
 	return resolve(event);

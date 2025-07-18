@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		ClockFadingIcon,
+		CodeIcon,
 		FileIcon,
 		FolderIcon,
 		FolderSyncIcon,
@@ -84,6 +85,14 @@
 				}),
 				icon: ImageIcon,
 				accentColor: 'orange'
+			},
+			{
+				title: 'Code',
+				url: route('/categories/[category]', {
+					category: 'code'
+				}),
+				icon: CodeIcon,
+				accentColor: 'green'
 			}
 		],
 		help: [

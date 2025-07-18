@@ -35,16 +35,6 @@ services:
     volumes:
       - minio_data:/bitnami/minio/data
 
-  redis:
-    image: bitnami/redis:8.0
-    restart: unless-stopped
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ulimits:
-      memlock: -1
-    ports:
-      - 6379:6379
-
 volumes:
   postgres_data:
     driver: local
