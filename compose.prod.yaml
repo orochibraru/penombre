@@ -20,6 +20,7 @@ services:
       - MINIO_URL=http://minio:9000
       - ORIGIN=${URL-http://localhost:3000}
       - BODY_SIZE_LIMIT=Infinity
+      - LOG_FORMAT=${LOG_FORMAT-json}
     networks:
       - proxy-swarm
       - opendrive

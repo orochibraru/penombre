@@ -28,6 +28,7 @@ services:
       - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
       - MINIO_URL=http://minio:9000
       - BODY_SIZE_LIMIT=Infinity
+      - LOG_FORMAT=${LOG_FORMAT-json}
 
   minio:
     image: bitnami/minio:2025
