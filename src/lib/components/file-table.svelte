@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {
-		CheckIcon,
 		CopyIcon,
 		EllipsisVerticalIcon,
 		ExternalLinkIcon,
@@ -22,18 +21,18 @@
 	import { page } from '$app/state';
 	import { bridge } from '$lib/client/api';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Button, type ButtonVariant } from '$lib/components/ui/button/index.js';
+	import { Badge } from '$lib/components/ui/badge/index';
+	import { Button, type ButtonVariant } from '$lib/components/ui/button/index';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
-	import * as Code from '$lib/components/ui/code';
+	import * as Code from '$lib/components/ui/code/index';
 	import type { SupportedLanguage } from '$lib/components/ui/code/shiki';
 	import * as ContextMenu from '$lib/components/ui/context-menu/index';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
 	import { Input } from '$lib/components/ui/input';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
-	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
+	import { Skeleton } from '$lib/components/ui/skeleton/index';
+	import * as Table from '$lib/components/ui/table/index';
 	import { determineCodeFileLanguage, isCodeItem } from '$lib/file-utils';
 	import { route } from '$lib/ROUTES';
 	import type { ObjectItem, ObjectList } from '$lib/server/services/storage';
@@ -647,6 +646,9 @@
 					<Code.Root lang={fileToView.language} class="w-full" code={fileToView.content}>
 						<Code.CopyButton />
 					</Code.Root>
+					<!-- <div class="h-[50vh] w-full overflow-y-auto">
+						<pre><code>{fileToView.content}</code></pre>
+					</div> -->
 				{/if}
 			</div>
 		</Dialog.Content>

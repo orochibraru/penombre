@@ -1,7 +1,3 @@
-<!--
-	Installed from @ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
 	import { box } from 'svelte-toolbelt';
 	import Button from '$lib/components/ui/button/button.svelte';

@@ -1,7 +1,3 @@
-<!--
-	Installed from @ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
 	import type { CodeCopyButtonProps } from '$lib/components/ui/code/types';
 	import { CopyButton } from '$lib/components/ui/copy-button';

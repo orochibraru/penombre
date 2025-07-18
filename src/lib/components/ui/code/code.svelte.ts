@@ -1,8 +1,3 @@
-/*
-	Installed from @ieedan/shadcn-svelte-extras
-*/
-
-import DOMPurify from 'isomorphic-dompurify';
 import { Context } from 'runed';
 import type { HighlighterCore } from 'shiki';
 import type { ReadableBoxedValues, WritableBoxedValues } from 'svelte-toolbelt';
@@ -80,7 +75,7 @@ class CodeRootState {
 		return this.opts.code.current;
 	}
 
-	highlighted = $derived(DOMPurify.sanitize(this.highlight(this.code) ?? ''));
+	highlighted = $derived(this.highlight(this.code));
 }
 
 function within(num: number, range: CodeRootProps['highlight']) {
