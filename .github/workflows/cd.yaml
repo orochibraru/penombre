@@ -15,10 +15,7 @@ env:
   IMAGE: git.ombrage.space/opendrive/opendrive
   TAG: ${{ github.sha }}
   TZ: Europe/Paris
-  OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
-  OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
-  BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-  OAUTH_PROVIDERS: pocketid
+  OAUTH_PROVIDERS: "pocketid"
   OAUTH_POCKETID_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
   OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
   OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
