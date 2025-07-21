@@ -1,5 +1,5 @@
-/node_modules/
-/build/
+/ui/node_modules/
+/ui/build/
 .env
 .vscode
 .idea

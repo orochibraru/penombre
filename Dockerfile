@@ -1,58 +1,52 @@
-# syntax=docker/dockerfile:1
-FROM node:current-alpine3.22 AS base
+# UI
+FROM node:current-alpine3.22 AS svelte-builder
 
 WORKDIR /app
-
-RUN apk add --no-cache curl bash ca-certificates wget
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
 
-RUN pnpm i -g tsx
+ENV BUILD_OUTPUT_PATH="./build"
+ENV PUBLIC_API_URL=http://0.0.0.0:8080
 
-# Build Stage
-FROM base AS builder
-
-COPY package.json ./
+COPY ui/package.json ./
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts --prefer-offline
 
-COPY . .
+COPY ./ui .
 
 RUN --mount=type=cache,id=vitebuild-opendrive,target=/node_modules/.vite pnpm run build
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prune --production --ignore-scripts
+# API
+FROM golang:1.24.5-alpine AS go-builder
 
-RUN tsx /app/scripts/build-migration.ts
+WORKDIR /app
 
-# Run Stage
-FROM base AS runner
+COPY ./api/go.mod ./api/go.sum ./
 
-COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/dist/migrate.js /app/migrate.js
-COPY --from=builder /app/drizzle /app/drizzle
-COPY --from=builder /app/drizzle.config.ts /app/drizzle.config.ts
-COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
-COPY --from=builder /app/build /app/build
+RUN go mod download
 
-ENV NODE_ENV=production
-ENV BODY_SIZE_LIMIT=Infinity
+COPY ./api .
 
-RUN chmod +x /app/entrypoint.sh
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "curl", "-f", "http://localhost:300/api/v1/ping" ]
+# Server
+FROM alpine:3.22
 
-EXPOSE 3000/tcp
+ENV ENV=prod
 
-RUN chown -R node:node /app
+WORKDIR /app/
 
-USER node
+# Copy the Go binary
+COPY --from=go-builder /app/main .
 
-RUN mkdir /app/temp
+# Copy the SvelteKit static build output
+COPY --from=svelte-builder /app/build ./frontend
 
-ENTRYPOINT [ "/app/entrypoint.sh" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "wget", "--quiet", "--timeout=3", "--tries=1", "--spider", "http://0.0.0.0:8080/api/v1/healthz" ]
 
-CMD ["node", "/app/build/index.js"]
+EXPOSE 8080
+
+CMD ["./main"]

@@ -6,7 +6,7 @@ node_modules
 .vercel
 .netlify
 .wrangler
-/.svelte-kit
+/.svelte-kit/
 /build
 
 # OS
@@ -26,3 +26,5 @@ vite.config.ts.timestamp-*
 /.pnpm-store/
 /docs/.vitepress/cache/
 /temp/
+/tmp/
+/.husky/_/

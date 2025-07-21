@@ -1,0 +1,35 @@
+pre-commit:
+  jobs:
+    - name: ui
+      root: ui
+      group:
+        parallel: true
+        jobs:
+          - run: pnpm run circular
+          - run: pnpm run check
+
+    - name: api
+      root: api
+      group:
+        parallel: true
+        jobs:
+          - run: go vet
+          - run: go mod tidy
+
+    - name: trunk
+      group:
+        parallel: true
+        jobs:
+          - run: trunk fmt
+
+post-merge:
+  jobs:
+    - name: ui
+      root: ui
+      run: pnpm install
+
+post-checkout:
+  jobs:
+    - name: ui
+      root: ui
+      run: pnpm install

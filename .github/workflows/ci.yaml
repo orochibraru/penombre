@@ -2,9 +2,13 @@ name: CI
 
 on:
   workflow_call:
-  push:
-    branches-ignore:
-      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions: read-all
 
 env:
   PNPM_VERSION: 10.12.4
@@ -13,16 +17,42 @@ env:
   MINIO_URL: http://minio:9000
   OAUTH_CLIENT_ID: 123
   OAUTH_CLIENT_SECRET: acb456
-  BETTER_AUTH_SECRET: very_secret_secret
-  BETTER_AUTH_URL: http://0.0.0.0:5173
+  PUBLIC_API_URL: http://localhost:8080
   NODE_VERSION: 22
   AWS_ACCESS_KEY_ID: opendrive
   AWS_SECRET_ACCESS_KEY: opendrive
 
 jobs:
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test with Race Detector
+        run: go test -v -race ./...
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+          working-directory: api/
+
   docker:
     runs-on: ubuntu-latest
-    name: 'Docker build'
+    name: Docker
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -43,98 +73,34 @@ jobs:
         shell: bash
         run: docker buildx bake
 
-  checks:
-    name: 'Checks'
+  node:
+    name: Node
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ui
     strategy:
       matrix:
-        job: [format:check, lint, circular, check, build]
+        job: [circular, check, build]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
+          cwd: ./ui
 
-      - name: Use Node.js ${{ env.NODE_VERSION }}
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
 
       - name: Run '${{ matrix.job }}' command 🧪
         run: pnpm ${{ matrix.job }}
-
-  tests:
-    name: 'Tests'
-    runs-on: ubuntu-latest
-    container: node:22-alpine
-    services:
-      # Label used to access the service container
-      service-db:
-        # Docker Hub image
-        image: bitnami/postgresql:17
-        # Provide the password for postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_DB: opendrive
-        ports:
-          - 5432
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd "pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      minio:
-        # Docker Hub image
-        image: bitnami/minio:latest
-        # Provide the password for postgres
-        env:
-          MINIO_ROOT_USER: ${{ env.AWS_ACCESS_KEY_ID }}
-          MINIO_ROOT_PASSWORD: ${{ env.AWS_SECRET_ACCESS_KEY }}
-        ports:
-          - 9000
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd "curl -f http://0.0.0.0:9000/minio/health/live"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Ping minio
-        run: |
-          apk add --no-cache curl
-          curl -vf ${{ env.MINIO_URL }}/minio/health/live
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
-
-      - name: Sync
-        run: pnpm exec svelte-kit sync
-
-      - name: DB Migration
-        run: pnpm run db:migrate
-
-      - name: Run tests
-        run: pnpm run test:ci

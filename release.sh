@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-pnpm exec changelogen --release
-
-pnpm run format
+pnpm dlx changelogen --release

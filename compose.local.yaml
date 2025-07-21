@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runner
     depends_on:
       minio:
         condition: service_healthy
@@ -11,24 +10,25 @@ services:
         condition: service_healthy
     restart: unless-stopped
     ports:
-      - 3000:3000
+      - 8080:8080
     extra_hosts:
       - host.docker.internal:host-gateway
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/v1/ping']
+      test: [CMD, curl, -f, http://0.0.0.0:8080/api/v1/healthz]
       retries: 5
       timeout: 3s
       interval: 10s
       start_period: 2s
     environment:
-      - LOG_LEVEL=${LOG_LEVEL-debug}
-      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}
-      - ORIGIN=http://localhost:3000
-      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
-      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}?sslmode=disable
+      - ORIGIN=http://0.0.0.0:8080
       - MINIO_URL=http://minio:9000
       - BODY_SIZE_LIMIT=Infinity
-      - LOG_FORMAT=${LOG_FORMAT-json}
+      - OAUTH_PROVIDERS=${OAUTH_PROVIDERS}
+      - OAUTH_POCKETID_DISCOVERY_URL=${OAUTH_POCKETID_DISCOVERY_URL}
+      - OAUTH_POCKETID_REDIRECT_URL=${OAUTH_POCKETID_REDIRECT_URL}
+      - OAUTH_POCKETID_CLIENT_ID=${OAUTH_POCKETID_CLIENT_ID}
+      - OAUTH_POCKETID_CLIENT_SECRET=${OAUTH_POCKETID_CLIENT_SECRET}
 
   minio:
     image: bitnami/minio:2025
@@ -37,7 +37,7 @@ services:
       - MINIO_ROOT_USER=opendrive
       - MINIO_ROOT_PASSWORD=opendrive
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://0.0.0.0:9000/minio/health/live']
+      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
       retries: 5
       timeout: 3s
       interval: 10s
@@ -60,7 +60,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
-        ['CMD-SHELL', "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'"]
+        [
+          CMD-SHELL,
+          "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'",
+        ]
       interval: 3s
       timeout: 10s
       retries: 5
