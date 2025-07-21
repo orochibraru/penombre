@@ -45,7 +45,7 @@ COPY --from=go-builder /app/main .
 # Copy the SvelteKit static build output
 COPY --from=svelte-builder /app/build ./frontend
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "wget", "--quiet", "--timeout=3", "--tries=1", "--spider", "http://0.0.0.0:8080/api/v1/healthz" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "CMD", "wget", "--quiet", "--timeout=3", "--tries=1", "--spider", "http://0.0.0.0:8080/api/v1/healthz" ]
 
 EXPOSE 8080
 
