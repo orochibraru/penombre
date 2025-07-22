@@ -209,7 +209,13 @@ func proxyFile(w http.ResponseWriter, r *http.Request, proxyUrl string) {
 		http.Error(w, "Proxy request failed", http.StatusInternalServerError)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Print(err)
+			return
+		}
+	}()
 
 	// Copy response headers
 	for name, values := range resp.Header {
@@ -219,7 +225,11 @@ func proxyFile(w http.ResponseWriter, r *http.Request, proxyUrl string) {
 	}
 
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		log.Print(err)
+		return
+	}
 }
 
 // GetP implements ServerInterface.

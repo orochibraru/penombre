@@ -9,8 +9,11 @@ dev:
 db:
 	sqlc generate
 
+lint:
+	golangci-lint run
+
 migration:
 	migrate -source file://db/migrations -database postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable up 2
 
 
-.PHONY: api dev migration
+.PHONY: api dev migration lint
