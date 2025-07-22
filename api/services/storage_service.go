@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	db "opendrive/api/db/sqlc"
 	"os"
 	"path/filepath"
@@ -69,17 +70,33 @@ func DetermineFileCategory(fileName, contentType string) string {
 	return "" // Default category if none match
 }
 
-// NewStorageService initializes and returns a new StorageService.
-func NewStorageService() (*StorageService, error) {
+func GetStorageUrl() string {
 	minioUrl := "http://localhost:9000"
 	minioUrlEnv := os.Getenv("MINIO_URL")
 	if minioUrlEnv != "" {
 		minioUrl = minioUrlEnv
 	}
+
+	return minioUrl
+}
+
+func GetAppUrl() string {
+	appUrl := "http://localhost:8080"
+	appUrlEnv := os.Getenv("ORIGIN")
+	if appUrlEnv != "" {
+		appUrl = appUrlEnv
+	}
+
+	return appUrl
+}
+
+// NewStorageService initializes and returns a new StorageService.
+func NewStorageService() (*StorageService, error) {
+
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion("us-east-1"),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("opendrive", "opendrive", "")),
-		config.WithBaseEndpoint(minioUrl),
+		config.WithBaseEndpoint(GetStorageUrl()),
 	)
 	if err != nil {
 		log.Fatalf("unable to load SDK config, %v", err)
@@ -373,8 +390,25 @@ func (s *StorageService) ListObjectsByCategory(bucket, category string) (*Object
 	}, nil
 }
 
+func processPresignedUrl(bucket string, baseUrl string, key string) (*string, error) {
+	parsed, err := url.Parse(baseUrl)
+	if err != nil {
+		log.Print("Failed to parse presigned url")
+		return nil, err
+	}
+
+	finalUrl, err := url.Parse(bucket + "/" + key + "?" + parsed.RawQuery)
+	if err != nil {
+		log.Print("Failed to parse final URL")
+		return nil, err
+	}
+
+	encodedString := url.QueryEscape(finalUrl.String())
+	return &encodedString, nil
+}
+
 // GetPresignedURL generates a temporary URL to access an S3 object.
-func (s *StorageService) GetPresignedURL(bucket, key string) (string, error) {
+func (s *StorageService) GetPresignedURL(bucket, key string) (*string, error) {
 	presignedUrl, err := s.PresignClient.PresignGetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -382,10 +416,14 @@ func (s *StorageService) GetPresignedURL(bucket, key string) (string, error) {
 		opts.Expires = time.Duration(15 * time.Minute)
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return presignedUrl.URL, nil
+	processed, err := processPresignedUrl(bucket, presignedUrl.URL, key)
+	if err != nil {
+		return nil, err
+	}
+	return processed, nil
 }
 
 func (s *StorageService) UploadObjectMeta(bucket string, props UploadBody) (*UploadResult, error) {
@@ -401,10 +439,9 @@ func (s *StorageService) UploadObjectMeta(bucket string, props UploadBody) (*Upl
 	metadata["category"] = category
 
 	var objectMeta = &s3.PutObjectInput{
-		Bucket:      &bucket,
-		Key:         &finalName,
-		ContentType: &props.Type,
-		Metadata:    metadata,
+		Bucket:   &bucket,
+		Key:      &finalName,
+		Metadata: metadata,
 	}
 	_, err = s.S3Client.PutObject(context.TODO(), objectMeta)
 
@@ -420,8 +457,13 @@ func (s *StorageService) UploadObjectMeta(bucket string, props UploadBody) (*Upl
 		return nil, err
 	}
 
+	processed, err := processPresignedUrl(bucket, presignedUrl.URL, finalName)
+	if err != nil {
+		return nil, err
+	}
+
 	var res = &UploadResult{
-		PresignedUrl: presignedUrl.URL,
+		PresignedUrl: *processed,
 		FinalName:    finalName,
 		Metadata:     &metadata,
 	}

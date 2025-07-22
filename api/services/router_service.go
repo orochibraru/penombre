@@ -135,9 +135,14 @@ type GetApiV1StorageObjectsUrlParams struct {
 	Item string `form:"item" json:"item"`
 }
 
-// GetPBucketParams defines parameters for GetPBucket.
-type GetPBucketParams struct {
-	Item string `form:"item" json:"item"`
+// GetPParams defines parameters for GetP.
+type GetPParams struct {
+	Url string `form:"url" json:"url"`
+}
+
+// PutPParams defines parameters for PutP.
+type PutPParams struct {
+	Url string `form:"url" json:"url"`
 }
 
 // PostApiV1StorageBucketsJSONRequestBody defines body for PostApiV1StorageBuckets for application/json ContentType.
@@ -206,8 +211,11 @@ type ServerInterface interface {
 	// (GET /api/v1/storage/objects/url)
 	GetApiV1StorageObjectsUrl(w http.ResponseWriter, r *http.Request, params GetApiV1StorageObjectsUrlParams)
 	// Proxy to an S3 object
-	// (GET /p/{bucket})
-	GetPBucket(w http.ResponseWriter, r *http.Request, bucket string, params GetPBucketParams)
+	// (GET /p)
+	GetP(w http.ResponseWriter, r *http.Request, params GetPParams)
+	// Upload an S3 object
+	// (PUT /p)
+	PutP(w http.ResponseWriter, r *http.Request, params PutPParams)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -323,8 +331,14 @@ func (_ Unimplemented) GetApiV1StorageObjectsUrl(w http.ResponseWriter, r *http.
 }
 
 // Proxy to an S3 object
-// (GET /p/{bucket})
-func (_ Unimplemented) GetPBucket(w http.ResponseWriter, r *http.Request, bucket string, params GetPBucketParams) {
+// (GET /p)
+func (_ Unimplemented) GetP(w http.ResponseWriter, r *http.Request, params GetPParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Upload an S3 object
+// (PUT /p)
+func (_ Unimplemented) PutP(w http.ResponseWriter, r *http.Request, params PutPParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -766,40 +780,65 @@ func (siw *ServerInterfaceWrapper) GetApiV1StorageObjectsUrl(w http.ResponseWrit
 	handler.ServeHTTP(w, r)
 }
 
-// GetPBucket operation middleware
-func (siw *ServerInterfaceWrapper) GetPBucket(w http.ResponseWriter, r *http.Request) {
+// GetP operation middleware
+func (siw *ServerInterfaceWrapper) GetP(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 
-	// ------------- Path parameter "bucket" -------------
-	var bucket string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "bucket", chi.URLParam(r, "bucket"), &bucket, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "bucket", Err: err})
-		return
-	}
-
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetPBucketParams
+	var params GetPParams
 
-	// ------------- Required query parameter "item" -------------
+	// ------------- Required query parameter "url" -------------
 
-	if paramValue := r.URL.Query().Get("item"); paramValue != "" {
+	if paramValue := r.URL.Query().Get("url"); paramValue != "" {
 
 	} else {
-		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "item"})
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "url"})
 		return
 	}
 
-	err = runtime.BindQueryParameter("form", true, true, "item", r.URL.Query(), &params.Item)
+	err = runtime.BindQueryParameter("form", true, true, "url", r.URL.Query(), &params.Url)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "item", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "url", Err: err})
 		return
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetPBucket(w, r, bucket, params)
+		siw.Handler.GetP(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutP operation middleware
+func (siw *ServerInterfaceWrapper) PutP(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PutPParams
+
+	// ------------- Required query parameter "url" -------------
+
+	if paramValue := r.URL.Query().Get("url"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "url"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "url", r.URL.Query(), &params.Url)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "url", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutP(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -977,7 +1016,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/api/v1/storage/objects/url", wrapper.GetApiV1StorageObjectsUrl)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/p/{bucket}", wrapper.GetPBucket)
+		r.Get(options.BaseURL+"/p", wrapper.GetP)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/p", wrapper.PutP)
 	})
 
 	return r

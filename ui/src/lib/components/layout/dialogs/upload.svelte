@@ -73,7 +73,9 @@
       try {
         const promise = new Promise<boolean>((resolve) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("PUT", result.data.presignedUrl);
+          const finalUrl =
+            page.url.origin + `/p?url=${result.data.presignedUrl}`;
+          xhr.open("PUT", finalUrl);
           xhr.setRequestHeader("Content-Type", result.file.type);
 
           for (const key in result.data.metadata) {

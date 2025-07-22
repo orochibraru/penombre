@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: 'Opendrive'
+  name: "Opendrive"
   tagline: A self-hosted drive solution
   actions:
     - theme: brand

@@ -7,6 +7,7 @@
     FileIcon,
     FileImageIcon,
     FileMusicIcon,
+    FileTextIcon,
     FolderIcon,
     FolderInputIcon,
     type Icon as IconType,
@@ -19,12 +20,7 @@
   import { toast } from "svelte-sonner";
   import { invalidateAll } from "$app/navigation";
   import { page } from "$app/state";
-  import {
-    api,
-    getProxyPath,
-    type ObjectItem,
-    type ObjectList,
-  } from "$lib/api";
+  import { api, type ObjectItem, type ObjectList } from "$lib/api";
   import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import { Badge } from "$lib/components/ui/badge/index";
   import { Button, type ButtonVariant } from "$lib/components/ui/button/index";
@@ -293,19 +289,31 @@
 
   async function handleOpenItem(item: ObjectItem): Promise<void> {
     $playableMusic = null;
-    const proxyurl = `${page.url.protocol}//${page.url.host}`;
 
     const fullPath = page.params.path
       ? `${page.params.path}/${item.key}`
       : item.key;
 
-    const presignedUrl = getProxyPath({
-      bucket: page.data.user.id,
-      path: fullPath,
-    });
+    const { data: presignedUrl, error: err } = await api.GET(
+      "/api/v1/storage/objects/url",
+      {
+        params: {
+          query: {
+            item: fullPath,
+          },
+        },
+      }
+    );
+
+    if (err) {
+      console.error(err);
+      throw err;
+    }
+
+    const finalUrl = page.url.origin + `/p?url=${presignedUrl}`;
 
     if (isCodeItem(item.key)) {
-      const codeReq = await fetch(presignedUrl);
+      const codeReq = await fetch(finalUrl);
       if (!codeReq.ok) {
         toast.error("Failed to open code file.", {
           description: codeReq.statusText,
@@ -315,7 +323,7 @@
       const code = await codeReq.text();
       fileToView = {
         item,
-        src: presignedUrl,
+        src: finalUrl,
         content: code,
         type: "code",
         language: determineCodeFileLanguage(item),
@@ -327,7 +335,7 @@
     if (item.contentType?.startsWith("image")) {
       fileToView = {
         item,
-        src: presignedUrl,
+        src: finalUrl,
         type: "image",
       };
       viewFileOpen = true;
@@ -337,12 +345,12 @@
     if (item.contentType?.startsWith("audio")) {
       $playableMusic = {
         title: item.key,
-        source: presignedUrl,
+        source: finalUrl,
       };
       return;
     }
 
-    const newTab = window.open(presignedUrl, "_blank");
+    const newTab = window.open(finalUrl, "_blank");
     if (newTab) {
       newTab.focus();
     }
@@ -511,8 +519,8 @@
                     {/if}
                   </div>
                 {:else if item.contentType}
-                  {#if item.contentType === "application/pdf"}
-                    <FileIcon class={cn(iconSize, "text-indigo-400")} />
+                  {#if item.contentType.includes("application/pdf")}
+                    <FileTextIcon class={cn(iconSize, "text-red-600")} />
                   {:else if item.contentType.startsWith("audio")}
                     <FileMusicIcon class={cn(iconSize, "text-pink-400")} />
                   {:else if item.contentType.startsWith("image")}
@@ -527,7 +535,9 @@
                 {/if}
                 <div>
                   <p
+                    title={item.key}
                     class={cn(
+                      "truncate max-w-72",
                       isUploading ? "text-gray-500 dark:text-gray-300" : ""
                     )}
                   >

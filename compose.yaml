@@ -12,7 +12,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
-        ['CMD-SHELL', "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'"]
+        [
+          CMD-SHELL,
+          "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'",
+        ]
       interval: 3s
       timeout: 10s
       retries: 5
@@ -25,7 +28,7 @@ services:
       - MINIO_ROOT_USER=opendrive
       - MINIO_ROOT_PASSWORD=opendrive
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://0.0.0.0:9000/minio/health/live']
+      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
       retries: 5
       timeout: 3s
       interval: 10s

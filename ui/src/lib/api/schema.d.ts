@@ -870,9 +870,7 @@ export interface paths {
             [name: string]: unknown;
           };
           content: {
-            "application/json": {
-              url: string;
-            };
+            "application/json": string;
           };
         };
         /** @description Bad Request */
@@ -903,7 +901,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/p/{bucket}": {
+  "/p": {
     parameters: {
       query?: never;
       header?: never;
@@ -917,12 +915,10 @@ export interface paths {
     get: {
       parameters: {
         query: {
-          item: string;
+          url: string;
         };
         header?: never;
-        path: {
-          bucket: string;
-        };
+        path?: never;
         cookie?: never;
       };
       requestBody?: never;
@@ -954,7 +950,48 @@ export interface paths {
         };
       };
     };
-    put?: never;
+    /**
+     * Upload an S3 object
+     * @description Redirects to a presigned URL for a given object, hiding the direct storage URL.
+     */
+    put: {
+      parameters: {
+        query: {
+          url: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Temporary Redirect to the presigned URL. */
+        307: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description Bad Request */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+        /** @description Internal Server Error */
+        500: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": components["schemas"]["Error"];
+          };
+        };
+      };
+    };
     post?: never;
     delete?: never;
     options?: never;

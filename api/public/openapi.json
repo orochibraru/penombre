@@ -684,13 +684,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": ["url"],
-                  "properties": {
-                    "url": {
-                      "type": "string"
-                    }
-                  }
+                  "type": "string",
+                  "nullable": false,
+                  "format": "url"
                 }
               }
             }
@@ -718,26 +714,60 @@
         }
       }
     },
-    "/p/{bucket}": {
+    "/p": {
       "get": {
         "summary": "Proxy to an S3 object",
         "description": "Redirects to a presigned URL for a given object, hiding the direct storage URL.",
         "tags": ["Storage"],
         "parameters": [
           {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "item",
+            "name": "url",
             "in": "query",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "url"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": "Temporary Redirect to the presigned URL."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Upload an S3 object",
+        "description": "Redirects to a presigned URL for a given object, hiding the direct storage URL.",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "url"
             }
           }
         ],

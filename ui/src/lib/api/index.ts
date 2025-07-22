@@ -26,17 +26,6 @@ client.use(authMiddleware);
 
 export const api = client;
 
-export interface GetProxyUrl {
-  bucket: string;
-  path: string;
-}
-
-export type ProxyUrl = paths["/p/{bucket}"]["get"];
-
-export function getProxyPath({ bucket, path }: GetProxyUrl): string {
-  return `/p/${bucket}?item=${encodeURIComponent(path)}`;
-}
-
 export type ApiError = {
   code: number;
   message: string;

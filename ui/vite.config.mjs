@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import { kitRoutes } from "vite-plugin-kit-routes";
 
+/** @type {import('vite').UserConfig} */
 export default defineConfig({
   server: {
     host: "0.0.0.0",

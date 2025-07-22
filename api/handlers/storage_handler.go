@@ -6,9 +6,12 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	db "opendrive/api/db/sqlc"
 	"opendrive/api/services"
 	"slices"
+	"strings"
+	"time"
 
 	"github.com/aws/smithy-go"
 )
@@ -166,48 +169,67 @@ func (s *Server) GetApiV1StorageObjectsUrl(w http.ResponseWriter, r *http.Reques
 		RespondWithError(w, http.StatusInternalServerError, "Failed to generate presigned URL")
 		return
 	}
-	RespondWithJSON(w, http.StatusOK, map[string]string{"url": url})
+	RespondWithJSON(w, http.StatusOK, url)
 }
 
-// GetApiV1StorageProxyBucket implements ServerInterface.
-func (s *Server) GetPBucket(w http.ResponseWriter, r *http.Request, bucket string, params services.GetPBucketParams) {
+func proxyFile(w http.ResponseWriter, r *http.Request, proxyUrl string) {
 	// Get the direct presigned URL from the storage service.
-	presignedURL, err := s.Storage.GetPresignedURL(bucket, params.Item)
+	parsedURL, err := url.Parse(services.GetStorageUrl() + "/" + proxyUrl)
 	if err != nil {
-		RespondWithError(w, http.StatusInternalServerError, "Failed to generate presigned URL for proxy")
+		http.Error(w, "Invalid target URL", http.StatusBadRequest)
 		return
 	}
 
-	// Make a request to the presigned URL from our server.
-	s3Response, err := http.Get(presignedURL)
+	proxyReq, err := http.NewRequest(r.Method, parsedURL.String(), r.Body)
 	if err != nil {
-		RespondWithError(w, http.StatusInternalServerError, "Failed to fetch object from storage")
+		http.Error(w, "Failed to create proxy request", http.StatusInternalServerError)
 		return
 	}
-	defer func() {
-		err := s3Response.Body.Close()
-		if err != nil {
-			log.Print(err)
-			return
+
+	proxyReq.ContentLength = r.ContentLength
+
+	// Copy relevant headers
+	proxyReq.Header.Set("Content-Type", r.Header.Get("Content-Type"))
+	proxyReq.Header.Set("Content-Length", r.Header.Get("Content-Length"))
+
+	// Forward other relevant headers
+	for name, values := range r.Header {
+		// Forward headers that are important for S3 presigned URLs
+		if strings.HasPrefix(strings.ToLower(name), "x-amz-") || name == "Authorization" || name == "Content-Type" || name == "Content-Length" {
+			for _, value := range values {
+				proxyReq.Header.Add(name, value)
+			}
 		}
-	}()
-
-	// Copy headers from the S3 response to our response.
-	// This is important for the client to get the correct Content-Type, Content-Length, etc.
-	for name, values := range s3Response.Header {
-		w.Header()[name] = values
 	}
 
-	// Write the status code from the S3 response.
-	w.WriteHeader(s3Response.StatusCode)
-
-	// Stream the body from the S3 response to our response.
-	_, err = io.Copy(w, s3Response.Body)
-
+	// Execute the request
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(proxyReq)
 	if err != nil {
-		log.Print("Failed to stream body of S3 response")
+		http.Error(w, "Proxy request failed", http.StatusInternalServerError)
 		return
 	}
+	defer resp.Body.Close()
+
+	// Copy response headers
+	for name, values := range resp.Header {
+		for _, value := range values {
+			w.Header().Add(name, value)
+		}
+	}
+
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
+}
+
+// GetP implements ServerInterface.
+func (s *Server) GetP(w http.ResponseWriter, r *http.Request, params services.GetPParams) {
+	proxyFile(w, r, params.Url)
+}
+
+// PutP implements ServerInterface.
+func (s *Server) PutP(w http.ResponseWriter, r *http.Request, params services.PutPParams) {
+	proxyFile(w, r, params.Url)
 }
 
 // PostApiV1StorageObjects implements ServerInterface.

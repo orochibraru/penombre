@@ -13,4 +13,4 @@ migration:
 	migrate -source file://db/migrations -database postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable up 2
 
 
-.PHONY: api dev
+.PHONY: api dev migration

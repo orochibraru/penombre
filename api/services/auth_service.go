@@ -91,7 +91,7 @@ func ApiAuthMiddleware(database *Database) func(http.Handler) http.Handler {
 				"/api/v1/auth/oauth/providers",
 				"/api/v1/auth/oauth/pocketid/login",
 				"/api/v1/auth/oauth/pocketid/callback",
-				"/p/",
+				"/p",
 			}
 
 			// Check if the request path is explicitly in the allowlist
