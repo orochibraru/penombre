@@ -28,8 +28,16 @@ post-merge:
       root: ui
       run: pnpm install
 
+    - name: go
+      root: ui
+      run: go mod tidy
+
 post-checkout:
   jobs:
     - name: ui
       root: ui
       run: pnpm install
+
+    - name: go
+      root: ui
+      run: go mod tidy

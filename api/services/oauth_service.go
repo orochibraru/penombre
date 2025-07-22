@@ -91,7 +91,8 @@ func InitOAuthProviders() error {
 		defer func() {
 			err := resp.Body.Close()
 			if err != nil {
-				log.Fatal(err)
+				log.Print(err)
+				return
 			}
 		}()
 

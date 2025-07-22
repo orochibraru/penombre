@@ -1,18 +1,35 @@
-/ui/node_modules/
-/ui/build/
+# IDE & Tools
 .env
 .vscode
 .idea
-emails
 .github
 .husky
 .vscode
-resources
 .example.env
+Makefile
+README.md
+
+# Docker
 compose.prod.yaml
 compose.local.yaml
 compose.yaml
-Makefile
-README.md
 .dockerignore
 docker-bake.hcl
+
+# Temp
+/tmp/
+
+# UI
+/ui/node_modules/
+/ui/build/
+/ui/.svelte-kit/
+/ui/README.md
+
+# API
+/api/sqlc.yaml
+/api/Makefile
+/api/codegen.yaml
+/api/.air.toml
+/api/tmp/
+/api/frontend/
+/api/README.md

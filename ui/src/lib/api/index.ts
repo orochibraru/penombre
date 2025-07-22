@@ -1,14 +1,9 @@
-import { browser, dev } from "$app/environment";
+import { browser } from "$app/environment";
 import createClient, { type Middleware } from "openapi-fetch";
 import type { components, paths } from "./schema";
-import { PUBLIC_API_URL } from "$env/static/public";
 import { getAuthToken } from "$lib/auth";
 
-const prodApiUrl = PUBLIC_API_URL ?? "http://api";
-
-export const apiUrl = dev ? "http://localhost:8080" : prodApiUrl;
-
-const client = createClient<paths>({ baseUrl: apiUrl });
+const client = createClient<paths>();
 
 function sleep(amount: number) {
   return new Promise((resolve) => setTimeout(resolve, amount));
@@ -38,8 +33,8 @@ export interface GetProxyUrl {
 
 export type ProxyUrl = paths["/p/{bucket}"]["get"];
 
-export function getProxyUrl({ bucket, path }: GetProxyUrl): URL {
-  return new URL(`/p/${bucket}?item=${encodeURIComponent(path)}`, apiUrl);
+export function getProxyPath({ bucket, path }: GetProxyUrl): string {
+  return `/p/${bucket}?item=${encodeURIComponent(path)}`;
 }
 
 export type ApiError = {

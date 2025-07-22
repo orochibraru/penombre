@@ -187,7 +187,8 @@ func (s *Server) GetPBucket(w http.ResponseWriter, r *http.Request, bucket strin
 	defer func() {
 		err := s3Response.Body.Close()
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
+			return
 		}
 	}()
 
@@ -204,9 +205,9 @@ func (s *Server) GetPBucket(w http.ResponseWriter, r *http.Request, bucket strin
 	_, err = io.Copy(w, s3Response.Body)
 
 	if err != nil {
-		log.Fatal("Failed to stream body of S3 response")
+		log.Print("Failed to stream body of S3 response")
+		return
 	}
-
 }
 
 // PostApiV1StorageObjects implements ServerInterface.

@@ -128,7 +128,8 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
+			return
 		}
 	}()
 
@@ -136,7 +137,8 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	var userInfo services.UserInfo
 	err = json.Unmarshal(body, &userInfo)
 	if err != nil {
-		log.Fatal("Failed to unmarshal body")
+		log.Print("Failed to unmarshal body")
+		return
 	}
 
 	// Find or create user

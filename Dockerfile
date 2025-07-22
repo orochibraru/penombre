@@ -9,7 +9,6 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
 ENV BUILD_OUTPUT_PATH="./build"
-ENV PUBLIC_API_URL=http://0.0.0.0:8080
 
 COPY ui/package.json ./
 
@@ -35,9 +34,17 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 # Server
 FROM alpine:3.22
 
+LABEL org.opencontainers.image.authors="boyer63nicolas@gmail.com"
+
 ENV ENV=prod
 
-WORKDIR /app/
+RUN adduser -D opendrive
+
+# Switch to the newly created non-root user
+USER opendrive
+
+# Set the working directory to the user's home
+WORKDIR /home/opendrive
 
 # Copy the Go binary
 COPY --from=go-builder /app/main .

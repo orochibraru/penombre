@@ -4,14 +4,21 @@
   import { title } from "$lib/store/title";
   import { capitalizeFirstLetter, cn } from "$lib/utils.js";
   import { dev } from "$app/environment";
-  import { PUBLIC_API_URL } from "$env/static/public";
   import { AlertCircleIcon } from "@lucide/svelte";
+  import { goto } from "$app/navigation";
+
+  let loading: boolean = $state(false);
 
   $title = "Sign in";
 
   const { data } = $props();
 
   let error: boolean = $state(false);
+
+  async function handleOauthSignIn(provider: string) {
+    loading = true;
+    await goto(`/api/v1/auth/oauth/${provider}/login`);
+  }
 </script>
 
 <form class={cn("flex flex-col gap-6")}>
@@ -33,17 +40,14 @@
     {#if data.providers && data.providers.length > 0}
       <div class="grid gap-2">
         {#each data.providers as provider}
-          <a
-            href={dev
-              ? new URL(`/api/v1/auth/oauth/${provider}/login`, PUBLIC_API_URL)
-                  .href
-              : `/api/v1/auth/oauth/${provider}/login`}
+          <Button
+            variant="outline"
             class="w-full"
+            {loading}
+            onclick={() => handleOauthSignIn(provider)}
           >
-            <Button variant="outline" class="w-full">
-              Sign in with {capitalizeFirstLetter(provider)}
-            </Button>
-          </a>
+            Sign in with {capitalizeFirstLetter(provider)}
+          </Button>
         {/each}
       </div>
     {:else}

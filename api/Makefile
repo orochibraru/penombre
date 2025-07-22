@@ -1,6 +1,7 @@
 api:
 	go tool oapi-codegen -config ./codegen.yaml ./public/openapi.json
 	go mod tidy
+	pnpm -C ../ui gen:api
 
 dev: 
 	go tool air

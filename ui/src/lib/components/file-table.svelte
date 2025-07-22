@@ -19,7 +19,12 @@
   import { toast } from "svelte-sonner";
   import { invalidateAll } from "$app/navigation";
   import { page } from "$app/state";
-  import { api, getProxyUrl, type ObjectItem, type ObjectList } from "$lib/api";
+  import {
+    api,
+    getProxyPath,
+    type ObjectItem,
+    type ObjectList,
+  } from "$lib/api";
   import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import { Badge } from "$lib/components/ui/badge/index";
   import { Button, type ButtonVariant } from "$lib/components/ui/button/index";
@@ -123,9 +128,7 @@
           .DELETE("/api/v1/storage/objects/folder", {
             params: {
               query: {
-                path: itemPath.endsWith("/")
-                  ? itemPath.replace("/", "")
-                  : itemPath,
+                path: itemPath.slice(0, -1),
               },
             },
           })
@@ -296,13 +299,13 @@
       ? `${page.params.path}/${item.key}`
       : item.key;
 
-    const presignedUrl = getProxyUrl({
+    const presignedUrl = getProxyPath({
       bucket: page.data.user.id,
       path: fullPath,
     });
 
     if (isCodeItem(item.key)) {
-      const codeReq = await fetch(presignedUrl.href);
+      const codeReq = await fetch(presignedUrl);
       if (!codeReq.ok) {
         toast.error("Failed to open code file.", {
           description: codeReq.statusText,
@@ -312,7 +315,7 @@
       const code = await codeReq.text();
       fileToView = {
         item,
-        src: presignedUrl.href,
+        src: presignedUrl,
         content: code,
         type: "code",
         language: determineCodeFileLanguage(item),
@@ -324,7 +327,7 @@
     if (item.contentType?.startsWith("image")) {
       fileToView = {
         item,
-        src: presignedUrl.href,
+        src: presignedUrl,
         type: "image",
       };
       viewFileOpen = true;
@@ -334,7 +337,7 @@
     if (item.contentType?.startsWith("audio")) {
       $playableMusic = {
         title: item.key,
-        source: presignedUrl.href,
+        source: presignedUrl,
       };
       return;
     }

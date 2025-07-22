@@ -2,7 +2,6 @@ import {
   api,
   apiError,
   apiSuccess,
-  apiUrl,
   type ApiResponse,
   type BaseUploadBody,
   type ObjectList,
