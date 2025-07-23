@@ -1,0 +1,14 @@
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+.pnpm-store/
+api/frontend/
+/ui/.svelte-kit
+*.go
+go.mod
+go.sum
+.prettierignore
+Makefile
+src/lib/ROUTES.ts

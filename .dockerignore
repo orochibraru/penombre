@@ -8,6 +8,8 @@
 .example.env
 Makefile
 README.md
+.prettierrc
+.prettierignore
 
 # Docker
 compose.prod.yaml
@@ -20,16 +22,15 @@ docker-bake.hcl
 /tmp/
 
 # UI
-/ui/node_modules/
-/ui/build/
-/ui/.svelte-kit/
-/ui/README.md
+/node_modules/
+/dist/
+/.svelte-kit/
+README.md
 
 # API
-/api/sqlc.yaml
-/api/Makefile
-/api/codegen.yaml
-/api/.air.toml
-/api/tmp/
-/api/frontend/
-/api/README.md
+sqlc.yaml
+Makefile
+codegen.yaml
+.air.toml
+/tmp/
+README.md

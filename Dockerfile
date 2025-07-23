@@ -8,13 +8,11 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
 
-ENV BUILD_OUTPUT_PATH="./build"
-
-COPY ui/package.json ./
+COPY package.json ./
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts --prefer-offline
 
-COPY ./ui .
+COPY . .
 
 RUN --mount=type=cache,id=vitebuild-opendrive,target=/node_modules/.vite pnpm run build
 
@@ -23,11 +21,11 @@ FROM golang:1.24.5-alpine AS go-builder
 
 WORKDIR /app
 
-COPY ./api/go.mod ./api/go.sum ./
+COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY ./api .
+COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
@@ -50,7 +48,7 @@ WORKDIR /home/opendrive
 COPY --from=go-builder /app/main .
 
 # Copy the SvelteKit static build output
-COPY --from=svelte-builder /app/build ./frontend
+COPY --from=svelte-builder /app/dist ./dist
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "CMD", "wget", "--quiet", "--timeout=3", "--tries=1", "--spider", "http://0.0.0.0:8080/api/v1/healthz" ]
 

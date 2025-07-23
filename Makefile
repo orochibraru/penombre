@@ -1,12 +1,22 @@
-dev-api:
-	DEV_PROXY=true make -C api dev
-
-dev-ui:
-	pnpm -C ui run dev:silent
-
-dev: dev-api dev-ui
-
 api:
-	make -C api
+	go tool oapi-codegen -config ./codegen.yaml ./public/openapi.json
+	go mod tidy
+	pnpm -C ../ui gen:api
 
-.PHONY: dev api
+dev: 
+	go tool air
+
+db:
+	go tool sqlc generate
+
+lint:
+	go tool golangci-lint run
+
+test:
+	go test -v -race ./...
+
+migration:
+	migrate -source file://db/migrations -database postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable up 2
+
+
+.PHONY: api dev migration lint db
