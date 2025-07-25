@@ -100,8 +100,7 @@ jobs:
         timeout-minutes: 3
         name: Start the Containers
         run: |
-          docker compose -f ${{ env.COMPOSE_FILE }} config > compose.compiled.yaml
-          docker --context "${{ env.CONTEXT }}" stack deploy --with-registry-auth --detach=false --compose-file compose.compiled.yaml ${{ env.STACK }}
+          docker --context "${{ env.CONTEXT }}" stack deploy --with-registry-auth --detach=false --compose-file ${{ env.COMPOSE_FILE }} ${{ env.STACK }}
 
       - shell: bash
         name: Cleanup
