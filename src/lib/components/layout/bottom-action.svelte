@@ -23,7 +23,7 @@
 
 {#if open}
 	<div
-		class="bottom-drawer lg:bottom-drawer-lg bg-sidebar/50 fixed right-5 bottom-5 rounded-xl border p-3 backdrop-blur-sm"
+		class="bottom-drawer lg:bottom-drawer-lg bg-sidebar/50 fixed right-5 bottom-20 rounded-xl border p-3 backdrop-blur-sm lg:bottom-5"
 		transition:slide
 	>
 		<div class="mb-2 flex items-center justify-between">

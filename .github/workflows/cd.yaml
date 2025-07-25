@@ -20,7 +20,6 @@ env:
   OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
   OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
   OAUTH_POCKETID_REDIRECT_URL: https://drive.ombrage.space/api/v1/auth/oauth/pocketid/callback
-  LOG_FORMAT: json
 
 permissions:
   contents: write
@@ -95,11 +94,12 @@ jobs:
 
       - name: Pull the latest images
         shell: bash
-        run: docker --context "${{ env.CONTEXT }}" compose -f compose.prod.yaml pull
+        run: docker --context "${{ env.CONTEXT }}" compose -f ${{ env.COMPOSE_FILE }} pull
 
       - shell: bash
+        timeout-minutes: 3
         name: Start the Containers
-        run: docker --context "${{ env.CONTEXT }}" stack deploy --with-registry-auth --detach=false --compose-file compose.prod.yaml opendrive
+        run: docker --context "${{ env.CONTEXT }}" stack deploy --with-registry-auth --detach=false --compose-file ${{ env.COMPOSE_FILE }} ${{ env.STACK }}
 
       - shell: bash
         name: Cleanup

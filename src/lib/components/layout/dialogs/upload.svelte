@@ -293,7 +293,7 @@
 						</div>
 					{/each}
 				</div>
-				<Dialog.Footer class="fixed bottom-0 left-0 w-full border-t bg-white p-5">
+				<Dialog.Footer class="fixed bottom-0 left-0 w-full border-t p-5">
 					<Button
 						type="button"
 						class="w-full"

@@ -1,4 +1,3 @@
-import { error } from '@sveltejs/kit';
 import { listFiles } from '$lib/api/helpers/storage';
 import { route } from '$lib/ROUTES';
 
@@ -8,12 +7,6 @@ type Crumb = {
 };
 
 export const load = async ({ params }) => {
-	const { data: files, err } = await listFiles(params.path);
-
-	if (err) {
-		return error(err.code, err.message);
-	}
-
 	const folders = params.path.split('/');
 
 	const crumbs: Crumb[] = [];
@@ -35,7 +28,7 @@ export const load = async ({ params }) => {
 	}
 
 	return {
-		files,
+		files: listFiles(params.path),
 		title: folders[folders.length - 1],
 		folders,
 		crumbs

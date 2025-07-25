@@ -17,8 +17,9 @@
 		TrashIcon,
 		XIcon
 	} from '@lucide/svelte';
+	import { MediaQuery } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { api, type ObjectItem, type ObjectList } from '$lib/api';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
@@ -27,13 +28,14 @@
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import * as Code from '$lib/components/ui/code/index';
 	import type { SupportedLanguage } from '$lib/components/ui/code/shiki';
-	import * as ContextMenu from '$lib/components/ui/context-menu/index';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
 	import { Input } from '$lib/components/ui/input';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton/index';
 	import * as Table from '$lib/components/ui/table/index';
+	import { touchAction } from '$lib/file-actions';
 	import { determineCodeFileLanguage, isCodeItem } from '$lib/file-utils';
 	import { route } from '$lib/ROUTES';
 	import { playableMusic } from '$lib/store/music';
@@ -62,6 +64,8 @@
 	let searchTimeout: ReturnType<typeof setTimeout> | undefined = $state();
 	let loading: boolean = $state(false);
 	let searchResults: ObjectItem[] = $state([]);
+	let actionsContextOpen: boolean = $state(false);
+	let actionableItem: ObjectItem | undefined = $state();
 	let viewFileOpen: boolean = $state(false);
 	let fileToView: {
 		item: ObjectItem;
@@ -70,6 +74,7 @@
 		content?: string;
 		language?: SupportedLanguage;
 	} | null = $state(null);
+	let multiObjectActionsOpen = $derived((indeterminate || allSelected) && !isSingleItemAction);
 
 	async function updateSearchResults() {
 		searchResults = data.list.filter((item) => item.key.toLowerCase().includes(searchValue));
@@ -105,7 +110,7 @@
 		disabled?: boolean;
 	};
 
-	async function handleDeleteFolder() {
+	async function handleDeleteObject() {
 		if (Object.keys(checkedItems).length === 0) {
 			return;
 		}
@@ -163,6 +168,8 @@
 		toast.promise(
 			Promise.all(promises).finally(async () => {
 				checkedItems = {};
+				actionsContextOpen = false;
+				actionableItem = undefined;
 				await invalidateAll();
 			}),
 			{
@@ -266,10 +273,6 @@
 			colSpan: 1
 		},
 		{
-			title: 'Last Modified',
-			colSpan: 1
-		},
-		{
 			title: 'Actions',
 			colSpan: 1,
 			class: 'w-4 text-right'
@@ -364,8 +367,6 @@
 		}
 	});
 
-	let actionsOpen = $derived((indeterminate || allSelected) && !isSingleItemAction);
-
 	function isChecked(item: ObjectItem): boolean {
 		return checkedItems[item.key] || false;
 	}
@@ -377,21 +378,15 @@
 	const iconSize = 'h-5 w-5';
 
 	const loadingAmount = 20;
-</script>
 
-{#snippet DataTableActions(item: ObjectItem)}
-	{#each itemActions as action}
-		{@const Icon = action.icon}
-		<ContextMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
-			<Icon />
-			{action.title}
-		</ContextMenu.Item>
-	{/each}
-{/snippet}
+	const isDesktop = new MediaQuery('(min-width: 768px)');
+
+	// TODO: Replace datatable with list on mobile
+</script>
 
 <!-- Filters -->
 
-{#if actionsOpen}
+{#if multiObjectActionsOpen}
 	<div class="ml-auto max-w-xl">
 		<div class="flex items-center gap-2 pb-5">
 			{#each multipleItemsActions as action}
@@ -460,91 +455,110 @@
 			/>
 		</Table.Cell>
 		<Table.Cell colspan={7}>
-			<ContextMenu.Root>
-				<ContextMenu.Trigger style="display: contents;">
-					<div class="flex items-center gap-2">
-						{#if isFolder}
-							{@const folder = item.key.replace('/', '')}
-							<FolderIcon class={cn(iconSize, 'text-indigo-600')} fill="#1447e6" />
-							<a
-								href={route('/browse/[...path]', {
-									path: page.params.path ? [page.params.path, folder] : [folder]
-								})}
-							>
-								{folder}
-							</a>
-						{:else}
-							<button
-								onclick={() => handleOpenItemWrapper(item)}
-								class="flex items-center gap-2"
-								disabled={isUploading}
-							>
-								{#if isUploading}
-									<div>
-										{#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
-											<span class="text-xs">
-												{Math.round($uploadingItems[item.key] ?? 0)}%
-											</span>
-										{:else}
-											<XIcon class="h-4 w-4 text-red-600" />
-										{/if}
-									</div>
-								{:else if item.contentType}
-									{#if item.contentType.includes('application/pdf')}
-										<FileTextIcon class={cn(iconSize, 'text-red-600')} />
-									{:else if item.contentType.startsWith('audio')}
-										<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
-									{:else if item.contentType.startsWith('image')}
-										<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
-									{:else if isCode}
-										<FileCodeIcon class={cn(iconSize, 'text-green-400')} />
+			<div
+				class="flex flex-col items-start gap-2"
+				role="button"
+				tabindex={-1}
+				use:touchAction
+				ontap={() => {
+					if (isFolder) {
+						const folder = item.key.replace('/', '');
+						goto(
+							route('/browse/[...path]', {
+								path: page.params.path ? [page.params.path, folder] : [folder]
+							})
+						);
+						return;
+					}
+
+					handleOpenItemWrapper(item);
+				}}
+				onlongpress={() => {
+					actionableItem = item;
+					actionsContextOpen = true;
+				}}
+			>
+				<div class="flex items-center gap-2">
+					{#if isFolder}
+						{@const folder = item.key.replace('/', '')}
+						<FolderIcon class={cn(iconSize, 'text-indigo-600')} fill="#1447e6" />
+						<a
+							href={route('/browse/[...path]', {
+								path: page.params.path ? [page.params.path, folder] : [folder]
+							})}
+						>
+							{folder}
+						</a>
+					{:else}
+						<button
+							onclick={() => handleOpenItemWrapper(item)}
+							class="flex items-center gap-2"
+							disabled={isUploading}
+						>
+							{#if isUploading}
+								<div>
+									{#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
+										<span class="text-xs">
+											{Math.round($uploadingItems[item.key] ?? 0)}%
+										</span>
 									{:else}
-										<FileIcon class={iconSize} />
+										<XIcon class="h-4 w-4 text-red-600" />
 									{/if}
+								</div>
+							{:else if item.contentType}
+								{#if item.contentType.includes('application/pdf')}
+									<FileTextIcon class={cn(iconSize, 'text-red-600')} />
+								{:else if item.contentType.startsWith('audio')}
+									<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
+								{:else if item.contentType.startsWith('image')}
+									<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
+								{:else if isCode}
+									<FileCodeIcon class={cn(iconSize, 'text-green-400')} />
 								{:else}
 									<FileIcon class={iconSize} />
 								{/if}
-								<div>
-									<p
-										title={item.key}
-										class={cn(
-											'max-w-72 truncate',
-											isUploading ? 'text-gray-500 dark:text-gray-300' : ''
-										)}
-									>
-										{item.key}
-									</p>
-								</div>
-								{#if item.metadata?.category === 'music'}
-									{#if item.metadata.musicduration}
-										<Badge variant="outline" class="text-muted-foreground px-1.5 text-xs">
-											{secondsToMinutes(Number.parseFloat(item.metadata.musicduration))}
-										</Badge>
-									{/if}
+							{:else}
+								<FileIcon class={iconSize} />
+							{/if}
+							<div class="text-start">
+								<p
+									title={item.key}
+									class={cn(
+										'max-w-72 truncate text-base lg:text-sm',
+										isUploading ? 'text-gray-500 dark:text-gray-300' : ''
+									)}
+								>
+									{item.key}
+								</p>
+								{#if item.lastModified}
+									<p class="text-xs dark:text-gray-500">Modified {prettyDate(item.lastModified)}</p>
 								{/if}
-							</button>
-						{/if}
-					</div>
-				</ContextMenu.Trigger>
-				<ContextMenu.Content class="w-52">
-					{@render DataTableActions(item)}
-				</ContextMenu.Content>
-			</ContextMenu.Root>
+							</div>
+							{#if item.metadata?.category === 'music'}
+								{#if item.metadata.musicduration}
+									<Badge variant="outline" class="text-muted-foreground px-1.5 text-xs">
+										{secondsToMinutes(Number.parseFloat(item.metadata.musicduration))}
+									</Badge>
+								{/if}
+							{/if}
+						</button>
+					{/if}
+				</div>
+			</div>
 		</Table.Cell>
 		<Table.Cell colspan={1} class="w-32">
-			<Badge variant="outline" class="text-muted-foreground px-1.5">
-				{item.metadata?.category ? capitalizeFirstLetter(item.metadata.category) : 'No category'}
-			</Badge>
+			{#if isFolder}
+				<span>-</span>
+			{:else}
+				<Badge variant="outline" class="text-muted-foreground px-1.5">
+					{item.metadata?.category ? capitalizeFirstLetter(item.metadata.category) : 'No category'}
+				</Badge>
+			{/if}
 		</Table.Cell>
 		<Table.Cell colspan={1} class="w-32">
-			<p>
+			<p class="text-xs">
 				{humanFileSize(item.size as number) ?? '-'}
 			</p>
-		</Table.Cell>
-		<Table.Cell colspan={1} class="w-32">
-			{#if item.lastModified}
-				{prettyDate(item.lastModified)}
-			{/if}
 		</Table.Cell>
 		<Table.Cell colspan={1} class="w-4">
 			<div class="flex w-full items-center justify-end">
@@ -581,84 +595,144 @@
 {/snippet}
 
 <!-- Table -->
-<div class="overflow-hidden rounded-lg border">
-	<Table.Root>
-		<Table.Header class="bg-muted sticky top-0 z-10">
-			<Table.Row>
-				<Table.Head colspan={1} class="w-4">
-					<Checkbox
-						onCheckedChange={(e) => toggleSelectAll(e)}
-						checked={allSelected}
-						bind:indeterminate
-					/>
-				</Table.Head>
-				{#each columns as headItem}
-					<Table.Head colspan={headItem.colSpan} class={cn(headItem.class)}>
-						{headItem.title}
+{#if isDesktop.current}
+	<div class="rounded-lg border">
+		<Table.Root>
+			<Table.Header class="bg-muted sticky top-0 z-10">
+				<Table.Row>
+					<Table.Head colspan={1} class="w-4">
+						<Checkbox
+							onCheckedChange={(e) => toggleSelectAll(e)}
+							checked={allSelected}
+							bind:indeterminate
+						/>
 					</Table.Head>
-				{/each}
-			</Table.Row>
-		</Table.Header>
-		<Table.Body>
-			{#if loading}
-				{@render loadingRows()}
-			{:else if searchValue}
-				{#if searchResults.length > 0}
-					{#each searchResults as item}
+					{#each columns as headItem}
+						<Table.Head colspan={headItem.colSpan} class={cn(headItem.class)}>
+							{headItem.title}
+						</Table.Head>
+					{/each}
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#if loading}
+					{@render loadingRows()}
+				{:else if searchValue}
+					{#if searchResults.length > 0}
+						{#each searchResults as item}
+							{@render tableRow(item)}
+						{/each}
+					{:else}
+						{@render emptyRow()}
+					{/if}
+				{:else if data.count > 0}
+					{#each data.list as item}
 						{@render tableRow(item)}
 					{/each}
 				{:else}
 					{@render emptyRow()}
 				{/if}
-			{:else if data.count > 0}
-				{#each data.list as item}
-					{@render tableRow(item)}
-				{/each}
-			{:else}
-				{@render emptyRow()}
-			{/if}
-		</Table.Body>
-	</Table.Root>
-</div>
+			</Table.Body>
+		</Table.Root>
+	</div>
+{:else}
+	Mobile layout
+{/if}
 
-<AlertDialog.Root bind:open={confirmDeleteOpen}>
-	<AlertDialog.Content class="max-h-[70%] overflow-y-auto pb-16">
-		<AlertDialog.Header>
-			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
-			<AlertDialog.Description>
-				This action cannot be undone. This will permanently delete the following items from your
-				storage device.
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-		<div class="prose">
-			<ul>
-				{#each Object.keys(checkedItems) as item}
-					<li>{item}</li>
-				{/each}
-			</ul>
-		</div>
-		<AlertDialog.Footer class="fixed bottom-5 w-full px-10">
-			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-			<AlertDialog.Action
-				onclick={() => handleDeleteFolder()}
-				disabled={deletingItem}
-				class="bg-red-600"
-			>
-				{#if deletingItem}
-					<Spinner />
-				{:else}
-					Continue
+<Drawer.Root bind:open={actionsContextOpen}>
+	<Drawer.Content class="z-50">
+		<Drawer.Header>
+			{#if actionableItem}
+				<Drawer.Title>
+					{actionableItem.key}
+				</Drawer.Title>
+			{/if}
+			<Drawer.Description>Operate actions on this item</Drawer.Description>
+		</Drawer.Header>
+		<Drawer.Footer>
+			<div class="mx-auto flex w-full flex-col items-start gap-5">
+				{#if actionableItem}
+					{@const item = actionableItem}
+					{#each itemActions as action}
+						{@const Icon = action.icon}
+						<button
+							onclick={() => action.action(item)}
+							disabled={action.disabled}
+							class="disabled:text-muted hover:text-primary flex w-full items-center justify-start gap-3 text-balance transition-colors"
+						>
+							<Icon />
+							{action.title}
+						</button>
+					{/each}
 				{/if}
-			</AlertDialog.Action>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
+			</div>
+		</Drawer.Footer>
+	</Drawer.Content>
+</Drawer.Root>
+
+{#if isDesktop.current}
+	<AlertDialog.Root bind:open={confirmDeleteOpen}>
+		<AlertDialog.Content class="max-h-[70%] overflow-y-auto pb-16">
+			<AlertDialog.Header>
+				<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+				<AlertDialog.Description>
+					This action cannot be undone. This will permanently delete the following items from your
+					storage device.
+				</AlertDialog.Description>
+			</AlertDialog.Header>
+			<div class="prose">
+				<ul>
+					{#each Object.keys(checkedItems) as item}
+						<li class="text-foreground">{item}</li>
+					{/each}
+				</ul>
+			</div>
+			<AlertDialog.Footer class="fixed bottom-5 w-full px-10">
+				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+				<AlertDialog.Action
+					onclick={() => handleDeleteObject()}
+					disabled={deletingItem}
+					class="bg-red-600"
+				>
+					{#if deletingItem}
+						<Spinner />
+					{:else}
+						Continue
+					{/if}
+				</AlertDialog.Action>
+			</AlertDialog.Footer>
+		</AlertDialog.Content>
+	</AlertDialog.Root>
+{:else}
+	<Drawer.Root bind:open={confirmDeleteOpen}>
+		<Drawer.Content>
+			<Drawer.Header>
+				<Drawer.Title>Are you sure absolutely sure?</Drawer.Title>
+				<Drawer.Description>
+					This action cannot be undone. This will permanently delete the following items from your
+					storage device.
+				</Drawer.Description>
+			</Drawer.Header>
+			<div class="prose">
+				<ul>
+					{#each Object.keys(checkedItems) as item}
+						<li class="text-foreground">{item}</li>
+					{/each}
+				</ul>
+			</div>
+			<Drawer.Footer>
+				<Button loading={deletingItem} onclick={() => handleDeleteObject()}>Continue</Button>
+				<Drawer.Close>Cancel</Drawer.Close>
+			</Drawer.Footer>
+		</Drawer.Content>
+	</Drawer.Root>
+{/if}
 
 <Dialog.Root bind:open={viewFileOpen}>
 	{#if fileToView}
 		<Dialog.Content class="max-h-[70%] pb-16 md:max-w-3xl lg:max-w-5xl xl:max-w-7xl">
-			<div class="flex justify-between gap-5">
-				<Dialog.Header>
+			<div class="flex flex-col justify-between gap-5 lg:flex-row">
+				<Dialog.Header class="text-start lg:text-center">
 					<Dialog.Title>
 						{fileToView.item.key}
 					</Dialog.Title>
@@ -672,7 +746,14 @@
 					</Dialog.Description>
 				</Dialog.Header>
 				<div class="pr-5">
-					<Button type="button" variant="outline" size="sm" href={fileToView.src} target="_blank">
+					<Button
+						type="button"
+						class="w-full lg:w-auto"
+						variant="outline"
+						size="sm"
+						href={fileToView.src}
+						target="_blank"
+					>
 						Open in new tab
 						<ExternalLinkIcon />
 					</Button>

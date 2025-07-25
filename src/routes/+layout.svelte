@@ -2,8 +2,8 @@
 	import '../app.css';
 
 	import { ModeWatcher } from 'mode-watcher';
-	import { Toaster } from 'svelte-sonner';
 	import TopLoadingbar from '$lib/components/layout/top-loading-bar.svelte';
+	import { Toaster } from '$lib/components/ui/sonner/index';
 	import { title } from '$lib/store/title';
 
 	let { children } = $props();

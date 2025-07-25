@@ -58,10 +58,6 @@ jobs:
           docker compose -f compose.local.yaml config --quiet
           docker compose -f compose.prod.yaml config --quiet
 
-      - name: Build
-        shell: bash
-        run: docker buildx bake
-
   node:
     name: Node
     runs-on: ubuntu-latest

@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { EllipsisVerticalIcon, LogOutIcon, UserCircleIcon } from '@lucide/svelte';
-	import { toast } from 'svelte-sonner';
-	import { goto } from '$app/navigation';
-	import { api, type User } from '$lib/api';
+	import { type User } from '$lib/api';
+	import { handleSignOut } from '$lib/api/helpers/auth';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -15,26 +14,6 @@
 	let { user }: Props = $props();
 
 	const sidebar = Sidebar.useSidebar();
-
-	async function signOutCallback() {
-		const { error } = await api.POST('/api/v1/auth/sign-out');
-		if (error) {
-			console.error(error);
-			return false;
-		}
-
-		await goto(route('/auth/sign-in'), { invalidateAll: true });
-
-		return true;
-	}
-
-	async function handleSignOut() {
-		toast.promise(signOutCallback, {
-			loading: 'Signing you out',
-			success: 'You were signed out',
-			error: 'Failed to sign you out'
-		});
-	}
 </script>
 
 <Sidebar.Menu>

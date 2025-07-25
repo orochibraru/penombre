@@ -26,3 +26,10 @@ declare global {
 		}
 	}
 }
+
+declare module 'svelte/elements' {
+	interface HTMLAttributes {
+		ontap?: (event: CustomEvent<null>) => void;
+		onlongpress?: (event: CustomEvent<null>) => void;
+	}
+}

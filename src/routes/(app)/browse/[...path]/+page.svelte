@@ -1,5 +1,5 @@
 <script lang="ts">
-	import FileTable from '$lib/components/file-table.svelte';
+	import FileLayout from '$lib/components/file-layout.svelte';
 	import { title } from '$lib/store/title';
 
 	let { data } = $props();
@@ -9,6 +9,4 @@
 	});
 </script>
 
-<section>
-	<FileTable data={data.files} />
-</section>
+<FileLayout data={data.files} />

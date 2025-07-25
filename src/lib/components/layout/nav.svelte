@@ -4,6 +4,7 @@
 		url: string;
 		icon: typeof IconType;
 		accentColor?: 'indigo' | 'orange' | 'pink' | 'green';
+		hideOnMobile?: boolean;
 	};
 </script>
 
@@ -41,7 +42,7 @@
 			{#if items && items.length > 0}
 				{#each items as item (item.title)}
 					{@const Icon = item.icon}
-					<Sidebar.MenuItem>
+					<Sidebar.MenuItem class={cn(item.hideOnMobile ? 'hidden lg:block' : 'block')}>
 						<Sidebar.MenuButton isActive={isActive(item)}>
 							{#snippet child({ props })}
 								<a
@@ -52,13 +53,14 @@
 										item.accentColor === 'indigo' ? 'data-[active=true]:text-indigo-500' : '',
 										item.accentColor === 'orange' ? 'data-[active=true]:text-orange-500' : '',
 										item.accentColor === 'pink' ? 'data-[active=true]:text-pink-500' : '',
-										item.accentColor === 'green' ? 'data-[active=true]:text-green-500' : ''
+										item.accentColor === 'green' ? 'data-[active=true]:text-green-500' : '',
+										'text-[1.1rem] lg:text-sm'
 									)}
 									title={item.title}
 								>
 									<Icon
 										class={cn(
-											'h-4.5 w-4.5',
+											'lg:h-4.5 lg:w-4.5',
 											item.accentColor === 'indigo' ? 'text-indigo-500' : '',
 											item.accentColor === 'orange' ? 'text-orange-500' : '',
 											item.accentColor === 'pink' ? 'text-pink-500' : '',

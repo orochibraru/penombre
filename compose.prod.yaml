@@ -28,10 +28,10 @@ services:
     deploy:
       labels:
         - traefik.enable=true
-        - traefik.http.routers.opendrive-app.rule=Host(`drive.ombrage.space`)
-        - traefik.http.routers.opendrive-app.entrypoints=websecure
-        - traefik.http.routers.opendrive-app.tls.certResolver=letsencrypt
-        - traefik.http.services.opendrive-app.loadbalancer.server.port=8080
+        - traefik.http.routers.${STACK}-app.rule=Host(`${URL}`)
+        - traefik.http.routers.${STACK}-app.entrypoints=websecure
+        - traefik.http.routers.${STACK}-app.tls.certResolver=letsencrypt
+        - traefik.http.services.${STACK}-app.loadbalancer.server.port=8080
 
   minio:
     image: bitnami/minio:2025
@@ -73,12 +73,14 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
+    name: ${STACK}_postgres_data
   minio_data:
+    name: ${STACK}_minio_data
     driver: local
 
 networks:
   proxy-swarm:
     external: true
   opendrive:
+    name: ${STACK}
     driver: overlay

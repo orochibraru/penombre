@@ -1,5 +1,5 @@
 <script lang="ts">
-	import DataTable from '$lib/components/file-table.svelte';
+	import FileLayout from '$lib/components/file-layout.svelte';
 	import { title } from '$lib/store/title';
 	import { capitalizeFirstLetter } from '$lib/utils';
 
@@ -10,6 +10,4 @@
 	});
 </script>
 
-<div>
-	<DataTable data={data.files} />
-</div>
+<FileLayout data={data.files} />

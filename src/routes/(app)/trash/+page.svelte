@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { TrashIcon } from '@lucide/svelte';
-	import DataTable from '$lib/components/file-table.svelte';
+	import FileLayout from '$lib/components/file-layout.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { title } from '$lib/store/title';
 
@@ -15,5 +15,6 @@
 			<TrashIcon />
 		</Button>
 	</div>
-	<DataTable data={data.files} />
 </div>
+
+<FileLayout data={data.files} />

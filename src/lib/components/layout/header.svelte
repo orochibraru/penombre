@@ -3,13 +3,11 @@
 	import { page } from '$app/state';
 	import NewFolder from '$lib/components/layout/dialogs/new-folder.svelte';
 	import Upload from '$lib/components/layout/dialogs/upload.svelte';
-	import Notifications from '$lib/components/layout/notifications.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { title } from '$lib/store/title';
-	import { uploadedItems, uploadingItems } from '$lib/store/upload';
 
 	type Props = {
 		newFolderOpen: boolean;
@@ -50,7 +48,6 @@
 			</Breadcrumb.List>
 		</Breadcrumb.Root>
 		<div class="ml-auto flex items-center gap-2">
-			<Notifications />
 			<div class="flex items-center gap-2">
 				<Button
 					variant="outline"

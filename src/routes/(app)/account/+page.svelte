@@ -1,4 +1,9 @@
 <script lang="ts">
+	import { LogOutIcon } from '@lucide/svelte';
+	import { handleSignOut } from '$lib/api/helpers/auth';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Label from '$lib/components/ui/label/label.svelte';
 	import { title } from '$lib/store/title';
 
 	$title = 'Account';
@@ -6,6 +11,24 @@
 	const { data } = $props();
 </script>
 
-<div>
-	<pre class="rounded-xl bg-black p-5 text-white">{JSON.stringify(data.user, null, 2)}</pre>
+<div class="w-full max-w-lg">
+	<form class="mb-5">
+		<fieldset disabled class="flex flex-col gap-5">
+			{#if data.user.image}
+				<img src={data.user.image} alt={data.user.name} class="max-w-20 rounded-full" />
+			{/if}
+			<div class="flex w-full flex-col gap-1.5">
+				<Label>Email</Label>
+				<Input type="email" value={data.user.email} />
+			</div>
+			<div class="flex w-full flex-col gap-1.5">
+				<Label>Name</Label>
+				<Input type="email" value={data.user.name} />
+			</div>
+		</fieldset>
+	</form>
+	<Button onclick={() => handleSignOut()} class="w-full" variant="outline">
+		Sign out
+		<LogOutIcon />
+	</Button>
 </div>

@@ -1,3 +1,5 @@
+import { toast } from 'svelte-sonner';
+import { goto } from '$app/navigation';
 import {
 	type ApiResponse,
 	api,
@@ -6,6 +8,7 @@ import {
 	type Providers,
 	type UserSession
 } from '$lib/api';
+import { route } from '$lib/ROUTES';
 
 export async function getProviders(): Promise<ApiResponse<Providers>> {
 	try {
@@ -37,4 +40,24 @@ export async function getUser(): Promise<ApiResponse<UserSession>> {
 	} catch (e) {
 		return apiError(500, 'API seems unreachable', e);
 	}
+}
+
+async function signOutCallback() {
+	const { error } = await api.POST('/api/v1/auth/sign-out');
+	if (error) {
+		console.error(error);
+		return false;
+	}
+
+	await goto(route('/auth/sign-in'), { invalidateAll: true });
+
+	return true;
+}
+
+export async function handleSignOut() {
+	toast.promise(signOutCallback, {
+		loading: 'Signing you out',
+		success: 'You were signed out',
+		error: 'Failed to sign you out'
+	});
 }

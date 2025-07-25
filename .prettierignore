@@ -12,3 +12,5 @@ go.sum
 .prettierignore
 Makefile
 src/lib/ROUTES.ts
+.air.toml
+docker-bake.hcl

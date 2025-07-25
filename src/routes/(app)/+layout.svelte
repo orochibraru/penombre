@@ -12,16 +12,19 @@
 		SettingsIcon,
 		StarIcon,
 		TrashIcon,
+		UserIcon,
 		UsersIcon
 	} from '@lucide/svelte';
-
+	import { page } from '$app/state';
 	import SiteHeader from '$lib/components/layout/header.svelte';
 	import MusicPlayer from '$lib/components/layout/music-player.svelte';
 	import Nav, { type NavItem } from '$lib/components/layout/nav.svelte';
 	import NavUser from '$lib/components/layout/user-menu.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { route } from '$lib/ROUTES';
+	import { playableMusic } from '$lib/store/music';
 	import { title } from '$lib/store/title';
+	import { cn } from '$lib/utils';
 
 	const { children, data } = $props();
 
@@ -37,12 +40,14 @@
 			{
 				title: 'My Drive',
 				url: route('/browse'),
-				icon: FolderIcon
+				icon: FolderIcon,
+				hideOnMobile: true
 			},
 			{
 				title: 'Recent',
 				url: route('/recent'),
-				icon: ClockFadingIcon
+				icon: ClockFadingIcon,
+				hideOnMobile: true
 			},
 			{
 				title: 'Starred',
@@ -98,7 +103,8 @@
 			{
 				title: 'Settings',
 				url: route('/settings'),
-				icon: SettingsIcon
+				icon: SettingsIcon,
+				hideOnMobile: true
 			},
 			{
 				title: 'Sync',
@@ -112,10 +118,25 @@
 			}
 		]
 	};
+
+	const bottomNavItemClass = 'flex flex-col gap-1 items-center text-xs';
+	const bottomNavItemIconClass = 'w-5.5 h-5.5';
+
+	function isActive(itemUrl: string) {
+		if (page.url.pathname === '/' && itemUrl === '/') {
+			return true;
+		}
+
+		if (page.url.pathname.startsWith(itemUrl)) {
+			return true;
+		}
+
+		return false;
+	}
 </script>
 
 <svelte:head>
-	<title>Opendrive - {$title}</title>
+	<title>Opendrive - {$title ?? 'Home'}</title>
 </svelte:head>
 
 <Sidebar.Provider
@@ -143,18 +164,59 @@
 		</Sidebar.Content>
 		<Sidebar.Footer>
 			{#if data.user}
-				<NavUser user={data.user} />
+				<div class="hidden lg:block">
+					<NavUser user={data.user} />
+				</div>
 			{/if}
 		</Sidebar.Footer>
 	</Sidebar.Root>
 
 	<Sidebar.Inset>
 		<SiteHeader bind:newFolderOpen bind:uploadOpen />
-		<div class="flex flex-1 flex-col pb-26">
+		<div
+			class={cn(
+				'flex flex-1 flex-col pb-46 transition-all ',
+				$playableMusic !== null ? 'lg:pb-26' : 'lg:pb-5'
+			)}
+		>
 			<div class="main-container @container/main flex flex-1 flex-col gap-5 p-5">
 				{@render children()}
 			</div>
 		</div>
 		<MusicPlayer />
+		<div
+			class="bg-background/20 fixed bottom-0 left-0 w-full rounded-t-4xl border-t px-8 py-2 backdrop-blur-xl lg:hidden"
+		>
+			<div class="flex items-center justify-between gap-5">
+				<a
+					href={route('/browse')}
+					class={cn(bottomNavItemClass, isActive(route('/browse')) ? 'text-primary' : '')}
+				>
+					<FolderIcon class={bottomNavItemIconClass} />
+					Home
+				</a>
+				<a
+					href={route('/recent')}
+					class={cn(bottomNavItemClass, isActive(route('/recent')) ? 'text-primary' : '')}
+				>
+					<ClockFadingIcon class={bottomNavItemIconClass} />
+					Recent
+				</a>
+				<a
+					href={route('/account')}
+					class={cn(bottomNavItemClass, isActive(route('/account')) ? 'text-primary' : '')}
+				>
+					<UserIcon class={bottomNavItemIconClass} />
+					Profile
+				</a>
+				<a
+					href={route('/settings')}
+					class={cn(bottomNavItemClass, isActive(route('/settings')) ? 'text-primary' : '')}
+				>
+					<SettingsIcon class={bottomNavItemIconClass} />
+					Settings
+				</a>
+			</div>
+		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>
