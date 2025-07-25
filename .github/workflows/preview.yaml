@@ -9,6 +9,7 @@ env:
   COMPOSE_FILE: compose.prod.yaml
   STACK: opendrive-pr-${{ github.event.number }}
   URL: https://pr-${{ github.event.number }}-drive.ombrage.space
+  HOSTNAME: pr-${{ github.event.number }}-drive.ombrage.space
   IMAGE: git.ombrage.space/opendrive/opendrive
   TAG: ${{ github.event.pull_request.head.sha }}
   TZ: Europe/Paris

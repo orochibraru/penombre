@@ -12,6 +12,7 @@ env:
   COMPOSE_FILE: compose.prod.yaml
   STACK: opendrive
   URL: https://drive.ombrage.space
+  HOSTNAME: drive.ombrage.space
   IMAGE: git.ombrage.space/opendrive/opendrive
   TAG: ${{ github.sha }}
   TZ: Europe/Paris

@@ -28,7 +28,7 @@ services:
     deploy:
       labels:
         - traefik.enable=true
-        - traefik.http.routers.${STACK}-app.rule=Host(`${URL}`)
+        - traefik.http.routers.${STACK}-app.rule=Host(`${HOSTNAME}`)
         - traefik.http.routers.${STACK}-app.entrypoints=websecure
         - traefik.http.routers.${STACK}-app.tls.certResolver=letsencrypt
         - traefik.http.services.${STACK}-app.loadbalancer.server.port=8080
