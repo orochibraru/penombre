@@ -1,13 +1,17 @@
 <script lang="ts">
-	import { CloudUploadIcon, FolderPlusIcon } from '@lucide/svelte';
+	import { CloudUploadIcon, EllipsisIcon, FolderPlusIcon } from '@lucide/svelte';
+	import { MediaQuery } from 'svelte/reactivity';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import NewFolder from '$lib/components/layout/dialogs/new-folder.svelte';
 	import Upload from '$lib/components/layout/dialogs/upload.svelte';
-	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
+	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index';
 	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
+	import { Separator } from '$lib/components/ui/separator/index';
+	import * as Sidebar from '$lib/components/ui/sidebar/index';
 	import { title } from '$lib/store/title';
+	import type { BreadCrumb } from '$lib/utils';
 
 	type Props = {
 		newFolderOpen: boolean;
@@ -17,6 +21,8 @@
 	let uploadLoading: boolean = $state(false);
 
 	let { newFolderOpen = $bindable(false), uploadOpen = $bindable(false) }: Props = $props();
+
+	const isDesktop = new MediaQuery('(min-width: 768px)');
 </script>
 
 <header
@@ -29,19 +35,58 @@
 		<Breadcrumb.Root>
 			<Breadcrumb.List>
 				{#if page.data.crumbs}
-					{#each page.data.crumbs as crumb}
-						{@const index = page.data.crumbs.indexOf(crumb)}
-						{#if index !== page.data.crumbs.length && index !== 0}
+					{@const crumbs: BreadCrumb[] = page.data.crumbs}
+					{#if isDesktop.current}
+						{#each crumbs as crumb}
+							{@const index = crumbs.indexOf(crumb)}
+							{#if index !== crumbs.length && index !== 0}
+								<Breadcrumb.Separator />
+							{/if}
+							<Breadcrumb.Item class="md:text-sm">
+								<Breadcrumb.Link href={crumb.href}>
+									{crumb.title}
+								</Breadcrumb.Link>
+							</Breadcrumb.Item>
+						{/each}
+					{:else}
+						{@const firstCrumb = crumbs[0]}
+						{@const lastCrumb = crumbs[crumbs.length - 1]}
+						{@const otherCrumbs = crumbs.slice(1, crumbs.length - 1)}
+						{#if firstCrumb}
+							<Breadcrumb.Item class="md:text-sm">
+								<Breadcrumb.Link href={firstCrumb.href}>
+									{firstCrumb.title}
+								</Breadcrumb.Link>
+							</Breadcrumb.Item>
 							<Breadcrumb.Separator />
 						{/if}
-						<Breadcrumb.Item>
-							<Breadcrumb.Link href={crumb.href}>
-								{crumb.title}
-							</Breadcrumb.Link>
-						</Breadcrumb.Item>
-					{/each}
+						{#if crumbs.length > 2}
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger>
+									<EllipsisIcon />
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content>
+									<DropdownMenu.Group>
+										{#each otherCrumbs as crumb}
+											<DropdownMenu.Item onclick={() => goto(crumb.href)}>
+												{crumb.title}
+											</DropdownMenu.Item>
+										{/each}
+									</DropdownMenu.Group>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
+							<Breadcrumb.Separator />
+						{/if}
+						{#if lastCrumb}
+							<Breadcrumb.Item class="md:text-sm">
+								<Breadcrumb.Link href={lastCrumb.href}>
+									{lastCrumb.title}
+								</Breadcrumb.Link>
+							</Breadcrumb.Item>
+						{/if}
+					{/if}
 				{:else}
-					<Breadcrumb.Item>
+					<Breadcrumb.Item class="md:text-sm">
 						<Breadcrumb.Link>{$title}</Breadcrumb.Link>
 					</Breadcrumb.Item>
 				{/if}

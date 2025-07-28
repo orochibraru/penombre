@@ -1,15 +1,11 @@
 import { listFiles } from '$lib/api/helpers/storage';
 import { route } from '$lib/ROUTES';
-
-type Crumb = {
-	title: string;
-	href: string;
-};
+import type { BreadCrumb } from '$lib/utils';
 
 export const load = async ({ params }) => {
 	const folders = params.path.split('/');
 
-	const crumbs: Crumb[] = [];
+	const crumbs: BreadCrumb[] = [];
 	const chain: string[] = [];
 
 	crumbs.push({

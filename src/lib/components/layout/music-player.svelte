@@ -3,9 +3,10 @@
 	import { dev } from '$app/environment';
 	import BottomAction from '$lib/components/layout/bottom-action.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { Progress } from '$lib/components/ui/progress/index.js';
-	import { Slider } from '$lib/components/ui/slider/index.js';
+	import * as Popover from '$lib/components/ui/popover/index';
+	import { Progress } from '$lib/components/ui/progress/index';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import { Slider } from '$lib/components/ui/slider/index';
 	import { playableMusic } from '$lib/store/music';
 
 	function clearCurrent() {
@@ -18,6 +19,7 @@
 	let currentTime = $state(0);
 	let duration = $state(0);
 	let volume = $state(1);
+	let loading: boolean = $state(true);
 
 	$effect(() => {
 		const music = $playableMusic;
@@ -30,14 +32,6 @@
 				player.src = music.source;
 				// `load()` tells the audio element to fetch the new source.
 				player.load();
-				if (!dev) {
-					// `play()` returns a promise, which we should handle.
-					player.play().catch((error) => {
-						console.error('Autoplay was prevented:', error);
-						// If autoplay fails, update the UI to show the paused state.
-						paused = true;
-					});
-				}
 			}
 		} else if (player) {
 			// If there's no music, pause the player and clear the source.
@@ -87,7 +81,11 @@
 >
 	<div class="flex w-full items-center gap-2">
 		<div class="flex items-center justify-between gap-2">
-			{#if paused}
+			{#if loading}
+				<Button disabled>
+					<Spinner />
+				</Button>
+			{:else if paused}
 				<Button onclick={() => player?.play()} title="Play">
 					<PlayIcon />
 				</Button>
@@ -124,6 +122,16 @@
 		class="sr-only w-full rounded-none"
 		title={$playableMusic?.title}
 		playsinline
+		oncanplay={() => {
+			loading = false;
+			if (!dev) {
+				player.play().catch((error) => {
+					console.error('Autoplay was prevented:', error);
+					// If autoplay fails, update the UI to show the paused state.
+					paused = true;
+				});
+			}
+		}}
 		bind:this={player}
 		bind:paused
 		bind:currentTime

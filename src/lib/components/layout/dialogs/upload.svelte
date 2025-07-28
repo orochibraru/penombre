@@ -9,7 +9,7 @@
 	import { api, type UploadBody, type UploadResult } from '$lib/api';
 	import { uploadFile } from '$lib/api/helpers/storage';
 	import { Button } from '$lib/components/ui/button';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Dialog from '$lib/components/ui/dialog/index';
 	import {
 		displaySize,
 		FileDropZone,

@@ -15,24 +15,22 @@
 	import { api, type ObjectItem, type ObjectList } from '$lib/api';
 	import FileList from '$lib/components/file-list.svelte';
 	import FileTable from '$lib/components/file-table.svelte';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Badge } from '$lib/components/ui/badge/index';
-	import { Button, type ButtonVariant } from '$lib/components/ui/button/index';
+	import { Button } from '$lib/components/ui/button/index';
 	import * as Code from '$lib/components/ui/code/index';
 	import type { SupportedLanguage } from '$lib/components/ui/code/shiki';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { Input } from '$lib/components/ui/input';
-	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { determineCodeFileLanguage, isCodeItem } from '$lib/file-utils';
 	import { playableMusic } from '$lib/store/music';
 	import { humanFileSize, type ItemAction, type MultipleItemsAction } from '$lib/utils';
 
 	type Props = {
 		data: ObjectList;
+		loading?: boolean;
 	};
 
-	let { data }: Props = $props();
+	let { data, loading = $bindable(false) }: Props = $props();
 
 	let allSelected: boolean = $state(false);
 	let indeterminate: boolean = $state(false);
@@ -43,7 +41,6 @@
 	let searchValue: string = $state('');
 	let searchResults: ObjectItem[] = $state([]);
 	let searchTimeout: ReturnType<typeof setTimeout> | undefined = $state();
-	let loading: boolean = $state(false);
 	let actionsContextOpen: boolean = $state(false);
 	let actionableItem: ObjectItem | undefined = $state();
 	let viewFileOpen: boolean = $state(false);
@@ -293,7 +290,15 @@
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
-	// TODO: Replace datatable with list on mobile
+	$effect(() => {
+		allSelected = data.count > 0 && data.list.every((item) => checkedItems[item.key]);
+		indeterminate =
+			data.count > 0 && data.list.some((item) => checkedItems[item.key] === true) && !allSelected;
+
+		if (data.count === 0) {
+			checkedItems = {};
+		}
+	});
 </script>
 
 <!-- Filters -->
@@ -333,6 +338,10 @@
 		{itemActions}
 		{searchValue}
 		{searchResults}
+		{handleDeleteObject}
+		bind:checkedItems
+		bind:deletingItem
+		bind:confirmDeleteOpen
 		bind:loading
 		bind:allSelected
 		bind:indeterminate
@@ -346,101 +355,16 @@
 		{itemActions}
 		{searchValue}
 		{searchResults}
+		bind:checkedItems
+		{handleDeleteObject}
+		bind:deletingItem
+		bind:confirmDeleteOpen
 		bind:loading
 		bind:allSelected
 		bind:indeterminate
 		bind:actionableItem
 		bind:actionsContextOpen
 	/>
-{/if}
-
-<Drawer.Root bind:open={actionsContextOpen}>
-	<Drawer.Content class="z-50">
-		<Drawer.Header>
-			{#if actionableItem}
-				<Drawer.Title>
-					{actionableItem.key}
-				</Drawer.Title>
-			{/if}
-			<Drawer.Description>Operate actions on this item</Drawer.Description>
-		</Drawer.Header>
-		<Drawer.Footer>
-			<div class="mx-auto flex w-full flex-col items-start gap-5">
-				{#if actionableItem}
-					{@const item = actionableItem}
-					{#each itemActions as action}
-						{@const Icon = action.icon}
-						<button
-							onclick={() => action.action(item)}
-							disabled={action.disabled}
-							class="disabled:text-muted hover:text-primary flex w-full items-center justify-start gap-3 text-balance transition-colors"
-						>
-							<Icon />
-							{action.title}
-						</button>
-					{/each}
-				{/if}
-			</div>
-		</Drawer.Footer>
-	</Drawer.Content>
-</Drawer.Root>
-
-{#if isDesktop.current}
-	<AlertDialog.Root bind:open={confirmDeleteOpen}>
-		<AlertDialog.Content class="max-h-[70%] overflow-y-auto pb-16">
-			<AlertDialog.Header>
-				<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
-				<AlertDialog.Description>
-					This action cannot be undone. This will permanently delete the following items from your
-					storage device.
-				</AlertDialog.Description>
-			</AlertDialog.Header>
-			<div class="prose">
-				<ul>
-					{#each Object.keys(checkedItems) as item}
-						<li class="text-foreground">{item}</li>
-					{/each}
-				</ul>
-			</div>
-			<AlertDialog.Footer class="fixed bottom-5 w-full px-10">
-				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-				<AlertDialog.Action
-					onclick={() => handleDeleteObject()}
-					disabled={deletingItem}
-					class="bg-red-600"
-				>
-					{#if deletingItem}
-						<Spinner />
-					{:else}
-						Continue
-					{/if}
-				</AlertDialog.Action>
-			</AlertDialog.Footer>
-		</AlertDialog.Content>
-	</AlertDialog.Root>
-{:else}
-	<Drawer.Root bind:open={confirmDeleteOpen}>
-		<Drawer.Content>
-			<Drawer.Header>
-				<Drawer.Title>Are you sure absolutely sure?</Drawer.Title>
-				<Drawer.Description>
-					This action cannot be undone. This will permanently delete the following items from your
-					storage device.
-				</Drawer.Description>
-			</Drawer.Header>
-			<div class="prose">
-				<ul>
-					{#each Object.keys(checkedItems) as item}
-						<li class="text-foreground">{item}</li>
-					{/each}
-				</ul>
-			</div>
-			<Drawer.Footer>
-				<Button loading={deletingItem} onclick={() => handleDeleteObject()}>Continue</Button>
-				<Drawer.Close>Cancel</Drawer.Close>
-			</Drawer.Footer>
-		</Drawer.Content>
-	</Drawer.Root>
 {/if}
 
 <Dialog.Root bind:open={viewFileOpen}>

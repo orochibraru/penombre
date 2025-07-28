@@ -2,9 +2,9 @@
 	import { EllipsisVerticalIcon, LogOutIcon, UserCircleIcon } from '@lucide/svelte';
 	import { type User } from '$lib/api';
 	import { handleSignOut } from '$lib/api/helpers/auth';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Avatar from '$lib/components/ui/avatar/index';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
+	import * as Sidebar from '$lib/components/ui/sidebar/index';
 	import { route } from '$lib/ROUTES';
 
 	type Props = {

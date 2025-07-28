@@ -20,7 +20,7 @@
 	import MusicPlayer from '$lib/components/layout/music-player.svelte';
 	import Nav, { type NavItem } from '$lib/components/layout/nav.svelte';
 	import NavUser from '$lib/components/layout/user-menu.svelte';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Sidebar from '$lib/components/ui/sidebar/index';
 	import { route } from '$lib/ROUTES';
 	import { playableMusic } from '$lib/store/music';
 	import { title } from '$lib/store/title';
@@ -164,7 +164,7 @@
 		</Sidebar.Content>
 		<Sidebar.Footer>
 			{#if data.user}
-				<div class="hidden lg:block">
+				<div class="hidden md:block">
 					<NavUser user={data.user} />
 				</div>
 			{/if}
@@ -185,7 +185,7 @@
 		</div>
 		<MusicPlayer />
 		<div
-			class="bg-background/20 fixed bottom-0 left-0 w-full rounded-t-4xl border-t px-8 py-2 backdrop-blur-xl lg:hidden"
+			class="bg-background/20 fixed bottom-0 left-0 w-full rounded-t-4xl border-t px-8 py-2 backdrop-blur-xl md:hidden"
 		>
 			<div class="flex items-center justify-between gap-5">
 				<a

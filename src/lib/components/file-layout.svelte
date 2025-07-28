@@ -1,9 +1,8 @@
 <script lang="ts">
 	import type { ObjectRequest } from '$lib/api/helpers/storage';
-	import FileTable from '$lib/components/file-wrapper.svelte';
+	import FileWrapper from '$lib/components/file-wrapper.svelte';
 
 	import PageError from '$lib/components/layout/page-error.svelte';
-	import PageLoader from '$lib/components/page-loader.svelte';
 
 	type Props = {
 		data: ObjectRequest;
@@ -14,12 +13,18 @@
 
 <section>
 	{#await data}
-		<PageLoader />
+		<FileWrapper
+			data={{
+				list: [],
+				count: 0
+			}}
+			loading
+		/>
 	{:then res}
 		{#if !res.data}
 			<PageError />
 		{:else}
-			<FileTable data={res.data} />
+			<FileWrapper data={res.data} />
 		{/if}
 	{:catch}
 		<PageError />

@@ -2,7 +2,7 @@ import type { Icon as IconType } from '@lucide/svelte';
 import clsx, { type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { v4 as uuidv4 } from 'uuid';
-import type { ObjectItem } from '$lib/api';
+import type { ObjectItem, ObjectList } from '$lib/api';
 import type { ButtonVariant } from '$lib/components/ui/button';
 
 /**
@@ -168,4 +168,26 @@ export type ItemAction = {
 	icon: typeof IconType;
 	action: (item: ObjectItem) => void;
 	disabled?: boolean;
+};
+
+export type SharedFileDisplayProps = {
+	handleOpenItem: (item: ObjectItem) => void;
+	files: ObjectList;
+	actionableItem: ObjectItem | undefined;
+	actionsContextOpen: boolean;
+	checkedItems: Record<string, boolean>;
+	allSelected: boolean;
+	indeterminate: boolean;
+	itemActions: ItemAction[];
+	loading: boolean;
+	searchValue: string;
+	searchResults: ObjectItem[];
+	confirmDeleteOpen: boolean;
+	handleDeleteObject: () => void;
+	deletingItem: boolean;
+};
+
+export type BreadCrumb = {
+	title: string;
+	href: string;
 };

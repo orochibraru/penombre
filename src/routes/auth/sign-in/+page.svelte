@@ -2,8 +2,8 @@
 	import { AlertCircleIcon } from '@lucide/svelte';
 	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
-	import * as Alert from '$lib/components/ui/alert/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Alert from '$lib/components/ui/alert/index';
+	import { Button } from '$lib/components/ui/button/index';
 	import { title } from '$lib/store/title';
 	import { capitalizeFirstLetter, cn } from '$lib/utils.js';
 

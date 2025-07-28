@@ -1,48 +1,26 @@
 <script lang="ts">
-	import {
-		EllipsisVerticalIcon,
-		FileCodeIcon,
-		FileIcon,
-		FileImageIcon,
-		FileMusicIcon,
-		FileTextIcon,
-		FolderIcon,
-		XIcon
-	} from '@lucide/svelte';
+	import { EllipsisVerticalIcon } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import type { ObjectItem, ObjectList } from '$lib/api';
+	import type { ObjectItem } from '$lib/api';
 	import FilePrefix from '$lib/components/file-prefix.svelte';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Badge } from '$lib/components/ui/badge/index';
 	import { Button } from '$lib/components/ui/button';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton/index';
 	import * as Table from '$lib/components/ui/table/index';
-	import { touchAction } from '$lib/file-actions';
-	import { isCodeItem } from '$lib/file-utils';
 	import { route } from '$lib/ROUTES';
-	import { uploadedItems, uploadingItems } from '$lib/store/upload';
+	import { uploadedItems } from '$lib/store/upload';
 	import {
 		capitalizeFirstLetter,
 		cn,
 		humanFileSize,
-		type ItemAction,
-		isFolderItem
+		isFolderItem,
+		type SharedFileDisplayProps
 	} from '$lib/utils';
-
-	type Props = {
-		handleOpenItem: (item: ObjectItem) => void;
-		files: ObjectList;
-		actionableItem: ObjectItem | undefined;
-		actionsContextOpen: boolean;
-		allSelected: boolean;
-		indeterminate: boolean;
-		itemActions: ItemAction[];
-		loading: boolean;
-		searchValue: string;
-		searchResults: ObjectItem[];
-	};
 
 	let {
 		handleOpenItem,
@@ -52,17 +30,19 @@
 		allSelected = $bindable(false),
 		indeterminate = $bindable(false),
 		loading = $bindable(false),
+		confirmDeleteOpen = $bindable(false),
+		deletingItem = $bindable(false),
+		checkedItems = $bindable(),
+		handleDeleteObject,
 		searchValue,
 		searchResults,
 		itemActions
-	}: Props = $props();
+	}: SharedFileDisplayProps = $props();
 
 	const iconSize = 'h-5 w-5';
 	const loadingAmount = 20;
 
-	let checkedItems: Record<string, boolean> = $state({});
 	let isSingleItemAction: boolean = $state(false);
-	let multiObjectActionsOpen = $derived((indeterminate || allSelected) && !isSingleItemAction);
 
 	function toggleSelectAll(checked: boolean) {
 		isSingleItemAction = false;
@@ -100,22 +80,10 @@
 	function isChecked(item: ObjectItem): boolean {
 		return checkedItems[item.key] || false;
 	}
-
-	$effect(() => {
-		allSelected = files.count > 0 && files.list.every((item) => checkedItems[item.key]);
-		indeterminate =
-			files.count > 0 && files.list.some((item) => checkedItems[item.key] === true) && !allSelected;
-
-		if (files.count === 0) {
-			checkedItems = {};
-		}
-	});
 </script>
 
 {#snippet tableRow(objectItem: ObjectItem)}
-	{@const isCode = isCodeItem(objectItem.key)}
 	{@const isFolder = isFolderItem(objectItem)}
-	{@const isUploading = !isFolder && objectItem.size === 0 && !$uploadedItems[objectItem.key]}
 	{@const item = $uploadedItems[objectItem.key] ?? objectItem}
 	<Table.Row>
 		<Table.Cell class="w-4">
@@ -137,7 +105,6 @@
 				class="flex flex-col items-start gap-2"
 				role="button"
 				tabindex={-1}
-				use:touchAction
 				ontap={() => {
 					if (isFolder) {
 						const folder = item.key.replace('/', '');
@@ -151,12 +118,8 @@
 
 					handleOpenItem(item);
 				}}
-				onlongpress={() => {
-					actionableItem = item;
-					actionsContextOpen = true;
-				}}
 			>
-				<FilePrefix item={objectItem} {handleOpenItem} {iconSize} />
+				<FilePrefix {indeterminate} item={objectItem} {handleOpenItem} {iconSize} />
 			</div>
 		</Table.Cell>
 		<Table.Cell colspan={1} class="w-32">
@@ -267,3 +230,36 @@
 		</Table.Body>
 	</Table.Root>
 </div>
+
+<AlertDialog.Root bind:open={confirmDeleteOpen}>
+	<AlertDialog.Content class="max-h-[70%] overflow-y-auto pb-16">
+		<AlertDialog.Header>
+			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+			<AlertDialog.Description>
+				This action cannot be undone. This will permanently delete the following items from your
+				storage device.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<div class="prose">
+			<ul>
+				{#each Object.keys(checkedItems) as item}
+					<li class="text-foreground">{item}</li>
+				{/each}
+			</ul>
+		</div>
+		<AlertDialog.Footer class="fixed bottom-5 w-full px-10">
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action
+				onclick={() => handleDeleteObject()}
+				disabled={deletingItem}
+				class="bg-red-600"
+			>
+				{#if deletingItem}
+					<Spinner />
+				{:else}
+					Continue
+				{/if}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

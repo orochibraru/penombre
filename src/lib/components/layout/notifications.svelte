@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { BellIcon, XIcon } from '@lucide/svelte';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import { buttonVariants } from '$lib/components/ui/button/index';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
 
 	type Alert = {
 		title: string;

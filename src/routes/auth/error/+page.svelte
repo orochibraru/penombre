@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { getAuthError } from '$lib/auth';
 	import * as Alert from '$lib/components/ui/alert/index';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '$lib/components/ui/button/index';
 	import { route } from '$lib/ROUTES';
 	import { title } from '$lib/store/title';
 	import { cn } from '$lib/utils.js';
