@@ -1,7 +1,9 @@
+import type { Icon as IconType } from '@lucide/svelte';
 import clsx, { type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { v4 as uuidv4 } from 'uuid';
 import type { ObjectItem } from '$lib/api';
+import type { ButtonVariant } from '$lib/components/ui/button';
 
 /**
  * A version of clsx that uses tailwind-merge to merge classes.
@@ -149,3 +151,21 @@ export function getCookie(name: string): string | undefined {
 	const parts = value.split(`; ${name}=`);
 	if (parts.length === 2) return parts.pop()?.split(';').shift();
 }
+
+export function isFolderItem(item: ObjectItem) {
+	return item.key.endsWith('/');
+}
+
+export type MultipleItemsAction = {
+	title: string;
+	icon: typeof IconType;
+	action: () => void;
+	variant: ButtonVariant;
+};
+
+export type ItemAction = {
+	title: string;
+	icon: typeof IconType;
+	action: (item: ObjectItem) => void;
+	disabled?: boolean;
+};

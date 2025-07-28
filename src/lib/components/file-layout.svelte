@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ObjectRequest } from '$lib/api/helpers/storage';
-	import FileTable from '$lib/components/file-table.svelte';
+	import FileTable from '$lib/components/file-wrapper.svelte';
 
 	import PageError from '$lib/components/layout/page-error.svelte';
 	import PageLoader from '$lib/components/page-loader.svelte';
