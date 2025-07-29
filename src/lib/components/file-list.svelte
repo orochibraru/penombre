@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { EllipsisVerticalIcon } from '@lucide/svelte';
-	import type { ObjectItem, ObjectList } from '$lib/api';
+	import type { ObjectItem } from '$lib/api';
 	import FilePrefix from '$lib/components/file-prefix.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Drawer from '$lib/components/ui/drawer/index';
 	import { Skeleton } from '$lib/components/ui/skeleton/index';
-	import { touchAction } from '$lib/file-actions';
 	import { cn, type SharedFileDisplayProps } from '$lib/utils';
 
 	let {
@@ -14,7 +13,7 @@
 		actionableItem = $bindable(),
 		actionsContextOpen = $bindable(false),
 		allSelected = $bindable(false),
-		indeterminate = $bindable(false),
+		indeterminate,
 		loading = $bindable(false),
 		confirmDeleteOpen = $bindable(false),
 		deletingItem = $bindable(false),
@@ -33,27 +32,18 @@
 	}
 </script>
 
-{#snippet listItem(objectItem: ObjectItem)}
-	{@const checked = isChecked(objectItem)}
+{#snippet listItem(item: ObjectItem)}
+	{@const checked = isChecked(item)}
 	<li
 		class={cn(
 			'flex items-center justify-between rounded-xl px-1 py-3 transition-colors',
 			checked ? 'bg-primary/5' : ''
 		)}
-		use:touchAction
-		onlongpress={() => {
-			if (checked) {
-				checkedItems[objectItem.key] = false;
-				return;
-			}
-
-			checkedItems[objectItem.key] = true;
-		}}
 	>
-		<FilePrefix selected={checked} {indeterminate} item={objectItem} {handleOpenItem} {iconSize} />
+		<FilePrefix bind:checkedItems {indeterminate} {item} {handleOpenItem} {iconSize} />
 		<button
 			onclick={() => {
-				actionableItem = objectItem;
+				actionableItem = item;
 				actionsContextOpen = true;
 			}}
 			class="py-1 pl-5"

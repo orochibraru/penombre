@@ -339,12 +339,12 @@
 		{searchValue}
 		{searchResults}
 		{handleDeleteObject}
+		{indeterminate}
 		bind:checkedItems
 		bind:deletingItem
 		bind:confirmDeleteOpen
 		bind:loading
 		bind:allSelected
-		bind:indeterminate
 		bind:actionableItem
 		bind:actionsContextOpen
 	/>
@@ -355,13 +355,13 @@
 		{itemActions}
 		{searchValue}
 		{searchResults}
+		{indeterminate}
 		bind:checkedItems
 		{handleDeleteObject}
 		bind:deletingItem
 		bind:confirmDeleteOpen
 		bind:loading
 		bind:allSelected
-		bind:indeterminate
 		bind:actionableItem
 		bind:actionsContextOpen
 	/>

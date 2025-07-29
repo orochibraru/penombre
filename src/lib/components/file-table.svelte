@@ -119,7 +119,13 @@
 					handleOpenItem(item);
 				}}
 			>
-				<FilePrefix {indeterminate} item={objectItem} {handleOpenItem} {iconSize} />
+				<FilePrefix
+					bind:checkedItems
+					{indeterminate}
+					item={objectItem}
+					{handleOpenItem}
+					{iconSize}
+				/>
 			</div>
 		</Table.Cell>
 		<Table.Cell colspan={1} class="w-32">
