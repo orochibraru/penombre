@@ -13,7 +13,8 @@
 		StarIcon,
 		TrashIcon,
 		UserIcon,
-		UsersIcon
+		UsersIcon,
+		VideoIcon
 	} from '@lucide/svelte';
 	import { page } from '$app/state';
 	import SiteHeader from '$lib/components/layout/header.svelte';
@@ -97,6 +98,14 @@
 				}),
 				icon: CodeIcon,
 				accentColor: 'green'
+			},
+			{
+				title: 'Video',
+				url: route('/categories/[category]', {
+					category: 'video'
+				}),
+				icon: VideoIcon,
+				accentColor: 'purple'
 			}
 		],
 		help: [

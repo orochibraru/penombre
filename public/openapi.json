@@ -905,7 +905,7 @@
 				"items": {
 					"type": "string"
 				},
-				"example": ["documents", "music", "images"]
+				"example": ["documents", "music", "images", "video"]
 			},
 			"ObjectList": {
 				"type": "object",

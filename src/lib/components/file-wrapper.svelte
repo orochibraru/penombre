@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		CopyIcon,
+		DownloadIcon,
 		ExternalLinkIcon,
 		FolderInputIcon,
 		PencilLineIcon,
@@ -47,7 +48,7 @@
 	let fileToView: {
 		item: ObjectItem;
 		src: string;
-		type: 'image' | 'code';
+		type: 'image' | 'code' | 'pdf';
 		content?: string;
 		language?: SupportedLanguage;
 	} | null = $state(null);
@@ -144,7 +145,43 @@
 		);
 	}
 
+	async function downloadItem(itemPath: string) {
+		const fullPath = page.params.path ? `${page.params.path}/${itemPath}` : itemPath;
+
+		const { data: presignedUrl, error: err } = await api.GET('/api/v1/storage/objects/url', {
+			params: {
+				query: {
+					item: fullPath
+				}
+			}
+		});
+
+		if (err) {
+			console.error(err);
+			throw err;
+		}
+
+		const finalUrl = `${page.url.origin}/p?url=${presignedUrl}`;
+
+		const a = document.createElement('a');
+		a.style.display = 'none';
+		a.href = finalUrl;
+		// the filename you want
+		a.download = itemPath;
+		document.body.appendChild(a);
+		a.click();
+		window.URL.revokeObjectURL(finalUrl);
+		actionsContextOpen = false;
+		toast.info(`Downloaded ${itemPath}`);
+	}
+
 	const itemActions: ItemAction[] = [
+		{
+			title: 'Download',
+			icon: DownloadIcon,
+			action: (item) => downloadItem(item.key),
+			disabled: false
+		},
 		{
 			title: 'Rename',
 			icon: PencilLineIcon,
@@ -188,6 +225,21 @@
 	];
 
 	const multipleItemsActions: MultipleItemsAction[] = [
+		{
+			title: 'Download',
+			icon: DownloadIcon,
+			variant: 'outline',
+			action: () => {
+				if (Object.keys(checkedItems).length === 0) {
+					return;
+				}
+
+				for (const checkedItem of Object.keys(checkedItems)) {
+					downloadItem(checkedItem);
+					checkedItems[checkedItem] = false;
+				}
+			}
+		},
 		{
 			title: 'Move',
 			icon: FolderInputIcon,
@@ -280,6 +332,17 @@
 				source: finalUrl
 			};
 			return;
+		}
+		if (item.contentType?.startsWith('application/pdf')) {
+			if (isDesktop.current) {
+				fileToView = {
+					item,
+					src: finalUrl,
+					type: 'pdf'
+				};
+				viewFileOpen = true;
+				return;
+			}
 		}
 
 		const newTab = window.open(finalUrl, '_blank');
@@ -412,6 +475,14 @@
 					<!-- <div class="h-[50vh] w-full overflow-y-auto">
 						<pre><code>{fileToView.content}</code></pre>
 					</div> -->
+				{:else if fileToView.type === 'pdf'}
+					<iframe
+						src={fileToView.src}
+						title={fileToView.item.key}
+						class="h-full w-full"
+						width="500"
+						height="700"
+					></iframe>
 				{/if}
 			</div>
 		</Dialog.Content>

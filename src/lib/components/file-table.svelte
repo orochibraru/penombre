@@ -8,6 +8,7 @@
 	import { Badge } from '$lib/components/ui/badge/index';
 	import { Button } from '$lib/components/ui/button';
 	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
+	import * as ContextMenu from '$lib/components/ui/context-menu/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton/index';
@@ -101,32 +102,45 @@
 			/>
 		</Table.Cell>
 		<Table.Cell colspan={7}>
-			<div
-				class="flex flex-col items-start gap-2"
-				role="button"
-				tabindex={-1}
-				ontap={() => {
-					if (isFolder) {
-						const folder = item.key.replace('/', '');
-						goto(
-							route('/browse/[...path]', {
-								path: page.params.path ? [page.params.path, folder] : [folder]
-							})
-						);
-						return;
-					}
+			<ContextMenu.Root>
+				<ContextMenu.Trigger>
+					<div
+						class="flex flex-col items-start gap-2"
+						role="button"
+						tabindex={-1}
+						ontap={() => {
+							if (isFolder) {
+								const folder = item.key.replace('/', '');
+								goto(
+									route('/browse/[...path]', {
+										path: page.params.path ? [page.params.path, folder] : [folder]
+									})
+								);
+								return;
+							}
 
-					handleOpenItem(item);
-				}}
-			>
-				<FilePrefix
-					bind:checkedItems
-					{indeterminate}
-					item={objectItem}
-					{handleOpenItem}
-					{iconSize}
-				/>
-			</div>
+							handleOpenItem(item);
+						}}
+					>
+						<FilePrefix
+							bind:checkedItems
+							{indeterminate}
+							item={objectItem}
+							{handleOpenItem}
+							{iconSize}
+						/>
+					</div>
+				</ContextMenu.Trigger>
+				<ContextMenu.Content>
+					{#each itemActions as action}
+						{@const Icon = action.icon}
+						<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+							<Icon />
+							{action.title}
+						</DropdownMenu.Item>
+					{/each}
+				</ContextMenu.Content>
+			</ContextMenu.Root>
 		</Table.Cell>
 		<Table.Cell colspan={1} class="w-32">
 			{#if isFolder}

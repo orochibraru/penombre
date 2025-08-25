@@ -3,7 +3,7 @@
 		title: string;
 		url: string;
 		icon: typeof IconType;
-		accentColor?: 'indigo' | 'orange' | 'pink' | 'green';
+		accentColor?: 'indigo' | 'orange' | 'pink' | 'green' | 'purple';
 		hideOnMobile?: boolean;
 	};
 </script>
@@ -54,6 +54,7 @@
 										item.accentColor === 'orange' ? 'data-[active=true]:text-orange-500' : '',
 										item.accentColor === 'pink' ? 'data-[active=true]:text-pink-500' : '',
 										item.accentColor === 'green' ? 'data-[active=true]:text-green-500' : '',
+										item.accentColor === 'purple' ? 'data-[active=true]:text-purple-500' : '',
 										'text-[1.1rem] md:text-sm'
 									)}
 									title={item.title}
@@ -64,7 +65,8 @@
 											item.accentColor === 'indigo' ? 'text-indigo-500' : '',
 											item.accentColor === 'orange' ? 'text-orange-500' : '',
 											item.accentColor === 'pink' ? 'text-pink-500' : '',
-											item.accentColor === 'green' ? 'text-green-500' : ''
+											item.accentColor === 'green' ? 'text-green-500' : '',
+											item.accentColor === 'purple' ? 'text-purple-500' : ''
 										)}
 									/>
 									<span>{item.title}</span>

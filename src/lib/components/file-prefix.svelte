@@ -43,7 +43,15 @@
 
 	const isCode = isCodeItem(item.key);
 	const isFolder = isFolderItem(item);
-	const isUploading = !isFolder && item.size === 0 && !$uploadedItems[item.key];
+	let isUploading: boolean = $derived(
+		!isFolder &&
+			item.size === 0 &&
+			!$uploadedItems[item.key] &&
+			$uploadingItems[item.key] &&
+			$uploadingItems[item.key] !== 100
+			? true
+			: false
+	);
 	const folder = item.key.replace('/', '');
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 

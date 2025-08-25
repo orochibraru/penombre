@@ -16,7 +16,7 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-var allowedFileCategories = []string{"music", "documents", "images", "recent", "code", "trash"}
+var allowedFileCategories = []string{"music", "documents", "images", "video", "recent", "code", "trash"}
 
 // GetApiV1StorageObjectsCategories implements services.ServerInterface.
 func (s Server) GetApiV1StorageObjectsCategories(w http.ResponseWriter, r *http.Request) {
