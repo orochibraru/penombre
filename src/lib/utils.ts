@@ -191,3 +191,16 @@ export type BreadCrumb = {
 	title: string;
 	href: string;
 };
+
+export function stripFolders(filePath: string): string {
+	if (!filePath) {
+		return '';
+	}
+
+	// Find the index of the last occurrence of either a forward slash or a backslash.
+	const lastSlashIndex = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
+
+	// If a separator is found, return the part of the string after it.
+	// Otherwise, the string is just a filename, so return it as is.
+	return filePath.substring(lastSlashIndex + 1);
+}

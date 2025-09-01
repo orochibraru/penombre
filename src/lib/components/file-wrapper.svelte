@@ -9,11 +9,14 @@
 		StarIcon,
 		TrashIcon
 	} from '@lucide/svelte';
+	import { onMount } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { api, type ObjectItem, type ObjectList } from '$lib/api';
+	import FileGrid from '$lib/components/file-grid.svelte';
 	import FileList from '$lib/components/file-list.svelte';
 	import FileTable from '$lib/components/file-table.svelte';
 	import { Badge } from '$lib/components/ui/badge/index';
@@ -22,9 +25,17 @@
 	import type { SupportedLanguage } from '$lib/components/ui/code/shiki';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
+	import * as Select from '$lib/components/ui/select/index.js';
 	import { determineCodeFileLanguage, isCodeItem } from '$lib/file-utils';
+	import { type AvailableLayouts, availableLayouts, layoutStore } from '$lib/store/layout';
 	import { playableMusic } from '$lib/store/music';
-	import { humanFileSize, type ItemAction, type MultipleItemsAction } from '$lib/utils';
+	import { getProxiedObjectUrl } from '$lib/url';
+	import {
+		capitalizeFirstLetter,
+		humanFileSize,
+		type ItemAction,
+		type MultipleItemsAction
+	} from '$lib/utils';
 
 	type Props = {
 		data: ObjectList;
@@ -56,7 +67,9 @@
 	let multiObjectActionsOpen = $derived((indeterminate || allSelected) && !isSingleItemAction);
 
 	async function updateSearchResults() {
-		searchResults = data.list.filter((item) => item.key.toLowerCase().includes(searchValue));
+		searchResults = data.list.filter((item) =>
+			item.key.toLowerCase().includes(searchValue.toLowerCase())
+		);
 
 		loading = false;
 		return;
@@ -279,22 +292,7 @@
 	async function handleOpenItem(item: ObjectItem): Promise<void> {
 		$playableMusic = null;
 
-		const fullPath = page.params.path ? `${page.params.path}/${item.key}` : item.key;
-
-		const { data: presignedUrl, error: err } = await api.GET('/api/v1/storage/objects/url', {
-			params: {
-				query: {
-					item: fullPath
-				}
-			}
-		});
-
-		if (err) {
-			console.error(err);
-			throw err;
-		}
-
-		const finalUrl = `${page.url.origin}/p?url=${presignedUrl}`;
+		const finalUrl = await getProxiedObjectUrl(item);
 
 		if (isCodeItem(item.key)) {
 			const codeReq = await fetch(finalUrl);
@@ -353,6 +351,30 @@
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
+	function setLayoutBasedOnRoute() {
+		if (page.url.pathname.startsWith('/browse')) {
+			$layoutStore = 'list';
+		} else {
+			$layoutStore = 'grid';
+		}
+	}
+
+	onMount(() => {
+		if (browser) {
+			const layoutParam = localStorage.getItem('layout');
+
+			if (layoutParam) {
+				if (!availableLayouts.includes(layoutParam)) {
+					setLayoutBasedOnRoute();
+				} else {
+					$layoutStore = (layoutParam as AvailableLayouts) ?? 'list';
+				}
+			} else {
+				setLayoutBasedOnRoute();
+			}
+		}
+	});
+
 	$effect(() => {
 		allSelected = data.count > 0 && data.list.every((item) => checkedItems[item.key]);
 		indeterminate =
@@ -390,12 +412,55 @@
 				debounce();
 			}}
 		/>
+		{#if isDesktop.current}
+			<Select.Root
+				type="single"
+				name="favoriteFruit"
+				bind:value={$layoutStore}
+				onValueChange={(val) => {
+					if (browser) {
+						if (page.url.pathname.startsWith('/browse') && val === 'list') {
+							localStorage.removeItem('layout');
+						} else if (!page.url.pathname.startsWith('/browse') && val === 'grid') {
+							localStorage.removeItem('layout');
+						} else {
+							localStorage.setItem('layout', val);
+						}
+					}
+				}}
+			>
+				<Select.Trigger class="w-[180px]"
+					>Layout: {capitalizeFirstLetter($layoutStore)}</Select.Trigger
+				>
+				<Select.Content>
+					<Select.Item value={'list'} label={'List'}>List</Select.Item>
+					<Select.Item value={'grid'} label={'Grid'}>Grid</Select.Item>
+				</Select.Content>
+			</Select.Root>
+		{/if}
 	</div>
 {/if}
 
 <!-- Table -->
-{#if isDesktop.current}
+{#if isDesktop.current && $layoutStore === 'list'}
 	<FileTable
+		handleOpenItem={handleOpenItemWrapper}
+		files={data}
+		{itemActions}
+		{searchValue}
+		{searchResults}
+		{handleDeleteObject}
+		{indeterminate}
+		bind:checkedItems
+		bind:deletingItem
+		bind:confirmDeleteOpen
+		bind:loading
+		bind:allSelected
+		bind:actionableItem
+		bind:actionsContextOpen
+	/>
+{:else if isDesktop.current && $layoutStore === 'grid'}
+	<FileGrid
 		handleOpenItem={handleOpenItemWrapper}
 		files={data}
 		{itemActions}

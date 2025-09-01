@@ -15,11 +15,13 @@
 	import { page } from '$app/state';
 	import type { ObjectItem } from '$lib/api';
 	import { Badge } from '$lib/components/ui/badge/index';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { touchAction } from '$lib/file-actions';
 	import { isCodeItem } from '$lib/file-utils';
 	import { route } from '$lib/ROUTES';
 	import { uploadedItems, uploadingItems } from '$lib/store/upload';
-	import { cn, isFolderItem, prettyDate, secondsToMinutes } from '$lib/utils';
+	import { getProxiedObjectUrl } from '$lib/url';
+	import { cn, isFolderItem, prettyDate, secondsToMinutes, stripFolders } from '$lib/utils';
 
 	type Props = {
 		item: ObjectItem;
@@ -27,6 +29,7 @@
 		handleOpenItem: (item: ObjectItem) => void;
 		indeterminate: boolean;
 		checkedItems: Record<string, boolean>;
+		layout: 'grid' | 'list';
 	};
 
 	let {
@@ -34,7 +37,8 @@
 		iconSize,
 		handleOpenItem,
 		checkedItems = $bindable(),
-		indeterminate
+		indeterminate,
+		layout
 	}: Props = $props();
 
 	function isChecked(item: ObjectItem): boolean {
@@ -71,9 +75,10 @@
 		}
 
 		if (isFolder) {
+			const basePath = page.params.path ? [page.params.path, folder] : [folder];
 			goto(
 				route('/browse/[...path]', {
-					path: page.params.path ? [page.params.path, folder] : [folder]
+					path: basePath
 				})
 			);
 			return;
@@ -86,6 +91,28 @@
 		return toggleCheck();
 	}
 </script>
+
+{#snippet previewItem(item: ObjectItem)}
+	<div class="flex w-full items-center justify-between">
+		{#await getProxiedObjectUrl(item)}
+			<Spinner />
+		{:then url}
+			{#if item.contentType?.includes('application/pdf')}
+				<embed
+					src={url}
+					type="application/pdf"
+					class="overflow-hidden"
+					title={item.key}
+					onscroll={(e) => e.preventDefault()}
+					width="100%"
+					height="200px"
+				/>
+			{:else}
+				<img src={url} alt={item.key} class="mx-auto max-h-[200px] min-w-[200px] rounded-xl" />
+			{/if}
+		{/await}
+	</div>
+{/snippet}
 
 {#if isFolder}
 	<button
@@ -112,7 +139,10 @@
 		onclick={() => handleClick()}
 		ontap={() => handleClick()}
 		onlongpress={() => handleLongPress()}
-		class="flex w-full items-center gap-2"
+		class={cn(
+			'flex h-full w-full gap-2',
+			layout === 'grid' ? 'flex-col items-start' : 'flex-row items-center'
+		)}
 		disabled={isUploading}
 	>
 		{#if !isDesktop.current && indeterminate}
@@ -132,17 +162,32 @@
 				{/if}
 			</div>
 		{:else if item.contentType}
-			{#if item.contentType.includes('application/pdf')}
-				<FileTextIcon class={cn(iconSize, 'text-red-600')} />
-			{:else if item.contentType.startsWith('audio')}
-				<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
-			{:else if item.contentType.startsWith('image')}
-				<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
-			{:else if isCode}
-				<FileCodeIcon class={cn(iconSize, 'text-green-400')} />
-			{:else}
-				<FileIcon class={iconSize} />
-			{/if}
+			<div
+				class={cn(
+					'flex h-full items-center',
+					layout === 'grid' ? 'w-full justify-center' : 'justify-start'
+				)}
+			>
+				{#if item.contentType.includes('application/pdf')}
+					{#if layout === 'grid'}
+						{@render previewItem(item)}
+					{:else}
+						<FileTextIcon class={cn(iconSize, 'text-red-600')} />
+					{/if}
+				{:else if item.contentType.startsWith('audio')}
+					<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
+				{:else if item.contentType.startsWith('image')}
+					{#if layout === 'grid'}
+						{@render previewItem(item)}
+					{:else}
+						<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
+					{/if}
+				{:else if isCode}
+					<FileCodeIcon class={cn(iconSize, 'text-green-400')} />
+				{:else}
+					<FileIcon class={iconSize} />
+				{/if}
+			</div>
 		{:else}
 			<FileIcon class={iconSize} />
 		{/if}
@@ -154,7 +199,11 @@
 					isUploading ? 'text-gray-500 dark:text-gray-300' : ''
 				)}
 			>
-				{item.key}
+				{#if page.url.pathname.startsWith('/browse')}
+					{item.key}
+				{:else}
+					{stripFolders(item.key)}
+				{/if}
 			</p>
 			{#if item.lastModified}
 				<p class="text-xs dark:text-gray-500">Modified {prettyDate(item.lastModified)}</p>

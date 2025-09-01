@@ -128,6 +128,7 @@
 							item={objectItem}
 							{handleOpenItem}
 							{iconSize}
+							layout="list"
 						/>
 					</div>
 				</ContextMenu.Trigger>

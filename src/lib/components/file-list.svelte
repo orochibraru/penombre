@@ -40,7 +40,14 @@
 			checked ? 'bg-primary/5' : ''
 		)}
 	>
-		<FilePrefix bind:checkedItems {indeterminate} {item} {handleOpenItem} {iconSize} />
+		<FilePrefix
+			layout="list"
+			bind:checkedItems
+			{indeterminate}
+			{item}
+			{handleOpenItem}
+			{iconSize}
+		/>
 		<button
 			onclick={() => {
 				actionableItem = item;
