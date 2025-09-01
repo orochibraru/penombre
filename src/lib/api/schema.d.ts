@@ -1046,7 +1046,8 @@ export interface components {
 		/** @example [
 		 *       "documents",
 		 *       "music",
-		 *       "images"
+		 *       "images",
+		 *       "video"
 		 *     ] */
 		CategoriesList: string[];
 		ObjectList: {
