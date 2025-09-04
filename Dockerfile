@@ -8,11 +8,11 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
 
-COPY package.json ./
+COPY packages/ui/package.json ./
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts --prefer-offline
 
-COPY . .
+COPY ./packages/ui .
 
 RUN --mount=type=cache,id=vitebuild-opendrive,target=/node_modules/.vite pnpm run build
 
@@ -21,11 +21,11 @@ FROM golang:1.24.5-alpine AS go-builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY ./packages/api/go.mod ./packages/api/go.sum ./
 
 RUN go mod download
 
-COPY . .
+COPY ./packages/api .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 

@@ -1,19 +1,19 @@
 api:
-	go tool oapi-codegen -config ./codegen.yaml ./public/openapi.json
-	go mod tidy
-	pnpm gen:api
+	go -C packages/api tool oapi-codegen -config ./codegen.yaml ./public/openapi.json
+	go -C packages/api mod tidy
+	pnpm -C packages/ui gen:api
 
-dev: 
-	go tool air
+dev:
+	go -C packages/api tool air
 
 db:
-	go tool sqlc generate
+	go -C packages/api tool sqlc generate
 
 lint:
-	go tool golangci-lint run
+	go -C packages/api tool golangci-lint run
 
 test:
-	go test -v -race ./...
+	go -C packages/api test -v -race ./...
 
 migration:
 	migrate -source file://db/migrations -database postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable up 2

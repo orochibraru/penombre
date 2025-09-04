@@ -3,7 +3,7 @@ set -euo pipefail
 
 echo "⏳ Running lint-staged..."
 export NODE_OPTIONS="--experimental-strip-types --disable-warning=ExperimentalWarning"
-if pnpm exec lint-staged --config lint-staged.config.ts; then
+if pnpm exec lint-staged --config lint-staged.config.mjs; then
     echo "✅ Lint staged ran successfully"
 else
     echo "🔴 Failed to run Lint staged"
@@ -11,7 +11,7 @@ else
 fi
 
 echo "⏳ Formatting..."
-if pnpm run format; then
+if pnpm -C packages/ui run format; then
     echo "✅ Formatted all files"
 else
     echo "🔴 Failed to format files"

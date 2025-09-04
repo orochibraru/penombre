@@ -19,6 +19,10 @@ jobs:
   go:
     name: Go
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./packages/api
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -38,6 +42,7 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.1
+          working-directory: packages/api
 
   docker:
     runs-on: ubuntu-latest
@@ -61,9 +66,13 @@ jobs:
   node:
     name: Node
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./packages/ui
     strategy:
       matrix:
-        job: [circular, check, build, 'lint', 'format:check']
+        job: [circular, check, build, "lint", "format:check"]
     steps:
       - uses: actions/checkout@v4
 
