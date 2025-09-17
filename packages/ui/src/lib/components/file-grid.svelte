@@ -52,7 +52,7 @@
 		<ContextMenu.Root>
 			<ContextMenu.Trigger class="h-full w-full">
 				<div
-					class="flex h-full flex-col items-start gap-2"
+					class="flex h-full flex-col items-start justify-center gap-2"
 					role="button"
 					tabindex={-1}
 					ontap={() => {
