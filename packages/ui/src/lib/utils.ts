@@ -168,6 +168,8 @@ export type ItemAction = {
 	icon: typeof IconType;
 	action: (item: ObjectItem) => void;
 	disabled?: boolean;
+	fileOnly?: boolean;
+	folderOnly?: boolean;
 };
 
 export type SharedFileDisplayProps = {
@@ -203,4 +205,17 @@ export function stripFolders(filePath: string): string {
 	// If a separator is found, return the part of the string after it.
 	// Otherwise, the string is just a filename, so return it as is.
 	return filePath.substring(lastSlashIndex + 1);
+}
+
+export function shouldDisplayAction({ action, item }: { action: ItemAction; item: ObjectItem }) {
+	const isFolder = isFolderItem(item);
+	if (isFolder && action.fileOnly) {
+		return false;
+	}
+
+	if (!isFolder && action.folderOnly) {
+		return false;
+	}
+
+	return true;
 }

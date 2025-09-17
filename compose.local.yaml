@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      minio:
+      storage:
         condition: service_healthy
       db:
         condition: service_healthy
@@ -23,7 +23,7 @@ services:
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}?sslmode=disable
       - ORIGIN=http://0.0.0.0:8080
-      - MINIO_URL=http://minio:9000
+      - STORAGE_URL=http://storage:9000
       - BODY_SIZE_LIMIT=Infinity
       - OAUTH_PROVIDERS=${OAUTH_PROVIDERS}
       - OAUTH_POCKETID_DISCOVERY_URL=${OAUTH_POCKETID_DISCOVERY_URL}
@@ -31,22 +31,16 @@ services:
       - OAUTH_POCKETID_CLIENT_ID=${OAUTH_POCKETID_CLIENT_ID}
       - OAUTH_POCKETID_CLIENT_SECRET=${OAUTH_POCKETID_CLIENT_SECRET}
 
-  minio:
-    image: bitnami/minio:2025
+  storage:
+    image: rustfs/rustfs:latest
     restart: unless-stopped
     environment:
-      - MINIO_ROOT_USER=opendrive
-      - MINIO_ROOT_PASSWORD=opendrive
-    healthcheck:
-      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
-      retries: 5
-      timeout: 3s
-      interval: 10s
-      start_period: 2s
+      - RUSTFS_ACCESS_KEY=opendrive
+      - RUSTFS_SECRET_KEY=opendrive
     ports:
       - 9000
     volumes:
-      - minio_data:/bitnami/minio/data
+      - storage_data:/data
 
   db:
     image: postgres:17-alpine
@@ -70,5 +64,5 @@ services:
 volumes:
   postgres_data:
     driver: local
-  minio_data:
+  storage_data:
     driver: local

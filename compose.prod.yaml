@@ -14,7 +14,7 @@ services:
       start_period: 2s
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}?sslmode=disable
-      - MINIO_URL=http://minio:9000
+      - STORAGE_URL=http://storage:9000
       - ORIGIN=${URL-http://localhost:8080}
       - BODY_SIZE_LIMIT=Infinity
       - OAUTH_PROVIDERS=${OAUTH_PROVIDERS}
@@ -33,23 +33,17 @@ services:
         - traefik.http.routers.${STACK}-app.tls.certResolver=letsencrypt
         - traefik.http.services.${STACK}-app.loadbalancer.server.port=8080
 
-  minio:
-    image: bitnami/minio:2025
+  storage:
+    image: rustfs/rustfs:latest
     networks:
       - opendrive
     environment:
-      - MINIO_ROOT_USER=opendrive
-      - MINIO_ROOT_PASSWORD=opendrive
-    healthcheck:
-      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
-      retries: 5
-      timeout: 3s
-      interval: 10s
-      start_period: 2s
+      - RUSTFS_ACCESS_KEY=opendrive
+      - RUSTFS_SECRET_KEY=opendrive
     ports:
       - 9000
     volumes:
-      - minio_data:/bitnami/minio/data
+      - storage_data:/data
 
   db:
     image: postgres:17-alpine
@@ -74,8 +68,8 @@ services:
 volumes:
   postgres_data:
     name: ${STACK}_postgres_data
-  minio_data:
-    name: ${STACK}_minio_data
+  storage_data:
+    name: ${STACK}_storage_data
     driver: local
 
 networks:

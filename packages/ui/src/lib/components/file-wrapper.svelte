@@ -193,7 +193,8 @@
 			title: 'Download',
 			icon: DownloadIcon,
 			action: (item) => downloadItem(item.key),
-			disabled: false
+			disabled: false,
+			fileOnly: true
 		},
 		{
 			title: 'Rename',

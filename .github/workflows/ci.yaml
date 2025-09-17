@@ -10,7 +10,7 @@ env:
   PNPM_VERSION: 10.12.4
   TZ: Europe/Paris
   DATABASE_URL: postgres://postgres:postgres@service-db:5432/opendrive
-  MINIO_URL: http://minio:9000
+  STORAGE_URL: http://storage:9000
   NODE_VERSION: 22
   AWS_ACCESS_KEY_ID: opendrive
   AWS_SECRET_ACCESS_KEY: opendrive

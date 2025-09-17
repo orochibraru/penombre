@@ -18,25 +18,19 @@ services:
       retries: 5
       start_period: 3s
 
-  minio:
-    image: bitnami/minio:2025
+  storage:
+    image: rustfs/rustfs:latest
     restart: unless-stopped
     environment:
-      - MINIO_ROOT_USER=opendrive
-      - MINIO_ROOT_PASSWORD=opendrive
-    healthcheck:
-      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
-      retries: 5
-      timeout: 3s
-      interval: 10s
-      start_period: 2s
+      - RUSTFS_ACCESS_KEY=opendrive
+      - RUSTFS_SECRET_KEY=opendrive
     ports:
       - 9000:9000
     volumes:
-      - minio_data:/bitnami/minio/data
+      - storage_data:/data
 
 volumes:
   postgres_data:
     driver: local
-  minio_data:
+  storage_data:
     driver: local

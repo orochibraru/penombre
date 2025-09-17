@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Drawer from '$lib/components/ui/drawer/index';
 	import { Skeleton } from '$lib/components/ui/skeleton/index';
-	import { cn, type SharedFileDisplayProps } from '$lib/utils';
+	import { cn, isFolderItem, type SharedFileDisplayProps, shouldDisplayAction } from '$lib/utils';
 
 	let {
 		handleOpenItem,
@@ -108,15 +108,17 @@
 				{#if actionableItem}
 					{@const item = actionableItem}
 					{#each itemActions as action}
-						{@const Icon = action.icon}
-						<button
-							onclick={() => action.action(item)}
-							disabled={action.disabled}
-							class="disabled:text-muted-foreground hover:text-primary flex w-full items-center justify-start gap-3 text-balance transition-colors"
-						>
-							<Icon />
-							{action.title}
-						</button>
+						{#if shouldDisplayAction({ action, item })}
+							{@const Icon = action.icon}
+							<button
+								onclick={() => action.action(item)}
+								disabled={action.disabled}
+								class="disabled:text-muted-foreground hover:text-primary flex w-full items-center justify-start gap-3 text-balance transition-colors"
+							>
+								<Icon />
+								{action.title}
+							</button>
+						{/if}
 					{/each}
 				{/if}
 			</div>

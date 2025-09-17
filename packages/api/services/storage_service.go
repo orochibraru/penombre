@@ -71,13 +71,13 @@ func DetermineFileCategory(fileName, contentType string) string {
 }
 
 func GetStorageUrl() string {
-	minioUrl := "http://localhost:9000"
-	minioUrlEnv := os.Getenv("MINIO_URL")
-	if minioUrlEnv != "" {
-		minioUrl = minioUrlEnv
+	storageUrl := "http://localhost:9000"
+	storageUrlEnv := os.Getenv("STORAGE_URL")
+	if storageUrlEnv != "" {
+		storageUrl = storageUrlEnv
 	}
 
-	return minioUrl
+	return storageUrl
 }
 
 func GetAppUrl() string {
@@ -142,7 +142,7 @@ func (s *StorageService) BucketExists(bucketName string) (bool, error) {
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) {
 			switch apiErr.ErrorCode() {
-			case "NotFound": // In AWS S3 this is "404 Not Found", MinIO might use "NotFound"
+			case "NotFound": // In AWS S3 this is "404 Not Found", Storage service might use "NotFound"
 				return false, nil
 			}
 		}

@@ -12,7 +12,7 @@
 	import { Skeleton } from '$lib/components/ui/skeleton/index';
 	import { route } from '$lib/ROUTES';
 	import { uploadedItems } from '$lib/store/upload';
-	import { cn, isFolderItem, type SharedFileDisplayProps } from '$lib/utils';
+	import { cn, isFolderItem, type SharedFileDisplayProps, shouldDisplayAction } from '$lib/utils';
 
 	let {
 		handleOpenItem,
@@ -81,11 +81,13 @@
 			</ContextMenu.Trigger>
 			<ContextMenu.Content>
 				{#each itemActions as action}
-					{@const Icon = action.icon}
-					<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
-						<Icon />
-						{action.title}
-					</DropdownMenu.Item>
+					{#if shouldDisplayAction({ action, item })}
+						{@const Icon = action.icon}
+						<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+							<Icon />
+							{action.title}
+						</DropdownMenu.Item>
+					{/if}
 				{/each}
 			</ContextMenu.Content>
 		</ContextMenu.Root>
@@ -100,11 +102,13 @@
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end">
 				{#each itemActions as action}
-					{@const Icon = action.icon}
-					<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
-						<Icon />
-						{action.title}
-					</DropdownMenu.Item>
+					{#if shouldDisplayAction({ action, item })}
+						{@const Icon = action.icon}
+						<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+							<Icon />
+							{action.title}
+						</DropdownMenu.Item>
+					{/if}
 				{/each}
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>

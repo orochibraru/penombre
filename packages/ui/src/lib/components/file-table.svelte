@@ -20,7 +20,8 @@
 		cn,
 		humanFileSize,
 		isFolderItem,
-		type SharedFileDisplayProps
+		type SharedFileDisplayProps,
+		shouldDisplayAction
 	} from '$lib/utils';
 
 	let {
@@ -134,11 +135,13 @@
 				</ContextMenu.Trigger>
 				<ContextMenu.Content>
 					{#each itemActions as action}
-						{@const Icon = action.icon}
-						<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
-							<Icon />
-							{action.title}
-						</DropdownMenu.Item>
+						{#if shouldDisplayAction({ action, item })}
+							{@const Icon = action.icon}
+							<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+								<Icon />
+								{action.title}
+							</DropdownMenu.Item>
+						{/if}
 					{/each}
 				</ContextMenu.Content>
 			</ContextMenu.Root>
@@ -172,11 +175,13 @@
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="end">
 						{#each itemActions as action}
-							{@const Icon = action.icon}
-							<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
-								<Icon />
-								{action.title}
-							</DropdownMenu.Item>
+							{#if shouldDisplayAction({ action, item })}
+								{@const Icon = action.icon}
+								<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+									<Icon />
+									{action.title}
+								</DropdownMenu.Item>
+							{/if}
 						{/each}
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>

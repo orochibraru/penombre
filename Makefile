@@ -15,8 +15,5 @@ lint:
 test:
 	go -C packages/api test -v -race ./...
 
-migration:
-	migrate -source file://db/migrations -database postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable up 2
-
 
 .PHONY: api dev migration lint db

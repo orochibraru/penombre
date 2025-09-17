@@ -4,6 +4,8 @@
 
 ```bash
 pnpm i
+docker compose up
+make migration
 pnpm run dev
 ```
 
