@@ -9,9 +9,9 @@ import {
 	type UploadResult
 } from '$lib/api';
 
-export type ObjectRequest = Promise<ApiResponse<ObjectList>>;
+export type ObjectRequest = ApiResponse<ObjectList>;
 
-export async function listFiles(folder?: string): ObjectRequest {
+export async function listFiles(folder?: string): Promise<ObjectRequest> {
 	try {
 		const {
 			data,
@@ -35,7 +35,7 @@ export async function listFiles(folder?: string): ObjectRequest {
 	}
 }
 
-export async function listRecentFiles(): ObjectRequest {
+export async function listRecentFiles(): Promise<ObjectRequest> {
 	try {
 		const { data, error: err, response } = await api.GET('/api/v1/storage/objects/recent');
 
@@ -49,7 +49,7 @@ export async function listRecentFiles(): ObjectRequest {
 	}
 }
 
-export async function listFilesByCategory(category: string): ObjectRequest {
+export async function listFilesByCategory(category: string): Promise<ObjectRequest> {
 	try {
 		const {
 			data,

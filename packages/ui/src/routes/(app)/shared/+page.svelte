@@ -2,7 +2,6 @@
 	import DataTable from '$lib/components/file-wrapper.svelte';
 	import { title } from '$lib/store/title';
 
-	const { data } = $props();
 	$title = 'Shared';
 </script>
 

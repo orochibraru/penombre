@@ -24,7 +24,7 @@ export const load = async ({ params }) => {
 	}
 
 	return {
-		files: listFiles(params.path),
+		files: await listFiles(params.path),
 		title: folders[folders.length - 1],
 		folders,
 		crumbs

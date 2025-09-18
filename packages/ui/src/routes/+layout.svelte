@@ -7,6 +7,8 @@
 	import { title } from '$lib/store/title';
 
 	let { children } = $props();
+
+	document.body.classList.add('svelte-kit-started');
 </script>
 
 <svelte:head>

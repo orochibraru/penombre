@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
+	"net"
 	"net/http"
 	"net/url"
 	db "opendrive/api/db/sqlc"
+	"opendrive/api/lib"
 	"opendrive/api/services"
 	"slices"
 	"strings"
@@ -17,6 +18,7 @@ import (
 )
 
 var allowedFileCategories = []string{"music", "documents", "images", "video", "recent", "code", "trash"}
+var logger = lib.GetLogger()
 
 // GetApiV1StorageObjectsCategories implements services.ServerInterface.
 func (s Server) GetApiV1StorageObjectsCategories(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +79,8 @@ func (s Server) GetBucketName(w http.ResponseWriter, r *http.Request) string {
 	userContextKey := services.GetContextKey()
 	session, ok := r.Context().Value(userContextKey).(db.GetSessionWithUserRow)
 	if !ok {
-		RespondWithError(w, http.StatusInternalServerError, "Could not retrieve user from context (getting bucket name)")
+		logger.Error("Failed to get bucket name: could not retrieve user from context.")
+		RespondWithError(w, http.StatusInternalServerError, "Failed to get bucket name: could not retrieve user from context.")
 		return ""
 	}
 
@@ -95,6 +98,7 @@ func (s *Server) GetApiV1StorageObjects(w http.ResponseWriter, r *http.Request, 
 	bucket := s.GetBucketName(w, r)
 	objectList, err := s.Storage.ListObjects(bucket, folder)
 	if err != nil {
+		logger.Error("Failed to list objects:", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to list objects")
 		return
 	}
@@ -109,6 +113,7 @@ func (s *Server) DeleteApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) {
+			logger.Error("Failed to delete object:", apiErr.ErrorMessage())
 			RespondWithError(w, http.StatusInternalServerError, "Failed to delete object: "+apiErr.ErrorMessage())
 		} else {
 			RespondWithError(w, http.StatusInternalServerError, "An unexpected error occurred")
@@ -123,6 +128,7 @@ func (s *Server) DeleteApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Re
 func (s *Server) GetApiV1StorageObjectsCategoryCategory(w http.ResponseWriter, r *http.Request, category string) {
 	// Validate the category
 	if !slices.Contains(allowedFileCategories, category) {
+		logger.Error("Invalid category specified:", category)
 		RespondWithError(w, http.StatusBadRequest, "Invalid category specified")
 		return
 	}
@@ -130,6 +136,7 @@ func (s *Server) GetApiV1StorageObjectsCategoryCategory(w http.ResponseWriter, r
 	bucket := s.GetBucketName(w, r)
 	objectList, err := s.Storage.ListObjectsByCategory(bucket, category)
 	if err != nil {
+		logger.Error(err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to list objects by category")
 		return
 	}
@@ -142,7 +149,8 @@ func (s *Server) GetApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Reque
 	bucket := s.GetBucketName(w, r)
 	object, err := s.Storage.GetObject(bucket, params.Item)
 	if err != nil {
-		RespondWithError(w, http.StatusInternalServerError, "Failed to list recent objects")
+		logger.Error("Failed to list objects:", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to list objects")
 		return
 	}
 
@@ -154,6 +162,7 @@ func (s *Server) GetApiV1StorageObjectsRecent(w http.ResponseWriter, r *http.Req
 	bucket := s.GetBucketName(w, r)
 	objectList, err := s.Storage.ListRecentObjects(bucket)
 	if err != nil {
+		logger.Error("Failed to list recent objects:", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to list recent objects")
 		return
 	}
@@ -176,12 +185,14 @@ func proxyFile(w http.ResponseWriter, r *http.Request, proxyUrl string) {
 	// Get the direct presigned URL from the storage service.
 	parsedURL, err := url.Parse(services.GetStorageUrl() + "/" + proxyUrl)
 	if err != nil {
+		logger.Error("Invalid target url:", err)
 		http.Error(w, "Invalid target URL", http.StatusBadRequest)
 		return
 	}
 
 	proxyReq, err := http.NewRequest(r.Method, parsedURL.String(), r.Body)
 	if err != nil {
+		logger.Error("Failed to create proxy request:", err)
 		http.Error(w, "Failed to create proxy request", http.StatusInternalServerError)
 		return
 	}
@@ -189,7 +200,7 @@ func proxyFile(w http.ResponseWriter, r *http.Request, proxyUrl string) {
 	proxyReq.ContentLength = r.ContentLength
 
 	// Copy relevant headers
-	proxyReq.Header.Set("Content-Type", r.Header.Get("Content-Type"))
+	// proxyReq.Header.Set("Content-Type", r.Header.Get("Content-Type"))
 	proxyReq.Header.Set("Content-Length", r.Header.Get("Content-Length"))
 
 	// Forward other relevant headers
@@ -203,16 +214,23 @@ func proxyFile(w http.ResponseWriter, r *http.Request, proxyUrl string) {
 	}
 
 	// Execute the request
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{
+		Transport: &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout: 10 * time.Second,
+			}).DialContext,
+		},
+	}
 	resp, err := client.Do(proxyReq)
 	if err != nil {
+		logger.Error("Proxy request failed:", err)
 		http.Error(w, "Proxy request failed", http.StatusInternalServerError)
 		return
 	}
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			log.Print(err)
+			logger.Error("Failed to run proxy request:", err)
 			return
 		}
 	}()
@@ -227,7 +245,7 @@ func proxyFile(w http.ResponseWriter, r *http.Request, proxyUrl string) {
 	w.WriteHeader(resp.StatusCode)
 	_, err = io.Copy(w, resp.Body)
 	if err != nil {
-		log.Print(err)
+		logger.Error("Failed to copy headers:", err)
 		return
 	}
 }
@@ -249,7 +267,7 @@ func (s *Server) PostApiV1StorageObjects(w http.ResponseWriter, r *http.Request)
 	err := json.NewDecoder(r.Body).Decode(&reqBody)
 
 	if err != nil {
-		log.Printf("Invalid request body: %s", err)
+		logger.Error("Invalid request body:", err)
 		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -273,6 +291,7 @@ func (s *Server) PostApiV1StorageObjects(w http.ResponseWriter, r *http.Request)
 	bucket := s.GetBucketName(w, r)
 	res, err := s.Storage.UploadObjectMeta(bucket, obj)
 	if err != nil {
+		logger.Error("Failed to generate presigned upload url:", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to generate presigned upload URL")
 		return
 	}
@@ -292,6 +311,7 @@ func (s *Server) PostApiV1StorageObjectsFolder(w http.ResponseWriter, r *http.Re
 	err := s.Storage.CreateFolder(bucket, reqBody.Name)
 
 	if err != nil {
+		logger.Error("Failed to create folder:", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to create folder")
 		return
 	}
@@ -305,7 +325,7 @@ func (s *Server) DeleteApiV1StorageObjectsFolder(w http.ResponseWriter, r *http.
 	err := s.Storage.DeleteFolder(bucket, params.Path)
 
 	if err != nil {
-		log.Printf("%s", err.Error())
+		logger.Error("Failed to delete folder:", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to delete folder")
 		return
 	}
