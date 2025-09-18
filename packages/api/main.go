@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -13,7 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	"opendrive/api/config"
 	"opendrive/api/handlers"
+	"opendrive/api/logger"
 
 	"opendrive/api/services"
 
@@ -26,24 +27,26 @@ import (
 )
 
 func main() {
+	logger.Init()
+
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("No .env file found, continuing with environment variables")
+		logger.Info("No .env file found, continuing with environment variables")
 	}
 
 	storage, err := services.NewStorageService()
 	if err != nil {
-		log.Fatalf("Failed to initialize storage service: %v", err)
+		logger.Fatal("Failed to initialize storage service: %v", err)
 	}
 
 	if err != nil {
-		log.Fatalf("Failed to initialize storage service: %v", err)
+		logger.Fatal("Failed to initialize storage service: %v", err)
 	}
 
 	ctx := context.Background()
 	database, err := services.NewDatabase(ctx)
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		logger.Fatal("failed to connect to database: %v", err)
 	}
 	defer database.Close()
 
@@ -73,7 +76,7 @@ func main() {
 	err = services.InitOAuthProviders()
 
 	if err != nil {
-		log.Fatalf("Failed to initialize OAuth providers: %v", err)
+		logger.Fatal("Failed to initialize OAuth providers: %v", err)
 	}
 
 	r.Group(func(r chi.Router) {
@@ -85,19 +88,17 @@ func main() {
 	r.Get("/docs/*", httpSwagger.Handler(
 		httpSwagger.URL("/public/openapi.json"),
 	))
-	log.Println("Swagger UI is available at http://localhost:8080/docs/index.html")
+	logger.Info("Swagger UI is available at http://localhost:8080/docs/index.html")
 
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "public"))
 	FileServer(r, "/public", filesDir)
 
-	devProxyMode := os.Getenv("DEV_PROXY") == "true"
-
-	if devProxyMode {
-		log.Println("Running in DEV Proxy mode. Proxying frontend requests to Vite at http://localhost:5173")
+	if config.DevProxy == true {
+		logger.Info("Running in DEV Proxy mode. Proxying frontend requests to Vite at http://localhost:5173")
 		viteServerURL, err := url.Parse("http://localhost:5173")
 		if err != nil {
-			log.Fatalf("Failed to parse Vite server URL: %v", err)
+			logger.Fatal("Failed to parse Vite server URL: %v", err)
 		}
 
 		proxy := httputil.NewSingleHostReverseProxy(viteServerURL)
@@ -128,7 +129,7 @@ func main() {
 
 				fs.ServeHTTP(w, r)
 			})
-			log.Printf("Serving frontend from %s at http://localhost:8080", frontendDir)
+			logger.Info("Serving frontend from %s at http://localhost:8080", frontendDir)
 		})
 	}
 
@@ -137,25 +138,27 @@ func main() {
 		Addr:    "0.0.0.0:8080",
 	}
 	go func() {
-		log.Println("Starting server on port 8080")
+		logger.Info("Starting server on port 8080")
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Could not start server: %v", err)
+			logger.Fatal("Could not start server: %v", err)
 		}
+
+		logger.Info("Server started at http://localhost:8080")
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	logger.Info("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := s.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		logger.Fatal("Server forced to shutdown: %v", err)
 	}
 
-	log.Println("Server exiting")
+	logger.Info("Server exiting")
 }
 
 func FileServer(r chi.Router, path string, root http.FileSystem) {

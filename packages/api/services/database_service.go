@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"log"
 	db "opendrive/api/db/sqlc"
+	"opendrive/api/logger"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -30,7 +30,7 @@ func CheckDb(db *Database, ctx context.Context) *error {
 	err := db.Pool.Ping(ctx)
 
 	if err != nil {
-		log.Println("Database not yet available.")
+		logger.Error("Database not yet available.")
 		return &err
 	}
 
@@ -48,7 +48,7 @@ func NewDatabase(ctx context.Context) (*Database, error) {
 
 	if err != nil {
 		// Fail silently, the DB might be spinning up.
-		log.Println("Database not yet available.")
+		logger.Error("Database not yet available.")
 		return &Database{
 			Queries:   db.New(pool),
 			Pool:      pool,
@@ -57,7 +57,7 @@ func NewDatabase(ctx context.Context) (*Database, error) {
 		}, nil
 	}
 
-	log.Println("Successfully connected to the database.")
+	logger.Info("Successfully connected to the database.")
 
 	return &Database{
 		Queries:   db.New(pool),

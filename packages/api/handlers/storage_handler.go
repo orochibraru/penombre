@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	db "opendrive/api/db/sqlc"
-	"opendrive/api/lib"
+	"opendrive/api/logger"
 	"opendrive/api/services"
 	"slices"
 	"strings"
@@ -18,7 +18,6 @@ import (
 )
 
 var allowedFileCategories = []string{"music", "documents", "images", "video", "recent", "code", "trash"}
-var logger = lib.GetLogger()
 
 // GetApiV1StorageObjectsCategories implements services.ServerInterface.
 func (s Server) GetApiV1StorageObjectsCategories(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +135,7 @@ func (s *Server) GetApiV1StorageObjectsCategoryCategory(w http.ResponseWriter, r
 	bucket := s.GetBucketName(w, r)
 	objectList, err := s.Storage.ListObjectsByCategory(bucket, category)
 	if err != nil {
-		logger.Error(err)
+		logger.Error("Failed to list objects by category:", err)
 		RespondWithError(w, http.StatusInternalServerError, "Failed to list objects by category")
 		return
 	}

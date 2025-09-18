@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
+	"opendrive/api/logger"
 	"opendrive/api/services"
 )
 
@@ -25,7 +25,7 @@ func (s Server) GetApiV1Healthz(w http.ResponseWriter, r *http.Request) {
 	dbErr := services.CheckDb(s.DB, ctx)
 	if dbErr != nil {
 		// Fail silently, the DB might be spinning up.
-		log.Println("Database service not yet available.")
+		logger.Error("Database service not yet available.")
 		RespondWithError(w, http.StatusInternalServerError, "DB is unreachable")
 		return
 	}
@@ -33,7 +33,7 @@ func (s Server) GetApiV1Healthz(w http.ResponseWriter, r *http.Request) {
 	_, err := s.Storage.ListBuckets()
 	if err != nil {
 		// Fail silently, the DB might be spinning up.
-		log.Println("Storage service not yet available.")
+		logger.Error("Storage service not yet available.")
 		RespondWithError(w, http.StatusInternalServerError, "S3 is unreachable")
 		return
 	}
@@ -48,14 +48,14 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.WriteHeader(code)
 	_, err := w.Write(response)
 	if err != nil {
-		log.Print("Failed to write JSON response")
+		logger.Error("Failed to write JSON response")
 		return
 	}
 }
 
 // Helper function to respond with an error
 func RespondWithError(w http.ResponseWriter, code int, message string) {
-	log.Printf("API Error: %s", message)
+	logger.Error("API Error: %c %s", code, message)
 	errorResponse := services.Error{Error: &message}
 	RespondWithJSON(w, code, errorResponse)
 }

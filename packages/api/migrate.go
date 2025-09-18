@@ -3,7 +3,7 @@ package main
 import (
 	"embed"
 	"fmt"
-	"log"
+	"opendrive/api/logger"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -14,11 +14,11 @@ import (
 var migrationsFS embed.FS
 
 func RunMigrations(dbURL string) {
-	log.Println("Checking for database migrations...")
+	logger.Info("Checking for database migrations...")
 
 	sourceDriver, err := iofs.New(migrationsFS, "db/migrations")
 	if err != nil {
-		log.Fatalf("could not create migration source driver: %v", err)
+		logger.Fatal("could not create migration source driver: %v", err)
 	}
 
 	// The database URL for migrate needs the `x-migrations-table` parameter
@@ -28,16 +28,16 @@ func RunMigrations(dbURL string) {
 
 	m, err := migrate.NewWithSourceInstance("iofs", sourceDriver, migrateDbURL)
 	if err != nil {
-		log.Fatalf("could not create migrate instance: %v", err)
+		logger.Fatal("could not create migrate instance: %v", err)
 	}
 
 	if err := m.Up(); err != nil {
 		if err == migrate.ErrNoChange {
-			log.Println("Database schema is up to date.")
+			logger.Info("Database schema is up to date.")
 		} else {
-			log.Fatalf("failed to apply migrations: %v", err)
+			logger.Fatal("failed to apply migrations: %v", err)
 		}
 	} else {
-		log.Println("Database migrations applied successfully.")
+		logger.Info("Database migrations applied successfully.")
 	}
 }

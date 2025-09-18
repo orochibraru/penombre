@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	db "opendrive/api/db/sqlc"
+	"opendrive/api/logger"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -111,14 +111,14 @@ func ApiAuthMiddleware(database *Database) func(http.Handler) http.Handler {
 
 			csrfHeader := r.Header.Get("X-CSRF-Token")
 			if csrfHeader == "" {
-				log.Print("Invalid CSRF Token")
+				logger.Error("Invalid CSRF Token")
 				http.Error(w, "Forbidden: Missing CSRF token header", http.StatusForbidden)
 				return
 			}
 
 			sessionID, err := uuid.Parse(sessionCookie.Value)
 			if err != nil {
-				log.Print("Malformed Session Token")
+				logger.Error("Malformed Session Token")
 				http.Error(w, "Forbidden: Malformed session token", http.StatusForbidden)
 				return
 			}
@@ -175,14 +175,14 @@ func PageAuthMiddleware(database *Database) func(http.Handler) http.Handler {
 			// For all other paths, a valid session is required
 			c, err := r.Cookie("session_token")
 			if err != nil {
-				log.Print("Failed to get session token")
+				logger.Error("Failed to get session token")
 				http.Redirect(w, r, signInPath, http.StatusSeeOther)
 				return
 			}
 
 			sessionID, err := uuid.Parse(c.Value)
 			if err != nil {
-				log.Print("Failed to parse Session UUID")
+				logger.Error("Failed to parse Session UUID")
 				// Invalid cookie format, treat as unauthenticated
 				http.Redirect(w, r, signInPath, http.StatusSeeOther)
 				return
@@ -191,7 +191,7 @@ func PageAuthMiddleware(database *Database) func(http.Handler) http.Handler {
 			pgxUUID := pgtype.UUID{Bytes: sessionID, Valid: true}
 			session, err := database.GetSessionWithUser(context.Background(), pgxUUID)
 			if err != nil || session.ExpiresAt.Time.Before(time.Now()) {
-				log.Print("Session has expired")
+				logger.Error("Session has expired")
 				// If session is not found or is expired, redirect to sign-in
 				http.Redirect(w, r, signInPath, http.StatusSeeOther)
 				return

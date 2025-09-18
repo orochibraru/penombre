@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
+	appConfig "opendrive/api/config"
 	db "opendrive/api/db/sqlc"
+	"opendrive/api/logger"
 	"os"
 	"path/filepath"
 	"sort"
@@ -95,11 +96,11 @@ func NewStorageService() (*StorageService, error) {
 
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion("us-east-1"),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("opendrive", "opendrive", "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(appConfig.StorageAccessKeyId, appConfig.StorageAccessKeySecret, "")),
 		config.WithBaseEndpoint(GetStorageUrl()),
 	)
 	if err != nil {
-		log.Fatalf("unable to load SDK config, %v", err)
+		logger.Error("unable to load SDK config, %v", err)
 		return nil, err
 	}
 
@@ -161,12 +162,12 @@ func (s *StorageService) EnsureUserBucket(user db.User) error {
 	}
 
 	if !exists {
-		log.Printf("Bucket '%s' does not exist. Creating now...", bucketName)
+		logger.Info("Bucket '%s' does not exist. Creating now...", bucketName)
 		err := s.CreateBucket(bucketName)
 		if err != nil {
 			return fmt.Errorf("failed to create bucket '%s': %w", bucketName, err)
 		}
-		log.Printf("Successfully created bucket '%s'", bucketName)
+		logger.Info("Successfully created bucket '%s'", bucketName)
 	}
 
 	return nil
@@ -240,7 +241,7 @@ func (s *StorageService) ListObjects(bucket, folderPath string) (*ObjectList, er
 				Key:    aws.String(key),
 			})
 			if err != nil {
-				log.Printf("Failed to get metadata for %s: %v", key, err)
+				logger.Info("Failed to get metadata for %s: %v", key, err)
 				return
 			}
 			objects[i].ContentType = head.ContentType
@@ -330,7 +331,7 @@ func (s *StorageService) ListRecentObjects(bucket string) (*ObjectList, error) {
 				Key:    aws.String(key),
 			})
 			if err != nil {
-				log.Printf("Failed to get metadata for %s: %v", key, err)
+				logger.Info("Failed to get metadata for %s: %v", key, err)
 				return
 			}
 			objects[i].ContentType = head.ContentType
@@ -365,7 +366,7 @@ func (s *StorageService) ListObjectsByCategory(bucket, category string) (*Object
 					Key:    obj.Key,
 				})
 				if err != nil {
-					log.Printf("Failed to get metadata for %s: %v", *obj.Key, err)
+					logger.Info("Failed to get metadata for %s: %v", *obj.Key, err)
 					continue
 				}
 
@@ -393,13 +394,13 @@ func (s *StorageService) ListObjectsByCategory(bucket, category string) (*Object
 func processPresignedUrl(bucket string, baseUrl string, key string) (*string, error) {
 	parsed, err := url.Parse(baseUrl)
 	if err != nil {
-		log.Print("Failed to parse presigned url")
+		logger.Error("Failed to parse presigned url")
 		return nil, err
 	}
 
 	finalUrl, err := url.Parse(bucket + "/" + key + "?" + parsed.RawQuery)
 	if err != nil {
-		log.Print("Failed to parse final URL")
+		logger.Error("Failed to parse final URL")
 		return nil, err
 	}
 
@@ -430,6 +431,7 @@ func (s *StorageService) UploadObjectMeta(bucket string, props UploadBody) (*Upl
 	finalName, err := s.incrementFileName(bucket, props.Key)
 
 	if err != nil {
+		logger.Error("Failed to increment file name", err)
 		return nil, err
 	}
 
@@ -446,7 +448,8 @@ func (s *StorageService) UploadObjectMeta(bucket string, props UploadBody) (*Upl
 	_, err = s.S3Client.PutObject(context.TODO(), objectMeta)
 
 	if err != nil {
-		log.Fatal("Failed to upload object meta")
+		logger.Error("Failed to upload object meta", err)
+		return nil, err
 	}
 
 	presignedUrl, err := s.PresignClient.PresignPutObject(context.TODO(), objectMeta, func(opts *s3.PresignOptions) {
@@ -454,11 +457,13 @@ func (s *StorageService) UploadObjectMeta(bucket string, props UploadBody) (*Upl
 	})
 
 	if err != nil {
+		logger.Error("Failed to generate presigned url", err)
 		return nil, err
 	}
 
 	processed, err := processPresignedUrl(bucket, presignedUrl.URL, finalName)
 	if err != nil {
+		logger.Error("Failed to process presigned url", err)
 		return nil, err
 	}
 
@@ -506,6 +511,7 @@ func (s *StorageService) folderExists(bucket, folderName string) (bool, error) {
 func (s *StorageService) incrementFileName(bucket, originalName string) (string, error) {
 	exists, err := s.fileExists(bucket, originalName)
 	if err != nil {
+		logger.Error("Failed to ensure file existence", err)
 		return "", err
 	}
 	if !exists {
@@ -529,6 +535,7 @@ func (s *StorageService) incrementFileName(bucket, originalName string) (string,
 func (s *StorageService) incrementFolderName(bucket, originalName string) (string, error) {
 	exists, err := s.folderExists(bucket, originalName)
 	if err != nil {
+		logger.Error("Failed to ensure folder existence", err)
 		return "", err
 	}
 	if !exists {
@@ -540,6 +547,7 @@ func (s *StorageService) incrementFolderName(bucket, originalName string) (strin
 		newName := fmt.Sprintf("%s (%d)", originalName, counter)
 		exists, err := s.folderExists(bucket, newName)
 		if err != nil {
+			logger.Error("Failed to ensure folder existence", err)
 			return "", err
 		}
 		if !exists {
@@ -553,6 +561,7 @@ func (s *StorageService) incrementFolderName(bucket, originalName string) (strin
 func (s *StorageService) CreateFolder(bucket, folderName string) error {
 	finalName, err := s.incrementFolderName(bucket, folderName)
 	if err != nil {
+		logger.Error("Failed to incremnt folder name", err)
 		return err
 	}
 
