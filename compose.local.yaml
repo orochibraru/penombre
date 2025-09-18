@@ -32,11 +32,12 @@ services:
       - OAUTH_POCKETID_CLIENT_SECRET=${OAUTH_POCKETID_CLIENT_SECRET}
 
   storage:
-    image: rustfs/rustfs:latest
+    image: quay.io/minio/minio:latest
+    command: server /data
     restart: unless-stopped
     environment:
-      - RUSTFS_ACCESS_KEY=opendrive
-      - RUSTFS_SECRET_KEY=opendrive
+      - MINIO_ROOT_USER=opendrive
+      - MINIO_ROOT_PASSWORD=opendrive
     ports:
       - 9000
     volumes:

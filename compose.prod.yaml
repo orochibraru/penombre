@@ -34,12 +34,13 @@ services:
         - traefik.http.services.${STACK}-app.loadbalancer.server.port=8080
 
   storage:
-    image: rustfs/rustfs:latest
+    image: quay.io/minio/minio:latest
+    command: server /data
     networks:
       - opendrive
     environment:
-      - RUSTFS_ACCESS_KEY=opendrive
-      - RUSTFS_SECRET_KEY=opendrive
+      - MINIO_ROOT_USER=opendrive
+      - MINIO_ROOT_PASSWORD=opendrive
     ports:
       - 9000
     volumes:
