@@ -61,3 +61,5 @@ go.work
 
 /frontend/
 __debug_*
+/packages/ui/dist
+/packages/api/tmp
