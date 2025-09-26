@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opendrive-app
+  namespace: opendrive
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opendrive-app
+  template:
+    metadata:
+      labels:
+        app: opendrive-app
+    spec:
+      imagePullSecrets:
+        - name: registry-secret
+      containers:
+        - name: opendrive
+          image: git.ombrage.space/opendrive/opendrive:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: opendrive-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opendrive-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: opendrive-config
+                  key: POSTGRES_DB
+            - name: DATABASE_URL
+              value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@db:5432/$(POSTGRES_DB)?sslmode=disable"
+            - name: STORAGE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: opendrive-config
+                  key: STORAGE_URL
+            - name: ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: opendrive-config
+                  key: URL
+            - name: BODY_SIZE_LIMIT
+              valueFrom:
+                configMapKeyRef:
+                  name: opendrive-config
+                  key: BODY_SIZE_LIMIT
+            - name: OAUTH_PROVIDERS
+              valueFrom:
+                configMapKeyRef:
+                  name: opendrive-config
+                  key: OAUTH_PROVIDERS
+            - name: OAUTH_POCKETID_DISCOVERY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: opendrive-config
+                  key: OAUTH_POCKETID_DISCOVERY_URL
+            - name: OAUTH_POCKETID_REDIRECT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: opendrive-config
+                  key: OAUTH_POCKETID_REDIRECT_URL
+            - name: OAUTH_POCKETID_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: opendrive-secrets
+                  key: OAUTH_POCKETID_CLIENT_ID
+            - name: OAUTH_POCKETID_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: opendrive-secrets
+                  key: OAUTH_POCKETID_CLIENT_SECRET
+            - name: STORAGE_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: opendrive-secrets
+                  key: STORAGE_ACCESS_KEY_ID
+            - name: STORAGE_ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: opendrive-secrets
+                  key: STORAGE_ACCESS_KEY_SECRET
+          livenessProbe:
+            httpGet:
+              path: /api/v1/healthz
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/healthz
+              port: 8080
+            initialDelaySeconds: 2
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opendrive-app
+  namespace: opendrive
+spec:
+  selector:
+    app: opendrive-app
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

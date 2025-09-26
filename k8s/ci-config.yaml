@@ -1,0 +1,191 @@
+name: CD-Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: git.ombrage.space
+  IMAGE_NAME: opendrive/opendrive
+  STORAGE_IMAGE_NAME: opendrive/storage
+  TAG: ${{ github.sha }}
+  NAMESPACE: opendrive
+  URL: https://drive-k8s.ombrage.space # Different URL for K8s deployment
+  HOSTNAME: drive-k8s.ombrage.space
+  OAUTH_PROVIDERS: "pocketid"
+  OAUTH_POCKETID_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+  OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
+  OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
+  OAUTH_POCKETID_REDIRECT_URL: https://drive-k8s.ombrage.space/api/v1/auth/oauth/pocketid/callback
+  STORAGE_ACCESS_KEY_ID: opendrive
+  STORAGE_ACCESS_KEY_SECRET: opendrive
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Reuse the existing docker build job from cd.yaml
+  docker-build:
+    runs-on: ubuntu-latest
+    name: Docker build & Push (for K8s)
+    steps:
+      - name: Login to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: salokain
+          password: ${{ secrets.PACKAGES_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - uses: actions/checkout@v5
+
+      - name: Build and push
+        shell: bash
+        run: docker buildx bake --push
+
+  deploy-k8s:
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    name: Deploy to Kubernetes
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "latest"
+
+      - name: Configure kubectl for remote cluster
+        shell: bash
+        run: |
+          # Create kubeconfig directory
+          mkdir -p $HOME/.kube
+
+          # Setup kubeconfig from secrets
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+          # Verify connection
+          kubectl cluster-info
+
+      - name: Create/Update Registry Secret
+        shell: bash
+        run: |
+          # Create namespace if it doesn't exist
+          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+          # Create or update registry secret
+          kubectl create secret docker-registry registry-secret \
+            --docker-server=${{ env.REGISTRY }} \
+            --docker-username=salokain \
+            --docker-password=${{ secrets.PACKAGES_TOKEN }} \
+            --namespace=${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Update ConfigMap and Secrets with environment values
+        shell: bash
+        run: |
+          # Apply the base config from your k8s manifests
+          kubectl apply -f k8s/config.yaml
+
+          # Patch the ConfigMap with environment-specific values
+          kubectl patch configmap opendrive-config -n ${{ env.NAMESPACE }} --type='merge' -p='{
+            "data": {
+              "URL": "${{ env.URL }}",
+              "OAUTH_PROVIDERS": "${{ env.OAUTH_PROVIDERS }}",
+              "OAUTH_POCKETID_DISCOVERY_URL": "${{ env.OAUTH_POCKETID_DISCOVERY_URL }}",
+              "OAUTH_POCKETID_REDIRECT_URL": "${{ env.OAUTH_POCKETID_REDIRECT_URL }}"
+            }
+          }'
+
+          # Patch the Secret with environment-specific values
+          kubectl patch secret opendrive-secrets -n ${{ env.NAMESPACE }} --type='merge' -p='{
+            "stringData": {
+              "POSTGRES_PASSWORD": "${{ secrets.POSTGRES_PASSWORD }}",
+              "OAUTH_POCKETID_CLIENT_ID": "${{ env.OAUTH_POCKETID_CLIENT_ID }}",
+              "OAUTH_POCKETID_CLIENT_SECRET": "${{ env.OAUTH_POCKETID_CLIENT_SECRET }}"
+            }
+          }'
+
+      - name: Update Deployment Images
+        shell: bash
+        run: |
+          # Update app deployment with new image tag
+          kubectl set image deployment/opendrive-app opendrive=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} -n ${{ env.NAMESPACE }}
+
+          # Update storage statefulset with new image tag (if needed)
+          kubectl set image statefulset/storage minio=${{ env.REGISTRY }}/${{ env.STORAGE_IMAGE_NAME }}:latest -n ${{ env.NAMESPACE }}
+
+      - name: Update Ingress Host
+        shell: bash
+        run: |
+          # Update ingress with the correct hostname
+          kubectl patch ingress opendrive-ingress -n ${{ env.NAMESPACE }} --type='json' \
+            -p='[{"op": "replace", "path": "/spec/rules/0/host", "value": "${{ env.HOSTNAME }}"}]'
+
+      - name: Deploy/Update Kubernetes Resources
+        shell: bash
+        run: |
+          # Apply all manifests (idempotent)
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/postgres.yaml
+          kubectl apply -f k8s/storage.yaml
+          kubectl apply -f k8s/app.yaml
+          kubectl apply -f k8s/ingress.yaml
+
+      - name: Wait for Deployment
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          echo "⏳ Waiting for deployments to be ready..."
+          kubectl -n ${{ env.NAMESPACE }} rollout status statefulset/postgres --timeout=300s
+          kubectl -n ${{ env.NAMESPACE }} rollout status statefulset/storage --timeout=300s
+          kubectl -n ${{ env.NAMESPACE }} rollout status deployment/opendrive-app --timeout=300s
+
+      - name: Deployment Status
+        shell: bash
+        run: |
+          echo "✅ Kubernetes deployment completed!"
+          echo ""
+          echo "📊 Deployment status:"
+          kubectl -n ${{ env.NAMESPACE }} get pods,svc,pvc,ingress
+          echo ""
+          echo "🔍 Recent events:"
+          kubectl -n ${{ env.NAMESPACE }} get events --sort-by='.lastTimestamp' | tail -10
+
+      - name: Health Check
+        shell: bash
+        run: |
+          # Wait a bit for the service to be ready
+          sleep 30
+
+          # Get the service URL
+          echo "🏥 Performing health check..."
+
+          # Check if we can reach the health endpoint through the ingress
+          if curl -f --max-time 30 "https://${{ env.HOSTNAME }}/api/v1/healthz"; then
+            echo "✅ Health check passed!"
+          else
+            echo "⚠️ Health check failed, but deployment may still be starting up"
+            echo "📋 Pod status:"
+            kubectl -n ${{ env.NAMESPACE }} get pods
+            echo "📋 Pod logs (last 20 lines):"
+            kubectl -n ${{ env.NAMESPACE }} logs -l app=opendrive-app --tail=20
+          fi

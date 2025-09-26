@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opendrive-config
+  namespace: opendrive
+data:
+  POSTGRES_DB: "opendrive"
+  STORAGE_URL: "http://storage:9000"
+  BODY_SIZE_LIMIT: "Infinity"
+  # Update these values as needed
+  URL: "https://your-domain.com"
+  OAUTH_PROVIDERS: ""
+  OAUTH_POCKETID_DISCOVERY_URL: ""
+  OAUTH_POCKETID_REDIRECT_URL: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: opendrive-secrets
+  namespace: opendrive
+type: Opaque
+stringData:
+  POSTGRES_USER: "postgres"
+  POSTGRES_PASSWORD: "postgres"
+  OAUTH_POCKETID_CLIENT_ID: ""
+  OAUTH_POCKETID_CLIENT_SECRET: ""
+  STORAGE_ACCESS_KEY_ID: "opendrive"
+  STORAGE_ACCESS_KEY_SECRET: "opendrive"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registry-secret
+  namespace: opendrive
+type: kubernetes.io/dockerconfigjson
+data:
+  # Replace with your actual registry credentials
+  # Generate with: kubectl create secret docker-registry registry-secret --docker-server=git.ombrage.space --docker-username=YOUR_USERNAME --docker-password=YOUR_PASSWORD --dry-run=client -o yaml | grep ".dockerconfigjson:" | cut -d' ' -f4
+  .dockerconfigjson: eyJhdXRocyI6eyJnaXQub21icmFnZS5zcGFjZSI6eyJ1c2VybmFtZSI6IllPVVJfVVNFUk5BTUUiLCJwYXNzd29yZCI6IllPVVJfUEFTU1dPUkQiLCJhdXRoIjoiV1U5VlVsOVZVMFZTVGtGTlJUcFpUMVZTWDFCQlUxTlhUMUpFIn19fQ==

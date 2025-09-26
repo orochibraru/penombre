@@ -24,6 +24,7 @@ env:
   STORAGE_ACCESS_KEY_ID: opendrive
   STORAGE_ACCESS_KEY_SECRET: opendrive
   STORAGE_URL: http://storage:9000
+  DEV_PROXY: false
 
 permissions:
   contents: write

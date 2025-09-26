@@ -8,7 +8,10 @@ export default defineConfig({
 	server: {
 		host: '0.0.0.0'
 	},
-	plugins: [tailwindcss(), sveltekit(), kitRoutes()]
+	plugins: [tailwindcss(), sveltekit(), kitRoutes()],
+	build: {
+		outDir: '../api/dist'
+	}
 });
 
 import type { KIT_ROUTES } from '$lib/ROUTES';

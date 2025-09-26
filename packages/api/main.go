@@ -106,7 +106,7 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(services.PageAuthMiddleware(database))
 
-			frontendDir := "../ui/dist"
+			frontendDir := "./dist"
 			fs := http.FileServer(http.Dir(frontendDir))
 
 			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {

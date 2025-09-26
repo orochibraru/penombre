@@ -15,7 +15,15 @@ services:
       - host.docker.internal:host-gateway
     healthcheck:
       test:
-        [CMD, wget, --quiet, --timeout=3, --tries=1, --spider, http://0.0.0.0:8080/api/v1/healthz]
+        [
+          CMD,
+          wget,
+          --quiet,
+          --timeout=3,
+          --tries=1,
+          --spider,
+          http://0.0.0.0:8080/api/v1/healthz,
+        ]
       retries: 5
       timeout: 3s
       interval: 10s
@@ -30,6 +38,8 @@ services:
       - OAUTH_POCKETID_REDIRECT_URL=${OAUTH_POCKETID_REDIRECT_URL}
       - OAUTH_POCKETID_CLIENT_ID=${OAUTH_POCKETID_CLIENT_ID}
       - OAUTH_POCKETID_CLIENT_SECRET=${OAUTH_POCKETID_CLIENT_SECRET}
+      - STORAGE_ACCESS_KEY_ID=${STORAGE_ACCESS_KEY_ID}
+      - STORAGE_ACCESS_KEY_SECRET=${STORAGE_ACCESS_KEY_SECRET}
 
   storage:
     image: git.ombrage.space/opendrive/storage:latest
@@ -61,7 +71,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
-        [CMD-SHELL, "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'"]
+        [
+          CMD-SHELL,
+          "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'",
+        ]
       interval: 3s
       timeout: 10s
       retries: 5
