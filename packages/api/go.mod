@@ -15,9 +15,8 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/oapi-codegen/runtime v1.1.2
-	github.com/rs/zerolog v1.34.0
 	github.com/swaggo/http-swagger v1.3.4
-	github.com/zerodha/logf v0.5.5
+	go.uber.org/zap v1.27.0
 	golang.org/x/oauth2 v0.30.0
 )
 
@@ -284,7 +283,6 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.40.0 // indirect
 	golang.org/x/exp v0.0.0-20250531010427-b6e5de432a8b // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250620022241-b7579e27df2b // indirect

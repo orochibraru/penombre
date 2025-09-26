@@ -2,9 +2,8 @@ package services
 
 import (
 	"context"
+	"opendrive/api/config"
 	db "opendrive/api/db/sqlc"
-	"opendrive/api/logger"
-	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -16,21 +15,11 @@ type Database struct {
 	URL       string
 }
 
-func GetDbUrl() string {
-	var dbUrl = "postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable"
-	var envUrl = os.Getenv("DATABASE_URL")
-	if envUrl != "" {
-		dbUrl = envUrl
-	}
-
-	return dbUrl
-}
-
 func CheckDb(db *Database, ctx context.Context) *error {
 	err := db.Pool.Ping(ctx)
 
 	if err != nil {
-		logger.Error("Database not yet available.")
+		l.Error("Database not yet available.")
 		return &err
 	}
 
@@ -38,7 +27,10 @@ func CheckDb(db *Database, ctx context.Context) *error {
 }
 
 func NewDatabase(ctx context.Context) (*Database, error) {
-	dbUrl := GetDbUrl()
+	dbUrl := config.Get(config.DatabaseUrl)
+	if dbUrl == "" {
+		l.Fatal("Missing DATABASE_URL.")
+	}
 	pool, err := pgxpool.New(ctx, dbUrl)
 	if err != nil {
 		return nil, err
@@ -48,7 +40,7 @@ func NewDatabase(ctx context.Context) (*Database, error) {
 
 	if err != nil {
 		// Fail silently, the DB might be spinning up.
-		logger.Error("Database not yet available.")
+		l.Error("Database not yet available.")
 		return &Database{
 			Queries:   db.New(pool),
 			Pool:      pool,
@@ -57,7 +49,7 @@ func NewDatabase(ctx context.Context) (*Database, error) {
 		}, nil
 	}
 
-	logger.Info("Successfully connected to the database.")
+	l.Info("Successfully connected to the database.")
 
 	return &Database{
 		Queries:   db.New(pool),

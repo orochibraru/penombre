@@ -1,17 +1,32 @@
 package config
 
 import (
+	"opendrive/api/logger"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
-type Config struct {
-	Environment            string
-	DevProxy               bool
-	StorageAccessKeyId     string
-	StorageAccessKeySecret string
+var l = logger.Get()
+
+func Init() {
+	err := godotenv.Load(".env", "../.env", "../../../.env")
+	if err != nil {
+		l.Warn("Failed to load .env")
+	}
 }
 
-var Environment string = os.Getenv("APP_ENV")
-var DevProxy bool = os.Getenv("DEV_PROXY") == "true"
-var StorageAccessKeyId string = os.Getenv("STORAGE_ACCESS_KEY_ID")
-var StorageAccessKeySecret string = os.Getenv("STORAGE_ACCESS_KEY_SECRET")
+type ConfigKey string
+
+const (
+	Environment            ConfigKey = "APP_ENV"
+	DevProxy               ConfigKey = "DEV_PROXY"
+	StorageAccessKeyId     ConfigKey = "STORAGE_ACCESS_KEY_ID"
+	StorageAccessKeySecret ConfigKey = "STORAGE_ACCESS_KEY_SECRET"
+	DatabaseUrl            ConfigKey = "DATABASE_URL"
+	StorageUrl             ConfigKey = "STORAGE_URL"
+)
+
+func Get(c ConfigKey) string {
+	return os.Getenv(string(c))
+}

@@ -23,8 +23,11 @@ docker-bake.hcl
 
 # UI
 /node_modules/
+/packages/ui/node_modules/
 /dist/
+/packages/ui/dist/
 /.svelte-kit/
+/packages/ui/dist/.svelte-kit/
 README.md
 
 # API

@@ -23,6 +23,24 @@
 				transition: opacity 0.3s ease-in-out;
 			}
 
+			#splash-screen-logo-container {
+				background-image: url('/logo-light-notext.png');
+				background-size: cover;
+				background-position: center center;
+				width: 100px;
+				height: 100px;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				#svelte-loader {
+					background: black;
+				}
+
+				#splash-screen-logo-container {
+					background-image: url('/logo-dark-notext.png');
+				}
+			}
+
 			.spinner {
 				width: 30px;
 				height: 30px;
@@ -49,7 +67,7 @@
 
 	<body data-sveltekit-preload-data="hover">
 		<div id="svelte-loader">
-			<img src="/logo-light-notext.png" height="100" width="100" title="Opendrive logo" />
+			<div id="splash-screen-logo-container"></div>
 			<div class="spinner"></div>
 		</div>
 		<div style="display: contents">%sveltekit.body%</div>

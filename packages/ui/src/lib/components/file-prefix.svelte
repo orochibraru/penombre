@@ -8,17 +8,20 @@
 		FileMusicIcon,
 		FileTextIcon,
 		FolderIcon,
+		PauseIcon,
 		XIcon
 	} from '@lucide/svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { ObjectItem } from '$lib/api';
+	import NowPlaying from '$lib/components/now-playing.svelte';
 	import { Badge } from '$lib/components/ui/badge/index';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { touchAction } from '$lib/file-actions';
 	import { isCodeItem } from '$lib/file-utils';
 	import { route } from '$lib/ROUTES';
+	import { playableMusic } from '$lib/store/music';
 	import { uploadedItems, uploadingItems } from '$lib/store/upload';
 	import { getProxiedObjectUrl } from '$lib/url';
 	import { cn, isFolderItem, prettyDate, secondsToMinutes, stripFolders } from '$lib/utils';
@@ -189,7 +192,15 @@
 						<FileTextIcon class={cn(iconSize, 'text-red-600')} />
 					{/if}
 				{:else if item.contentType.startsWith('audio')}
-					<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
+					{#if $playableMusic && $playableMusic.title === item.key}
+						{#if $playableMusic.isPlaying}
+							<NowPlaying />
+						{:else}
+							<PauseIcon class={cn(iconSize, 'text-pink-400')} />
+						{/if}
+					{:else}
+						<FileMusicIcon class={cn(iconSize, 'text-pink-400')} />
+					{/if}
 				{:else if item.contentType.startsWith('image')}
 					{#if layout === 'grid'}
 						{@render previewItem(item)}
@@ -214,7 +225,11 @@
 				title={item.key}
 				class={cn(
 					'max-w-72 truncate text-base lg:text-sm',
-					isUploading ? 'text-gray-500 dark:text-gray-300' : ''
+					$playableMusic && $playableMusic.title === item.key
+						? 'text-primary font-medium'
+						: isUploading
+							? 'text-gray-500 dark:text-gray-300'
+							: ''
 				)}
 			>
 				{#if page.url.pathname.startsWith('/browse')}

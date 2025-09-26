@@ -12,8 +12,6 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"test": "node --env-file=./tests/test.env ./node_modules/vitest/vitest.mjs run",
-		"test:ci": "CI=true vitest run",
 		"circular": "tsx circular.ts",
 		"lint": "biome check ./src/",
 		"lint:fix": "biome check --fix ./src/ && pnpm format",
@@ -40,7 +38,6 @@
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/typography": "^0.5.16",
 		"@tailwindcss/vite": "^4.1.12",
-		"@testcontainers/postgresql": "^11.5.1",
 		"@types/d3-scale": "^4.0.9",
 		"@types/d3-shape": "^3.1.7",
 		"@types/madge": "^5.0.3",
@@ -68,8 +65,7 @@
 		"typescript": "^5.9.2",
 		"vite": "^7.1.3",
 		"vite-plugin-kit-routes": "^1.0.2",
-		"vitepress": "^1.6.4",
-		"vitest": "^3.2.4"
+		"vitepress": "^1.6.4"
 	},
 	"dependencies": {
 		"@capacitor/android": "^7.4.2",

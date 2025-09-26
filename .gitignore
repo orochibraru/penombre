@@ -61,5 +61,11 @@ go.work
 
 /frontend/
 __debug_*
-/packages/ui/dist
-/packages/api/tmp
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/packages/ui/dist/

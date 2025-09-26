@@ -22,6 +22,8 @@ services:
       - OAUTH_POCKETID_REDIRECT_URL=${OAUTH_POCKETID_REDIRECT_URL}
       - OAUTH_POCKETID_CLIENT_ID=${OAUTH_POCKETID_CLIENT_ID}
       - OAUTH_POCKETID_CLIENT_SECRET=${OAUTH_POCKETID_CLIENT_SECRET}
+      - STORAGE_ACCESS_KEY_ID=${STORAGE_ACCESS_KEY_ID}
+      - STORAGE_ACCESS_KEY_SECRET=${STORAGE_ACCESS_KEY_SECRET}
     networks:
       - proxy-swarm
       - opendrive
@@ -34,13 +36,18 @@ services:
         - traefik.http.services.${STACK}-app.loadbalancer.server.port=8080
 
   storage:
-    image: quay.io/minio/minio:latest
-    command: server /data
+    image: git.ombrage.space/opendrive/storage:latest
+    healthcheck:
+      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
+      retries: 5
+      timeout: 3s
+      interval: 10s
+      start_period: 2s
     networks:
       - opendrive
     environment:
-      - MINIO_ROOT_USER=opendrive
-      - MINIO_ROOT_PASSWORD=opendrive
+      - MINIO_ROOT_USER=${STORAGE_ACCESS_KEY_ID}
+      - MINIO_ROOT_PASSWORD=${STORAGE_ACCESS_KEY_ID}
     ports:
       - 9000
     volumes:

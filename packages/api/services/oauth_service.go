@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"opendrive/api/logger"
 	"os"
 	"strings"
 
@@ -52,13 +51,13 @@ func InitOAuthProviders() error {
 	// OAUTH_PROVIDERS should be a comma-separated list, e.g., "pocketid,google"
 	providers := os.Getenv("OAUTH_PROVIDERS")
 	if providers == "" {
-		logger.Warn("No OAuth providers configured. Skipping OAuth initialization.")
+		l.Warn("No OAuth providers configured. Skipping OAuth initialization.")
 		return nil
 	}
 
 	for _, providerName := range strings.Split(providers, ",") {
 		providerName = strings.TrimSpace(providerName)
-		logger.Info("Initializing OAuth provider: %s", providerName)
+		l.Info("Initializing OAuth provider: %s", providerName)
 
 		// Construct env var names from the provider name
 		envPrefix := "OAUTH_" + strings.ToUpper(providerName) + "_"
@@ -91,7 +90,7 @@ func InitOAuthProviders() error {
 		defer func() {
 			err := resp.Body.Close()
 			if err != nil {
-				logger.Error(err)
+				l.Error(err)
 				return
 			}
 		}()
@@ -115,7 +114,7 @@ func InitOAuthProviders() error {
 				},
 			},
 		}
-		logger.Info("Successfully configured OAuth provider: %s", providerName)
+		l.Info("Successfully configured OAuth provider: %s", providerName)
 	}
 	return nil
 }

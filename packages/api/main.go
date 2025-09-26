@@ -22,31 +22,22 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"github.com/joho/godotenv"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+var l = logger.Get()
+
 func main() {
-	logger.Init()
-
-	err := godotenv.Load()
-	if err != nil {
-		logger.Info("No .env file found, continuing with environment variables")
-	}
-
+	config.Init()
 	storage, err := services.NewStorageService()
 	if err != nil {
-		logger.Fatal("Failed to initialize storage service: %v", err)
-	}
-
-	if err != nil {
-		logger.Fatal("Failed to initialize storage service: %v", err)
+		os.Exit(1)
 	}
 
 	ctx := context.Background()
 	database, err := services.NewDatabase(ctx)
 	if err != nil {
-		logger.Fatal("failed to connect to database: %v", err)
+		l.Fatal("failed to connect to database: %v", err)
 	}
 	defer database.Close()
 
@@ -76,7 +67,7 @@ func main() {
 	err = services.InitOAuthProviders()
 
 	if err != nil {
-		logger.Fatal("Failed to initialize OAuth providers: %v", err)
+		l.Fatal("Failed to initialize OAuth providers: %v", err)
 	}
 
 	r.Group(func(r chi.Router) {
@@ -88,17 +79,17 @@ func main() {
 	r.Get("/docs/*", httpSwagger.Handler(
 		httpSwagger.URL("/public/openapi.json"),
 	))
-	logger.Info("Swagger UI is available at http://localhost:8080/docs/index.html")
+	l.Info("Swagger UI is available at http://0.0.0.0:8080/docs/index.html")
 
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "public"))
 	FileServer(r, "/public", filesDir)
 
-	if config.DevProxy == true {
-		logger.Info("Running in DEV Proxy mode. Proxying frontend requests to Vite at http://localhost:5173")
-		viteServerURL, err := url.Parse("http://localhost:5173")
+	if config.Get(config.DevProxy) == "true" {
+		l.Info("Running in DEV Proxy mode. Proxying frontend requests here. Make sure the Vite dev server is running on port 5173.")
+		viteServerURL, err := url.Parse("http://0.0.0.0:5173")
 		if err != nil {
-			logger.Fatal("Failed to parse Vite server URL: %v", err)
+			l.Fatal("Failed to parse Vite server URL: %v", err)
 		}
 
 		proxy := httputil.NewSingleHostReverseProxy(viteServerURL)
@@ -115,7 +106,7 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(services.PageAuthMiddleware(database))
 
-			frontendDir := "dist"
+			frontendDir := "../ui/dist"
 			fs := http.FileServer(http.Dir(frontendDir))
 
 			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +120,7 @@ func main() {
 
 				fs.ServeHTTP(w, r)
 			})
-			logger.Info("Serving frontend from %s at http://localhost:8080", frontendDir)
+			l.Infof("Serving UI from %s at http://localhost:8080", frontendDir)
 		})
 	}
 
@@ -138,27 +129,28 @@ func main() {
 		Addr:    "0.0.0.0:8080",
 	}
 	go func() {
-		logger.Info("Starting server on port 8080")
-		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal("Could not start server: %v", err)
+		l.Info("Starting server on port 8080")
+		l.Info("Server started at http://localhost:8080")
+		err := s.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			l.Fatal("Could not start server: %v", err)
 		}
 
-		logger.Info("Server started at http://localhost:8080")
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	logger.Info("Shutting down server...")
+	l.Info("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := s.Shutdown(ctx); err != nil {
-		logger.Fatal("Server forced to shutdown: %v", err)
+		l.Fatal("Server forced to shutdown: %v", err)
 	}
 
-	logger.Info("Server exiting")
+	l.Info("Server exiting")
 }
 
 func FileServer(r chi.Router, path string, root http.FileSystem) {

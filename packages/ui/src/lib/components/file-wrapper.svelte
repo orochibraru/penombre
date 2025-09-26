@@ -12,7 +12,7 @@
 	import { onMount } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
-	import { browser } from '$app/environment';
+	import { browser, dev } from '$app/environment';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { api, type ObjectItem, type ObjectList } from '$lib/api';
@@ -158,6 +158,27 @@
 		);
 	}
 
+	async function openItemInNewTab(itemPath: string) {
+		const fullPath = page.params.path ? `${page.params.path}/${itemPath}` : itemPath;
+
+		const { data: presignedUrl, error: err } = await api.GET('/api/v1/storage/objects/url', {
+			params: {
+				query: {
+					item: fullPath
+				}
+			}
+		});
+
+		if (err) {
+			console.error(err);
+			throw err;
+		}
+
+		const finalUrl = `${page.url.origin}/p?url=${presignedUrl}`;
+
+		window.open(finalUrl);
+	}
+
 	async function downloadItem(itemPath: string) {
 		const fullPath = page.params.path ? `${page.params.path}/${itemPath}` : itemPath;
 
@@ -207,6 +228,13 @@
 			icon: FolderInputIcon,
 			action: () => [],
 			disabled: true
+		},
+		{
+			title: 'Open in new tab',
+			icon: ExternalLinkIcon,
+			action: (item) => openItemInNewTab(item.key),
+			disabled: false,
+			fileOnly: true
 		},
 		{
 			title: 'Duplicate',
@@ -328,7 +356,8 @@
 		if (item.contentType?.startsWith('audio')) {
 			$playableMusic = {
 				title: item.key,
-				source: finalUrl
+				source: finalUrl,
+				isPlaying: !dev
 			};
 			return;
 		}

@@ -16,11 +16,14 @@ env:
   IMAGE: git.ombrage.space/opendrive/opendrive
   TAG: ${{ github.sha }}
   TZ: Europe/Paris
-  OAUTH_PROVIDERS: 'pocketid'
+  OAUTH_PROVIDERS: "pocketid"
   OAUTH_POCKETID_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
   OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
   OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
   OAUTH_POCKETID_REDIRECT_URL: https://drive.ombrage.space/api/v1/auth/oauth/pocketid/callback
+  STORAGE_ACCESS_KEY_ID: opendrive
+  STORAGE_ACCESS_KEY_SECRET: opendrive
+  STORAGE_URL: http://storage:9000
 
 permissions:
   contents: write
@@ -44,7 +47,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Build and push
         shell: bash
@@ -55,7 +58,7 @@ jobs:
     needs: [docker]
     name: Deploy
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - shell: bash
         name: Setup SSH

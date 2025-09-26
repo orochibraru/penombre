@@ -9,19 +9,3 @@ else
     echo "🔴 Failed to run Lint staged"
     exit 1
 fi
-
-echo "⏳ Formatting..."
-if pnpm -C packages/ui run format; then
-    echo "✅ Formatted all files"
-else
-    echo "🔴 Failed to format files"
-    exit 1
-fi
-
-echo "⏳ Adding changed files to git"
-if git add .; then
-    echo "✅ Added files to git"
-else
-    echo "🔴 Failed to add files to git"
-    exit 1
-fi

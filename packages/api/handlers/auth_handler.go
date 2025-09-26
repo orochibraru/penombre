@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	db "opendrive/api/db/sqlc"
-	"opendrive/api/logger"
 	"opendrive/api/services"
 	"time"
 
@@ -29,7 +28,7 @@ func (s Server) PostApiV1AuthSignOut(w http.ResponseWriter, r *http.Request) {
 		pgxUUID := pgtype.UUID{Bytes: sessionID, Valid: true}
 		err := s.DB.DeleteSession(context.Background(), pgxUUID)
 		if err != nil {
-			logger.Error("Failed to delete session")
+			l.Error("Failed to delete session")
 		}
 	}
 
@@ -90,7 +89,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	oauthProvider, ok := providerRegistry[provider]
 	if !ok {
 		services.SetErrorCookie(w, "Unsupported OAuth provider")
-		logger.Error("Unsupported OAuth provider: %s", provider)
+		l.Error("Unsupported OAuth provider: %s", provider)
 		http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 		return
 	}
@@ -99,7 +98,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	stateCookie, err := r.Cookie("oauth_state")
 	if err != nil || r.URL.Query().Get("state") != stateCookie.Value {
 		services.SetErrorCookie(w, "Invalid state paramter")
-		logger.Error("Invalid state paramter: %s", err)
+		l.Error("Invalid state paramter: %s", err)
 		http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 		return
 	}
@@ -109,7 +108,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	token, err := oauthProvider.Config.Exchange(context.Background(), code)
 	if err != nil {
 		services.SetErrorCookie(w, "Failed to exchange token")
-		logger.Error("Failed to exchange token: %s", err)
+		l.Error("Failed to exchange token: %s", err)
 		http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 		return
 	}
@@ -120,7 +119,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		services.SetErrorCookie(w, "Failed to get user info")
-		logger.Error("Failed to get user info: %s", err)
+		l.Error("Failed to get user info: %s", err)
 		http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 		return
 	}
@@ -128,7 +127,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			logger.Error(err)
+			l.Error(err)
 			return
 		}
 	}()
@@ -137,7 +136,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	var userInfo services.UserInfo
 	err = json.Unmarshal(body, &userInfo)
 	if err != nil {
-		logger.Error("Failed to unmarshal body")
+		l.Error("Failed to unmarshal body")
 		return
 	}
 
@@ -151,7 +150,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 		})
 		if createErr != nil {
 			services.SetErrorCookie(w, "Failed to create user")
-			logger.Error("Failed to create user: %s", createErr)
+			l.Error("Failed to create user: %s", createErr)
 			http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 			return
 		}
@@ -161,7 +160,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	validUserId, err := uuid.Parse(user.ID.String())
 
 	if err != nil {
-		logger.Error("Failed to decode UUID: %s", err)
+		l.Error("Failed to decode UUID: %s", err)
 		services.SetErrorCookie(w, "Failed to decode UUID")
 		http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 		return
@@ -171,11 +170,11 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 
 	if err != nil {
 		// Log the error but don't block the login process
-		logger.Fatalf("CRITICAL: Failed to ensure bucket for user %s: %v", user.ID, err)
+		l.Error("CRITICAL: Failed to ensure bucket for user %s: %v", user.ID, err)
 	}
 
 	services.SetSessionCookies(w, validUserId, s.DB)
-	logger.Info("Login callback successful")
+	l.Info("Login callback successful")
 	http.Redirect(w, r, "/auth/callback", http.StatusSeeOther)
 }
 
@@ -185,7 +184,7 @@ func (s Server) GetApiV1AuthOauthProviderLogin(w http.ResponseWriter, r *http.Re
 	oauthProvider, ok := providerRegistry[provider]
 	if !ok {
 		services.SetErrorCookie(w, "Unsupported OAuth provider")
-		logger.Warn("Unsupported OAuth provider: %s", provider)
+		l.Warn("Unsupported OAuth provider: %s", provider)
 		http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 		return
 	}
@@ -209,7 +208,7 @@ func (s Server) GetApiV1AuthOauthProviderLogin(w http.ResponseWriter, r *http.Re
 	})
 
 	url := oauthProvider.Config.AuthCodeURL(state)
-	logger.Info("Login fist step successful")
+	l.Info("Login fist step successful")
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 

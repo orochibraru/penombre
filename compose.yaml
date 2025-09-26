@@ -19,9 +19,14 @@ services:
       start_period: 3s
 
   storage:
-    image: quay.io/minio/minio:latest
+    image: git.ombrage.space/opendrive/storage:latest
     restart: unless-stopped
-    command: server /data
+    healthcheck:
+      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
+      retries: 5
+      timeout: 3s
+      interval: 10s
+      start_period: 2s
     environment:
       - MINIO_ROOT_USER=opendrive
       - MINIO_ROOT_PASSWORD=opendrive

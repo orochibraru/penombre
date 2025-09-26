@@ -9,11 +9,16 @@ permissions: read-all
 env:
   PNPM_VERSION: 10.12.4
   TZ: Europe/Paris
-  DATABASE_URL: postgres://postgres:postgres@service-db:5432/opendrive
-  STORAGE_URL: http://storage:9000
+  DATABASE_URL: postgres://postgres:postgres@db:5432/opendrive?sslmode=disable
+  STORAGE_URL: http://minio:9000
   NODE_VERSION: 22
-  AWS_ACCESS_KEY_ID: opendrive
-  AWS_SECRET_ACCESS_KEY: opendrive
+  STORAGE_ACCESS_KEY_ID: opendrive
+  STORAGE_ACCESS_KEY_SECRET: opendrive
+  OAUTH_PROVIDERS: "pocketid"
+  OAUTH_POCKETID_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+  OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
+  OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
+  OAUTH_POCKETID_REDIRECT_URL: https://pr-${{ github.event.number }}-drive.ombrage.space/api/v1/auth/oauth/pocketid/callback
 
 jobs:
   go:
@@ -25,7 +30,7 @@ jobs:
         working-directory: ./packages/api
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -70,11 +75,8 @@ jobs:
       run:
         shell: bash
         working-directory: ./packages/ui
-    strategy:
-      matrix:
-        job: [circular, check, build, "lint", "format:check"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -95,5 +97,64 @@ jobs:
       - name: Sync routes
         run: pnpm exec kit-routes sync
 
-      - name: Run '${{ matrix.job }}' command 🧪
-        run: pnpm ${{ matrix.job }}
+      - name: Run CI tasks 🧪
+        run: pnpm -w run ci:tasks
+
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: opendrive
+      minio:
+        image: git.ombrage.space/opendrive/storage:latest
+        options: --health-cmd="curl -f http://0.0.0.0:9000/minio/health/live" --health-interval=10s --health-timeout=5s --health-retries=3
+        credentials:
+          username: salokain
+          password: ${{ secrets.PACKAGES_TOKEN }}
+        ports:
+          - 9000:9000
+        env:
+          MINIO_ROOT_USER: ${{ env.STORAGE_ACCESS_KEY_ID }}
+          MINIO_ROOT_PASSWORD: ${{ env.STORAGE_ACCESS_KEY_SECRET }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "^1.25.0"
+
+      - name: Install Go deps
+        run: go -C packages/api mod tidy
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Node deps
+        run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+
+      - name: Build frontend
+        run: pnpm -C packages/ui run build
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: pnpm run test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

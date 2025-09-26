@@ -1,5 +1,12 @@
 <script lang="ts">
-	import { PauseIcon, PlayIcon, Volume1Icon, Volume2Icon, VolumeXIcon } from '@lucide/svelte';
+	import {
+		ExternalLinkIcon,
+		PauseIcon,
+		PlayIcon,
+		Volume1Icon,
+		Volume2Icon,
+		VolumeXIcon
+	} from '@lucide/svelte';
 	import { dev } from '$app/environment';
 	import BottomAction from '$lib/components/layout/bottom-action.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -86,17 +93,36 @@
 					<Spinner />
 				</Button>
 			{:else if paused}
-				<Button onclick={() => player?.play()} title="Play">
+				<Button
+					onclick={() => {
+						player?.play();
+						if ($playableMusic) {
+							$playableMusic.isPlaying = true;
+						}
+					}}
+					title="Play"
+				>
 					<PlayIcon />
 				</Button>
 			{:else}
-				<Button onclick={() => player?.pause()} title="Pause">
+				<Button
+					onclick={() => {
+						player?.pause();
+						if ($playableMusic) {
+							$playableMusic.isPlaying = false;
+						}
+					}}
+					title="Pause"
+				>
 					<PauseIcon />
 				</Button>
 			{/if}
 			<p class="text-xs text-nowrap">{formatTime(currentTime)} / {formatTime(duration)}</p>
 		</div>
 		<Progress value={currentTime} max={duration} class="w-full cursor-pointer" onclick={seek} />
+		<Button variant="outline" title="Open in new tab" href={$playableMusic?.source} target="_blank">
+			<ExternalLinkIcon />
+		</Button>
 		<Popover.Root>
 			<Popover.Trigger title="Change Volume">
 				<Button variant="outline">
@@ -125,11 +151,21 @@
 		oncanplay={() => {
 			loading = false;
 			if (!dev) {
-				player.play().catch((error) => {
-					console.error('Autoplay was prevented:', error);
-					// If autoplay fails, update the UI to show the paused state.
-					paused = true;
-				});
+				player
+					.play()
+					.then(() => {
+						if ($playableMusic) {
+							$playableMusic.isPlaying = true;
+						}
+					})
+					.catch((error) => {
+						console.error('Autoplay was prevented:', error);
+						// If autoplay fails, update the UI to show the paused state.
+						paused = true;
+						if ($playableMusic) {
+							$playableMusic.isPlaying = false;
+						}
+					});
 			}
 		}}
 		bind:this={player}
