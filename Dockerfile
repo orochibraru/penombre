@@ -17,7 +17,7 @@ COPY ./packages/ui .
 RUN --mount=type=cache,id=vitebuild-opendrive,target=/node_modules/.vite pnpm run build
 
 # API
-FROM golang:1.24.5-alpine AS go-builder
+FROM golang:1.25.2-alpine AS go-builder
 
 WORKDIR /app
 
