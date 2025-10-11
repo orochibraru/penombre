@@ -23,12 +23,3 @@ target "app" {
   cache-from = ["type=gha,scope=opendrive"]
   cache-to = ["type=gha,scope=opendrive,mode=max"]
 }
-
-target "preview" {
-  context    = "."
-  dockerfile = "./Dockerfile"
-  tags       = ["${IMAGE}:${TAG}"]
-  platforms = ["linux/arm64/v8"]
-  cache-from = ["type=gha,scope=opendrive"]
-  cache-to = ["type=gha,scope=opendrive,mode=max"]
-}
