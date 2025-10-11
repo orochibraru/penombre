@@ -21,8 +21,6 @@ FROM golang:1.25.2-alpine AS go-builder
 
 WORKDIR /app
 
-ENV GODEBUG=cpu.bmi2=off
-
 COPY ./packages/api/go.mod ./packages/api/go.sum ./
 
 RUN go mod download
