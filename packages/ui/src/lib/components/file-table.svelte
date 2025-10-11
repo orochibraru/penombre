@@ -93,7 +93,9 @@
 				checked={isChecked(item)}
 				onCheckedChange={(checked) => {
 					checkedItems[item.key] = checked;
-					const someChecked = files.list.filter((item) => checkedItems[item.key] === true);
+					const someChecked = files.list.filter(
+						(item) => checkedItems[item.key] === true
+					);
 					if (someChecked.length > 1) {
 						isSingleItemAction = false;
 					} else {
@@ -114,7 +116,9 @@
 								const folder = item.key.replace('/', '');
 								goto(
 									route('/browse/[...path]', {
-										path: page.params.path ? [page.params.path, folder] : [folder]
+										path: page.params.path
+											? [page.params.path, folder]
+											: [folder]
 									})
 								);
 								return;
@@ -137,7 +141,10 @@
 					{#each itemActions as action}
 						{#if shouldDisplayAction({ action, item })}
 							{@const Icon = action.icon}
-							<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+							<DropdownMenu.Item
+								onclick={() => action.action(item)}
+								disabled={action.disabled}
+							>
 								<Icon />
 								{action.title}
 							</DropdownMenu.Item>
@@ -151,7 +158,9 @@
 				<span>-</span>
 			{:else}
 				<Badge variant="outline" class="text-muted-foreground px-1.5">
-					{item.metadata?.category ? capitalizeFirstLetter(item.metadata.category) : 'No category'}
+					{item.metadata?.category
+						? capitalizeFirstLetter(item.metadata.category)
+						: 'No category'}
 				</Badge>
 			{/if}
 		</Table.Cell>
@@ -177,7 +186,10 @@
 						{#each itemActions as action}
 							{#if shouldDisplayAction({ action, item })}
 								{@const Icon = action.icon}
-								<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+								<DropdownMenu.Item
+									onclick={() => action.action(item)}
+									disabled={action.disabled}
+								>
 									<Icon />
 									{action.title}
 								</DropdownMenu.Item>
@@ -262,8 +274,8 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 			<AlertDialog.Description>
-				This action cannot be undone. This will permanently delete the following items from your
-				storage device.
+				This action cannot be undone. This will permanently delete the following items from
+				your storage device.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<div class="prose">

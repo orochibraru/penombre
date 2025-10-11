@@ -1,0 +1,125 @@
+name: Verify / Tests
+
+on:
+  workflow_call:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write # To post comments
+
+env:
+  PNPM_VERSION: 10.12.4
+  TZ: Europe/Paris
+  DATABASE_URL: postgres://postgres:postgres@db:5432/opendrive?sslmode=disable
+  STORAGE_URL: http://minio:9000
+  NODE_VERSION: 22
+  STORAGE_ACCESS_KEY_ID: opendrive
+  STORAGE_ACCESS_KEY_SECRET: opendrive
+  OAUTH_PROVIDERS: "pocketid"
+  OAUTH_POCKETID_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+  OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
+  OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
+  OAUTH_POCKETID_REDIRECT_URL: https://pr-${{ github.event.number }}-drive.ombrage.space/api/v1/auth/oauth/pocketid/callback
+
+jobs:
+  test:
+    name: E2E
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17
+        ports:
+          - 5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: opendrive
+      minio:
+        image: git.ombrage.space/opendrive/storage:latest
+        options: --health-cmd="curl -f http://0.0.0.0:9000/minio/health/live" --health-interval=10s --health-timeout=5s --health-retries=3
+        credentials:
+          username: salokain
+          password: ${{ secrets.PACKAGES_TOKEN }}
+        ports:
+          - 9000
+        env:
+          MINIO_ROOT_USER: ${{ env.STORAGE_ACCESS_KEY_ID }}
+          MINIO_ROOT_PASSWORD: ${{ env.STORAGE_ACCESS_KEY_SECRET }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "^1.25.0"
+
+      - name: Install Go deps
+        run: go -C packages/api mod tidy
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Node deps
+        run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+
+      - name: Build frontend
+        run: pnpm run build
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: pnpm run test
+
+      - name: Generate test results comment
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        run: |
+          npm i -g tsx
+          # Generate markdown summary from Playwright results
+          TEST_MARKDOWN=$(tsx scripts/parse-playwright-results.ts)
+
+          # Save to file for GitHub script to read
+          echo "$TEST_MARKDOWN" > /tmp/test-results.md
+
+      - name: Post Playwright report comment
+        if: always() && !cancelled() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            // Read the generated markdown
+            let body;
+            try {
+              body = fs.readFileSync('/tmp/test-results.md', 'utf8');
+            } catch (error) {
+              // Fallback if markdown generation failed
+              const testStatus = '${{ job.status }}';
+              const statusEmoji = testStatus === 'success' ? '✅' : '❌';
+              const statusText = testStatus === 'success' ? 'Passed' : 'Failed';
+              
+              body = `## 🎭 Playwright Test Report
+
+            **Test Status:** ${statusEmoji} ${statusText}
+
+            📋 **Report:** Test execution completed
+
+            ${testStatus === 'failure' ? '❌ Some tests failed. Check the workflow logs for details.' : '✅ All tests passed successfully!'}
+
+            ---
+            *Report generated from commit ${{ github.sha }}*
+            `;
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

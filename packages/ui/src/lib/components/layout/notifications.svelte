@@ -33,13 +33,22 @@
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content align="end">
 		<DropdownMenu.Item>
-			{@render alert({ title: 'Alert 1', summary: 'An example of what a notification can be' })}
+			{@render alert({
+				title: 'Alert 1',
+				summary: 'An example of what a notification can be'
+			})}
 		</DropdownMenu.Item>
 		<DropdownMenu.Item>
-			{@render alert({ title: 'Alert 2', summary: 'An example of what a notification can be' })}
+			{@render alert({
+				title: 'Alert 2',
+				summary: 'An example of what a notification can be'
+			})}
 		</DropdownMenu.Item>
 		<DropdownMenu.Item>
-			{@render alert({ title: 'Alert 3', summary: 'An example of what a notification can be' })}
+			{@render alert({
+				title: 'Alert 3',
+				summary: 'An example of what a notification can be'
+			})}
 		</DropdownMenu.Item>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>

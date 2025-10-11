@@ -131,8 +131,8 @@
 		<Drawer.Header>
 			<Drawer.Title>Are you sure absolutely sure?</Drawer.Title>
 			<Drawer.Description>
-				This action cannot be undone. This will permanently delete the following items from your
-				storage device.
+				This action cannot be undone. This will permanently delete the following items from
+				your storage device.
 			</Drawer.Description>
 		</Drawer.Header>
 		<div class="prose">

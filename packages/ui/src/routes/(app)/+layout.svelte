@@ -213,14 +213,20 @@
 				</a>
 				<a
 					href={route('/account')}
-					class={cn(bottomNavItemClass, isActive(route('/account')) ? 'text-primary' : '')}
+					class={cn(
+						bottomNavItemClass,
+						isActive(route('/account')) ? 'text-primary' : ''
+					)}
 				>
 					<UserIcon class={bottomNavItemIconClass} />
 					Profile
 				</a>
 				<a
 					href={route('/settings')}
-					class={cn(bottomNavItemClass, isActive(route('/settings')) ? 'text-primary' : '')}
+					class={cn(
+						bottomNavItemClass,
+						isActive(route('/settings')) ? 'text-primary' : ''
+					)}
 				>
 					<SettingsIcon class={bottomNavItemIconClass} />
 					Settings

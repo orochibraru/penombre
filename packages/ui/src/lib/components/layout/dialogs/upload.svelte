@@ -74,14 +74,18 @@
 
 					for (const key in result.data.metadata) {
 						if (result.data.metadata[key]) {
-							xhr.setRequestHeader(`x-amz-meta-${key.toLowerCase()}`, result.data.metadata[key]);
+							xhr.setRequestHeader(
+								`x-amz-meta-${key.toLowerCase()}`,
+								result.data.metadata[key]
+							);
 						}
 					}
 
 					xhr.upload.onprogress = (event) => {
 						if (event.lengthComputable) {
 							const percentLoaded = (event.loaded / event.total) * 100;
-							$uploadingItems[fileNameWithoutFolder(result.data.finalName)] = percentLoaded;
+							$uploadingItems[fileNameWithoutFolder(result.data.finalName)] =
+								percentLoaded;
 						}
 					};
 
@@ -270,13 +274,17 @@
 					{#each Array.from($files) as file, i (file.name)}
 						<div>
 							<div
-								class={cn('flex place-items-center justify-between gap-3 rounded-xl border p-3')}
+								class={cn(
+									'flex place-items-center justify-between gap-3 rounded-xl border p-3'
+								)}
 							>
 								<div class="flex flex-col">
 									<div class="flex items-center gap-2">
 										<span class="text-sm">{file.name}</span>
 									</div>
-									<span class="text-muted-foreground text-xs">{displaySize(file.size)}</span>
+									<span class="text-muted-foreground text-xs"
+										>{displaySize(file.size)}</span
+									>
 								</div>
 								<div class="flex items-center gap-2">
 									<Button

@@ -36,6 +36,7 @@
 				</p>
 			</Alert.Description>
 		</Alert.Root>
-		<Button class="w-full" variant="destructive" href={route('/auth/sign-in')}>Try Again</Button>
+		<Button class="w-full" variant="destructive" href={route('/auth/sign-in')}>Try Again</Button
+		>
 	</div>
 </form>

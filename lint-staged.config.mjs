@@ -12,5 +12,6 @@ export default {
     "sh -c 'cd packages/api && go fmt'",
     "sh -c 'cd packages/api && make lint'",
     "sh -c 'cd packages/api && make test'",
+    "pnpm run db:diagram",
   ],
 };

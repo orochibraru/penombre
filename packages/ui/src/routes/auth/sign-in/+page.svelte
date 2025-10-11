@@ -31,7 +31,9 @@
 	{#if error}
 		<Alert.Root class="mb-5" variant="destructive">
 			<Alert.Title>Oops.</Alert.Title>
-			<Alert.Description>There was an error when signing in. Please try again.</Alert.Description>
+			<Alert.Description
+				>There was an error when signing in. Please try again.</Alert.Description
+			>
 		</Alert.Root>
 	{/if}
 	<div class="grid gap-6">
@@ -54,8 +56,10 @@
 				<Alert.Title>No providers have been configured for this application.</Alert.Title>
 				<Alert.Description>
 					<p>
-						Please read <a target="_blank" class="underline" href="https://opendrive.space/docs"
-							>the docs</a
+						Please read <a
+							target="_blank"
+							class="underline"
+							href="https://opendrive.space/docs">the docs</a
 						> to configure an auth provider.
 					</p>
 				</Alert.Description>

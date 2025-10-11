@@ -1,0 +1,53 @@
+name: Verify / Go
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - "packages/api/**"
+      - ".github/workflows/go.yaml"
+
+permissions:
+  contents: read
+  pull-requests: write # To post comments
+
+env:
+  TZ: Europe/Paris
+  DATABASE_URL: postgres://postgres:postgres@db:5432/opendrive?sslmode=disable
+  STORAGE_URL: http://minio:9000
+  STORAGE_ACCESS_KEY_ID: opendrive
+  STORAGE_ACCESS_KEY_SECRET: opendrive
+  OAUTH_PROVIDERS: "pocketid"
+  OAUTH_POCKETID_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+  OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
+  OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
+  OAUTH_POCKETID_REDIRECT_URL: https://pr-${{ github.event.number }}-drive.ombrage.space/api/v1/auth/oauth/pocketid/callback
+
+jobs:
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./packages/api
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test with Race Detector
+        run: go test -v -race ./...
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+          working-directory: packages/api

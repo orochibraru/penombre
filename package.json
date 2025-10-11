@@ -8,19 +8,25 @@
     "test": "playwright test",
     "dev": "node --env-file .env concurrently.config.mjs",
     "ci:tasks": "node concurrently.config.ci.mjs",
-    "build": "pnpm -C packages/ui run build && go -C packages/api build"
+    "build": "pnpm -C packages/ui run build && mv packages/ui/dist packages/api/dist && go -C packages/api build",
+    "db:diagram": "sql2dbml packages/api/db/migrations/001_initial.up.sql --postgres -o docs/db/opendrive.dbml && dbml-renderer -i docs/db/opendrive.dbml -o docs/db/opendrive.svg",
+    "api": "make -C packages/api api",
+    "format": "pnpm --filter ui run format"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.55.0",
-    "@types/node": "^24.3.0",
+    "@dbml/cli": "^3.14.1",
+    "@playwright/test": "^1.56.0",
+    "@softwaretechnik/dbml-renderer": "^1.0.31",
+    "@types/node": "^24.7.2",
     "concurrently": "^9.2.1",
+    "dbdocs": "^0.16.2",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.6"
+    "lint-staged": "^16.2.4"
   },
   "dependencies": {
-    "dotenv": "^17.2.2"
+    "dotenv": "^17.2.3"
   }
 }

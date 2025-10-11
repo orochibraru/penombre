@@ -1,0 +1,113 @@
+name: Deploy
+
+on:
+  push:
+    # tags:
+    #   - 'v*'
+    branches:
+      - main
+
+env:
+  CONTEXT: homelab
+  COMPOSE_FILE: ./infrastructure/compose.prod.yaml
+  STACK: opendrive
+  URL: https://drive.ombrage.space
+  HOSTNAME: drive.ombrage.space
+  IMAGE: git.ombrage.space/opendrive/opendrive
+  TAG: ${{ github.sha }}
+  TZ: Europe/Paris
+  OAUTH_PROVIDERS: "pocketid"
+  OAUTH_POCKETID_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+  OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
+  OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
+  OAUTH_POCKETID_REDIRECT_URL: https://drive.ombrage.space/api/v1/auth/oauth/pocketid/callback
+  STORAGE_ACCESS_KEY_ID: opendrive
+  STORAGE_ACCESS_KEY_SECRET: opendrive
+  STORAGE_URL: http://storage:9000
+  DEV_PROXY: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    name: Docker build & Push
+    steps:
+      - name: Login to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: git.ombrage.space
+          username: salokain
+          password: ${{ secrets.PACKAGES_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - uses: actions/checkout@v5
+
+      - name: Build and push
+        shell: bash
+        run: docker buildx bake --push
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: [docker]
+  #   name: Deploy
+  #   steps:
+  #     - uses: actions/checkout@v5
+
+  #     - shell: bash
+  #       name: Setup SSH
+  #       run: |
+  #         mkdir --parents $HOME/.ssh
+  #         echo "Initializing SSH Agent"
+  #         if [ -z "$SSH_AGENT_PID" ]; then
+  #           eval $(ssh-agent)
+  #           echo "Initializing Socket"
+  #           echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
+  #           echo "Initializing PID"
+  #           echo "SSH_AGENT_PID=SSH_AGENT_PID" >> $GITHUB_ENV
+  #         fi
+
+  #         echo "Setting up Private Key"
+  #         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+  #         echo "Setting up Public Key"
+  #         echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+  #         echo "Setting permissions"
+  #         chmod 600 ~/.ssh/id_rsa
+  #         echo "Scanning key"
+  #         ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" > ~/.ssh/known_hosts
+  #         echo "Adding key"
+  #         ssh-add ~/.ssh/id_rsa
+
+  #     - name: Login to the Container registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: git.ombrage.space
+  #         username: salokain
+  #         password: ${{ secrets.PACKAGES_TOKEN }}
+
+  #     - shell: bash
+  #       name: Setup Context
+  #       run: |
+  #         docker context create --docker "host=ssh://${{ secrets.SSH_USERNAME}}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_PORT }}" "${{ env.CONTEXT }}"
+
+  #     - name: Pull the latest images
+  #       shell: bash
+  #       run: docker --context "${{ env.CONTEXT }}" compose -f ${{ env.COMPOSE_FILE }} pull
+
+  #     - shell: bash
+  #       timeout-minutes: 3
+  #       name: Start the Containers
+  #       run: |
+  #         docker --context "${{ env.CONTEXT }}" stack deploy --with-registry-auth --detach=false --compose-file ${{ env.COMPOSE_FILE }} ${{ env.STACK }}
+
+  #     - shell: bash
+  #       name: Cleanup
+  #       run: |
+  #         rm ~/.ssh/id_rsa

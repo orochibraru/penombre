@@ -50,11 +50,21 @@
 									{...props}
 									class={cn(
 										props.class as string,
-										item.accentColor === 'indigo' ? 'data-[active=true]:text-indigo-500' : '',
-										item.accentColor === 'orange' ? 'data-[active=true]:text-orange-500' : '',
-										item.accentColor === 'pink' ? 'data-[active=true]:text-pink-500' : '',
-										item.accentColor === 'green' ? 'data-[active=true]:text-green-500' : '',
-										item.accentColor === 'purple' ? 'data-[active=true]:text-purple-500' : '',
+										item.accentColor === 'indigo'
+											? 'data-[active=true]:text-indigo-500'
+											: '',
+										item.accentColor === 'orange'
+											? 'data-[active=true]:text-orange-500'
+											: '',
+										item.accentColor === 'pink'
+											? 'data-[active=true]:text-pink-500'
+											: '',
+										item.accentColor === 'green'
+											? 'data-[active=true]:text-green-500'
+											: '',
+										item.accentColor === 'purple'
+											? 'data-[active=true]:text-purple-500'
+											: '',
 										'text-[1.1rem] md:text-sm'
 									)}
 									title={item.title}

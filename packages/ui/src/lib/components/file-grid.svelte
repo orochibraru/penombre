@@ -83,7 +83,10 @@
 				{#each itemActions as action}
 					{#if shouldDisplayAction({ action, item })}
 						{@const Icon = action.icon}
-						<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+						<DropdownMenu.Item
+							onclick={() => action.action(item)}
+							disabled={action.disabled}
+						>
 							<Icon />
 							{action.title}
 						</DropdownMenu.Item>
@@ -92,7 +95,9 @@
 			</ContextMenu.Content>
 		</ContextMenu.Root>
 		<DropdownMenu.Root>
-			<DropdownMenu.Trigger class="data-[state=open]:bg-muted text-muted-foreground flex size-8">
+			<DropdownMenu.Trigger
+				class="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+			>
 				{#snippet child({ props })}
 					<Button variant="ghost" size="icon" {...props}>
 						<EllipsisVerticalIcon />
@@ -104,7 +109,10 @@
 				{#each itemActions as action}
 					{#if shouldDisplayAction({ action, item })}
 						{@const Icon = action.icon}
-						<DropdownMenu.Item onclick={() => action.action(item)} disabled={action.disabled}>
+						<DropdownMenu.Item
+							onclick={() => action.action(item)}
+							disabled={action.disabled}
+						>
 							<Icon />
 							{action.title}
 						</DropdownMenu.Item>
@@ -154,8 +162,8 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 			<AlertDialog.Description>
-				This action cannot be undone. This will permanently delete the following items from your
-				storage device.
+				This action cannot be undone. This will permanently delete the following items from
+				your storage device.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<div class="prose">

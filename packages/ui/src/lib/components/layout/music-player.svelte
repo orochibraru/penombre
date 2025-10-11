@@ -120,7 +120,12 @@
 			<p class="text-xs text-nowrap">{formatTime(currentTime)} / {formatTime(duration)}</p>
 		</div>
 		<Progress value={currentTime} max={duration} class="w-full cursor-pointer" onclick={seek} />
-		<Button variant="outline" title="Open in new tab" href={$playableMusic?.source} target="_blank">
+		<Button
+			variant="outline"
+			title="Open in new tab"
+			href={$playableMusic?.source}
+			target="_blank"
+		>
 			<ExternalLinkIcon />
 		</Button>
 		<Popover.Root>
@@ -138,7 +143,13 @@
 				</Button>
 			</Popover.Trigger>
 			<Popover.Content class="w-10">
-				<Slider type="single" orientation="vertical" bind:value={volume} max={1} step={0.01} />
+				<Slider
+					type="single"
+					orientation="vertical"
+					bind:value={volume}
+					max={1}
+					step={0.01}
+				/>
 			</Popover.Content>
 		</Popover.Root>
 	</div>

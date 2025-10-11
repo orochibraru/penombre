@@ -22,7 +22,9 @@
 	async function handleNewFolder() {
 		newFolderLoading = true;
 
-		const folderPath = page.params.path ? `${page.params.path}/${newFolderName}` : newFolderName;
+		const folderPath = page.params.path
+			? `${page.params.path}/${newFolderName}`
+			: newFolderName;
 
 		const promise = api
 			.POST('/api/v1/storage/objects/folder', {
@@ -81,7 +83,9 @@
 				{/if}
 			</div>
 			<Dialog.Footer>
-				<Button onclick={() => (open = false)} variant="outline" type="button">Cancel</Button>
+				<Button onclick={() => (open = false)} variant="outline" type="button"
+					>Cancel</Button
+				>
 				<Button bind:loading={newFolderLoading} type="submit">Create</Button>
 			</Dialog.Footer>
 		</form>

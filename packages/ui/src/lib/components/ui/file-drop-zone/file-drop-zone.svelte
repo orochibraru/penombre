@@ -63,7 +63,8 @@
 	};
 
 	const shouldAcceptFile = (file: File, fileNumber: number): FileRejectedReason | undefined => {
-		if (maxFileSize !== undefined && file.size > maxFileSize) return 'Maximum file size exceeded';
+		if (maxFileSize !== undefined && file.size > maxFileSize)
+			return 'Maximum file size exceeded';
 
 		if (maxFiles !== undefined && fileNumber > maxFiles) return 'Maximum files uploaded';
 

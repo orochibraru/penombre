@@ -1,0 +1,98 @@
+services:
+  app:
+    image: git.ombrage.space/opendrive/opendrive:${TAG-latest}
+    ports:
+      - 8080
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    healthcheck:
+      test:
+        [
+          CMD,
+          wget,
+          --quiet,
+          --timeout=3,
+          --tries=1,
+          --spider,
+          http://0.0.0.0:8080/api/v1/healthz,
+        ]
+      retries: 5
+      timeout: 3s
+      interval: 10s
+      start_period: 2s
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER-postgres}:${POSTGRES_PASSWORD-postgres}@db:5432/${POSTGRES_DB-opendrive}?sslmode=disable
+      - STORAGE_URL=http://storage:9000
+      - BODY_SIZE_LIMIT=Infinity
+      - OAUTH_PROVIDERS=${OAUTH_PROVIDERS}
+      - OAUTH_POCKETID_DISCOVERY_URL=${OAUTH_POCKETID_DISCOVERY_URL}
+      - OAUTH_POCKETID_REDIRECT_URL=${OAUTH_POCKETID_REDIRECT_URL}
+      - OAUTH_POCKETID_CLIENT_ID=${OAUTH_POCKETID_CLIENT_ID}
+      - OAUTH_POCKETID_CLIENT_SECRET=${OAUTH_POCKETID_CLIENT_SECRET}
+      - STORAGE_ACCESS_KEY_ID=${STORAGE_ACCESS_KEY_ID}
+      - STORAGE_ACCESS_KEY_SECRET=${STORAGE_ACCESS_KEY_SECRET}
+    networks:
+      - proxy-swarm
+      - opendrive
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.${STACK}-app.rule=Host(`${HOSTNAME}`)
+        - traefik.http.routers.${STACK}-app.entrypoints=websecure
+        - traefik.http.routers.${STACK}-app.tls.certResolver=letsencrypt
+        - traefik.http.services.${STACK}-app.loadbalancer.server.port=8080
+
+  storage:
+    image: git.ombrage.space/opendrive/storage:latest
+    healthcheck:
+      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
+      retries: 5
+      timeout: 3s
+      interval: 10s
+      start_period: 2s
+    networks:
+      - opendrive
+    environment:
+      - MINIO_ROOT_USER=${STORAGE_ACCESS_KEY_ID}
+      - MINIO_ROOT_PASSWORD=${STORAGE_ACCESS_KEY_ID}
+    ports:
+      - 9000
+    volumes:
+      - storage_data:/data
+
+  db:
+    image: postgres:17-alpine
+    networks:
+      - opendrive
+    ports:
+      - 5432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
+      - POSTGRES_DB=${POSTGRES_DB-opendrive}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          CMD-SHELL,
+          "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'",
+        ]
+      interval: 3s
+      timeout: 10s
+      retries: 5
+      start_period: 3s
+
+volumes:
+  postgres_data:
+    name: ${STACK}_postgres_data
+  storage_data:
+    name: ${STACK}_storage_data
+    driver: local
+
+networks:
+  proxy-swarm:
+    external: true
+  opendrive:
+    name: ${STACK}
+    driver: overlay

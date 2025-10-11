@@ -51,13 +51,13 @@
 	const isCode = isCodeItem(item.key);
 	const isFolder = isFolderItem(item);
 	let isUploading: boolean = $derived(
-		!isFolder &&
+		!!(
+			!isFolder &&
 			item.size === 0 &&
 			!$uploadedItems[item.key] &&
 			$uploadingItems[item.key] &&
 			$uploadingItems[item.key] !== 100
-			? true
-			: false
+		)
 	);
 	const folder = item.key.replace('/', '');
 	const isDesktop = new MediaQuery('(min-width: 768px)');
@@ -125,7 +125,11 @@
 					height="200px"
 				></iframe>
 			{:else}
-				<img src={url} alt={item.key} class="mx-auto max-h-[200px] min-w-[200px] rounded-xl" />
+				<img
+					src={url}
+					alt={item.key}
+					class="mx-auto max-h-[200px] min-w-[200px] rounded-xl"
+				/>
 			{/if}
 		{/await}
 	</div>

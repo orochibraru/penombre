@@ -408,7 +408,9 @@
 	$effect(() => {
 		allSelected = data.count > 0 && data.list.every((item) => checkedItems[item.key]);
 		indeterminate =
-			data.count > 0 && data.list.some((item) => checkedItems[item.key] === true) && !allSelected;
+			data.count > 0 &&
+			data.list.some((item) => checkedItems[item.key] === true) &&
+			!allSelected;
 
 		if (data.count === 0) {
 			checkedItems = {};
@@ -424,7 +426,11 @@
 			{#each multipleItemsActions as action}
 				{@const Icon = action.icon}
 				<div class="w-full">
-					<Button variant={action.variant} onclick={() => action.action()} class="w-full text-xs">
+					<Button
+						variant={action.variant}
+						onclick={() => action.action()}
+						class="w-full text-xs"
+					>
 						<Icon class="h-5 w-4" />
 						{action.title}
 					</Button>
