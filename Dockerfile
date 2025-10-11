@@ -21,13 +21,15 @@ FROM golang:1.25.2-alpine AS go-builder
 
 WORKDIR /app
 
+ENV GODEBUG=cpu.bmi2=off
+
 COPY ./packages/api/go.mod ./packages/api/go.sum ./
 
-RUN GODEBUG=cpu.bmi2=off go mod download
+RUN go mod download
 
 COPY ./packages/api .
 
-RUN GODEBUG=cpu.bmi2=off CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -o main .
 
 # Server
 FROM alpine:3.22
