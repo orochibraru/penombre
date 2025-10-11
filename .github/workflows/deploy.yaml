@@ -52,7 +52,7 @@ jobs:
 
       - name: Build and push
         shell: bash
-        run: docker buildx bake --push
+        run: docker buildx bake --file ./infrastructure/docker-bake.hcl --push
 
   # deploy:
   #   runs-on: ubuntu-latest
