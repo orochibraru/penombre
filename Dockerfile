@@ -23,11 +23,11 @@ WORKDIR /app
 
 COPY ./packages/api/go.mod ./packages/api/go.sum ./
 
-RUN go mod download
+RUN GODEBUG=cpu.bmi2=off go mod download
 
 COPY ./packages/api .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN GODEBUG=cpu.bmi2=off CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # Server
 FROM alpine:3.22
