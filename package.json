@@ -9,7 +9,7 @@
     "dev": "node --env-file .env concurrently.config.mjs",
     "ci:tasks": "node concurrently.config.ci.mjs",
     "build": "pnpm -C packages/ui run build && mv packages/ui/dist packages/api/dist && go -C packages/api build",
-    "db:diagram": "sql2dbml packages/api/db/migrations/001_initial.up.sql --postgres -o docs/db/opendrive.dbml && dbml-renderer -i docs/db/opendrive.dbml -o docs/db/opendrive.svg",
+    "db:diagram": "pnpm exec sql2dbml packages/api/db/migrations/001_initial.up.sql --postgres -o docs/db/opendrive.dbml && dbml-renderer -i docs/db/opendrive.dbml -o docs/db/opendrive.svg",
     "api": "make -C packages/api api",
     "format": "pnpm --filter ui run format"
   },
