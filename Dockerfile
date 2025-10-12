@@ -21,6 +21,8 @@ FROM golang:1.25.2-alpine AS go-builder
 
 WORKDIR /app
 
+RUN apk --no-cache add ca-certificates
+
 COPY ./packages/api/go.mod ./packages/api/go.sum ./
 
 RUN go mod download
@@ -30,21 +32,15 @@ COPY ./packages/api .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -o main .
 
 # Server
-FROM alpine:3.22
+FROM scratch
 
-RUN apk add curl wget
+COPY --from=curlimages/curl:latest /usr/bin/curl /usr/bin/curl
+
+COPY --from=go-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 LABEL org.opencontainers.image.authors="boyer63nicolas@gmail.com"
 
 ENV ENV=prod
-
-RUN adduser -D opendrive
-
-# Switch to the newly created non-root user
-USER opendrive
-
-# Set the working directory to the user's home
-WORKDIR /home/opendrive
 
 # Copy the Go binary
 COPY --from=go-builder /app/main .
@@ -52,7 +48,7 @@ COPY --from=go-builder /app/main .
 # Copy the SvelteKit static build output
 COPY --from=svelte-builder /app/dist ./dist
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "curl", "--fail", "--silent", "--max-time", "3", "http://0.0.0.0:8080/api/v1/healthz" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "/usr/bin/curl", "--fail", "--silent", "--max-time", "3", "http://0.0.0.0:8080/api/v1/healthz" ]
 
 EXPOSE 8080
 
