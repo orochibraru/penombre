@@ -57,7 +57,7 @@ func InitOAuthProviders() error {
 
 	for _, providerName := range strings.Split(providers, ",") {
 		providerName = strings.TrimSpace(providerName)
-		l.Info("Initializing OAuth provider: %s", providerName)
+		l.Infof("Initializing OAuth provider: %s", providerName)
 
 		// Construct env var names from the provider name
 		envPrefix := "OAUTH_" + strings.ToUpper(providerName) + "_"
@@ -114,7 +114,7 @@ func InitOAuthProviders() error {
 				},
 			},
 		}
-		l.Info("Successfully configured OAuth provider: %s", providerName)
+		l.Infof("Successfully configured OAuth provider: %s", providerName)
 	}
 	return nil
 }

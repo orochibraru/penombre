@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -79,7 +80,6 @@ func main() {
 	r.Get("/docs/*", httpSwagger.Handler(
 		httpSwagger.URL("/public/openapi.json"),
 	))
-	l.Info("Swagger UI is available at http://0.0.0.0:8080/docs/index.html")
 
 	workDir, _ := os.Getwd()
 	filesDir := http.Dir(filepath.Join(workDir, "public"))
@@ -120,17 +120,20 @@ func main() {
 
 				fs.ServeHTTP(w, r)
 			})
-			l.Infof("Serving UI from %s at http://localhost:8080", frontendDir)
+			l.Infof("Serving UI from %s", frontendDir)
 		})
 	}
 
+	port := strconv.Itoa(8080)
+
 	s := &http.Server{
 		Handler: r,
-		Addr:    "0.0.0.0:8080",
+		Addr:    "0.0.0.0:" + port,
 	}
 	go func() {
-		l.Info("Starting server on port 8080")
-		l.Info("Server started at http://localhost:8080")
+		l.Infof("Starting server on port: %s", port)
+		l.Infof("Server started at http://%s", s.Addr)
+		l.Infof("Swagger UI is available at http://%s/docs/index.html", s.Addr)
 		err := s.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			l.Fatal("Could not start server: %v", err)

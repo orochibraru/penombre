@@ -89,7 +89,7 @@ func (s Server) GetApiV1AuthOauthProviderCallback(w http.ResponseWriter, r *http
 	oauthProvider, ok := providerRegistry[provider]
 	if !ok {
 		services.SetErrorCookie(w, "Unsupported OAuth provider")
-		l.Error("Unsupported OAuth provider: %s", provider)
+		l.Errorf("Unsupported OAuth provider: %s", provider)
 		http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 		return
 	}
@@ -184,7 +184,7 @@ func (s Server) GetApiV1AuthOauthProviderLogin(w http.ResponseWriter, r *http.Re
 	oauthProvider, ok := providerRegistry[provider]
 	if !ok {
 		services.SetErrorCookie(w, "Unsupported OAuth provider")
-		l.Warn("Unsupported OAuth provider: %s", provider)
+		l.Warnf("Unsupported OAuth provider: %s", provider)
 		http.Redirect(w, r, "/auth/error", http.StatusSeeOther)
 		return
 	}
