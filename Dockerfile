@@ -32,6 +32,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -
 # Server
 FROM alpine:3.22
 
+RUN apk add curl wget
+
 LABEL org.opencontainers.image.authors="boyer63nicolas@gmail.com"
 
 ENV ENV=prod
@@ -50,7 +52,7 @@ COPY --from=go-builder /app/main .
 # Copy the SvelteKit static build output
 COPY --from=svelte-builder /app/dist ./dist
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "CMD", "wget", "--quiet", "--timeout=3", "--tries=1", "--spider", "http://0.0.0.0:8080/api/v1/healthz" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "curl", "--fail", "--silent", "--max-time", "3", "http://0.0.0.0:8080/api/v1/healthz" ]
 
 EXPOSE 8080
 
