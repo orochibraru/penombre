@@ -29,27 +29,43 @@ RUN go mod download
 
 COPY ./packages/api .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -o server .
+
+# CLI
+FROM golang:1.25.2-alpine AS cli-builder
+
+WORKDIR /app
+
+RUN apk --no-cache add ca-certificates
+
+COPY ./packages/cli/go.mod ./packages/cli/go.sum ./
+
+RUN go mod download
+
+COPY ./packages/cli .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -o cli .
 
 # Server
 FROM scratch
 
-COPY --from=curlimages/curl:latest /usr/bin/curl /usr/bin/curl
+WORKDIR /app
 
 COPY --from=go-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
-LABEL org.opencontainers.image.authors="boyer63nicolas@gmail.com"
 
 ENV ENV=prod
 
 # Copy the Go binary
-COPY --from=go-builder /app/main .
+COPY --from=go-builder /app/server /app/server
+
+# Copy the CLI binary
+COPY --from=cli-builder /app/cli /app/cli
 
 # Copy the SvelteKit static build output
 COPY --from=svelte-builder /app/dist ./dist
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "/usr/bin/curl", "--fail", "--silent", "--max-time", "3", "http://0.0.0.0:8080/api/v1/healthz" ]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "/app/cli", "health" ]
 
 EXPOSE 8080
 
-CMD ["./main"]
+CMD ["/app/server"]
