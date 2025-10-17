@@ -1,5 +1,5 @@
 # UI
-FROM node:current-alpine3.22 AS svelte-builder
+FROM node:24-alpine3.22 AS svelte-builder
 
 WORKDIR /app
 

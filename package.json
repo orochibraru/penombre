@@ -28,5 +28,8 @@
   },
   "dependencies": {
     "dotenv": "^17.2.3"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   }
 }
