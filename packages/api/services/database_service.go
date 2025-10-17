@@ -19,7 +19,7 @@ func CheckDb(db *Database, ctx context.Context) *error {
 	err := db.Pool.Ping(ctx)
 
 	if err != nil {
-		l.Error("Database not yet available.")
+		l.Warn("Database not yet available.")
 		return &err
 	}
 
@@ -40,7 +40,7 @@ func NewDatabase(ctx context.Context) (*Database, error) {
 
 	if err != nil {
 		// Fail silently, the DB might be spinning up.
-		l.Error("Database not yet available.")
+		l.Warn("Database not yet available.")
 		return &Database{
 			Queries:   db.New(pool),
 			Pool:      pool,

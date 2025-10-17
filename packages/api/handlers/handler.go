@@ -17,31 +17,37 @@ func NewServer() Server {
 	return Server{}
 }
 
+type HealthResponse struct {
+	db      string
+	storage string
+}
+
 // GetHealthz implements ServerInterface.
 func (s Server) GetApiV1Healthz(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	dbErr := services.CheckDb(s.DB, ctx)
+	dbStatus := "available"
 	if dbErr != nil {
-		// Fail silently, the DB might be spinning up.
-		l.Error("Database service not yet available.")
-		RespondWithError(w, http.StatusInternalServerError, "DB is unreachable")
-		return
+		l.Warn("Database service not yet available.")
+		dbStatus = "unavailable"
 	}
 
 	_, err := s.Storage.ListBuckets()
+	storageStatus := "available"
 	if err != nil {
-		// Fail silently, the DB might be spinning up.
-		l.Error("Storage service not yet available.")
-		RespondWithError(w, http.StatusInternalServerError, "S3 is unreachable")
-		return
+		l.Warn("Storage service not yet available.")
+		storageStatus = "unavailable"
 	}
 
-	RespondWithJSON(w, http.StatusOK, "Services are up.")
+	RespondWithJSON(w, http.StatusOK, HealthResponse{
+		db:      dbStatus,
+		storage: storageStatus,
+	})
 }
 
 // Helper function to respond with JSON
-func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
 	response, _ := json.Marshal(payload)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)

@@ -103,7 +103,7 @@ func NewStorageService() (*StorageService, error) {
 
 	_, err = http.Get(appConfig.Get(appConfig.StorageUrl) + "/minio/health/live")
 	if err != nil {
-		l.Fatalf("Failed ping health endpoint for storage system: %s", err)
+		l.Warn("Failed ping health endpoint for storage system: %s", err)
 	}
 
 	_, err = s3Client.ListBuckets(context.TODO(), &s3.ListBucketsInput{})
