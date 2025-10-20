@@ -24,7 +24,8 @@
     "concurrently": "^9.2.1",
     "dbdocs": "^0.16.2",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.4"
+    "lint-staged": "^16.2.4",
+    "svelte-adapter-bun": "^1.0.0"
   },
   "dependencies": {
     "dotenv": "^17.2.3"
