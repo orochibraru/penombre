@@ -1,0 +1,38 @@
+---
+title: Wallos
+description: Set up Opendrive authentication for Wallos
+---
+
+Below URLs are used as placeholders for the [Wallos] and Opendrive instances. Replace them with the actual URLs.
+
+- wallos.example.com (The url of your Wallos instance.)
+- pocketid.example.com (The url of your Opendrive instance.)
+
+## Create OIDC Client in Opendrive
+
+1. Create a new OIDC Client in Opendrive (e.g., `Wallos`).
+2. Set the **Callback URL** to the value below, or leave blank to autofill on first login.
+   ```
+   https://wallos.example.com
+   ```
+3. _Optional:_ Download a PNG or SVG **logo** from the [Wallos] GitHub or somewhere else and upload it to Opendrive.
+4. Ensure that PKCE is not on.
+5. Click save.
+6. Copy the **Client ID**, **Client Secret**, and **Authorization URL**, **Token URL**, and **Userinfo URL** for use in the next section.
+
+## Configure Wallos
+
+1. Open the Wallos admin interface (`/admin.php`) and navigate to: **`OIDC Settings`**
+2. Fill in the required fields with values from Opendrive:
+   - **Display Name** of your choice (i.e.: `PocketID`)
+   - **Client ID**
+   - **Client Secret**
+   - **Auth URL**
+   - **Token URL**
+   - **User info URL**.
+3. _Optional:_ Enable Create User automatically.
+4. Turn the OIDC toggle on
+5. Save the settings.
+6. Test the OAuth login to ensure it works.
+
+[Wallos]: https://github.com/ellite/Wallos#readme

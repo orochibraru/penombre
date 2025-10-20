@@ -1,36 +1,15 @@
 <script lang="ts">
-	import AppSidebar from '$lib/components/app-sidebar.svelte';
-	import Breadcrumb from '$lib/components/breadcrumb.svelte';
-	import DarkModeToggle from '$lib/components/dark-mode-toggle.svelte';
-	import SearchBar from '$lib/components/search-bar.svelte';
-	import SocialMedia from '$lib/components/social-media.svelte';
-	import { Separator } from '$lib/components/ui/separator/index.js';
+	import DocsSidebar from '$lib/components/docs-sidebar.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	let { children }: { children: any } = $props();
+	import { SidebarNavItems } from '$lib/config/docs.js';
+	let { children } = $props();
 </script>
 
-<Sidebar.Provider>
-	<AppSidebar />
-	<Sidebar.Inset>
-		<header
-			class="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 border-b bg-background px-4"
-		>
-			<div class="flex h-16 items-center gap-2">
-				<Sidebar.Trigger class="-ml-1" />
-				<Separator orientation="vertical" class="mr-2 h-4" />
-				<Breadcrumb />
-			</div>
-
-			<div class="flex items-center gap-2">
-				<SearchBar />
-				<div class="hidden sm:block">
-					<SocialMedia />
-				</div>
-				<DarkModeToggle />
-			</div>
-		</header>
-		<div class="flex flex-col gap-4 p-4">
-			{@render children()}
-		</div>
-	</Sidebar.Inset>
-</Sidebar.Provider>
+<div class="container-wrapper flex flex-1 flex-col px-2">
+	<Sidebar.Provider
+		class="3xl:fixed:container 3xl:fixed:px-3 min-h-min flex-1 items-start px-0 [--sidebar-width:220px] [--top-spacing:0] lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:[--sidebar-width:240px] lg:[--top-spacing:calc(var(--spacing)*4)]"
+	>
+		<DocsSidebar navItems={SidebarNavItems} />
+		<div class="h-full w-full">{@render children()}</div>
+	</Sidebar.Provider>
+</div>

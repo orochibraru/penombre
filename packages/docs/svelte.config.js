@@ -1,16 +1,22 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { mdsx } from 'mdsx';
+import { mdsxConfig } from './mdsx.config.js';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	extensions: ['.svelte', '.md', '.svx'],
-	preprocess: [
-		vitePreprocess({}),
-	],
+  preprocess: [mdsx(mdsxConfig), vitePreprocess()],
+  extensions: ['.svelte', '.md'],
 
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter({
+      fallback: 'index.html',
+      pages: './build',
+    }),
+    alias: {
+      '$docs/*': '.velite/*',
+    },
+  },
 };
 
 export default config;

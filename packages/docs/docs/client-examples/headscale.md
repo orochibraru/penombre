@@ -1,0 +1,38 @@
+---
+title: Headscale
+description: Configure Headscale VPN with Opendrive OIDC
+---
+
+## Create OIDC Client in Opendrive
+
+1. Create a new OIDC Client in Opendrive (e.g., `Headscale`).
+2. Set the callback URL: `https://<HEADSCALE-DOMAIN>/oidc/callback`, or leave blank to autofill on first login.
+3. Enable `PKCE`.
+4. Copy the **Client ID** and **Client Secret**.
+
+## Configure Headscale
+
+> [!NOTE]
+> Refer to the example [`config.yaml`](https://github.com/juanfont/headscale/blob/main/config-example.yaml) for full OIDC configuration options.
+
+Add the following to `config.yaml`:
+
+```yaml
+oidc:
+  issuer: "https://<POCKET-ID-DOMAIN>"
+  client_id: "<CLIENT-ID>"
+  client_secret: "<CLIENT-SECRET>"
+  pkce:
+    enabled: true
+    method: S256
+```
+
+### (Optional) Restrict Access to Certain Groups
+
+To allow only specific groups, add:
+
+```yaml
+scope: ["openid", "profile", "email", "groups"]
+allowed_groups:
+  - <POCKET-ID-GROUP-NAME> #example: headscale
+```

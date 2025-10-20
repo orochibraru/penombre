@@ -1,15 +1,44 @@
-import { error } from '@sveltejs/kit';
-import type { PageLoad } from './$types.js';
-import type { DocFile } from '$lib/types/docs.js';
-import { getDoc } from '$lib/utils.js';
+import { getDoc } from '$lib/docs.js';
+import {
+  introduction,
+  setup,
+  configuration,
+  guides,
+  advanced,
+  troubleshooting,
+  helpingOut,
+  api,
+  clientExamplesOverview,
+  clientExamples,
+} from '$docs/index.js';
+import type { EntryGenerator, PageLoad } from './$types.js';
 
-export const load: PageLoad = async (event) => {
-    const doc: DocFile = await getDoc(event.params.slug);
-    if (!doc || !doc.metadata) {
-        error(404);
-    }
-    return {
-        doc: doc.default,
-        metadata: doc.metadata,
-    };
+export const prerender = true;
+
+const ALL_DOCS = [
+  ...introduction,
+  ...setup,
+  ...configuration,
+  ...guides,
+  ...advanced,
+  ...troubleshooting,
+  ...helpingOut,
+  ...api,
+  ...clientExamplesOverview,
+  ...clientExamples,
+];
+
+export const entries: EntryGenerator = () => {
+  console.info('Prerendering /docs');
+  const list = ALL_DOCS.map((doc) => ({ slug: doc.path }));
+  if (!list.find((e) => e.slug === 'introduction')) {
+    list.push({ slug: 'introduction' });
+  }
+  return list;
+};
+
+export const load: PageLoad = async ({ params }) => {
+  const slug = params.slug === '' ? 'introduction' : params.slug;
+  const doc = await getDoc(slug);
+  return doc;
 };
