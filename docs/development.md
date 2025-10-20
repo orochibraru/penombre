@@ -6,52 +6,52 @@ This guide covers everything you need to know to contribute to Opendrive, from s
 
 ### System Requirements
 
-- **Operating System**: macOS, Linux, or Windows with WSL2
-- **Node.js**: 20+ with pnpm package manager
-- **Go**: 1.24+
-- **Docker**: Latest version with Docker Compose
-- **Git**: For version control
+-   **Operating System**: macOS, Linux, or Windows with WSL2
+-   **Node.js**: 20+ with pnpm package manager
+-   **Go**: 1.25+
+-   **Docker**: Latest version with Docker Compose
+-   **Git**: For version control
 
 ### Development Tools (Recommended)
 
-- **VS Code**: With Go and Svelte extensions
-- **Database Client**: pgAdmin, DBeaver, or similar
-- **API Client**: Postman, Insomnia, or similar
-- **Browser Dev Tools**: Chrome DevTools or Firefox Developer Tools
+-   **VS Code**: With Go and Svelte extensions
+-   **Database Client**: pgAdmin, DBeaver, or similar
+-   **API Client**: Postman, Insomnia, or similar
+-   **Browser Dev Tools**: Chrome DevTools or Firefox Developer Tools
 
 ## Quick Setup
 
 1. **Clone the repository**
 
-   ```bash
-   git clone https://github.com/your-username/opendrive.git
-   cd opendrive
-   ```
+    ```bash
+    git clone https://github.com/your-username/opendrive.git
+    cd opendrive
+    ```
 
 2. **Install dependencies**
 
-   ```bash
-   pnpm install
-   ```
+    ```bash
+    pnpm install
+    ```
 
 3. **Start development environment**
 
-   ```bash
-   # Start PostgreSQL and MinIO containers
-   docker compose up -d db storage
+    ```bash
+    # Start PostgreSQL and MinIO containers
+    docker compose up -d db storage
 
-   # Run database migrations
-   cd packages/api && make migration && cd ../..
+    # Run database migrations
+    cd packages/api && make migration && cd ../..
 
-   # Start all development servers
-   pnpm run dev
-   ```
+    # Start all development servers
+    pnpm run dev
+    ```
 
 4. **Verify setup**
-   - Web UI: http://localhost:5173
-   - API: http://localhost:8080
-   - API Health: http://localhost:8080/api/v1/healthz
-   - MinIO Console: http://localhost:9001
+    - Web UI: http://localhost:5173
+    - API: http://localhost:8080
+    - API Health: http://localhost:8080/api/v1/healthz
+    - MinIO Console: http://localhost:9001
 
 ## Backend Development (Go)
 
@@ -74,10 +74,10 @@ packages/api/
 
 ### Key Technologies
 
-- **HTTP Router**: [Chi](https://go-chi.io/) - Lightweight, composable router
-- **Database**: [SQLC](https://sqlc.dev/) - Generate type-safe Go from SQL
-- **API Generation**: [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen)
-- **Hot Reload**: [Air](https://github.com/air-verse/air) - Live reloading for development
+-   **HTTP Router**: [Chi](https://go-chi.io/) - Lightweight, composable router
+-   **Database**: [SQLC](https://sqlc.dev/) - Generate type-safe Go from SQL
+-   **API Generation**: [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen)
+-   **Hot Reload**: [Air](https://github.com/air-verse/air) - Live reloading for development
 
 ### Development Workflow
 
@@ -155,9 +155,9 @@ go tool sqlc generate
 
 1. **Update OpenAPI specification** in `public/openapi.json`
 2. **Regenerate Go code**:
-   ```bash
-   go tool oapi-codegen -config ./config/codegen.yaml ./public/openapi.json
-   ```
+    ```bash
+    go tool oapi-codegen -config ./config/codegen.yaml ./public/openapi.json
+    ```
 3. **Implement handler** in `handlers/` directory
 4. **Add business logic** in `services/` directory
 5. **Update tests**
@@ -210,11 +210,11 @@ packages/ui/src/
 
 ### Key Technologies
 
-- **Framework**: [SvelteKit](https://kit.svelte.dev/) - Full-stack web framework
-- **Styling**: [TailwindCSS](https://tailwindcss.com/) - Utility-first CSS
-- **Components**: [Shadcn/ui](https://shadcn-svelte.com/) - High-quality components
-- **Type Safety**: TypeScript with generated API client
-- **Build Tool**: [Vite](https://vitejs.dev/) - Fast build tool
+-   **Framework**: [SvelteKit](https://kit.svelte.dev/) - Full-stack web framework
+-   **Styling**: [TailwindCSS](https://tailwindcss.com/) - Utility-first CSS
+-   **Components**: [Shadcn/ui](https://shadcn-svelte.com/) - High-quality components
+-   **Type Safety**: TypeScript with generated API client
+-   **Build Tool**: [Vite](https://vitejs.dev/) - Fast build tool
 
 ### Development Workflow
 
@@ -302,19 +302,19 @@ The frontend uses auto-generated TypeScript client from the OpenAPI specificatio
 import type { paths } from "./schema";
 
 export class ApiClient {
-  private baseUrl: string;
+    private baseUrl: string;
 
-  constructor(baseUrl: string = "/api/v1") {
-    this.baseUrl = baseUrl;
-  }
+    constructor(baseUrl: string = "/api/v1") {
+        this.baseUrl = baseUrl;
+    }
 
-  async listObjects(): Promise<
-    paths["/storage/objects"]["get"]["responses"]["200"]["content"]["application/json"]
-  > {
-    const response = await fetch(`${this.baseUrl}/storage/objects`);
-    if (!response.ok) throw new Error("Failed to fetch objects");
-    return response.json();
-  }
+    async listObjects(): Promise<
+        paths["/storage/objects"]["get"]["responses"]["200"]["content"]["application/json"]
+    > {
+        const response = await fetch(`${this.baseUrl}/storage/objects`);
+        if (!response.ok) throw new Error("Failed to fetch objects");
+        return response.json();
+    }
 }
 ```
 
@@ -324,15 +324,15 @@ export class ApiClient {
 
 1. **Install Capacitor CLI**
 
-   ```bash
-   npm install -g @capacitor/cli
-   ```
+    ```bash
+    npm install -g @capacitor/cli
+    ```
 
 2. **Sync mobile projects**
-   ```bash
-   cd packages/ui
-   npx cap sync
-   ```
+    ```bash
+    cd packages/ui
+    npx cap sync
+    ```
 
 ### Android Development
 
@@ -367,13 +367,13 @@ The development environment uses PostgreSQL in Docker:
 ```yaml
 # compose.yaml
 db:
-  image: postgres:17-alpine
-  environment:
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
-    POSTGRES_DB: opendrive
-  ports:
-    - "5432:5432"
+    image: postgres:17-alpine
+    environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: opendrive
+    ports:
+        - "5432:5432"
 ```
 
 ### Migration Management
@@ -474,16 +474,16 @@ The project uses Husky and lint-staged for pre-commit hooks:
 ```javascript
 // lint-staged.config.mjs
 export default {
-  "packages/ui/**/*.{ts,svelte}": [
-    "pnpm -C packages/ui run lint:fix",
-    "pnpm -C packages/ui run check",
-    "pnpm -C packages/ui run format",
-  ],
-  "**/*.go": [
-    "sh -c 'cd packages/api && go fmt'",
-    "sh -c 'cd packages/api && make lint'",
-    "sh -c 'cd packages/api && make test'",
-  ],
+    "packages/ui/**/*.{ts,svelte}": [
+        "pnpm -C packages/ui run lint:fix",
+        "pnpm -C packages/ui run check",
+        "pnpm -C packages/ui run format",
+    ],
+    "**/*.go": [
+        "sh -c 'cd packages/api && go fmt'",
+        "sh -c 'cd packages/api && make lint'",
+        "sh -c 'cd packages/api && make test'",
+    ],
 };
 ```
 
@@ -531,20 +531,20 @@ OAUTH_POCKETID_REDIRECT_URL=http://localhost:8080/api/v1/auth/pocketid/callback
 ```json
 // .vscode/launch.json
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Debug API",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/packages/api",
-      "env": {
-        "DATABASE_URL": "postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable",
-        "STORAGE_URL": "http://localhost:9000"
-      }
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug API",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/packages/api",
+            "env": {
+                "DATABASE_URL": "postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable",
+                "STORAGE_URL": "http://localhost:9000"
+            }
+        }
+    ]
 }
 ```
 
@@ -563,18 +563,18 @@ logger.Info("Processing request",
 
 #### Browser DevTools
 
-- Use Chrome/Firefox developer tools
-- Check Network tab for API requests
-- Use Console for JavaScript errors
-- Use Svelte DevTools extension
+-   Use Chrome/Firefox developer tools
+-   Check Network tab for API requests
+-   Use Console for JavaScript errors
+-   Use Svelte DevTools extension
 
 #### VS Code Integration
 
 ```json
 // .vscode/settings.json
 {
-  "svelte.enable-ts-plugin": true,
-  "typescript.preferences.includePackageJsonAutoImports": "auto"
+    "svelte.enable-ts-plugin": true,
+    "typescript.preferences.includePackageJsonAutoImports": "auto"
 }
 ```
 
@@ -593,11 +593,11 @@ logger.Info("Processing request",
 
 #### Go Code
 
-- Follow [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
-- Use `gofmt` for formatting
-- Write meaningful variable names
-- Add comments for exported functions
-- Handle errors properly
+-   Follow [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
+-   Use `gofmt` for formatting
+-   Write meaningful variable names
+-   Add comments for exported functions
+-   Handle errors properly
 
 ```go
 // Good
@@ -617,10 +617,10 @@ func (s *StorageService) GetObject(ctx context.Context, key string) (*Object, er
 
 #### TypeScript/Svelte Code
 
-- Use TypeScript for type safety
-- Follow consistent naming conventions
-- Use meaningful component and variable names
-- Add JSDoc comments for complex functions
+-   Use TypeScript for type safety
+-   Follow consistent naming conventions
+-   Use meaningful component and variable names
+-   Add JSDoc comments for complex functions
 
 ```typescript
 /**
@@ -629,16 +629,16 @@ func (s *StorageService) GetObject(ctx context.Context, key string) (*Object, er
  * @returns Formatted string like "1.5 MB"
  */
 function formatFileSize(bytes: number): string {
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let size = bytes;
-  let unitIndex = 0;
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let size = bytes;
+    let unitIndex = 0;
 
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
-  }
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex++;
+    }
 
-  return `${Math.round(size * 100) / 100} ${units[unitIndex]}`;
+    return `${Math.round(size * 100) / 100} ${units[unitIndex]}`;
 }
 ```
 
@@ -714,32 +714,32 @@ pnpm install
 
 ### Getting Help
 
-- **Documentation**: Check this guide and other docs
-- **Issues**: Search GitHub issues for similar problems
-- **Discussions**: Join GitHub Discussions for questions
-- **Community**: Reach out to the community on Discord/Slack
+-   **Documentation**: Check this guide and other docs
+-   **Issues**: Search GitHub issues for similar problems
+-   **Discussions**: Join GitHub Discussions for questions
+-   **Community**: Reach out to the community on Discord/Slack
 
 ## Performance Tips
 
 ### Backend Optimization
 
-- Use connection pooling for database
-- Implement proper caching strategies
-- Profile with `go tool pprof`
-- Optimize database queries
+-   Use connection pooling for database
+-   Implement proper caching strategies
+-   Profile with `go tool pprof`
+-   Optimize database queries
 
 ### Frontend Optimization
 
-- Use SvelteKit's prerendering features
-- Implement lazy loading for components
-- Optimize images and assets
-- Use Vite's code splitting
+-   Use SvelteKit's prerendering features
+-   Implement lazy loading for components
+-   Optimize images and assets
+-   Use Vite's code splitting
 
 ### Development Speed
 
-- Use Air for Go hot reloading
-- Enable Vite's fast refresh
-- Use VS Code extensions for better DX
-- Set up proper debugging configuration
+-   Use Air for Go hot reloading
+-   Enable Vite's fast refresh
+-   Use VS Code extensions for better DX
+-   Set up proper debugging configuration
 
 This development guide should help you get started with contributing to Opendrive. For specific questions or issues, don't hesitate to reach out to the community or check the existing documentation.

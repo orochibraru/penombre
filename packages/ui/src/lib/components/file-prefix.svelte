@@ -24,7 +24,14 @@
 	import { playableMusic } from '$lib/store/music';
 	import { uploadedItems, uploadingItems } from '$lib/store/upload';
 	import { getProxiedObjectUrl } from '$lib/url';
-	import { cn, isFolderItem, prettyDate, secondsToMinutes, stripFolders } from '$lib/utils';
+	import {
+		cn,
+		ItemStatus,
+		isFolderItem,
+		prettyDate,
+		secondsToMinutes,
+		stripFolders
+	} from '$lib/utils';
 
 	type Props = {
 		item: ObjectItem;
@@ -36,7 +43,7 @@
 	};
 
 	let {
-		item,
+		item: baseItem,
 		iconSize,
 		handleOpenItem,
 		checkedItems = $bindable(),
@@ -44,26 +51,32 @@
 		layout
 	}: Props = $props();
 
-	function isChecked(item: ObjectItem): boolean {
+	const item = $derived($uploadedItems[baseItem.key] || baseItem);
+
+	function isChecked(): boolean {
 		return checkedItems[item.key] || false;
 	}
 
-	const isCode = isCodeItem(item.key);
-	const isFolder = isFolderItem(item);
-	let isUploading: boolean = $derived(
-		!!(
-			!isFolder &&
-			item.size === 0 &&
-			!$uploadedItems[item.key] &&
-			$uploadingItems[item.key] &&
-			$uploadingItems[item.key] !== 100
-		)
-	);
-	const folder = item.key.replace('/', '');
+	function getItemStatus(): ItemStatus {
+		if ($uploadedItems[item.key]) {
+			return ItemStatus.JUST_UPLOADED;
+		}
+
+		if ($uploadingItems[item.key]) {
+			return ItemStatus.UPLOADING;
+		}
+
+		if (item.size === 0) {
+			return ItemStatus.ERROR;
+		}
+
+		return ItemStatus.VALIDATED;
+	}
+
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
 	function toggleCheck() {
-		if (isChecked(item)) {
+		if (isChecked()) {
 			checkedItems[item.key] = false;
 			return;
 		}
@@ -77,12 +90,19 @@
 			return toggleCheck();
 		}
 
-		if (isFolder) {
-			const basePath = page.params.path ? [page.params.path, folder] : [folder];
+		if (isFolderItem(item)) {
+			const folder = item.key.replace('/', '');
+			const basePath = page.params.path
+				? [page.params.path, encodeURIComponent(folder)]
+				: [encodeURIComponent(folder)];
+
 			goto(
 				route('/browse/[...path]', {
 					path: basePath
-				})
+				}),
+				{
+					invalidateAll: true
+				}
 			);
 			return;
 		}
@@ -135,7 +155,7 @@
 	</div>
 {/snippet}
 
-{#if isFolder}
+{#if isFolderItem(item)}
 	<button
 		use:touchAction
 		onclick={() => handleClick()}
@@ -144,7 +164,7 @@
 		class="flex w-full items-center gap-2"
 	>
 		{#if !isDesktop.current && indeterminate}
-			{#if isChecked(item)}
+			{#if isChecked()}
 				<CircleCheckIcon class="text-primary" />
 			{:else}
 				<CircleIcon class="text-muted-foreground" />
@@ -152,7 +172,7 @@
 		{:else}
 			<FolderIcon class={cn(iconSize, 'text-indigo-600')} fill="#1447e6" />
 		{/if}
-		{folder}
+		{item.key.replace('/', '')}
 	</button>
 {:else}
 	<button
@@ -164,15 +184,15 @@
 			'flex h-full w-full gap-2',
 			layout === 'grid' ? 'flex-col items-start' : 'flex-row items-center'
 		)}
-		disabled={isUploading}
+		disabled={getItemStatus() === ItemStatus.UPLOADING}
 	>
 		{#if !isDesktop.current && indeterminate}
-			{#if isChecked(item)}
+			{#if isChecked()}
 				<CircleCheckIcon class="text-primary" />
 			{:else}
 				<CircleIcon class="text-muted-foreground" />
 			{/if}
-		{:else if isUploading}
+		{:else if getItemStatus() === ItemStatus.UPLOADING}
 			<div>
 				{#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
 					<span class="text-xs">
@@ -189,7 +209,7 @@
 					layout === 'grid' ? 'w-full justify-center' : 'justify-start'
 				)}
 			>
-				{#if item.contentType.includes('application/pdf')}
+				{#if item.contentType.includes('application/pdf') || item.contentType === 'application/pdf'}
 					{#if layout === 'grid'}
 						{@render previewItem(item)}
 					{:else}
@@ -211,7 +231,7 @@
 					{:else}
 						<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
 					{/if}
-				{:else if isCode}
+				{:else if isCodeItem(item.key)}
 					{#if layout === 'grid'}
 						{@render previewItem(item)}
 					{:else}
@@ -231,7 +251,7 @@
 					'max-w-72 truncate text-base lg:text-sm',
 					$playableMusic && $playableMusic.title === item.key
 						? 'text-primary font-medium'
-						: isUploading
+						: getItemStatus() === ItemStatus.UPLOADING
 							? 'text-gray-500 dark:text-gray-300'
 							: ''
 				)}

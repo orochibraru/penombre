@@ -9,11 +9,11 @@ permissions:
   pull-requests: write # To post comments
 
 env:
-  PNPM_VERSION: 10.12.4
+  PNPM_VERSION: 10
   TZ: Europe/Paris
   DATABASE_URL: postgres://postgres:postgres@db:5432/opendrive?sslmode=disable
   STORAGE_URL: http://minio:9000
-  NODE_VERSION: 22
+  NODE_VERSION: 24
   STORAGE_ACCESS_KEY_ID: opendrive
   STORAGE_ACCESS_KEY_SECRET: opendrive
   OAUTH_PROVIDERS: "pocketid"
@@ -50,6 +50,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
       - uses: actions/setup-go@v6
         with:
           go-version: "^1.25.0"
@@ -58,7 +64,7 @@ jobs:
         run: go -C packages/api mod tidy
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm

@@ -10,7 +10,7 @@ import (
 var l = logger.Get()
 
 func Init() {
-	err := godotenv.Load(".env", "../.env", "../../../.env")
+	err := godotenv.Load("../../.env", ".env")
 	if err != nil {
 		l.Info("Skipping .env file as none was found.")
 	}

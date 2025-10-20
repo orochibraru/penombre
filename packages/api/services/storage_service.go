@@ -567,7 +567,7 @@ func (s *StorageService) CreateFolder(bucket, folderName string) error {
 		return err
 	}
 
-	_, err = s.S3Client.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err = s.S3Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(finalName + "/"),
 	})

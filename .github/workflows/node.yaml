@@ -12,9 +12,9 @@ permissions:
   pull-requests: write # To post comments
 
 env:
-  PNPM_VERSION: 10.12.4
+  PNPM_VERSION: 10
   TZ: Europe/Paris
-  NODE_VERSION: 22
+  NODE_VERSION: 24
 
 jobs:
   node:
@@ -34,7 +34,7 @@ jobs:
           run_install: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm

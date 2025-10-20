@@ -219,3 +219,10 @@ export function shouldDisplayAction({ action, item }: { action: ItemAction; item
 
 	return true;
 }
+
+export enum ItemStatus {
+	UPLOADING = 'uploading',
+	JUST_UPLOADED = 'uploaded',
+	VALIDATED = 'validated',
+	ERROR = 'error'
+}

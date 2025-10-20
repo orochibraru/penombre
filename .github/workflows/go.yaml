@@ -22,6 +22,8 @@ env:
   OAUTH_POCKETID_CLIENT_SECRET: ${{ secrets.OAUTH_CLIENT_SECRET }}
   OAUTH_POCKETID_DISCOVERY_URL: https://auth.ombrage.space/.well-known/openid-configuration
   OAUTH_POCKETID_REDIRECT_URL: https://pr-${{ github.event.number }}-drive.ombrage.space/api/v1/auth/oauth/pocketid/callback
+  GO_VERSION: 1.25.2
+  GOLANGCI_LINT_VERSION: v2.5.0
 
 jobs:
   go:
@@ -32,13 +34,12 @@ jobs:
         shell: bash
         working-directory: ./packages/api
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: 1.25.2
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Build
         run: go build -v ./...
@@ -49,5 +50,5 @@ jobs:
       - name: Lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.1
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
           working-directory: packages/api

@@ -70,7 +70,6 @@
 					const finalUrl = `${page.url.origin}/p?url=${result.data.presignedUrl}`;
 					xhr.open('PUT', finalUrl);
 					xhr.setRequestHeader('Content-Type', result.file.type);
-					console.log(result.data);
 
 					for (const key in result.data.metadata) {
 						if (result.data.metadata[key]) {
@@ -117,7 +116,6 @@
 					};
 
 					xhr.onabort = () => {
-						console.log(`Upload aborted for ${result.data.finalName}`);
 						uploadErrors.push({
 							error: xhr.responseText || 'Request aborted',
 							...result

@@ -11,7 +11,6 @@
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton/index';
 	import { route } from '$lib/ROUTES';
-	import { uploadedItems } from '$lib/store/upload';
 	import { cn, isFolderItem, type SharedFileDisplayProps, shouldDisplayAction } from '$lib/utils';
 
 	let {
@@ -42,7 +41,6 @@
 {#snippet listItem(objectItem: ObjectItem)}
 	{@const checked = isChecked(objectItem)}
 	{@const isFolder = isFolderItem(objectItem)}
-	{@const item = $uploadedItems[objectItem.key] ?? objectItem}
 	<li
 		class={cn(
 			'flex items-end justify-between rounded-xl border p-5 transition-colors',
@@ -57,7 +55,7 @@
 					tabindex={-1}
 					ontap={() => {
 						if (isFolder) {
-							const folder = item.key.replace('/', '');
+							const folder = objectItem.key.replace('/', '');
 							goto(
 								route('/browse/[...path]', {
 									path: page.params.path ? [page.params.path, folder] : [folder]
@@ -66,7 +64,7 @@
 							return;
 						}
 
-						handleOpenItem(item);
+						handleOpenItem(objectItem);
 					}}
 				>
 					<FilePrefix
@@ -81,10 +79,10 @@
 			</ContextMenu.Trigger>
 			<ContextMenu.Content>
 				{#each itemActions as action}
-					{#if shouldDisplayAction({ action, item })}
+					{#if shouldDisplayAction({ action, item: objectItem })}
 						{@const Icon = action.icon}
 						<DropdownMenu.Item
-							onclick={() => action.action(item)}
+							onclick={() => action.action(objectItem)}
 							disabled={action.disabled}
 						>
 							<Icon />
@@ -107,10 +105,10 @@
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end">
 				{#each itemActions as action}
-					{#if shouldDisplayAction({ action, item })}
+					{#if shouldDisplayAction({ action, item: objectItem })}
 						{@const Icon = action.icon}
 						<DropdownMenu.Item
-							onclick={() => action.action(item)}
+							onclick={() => action.action(objectItem)}
 							disabled={action.disabled}
 						>
 							<Icon />

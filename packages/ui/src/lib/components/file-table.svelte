@@ -14,7 +14,6 @@
 	import { Skeleton } from '$lib/components/ui/skeleton/index';
 	import * as Table from '$lib/components/ui/table/index';
 	import { route } from '$lib/ROUTES';
-	import { uploadedItems } from '$lib/store/upload';
 	import {
 		capitalizeFirstLetter,
 		cn,
@@ -86,13 +85,12 @@
 
 {#snippet tableRow(objectItem: ObjectItem)}
 	{@const isFolder = isFolderItem(objectItem)}
-	{@const item = $uploadedItems[objectItem.key] ?? objectItem}
 	<Table.Row>
 		<Table.Cell class="w-4">
 			<Checkbox
-				checked={isChecked(item)}
+				checked={isChecked(objectItem)}
 				onCheckedChange={(checked) => {
-					checkedItems[item.key] = checked;
+					checkedItems[objectItem.key] = checked;
 					const someChecked = files.list.filter(
 						(item) => checkedItems[item.key] === true
 					);
@@ -113,7 +111,7 @@
 						tabindex={-1}
 						ontap={() => {
 							if (isFolder) {
-								const folder = item.key.replace('/', '');
+								const folder = objectItem.key.replace('/', '');
 								goto(
 									route('/browse/[...path]', {
 										path: page.params.path
@@ -124,7 +122,7 @@
 								return;
 							}
 
-							handleOpenItem(item);
+							handleOpenItem(objectItem);
 						}}
 					>
 						<FilePrefix
@@ -139,10 +137,10 @@
 				</ContextMenu.Trigger>
 				<ContextMenu.Content>
 					{#each itemActions as action}
-						{#if shouldDisplayAction({ action, item })}
+						{#if shouldDisplayAction({ action, item: objectItem })}
 							{@const Icon = action.icon}
 							<DropdownMenu.Item
-								onclick={() => action.action(item)}
+								onclick={() => action.action(objectItem)}
 								disabled={action.disabled}
 							>
 								<Icon />
@@ -158,15 +156,15 @@
 				<span>-</span>
 			{:else}
 				<Badge variant="outline" class="text-muted-foreground px-1.5">
-					{item.metadata?.category
-						? capitalizeFirstLetter(item.metadata.category)
+					{objectItem.metadata?.category
+						? capitalizeFirstLetter(objectItem.metadata.category)
 						: 'No category'}
 				</Badge>
 			{/if}
 		</Table.Cell>
 		<Table.Cell colspan={1} class="w-32">
 			<p class="text-xs">
-				{humanFileSize(item.size as number) ?? '-'}
+				{humanFileSize(objectItem.size as number) ?? '-'}
 			</p>
 		</Table.Cell>
 		<Table.Cell colspan={1} class="w-4">
@@ -184,10 +182,10 @@
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="end">
 						{#each itemActions as action}
-							{#if shouldDisplayAction({ action, item })}
+							{#if shouldDisplayAction({ action, item: objectItem })}
 								{@const Icon = action.icon}
 								<DropdownMenu.Item
-									onclick={() => action.action(item)}
+									onclick={() => action.action(objectItem)}
 									disabled={action.disabled}
 								>
 									<Icon />
@@ -278,12 +276,14 @@
 				your storage device.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
-		<div class="prose">
-			<ul>
-				{#each Object.keys(checkedItems) as item}
-					<li class="text-foreground">{item}</li>
-				{/each}
-			</ul>
+		<div class="overflow-y-auto">
+			<div class="prose">
+				<ul>
+					{#each Object.keys(checkedItems) as item}
+						<li class="text-foreground">{item}</li>
+					{/each}
+				</ul>
+			</div>
 		</div>
 		<AlertDialog.Footer class="fixed bottom-5 w-full px-10">
 			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>

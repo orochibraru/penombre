@@ -39,12 +39,12 @@
 					throw error;
 				}
 
+				await invalidateAll();
 				open = false;
 				newFolderName = defaultFolderName;
-				await invalidateAll();
 			});
 
-		toast.promise(promise, {
+		return toast.promise(promise, {
 			loading: 'Creating folder',
 			success: 'Folder created',
 			error: 'Failed to create folder'
