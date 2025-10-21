@@ -2,6 +2,6 @@
 	Installed from @ieedan/shadcn-svelte-extras
 */
 
-import Window from "./window.svelte";
+import Window from './window.svelte';
 
 export { Window };

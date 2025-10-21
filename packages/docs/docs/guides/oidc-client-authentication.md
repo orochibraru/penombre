@@ -30,10 +30,10 @@ With Federated Client Credentials, OIDC clients can authenticate themselves (e.g
 To use Federated Client Credentials:
 
 - You will need an external IdP that can authenticate your application by issuing JWT tokens, for example:
-  - On apps running on Kubernetes, you can use service account tokens that are issued by the Kubernetes API server
-  - On cloud providers like AWS, Microsoft Azure, GCP, etc, you can use tokens issued by the cloud platform itself (e.g. AWS IAM Roles, Microsoft Entra Workload ID / Managed Identity, etc)
-  - [SPIFFE/SPIRE](https://spiffe.io/)
-  - Any other OIDC-compliant IdP
+    - On apps running on Kubernetes, you can use service account tokens that are issued by the Kubernetes API server
+    - On cloud providers like AWS, Microsoft Azure, GCP, etc, you can use tokens issued by the cloud platform itself (e.g. AWS IAM Roles, Microsoft Entra Workload ID / Managed Identity, etc)
+    - [SPIFFE/SPIRE](https://spiffe.io/)
+    - Any other OIDC-compliant IdP
 - Your application must support using JWTs for client authentication, as per [RFC 7523 section 2.2](https://datatracker.ietf.org/doc/html/rfc7523#section-2.2). You will need to ensure that your application can obtain a JWT from the external IdP in an appropriate way (see below for some examples), and that you use that token as client assertion during the OAuth2 token exchange.
 
 > [!TIP]
@@ -59,8 +59,8 @@ Each identity allows specifying:
 - **JWKS URL** (optional): URL where the JWKS (JSON Web Key Set) document can be retrieved.  
   If empty, this defaults to `<issuer>/.well-known/jwks.json`.
 
-  > [!NOTE]
-  > While HTTP URLs are accepted, using HTTPS is strongly recommended for security.
+    > [!NOTE]
+    > While HTTP URLs are accepted, using HTTPS is strongly recommended for security.
 
 ### Kubernetes Service Account Tokens
 
@@ -87,10 +87,10 @@ On Microsoft Azure, you can use Microsoft Entra Workload ID (e.g. Managed Identi
 Set up steps for Azure:
 
 1. Assign an identity to your application, such as a System-assigned or User-assigned Identity. [Instructions](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview) are specific to each service being used.
-   - For workloads running on Azure Kubernetes Service, you may want to use [Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)
+    - For workloads running on Azure Kubernetes Service, you may want to use [Workload Identity](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)
 2. Create an application in Microsoft Entra ID ([docs](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app))
-   - Take note of the client ID of this app, which will be a UUID
-   - Configure the Entra ID app with Federated credentials for the Managed Identity created for your resource ([docs](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation))
+    - Take note of the client ID of this app, which will be a UUID
+    - Configure the Entra ID app with Federated credentials for the Managed Identity created for your resource ([docs](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation))
 
 Configuration values for Federated Client Credentials in Opendrive:
 

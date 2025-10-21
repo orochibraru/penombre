@@ -3,24 +3,24 @@
 -->
 
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { useTerminalLoop } from './terminal.svelte.js';
-  import type { TerminalLoopProps } from './types.js';
+	import { onDestroy } from 'svelte';
+	import { useTerminalLoop } from './terminal.svelte.js';
+	import type { TerminalLoopProps } from './types.js';
 
-  let { delay = 500, children }: TerminalLoopProps = $props();
+	let { delay = 500, children }: TerminalLoopProps = $props();
 
-  let loopIndex = $state(0);
-  let loopDelayTimeout = $state<ReturnType<typeof setTimeout>>();
+	let loopIndex = $state(0);
+	let loopDelayTimeout = $state<ReturnType<typeof setTimeout>>();
 
-  const onComplete = () => {
-    loopDelayTimeout = setTimeout(() => loopIndex++, delay);
-  };
+	const onComplete = () => {
+		loopDelayTimeout = setTimeout(() => loopIndex++, delay);
+	};
 
-  useTerminalLoop({ onComplete });
+	useTerminalLoop({ onComplete });
 
-  onDestroy(() => clearTimeout(loopDelayTimeout));
+	onDestroy(() => clearTimeout(loopDelayTimeout));
 </script>
 
 {#key loopIndex}
-  {@render children?.()}
+	{@render children?.()}
 {/key}

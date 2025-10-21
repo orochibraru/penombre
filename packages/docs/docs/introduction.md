@@ -29,4 +29,3 @@ Additionally, what makes Opendrive special is that it only supports [passkey](ht
 
 - [Installation](/docs/setup/installation)
 - [Proxy Services](/docs/guides/proxy-services)
-- [Client Examples](/docs/client-examples)

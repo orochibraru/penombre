@@ -23,11 +23,11 @@ docker compose up -d
 
 3. Download the latest binary from the [releases page](https://github.com/pocket-id/pocket-id/releases/latest).
 
-   Make sure to download the correct version for your operating system. The binary names follow this pattern:
-   - `pocket-id-<operating-system>-<architecture>`
-   - Example: `pocket-id-linux-amd64`
+    Make sure to download the correct version for your operating system. The binary names follow this pattern:
+    - `pocket-id-<operating-system>-<architecture>`
+    - Example: `pocket-id-linux-amd64`
 
-   You can use curl to download the binary directly. For example, for Linux on AMD64 architecture:
+    You can use curl to download the binary directly. For example, for Linux on AMD64 architecture:
 
 ```bash
    curl -L -o pocket-id-linux-amd64 https://github.com/pocket-id/pocket-id/releases/latest/download/pocket-id-linux-amd64

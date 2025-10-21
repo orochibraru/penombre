@@ -31,18 +31,18 @@ To run the container as non-root and with a read-only root file system, use one 
 
 - **Docker CLI**: Add the `--user 1000:1000 --read-only` flags to the `docker run` command.
 - **Docker Compose**: Set these options in the `pocket-id` service:
-  - `read_only: true`
-  - `user: "1000:1000"`
+    - `read_only: true`
+    - `user: "1000:1000"`
 
-  Example:
+    Example:
 
-  ```yaml
-  services:
-    pocket-id:
-      # ...
-      read_only: true
-      user: "1000:1000"
-  ```
+    ```yaml
+    services:
+        pocket-id:
+            # ...
+            read_only: true
+            user: '1000:1000'
+    ```
 
 ## Distroless container
 
@@ -67,21 +67,21 @@ This `docker-compose.yml` includes a full example of using Opendrive's distroles
 
 ```yaml
 services:
-  pocket-id:
-    image: ghcr.io/pocket-id/pocket-id:v1-distroless
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      - 1411:1411
-    volumes:
-      - "./data:/app/data"
-    read_only: true
-    user: "1000:1000"
-    # Optional healthcheck
-    healthcheck:
-      test: ["CMD", "/app/pocket-id", "healthcheck"]
-      interval: 1m30s
-      timeout: 5s
-      retries: 2
-      start_period: 10s
+    pocket-id:
+        image: ghcr.io/pocket-id/pocket-id:v1-distroless
+        restart: unless-stopped
+        env_file: .env
+        ports:
+            - 1411:1411
+        volumes:
+            - './data:/app/data'
+        read_only: true
+        user: '1000:1000'
+        # Optional healthcheck
+        healthcheck:
+            test: ['CMD', '/app/pocket-id', 'healthcheck']
+            interval: 1m30s
+            timeout: 5s
+            retries: 2
+            start_period: 10s
 ```

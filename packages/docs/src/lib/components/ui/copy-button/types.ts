@@ -9,13 +9,14 @@ import type { HTMLAttributes } from 'svelte/elements';
 import type { WithChildren, WithoutChildren } from 'bits-ui';
 
 export type CopyButtonPropsWithoutHTML = WithChildren<
-  Pick<ButtonPropsWithoutHTML, 'size' | 'variant'> & {
-    ref?: HTMLButtonElement | null;
-    text: string;
-    icon?: Snippet<[]>;
-    animationDuration?: number;
-    onCopy?: (status: UseClipboard['status']) => void;
-  }
+	Pick<ButtonPropsWithoutHTML, 'size' | 'variant'> & {
+		ref?: HTMLButtonElement | null;
+		text: string;
+		icon?: Snippet<[]>;
+		animationDuration?: number;
+		onCopy?: (status: UseClipboard['status']) => void;
+	}
 >;
 
-export type CopyButtonProps = CopyButtonPropsWithoutHTML & WithoutChildren<HTMLAttributes<HTMLButtonElement>>;
+export type CopyButtonProps = CopyButtonPropsWithoutHTML &
+	WithoutChildren<HTMLAttributes<HTMLButtonElement>>;

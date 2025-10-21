@@ -120,12 +120,12 @@ To configure OAuth2 Proxy with Opendrive, you have to add the following service 
 # uptime-kuma:
 #  image: louislam/uptime-kuma
 oauth2-proxy:
-  image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
-  command: --config /oauth2-proxy.cfg
-  volumes:
-    - "./oauth2-proxy.cfg:/oauth2-proxy.cfg"
-  ports:
-    - 4180:4180
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+    command: --config /oauth2-proxy.cfg
+    volumes:
+        - './oauth2-proxy.cfg:/oauth2-proxy.cfg'
+    ports:
+        - 4180:4180
 ```
 
 #### 2. Create a new OIDC client in Opendrive.

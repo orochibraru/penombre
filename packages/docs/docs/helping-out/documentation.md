@@ -66,8 +66,6 @@ Sidebar & neighbor links are generated from the Velite collections (see [`docs.t
 1. `order` (ascending) if present
 2. `title` alphabetical
 
-Client examples are excluded from the sidebar but have their own overview page and grid.
-
 External static links (Demo / Discord) are appended as a Resources group (see same config file).
 
 ## 5. Hiding a page (draft)

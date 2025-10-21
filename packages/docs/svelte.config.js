@@ -5,18 +5,18 @@ import { mdsxConfig } from './mdsx.config.js';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-    preprocess: [mdsx(mdsxConfig), vitePreprocess()],
-    extensions: ['.svelte', '.md'],
+	preprocess: [mdsx(mdsxConfig), vitePreprocess()],
+	extensions: ['.svelte', '.md'],
 
-    kit: {
-        adapter: adapter({
-            fallback: 'index.html',
-            pages: './build',
-        }),
-        alias: {
-            '$docs/*': '.velite/*',
-        },
-    },
+	kit: {
+		adapter: adapter({
+			fallback: 'index.html',
+			pages: './build'
+		}),
+		alias: {
+			'$docs/*': '.velite/*'
+		}
+	}
 };
 
 export default config;

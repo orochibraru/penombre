@@ -15,11 +15,11 @@ You can use a reverse proxy like [Caddy](https://caddyserver.com/) or [NGINX](ht
 
 1. Download the [`docker-compose.yml`](https://raw.githubusercontent.com/pocket-id/pocket-id/main/docker-compose.yml) and [`.env`](https://raw.githubusercontent.com/pocket-id/pocket-id/main/.env.example) file:
 
-   ```bash
-    curl -O https://raw.githubusercontent.com/pocket-id/pocket-id/main/docker-compose.yml
+    ```bash
+     curl -O https://raw.githubusercontent.com/pocket-id/pocket-id/main/docker-compose.yml
 
-    curl -o .env https://raw.githubusercontent.com/pocket-id/pocket-id/main/.env.example
-   ```
+     curl -o .env https://raw.githubusercontent.com/pocket-id/pocket-id/main/.env.example
+    ```
 
 2. Edit the `.env` file so that it fits your needs. See the [environment variables](/docs/configuration/environment-variables) section for more information.
 3. Run `docker compose up -d`
@@ -30,35 +30,35 @@ You can now sign in with the admin account on `https://<your-app-url>/setup`.
 
 1. Download the latest binary from the [releases page](https://github.com/pocket-id/pocket-id/releases/latest).
 
-   Make sure to download the correct version for your operating system. The binary names follow this pattern:
-   - `pocket-id-<operating-system>-<architecture>`
-   - Example: `pocket-id-linux-amd64`
+    Make sure to download the correct version for your operating system. The binary names follow this pattern:
+    - `pocket-id-<operating-system>-<architecture>`
+    - Example: `pocket-id-linux-amd64`
 
-   You can use curl to download the binary directly. For example, for Linux on AMD64 architecture:
+    You can use curl to download the binary directly. For example, for Linux on AMD64 architecture:
 
-   ```bash
-   curl -L -o pocket-id-linux-amd64 https://github.com/pocket-id/pocket-id/releases/latest/download/pocket-id-linux-amd64
-   ```
+    ```bash
+    curl -L -o pocket-id-linux-amd64 https://github.com/pocket-id/pocket-id/releases/latest/download/pocket-id-linux-amd64
+    ```
 
 2. Rename the binary and make it executable:
 
-   ```bash
-   mv pocket-id-<operating-system>-<architecture> pocket-id
-   chmod +x pocket-id
-   ```
+    ```bash
+    mv pocket-id-<operating-system>-<architecture> pocket-id
+    chmod +x pocket-id
+    ```
 
 3. Download the `.env` file:
 
-   ```bash
-   curl -o .env https://raw.githubusercontent.com/pocket-id/pocket-id/main/.env.example
-   ```
+    ```bash
+    curl -o .env https://raw.githubusercontent.com/pocket-id/pocket-id/main/.env.example
+    ```
 
 4. Edit the `.env` file so that it fits your needs. See the [environment variables](/docs/configuration/environment-variables) section for more information.
 5. Run the binary:
 
-   ```bash
-   ./pocket-id
-   ```
+    ```bash
+    ./pocket-id
+    ```
 
 You can now sign in with the admin account on `https://<your-app-url>/setup`.
 
@@ -114,26 +114,26 @@ Required tools:
 
 1. Run the following commands:
 
-   ```bash
-   # Clone the repo
-   git clone https://github.com/pocket-id/pocket-id
-   cd pocket-id
+    ```bash
+    # Clone the repo
+    git clone https://github.com/pocket-id/pocket-id
+    cd pocket-id
 
-   # Checkout latest version
-   git fetch --tags && git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
+    # Checkout latest version
+    git fetch --tags && git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
 
-   # Build the frontend
-   pnpm --filter pocket-id-frontend install
-   pnpm --filter pocket-id-frontend build
+    # Build the frontend
+    pnpm --filter pocket-id-frontend install
+    pnpm --filter pocket-id-frontend build
 
-   # Build the backend
-   cd ../backend/cmd
-   go build -o ../../pocket-id
+    # Build the backend
+    cd ../backend/cmd
+    go build -o ../../pocket-id
 
-   # Create the .env file
-   cd ../../
-   cp .env.example .env
-   ```
+    # Create the .env file
+    cd ../../
+    cp .env.example .env
+    ```
 
 2. Edit the `.env` file so that it fits your needs. See the [environment variables](/docs/configuration/environment-variables) section for more information.
 3. Run the binary:

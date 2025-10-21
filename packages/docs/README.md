@@ -9,13 +9,13 @@ This website is built with [SvelteKit](https://svelte.dev/docs/kit/introduction)
 ### Setup
 
 1. Install the dependencies:
-   ```bash
-   pnpm install
-   ```
+    ```bash
+    pnpm install
+    ```
 2. Start the development server:
-   ```bash
-   pnpm dev
-   ```
+    ```bash
+    pnpm dev
+    ```
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 

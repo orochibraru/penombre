@@ -9,6 +9,12 @@
 	const target = $derived(!internal ? '_blank' : undefined);
 </script>
 
-<a {href} {target} {rel} class={cn('font-medium underline underline-offset-4', className)} {...restProps}>
+<a
+	{href}
+	{target}
+	{rel}
+	class={cn('font-medium underline underline-offset-4', className)}
+	{...restProps}
+>
 	{@render children?.()}
 </a>

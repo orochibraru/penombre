@@ -3,9 +3,16 @@
 	import { getIconForLanguageExtension } from '../icons/icons.js';
 	import { cn } from '$lib/utils.js';
 
-	let { class: className, children, 'data-language': language, ...restProps }: HTMLAttributes<HTMLElement> = $props();
+	let {
+		class: className,
+		children,
+		'data-language': language,
+		...restProps
+	}: HTMLAttributes<HTMLElement> = $props();
 
-	const Icon = $derived(language && typeof language === 'string' ? getIconForLanguageExtension(language) : null);
+	const Icon = $derived(
+		language && typeof language === 'string' ? getIconForLanguageExtension(language) : null
+	);
 </script>
 
 <!-- svelte-ignore a11y_figcaption_parent -->

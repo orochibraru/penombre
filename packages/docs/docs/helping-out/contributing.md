@@ -15,19 +15,19 @@ Before you submit the pull request for review please ensure that
 
 - The pull request naming follows the [Conventional Commits specification](https://www.conventionalcommits.org):
 
-  `<type>[optional scope]: <description>`
+    `<type>[optional scope]: <description>`
 
-  example:
+    example:
 
-  ```
-  fix: hide global audit log switch for non admin users
-  ```
+    ```
+    fix: hide global audit log switch for non admin users
+    ```
 
-  Where `TYPE` can be:
-  - **feat** - is a new feature
-  - **doc** - documentation only changes
-  - **fix** - a bug fix
-  - **refactor** - code change that neither fixes a bug nor adds a feature
+    Where `TYPE` can be:
+    - **feat** - is a new feature
+    - **doc** - documentation only changes
+    - **fix** - a bug fix
+    - **refactor** - code change that neither fixes a bug nor adds a feature
 
 - Your pull request has a detailed description
 - You run `pnpm format` to format the code

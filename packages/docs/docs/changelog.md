@@ -1,6 +1,6 @@
 ---
-title: "Changelog"
-description: "Release notes for pocket-id"
+title: 'Changelog'
+description: 'Release notes for pocket-id'
 ---
 
 ## v1.13.1 - 2025-10-07
