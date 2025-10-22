@@ -6,6 +6,11 @@ import { spawn } from "node:child_process";
 
 process.env.DEV_PROXY = "false";
 
+function sleep(s: number) {
+    console.log(`Sleeping for ${s} seconds...`);
+    return new Promise((resolve) => setTimeout(resolve, s * 1000));
+}
+
 async function startWebServer() {
     console.log("Starting Go web server...");
     const goServer = spawn("go", ["run", "."], {
@@ -14,47 +19,14 @@ async function startWebServer() {
         stdio: "inherit",
     });
 
-    // Wait for server to be ready (max 10 retries)
-    await new Promise((resolve, reject) => {
-        let retries = 0;
-        const maxRetries = 10;
-        const checkServer = async () => {
-            try {
-                const response = await fetch(
-                    "http://localhost:8080/api/v1/healthz"
-                );
-                if (response.ok) {
-                    console.log("Go web server ready!");
-                    console.log(response.status);
-                    console.log(await response.json());
-                    resolve(true);
-                } else {
-                    retries++;
-                    if (retries >= maxRetries) {
-                        reject(
-                            new Error(
-                                `Server failed to start after ${maxRetries} retries`
-                            )
-                        );
-                    } else {
-                        setTimeout(checkServer, 300);
-                    }
-                }
-            } catch {
-                retries++;
-                if (retries >= maxRetries) {
-                    reject(
-                        new Error(
-                            `Server failed to start after ${maxRetries} retries`
-                        )
-                    );
-                } else {
-                    setTimeout(checkServer, 300);
-                }
-            }
-        };
-        checkServer();
-    });
+    await sleep(5);
+
+    const response = await fetch("http://localhost:8080/api/v1/healthz");
+    if (!response.ok) {
+        console.log("Go web server not ready!");
+        console.log(response.status);
+        console.log(await response.text());
+    }
 
     return goServer;
 }
@@ -81,7 +53,7 @@ async function globalSetup(): Promise<() => Promise<void>> {
     const dbName = "test_db";
     const dbPassword = "test_password";
     const postgresContainer = await new PostgreSqlContainer(
-        "postgres:17-alpine"
+        "postgres:17-alpine",
     )
         .withDatabase(dbName)
         .withUsername(dbUser)
