@@ -1,7 +1,7 @@
 // global-setup.ts
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { MinioContainer } from "@testcontainers/minio";
-import { PortWithBinding } from "testcontainers";
+import type { PortWithBinding } from "testcontainers";
 import { spawn } from "node:child_process";
 
 process.env.DEV_PROXY = "false";
@@ -80,7 +80,7 @@ async function globalSetup(): Promise<() => Promise<void>> {
         .withHealthCheck({
             test: [
                 "CMD-SHELL",
-                `curl -f http://0.0.0.0:9000/minio/health/live`,
+                "curl -f http://0.0.0.0:9000/minio/health/live",
             ],
             interval: 3000,
             timeout: 10000,
@@ -116,6 +116,13 @@ async function globalSetup(): Promise<() => Promise<void>> {
         console.log("Stopping services...");
         if (goServer) {
             goServer.kill();
+            sleep(5);
+            if (!goServer.killed) {
+                console.warn(
+                    "Go server did not stop gracefully, forcing kill.",
+                );
+                goServer.kill("SIGKILL");
+            }
             console.log("Go server stopped");
         }
         await postgresContainer.stop();

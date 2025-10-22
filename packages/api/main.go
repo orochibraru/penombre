@@ -42,9 +42,33 @@ func main() {
 	}
 	defer database.Close()
 
+	migrationsRun := false
 	if database.Available {
 		RunMigrations(database.URL)
+		migrationsRun = true
 	}
+
+	// Start a goroutine to periodically check database availability and run migrations if needed
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if !migrationsRun && !database.Available {
+				checkCtx := context.Background()
+				err := services.CheckDb(database, checkCtx)
+				if err == nil {
+					database.Available = true
+					l.Info("Database is now available. Running migrations...")
+					RunMigrations(database.URL)
+					migrationsRun = true
+					return // Stop checking once migrations are run
+				}
+			} else if migrationsRun {
+				return // Stop checking if migrations have been run
+			}
+		}
+	}()
 
 	api := &handlers.Server{
 		Storage: storage,
