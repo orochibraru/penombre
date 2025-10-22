@@ -63,6 +63,7 @@ func main() {
 	}))
 
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.Compress(5)) // gzip compression
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	err = services.InitOAuthProviders()
@@ -111,11 +112,18 @@ func main() {
 
 			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 				filePath := filepath.Join(frontendDir, r.URL.Path)
-				_, err := os.Stat(filePath)
+				fileInfo, err := os.Stat(filePath)
 
 				if os.IsNotExist(err) {
+					// Serve index.html for SPA routing
+					w.Header().Set("Cache-Control", "no-cache")
 					http.ServeFile(w, r, filepath.Join(frontendDir, "index.html"))
 					return
+				}
+
+				// Set cache headers based on file type
+				if !fileInfo.IsDir() {
+					setCacheHeaders(w, r.URL.Path)
 				}
 
 				fs.ServeHTTP(w, r)
@@ -154,6 +162,28 @@ func main() {
 	}
 
 	l.Info("Server exiting")
+}
+
+func setCacheHeaders(w http.ResponseWriter, path string) {
+	// Cache static assets aggressively, but not HTML files
+	if strings.HasSuffix(path, ".js") || strings.HasSuffix(path, ".css") ||
+		strings.HasSuffix(path, ".woff") || strings.HasSuffix(path, ".woff2") ||
+		strings.HasSuffix(path, ".ttf") || strings.HasSuffix(path, ".eot") {
+		// Cache for 1 year (immutable assets with content hashes)
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	} else if strings.HasSuffix(path, ".png") || strings.HasSuffix(path, ".jpg") ||
+		strings.HasSuffix(path, ".jpeg") || strings.HasSuffix(path, ".gif") ||
+		strings.HasSuffix(path, ".svg") || strings.HasSuffix(path, ".ico") ||
+		strings.HasSuffix(path, ".webp") {
+		// Cache images for 1 week
+		w.Header().Set("Cache-Control", "public, max-age=604800")
+	} else if strings.HasSuffix(path, ".html") {
+		// Don't cache HTML files
+		w.Header().Set("Cache-Control", "no-cache")
+	} else {
+		// Default: cache for 1 hour
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+	}
 }
 
 func FileServer(r chi.Router, path string, root http.FileSystem) {
