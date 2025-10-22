@@ -19,3 +19,4 @@ docker-bake.hcl
 /data/
 /.velite/
 /.svelte-kit/
+/dist/
