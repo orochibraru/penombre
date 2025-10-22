@@ -2,6 +2,7 @@
  * @type {import('lint-staged').Configuration}
  */
 export default {
+    "*": ["pnpm run format"],
     "packages/ui/**/*.{ts,svelte}": [
         "pnpm -C packages/ui run lint:fix",
         "pnpm -C packages/ui run check",

@@ -27,7 +27,6 @@
     "dbdocs": "^0.16.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.4",
-    "svelte-adapter-bun": "^1.0.0",
     "testcontainers": "^11.7.1"
   },
   "dependencies": {
