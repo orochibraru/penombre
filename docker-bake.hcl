@@ -1,7 +1,3 @@
-variable "IMAGE" {
-  default = "git.ombrage.space/opendrive/opendrive"
-}
-
 variable "TAG" {
   default = "latest"
   validation {
@@ -11,14 +7,14 @@ variable "TAG" {
 }
 
 group "default" {
-  targets = ["app"]
+  targets = ["app", "docs"]
 }
 
 
 target "app" {
   context    = "."
   dockerfile = "./Dockerfile"
-  tags       = ["${IMAGE}:latest","${IMAGE}:${TAG}"]
+  tags       = ["git.ombrage.space/opendrive/opendrive:latest","git.ombrage.space/opendrive/opendrive:${TAG}"]
   platforms = ["linux/amd64"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]

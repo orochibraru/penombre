@@ -53,3 +53,22 @@ jobs:
       - name: Build and push
         shell: bash
         run: docker buildx bake --file ./docker-bake.hcl --push
+
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    name: Deploy to Dokploy
+    steps:
+      - name: Deploy Application
+        uses: benbristow/dokploy-deploy-action@0.0.1
+        with:
+          auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+          dokploy_url: ${{ secrets.DOKPLOY_URL }}
+          application_id: ${{ secrets.APP_DOKPLOY_ID }}
+
+      - name: Deploy Docs
+        uses: benbristow/dokploy-deploy-action@0.0.1
+        with:
+          auth_token: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+          dokploy_url: ${{ secrets.DOKPLOY_URL }}
+          application_id: ${{ secrets.DOCS_DOKPLOY_ID }}
