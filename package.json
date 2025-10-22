@@ -9,7 +9,7 @@
     "test": "playwright test -c playwright.config.ts",
     "dev": "node --env-file .env concurrently.config.mjs",
     "build": "pnpm -C packages/ui run build && mv packages/ui/dist packages/api/dist && go -C packages/api build",
-    "db:diagram": "pnpm exec sql2dbml packages/api/db/migrations/001_initial.up.sql --postgres -o docs/db/opendrive.dbml && dbml-renderer -i docs/db/opendrive.dbml -o docs/db/opendrive.svg",
+    "db:diagram": "pnpm exec sql2dbml packages/api/db/migrations/001_initial.up.sql --postgres -o resources/db/opendrive.dbml && dbml-renderer -i resources/db/opendrive.dbml -o resources/db/opendrive.svg",
     "api": "make -C packages/api api",
     "format": "pnpm -C packages/ui run format && pnpm -C packages/docs run format"
   },
@@ -26,6 +26,7 @@
     "concurrently": "^9.2.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.4",
+    "prettier": "^3.6.2",
     "testcontainers": "^11.7.1"
   },
   "dependencies": {
