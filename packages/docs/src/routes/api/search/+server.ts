@@ -1,13 +1,13 @@
 import { json } from '@sveltejs/kit';
 import {
-	introduction,
-	setup,
+	advanced,
+	api,
 	configuration,
 	guides,
-	advanced,
-	troubleshooting,
 	helpingOut,
-	api
+	introduction,
+	setup,
+	troubleshooting
 } from '$docs/index.js';
 
 export const prerender = true;

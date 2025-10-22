@@ -5,7 +5,7 @@ bun.lock
 bun.lockb
 .pnpm-store/
 api/frontend/
-/ui/.svelte-kit
+.svelte-kit
 *.go
 go.mod
 go.sum
@@ -14,3 +14,6 @@ Makefile
 src/lib/ROUTES.ts
 .air.toml
 docker-bake.hcl
+build/
+dist/
+

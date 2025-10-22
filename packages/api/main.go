@@ -32,13 +32,13 @@ func main() {
 	config.Init()
 	storage, err := services.NewStorageService()
 	if err != nil {
-		os.Exit(1)
+		l.Errorf("failed to connect to storage service: %v", err)
 	}
 
 	ctx := context.Background()
 	database, err := services.NewDatabase(ctx)
 	if err != nil {
-		l.Fatal("failed to connect to database: %v", err)
+		l.Errorf("failed to connect to database: %v", err)
 	}
 	defer database.Close()
 

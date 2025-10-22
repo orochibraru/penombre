@@ -1,15 +1,15 @@
-import {
-	introduction,
-	setup,
-	configuration,
-	guides,
-	advanced,
-	troubleshooting,
-	helpingOut,
-	api
-} from '$docs/index.js';
 import { error } from '@sveltejs/kit';
 import type { Component } from 'svelte';
+import {
+	advanced,
+	api,
+	configuration,
+	guides,
+	helpingOut,
+	introduction,
+	setup,
+	troubleshooting
+} from '$docs/index.js';
 
 type CollectionDoc = (typeof introduction)[number];
 

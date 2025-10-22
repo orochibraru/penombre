@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import yaml from 'js-yaml';
-	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import { onMount } from 'svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
-	import { indexOpenApi, filterIndexed } from '$lib/utils/openapi-util.js';
+	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import { filterIndexed, indexOpenApi } from '$lib/utils/openapi-util.js';
 
 	interface Props {
 		src?: string;

@@ -17,3 +17,8 @@ export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & {
 	ref?: U | null;
 };
+export type TocEntry = {
+	title: string;
+	url: string;
+	items: TocEntry[];
+};

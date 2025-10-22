@@ -68,23 +68,13 @@ Opendrive follows a microservices architecture with the following components:
     - Web UI: http://localhost:8080
     - API Documentation: http://localhost:8080/docs
 
-## 📖 Documentation
-
--   [📋 Overview](./docs/overview.md) - Project overview and concepts
--   [🏗️ Architecture](./docs/architecture.md) - System architecture and design
--   [🚀 Deployment](./docs/deployment.md) - Production deployment guide
--   [💻 Development](./docs/development.md) - Local development setup
--   [� CI/CD](./docs/ci-cd.md) - Continuous integration and deployment
--   [🧪 PR Testing](./docs/pr-testing.md) - Pull request testing and preview environments
--   [�🔌 API Reference](./docs/api.md) - Complete API documentation
--   [👤 User Guide](./docs/user-guide.md) - End-user documentation
-
 ## 🛠️ Development
 
 ### Tech Stack
 
 -   **Backend**: Go, Chi router, SQLC, PostgreSQL
 -   **Frontend**: SvelteKit, TypeScript, TailwindCSS, Shadcn/ui
+-   **Docs**: SvelteKit, TypeScript, TailwindCSS, Shadcn/ui
 -   **Mobile**: Capacitor, Android/iOS native
 -   **Storage**: MinIO (S3-compatible)
 -   **DevOps**: Docker, GitHub Actions
@@ -98,7 +88,7 @@ pnpm run test         # Run tests
 pnpm run build        # Build all packages
 
 # API specific (in packages/api/)
-make migration        # Run database migrations
+make migration       # Run database migrations
 make lint            # Lint Go code
 make test            # Run Go tests
 go tool air          # Hot reload development server
@@ -107,6 +97,7 @@ go tool air          # Hot reload development server
 pnpm run dev         # Start web development server
 pnpm run build       # Build web application
 pnpm run lint        # Lint TypeScript/Svelte code
+pnpm run lint:fix    # Lint TypeScript/Svelte code and fix (fixable) issues
 ```
 
 ### API Code Generation
@@ -121,15 +112,6 @@ make api
 # This is automatically done during build
 ```
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Development Guide](./docs/development.md) for details on:
-
--   Setting up your development environment
--   Code style and conventions
--   Testing requirements
--   Submitting pull requests
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -139,7 +121,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Built with amazing open-source technologies:
 
 -   [SvelteKit](https://kit.svelte.dev/) - Web framework
--   [Shadcn/ui](https://shadcn-svelte.com/) - UI components
+-   [Shadcn/ui (svelte)](https://shadcn-svelte.com/) - UI components
 -   [Go](https://golang.org/) - Backend language
 -   [Chi](https://go-chi.io/) - HTTP router
 -   [MinIO](https://min.io/) - Object storage
@@ -148,6 +130,5 @@ Built with amazing open-source technologies:
 
 ## 🆘 Support
 
--   📖 [Documentation](./docs/)
--   🐛 [Issue Tracker](https://github.com/opendrive/opendrive/issues)
--   💬 [Discussions](https://github.com/opendrive/opendrive/discussions)
+-   🐛 [Issue Tracker](https://github.com/boyer-nicolas/opendrive/issues)
+-   💬 [Discussions](https://github.com/boyer-nicolas/opendrive/discussions)

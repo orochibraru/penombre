@@ -2,6 +2,7 @@
 	export {
 		a,
 		blockquote,
+		figcaption,
 		h1,
 		h2,
 		h3,
@@ -19,8 +20,7 @@
 		td,
 		th,
 		tr,
-		ul,
-		figcaption
+		ul
 	} from './index.js';
 </script>
 

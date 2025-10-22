@@ -1,9 +1,9 @@
 <script lang="ts">
 	import '../app.css';
-	import { ModeWatcher } from 'mode-watcher';
-	import Header from '$lib/components/header.svelte';
 	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 	import Code from '@lucide/svelte/icons/code';
+	import { ModeWatcher } from 'mode-watcher';
+	import Header from '$lib/components/header.svelte';
 
 	let { children } = $props();
 
@@ -28,7 +28,9 @@
 		if (!isProd) {
 			showBanner = true;
 			isDev = host === 'localhost' || host === '127.0.0.1';
-			readVersionFile().then((v) => (version = v?.trim() || undefined));
+			readVersionFile().then((v) => {
+				version = v?.trim() || undefined;
+			});
 		}
 	}
 </script>

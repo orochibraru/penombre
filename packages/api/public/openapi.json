@@ -1,975 +1,996 @@
 {
-	"openapi": "3.0.4",
-	"info": {
-		"title": "Opendrive API",
-		"version": "1.0.0",
-		"description": "This is the API for the Opendrive application."
-	},
-	"paths": {
-		"/api/v1/healthz": {
-			"get": {
-				"summary": "Health check",
-				"description": "Responds with \"PONG!\" if the service is healthy.",
-				"tags": ["General"],
-				"responses": {
-					"200": {
-						"description": "Successful response",
-						"content": {
-							"text/plain": {
-								"schema": {
-									"type": "string",
-									"example": "PONG!"
-								}
-							}
-						}
-					}
-				}
-			},
-			"500": {
-				"description": "Internal Server Error",
-				"content": {
-					"application/json": {
-						"schema": {
-							"$ref": "#/components/schemas/Error"
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/auth/oauth/providers": {
-			"get": {
-				"summary": "List available OAuth providers",
-				"description": "Returns a list of configured OAuth provider names that can be used for login.",
-				"tags": ["Auth"],
-				"responses": {
-					"200": {
-						"description": "A list of provider names.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Providers"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/auth/oauth/{provider}/login": {
-			"get": {
-				"summary": "Initiate OAuth Login",
-				"description": "Starts the OAuth 2.0 Authorization Code flow by redirecting the user to the specified provider's login page.",
-				"tags": ["Auth"],
-				"parameters": [
-					{
-						"name": "provider",
-						"in": "path",
-						"required": true,
-						"description": "The name of the OAuth provider (e.g., \"pocketid\").",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"307": {
-						"description": "Temporary Redirect to the OAuth provider's authorization URL."
-					}
-				}
-			}
-		},
-		"/api/v1/auth/oauth/{provider}/callback": {
-			"get": {
-				"summary": "OAuth Callback",
-				"description": "Handles the callback from the OAuth provider after the user has authenticated. The server exchanges the code for a token, creates a session, and sets session cookies.",
-				"tags": ["Auth"],
-				"parameters": [
-					{
-						"name": "provider",
-						"in": "path",
-						"required": true,
-						"description": "The name of the OAuth provider.",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"name": "code",
-						"in": "query",
-						"required": true,
-						"description": "The authorization code provided by the OAuth server.",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"name": "state",
-						"in": "query",
-						"required": true,
-						"description": "The state parameter for CSRF protection.",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"303": {
-						"description": "See Other. Redirects to the application's root on successful login."
-					},
-					"400": {
-						"description": "Bad Request, e.g., invalid state or code."
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/auth/me": {
-			"get": {
-				"summary": "Get Current User",
-				"description": "Retrieves the session information for the currently authenticated user. Requires a valid session cookie.",
-				"tags": ["Auth"],
-				"security": [
-					{
-						"cookieAuth": []
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "The current user and session information.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/UserSession"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized. The user is not authenticated."
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/auth/sign-out": {
-			"post": {
-				"summary": "Sign Out",
-				"description": "Invalidates the user's session and clears authentication cookies.",
-				"tags": ["Auth"],
-				"responses": {
-					"200": {
-						"description": "Successfully signed out."
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/storage/buckets": {
-			"post": {
-				"summary": "Create a new bucket",
-				"description": "Creates a new S3 bucket.",
-				"tags": ["Storage"],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"type": "object",
-								"properties": {
-									"name": {
-										"type": "string"
-									}
-								}
-							}
-						}
-					}
-				},
-				"responses": {
-					"201": {
-						"description": "Bucket created successfully"
-					},
-					"400": {
-						"description": "Invalid bucket name",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			},
-			"get": {
-				"summary": "List buckets",
-				"description": "Fetches all buckets",
-				"tags": ["Storage"],
-				"responses": {
-					"200": {
-						"description": "A list of buckets",
-						"content": {
-							"application/json": {
-								"schema": {
-									"maxItems": 1000,
-									"type": "array",
-									"items": {
-										"$ref": "#/components/schemas/Bucket"
-									}
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/storage/objects": {
-			"get": {
-				"summary": "List objects",
-				"description": "Fetches all objects in a folder",
-				"tags": ["Storage"],
-				"parameters": [
-					{
-						"name": "folder",
-						"in": "query",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "A list of objects",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ObjectList"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			},
-			"post": {
-				"summary": "Get a presigned URL for upload",
-				"description": "Gets a presigned URL that can be used to upload a file.",
-				"tags": ["Storage"],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/UploadBody"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"description": "A presigned URL for upload",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/UploadResult"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/storage/objects/categories": {
-			"get": {
-				"summary": "List categories",
-				"description": "Fetches all categories that can be used",
-				"tags": ["Storage"],
-				"responses": {
-					"200": {
-						"description": "A list of categories",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/CategoriesList"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/storage/objects/item": {
-			"get": {
-				"summary": "Get an object",
-				"description": "Gets a single object from storage.",
-				"tags": ["Storage"],
-				"parameters": [
-					{
-						"name": "item",
-						"in": "query",
-						"required": true,
-						"description": "The full key of the object to delete.",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "Object retrieved successfully.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ObjectItem"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			},
-			"delete": {
-				"summary": "Delete an object",
-				"description": "Deletes a single object from storage.",
-				"tags": ["Storage"],
-				"parameters": [
-					{
-						"name": "item",
-						"in": "query",
-						"required": true,
-						"description": "The full key of the object to delete.",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"204": {
-						"description": "Object deleted successfully."
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/storage/objects/folder": {
-			"post": {
-				"summary": "Create a folder",
-				"description": "Creates a new folder in the storage.",
-				"tags": ["Storage"],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"type": "object",
-								"properties": {
-									"name": {
-										"type": "string"
-									}
-								},
-								"required": ["name"]
-							}
-						}
-					}
-				},
-				"responses": {
-					"201": {
-						"description": "Folder created successfully."
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			},
-			"delete": {
-				"summary": "Delete a folder",
-				"description": "Deletes a folder and all of its contents.",
-				"tags": ["Storage"],
-				"parameters": [
-					{
-						"name": "path",
-						"in": "query",
-						"required": true,
-						"description": "The full path of the folder to delete.",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"204": {
-						"description": "Folder deleted successfully."
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/storage/objects/recent": {
-			"get": {
-				"summary": "List recent objects",
-				"description": "Fetches the most recently modified objects.",
-				"tags": ["Storage"],
-				"security": [
-					{
-						"BearerAuth": []
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "A list of recent objects.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ObjectList"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/storage/objects/category/{category}": {
-			"get": {
-				"summary": "List objects by category",
-				"description": "Fetches all objects belonging to a specific category.",
-				"tags": ["Storage"],
-				"security": [
-					{
-						"BearerAuth": []
-					}
-				],
-				"parameters": [
-					{
-						"name": "category",
-						"in": "path",
-						"required": true,
-						"description": "The category to filter by (e.g., images, documents, music, code).",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "A list of objects in the specified category.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ObjectList"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid category specified.",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/v1/storage/objects/url": {
-			"get": {
-				"summary": "Get a presigned URL",
-				"description": "Gets a presigned URL for an item",
-				"tags": ["Storage"],
-				"parameters": [
-					{
-						"name": "item",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "A presigned URL",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string",
-									"nullable": false,
-									"format": "url"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/p": {
-			"get": {
-				"summary": "Proxy to an S3 object",
-				"description": "Redirects to a presigned URL for a given object, hiding the direct storage URL.",
-				"tags": ["Storage"],
-				"parameters": [
-					{
-						"name": "url",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"format": "url"
-						}
-					}
-				],
-				"responses": {
-					"307": {
-						"description": "Temporary Redirect to the presigned URL."
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			},
-			"put": {
-				"summary": "Upload an S3 object",
-				"description": "Redirects to a presigned URL for a given object, hiding the direct storage URL.",
-				"tags": ["Storage"],
-				"parameters": [
-					{
-						"name": "url",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"format": "url"
-						}
-					}
-				],
-				"responses": {
-					"307": {
-						"description": "Temporary Redirect to the presigned URL."
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Error"
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	},
-	"components": {
-		"schemas": {
-			"User": {
-				"type": "object",
-				"required": ["id", "name", "email"],
-				"properties": {
-					"id": {
-						"type": "string",
-						"format": "uuid"
-					},
-					"name": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string",
-						"format": "email"
-					},
-					"image": {
-						"type": "string",
-						"nullable": true
-					}
-				}
-			},
-			"Providers": {
-				"maxItems": 20,
-				"type": "array",
-				"items": {
-					"type": "string"
-				},
-				"example": ["pocketid", "google"]
-			},
-			"Session": {
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string",
-						"format": "uuid"
-					},
-					"expiresAt": {
-						"type": "string",
-						"format": "date-time"
-					}
-				}
-			},
-			"UserSession": {
-				"type": "object",
-				"required": ["user", "session"],
-				"properties": {
-					"user": {
-						"$ref": "#/components/schemas/User"
-					},
-					"session": {
-						"$ref": "#/components/schemas/Session"
-					}
-				}
-			},
-			"Bucket": {
-				"type": "object",
-				"required": ["name", "creationDate"],
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"creationDate": {
-						"type": "string",
-						"format": "date-time"
-					}
-				}
-			},
-			"ObjectItem": {
-				"type": "object",
-				"required": ["key"],
-				"properties": {
-					"key": {
-						"type": "string"
-					},
-					"lastModified": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"eTag": {
-						"type": "string"
-					},
-					"size": {
-						"type": "integer"
-					},
-					"storageClass": {
-						"type": "string"
-					},
-					"contentType": {
-						"type": "string"
-					},
-					"metadata": {
-						"type": "object",
-						"additionalProperties": {
-							"type": "string"
-						}
-					}
-				}
-			},
-			"CategoriesList": {
-				"type": "array",
-				"maxItems": 100,
-				"items": {
-					"type": "string"
-				},
-				"example": ["documents", "music", "images", "video"]
-			},
-			"ObjectList": {
-				"type": "object",
-				"required": ["count", "list"],
-				"properties": {
-					"count": {
-						"type": "integer"
-					},
-					"list": {
-						"maxItems": 1000,
-						"type": "array",
-						"items": {
-							"$ref": "#/components/schemas/ObjectItem"
-						}
-					}
-				}
-			},
-			"Error": {
-				"type": "object",
-				"properties": {
-					"error": {
-						"type": "string"
-					}
-				}
-			},
-			"UploadBody": {
-				"type": "object",
-				"required": ["key", "type"],
-				"properties": {
-					"key": {
-						"type": "string"
-					},
-					"type": {
-						"type": "string"
-					},
-					"folder": {
-						"type": "string"
-					},
-					"metadata": {
-						"type": "object",
-						"additionalProperties": {
-							"type": "string"
-						}
-					}
-				}
-			},
-			"UploadResult": {
-				"type": "object",
-				"required": ["presignedUrl", "finalName"],
-				"properties": {
-					"presignedUrl": {
-						"type": "string"
-					},
-					"finalName": {
-						"type": "string"
-					},
-					"metadata": {
-						"type": "object",
-						"additionalProperties": {
-							"type": "string"
-						}
-					}
-				}
-			}
-		}
-	}
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Opendrive API",
+    "version": "1.0.0",
+    "description": "This is the API for the Opendrive application."
+  },
+  "paths": {
+    "/api/v1/healthz": {
+      "get": {
+        "summary": "Health check",
+        "description": "Returns the health status of database and storage services.",
+        "tags": ["General"],
+        "responses": {
+          "200": {
+            "description": "Services are healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["DB", "Storage"],
+                  "properties": {
+                    "DB": {
+                      "type": "string",
+                      "enum": ["available", "unavailable"]
+                    },
+                    "Storage": {
+                      "type": "string",
+                      "enum": ["available", "unavailable"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "One or more services are unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["DB", "Storage"],
+                  "properties": {
+                    "DB": {
+                      "type": "string",
+                      "enum": ["available", "unavailable"]
+                    },
+                    "Storage": {
+                      "type": "string",
+                      "enum": ["available", "unavailable"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/oauth/providers": {
+      "get": {
+        "summary": "List available OAuth providers",
+        "description": "Returns a list of configured OAuth provider names that can be used for login.",
+        "tags": ["Auth"],
+        "responses": {
+          "200": {
+            "description": "A list of provider names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Providers"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/oauth/{provider}/login": {
+      "get": {
+        "summary": "Initiate OAuth Login",
+        "description": "Starts the OAuth 2.0 Authorization Code flow by redirecting the user to the specified provider's login page.",
+        "tags": ["Auth"],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "description": "The name of the OAuth provider (e.g., \"pocketid\").",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": "Temporary Redirect to the OAuth provider's authorization URL."
+          }
+        }
+      }
+    },
+    "/api/v1/auth/oauth/{provider}/callback": {
+      "get": {
+        "summary": "OAuth Callback",
+        "description": "Handles the callback from the OAuth provider after the user has authenticated. The server exchanges the code for a token, creates a session, and sets session cookies.",
+        "tags": ["Auth"],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "description": "The name of the OAuth provider.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "description": "The authorization code provided by the OAuth server.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "description": "The state parameter for CSRF protection.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "See Other. Redirects to the application's root on successful login."
+          },
+          "400": {
+            "description": "Bad Request, e.g., invalid state or code."
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "summary": "Get Current User",
+        "description": "Retrieves the session information for the currently authenticated user. Requires a valid session cookie.",
+        "tags": ["Auth"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The current user and session information.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized. The user is not authenticated."
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sign-out": {
+      "post": {
+        "summary": "Sign Out",
+        "description": "Invalidates the user's session and clears authentication cookies.",
+        "tags": ["Auth"],
+        "responses": {
+          "200": {
+            "description": "Successfully signed out."
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/buckets": {
+      "post": {
+        "summary": "Create a new bucket",
+        "description": "Creates a new S3 bucket.",
+        "tags": ["Storage"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bucket created successfully"
+          },
+          "400": {
+            "description": "Invalid bucket name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List buckets",
+        "description": "Fetches all buckets",
+        "tags": ["Storage"],
+        "responses": {
+          "200": {
+            "description": "A list of buckets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "maxItems": 1000,
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bucket"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/objects": {
+      "get": {
+        "summary": "List objects",
+        "description": "Fetches all objects in a folder",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "folder",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of objects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Get a presigned URL for upload",
+        "description": "Gets a presigned URL that can be used to upload a file.",
+        "tags": ["Storage"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A presigned URL for upload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/objects/categories": {
+      "get": {
+        "summary": "List categories",
+        "description": "Fetches all categories that can be used",
+        "tags": ["Storage"],
+        "responses": {
+          "200": {
+            "description": "A list of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoriesList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/objects/item": {
+      "get": {
+        "summary": "Get an object",
+        "description": "Gets a single object from storage.",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "item",
+            "in": "query",
+            "required": true,
+            "description": "The full key of the object to delete.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Object retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an object",
+        "description": "Deletes a single object from storage.",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "item",
+            "in": "query",
+            "required": true,
+            "description": "The full key of the object to delete.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Object deleted successfully."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/objects/folder": {
+      "post": {
+        "summary": "Create a folder",
+        "description": "Creates a new folder in the storage.",
+        "tags": ["Storage"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Folder created successfully."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a folder",
+        "description": "Deletes a folder and all of its contents.",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "description": "The full path of the folder to delete.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Folder deleted successfully."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/objects/recent": {
+      "get": {
+        "summary": "List recent objects",
+        "description": "Fetches the most recently modified objects.",
+        "tags": ["Storage"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of recent objects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/objects/category/{category}": {
+      "get": {
+        "summary": "List objects by category",
+        "description": "Fetches all objects belonging to a specific category.",
+        "tags": ["Storage"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "description": "The category to filter by (e.g., images, documents, music, code).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of objects in the specified category.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid category specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/storage/objects/url": {
+      "get": {
+        "summary": "Get a presigned URL",
+        "description": "Gets a presigned URL for an item",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "item",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A presigned URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": false,
+                  "format": "url"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/p": {
+      "get": {
+        "summary": "Proxy to an S3 object",
+        "description": "Redirects to a presigned URL for a given object, hiding the direct storage URL.",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "url"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": "Temporary Redirect to the presigned URL."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Upload an S3 object",
+        "description": "Redirects to a presigned URL for a given object, hiding the direct storage URL.",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "url"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": "Temporary Redirect to the presigned URL."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "required": ["id", "name", "email"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Providers": {
+        "maxItems": 20,
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "example": ["pocketid", "google"]
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserSession": {
+        "type": "object",
+        "required": ["user", "session"],
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "session": {
+            "$ref": "#/components/schemas/Session"
+          }
+        }
+      },
+      "Bucket": {
+        "type": "object",
+        "required": ["name", "creationDate"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ObjectItem": {
+        "type": "object",
+        "required": ["key"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "lastModified": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "eTag": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "storageClass": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CategoriesList": {
+        "type": "array",
+        "maxItems": 100,
+        "items": {
+          "type": "string"
+        },
+        "example": ["documents", "music", "images", "video"]
+      },
+      "ObjectList": {
+        "type": "object",
+        "required": ["count", "list"],
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "list": {
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectItem"
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "UploadBody": {
+        "type": "object",
+        "required": ["key", "type"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "folder": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UploadResult": {
+        "type": "object",
+        "required": ["presignedUrl", "finalName"],
+        "properties": {
+          "presignedUrl": {
+            "type": "string"
+          },
+          "finalName": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
 }

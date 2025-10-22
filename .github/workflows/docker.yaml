@@ -21,13 +21,18 @@ env:
   OAUTH_POCKETID_REDIRECT_URL: https://pr-${{ github.event.number }}-drive.ombrage.space/api/v1/auth/oauth/pocketid/callback
 
 jobs:
-  docker:
+  docker-mr:
     runs-on: ubuntu-latest
-    name: Docker
+    name: Docker build & Push
     steps:
-      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Validate Compose configurations
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - uses: actions/checkout@v5
+
+      - name: Build
         shell: bash
-        run: |
-          docker compose -f compose.yaml config --quiet
+        run: docker buildx bake --file ./docker-bake.hcl app docs

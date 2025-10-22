@@ -8,11 +8,11 @@
 		"dev": "vite dev",
 		"dev:silent": "vite dev --logLevel warn",
 		"build": "svelte-kit sync && vite build",
-		"start": "tsx ./build/index.js",
+		"start": "node ./build/index.js",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"circular": "tsx circular.ts",
+		"circular": "node circular.ts",
 		"lint": "biome check ./src/",
 		"lint:fix": "biome check --fix ./src/ && pnpm format",
 		"docs:dev": "vitepress dev docs",
@@ -107,5 +107,8 @@
 			"protobufjs",
 			"ssh2"
 		]
+	},
+	"engines": {
+		"node": "^24"
 	}
 }

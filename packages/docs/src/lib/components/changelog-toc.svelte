@@ -1,16 +1,11 @@
 <script lang="ts" module>
 	// Velite TocEntry type structure
-	type TocEntry = {
-		title: string;
-		url: string;
-		items: TocEntry[];
-	};
 
 	function flattenToc(items: TocEntry[] = [], depth = 0) {
 		const out: Array<{ title: string; url: string; depth: number }> = [];
 		for (const item of items) {
 			out.push({ title: item.title, url: item.url, depth });
-			if (item.items && item.items.length) {
+			if (item.items?.length) {
 				out.push(...flattenToc(item.items, depth + 1));
 			}
 		}
@@ -57,6 +52,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils.js';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import type { TocEntry } from '$lib/utils/utils.js';
 
 	let {
 		toc,

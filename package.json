@@ -5,32 +5,35 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky",
-    "test": "playwright test",
+    "start": "go -C packages/api run .",
+    "test": "playwright test -c playwright.config.ts",
     "dev": "node --env-file .env concurrently.config.mjs",
-    "ci:tasks": "node concurrently.config.ci.mjs",
     "build": "pnpm -C packages/ui run build && mv packages/ui/dist packages/api/dist && go -C packages/api build",
     "db:diagram": "pnpm exec sql2dbml packages/api/db/migrations/001_initial.up.sql --postgres -o docs/db/opendrive.dbml && dbml-renderer -i docs/db/opendrive.dbml -o docs/db/opendrive.svg",
     "api": "make -C packages/api api",
-    "format": "pnpm --filter ui run format"
+    "format": "pnpm -C packages/ui run format && pnpm -C packages/docs run format"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@dbml/cli": "^3.14.1",
     "@playwright/test": "^1.56.0",
     "@softwaretechnik/dbml-renderer": "^1.0.31",
+    "@testcontainers/minio": "^11.7.1",
+    "@testcontainers/postgresql": "^11.7.1",
     "@types/node": "^24.7.2",
     "concurrently": "^9.2.1",
     "dbdocs": "^0.16.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.4",
-    "svelte-adapter-bun": "^1.0.0"
+    "svelte-adapter-bun": "^1.0.0",
+    "testcontainers": "^11.7.1"
   },
   "dependencies": {
     "dotenv": "^17.2.3"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24"
   }
 }

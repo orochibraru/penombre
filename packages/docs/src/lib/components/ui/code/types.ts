@@ -3,10 +3,10 @@
 */
 
 import type { WithChildren, WithoutChildren } from 'bits-ui';
-import type { CodeVariant } from './index.js';
-import type { SupportedLanguage } from './shiki.js';
 import type { HTMLAttributes } from 'svelte/elements';
-import type { CopyButtonPropsWithoutHTML } from '$lib/components/ui/copy-button/types.js';
+import type { CodeVariant } from '$lib/components/ui/code';
+import type { CopyButtonProps } from '$lib/components/ui/copy-button';
+import type { SupportedLanguage } from './shiki';
 
 export type CodeRootPropsWithoutHTML = WithChildren<{
 	ref?: HTMLDivElement | null;
@@ -21,14 +21,11 @@ export type CodeRootPropsWithoutHTML = WithChildren<{
 export type CodeRootProps = CodeRootPropsWithoutHTML &
 	WithoutChildren<HTMLAttributes<HTMLDivElement>>;
 
-export type CodeCopyButtonPropsWithoutHTML = Omit<CopyButtonPropsWithoutHTML, 'text'>;
-
-export type CodeCopyButtonProps = CodeCopyButtonPropsWithoutHTML &
-	WithoutChildren<HTMLAttributes<HTMLButtonElement>>;
-
 export type CodeOverflowPropsWithoutHTML = WithChildren<{
 	collapsed?: boolean;
 }>;
 
 export type CodeOverflowProps = CodeOverflowPropsWithoutHTML &
 	WithoutChildren<HTMLAttributes<HTMLDivElement>>;
+
+export type CodeCopyButtonProps = Omit<CopyButtonProps, 'text'>;

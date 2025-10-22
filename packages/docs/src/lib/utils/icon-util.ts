@@ -31,14 +31,15 @@ export function resolveIconUrl(iconRef: string | undefined): string | undefined 
 		// If specific extension is requested, return that
 		if (iconRef.endsWith('.svg')) {
 			return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/${iconName}.svg`;
-		} else if (iconRef.endsWith('.png')) {
-			return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/${iconName}.png`;
-		} else if (iconRef.endsWith('.webp')) {
-			return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/${iconName}.webp`;
-		} else {
-			// Default to SVG for selfhst
-			return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/${iconName}.svg`;
 		}
+		if (iconRef.endsWith('.png')) {
+			return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/${iconName}.png`;
+		}
+		if (iconRef.endsWith('.webp')) {
+			return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/${iconName}.webp`;
+		}
+		// Default to SVG for selfhst
+		return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/${iconName}.svg`;
 	}
 
 	if (iconRef.endsWith('.svg')) {
@@ -80,16 +81,19 @@ export function getNextFallbackUrl(
 	// Try different formats in order: svg -> png -> webp -> dashboard-icons
 	if (currentSrc.includes('selfhst/icons') && currentSrc.includes('/svg/')) {
 		return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/${iconName}.png`;
-	} else if (currentSrc.includes('selfhst/icons') && currentSrc.includes('/png/')) {
-		return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/${iconName}.webp`;
-	} else if (currentSrc.includes('selfhst/icons') && currentSrc.includes('/webp/')) {
-		return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/${iconName}.svg`;
-	} else if (currentSrc.includes('dashboard-icons/svg/')) {
-		return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${iconName}.png`;
-	} else if (currentSrc.includes('dashboard-icons/png/')) {
-		return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/${iconName}.webp`;
-	} else {
-		// All fallbacks failed, use logo
-		return '/img/logo.png';
 	}
+	if (currentSrc.includes('selfhst/icons') && currentSrc.includes('/png/')) {
+		return `https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/${iconName}.webp`;
+	}
+	if (currentSrc.includes('selfhst/icons') && currentSrc.includes('/webp/')) {
+		return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/${iconName}.svg`;
+	}
+	if (currentSrc.includes('dashboard-icons/svg/')) {
+		return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${iconName}.png`;
+	}
+	if (currentSrc.includes('dashboard-icons/png/')) {
+		return `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/${iconName}.webp`;
+	}
+	// All fallbacks failed, use logo
+	return '/img/logo.png';
 }

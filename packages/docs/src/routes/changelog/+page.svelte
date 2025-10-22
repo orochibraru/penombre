@@ -1,13 +1,13 @@
 <script lang="ts">
-	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import ChangelogToc from '$lib/components/changelog-toc.svelte';
+	import type { TocEntry } from '$lib/utils/utils.js';
 	import type { PageData } from './$types.js';
 
 	let { data }: { data: PageData } = $props();
 
 	const Markdown = $derived(data.component);
 	const doc = $derived(data.metadata);
-	const toc = $derived(doc.toc ?? []);
+	const toc: TocEntry[] = $derived(doc.toc ?? []) as TocEntry[];
 
 	const githubEditUrl = $derived(
 		`https://github.com/pocket-id/website/edit/main/docs/${doc.path}.md`
@@ -16,7 +16,7 @@
 
 <svelte:head>
 	<title>{doc.title}</title>
-	<meta name="description" content={doc.description} />
+	<meta name="description" content={doc.description as string} />
 </svelte:head>
 
 <div class="container mx-auto flex min-w-0 flex-1 px-4 py-6 lg:py-8">

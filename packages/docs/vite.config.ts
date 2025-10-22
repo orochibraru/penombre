@@ -1,8 +1,8 @@
-import tailwindcss from '@tailwindcss/vite';
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
+import { sveltekit } from '@sveltejs/kit/vite';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite';
 
 function generateLlmsTxt() {
 	return {
@@ -10,10 +10,6 @@ function generateLlmsTxt() {
 		buildStart() {
 			const docsDir = 'docs';
 			let content = '# Opendrive Documentation\n\n';
-
-			interface ReadMarkdownFiles {
-				(dir: string): void;
-			}
 
 			interface FileStat {
 				isDirectory(): boolean;

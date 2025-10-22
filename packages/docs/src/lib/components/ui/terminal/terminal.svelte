@@ -3,10 +3,10 @@
 -->
 
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Window } from '$lib/components/ui/window/index.js';
 	import { cn } from '$lib/utils/utils.js';
 	import { useTerminalRoot } from './terminal.svelte.js';
-	import { onMount } from 'svelte';
 	import type { TerminalRootProps } from './types.js';
 
 	let {

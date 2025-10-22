@@ -3,10 +3,10 @@
 -->
 
 <script lang="ts">
-	import { cn } from '$lib/utils/utils.js';
 	import { onDestroy } from 'svelte';
-	import { useAnimation } from './terminal.svelte.js';
 	import { fly } from 'svelte/transition';
+	import { cn } from '$lib/utils/utils.js';
+	import { useAnimation } from './terminal.svelte.js';
 	import type { TerminalLoadingProps } from './types.js';
 
 	const frames = ['◒', '◐', '◓', '◑'];

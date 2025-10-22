@@ -1,13 +1,9 @@
-<!--
-	Installed from @ieedan/shadcn-svelte-extras
--->
-
 <script lang="ts">
-	import Button from '$lib/components/ui/button/button.svelte';
-	import { useCodeOverflow } from './code.svelte.js';
 	import { box } from 'svelte-toolbelt';
-	import type { CodeOverflowProps } from './types.js';
-	import { cn } from '$lib/utils.js';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import { cn } from '$lib/utils/utils';
+	import { useCodeOverflow } from './code.svelte.js';
+	import type { CodeOverflowProps } from './types';
 
 	let {
 		collapsed = $bindable(true),
@@ -19,7 +15,9 @@
 	const state = useCodeOverflow({
 		collapsed: box.with(
 			() => collapsed,
-			(v) => (collapsed = v)
+			(v) => {
+				collapsed = v;
+			}
 		)
 	});
 </script>

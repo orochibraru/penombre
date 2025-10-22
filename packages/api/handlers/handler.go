@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"opendrive/api/services"
 )
@@ -18,49 +17,34 @@ func NewServer() Server {
 }
 
 type HealthResponse struct {
-	db      string
-	storage string
+	DB      string `json:"db"`
+	Storage string `json:"storage"`
 }
 
 // GetHealthz implements ServerInterface.
 func (s Server) GetApiV1Healthz(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
+	httpStatus := http.StatusOK
+
 	dbErr := services.CheckDb(s.DB, ctx)
 	dbStatus := "available"
 	if dbErr != nil {
 		l.Warn("Database service not yet available.")
 		dbStatus = "unavailable"
+		httpStatus = http.StatusInternalServerError
 	}
 
-	_, err := s.Storage.ListBuckets()
+	err := s.Storage.HealthCheck()
 	storageStatus := "available"
 	if err != nil {
 		l.Warn("Storage service not yet available.")
 		storageStatus = "unavailable"
+		httpStatus = http.StatusInternalServerError
 	}
 
-	RespondWithJSON(w, http.StatusOK, HealthResponse{
-		db:      dbStatus,
-		storage: storageStatus,
+	RespondWithJSON(w, httpStatus, HealthResponse{
+		DB:      dbStatus,
+		Storage: storageStatus,
 	})
-}
-
-// Helper function to respond with JSON
-func RespondWithJSON(w http.ResponseWriter, code int, payload any) {
-	response, _ := json.Marshal(payload)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	_, err := w.Write(response)
-	if err != nil {
-		l.Error("Failed to write JSON response")
-		return
-	}
-}
-
-// Helper function to respond with an error
-func RespondWithError(w http.ResponseWriter, code int, message string) {
-	l.Error("API Error: %c %s", code, message)
-	errorResponse := services.Error{Error: &message}
-	RespondWithJSON(w, code, errorResponse)
 }

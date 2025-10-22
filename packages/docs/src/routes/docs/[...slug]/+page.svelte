@@ -2,6 +2,7 @@
 	let { data } = $props();
 	const Markdown = $derived(data.component);
 	const doc = $derived(data.metadata);
+
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 
 	const githubEditUrl = $derived(

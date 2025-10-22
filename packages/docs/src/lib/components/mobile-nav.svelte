@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { cn } from '$lib/utils.js';
+	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import { Button, type ButtonProps } from '$lib/components/ui/button/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import { mainNavItems, SidebarNavItems } from '$lib/config/docs.js';
+	import { cn } from '$lib/utils.js';
 
 	type MobileLinkProps = HTMLAnchorAttributes & {
 		content?: string;

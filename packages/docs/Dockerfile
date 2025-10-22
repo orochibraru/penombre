@@ -1,47 +1,29 @@
 # syntax=docker/dockerfile:1
-FROM oven/bun:1-alpine AS base
+FROM node:24-alpine3.22 AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache curl bash ca-certificates wget nano micro
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 
-FROM base AS install
-RUN mkdir -p /temp/dev
-COPY package.json bun.lock /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
-
-RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
-
-# Builder
-FROM base AS builder
-
-COPY --from=install /temp/dev/node_modules node_modules
+RUN corepack enable
 
 COPY package.json ./
 
-COPY . .
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts --prefer-offline
 
-RUN bun --bun run build
+COPY --exclude=nginx.conf . .
 
-# Runner
-FROM base AS runner
+RUN --mount=type=cache,id=vitebuild-opendrive,target=/node_modules/.vite pnpm run build
 
-ENV NODE_ENV=production
+FROM nginxinc/nginx-unprivileged:alpine AS release
 
-WORKDIR /app
+COPY --from=builder --chown=nginx:nginx /app/dist /usr/share/nginx/html
 
-COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=builder /app/build /app/build
-COPY --from=builder /app/package.json /app/package.json
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 3000/tcp
+EXPOSE 8080/tcp
 
-ENV ORIGIN=http://localhost:3000
+HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "curl", "-f", "http://localhost:8080" ]
 
-HEALTHCHECK --interval=10s --timeout=10s --start-period=5s --retries=3 CMD [ "curl", "-f", "http://localhost:3000" ]
-
-USER bun
-
-CMD ["bun", "/app/build/index.js"]
+CMD ["nginx", "-g", "daemon off;"]

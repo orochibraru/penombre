@@ -1,15 +1,14 @@
-import { type Icon as IconType } from '@lucide/svelte';
-
-import Shield from '@lucide/svelte/icons/shield';
-import Users from '@lucide/svelte/icons/users';
-import Database from '@lucide/svelte/icons/database';
+import type { Icon as IconType } from '@lucide/svelte';
 import Code from '@lucide/svelte/icons/code';
-import UserPlus from '@lucide/svelte/icons/user-plus';
-import Smartphone from '@lucide/svelte/icons/smartphone';
-import Globe from '@lucide/svelte/icons/globe';
-import Palette from '@lucide/svelte/icons/palette';
+import Database from '@lucide/svelte/icons/database';
 import FileText from '@lucide/svelte/icons/file-text';
+import Globe from '@lucide/svelte/icons/globe';
 import Mail from '@lucide/svelte/icons/mail';
+import Palette from '@lucide/svelte/icons/palette';
+import Shield from '@lucide/svelte/icons/shield';
+import Smartphone from '@lucide/svelte/icons/smartphone';
+import UserPlus from '@lucide/svelte/icons/user-plus';
+import Users from '@lucide/svelte/icons/users';
 
 export interface Feature {
 	icon: typeof IconType;

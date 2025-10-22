@@ -1,13 +1,20 @@
 <script lang="ts">
-	import { cn } from '$lib/utils.js';
-	import type { HTMLAttributes } from 'svelte/elements';
+	import AlertCircle from '@lucide/svelte/icons/alert-circle';
+	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
 	import Info from '@lucide/svelte/icons/info';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
-	import AlertTriangle from '@lucide/svelte/icons/alert-triangle';
-	import AlertCircle from '@lucide/svelte/icons/alert-circle';
 	import OctagonAlert from '@lucide/svelte/icons/octagon-alert';
+	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes, HTMLBlockquoteAttributes } from 'svelte/elements';
+	import { cn } from '$lib/utils.js';
 
-	let { class: className, children, ...restProps }: HTMLAttributes<HTMLElement> = $props();
+	type Props = {
+		class?: string;
+		children?: Snippet;
+		restProps: HTMLBlockquoteAttributes | HTMLDivElement;
+	};
+
+	let { class: className, children, ...restProps }: Props = $props();
 
 	// Extract text content to detect callout type
 	let textContent = $state('');
@@ -56,14 +63,16 @@
 	function cleanContent(element: HTMLElement) {
 		const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
 
-		let node;
-		while ((node = walker.nextNode())) {
+		let node: Node | null;
+		node = walker.nextNode();
+		while (node) {
 			if (node.textContent) {
 				node.textContent = node.textContent.replace(
 					/\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*/i,
 					''
 				);
 			}
+			node = walker.nextNode();
 		}
 	}
 
@@ -80,25 +89,23 @@
 
 {#if type && config}
 	{@const Icon = config.icon}
-	<div
-		class={cn('mt-6 rounded-sm border-l-2 p-4 not-italic', config.class, className)}
-		{...restProps}
-		use:handleMount
-	>
+	<div {...restProps} use:handleMount>
 		<div class="flex items-start gap-3">
 			<Icon class="mt-0.5 size-5 shrink-0" />
 			<div class="flex-1">
 				<div class="mb-1 font-semibold">{config.label}</div>
 				<div class="[&>p]:mb-2 last:[&>p]:mb-0">
-					{@render children?.()}
+					{#if children}
+						{@render children()}
+					{/if}
 				</div>
 			</div>
 		</div>
 	</div>
 {:else}
 	<blockquote
-		class={cn('bg-muted border-l-primary mt-6 rounded-sm border-l-2 p-5 italic', className)}
 		{...restProps}
+		class={cn('bg-muted border-l-primary mt-6 rounded-sm border-l-2 p-5 italic', className)}
 		use:handleMount
 	>
 		{@render children?.()}

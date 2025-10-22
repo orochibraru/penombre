@@ -2,6 +2,7 @@
 	import DocsSidebar from '$lib/components/docs-sidebar.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { SidebarNavItems } from '$lib/config/docs.js';
+
 	let { children } = $props();
 </script>
 

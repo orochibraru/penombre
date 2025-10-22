@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig, defineCollection, s } from 'velite';
+import { defineCollection, defineConfig, s } from 'velite';
 
 const docSchema = s
 	.object({

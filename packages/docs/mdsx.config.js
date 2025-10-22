@@ -2,8 +2,8 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'mdsx';
-import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
+import remarkGfm from 'remark-gfm';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 

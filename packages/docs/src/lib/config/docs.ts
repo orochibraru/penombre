@@ -1,12 +1,12 @@
 import {
-	introduction,
-	setup,
+	advanced,
+	api,
 	configuration,
 	guides,
-	advanced,
-	troubleshooting,
 	helpingOut,
-	api
+	introduction,
+	setup,
+	troubleshooting
 } from '$docs/index.js';
 
 export type NavItem = {
@@ -101,7 +101,7 @@ export function findNeighbors(pathName: string): {
 	previous: SidebarNavItem | null;
 	next: SidebarNavItem | null;
 } {
-	const clean = pathName.split('?')[0].split('#')[0];
+	const clean = (pathName.split('?')[0] ?? '').split('#')[0] ?? '';
 	const idx = flat.findIndex((i) => i.href === clean);
 	if (idx === -1) return { previous: null, next: null };
 	return {

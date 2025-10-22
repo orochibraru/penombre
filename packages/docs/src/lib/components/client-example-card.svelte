@@ -1,8 +1,8 @@
 <script lang="ts">
 	import {
-		resolveIconUrl,
 		createIconFallbackState,
-		getNextFallbackUrl
+		getNextFallbackUrl,
+		resolveIconUrl
 	} from '$lib/utils/icon-util.js';
 
 	interface Props {

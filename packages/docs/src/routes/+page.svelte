@@ -1,4 +1,8 @@
 <script lang="ts">
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import Github from '@lucide/svelte/icons/github';
+	import TestTube from '@lucide/svelte/icons/test-tube';
+	import { onMount } from 'svelte';
 	import ConnectArrow from '$lib/components/connect-arrow.svelte';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -10,11 +14,6 @@
 		CardTitle
 	} from '$lib/components/ui/card/index.js';
 	import { additionalFeatures, mainFeatures } from '$lib/config/features.js';
-
-	import BookOpen from '@lucide/svelte/icons/book-open';
-	import Github from '@lucide/svelte/icons/github';
-	import TestTube from '@lucide/svelte/icons/test-tube';
-	import { onMount } from 'svelte';
 	import type { PageProps } from './$types.js';
 
 	let { data }: PageProps = $props();
@@ -22,7 +21,9 @@
 	let isLoaded = $state(false);
 
 	onMount(() => {
-		requestAnimationFrame(() => (isLoaded = true));
+		requestAnimationFrame(() => {
+			isLoaded = true;
+		});
 	});
 </script>
 
@@ -171,7 +172,7 @@
 					>
 						<CardHeader>
 							<div class="flex items-center space-x-2">
-								<Icon this={feature.icon} class="text-foreground size-6" />
+								<Icon class="text-foreground size-6" />
 								<CardTitle class="text-foreground">{feature.title}</CardTitle>
 							</div>
 						</CardHeader>

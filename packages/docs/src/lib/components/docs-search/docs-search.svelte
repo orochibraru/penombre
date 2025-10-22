@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { useIsMac } from '$lib/hooks/is-mac.svelte.js';
+	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
+	import type { Component } from 'svelte';
+	import { tick } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
+	import { goto } from '$app/navigation';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils.js';
-	import type { HTMLAttributes } from 'svelte/elements';
 	import { SidebarNavItems } from '$lib/config/docs.js';
-	import type { Component } from 'svelte';
-	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
+	import { useIsMac } from '$lib/hooks/is-mac.svelte.js';
+	import { cn } from '$lib/utils.js';
 	import CommandMenuItem from './docs-search-item.svelte';
-	import { goto } from '$app/navigation';
-	import { tick } from 'svelte';
 
 	const isMac = useIsMac();
 	let open = $state(false);

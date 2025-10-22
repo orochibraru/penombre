@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { Component } from 'svelte';
 import { changelog as changelogMeta } from '$docs/index.js';
 
-type DocModule = { default: Component; metadata?: Record<string, any> };
+type DocModule = { default: Component; metadata?: Record<string, unknown> };
 
 const modules = import.meta.glob<DocModule>('/docs/**/*.md');
 
@@ -24,7 +24,10 @@ export const load = async () => {
 	const key = Object.keys(modules).find((k) => transformPath(k) === 'changelog');
 	if (!key) throw error(404, 'Changelog module not found');
 
-	const mod = await modules[key]();
+	const moduleLoader = modules[key];
+	if (!moduleLoader) throw error(404, 'Changelog module not found');
+
+	const mod = await moduleLoader();
 	const fm = mod.metadata ?? {};
 
 	return {

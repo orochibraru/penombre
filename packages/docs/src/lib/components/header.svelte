@@ -1,17 +1,16 @@
 <script lang="ts">
+	import { mode } from 'mode-watcher';
 	import { onMount } from 'svelte';
-	import MainNav from './main-nav.svelte';
-	import MobileNav from './mobile-nav.svelte';
-	import Logo from './logo.svelte';
-	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import GithubLink from './github-link.svelte';
-	import ModeSwitcher from './modeswitcher.svelte';
-	import { mode } from 'mode-watcher';
-
+	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { mainNavItems } from '$lib/config/docs.js';
 	import DocsSearch from './docs-search/docs-search.svelte';
+	import GithubLink from './github-link.svelte';
+	import Logo from './logo.svelte';
+	import MainNav from './main-nav.svelte';
+	import MobileNav from './mobile-nav.svelte';
+	import ModeSwitcher from './modeswitcher.svelte';
 
 	let version: string | undefined = $state('');
 	let isDark = $state(false);

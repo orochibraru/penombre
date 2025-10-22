@@ -118,6 +118,28 @@ func NewStorageService() (*StorageService, error) {
 	}, nil
 }
 
+// HealthCheck pings the MinIO health endpoint to verify storage availability.
+func (s *StorageService) HealthCheck() error {
+	storageUrl := appConfig.Get(appConfig.StorageUrl)
+	healthEndpoint := storageUrl + "/minio/health/live"
+
+	resp, err := http.Get(healthEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to reach storage health endpoint: %w", err)
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			l.Warn("Failed to close response body: %v", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("storage health check failed with status: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
 // ListBuckets retrieves all buckets from the S3-compatible storage.
 func (s *StorageService) ListBuckets() ([]Bucket, error) {
 	result, err := s.S3Client.ListBuckets(context.TODO(), &s3.ListBucketsInput{})

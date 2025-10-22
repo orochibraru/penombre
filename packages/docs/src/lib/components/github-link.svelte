@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import GithubIcon from './icons/github.svelte';
-	import { onMount } from 'svelte';
 
 	const FALLBACK_STAR_COUNT = 0;
 

@@ -13,7 +13,7 @@ export interface paths {
 		};
 		/**
 		 * Health check
-		 * @description Responds with "PONG!" if the service is healthy.
+		 * @description Returns the health status of database and storage services.
 		 */
 		get: {
 			parameters: {
@@ -24,13 +24,32 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description Successful response */
+				/** @description Services are healthy */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'text/plain': string;
+						'application/json': {
+							/** @enum {string} */
+							DB: 'available' | 'unavailable';
+							/** @enum {string} */
+							Storage: 'available' | 'unavailable';
+						};
+					};
+				};
+				/** @description One or more services are unavailable */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': {
+							/** @enum {string} */
+							DB: 'available' | 'unavailable';
+							/** @enum {string} */
+							Storage: 'available' | 'unavailable';
+						};
 					};
 				};
 			};

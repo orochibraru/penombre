@@ -42,14 +42,17 @@ export class TerminalSession {
 			this.#animations.sort((a, b) => a.delay - b.delay);
 
 			for (let i = 0; i < this.#animations.length; i++) {
-				this.#animations[i].timeout = setTimeout(() => {
-					this.#animations[i].play(this.opts.speed);
+				const animation = this.#animations[i];
+				if (!animation) continue;
+
+				animation.timeout = setTimeout(() => {
+					animation.play(this.opts.speed);
 
 					// when the most delayed animation is complete call onComplete
 					if (i === this.#animations.length - 1) {
-						this.#animations[i].onComplete = this.onComplete;
+						animation.onComplete = this.onComplete;
 					}
-				}, this.#animations[i].delay);
+				}, animation.delay);
 			}
 		}, this.opts.delay);
 	}
@@ -105,7 +108,7 @@ export const useTerminalLoop = (props: TerminalLoopProps) => {
 };
 
 export const useTerminalRoot = (props: TerminalRootProps) => {
-	let loopState: TerminalLoop | undefined = undefined;
+	let loopState: TerminalLoop | undefined;
 
 	try {
 		loopState = TerminalLoopContext.get();

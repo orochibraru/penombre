@@ -3,11 +3,11 @@
 -->
 
 <script lang="ts">
-	import { cn } from '$lib/utils/utils.js';
 	import { onDestroy } from 'svelte';
+	import { typewriter } from '$lib/actions/typewriter.svelte';
+	import { cn } from '$lib/utils/utils.js';
 	import { useAnimation } from './terminal.svelte.js';
 	import type { TerminalAnimationProps } from './types.js';
-	import { typewriter } from '$lib/actions/typewriter.svelte';
 
 	let { children, delay = 0, class: className }: TerminalAnimationProps = $props();
 
