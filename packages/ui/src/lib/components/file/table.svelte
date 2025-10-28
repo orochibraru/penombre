@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { ObjectItem } from '$lib/api';
-	import FilePrefix from '$lib/components/file-prefix.svelte';
+	import FilePrefix from '$lib/components/file/prefix.svelte';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Badge } from '$lib/components/ui/badge/index';
 	import { Button } from '$lib/components/ui/button';

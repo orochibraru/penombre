@@ -1,5 +1,5 @@
 <script lang="ts">
-	import DataTable from '$lib/components/file-wrapper.svelte';
+	import DataTable from '$lib/components/file/wrapper.svelte';
 	import { title } from '$lib/store/title';
 
 	const { data } = $props();

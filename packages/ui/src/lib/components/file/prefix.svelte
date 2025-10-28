@@ -15,6 +15,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { ObjectItem } from '$lib/api';
+	import FilePreview from '$lib/components/file/preview.svelte';
 	import NowPlaying from '$lib/components/now-playing.svelte';
 	import { Badge } from '$lib/components/ui/badge/index';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
@@ -115,46 +116,6 @@
 	}
 </script>
 
-{#snippet previewItem(item: ObjectItem)}
-	<div class="flex w-full items-center justify-between">
-		{#await getProxiedObjectUrl(item)}
-			<Spinner />
-		{:then url}
-			{#if item.contentType?.includes('application/pdf')}
-				<iframe
-					src={url}
-					title={item.key}
-					scrolling="no"
-					class="overflow-hidden"
-					loading="lazy"
-					allowfullscreen={false}
-					referrerpolicy="no-referrer-when-downgrade"
-					width="100%"
-					height="200px"
-				></iframe>
-			{:else if isCodeItem(item.key)}
-				<iframe
-					src={url}
-					title={item.key}
-					scrolling="no"
-					class="overflow-hidden rounded-lg border p-3 shadow-sm"
-					loading="lazy"
-					allowfullscreen={false}
-					referrerpolicy="no-referrer-when-downgrade"
-					width="100%"
-					height="200px"
-				></iframe>
-			{:else}
-				<img
-					src={url}
-					alt={item.key}
-					class="mx-auto max-h-[200px] min-w-[200px] rounded-xl"
-				/>
-			{/if}
-		{/await}
-	</div>
-{/snippet}
-
 {#if isFolderItem(item)}
 	<button
 		use:touchAction
@@ -211,7 +172,7 @@
 			>
 				{#if item.contentType.includes('application/pdf') || item.contentType === 'application/pdf'}
 					{#if layout === 'grid'}
-						{@render previewItem(item)}
+						<FilePreview {item} />
 					{:else}
 						<FileTextIcon class={cn(iconSize, 'text-red-600')} />
 					{/if}
@@ -227,13 +188,13 @@
 					{/if}
 				{:else if item.contentType.startsWith('image')}
 					{#if layout === 'grid'}
-						{@render previewItem(item)}
+						<FilePreview {item} />
 					{:else}
 						<FileImageIcon class={cn(iconSize, 'text-orange-400')} />
 					{/if}
 				{:else if isCodeItem(item.key)}
 					{#if layout === 'grid'}
-						{@render previewItem(item)}
+						<FilePreview {item} />
 					{:else}
 						<FileCodeIcon class={cn(iconSize, 'text-green-400')} />
 					{/if}

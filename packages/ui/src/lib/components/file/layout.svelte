@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ObjectRequest } from '$lib/api/helpers/storage';
-	import FileWrapper from '$lib/components/file-wrapper.svelte';
+	import FileWrapper from '$lib/components/file/wrapper.svelte';
 
 	import PageError from '$lib/components/layout/page-error.svelte';
 

@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import type { ObjectItem } from '$lib/api';
-	import FilePrefix from '$lib/components/file-prefix.svelte';
+	import FilePrefix from '$lib/components/file/prefix.svelte';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import * as ContextMenu from '$lib/components/ui/context-menu/index.js';

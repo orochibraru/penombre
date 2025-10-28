@@ -16,9 +16,9 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { api, type ObjectItem, type ObjectList } from '$lib/api';
-	import FileGrid from '$lib/components/file-grid.svelte';
-	import FileList from '$lib/components/file-list.svelte';
-	import FileTable from '$lib/components/file-table.svelte';
+	import FileGrid from '$lib/components/file/grid.svelte';
+	import FileList from '$lib/components/file/list.svelte';
+	import FileTable from '$lib/components/file/table.svelte';
 	import { Badge } from '$lib/components/ui/badge/index';
 	import { Button } from '$lib/components/ui/button/index';
 	import * as Code from '$lib/components/ui/code/index';
@@ -573,17 +573,14 @@
 					<Code.Root lang={fileToView.language} class="w-full" code={fileToView.content}>
 						<Code.CopyButton />
 					</Code.Root>
-					<!-- <div class="h-[50vh] w-full overflow-y-auto">
-						<pre><code>{fileToView.content}</code></pre>
-					</div> -->
 				{:else if fileToView.type === 'pdf'}
-					<iframe
+					<embed
 						src={fileToView.src}
 						title={fileToView.item.key}
 						class="h-full w-full"
 						width="500"
 						height="700"
-					></iframe>
+					/>
 				{/if}
 			</div>
 		</Dialog.Content>
@@ -591,7 +588,7 @@
 </Dialog.Root>
 
 <style lang="postcss">
-	@reference "../../app.css";
+	@reference "../../../app.css";
 	:global(.dark) {
 		:global(.shiki),
 		:global(.shiki span) {
