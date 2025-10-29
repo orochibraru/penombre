@@ -331,3 +331,40 @@ func (s *Server) DeleteApiV1StorageObjectsFolder(w http.ResponseWriter, r *http.
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (s *Server) PutApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Request, params services.PutApiV1StorageObjectsItemParams) {
+	bucket := s.GetBucketName(w, r)
+
+	// The old key comes from the query parameter
+	oldKey := params.Item
+	if oldKey == "" {
+		l.Error("Missing 'item' query parameter")
+		RespondWithError(w, http.StatusBadRequest, "Missing 'item' query parameter")
+		return
+	}
+
+	var reqBody services.PostApiV1StorageObjectsJSONRequestBody
+
+	err := json.NewDecoder(r.Body).Decode(&reqBody)
+
+	if err != nil {
+		l.Error("Invalid request body:", err)
+		RespondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Build the new key from the request body
+	newKey := reqBody.Key
+	if reqBody.Folder != nil && *reqBody.Folder != "" {
+		newKey = *reqBody.Folder + "/" + newKey
+	}
+
+	err = s.Storage.RenameObject(bucket, oldKey, newKey)
+	if err != nil {
+		l.Error("Failed to rename object:", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to rename object")
+		return
+	}
+	res := map[string]string{"message": "Object renamed successfully"}
+	RespondWithJSON(w, http.StatusOK, res)
+}

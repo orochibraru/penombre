@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { ObjectRequest } from '$lib/api/helpers/storage';
 	import FileWrapper from '$lib/components/file/wrapper.svelte';
-
+	import RenameDialog from '$lib/components/layout/dialogs/rename-dialog.svelte';
 	import PageError from '$lib/components/layout/page-error.svelte';
+	import { itemAction } from '$lib/store/actions';
 
 	type Props = {
 		data: ObjectRequest;
@@ -30,3 +32,5 @@
 		<PageError />
 	{/await}
 </section>
+
+<RenameDialog />

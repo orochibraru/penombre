@@ -27,6 +27,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { determineCodeFileLanguage, isCodeItem } from '$lib/file-utils';
+	import { itemAction } from '$lib/store/actions';
 	import { type AvailableLayouts, availableLayouts, layoutStore } from '$lib/store/layout';
 	import { playableMusic } from '$lib/store/music';
 	import { getProxiedObjectUrl } from '$lib/url';
@@ -220,8 +221,13 @@
 		{
 			title: 'Rename',
 			icon: PencilLineIcon,
-			action: () => [],
-			disabled: true
+			action: (item) => {
+				$itemAction = {
+					open: true,
+					item
+				};
+			},
+			disabled: false
 		},
 		{
 			title: 'Move',

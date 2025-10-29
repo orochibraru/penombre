@@ -130,6 +130,12 @@ type GetApiV1StorageObjectsItemParams struct {
 	Item string `form:"item" json:"item"`
 }
 
+// PutApiV1StorageObjectsItemParams defines parameters for PutApiV1StorageObjectsItem.
+type PutApiV1StorageObjectsItemParams struct {
+	// Item The current full key of the object to rename.
+	Item string `form:"item" json:"item"`
+}
+
 // GetApiV1StorageObjectsUrlParams defines parameters for GetApiV1StorageObjectsUrl.
 type GetApiV1StorageObjectsUrlParams struct {
 	Item string `form:"item" json:"item"`
@@ -153,6 +159,9 @@ type PostApiV1StorageObjectsJSONRequestBody = UploadBody
 
 // PostApiV1StorageObjectsFolderJSONRequestBody defines body for PostApiV1StorageObjectsFolder for application/json ContentType.
 type PostApiV1StorageObjectsFolderJSONRequestBody PostApiV1StorageObjectsFolderJSONBody
+
+// PutApiV1StorageObjectsItemJSONRequestBody defines body for PutApiV1StorageObjectsItem for application/json ContentType.
+type PutApiV1StorageObjectsItemJSONRequestBody = UploadBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -204,6 +213,9 @@ type ServerInterface interface {
 	// Get an object
 	// (GET /api/v1/storage/objects/item)
 	GetApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Request, params GetApiV1StorageObjectsItemParams)
+	// Rename an object
+	// (PUT /api/v1/storage/objects/item)
+	PutApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Request, params PutApiV1StorageObjectsItemParams)
 	// List recent objects
 	// (GET /api/v1/storage/objects/recent)
 	GetApiV1StorageObjectsRecent(w http.ResponseWriter, r *http.Request)
@@ -315,6 +327,12 @@ func (_ Unimplemented) DeleteApiV1StorageObjectsItem(w http.ResponseWriter, r *h
 // Get an object
 // (GET /api/v1/storage/objects/item)
 func (_ Unimplemented) GetApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Request, params GetApiV1StorageObjectsItemParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Rename an object
+// (PUT /api/v1/storage/objects/item)
+func (_ Unimplemented) PutApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Request, params PutApiV1StorageObjectsItemParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -726,6 +744,40 @@ func (siw *ServerInterfaceWrapper) GetApiV1StorageObjectsItem(w http.ResponseWri
 	handler.ServeHTTP(w, r)
 }
 
+// PutApiV1StorageObjectsItem operation middleware
+func (siw *ServerInterfaceWrapper) PutApiV1StorageObjectsItem(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PutApiV1StorageObjectsItemParams
+
+	// ------------- Required query parameter "item" -------------
+
+	if paramValue := r.URL.Query().Get("item"); paramValue != "" {
+
+	} else {
+		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "item"})
+		return
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "item", r.URL.Query(), &params.Item)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "item", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutApiV1StorageObjectsItem(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetApiV1StorageObjectsRecent operation middleware
 func (siw *ServerInterfaceWrapper) GetApiV1StorageObjectsRecent(w http.ResponseWriter, r *http.Request) {
 
@@ -1008,6 +1060,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/v1/storage/objects/item", wrapper.GetApiV1StorageObjectsItem)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/api/v1/storage/objects/item", wrapper.PutApiV1StorageObjectsItem)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/v1/storage/objects/recent", wrapper.GetApiV1StorageObjectsRecent)

@@ -464,6 +464,69 @@
           }
         }
       },
+      "put": {
+        "summary": "Rename an object",
+        "description": "Renames an object by copying it to a new key and deleting the old one.",
+        "tags": ["Storage"],
+        "parameters": [
+          {
+            "name": "item",
+            "in": "query",
+            "required": true,
+            "description": "The current full key of the object to rename.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Object renamed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
       "delete": {
         "summary": "Delete an object",
         "description": "Deletes a single object from storage.",

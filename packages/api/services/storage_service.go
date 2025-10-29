@@ -629,3 +629,28 @@ func (s *StorageService) DeleteFolder(bucket, folderPath string) error {
 
 	return nil
 }
+func (s *StorageService) RenameObject(bucket, oldKey, newKey string) error {
+	// Copy the object to the new key
+	copySource := bucket + "/" + oldKey
+	_, err := s.S3Client.CopyObject(context.TODO(), &s3.CopyObjectInput{
+		Bucket:     aws.String(bucket),
+		CopySource: aws.String(copySource),
+		Key:        aws.String(newKey),
+	})
+	if err != nil {
+		l.Error("Failed to copy object during rename:", err)
+		return fmt.Errorf("failed to copy object: %w", err)
+	}
+
+	// Delete the old object
+	_, err = s.S3Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(oldKey),
+	})
+	if err != nil {
+		l.Error("Failed to delete old object after rename:", err)
+		return fmt.Errorf("failed to delete old object: %w", err)
+	}
+
+	return nil
+}

@@ -600,7 +600,57 @@ export interface paths {
 				};
 			};
 		};
-		put?: never;
+		/**
+		 * Rename an object
+		 * @description Renames an object by copying it to a new key and deleting the old one.
+		 */
+		put: {
+			parameters: {
+				query: {
+					/** @description The current full key of the object to rename. */
+					item: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['UploadBody'];
+				};
+			};
+			responses: {
+				/** @description Object renamed successfully. */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': {
+							message?: string;
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['Error'];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['Error'];
+					};
+				};
+			};
+		};
 		post?: never;
 		/**
 		 * Delete an object
