@@ -6,10 +6,9 @@ type FetchResponse = {
 const envVars = [
     "DOKPLOY_URL",
     "DOKPLOY_AUTH_TOKEN",
-    // "DOKPLOY_APP_ID",
     "REGISTRY_USER",
     "REGISTRY_PASSWORD",
-    "DOCKER_IMAGE",
+    "DOCKER_TAG",
 ];
 
 // Validation
@@ -31,8 +30,10 @@ type Config = {
         user: string;
         password: string;
     };
-    dockerImage: string;
+    dockerTag: string;
 };
+
+const baseImage = "git.ombrage.space/opendrive";
 
 const config: Config = {
     dokploy: {
@@ -44,7 +45,7 @@ const config: Config = {
         user: process.env.REGISTRY_USER!,
         password: process.env.REGISTRY_PASSWORD!,
     },
-    dockerImage: process.env.DOCKER_IMAGE!,
+    dockerTag: process.env.DOCKER_TAG!,
 };
 
 const headers = {
@@ -140,7 +141,13 @@ async function getAppId() {
     };
 }
 
-async function updateImage(appId: string): Promise<FetchResponse> {
+async function updateImage({
+    appId,
+    appName,
+}: {
+    appId: string;
+    appName: string;
+}): Promise<FetchResponse> {
     const req = await fetch(
         `${config.dokploy.url}/api/application.saveDockerProvider`,
         {
@@ -148,7 +155,7 @@ async function updateImage(appId: string): Promise<FetchResponse> {
             headers,
             body: JSON.stringify({
                 applicationId: appId,
-                dockerImage: config.dockerImage,
+                dockerImage: `${baseImage}/${appName}:${config.dockerTag}`,
                 username: config.registry.user,
                 password: config.registry.password,
             }),
@@ -194,7 +201,7 @@ async function main() {
     console.log("🚀 Starting deployment...");
     const appIds = await getAppId();
     console.log("Updating application image for app...");
-    let res = await updateImage(appIds.app);
+    let res = await updateImage({ appId: appIds.app, appName: "opendrive" });
     if (res.err) {
         console.error(
             "❌ Failed to update application image for app.",
@@ -204,7 +211,7 @@ async function main() {
     }
 
     console.log("Updating application image for docs...");
-    res = await updateImage(appIds.docs);
+    res = await updateImage({ appId: appIds.docs, appName: "docs" });
     if (res.err) {
         console.error(
             "❌ Failed to update application image for docs.",

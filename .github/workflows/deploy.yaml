@@ -63,6 +63,7 @@ jobs:
       REGISTRY_PASSWORD: ${{ secrets.PACKAGES_TOKEN }}
       DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
       DOKPLOY_AUTH_TOKEN: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+      DOCKER_TAG: ${{ github.sha }}
 
     steps:
       - uses: actions/checkout@v5
@@ -72,16 +73,6 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Deploy App
+      - name: Deploy
         shell: bash
-        env:
-          DOCKER_IMAGE: git.ombrage.space/opendrive/opendrive:${{ github.sha }}
-          DOKPLOY_APP_ID: ${{ secrets.APP_DOKPLOY_ID }}
-        run: bun run ./scripts/deploy.ts
-
-      - name: Deploy Docs
-        shell: bash
-        env:
-          DOCKER_IMAGE: git.ombrage.space/opendrive/docs:${{ github.sha }}
-          DOKPLOY_APP_ID: ${{ secrets.DOCS_DOKPLOY_ID }}
         run: bun run ./scripts/deploy.ts
