@@ -82,6 +82,6 @@ jobs:
       - name: Deploy Docs
         shell: bash
         env:
-          DOCKER_IMAGE: git.ombrage.space/opendrive/opendrive:${{ github.sha }}
+          DOCKER_IMAGE: git.ombrage.space/opendrive/docs:${{ github.sha }}
           DOKPLOY_APP_ID: ${{ secrets.DOCS_DOKPLOY_ID }}
         run: bun run ./scripts/deploy/index.ts
