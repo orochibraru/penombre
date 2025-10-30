@@ -58,29 +58,30 @@ jobs:
     needs: docker
     runs-on: ubuntu-latest
     name: Deploy to Dokploy
+    env:
+      REGISTRY_USER: salokain
+      REGISTRY_PASSWORD: ${{ secrets.PACKAGES_TOKEN }}
+      DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+      DOKPLOY_AUTH_TOKEN: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
+
     steps:
-      - name: Deploy Application
-        run: |
-          curl -X 'POST' \
-          'https://${{ secrets.DOKPLOY_URL }}/api/trpc/application.deploy' \
-          -H 'accept: application/json' \
-          -H 'x-api-key: ${{ secrets.DOKPLOY_AUTH_TOKEN }}' \
-          -H 'Content-Type: application/json' \
-          -d '{
-              "json":{
-                  "applicationId": "${{ secrets.APP_DOKPLOY_ID }}"
-              }
-          }'
+      - uses: actions/checkout@v5
+
+      - name: Setup bun
+        uses: oven-sh/bun-install@v2
+        with:
+          version: stable
+
+      - name: Deploy App
+        shell: bash
+        env:
+          DOCKER_IMAGE: git.ombrage.space/opendrive/opendrive:${{ github.sha }}
+          DOKPLOY_APP_ID: ${{ secrets.APP_DOKPLOY_ID }}
+        run: bun run ./scripts/deploy.ts
 
       - name: Deploy Docs
-        run: |
-          curl -X 'POST' \
-          'https://${{ secrets.DOKPLOY_URL }}/api/trpc/application.deploy' \
-          -H 'accept: application/json' \
-          -H 'x-api-key: ${{ secrets.DOKPLOY_AUTH_TOKEN }}' \
-          -H 'Content-Type: application/json' \
-          -d '{
-              "json":{
-                  "applicationId": "${{ secrets.DOCS_DOKPLOY_ID }}"
-              }
-          }'
+        shell: bash
+        env:
+          DOCKER_IMAGE: git.ombrage.space/opendrive/opendrive:${{ github.sha }}
+          DOKPLOY_APP_ID: ${{ secrets.DOCS_DOKPLOY_ID }}
+        run: bun run ./scripts/deploy.ts
