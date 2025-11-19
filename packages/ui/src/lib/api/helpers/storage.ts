@@ -1,94 +1,34 @@
 import {
 	type ApiResponse,
-	api,
 	apiError,
 	apiSuccess,
 	type BaseUploadBody,
+	getApiClient,
 	type ObjectList,
 	type UploadBody,
-	type UploadResult
-} from '$lib/api';
+	type UploadResult,
+} from "$lib/api";
 
 export type ObjectRequest = ApiResponse<ObjectList>;
 
-export async function listFiles(folder?: string): Promise<ObjectRequest> {
+export async function uploadFile(
+	body: UploadBody,
+): Promise<ApiResponse<UploadResult>> {
 	try {
 		const {
 			data,
 			error: err,
-			response
-		} = await api.GET('/api/v1/storage/objects', {
-			params: {
-				query: {
-					folder
-				}
-			}
+			response,
+		} = await getApiClient().POST("/api/storage/objects", {
+			body: body as BaseUploadBody,
 		});
 
 		if (err) {
-			return apiError(response.status, err.error);
+			return apiError(response.status, err.message);
 		}
 
 		return apiSuccess(data);
 	} catch (e) {
-		return apiError(500, 'API seems unreachable', e);
-	}
-}
-
-export async function listRecentFiles(): Promise<ObjectRequest> {
-	try {
-		const { data, error: err, response } = await api.GET('/api/v1/storage/objects/recent');
-
-		if (err) {
-			return apiError(response.status, err.error);
-		}
-
-		return apiSuccess(data);
-	} catch (e) {
-		return apiError(500, 'API seems unreachable', e);
-	}
-}
-
-export async function listFilesByCategory(category: string): Promise<ObjectRequest> {
-	try {
-		const {
-			data,
-			error: err,
-			response
-		} = await api.GET('/api/v1/storage/objects/category/{category}', {
-			params: {
-				path: {
-					category
-				}
-			}
-		});
-
-		if (err) {
-			return apiError(response.status, err.error);
-		}
-
-		return apiSuccess(data);
-	} catch (e) {
-		return apiError(500, 'API seems unreachable', e);
-	}
-}
-
-export async function uploadFile(body: UploadBody): Promise<ApiResponse<UploadResult>> {
-	try {
-		const {
-			data,
-			error: err,
-			response
-		} = await api.POST('/api/v1/storage/objects', {
-			body: body as BaseUploadBody
-		});
-
-		if (err) {
-			return apiError(response.status, err.error);
-		}
-
-		return apiSuccess(data);
-	} catch (e) {
-		return apiError(500, 'API seems unreachable', e);
+		return apiError(500, "API seems unreachable", e);
 	}
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { title } from '$lib/store/title';
+	import { title } from "$lib/store/title";
 
-	$title = 'Sync';
+	$title = "Sync";
 </script>
 
 <div>

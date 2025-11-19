@@ -26,7 +26,7 @@ export function touchAction(node: HTMLElement) {
 		}
 
 		timer = window.setTimeout(() => {
-			node.dispatchEvent(new CustomEvent('longpress'));
+			node.dispatchEvent(new CustomEvent("longpress"));
 			longPressTriggered = true;
 		}, longPressDuration);
 	}
@@ -51,25 +51,25 @@ export function touchAction(node: HTMLElement) {
 		clearTimeout(timer);
 		// Only dispatch tap if it wasn't a long press AND it wasn't a move
 		if (!longPressTriggered && !hasMoved) {
-			node.dispatchEvent(new CustomEvent('tap'));
+			node.dispatchEvent(new CustomEvent("tap"));
 		}
 	}
 
 	function handleClick() {
-		node.dispatchEvent(new CustomEvent('tap'));
+		node.dispatchEvent(new CustomEvent("tap"));
 	}
 
-	node.addEventListener('touchstart', handleTouchStart, { passive: false });
-	node.addEventListener('touchend', handleTouchEnd);
-	node.addEventListener('touchmove', handleTouchMove);
-	node.addEventListener('click', handleClick);
+	node.addEventListener("touchstart", handleTouchStart, { passive: false });
+	node.addEventListener("touchend", handleTouchEnd);
+	node.addEventListener("touchmove", handleTouchMove);
+	node.addEventListener("click", handleClick);
 
 	return {
 		destroy() {
-			node.removeEventListener('touchstart', handleTouchStart);
-			node.removeEventListener('touchend', handleTouchEnd);
-			node.removeEventListener('touchmove', handleTouchMove);
-			node.removeEventListener('click', handleClick);
-		}
+			node.removeEventListener("touchstart", handleTouchStart);
+			node.removeEventListener("touchend", handleTouchEnd);
+			node.removeEventListener("touchmove", handleTouchMove);
+			node.removeEventListener("click", handleClick);
+		},
 	};
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import GalleryVerticalEndIcon from '@lucide/svelte/icons/gallery-vertical-end';
-	import { route } from '$lib/ROUTES';
+	import GalleryVerticalEndIcon from "@lucide/svelte/icons/gallery-vertical-end";
+	import { route } from "$lib/ROUTES";
 
 	const { children } = $props();
 </script>

@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { dev } from '$app/environment';
-	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button';
-	import { route } from '$lib/ROUTES';
-	import { title } from '$lib/store/title';
-	import { cn } from '$lib/utils';
+	import { onMount } from "svelte";
+	import { dev } from "$app/environment";
+	import { page } from "$app/state";
+	import { Button } from "$lib/components/ui/button";
+	import { route } from "$lib/ROUTES";
+	import { title } from "$lib/store/title";
+	import { cn } from "$lib/utils";
 
 	type Props = {
 		normalHeight: boolean;
@@ -14,7 +14,7 @@
 	const { normalHeight = false }: Props = $props();
 
 	onMount(() => {
-		$title = 'Oops';
+		$title = "Oops";
 	});
 </script>
 

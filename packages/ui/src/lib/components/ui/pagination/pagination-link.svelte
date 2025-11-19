@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Pagination as PaginationPrimitive } from 'bits-ui';
-	import { buttonVariants, type Props } from '$lib/components/ui/button/index';
-	import { cn } from '$lib/utils.js';
+	import { Pagination as PaginationPrimitive } from "bits-ui";
+	import { buttonVariants, type Props } from "$lib/components/ui/button/index";
+	import { cn } from "$lib/utils.js";
 
 	let {
 		ref = $bindable(null),
 		class: className,
-		size = 'icon',
+		size = "icon",
 		isActive,
 		page,
 		children,
@@ -34,6 +34,7 @@
 		}),
 		className
 	)}
-	children={children || Fallback}
 	{...restProps}
-/>
+>
+	{@render (children || Fallback)()}
+</PaginationPrimitive.Page>

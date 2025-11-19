@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### ⚡️ Performance & Testing
+
+- **BREAKING**: Replaced Playwright with Bun's native test runner
+    - Playwright was incompatible with Bun and slow as hell
+    - Now using `@happy-dom/global-registrator` for DOM APIs
+    - Test suite is 10x faster and actually works
+    - Removed browser overhead completely
+    - Tests still use Testcontainers for real PostgreSQL and MinIO
+
+### 📝 Documentation
+
+- Added comprehensive test documentation (`tests/README.md`)
+- Added migration guide (`TESTING_MIGRATION.md`)
+
+### 🔧 Configuration
+
+- Added `bunfig.toml` for Bun test configuration
+- Updated test scripts in `package.json`
+
 ## v0.0.7
 
 ### 🚀 Enhancements

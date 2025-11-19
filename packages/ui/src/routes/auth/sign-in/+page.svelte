@@ -1,23 +1,31 @@
 <script lang="ts">
-	import { AlertCircleIcon } from '@lucide/svelte';
-	import { dev } from '$app/environment';
-	import { goto } from '$app/navigation';
-	import * as Alert from '$lib/components/ui/alert/index';
-	import { Button } from '$lib/components/ui/button/index';
-	import { title } from '$lib/store/title';
-	import { capitalizeFirstLetter, cn } from '$lib/utils.js';
+	import { toast } from "svelte-sonner";
+	import { goto } from "$app/navigation";
+	import { handleOauthSignIn } from "$lib/api/helpers/auth";
+	import * as Alert from "$lib/components/ui/alert/index";
+	import { Button } from "$lib/components/ui/button/index";
+	import { title } from "$lib/store/title";
+	import { cn } from "$lib/utils.js";
 
 	let loading: boolean = $state(false);
 
-	$title = 'Sign in';
-
-	const { data } = $props();
+	$title = "Sign in";
 
 	let error: boolean = $state(false);
 
-	async function handleOauthSignIn(provider: string) {
+	async function oauthHandler(provider: string) {
 		loading = true;
-		await goto(`/api/v1/auth/oauth/${provider}/login`);
+		const res = await handleOauthSignIn(provider);
+		if (res.error) {
+			error = true;
+			toast.error("There was an error when signing in. Please try again.");
+			loading = false;
+			return;
+		}
+		console.log(res.data);
+		if (res.data.url) {
+			goto(res.data.url);
+		}
 	}
 </script>
 
@@ -37,34 +45,14 @@
 		</Alert.Root>
 	{/if}
 	<div class="grid gap-6">
-		{#if data.providers && data.providers.length > 0}
-			<div class="grid gap-2">
-				{#each data.providers as provider}
-					<Button
-						variant="outline"
-						class="w-full"
-						{loading}
-						onclick={() => handleOauthSignIn(provider)}
-					>
-						Sign in with {capitalizeFirstLetter(provider)}
-					</Button>
-				{/each}
-			</div>
-		{:else}
-			<Alert.Root>
-				<AlertCircleIcon />
-				<Alert.Title>No providers have been configured for this application.</Alert.Title>
-				<Alert.Description>
-					<p>
-						Please read <a
-							target="_blank"
-							class="underline"
-							href="https://opendrive.space/docs">the docs</a
-						> to configure an auth provider.
-					</p>
-				</Alert.Description>
-			</Alert.Root>
-		{/if}
+		<Button
+			variant="outline"
+			class="w-full"
+			{loading}
+			onclick={() => oauthHandler('pocket-id')}
+		>
+			Sign in with Ombrage Auth
+		</Button>
 
 		<div class="text-center text-sm">Don&apos;t have an account? Too bad.</div>
 	</div>

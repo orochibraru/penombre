@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import Spinner from "$lib/components/ui/Spinner.svelte";
 </script>
 
 <div class="flex h-full w-full flex-col items-center justify-center gap-3">

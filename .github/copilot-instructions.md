@@ -1,146 +1,153 @@
-# Opendrive AI Development Guide
+# Opendrive Development Guide
+
+This is a self-hosted cloud storage platform with a modern monorepo architecture using Bun, Koritsu (API), and SvelteKit (UI).
 
 ## Architecture Overview
 
-Opendrive is a self-hosted cloud storage solution with a **monorepo structure** using pnpm workspaces:
+**Monorepo Structure**: Bun workspace with two packages (`packages/api`, `packages/ui`)
 
--   **API** (`packages/api/`): Go 1.25+ backend with Chi router, serving both API and static UI
--   **UI** (`packages/ui/`): SvelteKit 2 SPA with Shadcn/ui components, built to `packages/api/dist`
--   **Docs** (`packages/docs/`): SvelteKit-based documentation site
--   **CLI** (`packages/cli/`): Go CLI tool for health checks
+- **API**: [Koritsu](https://koritsu.dev) file-based routing framework with auto-generated OpenAPI docs
+    - **Database**: PostgreSQL via Bun's native SQL driver + Drizzle ORM
+    - **Auth**: [better-auth](https://www.better-auth.com/) library handles OAuth providers and session management
+- **UI**: SvelteKit with [Svelte 5 Runes](https://svelte.dev/blog/runes) + Shadcn/Svelte components, deployed with svelte-adapter-bun
+- **Storage Service**: User-specific Directories managed by `StorageService` class (`packages/api/lib/storage.ts`)
 
-**Critical**: The Go API server serves the built UI from `packages/api/dist` in production, or proxies to Vite dev server (port 5173) when `DEV_PROXY=true`.
+**Key Design Patterns**:
+
+- **API Routes**: Follow [Koritsu conventions](https://koritsu.dev) - file-based routing with `route.ts` files exporting `createRoute()` handlers
+    - Routes auto-discovered from `packages/api/routes/**` directory structure
+    - OpenAPI spec defined inline with Zod schemas (see `packages/api/routes/storage/objects/route.ts`)
+    - Uses Bun's native File I/O client (`File` from `"bun"`) and standard Node operations for directories
+- **Auth**: better-auth handles all authentication logic - don't reinvent auth patterns (see `packages/api/lib/auth.ts`)
+- **Database**: Bun SQL client wrapped by Drizzle ORM - schema in `packages/api/lib/db/schema.ts`
+- **Type Generation**: UI consumes typed API client from OpenAPI spec via `openapi-typescript` → `packages/ui/src/lib/api/schema.d.ts`
+- **Storage Architecture**:
+    - Per-user directories created on-demand, named `user-{sanitized-username}` (see `StorageService` constructor)
+    - File metadata stored as JSON in files within user directories, not database (see `getFileMetadata` method)
 
 ## Development Workflow
 
-### Starting the Dev Environment
+### Start Development Environment
 
 ```bash
-# Root command starts EVERYTHING via concurrently:
-pnpm run dev
-# Launches: docker compose (PostgreSQL + MinIO) + go tool air (API hot reload) + vite (UI dev server)
+bun run dev  # Runs concurrently: Docker (DB), API with hot reload, UI with Vite
 ```
 
-Individual services in `concurrently.config.mjs`: containers:dev, api:dev, ui:dev.
+This uses `concurrently.config.mjs` to orchestrate:
 
-### Code Generation (Critical)
+1. `docker compose up db` (PostgreSQL on :5432)
+2. API server on :8080 (waits for containers via `wait-on`)
+3. UI dev server on :5173
 
-**ALWAYS regenerate after OpenAPI changes:**
+### Database Changes
 
 ```bash
-# In packages/api/ directory:
-make api
-# 1. Generates Go server code (services/router_service.go) from public/openapi.json
-# 2. Generates TypeScript client (packages/ui/src/lib/api/schema.d.ts)
+cd packages/api
+bun run db:generate  # Generate migration from schema changes
+bun run db:migrate   # Apply migrations
 ```
 
-**SQLC for database code:**
+Migrations run automatically in production (see `packages/api/index.ts` - calls `runMigrations()` before server start).
+
+### API Schema Updates
+
+When adding/modifying API routes:
+
+1. Update route in `packages/api/routes/**` with inline OpenAPI spec
+2. Dev server auto-generates `packages/api/openapi.json` (see `writeRealTimeSpec()` in `index.ts`)
+3. Run `bun run gen:api` in `packages/ui` to regenerate TypeScript client types
+4. UI automatically gets type-safe API calls via `openapi-fetch` client (see `packages/ui/src/lib/api/index.ts`)
+
+### Testing Strategy
+
+Uses **Bun's native test runner** with Happy DOM (no Playwright). See `tests/README.md`.
 
 ```bash
-cd packages/api && make db
-# Generates type-safe Go code from db/query.sql → db/sqlc/
+bun test tests/smoke.test.ts      # Fast smoke tests
+bun test:api                       # API tests with docker (requires Docker)
+bun test:integration               # Full-stack tests with docker
 ```
 
-### Database Migrations
+**Critical**: API/integration tests spin up real PostgreSQL via docker. Set `BASE_URL` env var to skip container setup in CI.
 
--   Migrations live in `packages/api/db/migrations/` (e.g., `001_initial.up.sql`)
--   **Auto-run on API startup** via embedded migrations in `migrate.go`
--   Use `golang-migrate` patterns: `.up.sql` and `.down.sql` files
--   Update diagram: `pnpm run db:diagram` (generates SVG from SQL)
+## Code Conventions
 
-## Project-Specific Patterns
+### Formatting & Linting
 
-### Go Backend Conventions
+- **Biome**: All linting handled by Biome for both API and UI (`bun run lint` / `bun run lint:fix`)
+- **Prettier**: Formatter for UI only (`bun run format` in `packages/ui`)
+- Double quotes for JavaScript (see `biome.json`)
+- Pre-commit hook runs Biome checks via Husky
 
-1. **Package-level logger**: Every service file uses `var l = logger.Get()` at top
-2. **Handler structure**: All handlers in `packages/api/handlers/` implement generated `ServerInterface`
-3. **Service injection**: `Server` struct contains `*Storage` and `*DB` services
-4. **Config pattern**: Use `config.Get(config.ConfigKey)` for env vars (typed constants)
-5. **Auth middleware**: Two distinct middlewares:
-    - `ApiAuthMiddleware`: Requires session_token cookie + X-CSRF-Token header
-    - `PageAuthMiddleware`: Redirects to /auth/sign-in, allows static assets
-6. **Response helpers**: Use `RespondWithJSON()` and `RespondWithError()` from `handler.go`
+### API Route Pattern
 
-### Frontend Conventions
+Follow [Koritsu's file-based routing](https://koritsu.dev). Every `route.ts` exports HTTP methods using `createRoute`:
 
-1. **API client**: Generated TypeScript client from OpenAPI via `openapi-fetch`
-    - Import from `$lib/api` (includes CSRF middleware)
-    - Types exported: `UserSession`, `User`, `Bucket`, `ObjectItem`, etc.
-2. **Auth**: CSRF token stored in cookie, automatically added to requests via middleware
-3. **SvelteKit setup**: Static adapter with fallback to `index.html`, version from `package.json`
-4. **Styling**: TailwindCSS 4 + Shadcn/ui components in `$lib/components/ui/`
-5. \*SvelteKit version\*\*: This is mandatory: Svelte 5 is required, not 4. This means we HAVE to use runes.
-
-### Testing
-
-**Playwright e2e tests** with Testcontainers:
-
--   `tests/global-setup.ts` spins up PostgreSQL + MinIO + Go server before tests
--   Run: `pnpm test` (uses `playwright.config.ts`)
--   Environment: `DEV_PROXY=false` forced in test config
--   Tests in `tests/`: `api/`, `e2e/`, `auth.spec.ts`
--   At the root of the repo, `pnpm test` can be run to start the whole suite.
-
-### Linting & Formatting
-
-**Go:**
-
--   Lint: `cd packages/api && make lint` (uses `golangci-lint`)
--   Format: `go fmt` (auto-run in pre-commit)
-
-**TypeScript/Svelte:**
-
--   Lint: `pnpm -C packages/ui run lint` (Biome) + `pnpm -C packages/ui run check` (svelte-check)
--   Fix: `pnpm -C packages/ui run lint:fix`
--   Format: `pnpm format` (Prettier, root level)
--   Pre-commit hook: `lint-staged.config.mjs` runs checks + circular dependency detection
-
-**Critical**: Biome config excludes generated files (`src/lib/ROUTES.ts`, `src/app.css`)
-
-## Integration Points
-
-### Authentication Flow
-
-1. OAuth providers configured via env vars: `OAUTH_PROVIDERS`, `OAUTH_POCKETID_*`
-2. Session flow: OAuth callback → `SetSessionCookies()` → creates DB session + sets cookies
-3. Cookies: `session_token` (HttpOnly), `csrf_token` (client-accessible)
-4. Auth allowlist paths hardcoded in middleware (e.g., `/api/v1/healthz`, `/p/*`)
-
-### Storage Integration
-
--   MinIO (S3-compatible) via `services.StorageService`
--   Config: `STORAGE_URL`, `STORAGE_ACCESS_KEY_ID`, `STORAGE_ACCESS_KEY_SECRET`
--   Health check: `s.Storage.ListBuckets()` in `/api/v1/healthz`
-
-### Database
-
--   PostgreSQL with pgx driver (v5)
--   SQLC generates type-safe queries from `db/query.sql`
--   Example: `database.GetSessionWithUser()`, `database.CreateSession()`
-
-## Build & Deployment
-
-```bash
-# Production build (root):
-pnpm run build
-# 1. Builds UI → packages/ui/dist
-# 2. Moves dist → packages/api/dist
+```typescript
+export const GET = createRoute({
+  method: "GET",
+  handler: async ({ headers, query }) => {
+    // Auth via better-auth
+    const session = await auth.api.getSession({ headers });
+    if (!session) {
+      return Response.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    // ... handler logic
+  },
+  spec: {
+    parameters: { query: z.object({ ... }) },
+    responses: { 200: { schema: ... } },
+    summary: "...",
+  },
+});
 ```
 
-## Common Pitfalls
+**Critical**: Use Bun's native clients (`File` from `"bun"`, Drizzle with Bun SQL) - not Node.js alternatives
 
--   **API changes require `make api`** or TypeScript types will be stale
--   **DEV_PROXY** must be `true` for local development, `false` for tests/production
--   **Air (hot reload)** requires `go tool air` NOT `air` directly
--   **Session cookies** require matching CSRF header for API calls (auto-handled by UI middleware)
--   **Route protection**: Add new unprotected paths to middleware allowlists explicitly
--   **Node 24+ required** (engines field in package.json)
+### Storage Service Usage
 
-## Key Files Reference
+Always instantiate per-request with user context:
 
--   `packages/api/main.go`: Server setup, middleware chain, proxy logic
--   `packages/api/handlers/handler.go`: Response helpers, health check
--   `packages/api/services/auth_service.go`: Auth middleware, session management
--   `packages/ui/src/lib/api/index.ts`: API client setup with CSRF middleware
--   `concurrently.config.mjs`: Dev server orchestration
--   `lint-staged.config.mjs`: Pre-commit validation rules
+```typescript
+const session = await auth.api.getSession({ headers });
+const storageService = new StorageService(session.user);
+// Automatically manages user-specific bucket
+```
+
+### UI API Client Pattern
+
+- **Browser**: `getApiClient()` - reads auth cookie from SvelteKit page data
+- **Server**: `getServerSideApi(cookie)` - pass cookie explicitly from `event.cookies`
+- Both return typed `openapi-fetch` client with automatic auth middleware
+
+## Deployment & Production
+
+**Docker Build**: Multi-stage Dockerfile compiles UI + API, runs with nginx + supervisor
+
+- UI served via nginx reverse proxy
+- API runs on internal port, proxied through nginx
+- Both services managed by supervisord
+
+**Environment Variables**:
+
+- `DATABASE_URL`: PostgreSQL connection (defaults to `postgres://postgres:postgres@db:5432/opendrive`)
+- OAuth config: `OAUTH_PROVIDERS`, `OAUTH_POCKETID_CLIENT_ID`, etc.
+
+## Common Gotchas
+
+1. **File metadata is in files ending with .meta.json, not DB**: Don't look for file tables in Drizzle schema - metadata is JSON in objects
+2. **Folder representation**: Folders end with `/` and contain `.keep` files with metadata JSON
+3. **Presigned URL proxying**: URLs are returned without endpoint prefix for `/p` proxy endpoint (see `presign()` method)
+4. **Bun-specific types**: Some AWS SDK types mismatch - see `@ts-expect-error` in `presign()` for Smithy types
+5. **OpenAPI spec merging**: API combines Koritsu routes + better-auth schema (see `externalSpecs` in `index.ts`)
+6. **Auth cookie name**: `better-auth.session_token` - used consistently across API/UI
+7. **Circular dependency check**: Both packages have `circular.ts` scripts using Madge - run before major refactors
+
+## Quick Reference
+
+- **API Docs**: http://localhost:8080/ (Swagger UI in dev, auto-generated by Koritsu)
+- **Framework Docs**: [Koritsu](https://koritsu.dev), [better-auth](https://www.better-auth.com/)
+- **Main configs**: `compose.yaml`, `concurrently.config.mjs`, `packages/*/package.json`
+- **Route registration**: Auto-scanned from `packages/api/routes/**` (Koritsu file-based routing)
+- **Package manager**: Bun only - enforced via `preinstall` scripts
+- **Native Bun features used**: File client, SQL driver (via Drizzle), hot reload (`--hot` flag)

@@ -1,14 +1,19 @@
 <script lang="ts">
-	import { type Icon as IconType, MonitorIcon, MoonIcon, SunIcon } from '@lucide/svelte';
-	import { setMode, userPrefersMode } from 'mode-watcher';
-	import { Label } from '$lib/components/ui/label';
-	import * as RadioGroup from '$lib/components/ui/radio-group';
-	import { title } from '$lib/store/title';
+	import {
+		type Icon as IconType,
+		MonitorIcon,
+		MoonIcon,
+		SunIcon,
+	} from "@lucide/svelte";
+	import { setMode, userPrefersMode } from "mode-watcher";
+	import { Label } from "$lib/components/ui/label";
+	import * as RadioGroup from "$lib/components/ui/radio-group";
+	import { title } from "$lib/store/title";
 
-	$title = 'Settings';
+	$title = "Settings";
 
 	type Theme = {
-		id: 'dark' | 'light' | 'system';
+		id: "dark" | "light" | "system";
 		name: string;
 		description: string;
 		icon: typeof IconType;
@@ -16,23 +21,23 @@
 
 	const themes: Theme[] = [
 		{
-			id: 'system',
-			name: 'System',
+			id: "system",
+			name: "System",
 			description: "Follows your system's preferences",
-			icon: MonitorIcon
+			icon: MonitorIcon,
 		},
 		{
-			id: 'light',
-			name: 'Light',
-			description: 'Clear white-ish theme.',
-			icon: SunIcon
+			id: "light",
+			name: "Light",
+			description: "Clear white-ish theme.",
+			icon: SunIcon,
 		},
 		{
-			id: 'dark',
-			name: 'Dark',
-			description: 'Everything black.',
-			icon: MoonIcon
-		}
+			id: "dark",
+			name: "Dark",
+			description: "Everything black.",
+			icon: MoonIcon,
+		},
 	];
 </script>
 

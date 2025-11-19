@@ -1,15 +1,15 @@
 <script lang="ts">
-	import type { HTMLAttributes } from 'svelte/elements';
-	import { onNavigate } from '$app/navigation';
-	import * as Tooltip from '$lib/components/ui/tooltip/index';
-	import { cn, type WithElementRef } from '$lib/utils.js';
+	import type { HTMLAttributes } from "svelte/elements";
+	import { onNavigate } from "$app/navigation";
+	import * as Tooltip from "$lib/components/ui/tooltip/index";
+	import { cn, type WithElementRef } from "$lib/utils.js";
 	import {
 		SIDEBAR_COOKIE_MAX_AGE,
 		SIDEBAR_COOKIE_NAME,
 		SIDEBAR_WIDTH,
-		SIDEBAR_WIDTH_ICON
-	} from './constants.js';
-	import { setSidebar } from './context.svelte.js';
+		SIDEBAR_WIDTH_ICON,
+	} from "./constants.js";
+	import { setSidebar } from "./context.svelte.js";
 
 	let {
 		ref = $bindable(null),
@@ -33,7 +33,7 @@
 			// This sets the cookie to keep the sidebar state.
 			// biome-ignore lint/suspicious/noDocumentCookie: common it's a sidebar issoké
 			document.cookie = `${SIDEBAR_COOKIE_NAME}=${open}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
-		}
+		},
 	});
 
 	onNavigate(() => {

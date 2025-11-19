@@ -4,7 +4,79 @@
  */
 
 export interface paths {
-	'/api/v1/healthz': {
+	"/api/activity": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get user activities
+		 * @description Retrieve a list of activities for the authenticated user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							id: string;
+							userId: string;
+							/** @enum {string} */
+							action: "create" | "update" | "delete" | "share";
+							message: string;
+							link: Record<string, never>;
+							/** @enum {string} */
+							level: "info" | "warning" | "error";
+							/** Format: date-time */
+							createdAt: string;
+						}[];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/health": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -13,7 +85,7 @@ export interface paths {
 		};
 		/**
 		 * Health check
-		 * @description Returns the health status of database and storage services.
+		 * @description Checks the health status of the storage service
 		 */
 		get: {
 			parameters: {
@@ -24,32 +96,22 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description Services are healthy */
+				/** @description Successful response */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': {
-							/** @enum {string} */
-							DB: 'available' | 'unavailable';
-							/** @enum {string} */
-							Storage: 'available' | 'unavailable';
-						};
+						"text/plain": string;
 					};
 				};
-				/** @description One or more services are unavailable */
+				/** @description Internal server error */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': {
-							/** @enum {string} */
-							DB: 'available' | 'unavailable';
-							/** @enum {string} */
-							Storage: 'available' | 'unavailable';
-						};
+						"text/plain": string;
 					};
 				};
 			};
@@ -62,7 +124,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/auth/oauth/providers': {
+	"/api/storage/objects/category/{category}": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -70,190 +132,103 @@ export interface paths {
 			cookie?: never;
 		};
 		/**
-		 * List available OAuth providers
-		 * @description Returns a list of configured OAuth provider names that can be used for login.
-		 */
-		get: {
-			parameters: {
-				query?: never;
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description A list of provider names. */
-				200: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Providers'];
-					};
-				};
-				/** @description Internal Server Error */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-			};
-		};
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	'/api/v1/auth/oauth/{provider}/login': {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/**
-		 * Initiate OAuth Login
-		 * @description Starts the OAuth 2.0 Authorization Code flow by redirecting the user to the specified provider's login page.
+		 * Get files by category
+		 * @description Retrieve a list of files by their category.
 		 */
 		get: {
 			parameters: {
 				query?: never;
 				header?: never;
 				path: {
-					/** @description The name of the OAuth provider (e.g., "pocketid"). */
-					provider: string;
+					category: string;
 				};
 				cookie?: never;
 			};
 			requestBody?: never;
 			responses: {
-				/** @description Temporary Redirect to the OAuth provider's authorization URL. */
-				307: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content?: never;
-				};
-			};
-		};
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	'/api/v1/auth/oauth/{provider}/callback': {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/**
-		 * OAuth Callback
-		 * @description Handles the callback from the OAuth provider after the user has authenticated. The server exchanges the code for a token, creates a session, and sets session cookies.
-		 */
-		get: {
-			parameters: {
-				query: {
-					/** @description The authorization code provided by the OAuth server. */
-					code: string;
-					/** @description The state parameter for CSRF protection. */
-					state: string;
-				};
-				header?: never;
-				path: {
-					/** @description The name of the OAuth provider. */
-					provider: string;
-				};
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description See Other. Redirects to the application's root on successful login. */
-				303: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content?: never;
-				};
-				/** @description Bad Request, e.g., invalid state or code. */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content?: never;
-				};
-				/** @description Internal Server Error */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-			};
-		};
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	'/api/v1/auth/me': {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/**
-		 * Get Current User
-		 * @description Retrieves the session information for the currently authenticated user. Requires a valid session cookie.
-		 */
-		get: {
-			parameters: {
-				query?: never;
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description The current user and session information. */
+				/** @description Successful response */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['UserSession'];
+						"application/json": {
+							list: {
+								key: string;
+								/** Format: date-time */
+								updatedAt?: string;
+								size?: number;
+								metadata: {
+									id: string;
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "UNKNOWN";
+									tags?: string[];
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "video/mp4"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "text/plain"
+										| "application/zip"
+										| "application/json"
+										| "text/html"
+										| "application/octet-stream";
+									/** Format: date-time */
+									createdAt: string;
+									owner: string;
+									/** @default false */
+									isTrashed: boolean;
+									music?: {
+										duration?: number;
+									};
+									video?: {
+										duration?: number;
+									};
+								};
+								/** @enum {string} */
+								type: "file" | "folder";
+							}[];
+							/** @default 0 */
+							count: number;
+							/** @default 0 */
+							total: number;
+						};
 					};
 				};
-				/** @description Unauthorized. The user is not authenticated. */
+				/** @description Unauthorized */
 				401: {
 					headers: {
 						[name: string]: unknown;
 					};
-					content?: never;
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
 				};
-				/** @description Internal Server Error */
+				/** @description Internal server error */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
 					};
 				};
 			};
@@ -266,53 +241,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/auth/sign-out': {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/**
-		 * Sign Out
-		 * @description Invalidates the user's session and clears authentication cookies.
-		 */
-		post: {
-			parameters: {
-				query?: never;
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description Successfully signed out. */
-				200: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content?: never;
-				};
-				/** @description Internal Server Error */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-			};
-		};
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	'/api/v1/storage/buckets': {
+	"/api/storage/objects/trash": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -320,8 +249,8 @@ export interface paths {
 			cookie?: never;
 		};
 		/**
-		 * List buckets
-		 * @description Fetches all buckets
+		 * Get all files
+		 * @description Retrieve a list of all files.
 		 */
 		get: {
 			parameters: {
@@ -332,80 +261,102 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description A list of buckets */
+				/** @description Successful response */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Bucket'][];
+						"application/json": {
+							list: {
+								key: string;
+								/** Format: date-time */
+								updatedAt?: string;
+								size?: number;
+								metadata: {
+									id: string;
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "UNKNOWN";
+									tags?: string[];
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "video/mp4"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "text/plain"
+										| "application/zip"
+										| "application/json"
+										| "text/html"
+										| "application/octet-stream";
+									/** Format: date-time */
+									createdAt: string;
+									owner: string;
+									/** @default false */
+									isTrashed: boolean;
+									music?: {
+										duration?: number;
+									};
+									video?: {
+										duration?: number;
+									};
+								};
+								/** @enum {string} */
+								type: "file" | "folder";
+							}[];
+							/** @default 0 */
+							count: number;
+							/** @default 0 */
+							total: number;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
 					};
 				};
 			};
 		};
 		put?: never;
-		/**
-		 * Create a new bucket
-		 * @description Creates a new S3 bucket.
-		 */
-		post: {
-			parameters: {
-				query?: never;
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody: {
-				content: {
-					'application/json': {
-						name?: string;
-					};
-				};
-			};
-			responses: {
-				/** @description Bucket created successfully */
-				201: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content?: never;
-				};
-				/** @description Invalid bucket name */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-				/** @description Internal Server Error */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-			};
-		};
+		post?: never;
 		delete?: never;
 		options?: never;
 		head?: never;
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/storage/objects': {
+	"/api/storage/objects": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -413,8 +364,8 @@ export interface paths {
 			cookie?: never;
 		};
 		/**
-		 * List objects
-		 * @description Fetches all objects in a folder
+		 * Get all files
+		 * @description Retrieve a list of all files.
 		 */
 		get: {
 			parameters: {
@@ -427,69 +378,185 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description A list of objects */
+				/** @description Successful response */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ObjectList'];
+						"application/json": {
+							list: {
+								key: string;
+								/** Format: date-time */
+								updatedAt?: string;
+								size?: number;
+								metadata: {
+									id: string;
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "UNKNOWN";
+									tags?: string[];
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "video/mp4"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "text/plain"
+										| "application/zip"
+										| "application/json"
+										| "text/html"
+										| "application/octet-stream";
+									/** Format: date-time */
+									createdAt: string;
+									owner: string;
+									/** @default false */
+									isTrashed: boolean;
+									music?: {
+										duration?: number;
+									};
+									video?: {
+										duration?: number;
+									};
+								};
+								/** @enum {string} */
+								type: "file" | "folder";
+							}[];
+							/** @default 0 */
+							count: number;
+							/** @default 0 */
+							total: number;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
 			};
 		};
 		put?: never;
 		/**
-		 * Get a presigned URL for upload
-		 * @description Gets a presigned URL that can be used to upload a file.
+		 * Create a file
+		 * @description Create a new file in the storage (without uploading the file contents).
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					folder?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
 			};
 			requestBody: {
 				content: {
-					'application/json': components['schemas']['UploadBody'];
+					"application/json": {
+						name: string;
+						size: number;
+					};
 				};
 			};
 			responses: {
-				/** @description A presigned URL for upload */
+				/** @description Successful response */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['UploadResult'];
+						"application/json": {
+							id?: string;
+							finalName: string;
+							metadata: {
+								id: string;
+								/** @enum {string} */
+								category:
+									| "MUSIC"
+									| "DOCUMENTS"
+									| "IMAGES"
+									| "VIDEO"
+									| "RECENT"
+									| "CODE"
+									| "UNKNOWN";
+								tags?: string[];
+								/** @enum {string} */
+								contentType:
+									| "application/pdf"
+									| "image/jpeg"
+									| "image/png"
+									| "image/gif"
+									| "video/mp4"
+									| "audio/mpeg"
+									| "audio/wav"
+									| "audio/flac"
+									| "text/plain"
+									| "application/zip"
+									| "application/json"
+									| "text/html"
+									| "application/octet-stream";
+								/** Format: date-time */
+								createdAt: string;
+								owner: string;
+								/** @default false */
+								isTrashed: boolean;
+								music?: {
+									duration?: number;
+								};
+								video?: {
+									duration?: number;
+								};
+							};
+						};
 					};
 				};
-				/** @description Bad Request */
-				400: {
+				/** @description Unauthorized */
+				401: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Internal server error */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
 			};
@@ -500,7 +567,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/storage/objects/categories': {
+	"/api/storage/objects/item/{item}": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -508,8 +575,446 @@ export interface paths {
 			cookie?: never;
 		};
 		/**
-		 * List categories
-		 * @description Fetches all categories that can be used
+		 * Get file metadata
+		 * @description Get file metadata from the storage.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					raw?: string;
+				};
+				header?: never;
+				path: {
+					item: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							key: string;
+							/** Format: date-time */
+							updatedAt?: string;
+							size?: number;
+							metadata: {
+								id: string;
+								/** @enum {string} */
+								category:
+									| "MUSIC"
+									| "DOCUMENTS"
+									| "IMAGES"
+									| "VIDEO"
+									| "RECENT"
+									| "CODE"
+									| "UNKNOWN";
+								tags?: string[];
+								/** @enum {string} */
+								contentType:
+									| "application/pdf"
+									| "image/jpeg"
+									| "image/png"
+									| "image/gif"
+									| "video/mp4"
+									| "audio/mpeg"
+									| "audio/wav"
+									| "audio/flac"
+									| "text/plain"
+									| "application/zip"
+									| "application/json"
+									| "text/html"
+									| "application/octet-stream";
+								/** Format: date-time */
+								createdAt: string;
+								owner: string;
+								/** @default false */
+								isTrashed: boolean;
+								music?: {
+									duration?: number;
+								};
+								video?: {
+									duration?: number;
+								};
+							};
+							/** @enum {string} */
+							type: "file" | "folder";
+						};
+					};
+				};
+				/** @description HTTP 206 response */
+				206: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							key: string;
+							/** Format: date-time */
+							updatedAt?: string;
+							size?: number;
+							metadata: {
+								id: string;
+								/** @enum {string} */
+								category:
+									| "MUSIC"
+									| "DOCUMENTS"
+									| "IMAGES"
+									| "VIDEO"
+									| "RECENT"
+									| "CODE"
+									| "UNKNOWN";
+								tags?: string[];
+								/** @enum {string} */
+								contentType:
+									| "application/pdf"
+									| "image/jpeg"
+									| "image/png"
+									| "image/gif"
+									| "video/mp4"
+									| "audio/mpeg"
+									| "audio/wav"
+									| "audio/flac"
+									| "text/plain"
+									| "application/zip"
+									| "application/json"
+									| "text/html"
+									| "application/octet-stream";
+								/** Format: date-time */
+								createdAt: string;
+								owner: string;
+								/** @default false */
+								isTrashed: boolean;
+								music?: {
+									duration?: number;
+								};
+								video?: {
+									duration?: number;
+								};
+							};
+							/** @enum {string} */
+							type: "file" | "folder";
+						};
+					};
+				};
+				/** @description Bad request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description HTTP 416 response */
+				416: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+			};
+		};
+		/**
+		 * Update file metadata
+		 * @description Update metadata for a file in the storage.
+		 */
+		put: {
+			parameters: {
+				query?: {
+					folder?: string;
+				};
+				header?: never;
+				path: {
+					item: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						type?: string;
+						/** @enum {string} */
+						category?:
+							| "MUSIC"
+							| "DOCUMENTS"
+							| "IMAGES"
+							| "VIDEO"
+							| "RECENT"
+							| "CODE"
+							| "UNKNOWN";
+						tags?: string[];
+						key?: string;
+						/** @enum {string} */
+						contentType?:
+							| "application/pdf"
+							| "image/jpeg"
+							| "image/png"
+							| "image/gif"
+							| "video/mp4"
+							| "audio/mpeg"
+							| "audio/wav"
+							| "audio/flac"
+							| "text/plain"
+							| "application/zip"
+							| "application/json"
+							| "text/html"
+							| "application/octet-stream";
+						isTrashed?: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+			};
+		};
+		/**
+		 * Upload a file's body
+		 * @description Upload the body of a file to the storage.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					item: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The file to upload. */
+						file: Record<string, never>;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Bad request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
+					};
+				};
+			};
+		};
+		/**
+		 * Delete a file
+		 * @description Delete a file from the storage.
+		 */
+		delete: {
+			parameters: {
+				query?: {
+					folder?: string;
+				};
+				header?: never;
+				path: {
+					item: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/storage/objects/recent": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get recent files
+		 * @description Retrieve a list of recently accessed files.
 		 */
 		get: {
 			parameters: {
@@ -520,22 +1025,89 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description A list of categories */
+				/** @description Successful response */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['CategoriesList'];
+						"application/json": {
+							list: {
+								key: string;
+								/** Format: date-time */
+								updatedAt?: string;
+								size?: number;
+								metadata: {
+									id: string;
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "UNKNOWN";
+									tags?: string[];
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "video/mp4"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "text/plain"
+										| "application/zip"
+										| "application/json"
+										| "text/html"
+										| "application/octet-stream";
+									/** Format: date-time */
+									createdAt: string;
+									owner: string;
+									/** @default false */
+									isTrashed: boolean;
+									music?: {
+										duration?: number;
+									};
+									video?: {
+										duration?: number;
+									};
+								};
+								/** @enum {string} */
+								type: "file" | "folder";
+							}[];
+							/** @default 0 */
+							count: number;
+							/** @default 0 */
+							total: number;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
 					};
 				};
 			};
@@ -548,7 +1120,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/storage/objects/item': {
+	"/api/storage/folders/folder/{folder}": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -556,14 +1128,135 @@ export interface paths {
 			cookie?: never;
 		};
 		/**
-		 * Get an object
-		 * @description Gets a single object from storage.
+		 * Retrieve folders
+		 * @description Retrieve a single folder.
 		 */
 		get: {
 			parameters: {
-				query: {
-					/** @description The full key of the object to delete. */
-					item: string;
+				query?: {
+					parent?: string;
+				};
+				header?: never;
+				path: {
+					folder: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		/**
+		 * Delete a folder
+		 * @description Delete a folder from the storage.
+		 */
+		delete: {
+			parameters: {
+				query?: {
+					parent?: string;
+				};
+				header?: never;
+				path: {
+					folder: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/storage/folders": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Retrieve folders
+		 * @description Retrieve a list of folders in the storage.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					parent?: string;
 				};
 				header?: never;
 				path?: never;
@@ -571,63 +1264,1028 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description Object retrieved successfully. */
+				/** @description Successful response */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ObjectItem'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
-				/** @description Bad Request */
-				400: {
+				/** @description Unauthorized */
+				401: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Internal server error */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
 					};
 				};
 			};
 		};
+		put?: never;
 		/**
-		 * Rename an object
-		 * @description Renames an object by copying it to a new key and deleting the old one.
+		 * Create a folder
+		 * @description Create a new folder in the storage.
 		 */
-		put: {
+		post: {
 			parameters: {
-				query: {
-					/** @description The current full key of the object to rename. */
-					item: string;
-				};
+				query?: never;
 				header?: never;
 				path?: never;
 				cookie?: never;
 			};
 			requestBody: {
 				content: {
-					'application/json': components['schemas']['UploadBody'];
+					"application/json": {
+						name: string;
+						parent?: string;
+					};
 				};
 			};
 			responses: {
-				/** @description Object renamed successfully. */
+				/** @description Created successfully */
+				201: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Internal server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							error?: string;
+							/** @default An unexpected error occurred */
+							message: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/sign-in/social": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign in with a social provider */
+		post: operations["socialSignIn"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/get-session": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Get the current session */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Success */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': {
+						"application/json": {
+							session: components["schemas"]["Session"];
+							user: components["schemas"]["User"];
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
 							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/sign-out": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign out the current user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": Record<string, never>;
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							success?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/sign-up/email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign up a user using email and password */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": {
+						/** @description The name of the user */
+						name: string;
+						/** @description The email of the user */
+						email: string;
+						/** @description The password of the user */
+						password: string;
+						/** @description The profile image URL of the user */
+						image?: string;
+						/** @description The URL to use for email verification callback */
+						callbackURL?: string;
+						/** @description If this is false, the session will not be remembered. Default is `true`. */
+						rememberMe?: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Successfully created user */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Authentication token for the session */
+							token?: string | null;
+							user: {
+								/** @description The unique identifier of the user */
+								id: string;
+								/**
+								 * Format: email
+								 * @description The email address of the user
+								 */
+								email: string;
+								/** @description The name of the user */
+								name: string;
+								/**
+								 * Format: uri
+								 * @description The profile image URL of the user
+								 */
+								image?: string | null;
+								/** @description Whether the email has been verified */
+								emailVerified: boolean;
+								/**
+								 * Format: date-time
+								 * @description When the user was created
+								 */
+								createdAt: string;
+								/**
+								 * Format: date-time
+								 * @description When the user was last updated
+								 */
+								updatedAt: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Unprocessable Entity. User already exists or failed to create user. */
+				422: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/sign-in/email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign in with email and password */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description Email of the user */
+						email: string;
+						/** @description Password of the user */
+						password: string;
+						/** @description Callback URL to use as a redirect for email verification */
+						callbackURL?: string | null;
+						rememberMe?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Success - Returns either session details or redirect URL */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @enum {boolean} */
+							redirect: false;
+							/** @description Session token */
+							token: string;
+							url?: null | null;
+							user: {
+								id: string;
+								email: string;
+								name?: string | null;
+								image?: string | null;
+								emailVerified: boolean;
+								/** Format: date-time */
+								createdAt: string;
+								/** Format: date-time */
+								updatedAt: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/forget-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Send a password reset email to the user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The email address of the user to send a password reset email to */
+						email: string;
+						/** @description The URL to redirect the user to reset their password. If the token isn't valid or expired, it'll be redirected with a query parameter `?error=INVALID_TOKEN`. If the token is valid, it'll be redirected with a query parameter `?token=VALID_TOKEN */
+						redirectTo?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							status?: boolean;
+							message?: string;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/reset-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Reset the password for a user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The new password to set */
+						newPassword: string;
+						/** @description The token to reset the password */
+						token?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							status?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/verify-email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Verify the email of the user */
+		get: {
+			parameters: {
+				query: {
+					/** @description The token to verify the email */
+					token: string;
+					/** @description The URL to redirect to after email verification */
+					callbackURL?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							user: {
+								/** @description User ID */
+								id: string;
+								/** @description User email */
+								email: string;
+								/** @description User name */
+								name: string;
+								/** @description User image URL */
+								image: string;
+								/** @description Indicates if the user email is verified */
+								emailVerified: boolean;
+								/** @description User creation date */
+								createdAt: string;
+								/** @description User update date */
+								updatedAt: string;
+							};
+							/** @description Indicates if the email was verified successfully */
+							status: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/send-verification-email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Send a verification email to the user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": {
+						/**
+						 * @description The email to send the verification email to
+						 * @example user@example.com
+						 */
+						email: string;
+						/**
+						 * @description The URL to use for email verification callback
+						 * @example https://example.com/callback
+						 */
+						callbackURL?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/**
+							 * @description Indicates if the email was sent successfully
+							 * @example true
+							 */
+							status?: boolean;
 						};
 					};
 				};
@@ -637,70 +2295,79 @@ export interface paths {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							/**
+							 * @description Error message
+							 * @example Verification email isn't enabled
+							 */
+							message?: string;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message?: string;
+						};
 					};
 				};
 			};
 		};
-		post?: never;
-		/**
-		 * Delete an object
-		 * @description Deletes a single object from storage.
-		 */
-		delete: {
-			parameters: {
-				query: {
-					/** @description The full key of the object to delete. */
-					item: string;
-				};
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description Object deleted successfully. */
-				204: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content?: never;
-				};
-				/** @description Bad Request */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-				/** @description Internal Server Error */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-			};
-		};
+		delete?: never;
 		options?: never;
 		head?: never;
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/storage/objects/folder': {
+	"/auth/change-email": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -709,10 +2376,6 @@ export interface paths {
 		};
 		get?: never;
 		put?: never;
-		/**
-		 * Create a folder
-		 * @description Creates a new folder in the storage.
-		 */
 		post: {
 			parameters: {
 				query?: never;
@@ -722,48 +2385,508 @@ export interface paths {
 			};
 			requestBody: {
 				content: {
-					'application/json': {
-						name: string;
+					"application/json": {
+						/** @description The new email address to set must be a valid email address */
+						newEmail: string;
+						/** @description The URL to redirect to after email verification */
+						callbackURL?: string | null;
 					};
 				};
 			};
 			responses: {
-				/** @description Folder created successfully. */
-				201: {
+				/** @description Email change request processed successfully */
+				200: {
 					headers: {
 						[name: string]: unknown;
 					};
-					content?: never;
+					content: {
+						"application/json": {
+							/** @description Indicates if the request was successful */
+							status: boolean;
+							/**
+							 * @description Status message of the email change process
+							 * @enum {string|null}
+							 */
+							message?: "Email updated" | "Verification email sent" | null;
+						};
+					};
 				};
-				/** @description Bad Request */
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
 				400: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Unprocessable Entity. Email already exists */
+				422: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message?: string;
+						};
 					};
 				};
 			};
 		};
-		/**
-		 * Delete a folder
-		 * @description Deletes a folder and all of its contents.
-		 */
-		delete: {
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/change-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Change the password of the user */
+		post: {
 			parameters: {
-				query: {
-					/** @description The full path of the folder to delete. */
-					path: string;
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The new password to set */
+						newPassword: string;
+						/** @description The current password is required */
+						currentPassword: string;
+						/** @description Must be a boolean value */
+						revokeOtherSessions?: boolean | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Password successfully changed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description New session token if other sessions were revoked */
+							token?: string | null;
+							user: {
+								/** @description The unique identifier of the user */
+								id: string;
+								/**
+								 * Format: email
+								 * @description The email address of the user
+								 */
+								email: string;
+								/** @description The name of the user */
+								name: string;
+								/**
+								 * Format: uri
+								 * @description The profile image URL of the user
+								 */
+								image?: string | null;
+								/** @description Whether the email has been verified */
+								emailVerified: boolean;
+								/**
+								 * Format: date-time
+								 * @description When the user was created
+								 */
+								createdAt: string;
+								/**
+								 * Format: date-time
+								 * @description When the user was last updated
+								 */
+								updatedAt: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/update-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Update the current user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": {
+						/** @description The name of the user */
+						name?: string;
+						/** @description The image of the user */
+						image?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if the update was successful */
+							status?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/delete-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Delete the user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The callback URL to redirect to after the user is deleted */
+						callbackURL?: string | null;
+						/** @description The password of the user is required to delete the user */
+						password?: string | null;
+						/** @description The token to delete the user is required */
+						token?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description User deletion processed successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if the operation was successful */
+							success: boolean;
+							/**
+							 * @description Status message of the deletion process
+							 * @enum {string}
+							 */
+							message: "User deleted" | "Verification email sent";
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/reset-password/{token}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Redirects the user to the callback URL with the token */
+		get: {
+			parameters: {
+				query?: {
+					callbackURL?: string;
 				};
 				header?: never;
 				path?: never;
@@ -771,49 +2894,215 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description Folder deleted successfully. */
-				204: {
+				/** @description Success */
+				200: {
 					headers: {
 						[name: string]: unknown;
 					};
-					content?: never;
+					content: {
+						"application/json": {
+							token?: string;
+						};
+					};
 				};
-				/** @description Bad Request */
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
 				400: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message?: string;
+						};
 					};
 				};
 			};
 		};
+		put?: never;
+		post?: never;
+		delete?: never;
 		options?: never;
 		head?: never;
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/storage/objects/recent': {
+	"/auth/request-password-reset": {
 		parameters: {
 			query?: never;
 			header?: never;
 			path?: never;
 			cookie?: never;
 		};
-		/**
-		 * List recent objects
-		 * @description Fetches the most recently modified objects.
-		 */
+		get?: never;
+		put?: never;
+		/** @description Send a password reset email to the user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The email address of the user to send a password reset email to */
+						email: string;
+						/** @description The URL to redirect the user to reset their password. If the token isn't valid or expired, it'll be redirected with a query parameter `?error=INVALID_TOKEN`. If the token is valid, it'll be redirected with a query parameter `?token=VALID_TOKEN */
+						redirectTo?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							status?: boolean;
+							message?: string;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/list-sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List all active sessions for the user */
 		get: {
 			parameters: {
 				query?: never;
@@ -823,22 +3112,79 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description A list of recent objects. */
+				/** @description Success */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ObjectList'];
+						"application/json": components["schemas"]["Session"][];
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message?: string;
+						};
 					};
 				};
 			};
@@ -851,54 +3197,565 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/storage/objects/category/{category}': {
+	"/auth/revoke-session": {
 		parameters: {
 			query?: never;
 			header?: never;
 			path?: never;
 			cookie?: never;
 		};
-		/**
-		 * List objects by category
-		 * @description Fetches all objects belonging to a specific category.
-		 */
+		get?: never;
+		put?: never;
+		/** @description Revoke a single session */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": {
+						/** @description The token to revoke */
+						token: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if the session was revoked successfully */
+							status: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/revoke-sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Revoke all sessions for the user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": Record<string, never>;
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if all sessions were revoked successfully */
+							status: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/revoke-other-sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Revoke all other sessions for the user except the current one */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": Record<string, never>;
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if all other sessions were revoked successfully */
+							status: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/link-social": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Link a social account to the user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The URL to redirect to after the user has signed in */
+						callbackURL?: string | null;
+						provider: string;
+						idToken?: {
+							token: string;
+							nonce?: string | null;
+							accessToken?: string | null;
+							refreshToken?: string | null;
+							scopes?: unknown[] | null;
+						} | null;
+						requestSignUp?: boolean | null;
+						/** @description Additional scopes to request from the provider */
+						scopes?: unknown[] | null;
+						/** @description The URL to redirect to if there is an error during the link process */
+						errorCallbackURL?: string | null;
+						/** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
+						disableRedirect?: boolean | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description The authorization URL to redirect the user to */
+							url?: string;
+							/** @description Indicates if the user should be redirected to the authorization URL */
+							redirect: boolean;
+							status?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/list-accounts": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List all accounts linked to the user */
 		get: {
 			parameters: {
 				query?: never;
 				header?: never;
-				path: {
-					/** @description The category to filter by (e.g., images, documents, music, code). */
-					category: string;
-				};
+				path?: never;
 				cookie?: never;
 			};
 			requestBody?: never;
 			responses: {
-				/** @description A list of objects in the specified category. */
+				/** @description Success */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['ObjectList'];
+						"application/json": {
+							id: string;
+							providerId: string;
+							/** Format: date-time */
+							createdAt: string;
+							/** Format: date-time */
+							updatedAt: string;
+							accountId: string;
+							scopes: string[];
+						}[];
 					};
 				};
-				/** @description Invalid category specified. */
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
 				400: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message?: string;
+						};
 					};
 				};
 			};
@@ -911,21 +3768,19 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/api/v1/storage/objects/url': {
+	"/auth/delete-user/callback": {
 		parameters: {
 			query?: never;
 			header?: never;
 			path?: never;
 			cookie?: never;
 		};
-		/**
-		 * Get a presigned URL
-		 * @description Gets a presigned URL for an item
-		 */
+		/** @description Callback to complete user deletion with verification token */
 		get: {
 			parameters: {
-				query: {
-					item: string;
+				query?: {
+					token?: string;
+					callbackURL?: string | null;
 				};
 				header?: never;
 				path?: never;
@@ -933,31 +3788,87 @@ export interface paths {
 			};
 			requestBody?: never;
 			responses: {
-				/** @description A presigned URL */
+				/** @description User successfully deleted */
 				200: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': string;
+						"application/json": {
+							/** @description Indicates if the deletion was successful */
+							success: boolean;
+							/**
+							 * @description Confirmation message
+							 * @enum {string}
+							 */
+							message: "User deleted";
+						};
 					};
 				};
-				/** @description Bad Request */
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
 				400: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message?: string;
+						};
 					};
 				};
 			};
@@ -970,98 +3881,1031 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/p': {
+	"/auth/unlink-account": {
 		parameters: {
 			query?: never;
 			header?: never;
 			path?: never;
 			cookie?: never;
 		};
-		/**
-		 * Proxy to an S3 object
-		 * @description Redirects to a presigned URL for a given object, hiding the direct storage URL.
-		 */
+		get?: never;
+		put?: never;
+		/** @description Unlink an account */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						providerId: string;
+						accountId?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							status?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/refresh-token": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Refresh the access token using a refresh token */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The provider ID for the OAuth provider */
+						providerId: string;
+						/** @description The account ID associated with the refresh token */
+						accountId?: string | null;
+						/** @description The user ID associated with the account */
+						userId?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Access token refreshed successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							tokenType?: string;
+							idToken?: string;
+							accessToken?: string;
+							refreshToken?: string;
+							/** Format: date-time */
+							accessTokenExpiresAt?: string;
+							/** Format: date-time */
+							refreshTokenExpiresAt?: string;
+						};
+					};
+				};
+				/** @description Invalid refresh token or provider configuration */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/get-access-token": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Get a valid access token, doing a refresh if needed */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The provider ID for the OAuth provider */
+						providerId: string;
+						/** @description The account ID associated with the refresh token */
+						accountId?: string | null;
+						/** @description The user ID associated with the account */
+						userId?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description A Valid access token */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							tokenType?: string;
+							idToken?: string;
+							accessToken?: string;
+							refreshToken?: string;
+							/** Format: date-time */
+							accessTokenExpiresAt?: string;
+							/** Format: date-time */
+							refreshTokenExpiresAt?: string;
+						};
+					};
+				};
+				/** @description Invalid refresh token or provider configuration */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/account-info": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Get the account info provided by the provider */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The provider given account id for which to get the account info */
+						accountId: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							user: {
+								id: string;
+								name?: string;
+								email?: string;
+								image?: string;
+								emailVerified: boolean;
+							};
+							data: {
+								[key: string]: unknown;
+							};
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/ok": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Check if the API is working */
 		get: {
 			parameters: {
-				query: {
-					url: string;
-				};
+				query?: never;
 				header?: never;
 				path?: never;
 				cookie?: never;
 			};
 			requestBody?: never;
 			responses: {
-				/** @description Temporary Redirect to the presigned URL. */
-				307: {
+				/** @description API is working */
+				200: {
 					headers: {
 						[name: string]: unknown;
 					};
-					content?: never;
+					content: {
+						"application/json": {
+							/** @description Indicates if the API is working */
+							ok: boolean;
+						};
+					};
 				};
-				/** @description Bad Request */
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
 				400: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message: string;
+						};
 					};
 				};
-				/** @description Internal Server Error */
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
 				500: {
 					headers: {
 						[name: string]: unknown;
 					};
 					content: {
-						'application/json': components['schemas']['Error'];
+						"application/json": {
+							message?: string;
+						};
 					};
 				};
 			};
 		};
-		/**
-		 * Upload an S3 object
-		 * @description Redirects to a presigned URL for a given object, hiding the direct storage URL.
-		 */
-		put: {
-			parameters: {
-				query: {
-					url: string;
-				};
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description Temporary Redirect to the presigned URL. */
-				307: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content?: never;
-				};
-				/** @description Bad Request */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-				/** @description Internal Server Error */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						'application/json': components['schemas']['Error'];
-					};
-				};
-			};
-		};
+		put?: never;
 		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/error": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Displays an error page */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"text/html": string;
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/sign-in/oauth2": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign in with OAuth2 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The provider ID for the OAuth provider */
+						providerId: string;
+						/** @description The URL to redirect to after sign in */
+						callbackURL?: string | null;
+						/** @description The URL to redirect to if an error occurs */
+						errorCallbackURL?: string | null;
+						/** @description The URL to redirect to after login if the user is new. Eg: "/welcome" */
+						newUserCallbackURL?: string | null;
+						/** @description Disable redirect */
+						disableRedirect?: boolean | null;
+						/** @description Scopes to be passed to the provider authorization request. */
+						scopes?: unknown[] | null;
+						/** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider. Eg: false */
+						requestSignUp?: boolean | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Sign in with OAuth2 */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							url?: string;
+							redirect?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/oauth2/callback/{providerId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description OAuth2 callback */
+		get: {
+			parameters: {
+				query?: {
+					code?: string | null;
+					error?: string | null;
+					error_description?: string | null;
+					state?: string | null;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OAuth2 callback */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							url?: string;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/oauth2/link": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Link an OAuth2 account to the current user session */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						providerId: string;
+						callbackURL: string;
+						/** @description Additional scopes to request when linking the account */
+						scopes?: unknown[] | null;
+						/** @description The URL to redirect to if there is an error during the link process */
+						errorCallbackURL?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Authorization URL generated successfully for linking an OAuth2 account */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/**
+							 * Format: uri
+							 * @description The authorization URL to redirect the user to for linking the OAuth2 account
+							 */
+							url: string;
+							/**
+							 * @description Indicates that the client should redirect to the provided URL
+							 * @enum {boolean}
+							 */
+							redirect: true;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -1073,73 +4917,53 @@ export type webhooks = Record<string, never>;
 export interface components {
 	schemas: {
 		User: {
-			/** Format: uuid */
-			id: string;
-			name: string;
-			/** Format: email */
-			email: string;
-			image?: string | null;
-		};
-		/** @example [
-		 *       "pocketid",
-		 *       "google"
-		 *     ] */
-		Providers: string[];
-		Session: {
-			/** Format: uuid */
 			id?: string;
-			/** Format: date-time */
-			expiresAt?: string;
-		};
-		UserSession: {
-			user: components['schemas']['User'];
-			session: components['schemas']['Session'];
-		};
-		Bucket: {
 			name: string;
-			/** Format: date-time */
-			creationDate: string;
+			email: string;
+			/** @default false */
+			readonly emailVerified: boolean;
+			image?: string;
+			/** @default Generated at runtime */
+			createdAt: string;
+			/** @default Generated at runtime */
+			updatedAt: string;
 		};
-		ObjectItem: {
-			key: string;
-			/** Format: date-time */
-			lastModified?: string;
-			eTag?: string;
-			size?: number;
-			storageClass?: string;
-			contentType?: string;
-			metadata?: {
-				[key: string]: string;
-			};
+		Session: {
+			id?: string;
+			expiresAt: string;
+			token: string;
+			/** @default Generated at runtime */
+			createdAt: string;
+			updatedAt: string;
+			ipAddress?: string;
+			userAgent?: string;
+			userId: string;
 		};
-		/** @example [
-		 *       "documents",
-		 *       "music",
-		 *       "images",
-		 *       "video"
-		 *     ] */
-		CategoriesList: string[];
-		ObjectList: {
-			count: number;
-			list: components['schemas']['ObjectItem'][];
+		Account: {
+			id?: string;
+			accountId: string;
+			providerId: string;
+			userId: string;
+			accessToken?: string;
+			refreshToken?: string;
+			idToken?: string;
+			accessTokenExpiresAt?: string;
+			refreshTokenExpiresAt?: string;
+			scope?: string;
+			password?: string;
+			/** @default Generated at runtime */
+			createdAt: string;
+			updatedAt: string;
 		};
-		Error: {
-			error?: string;
-		};
-		UploadBody: {
-			key: string;
-			type: string;
-			folder?: string;
-			metadata?: {
-				[key: string]: string;
-			};
-		};
-		UploadResult: {
-			presignedUrl: string;
-			finalName: string;
-			metadata?: {
-				[key: string]: string;
-			};
+		Verification: {
+			id?: string;
+			identifier: string;
+			value: string;
+			expiresAt: string;
+			/** @default Generated at runtime */
+			createdAt: string;
+			/** @default Generated at runtime */
+			updatedAt: string;
 		};
 	};
 	responses: never;
@@ -1149,4 +4973,127 @@ export interface components {
 	pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+	socialSignIn: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Callback URL to redirect to after the user has signed in */
+					callbackURL?: string | null;
+					newUserCallbackURL?: string | null;
+					/** @description Callback URL to redirect to if an error happens */
+					errorCallbackURL?: string | null;
+					provider: string;
+					/** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
+					disableRedirect?: boolean | null;
+					idToken?: {
+						/** @description ID token from the provider */
+						token: string;
+						/** @description Nonce used to generate the token */
+						nonce?: string | null;
+						/** @description Access token from the provider */
+						accessToken?: string | null;
+						/** @description Refresh token from the provider */
+						refreshToken?: string | null;
+						/** @description Expiry date of the token */
+						expiresAt?: number | null;
+					} | null;
+					/** @description Array of scopes to request from the provider. This will override the default scopes passed. */
+					scopes?: unknown[] | null;
+					/** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider */
+					requestSignUp?: boolean | null;
+					/** @description The login hint to use for the authorization code request */
+					loginHint?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Success - Returns either session details or redirect URL */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @enum {boolean} */
+						redirect: false;
+						/** @description Session token */
+						token: string;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+}

@@ -1,6 +1,6 @@
-import type { Logger } from '$lib/logger';
+import type { Logger } from "$lib/logger";
 // See https://svelte.dev/docs/kit/types#app.d.ts
-import type { User } from '$lib/api';
+import type { User } from "$lib/api";
 
 // for information about these interfaces
 declare global {
@@ -27,7 +27,7 @@ declare global {
 	}
 }
 
-declare module 'svelte/elements' {
+declare module "svelte/elements" {
 	interface HTMLAttributes {
 		ontap?: (event: CustomEvent<null>) => void;
 		onlongpress?: (event: CustomEvent<null>) => void;

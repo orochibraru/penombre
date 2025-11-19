@@ -3,11 +3,11 @@
 -->
 
 <script lang="ts">
-	import { UploadIcon } from '@lucide/svelte';
-	import { useId } from 'bits-ui';
-	import { cn } from '$lib/utils';
-	import { displaySize } from '.';
-	import type { FileDropZoneProps, FileRejectedReason } from './types';
+	import { UploadIcon } from "@lucide/svelte";
+	import { useId } from "bits-ui";
+	import { cn } from "$lib/utils";
+	import { displaySize } from ".";
+	import type { FileDropZoneProps, FileRejectedReason } from "./types";
 
 	let {
 		id = useId(),
@@ -25,7 +25,7 @@
 
 	if (maxFiles !== undefined && fileCount === undefined) {
 		console.warn(
-			'Make sure to provide FileDropZone with `fileCount` when using the `maxFiles` prompt'
+			"Make sure to provide FileDropZone with `fileCount` when using the `maxFiles` prompt",
 		);
 	}
 
@@ -34,7 +34,7 @@
 	const drop = async (
 		e: DragEvent & {
 			currentTarget: EventTarget & HTMLLabelElement;
-		}
+		},
 	) => {
 		if (disabled || !canUploadFiles) return;
 
@@ -48,7 +48,7 @@
 	const change = async (
 		e: Event & {
 			currentTarget: EventTarget & HTMLInputElement;
-		}
+		},
 	) => {
 		if (disabled) return;
 
@@ -59,30 +59,34 @@
 		await upload(Array.from(selectedFiles));
 
 		// this if a file fails and we upload the same file again we still get feedback
-		(e.target as HTMLInputElement).value = '';
+		(e.target as HTMLInputElement).value = "";
 	};
 
-	const shouldAcceptFile = (file: File, fileNumber: number): FileRejectedReason | undefined => {
+	const shouldAcceptFile = (
+		file: File,
+		fileNumber: number,
+	): FileRejectedReason | undefined => {
 		if (maxFileSize !== undefined && file.size > maxFileSize)
-			return 'Maximum file size exceeded';
+			return "Maximum file size exceeded";
 
-		if (maxFiles !== undefined && fileNumber > maxFiles) return 'Maximum files uploaded';
+		if (maxFiles !== undefined && fileNumber > maxFiles)
+			return "Maximum files uploaded";
 
 		if (!accept) return undefined;
 
-		const acceptedTypes = accept.split(',').map((a) => a.trim().toLowerCase());
+		const acceptedTypes = accept.split(",").map((a) => a.trim().toLowerCase());
 		const fileType = file.type.toLowerCase();
 		const fileName = file.name.toLowerCase();
 
 		const isAcceptable = acceptedTypes.some((pattern) => {
 			// check extension like .mp4
-			if (fileType.startsWith('.')) {
+			if (fileType.startsWith(".")) {
 				return fileName.endsWith(pattern);
 			}
 
 			// if pattern has wild card like video/*
-			if (pattern.endsWith('/*')) {
-				const baseType = pattern.slice(0, pattern.indexOf('/*'));
+			if (pattern.endsWith("/*")) {
+				const baseType = pattern.slice(0, pattern.indexOf("/*"));
 				return fileType.startsWith(`${baseType}/`);
 			}
 
@@ -90,7 +94,7 @@
 			return fileType === pattern;
 		});
 
-		if (!isAcceptable) return 'File type not allowed';
+		if (!isAcceptable) return "File type not allowed";
 
 		return undefined;
 	};
@@ -104,12 +108,15 @@
 			for (let i = 0; i < uploadFiles.length; i++) {
 				const file = uploadFiles[i];
 
-				const rejectedReason = shouldAcceptFile(file as File, (fileCount ?? 0) + i + 1);
+				const rejectedReason = shouldAcceptFile(
+					file as File,
+					(fileCount ?? 0) + i + 1,
+				);
 
 				if (rejectedReason) {
 					onFileRejected?.({
 						file: file as File,
-						reason: rejectedReason
+						reason: rejectedReason,
 					});
 					continue;
 				}
@@ -126,7 +133,11 @@
 	const canUploadFiles = $derived(
 		!disabled &&
 			!uploading &&
-			!(maxFiles !== undefined && fileCount !== undefined && fileCount >= maxFiles)
+			!(
+				maxFiles !== undefined &&
+				fileCount !== undefined &&
+				fileCount >= maxFiles
+			),
 	);
 </script>
 

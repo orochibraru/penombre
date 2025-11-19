@@ -1,3 +1,3 @@
-import { type Writable, writable } from 'svelte/store';
+import { type Writable, writable } from "svelte/store";
 
-export const title: Writable<string> = writable('');
+export const title: Writable<string> = writable("");

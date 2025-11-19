@@ -1,17 +1,21 @@
 <script lang="ts">
-	import { CloudUploadIcon, EllipsisIcon, FolderPlusIcon } from '@lucide/svelte';
-	import { MediaQuery } from 'svelte/reactivity';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
-	import NewFolder from '$lib/components/layout/dialogs/new-folder.svelte';
-	import Upload from '$lib/components/layout/dialogs/upload.svelte';
-	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index';
-	import { Button } from '$lib/components/ui/button';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
-	import { Separator } from '$lib/components/ui/separator/index';
-	import * as Sidebar from '$lib/components/ui/sidebar/index';
-	import { title } from '$lib/store/title';
-	import type { BreadCrumb } from '$lib/utils';
+	import {
+		CloudUploadIcon,
+		EllipsisIcon,
+		FolderPlusIcon,
+	} from "@lucide/svelte";
+	import { MediaQuery } from "svelte/reactivity";
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import NewFolder from "$lib/components/layout/dialogs/new-folder.svelte";
+	import Upload from "$lib/components/layout/dialogs/upload.svelte";
+	import * as Breadcrumb from "$lib/components/ui/breadcrumb/index";
+	import { Button } from "$lib/components/ui/button";
+	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
+	import { Separator } from "$lib/components/ui/separator/index";
+	import * as Sidebar from "$lib/components/ui/sidebar/index";
+	import { title } from "$lib/store/title";
+	import type { BreadCrumb } from "$lib/utils";
 
 	type Props = {
 		newFolderOpen: boolean;
@@ -20,9 +24,12 @@
 
 	let uploadLoading: boolean = $state(false);
 
-	let { newFolderOpen = $bindable(false), uploadOpen = $bindable(false) }: Props = $props();
+	let {
+		newFolderOpen = $bindable(false),
+		uploadOpen = $bindable(false),
+	}: Props = $props();
 
-	const isDesktop = new MediaQuery('(min-width: 768px)');
+	const isDesktop = new MediaQuery("(min-width: 768px)");
 </script>
 
 <header

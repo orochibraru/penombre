@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { XIcon } from '@lucide/svelte';
-	import type { Snippet } from 'svelte';
-	import { slide } from 'svelte/transition';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import { XIcon } from "@lucide/svelte";
+	import type { Snippet } from "svelte";
+	import { slide } from "svelte/transition";
+	import Button from "$lib/components/ui/button/button.svelte";
 
 	type Props = {
 		title: string;
@@ -17,7 +17,7 @@
 		children,
 		open = $bindable(false),
 		callback,
-		showCloseButton = true
+		showCloseButton = true,
 	}: Props = $props();
 </script>
 

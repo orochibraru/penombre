@@ -1,63 +1,31 @@
-import { toast } from 'svelte-sonner';
-import { goto } from '$app/navigation';
-import {
-	type ApiResponse,
-	api,
-	apiError,
-	apiSuccess,
-	type Providers,
-	type UserSession
-} from '$lib/api';
-import { route } from '$lib/ROUTES';
+import { genericOAuthClient } from "better-auth/client/plugins";
+import { createAuthClient } from "better-auth/svelte";
+import { toast } from "svelte-sonner";
+import { goto } from "$app/navigation";
+import { route } from "$lib/ROUTES";
 
-export async function getProviders(): Promise<ApiResponse<Providers>> {
-	try {
-		const { data, error: err, response } = await api.GET('/api/v1/auth/oauth/providers');
+export const authClient = createAuthClient({
+	baseURL: "http://localhost:8080/auth",
+	plugins: [genericOAuthClient()],
+});
 
-		if (err) {
-			return apiError(response.status, err.error);
-		}
-
-		return apiSuccess(data);
-	} catch (e) {
-		return apiError(500, 'API seems unreachable', e);
-	}
-}
-
-export async function getUser(): Promise<ApiResponse<UserSession>> {
-	try {
-		const { data, error: err, response } = await api.GET('/api/v1/auth/me');
-
-		if (err) {
-			return apiError(response.status, err.error);
-		}
-
-		if (!data) {
-			return apiError(500, 'No user or session retrieved from auth me endpoint');
-		}
-
-		return apiSuccess(data);
-	} catch (e) {
-		return apiError(500, 'API seems unreachable', e);
-	}
+export async function handleOauthSignIn(provider: string) {
+	return await authClient.signIn.oauth2({
+		providerId: provider,
+		callbackURL: window.location.origin,
+	});
 }
 
 async function signOutCallback() {
-	const { error } = await api.POST('/api/v1/auth/sign-out');
-	if (error) {
-		console.error(error);
-		return false;
-	}
-
-	await goto(route('/auth/sign-in'), { invalidateAll: true });
-
+	await authClient.signOut();
+	await goto(route("/auth/sign-in"), { invalidateAll: true });
 	return true;
 }
 
 export async function handleSignOut() {
 	toast.promise(signOutCallback, {
-		loading: 'Signing you out',
-		success: 'You were signed out',
-		error: 'Failed to sign you out'
+		loading: "Signing you out",
+		success: "You were signed out",
+		error: "Failed to sign you out",
 	});
 }

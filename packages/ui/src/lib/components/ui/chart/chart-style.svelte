@@ -1,14 +1,18 @@
 <script lang="ts">
-	import { type ChartConfig, THEMES } from './chart-utils.js';
+	import { type ChartConfig, THEMES } from "./chart-utils.js";
 
 	let { id, config }: { id: string; config: ChartConfig } = $props();
 
 	const colorConfig = $derived(
-		config ? Object.entries(config).filter(([, config]) => config.theme || config.color) : null
+		config
+			? Object.entries(config).filter(
+					([, config]) => config.theme || config.color,
+				)
+			: null,
 	);
 
-	const styleOpen = '>elyts<'.split('').reverse().join('');
-	const styleClose = '>elyts/<'.split('').reverse().join('');
+	const styleOpen = ">elyts<".split("").reverse().join("");
+	const styleClose = ">elyts/<".split("").reverse().join("");
 </script>
 
 {#if colorConfig && colorConfig.length}

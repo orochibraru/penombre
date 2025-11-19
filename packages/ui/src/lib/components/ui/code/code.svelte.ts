@@ -1,8 +1,8 @@
-import { Context } from 'runed';
-import type { HighlighterCore } from 'shiki';
-import type { ReadableBoxedValues, WritableBoxedValues } from 'svelte-toolbelt';
-import { highlighter } from './shiki';
-import type { CodeRootProps } from './types';
+import { Context } from "runed";
+import type { HighlighterCore } from "shiki";
+import type { ReadableBoxedValues, WritableBoxedValues } from "svelte-toolbelt";
+import { highlighter } from "./shiki";
+import type { CodeRootProps } from "./types";
 
 type CodeOverflowStateProps = WritableBoxedValues<{
 	collapsed: boolean;
@@ -24,9 +24,9 @@ class CodeOverflowState {
 
 type CodeRootStateProps = ReadableBoxedValues<{
 	code: string;
-	lang: NonNullable<CodeRootProps['lang']>;
+	lang: NonNullable<CodeRootProps["lang"]>;
 	hideLines: boolean;
-	highlight: CodeRootProps['highlight'];
+	highlight: CodeRootProps["highlight"];
 }>;
 
 class CodeRootState {
@@ -34,7 +34,7 @@ class CodeRootState {
 
 	constructor(
 		readonly opts: CodeRootStateProps,
-		readonly overflow?: CodeOverflowState
+		readonly overflow?: CodeOverflowState,
 	) {
 		highlighter.then((hl) => {
 			this.highlighter = hl;
@@ -45,16 +45,16 @@ class CodeRootState {
 		return this.highlighter?.codeToHtml(code, {
 			lang: this.opts.lang.current,
 			themes: {
-				light: 'github-light-default',
-				dark: 'github-dark-default'
+				light: "github-light-default",
+				dark: "github-dark-default",
 			},
 			transformers: [
 				{
 					pre: (el) => {
-						el.properties.style = '';
+						el.properties.style = "";
 
 						if (!this.opts.hideLines.current) {
-							el.properties.class += ' line-numbers';
+							el.properties.class += " line-numbers";
 						}
 
 						return el;
@@ -65,9 +65,9 @@ class CodeRootState {
 						}
 
 						return node;
-					}
-				}
-			]
+					},
+				},
+			],
 		});
 	}
 
@@ -78,13 +78,13 @@ class CodeRootState {
 	highlighted = $derived(this.highlight(this.code));
 }
 
-function within(num: number, range: CodeRootProps['highlight']) {
+function within(num: number, range: CodeRootProps["highlight"]) {
 	if (!range) return false;
 
 	let within = false;
 
 	for (const r of range) {
-		if (typeof r === 'number') {
+		if (typeof r === "number") {
 			if (num === r) {
 				within = true;
 				break;
@@ -109,9 +109,9 @@ class CodeCopyButtonState {
 	}
 }
 
-const overflowCtx = new Context<CodeOverflowState>('code-overflow-state');
+const overflowCtx = new Context<CodeOverflowState>("code-overflow-state");
 
-const ctx = new Context<CodeRootState>('code-root-state');
+const ctx = new Context<CodeRootState>("code-root-state");
 
 export function useCodeOverflow(props: CodeOverflowStateProps) {
 	return overflowCtx.set(new CodeOverflowState(props));

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "⏳ Running lint-staged..."
-export NODE_OPTIONS="--experimental-strip-types --disable-warning=ExperimentalWarning"
-if pnpm exec lint-staged --config lint-staged.config.mjs; then
-    echo "✅ Lint staged ran successfully"
+echo "Running pre-commit hooks..."
+
+echo "Linting, formatting and fixing issues..."
+if bunx --bun biome check --write; then
+    echo "Linting passed."
 else
-    echo "🔴 Failed to run Lint staged"
+    echo "Linting issues found. Please run 'bunx --bun biome check --write' to fix them."
     exit 1
 fi
+
+echo "Staging changes..."
+git add .

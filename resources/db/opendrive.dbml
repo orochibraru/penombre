@@ -1,19 +1,93 @@
-Table "users" {
-  "id" uuid [pk, default: `gen_random_uuid()`]
+Table "account" {
+  "id" text [pk, not null]
+  "account_id" text [not null]
+  "provider_id" text [not null]
+  "user_id" text [not null]
+  "access_token" text
+  "refresh_token" text
+  "id_token" text
+  "access_token_expires_at" timestamp
+  "refresh_token_expires_at" timestamp
+  "scope" text
+  "password" text
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+}
+
+Table "activity" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "user_id" text [not null]
+  "action" text [not null]
+  "message" text [not null]
+  "link" text
+  "level" text [not null]
+  "created_at" timestamp [not null]
+}
+
+Table "session" {
+  "id" text [pk, not null]
+  "expires_at" timestamp [not null]
+  "token" text [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+  "ip_address" text
+  "user_agent" text
+  "user_id" text [not null]
+
+  Indexes {
+    token [unique, name: "session_token_unique"]
+  }
+}
+
+Table "shared_with" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "sharing_id" uuid [not null]
+  "user_id" text [not null]
+  "created_at" timestamp [not null]
+}
+
+Table "sharings" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "owner_id" text [not null]
+  "resource_type" text [not null]
+  "resource_id" text [not null]
+  "permission" text [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+  "expiration" timestamp
+}
+
+Table "user" {
+  "id" text [pk, not null]
   "name" text [not null]
-  "email" text [unique, not null]
+  "email" text [not null]
   "email_verified" boolean [not null, default: false]
   "image" text
-  "created_at" timestamptz [not null, default: `now()`]
-  "updated_at" timestamptz [not null, default: `now()`]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    email [unique, name: "user_email_unique"]
+  }
 }
 
-Table "sessions" {
-  "id" uuid [pk]
-  "user_id" uuid [not null]
-  "csrf_token" text [not null]
-  "expires_at" timestamptz [not null]
-  "created_at" timestamptz [not null, default: `now()`]
+Table "verification" {
+  "id" text [pk, not null]
+  "identifier" text [not null]
+  "value" text [not null]
+  "expires_at" timestamp [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
 }
 
-Ref:"users"."id" < "sessions"."user_id" [delete: cascade]
+Ref "account_user_id_user_id_fk":"user"."id" < "account"."user_id" [update: no action, delete: cascade]
+
+Ref "activity_user_id_user_id_fk":"user"."id" < "activity"."user_id" [update: no action, delete: cascade]
+
+Ref "session_user_id_user_id_fk":"user"."id" < "session"."user_id" [update: no action, delete: cascade]
+
+Ref "shared_with_sharing_id_sharings_id_fk":"sharings"."id" < "shared_with"."sharing_id" [update: no action, delete: cascade]
+
+Ref "shared_with_user_id_user_id_fk":"user"."id" < "shared_with"."user_id" [update: no action, delete: cascade]
+
+Ref "sharings_owner_id_user_id_fk":"user"."id" < "sharings"."owner_id" [update: no action, delete: cascade]

@@ -1,23 +1,11 @@
-import { page } from '$app/state';
-import { api, type ObjectItem } from '$lib/api';
+import { page } from "$app/state";
+import { apiUrl } from "$lib/api";
 
-export async function getProxiedObjectUrl(item: ObjectItem) {
-	const fullPath = page.params.path ? `${page.params.path}/${item.key}` : item.key;
+export function getObjectUrl(itemPath: string, raw?: boolean): string {
+	const fullPath = page.params.path
+		? `${page.params.path}/${itemPath}`
+		: itemPath;
 
-	const { data: presignedUrl, error: err } = await api.GET('/api/v1/storage/objects/url', {
-		params: {
-			query: {
-				item: fullPath
-			}
-		}
-	});
-
-	if (err) {
-		console.error(err);
-		throw err;
-	}
-
-	const finalUrl = `${page.url.origin}/p?url=${presignedUrl}`;
-
+	const finalUrl = `${apiUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${raw ? "?raw=true" : ""}`;
 	return finalUrl;
 }

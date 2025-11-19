@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { base } from '$app/paths';
-	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import { onMount } from "svelte";
+	import { goto } from "$app/navigation";
+	import { base } from "$app/paths";
+	import Spinner from "$lib/components/ui/Spinner.svelte";
 
 	// This page exists only to load cookies in the browser
 	// so the sign in flow works properly

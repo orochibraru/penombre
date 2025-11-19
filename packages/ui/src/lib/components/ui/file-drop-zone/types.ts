@@ -2,13 +2,13 @@
 	Installed from @ieedan/shadcn-svelte-extras
 */
 
-import type { WithChildren } from 'bits-ui';
-import type { HTMLInputAttributes } from 'svelte/elements';
+import type { WithChildren } from "bits-ui";
+import type { HTMLInputAttributes } from "svelte/elements";
 
 export type FileRejectedReason =
-	| 'Maximum file size exceeded'
-	| 'File type not allowed'
-	| 'Maximum files uploaded';
+	| "Maximum file size exceeded"
+	| "File type not allowed"
+	| "Maximum files uploaded";
 
 export type FileDropZonePropsWithoutHTML = WithChildren<{
 	ref?: HTMLInputElement | null;
@@ -48,4 +48,4 @@ export type FileDropZonePropsWithoutHTML = WithChildren<{
 }>;
 
 export type FileDropZoneProps = FileDropZonePropsWithoutHTML &
-	Omit<HTMLInputAttributes, 'multiple' | 'files'>;
+	Omit<HTMLInputAttributes, "multiple" | "files">;

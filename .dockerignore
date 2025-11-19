@@ -17,23 +17,29 @@ compose.local.yaml
 compose.yaml
 .dockerignore
 docker-bake.hcl
+concurrently.config.mjs
+*.sh
+biome.json
+LICENSE
+.editorconfig
+/resources/
+/scripts/
+/test-results/
+/tests/
 
 # Temp
 /tmp/
 
-# UI
-/node_modules/
-/packages/ui/node_modules/
-/dist/
-/packages/ui/dist/
-/.svelte-kit/
-/packages/ui/dist/.svelte-kit/
-README.md
-
-# API
-sqlc.yaml
-Makefile
-codegen.yaml
-.air.toml
-/tmp/
-README.md
+# Node
+**/node_modules/
+**/dist/
+**/build/
+**/out/
+**/.next/
+**/.nuxt/
+**/.turbo/
+**/.parcel-cache/
+**/.vercel/
+**/.expo/
+**/.svelte-kit/
+**/.expo-shared/

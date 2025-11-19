@@ -3,17 +3,17 @@
 		title: string;
 		url: string;
 		icon: typeof IconType;
-		accentColor?: 'indigo' | 'orange' | 'pink' | 'green' | 'purple';
+		accentColor?: "indigo" | "orange" | "pink" | "green" | "purple";
 		hideOnMobile?: boolean;
 	};
 </script>
 
 <script lang="ts">
+	import { type Icon as IconType } from '@lucide/svelte';
+	import type { ComponentProps } from 'svelte';
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar/index';
 	import { cn, type WithoutChildren } from '$lib/utils.js';
-	import { type Icon as IconType } from '@lucide/svelte';
-	import type { ComponentProps } from 'svelte';
 
 	type Props = WithoutChildren<ComponentProps<typeof Sidebar.Group>> & {
 		title: string;

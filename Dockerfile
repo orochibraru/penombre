@@ -1,71 +1,39 @@
-# UI
-FROM node:24-alpine3.22 AS svelte-builder
+# Build UI
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+RUN mkdir -p /app/packages/ui /app/packages/api
 
-RUN corepack enable
+COPY package.json bun.lock /app/
+COPY packages/ui/package.json /app/packages/ui/
+COPY packages/api/package.json /app/packages/api/
 
-COPY packages/ui/package.json ./
+RUN bun ci --frozen-lockfile --ignore-scripts
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --ignore-scripts --prefer-offline
+COPY packages/ui /app/packages/ui
 
-COPY ./packages/ui .
+# Build UI
+RUN cd packages/ui && bun --bun vite build
 
-RUN --mount=type=cache,id=vitebuild-opendrive,target=/node_modules/.vite pnpm run build
+COPY . .
 
-# API
-FROM golang:1.25.2-alpine AS go-builder
+RUN bun ci --production --frozen-lockfile --ignore-scripts
 
-WORKDIR /app
-
-RUN apk --no-cache add ca-certificates
-
-COPY ./packages/api/go.mod ./packages/api/go.sum ./
-
-RUN go mod download
-
-COPY ./packages/api .
-
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -o server .
-
-# CLI
-FROM golang:1.25.2-alpine AS cli-builder
+# Final stage with Bun runtime
+FROM oven/bun:1-alpine AS final
 
 WORKDIR /app
 
-RUN apk --no-cache add ca-certificates
-
-COPY ./packages/cli/go.mod ./packages/cli/go.sum ./
-
-RUN go mod download
-
-COPY ./packages/cli .
-
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -a -installsuffix cgo -o cli .
-
-# Server
-FROM scratch
-
-WORKDIR /app
-
-COPY --from=go-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Copy API source and UI build
+COPY --from=builder /app/packages/api /app/packages/api
+COPY --from=builder /app/packages/ui/build /app/packages/ui/dist
+COPY --from=builder /app/node_modules /app/node_modules
 
 ENV ENV=prod
 
-# Copy the Go binary
-COPY --from=go-builder /app/server /app/server
-
-# Copy the CLI binary
-COPY --from=cli-builder /app/cli /app/cli
-
-# Copy the SvelteKit static build output
-COPY --from=svelte-builder /app/dist ./dist
-
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "/app/cli", "health" ]
-
 EXPOSE 8080
 
-CMD ["/app/server"]
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+CMD ["bun", "run", "/app/packages/api/index.ts"]

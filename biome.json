@@ -1,16 +1,33 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.0.5/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
 		"useIgnoreFile": false
 	},
+
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!src/lib/ROUTES.ts", "!src/app.css"]
+		"includes": [
+			"**",
+			"node_modules/**",
+			"!**/*.svelte",
+			"!packages/ui/src/lib/ROUTES.ts",
+			"!packages/ui/src/app.css",
+			"!packages/ui/vite.config.ts",
+			"!packages/ui/build",
+			"!packages/ui/dist",
+			"!packages/api/dist",
+			"!packages/api/build",
+			"!packages/ui/node_modules",
+			"!packages/api/node_modules",
+			"!packages/ui/.svelte-kit/*",
+			"!.svelte-kit",
+			"!test-results"
+		]
 	},
 	"formatter": {
-		"enabled": false
+		"enabled": true
 	},
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"linter": {
@@ -18,6 +35,7 @@
 		"rules": {
 			"recommended": true,
 			"style": {
+				"useConst": "error",
 				"noParameterAssign": "error",
 				"useAsConstAssertion": "error",
 				"useDefaultParameterLast": "error",
@@ -36,21 +54,10 @@
 			"quoteStyle": "double"
 		}
 	},
-	"overrides": [
-		{
-			"includes": ["**/*.svelte", "**/*.astro", "**/*.vue"],
-			"linter": {
-				"rules": {
-					"style": {
-						"useConst": "off",
-						"useImportType": "off"
-					},
-					"correctness": {
-						"noUnusedVariables": "off",
-						"noUnusedImports": "off"
-					}
-				}
-			}
+	"html": {
+		"experimentalFullSupportEnabled": true,
+		"formatter": {
+			"indentScriptAndStyle": true
 		}
-	]
+	}
 }

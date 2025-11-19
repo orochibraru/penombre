@@ -2,24 +2,13 @@ services:
   app:
     build: .
     depends_on:
-      storage:
-        condition: service_healthy
       db:
         condition: service_healthy
     ports:
       - 8080:8080
     environment:
-      - OAUTH_PROVIDERS=pocketid
-      - OAUTH_POCKETID_CLIENT_ID=${OAUTH_POCKETID_CLIENT_ID}
-      - OAUTH_POCKETID_CLIENT_SECRET=${OAUTH_POCKETID_CLIENT_SECRET}
-      - OAUTH_POCKETID_DISCOVERY_URL=${OAUTH_POCKETID_DISCOVERY_URL}
-      - OAUTH_POCKETID_REDIRECT_URL=${OAUTH_POCKETID_REDIRECT_URL}
-      - DEV_PROXY=false
-      - APP_ENV=prod
-      - STORAGE_ACCESS_KEY_ID=${STORAGE_ACCESS_KEY_ID-opendrive}
-      - STORAGE_ACCESS_KEY_SECRET=${STORAGE_ACCESS_KEY_SECRET-opendrive}
-      - STORAGE_URL=http://storage:9000
       - DATABASE_URL=postgres://postgres:postgres@db:5432/opendrive?sslmode=disable
+      - NODE_ENV=development
   db:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -42,25 +31,6 @@ services:
       retries: 5
       start_period: 3s
 
-  storage:
-    image: git.ombrage.space/opendrive/storage:latest
-    restart: unless-stopped
-    healthcheck:
-      test: [CMD, curl, -f, http://0.0.0.0:9000/minio/health/live]
-      retries: 5
-      timeout: 3s
-      interval: 10s
-      start_period: 2s
-    environment:
-      - MINIO_ROOT_USER=${STORAGE_ACCESS_KEY_ID-opendrive}
-      - MINIO_ROOT_PASSWORD=${STORAGE_ACCESS_KEY_SECRET-opendrive}
-    ports:
-      - 9000:9000
-    volumes:
-      - storage_data:/data
-
 volumes:
   postgres_data:
-    driver: local
-  storage_data:
     driver: local

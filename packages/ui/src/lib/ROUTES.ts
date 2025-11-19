@@ -25,7 +25,6 @@ const PAGES = {
   "/sync": `/sync`,
   "/trash": `/trash`,
   "/auth/callback": `/auth/callback`,
-  "/auth/error": `/auth/error`,
   "/auth/sign-in": `/auth/sign-in`,
   "/error": `/error`
 }
@@ -156,7 +155,7 @@ export function route<T extends keyof AllTypes>(key: T, ...params: any[]): strin
 * ```
 */
 export type KIT_ROUTES = {
-  PAGES: { '/': never, '/account': never, '/browse': never, '/browse/[...path]': 'path', '/categories/[category]': 'category', '/recent': never, '/settings': never, '/shared': never, '/starred': never, '/sync': never, '/trash': never, '/auth/callback': never, '/auth/error': never, '/auth/sign-in': never, '/error': never }
+  PAGES: { '/': never, '/account': never, '/browse': never, '/browse/[...path]': 'path', '/categories/[category]': 'category', '/recent': never, '/settings': never, '/shared': never, '/starred': never, '/sync': never, '/trash': never, '/auth/callback': never, '/auth/sign-in': never, '/error': never }
   SERVERS: Record<string, never>
   ACTIONS: Record<string, never>
   LINKS: Record<string, never>

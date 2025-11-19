@@ -7,7 +7,7 @@ variable "TAG" {
 }
 
 group "default" {
-  targets = ["app", "docs"]
+  targets = ["app"]
 }
 
 
@@ -20,11 +20,3 @@ target "app" {
   cache-to = ["type=gha,mode=max"]
 }
 
-target "docs" {
-  context    = "packages/docs"
-  dockerfile = "./Dockerfile"
-  tags       = ["git.ombrage.space/opendrive/docs:latest","git.ombrage.space/opendrive/docs:${TAG}"]
-  platforms = ["linux/amd64"]
-  cache-from = ["type=gha"]
-  cache-to = ["type=gha,mode=max"]
-}

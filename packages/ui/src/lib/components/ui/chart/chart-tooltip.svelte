@@ -1,9 +1,13 @@
 <script lang="ts">
-	import { getTooltipContext, Tooltip as TooltipPrimitive } from 'layerchart';
-	import type { Snippet } from 'svelte';
-	import type { HTMLAttributes } from 'svelte/elements';
-	import { cn, type WithElementRef, type WithoutChildren } from '$lib/utils.js';
-	import { getPayloadConfigFromPayload, type TooltipPayload, useChart } from './chart-utils.js';
+	import { getTooltipContext, Tooltip as TooltipPrimitive } from "layerchart";
+	import type { Snippet } from "svelte";
+	import type { HTMLAttributes } from "svelte/elements";
+	import { cn, type WithElementRef, type WithoutChildren } from "$lib/utils.js";
+	import {
+		getPayloadConfigFromPayload,
+		type TooltipPayload,
+		useChart,
+	} from "./chart-utils.js";
 
 	// biome-ignore lint/suspicious/noExplicitAny: this is a formatter
 	function defaultFormatter(value: any, _payload: TooltipPayload[]) {
@@ -14,7 +18,7 @@
 		ref = $bindable(null),
 		class: className,
 		hideLabel = false,
-		indicator = 'dot',
+		indicator = "dot",
 		hideIndicator = false,
 		labelKey,
 		label,
@@ -27,13 +31,14 @@
 	}: WithoutChildren<WithElementRef<HTMLAttributes<HTMLDivElement>>> & {
 		hideLabel?: boolean;
 		label?: string;
-		indicator?: 'line' | 'dot' | 'dashed';
+		indicator?: "line" | "dot" | "dashed";
 		nameKey?: string;
 		labelKey?: string;
 		hideIndicator?: boolean;
 		labelClassName?: string;
 		labelFormatter?: // biome-ignore lint/suspicious/noExplicitAny: this is still a formatter
-		((value: any, payload: TooltipPayload[]) => string | number | Snippet) | null;
+			| ((value: any, payload: TooltipPayload[]) => string | number | Snippet)
+			| null;
 		formatter?: Snippet<
 			[
 				{
@@ -42,7 +47,7 @@
 					item: TooltipPayload;
 					index: number;
 					payload: TooltipPayload[];
-				}
+				},
 			]
 		>;
 	} = $props();
@@ -54,12 +59,16 @@
 		if (hideLabel || !tooltipCtx.payload?.length) return null;
 
 		const [item] = tooltipCtx.payload;
-		const key = labelKey || item?.label || item?.name || 'value';
+		const key = labelKey || item?.label || item?.name || "value";
 
-		const itemConfig = getPayloadConfigFromPayload(chart.config, item as TooltipPayload, key);
+		const itemConfig = getPayloadConfigFromPayload(
+			chart.config,
+			item as TooltipPayload,
+			key,
+		);
 
 		const value =
-			!labelKey && typeof label === 'string'
+			!labelKey && typeof label === "string"
 				? chart.config[label as keyof typeof chart.config]?.label || label
 				: (itemConfig?.label ?? item?.label);
 
@@ -68,7 +77,9 @@
 		return labelFormatter(value, tooltipCtx.payload);
 	});
 
-	const nestLabel = $derived(tooltipCtx.payload.length === 1 && indicator !== 'dot');
+	const nestLabel = $derived(
+		tooltipCtx.payload.length === 1 && indicator !== "dot",
+	);
 </script>
 
 {#snippet TooltipLabel()}

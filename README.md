@@ -5,42 +5,35 @@
 Opendrive is a comprehensive file storage and synchronization platform that provides you with complete control over your data. Built with modern technologies and designed for both individual users and organizations who want the convenience of cloud storage without sacrificing privacy and control.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Go Version](https://img.shields.io/badge/go-1.25+-blue.svg)
-![Node Version](https://img.shields.io/badge/node-20+-green.svg)
+![Bun Version](https://img.shields.io/badge/bun-1.3.1-green.svg)
 
 ## ✨ Features
 
--   **🌐 Web Interface**: Modern, responsive web application built with SvelteKit
--   **📱 Mobile Apps**: Native Android and iOS applications using Capacitor
--   **🔐 OAuth Integration**: Secure authentication with multiple providers
--   **📂 File Management**: Upload, download, organize files and folders
--   **🏷️ Smart Categories**: Automatic categorization of files (images, documents, music, etc.)
--   **🔗 S3 Compatible**: Compatible with S3 API for easy integration
--   **🔒 Self-Hosted**: Complete control over your data and infrastructure
--   **⚡ High Performance**: Built with Go backend and modern frontend technologies
--   **🐳 Docker Support**: Easy deployment with Docker
--   **📊 Recent Files**: Quick access to recently modified files
--   **🌍 Multi-Platform**: Works on web, mobile, and desktop
+- **🌐 Web Interface**: Modern, responsive web application built with SvelteKit
+- **🔐 OAuth Integration**: Secure authentication with multiple providers
+- **📂 File Management**: Upload, download, organize files and folders
+- **🏷️ Smart Categories**: Automatic categorization of files (images, documents, music, etc.)
+- **🔒 Self-Hosted**: Complete control over your data and infrastructure
+- **🐳 Docker Support**: Easy deployment with Docker
+- **📊 Recent Files**: Quick access to recently modified files
+- **🌍 Multi-Platform**: Works on web, mobile, and desktop
 
 ## 🏗️ Architecture
 
 Opendrive follows a microservices architecture with the following components:
 
--   **API Server** (Go): RESTful API backend with OpenAPI specification
--   **Web UI** (SvelteKit): Modern web interface with Shadcn/ui components
--   **Mobile Apps** (Capacitor): Cross-platform mobile applications
--   **Database** (PostgreSQL): User data and metadata storage
--   **Object Storage** (MinIO): S3-compatible file storage
--   **Reverse Proxy** (Traefik): Load balancing and SSL termination
+- **API Server** (Bun): RESTful API backend with OpenAPI specification
+- **Web UI** (SvelteKit): Modern web interface with Shadcn/ui components
+- **Database** (PostgreSQL): User data and metadata storage
+- **Reverse Proxy** (Traefik): Load balancing and SSL termination
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
--   Node.js 20+ with pnpm
--   Go 1.25+
--   Docker and Docker Compose
--   PostgreSQL (for production)
+- Bun 1.3+
+- Docker and Docker Compose
+- PostgreSQL (for production)
 
 ### Development Setup
 
@@ -54,14 +47,14 @@ Opendrive follows a microservices architecture with the following components:
 2. **Install dependencies**
 
     ```bash
-    pnpm install
+    bun install
     ```
 
 3. **Start development services**
 
     ```bash
     # This runs with a concurrently config to launch docker compose, air and vite.
-    pnpm run dev
+    bun run dev
     ```
 
 4. **Access the application**
@@ -72,32 +65,28 @@ Opendrive follows a microservices architecture with the following components:
 
 ### Tech Stack
 
--   **Backend**: Go, Chi router, SQLC, PostgreSQL
--   **Frontend**: SvelteKit, TypeScript, TailwindCSS, Shadcn/ui
--   **Docs**: SvelteKit, TypeScript, TailwindCSS, Shadcn/ui
--   **Mobile**: Capacitor, Android/iOS native
--   **Storage**: MinIO (S3-compatible)
--   **DevOps**: Docker, GitHub Actions
+- **Backend**: Bun, Koritsu, Drizzle ORM, PostgreSQL
+- **Frontend**: SvelteKit, TypeScript, TailwindCSS, Shadcn/svelte
+- **DevOps**: Docker, GitHub Actions
 
 ### Available Commands
 
 ```bash
 # Development
-pnpm run dev          # Start all development servers
-pnpm run test         # Run tests
-pnpm run build        # Build all packages
+bun run dev          # Start all development servers
+bun run test         # Run tests
+bun run build        # Build all packages
 
 # API specific (in packages/api/)
-make migration       # Run database migrations
-make lint            # Lint Go code
-make test            # Run Go tests
-go tool air          # Hot reload development server
+bun run dev          # Start API development server with hot reload
+bun run db:migrate   # Run database migrations
+bun run db:generate  # Generate Drizzle schema types
 
 # UI specific (in packages/ui/)
-pnpm run dev         # Start web development server
-pnpm run build       # Build web application
-pnpm run lint        # Lint TypeScript/Svelte code
-pnpm run lint:fix    # Lint TypeScript/Svelte code and fix (fixable) issues
+bun run dev         # Start web development server
+bun run build       # Build web application
+bun run lint        # Lint TypeScript/Svelte code
+bun run lint:fix    # Lint TypeScript/Svelte code and fix (fixable) issues
 ```
 
 ### API Code Generation
@@ -105,10 +94,8 @@ pnpm run lint:fix    # Lint TypeScript/Svelte code and fix (fixable) issues
 The project uses OpenAPI for API specification and code generation:
 
 ```bash
-cd packages/api
-# Generate Go server code
-make api
 # Generate TypeScript client code (for UI)
+bun run gen:api
 # This is automatically done during build
 ```
 
@@ -120,15 +107,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Built with amazing open-source technologies:
 
--   [SvelteKit](https://kit.svelte.dev/) - Web framework
--   [Shadcn/ui (svelte)](https://shadcn-svelte.com/) - UI components
--   [Go](https://golang.org/) - Backend language
--   [Chi](https://go-chi.io/) - HTTP router
--   [MinIO](https://min.io/) - Object storage
--   [PostgreSQL](https://postgresql.org/) - Database
--   [Capacitor](https://capacitorjs.com/) - Mobile framework
+- [SvelteKit](https://kit.svelte.dev/) - Web framework
+- [Shadcn/ui (svelte)](https://shadcn-svelte.com/) - UI components
+- [Bun](https://bun.sh/) - JavaScript runtime and toolkit
+- [Koritsu](https://koritsu.dev/) - Web framework
+- [Drizzle ORM](https://orm.drizzle.team/) - TypeScript ORM
+- [PostgreSQL](https://postgresql.org/) - Database
 
 ## 🆘 Support
 
--   🐛 [Issue Tracker](https://github.com/boyer-nicolas/opendrive/issues)
--   💬 [Discussions](https://github.com/boyer-nicolas/opendrive/discussions)
+- 🐛 [Issue Tracker](https://github.com/boyer-nicolas/opendrive/issues)
+- 💬 [Discussions](https://github.com/boyer-nicolas/opendrive/discussions)

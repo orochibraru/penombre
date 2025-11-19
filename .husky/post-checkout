@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "Installing Node deps..."
-pnpm i
-echo "Installing Go deps..."
-go -C packages/api mod tidy
+echo "Installing Bun deps..."
+bun install
 
 echo "Done."

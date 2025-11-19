@@ -1,4 +1,4 @@
-import { page as pageState } from '$app/state';
+import { page as pageState } from "$app/state";
 
 export interface PaginationParams {
 	page: number;
@@ -7,7 +7,7 @@ export interface PaginationParams {
 
 export const PaginationDefaults: PaginationParams = {
 	limit: 20,
-	page: 1
+	page: 1,
 };
 
 interface INewPagination {
@@ -36,11 +36,12 @@ export class PaginationHelper {
 	 * @returns
 	 */
 	public get(): PaginationParams {
-		const pageParam = this.url.searchParams.get('page') ?? '';
-		const limitParam = this.url.searchParams.get('limit') ?? '';
-		this.page = pageParam === '' ? PaginationDefaults.page : Number(pageParam);
+		const pageParam = this.url.searchParams.get("page") ?? "";
+		const limitParam = this.url.searchParams.get("limit") ?? "";
+		this.page = pageParam === "" ? PaginationDefaults.page : Number(pageParam);
 
-		this.limit = limitParam === '' ? PaginationDefaults.limit : Number(limitParam);
+		this.limit =
+			limitParam === "" ? PaginationDefaults.limit : Number(limitParam);
 
 		return { page: this.page, limit: this.limit };
 	}
@@ -49,11 +50,11 @@ export class PaginationHelper {
 		this.limit = limit;
 		this.page = page;
 
-		this.url.searchParams.set('page', page.toString());
-		this.url.searchParams.set('limit', limit.toString());
+		this.url.searchParams.set("page", page.toString());
+		this.url.searchParams.set("limit", limit.toString());
 
-		pageState.url.searchParams.set('page', page.toString());
-		pageState.url.searchParams.set('limit', limit.toString());
+		pageState.url.searchParams.set("page", page.toString());
+		pageState.url.searchParams.set("limit", limit.toString());
 	}
 
 	/**
