@@ -35,7 +35,7 @@ export async function cleanupDeletedUserStorage() {
 	}
 
 	const storageBasePath = resolve(
-		join(cwd(), Bun.env.STORAGE_PATH || "/data/storage"),
+		Bun.env.STORAGE_PATH || join(cwd(), "/data/storage"),
 	);
 	const storageDir = await readdir(storageBasePath, { withFileTypes: true });
 

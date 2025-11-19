@@ -27,8 +27,14 @@ WORKDIR /app
 
 # Copy API source and UI build
 COPY --from=builder /app/packages/api /app/packages/api
+COPY --from=builder /app/packages/drizzle /app/packages/api/drizzle
+COPY --from=builder /app/packages/drizzle /app/drizzle
 COPY --from=builder /app/packages/ui/build /app/packages/ui/dist
 COPY --from=builder /app/node_modules /app/node_modules
+
+RUN mkdir -p /app/data
+
+ENV STORAGE_PATH=/app/data
 
 ENV ENV=prod
 
