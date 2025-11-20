@@ -33,7 +33,6 @@
 		"concurrently": "^9.2.1",
 		"husky": "^9.1.7",
 		"madge": "^8.0.0",
-		"prettier": "^3.6.2",
 		"wait-on": "^9.0.3"
 	},
 	"peerDependencies": {
