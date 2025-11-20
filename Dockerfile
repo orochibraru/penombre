@@ -13,7 +13,7 @@ COPY package.json bun.lock /app/
 COPY packages/ui/package.json ${FRONTEND_DIR}/
 COPY packages/api/package.json ${API_DIR}/
 
-RUN bun ci --frozen-lockfile --ignore-scriptsq
+RUN bun ci --frozen-lockfile --ignore-scripts
 
 COPY . .
 
