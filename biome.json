@@ -19,6 +19,7 @@
 			"!packages/ui/dist",
 			"!packages/api/dist",
 			"!packages/api/build",
+			"!packages/api/frontend",
 			"!packages/ui/node_modules",
 			"!packages/api/node_modules",
 			"!packages/ui/.svelte-kit/*",

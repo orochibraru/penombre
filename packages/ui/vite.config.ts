@@ -7,7 +7,7 @@ import { kitRoutes, type Options } from "vite-plugin-kit-routes";
 import type { KIT_ROUTES } from "$lib/ROUTES";
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit(), kitRoutes()],
+    plugins: [tailwindcss(), sveltekit(), kitRoutes()],
 });
 
 export const _kitRoutesConfig: Options<KIT_ROUTES> = {};
