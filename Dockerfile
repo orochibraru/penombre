@@ -11,26 +11,25 @@ COPY packages/api/package.json /app/packages/api/
 
 RUN bun ci --frozen-lockfile --ignore-scripts
 
-COPY packages/ui /app/packages/ui
-
-# Build UI
-RUN cd packages/ui && bun --bun vite build
-
 COPY . .
 
-RUN bun ci --production --frozen-lockfile --ignore-scripts
+# Build UI
+RUN bun run --filter @opendrive/ui build && ls -la /app/packages/ui
+
+RUN mv /app/packages/ui/build /app/packages/api/frontend
+
+# Build the binary
+RUN cd /app/packages/api && bun ./build.ts
 
 # Final stage with Bun runtime
 FROM oven/bun:1-alpine AS final
 
 WORKDIR /app
 
+RUN bun i -g koritsu drizzle-kit drizzle-orm
+
 # Copy API source and UI build
-COPY --from=builder /app/packages/api /app/packages/api
-COPY --from=builder /app/packages/api/drizzle /app/packages/api/drizzle
-COPY --from=builder /app/packages/api/drizzle /app/drizzle
-COPY --from=builder /app/packages/ui/build /app/packages/ui/dist
-COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/packages/api/build/opendrive /app/opendrive
 
 RUN mkdir -p /app/data
 
@@ -40,6 +39,6 @@ ENV ENV=prod
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
 
-CMD ["bun", "run", "/app/packages/api/index.ts"]
+CMD ["/app/opendrive"]

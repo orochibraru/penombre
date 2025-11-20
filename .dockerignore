@@ -43,3 +43,11 @@ LICENSE
 **/.expo/
 **/.svelte-kit/
 **/.expo-shared/
+
+packages/ui/build
+packages/api/frontend
+packages/api/build
+packages/api/tests
+packages/api/data
+packages/ui/node_modules
+packages/api/node_modules
