@@ -6,24 +6,24 @@ This is a self-hosted cloud storage platform with a modern monorepo architecture
 
 **Monorepo Structure**: Bun workspace with two packages (`packages/api`, `packages/ui`)
 
-- **API**: [Koritsu](https://koritsu.dev) file-based routing framework with auto-generated OpenAPI docs
-    - **Database**: PostgreSQL via Bun's native SQL driver + Drizzle ORM
-    - **Auth**: [better-auth](https://www.better-auth.com/) library handles OAuth providers and session management
-- **UI**: SvelteKit with [Svelte 5 Runes](https://svelte.dev/blog/runes) + Shadcn/Svelte components, deployed with svelte-adapter-bun
-- **Storage Service**: User-specific Directories managed by `StorageService` class (`packages/api/lib/storage.ts`)
+-   **API**: [Koritsu](https://koritsu.dev) file-based routing framework with auto-generated OpenAPI docs
+    -   **Database**: PostgreSQL via Bun's native SQL driver + Drizzle ORM
+    -   **Auth**: [better-auth](https://www.better-auth.com/) library handles OAuth providers and session management
+-   **UI**: SvelteKit with [Svelte 5 Runes](https://svelte.dev/blog/runes) + Shadcn/Svelte components, deployed with svelte-adapter-bun
+-   **Storage Service**: User-specific Directories managed by `StorageService` class (`packages/api/lib/storage.ts`)
 
 **Key Design Patterns**:
 
-- **API Routes**: Follow [Koritsu conventions](https://koritsu.dev) - file-based routing with `route.ts` files exporting `createRoute()` handlers
-    - Routes auto-discovered from `packages/api/routes/**` directory structure
-    - OpenAPI spec defined inline with Zod schemas (see `packages/api/routes/storage/objects/route.ts`)
-    - Uses Bun's native File I/O client (`File` from `"bun"`) and standard Node operations for directories
-- **Auth**: better-auth handles all authentication logic - don't reinvent auth patterns (see `packages/api/lib/auth.ts`)
-- **Database**: Bun SQL client wrapped by Drizzle ORM - schema in `packages/api/lib/db/schema.ts`
-- **Type Generation**: UI consumes typed API client from OpenAPI spec via `openapi-typescript` → `packages/ui/src/lib/api/schema.d.ts`
-- **Storage Architecture**:
-    - Per-user directories created on-demand, named `user-{sanitized-username}` (see `StorageService` constructor)
-    - File metadata stored as JSON in files within user directories, not database (see `getFileMetadata` method)
+-   **API Routes**: Follow [Koritsu conventions](https://koritsu.dev) - file-based routing with `route.ts` files exporting `createRoute()` handlers
+    -   Routes auto-discovered from `packages/api/routes/**` directory structure
+    -   OpenAPI spec defined inline with Zod schemas (see `packages/api/routes/storage/objects/route.ts`)
+    -   Uses Bun's native File I/O client (`File` from `"bun"`) and standard Node operations for directories
+-   **Auth**: better-auth handles all authentication logic - don't reinvent auth patterns (see `packages/api/lib/auth.ts`)
+-   **Database**: Bun SQL client wrapped by Drizzle ORM - schema in `packages/api/lib/db/schema.ts`
+-   **Type Generation**: UI consumes typed API client from OpenAPI spec via `openapi-typescript` → `packages/ui/src/lib/api/schema.d.ts`
+-   **Storage Architecture**:
+    -   Per-user directories created on-demand, named `user-{sanitized-username}` (see `StorageService` constructor)
+    -   File metadata stored as JSON in files within user directories, not database (see `getFileMetadata` method)
 
 ## Development Workflow
 
@@ -74,10 +74,9 @@ bun test:integration               # Full-stack tests with docker
 
 ### Formatting & Linting
 
-- **Biome**: All linting handled by Biome for both API and UI (`bun run lint` / `bun run lint:fix`)
-- **Prettier**: Formatter for UI only (`bun run format` in `packages/ui`)
-- Double quotes for JavaScript (see `biome.json`)
-- Pre-commit hook runs Biome checks via Husky
+-   **Biome**: All linting handled by Biome for both API and UI (`bun run lint` / `bun run lint:fix`)
+-   Double quotes for JavaScript (see `biome.json`)
+-   Pre-commit hook runs Biome checks via Husky
 
 ### API Route Pattern
 
@@ -116,22 +115,22 @@ const storageService = new StorageService(session.user);
 
 ### UI API Client Pattern
 
-- **Browser**: `getApiClient()` - reads auth cookie from SvelteKit page data
-- **Server**: `getServerSideApi(cookie)` - pass cookie explicitly from `event.cookies`
-- Both return typed `openapi-fetch` client with automatic auth middleware
+-   **Browser**: `getApiClient()` - reads auth cookie from SvelteKit page data
+-   **Server**: `getServerSideApi(cookie)` - pass cookie explicitly from `event.cookies`
+-   Both return typed `openapi-fetch` client with automatic auth middleware
 
 ## Deployment & Production
 
 **Docker Build**: Multi-stage Dockerfile compiles UI + API, runs with nginx + supervisor
 
-- UI served via nginx reverse proxy
-- API runs on internal port, proxied through nginx
-- Both services managed by supervisord
+-   UI served via nginx reverse proxy
+-   API runs on internal port, proxied through nginx
+-   Both services managed by supervisord
 
 **Environment Variables**:
 
-- `DATABASE_URL`: PostgreSQL connection (defaults to `postgres://postgres:postgres@db:5432/opendrive`)
-- OAuth config: `OAUTH_PROVIDERS`, `OAUTH_POCKETID_CLIENT_ID`, etc.
+-   `DATABASE_URL`: PostgreSQL connection (defaults to `postgres://postgres:postgres@db:5432/opendrive`)
+-   OAuth config: `OAUTH_PROVIDERS`, `OAUTH_POCKETID_CLIENT_ID`, etc.
 
 ## Common Gotchas
 
@@ -145,9 +144,9 @@ const storageService = new StorageService(session.user);
 
 ## Quick Reference
 
-- **API Docs**: http://localhost:8080/ (Swagger UI in dev, auto-generated by Koritsu)
-- **Framework Docs**: [Koritsu](https://koritsu.dev), [better-auth](https://www.better-auth.com/)
-- **Main configs**: `compose.yaml`, `concurrently.config.mjs`, `packages/*/package.json`
-- **Route registration**: Auto-scanned from `packages/api/routes/**` (Koritsu file-based routing)
-- **Package manager**: Bun only - enforced via `preinstall` scripts
-- **Native Bun features used**: File client, SQL driver (via Drizzle), hot reload (`--hot` flag)
+-   **API Docs**: http://localhost:8080/ (Swagger UI in dev, auto-generated by Koritsu)
+-   **Framework Docs**: [Koritsu](https://koritsu.dev), [better-auth](https://www.better-auth.com/)
+-   **Main configs**: `compose.yaml`, `concurrently.config.mjs`, `packages/*/package.json`
+-   **Route registration**: Auto-scanned from `packages/api/routes/**` (Koritsu file-based routing)
+-   **Package manager**: Bun only - enforced via `preinstall` scripts
+-   **Native Bun features used**: File client, SQL driver (via Drizzle), hot reload (`--hot` flag)
