@@ -1,13 +1,10 @@
-import { error } from "@sveltejs/kit";
-import { getServerSideApi } from "$lib/api";
+import { browser } from "$app/environment";
+import { getApiClient } from "$lib/api";
 import { route } from "$lib/ROUTES";
 import type { BreadCrumb } from "$lib/utils";
 
-export const load = async ({ params, parent }) => {
-	const { authCookie } = await parent();
+export const load = async ({ params }: { params: { path: string } }) => {
 	const folders = params.path.split("/");
-
-	const api = getServerSideApi(authCookie);
 
 	const crumbs: BreadCrumb[] = [];
 	const chain: string[] = [];
@@ -27,6 +24,20 @@ export const load = async ({ params, parent }) => {
 		chain.push(folder);
 	}
 
+	if (!browser) {
+		return {
+			files: {
+				data: null,
+				err: null,
+			},
+			title: folders[folders.length - 1],
+			folders,
+			crumbs,
+		};
+	}
+
+	const api = getApiClient();
+
 	const { data, error: err } = await api.GET("/api/storage/objects", {
 		params: {
 			query: {
@@ -36,7 +47,7 @@ export const load = async ({ params, parent }) => {
 	});
 
 	if (err) {
-		throw error(500, "Failed to load files");
+		throw new Error("Failed to load files");
 	}
 
 	return {

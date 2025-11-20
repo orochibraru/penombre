@@ -17,19 +17,34 @@ RUN bun ci --frozen-lockfile --ignore-scripts
 
 COPY . .
 
-# Build UI
-RUN cd ${FRONTEND_DIR} && bun run build
+# Build UI (static build)
+RUN cd ${FRONTEND_DIR} && bunx svelte-kit sync
+RUN cd ${FRONTEND_DIR} && bunx --bun vite build
+RUN ls -la ${FRONTEND_DIR}/build || echo "Build directory not found!"
 
-RUN mv ${FRONTEND_DIR}/build ${API_DIR}/frontend
+# Copy static build to API frontend directory
+RUN rm -rf ${API_DIR}/frontend && cp -r ${FRONTEND_DIR}/build ${API_DIR}/frontend
 
-RUN bun install --production --ignore-scripts
+# Remove dev dependencies and install only production dependencies
+RUN rm -rf /app/node_modules
+RUN bun install --production --frozen-lockfile --ignore-scripts
 
 # Final stage with Bun runtime
 FROM base AS final
 
-# Copy API source and UI build
-COPY --from=builder ${API_DIR}/ /app/
+# Copy only production node_modules from builder
+# We'll copy the entire node_modules but only the API's production deps were installed
 COPY --from=builder /app/node_modules /app/node_modules
+
+# Copy API source and UI build
+COPY --from=builder ${API_DIR}/lib /app/lib
+COPY --from=builder ${API_DIR}/routes /app/routes
+COPY --from=builder ${API_DIR}/index.ts /app/
+COPY --from=builder ${API_DIR}/migrate.ts /app/
+COPY --from=builder ${API_DIR}/drizzle /app/drizzle
+COPY --from=builder ${API_DIR}/drizzle.config.ts /app/
+COPY --from=builder ${API_DIR}/frontend /app/frontend
+COPY --from=builder ${API_DIR}/package.json /app/package.json
 
 RUN mkdir -p /app/data
 

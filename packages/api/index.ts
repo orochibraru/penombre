@@ -116,11 +116,11 @@ const server = new Api({
 					};
 				},
 			},
-			// UI Proxy - serve static files and SSR
+			// UI Proxy - serve static files
 			{
 				pattern: "/**",
 				enabled: env !== "development",
-				description: "Serve UI static files and SSR",
+				description: "Serve UI static files",
 				handler: async ({ request }) => {
 					const start = Date.now();
 					const url = new URL(request.url);
@@ -136,7 +136,7 @@ const server = new Api({
 					}
 
 					// Serve static files from UI build
-					const staticPath = `./frontend/client${url.pathname}`;
+					const staticPath = `./frontend${url.pathname}`;
 					const file = Bun.file(staticPath);
 
 					if (await file.exists()) {
@@ -148,11 +148,22 @@ const server = new Api({
 						};
 					}
 
-					// Forward to UI SSR handler
-					const uiHandler = await import("./frontend/handler");
-					const response = await uiHandler.getHandler().fetch(request);
-					logger.http(request, response, Date.now() - start);
+					// Fallback to index.html for SPA routing
+					const indexFile = Bun.file("./frontend/index.html");
+					if (await indexFile.exists()) {
+						const response = new Response(indexFile, {
+							headers: { "Content-Type": "text/html" },
+						});
+						logger.http(request, response, Date.now() - start);
+						return {
+							proceed: false,
+							response,
+						};
+					}
 
+					// 404 if no file found
+					const response = new Response("Not Found", { status: 404 });
+					logger.http(request, response, Date.now() - start);
 					return {
 						proceed: false,
 						response,
