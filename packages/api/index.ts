@@ -9,6 +9,8 @@ const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 8080;
 const host = process.env.HOST || "0.0.0.0";
 const env: "development" | "production" | "test" =
 	(process.env.ENV as "development" | "production" | "test") || "development";
+type LogLevel = "info" | "warning" | "trace" | "fatal" | "error" | "debug";
+const logLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || "info";
 
 async function writeRealTimeSpec() {
 	logger.info("Writing real-time OpenAPI spec...");
@@ -76,7 +78,7 @@ const server = new Api({
 	},
 	server: {
 		maxRequestBodySize: 5000 * 1024 * 1024, // 5GB
-		logLevel: "info",
+		logLevel,
 		port,
 		host,
 		routes: {
