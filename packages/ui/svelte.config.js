@@ -13,6 +13,7 @@ const config = {
 			fallback: "index.html",
 			pages: "./dist",
 			error: "error.html",
+			precompress: true,
 		}),
 		prerender: {
 			handleHttpError: ({ status, message }) => {
