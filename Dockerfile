@@ -17,6 +17,9 @@ RUN bun ci --frozen-lockfile --ignore-scripts
 
 COPY . .
 
+# Clean any existing build artifacts to prevent cache contamination
+RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
+
 # Build UI (static build) and move to API frontend directory
 RUN cd ${FRONTEND_DIR} && bun run build && ls -la build || exit 1
 RUN rm -rf ${FRONTEND_DIR}/node_modules

@@ -1,11 +1,37 @@
 import { redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
+import { building } from "$app/environment";
 import { getApiClient } from "$lib/api";
 import { route } from "$lib/ROUTES";
 import { uploadSchema } from "$lib/schemas/upload";
 
 export const load = async () => {
+	if (building) {
+		return {
+			user: {
+				id: "",
+				name: "",
+				email: "",
+				image: "",
+				emailVerified: false,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			},
+			session: {
+				id: "",
+				userId: "",
+				expiresAt: new Date(),
+				token: "",
+				ipAddress: "",
+				userAgent: "",
+			},
+			activity: [],
+			uploadForm: await superValidate({}, valibot(uploadSchema)),
+			authCookie: "123",
+		};
+	}
+
 	const api = getApiClient();
 
 	const {

@@ -1,6 +1,13 @@
+import { building } from "$app/environment";
 import { getApiClient } from "$lib/api";
+import { emptyFileApiResponse } from "$lib/utils";
 
 export const load = async () => {
+	if (building) {
+		return {
+			files: emptyFileApiResponse,
+		};
+	}
 	const api = getApiClient();
 
 	const { data, error: err } = await api.GET("/api/storage/objects");

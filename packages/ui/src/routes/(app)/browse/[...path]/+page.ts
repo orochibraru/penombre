@@ -1,9 +1,17 @@
-import { browser } from "$app/environment";
+import { browser, building } from "$app/environment";
 import { getApiClient } from "$lib/api";
 import { route } from "$lib/ROUTES";
-import type { BreadCrumb } from "$lib/utils";
+import { type BreadCrumb, emptyFileApiResponse } from "$lib/utils";
 
 export const load = async ({ params }: { params: { path: string } }) => {
+	if (building) {
+		return {
+			files: emptyFileApiResponse,
+			title: "Build Time",
+			folders: [],
+			crumbs: [],
+		};
+	}
 	const folders = params.path.split("/");
 
 	const crumbs: BreadCrumb[] = [];
