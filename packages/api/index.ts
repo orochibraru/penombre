@@ -166,7 +166,6 @@ const server = new Api({
 
 					// 404 if no file found
 					const response = new Response("Not Found", { status: 404 });
-					logger.http(request, response, Date.now() - start);
 					return {
 						proceed: false,
 						response,

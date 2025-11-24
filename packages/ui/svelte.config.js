@@ -15,19 +15,19 @@ const config = {
 			error: "error.html",
 			precompress: true,
 		}),
-		prerender: {
-			handleHttpError: ({ status, message }) => {
-				if (status > 300 && status < 307) {
-					return;
-				}
+		// prerender: {
+		// 	handleHttpError: ({ status, message }) => {
+		// 		if (status > 300 && status < 307) {
+		// 			return;
+		// 		}
 
-				if (status === 404) {
-					return;
-				}
+		// 		if (status === 404) {
+		// 			return;
+		// 		}
 
-				throw new Error(message);
-			},
-		},
+		// 		throw new Error(message);
+		// 	},
+		// },
 		version: {
 			name: packageJson.version,
 		},

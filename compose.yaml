@@ -8,7 +8,8 @@ services:
       - 8080:8080
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/opendrive?sslmode=disable
-      - NODE_ENV=development
+      - ENV=production
+      - LOG_LEVEL=debug
   db:
     image: postgres:17-alpine
     restart: unless-stopped
