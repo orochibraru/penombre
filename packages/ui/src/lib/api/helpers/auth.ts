@@ -5,7 +5,7 @@ import { goto } from "$app/navigation";
 import { route } from "$lib/ROUTES";
 
 export const authClient = createAuthClient({
-	baseURL: "http://localhost:8080/auth",
+	baseURL: "http://localhost:8080/api/auth",
 	plugins: [genericOAuthClient()],
 });
 

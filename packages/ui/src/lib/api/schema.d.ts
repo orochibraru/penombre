@@ -1365,7 +1365,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/sign-in/social": {
+	"/api/auth/sign-in/social": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -1382,7 +1382,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/get-session": {
+	"/api/auth/get-session": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -1487,7 +1487,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/sign-out": {
+	"/api/auth/sign-out": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -1595,7 +1595,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/sign-up/email": {
+	"/api/auth/sign-up/email": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -1756,7 +1756,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/sign-in/email": {
+	"/api/auth/sign-in/email": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -1887,7 +1887,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/forget-password": {
+	"/api/auth/forget-password": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2001,7 +2001,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/reset-password": {
+	"/api/auth/reset-password": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2114,7 +2114,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/verify-email": {
+	"/api/auth/verify-email": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2240,7 +2240,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/send-verification-email": {
+	"/api/auth/send-verification-email": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2367,7 +2367,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/change-email": {
+	"/api/auth/change-email": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2496,7 +2496,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/change-password": {
+	"/api/auth/change-password": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2640,7 +2640,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/update-user": {
+	"/api/auth/update-user": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2754,7 +2754,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/delete-user": {
+	"/api/auth/delete-user": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2875,7 +2875,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/reset-password/{token}": {
+	"/api/auth/reset-password/{token}": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -2981,7 +2981,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/request-password-reset": {
+	"/api/auth/request-password-reset": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3095,7 +3095,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/list-sessions": {
+	"/api/auth/list-sessions": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3197,7 +3197,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/revoke-session": {
+	"/api/auth/revoke-session": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3309,7 +3309,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/revoke-sessions": {
+	"/api/auth/revoke-sessions": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3418,7 +3418,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/revoke-other-sessions": {
+	"/api/auth/revoke-other-sessions": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3527,7 +3527,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/link-social": {
+	"/api/auth/link-social": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3657,7 +3657,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/list-accounts": {
+	"/api/auth/list-accounts": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3768,7 +3768,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/delete-user/callback": {
+	"/api/auth/delete-user/callback": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3881,7 +3881,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/unlink-account": {
+	"/api/auth/unlink-account": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -3992,7 +3992,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/refresh-token": {
+	"/api/auth/refresh-token": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -4110,7 +4110,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/get-access-token": {
+	"/api/auth/get-access-token": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -4228,7 +4228,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/account-info": {
+	"/api/auth/account-info": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -4348,7 +4348,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/ok": {
+	"/api/auth/ok": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -4453,7 +4453,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/error": {
+	"/api/auth/error": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -4555,7 +4555,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/sign-in/oauth2": {
+	"/api/auth/sign-in/oauth2": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -4679,7 +4679,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/oauth2/callback/{providerId}": {
+	"/api/auth/oauth2/callback/{providerId}": {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -4788,7 +4788,7 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/auth/oauth2/link": {
+	"/api/auth/oauth2/link": {
 		parameters: {
 			query?: never;
 			header?: never;

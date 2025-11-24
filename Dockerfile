@@ -23,7 +23,7 @@ RUN cd ${FRONTEND_DIR} && bunx --bun vite build
 RUN ls -la ${FRONTEND_DIR}/build || echo "Build directory not found!"
 
 # Copy static build to API frontend directory
-RUN rm -rf ${API_DIR}/frontend && cp -r ${FRONTEND_DIR}/build ${API_DIR}/frontend
+RUN mv ${FRONTEND_DIR}/build ${API_DIR}/frontend
 
 # Remove dev dependencies and install only production dependencies
 RUN rm -rf /app/node_modules

@@ -8,7 +8,7 @@ import { genericOAuth, openAPI } from "better-auth/plugins";
 import * as schema from "./db/schema";
 
 export const auth = betterAuth({
-	basePath: "/auth",
+	basePath: "/api/auth",
 	database: drizzleAdapter(db, {
 		provider: "pg",
 		schema,

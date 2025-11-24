@@ -56,7 +56,6 @@
 		}
 	},
 	"html": {
-		"experimentalFullSupportEnabled": true,
 		"formatter": {
 			"indentScriptAndStyle": true
 		}

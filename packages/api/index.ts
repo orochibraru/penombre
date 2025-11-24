@@ -92,10 +92,10 @@ const server = new Api({
 		// Unified OpenAPI documentation
 		externalSpecs: [
 			{
-				url: "http://localhost:8080/auth/open-api/generate-schema",
+				url: "http://localhost:8080/api/auth/open-api/generate-schema",
 				name: "better-auth",
 				tags: ["Auth"],
-				pathPrefix: "/auth",
+				pathPrefix: "/api/auth",
 			},
 		],
 	},
@@ -104,13 +104,15 @@ const server = new Api({
 		configs: [
 			// Auth
 			{
-				pattern: "/auth/**",
+				pattern: "/api/auth/**",
 				description: "Authentication endpoints handled by better-auth",
 				handler: async ({ request }) => {
 					const start = Date.now();
 
 					const response = await auth.handler(request);
 					logger.http(request, response, Date.now() - start);
+
+					logger.debug(response);
 
 					return {
 						proceed: false,
@@ -128,7 +130,6 @@ const server = new Api({
 					const url = new URL(request.url);
 					if (
 						url.pathname.startsWith("/api") ||
-						url.pathname.startsWith("/auth") ||
 						url.pathname.startsWith("/swagger")
 					) {
 						return {

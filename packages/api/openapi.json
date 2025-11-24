@@ -1587,7 +1587,7 @@
 				}
 			}
 		},
-		"/auth/sign-in/social": {
+		"/api/auth/sign-in/social": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Sign in with a social provider",
@@ -1787,7 +1787,7 @@
 				}
 			}
 		},
-		"/auth/get-session": {
+		"/api/auth/get-session": {
 			"get": {
 				"tags": ["Default", "Auth"],
 				"description": "Get the current session",
@@ -1880,7 +1880,7 @@
 				}
 			}
 		},
-		"/auth/sign-out": {
+		"/api/auth/sign-out": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Sign out the current user",
@@ -1976,7 +1976,7 @@
 				}
 			}
 		},
-		"/auth/sign-up/email": {
+		"/api/auth/sign-up/email": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Sign up a user using email and password",
@@ -2165,7 +2165,7 @@
 				}
 			}
 		},
-		"/auth/sign-in/email": {
+		"/api/auth/sign-in/email": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Sign in with email and password",
@@ -2312,7 +2312,7 @@
 				}
 			}
 		},
-		"/auth/forget-password": {
+		"/api/auth/forget-password": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Send a password reset email to the user",
@@ -2426,7 +2426,7 @@
 				}
 			}
 		},
-		"/auth/reset-password": {
+		"/api/auth/reset-password": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Reset the password for a user",
@@ -2537,7 +2537,7 @@
 				}
 			}
 		},
-		"/auth/verify-email": {
+		"/api/auth/verify-email": {
 			"get": {
 				"tags": ["Default", "Auth"],
 				"description": "Verify the email of the user",
@@ -2686,7 +2686,7 @@
 				}
 			}
 		},
-		"/auth/send-verification-email": {
+		"/api/auth/send-verification-email": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Send a verification email to the user",
@@ -2809,7 +2809,7 @@
 				}
 			}
 		},
-		"/auth/change-email": {
+		"/api/auth/change-email": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"security": [{ "bearerAuth": [] }],
@@ -2942,7 +2942,7 @@
 				}
 			}
 		},
-		"/auth/change-password": {
+		"/api/auth/change-password": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Change the password of the user",
@@ -3110,7 +3110,7 @@
 				}
 			}
 		},
-		"/auth/update-user": {
+		"/api/auth/update-user": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Update the current user",
@@ -3223,7 +3223,7 @@
 				}
 			}
 		},
-		"/auth/delete-user": {
+		"/api/auth/delete-user": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Delete the user",
@@ -3351,7 +3351,7 @@
 				}
 			}
 		},
-		"/auth/reset-password/{token}": {
+		"/api/auth/reset-password/{token}": {
 			"get": {
 				"tags": ["Default", "Auth"],
 				"description": "Redirects the user to the callback URL with the token",
@@ -3449,7 +3449,7 @@
 				}
 			}
 		},
-		"/auth/request-password-reset": {
+		"/api/auth/request-password-reset": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Send a password reset email to the user",
@@ -3563,7 +3563,7 @@
 				}
 			}
 		},
-		"/auth/list-sessions": {
+		"/api/auth/list-sessions": {
 			"get": {
 				"tags": ["Default", "Auth"],
 				"description": "List all active sessions for the user",
@@ -3652,7 +3652,7 @@
 				}
 			}
 		},
-		"/auth/revoke-session": {
+		"/api/auth/revoke-session": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Revoke a single session",
@@ -3763,7 +3763,7 @@
 				}
 			}
 		},
-		"/auth/revoke-sessions": {
+		"/api/auth/revoke-sessions": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Revoke all sessions for the user",
@@ -3865,7 +3865,7 @@
 				}
 			}
 		},
-		"/auth/revoke-other-sessions": {
+		"/api/auth/revoke-other-sessions": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Revoke all other sessions for the user except the current one",
@@ -3967,7 +3967,7 @@
 				}
 			}
 		},
-		"/auth/link-social": {
+		"/api/auth/link-social": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Link a social account to the user",
@@ -4114,7 +4114,7 @@
 				}
 			}
 		},
-		"/auth/list-accounts": {
+		"/api/auth/list-accounts": {
 			"get": {
 				"tags": ["Default", "Auth"],
 				"description": "List all accounts linked to the user",
@@ -4224,7 +4224,7 @@
 				}
 			}
 		},
-		"/auth/delete-user/callback": {
+		"/api/auth/delete-user/callback": {
 			"get": {
 				"tags": ["Default", "Auth"],
 				"description": "Callback to complete user deletion with verification token",
@@ -4342,7 +4342,7 @@
 				}
 			}
 		},
-		"/auth/unlink-account": {
+		"/api/auth/unlink-account": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Unlink an account",
@@ -4446,7 +4446,7 @@
 				}
 			}
 		},
-		"/auth/refresh-token": {
+		"/api/auth/refresh-token": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Refresh the access token using a refresh token",
@@ -4566,7 +4566,7 @@
 				}
 			}
 		},
-		"/auth/get-access-token": {
+		"/api/auth/get-access-token": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Get a valid access token, doing a refresh if needed",
@@ -4686,7 +4686,7 @@
 				}
 			}
 		},
-		"/auth/account-info": {
+		"/api/auth/account-info": {
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Get the account info provided by the provider",
@@ -4811,7 +4811,7 @@
 				}
 			}
 		},
-		"/auth/ok": {
+		"/api/auth/ok": {
 			"get": {
 				"tags": ["Default", "Auth"],
 				"description": "Check if the API is working",
@@ -4906,7 +4906,7 @@
 				}
 			}
 		},
-		"/auth/error": {
+		"/api/auth/error": {
 			"get": {
 				"tags": ["Default", "Auth"],
 				"description": "Displays an error page",
@@ -4995,7 +4995,7 @@
 				}
 			}
 		},
-		"/auth/sign-in/oauth2": {
+		"/api/auth/sign-in/oauth2": {
 			"post": {
 				"tags": ["Generic-oauth", "Auth"],
 				"description": "Sign in with OAuth2",
@@ -5134,7 +5134,7 @@
 				}
 			}
 		},
-		"/auth/oauth2/callback/{providerId}": {
+		"/api/auth/oauth2/callback/{providerId}": {
 			"get": {
 				"tags": ["Generic-oauth", "Auth"],
 				"description": "OAuth2 callback",
@@ -5260,7 +5260,7 @@
 				}
 			}
 		},
-		"/auth/oauth2/link": {
+		"/api/auth/oauth2/link": {
 			"post": {
 				"tags": ["Generic-oauth", "Auth"],
 				"description": "Link an OAuth2 account to the current user session",

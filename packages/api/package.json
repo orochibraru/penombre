@@ -5,12 +5,11 @@
 	"scripts": {
 		"preinstall": "bunx only-allow bun",
 		"dev": "bun --hot index.ts",
-		"start": "bun run ./index.ts",
+		"start": "ENV=production bun run ./index.ts",
 		"check": "tsc --project ./tsconfig.json",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "bun run ./migrate.ts",
-		"build": "bun run ./build.ts",
-		"build:ui": "bun run --cwd ../ui build && rm -rf ./frontend && mkdir -p ./frontend && cp -r ../ui/build/* ./frontend/"
+		"build": "bun run --cwd ../ui build && rm -rf ./frontend && mkdir -p ./frontend && cp -r ../ui/build/* ./frontend/"
 	},
 	"private": true,
 	"devDependencies": {

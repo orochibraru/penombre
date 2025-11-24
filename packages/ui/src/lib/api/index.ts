@@ -1,6 +1,5 @@
-import createClient, { type Middleware } from "openapi-fetch";
+import createClient from "openapi-fetch";
 import { browser } from "$app/environment";
-import { page } from "$app/state";
 import { env } from "$env/dynamic/public";
 import type { components, paths } from "./schema";
 
@@ -23,49 +22,12 @@ export function getAuthHeaders(cookie?: string): Headers {
 	return headers;
 }
 
-function buildMiddleware(cookie: string): Middleware {
-	return {
-		async onRequest({ request }) {
-			const headers = getAuthHeaders(cookie);
-			for (const [key, value] of headers.entries()) {
-				request.headers.set(key, value);
-			}
-			return request;
-		},
-	};
-}
-
 export function getApiClient() {
-	if (!browser) {
-		throw new Error("getApiClient can only be used in the browser");
-	}
-
-	if (!page.data.authCookie) {
-		throw new Error("No auth cookie found in page data");
-	}
-
-	const authMiddleware = buildMiddleware(page.data.authCookie);
-
 	const client = createClient<paths>({
 		baseUrl: apiUrl,
 		credentials: "include",
 	});
 
-	client.use(authMiddleware);
-	return client;
-}
-
-export function getServerSideApi(cookie: string) {
-	if (browser) {
-		throw new Error("getServerSideApi can only be used on the server");
-	}
-	const authMiddleware = buildMiddleware(cookie);
-
-	const client = createClient<paths>({
-		baseUrl: apiUrl,
-	});
-
-	client.use(authMiddleware);
 	return client;
 }
 
