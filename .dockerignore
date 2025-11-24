@@ -22,7 +22,6 @@ compose.local.yaml
 compose.yaml
 .dockerignore
 docker-bake.hcl
-concurrently.config.mjs
 *.sh
 biome.json
 LICENSE
@@ -49,7 +48,9 @@ LICENSE
 **/.vercel/
 **/.expo/
 **/.svelte-kit/
+**/.gitignore
 **/.expo-shared/
 
 packages/api/frontend/
 packages/api/data/
+packages/api/openapi.json

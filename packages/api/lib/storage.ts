@@ -1,11 +1,5 @@
-import {
-	copyFile,
-	exists,
-	mkdir,
-	readdir,
-	rmdir,
-	stat,
-} from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { copyFile, mkdir, readdir, rmdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { cwd } from "node:process";
 import { registerActivity } from "@lib/activity";
@@ -37,6 +31,11 @@ export async function cleanupDeletedUserStorage() {
 	const storageBasePath = resolve(
 		Bun.env.STORAGE_PATH || join(cwd(), "/data/storage"),
 	);
+	const exists = existsSync(storageBasePath);
+	if (!exists) {
+		logger.info("Storage base path does not exist. Skipping storage cleanup.");
+		return;
+	}
 	const storageDir = await readdir(storageBasePath, { withFileTypes: true });
 
 	for (const dirent of storageDir) {
@@ -82,7 +81,7 @@ export class StorageService {
 
 	public async ensureUserDirectory() {
 		try {
-			if (!(await exists(this.storagePath))) {
+			if (!existsSync(this.storagePath)) {
 				logger.info(
 					`Creating user storage folder at path: ${this.storagePath}...`,
 				);
@@ -640,12 +639,7 @@ export class StorageService {
 		const folderPrefix = key.endsWith("/") ? key : `${key}/`;
 		try {
 			const dirPath = join(this.storagePath, folderPrefix);
-			const dir = await exists(dirPath);
-			if (!dir) {
-				return false;
-			}
-
-			return true;
+			return existsSync(dirPath);
 		} catch {
 			return false;
 		}

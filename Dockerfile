@@ -21,7 +21,8 @@ COPY . .
 RUN cd ${FRONTEND_DIR} && bun run build && ls -la build || exit 1
 RUN rm -rf ${FRONTEND_DIR}/node_modules
 RUN rm -rf ${API_DIR}/frontend
-RUN mv ${FRONTEND_DIR}/build ${API_DIR}/frontend
+RUN mkdir -p ${API_DIR}/frontend
+RUN mv ${FRONTEND_DIR}/build/* ${API_DIR}/frontend/
 
 # Remove dev dependencies and install only production dependencies
 RUN rm -rf /app/node_modules
