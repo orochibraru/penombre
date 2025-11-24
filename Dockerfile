@@ -17,12 +17,10 @@ RUN bun ci --frozen-lockfile --ignore-scripts
 
 COPY . .
 
-# Build UI (static build)
-RUN cd ${FRONTEND_DIR} && bunx svelte-kit sync
-RUN cd ${FRONTEND_DIR} && bunx --bun vite build
-RUN ls -la ${FRONTEND_DIR}/build || echo "Build directory not found!"
-
-# Copy static build to API frontend directory
+# Build UI (static build) and move to API frontend directory
+RUN cd ${FRONTEND_DIR} && bun run build && ls -la build || exit 1
+RUN rm -rf ${FRONTEND_DIR}/node_modules
+RUN rm -rf ${API_DIR}/frontend
 RUN mv ${FRONTEND_DIR}/build ${API_DIR}/frontend
 
 # Remove dev dependencies and install only production dependencies
@@ -41,7 +39,7 @@ COPY --from=builder ${API_DIR}/ /app
 
 RUN mkdir -p /app/data
 
-ENV STORAGE_PATH=/app/data
+ENV STORAGE_PATH=/data
 
 ENV ENV=production
 

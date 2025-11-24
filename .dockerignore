@@ -28,9 +28,7 @@ biome.json
 LICENSE
 .editorconfig
 /resources/
-/scripts/
 /test-results/
-/tests/
 
 # Temp
 /tmp/
@@ -38,8 +36,12 @@ LICENSE
 # Node
 **/node_modules/
 **/dist/
+**/tests/
 **/build/
+**/scripts/
 **/out/
+**/tests/
+**/.cache/
 **/.next/
 **/.nuxt/
 **/.turbo/
@@ -49,12 +51,5 @@ LICENSE
 **/.svelte-kit/
 **/.expo-shared/
 
-packages/ui/build
-packages/ui/dist
-packages/ui/node_modules
-
-packages/api/frontend
-packages/api/build
-packages/api/tests
-packages/api/data
-packages/api/node_modules
+packages/api/frontend/
+packages/api/data/
