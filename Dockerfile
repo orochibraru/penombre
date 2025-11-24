@@ -37,14 +37,7 @@ FROM base AS final
 COPY --from=builder /app/node_modules /app/node_modules
 
 # Copy API source and UI build
-COPY --from=builder ${API_DIR}/lib /app/lib
-COPY --from=builder ${API_DIR}/routes /app/routes
-COPY --from=builder ${API_DIR}/index.ts /app/
-COPY --from=builder ${API_DIR}/migrate.ts /app/
-COPY --from=builder ${API_DIR}/drizzle /app/drizzle
-COPY --from=builder ${API_DIR}/drizzle.config.ts /app/
-COPY --from=builder ${API_DIR}/frontend /app/frontend
-COPY --from=builder ${API_DIR}/package.json /app/package.json
+COPY --from=builder ${API_DIR}/ /app
 
 RUN mkdir -p /app/data
 
@@ -54,6 +47,6 @@ ENV ENV=production
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://0.0.0.0:8080/api/health || exit 1
 
 CMD ["bun", "run", "/app/index.ts"]
