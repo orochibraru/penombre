@@ -1,9 +1,9 @@
 import adapter from "@sveltejs/adapter-static";
-import type { Config } from "@sveltejs/kit";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import packageJson from "./package.json" with { type: "json" };
 
-const config: Config = {
+/** @type {import('@sveltejs/kit').Config} */
+export default {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter({
@@ -22,5 +22,3 @@ const config: Config = {
 		},
 	},
 };
-
-export default config;
