@@ -126,7 +126,6 @@ const server = new Api({
 				enabled: env !== "development",
 				description: "Serve UI static files",
 				handler: async ({ request }) => {
-					const start = Date.now();
 					const url = new URL(request.url);
 					if (
 						url.pathname.startsWith("/api") ||
@@ -144,7 +143,6 @@ const server = new Api({
 
 					if (await file.exists()) {
 						const response = new Response(file);
-						logger.http(request, response, Date.now() - start);
 						return {
 							proceed: false,
 							response,
@@ -157,7 +155,6 @@ const server = new Api({
 						const response = new Response(indexFile, {
 							headers: { "Content-Type": "text/html" },
 						});
-						logger.http(request, response, Date.now() - start);
 						return {
 							proceed: false,
 							response,
@@ -165,6 +162,17 @@ const server = new Api({
 					}
 
 					// 404 if no file found
+					const errorFile = Bun.file("./frontend/error.html");
+					if (await errorFile.exists()) {
+						const response = new Response(errorFile, {
+							status: 404,
+							headers: { "Content-Type": "text/html" },
+						});
+						return {
+							proceed: false,
+							response,
+						};
+					}
 					const response = new Response("Not Found", { status: 404 });
 					return {
 						proceed: false,

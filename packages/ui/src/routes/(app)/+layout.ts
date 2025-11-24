@@ -4,6 +4,7 @@ import { valibot } from "sveltekit-superforms/adapters";
 import { getApiClient } from "$lib/api";
 import { route } from "$lib/ROUTES";
 import { uploadSchema } from "$lib/schemas/upload";
+export const prerender = true;
 
 export const load = async () => {
 	const api = getApiClient();

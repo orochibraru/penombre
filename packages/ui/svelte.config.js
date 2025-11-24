@@ -13,21 +13,14 @@ const config = {
 			fallback: "index.html",
 			pages: "./build",
 			error: "error.html",
-			precompress: true,
+			precompress: false,
 		}),
-		// prerender: {
-		// 	handleHttpError: ({ status, message }) => {
-		// 		if (status > 300 && status < 307) {
-		// 			return;
-		// 		}
-
-		// 		if (status === 404) {
-		// 			return;
-		// 		}
-
-		// 		throw new Error(message);
-		// 	},
-		// },
+		prerender: {
+			concurrency: 10,
+			crawl: true,
+			handleHttpError: "warn",
+			handleUnseenRoutes: "warn",
+		},
 		version: {
 			name: packageJson.version,
 		},

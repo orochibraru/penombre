@@ -315,6 +315,13 @@
                 fileOnly: true,
             },
             {
+                title: "Open in new tab",
+                icon: ExternalLinkIcon,
+                action: (item) => openItemInNewTab(item),
+                disabled: isTrash,
+                fileOnly: true,
+            },
+            {
                 title: "Rename",
                 icon: PencilLineIcon,
                 action: (item) => {
@@ -331,13 +338,7 @@
                 action: () => [],
                 disabled: isTrash,
             },
-            {
-                title: "Open in new tab",
-                icon: ExternalLinkIcon,
-                action: (item) => openItemInNewTab(item),
-                disabled: isTrash,
-                fileOnly: true,
-            },
+
             {
                 title: "Duplicate",
                 icon: CopyIcon,
