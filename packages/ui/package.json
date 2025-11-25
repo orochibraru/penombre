@@ -39,11 +39,8 @@
 		"tailwindcss": "^4.1.17",
 		"tsx": "^4.20.6",
 		"typescript": "^5.9.3",
-		"vite": "npm:rolldown-vite@latest",
+		"vite": "^7.2.4",
 		"vite-plugin-kit-routes": "^1.0.2"
-	},
-	"overrides": {
-		"vite": "npm:rolldown-vite@latest"
 	},
 	"dependencies": {
 		"@internationalized/date": "^3.10.0",

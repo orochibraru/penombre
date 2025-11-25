@@ -8,6 +8,9 @@ import type { KIT_ROUTES } from "$lib/ROUTES";
 
 export default defineConfig({
     plugins: [tailwindcss(), sveltekit(), kitRoutes()],
+    build: {
+        minify: false,
+    },
 });
 
 export const _kitRoutesConfig: Options<KIT_ROUTES> = {};
