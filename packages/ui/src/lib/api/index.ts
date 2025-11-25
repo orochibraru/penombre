@@ -22,10 +22,13 @@ export function getAuthHeaders(cookie?: string): Headers {
 	return headers;
 }
 
-export function getApiClient() {
+export function getApiClient(
+	fetch: typeof globalThis.fetch = globalThis.fetch,
+) {
 	const client = createClient<paths>({
 		baseUrl: apiUrl,
 		credentials: "include",
+		fetch,
 	});
 
 	return client;

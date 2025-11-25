@@ -3,7 +3,7 @@ import { getApiClient } from "$lib/api";
 import { route } from "$lib/ROUTES";
 import { type BreadCrumb, emptyFileApiResponse } from "$lib/utils";
 
-export const load = async ({ params }: { params: { path: string } }) => {
+export const load = async ({ params, fetch }) => {
 	if (building) {
 		return {
 			files: emptyFileApiResponse,
@@ -44,7 +44,7 @@ export const load = async ({ params }: { params: { path: string } }) => {
 		};
 	}
 
-	const api = getApiClient();
+	const api = getApiClient(fetch);
 
 	const { data, error: err } = await api.GET("/api/storage/objects", {
 		params: {

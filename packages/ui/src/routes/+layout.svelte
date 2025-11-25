@@ -7,7 +7,6 @@
     import { onNavigate } from "$app/navigation";
     import TopLoadingbar from "$lib/components/layout/top-loading-bar.svelte";
     import { Toaster } from "$lib/components/ui/sonner/index";
-    import { title } from "$lib/store/title";
 
     let { children } = $props();
 
@@ -43,10 +42,6 @@
         }
     });
 </script>
-
-<svelte:head>
-    <title>Opendrive - {$title}</title>
-</svelte:head>
 
 <ModeWatcher />
 

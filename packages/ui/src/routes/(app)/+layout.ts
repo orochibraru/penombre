@@ -6,7 +6,7 @@ import { getApiClient } from "$lib/api";
 import { route } from "$lib/ROUTES";
 import { uploadSchema } from "$lib/schemas/upload";
 
-export const load = async () => {
+export const load = async ({ fetch }) => {
 	if (building) {
 		return {
 			user: {
@@ -32,7 +32,7 @@ export const load = async () => {
 		};
 	}
 
-	const api = getApiClient();
+	const api = getApiClient(fetch);
 
 	const {
 		data: session,

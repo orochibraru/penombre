@@ -212,7 +212,7 @@
                 promises.push(promise);
                 continue;
             }
-            if (isTrash) {
+            if (page.url.pathname.startsWith("/trash")) {
                 const promise = getApiClient()
                     .DELETE("/api/storage/objects/item/{item}", {
                         params: {
@@ -303,100 +303,81 @@
         toast.info(`Downloaded ${itemPath}`);
     }
 
-    const isTrash = $derived(page.url.pathname.startsWith("/trash"));
+    let itemActions: ItemAction[] = [
+        {
+            title: "Download",
+            icon: DownloadIcon,
+            action: (item) => downloadItem(item.key),
+            disabled: page.url.pathname.startsWith("/trash"),
+            fileOnly: true,
+        },
+        {
+            title: "Open in new tab",
+            icon: ExternalLinkIcon,
+            action: (item) => openItemInNewTab(item),
+            disabled: page.url.pathname.startsWith("/trash"),
+            fileOnly: true,
+        },
+        {
+            title: "Rename",
+            icon: PencilLineIcon,
+            action: (item) => {
+                $itemAction = {
+                    open: true,
+                    item,
+                };
+            },
+            disabled: page.url.pathname.startsWith("/trash"),
+        },
+        {
+            title: "Move",
+            icon: FolderInputIcon,
+            action: () => [],
+            disabled: page.url.pathname.startsWith("/trash"),
+        },
 
-    const itemActions: ItemAction[] = $derived.by(() => {
-        const actions: ItemAction[] = [
-            {
-                title: "Download",
-                icon: DownloadIcon,
-                action: (item) => downloadItem(item.key),
-                disabled: isTrash,
-                fileOnly: true,
-            },
-            {
-                title: "Open in new tab",
-                icon: ExternalLinkIcon,
-                action: (item) => openItemInNewTab(item),
-                disabled: isTrash,
-                fileOnly: true,
-            },
-            {
-                title: "Rename",
-                icon: PencilLineIcon,
-                action: (item) => {
-                    $itemAction = {
-                        open: true,
-                        item,
-                    };
-                },
-                disabled: isTrash,
-            },
-            {
-                title: "Move",
-                icon: FolderInputIcon,
-                action: () => [],
-                disabled: isTrash,
-            },
-
-            {
-                title: "Duplicate",
-                icon: CopyIcon,
-                action: () => [],
-                disabled: true,
-            },
-            {
-                title: "Star",
-                icon: StarIcon,
-                action: () => [],
-                disabled: true,
-            },
-            {
-                title: "Share",
-                icon: ShareIcon,
-                action: () => [],
-                disabled: true,
-            },
-        ];
-
-        if (isTrash) {
-            actions.splice(0, 0, {
-                title: "Restore",
-                icon: ShareIcon,
-                action: (item: ObjectItem) => {
-                    isSingleItemAction = true;
-                    checkedItems = {};
-                    checkedItems[item.key] = true;
-                    confirmRestoreOpen = true;
-                },
-                disabled: false,
-            });
-
-            actions.splice(1, 0, {
-                title: "Delete permanently",
-                icon: TrashIcon,
-                action: async (item: ObjectItem) => {
-                    isSingleItemAction = true;
-                    checkedItems = {};
-                    checkedItems[item.key] = true;
-                    confirmDeleteOpen = true;
-                },
-            });
-        } else {
-            actions.push({
-                title: "Trash",
-                icon: TrashIcon,
-                action: async (item: ObjectItem) => {
-                    isSingleItemAction = true;
-                    checkedItems = {};
-                    checkedItems[item.key] = true;
-                    confirmDeleteOpen = true;
-                },
-            });
-        }
-
-        return actions;
-    });
+        {
+            title: "Duplicate",
+            icon: CopyIcon,
+            action: () => [],
+            disabled: true,
+        },
+        {
+            title: "Star",
+            icon: StarIcon,
+            action: () => [],
+            disabled: true,
+        },
+        {
+            title: "Share",
+            icon: ShareIcon,
+            action: () => [],
+            disabled: true,
+        },
+        page.url.pathname.startsWith("/trash")
+            ? {
+                  title: "Delete permanently",
+                  icon: TrashIcon,
+                  action: async (item: ObjectItem) => {
+                      isSingleItemAction = true;
+                      checkedItems = {};
+                      checkedItems[item.key] = true;
+                      confirmDeleteOpen = true;
+                  },
+                  disabled: false,
+              }
+            : {
+                  title: "Move to trash",
+                  icon: TrashIcon,
+                  action: async (item: ObjectItem) => {
+                      isSingleItemAction = true;
+                      checkedItems = {};
+                      checkedItems[item.key] = true;
+                      confirmDeleteOpen = true;
+                  },
+                  disabled: false,
+              },
+    ];
 
     const multipleItemsActions: MultipleItemsAction[] = [
         {
@@ -558,10 +539,6 @@
             (data.count ?? 0) > 0 &&
             (data.list ?? []).some((item) => checkedItems[item.key] === true) &&
             !allSelected;
-
-        if (data.count === 0) {
-            checkedItems = {};
-        }
     });
 </script>
 
