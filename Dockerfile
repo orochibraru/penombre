@@ -39,7 +39,7 @@ FROM base AS final
 COPY --from=builder /app/node_modules /app/node_modules
 
 # Copy API source and UI build
-COPY --from=builder ${API_DIR}/ /app
+COPY --from=builder ${API_DIR} /app/
 
 RUN mkdir -p /app/data
 
