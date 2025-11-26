@@ -137,6 +137,10 @@ const server = new Api({
 					}
 					const root = "./frontend";
 
+					if (url.pathname === "/") {
+						url.pathname = "/index.html";
+					}
+
 					let ext = "";
 					const hasExtension = extname(url.pathname);
 					if (!hasExtension) {
