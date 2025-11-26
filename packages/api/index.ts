@@ -152,9 +152,9 @@ const server = new Api({
 					const file = Bun.file(filePath);
 					const exists = await file.exists();
 
-					const stats = await file.stat();
-
 					if (exists) {
+						const stats = await file.stat();
+
 						const headers = new Headers();
 						headers.set("Cache-Control", "public, max-age=31536000, immutable");
 						headers.set("Content-Length", stats.size.toString());
