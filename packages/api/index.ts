@@ -1,3 +1,4 @@
+import { extname, join } from "node:path";
 import { auth } from "@lib/auth";
 import { logger } from "@lib/logger";
 import { cleanupDeletedUserStorage } from "@lib/storage";
@@ -112,8 +113,6 @@ const server = new Api({
 					const response = await auth.handler(request);
 					logger.http(request, response, Date.now() - start);
 
-					logger.debug(response);
-
 					return {
 						proceed: false,
 						response,
@@ -123,60 +122,38 @@ const server = new Api({
 			// UI Proxy - serve static files
 			{
 				pattern: "/**",
-				enabled: env !== "development",
+				enabled: true,
 				description: "Serve UI static files",
 				handler: async ({ request }) => {
 					const url = new URL(request.url);
-					if (
-						url.pathname.startsWith("/api") ||
-						url.pathname.startsWith("/swagger")
-					) {
+					const root = "./frontend";
+
+					const filePath = join(root, url.pathname);
+
+					const file = Bun.file(filePath);
+					const exists = await file.exists();
+
+					if (exists) {
 						return {
-							skip: true,
 							proceed: false,
+							response: new Response(file),
 						};
 					}
 
-					// Serve static files from UI build
-					const staticPath = `./frontend${url.pathname}`;
-					const file = Bun.file(staticPath);
+					const isAsset = extname(url.pathname) !== "";
 
-					if (await file.exists()) {
-						const response = new Response(file);
+					if (!isAsset) {
 						return {
 							proceed: false,
-							response,
+							response: new Response(Bun.file(join(root, "index.html"))),
 						};
 					}
 
-					// Fallback to index.html for SPA routing
-					const indexFile = Bun.file("./frontend/index.html");
-					if (await indexFile.exists()) {
-						const response = new Response(indexFile, {
-							headers: { "Content-Type": "text/html" },
-						});
-						return {
-							proceed: false,
-							response,
-						};
-					}
-
-					// 404 if no file found
-					const errorFile = Bun.file("./frontend/error.html");
-					if (await errorFile.exists()) {
-						const response = new Response(errorFile, {
-							status: 404,
-							headers: { "Content-Type": "text/html" },
-						});
-						return {
-							proceed: false,
-							response,
-						};
-					}
-					const response = new Response("Not Found", { status: 404 });
 					return {
 						proceed: false,
-						response,
+						response: new Response("404: File Not Found", {
+							status: 404,
+						}),
 					};
 				},
 			},
