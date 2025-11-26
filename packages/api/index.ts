@@ -126,26 +126,58 @@ const server = new Api({
 				description: "Serve UI static files",
 				handler: async ({ request }) => {
 					const url = new URL(request.url);
+					if (
+						url.pathname.startsWith("/api") ||
+						url.pathname.startsWith("/swagger")
+					) {
+						return {
+							skip: true,
+							proceed: false,
+						};
+					}
 					const root = "./frontend";
 
-					const filePath = join(root, url.pathname);
+					let ext = "";
+					const hasExtension = extname(url.pathname);
+					if (!hasExtension) {
+						ext = ".html";
+					}
+
+					const filePath = join(root, `${url.pathname}${ext}`);
 
 					const file = Bun.file(filePath);
 					const exists = await file.exists();
 
+					const stats = await file.stat();
+
 					if (exists) {
+						const headers = new Headers();
+						headers.set("Cache-Control", "public, max-age=31536000, immutable");
+						headers.set("Content-Length", stats.size.toString());
+						headers.set(
+							"Content-Type",
+							file.type || "application/octet-stream",
+						);
 						return {
 							proceed: false,
-							response: new Response(file),
+							response: new Response(file, {
+								headers: headers,
+							}),
 						};
 					}
+
+					logger.warn(`File not found: ${filePath}`);
 
 					const isAsset = extname(url.pathname) !== "";
 
 					if (!isAsset) {
+						const headers = new Headers();
+						headers.set("Content-Type", "text/html; charset=utf-8");
 						return {
 							proceed: false,
-							response: new Response(Bun.file(join(root, "index.html"))),
+							response: new Response(Bun.file(join(root, "error.html")), {
+								headers: headers,
+							}),
 						};
 					}
 
