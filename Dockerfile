@@ -1,5 +1,7 @@
 FROM oven/bun:1-alpine AS base
 
+RUN apk add --no-cache curl bash ca-certificates wget nano micro nodejs
+
 WORKDIR /app
 
 ARG FRONTEND_DIR=/app/packages/ui
@@ -15,19 +17,18 @@ COPY packages/api/package.json ${API_DIR}/
 
 RUN bun ci --frozen-lockfile --ignore-scripts
 
+FROM builder AS frontend-builder
+
 COPY . .
 
-# Clean any existing build artifacts to prevent cache contamination
 RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 
-# Build UI (static build) and move to API frontend directory
 RUN cd ${FRONTEND_DIR} && bun run build && ls -la build || exit 1
-RUN rm -rf ${FRONTEND_DIR}/node_modules
-RUN rm -rf ${API_DIR}/frontend
-RUN mkdir -p ${API_DIR}/frontend
-RUN mv ${FRONTEND_DIR}/build/* ${API_DIR}/frontend/
 
-# Remove dev dependencies and install only production dependencies
+FROM builder AS api-builder
+
+COPY . .
+
 RUN rm -rf /app/node_modules
 RUN bun install --production --frozen-lockfile --ignore-scripts
 
@@ -36,10 +37,12 @@ FROM base AS final
 
 # Copy only production node_modules from builder
 # We'll copy the entire node_modules but only the API's production deps were installed
-COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=api-builder /app/node_modules /app/node_modules
 
 # Copy API source and UI build
-COPY --from=builder ${API_DIR} /app/
+COPY --from=api-builder ${API_DIR} /app/
+
+COPY --from=frontend-builder ${FRONTEND_DIR}/build/ /app/frontend/
 
 RUN mkdir -p /app/data
 

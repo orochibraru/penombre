@@ -72,7 +72,7 @@ const server = new Api({
 	environment: env,
 	cors: {
 		enabled: true,
-		methods: ["GET", "POST", "PUT", "DELETE"],
+		methods: ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
 		origin: "http://localhost:5173",
 		allowedHeaders: ["Content-Type", "Authorization"],
 		credentials: true,
@@ -156,7 +156,10 @@ const server = new Api({
 						const stats = await file.stat();
 
 						const headers = new Headers();
-						headers.set("Cache-Control", "public, max-age=31536000, immutable");
+						// headers.set(
+						//     "Cache-Control",
+						//     "public, max-age=31536000, immutable"
+						// );
 						headers.set("Content-Length", stats.size.toString());
 						headers.set(
 							"Content-Type",
