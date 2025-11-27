@@ -19,7 +19,7 @@ RUN bun ci --frozen-lockfile --ignore-scripts
 
 FROM builder AS frontend-builder
 
-COPY . .
+COPY ./packages/ui ${FRONTEND_DIR}
 
 RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 
@@ -27,7 +27,7 @@ RUN cd ${FRONTEND_DIR} && bun run build && ls -la build || exit 1
 
 FROM builder AS api-builder
 
-COPY . .
+COPY ./packages/api ${API_DIR}
 
 RUN rm -rf /app/node_modules
 RUN bun install --production --frozen-lockfile --ignore-scripts

@@ -1,4 +1,4 @@
-import { extname, join } from "node:path";
+import { extname, join, resolve } from "node:path";
 import { auth } from "@lib/auth";
 import { logger } from "@lib/logger";
 import { cleanupDeletedUserStorage } from "@lib/storage";
@@ -126,72 +126,78 @@ const server = new Api({
 				description: "Serve UI static files",
 				handler: async ({ request }) => {
 					const url = new URL(request.url);
+
+					// Skip API paths
 					if (
 						url.pathname.startsWith("/api") ||
 						url.pathname.startsWith("/swagger")
 					) {
-						return {
-							skip: true,
-							proceed: false,
-						};
-					}
-					const root = "./frontend";
-
-					if (url.pathname === "/") {
-						url.pathname = "/index.html";
+						return { skip: true, proceed: false };
 					}
 
-					let ext = "";
-					const hasExtension = extname(url.pathname);
-					if (!hasExtension) {
-						ext = ".html";
+					// 1. Define absolute root to avoid CWD confusion in Docker
+					const root = resolve(process.cwd(), "frontend");
+
+					// 2. Determine the requested file path
+					const filePath = join(
+						root,
+						url.pathname === "/" ? "index.html" : url.pathname,
+					);
+
+					// 3. Try to find the file EXACTLY as requested
+					let file = Bun.file(filePath);
+
+					// Handle files without extensions (e.g. /about might match /about.html if prerendered)
+					if (!(await file.exists()) && extname(url.pathname) === "") {
+						const htmlPath = join(root, `${url.pathname}.html`);
+						if (await Bun.file(htmlPath).exists()) {
+							file = Bun.file(htmlPath);
+						}
 					}
 
-					const filePath = join(root, `${url.pathname}${ext}`);
-
-					const file = Bun.file(filePath);
-					const exists = await file.exists();
-
-					if (exists) {
+					// 4. Serve file if it exists
+					if (await file.exists()) {
 						const stats = await file.stat();
-
 						const headers = new Headers();
-						// headers.set(
-						//     "Cache-Control",
-						//     "public, max-age=31536000, immutable"
-						// );
 						headers.set("Content-Length", stats.size.toString());
+						// Important: Let Bun determine the strict content type
 						headers.set(
 							"Content-Type",
 							file.type || "application/octet-stream",
 						);
+
 						return {
 							proceed: false,
-							response: new Response(file, {
-								headers: headers,
-							}),
+							response: new Response(file, { headers }),
 						};
 					}
 
-					logger.warn(`File not found: ${filePath}`);
-
+					// 5. Handle Not Found (404)
 					const isAsset = extname(url.pathname) !== "";
 
-					if (!isAsset) {
-						const headers = new Headers();
-						headers.set("Content-Type", "text/html; charset=utf-8");
+					if (isAsset) {
+						// IF IT IS AN ASSET (e.g. .js, .css), DO NOT SERVE HTML FALLBACK.
+						// Return a real 404 so the browser knows the script failed.
 						return {
 							proceed: false,
-							response: new Response(Bun.file(join(root, "error.html")), {
-								headers: headers,
+							response: new Response("Not Found", {
+								status: 404,
 							}),
 						};
 					}
+					const indexFile = Bun.file(join(root, "index.html"));
+					if (await indexFile.exists()) {
+						return {
+							proceed: false,
+							response: new Response(indexFile),
+						};
+					}
 
+					// Final fail-safe
 					return {
 						proceed: false,
-						response: new Response("404: File Not Found", {
-							status: 404,
+						response: new Response("Critical: index.html not found", {
+							status: 500,
 						}),
 					};
 				},
