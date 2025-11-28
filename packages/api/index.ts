@@ -130,6 +130,11 @@ const server = new Api({
 						url.pathname.startsWith("/api") ||
 						url.pathname.startsWith("/swagger")
 					) {
+						if (request.method === "HEAD") {
+							const res = new Response(null, { status: 200 });
+							logger.http(request, res, Date.now() - start);
+							return { proceed: false, response: res };
+						}
 						return { skip: true, proceed: false };
 					}
 					if (!process.env.ORIGIN) {
