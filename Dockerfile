@@ -54,4 +54,8 @@ EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://0.0.0.0:8080/api/health || exit 1
 
+RUN chown -R bun:bun /app
+
+USER bun
+
 CMD ["bun", "run", "/app/index.ts"]

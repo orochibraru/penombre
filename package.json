@@ -44,6 +44,9 @@
 	"dependencies": {
 		"dotenv": "^17.2.3"
 	},
+	"overrides": {
+		"svelte": "^5.43.15"
+	},
 	"workspaces": [
 		"packages/*"
 	]
