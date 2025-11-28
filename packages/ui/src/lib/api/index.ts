@@ -1,8 +1,9 @@
 import createClient from "openapi-fetch";
-import { env } from "$env/dynamic/private";
+import { dev } from "$app/environment";
+import { page } from "$app/state";
 import type { components, paths } from "./schema";
 
-export const apiUrl = env.ORIGIN || "http://localhost:8080";
+export const apiUrl = dev ? "http://localhost:8080" : page.url.origin;
 
 export const authCookieName = "better-auth.session_token";
 

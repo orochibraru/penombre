@@ -41,7 +41,7 @@ export const handle = async ({ event, resolve }) => {
 		);
 	}
 
-	if (!sessionData?.user) {
+	if (!sessionData) {
 		throw redirect(307, route("/auth/sign-in"));
 	}
 	event.locals.user = sessionData.user;
