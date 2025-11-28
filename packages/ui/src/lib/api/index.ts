@@ -1,26 +1,10 @@
 import createClient from "openapi-fetch";
-import { browser } from "$app/environment";
-import { env } from "$env/dynamic/public";
+import { env } from "$env/dynamic/private";
 import type { components, paths } from "./schema";
 
-export const apiUrl = env.PUBLIC_API_URL || "http://localhost:8080";
+export const apiUrl = env.ORIGIN || "http://localhost:8080";
 
 export const authCookieName = "better-auth.session_token";
-
-export function getAuthHeaders(cookie?: string): Headers {
-	const headers: Headers = new Headers();
-	if (cookie) {
-		headers.set("Cookie", `${authCookieName}=${cookie}`);
-	} else if (browser) {
-		const match = document.cookie.match(
-			new RegExp(`(^| )${authCookieName}=([^;]+)`),
-		);
-		if (match) {
-			headers.set("Cookie", `${authCookieName}=${match[2]}`);
-		}
-	}
-	return headers;
-}
 
 export function getApiClient(
 	fetch: typeof globalThis.fetch = globalThis.fetch,

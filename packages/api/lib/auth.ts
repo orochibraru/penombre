@@ -7,6 +7,13 @@ import { createAuthMiddleware } from "better-auth/api";
 import { genericOAuth, openAPI } from "better-auth/plugins";
 import * as schema from "./db/schema";
 
+const origin = process.env.ORIGIN;
+if (!origin) {
+	logger.warn(
+		"ORIGIN environment variable is not set. Make sure to set it in production.",
+	);
+}
+
 export const auth = betterAuth({
 	basePath: "/api/auth",
 	database: drizzleAdapter(db, {
@@ -26,7 +33,11 @@ export const auth = betterAuth({
 			}
 		}),
 	},
-	trustedOrigins: ["http://localhost:5173", "http://localhost:8080"],
+	trustedOrigins: [
+		"http://localhost:5173",
+		"http://localhost:8080",
+		origin || "",
+	],
 	plugins: [
 		openAPI({
 			path: "/openapi",

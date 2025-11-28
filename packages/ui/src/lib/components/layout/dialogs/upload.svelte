@@ -7,8 +7,7 @@
     import { page } from "$app/state";
     import {
         apiUrl,
-        getApiClient,
-        getAuthHeaders,
+        getApiClient
         type UploadResult,
     } from "$lib/api";
     import { uploadFile } from "$lib/api/helpers/storage";
@@ -22,7 +21,6 @@
     import { uploadSchema } from "$lib/schemas/upload";
     import { uploadedItems, uploadingItems } from "$lib/store/upload";
     import { cn } from "$lib/utils";
-    import { getObjectUrl } from "$lib/url";
 
     type Props = {
         open: boolean;
@@ -117,12 +115,6 @@
                     // result.data.finalName now includes the full path from the API
                     const finalUrl = `${apiUrl}/api/storage/objects/item/${encodeURIComponent(result.data.finalName)}`;
                     xhr.open("POST", finalUrl);
-
-                    const headers = getAuthHeaders();
-
-                    for (const [key, value] of Object.entries(headers)) {
-                        xhr.setRequestHeader(key, value);
-                    }
 
                     // Also set credentials to include cookies
                     xhr.withCredentials = true;
