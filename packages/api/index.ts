@@ -1,4 +1,3 @@
-import { extname, join, resolve } from "node:path";
 import { auth } from "@lib/auth";
 import { logger } from "@lib/logger";
 import { cleanupDeletedUserStorage } from "@lib/storage";

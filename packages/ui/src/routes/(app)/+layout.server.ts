@@ -1,4 +1,3 @@
-import { redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { getApiClient } from "$lib/api";
