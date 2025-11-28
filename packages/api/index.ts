@@ -132,6 +132,7 @@ const server = new Api({
 					) {
 						return { skip: true, proceed: false };
 					}
+					process.env.ORIGIN = `http://${host}:${port}`;
 					const handler = await import("./frontend/handler");
 					const { fetch } = handler.getHandler();
 					const res = await fetch(request);
