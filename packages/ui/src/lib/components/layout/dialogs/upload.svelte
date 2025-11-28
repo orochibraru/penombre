@@ -5,11 +5,7 @@
     import { valibotClient } from "sveltekit-superforms/adapters";
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
-    import {
-        apiUrl,
-        getApiClient
-        type UploadResult,
-    } from "$lib/api";
+    import { apiUrl, getApiClient, type UploadResult } from "$lib/api";
     import { uploadFile } from "$lib/api/helpers/storage";
     import { Button } from "$lib/components/ui/button";
     import * as Dialog from "$lib/components/ui/dialog/index";
