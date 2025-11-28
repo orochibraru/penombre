@@ -3,7 +3,7 @@ import { getApiClient } from "$lib/api";
 import { route } from "$lib/ROUTES";
 import type { BreadCrumb } from "$lib/utils";
 
-export const load = async ({ params, fetch }) => {
+export const load = async ({ params, fetch, request }) => {
 	const folders = params.path.split("/");
 
 	const crumbs: BreadCrumb[] = [];
@@ -24,7 +24,7 @@ export const load = async ({ params, fetch }) => {
 		chain.push(folder);
 	}
 
-	const api = getApiClient(fetch);
+	const api = getApiClient({ fetch, url: request.url });
 
 	const { data, error: err } = await api.GET("/api/storage/objects", {
 		params: {

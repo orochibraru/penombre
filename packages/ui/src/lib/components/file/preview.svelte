@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { page } from "$app/state";
     import type { ObjectItem } from "$lib/api";
     import { isCodeItem } from "$lib/file-utils";
     import { getObjectUrl } from "$lib/url";
@@ -8,7 +9,12 @@
     };
 
     let { item }: Props = $props();
-    const url = getObjectUrl(item.key, true);
+
+    const url = getObjectUrl({
+        raw: true,
+        itemPath: item.key,
+        baseUrl: page.url.origin,
+    });
 </script>
 
 <div class="flex w-full items-center justify-between">

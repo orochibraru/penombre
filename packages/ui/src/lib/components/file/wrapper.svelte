@@ -78,6 +78,8 @@
         (indeterminate || allSelected) && !isSingleItemAction,
     );
 
+    const apiClient = getApiClient({ url: page.url.origin });
+
     async function updateSearchResults() {
         if (!data.list || data.list.length === 0) {
             searchResults = [];
@@ -121,7 +123,7 @@
                 ? `${page.params.path}/${checkedItem}`
                 : checkedItem;
 
-            const promise = getApiClient()
+            const promise = apiClient
                 .PUT("/api/storage/objects/item/{item}", {
                     params: {
                         path: {
@@ -181,7 +183,7 @@
                 ? `${page.params.path}/${checkedItem}`
                 : checkedItem;
             if (itemPath.endsWith("/")) {
-                const promise = getApiClient()
+                const promise = apiClient
                     .DELETE("/api/storage/folders/folder/{folder}", {
                         params: {
                             query: {
@@ -213,7 +215,7 @@
                 continue;
             }
             if (page.url.pathname.startsWith("/trash")) {
-                const promise = getApiClient()
+                const promise = apiClient
                     .DELETE("/api/storage/objects/item/{item}", {
                         params: {
                             path: {
@@ -237,7 +239,7 @@
                 continue;
             }
 
-            const promise = getApiClient()
+            const promise = apiClient
                 .PUT("/api/storage/objects/item/{item}", {
                     params: {
                         query: {
@@ -283,13 +285,21 @@
     }
 
     function openItemInNewTab(item: ObjectItem) {
-        const finalUrl = getObjectUrl(item.key, true);
+        const finalUrl = getObjectUrl({
+            baseUrl: apiClient.url,
+            itemPath: item.key,
+            raw: true,
+        });
 
         window.open(finalUrl);
     }
 
     async function downloadItem(itemPath: string) {
-        const finalUrl = getObjectUrl(itemPath, true);
+        const finalUrl = getObjectUrl({
+            baseUrl: apiClient.url,
+            itemPath,
+            raw: true,
+        });
 
         const a = document.createElement("a");
         a.style.display = "none";
@@ -434,7 +444,11 @@
     async function handleOpenItem(item: ObjectItem): Promise<void> {
         $playableMusic = null;
 
-        const finalUrl = getObjectUrl(item.key, true);
+        const finalUrl = getObjectUrl({
+            baseUrl: apiClient.url,
+            itemPath: item.key,
+            raw: true,
+        });
 
         if (item.metadata.category === "CODE") {
             const codeReq = await fetch(finalUrl);

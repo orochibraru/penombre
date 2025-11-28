@@ -1,8 +1,8 @@
 import { error } from "@sveltejs/kit";
 import { getApiClient } from "$lib/api";
 
-export const load = async ({ fetch }) => {
-	const api = getApiClient(fetch);
+export const load = async ({ fetch, request }) => {
+	const api = getApiClient({ fetch, url: request.url });
 
 	const { data, error: err } = await api.GET("/api/storage/objects");
 	if (err) {

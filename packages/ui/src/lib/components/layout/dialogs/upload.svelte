@@ -5,8 +5,7 @@
     import { valibotClient } from "sveltekit-superforms/adapters";
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
-    import { apiUrl, getApiClient, type UploadResult } from "$lib/api";
-    import { uploadFile } from "$lib/api/helpers/storage";
+    import { getApiClient, type UploadResult } from "$lib/api";
     import { Button } from "$lib/components/ui/button";
     import * as Dialog from "$lib/components/ui/dialog/index";
     import {
@@ -66,10 +65,11 @@
         return name.replace(`${page.params.path}/`, "");
     }
 
+    const apiClient = getApiClient({ url: page.url.origin });
+
     async function cleanup(fileName: string) {
         // Delete the file
-        const api = getApiClient();
-        const res = await api.DELETE("/api/storage/objects/item/{item}", {
+        const res = await apiClient.DELETE("/api/storage/objects/item/{item}", {
             params: {
                 path: {
                     item: fileNameWithoutFolder(fileName),
@@ -109,7 +109,7 @@
                 const promise = new Promise<boolean>(async (resolve, fail) => {
                     const xhr = new XMLHttpRequest();
                     // result.data.finalName now includes the full path from the API
-                    const finalUrl = `${apiUrl}/api/storage/objects/item/${encodeURIComponent(result.data.finalName)}`;
+                    const finalUrl = `${apiClient.url}/api/storage/objects/item/${encodeURIComponent(result.data.finalName)}`;
                     xhr.open("POST", finalUrl);
 
                     // Also set credentials to include cookies
@@ -196,7 +196,7 @@
                         }
 
                         // result.data.finalName is now the full path from API
-                        const { data: file } = await getApiClient().GET(
+                        const { data: file } = await apiClient.GET(
                             "/api/storage/objects/item/{item}",
                             {
                                 params: {
@@ -251,10 +251,13 @@
             const fullPath = page.params.path
                 ? `${page.params.path}/${file.name}`
                 : file.name;
-            const promise = await uploadFile({
-                name: fullPath,
-                size: file.size,
-            })
+            const promise = await apiClient
+                .POST("/api/storage/objects", {
+                    body: {
+                        name: fullPath,
+                        size: file.size,
+                    },
+                })
                 .then((res) => {
                     if (!res.data) {
                         throw new Error(

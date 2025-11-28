@@ -1,11 +1,11 @@
 <script lang="ts">
-    import type { ObjectRequest } from "$lib/api/helpers/storage";
+    import type { ApiResponse, ObjectList } from "$lib/api";
     import FileWrapper from "$lib/components/file/wrapper.svelte";
     import RenameDialog from "$lib/components/layout/dialogs/rename-dialog.svelte";
     import PageError from "$lib/components/layout/page-error.svelte";
 
     type Props = {
-        data: ObjectRequest;
+        data: ApiResponse<ObjectList>;
     };
 
     const { data: res }: Props = $props();

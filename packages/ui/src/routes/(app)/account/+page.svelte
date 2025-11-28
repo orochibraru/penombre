@@ -1,15 +1,18 @@
 <script lang="ts">
     import { LogOutIcon } from "@lucide/svelte";
-    import { handleSignOut } from "$lib/api/helpers/auth";
+    import { getAuthClient, handleSignOut } from "$lib/api/helpers/auth";
     import Button from "$lib/components/ui/button/button.svelte";
     import Input from "$lib/components/ui/input/input.svelte";
     import Label from "$lib/components/ui/label/label.svelte";
     import { title } from "$lib/store/title";
     import Badge from "$lib/components/ui/badge/badge.svelte";
+    import { page } from "$app/state";
 
     $title = "Account";
 
     const { data } = $props();
+
+    const authClient = getAuthClient(page.url.origin);
 </script>
 
 <div class="w-full max-w-lg">
@@ -25,15 +28,23 @@
             {/if}
             <div class="flex w-full flex-col gap-1.5">
                 <Label>Email</Label>
-                <Input type="email" value={data.user.email} />
+                <Input
+                    type="email"
+                    autocomplete="email"
+                    value={data.user.email}
+                />
             </div>
             <div class="flex w-full flex-col gap-1.5">
                 <Label>Name</Label>
-                <Input type="email" value={data.user.name} />
+                <Input type="text" autocomplete="name" value={data.user.name} />
             </div>
         </fieldset>
     </form>
-    <Button onclick={() => handleSignOut()} class="w-full" variant="outline">
+    <Button
+        onclick={() => handleSignOut(authClient)}
+        class="w-full"
+        variant="outline"
+    >
         Sign out
         <LogOutIcon />
     </Button>

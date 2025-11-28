@@ -3,8 +3,8 @@ import { valibot } from "sveltekit-superforms/adapters";
 import { getApiClient } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
 
-export const load = async ({ fetch, locals }) => {
-	const api = getApiClient(fetch);
+export const load = async ({ fetch, locals, request }) => {
+	const api = getApiClient({ fetch, url: request.url });
 
 	const { data: activity, error: activityError } =
 		await api.GET("/api/activity");

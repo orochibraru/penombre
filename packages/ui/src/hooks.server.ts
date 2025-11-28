@@ -13,7 +13,7 @@ export const handle = async ({ event, resolve }) => {
 		session = null;
 		return resolve(event);
 	}
-	const api = getApiClient(event.fetch);
+	const api = getApiClient({ fetch: event.fetch, url: event.url.origin });
 
 	if (session) {
 		event.locals.user = session.user;

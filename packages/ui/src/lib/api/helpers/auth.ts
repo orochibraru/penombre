@@ -3,31 +3,34 @@ import { createAuthClient } from "better-auth/svelte";
 import { toast } from "svelte-sonner";
 import { dev } from "$app/environment";
 import { goto } from "$app/navigation";
-import { page } from "$app/state";
 import { route } from "$lib/ROUTES";
 
-const apiUrl = dev ? "http://localhost:8080" : page.url.origin;
+export function getAuthClient(url: string) {
+	const finalUrl = dev ? "http://localhost:8080" : url;
+	return createAuthClient({
+		baseURL: `${finalUrl}/api/auth`,
+		plugins: [genericOAuthClient()],
+	});
+}
 
-export const authClient = createAuthClient({
-	baseURL: `${apiUrl}/api/auth`,
-	plugins: [genericOAuthClient()],
-});
-
-export async function handleOauthSignIn(provider: string) {
-	return await authClient.signIn.oauth2({
+export async function handleOauthSignIn(
+	client: ReturnType<typeof getAuthClient>,
+	provider: string,
+) {
+	return await client.signIn.oauth2({
 		providerId: provider,
 		callbackURL: window.location.origin,
 	});
 }
 
-async function signOutCallback() {
-	await authClient.signOut();
+async function signOutCallback(client: ReturnType<typeof getAuthClient>) {
+	await client.signOut();
 	await goto(route("/auth/sign-in"), { invalidateAll: true });
 	return true;
 }
 
-export async function handleSignOut() {
-	toast.promise(signOutCallback, {
+export async function handleSignOut(client: ReturnType<typeof getAuthClient>) {
+	toast.promise(signOutCallback(client), {
 		loading: "Signing you out",
 		success: "You were signed out",
 		error: "Failed to sign you out",

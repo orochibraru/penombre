@@ -3,7 +3,6 @@ import clsx, { type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
 import type { ObjectItem, ObjectList } from "$lib/api";
-import type { ObjectRequest } from "$lib/api/helpers/storage";
 import type { ButtonVariant } from "$lib/components/ui/button";
 
 /**
@@ -242,12 +241,3 @@ export enum ItemStatus {
 	VALIDATED = "validated",
 	ERROR = "error",
 }
-
-export const emptyFileApiResponse: ObjectRequest = {
-	data: {
-		list: [],
-		count: 0,
-		total: 0,
-	},
-	err: undefined,
-};

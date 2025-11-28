@@ -1,22 +1,25 @@
 import createClient from "openapi-fetch";
 import { dev } from "$app/environment";
-import { page } from "$app/state";
 import type { components, paths } from "./schema";
-
-export const apiUrl = dev ? "http://localhost:8080" : page.url.origin;
 
 export const authCookieName = "better-auth.session_token";
 
-export function getApiClient(
-	fetch: typeof globalThis.fetch = globalThis.fetch,
-) {
+type ApiClientProps = {
+	fetch?: typeof globalThis.fetch;
+	url: string;
+};
+
+export function getApiClient(props: ApiClientProps) {
 	const client = createClient<paths>({
-		baseUrl: apiUrl,
+		baseUrl: dev ? "http://localhost:8080" : props.url,
 		credentials: "include",
-		fetch,
+		fetch: props.fetch,
 	});
 
-	return client;
+	return {
+		...client,
+		url: props.url,
+	};
 }
 
 export type ApiError = {
