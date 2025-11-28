@@ -45,6 +45,7 @@
 		"dotenv": "^17.2.3"
 	},
 	"overrides": {
+		"koritsu": "^0.1.18",
 		"svelte": "^5.43.15"
 	},
 	"workspaces": [
