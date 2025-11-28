@@ -2193,7 +2193,7 @@
 											"type": "string",
 											"description": "Session token"
 										},
-										"url": { "type": "null", "nullable": true },
+										"url": { "type": "string", "nullable": true },
 										"user": {
 											"type": "object",
 											"$ref": "#/components/schemas/User"

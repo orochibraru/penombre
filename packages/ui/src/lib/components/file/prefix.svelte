@@ -52,6 +52,8 @@
 
     const item = $derived($uploadedItems[baseItem.key] || baseItem);
 
+    let navigating: boolean = $state(false);
+
     function isChecked(): boolean {
         return checkedItems[item.key] || false;
     }
@@ -84,18 +86,21 @@
         return;
     }
 
-    function handleClick() {
+    async function handleClick(e?: MouseEvent | CustomEvent<null>) {
+        e?.preventDefault();
         if (indeterminate) {
             return toggleCheck();
         }
 
         if (isFolderItem(item)) {
+            if (navigating) return;
+            navigating = true;
             const folder = item.key.replace("/", "");
             const basePath = page.params.path
                 ? [page.params.path, encodeURIComponent(folder)]
                 : [encodeURIComponent(folder)];
 
-            goto(
+            await goto(
                 route("/browse/[...path]", {
                     path: basePath,
                 }),
@@ -103,6 +108,7 @@
                     invalidateAll: true,
                 },
             );
+            navigating = false;
             return;
         }
 
@@ -117,8 +123,8 @@
 {#if isFolderItem(item)}
     <button
         use:touchAction
-        onclick={() => handleClick()}
-        ontap={() => handleClick()}
+        onclick={handleClick}
+        ontap={handleClick}
         onlongpress={() => handleLongPress()}
         class="flex w-full items-center gap-2"
     >
@@ -139,8 +145,8 @@
 {:else}
     <button
         use:touchAction
-        onclick={() => handleClick()}
-        ontap={() => handleClick()}
+        onclick={handleClick}
+        ontap={handleClick}
         onlongpress={() => handleLongPress()}
         class={cn(
             "flex h-full w-full gap-2",

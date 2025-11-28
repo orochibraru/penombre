@@ -74,8 +74,6 @@ export class StorageService {
 			this.userFolder,
 		);
 
-		logger.info(`Using storage path: ${this.storagePath}`);
-
 		this.user = user;
 	}
 

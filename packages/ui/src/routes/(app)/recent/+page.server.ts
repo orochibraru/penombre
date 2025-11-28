@@ -1,19 +1,13 @@
-import { building } from "$app/environment";
+import { error } from "@sveltejs/kit";
 import { getApiClient } from "$lib/api";
-import { emptyFileApiResponse } from "$lib/utils";
 
 export const load = async ({ fetch }) => {
-	if (building) {
-		return {
-			files: emptyFileApiResponse,
-		};
-	}
-
 	const api = getApiClient(fetch);
 	const { data, error: err } = await api.GET("/api/storage/objects/recent");
 
 	if (err) {
-		throw new Error("Failed to load recent files");
+		console.error(err);
+		return error(500, "Failed to load files");
 	}
 
 	return {

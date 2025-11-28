@@ -122,83 +122,24 @@ const server = new Api({
 			// UI Proxy - serve static files
 			{
 				pattern: "/**",
-				enabled: true,
+				enabled: env === "production",
 				description: "Serve UI static files",
 				handler: async ({ request }) => {
 					const url = new URL(request.url);
-
-					// Skip API paths
+					const start = Date.now();
 					if (
 						url.pathname.startsWith("/api") ||
 						url.pathname.startsWith("/swagger")
 					) {
 						return { skip: true, proceed: false };
 					}
-
-					// 1. Define absolute root to avoid CWD confusion in Docker
-					const root = resolve(process.cwd(), "frontend");
-
-					// 2. Determine the requested file path
-					const filePath = join(
-						root,
-						url.pathname === "/" ? "index.html" : url.pathname,
-					);
-
-					// 3. Try to find the file EXACTLY as requested
-					let file = Bun.file(filePath);
-
-					// Handle files without extensions (e.g. /about might match /about.html if prerendered)
-					if (!(await file.exists()) && extname(url.pathname) === "") {
-						const htmlPath = join(root, `${url.pathname}.html`);
-						if (await Bun.file(htmlPath).exists()) {
-							file = Bun.file(htmlPath);
-						}
-					}
-
-					// 4. Serve file if it exists
-					if (await file.exists()) {
-						const stats = await file.stat();
-						const headers = new Headers();
-						headers.set("Content-Length", stats.size.toString());
-						// Important: Let Bun determine the strict content type
-						headers.set(
-							"Content-Type",
-							file.type || "application/octet-stream",
-						);
-
-						return {
-							proceed: false,
-							response: new Response(file, { headers }),
-						};
-					}
-
-					// 5. Handle Not Found (404)
-					const isAsset = extname(url.pathname) !== "";
-
-					if (isAsset) {
-						// IF IT IS AN ASSET (e.g. .js, .css), DO NOT SERVE HTML FALLBACK.
-						// Return a real 404 so the browser knows the script failed.
-						return {
-							proceed: false,
-							response: new Response("Not Found", {
-								status: 404,
-							}),
-						};
-					}
-					const indexFile = Bun.file(join(root, "index.html"));
-					if (await indexFile.exists()) {
-						return {
-							proceed: false,
-							response: new Response(indexFile),
-						};
-					}
-
-					// Final fail-safe
+					const handler = await import("./frontend/handler");
+					const { fetch } = handler.getHandler();
+					const res = await fetch(request);
+					logger.http(request, res, Date.now() - start);
 					return {
 						proceed: false,
-						response: new Response("Critical: index.html not found", {
-							status: 500,
-						}),
+						response: res,
 					};
 				},
 			},
