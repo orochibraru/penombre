@@ -10,15 +10,16 @@ type ApiClientProps = {
 };
 
 export function getApiClient(props: ApiClientProps) {
+	const finalurl = dev ? "http://localhost:8080" : props.url;
 	const client = createClient<paths>({
-		baseUrl: dev ? "http://localhost:8080" : props.url,
+		baseUrl: finalurl,
 		credentials: "include",
 		fetch: props.fetch,
 	});
 
 	return {
 		...client,
-		url: props.url,
+		url: finalurl,
 	};
 }
 

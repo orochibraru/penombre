@@ -3,6 +3,7 @@ import { copyFile, mkdir, readdir, rmdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { cwd } from "node:process";
 import { registerActivity } from "@lib/activity";
+import { db } from "@lib/db";
 import { user } from "@lib/db/schema";
 import { FileNotFoundError, UnauthorizedError } from "@lib/errors";
 import { logger } from "@lib/logger";

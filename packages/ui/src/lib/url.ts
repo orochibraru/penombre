@@ -1,3 +1,4 @@
+import { dev } from "$app/environment";
 import { page } from "$app/state";
 
 type ObjectUrlProps = {
@@ -15,6 +16,8 @@ export function getObjectUrl({
 		? `${page.params.path}/${itemPath}`
 		: itemPath;
 
-	const finalUrl = `${baseUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${raw ? "?raw=true" : ""}`;
+	const finalBaseUrl = dev ? "http://localhost:8080" : baseUrl;
+
+	const finalUrl = `${finalBaseUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${raw ? "?raw=true" : ""}`;
 	return finalUrl;
 }

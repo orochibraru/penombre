@@ -1,3 +1,4 @@
+import { db } from "@lib/db";
 import { activity } from "@lib/db/schema";
 import { logger } from "@lib/logger";
 import type { NewActivity } from "@lib/schema";
