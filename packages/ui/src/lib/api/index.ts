@@ -1,5 +1,5 @@
 import createClient from "openapi-fetch";
-import { buildOriginUrl } from "$lib/utils";
+import { getBaseUrl, isServerSide } from "$lib/utils";
 import type { components, paths } from "./schema";
 
 export const authCookieName = "better-auth.session_token";
@@ -13,17 +13,13 @@ type ApiClientProps = {
 export function getApiClient(props: ApiClientProps) {
 	// In SSR context (server-side), use internal localhost to avoid deadlock
 	// but forward the original Host header so the API knows the real origin
-	const isServer = typeof window === "undefined";
-	const baseUrl = isServer
-		? "http://localhost:8080"
-		: buildOriginUrl(props.url).toString();
+	const baseUrl = getBaseUrl(props.url);
 
 	const client = createClient<paths>({
-		baseUrl,
+		baseUrl: baseUrl.toString(),
 		credentials: "include",
 		fetch: props.fetch,
-		// Forward headers in SSR so the API knows the real origin and has the cookies
-		headers: isServer
+		headers: isServerSide()
 			? {
 					"X-Forwarded-Host": props.url.host,
 					"X-Forwarded-Proto": props.url.protocol.replace(":", ""),
@@ -35,7 +31,7 @@ export function getApiClient(props: ApiClientProps) {
 
 	return {
 		...client,
-		url: props.url,
+		url: new URL(baseUrl),
 	};
 }
 

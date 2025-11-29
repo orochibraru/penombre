@@ -1,17 +1,15 @@
 import { genericOAuthClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/svelte";
 import { toast } from "svelte-sonner";
-import { dev } from "$app/environment";
 import { goto } from "$app/navigation";
 import { route } from "$lib/ROUTES";
-import { buildOriginUrl } from "$lib/utils";
+import { getBaseUrl } from "$lib/utils";
 
 export function getAuthClient(url: URL) {
-	const finalUrl = dev
-		? "http://localhost:8080"
-		: buildOriginUrl(url).toString();
+	const baseUrl = getBaseUrl(url);
+
 	return createAuthClient({
-		baseURL: `${finalUrl}/api/auth`,
+		baseURL: `${baseUrl}/api/auth`,
 		plugins: [genericOAuthClient()],
 	});
 }

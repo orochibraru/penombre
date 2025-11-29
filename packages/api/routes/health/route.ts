@@ -1,3 +1,4 @@
+import { getDb } from "@lib/db";
 import { logger } from "@lib/logger";
 import { createRoute } from "koritsu";
 import z from "zod";
@@ -5,6 +6,7 @@ import z from "zod";
 export const GET = createRoute({
 	method: "GET",
 	handler: async () => {
+		const db = getDb();
 		try {
 			const dbHealth = await db.execute("SELECT 1");
 			if (dbHealth.length !== 1) {

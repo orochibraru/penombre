@@ -66,8 +66,6 @@ setInterval(
 	24 * 60 * 60 * 1000, // Every 24 hours
 );
 
-const REQUEST_TIMEOUT_MS = 10 * 1000; // 10 seconds
-
 // Cache the frontend handler at module level for production
 let cachedFrontendHandler: Awaited<
 	ReturnType<typeof import("./frontend/handler").getHandler>
@@ -75,8 +73,13 @@ let cachedFrontendHandler: Awaited<
 
 async function getFrontendHandler() {
 	if (!cachedFrontendHandler) {
-		const handler = await import("./frontend/handler");
-		cachedFrontendHandler = handler.getHandler();
+		try {
+			const handler = await import("./frontend/handler");
+			cachedFrontendHandler = handler.getHandler();
+		} catch (err) {
+			logger.error("Failed to load frontend handler:", err);
+			process.exit(1);
+		}
 	}
 	return cachedFrontendHandler;
 }
@@ -177,26 +180,8 @@ const server = new Api({
 					const frontendHandler = await getFrontendHandler();
 					logger.debug(`Handling request for ${url.pathname}`);
 
-					const controller = new AbortController();
-					const timeout = setTimeout(() => {
-						controller.abort();
-					}, REQUEST_TIMEOUT_MS);
+					const res = await frontendHandler.fetch(request);
 
-					let res: Response;
-					try {
-						res = await frontendHandler.fetch(request);
-					} catch (err) {
-						clearTimeout(timeout);
-						if (controller.signal.aborted) {
-							logger.error("Frontend request timed out");
-							return {
-								proceed: false,
-								response: new Response("Request timed out", { status: 504 }),
-							};
-						}
-						throw err;
-					}
-					clearTimeout(timeout);
 					logger.debug("Frontend request handled");
 					logger.http(request, res, Date.now() - start);
 					return {

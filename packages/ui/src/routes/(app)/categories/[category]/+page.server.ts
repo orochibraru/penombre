@@ -7,6 +7,7 @@ export const load = async ({ params, fetch, request }) => {
 		url: new URL(request.url),
 		cookie: request.headers.get("cookie") || undefined,
 	});
+
 	const { data, error: err } = await apiClient.GET(
 		"/api/storage/objects/category/{category}",
 		{

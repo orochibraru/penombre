@@ -15,7 +15,7 @@
     } from "$lib/components/ui/file-drop-zone";
     import { uploadSchema } from "$lib/schemas/upload";
     import { uploadedItems, uploadingItems } from "$lib/store/upload";
-    import { cn } from "$lib/utils";
+    import { cn, getBaseUrl } from "$lib/utils";
     import { onMount } from "svelte";
 
     type Props = {
@@ -119,7 +119,7 @@
                 const promise = new Promise<boolean>(async (resolve, fail) => {
                     const xhr = new XMLHttpRequest();
                     // result.data.finalName now includes the full path from the API
-                    const finalUrl = `${apiClient.url}/api/storage/objects/item/${encodeURIComponent(result.data.finalName)}`;
+                    const finalUrl = `${getBaseUrl(apiClient.url)}/api/storage/objects/item/${encodeURIComponent(result.data.finalName)}`;
                     xhr.open("POST", finalUrl);
 
                     // Also set credentials to include cookies

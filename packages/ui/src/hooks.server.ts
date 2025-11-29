@@ -9,15 +9,15 @@ export const handle = async ({ event, resolve }) => {
 	}
 
 	const cookieHeader = event.request.headers.get("cookie");
-	console.log(
-		"[hooks.server] Cookie header:",
-		cookieHeader ? "present" : "missing",
-	);
+
+	if (!cookieHeader) {
+		throw redirect(307, route("/auth/sign-in"));
+	}
 
 	const api = getApiClient({
 		fetch: event.fetch,
+		cookie: cookieHeader,
 		url: event.url,
-		cookie: cookieHeader || undefined,
 	});
 
 	const {
@@ -27,13 +27,6 @@ export const handle = async ({ event, resolve }) => {
 	} = await api.GET("/api/auth/get-session", {
 		credentials: "include",
 	});
-
-	console.log(
-		"[hooks.server] Session response:",
-		sessionRes.status,
-		"data:",
-		JSON.stringify(sessionData),
-	);
 
 	if (sessionRes.status === 401) {
 		throw redirect(307, route("/auth/sign-in"));
