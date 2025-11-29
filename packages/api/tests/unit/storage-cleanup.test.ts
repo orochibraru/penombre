@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { mkdir, rmdir, stat } from "node:fs/promises";
-import { join } from "node:path";
-import { cleanupDeletedUserStorage } from "@lib/storage";
+import { join, resolve } from "node:path";
 import { MockDrizzle } from "../mocks/db";
 
 // Mock logger
@@ -13,21 +12,31 @@ mock.module("@lib/logger", () => ({
 	logger: mockLogger,
 }));
 
+// Mock db module - this MUST happen before importing storage functions
+const mockDb = new MockDrizzle();
+mock.module("@lib/db", () => ({
+	getDb: () => mockDb.getDb(),
+}));
+
+// Now import storage functions AFTER mocks are set up
+const { cleanupDeletedUserStorage } = await import("@lib/storage");
+
 describe("Storage Cleanup", () => {
-	const testStoragePath = `tmp/opendrive-cleanup-test-${Date.now()}`;
-	const mockDb = new MockDrizzle();
+	const testStoragePath = resolve(`./tmp/opendrive-cleanup-test-${Date.now()}`);
 
 	beforeEach(async () => {
 		process.env.STORAGE_PATH = testStoragePath;
 		await mkdir(testStoragePath, { recursive: true });
 		mockDb.reset();
-		global.db = mockDb.getDb();
+		mockLogger.info.mockClear();
+		mockLogger.error.mockClear();
 	});
 
 	afterEach(async () => {
 		try {
 			await rmdir(testStoragePath, { recursive: true });
 		} catch {}
+		delete process.env.STORAGE_PATH;
 	});
 
 	it("should delete storage for users that do not exist in DB", async () => {

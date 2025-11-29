@@ -241,3 +241,7 @@ export enum ItemStatus {
 	VALIDATED = "validated",
 	ERROR = "error",
 }
+
+export function buildOriginUrl(url: URL): URL {
+	return new URL(`${url.protocol}//${url.host}`);
+}

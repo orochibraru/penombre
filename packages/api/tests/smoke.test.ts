@@ -5,25 +5,18 @@ describe("Test Suite Smoke Test", () => {
 		expect(1 + 1).toBe(2);
 	});
 
-	test("Happy DOM provides document", () => {
-		expect(document).toBeDefined();
-		expect(document.body).toBeDefined();
-	});
-
 	test("fetch is available", () => {
 		expect(fetch).toBeDefined();
 		expect(typeof fetch).toBe("function");
 	});
 
-	test("can create DOM elements", () => {
-		const div = document.createElement("div");
-		div.textContent = "test";
-		expect(div.textContent).toBe("test");
+	test("Bun environment is available", () => {
+		expect(Bun).toBeDefined();
+		expect(typeof Bun.version).toBe("string");
 	});
 
-	test("DOM manipulation works", () => {
-		const div = document.createElement("div");
-		div.classList.add("test-class");
-		expect(div.classList.contains("test-class")).toBe(true);
+	test("async/await works", async () => {
+		const result = await Promise.resolve(42);
+		expect(result).toBe(42);
 	});
 });

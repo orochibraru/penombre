@@ -1,4 +1,5 @@
 import createClient from "openapi-fetch";
+import { buildOriginUrl } from "$lib/utils";
 import type { components, paths } from "./schema";
 
 export const authCookieName = "better-auth.session_token";
@@ -13,7 +14,9 @@ export function getApiClient(props: ApiClientProps) {
 	// In SSR context (server-side), use internal localhost to avoid deadlock
 	// but forward the original Host header so the API knows the real origin
 	const isServer = typeof window === "undefined";
-	const baseUrl = isServer ? "http://localhost:8080" : props.url.origin;
+	const baseUrl = isServer
+		? "http://localhost:8080"
+		: buildOriginUrl(props.url).toString();
 
 	const client = createClient<paths>({
 		baseUrl,

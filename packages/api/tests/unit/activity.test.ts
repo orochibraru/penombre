@@ -1,9 +1,4 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import {
-	getUserActivities,
-	listAllActivities,
-	registerActivity,
-} from "@lib/activity";
 import { activity } from "@lib/db/schema";
 import { MockDrizzle } from "../mocks/db";
 
@@ -18,12 +13,20 @@ mock.module("@lib/logger", () => ({
 	logger: mockLogger,
 }));
 
-describe("Activity Service", () => {
-	const mockDb = new MockDrizzle();
+// Mock db module - this MUST happen before importing activity functions
+const mockDb = new MockDrizzle();
+mock.module("@lib/db", () => ({
+	getDb: () => mockDb.getDb(),
+}));
 
+// Now import activity functions AFTER mocks are set up
+const { registerActivity, getUserActivities, listAllActivities } = await import(
+	"@lib/activity"
+);
+
+describe("Activity Service", () => {
 	beforeEach(() => {
 		mockDb.reset();
-		global.db = mockDb.getDb();
 		mockLogger.error.mockClear();
 	});
 
