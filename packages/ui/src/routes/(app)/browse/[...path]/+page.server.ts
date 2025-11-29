@@ -24,7 +24,7 @@ export const load = async ({ params, fetch, request }) => {
 		chain.push(folder);
 	}
 
-	const api = getApiClient({ fetch, url: request.url });
+	const api = getApiClient({ fetch, url: new URL(request.url) });
 
 	const { data, error: err } = await api.GET("/api/storage/objects", {
 		params: {

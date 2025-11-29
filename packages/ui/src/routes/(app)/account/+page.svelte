@@ -12,7 +12,7 @@
 
     const { data } = $props();
 
-    const authClient = getAuthClient(page.url.origin);
+    const authClient = getAuthClient(page.url);
 </script>
 
 <div class="w-full max-w-lg">

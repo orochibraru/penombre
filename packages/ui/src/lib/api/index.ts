@@ -5,14 +5,14 @@ export const authCookieName = "better-auth.session_token";
 
 type ApiClientProps = {
 	fetch?: typeof globalThis.fetch;
-	url: string;
+	url: URL;
 };
 
 export function getApiClient(props: ApiClientProps) {
 	// In SSR context (server-side), always use internal localhost to avoid deadlock
 	// The UI runs inside the API server process in production
 	const isServer = typeof window === "undefined";
-	const finalurl = isServer ? "http://localhost:8080" : props.url;
+	const finalurl = isServer ? "http://localhost:8080" : props.url.origin;
 	const client = createClient<paths>({
 		baseUrl: finalurl,
 		credentials: "include",
@@ -21,7 +21,7 @@ export function getApiClient(props: ApiClientProps) {
 
 	return {
 		...client,
-		url: finalurl,
+		url: new URL(finalurl),
 	};
 }
 

@@ -75,7 +75,7 @@
         return name.replace(`${page.params.path}/`, "");
     }
 
-    const apiClient = getApiClient({ url: page.url.origin });
+    const apiClient = getApiClient({ url: page.url });
 
     async function cleanup(fileName: string) {
         // Delete the file

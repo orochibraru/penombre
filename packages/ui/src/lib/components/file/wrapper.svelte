@@ -78,7 +78,7 @@
         (indeterminate || allSelected) && !isSingleItemAction,
     );
 
-    const apiClient = getApiClient({ url: page.url.origin });
+    const apiClient = getApiClient({ url: page.url });
 
     async function updateSearchResults() {
         if (!data.list || data.list.length === 0) {

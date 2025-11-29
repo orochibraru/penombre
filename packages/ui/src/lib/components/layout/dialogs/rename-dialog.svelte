@@ -25,7 +25,7 @@
             finalName = `${newName}/`;
         }
 
-        const promise = getApiClient({ url: page.url.origin })
+        const promise = getApiClient({ url: page.url })
             .PUT("/api/storage/objects/item/{item}", {
                 params: {
                     path: {

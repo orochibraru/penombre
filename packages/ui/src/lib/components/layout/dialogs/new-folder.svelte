@@ -22,7 +22,7 @@
     async function handleNewFolder() {
         newFolderLoading = true;
 
-        const promise = getApiClient({ url: page.url.origin })
+        const promise = getApiClient({ url: page.url })
             .POST("/api/storage/folders", {
                 body: {
                     name: newFolderName,

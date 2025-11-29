@@ -13,7 +13,7 @@
     const url = getObjectUrl({
         raw: true,
         itemPath: item.key,
-        baseUrl: page.url.origin,
+        baseUrl: page.url,
     });
 </script>
 

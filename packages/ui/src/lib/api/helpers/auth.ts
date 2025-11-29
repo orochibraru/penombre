@@ -5,8 +5,8 @@ import { dev } from "$app/environment";
 import { goto } from "$app/navigation";
 import { route } from "$lib/ROUTES";
 
-export function getAuthClient(url: string) {
-	const finalUrl = dev ? "http://localhost:8080" : url;
+export function getAuthClient(url: URL) {
+	const finalUrl = dev ? "http://localhost:8080" : url.origin;
 	return createAuthClient({
 		baseURL: `${finalUrl}/api/auth`,
 		plugins: [genericOAuthClient()],

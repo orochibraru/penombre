@@ -20,7 +20,7 @@
 
     const sidebar = Sidebar.useSidebar();
 
-    const authClient = getAuthClient(page.url.origin);
+    const authClient = getAuthClient(page.url);
 </script>
 
 <Sidebar.Menu>

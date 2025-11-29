@@ -17,7 +17,7 @@
     async function oauthHandler(provider: string) {
         loading = true;
         try {
-            const client = getAuthClient(page.url.origin);
+            const client = getAuthClient(page.url);
             const res = await handleOauthSignIn(client, provider);
             if (res.error) {
                 error = true;
