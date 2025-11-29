@@ -16,6 +16,7 @@
     import { uploadSchema } from "$lib/schemas/upload";
     import { uploadedItems, uploadingItems } from "$lib/store/upload";
     import { cn } from "$lib/utils";
+    import { onMount } from "svelte";
 
     type Props = {
         open: boolean;
@@ -23,6 +24,15 @@
     };
 
     const concurrency = 10;
+
+    onMount(() => {
+        // Reset the upload stores when the component is mounted
+        uploadingItems.set({});
+        uploadedItems.set({});
+        if (!page.data.uploadForm) {
+            throw new Error("uploadForm data is required");
+        }
+    });
 
     let { open = $bindable(false), loading = $bindable(false) }: Props =
         $props();

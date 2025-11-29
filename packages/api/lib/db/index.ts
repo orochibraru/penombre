@@ -1,9 +1,6 @@
 import { type BunSQLDatabase, drizzle } from "drizzle-orm/bun-sql";
 
 export type Database = BunSQLDatabase<Record<string, never>>;
-declare global {
-	var db: Database;
-}
 
 export function getDbUrl() {
 	return (
@@ -12,14 +9,11 @@ export function getDbUrl() {
 	);
 }
 
-// biome-ignore lint/suspicious/noRedeclare: Prevent too many clients error
-let db: Database;
+let db: Database | null = null;
 
-if (process.env.ENV === "production") {
-	db = drizzle(getDbUrl());
-} else {
-	if (!global.db) global.db = drizzle(getDbUrl());
-
-	db = global.db;
+export function getDb(): Database {
+	if (!db) {
+		db = drizzle(getDbUrl());
+	}
+	return db;
 }
-export { db };

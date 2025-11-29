@@ -1,4 +1,4 @@
-import { db } from "@lib/db";
+import { getDb } from "@lib/db";
 import { logger } from "@lib/logger";
 import { StorageService } from "@lib/storage";
 import { betterAuth } from "better-auth";
@@ -16,7 +16,7 @@ if (!origin) {
 
 export const auth = betterAuth({
 	basePath: "/api/auth",
-	database: drizzleAdapter(db, {
+	database: drizzleAdapter(getDb(), {
 		provider: "pg",
 		schema,
 	}),

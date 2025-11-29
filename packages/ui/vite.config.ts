@@ -8,6 +8,10 @@ import type { KIT_ROUTES } from "$lib/ROUTES";
 
 export default defineConfig({
     plugins: [tailwindcss(), sveltekit(), kitRoutes()],
+
+    define: {
+        SUPERFORMS_LEGACY: true
+    }
 }) satisfies UserConfig;
 
 export const _kitRoutesConfig: Options<KIT_ROUTES> = {};

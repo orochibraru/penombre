@@ -66,6 +66,21 @@ setInterval(
 	24 * 60 * 60 * 1000, // Every 24 hours
 );
 
+const REQUEST_TIMEOUT_MS = 10 * 1000; // 10 seconds
+
+// Cache the frontend handler at module level for production
+let cachedFrontendHandler: Awaited<
+	ReturnType<typeof import("./frontend/handler").getHandler>
+> | null = null;
+
+async function getFrontendHandler() {
+	if (!cachedFrontendHandler) {
+		const handler = await import("./frontend/handler");
+		cachedFrontendHandler = handler.getHandler();
+	}
+	return cachedFrontendHandler;
+}
+
 const server = new Api({
 	title: "Opendrive API",
 	environment: env,
@@ -124,6 +139,7 @@ const server = new Api({
 				enabled: env === "production",
 				description: "Serve UI static files",
 				handler: async ({ request }) => {
+					logger.debug("Frontend proxy handler invoked");
 					const url = new URL(request.url);
 					const start = Date.now();
 					if (
@@ -131,6 +147,7 @@ const server = new Api({
 						url.pathname.startsWith("/swagger")
 					) {
 						if (request.method === "HEAD") {
+							logger.debug("HEAD request to API or Swagger, returning 200 OK");
 							const res = new Response(null, { status: 200 });
 							logger.http(request, res, Date.now() - start);
 							return { proceed: false, response: res };
@@ -140,9 +157,32 @@ const server = new Api({
 					if (!process.env.ORIGIN) {
 						process.env.ORIGIN = `http://${host}:${port}`;
 					}
-					const handler = await import("./frontend/handler");
-					const { fetch } = handler.getHandler();
-					const res = await fetch(request);
+					logger.debug(`Set ORIGIN to ${process.env.ORIGIN}`);
+					logger.debug("Getting cached frontend handler");
+					const frontendHandler = await getFrontendHandler();
+					logger.debug(`Handling request for ${url.pathname}`);
+
+					const controller = new AbortController();
+					const timeout = setTimeout(() => {
+						controller.abort();
+					}, REQUEST_TIMEOUT_MS);
+
+					let res: Response;
+					try {
+						res = await frontendHandler.fetch(request);
+					} catch (err) {
+						clearTimeout(timeout);
+						if (controller.signal.aborted) {
+							logger.error("Frontend request timed out");
+							return {
+								proceed: false,
+								response: new Response("Request timed out", { status: 504 }),
+							};
+						}
+						throw err;
+					}
+					clearTimeout(timeout);
+					logger.debug("Frontend request handled");
 					logger.http(request, res, Date.now() - start);
 					return {
 						proceed: false,
@@ -156,19 +196,24 @@ const server = new Api({
 
 if (import.meta.main) {
 	logger.info("Running migrations in production environment.");
-	runMigrations()
-		.then(async () => {
-			logger.info("Migrations completed.");
-			return server.start().then(async () => {
-				await cleanup();
-				logger.info(`Server started in ${env} mode.`);
-				if (env === "development") {
-					writeRealTimeSpec();
-				}
+	try {
+		runMigrations()
+			.then(async () => {
+				logger.info("Migrations completed.");
+				return server.start().then(async () => {
+					await cleanup();
+					logger.info(`Server started in ${env} mode.`);
+					if (env === "development") {
+						writeRealTimeSpec();
+					}
+				});
+			})
+			.catch((err) => {
+				logger.error("Migration failed:", err);
+				process.exit(1);
 			});
-		})
-		.catch((err) => {
-			logger.error("Migration failed:", err);
-			process.exit(1);
-		});
+	} catch (err) {
+		logger.error("Unexpected error during startup:", err);
+		process.exit(1);
+	}
 }

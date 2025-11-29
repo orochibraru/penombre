@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { db } from "@lib/db";
+import { getDb } from "@lib/db";
 import { logger } from "@lib/logger";
 import { $, sleep } from "bun";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
@@ -7,6 +7,7 @@ import { migrate } from "drizzle-orm/bun-sql/migrator";
 const migrationsFolder = join(process.cwd(), "drizzle");
 
 export async function runMigrations() {
+	const db = getDb();
 	logger.info("Migrating database...");
 	const metaFile = `${migrationsFolder}/meta/_journal.json"`;
 	if (!Bun.file(metaFile).exists()) {

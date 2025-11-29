@@ -1,5 +1,4 @@
 import createClient from "openapi-fetch";
-import { dev } from "$app/environment";
 import type { components, paths } from "./schema";
 
 export const authCookieName = "better-auth.session_token";
@@ -10,7 +9,10 @@ type ApiClientProps = {
 };
 
 export function getApiClient(props: ApiClientProps) {
-	const finalurl = dev ? "http://localhost:8080" : props.url;
+	// In SSR context (server-side), always use internal localhost to avoid deadlock
+	// The UI runs inside the API server process in production
+	const isServer = typeof window === "undefined";
+	const finalurl = isServer ? "http://localhost:8080" : props.url;
 	const client = createClient<paths>({
 		baseUrl: finalurl,
 		credentials: "include",

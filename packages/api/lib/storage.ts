@@ -3,7 +3,7 @@ import { copyFile, mkdir, readdir, rmdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { cwd } from "node:process";
 import { registerActivity } from "@lib/activity";
-import { db } from "@lib/db";
+import { getDb } from "@lib/db";
 import { user } from "@lib/db/schema";
 import { FileNotFoundError, UnauthorizedError } from "@lib/errors";
 import { logger } from "@lib/logger";
@@ -23,6 +23,7 @@ import type { BunFile } from "bun";
 import { parseFile } from "music-metadata";
 
 export async function cleanupDeletedUserStorage() {
+	const db = getDb();
 	const usersList = await db.select().from(user);
 	if (usersList.length === 0) {
 		logger.info("No users found in database. Skipping storage cleanup.");

@@ -1,10 +1,11 @@
-import { db } from "@lib/db";
+import { getDb } from "@lib/db";
 import { activity } from "@lib/db/schema";
 import { logger } from "@lib/logger";
 import type { NewActivity } from "@lib/schema";
 import { desc, eq } from "drizzle-orm";
 
 export async function registerActivity(params: NewActivity): Promise<void> {
+	const db = getDb();
 	try {
 		await db.transaction(async (tx) => {
 			const prepared = tx
@@ -28,6 +29,7 @@ export async function registerActivity(params: NewActivity): Promise<void> {
 }
 
 export async function getUserActivities(userId: string) {
+	const db = getDb();
 	const activities = await db
 		.select()
 		.from(activity)
@@ -37,6 +39,7 @@ export async function getUserActivities(userId: string) {
 }
 
 export async function listAllActivities() {
+	const db = getDb();
 	const activities = await db
 		.select()
 		.from(activity)
