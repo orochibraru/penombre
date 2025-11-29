@@ -6,22 +6,33 @@ export const authCookieName = "better-auth.session_token";
 type ApiClientProps = {
 	fetch?: typeof globalThis.fetch;
 	url: URL;
+	cookie?: string;
 };
 
 export function getApiClient(props: ApiClientProps) {
-	// In SSR context (server-side), always use internal localhost to avoid deadlock
-	// The UI runs inside the API server process in production
+	// In SSR context (server-side), use internal localhost to avoid deadlock
+	// but forward the original Host header so the API knows the real origin
 	const isServer = typeof window === "undefined";
-	const finalurl = isServer ? "http://localhost:8080" : props.url.origin;
+	const baseUrl = isServer ? "http://localhost:8080" : props.url.origin;
+
 	const client = createClient<paths>({
-		baseUrl: finalurl,
+		baseUrl,
 		credentials: "include",
 		fetch: props.fetch,
+		// Forward headers in SSR so the API knows the real origin and has the cookies
+		headers: isServer
+			? {
+					"X-Forwarded-Host": props.url.host,
+					"X-Forwarded-Proto": props.url.protocol.replace(":", ""),
+					// Forward cookies since cross-origin requests to localhost won't include them
+					...(props.cookie ? { Cookie: props.cookie } : {}),
+				}
+			: undefined,
 	});
 
 	return {
 		...client,
-		url: new URL(finalurl),
+		url: props.url,
 	};
 }
 

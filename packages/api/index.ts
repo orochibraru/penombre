@@ -124,7 +124,22 @@ const server = new Api({
 				handler: async ({ request }) => {
 					const start = Date.now();
 
-					const response = await auth.handler(request);
+					// Rewrite request URL if X-Forwarded headers are present (SSR internal calls)
+					let authRequest = request;
+					const forwardedHost = request.headers.get("x-forwarded-host");
+					const forwardedProto =
+						request.headers.get("x-forwarded-proto") || "https";
+					if (forwardedHost) {
+						const originalUrl = new URL(request.url);
+						const newUrl = `${forwardedProto}://${forwardedHost}${originalUrl.pathname}${originalUrl.search}`;
+						authRequest = new Request(newUrl, {
+							method: request.method,
+							headers: request.headers,
+							body: request.body,
+						});
+					}
+
+					const response = await auth.handler(authRequest);
 					logger.http(request, response, Date.now() - start);
 
 					return {

@@ -7,19 +7,25 @@ import { createAuthMiddleware } from "better-auth/api";
 import { genericOAuth, openAPI } from "better-auth/plugins";
 import * as schema from "./db/schema";
 
-const origin = process.env.ORIGIN;
-if (!origin) {
+const origin = process.env.ORIGIN || "http://localhost:8080";
+if (!process.env.ORIGIN) {
 	logger.warn(
-		"ORIGIN environment variable is not set. Make sure to set it in production.",
+		"ORIGIN environment variable is not set. Defaulting to http://localhost:8080. Make sure to set it in production.",
 	);
 }
 
 export const auth = betterAuth({
 	basePath: "/api/auth",
+	baseURL: origin,
 	database: drizzleAdapter(getDb(), {
 		provider: "pg",
 		schema,
 	}),
+	advanced: {
+		// Use X-Forwarded headers to determine the real origin
+		// This is needed because SSR calls localhost:8080 internally
+		useSecureCookies: origin.startsWith("https://"),
+	},
 	hooks: {
 		after: createAuthMiddleware(async (ctx) => {
 			const session = ctx.context.session;
@@ -33,11 +39,7 @@ export const auth = betterAuth({
 			}
 		}),
 	},
-	trustedOrigins: [
-		"http://localhost:5173",
-		"http://localhost:8080",
-		origin || "",
-	],
+	trustedOrigins: ["http://localhost:5173", "http://localhost:8080", origin],
 	plugins: [
 		openAPI({
 			path: "/openapi",

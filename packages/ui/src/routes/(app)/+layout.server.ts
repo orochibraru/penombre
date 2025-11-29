@@ -4,7 +4,11 @@ import { getApiClient } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
 
 export const load = async ({ fetch, locals, request }) => {
-	const api = getApiClient({ fetch, url: new URL(request.url) });
+	const api = getApiClient({
+		fetch,
+		url: new URL(request.url),
+		cookie: request.headers.get("cookie") || undefined,
+	});
 
 	const { data: activity, error: activityError } =
 		await api.GET("/api/activity");

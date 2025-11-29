@@ -1,25 +1,24 @@
 import { redirect } from "@sveltejs/kit";
-import { getApiClient, type User, type UserSession } from "$lib/api";
+import { getApiClient } from "$lib/api";
 import { route } from "$lib/ROUTES";
-
-let session: {
-	session: UserSession;
-	user: User;
-} | null = null;
 
 export const handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
 	if (path.startsWith("/auth/")) {
-		session = null;
 		return resolve(event);
 	}
-	const api = getApiClient({ fetch: event.fetch, url: event.url });
 
-	if (session) {
-		event.locals.user = session.user;
-		event.locals.session = session.session;
-		return resolve(event);
-	}
+	const cookieHeader = event.request.headers.get("cookie");
+	console.log(
+		"[hooks.server] Cookie header:",
+		cookieHeader ? "present" : "missing",
+	);
+
+	const api = getApiClient({
+		fetch: event.fetch,
+		url: event.url,
+		cookie: cookieHeader || undefined,
+	});
 
 	const {
 		data: sessionData,
@@ -28,6 +27,13 @@ export const handle = async ({ event, resolve }) => {
 	} = await api.GET("/api/auth/get-session", {
 		credentials: "include",
 	});
+
+	console.log(
+		"[hooks.server] Session response:",
+		sessionRes.status,
+		"data:",
+		JSON.stringify(sessionData),
+	);
 
 	if (sessionRes.status === 401) {
 		throw redirect(307, route("/auth/sign-in"));
@@ -41,11 +47,11 @@ export const handle = async ({ event, resolve }) => {
 		);
 	}
 
-	if (!sessionData) {
+	// better-auth returns { session: null, user: null } when not authenticated
+	if (!sessionData?.session || !sessionData?.user) {
 		throw redirect(307, route("/auth/sign-in"));
 	}
 	event.locals.user = sessionData.user;
 	event.locals.session = sessionData.session;
-	session = sessionData;
 	return resolve(event);
 };
