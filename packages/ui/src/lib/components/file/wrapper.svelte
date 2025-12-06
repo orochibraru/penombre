@@ -1,5 +1,6 @@
 <script lang="ts">
     import {
+        ArchiveRestoreIcon,
         CopyIcon,
         DownloadIcon,
         ExternalLinkIcon,
@@ -39,6 +40,7 @@
         capitalizeFirstLetter,
         humanFileSize,
         type ItemAction,
+        type ItemActionGroup,
         type MultipleItemsAction,
     } from "$lib/utils";
     import DeleteDialog from "$lib/components/layout/dialogs/delete.svelte";
@@ -79,6 +81,8 @@
     );
 
     const apiClient = getApiClient({ url: page.url });
+
+    let isTrash = $derived(page.url.pathname.startsWith("/trash"));
 
     async function updateSearchResults() {
         if (!data.list || data.list.length === 0) {
@@ -168,6 +172,93 @@
         );
     }
 
+    async function getDeleteFolderPromise(itemPath: string) {
+        const promise = apiClient
+            .DELETE("/api/storage/folders/folder/{folder}", {
+                params: {
+                    query: {
+                        parent: itemPath.slice(0, -1).includes("/")
+                            ? itemPath
+                                  .slice(0, -1)
+                                  .split("/")
+                                  .slice(0, -1)
+                                  .join("/")
+                            : undefined,
+                    },
+                    path: {
+                        folder: itemPath.slice(0, -1),
+                    },
+                },
+            })
+            .then(async ({ error }) => {
+                if (error) {
+                    console.error(error);
+                    deletingItem = false;
+                    throw error;
+                }
+
+                confirmDeleteOpen = false;
+                deletingItem = false;
+            });
+
+        return promise;
+    }
+
+    async function getDeleteForeverPromise(itemPath: string) {
+        const promise = apiClient
+            .DELETE("/api/storage/objects/item/{item}", {
+                params: {
+                    path: {
+                        item: itemPath,
+                    },
+                    query: {
+                        folder: page.params.path,
+                    },
+                },
+            })
+            .then(async ({ error }) => {
+                if (error) {
+                    console.error(error);
+                    deletingItem = false;
+                    throw error;
+                }
+                confirmDeleteOpen = false;
+                deletingItem = false;
+            });
+        return promise;
+    }
+
+    async function getTrashActionPromise(itemPath: string) {
+        const promise = apiClient
+            .PUT("/api/storage/objects/item/{item}", {
+                params: {
+                    query: {
+                        folder: itemPath.includes("/")
+                            ? itemPath.split("/").slice(0, -1).join("/")
+                            : undefined,
+                    },
+                    path: {
+                        item: itemPath,
+                    },
+                },
+                body: {
+                    isTrashed: true,
+                },
+            })
+            .then(async ({ error }) => {
+                if (error) {
+                    console.error(error);
+                    deletingItem = false;
+                    throw error;
+                }
+
+                confirmDeleteOpen = false;
+
+                deletingItem = false;
+            });
+        return promise;
+    }
+
     async function handleDeleteObject() {
         if (Object.keys(checkedItems).length === 0) {
             return;
@@ -182,91 +273,26 @@
             const itemPath = page.params.path
                 ? `${page.params.path}/${checkedItem}`
                 : checkedItem;
-            if (itemPath.endsWith("/")) {
-                const promise = apiClient
-                    .DELETE("/api/storage/folders/folder/{folder}", {
-                        params: {
-                            query: {
-                                parent: itemPath.slice(0, -1).includes("/")
-                                    ? itemPath
-                                          .slice(0, -1)
-                                          .split("/")
-                                          .slice(0, -1)
-                                          .join("/")
-                                    : undefined,
-                            },
-                            path: {
-                                folder: itemPath.slice(0, -1),
-                            },
-                        },
-                    })
-                    .then(async ({ error }) => {
-                        if (error) {
-                            console.error(error);
-                            deletingItem = false;
-                            throw error;
-                        }
 
-                        confirmDeleteOpen = false;
-                        deletingItem = false;
-                    });
+            const isFolder = itemPath.endsWith("/");
 
-                promises.push(promise);
-                continue;
-            }
-            if (page.url.pathname.startsWith("/trash")) {
-                const promise = apiClient
-                    .DELETE("/api/storage/objects/item/{item}", {
-                        params: {
-                            path: {
-                                item: itemPath,
-                            },
-                            query: {
-                                folder: page.params.path,
-                            },
-                        },
-                    })
-                    .then(async ({ error }) => {
-                        if (error) {
-                            console.error(error);
-                            deletingItem = false;
-                            throw error;
-                        }
-                        confirmDeleteOpen = false;
-                        deletingItem = false;
-                    });
-                promises.push(promise);
+            if (isFolder) {
+                console.log("delete folder");
+                // Is a folder, so we delete the folder. TODO: move folder to trash
+                promises.push(getDeleteFolderPromise(itemPath));
                 continue;
             }
 
-            const promise = apiClient
-                .PUT("/api/storage/objects/item/{item}", {
-                    params: {
-                        query: {
-                            folder: itemPath.includes("/")
-                                ? itemPath.split("/").slice(0, -1).join("/")
-                                : undefined,
-                        },
-                        path: {
-                            item: itemPath,
-                        },
-                    },
-                    body: {
-                        isTrashed: true,
-                    },
-                })
-                .then(async ({ error }) => {
-                    if (error) {
-                        console.error(error);
-                        deletingItem = false;
-                        throw error;
-                    }
+            if (isTrash) {
+                console.log("delete forever");
+                // Is trash, so we delete forever
+                promises.push(getDeleteForeverPromise(itemPath));
+                continue;
+            }
 
-                    confirmDeleteOpen = false;
-                    deletingItem = false;
-                });
-
-            promises.push(promise);
+            // Not in trash, so we move to trash
+            console.log("move to trash");
+            promises.push(getTrashActionPromise(itemPath));
         }
 
         toast.promise(
@@ -277,9 +303,15 @@
                 await invalidateAll();
             }),
             {
-                loading: "Deleting items",
-                success: "Items deleted",
-                error: "Failed to delete items",
+                loading: isTrash
+                    ? "Deleting items permanently"
+                    : "Moving items to trash",
+                success: isTrash
+                    ? "Items deleted permanently"
+                    : "Items moved to trash",
+                error: isTrash
+                    ? "Failed to delete items permanently"
+                    : "Failed to move items to trash",
             },
         );
     }
@@ -313,81 +345,109 @@
         toast.info(`Downloaded ${itemPath}`);
     }
 
-    let itemActions: ItemAction[] = [
+    const trashActions: ItemActionGroup[] = [
         {
-            title: "Download",
-            icon: DownloadIcon,
-            action: (item) => downloadItem(item.key),
-            disabled: page.url.pathname.startsWith("/trash"),
-            fileOnly: true,
+            actions: [
+                {
+                    title: "Delete permanently",
+                    icon: TrashIcon,
+                    action: async (item: ObjectItem) => {
+                        isSingleItemAction = true;
+                        checkedItems = {};
+                        checkedItems[item.key] = true;
+                        confirmDeleteOpen = true;
+                    },
+                    disabled: false,
+                },
+                {
+                    title: "Restore",
+                    icon: ArchiveRestoreIcon,
+                    action: async (item: ObjectItem) => {
+                        isSingleItemAction = true;
+                        checkedItems = {};
+                        checkedItems[item.key] = true;
+                        confirmRestoreOpen = true;
+                    },
+                    disabled: false,
+                },
+            ],
         },
-        {
-            title: "Open in new tab",
-            icon: ExternalLinkIcon,
-            action: (item) => openItemInNewTab(item),
-            disabled: page.url.pathname.startsWith("/trash"),
-            fileOnly: true,
-        },
-        {
-            title: "Rename",
-            icon: PencilLineIcon,
-            action: (item) => {
-                $itemAction = {
-                    open: true,
-                    item,
-                };
-            },
-            disabled: page.url.pathname.startsWith("/trash"),
-        },
-        {
-            title: "Move",
-            icon: FolderInputIcon,
-            action: () => [],
-            disabled: page.url.pathname.startsWith("/trash"),
-        },
-
-        {
-            title: "Duplicate",
-            icon: CopyIcon,
-            action: () => [],
-            disabled: true,
-        },
-        {
-            title: "Star",
-            icon: StarIcon,
-            action: () => [],
-            disabled: true,
-        },
-        {
-            title: "Share",
-            icon: ShareIcon,
-            action: () => [],
-            disabled: true,
-        },
-        page.url.pathname.startsWith("/trash")
-            ? {
-                  title: "Delete permanently",
-                  icon: TrashIcon,
-                  action: async (item: ObjectItem) => {
-                      isSingleItemAction = true;
-                      checkedItems = {};
-                      checkedItems[item.key] = true;
-                      confirmDeleteOpen = true;
-                  },
-                  disabled: false,
-              }
-            : {
-                  title: "Move to trash",
-                  icon: TrashIcon,
-                  action: async (item: ObjectItem) => {
-                      isSingleItemAction = true;
-                      checkedItems = {};
-                      checkedItems[item.key] = true;
-                      confirmDeleteOpen = true;
-                  },
-                  disabled: false,
-              },
     ];
+
+    const mainActions: ItemActionGroup[] = [
+        {
+            actions: [
+                {
+                    title: "Download",
+                    icon: DownloadIcon,
+                    action: (item) => downloadItem(item.key),
+                    fileOnly: true,
+                },
+                {
+                    title: "Open in new tab",
+                    icon: ExternalLinkIcon,
+                    action: (item) => openItemInNewTab(item),
+                    fileOnly: true,
+                },
+            ],
+        },
+        {
+            actions: [
+                {
+                    title: "Rename",
+                    icon: PencilLineIcon,
+                    action: (item) => {
+                        $itemAction = {
+                            open: true,
+                            item,
+                        };
+                    },
+                },
+                {
+                    title: "Move",
+                    icon: FolderInputIcon,
+                    action: () => [],
+                },
+                {
+                    title: "Duplicate",
+                    icon: CopyIcon,
+                    action: () => [],
+                    disabled: true,
+                },
+                {
+                    title: "Star",
+                    icon: StarIcon,
+                    action: () => [],
+                    disabled: true,
+                },
+                {
+                    title: "Share",
+                    icon: ShareIcon,
+                    action: () => [],
+                    disabled: true,
+                },
+            ],
+        },
+        {
+            actions: [
+                {
+                    title: "Move to trash",
+                    icon: TrashIcon,
+                    action: async (item: ObjectItem) => {
+                        isSingleItemAction = true;
+                        checkedItems = {};
+                        checkedItems[item.key] = true;
+                        await handleDeleteObject();
+                    },
+                    disabled: false,
+                },
+            ],
+        },
+    ];
+
+    let itemActions: ItemActionGroup[] = $derived(
+        isTrash ? trashActions : mainActions,
+    );
 
     const multipleItemsActions: MultipleItemsAction[] = [
         {

@@ -182,6 +182,10 @@ export type ItemAction = {
 	folderOnly?: boolean;
 };
 
+export type ItemActionGroup = {
+	actions: ItemAction[];
+};
+
 export type SharedFileDisplayProps = {
 	handleOpenItem: (item: ObjectItem) => void;
 	files: ObjectList;
@@ -190,7 +194,7 @@ export type SharedFileDisplayProps = {
 	checkedItems: Record<string, boolean>;
 	allSelected: boolean;
 	indeterminate: boolean;
-	itemActions: ItemAction[];
+	itemActions: ItemActionGroup[];
 	loading: boolean;
 	searchValue: string;
 	searchResults: ObjectItem[];

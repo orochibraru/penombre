@@ -7,6 +7,7 @@
         FileImageIcon,
         FileMusicIcon,
         FileTextIcon,
+        FileVideoCameraIcon,
         FileVideoIcon,
         FolderIcon,
         PauseIcon,
@@ -52,11 +53,10 @@
 
     const item = $derived($uploadedItems[baseItem.key] || baseItem);
 
-    let navigating: boolean = $state(false);
+    let isFolder = $derived(isFolderItem(item));
 
-    function isChecked(): boolean {
-        return checkedItems[item.key] || false;
-    }
+    let navigating: boolean = $state(false);
+    let isSelected = $derived(checkedItems[item.key] || false);
 
     function getItemStatus(): ItemStatus {
         if ($uploadedItems[item.key]) {
@@ -77,7 +77,7 @@
     const isDesktop = new MediaQuery("(min-width: 768px)");
 
     function toggleCheck() {
-        if (isChecked()) {
+        if (isSelected) {
             checkedItems[item.key] = false;
             return;
         }
@@ -92,7 +92,7 @@
             return toggleCheck();
         }
 
-        if (isFolderItem(item)) {
+        if (isFolder) {
             if (navigating) return;
             navigating = true;
             const folder = item.key.replace("/", "");
@@ -120,7 +120,7 @@
     }
 </script>
 
-{#if isFolderItem(item)}
+{#if isFolder}
     <button
         use:touchAction
         onclick={handleClick}
@@ -129,7 +129,7 @@
         class="flex w-full items-center gap-2"
     >
         {#if !isDesktop.current && indeterminate}
-            {#if isChecked()}
+            {#if isSelected}
                 <CircleCheckIcon class="text-primary" />
             {:else}
                 <CircleIcon class="text-muted-foreground" />
@@ -157,7 +157,7 @@
         disabled={getItemStatus() === ItemStatus.UPLOADING}
     >
         {#if !isDesktop.current && indeterminate}
-            {#if isChecked()}
+            {#if isSelected}
                 <CircleCheckIcon class="text-primary" />
             {:else}
                 <CircleIcon class="text-muted-foreground" />
@@ -172,21 +172,10 @@
                     <XIcon class="h-4 w-4 text-red-600" />
                 {/if}
             </div>
-        {:else if item.metadata.category}
-            <div
-                class={cn(
-                    "flex h-full items-center",
-                    layout === "grid"
-                        ? "w-full justify-center"
-                        : "justify-start",
-                )}
-            >
+        {:else if item.metadata.category && layout !== "grid"}
+            <div class="flex h-full items-center justify-start">
                 {#if item.metadata.category === "DOCUMENTS"}
-                    {#if layout === "grid"}
-                        <FilePreview {item} />
-                    {:else}
-                        <FileTextIcon class={cn(iconSize, "text-red-600")} />
-                    {/if}
+                    <FileTextIcon class={cn(iconSize, "text-red-600")} />
                 {:else if item.metadata.category === "MUSIC"}
                     {#if $playableMusic && $playableMusic.title === item.key}
                         {#if $playableMusic.isPlaying}
@@ -198,28 +187,20 @@
                         <FileMusicIcon class={cn(iconSize, "text-pink-400")} />
                     {/if}
                 {:else if item.metadata.category === "IMAGES"}
-                    {#if layout === "grid"}
-                        <FilePreview {item} />
-                    {:else}
-                        <FileImageIcon
-                            class={cn(iconSize, "text-orange-400")}
-                        />
-                    {/if}
+                    <FileImageIcon class={cn(iconSize, "text-orange-400")} />
                 {:else if item.metadata.category === "VIDEO"}
-                    {#if layout === "grid"}
-                        <FilePreview {item} />
-                    {:else}
-                        <FileVideoIcon class={cn(iconSize, "text-blue-400")} />
-                    {/if}
+                    <FileVideoCameraIcon
+                        class={cn(iconSize, "text-blue-400")}
+                    />
                 {:else if item.metadata.category === "CODE"}
-                    {#if layout === "grid"}
-                        <FilePreview {item} />
-                    {:else}
-                        <FileCodeIcon class={cn(iconSize, "text-green-400")} />
-                    {/if}
+                    <FileCodeIcon class={cn(iconSize, "text-green-400")} />
                 {:else}
                     <FileIcon class={iconSize} />
                 {/if}
+            </div>
+        {:else if item.metadata.category && layout === "grid"}
+            <div class="w-full justify-center flex h-full items-center">
+                <FilePreview {item} />
             </div>
         {:else}
             <FileIcon class={iconSize} />
