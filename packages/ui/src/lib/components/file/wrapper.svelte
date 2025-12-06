@@ -1,6 +1,7 @@
 <script lang="ts">
     import {
         ArchiveRestoreIcon,
+        BrushCleaningIcon,
         CopyIcon,
         DownloadIcon,
         ExternalLinkIcon,
@@ -121,6 +122,8 @@
 
         actionsContextOpen = false;
 
+        const count = Object.keys(checkedItems).length;
+
         for (const checkedItem of Object.keys(checkedItems)) {
             restoringItem = true;
             const itemPath = page.params.path
@@ -157,17 +160,23 @@
             promises.push(promise);
         }
 
+        let failures = 0;
+
         toast.promise(
-            Promise.all(promises).finally(async () => {
-                checkedItems = {};
-                actionsContextOpen = false;
-                actionableItem = undefined;
-                await invalidateAll();
-            }),
+            Promise.all(promises)
+                .catch(() => {
+                    failures += 1;
+                })
+                .finally(async () => {
+                    checkedItems = {};
+                    actionsContextOpen = false;
+                    actionableItem = undefined;
+                    await invalidateAll();
+                }),
             {
-                loading: "Restoring items",
-                success: "Items restored",
-                error: "Failed to restore items",
+                loading: `Restoring ${count} items`,
+                success: `${count} items restored`,
+                error: `Failed to restore ${failures} items`,
             },
         );
     }
@@ -268,6 +277,8 @@
 
         actionsContextOpen = false;
 
+        const amount = Object.keys(checkedItems).length;
+
         for (const checkedItem of Object.keys(checkedItems)) {
             deletingItem = true;
             const itemPath = page.params.path
@@ -277,46 +288,49 @@
             const isFolder = itemPath.endsWith("/");
 
             if (isFolder) {
-                console.log("delete folder");
                 // Is a folder, so we delete the folder. TODO: move folder to trash
                 promises.push(getDeleteFolderPromise(itemPath));
                 continue;
             }
 
             if (isTrash) {
-                console.log("delete forever");
                 // Is trash, so we delete forever
                 promises.push(getDeleteForeverPromise(itemPath));
                 continue;
             }
 
             // Not in trash, so we move to trash
-            console.log("move to trash");
             promises.push(getTrashActionPromise(itemPath));
         }
 
+        let failures = 0;
+
         toast.promise(
-            Promise.all(promises).finally(async () => {
-                checkedItems = {};
-                actionsContextOpen = false;
-                actionableItem = undefined;
-                await invalidateAll();
-            }),
+            Promise.all(promises)
+                .catch(() => {
+                    failures += 1;
+                })
+                .finally(async () => {
+                    checkedItems = {};
+                    actionsContextOpen = false;
+                    actionableItem = undefined;
+                    await invalidateAll();
+                }),
             {
                 loading: isTrash
-                    ? "Deleting items permanently"
-                    : "Moving items to trash",
+                    ? `Deleting ${amount} items permanently`
+                    : `Moving ${amount} items to trash`,
                 success: isTrash
-                    ? "Items deleted permanently"
-                    : "Items moved to trash",
+                    ? `${amount} items deleted permanently`
+                    : `${amount} items moved to trash`,
                 error: isTrash
-                    ? "Failed to delete items permanently"
-                    : "Failed to move items to trash",
+                    ? `Failed to delete ${failures} items permanently`
+                    : `Failed to move ${failures} items to trash`,
             },
         );
     }
 
-    function openItemInNewTab(item: ObjectItem) {
+    function handleOpenItemInNewTab(item: ObjectItem) {
         const finalUrl = getObjectUrl({
             baseUrl: apiClient.url,
             itemPath: item.key,
@@ -326,7 +340,7 @@
         window.open(finalUrl);
     }
 
-    async function downloadItem(itemPath: string) {
+    async function handleDownloadItem(itemPath: string) {
         const finalUrl = getObjectUrl({
             baseUrl: apiClient.url,
             itemPath,
@@ -336,9 +350,9 @@
         const a = document.createElement("a");
         a.style.display = "none";
         a.href = finalUrl;
-        // the filename you want
         a.download = itemPath;
         document.body.appendChild(a);
+        a.target = "_blank";
         a.click();
         window.URL.revokeObjectURL(finalUrl);
         actionsContextOpen = false;
@@ -380,14 +394,20 @@
                 {
                     title: "Download",
                     icon: DownloadIcon,
-                    action: (item) => downloadItem(item.key),
+                    action: (item) => handleDownloadItem(item.key),
                     fileOnly: true,
                 },
                 {
                     title: "Open in new tab",
                     icon: ExternalLinkIcon,
-                    action: (item) => openItemInNewTab(item),
+                    action: (item) => handleOpenItemInNewTab(item),
                     fileOnly: true,
+                },
+                {
+                    title: "Share",
+                    icon: ShareIcon,
+                    action: () => [],
+                    disabled: true,
                 },
             ],
         },
@@ -420,12 +440,6 @@
                     action: () => [],
                     disabled: true,
                 },
-                {
-                    title: "Share",
-                    icon: ShareIcon,
-                    action: () => [],
-                    disabled: true,
-                },
             ],
         },
         {
@@ -439,6 +453,7 @@
                         checkedItems[item.key] = true;
                         await handleDeleteObject();
                     },
+                    variant: "destructive",
                     disabled: false,
                 },
             ],
@@ -449,7 +464,7 @@
         isTrash ? trashActions : mainActions,
     );
 
-    const multipleItemsActions: MultipleItemsAction[] = [
+    const mainMultipleActions: MultipleItemsAction[] = [
         {
             title: "Download",
             icon: DownloadIcon,
@@ -460,7 +475,7 @@
                 }
 
                 for (const checkedItem of Object.keys(checkedItems)) {
-                    downloadItem(checkedItem);
+                    handleDownloadItem(checkedItem);
                     checkedItems[checkedItem] = false;
                 }
             },
@@ -484,7 +499,27 @@
             action: () => [],
         },
         {
-            title: "Delete",
+            title: "Move to Trash",
+            icon: TrashIcon,
+            variant: "destructive",
+            action: async () => {
+                handleDeleteObject();
+            },
+        },
+    ];
+
+    const trashMultipleActions: MultipleItemsAction[] = [
+        {
+            title: "Restore",
+            icon: ArchiveRestoreIcon,
+            variant: "outline",
+            action: async () => {
+                isSingleItemAction = false;
+                confirmRestoreOpen = true;
+            },
+        },
+        {
+            title: "Delete permanently",
             icon: TrashIcon,
             variant: "destructive",
             action: async () => {
@@ -493,6 +528,10 @@
             },
         },
     ];
+
+    const multipleItemsActions: MultipleItemsAction[] = $derived(
+        isTrash ? trashMultipleActions : mainMultipleActions,
+    );
 
     async function handleOpenItemWrapper(item: ObjectItem) {
         return toast.promise(handleOpenItem(item), {
@@ -605,6 +644,15 @@
         }
     });
 
+    function emptyTrash() {
+        // Select all items
+        for (const item of data.list ?? []) {
+            checkedItems[item.key] = true;
+        }
+        confirmDeleteOpen = true;
+        isSingleItemAction = false;
+    }
+
     $effect(() => {
         allSelected =
             (data.count ?? 0) > 0 &&
@@ -681,6 +729,17 @@
                     >
                 </Select.Content>
             </Select.Root>
+        {/if}
+        {#if isTrash}
+            <Button
+                variant="destructive"
+                onclick={emptyTrash}
+                disabled={data.count === 0}
+                title={data.count === 0 ? "Trash is empty" : "Empty Trash"}
+            >
+                <BrushCleaningIcon />
+                Empty Trash
+            </Button>
         {/if}
     </div>
 {/if}

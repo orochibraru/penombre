@@ -2,15 +2,14 @@
     import { EllipsisVerticalIcon } from "@lucide/svelte";
     import type { ObjectItem } from "$lib/api";
     import FilePrefix from "$lib/components/file/prefix.svelte";
-    import { Button } from "$lib/components/ui/button";
     import * as Drawer from "$lib/components/ui/drawer/index";
     import { Skeleton } from "$lib/components/ui/skeleton/index";
     import {
         cn,
-        isFolderItem,
         type SharedFileDisplayProps,
         shouldDisplayAction,
     } from "$lib/utils";
+    import { Button } from "$lib/components/ui/button";
 
     let {
         handleOpenItem,
@@ -101,25 +100,41 @@
         <Drawer.Header>
             {#if actionableItem}
                 <Drawer.Title class="border-b pb-3 text-lg">
-                    {actionableItem.key}
+                    {actionableItem.key.endsWith("/")
+                        ? actionableItem.key.slice(0, -1)
+                        : actionableItem.key}
                 </Drawer.Title>
             {/if}
         </Drawer.Header>
         <Drawer.Footer>
-            <div class="mx-auto flex w-full flex-col items-start gap-5">
+            <div class="mx-auto flex w-full flex-col items-start gap-5 pb-5">
                 {#if actionableItem}
                     {@const item = actionableItem}
                     {#each itemActions as action}
-                        {#if shouldDisplayAction({ action, item })}
-                            {@const Icon = action.icon}
-                            <button
-                                onclick={() => action.action(item)}
-                                disabled={action.disabled}
-                                class="disabled:text-muted-foreground hover:text-primary flex w-full items-center justify-start gap-3 text-balance transition-colors"
-                            >
-                                <Icon />
-                                {action.title}
-                            </button>
+                        {#each action.actions as act}
+                            {#if shouldDisplayAction({ action: act, item })}
+                                {@const Icon = act.icon}
+                                <button
+                                    onclick={() => act.action(item)}
+                                    disabled={act.disabled}
+                                    class={cn(
+                                        "disabled:text-muted-foreground hover:text-primary flex w-full text-md items-center justify-start gap-3 text-balance transition-colors",
+                                        act.variant === "destructive"
+                                            ? "text-red-600 hover:text-red-800 disabled:text-red-300"
+                                            : "",
+                                    )}
+                                >
+                                    <Icon />
+                                    {act.title}
+                                </button>
+                            {/if}
+                        {/each}
+                        {@const isLast =
+                            action === itemActions[itemActions.length - 1]}
+                        {#if !isLast}
+                            <hr
+                                class="my-2 w-full border-muted-foreground/30"
+                            />
                         {/if}
                     {/each}
                 {/if}

@@ -9,11 +9,3 @@
 </script>
 
 <FileLayout data={data.files} />
-<div>
-    <div class="mb-3 flex items-center justify-end">
-        <Button size="sm" variant="destructive">
-            Empty Trash
-            <TrashIcon />
-        </Button>
-    </div>
-</div>

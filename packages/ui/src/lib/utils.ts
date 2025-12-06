@@ -177,6 +177,7 @@ export type ItemAction = {
 	title: string;
 	icon: typeof IconType;
 	action: (item: ObjectItem) => void;
+	variant?: "default" | "destructive";
 	disabled?: boolean;
 	fileOnly?: boolean;
 	folderOnly?: boolean;

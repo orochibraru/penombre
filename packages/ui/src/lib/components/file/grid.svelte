@@ -81,15 +81,25 @@
             </ContextMenu.Trigger>
             <ContextMenu.Content>
                 {#each itemActions as action}
-                    {#if shouldDisplayAction({ action, item: objectItem })}
-                        {@const Icon = action.icon}
-                        <DropdownMenu.Item
-                            onclick={() => action.action(objectItem)}
-                            disabled={action.disabled}
-                        >
-                            <Icon />
-                            {action.title}
-                        </DropdownMenu.Item>
+                    <ContextMenu.Group>
+                        {#each action.actions as act}
+                            {#if shouldDisplayAction( { action: act, item: objectItem }, )}
+                                {@const Icon = act.icon}
+                                <ContextMenu.Item
+                                    onclick={() => act.action(objectItem)}
+                                    disabled={act.disabled}
+                                    variant={act.variant}
+                                >
+                                    <Icon />
+                                    {act.title}
+                                </ContextMenu.Item>
+                            {/if}
+                        {/each}
+                    </ContextMenu.Group>
+                    {@const isLast =
+                        action === itemActions[itemActions.length - 1]}
+                    {#if !isLast}
+                        <ContextMenu.Separator />
                     {/if}
                 {/each}
             </ContextMenu.Content>
@@ -107,15 +117,25 @@
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
                 {#each itemActions as action}
-                    {#if shouldDisplayAction({ action, item: objectItem })}
-                        {@const Icon = action.icon}
-                        <DropdownMenu.Item
-                            onclick={() => action.action(objectItem)}
-                            disabled={action.disabled}
-                        >
-                            <Icon />
-                            {action.title}
-                        </DropdownMenu.Item>
+                    <DropdownMenu.Group>
+                        {#each action.actions as act}
+                            {#if shouldDisplayAction( { action: act, item: objectItem }, )}
+                                {@const Icon = act.icon}
+                                <DropdownMenu.Item
+                                    onclick={() => act.action(objectItem)}
+                                    disabled={act.disabled}
+                                    variant={act.variant}
+                                >
+                                    <Icon />
+                                    {act.title}
+                                </DropdownMenu.Item>
+                            {/if}
+                        {/each}
+                    </DropdownMenu.Group>
+                    {@const isLast =
+                        action === itemActions[itemActions.length - 1]}
+                    {#if !isLast}
+                        <DropdownMenu.Separator />
                     {/if}
                 {/each}
             </DropdownMenu.Content>

@@ -4,13 +4,11 @@
     import { page } from "$app/state";
     import type { ObjectItem } from "$lib/api";
     import FilePrefix from "$lib/components/file/prefix.svelte";
-    import * as AlertDialog from "$lib/components/ui/alert-dialog";
     import { Badge } from "$lib/components/ui/badge/index";
     import { Button } from "$lib/components/ui/button";
     import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
     import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
-    import Spinner from "$lib/components/ui/Spinner.svelte";
     import { Skeleton } from "$lib/components/ui/skeleton/index";
     import * as Table from "$lib/components/ui/table/index";
     import { route } from "$lib/ROUTES";
@@ -136,21 +134,26 @@
                 </ContextMenu.Trigger>
                 <ContextMenu.Content>
                     {#each itemActions as action}
-                        <DropdownMenu.Group>
-                            {#each action.actions as subAction}
-                                {#if shouldDisplayAction( { action: subAction, item: objectItem }, )}
-                                    {@const Icon = subAction.icon}
+                        <ContextMenu.Group>
+                            {#each action.actions as act}
+                                {#if shouldDisplayAction( { action: act, item: objectItem }, )}
+                                    {@const Icon = act.icon}
                                     <ContextMenu.Item
-                                        onclick={() =>
-                                            subAction.action(objectItem)}
-                                        disabled={subAction.disabled}
+                                        onclick={() => act.action(objectItem)}
+                                        disabled={act.disabled}
+                                        variant={act.variant}
                                     >
                                         <Icon />
-                                        {subAction.title}
+                                        {act.title}
                                     </ContextMenu.Item>
                                 {/if}
                             {/each}
-                        </DropdownMenu.Group>
+                        </ContextMenu.Group>
+                        {@const isLast =
+                            action === itemActions[itemActions.length - 1]}
+                        {#if !isLast}
+                            <ContextMenu.Separator />
+                        {/if}
                     {/each}
                 </ContextMenu.Content>
             </ContextMenu.Root>
@@ -187,20 +190,26 @@
                     <DropdownMenu.Content align="end">
                         {#each itemActions as action}
                             <DropdownMenu.Group>
-                                {#each action.actions as subAction}
-                                    {#if shouldDisplayAction( { action: subAction, item: objectItem }, )}
-                                        {@const Icon = subAction.icon}
+                                {#each action.actions as act}
+                                    {#if shouldDisplayAction( { action: act, item: objectItem }, )}
+                                        {@const Icon = act.icon}
                                         <DropdownMenu.Item
                                             onclick={() =>
-                                                subAction.action(objectItem)}
-                                            disabled={subAction.disabled}
+                                                act.action(objectItem)}
+                                            disabled={act.disabled}
+                                            variant={act.variant}
                                         >
-                                            <Icon class="mr-2 h-4 w-4" />
-                                            {subAction.title}
+                                            <Icon />
+                                            {act.title}
                                         </DropdownMenu.Item>
                                     {/if}
                                 {/each}
                             </DropdownMenu.Group>
+                            {@const isLast =
+                                action === itemActions[itemActions.length - 1]}
+                            {#if !isLast}
+                                <DropdownMenu.Separator />
+                            {/if}
                         {/each}
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
