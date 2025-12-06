@@ -136,16 +136,21 @@
                 </ContextMenu.Trigger>
                 <ContextMenu.Content>
                     {#each itemActions as action}
-                        {#if shouldDisplayAction({ action, item: objectItem })}
-                            {@const Icon = action.icon}
-                            <DropdownMenu.Item
-                                onclick={() => action.action(objectItem)}
-                                disabled={action.disabled}
-                            >
-                                <Icon />
-                                {action.title}
-                            </DropdownMenu.Item>
-                        {/if}
+                        <DropdownMenu.Group>
+                            {#each action.actions as subAction}
+                                {#if shouldDisplayAction( { action: subAction, item: objectItem }, )}
+                                    {@const Icon = subAction.icon}
+                                    <ContextMenu.Item
+                                        onclick={() =>
+                                            subAction.action(objectItem)}
+                                        disabled={subAction.disabled}
+                                    >
+                                        <Icon />
+                                        {subAction.title}
+                                    </ContextMenu.Item>
+                                {/if}
+                            {/each}
+                        </DropdownMenu.Group>
                     {/each}
                 </ContextMenu.Content>
             </ContextMenu.Root>
@@ -181,16 +186,21 @@
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
                         {#each itemActions as action}
-                            {#if shouldDisplayAction( { action, item: objectItem }, )}
-                                {@const Icon = action.icon}
-                                <DropdownMenu.Item
-                                    onclick={() => action.action(objectItem)}
-                                    disabled={action.disabled}
-                                >
-                                    <Icon />
-                                    {action.title}
-                                </DropdownMenu.Item>
-                            {/if}
+                            <DropdownMenu.Group>
+                                {#each action.actions as subAction}
+                                    {#if shouldDisplayAction( { action: subAction, item: objectItem }, )}
+                                        {@const Icon = subAction.icon}
+                                        <DropdownMenu.Item
+                                            onclick={() =>
+                                                subAction.action(objectItem)}
+                                            disabled={subAction.disabled}
+                                        >
+                                            <Icon class="mr-2 h-4 w-4" />
+                                            {subAction.title}
+                                        </DropdownMenu.Item>
+                                    {/if}
+                                {/each}
+                            </DropdownMenu.Group>
                         {/each}
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
