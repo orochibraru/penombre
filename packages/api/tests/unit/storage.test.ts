@@ -1,17 +1,15 @@
 import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import { rmdir } from "node:fs/promises";
 import type { FileCategory, FileContentType } from "@lib/schema";
+import { StorageService } from "@lib/storage";
 import type { User } from "better-auth";
 
-// Mock the activity module BEFORE importing storage to avoid database dependency
+// Mock the activity module to avoid database dependency
 mock.module("@lib/activity", () => ({
 	registerActivity: mock(() => Promise.resolve()),
 	getUserActivities: mock(() => Promise.resolve([])),
 	listAllActivities: mock(() => Promise.resolve([])),
 }));
-
-// Import storage AFTER mocks are set up
-const { StorageService } = await import("@lib/storage");
 
 // Mock user for testing
 const mockUser: User = {
