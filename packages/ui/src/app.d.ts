@@ -1,6 +1,6 @@
 import type { Logger } from "$lib/logger";
+import type { AuthType } from "$lib/server/auth";
 // See https://svelte.dev/docs/kit/types#app.d.ts
-import type { User, UserSession } from "$lib/api";
 
 // for information about these interfaces
 declare global {
@@ -12,8 +12,8 @@ declare global {
 			errorStackTrace: string;
 			message: unknown;
 			userAgent: string;
-			user: User;
-			session: UserSession;
+			user: AuthType["user"];
+			session: AuthType["session"];
 			logger: Logger;
 			isAdmin: boolean;
 			authCookie: string;

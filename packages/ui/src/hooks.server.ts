@@ -1,50 +1,61 @@
-import { redirect } from "@sveltejs/kit";
-import { getApiClient } from "$lib/api";
-import { route } from "$lib/ROUTES";
+import { join } from "node:path";
+import { svelteKitHandler } from "better-auth/svelte-kit";
+import { migrate } from "drizzle-orm/bun-sql/migrator";
+import { building } from "$app/environment";
+import { Logger } from "$lib/logger";
+import { auth } from "$lib/server/auth";
+import { getDb } from "$lib/server/db";
+
+const logger = new Logger("Hooks");
+
+const migrationsFolder = join(process.cwd(), "drizzle");
+
+async function sleep(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runMigrations() {
+	const db = getDb();
+	logger.info("Migrating database...");
+	let retries = 10;
+	while (retries > 0) {
+		try {
+			logger.info(`Running migrations (retries left: ${retries})`);
+			await migrate(db, {
+				migrationsFolder,
+			});
+			logger.info("Database migrated successfully.");
+			return;
+		} catch (error) {
+			logger.error(
+				`Migration error, Retrying... (${retries} attempts left)`,
+				error,
+			);
+			// This is the last retry, exit the process
+			if (retries === 1) {
+				logger.error("Could not migrate the database. Exiting.");
+				logger.error(error);
+				process.exit(1);
+			}
+			retries -= 1;
+			await sleep(3000);
+		}
+	}
+}
+
+export const init = async () => {
+	await runMigrations();
+};
 
 export const handle = async ({ event, resolve }) => {
-	const path = event.url.pathname;
-	if (path.startsWith("/auth/")) {
-		return resolve(event);
-	}
-
-	const cookieHeader = event.request.headers.get("cookie");
-
-	if (!cookieHeader) {
-		throw redirect(307, route("/auth/sign-in"));
-	}
-
-	const api = getApiClient({
-		fetch: event.fetch,
-		cookie: cookieHeader,
-		url: event.url,
+	const session = await auth.api.getSession({
+		headers: event.request.headers,
 	});
-
-	const {
-		data: sessionData,
-		error: sessionError,
-		response: sessionRes,
-	} = await api.GET("/api/auth/get-session", {
-		credentials: "include",
-	});
-
-	if (sessionRes.status === 401) {
-		throw redirect(307, route("/auth/sign-in"));
+	if (session) {
+		// Make session and user available on server
+		event.locals.session = session.session;
+		event.locals.user = session.user;
 	}
 
-	if (sessionError) {
-		throw new Error(
-			`Failed to retrieve user session: ${JSON.stringify(
-				sessionError,
-			)} (${sessionRes.status})`,
-		);
-	}
-
-	// better-auth returns { session: null, user: null } when not authenticated
-	if (!sessionData?.session || !sessionData?.user) {
-		throw redirect(307, route("/auth/sign-in"));
-	}
-	event.locals.user = sessionData.user;
-	event.locals.session = sessionData.session;
-	return resolve(event);
+	return svelteKitHandler({ event, resolve, auth, building });
 };

@@ -33,7 +33,18 @@ const PAGES = {
  * SERVERS
  */
 const SERVERS = {
-  
+  "GET /api/[...paths]": (params: { paths: (string | number)[] }) => {
+    return `/api/${params['paths']?.join('/')}`
+  },
+  "POST /api/[...paths]": (params: { paths: (string | number)[] }) => {
+    return `/api/${params['paths']?.join('/')}`
+  },
+  "PUT /api/[...paths]": (params: { paths: (string | number)[] }) => {
+    return `/api/${params['paths']?.join('/')}`
+  },
+  "DELETE /api/[...paths]": (params: { paths: (string | number)[] }) => {
+    return `/api/${params['paths']?.join('/')}`
+  }
 }
 
 /**
@@ -156,8 +167,8 @@ export function route<T extends keyof AllTypes>(key: T, ...params: any[]): strin
 */
 export type KIT_ROUTES = {
   PAGES: { '/': never, '/account': never, '/browse': never, '/browse/[...path]': 'path', '/categories/[category]': 'category', '/recent': never, '/settings': never, '/shared': never, '/starred': never, '/sync': never, '/trash': never, '/auth/callback': never, '/auth/sign-in': never, '/error': never }
-  SERVERS: Record<string, never>
+  SERVERS: { 'GET /api/[...paths]': 'paths', 'POST /api/[...paths]': 'paths', 'PUT /api/[...paths]': 'paths', 'DELETE /api/[...paths]': 'paths' }
   ACTIONS: Record<string, never>
   LINKS: Record<string, never>
-  Params: { 'path': never, 'category': never }
+  Params: { 'path': never, 'category': never, 'paths': never }
 }
