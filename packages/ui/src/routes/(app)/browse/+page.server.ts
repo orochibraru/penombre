@@ -1,14 +1,10 @@
 import { error } from "@sveltejs/kit";
-import { getApiClient } from "$lib/api";
+import { getApiClient } from "$lib/api-client";
 
-export const load = async ({ fetch, request }) => {
-	const api = getApiClient({
-		fetch,
-		url: new URL(request.url),
-		cookie: request.headers.get("cookie") || undefined,
-	});
+export const load = async ({ fetch }) => {
+	const client = getApiClient(fetch);
 
-	const { data, error: err } = await api.GET("/api/storage/objects");
+	const { data, error: err } = await client.storage.objects.$get();
 	if (err) {
 		console.error(err);
 		return error(500, "Failed to load files");

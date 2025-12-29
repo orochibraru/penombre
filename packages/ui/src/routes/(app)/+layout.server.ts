@@ -1,17 +1,12 @@
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
-import { getApiClient } from "$lib/api";
+import { getApiClient } from "$lib/api-client";
 import { uploadSchema } from "$lib/schemas/upload";
 
-export const load = async ({ fetch, locals, request }) => {
-	const api = getApiClient({
-		fetch,
-		url: new URL(request.url),
-		cookie: request.headers.get("cookie") || undefined,
-	});
+export const load = async ({ fetch, locals }) => {
+	const client = getApiClient(fetch);
 
-	const { data: activity, error: activityError } =
-		await api.GET("/api/activity");
+	const { data: activity, error: activityError } = await client.activity.$get();
 	if (activityError) {
 		throw new Error(
 			`Failed to retrieve user activity: ${JSON.stringify(activityError)}`,

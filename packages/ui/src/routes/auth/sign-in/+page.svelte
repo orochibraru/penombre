@@ -1,12 +1,11 @@
 <script lang="ts">
     import { toast } from "svelte-sonner";
     import { goto } from "$app/navigation";
-    import { getAuthClient, handleOauthSignIn } from "$lib/api/helpers/auth";
     import * as Alert from "$lib/components/ui/alert/index";
     import { Button } from "$lib/components/ui/button/index";
     import { title } from "$lib/store/title";
     import { cn } from "$lib/utils.js";
-    import { page } from "$app/state";
+    import { authClient } from "$lib/auth-client";
 
     let loading: boolean = $state(false);
 
@@ -17,8 +16,9 @@
     async function oauthHandler(provider: string) {
         loading = true;
         try {
-            const client = getAuthClient(page.url);
-            const res = await handleOauthSignIn(client, provider);
+            const res = await authClient.signIn.oauth2({
+                providerId: provider,
+            });
             if (res.error) {
                 error = true;
                 toast.error(

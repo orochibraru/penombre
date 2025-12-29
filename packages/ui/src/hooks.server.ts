@@ -1,4 +1,6 @@
 import { join } from "node:path";
+import type { Handle } from "@sveltejs/kit";
+import { sequence } from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
 import { building } from "$app/environment";
@@ -9,6 +11,10 @@ import { getDb } from "$lib/server/db";
 const logger = new Logger("Hooks");
 
 const migrationsFolder = join(process.cwd(), "drizzle");
+
+export function handleError({ event, error }) {
+	logger.error(`Error on ${event.request.method} ${event.url.pathname}`, error);
+}
 
 async function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -47,7 +53,7 @@ export const init = async () => {
 	await runMigrations();
 };
 
-export const handle = async ({ event, resolve }) => {
+const authHandler: Handle = async ({ event, resolve }) => {
 	const session = await auth.api.getSession({
 		headers: event.request.headers,
 	});
@@ -59,3 +65,19 @@ export const handle = async ({ event, resolve }) => {
 
 	return svelteKitHandler({ event, resolve, auth, building });
 };
+
+const generalHandler: Handle = async ({ event, resolve }) => {
+	const res = await resolve(event);
+	if (res.status >= 400) {
+		logger.error(
+			`Error on ${event.request.method} ${event.url.pathname} - ${res.status}`,
+		);
+	} else {
+		logger.info(
+			`${event.request.method} ${event.url.pathname} - ${res.status}`,
+		);
+	}
+	return res;
+};
+
+export const handle = sequence(generalHandler, authHandler);

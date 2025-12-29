@@ -11,25 +11,11 @@ import * as schema from "./db/schema";
 
 const logger = new Logger("Auth");
 
-const origin = process.env.ORIGIN || "http://localhost:5173";
-if (!process.env.ORIGIN) {
-	logger.warn(
-		"ORIGIN environment variable is not set. Defaulting to http://localhost:5173. Make sure to set it in production.",
-	);
-}
-
 export const auth = betterAuth({
-	basePath: "/api/auth",
-	baseURL: origin,
 	database: drizzleAdapter(getDb(), {
 		provider: "pg",
 		schema,
 	}),
-	advanced: {
-		// Use X-Forwarded headers to determine the real origin
-		// This is needed because SSR calls localhost:8080 internally
-		useSecureCookies: origin.startsWith("https://"),
-	},
 	hooks: {
 		after: createAuthMiddleware(async (ctx) => {
 			const session = ctx.context.session;
@@ -43,7 +29,6 @@ export const auth = betterAuth({
 			}
 		}),
 	},
-	trustedOrigins: ["http://localhost:5173", "http://localhost:8080", origin],
 	plugins: [
 		sveltekitCookies(getRequestEvent),
 		openAPI({
