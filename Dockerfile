@@ -21,14 +21,14 @@ COPY ./packages/ui ${FRONTEND_DIR}
 
 RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 
-RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync && bun run build && ls -la build || exit 
+RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync && bun run build
 
 # Final stage with Bun runtime
 FROM base AS final
 
 # Copy only production node_modules from builder
 # We'll copy the entire node_modules but only the API's production deps were installed
-COPY --from=frontend-builder /app/node_modules /app/node_modules
+COPY --from=builder /app/node_modules /app/node_modules
 
 COPY --from=frontend-builder ${FRONTEND_DIR}/build/ /app
 
