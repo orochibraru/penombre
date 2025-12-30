@@ -10,17 +10,23 @@
 
     let { item }: Props = $props();
 
-    const url = getObjectUrl({
-        raw: true,
-        itemPath: item.key,
-        baseUrl: page.url,
+    let objectUrl: string = $state("");
+
+    $effect(() => {
+        {
+            objectUrl = getObjectUrl({
+                raw: true,
+                itemPath: item.key,
+                baseUrl: page.url,
+            });
+        }
     });
 </script>
 
 <div class="flex w-full items-center justify-between">
     {#if item.metadata.contentType === "application/pdf"}
         <embed
-            src={url}
+            src={objectUrl}
             title={item.key}
             class="overflow-hidden"
             width="100%"
@@ -28,7 +34,7 @@
         />
     {:else if isCodeItem(item.key)}
         <embed
-            src={url}
+            src={objectUrl}
             title={item.key}
             class="overflow-hidden"
             width="100%"
@@ -36,9 +42,9 @@
         />
     {:else}
         <img
-            src={url}
+            src={objectUrl}
             alt={item.key}
-            class="mx-auto max-h-[200px] min-w-[200px] rounded-xl"
+            class="mx-auto max-h-50 min-w-50 rounded-xl"
         />
     {/if}
 </div>

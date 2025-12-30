@@ -12,12 +12,23 @@ export function getObjectUrl({
 	itemPath,
 	raw,
 }: ObjectUrlProps): string {
+	console.log(
+		"Generating object URL for itemPath:",
+		itemPath,
+		"with raw:",
+		raw,
+	);
 	const fullPath = page.params.path
 		? `${page.params.path}/${itemPath}`
 		: itemPath;
 
 	const finalBaseUrl = buildOriginUrl(baseUrl).toString();
 
-	const finalUrl = `${finalBaseUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${raw ? "?raw=true" : ""}`;
+	// Strip trailing slash if present
+	const normalizedBaseUrl = finalBaseUrl.endsWith("/")
+		? finalBaseUrl.slice(0, -1)
+		: finalBaseUrl;
+
+	const finalUrl = `${normalizedBaseUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${raw ? "?raw=true" : ""}`;
 	return finalUrl;
 }
