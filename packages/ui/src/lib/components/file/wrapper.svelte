@@ -17,7 +17,11 @@
     import { browser, dev } from "$app/environment";
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient, type ObjectItem, type ObjectList } from "$lib/api-client";
+    import {
+        getApiClient,
+        type ObjectItem,
+        type ObjectList,
+    } from "$lib/api-client";
     import FileGrid from "$lib/components/file/grid.svelte";
     import FileList from "$lib/components/file/list.svelte";
     import FileTable from "$lib/components/file/table.svelte";
@@ -178,7 +182,8 @@
     }
 
     async function getDeleteFolderPromise(itemPath: string) {
-        const folderName = itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
+        const folderName =
+            itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
         const parentPath = itemPath.slice(0, -1).includes("/")
             ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
             : undefined;

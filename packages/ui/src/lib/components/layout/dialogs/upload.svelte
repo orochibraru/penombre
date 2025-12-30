@@ -5,7 +5,11 @@
     import { valibotClient } from "sveltekit-superforms/adapters";
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient, type UploadResult, type ObjectItem } from "$lib/api-client";
+    import {
+        getApiClient,
+        type UploadResult,
+        type ObjectItem,
+    } from "$lib/api-client";
     import { Button } from "$lib/components/ui/button";
     import * as Dialog from "$lib/components/ui/dialog/index";
     import {
@@ -80,7 +84,9 @@
     async function cleanup(fileName: string) {
         // Delete the file
         const res = await apiClient.storage.objects.item[":item"].$delete({
-            param: { item: encodeURIComponent(fileNameWithoutFolder(fileName)) },
+            param: {
+                item: encodeURIComponent(fileNameWithoutFolder(fileName)),
+            },
         });
 
         if (!res.ok) {
@@ -202,8 +208,12 @@
                         }
 
                         // result.data.finalName is now the full path from API
-                        const fileRes = await apiClient.storage.objects.item[":item"].$get({
-                            param: { item: encodeURIComponent(result.data.finalName) },
+                        const fileRes = await apiClient.storage.objects.item[
+                            ":item"
+                        ].$get({
+                            param: {
+                                item: encodeURIComponent(result.data.finalName),
+                            },
                             query: {},
                         });
 

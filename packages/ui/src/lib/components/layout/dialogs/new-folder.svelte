@@ -22,8 +22,8 @@
     async function handleNewFolder() {
         newFolderLoading = true;
 
-        const promise = getApiClient(fetch).storage.folders
-            .$post({
+        const promise = getApiClient(fetch)
+            .storage.folders.$post({
                 json: {
                     name: newFolderName,
                     parent: page.params.path,

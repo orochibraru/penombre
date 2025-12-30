@@ -25,8 +25,8 @@
             finalName = `${newName}/`;
         }
 
-        const promise = getApiClient(fetch).storage.objects.item[":item"]
-            .$put({
+        const promise = getApiClient(fetch)
+            .storage.objects.item[":item"].$put({
                 param: { item: encodeURIComponent($itemAction.item.key) },
                 query: { folder: page.params.path },
                 json: {

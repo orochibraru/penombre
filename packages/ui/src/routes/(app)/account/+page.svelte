@@ -38,11 +38,7 @@
             </div>
         </fieldset>
     </form>
-    <Button
-        onclick={() => handleSignOut()}
-        class="w-full"
-        variant="outline"
-    >
+    <Button onclick={() => handleSignOut()} class="w-full" variant="outline">
         Sign out
         <LogOutIcon />
     </Button>
