@@ -4,20 +4,15 @@ RUN apk add --no-cache curl bash ca-certificates wget nano micro nodejs
 
 WORKDIR /app
 
-ARG FRONTEND_DIR=/app/packages/ui
-ARG API_DIR=/app/packages/api
-
 FROM base AS builder
 
-RUN mkdir -p ${FRONTEND_DIR} ${API_DIR}
+RUN mkdir -p ${FRONTEND_DIR}
 
 COPY package.json bun.lock /app/
-COPY packages/ui/package.json ${FRONTEND_DIR}/
-COPY packages/api/package.json ${API_DIR}/
 
 RUN bun ci --frozen-lockfile --ignore-scripts
 
-FROM builder AS frontend-builder
+FROM builder AS builder
 
 COPY ./packages/ui ${FRONTEND_DIR}
 
@@ -25,24 +20,11 @@ RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 
 RUN cd ${FRONTEND_DIR} && bun run build && ls -la build || exit 1
 
-FROM builder AS api-builder
-
-COPY ./packages/api ${API_DIR}
-
-RUN rm -rf /app/node_modules
-RUN bun install --production --frozen-lockfile --ignore-scripts
-
 # Final stage with Bun runtime
 FROM base AS final
 
-# Copy only production node_modules from builder
-# We'll copy the entire node_modules but only the API's production deps were installed
-COPY --from=api-builder /app/node_modules /app/node_modules
-
-# Copy API source and UI build
-COPY --from=api-builder ${API_DIR} /app/
-
-COPY --from=frontend-builder ${FRONTEND_DIR}/build/ /app/frontend/
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder ${FRONTEND_DIR}/build/ /app/frontend/
 
 RUN mkdir -p /app/data
 

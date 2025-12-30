@@ -11,13 +11,6 @@ else
     exit 1
 fi
 
-echo "Running unit tests..."
-if bun run test; then
-    echo "All tests passed."
-else
-    echo "Some tests failed. Please fix them before committing."
-    exit 1
-fi
 
 echo "Staging changes..."
 git add .

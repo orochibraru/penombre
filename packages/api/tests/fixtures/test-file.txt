@@ -1,4 +1,0 @@
-This is a test file for upload testing.
-It contains some sample text content for testing file upload functionality.
-
-File created for OpenDrive PR testing system.
