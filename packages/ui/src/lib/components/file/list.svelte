@@ -1,6 +1,6 @@
 <script lang="ts">
     import { EllipsisVerticalIcon } from "@lucide/svelte";
-    import type { ObjectItem } from "$lib/api";
+    import type { ObjectItem } from "$lib/api-client";
     import FilePrefix from "$lib/components/file/prefix.svelte";
     import * as Drawer from "$lib/components/ui/drawer/index";
     import { Skeleton } from "$lib/components/ui/skeleton/index";

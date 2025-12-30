@@ -6,3 +6,5 @@ export type CustomRouter = {
 		session: typeof auth.$Infer.Session.session | null;
 	};
 };
+
+export type { AppType } from "$lib/server/api";

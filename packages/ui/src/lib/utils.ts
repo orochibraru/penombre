@@ -2,8 +2,7 @@ import type { Icon as IconType } from "@lucide/svelte";
 import clsx, { type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
-import { dev } from "$app/environment";
-import type { ObjectItem, ObjectList } from "$lib/api";
+import type { ObjectItem, ObjectList } from "$lib/api-client";
 import type { ButtonVariant } from "$lib/components/ui/button";
 
 /**
@@ -254,24 +253,17 @@ export function buildOriginUrl(url: URL): URL {
 
 /**
  * Detect if we're running in a server-side context (SSR).
- * In SSR, we should use localhost to avoid deadlock when calling the API.
  */
 export function isServerSide(): boolean {
 	return typeof window === "undefined";
 }
 
+/**
+ * Get the base URL for API calls.
+ * In browser, uses current origin. In SSR, uses the provided URL's origin.
+ */
 export function getBaseUrl(url: URL): string {
-	// In SSR (server-side), ALWAYS use localhost to avoid deadlock
-	// The server calling itself via external URL will block forever
-	if (isServerSide()) {
-		return "http://localhost:8080";
-	}
-
-	// In browser, use the current origin (dev or prod)
-	const baseUrl: URL = dev
-		? new URL("http://localhost:8080")
-		: buildOriginUrl(url);
-
+	const baseUrl = buildOriginUrl(url);
 	let stringUrl = baseUrl.toString();
 	if (stringUrl.endsWith("/")) {
 		// Strip trailing slash if present

@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import type { ObjectItem } from "$lib/api";
+import type { ObjectItem } from "$lib/api-client";
 
 export type ItemAction = {
 	open: boolean;

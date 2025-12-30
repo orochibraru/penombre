@@ -16,7 +16,7 @@
     import { MediaQuery } from "svelte/reactivity";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
-    import type { ObjectItem } from "$lib/api";
+    import type { ObjectItem } from "$lib/api-client";
     import FilePreview from "$lib/components/file/preview.svelte";
     import NowPlaying from "$lib/components/now-playing.svelte";
     import { Badge } from "$lib/components/ui/badge/index";

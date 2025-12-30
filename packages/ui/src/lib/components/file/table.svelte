@@ -2,7 +2,7 @@
     import { EllipsisVerticalIcon } from "@lucide/svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
-    import type { ObjectItem } from "$lib/api";
+    import type { ObjectItem } from "$lib/api-client";
     import FilePrefix from "$lib/components/file/prefix.svelte";
     import { Badge } from "$lib/components/ui/badge/index";
     import { Button } from "$lib/components/ui/button";

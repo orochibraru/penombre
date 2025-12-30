@@ -1,23 +1,22 @@
 import { error } from "@sveltejs/kit";
-import { getApiClient } from "$lib/api";
+import { getApiClient } from "$lib/api-client";
+import type { PageServerLoad } from "./$types";
 
-export const load = async ({ fetch, request }) => {
-	const api = getApiClient({
-		fetch,
-		url: new URL(request.url),
-		cookie: request.headers.get("cookie") || undefined,
-	});
-	const { data, error: err } = await api.GET("/api/storage/objects/recent");
+export const load: PageServerLoad = async ({ fetch }) => {
+	const client = getApiClient(fetch);
 
-	if (err) {
-		console.error(err);
+	const res = await client.storage.objects.recent.$get();
+	if (!res.ok) {
+		console.error("Failed to load recent files", res.status);
 		return error(500, "Failed to load files");
 	}
+
+	const data = await res.json();
 
 	return {
 		files: {
 			data,
-			err,
+			err: undefined,
 		},
 	};
 };

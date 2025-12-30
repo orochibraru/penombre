@@ -2,21 +2,23 @@ import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { getApiClient } from "$lib/api-client";
 import { uploadSchema } from "$lib/schemas/upload";
+import type { Activity } from "$lib/server/schema";
+import type { LayoutServerLoad } from "./$types";
 
-export const load = async ({ fetch, locals }) => {
+export const load: LayoutServerLoad = async ({ fetch, locals }) => {
 	const client = getApiClient(fetch);
 
-	const { data: activity, error: activityError } = await client.activity.$get();
-	if (activityError) {
-		throw new Error(
-			`Failed to retrieve user activity: ${JSON.stringify(activityError)}`,
-		);
+	const res = await client.activity.$get();
+	if (!res.ok) {
+		throw new Error(`Failed to retrieve user activity: ${res.status}`);
 	}
+
+	const activity = (await res.json()) as Activity[];
 
 	return {
 		user: locals.user,
 		session: locals.session,
-		activity: activity,
+		activity,
 		uploadForm: await superValidate({}, valibot(uploadSchema)),
 		authCookie: "123",
 	};

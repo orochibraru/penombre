@@ -5,7 +5,7 @@
     import { valibotClient } from "sveltekit-superforms/adapters";
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient, type UploadResult } from "$lib/api";
+    import { getApiClient, type UploadResult, type ObjectItem } from "$lib/api-client";
     import { Button } from "$lib/components/ui/button";
     import * as Dialog from "$lib/components/ui/dialog/index";
     import {
@@ -15,7 +15,7 @@
     } from "$lib/components/ui/file-drop-zone";
     import { uploadSchema } from "$lib/schemas/upload";
     import { uploadedItems, uploadingItems } from "$lib/store/upload";
-    import { cn, getBaseUrl } from "$lib/utils";
+    import { cn } from "$lib/utils";
     import { onMount } from "svelte";
 
     type Props = {
@@ -75,24 +75,20 @@
         return name.replace(`${page.params.path}/`, "");
     }
 
-    const apiClient = getApiClient({ url: page.url });
+    const apiClient = getApiClient(fetch);
 
     async function cleanup(fileName: string) {
         // Delete the file
-        const res = await apiClient.DELETE("/api/storage/objects/item/{item}", {
-            params: {
-                path: {
-                    item: fileNameWithoutFolder(fileName),
-                },
-            },
+        const res = await apiClient.storage.objects.item[":item"].$delete({
+            param: { item: encodeURIComponent(fileNameWithoutFolder(fileName)) },
         });
 
-        if (res.error) {
+        if (!res.ok) {
             console.error(
                 `Failed to delete file after upload failure: ${fileNameWithoutFolder(
                     fileName,
                 )}`,
-                res.error,
+                await res.text(),
             );
         }
 
@@ -119,7 +115,7 @@
                 const promise = new Promise<boolean>(async (resolve, fail) => {
                     const xhr = new XMLHttpRequest();
                     // result.data.finalName now includes the full path from the API
-                    const finalUrl = `${getBaseUrl(apiClient.url)}/api/storage/objects/item/${encodeURIComponent(result.data.finalName)}`;
+                    const finalUrl = `/api/storage/objects/item/${encodeURIComponent(result.data.finalName)}`;
                     xhr.open("POST", finalUrl);
 
                     // Also set credentials to include cookies
@@ -206,18 +202,13 @@
                         }
 
                         // result.data.finalName is now the full path from API
-                        const { data: file } = await apiClient.GET(
-                            "/api/storage/objects/item/{item}",
-                            {
-                                params: {
-                                    path: {
-                                        item: result.data.finalName,
-                                    },
-                                },
-                            },
-                        );
+                        const fileRes = await apiClient.storage.objects.item[":item"].$get({
+                            param: { item: encodeURIComponent(result.data.finalName) },
+                            query: {},
+                        });
 
-                        if (file) {
+                        if (fileRes.ok) {
+                            const file = (await fileRes.json()) as ObjectItem;
                             file.key = fileNameWithoutFolder(file.key);
                             $uploadedItems[
                                 fileNameWithoutFolder(result.data.finalName)
@@ -261,22 +252,24 @@
             const fullPath = page.params.path
                 ? `${page.params.path}/${file.name}`
                 : file.name;
-            const promise = await apiClient
-                .POST("/api/storage/objects", {
-                    body: {
+            const promise = apiClient.storage.objects
+                .$post({
+                    query: { folder: page.params.path },
+                    json: {
                         name: fullPath,
                         size: file.size,
                     },
                 })
-                .then((res) => {
-                    if (!res.data) {
+                .then(async (res) => {
+                    if (!res.ok) {
                         throw new Error(
                             "No data returned from upload endpoint",
                         );
                     }
 
+                    const data = await res.json();
                     const result: FullResult = {
-                        data: res.data,
+                        data,
                         file,
                     };
 

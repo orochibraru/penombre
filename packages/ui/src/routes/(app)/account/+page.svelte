@@ -1,6 +1,6 @@
 <script lang="ts">
     import { LogOutIcon } from "@lucide/svelte";
-    import { getAuthClient, handleSignOut } from "$lib/api/helpers/auth";
+    import { handleSignOut } from "$lib/auth-helpers";
     import Button from "$lib/components/ui/button/button.svelte";
     import Input from "$lib/components/ui/input/input.svelte";
     import Label from "$lib/components/ui/label/label.svelte";
@@ -11,8 +11,6 @@
     $title = "Account";
 
     const { data } = $props();
-
-    const authClient = getAuthClient(page.url);
 </script>
 
 <div class="w-full max-w-lg">
@@ -41,7 +39,7 @@
         </fieldset>
     </form>
     <Button
-        onclick={() => handleSignOut(authClient)}
+        onclick={() => handleSignOut()}
         class="w-full"
         variant="outline"
     >

@@ -17,7 +17,7 @@
     import { browser, dev } from "$app/environment";
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient, type ObjectItem, type ObjectList } from "$lib/api";
+    import { getApiClient, type ObjectItem, type ObjectList } from "$lib/api-client";
     import FileGrid from "$lib/components/file/grid.svelte";
     import FileList from "$lib/components/file/list.svelte";
     import FileTable from "$lib/components/file/table.svelte";
@@ -81,7 +81,7 @@
         (indeterminate || allSelected) && !isSingleItemAction,
     );
 
-    const apiClient = getApiClient({ url: page.url });
+    const apiClient = getApiClient(fetch);
 
     let isTrash = $derived(page.url.pathname.startsWith("/trash"));
 
@@ -130,27 +130,23 @@
                 ? `${page.params.path}/${checkedItem}`
                 : checkedItem;
 
-            const promise = apiClient
-                .PUT("/api/storage/objects/item/{item}", {
-                    params: {
-                        path: {
-                            item: itemPath,
-                        },
-                        query: {
-                            folder: itemPath.includes("/")
-                                ? itemPath.split("/").slice(0, -1).join("/")
-                                : undefined,
-                        },
+            const promise = apiClient.storage.objects.item[":item"]
+                .$put({
+                    param: { item: encodeURIComponent(itemPath) },
+                    query: {
+                        folder: itemPath.includes("/")
+                            ? itemPath.split("/").slice(0, -1).join("/")
+                            : undefined,
                     },
-                    body: {
+                    json: {
                         isTrashed: false,
                     },
                 })
-                .then(async ({ error }) => {
-                    if (error) {
-                        console.error(error);
+                .then(async (res) => {
+                    if (!res.ok) {
+                        console.error(await res.text());
                         restoringItem = false;
-                        throw error;
+                        throw new Error("Failed to restore");
                     }
 
                     confirmRestoreOpen = false;
@@ -182,28 +178,21 @@
     }
 
     async function getDeleteFolderPromise(itemPath: string) {
-        const promise = apiClient
-            .DELETE("/api/storage/folders/folder/{folder}", {
-                params: {
-                    query: {
-                        parent: itemPath.slice(0, -1).includes("/")
-                            ? itemPath
-                                  .slice(0, -1)
-                                  .split("/")
-                                  .slice(0, -1)
-                                  .join("/")
-                            : undefined,
-                    },
-                    path: {
-                        folder: itemPath.slice(0, -1),
-                    },
-                },
+        const folderName = itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
+        const parentPath = itemPath.slice(0, -1).includes("/")
+            ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
+            : undefined;
+
+        const promise = apiClient.storage.folders.folder[":folder"]
+            .$delete({
+                param: { folder: encodeURIComponent(folderName) },
+                query: { parent: parentPath },
             })
-            .then(async ({ error }) => {
-                if (error) {
-                    console.error(error);
+            .then(async (res) => {
+                if (!res.ok) {
+                    console.error(await res.text());
                     deletingItem = false;
-                    throw error;
+                    throw new Error("Failed to delete folder");
                 }
 
                 confirmDeleteOpen = false;
@@ -214,22 +203,15 @@
     }
 
     async function getDeleteForeverPromise(itemPath: string) {
-        const promise = apiClient
-            .DELETE("/api/storage/objects/item/{item}", {
-                params: {
-                    path: {
-                        item: itemPath,
-                    },
-                    query: {
-                        folder: page.params.path,
-                    },
-                },
+        const promise = apiClient.storage.objects.item[":item"]
+            .$delete({
+                param: { item: encodeURIComponent(itemPath) },
             })
-            .then(async ({ error }) => {
-                if (error) {
-                    console.error(error);
+            .then(async (res) => {
+                if (!res.ok) {
+                    console.error(await res.text());
                     deletingItem = false;
-                    throw error;
+                    throw new Error("Failed to delete file");
                 }
                 confirmDeleteOpen = false;
                 deletingItem = false;
@@ -238,27 +220,23 @@
     }
 
     async function getTrashActionPromise(itemPath: string) {
-        const promise = apiClient
-            .PUT("/api/storage/objects/item/{item}", {
-                params: {
-                    query: {
-                        folder: itemPath.includes("/")
-                            ? itemPath.split("/").slice(0, -1).join("/")
-                            : undefined,
-                    },
-                    path: {
-                        item: itemPath,
-                    },
+        const promise = apiClient.storage.objects.item[":item"]
+            .$put({
+                param: { item: encodeURIComponent(itemPath) },
+                query: {
+                    folder: itemPath.includes("/")
+                        ? itemPath.split("/").slice(0, -1).join("/")
+                        : undefined,
                 },
-                body: {
+                json: {
                     isTrashed: true,
                 },
             })
-            .then(async ({ error }) => {
-                if (error) {
-                    console.error(error);
+            .then(async (res) => {
+                if (!res.ok) {
+                    console.error(await res.text());
                     deletingItem = false;
-                    throw error;
+                    throw new Error("Failed to trash file");
                 }
 
                 confirmDeleteOpen = false;
@@ -332,7 +310,7 @@
 
     function handleOpenItemInNewTab(item: ObjectItem) {
         const finalUrl = getObjectUrl({
-            baseUrl: apiClient.url,
+            baseUrl: page.url,
             itemPath: item.key,
             raw: true,
         });
@@ -342,7 +320,7 @@
 
     async function handleDownloadItem(itemPath: string) {
         const finalUrl = getObjectUrl({
-            baseUrl: apiClient.url,
+            baseUrl: page.url,
             itemPath,
             raw: true,
         });
@@ -544,7 +522,7 @@
         $playableMusic = null;
 
         const finalUrl = getObjectUrl({
-            baseUrl: apiClient.url,
+            baseUrl: page.url,
             itemPath: item.key,
             raw: true,
         });

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from "$app/state";
-    import type { ObjectItem } from "$lib/api";
+    import type { ObjectItem } from "$lib/api-client";
     import { isCodeItem } from "$lib/file-utils";
     import { getObjectUrl } from "$lib/url";
 

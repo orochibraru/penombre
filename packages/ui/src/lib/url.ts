@@ -1,4 +1,3 @@
-import { dev } from "$app/environment";
 import { page } from "$app/state";
 import { buildOriginUrl } from "$lib/utils";
 
@@ -17,9 +16,7 @@ export function getObjectUrl({
 		? `${page.params.path}/${itemPath}`
 		: itemPath;
 
-	const finalBaseUrl = dev
-		? "http://localhost:8080"
-		: buildOriginUrl(baseUrl).toString();
+	const finalBaseUrl = buildOriginUrl(baseUrl).toString();
 
 	const finalUrl = `${finalBaseUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${raw ? "?raw=true" : ""}`;
 	return finalUrl;

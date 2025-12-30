@@ -1,19 +1,22 @@
 import { error } from "@sveltejs/kit";
 import { getApiClient } from "$lib/api-client";
+import type { PageServerLoad } from "./$types";
 
-export const load = async ({ fetch }) => {
+export const load: PageServerLoad = async ({ fetch }) => {
 	const client = getApiClient(fetch);
 
-	const { data, error: err } = await client.storage.objects.$get();
-	if (err) {
-		console.error(err);
+	const res = await client.storage.objects.$get({ query: {} });
+	if (!res.ok) {
+		console.error("Failed to load files", res.status);
 		return error(500, "Failed to load files");
 	}
+
+	const data = await res.json();
 
 	return {
 		files: {
 			data,
-			err,
+			err: undefined,
 		},
 	};
 };

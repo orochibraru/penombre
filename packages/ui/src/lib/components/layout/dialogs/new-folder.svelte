@@ -2,7 +2,7 @@
     import { toast } from "svelte-sonner";
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient } from "$lib/api";
+    import { getApiClient } from "$lib/api-client";
     import Button from "$lib/components/ui/button/button.svelte";
     import * as Dialog from "$lib/components/ui/dialog";
     import { Input } from "$lib/components/ui/input";
@@ -22,18 +22,18 @@
     async function handleNewFolder() {
         newFolderLoading = true;
 
-        const promise = getApiClient({ url: page.url })
-            .POST("/api/storage/folders", {
-                body: {
+        const promise = getApiClient(fetch).storage.folders
+            .$post({
+                json: {
                     name: newFolderName,
                     parent: page.params.path,
                 },
             })
-            .then(async ({ error }) => {
+            .then(async (res) => {
                 newFolderLoading = false;
-                if (error) {
-                    console.error(error);
-                    throw error;
+                if (!res.ok) {
+                    console.error(await res.text());
+                    throw new Error("Failed to create folder");
                 }
 
                 await invalidateAll();

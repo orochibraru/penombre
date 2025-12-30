@@ -40,12 +40,15 @@ export const fileContentTypeSchema = z.enum([
 	"application/octet-stream",
 ]);
 
+// Date fields can be Date (server-side) or string (JSON serialized)
+const dateSchema = z.union([z.date(), z.string()]);
+
 export const fileMetadataSchema = z.object({
 	id: z.string(),
 	category: fileCategorySchema,
 	tags: z.array(z.string()).optional(),
 	contentType: fileContentTypeSchema,
-	createdAt: z.date(),
+	createdAt: dateSchema,
 	owner: z.string(),
 	isTrashed: z.boolean().default(false),
 	music: z
@@ -62,7 +65,7 @@ export const fileMetadataSchema = z.object({
 
 export const objectItemSchema = z.object({
 	key: z.string(),
-	updatedAt: z.date().optional(),
+	updatedAt: dateSchema.optional(),
 	size: z.number().optional(),
 	metadata: fileMetadataSchema,
 	type: z.enum(["file", "folder"]),
@@ -77,6 +80,11 @@ export const objectListSchema = z.object({
 export const newFileSchema = z.object({
 	name: z.string(),
 	size: z.number(),
+});
+
+export const newFolderSchema = z.object({
+	name: z.string(),
+	parent: z.string().optional(),
 });
 
 export const updateFileSchema = z.object({

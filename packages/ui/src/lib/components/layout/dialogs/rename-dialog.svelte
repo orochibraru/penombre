@@ -2,7 +2,7 @@
     import { toast } from "svelte-sonner";
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient } from "$lib/api";
+    import { getApiClient } from "$lib/api-client";
     import Button from "$lib/components/ui/button/button.svelte";
     import * as Dialog from "$lib/components/ui/dialog";
     import { Input } from "$lib/components/ui/input";
@@ -25,24 +25,21 @@
             finalName = `${newName}/`;
         }
 
-        const promise = getApiClient({ url: page.url })
-            .PUT("/api/storage/objects/item/{item}", {
-                params: {
-                    path: {
-                        item: $itemAction.item.key,
-                    },
-                    query: {
-                        folder: page.params.path,
-                    },
-                },
-                body: {
-                    type:
+        const promise = getApiClient(fetch).storage.objects.item[":item"]
+            .$put({
+                param: { item: encodeURIComponent($itemAction.item.key) },
+                query: { folder: page.params.path },
+                json: {
+                    contentType:
                         $itemAction.item.metadata.contentType ||
                         "application/octet-stream",
                     key: finalName,
                 },
             })
-            .then(() => {
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Failed to rename");
+                }
                 $itemAction.open = false;
                 invalidateAll();
             })

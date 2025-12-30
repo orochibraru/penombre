@@ -3,7 +3,7 @@
 	"info": {
 		"title": "Opendrive API",
 		"description": "Auto-generated API documentation from route specifications",
-		"version": "0.1.17"
+		"version": "0.1.18"
 	},
 	"servers": [
 		{ "url": "http://localhost:8080", "description": "Development server" }
@@ -1602,69 +1602,58 @@
 								"type": "object",
 								"properties": {
 									"callbackURL": {
-										"type": "string",
-										"description": "Callback URL to redirect to after the user has signed in",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "Callback URL to redirect to after the user has signed in"
 									},
-									"newUserCallbackURL": { "type": "string", "nullable": true },
+									"newUserCallbackURL": { "type": ["string", "null"] },
 									"errorCallbackURL": {
-										"type": "string",
-										"description": "Callback URL to redirect to if an error happens",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "Callback URL to redirect to if an error happens"
 									},
 									"provider": { "type": "string" },
 									"disableRedirect": {
-										"type": "boolean",
-										"description": "Disable automatic redirection to the provider. Useful for handling the redirection yourself",
-										"nullable": true
+										"type": ["boolean", "null"],
+										"description": "Disable automatic redirection to the provider. Useful for handling the redirection yourself"
 									},
 									"idToken": {
-										"type": "object",
+										"type": ["object", "null"],
 										"properties": {
 											"token": {
 												"type": "string",
 												"description": "ID token from the provider"
 											},
 											"nonce": {
-												"type": "string",
-												"description": "Nonce used to generate the token",
-												"nullable": true
+												"type": ["string", "null"],
+												"description": "Nonce used to generate the token"
 											},
 											"accessToken": {
-												"type": "string",
-												"description": "Access token from the provider",
-												"nullable": true
+												"type": ["string", "null"],
+												"description": "Access token from the provider"
 											},
 											"refreshToken": {
-												"type": "string",
-												"description": "Refresh token from the provider",
-												"nullable": true
+												"type": ["string", "null"],
+												"description": "Refresh token from the provider"
 											},
 											"expiresAt": {
-												"type": "number",
-												"description": "Expiry date of the token",
-												"nullable": true
+												"type": ["number", "null"],
+												"description": "Expiry date of the token"
 											}
 										},
-										"required": ["token"],
-										"nullable": true
+										"required": ["token"]
 									},
 									"scopes": {
-										"type": "array",
-										"description": "Array of scopes to request from the provider. This will override the default scopes passed.",
-										"nullable": true
+										"type": ["array", "null"],
+										"description": "Array of scopes to request from the provider. This will override the default scopes passed."
 									},
 									"requestSignUp": {
-										"type": "boolean",
-										"description": "Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider",
-										"nullable": true
+										"type": ["boolean", "null"],
+										"description": "Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider"
 									},
 									"loginHint": {
-										"type": "string",
-										"description": "The login hint to use for the authorization code request",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The login hint to use for the authorization code request"
 									},
-									"additionalData": { "type": "string", "nullable": true }
+									"additionalData": { "type": ["string", "null"] }
 								},
 								"required": ["provider"]
 							}
@@ -1778,6 +1767,7 @@
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"nullable": true,
 									"properties": {
 										"session": { "$ref": "#/components/schemas/Session" },
 										"user": { "$ref": "#/components/schemas/User" }
@@ -2168,11 +2158,10 @@
 										"description": "Password of the user"
 									},
 									"callbackURL": {
-										"type": "string",
-										"description": "Callback URL to use as a redirect for email verification",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "Callback URL to use as a redirect for email verification"
 									},
-									"rememberMe": { "type": "string", "nullable": true }
+									"rememberMe": { "type": ["string", "null"] }
 								},
 								"required": ["email", "password"]
 							}
@@ -2294,9 +2283,8 @@
 										"description": "The new password to set"
 									},
 									"token": {
-										"type": "string",
-										"description": "The token to reset the password",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The token to reset the password"
 									}
 								},
 								"required": ["newPassword"]
@@ -2643,9 +2631,8 @@
 										"description": "The new email address to set must be a valid email address"
 									},
 									"callbackURL": {
-										"type": "string",
-										"description": "The URL to redirect to after email verification",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The URL to redirect to after email verification"
 									}
 								},
 								"required": ["newEmail"]
@@ -2786,9 +2773,8 @@
 										"description": "The current password is required"
 									},
 									"revokeOtherSessions": {
-										"type": "boolean",
-										"description": "Must be a boolean value",
-										"nullable": true
+										"type": ["boolean", "null"],
+										"description": "Must be a boolean value"
 									}
 								},
 								"required": ["newPassword", "currentPassword"]
@@ -2951,7 +2937,8 @@
 									},
 									"image": {
 										"type": "string",
-										"description": "The image of the user"
+										"description": "The image of the user",
+										"nullable": true
 									}
 								}
 							}
@@ -3174,7 +3161,7 @@
 			"post": {
 				"tags": ["Default", "Auth"],
 				"description": "Send a password reset email to the user",
-				"operationId": "forgetPassword",
+				"operationId": "requestPasswordReset",
 				"security": [{ "bearerAuth": [] }],
 				"parameters": [],
 				"requestBody": {
@@ -3189,9 +3176,8 @@
 										"description": "The email address of the user to send a password reset email to"
 									},
 									"redirectTo": {
-										"type": "string",
-										"description": "The URL to redirect the user to reset their password. If the token isn't valid or expired, it'll be redirected with a query parameter `?error=INVALID_TOKEN`. If the token is valid, it'll be redirected with a query parameter `?token=VALID_TOKEN",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The URL to redirect the user to reset their password. If the token isn't valid or expired, it'll be redirected with a query parameter `?error=INVALID_TOKEN`. If the token is valid, it'll be redirected with a query parameter `?token=VALID_TOKEN"
 									}
 								},
 								"required": ["email"]
@@ -3810,40 +3796,35 @@
 								"type": "object",
 								"properties": {
 									"callbackURL": {
-										"type": "string",
-										"description": "The URL to redirect to after the user has signed in",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The URL to redirect to after the user has signed in"
 									},
 									"provider": { "type": "string" },
 									"idToken": {
-										"type": "object",
+										"type": ["object", "null"],
 										"properties": {
 											"token": { "type": "string" },
-											"nonce": { "type": "string", "nullable": true },
-											"accessToken": { "type": "string", "nullable": true },
-											"refreshToken": { "type": "string", "nullable": true },
-											"scopes": { "type": "array", "nullable": true }
+											"nonce": { "type": ["string", "null"] },
+											"accessToken": { "type": ["string", "null"] },
+											"refreshToken": { "type": ["string", "null"] },
+											"scopes": { "type": ["array", "null"] }
 										},
-										"required": ["token"],
-										"nullable": true
+										"required": ["token"]
 									},
-									"requestSignUp": { "type": "boolean", "nullable": true },
+									"requestSignUp": { "type": ["boolean", "null"] },
 									"scopes": {
-										"type": "array",
-										"description": "Additional scopes to request from the provider",
-										"nullable": true
+										"type": ["array", "null"],
+										"description": "Additional scopes to request from the provider"
 									},
 									"errorCallbackURL": {
-										"type": "string",
-										"description": "The URL to redirect to if there is an error during the link process",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The URL to redirect to if there is an error during the link process"
 									},
 									"disableRedirect": {
-										"type": "boolean",
-										"description": "Disable automatic redirection to the provider. Useful for handling the redirection yourself",
-										"nullable": true
+										"type": ["boolean", "null"],
+										"description": "Disable automatic redirection to the provider. Useful for handling the redirection yourself"
 									},
-									"additionalData": { "type": "string", "nullable": true }
+									"additionalData": { "type": ["string", "null"] }
 								},
 								"required": ["provider"]
 							}
@@ -4075,9 +4056,8 @@
 						"name": "callbackURL",
 						"in": "query",
 						"schema": {
-							"type": "string",
-							"description": "The URL to redirect to after deletion",
-							"nullable": true
+							"type": ["string", "null"],
+							"description": "The URL to redirect to after deletion"
 						}
 					}
 				],
@@ -4189,7 +4169,7 @@
 								"type": "object",
 								"properties": {
 									"providerId": { "type": "string" },
-									"accountId": { "type": "string", "nullable": true }
+									"accountId": { "type": ["string", "null"] }
 								},
 								"required": ["providerId"]
 							}
@@ -4297,14 +4277,12 @@
 										"description": "The provider ID for the OAuth provider"
 									},
 									"accountId": {
-										"type": "string",
-										"description": "The account ID associated with the refresh token",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The account ID associated with the refresh token"
 									},
 									"userId": {
-										"type": "string",
-										"description": "The user ID associated with the account",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The user ID associated with the account"
 									}
 								},
 								"required": ["providerId"]
@@ -4417,14 +4395,12 @@
 										"description": "The provider ID for the OAuth provider"
 									},
 									"accountId": {
-										"type": "string",
-										"description": "The account ID associated with the refresh token",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The account ID associated with the refresh token"
 									},
 									"userId": {
-										"type": "string",
-										"description": "The user ID associated with the account",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The user ID associated with the account"
 									}
 								},
 								"required": ["providerId"]
@@ -4829,36 +4805,30 @@
 										"description": "The provider ID for the OAuth provider"
 									},
 									"callbackURL": {
-										"type": "string",
-										"description": "The URL to redirect to after sign in",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The URL to redirect to after sign in"
 									},
 									"errorCallbackURL": {
-										"type": "string",
-										"description": "The URL to redirect to if an error occurs",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The URL to redirect to if an error occurs"
 									},
 									"newUserCallbackURL": {
-										"type": "string",
-										"description": "The URL to redirect to after login if the user is new. Eg: \"/welcome\"",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The URL to redirect to after login if the user is new. Eg: \"/welcome\""
 									},
 									"disableRedirect": {
-										"type": "boolean",
-										"description": "Disable redirect",
-										"nullable": true
+										"type": ["boolean", "null"],
+										"description": "Disable redirect"
 									},
 									"scopes": {
-										"type": "array",
-										"description": "Scopes to be passed to the provider authorization request.",
-										"nullable": true
+										"type": ["array", "null"],
+										"description": "Scopes to be passed to the provider authorization request."
 									},
 									"requestSignUp": {
-										"type": "boolean",
-										"description": "Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider. Eg: false",
-										"nullable": true
+										"type": ["boolean", "null"],
+										"description": "Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider. Eg: false"
 									},
-									"additionalData": { "type": "string", "nullable": true }
+									"additionalData": { "type": ["string", "null"] }
 								},
 								"required": ["providerId"]
 							}
@@ -4961,36 +4931,32 @@
 						"name": "code",
 						"in": "query",
 						"schema": {
-							"type": "string",
-							"description": "The OAuth2 code",
-							"nullable": true
+							"type": ["string", "null"],
+							"description": "The OAuth2 code"
 						}
 					},
 					{
 						"name": "error",
 						"in": "query",
 						"schema": {
-							"type": "string",
-							"description": "The error message, if any",
-							"nullable": true
+							"type": ["string", "null"],
+							"description": "The error message, if any"
 						}
 					},
 					{
 						"name": "error_description",
 						"in": "query",
 						"schema": {
-							"type": "string",
-							"description": "The error description, if any",
-							"nullable": true
+							"type": ["string", "null"],
+							"description": "The error description, if any"
 						}
 					},
 					{
 						"name": "state",
 						"in": "query",
 						"schema": {
-							"type": "string",
-							"description": "The state parameter from the OAuth2 request",
-							"nullable": true
+							"type": ["string", "null"],
+							"description": "The state parameter from the OAuth2 request"
 						}
 					}
 				],
@@ -5093,14 +5059,12 @@
 									"providerId": { "type": "string" },
 									"callbackURL": { "type": "string" },
 									"scopes": {
-										"type": "array",
-										"description": "Additional scopes to request when linking the account",
-										"nullable": true
+										"type": ["array", "null"],
+										"description": "Additional scopes to request when linking the account"
 									},
 									"errorCallbackURL": {
-										"type": "string",
-										"description": "The URL to redirect to if there is an error during the link process",
-										"nullable": true
+										"type": ["string", "null"],
+										"description": "The URL to redirect to if there is an error during the link process"
 									}
 								},
 								"required": ["providerId", "callbackURL"]
@@ -5220,13 +5184,13 @@
 					"image": { "type": "string" },
 					"createdAt": {
 						"type": "string",
-						"default": "Generated at runtime",
-						"format": "date-time"
+						"format": "date-time",
+						"default": "Generated at runtime"
 					},
 					"updatedAt": {
 						"type": "string",
-						"default": "Generated at runtime",
-						"format": "date-time"
+						"format": "date-time",
+						"default": "Generated at runtime"
 					}
 				},
 				"required": ["name", "email", "createdAt", "updatedAt"]
@@ -5239,8 +5203,8 @@
 					"token": { "type": "string" },
 					"createdAt": {
 						"type": "string",
-						"default": "Generated at runtime",
-						"format": "date-time"
+						"format": "date-time",
+						"default": "Generated at runtime"
 					},
 					"updatedAt": { "type": "string", "format": "date-time" },
 					"ipAddress": { "type": "string" },
@@ -5265,8 +5229,8 @@
 					"password": { "type": "string" },
 					"createdAt": {
 						"type": "string",
-						"default": "Generated at runtime",
-						"format": "date-time"
+						"format": "date-time",
+						"default": "Generated at runtime"
 					},
 					"updatedAt": { "type": "string", "format": "date-time" }
 				},
@@ -5287,13 +5251,13 @@
 					"expiresAt": { "type": "string", "format": "date-time" },
 					"createdAt": {
 						"type": "string",
-						"default": "Generated at runtime",
-						"format": "date-time"
+						"format": "date-time",
+						"default": "Generated at runtime"
 					},
 					"updatedAt": {
 						"type": "string",
-						"default": "Generated at runtime",
-						"format": "date-time"
+						"format": "date-time",
+						"default": "Generated at runtime"
 					}
 				},
 				"required": [

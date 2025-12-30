@@ -1,4 +1,4 @@
-import type { ObjectItem } from "$lib/api";
+import type { ObjectItem } from "$lib/api-client";
 import {
 	type SupportedLanguage,
 	supportedLanguages,

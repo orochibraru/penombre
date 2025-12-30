@@ -4,8 +4,8 @@
         LogOutIcon,
         UserCircleIcon,
     } from "@lucide/svelte";
-    import { type User } from "$lib/api";
-    import { getAuthClient, handleSignOut } from "$lib/api/helpers/auth";
+    import { type User } from "$lib/api-client";
+    import { handleSignOut } from "$lib/auth-helpers";
     import * as Avatar from "$lib/components/ui/avatar/index";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
@@ -19,8 +19,6 @@
     let { user }: Props = $props();
 
     const sidebar = Sidebar.useSidebar();
-
-    const authClient = getAuthClient(page.url);
 </script>
 
 <Sidebar.Menu>
@@ -94,7 +92,7 @@
                         {/snippet}
                     </DropdownMenu.Item>
                 </DropdownMenu.Group>
-                <DropdownMenu.Item onclick={() => handleSignOut(authClient)}>
+                <DropdownMenu.Item onclick={() => handleSignOut()}>
                     <LogOutIcon />
                     Sign out
                 </DropdownMenu.Item>

@@ -526,9 +526,17 @@ export class StorageService {
 		// Sort by updatedAt descending and take the top 10
 		const recentFiles = allFiles.list
 			.filter((item) => item.type === "file")
-			.sort(
-				(a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0),
-			)
+			.sort((a, b) => {
+				const aTime =
+					a.updatedAt instanceof Date
+						? a.updatedAt.getTime()
+						: new Date(a.updatedAt || 0).getTime();
+				const bTime =
+					b.updatedAt instanceof Date
+						? b.updatedAt.getTime()
+						: new Date(b.updatedAt || 0).getTime();
+				return bTime - aTime;
+			})
 			.slice(0, 10);
 
 		return {
