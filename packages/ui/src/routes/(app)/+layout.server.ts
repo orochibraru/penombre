@@ -1,3 +1,4 @@
+import { error } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { getApiClient } from "$lib/api-client";
@@ -14,6 +15,10 @@ export const load: LayoutServerLoad = async ({ fetch, locals }) => {
 	}
 
 	const activity = (await res.json()) as Activity[];
+
+	if (!locals.user || !locals.session) {
+		return error(401, "Unauthorized");
+	}
 
 	return {
 		user: locals.user,
