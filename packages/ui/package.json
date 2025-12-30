@@ -7,7 +7,7 @@
 	"scripts": {
 		"preinstall": "bunx only-allow bun",
 		"dev": "bunx --bun vite dev",
-		"build": "bunx --bun svelte-kit sync && vite build",
+		"build": "bunx --bun svelte-kit sync && bunx --bun vite build",
 		"preview": "bunx --bun vite preview",
 		"prepare": "bunx --bun svelte-kit sync || echo ''",
 		"check": "bunx --bun svelte-kit sync && bunx --bun svelte-check --tsconfig ./tsconfig.json",
