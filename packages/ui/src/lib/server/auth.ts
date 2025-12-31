@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { genericOAuth, openAPI } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
+import { dev } from "$app/environment";
 import { getRequestEvent } from "$app/server";
 import { Logger } from "$lib/logger";
 import { getDb } from "$lib/server/db";
@@ -11,8 +12,18 @@ import * as schema from "./db/schema";
 
 const logger = new Logger("Auth");
 
+if (!process.env.ORIGIN && !dev) {
+	throw new Error("ORIGIN environment variable is not set");
+}
+
 export const auth = betterAuth({
-	trustedOrigins: ["http://localhost:5173", "http://localhost:4173"],
+	trustedOrigins: dev
+		? [
+				"http://localhost:5173",
+				"http://localhost:4173",
+				"http://localhost:3000",
+			]
+		: [process.env.ORIGIN],
 	database: drizzleAdapter(getDb(), {
 		provider: "pg",
 		schema,
