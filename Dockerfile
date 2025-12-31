@@ -31,6 +31,8 @@ FROM base AS final
 COPY --from=builder /app/node_modules /app/node_modules
 
 COPY --from=frontend-builder ${FRONTEND_DIR}/build/ /app
+COPY --from=frontend-builder ${FRONTEND_DIR}/drizzle/ /app
+COPY --from=frontend-builder ${FRONTEND_DIR}/drizzle.config.ts /app
 
 RUN mkdir -p /app/data
 

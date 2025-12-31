@@ -42,7 +42,10 @@
 		"valibot": "^1.2.0"
 	},
 	"dependencies": {
-		"dotenv": "^17.2.3"
+		"dotenv": "^17.2.3",
+		"drizzle-orm": "^0.45.1",
+		"music-metadata": "^11.10.3",
+		"zod": "^4.3.2"
 	},
 	"overrides": {
 		"koritsu": "^0.1.18",
