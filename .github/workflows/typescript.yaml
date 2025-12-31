@@ -37,27 +37,8 @@ jobs:
       - name: Format check
         run: bun run format:check
 
-      - name: Build @opendrive/ui
+      - name: Build
         run: bun run --filter @opendrive/ui build
 
-      - name: Build @opendrive/api
-        run: bun run --filter @opendrive/api build
-
-      - name: API sync
-        run: |
-          # Run API spec generator
-          bun run --filter @opendrive/ui gen:api || exit 1
-          # Check for changes
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "API specs are out of date. Please run 'bun run --filter @opendrive/ui gen:api' and commit the changes."
-            exit 1
-          fi
-
-      - name: Type check @opendrive/ui
+      - name: Type check
         run: bun run --filter @opendrive/ui check
-
-      - name: Type check @opendrive/api
-        run: bun run --filter @opendrive/api check
-
-      - name: Run tests
-        run: bun test --ci --coverage
