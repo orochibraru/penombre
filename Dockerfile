@@ -21,7 +21,7 @@ COPY ./packages/ui ${FRONTEND_DIR}
 
 RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 
-RUN cd ${FRONTEND_DIR} && bun run build
+RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync && bunx --bun vite build
 
 # Final stage with Bun runtime
 FROM base AS final
