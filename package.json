@@ -44,6 +44,7 @@
 	"dependencies": {
 		"dotenv": "^17.2.3",
 		"drizzle-orm": "^0.45.1",
+		"hono": "^4.11.3",
 		"music-metadata": "^11.10.3",
 		"zod": "^4.3.2"
 	},

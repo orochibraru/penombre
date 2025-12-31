@@ -13,7 +13,7 @@ RUN mkdir -p ${FRONTEND_DIR}
 COPY package.json bun.lock /app/
 COPY packages/ui/package.json ${FRONTEND_DIR}/
 
-RUN bun ci --frozen-lockfile --ignore-scripts
+RUN bun i --frozen-lockfile --ignore-scripts
 
 FROM builder AS frontend-builder
 
@@ -23,6 +23,9 @@ RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 
 RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync && bunx --bun vite build
 
+# Strip dev dependencies from frontend
+RUN cd ${FRONTEND_DIR} && bun i --production --frozen-lockfile --ignore-scripts
+
 # Final stage with Bun runtime
 FROM base AS final
 
@@ -30,9 +33,9 @@ FROM base AS final
 # We'll copy the entire node_modules but only the API's production deps were installed
 COPY --from=builder /app/node_modules /app/node_modules
 
-COPY --from=frontend-builder ${FRONTEND_DIR}/build/ /app
-COPY --from=frontend-builder ${FRONTEND_DIR}/drizzle/ /app
-COPY --from=frontend-builder ${FRONTEND_DIR}/drizzle.config.ts /app
+COPY --from=frontend-builder ${FRONTEND_DIR}/build/ /app/build
+COPY --from=frontend-builder ${FRONTEND_DIR}/drizzle/ /app/drizzle
+COPY --from=frontend-builder ${FRONTEND_DIR}/drizzle.config.ts /app/drizzle.config.ts
 
 RUN mkdir -p /app/data
 
@@ -48,4 +51,4 @@ RUN chown -R bun:bun /app
 
 USER bun
 
-CMD ["bun", "run", "/app/index.js"]
+CMD ["bun", "run", "/app/build/index.js"]
