@@ -9,12 +9,6 @@ const tasks: ConcurrentlyResult = concurrently([
 		prefixColor: "cyan",
 	},
 	{
-		name: "api",
-		command: "bunx wait-on tcp:5432 && bun run dev",
-		prefixColor: "blue",
-		cwd: path.resolve(cwd(), "packages/api"),
-	},
-	{
 		name: "ui",
 		command: "bun run dev",
 		prefixColor: "green",
