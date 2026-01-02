@@ -4,32 +4,34 @@
 		"clientKind": "git",
 		"useIgnoreFile": false
 	},
-
 	"files": {
 		"ignoreUnknown": false,
 		"includes": [
 			"**",
 			"node_modules/**",
 			"!**/*.svelte",
-			"!packages/ui/src/lib/ROUTES.ts",
-			"!packages/ui/src/app.css",
-			"!packages/ui/vite.config.ts",
-			"!packages/ui/build",
-			"!packages/ui/dist",
-			"!packages/api/dist",
-			"!packages/api/build",
-			"!packages/api/frontend",
-			"!packages/ui/node_modules",
-			"!packages/api/node_modules",
-			"!packages/ui/.svelte-kit/*",
+			"!packages/web/src/lib/ROUTES.ts",
+			"!packages/web/src/app.css",
+			"!packages/web/vite.config.ts",
+			"!packages/web/build",
+			"!packages/web/dist",
+			"!packages/web/node_modules",
+			"!packages/web/.svelte-kit/*",
 			"!.svelte-kit",
-			"!test-results"
+			"!test-results",
+			"!packages/mobile/.expo"
 		]
 	},
 	"formatter": {
 		"enabled": true
 	},
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {

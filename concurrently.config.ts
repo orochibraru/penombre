@@ -12,7 +12,7 @@ const tasks: ConcurrentlyResult = concurrently([
 		name: "ui",
 		command: "bun run dev",
 		prefixColor: "green",
-		cwd: path.resolve(cwd(), "packages/ui"),
+		cwd: path.resolve(cwd(), "packages/web"),
 	},
 ]);
 

@@ -82,7 +82,7 @@ bun run dev          # Start API development server with hot reload
 bun run db:migrate   # Run database migrations
 bun run db:generate  # Generate Drizzle schema types
 
-# UI specific (in packages/ui/)
+# UI specific (in packages/web/)
 bun run dev         # Start web development server
 bun run build       # Build web application
 bun run lint        # Lint TypeScript/Svelte code

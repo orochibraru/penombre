@@ -4,20 +4,20 @@ RUN apk add --no-cache curl bash ca-certificates wget nano micro nodejs
 
 WORKDIR /app
 
-ARG FRONTEND_DIR=/app/packages/ui
+ARG FRONTEND_DIR=/app/packages/web
 
 FROM base AS builder
 
 RUN mkdir -p ${FRONTEND_DIR}
 
 COPY package.json bun.lock /app/
-COPY packages/ui/package.json ${FRONTEND_DIR}/
+COPY packages/web/package.json ${FRONTEND_DIR}/
 
 RUN bun i --frozen-lockfile --ignore-scripts
 
 FROM builder AS frontend-builder
 
-COPY ./packages/ui ${FRONTEND_DIR}
+COPY ./packages/web ${FRONTEND_DIR}
 
 RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 

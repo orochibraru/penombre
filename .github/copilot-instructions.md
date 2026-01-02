@@ -4,7 +4,7 @@ This is a self-hosted cloud storage platform with a modern monorepo architecture
 
 ## Architecture Overview
 
-**Monorepo Structure**: Bun workspace with two packages (`packages/api`, `packages/ui`)
+**Monorepo Structure**: Bun workspace with two packages (`packages/api`, `packages/web`)
 
 -   **API**: [Koritsu](https://koritsu.dev) file-based routing framework with auto-generated OpenAPI docs
     -   **Database**: PostgreSQL via Bun's native SQL driver + Drizzle ORM
@@ -20,7 +20,7 @@ This is a self-hosted cloud storage platform with a modern monorepo architecture
     -   Uses Bun's native File I/O client (`File` from `"bun"`) and standard Node operations for directories
 -   **Auth**: better-auth handles all authentication logic - don't reinvent auth patterns (see `packages/api/lib/auth.ts`)
 -   **Database**: Bun SQL client wrapped by Drizzle ORM - schema in `packages/api/lib/db/schema.ts`
--   **Type Generation**: UI consumes typed API client from OpenAPI spec via `openapi-typescript` → `packages/ui/src/lib/api/schema.d.ts`
+-   **Type Generation**: UI consumes typed API client from OpenAPI spec via `openapi-typescript` → `packages/web/src/lib/api/schema.d.ts`
 -   **Storage Architecture**:
     -   Per-user directories created on-demand, named `user-{sanitized-username}` (see `StorageService` constructor)
     -   File metadata stored as JSON in files within user directories, not database (see `getFileMetadata` method)
@@ -55,8 +55,8 @@ When adding/modifying API routes:
 
 1. Update route in `packages/api/routes/**` with inline OpenAPI spec
 2. Dev server auto-generates `packages/api/openapi.json` (see `writeRealTimeSpec()` in `index.ts`)
-3. Run `bun run gen:api` in `packages/ui` to regenerate TypeScript client types
-4. UI automatically gets type-safe API calls via `openapi-fetch` client (see `packages/ui/src/lib/api/index.ts`)
+3. Run `bun run gen:api` in `packages/web` to regenerate TypeScript client types
+4. UI automatically gets type-safe API calls via `openapi-fetch` client (see `packages/web/src/lib/api/index.ts`)
 
 ### Testing Strategy
 
