@@ -63,9 +63,10 @@
 		"vaul-svelte": "1.0.0-next.7",
 		"zod": "^4.2.1"
 	},
-	"overrides": {
-		"koritsu": "^0.1.18",
-		"svelte": "^5.43.15"
+	"resolutions": {
+		"svelte": "^5.43.15",
+		"lightningcss": "1.30.1",
+		"react-test-renderer": "19.1.0"
 	},
 	"workspaces": [
 		"packages/*"
