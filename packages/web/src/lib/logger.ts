@@ -179,6 +179,7 @@ export class Logger {
 	warn(input: unknown, ...optionalParams: unknown[]) {
 		const acceptedLogLevels = [
 			LOG_LEVELS.WARN,
+			LOG_LEVELS.INFO,
 			LOG_LEVELS.ERROR,
 			LOG_LEVELS.DEBUG,
 			LOG_LEVELS.TRACE,
@@ -215,6 +216,8 @@ export class Logger {
 	error(err: any, ...optionalParams: unknown[]) {
 		const acceptedLogLevels = [
 			LOG_LEVELS.ERROR,
+			LOG_LEVELS.INFO,
+			LOG_LEVELS.WARN,
 			LOG_LEVELS.DEBUG,
 			LOG_LEVELS.TRACE,
 		];
