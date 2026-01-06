@@ -10,6 +10,7 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/opendrive?sslmode=disable
       - ENV=production
       - LOG_LEVEL=debug
+      - ORIGIN=http://localhost:3000
   db:
     image: postgres:17-alpine
     restart: unless-stopped

@@ -5,13 +5,15 @@ RUN apk add --no-cache curl bash ca-certificates wget nano micro nodejs
 WORKDIR /app
 
 ARG FRONTEND_DIR=/app/packages/web
+ARG MOBILE_DIR=/app/packages/mobile
 
 FROM base AS builder
 
-RUN mkdir -p ${FRONTEND_DIR}
+RUN mkdir -p ${FRONTEND_DIR} ${MOBILE_DIR}
 
 COPY package.json bun.lock /app/
 COPY packages/web/package.json ${FRONTEND_DIR}/
+COPY packages/mobile/package.json ${MOBILE_DIR}/
 
 RUN bun i --frozen-lockfile --ignore-scripts
 
@@ -21,7 +23,8 @@ COPY ./packages/web ${FRONTEND_DIR}
 
 RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 
-RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync && bunx --bun vite build
+# ORIGIN is required at build time for better-auth import validation
+RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync && ORIGIN=http://localhost bunx --bun vite build
 
 # Strip dev dependencies from frontend
 RUN cd ${FRONTEND_DIR} && bun i --production --frozen-lockfile --ignore-scripts
@@ -42,6 +45,8 @@ RUN mkdir -p /app/data
 ENV STORAGE_PATH=/data
 
 ENV ENV=production
+
+ENV BODY_SIZE_LIMIT=Infinity
 
 EXPOSE 3000
 
