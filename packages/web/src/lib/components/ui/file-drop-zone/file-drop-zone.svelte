@@ -8,6 +8,7 @@
     import { cn } from "$lib/utils";
     import { displaySize } from ".";
     import type { FileDropZoneProps, FileRejectedReason } from "./types";
+    import { MediaQuery } from "svelte/reactivity";
 
     let {
         id = useId(),
@@ -143,6 +144,7 @@
                 fileCount >= maxFiles
             ),
     );
+    const isDesktop = new MediaQuery("(min-width: 768px)");
 </script>
 
 <label
@@ -151,7 +153,7 @@
     for={id}
     aria-disabled={!canUploadFiles}
     class={cn(
-        "border-border hover:bg-accent/25 flex h-48 w-full place-items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all hover:cursor-pointer aria-disabled:opacity-50 aria-disabled:hover:cursor-not-allowed",
+        "border-border hover:bg-accent/25 flex h-48 w-full place-items-center justify-center rounded-lg border-2 border-dashed md:p-6 transition-all hover:cursor-pointer aria-disabled:opacity-50 aria-disabled:hover:cursor-not-allowed",
         className,
     )}
 >
@@ -166,7 +168,11 @@
             </div>
             <div class="flex flex-col gap-0.5 text-center">
                 <span class="text-muted-foreground font-medium">
-                    Drag 'n' drop files here, or click to select files
+                    {#if isDesktop.current}
+                        Drag 'n' drop files here, or click to select files
+                    {:else}
+                        Tap to select files
+                    {/if}
                 </span>
                 {#if maxFiles || maxFileSize}
                     <span class="text-muted-foreground/75 text-sm">

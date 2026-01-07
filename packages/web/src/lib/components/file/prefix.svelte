@@ -140,7 +140,7 @@
                 fill="#1447e6"
             />
         {/if}
-        {item.key.replace("/", "")}
+        {item.metadata.name ?? item.key.replace("/", "")}
     </button>
 {:else}
     <button
@@ -177,7 +177,7 @@
                 {#if item.metadata.category === "DOCUMENTS"}
                     <FileTextIcon class={cn(iconSize, "text-red-600")} />
                 {:else if item.metadata.category === "MUSIC"}
-                    {#if $playableMusic && $playableMusic.title === item.key}
+                    {#if $playableMusic && $playableMusic.title === (item.metadata.name ?? item.key)}
                         {#if $playableMusic.isPlaying}
                             <NowPlaying />
                         {:else}
@@ -207,21 +207,19 @@
         {/if}
         <div class="text-start">
             <p
-                title={item.key}
+                title={item.metadata.name ?? item.key}
                 class={cn(
                     "max-w-72 truncate text-base lg:text-sm",
-                    $playableMusic && $playableMusic.title === item.key
+                    $playableMusic &&
+                        $playableMusic.title ===
+                            (item.metadata.name ?? item.key)
                         ? "text-primary font-medium"
                         : getItemStatus() === ItemStatus.UPLOADING
                           ? "text-gray-500 dark:text-gray-300"
                           : "",
                 )}
             >
-                {#if page.url.pathname.startsWith("/browse")}
-                    {item.key}
-                {:else}
-                    {stripFolders(item.key)}
-                {/if}
+                {item.metadata.name ?? stripFolders(item.key)}
             </p>
             {#if item.updatedAt}
                 <p class="text-xs dark:text-gray-500">

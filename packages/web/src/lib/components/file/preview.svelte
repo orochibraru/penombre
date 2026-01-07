@@ -27,15 +27,15 @@
     {#if item.metadata.contentType === "application/pdf"}
         <embed
             src={objectUrl}
-            title={item.key}
+            title={item.metadata.name ?? item.key}
             class="overflow-hidden"
             width="100%"
             height="200px"
         />
-    {:else if isCodeItem(item.key)}
+    {:else if isCodeItem(item.metadata.name ?? item.key)}
         <embed
             src={objectUrl}
-            title={item.key}
+            title={item.metadata.name ?? item.key}
             class="overflow-hidden"
             width="100%"
             height="200px"
@@ -43,7 +43,7 @@
     {:else}
         <img
             src={objectUrl}
-            alt={item.key}
+            alt={item.metadata.name ?? item.key}
             class="mx-auto max-h-50 min-w-50 rounded-xl"
         />
     {/if}

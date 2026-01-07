@@ -61,11 +61,17 @@
 
     $effect(() => {
         if ($itemAction?.item) {
+            if (!$itemAction.item.metadata) {
+                throw new Error("Item metadata is missing");
+            }
+            if (!$itemAction.item.metadata.name) {
+                throw new Error("Item name is missing");
+            }
             if ($itemAction.item.key.endsWith("/")) {
                 isFolder = true;
-                newName = $itemAction.item.key.slice(0, -1);
+                newName = $itemAction.item.metadata.name.slice(0, -1);
             } else {
-                newName = $itemAction.item.key;
+                newName = $itemAction.item.metadata.name;
             }
         }
     });
@@ -74,12 +80,12 @@
 <Dialog.Root bind:open>
     <Dialog.Content>
         <Dialog.Header>
-            <Dialog.Title
-                >Rename {$itemAction.item?.key ?? "this file"}</Dialog.Title
-            >
-            <Dialog.Description
-                >This will change the name of this item.</Dialog.Description
-            >
+            <Dialog.Title>
+                Rename {$itemAction.item?.metadata.name ?? "this file"}
+            </Dialog.Title>
+            <Dialog.Description>
+                This will change the name of this item.
+            </Dialog.Description>
         </Dialog.Header>
         <form
             onsubmit={async (e) => {

@@ -5,6 +5,11 @@
         icon: typeof IconType;
         accentColor?: "indigo" | "orange" | "pink" | "green" | "purple";
         hideOnMobile?: boolean;
+        isRoot?: boolean;
+    };
+
+    export type NavMenus = {
+        [key: string]: NavItem[];
     };
 </script>
 
@@ -27,7 +32,11 @@
             return true;
         }
 
-        if (page.url.pathname.startsWith(item.url)) {
+        if (item.isRoot && page.url.pathname === item.url) {
+            return true;
+        }
+
+        if (page.url.pathname.startsWith(item.url) && !item.isRoot) {
             return true;
         }
 

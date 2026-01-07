@@ -9,7 +9,6 @@
         type SharedFileDisplayProps,
         shouldDisplayAction,
     } from "$lib/utils";
-    import { Button } from "$lib/components/ui/button";
 
     let {
         handleOpenItem,
@@ -70,7 +69,7 @@
 {#snippet loadingRows()}
     {#each Array(loadingAmount) as _}
         <li class="flex items-center justify-between py-3">
-            <Skeleton class="h-[30px] w-full rounded-sm" />
+            <Skeleton class="h-7.5 w-full rounded-sm" />
         </li>
     {/each}
 {/snippet}
@@ -100,9 +99,10 @@
         <Drawer.Header>
             {#if actionableItem}
                 <Drawer.Title class="border-b pb-3 text-lg">
-                    {actionableItem.key.endsWith("/")
-                        ? actionableItem.key.slice(0, -1)
-                        : actionableItem.key}
+                    {actionableItem.metadata.name ??
+                        (actionableItem.key.endsWith("/")
+                            ? actionableItem.key.slice(0, -1)
+                            : actionableItem.key)}
                 </Drawer.Title>
             {/if}
         </Drawer.Header>

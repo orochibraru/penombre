@@ -11,6 +11,9 @@ else
     exit 1
 fi
 
+echo "Generating .env.example file..."
+bun run --cwd packages/web gen:env
+
 
 echo "Staging changes..."
 git add .

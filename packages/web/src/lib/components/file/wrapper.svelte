@@ -43,7 +43,7 @@
     import { getObjectUrl } from "$lib/url";
     import {
         capitalizeFirstLetter,
-        humanFileSize,
+        readableFileSize,
         type ItemAction,
         type ItemActionGroup,
         type MultipleItemsAction,
@@ -96,9 +96,10 @@
             return;
         }
 
-        searchResults = data.list.filter((item) =>
-            item.key.toLowerCase().includes(searchValue.toLowerCase()),
-        );
+        searchResults = data.list.filter((item) => {
+            const display = (item.metadata.name || item.key).toLowerCase();
+            return display.includes(searchValue.toLowerCase());
+        });
 
         loading = false;
         return;
@@ -134,30 +135,36 @@
                 ? `${page.params.path}/${checkedItem}`
                 : checkedItem;
 
-            const promise = apiClient.storage.objects.item[":item"]
-                .$put({
-                    param: { item: encodeURIComponent(itemPath) },
-                    query: {
-                        folder: itemPath.includes("/")
-                            ? itemPath.split("/").slice(0, -1).join("/")
-                            : undefined,
-                    },
-                    json: {
-                        isTrashed: false,
-                    },
-                })
-                .then(async (res) => {
-                    if (!res.ok) {
-                        console.error(await res.text());
+            if (itemPath.endsWith("/")) {
+                // Restore folder via folders PUT
+                promises.push(getRestoreFolderPromise(itemPath));
+            } else {
+                // Restore file via objects PUT
+                const promise = apiClient.storage.objects.item[":item"]
+                    .$put({
+                        param: { item: encodeURIComponent(itemPath) },
+                        query: {
+                            folder: itemPath.includes("/")
+                                ? itemPath.split("/").slice(0, -1).join("/")
+                                : undefined,
+                        },
+                        json: {
+                            isTrashed: false,
+                        },
+                    })
+                    .then(async (res) => {
+                        if (!res.ok) {
+                            console.error(await res.text());
+                            restoringItem = false;
+                            throw new Error("Failed to restore");
+                        }
+
+                        confirmRestoreOpen = false;
                         restoringItem = false;
-                        throw new Error("Failed to restore");
-                    }
+                    });
 
-                    confirmRestoreOpen = false;
-                    restoringItem = false;
-                });
-
-            promises.push(promise);
+                promises.push(promise);
+            }
         }
 
         let failures = 0;
@@ -198,6 +205,33 @@
                     console.error(await res.text());
                     deletingItem = false;
                     throw new Error("Failed to delete folder");
+                }
+
+                confirmDeleteOpen = false;
+                deletingItem = false;
+            });
+
+        return promise;
+    }
+
+    async function getTrashFolderPromise(itemPath: string) {
+        const folderName =
+            itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
+        const parentPath = itemPath.slice(0, -1).includes("/")
+            ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
+            : undefined;
+
+        const promise = apiClient.storage.folders.folder[":folder"]
+            .$put({
+                param: { folder: encodeURIComponent(folderName) },
+                query: { parent: parentPath },
+                json: { isTrashed: true },
+            })
+            .then(async (res) => {
+                if (!res.ok) {
+                    console.error(await res.text());
+                    deletingItem = false;
+                    throw new Error("Failed to move folder to trash");
                 }
 
                 confirmDeleteOpen = false;
@@ -251,6 +285,33 @@
         return promise;
     }
 
+    async function getRestoreFolderPromise(itemPath: string) {
+        const folderName =
+            itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
+        const parentPath = itemPath.slice(0, -1).includes("/")
+            ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
+            : undefined;
+
+        const promise = apiClient.storage.folders.folder[":folder"]
+            .$put({
+                param: { folder: encodeURIComponent(folderName) },
+                query: { parent: parentPath },
+                json: { isTrashed: false },
+            })
+            .then(async (res) => {
+                if (!res.ok) {
+                    console.error(await res.text());
+                    restoringItem = false;
+                    throw new Error("Failed to restore folder");
+                }
+
+                confirmRestoreOpen = false;
+                restoringItem = false;
+            });
+
+        return promise;
+    }
+
     async function handleDeleteObject() {
         if (Object.keys(checkedItems).length === 0) {
             return;
@@ -271,8 +332,12 @@
             const isFolder = itemPath.endsWith("/");
 
             if (isFolder) {
-                // Is a folder, so we delete the folder. TODO: move folder to trash
-                promises.push(getDeleteFolderPromise(itemPath));
+                // Folder: if in Trash, hard delete; else soft-trash via PUT
+                if (isTrash) {
+                    promises.push(getDeleteFolderPromise(itemPath));
+                } else {
+                    promises.push(getTrashFolderPromise(itemPath));
+                }
                 continue;
             }
 
@@ -517,9 +582,10 @@
     );
 
     async function handleOpenItemWrapper(item: ObjectItem) {
+        const display = item.metadata.name || item.key;
         return toast.promise(handleOpenItem(item), {
-            loading: `Opening "${item.key}"`,
-            error: `Failed to open "${item.key}"`,
+            loading: `Opening "${display}"`,
+            error: `Failed to open "${display}"`,
         });
     }
 
@@ -564,7 +630,7 @@
 
         if (item.metadata.category === "MUSIC") {
             $playableMusic = {
-                title: item.key,
+                title: item.metadata.name || item.key,
                 source: finalUrl,
                 isPlaying: !dev,
             };
@@ -700,7 +766,7 @@
                     }
                 }}
             >
-                <Select.Trigger class="w-[180px]"
+                <Select.Trigger class="w-45"
                     >Layout: {capitalizeFirstLetter(
                         $layoutStore,
                     )}</Select.Trigger
@@ -780,11 +846,11 @@
             <div class="flex flex-col justify-between gap-5 lg:flex-row">
                 <Dialog.Header class="text-start lg:text-center">
                     <Dialog.Title>
-                        {fileToView.item.key}
+                        {fileToView.item.metadata.name ?? fileToView.item.key}
                     </Dialog.Title>
                     <Dialog.Description class="flex items-center gap-2">
                         <span>
-                            {humanFileSize(fileToView.item.size as number) ??
+                            {readableFileSize(fileToView.item.size as number) ??
                                 "-"}
                         </span>
                         {#if fileToView.language}
@@ -814,13 +880,15 @@
                 {#if fileToView.type === "image"}
                     <img
                         src={fileToView.src}
-                        alt={fileToView.item.key}
+                        alt={fileToView.item.metadata.name ??
+                            fileToView.item.key}
                         class="h-full max-w-full rounded-md object-contain"
                     />
                 {:else if fileToView.type === "video"}
                     <VideoPlayer
                         src={fileToView.src}
-                        title={fileToView.item.key}
+                        title={fileToView.item.metadata.name ??
+                            fileToView.item.key}
                     />
                 {:else if fileToView.type === "code" && fileToView.language && fileToView.content}
                     <Code.Root
@@ -833,7 +901,8 @@
                 {:else if fileToView.type === "pdf"}
                     <embed
                         src={fileToView.src}
-                        title={fileToView.item.key}
+                        title={fileToView.item.metadata.name ??
+                            fileToView.item.key}
                         class="h-full w-full"
                         width="500"
                         height="700"

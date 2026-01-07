@@ -6,6 +6,7 @@ import { migrate } from "drizzle-orm/bun-sql/migrator";
 import { building } from "$app/environment";
 import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
+import { seedAuth } from "$lib/server/auth/seed";
 import { getDb } from "$lib/server/db";
 
 const logger = new Logger("Hooks");
@@ -51,6 +52,7 @@ async function runMigrations() {
 
 export const init = async () => {
 	await runMigrations();
+	await seedAuth();
 };
 
 const authHandler: Handle = async ({ event, resolve }) => {
@@ -67,6 +69,9 @@ const authHandler: Handle = async ({ event, resolve }) => {
 };
 
 const generalHandler: Handle = async ({ event, resolve }) => {
+	if (event.url.pathname.startsWith("/.well-known/")) {
+		return await resolve(event);
+	}
 	const res = await resolve(event);
 	if (res.status >= 400) {
 		logger.error(

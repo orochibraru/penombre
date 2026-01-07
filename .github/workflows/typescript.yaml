@@ -38,7 +38,12 @@ jobs:
         run: bun run format:check
 
       - name: Build
-        run: bun run --filter @opendrive/web build
+        working-directory: packages/web
+        run: bun run build
 
       - name: Type check
-        run: bun run --filter @opendrive/web check
+        working-directory: packages/web
+        run: bun run check
+
+      - name: Run tests
+        run: bun test --coverage

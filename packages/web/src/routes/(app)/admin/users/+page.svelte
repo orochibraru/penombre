@@ -1,0 +1,23 @@
+<script lang="ts">
+    import { title } from "$lib/store/title";
+    import { onMount } from "svelte";
+
+    onMount(() => {
+        title.set("Admin - Users");
+    });
+
+    const { data } = $props();
+</script>
+
+<h2 class="text-lg font-medium">User Management</h2>
+<p>
+    This instance currently has {data.users.total} user{data.users.total === 1
+        ? ""
+        : "s"}.
+</p>
+
+<ul>
+    {#each data.users.users as user}
+        <li>{user.name} - {user.email}</li>
+    {/each}
+</ul>

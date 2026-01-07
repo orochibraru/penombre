@@ -10,7 +10,7 @@
         type UploadResult,
         type ObjectItem,
     } from "$lib/api-client";
-    import { Button } from "$lib/components/ui/button";
+    import { Button, buttonVariants } from "$lib/components/ui/button";
     import * as Dialog from "$lib/components/ui/dialog/index";
     import {
         displaySize,
@@ -21,6 +21,8 @@
     import { uploadedItems, uploadingItems } from "$lib/store/upload";
     import { cn } from "$lib/utils";
     import { onMount } from "svelte";
+    import { MediaQuery } from "svelte/reactivity";
+    import * as Drawer from "$lib/components/ui/drawer/index";
 
     type Props = {
         open: boolean;
@@ -327,90 +329,119 @@
             error: "Failed to queue files for upload",
         });
     }
+
+    const isDesktop = new MediaQuery("(min-width: 768px)");
 </script>
 
-<Dialog.Root bind:open>
-    <Dialog.Content
-        class="max-h-[70%] pb-16 md:max-w-3xl lg:max-w-5xl xl:max-w-7xl"
+{#snippet form()}
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="flex max-h-[50vh] w-full flex-col gap-2 overflow-y-auto"
     >
-        <Dialog.Header>
-            <Dialog.Title>Upload new files</Dialog.Title>
-            <Dialog.Description>
-                Drag n' Drop or click to select the files you want to upload.
-            </Dialog.Description>
-        </Dialog.Header>
-        <form
-            method="POST"
-            enctype="multipart/form-data"
-            class="flex max-h-[50vh] w-full flex-col gap-2 overflow-y-auto px-5"
-        >
-            <fieldset disabled={loading}>
-                <input
-                    type="hidden"
-                    name="rootFolder"
-                    value={page.params.path}
-                />
-                <FileDropZone
-                    {onUpload}
-                    {onFileRejected}
-                    fileCount={$files.length}
-                    class="mb-5"
-                />
-                <input
-                    name="attachments"
-                    type="file"
-                    bind:files={$files}
-                    class="hidden"
-                />
-                <div class="mb-5 flex flex-col gap-3">
-                    {#each Array.from($files) as file, i (file.name)}
-                        <div>
-                            <div
-                                class={cn(
-                                    "flex place-items-center justify-between gap-3 rounded-xl border p-3",
-                                )}
-                            >
-                                <div class="flex flex-col">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm">{file.name}</span>
-                                    </div>
-                                    <span class="text-muted-foreground text-xs"
-                                        >{displaySize(file.size)}</span
-                                    >
-                                </div>
+        <fieldset disabled={loading}>
+            <input type="hidden" name="rootFolder" value={page.params.path} />
+            <FileDropZone
+                {onUpload}
+                {onFileRejected}
+                fileCount={$files.length}
+                class="mb-5"
+            />
+            <input
+                name="attachments"
+                type="file"
+                bind:files={$files}
+                class="hidden"
+            />
+            <div class="mb-5 flex flex-col gap-3">
+                {#each Array.from($files) as file, i (file.name)}
+                    <div>
+                        <div
+                            class={cn(
+                                "flex place-items-center justify-between gap-3 rounded-xl border p-3",
+                            )}
+                        >
+                            <div class="flex flex-col">
                                 <div class="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onclick={() => {
-                                            // we use set instead of an assignment since it accepts a File[]
-                                            removeFile(i);
-                                        }}
-                                    >
-                                        <XIcon />
-                                    </Button>
+                                    <span class="text-sm">{file.name}</span>
                                 </div>
+                                <span class="text-muted-foreground text-xs"
+                                    >{displaySize(file.size)}</span
+                                >
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onclick={() => {
+                                        // we use set instead of an assignment since it accepts a File[]
+                                        removeFile(i);
+                                    }}
+                                >
+                                    <XIcon />
+                                </Button>
                             </div>
                         </div>
-                    {/each}
-                </div>
-                <Dialog.Footer
-                    class="fixed bottom-0 left-0 w-full border-t p-5"
+                    </div>
+                {/each}
+            </div>
+            <Button
+                type="button"
+                class="w-full"
+                {loading}
+                disabled={$files.length === 0}
+                onclick={() => handleUpload()}
+            >
+                Upload
+                {#if $files.length > 0 && $files.length === 1}
+                    {$files.length} file
+                {:else if $files.length > 1}
+                    {$files.length} files
+                {/if}
+            </Button>
+        </fieldset>
+    </form>
+{/snippet}
+
+{#if isDesktop.current}
+    <Dialog.Root bind:open>
+        <Dialog.Content
+            class="max-h-[70%] pb-16 md:max-w-3xl lg:max-w-5xl xl:max-w-7xl"
+        >
+            <Dialog.Header>
+                <Dialog.Title>Upload new files</Dialog.Title>
+                <Dialog.Description>
+                    Drag n' Drop or click to select the files you want to
+                    upload. Tap to select files you want to upload.
+                </Dialog.Description>
+            </Dialog.Header>
+            {@render form()}
+            <Dialog.Footer>
+                <Dialog.Close
+                    class={cn(buttonVariants({ variant: "outline" }), "w-full")}
                 >
-                    <Button
-                        type="button"
-                        class="w-full"
-                        {loading}
-                        disabled={$files.length === 0}
-                        onclick={() => handleUpload()}
-                    >
-                        Upload
-                        {#if $files.length > 0}
-                            {$files.length} files
-                        {/if}
-                    </Button>
-                </Dialog.Footer>
-            </fieldset>
-        </form>
-    </Dialog.Content>
-</Dialog.Root>
+                    Cancel
+                </Dialog.Close>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
+{:else}
+    <Drawer.Root bind:open>
+        <Drawer.Content class="z-50">
+            <Drawer.Header>
+                <Drawer.Title class="text-lg">Upload files</Drawer.Title>
+                <Drawer.Description class="text-sm text-muted-foreground">
+                    Tap to select files you want to upload.
+                </Drawer.Description>
+            </Drawer.Header>
+            <div class="p-4 flex flex-col gap-2">
+                {@render form()}
+            </div>
+            <Drawer.Footer>
+                <Drawer.Close class={buttonVariants({ variant: "outline" })}>
+                    Cancel
+                </Drawer.Close>
+            </Drawer.Footer>
+        </Drawer.Content>
+    </Drawer.Root>
+{/if}

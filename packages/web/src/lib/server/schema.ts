@@ -45,6 +45,7 @@ const dateSchema = z.union([z.date(), z.string()]);
 
 export const fileMetadataSchema = z.object({
 	id: z.string(),
+	name: z.string().optional(),
 	category: fileCategorySchema,
 	tags: z.array(z.string()).optional(),
 	contentType: fileContentTypeSchema,

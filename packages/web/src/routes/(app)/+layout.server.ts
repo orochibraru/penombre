@@ -25,11 +25,14 @@ export const load: LayoutServerLoad = async ({ fetch, locals }) => {
 
 	const activity = await res.json();
 
+	const isAdmin = locals.user.role === "admin";
+
 	return {
 		user: locals.user,
 		session: locals.session,
 		activity,
 		uploadForm: await superValidate({}, valibot(uploadSchema)),
 		authCookie: "123",
+		isAdmin,
 	};
 };

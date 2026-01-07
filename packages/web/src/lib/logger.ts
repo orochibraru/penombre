@@ -8,27 +8,19 @@ import {
 	white,
 	yellow,
 } from "@kitql/helpers";
-import { dev } from "$app/environment";
-import { env } from "$env/dynamic/private";
+import { getOpendriveConfig } from "$lib/server/config";
 
-const logFormats = ["console", "json"];
 export type LogFormats = "console" | "json";
 
 export enum LOG_LEVELS {
-	INFO = "INFO",
-	WARN = "WARN",
-	ERROR = "ERROR",
-	DEBUG = "DEBUG",
-	TRACE = "TRACE",
+	DEBUG = "debug",
+	INFO = "info",
+	WARN = "warn",
+	ERROR = "error",
+	TRACE = "trace",
 }
 
-const logLevels = [
-	LOG_LEVELS.INFO,
-	LOG_LEVELS.WARN,
-	LOG_LEVELS.ERROR,
-	LOG_LEVELS.DEBUG,
-	LOG_LEVELS.TRACE,
-];
+type RawLogLevels = "debug" | "info" | "warn" | "error" | "trace";
 
 export type HttpLog = {
 	req: Request;
@@ -42,7 +34,7 @@ export class Logger {
 	logFormat: "console" | "json";
 	prefix?: string;
 	prettyPrefix?: string;
-	logLevel: LOG_LEVELS;
+	logLevel: LOG_LEVELS | RawLogLevels;
 
 	/**
 	 * Initializes a new instance of the Logger class.
@@ -51,33 +43,56 @@ export class Logger {
 	 * is not set, defaults to 'console'. Throws an error if the format is invalid.
 	 */
 	constructor(prefix?: string) {
-		let formatEnv = env.LOG_FORMAT;
-
-		if (!formatEnv) {
-			formatEnv = "console";
-		} else if (!logFormats.includes(formatEnv)) {
-			throw new Error(
-				`Invalid LOG_FORMAT. Please set to either: 'console', or 'json' (Received: ${formatEnv}).`,
-			);
-		}
-
-		const envLogLevel: LOG_LEVELS | null = env.LOG_LEVEL
-			? (env.LOG_LEVEL.toUpperCase() as LOG_LEVELS)
-			: null;
-
-		if (envLogLevel && !logLevels.includes(envLogLevel)) {
-			throw new Error(
-				`Invalid LOG_LEVEL. Please set it to one of the following: ${logLevels.join(", ")}`,
-			);
-		}
+		const config = getOpendriveConfig();
 
 		this.prefix = prefix;
 		this.prettyPrefix = magenta(`[${this.prefix}]`);
-		this.logFormat = formatEnv as LogFormats;
-		const defaultLogLevel: LOG_LEVELS = dev
-			? LOG_LEVELS.DEBUG
-			: LOG_LEVELS.INFO;
-		this.logLevel = (envLogLevel as LOG_LEVELS) ?? defaultLogLevel;
+		this.logFormat = config.logFormat;
+		this.logLevel = config.logLevel;
+	}
+
+	log({
+		level,
+		message,
+		metadata = [],
+	}: {
+		level: LOG_LEVELS | RawLogLevels;
+		message: string;
+		metadata?: unknown[];
+	}) {
+		if (this.logFormat === "console") {
+			const colorFn = (str: string) => {
+				switch (level) {
+					case LOG_LEVELS.DEBUG:
+						return cyan(str);
+					case LOG_LEVELS.INFO:
+						return blue(str);
+					case LOG_LEVELS.WARN:
+						return yellow(str);
+					case LOG_LEVELS.ERROR:
+						return red(str);
+					case LOG_LEVELS.TRACE:
+						return white(str);
+					default:
+						return str;
+				}
+			};
+
+			console.log(
+				colorFn(`[LEVEL::${level}]`),
+				this.prettyPrefix,
+				message,
+				...metadata,
+			);
+			return;
+		}
+
+		console.log({
+			scope: this.prefix,
+			level,
+			message,
+			...metadata,
+		});
 	}
 
 	/**
@@ -148,13 +163,13 @@ export class Logger {
 			LOG_LEVELS.DEBUG,
 			LOG_LEVELS.TRACE,
 		];
-		if (!acceptedLogLevels.includes(this.logLevel)) {
+		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
 			return;
 		}
 
 		if (this.logFormat === "console") {
 			return console.log(
-				blue(`[LEVEL::${LOG_LEVELS.INFO}]`),
+				blue(`[LEVEL::${LOG_LEVELS.INFO.toUpperCase()}] `),
 				this.prettyPrefix,
 				input,
 				...optionalParams,
@@ -184,13 +199,13 @@ export class Logger {
 			LOG_LEVELS.DEBUG,
 			LOG_LEVELS.TRACE,
 		];
-		if (!acceptedLogLevels.includes(this.logLevel)) {
+		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
 			return;
 		}
 
 		if (this.logFormat === "console") {
 			return console.log(
-				yellow(`[LEVEL::${LOG_LEVELS.WARN}]`),
+				yellow(`[LEVEL::${LOG_LEVELS.WARN.toUpperCase()}] `),
 				this.prettyPrefix,
 				input,
 				...optionalParams,
@@ -221,13 +236,13 @@ export class Logger {
 			LOG_LEVELS.DEBUG,
 			LOG_LEVELS.TRACE,
 		];
-		if (!acceptedLogLevels.includes(this.logLevel)) {
+		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
 			return;
 		}
 
 		if (this.logFormat === "console") {
 			return console.error(
-				red(`[LEVEL::${LOG_LEVELS.ERROR}]`),
+				red(`[LEVEL::${LOG_LEVELS.ERROR.toUpperCase()}]`),
 				this.prettyPrefix,
 				err,
 				...optionalParams,
@@ -251,14 +266,13 @@ export class Logger {
 	 */
 	debug(input: unknown, ...optionalParams: unknown[]) {
 		const acceptedLogLevels = [LOG_LEVELS.DEBUG, LOG_LEVELS.TRACE];
-		if (!acceptedLogLevels.includes(this.logLevel)) {
+		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
 			return;
 		}
 
 		if (this.logFormat === "console") {
-			console.log();
 			return console.log(
-				cyan(`[LEVEL::${LOG_LEVELS.DEBUG}]`),
+				cyan(`[LEVEL::${LOG_LEVELS.DEBUG.toUpperCase()}]`),
 				this.prettyPrefix,
 				input,
 				...optionalParams,
@@ -283,7 +297,7 @@ export class Logger {
 
 	trace(input: unknown, ...optionalParams: unknown[]) {
 		const acceptedLogLevels = [LOG_LEVELS.TRACE];
-		if (!acceptedLogLevels.includes(this.logLevel)) {
+		if (!acceptedLogLevels.includes(this.logLevel as LOG_LEVELS)) {
 			return;
 		}
 
@@ -291,7 +305,7 @@ export class Logger {
 			console.log();
 			return console.log(
 				this.prettyPrefix,
-				white(`[LEVEL::${LOG_LEVELS.TRACE}]`),
+				white(`[LEVEL::${LOG_LEVELS.TRACE.toUpperCase()}]`),
 				input,
 				...optionalParams,
 			);

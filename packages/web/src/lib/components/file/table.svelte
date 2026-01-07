@@ -15,7 +15,7 @@
     import {
         capitalizeFirstLetter,
         cn,
-        humanFileSize,
+        readableFileSize,
         isFolderItem,
         type SharedFileDisplayProps,
         shouldDisplayAction,
@@ -171,7 +171,7 @@
         </Table.Cell>
         <Table.Cell colspan={1} class="w-32">
             <p class="text-xs">
-                {humanFileSize(objectItem.size as number) ?? "-"}
+                {readableFileSize(objectItem.size as number) ?? "-"}
             </p>
         </Table.Cell>
         <Table.Cell colspan={1} class="w-4">

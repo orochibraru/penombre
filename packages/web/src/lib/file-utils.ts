@@ -81,9 +81,10 @@ export function isCodeItem(fileName: string) {
 }
 
 export function determineCodeFileLanguage(item: ObjectItem): SupportedLanguage {
-	const fileExtension = getFileExtension(item.key);
+	const display = item.metadata?.name || item.key;
+	const fileExtension = getFileExtension(display);
 
-	if (fileExtension === item.key) {
+	if (fileExtension === display) {
 		// Try special code file names
 		for (const codeFileName of codeFileNames) {
 			const isSupported = supportedLanguages.find(

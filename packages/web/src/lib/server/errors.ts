@@ -1,7 +1,7 @@
-export class FileNotFoundError extends Error {
+export class FileOrFolderNotFoundError extends Error {
 	constructor(message: string) {
 		super(message);
-		this.name = "FileNotFoundError";
+		this.name = "FileOrFolderNotFoundError";
 	}
 }
 

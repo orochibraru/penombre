@@ -1,3 +1,4 @@
+import { SQL } from "bun";
 import { type BunSQLDatabase, drizzle } from "drizzle-orm/bun-sql";
 
 export type Database = BunSQLDatabase<Record<string, never>>;
@@ -9,11 +10,18 @@ export function getDbUrl() {
 	);
 }
 
-let db: Database | null = null;
+const client = new SQL({
+	url: getDbUrl(),
+	max: 50, // Maximum connections in pool
+	idleTimeout: 30, // Close idle connections after 30s
+	maxLifetime: 0, // Connection lifetime in seconds (0 = forever)
+	connectionTimeout: 30, // Timeout when establishing new connections
+	tls: false,
+});
 
-export function getDb(): Database {
-	if (!db) {
-		db = drizzle(getDbUrl());
-	}
+export const db = drizzle({ client });
+
+// For backward compatibility
+export function getDb() {
 	return db;
 }

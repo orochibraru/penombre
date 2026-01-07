@@ -1,152 +1,80 @@
-# Opendrive Development Guide
+# Copilot Instructions for Opendrive
 
-This is a self-hosted cloud storage platform with a modern monorepo architecture using Bun, Koritsu (API), and SvelteKit (UI).
+## Overview
+- Monorepo with `packages/web` (SvelteKit + Bun) and `packages/mobile` (Expo). Backend APIs are implemented inside the web app using Hono routers and SvelteKit server code.
+- Primary runtime is Bun (1.3.x). Use Bun for scripts, testing, and dev servers.
+- Storage is local filesystem under `STORAGE_PATH` (default `/data`), per-user in `user-<id>` folders. Metadata is JSON alongside content.
 
-## Architecture Overview
+## Architecture & Data Flow
+- UI (SvelteKit) calls internal API routes; typed client in `$lib/api-client` is used from components like [packages/web/src/lib/components/file/wrapper.svelte](packages/web/src/lib/components/file/wrapper.svelte).
+- Server (Hono routers within SvelteKit):
+  - Folders: [packages/web/src/lib/server/routes/storage/folders.ts](packages/web/src/lib/server/routes/storage/folders.ts)
+  - Files/Objects: [packages/web/src/lib/server/routes/storage/objects.ts](packages/web/src/lib/server/routes/storage/objects.ts)
+- Services (business logic):
+  - Storage: [packages/web/src/lib/server/dto/storage.ts](packages/web/src/lib/server/dto/storage.ts)
+  - Activity: `$lib/server/dto/activity` (used for logging user actions)
+- Database: PostgreSQL (compose file). Drizzle ORM present in web package; DB usage is primarily user accounts and activity.
 
-**Monorepo Structure**: Bun workspace with two packages (`packages/api`, `packages/web`)
+## Authentication
+- Web uses Better Auth. `User` types are imported from `better-auth` and injected into Hono context (see routers using `c.get("user")`). Route guards reject if missing, and `StorageService.permissionsCheck()` enforces `metadata.owner === user.id`.
+- Build-time requirement: Dockerfile sets `ORIGIN=http://localhost` during `vite build` for Better Auth import validation. Keep `ORIGIN` aligned with your deployment host.
 
--   **API**: [Koritsu](https://koritsu.dev) file-based routing framework with auto-generated OpenAPI docs
-    -   **Database**: PostgreSQL via Bun's native SQL driver + Drizzle ORM
-    -   **Auth**: [better-auth](https://www.better-auth.com/) library handles OAuth providers and session management
--   **UI**: SvelteKit with [Svelte 5 Runes](https://svelte.dev/blog/runes) + Shadcn/Svelte components, deployed with svelte-adapter-bun
--   **Storage Service**: User-specific Directories managed by `StorageService` class (`packages/api/lib/storage.ts`)
+## Storage Model & Conventions
+- Files live under `STORAGE_PATH/user-<userId>/...` with adjacent metadata in `filename.ext.meta.json`.
+- Folder metadata lives inside the folder in `.keep.meta.json`. A `.keep` file may exist; older folders may store JSON there.
+- Soft-trash: set `metadata.isTrashed = true`.
+  - Files: PUT on `/storage/objects/item/:item` sets `isTrashed`.
+  - Folders: PUT on `/storage/folders/folder/:folder` sets `isTrashed` in `.keep.meta.json`.
+- Listing behavior:
+  - Objects: `abstractListFiles()` excludes trashed items unless `includeTrashed` is true (see [storage.ts](packages/web/src/lib/server/dto/storage.ts#L554-L599)).
+  - Folders: `listFolders()` excludes trashed by default, or lists only trashed via router `/storage/folders/trash`.
+- Renaming: `updateFile()` preserves subdirectory when `data.key` is a basename; it copies+deletes both file and its `.meta.json`.
 
-**Key Design Patterns**:
+## Developer Workflows
+- Dev (root):
+  - `bun run dev` → starts Postgres via Docker Compose and the web dev server via Vite (see [concurrently.config.ts](concurrently.config.ts)).
+  - Access web UI: verify port at runtime. README references `8080`; Vite default is `5173`; Docker `app` exposes `3000` with `ORIGIN` set accordingly.
+- Web package:
+  - `bun run dev` → Vite dev server.
+  - `bun run build` → SvelteKit sync + Vite build; Dockerfile uses this to produce `/app/build`.
+  - `bun run check` → SvelteKit sync + `svelte-check`.
+- Testing/Linting (root):
+  - `bun run test` → Bun test runner.
+  - `bun run lint` / `bun run lint:fix` → Biome lints/formatting.
 
--   **API Routes**: Follow [Koritsu conventions](https://koritsu.dev) - file-based routing with `route.ts` files exporting `createRoute()` handlers
-    -   Routes auto-discovered from `packages/api/routes/**` directory structure
-    -   OpenAPI spec defined inline with Zod schemas (see `packages/api/routes/storage/objects/route.ts`)
-    -   Uses Bun's native File I/O client (`File` from `"bun"`) and standard Node operations for directories
--   **Auth**: better-auth handles all authentication logic - don't reinvent auth patterns (see `packages/api/lib/auth.ts`)
--   **Database**: Bun SQL client wrapped by Drizzle ORM - schema in `packages/api/lib/db/schema.ts`
--   **Type Generation**: UI consumes typed API client from OpenAPI spec via `openapi-typescript` → `packages/web/src/lib/api/schema.d.ts`
--   **Storage Architecture**:
-    -   Per-user directories created on-demand, named `user-{sanitized-username}` (see `StorageService` constructor)
-    -   File metadata stored as JSON in files within user directories, not database (see `getFileMetadata` method)
+## Environment & Deployment
+- Docker Compose defines `db` and `app` services (see [compose.yaml](compose.yaml)). App uses envs like `DATABASE_URL`, `ORIGIN`, `ENV`, `LOG_LEVEL`.
+- Dockerfile builds only the web package; runtime is Bun. `STORAGE_PATH` defaults to `/data` inside container.
+- Admin storage info: `AdminStorageService.getAvailableStorageSize()` uses `statfs` or `df -k` to compute free bytes.
 
-## Development Workflow
+## Mobile App (Expo)
+- Location: [packages/mobile](packages/mobile)
+- Start:
+  - `npm install` then `npx expo start` (see [packages/mobile/README.md](packages/mobile/README.md)).
+- Routing: file-based under `packages/mobile/app/`.
+- Backend integration: when calling web APIs from device/emulator, avoid `localhost`.
+  - iOS Simulator: use host machine IP (e.g., `http://192.168.x.x:3000`).
+  - Android Emulator: use `http://10.0.2.2:3000` or `adb reverse` to map ports.
+- Auth: Better Auth runs server-side in web; mobile should call the same Hono endpoints. If you want typed clients on mobile, mirror web’s OpenAPI generation (e.g., `openapi-typescript`) or share a minimal fetch wrapper.
 
-### Start Development Environment
+## Patterns & Gotchas
+- Always pass folder prefixes carefully; use empty `""` for storage root in `listFolders()` to avoid `join()` resetting to OS root.
+- When creating folders, write both `.keep` and `.keep.meta.json` so downstream filters work.
+- For partial content, range requests are supported via `generateRangeHeaders()`.
+- Prefer service methods for mutations; routers are thin wrappers that decode params and call `StorageService`.
+- Better Auth build-time check: ensure `ORIGIN` is set in any environment running `vite build` (Dockerfile already handles this).
+- Mobile networking: never hardcode `localhost`; parameterize API base URL per platform.
 
-```bash
-bun run dev  # Runs concurrently: Docker (DB), API with hot reload, UI with Vite
-```
+## Useful File References
+- Listing/trash filtering: [storage listing](packages/web/src/lib/server/dto/storage.ts#L554-L599), [folder listing](packages/web/src/lib/server/dto/storage.ts#L176-L219)
+- Folder routes: [folders router](packages/web/src/lib/server/routes/storage/folders.ts)
+- Object routes: [objects router](packages/web/src/lib/server/routes/storage/objects.ts)
+- UI actions using API client: [wrapper.svelte](packages/web/src/lib/components/file/wrapper.svelte)
 
-This uses `concurrently.config.mjs` to orchestrate:
+## How to Integrate New Features
+- Add server logic in `StorageService` and expose via Hono routers under `packages/web/src/lib/server/routes/...`.
+- Respect `isTrashed` semantics and metadata locations.
+- Keep file moves/renames atomic where possible; for local FS, `fs.promises.rename` is acceptable if cross-device moves aren’t needed.
 
-1. `docker compose up db` (PostgreSQL on :5432)
-2. API server on :8080 (waits for containers via `wait-on`)
-3. UI dev server on :5173
-
-### Database Changes
-
-```bash
-cd packages/api
-bun run db:generate  # Generate migration from schema changes
-bun run db:migrate   # Apply migrations
-```
-
-Migrations run automatically in production (see `packages/api/index.ts` - calls `runMigrations()` before server start).
-
-### API Schema Updates
-
-When adding/modifying API routes:
-
-1. Update route in `packages/api/routes/**` with inline OpenAPI spec
-2. Dev server auto-generates `packages/api/openapi.json` (see `writeRealTimeSpec()` in `index.ts`)
-3. Run `bun run gen:api` in `packages/web` to regenerate TypeScript client types
-4. UI automatically gets type-safe API calls via `openapi-fetch` client (see `packages/web/src/lib/api/index.ts`)
-
-### Testing Strategy
-
-Uses **Bun's native test runner** with Happy DOM (no Playwright). See `tests/README.md`.
-
-```bash
-bun test tests/smoke.test.ts      # Fast smoke tests
-bun test:api                       # API tests with docker (requires Docker)
-bun test:integration               # Full-stack tests with docker
-```
-
-**Critical**: API/integration tests spin up real PostgreSQL via docker. Set `BASE_URL` env var to skip container setup in CI.
-
-## Code Conventions
-
-### Formatting & Linting
-
--   **Biome**: All linting handled by Biome for both API and UI (`bun run lint` / `bun run lint:fix`)
--   Double quotes for JavaScript (see `biome.json`)
--   Pre-commit hook runs Biome checks via Husky
-
-### API Route Pattern
-
-Follow [Koritsu's file-based routing](https://koritsu.dev). Every `route.ts` exports HTTP methods using `createRoute`:
-
-```typescript
-export const GET = createRoute({
-  method: "GET",
-  handler: async ({ headers, query }) => {
-    // Auth via better-auth
-    const session = await auth.api.getSession({ headers });
-    if (!session) {
-      return Response.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    // ... handler logic
-  },
-  spec: {
-    parameters: { query: z.object({ ... }) },
-    responses: { 200: { schema: ... } },
-    summary: "...",
-  },
-});
-```
-
-**Critical**: Use Bun's native clients (`File` from `"bun"`, Drizzle with Bun SQL) - not Node.js alternatives
-
-### Storage Service Usage
-
-Always instantiate per-request with user context:
-
-```typescript
-const session = await auth.api.getSession({ headers });
-const storageService = new StorageService(session.user);
-// Automatically manages user-specific bucket
-```
-
-### UI API Client Pattern
-
--   **Browser**: `getApiClient()` - reads auth cookie from SvelteKit page data
--   **Server**: `getServerSideApi(cookie)` - pass cookie explicitly from `event.cookies`
--   Both return typed `openapi-fetch` client with automatic auth middleware
-
-## Deployment & Production
-
-**Docker Build**: Multi-stage Dockerfile compiles UI + API, runs with nginx + supervisor
-
--   UI served via nginx reverse proxy
--   API runs on internal port, proxied through nginx
--   Both services managed by supervisord
-
-**Environment Variables**:
-
--   `DATABASE_URL`: PostgreSQL connection (defaults to `postgres://postgres:postgres@db:5432/opendrive`)
--   OAuth config: `OAUTH_PROVIDERS`, `OAUTH_POCKETID_CLIENT_ID`, etc.
-
-## Common Gotchas
-
-1. **File metadata is in files ending with .meta.json, not DB**: Don't look for file tables in Drizzle schema - metadata is JSON in objects
-2. **Folder representation**: Folders end with `/` and contain `.keep` files with metadata JSON
-3. **Presigned URL proxying**: URLs are returned without endpoint prefix for `/p` proxy endpoint (see `presign()` method)
-4. **Bun-specific types**: Some AWS SDK types mismatch - see `@ts-expect-error` in `presign()` for Smithy types
-5. **OpenAPI spec merging**: API combines Koritsu routes + better-auth schema (see `externalSpecs` in `index.ts`)
-6. **Auth cookie name**: `better-auth.session_token` - used consistently across API/UI
-7. **Circular dependency check**: Both packages have `circular.ts` scripts using Madge - run before major refactors
-
-## Quick Reference
-
--   **API Docs**: http://localhost:8080/ (Swagger UI in dev, auto-generated by Koritsu)
--   **Framework Docs**: [Koritsu](https://koritsu.dev), [better-auth](https://www.better-auth.com/)
--   **Main configs**: `compose.yaml`, `concurrently.config.mjs`, `packages/*/package.json`
--   **Route registration**: Auto-scanned from `packages/api/routes/**` (Koritsu file-based routing)
--   **Package manager**: Bun only - enforced via `preinstall` scripts
--   **Native Bun features used**: File client, SQL driver (via Drizzle), hot reload (`--hot` flag)
+---
+If anything above is unclear (e.g., dev port vs Docker port, DB usage boundaries, or missing API generation flow), tell me what you’re trying to do and I’ll refine these instructions.

@@ -3,9 +3,14 @@
     import { invalidateAll } from "$app/navigation";
     import { page } from "$app/state";
     import { getApiClient } from "$lib/api-client";
-    import Button from "$lib/components/ui/button/button.svelte";
+    import Button, {
+        buttonVariants,
+    } from "$lib/components/ui/button/button.svelte";
     import * as Dialog from "$lib/components/ui/dialog";
     import { Input } from "$lib/components/ui/input";
+    import { MediaQuery } from "svelte/reactivity";
+    import * as Drawer from "$lib/components/ui/drawer/index";
+    import { cn } from "$lib/utils";
 
     type Props = {
         open: boolean;
@@ -47,48 +52,75 @@
             error: "Failed to create folder",
         });
     }
+
+    const isDesktop = new MediaQuery("(min-width: 768px)");
 </script>
 
-<Dialog.Root bind:open>
-    <Dialog.Content>
-        <Dialog.Header>
-            <Dialog.Title>Create a new folder</Dialog.Title>
-            <Dialog.Description>
-                This will create a new folder in the current directory.
-            </Dialog.Description>
-        </Dialog.Header>
-        <form
-            onsubmit={async (e) => {
-                e.preventDefault();
-                await handleNewFolder();
-            }}
-            style="display: contents;"
-        >
-            <div class="flex flex-col gap-1">
-                <Input
-                    required
-                    type="text"
-                    bind:value={newFolderName}
-                    placeholder="Folder name"
-                    class="w-full"
-                    aria-invalid={newFolderError !== ""}
-                />
-                {#if newFolderError}
-                    <p class="text-xs text-red-600">
-                        {newFolderError}
-                    </p>
-                {/if}
-            </div>
+{#snippet form()}
+    <form
+        onsubmit={async (e) => {
+            e.preventDefault();
+            await handleNewFolder();
+        }}
+        style="display: contents;"
+    >
+        <div class="flex flex-col gap-1">
+            <Input
+                required
+                type="text"
+                bind:value={newFolderName}
+                placeholder="Folder name"
+                class="w-full"
+                aria-invalid={newFolderError !== ""}
+            />
+            {#if newFolderError}
+                <p class="text-xs text-red-600">
+                    {newFolderError}
+                </p>
+            {/if}
+        </div>
+
+        <Button bind:loading={newFolderLoading} type="submit">Create</Button>
+    </form>
+{/snippet}
+
+{#if isDesktop.current}
+    <Dialog.Root bind:open>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>Create a new folder</Dialog.Title>
+                <Dialog.Description>
+                    This will create a new folder in the current directory.
+                </Dialog.Description>
+            </Dialog.Header>
+            {@render form()}
             <Dialog.Footer>
-                <Button
-                    onclick={() => (open = false)}
-                    variant="outline"
-                    type="button">Cancel</Button
+                <Dialog.Close
+                    class={cn(buttonVariants({ variant: "outline" }), "w-full")}
                 >
-                <Button bind:loading={newFolderLoading} type="submit"
-                    >Create</Button
-                >
+                    Cancel
+                </Dialog.Close>
             </Dialog.Footer>
-        </form>
-    </Dialog.Content>
-</Dialog.Root>
+        </Dialog.Content>
+    </Dialog.Root>
+{:else}
+    <Drawer.Root bind:open>
+        <Drawer.Content class="z-50">
+            <Drawer.Header>
+                <Drawer.Title class="text-lg">Create a new folder</Drawer.Title>
+                <Drawer.Description class="text-sm text-muted-foreground">
+                    This will create a new folder in the current directory.
+                </Drawer.Description>
+            </Drawer.Header>
+            <div class="p-4 flex flex-col gap-2">
+                {@render form()}
+            </div>
+
+            <Drawer.Footer>
+                <Drawer.Close class={buttonVariants({ variant: "outline" })}>
+                    Cancel
+                </Drawer.Close>
+            </Drawer.Footer>
+        </Drawer.Content>
+    </Drawer.Root>
+{/if}

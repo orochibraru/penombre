@@ -96,7 +96,7 @@ export function generateUuid() {
 	return generated;
 }
 
-export function humanFileSize(bytes: number, si = false, dp = 1) {
+export function readableFileSize(bytes: number, si = false, dp = 1) {
 	if (!bytes || Number.isNaN(bytes)) {
 		return "-";
 	}

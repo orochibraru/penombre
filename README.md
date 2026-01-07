@@ -10,37 +10,55 @@ Opendrive is a comprehensive file storage and synchronization platform that prov
 ## ✨ Features
 
 - **🌐 Web Interface**: Modern, responsive web application built with SvelteKit
-- **🔐 OAuth Integration**: Secure authentication with multiple providers
+- **� Mobile App**: Native mobile experience with Expo/React Native
+- **🔐 Authentication**: Secure authentication via Better Auth with OAuth providers
 - **📂 File Management**: Upload, download, organize files and folders
 - **🏷️ Smart Categories**: Automatic categorization of files (images, documents, music, etc.)
+- **🗑️ Soft Trash**: Recoverable file deletion with trash support
 - **🔒 Self-Hosted**: Complete control over your data and infrastructure
-- **🐳 Docker Support**: Easy deployment with Docker
+- **🐳 Docker Support**: Easy deployment with Docker Compose
 - **📊 Recent Files**: Quick access to recently modified files
-- **🌍 Multi-Platform**: Works on web, mobile, and desktop
 
 ## 🏗️ Architecture
 
-Opendrive follows a microservices architecture with the following components:
+Opendrive is a **monorepo** with the following packages:
 
-- **API Server** (Bun): RESTful API backend with OpenAPI specification
-- **Web UI** (SvelteKit): Modern web interface with Shadcn/ui components
-- **Database** (PostgreSQL): User data and metadata storage
-- **Reverse Proxy** (Traefik): Load balancing and SSL termination
+```
+packages/
+├── web/     # SvelteKit app (frontend + Hono API backend)
+└── mobile/  # Expo/React Native mobile app
+```
+
+### Web Package (`packages/web`)
+
+The web package is a full-stack SvelteKit application:
+
+- **Frontend**: SvelteKit with Svelte 5, TailwindCSS, and shadcn-svelte components
+- **Backend API**: Hono routers integrated into SvelteKit server routes
+- **Database**: PostgreSQL with Drizzle ORM (user accounts, activity logging)
+- **Storage**: Local filesystem storage under `STORAGE_PATH` (default `/data`)
+- **Auth**: Better Auth for authentication
+
+### Mobile Package (`packages/mobile`)
+
+- **Framework**: Expo with React Native
+- **Styling**: NativeWind (TailwindCSS for React Native)
+- **Routing**: Expo Router (file-based routing)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Bun 1.3+
-- Docker and Docker Compose
-- PostgreSQL (for production)
+- **Bun 1.3+** (primary runtime)
+- **Docker and Docker Compose** (for PostgreSQL)
+- **Node.js** (for Expo/mobile development)
 
 ### Development Setup
 
 1. **Clone the repository**
 
     ```bash
-    git clone https://github.com/opendrive/opendrive.git
+    git clone https://github.com/boyer-nicolas/opendrive.git
     cd opendrive
     ```
 
@@ -53,50 +71,119 @@ Opendrive follows a microservices architecture with the following components:
 3. **Start development services**
 
     ```bash
-    # This runs with a concurrently config to launch docker compose, air and vite.
     bun run dev
     ```
 
+    This starts PostgreSQL via Docker Compose and the Vite dev server for the web app.
+
 4. **Access the application**
-    - Web UI: http://localhost:8080
-    - API Documentation: http://localhost:8080/docs
+    - Web UI: http://localhost:5173 (Vite default)
+
+### Mobile Development
+
+```bash
+cd packages/mobile
+npm install
+npx expo start
+```
+
+> **Note**: When connecting to the web API from a device/emulator, don't use `localhost`:
+> - **iOS Simulator**: Use your host machine IP (e.g., `http://192.168.x.x:3000`)
+> - **Android Emulator**: Use `http://10.0.2.2:3000` or set up `adb reverse`
+
+## 🐳 Docker Deployment
+
+Build and run the production container:
+
+```bash
+docker compose up --build
+```
+
+The app will be available at http://localhost:3000.
+
+### Environment Variables
+
+See [.env.example](.env.example) for a complete reference.
+
+#### Core
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `APP_ENV` | Environment (`dev`/`production`) | `production` |
+| `PORT` | Server port | `8080` |
+| `ORIGIN` | Public origin URL (used for OAuth callbacks) | Required |
+| `LOG_LEVEL` | `debug`, `info`, `warn`, `error`, `trace` | `info` |
+| `LOG_FORMAT` | `console` or `json` | `console` |
+
+#### Database
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+
+#### Authentication
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AUTH_SECRET` | Secret key for signing auth tokens | Required |
+| `ENABLE_EMAIL_SIGNIN` | Enable email/password sign-in | `true` |
+| `ENABLE_OAUTH_SIGNIN` | Enable OAuth sign-in | `false` |
+| `MIN_PASSWORD_LENGTH` | Minimum password length | `8` |
+
+#### OAuth Providers (Optional)
+
+Configure OAuth providers using the pattern `OAUTH_<PROVIDER>_<SETTING>`:
+
+```bash
+OAUTH_GITHUB_CLIENT_ID=your-client-id
+OAUTH_GITHUB_CLIENT_SECRET=your-client-secret
+OAUTH_GITHUB_ENABLED=true
+```
+
+#### SMTP (Optional)
+
+| Variable | Description |
+|----------|-------------|
+| `SMTP_HOST` | SMTP server hostname |
+| `SMTP_PORT` | SMTP server port |
+| `SMTP_USER` | SMTP username |
+| `SMTP_PASSWORD` | SMTP password |
+| `SMTP_FROM` | Sender email address |
+| `SMTP_SECURE` | Use TLS (`true`/`false`) |
 
 ## 🛠️ Development
 
 ### Tech Stack
 
-- **Backend**: Bun, Koritsu, Drizzle ORM, PostgreSQL
-- **Frontend**: SvelteKit, TypeScript, TailwindCSS, Shadcn/svelte
-- **DevOps**: Docker, GitHub Actions
+- **Runtime**: Bun
+- **Web Framework**: SvelteKit + Hono
+- **Frontend**: Svelte 5, TailwindCSS 4, shadcn-svelte
+- **Mobile**: Expo, React Native, NativeWind
+- **Database**: PostgreSQL, Drizzle ORM
+- **Auth**: Better Auth
+- **Linting**: Biome
 
 ### Available Commands
 
 ```bash
-# Development
-bun run dev          # Start all development servers
+# Root commands
+bun run dev          # Start dev servers (DB + web)
 bun run test         # Run tests
 bun run build        # Build all packages
+bun run lint         # Lint with Biome
+bun run lint:fix     # Lint and fix issues
+bun run check        # Type-check all packages
 
-# API specific (in packages/api/)
-bun run dev          # Start API development server with hot reload
-bun run db:migrate   # Run database migrations
-bun run db:generate  # Generate Drizzle schema types
+# Web package (packages/web)
+bun run dev          # Start Vite dev server
+bun run build        # Build for production
+bun run check        # Type-check with svelte-check
+bun run db:generate  # Generate Drizzle migrations
 
-# UI specific (in packages/web/)
-bun run dev         # Start web development server
-bun run build       # Build web application
-bun run lint        # Lint TypeScript/Svelte code
-bun run lint:fix    # Lint TypeScript/Svelte code and fix (fixable) issues
-```
-
-### API Code Generation
-
-The project uses OpenAPI for API specification and code generation:
-
-```bash
-# Generate TypeScript client code (for UI)
-bun run gen:api
-# This is automatically done during build
+# Mobile package (packages/mobile)
+npx expo start       # Start Expo dev server
+npm run android      # Run on Android
+npm run ios          # Run on iOS
 ```
 
 ## 📄 License
@@ -105,14 +192,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-Built with amazing open-source technologies:
+Built with these open-source technologies:
 
-- [SvelteKit](https://kit.svelte.dev/) - Web framework
-- [Shadcn/ui (svelte)](https://shadcn-svelte.com/) - UI components
+- [SvelteKit](https://kit.svelte.dev/) - Full-stack web framework
+- [Hono](https://hono.dev/) - Lightweight web framework for API routes
+- [shadcn-svelte](https://shadcn-svelte.com/) - UI components
 - [Bun](https://bun.sh/) - JavaScript runtime and toolkit
-- [Koritsu](https://koritsu.dev/) - Web framework
+- [Expo](https://expo.dev/) - React Native framework
 - [Drizzle ORM](https://orm.drizzle.team/) - TypeScript ORM
+- [Better Auth](https://www.better-auth.com/) - Authentication library
 - [PostgreSQL](https://postgresql.org/) - Database
+- [Biome](https://biomejs.dev/) - Linter and formatter
 
 ## 🆘 Support
 

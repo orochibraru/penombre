@@ -21,6 +21,8 @@ FROM builder AS frontend-builder
 
 COPY ./packages/web ${FRONTEND_DIR}
 
+RUN cd ${FRONTEND_DIR} && bun i --frozen-lockfile --ignore-scripts
+
 RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 
 # ORIGIN is required at build time for better-auth import validation
@@ -44,7 +46,7 @@ RUN mkdir -p /app/data
 
 ENV STORAGE_PATH=/data
 
-ENV ENV=production
+ENV APP_ENV=production
 
 ENV BODY_SIZE_LIMIT=Infinity
 

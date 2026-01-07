@@ -16,8 +16,23 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	});
 
 	for (const folder of folders) {
+		// Resolve display name via folder metadata
+		const parent = chain.join("/");
+		let title = folder;
+		try {
+			const resMeta = await fetch(
+				`/api/storage/folders/folder/${encodeURIComponent(folder)}/meta${
+					parent ? `?parent=${encodeURIComponent(parent)}` : ""
+				}`,
+			);
+			if (resMeta.ok) {
+				const meta = await resMeta.json();
+				if (meta?.name) title = meta.name as string;
+			}
+		} catch {}
+
 		crumbs.push({
-			title: folder,
+			title,
 			href: route("/browse/[...path]", {
 				path: [...chain, folder],
 			}),
@@ -43,7 +58,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 			data,
 			err: undefined,
 		},
-		title: folders[folders.length - 1],
+		title: crumbs[crumbs.length - 1]?.title || folders[folders.length - 1],
 		folders,
 		crumbs,
 	};

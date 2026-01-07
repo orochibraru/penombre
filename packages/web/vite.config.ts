@@ -10,6 +10,14 @@ export default defineConfig({
     plugins: [tailwindcss(), sveltekit(), kitRoutes()],
     define: {
         SUPERFORMS_LEGACY: true
+    },
+    build: {
+        rollupOptions: {
+            external: ["bun"]
+        }
+    },
+    ssr: {
+        external: ["bun"]
     }
 }) satisfies UserConfig;
 

@@ -1,15 +1,18 @@
 <script lang="ts">
     import {
         ClockFadingIcon,
+        CloudUploadIcon,
         CodeIcon,
         FileIcon,
         FolderIcon,
+        FolderPlusIcon,
         FolderSyncIcon,
-        HardDriveIcon,
         ImageIcon,
+        MenuIcon,
         MusicIcon,
         PlugIcon,
         SettingsIcon,
+        SquarePlusIcon,
         StarIcon,
         TrashIcon,
         UserIcon,
@@ -19,22 +22,27 @@
     import { page } from "$app/state";
     import SiteHeader from "$lib/components/layout/header.svelte";
     import MusicPlayer from "$lib/components/layout/music-player.svelte";
-    import Nav, { type NavItem } from "$lib/components/layout/nav.svelte";
-    import NavUser from "$lib/components/layout/user-menu.svelte";
+    import Nav, { type NavMenus } from "$lib/components/layout/nav.svelte";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
     import { route } from "$lib/ROUTES";
     import { playableMusic } from "$lib/store/music";
     import { title } from "$lib/store/title";
     import { cn } from "$lib/utils";
+    import SidebarBranding from "$lib/components/sidebar-branding.svelte";
+    import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+    import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
+    import * as Drawer from "$lib/components/ui/drawer/index";
+    import NewFolderDialog from "$lib/components/layout/dialogs/new-folder.svelte";
+    import UploadDialog from "$lib/components/layout/dialogs/upload.svelte";
+    import Spinner from "$lib/components/ui/Spinner.svelte";
+    import { MediaQuery } from "svelte/reactivity";
 
     const { children, data } = $props();
 
     let newFolderOpen: boolean = $state(false);
     let uploadOpen: boolean = $state(false);
-
-    type NavMenus = {
-        [key: string]: NavItem[];
-    };
+    let mobileCreateDrawerOpen: boolean = $state(false);
+    let uploadLoading: boolean = $state(false);
 
     const nav: NavMenus = {
         general: [
@@ -142,6 +150,8 @@
 
         return false;
     }
+
+    const isDesktop = new MediaQuery("(min-width: 768px)");
 </script>
 
 <svelte:head>
@@ -153,39 +163,47 @@
 >
     <Sidebar.Root collapsible="icon" variant="inset">
         <Sidebar.Header>
-            <Sidebar.Menu>
-                <Sidebar.MenuItem>
-                    <Sidebar.MenuButton
-                        class="data-[slot=sidebar-menu-button]:p-1.5!"
-                    >
+            <SidebarBranding />
+            {#if isDesktop.current}
+                <DropdownMenu.Root>
+                    <DropdownMenu.Trigger>
                         {#snippet child({ props })}
-                            <a href={route("/")} {...props}>
-                                <HardDriveIcon class="size-5!" />
-                                <span class="text-base font-semibold"
-                                    >Opendrive.</span
-                                >
-                            </a>
+                            <Button {...props} loading={uploadLoading}>
+                                New
+                                <SquarePlusIcon />
+                            </Button>
                         {/snippet}
-                    </Sidebar.MenuButton>
-                </Sidebar.MenuItem>
-            </Sidebar.Menu>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content class="w-56" align="start">
+                        <DropdownMenu.Group>
+                            <DropdownMenu.Item
+                                class="font-medium"
+                                onclick={() => (newFolderOpen = true)}
+                            >
+                                <FolderPlusIcon />
+                                Folder
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Item
+                                class="font-medium"
+                                onclick={() => (uploadOpen = true)}
+                            >
+                                <CloudUploadIcon />
+                                File Upload
+                            </DropdownMenu.Item>
+                        </DropdownMenu.Group>
+                    </DropdownMenu.Content>
+                </DropdownMenu.Root>
+            {/if}
         </Sidebar.Header>
         <Sidebar.Content>
             <Nav title="General" items={nav.general} />
             <Nav title="Categories" items={nav.categories} />
             <Nav title="Help" items={nav.help} class="mt-auto" />
         </Sidebar.Content>
-        <Sidebar.Footer>
-            {#if data.user}
-                <div class="hidden md:block">
-                    <NavUser user={data.user} />
-                </div>
-            {/if}
-        </Sidebar.Footer>
     </Sidebar.Root>
 
     <Sidebar.Inset>
-        <SiteHeader bind:newFolderOpen bind:uploadOpen />
+        <SiteHeader user={data.user} />
         <div
             class={cn(
                 "flex flex-1 flex-col pb-46 transition-all ",
@@ -223,6 +241,40 @@
                     <ClockFadingIcon class={bottomNavItemIconClass} />
                     Recent
                 </a>
+
+                {#if page.data.hasCustomMenu === true}
+                    <button
+                        title="Menu"
+                        class={cn(
+                            bottomNavItemClass,
+                            "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg  border-transparent border-2 w-12 h-12 flex items-center justify-center",
+                            isActive(route("/create"))
+                                ? "text-primary bg-background border-primary"
+                                : "",
+                        )}
+                    >
+                        <MenuIcon class="w-6! h-6!" />
+                    </button>
+                {:else}
+                    <button
+                        onclick={() => (mobileCreateDrawerOpen = true)}
+                        title="New"
+                        class={cn(
+                            bottomNavItemClass,
+                            "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg  border-transparent border-2 w-12 h-12 flex items-center justify-center",
+                            isActive(route("/create"))
+                                ? "text-primary bg-background border-primary"
+                                : "",
+                        )}
+                    >
+                        {#if uploadLoading}
+                            <Spinner class="text-white" />
+                        {:else}
+                            <CloudUploadIcon class="w-6! h-6!" />
+                        {/if}
+                    </button>
+                {/if}
+
                 <a
                     href={route("/account")}
                     class={cn(
@@ -231,8 +283,9 @@
                     )}
                 >
                     <UserIcon class={bottomNavItemIconClass} />
-                    Profile
+                    Account
                 </a>
+
                 <a
                     href={route("/settings")}
                     class={cn(
@@ -247,3 +300,48 @@
         </div>
     </Sidebar.Inset>
 </Sidebar.Provider>
+
+<Drawer.Root bind:open={mobileCreateDrawerOpen}>
+    <Drawer.Content class="z-50">
+        <Drawer.Header>
+            <Drawer.Title class="text-lg">New</Drawer.Title>
+            <Drawer.Description class="text-sm text-muted-foreground">
+                Create a new folder, upload some files.
+            </Drawer.Description>
+        </Drawer.Header>
+        <div class="mx-auto flex w-full flex-col items-start gap-5 p-4">
+            <Button
+                class="w-full"
+                size="lg"
+                variant="outline"
+                onclick={() => {
+                    newFolderOpen = true;
+                    mobileCreateDrawerOpen = false;
+                }}
+            >
+                <FolderPlusIcon class="text-primary w-5! h-5!" />
+                Folder
+            </Button>
+            <Button
+                class="w-full"
+                variant="outline"
+                size="lg"
+                onclick={() => {
+                    uploadOpen = true;
+                    mobileCreateDrawerOpen = false;
+                }}
+            >
+                <CloudUploadIcon class="text-primary w-5! h-5!" />
+                File upload
+            </Button>
+        </div>
+        <Drawer.Footer>
+            <Drawer.Close class={buttonVariants({ variant: "destructive" })}>
+                Cancel
+            </Drawer.Close>
+        </Drawer.Footer>
+    </Drawer.Content>
+</Drawer.Root>
+
+<NewFolderDialog bind:open={newFolderOpen} />
+<UploadDialog bind:open={uploadOpen} bind:loading={uploadLoading} />
