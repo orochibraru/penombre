@@ -33,6 +33,9 @@ const app = new Hono<CustomRouter>()
 	.on(["POST", "GET", "OPTIONS"], "/auth/*", (c) => {
 		return auth.handler(c.req.raw);
 	})
+	.on(["GET", "HEAD"], "/health", (c) => {
+		return c.json({ status: "ok" });
+	})
 	.route("/activity", activityRouter)
 	.route("/storage", storageRouter);
 
