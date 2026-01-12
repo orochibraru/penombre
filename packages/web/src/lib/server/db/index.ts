@@ -10,18 +10,59 @@ export function getDbUrl() {
 	);
 }
 
-const client = new SQL({
-	url: getDbUrl(),
-	max: 50, // Maximum connections in pool
-	idleTimeout: 30, // Close idle connections after 30s
-	maxLifetime: 0, // Connection lifetime in seconds (0 = forever)
-	connectionTimeout: 30, // Timeout when establishing new connections
-	tls: false,
-});
+/**
+ * Database singleton that survives Vite HMR.
+ * Without this, every hot reload creates a new connection pool,
+ * eventually hitting "too many clients" in PostgreSQL.
+ */
+const globalForDb = globalThis as unknown as {
+	__db_client?: SQL;
+	__db_instance?: BunSQLDatabase<Record<string, never>>;
+};
 
-export const db = drizzle({ client });
+function createClient(): SQL {
+	if (globalForDb.__db_client) {
+		return globalForDb.__db_client;
+	}
+
+	const client = new SQL({
+		url: getDbUrl(),
+		max: 20, // Keep pool small - PostgreSQL default max_connections is 100
+		idleTimeout: 30, // Close idle connections after 30s
+		maxLifetime: 1800, // Recycle connections every 30 min to prevent stale connections
+		connectionTimeout: 10, // Fail fast if DB is down
+		tls: false,
+	});
+
+	globalForDb.__db_client = client;
+	return client;
+}
+
+function createDb(): BunSQLDatabase<Record<string, never>> {
+	if (globalForDb.__db_instance) {
+		return globalForDb.__db_instance;
+	}
+
+	const instance = drizzle({ client: createClient() });
+	globalForDb.__db_instance = instance;
+	return instance;
+}
+
+export const db = createDb();
 
 // For backward compatibility
 export function getDb() {
 	return db;
+}
+
+/**
+ * Close the database connection pool.
+ * Call this during graceful shutdown.
+ */
+export async function closeDb(): Promise<void> {
+	if (globalForDb.__db_client) {
+		await globalForDb.__db_client.close();
+		globalForDb.__db_client = undefined;
+		globalForDb.__db_instance = undefined;
+	}
 }

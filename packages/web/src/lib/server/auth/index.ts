@@ -5,7 +5,7 @@ import { admin, genericOAuth, openAPI } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
 import { dev } from "$app/environment";
 import { getRequestEvent } from "$app/server";
-import { LOG_LEVELS, Logger } from "$lib/logger";
+import { Logger } from "$lib/logger";
 import { getOpendriveConfig, isSmtpEnabled } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import * as schema from "$lib/server/db/schema";

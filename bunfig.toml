@@ -1,5 +1,5 @@
 [test]
-preload = ["./packages/web/src/lib/server/test.setup.ts"]
+preload = ["./packages/web/test.setup.ts"]
 coverage = true
 coverageThreshold = { line = 0.7, function = 0.8, statement = 0.9 }
 
