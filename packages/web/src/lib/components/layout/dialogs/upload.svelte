@@ -29,7 +29,7 @@
         loading: boolean;
     };
 
-    const concurrency = 10;
+    const concurrency = 3;
 
     onMount(() => {
         // Reset the upload stores when the component is mounted
