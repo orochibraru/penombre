@@ -113,6 +113,13 @@ export const activity = pgTable("activity", (t) => ({
 		.notNull(),
 }));
 
+export const activityRelations = relations(activity, ({ one }) => ({
+	user: one(user, {
+		fields: [activity.userId],
+		references: [user.id],
+	}),
+}));
+
 export const sharings = pgTable("sharings", (t) => ({
 	id: t.uuid().notNull().primaryKey().defaultRandom(),
 	ownerId: text("owner_id")
@@ -135,6 +142,14 @@ export const sharings = pgTable("sharings", (t) => ({
 	expiration: timestamp("expiration"),
 }));
 
+export const sharingRelations = relations(sharings, ({ one, many }) => ({
+	owner: one(user, {
+		fields: [sharings.ownerId],
+		references: [user.id],
+	}),
+	sharedWith: many(sharedWith),
+}));
+
 export const sharedWith = pgTable("shared_with", (t) => ({
 	id: t.uuid().notNull().primaryKey().defaultRandom(),
 	sharingId: t
@@ -147,4 +162,15 @@ export const sharedWith = pgTable("shared_with", (t) => ({
 	createdAt: timestamp("created_at")
 		.$defaultFn(() => new Date())
 		.notNull(),
+}));
+
+export const sharedWithRelations = relations(sharedWith, ({ one }) => ({
+	sharing: one(sharings, {
+		fields: [sharedWith.sharingId],
+		references: [sharings.id],
+	}),
+	user: one(user, {
+		fields: [sharedWith.userId],
+		references: [user.id],
+	}),
 }));

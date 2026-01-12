@@ -31,6 +31,7 @@
 		"bun": "^1.3.5",
 		"changelogen": "^0.6.2",
 		"clsx": "^2.1.1",
+		"drizzle-kit": "^0.31.8",
 		"openapi-typescript": "^7.10.1",
 		"runed": "^0.34.0",
 		"shiki": "^3.21.0",

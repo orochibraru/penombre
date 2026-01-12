@@ -91,4 +91,12 @@ table verification {
 
 ref: account.user_id > user.id
 
+ref: activity.user_id - user.id
+
 ref: session.user_id > user.id
+
+ref: shared_with.sharing_id > sharings.id
+
+ref: shared_with.user_id - user.id
+
+ref: sharings.owner_id - user.id
