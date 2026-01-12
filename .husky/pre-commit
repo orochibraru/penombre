@@ -14,7 +14,7 @@ fi
 echo "Generating DB diagram..."
 bun run db:diagram
 
-echo "Generating .env.example file..."
+echo "Generating .example.env file..."
 bun run --cwd packages/web gen:env
 
 

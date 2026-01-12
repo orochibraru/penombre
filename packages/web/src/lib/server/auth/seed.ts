@@ -1,11 +1,11 @@
-import { Log } from "@kitql/helpers";
-import type { User } from "better-auth";
 import { eq } from "drizzle-orm";
+import { Logger } from "$lib/logger";
+import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
 
-const logger = new Log("auth-seed");
+const logger = new Logger("auth:seed");
 
 export const defaultEmail = process.env.ADMIN_EMAIL ?? "admin@example.com";
 export const defaultPassword = process.env.ADMIN_PASSWORD ?? "admin";
@@ -29,29 +29,48 @@ async function shouldBumpUserRole(): Promise<boolean> {
 		return false;
 	}
 
-	return users.length === 1;
+	const singleUser = users.length === 1;
+
+	if (!singleUser) {
+		return false;
+	}
+
+	const existingUser = users[0] as AuthType["user"];
+	// biome-ignore lint/style/noNonNullAssertion: The type is incorrect here
+	const isNotAdmin = existingUser!.role !== "admin";
+
+	return isNotAdmin;
 }
 
-export async function seedAuth() {
+export async function seedAuth(): Promise<void> {
 	const db = getDb();
 	const exists = await defaultUserExists();
 	if (exists) {
 		logger.info("Default user already exists. Skipping seeding.");
-		if (await shouldBumpUserRole()) {
-			logger.info("Bumping existing user to admin role...");
-			const users = await db.select().from(user);
-			const existingUser = users[0] as User;
-			const updateQuery = await db
-				.update(user)
-				.set({ role: "admin" })
-				.where(eq(user.id, existingUser.id))
-				.returning();
-			if (updateQuery.length === 0) {
-				logger.error("Failed to bump existing user to admin role");
-				throw new Error("Failed to bump existing user to admin role");
-			}
-			logger.info("Existing user bumped to admin role.");
+
+		const shouldBump = await shouldBumpUserRole();
+
+		if (!shouldBump) {
+			return;
 		}
+
+		logger.info("Bumping existing user to admin role...");
+		const users = await db.select().from(user);
+		const existingUser = users[0] as AuthType["user"];
+		if (!existingUser) {
+			logger.error("No existing user found to bump to admin role");
+			throw new Error("No existing user found to bump to admin role");
+		}
+		const updateQuery = await db
+			.update(user)
+			.set({ role: "admin" })
+			.where(eq(user.id, existingUser.id))
+			.returning();
+		if (updateQuery.length === 0) {
+			logger.error("Failed to bump existing user to admin role");
+			throw new Error("Failed to bump existing user to admin role");
+		}
+		logger.info("Existing user bumped to admin role.");
 		return;
 	}
 

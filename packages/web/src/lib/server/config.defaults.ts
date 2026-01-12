@@ -2,13 +2,13 @@
  * Default configuration values for Opendrive.
  * Extracted to a separate file so it can be used by both:
  * - The runtime config loader (config.ts)
- * - The .env.example generator script (scripts/generate-env-example.ts)
+ * - The .example.env generator script (scripts/generate-env-example.ts)
  */
 
 export const defaultConfigValues = {
 	environment: "production" as "dev" | "production",
-	port: 8080,
-	origin: "http://localhost:8080",
+	port: 3000,
+	origin: "http://localhost:3000",
 	logLevel: "info" as "debug" | "info" | "warn" | "error",
 	logFormat: "console" as "console" | "json",
 	db: {
@@ -21,7 +21,15 @@ export const defaultConfigValues = {
 		secret: "change_this_secret_to_a_random_secure_value",
 		oauthProviders: [],
 	},
-	smtp: undefined,
+	smtp: {
+		enabled: false,
+		host: "smtp.example.com",
+		port: 587,
+		user: "your-smtp-user",
+		password: "your-smtp-password",
+		from: "noreply@example.com",
+		secure: false,
+	},
 };
 
 export function generateExampleDotenvFile(): string {
@@ -34,6 +42,7 @@ APP_ENV=${defaultConfigValues.environment}
 
 # Log level: "debug", "info", "warn", "error", or "trace"
 LOG_LEVEL=${defaultConfigValues.logLevel}
+
 # Log format: "console" or "json"
 LOG_FORMAT=${defaultConfigValues.logFormat}
 
@@ -70,23 +79,24 @@ AUTH_SECRET=${defaultConfigValues.auth.secret}
 # Format: OAUTH_<PROVIDER_NAME>_<SETTING>
 # Provider names should be UPPERCASE with underscores (e.g., POCKET_ID, GOOGLE, GITHUB)
 #
-# Example for a provider called "pocketid":
-# OAUTH_POCKETID_CLIENT_ID=your-client-id
-# OAUTH_POCKETID_CLIENT_SECRET=your-client-secret
-# OAUTH_POCKETID_DISCOVERY_URL=https://auth.example.com/.well-known/openid-configuration
-# OAUTH_POCKETID_ENABLED=true
-# OAUTH_POCKETID_PRETTY_NAME=Pocket ID
-# OAUTH_POCKETID_PKCE=true
-# OAUTH_POCKETID_SCOPES=openid,profile,email
+# Example for a provider called "default":
+OAUTH_DEFAULT_ENABLED=false
+OAUTH_DEFAULT_CLIENT_ID=your-client-id
+OAUTH_DEFAULT_CLIENT_SECRET=your-client-secret
+OAUTH_DEFAULT_DISCOVERY_URL=https://auth.example.com/.well-known/openid-configuration
+OAUTH_DEFAULT_PRETTY_NAME=Default OIDC Provider
+OAUTH_DEFAULT_PKCE=true
+OAUTH_DEFAULT_SCOPES=openid,profile,email
 
 # ===========================================
 # SMTP (Optional - for email features)
 # ===========================================
-# SMTP_HOST=smtp.example.com
-# SMTP_PORT=587
-# SMTP_USER=your-smtp-user
-# SMTP_PASSWORD=your-smtp-password
-# SMTP_FROM=noreply@example.com
-# SMTP_SECURE=false
+SMTP_ENABLED=${defaultConfigValues.smtp.enabled}
+SMTP_HOST=${defaultConfigValues.smtp.host}
+SMTP_PORT=${defaultConfigValues.smtp.port}
+SMTP_USER=${defaultConfigValues.smtp.user}
+SMTP_PASSWORD=${defaultConfigValues.smtp.password}
+SMTP_FROM=${defaultConfigValues.smtp.from}
+SMTP_SECURE=${defaultConfigValues.smtp.secure}
 `;
 }

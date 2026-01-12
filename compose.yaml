@@ -5,12 +5,50 @@ services:
       db:
         condition: service_healthy
     ports:
-      - 3000:3000
+      - 3000:${PORT-3000}
+    restart: unless-stopped
     environment:
+      # ===========================================
+      # Application
+      # ===========================================
+      - APP_ENV=${APP_ENV-production}
+      - LOG_LEVEL=${LOG_LEVEL-info}
+      - LOG_FORMAT=${LOG_FORMAT-console}
+      - PORT=${PORT-3000}
+      - ORIGIN=${ORIGIN-http://localhost:3000}
+
+      # ===========================================
+      # Database
+      # ===========================================
       - DATABASE_URL=postgres://postgres:postgres@db:5432/opendrive?sslmode=disable
-      - ENV=production
-      - LOG_LEVEL=debug
-      - ORIGIN=http://localhost:3000
+
+      # ===========================================
+      # Authentication
+      # ===========================================
+      - AUTH_SECRET=${AUTH_SECRET}
+      - ENABLE_EMAIL_SIGNIN=${ENABLE_EMAIL_SIGNIN}
+      - ENABLE_OAUTH_SIGNIN=${ENABLE_OAUTH_SIGNIN}
+      - MIN_PASSWORD_LENGTH=${MIN_PASSWORD_LENGTH-8}
+
+      # ===========================================
+      # OAuth Provider (Default)
+      # ===========================================
+      - OAUTH_DEFAULT_CLIENT_ID=${OAUTH_DEFAULT_CLIENT_ID}
+      - OAUTH_DEFAULT_CLIENT_SECRET=${OAUTH_DEFAULT_CLIENT_SECRET}
+      - OAUTH_DEFAULT_DISCOVERY_URL=${OAUTH_DEFAULT_DISCOVERY_URL}
+      - OAUTH_DEFAULT_PRETTY_NAME=${OAUTH_DEFAULT_PRETTY_NAME}
+
+      # ===========================================
+      # SMTP (Optional - for email features)
+      # ===========================================
+      - SMTP_ENABLED=${SMTP_ENABLED-false}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_SECURE=${SMTP_SECURE-false}
+      - SMTP_FROM=${SMTP_FROM}
+
   db:
     image: postgres:17-alpine
     restart: unless-stopped

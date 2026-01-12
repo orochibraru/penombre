@@ -28,9 +28,9 @@ export class Email {
 		this.content = content;
 
 		const smtpConfig = getOpendriveConfig().smtp;
-		if (!smtpConfig) {
-			logger.error("SMTP configuration is not defined");
-			throw new Error("SMTP configuration is not defined");
+		if (!smtpConfig || !smtpConfig.enabled) {
+			logger.error("SMTP configuration is not defined or not enabled");
+			throw new Error("SMTP configuration is not defined or not enabled");
 		}
 
 		this.from = smtpConfig.from;

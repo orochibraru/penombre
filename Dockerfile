@@ -1,7 +1,5 @@
 FROM oven/bun:1-alpine AS base
 
-RUN apk add --no-cache curl bash ca-certificates wget nano micro nodejs
-
 WORKDIR /app
 
 ARG FRONTEND_DIR=/app/packages/web
@@ -28,33 +26,61 @@ RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
 # ORIGIN is required at build time for better-auth import validation
 RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync && ORIGIN=http://localhost bunx --bun vite build
 
-# Strip dev dependencies from frontend
-RUN cd ${FRONTEND_DIR} && bun i --production --frozen-lockfile --ignore-scripts
+# Create a standalone production install outside workspace context
+# This avoids Bun's symlink hell from workspace hoisting
+RUN mkdir -p /prod && \
+    cp ${FRONTEND_DIR}/package.json /prod/ && \
+    cd /prod && \
+    bun i --production --frozen-lockfile --ignore-scripts && \
+    # Nuke dev garbage and unused transitive deps that bloat the image
+    rm -rf /prod/node_modules/typescript \
+    /prod/node_modules/vite \
+    /prod/node_modules/tsx \
+    /prod/node_modules/drizzle-kit \
+    /prod/node_modules/@esbuild \
+    /prod/node_modules/@esbuild-kit \
+    /prod/node_modules/svelte-check \
+    /prod/node_modules/lightningcss-* \
+    /prod/node_modules/@rollup \
+    /prod/node_modules/rollup \
+    /prod/node_modules/esbuild \
+    /prod/node_modules/@types \
+    /prod/node_modules/bun-types \
+    /prod/node_modules/effect \
+    /prod/node_modules/fast-check \
+    /prod/node_modules/kysely \
+    /prod/node_modules/class-validator \
+    /prod/node_modules/typebox \
+    /prod/node_modules/@swc \
+    /prod/node_modules/@aws-sdk \
+    /prod/node_modules/@smithy
 
-# Final stage with Bun runtime
-FROM base AS final
+# Final stage - minimal runtime
+FROM oven/bun:1-alpine AS final
 
-# Copy only production node_modules from builder
-# We'll copy the entire node_modules but only the API's production deps were installed
-COPY --from=builder /app/node_modules /app/node_modules
+# Only install what's actually needed at runtime
+RUN apk add --no-cache wget
 
-COPY --from=frontend-builder ${FRONTEND_DIR}/build/ /app/build
-COPY --from=frontend-builder ${FRONTEND_DIR}/drizzle/ /app/drizzle
-COPY --from=frontend-builder ${FRONTEND_DIR}/drizzle.config.ts /app/drizzle.config.ts
+WORKDIR /app
 
-RUN mkdir -p /app/data
+# Copy production node_modules from standalone install
+COPY --from=frontend-builder /prod/node_modules /app/node_modules
+
+# Copy built app
+COPY --from=frontend-builder /app/packages/web/build/ /app/build
+COPY --from=frontend-builder /app/packages/web/drizzle/ /app/drizzle
+COPY --from=frontend-builder /app/packages/web/drizzle.config.ts /app/drizzle.config.ts
+
+# Create data dir with correct ownership in one layer
+RUN mkdir -p /app/data && chown -R bun:bun /app
 
 ENV STORAGE_PATH=/data
-
 ENV APP_ENV=production
-
 ENV BODY_SIZE_LIMIT=Infinity
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://0.0.0.0:8080/api/health || exit 1
-
-RUN chown -R bun:bun /app
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://0.0.0.0:3000/api/health || exit 1
 
 USER bun
 

@@ -60,6 +60,7 @@ const opendriveConfigSchema = z
 			.default(defaultConfigValues.auth),
 		smtp: z
 			.object({
+				enabled: z.boolean().default(false),
 				host: z.string().min(1),
 				port: z.number().min(1),
 				user: z.string().min(1),
@@ -70,7 +71,7 @@ const opendriveConfigSchema = z
 			.optional(),
 	})
 	.superRefine((config, ctx) => {
-		if (config.smtp) {
+		if (config.smtp?.enabled) {
 			if (!config.smtp.host) {
 				ctx.addIssue({
 					code: "custom",
@@ -186,8 +187,7 @@ export function getOpendriveConfig(): OpendriveConfig {
 		});
 	}
 
-	const anySmtpVariableConfigured =
-		env.SMTP_HOST || env.SMTP_PORT || env.SMTP_USER || env.SMTP_PASSWORD;
+	const smtpEnabled = env.SMTP_ENABLED === "true";
 
 	const anyDbVariableConfigured = env.DATABASE_URL;
 
@@ -230,8 +230,9 @@ export function getOpendriveConfig(): OpendriveConfig {
 							: defaultConfigValues.auth.oauthProviders,
 				}
 			: defaultConfigValues.auth,
-		smtp: anySmtpVariableConfigured
+		smtp: smtpEnabled
 			? {
+					enabled: env.SMTP_ENABLED === "true",
 					host: env.SMTP_HOST,
 					port: env.SMTP_PORT ? Number.parseInt(env.SMTP_PORT, 10) : undefined,
 					user: env.SMTP_USER,

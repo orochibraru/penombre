@@ -17,7 +17,7 @@ Thumbs.db
 # Env
 .env
 .env.*
-!.env.example
+!.example.env
 !.env.test
 
 # Vite
@@ -32,3 +32,6 @@ vite.config.ts.timestamp-*
 
 **/node_modules/
 **/*.log
+
+*.env
+!.example.env

@@ -106,7 +106,7 @@ The app will be available at http://localhost:3000.
 
 ### Environment Variables
 
-See [.env.example](.env.example) for a complete reference.
+See [.example.env](.example.env) for a complete reference.
 
 #### Core
 
