@@ -52,6 +52,7 @@ jobs:
       DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
       DOKPLOY_AUTH_TOKEN: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
       DOCKER_TAG: ${{ github.sha }}
+      DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
 
     steps:
       - uses: actions/checkout@v5
