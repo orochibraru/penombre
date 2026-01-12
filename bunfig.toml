@@ -2,8 +2,8 @@
 preload = ["./packages/web/test.setup.ts"]
 coverage = true
 coverageThreshold = { line = 0.7, function = 0.8, statement = 0.9 }
-
-coveragePathIgnorePatterns = ["**/setup.ts", "**/mocks/**", "**/types/**", "**/schema.ts"]
+rerunEach = 3
+coveragePathIgnorePatterns = ["**/setup.ts", "**/test.setup.ts", "**/test-utils.ts", "**/mocks/**", "**/types/**", "**/schema.ts"]
 
 [run]
 bun = true

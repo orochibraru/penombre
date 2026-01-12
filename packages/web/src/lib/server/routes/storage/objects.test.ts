@@ -1,0 +1,779 @@
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	mock,
+	spyOn,
+} from "bun:test";
+import { Hono } from "hono";
+import type { StorageRouter } from "$lib/server/api-types";
+import { StorageService } from "$lib/server/dto/storage";
+import {
+	FileOrFolderNotFoundError,
+	UnauthorizedError,
+} from "$lib/server/errors";
+import { objectsRouter } from "./objects";
+
+/**
+ * Objects Router unit tests
+ *
+ * Tests all file-related API endpoints including:
+ * - List files
+ * - Create file
+ * - Get file metadata/raw
+ * - Upload file body
+ * - Update file metadata
+ * - Delete file
+ * - List by category/recent/trash
+ */
+
+// Mock user for authenticated requests
+const mockUser = {
+	id: "test-user-id",
+	name: "Test User",
+	email: "test@example.com",
+	emailVerified: true,
+	image: null,
+	createdAt: new Date(),
+	updatedAt: new Date(),
+	banned: null,
+	role: "user",
+	banReason: null,
+	banExpires: null,
+};
+
+// Mock session
+const mockSession = {
+	id: "session-id",
+	createdAt: new Date(),
+	updatedAt: new Date(),
+	userId: "test-user-id",
+	expiresAt: new Date(Date.now() + 86400000),
+	token: "test-token",
+	ipAddress: null,
+	userAgent: null,
+};
+
+// Mock ObjectList response
+const mockObjectList = {
+	list: [
+		{
+			key: "test-file.txt",
+			size: 1024,
+			type: "file" as const,
+			updatedAt: new Date(),
+			metadata: {
+				id: "file-id-1",
+				name: "test-file.txt",
+				category: "DOCUMENTS" as const,
+				contentType: "text/plain" as const,
+				createdAt: new Date().toISOString(),
+				owner: "test-user-id",
+				isTrashed: false,
+			},
+		},
+	],
+	count: 1,
+	total: 1,
+};
+
+// Mock ObjectItem
+const mockObjectItem = {
+	key: "test-file.txt",
+	size: 1024,
+	type: "file" as const,
+	updatedAt: new Date(),
+	metadata: {
+		id: "file-id-1",
+		name: "test-file.txt",
+		category: "DOCUMENTS" as const,
+		contentType: "text/plain" as const,
+		createdAt: new Date().toISOString(),
+		owner: "test-user-id",
+		isTrashed: false,
+	},
+};
+
+// Mock upload result
+const mockUploadResult = {
+	id: "new-file-id",
+	finalName: "new-file-id",
+	metadata: {
+		id: "new-file-id",
+		name: "newfile.txt",
+		category: "DOCUMENTS" as const,
+		contentType: "text/plain" as const,
+		createdAt: new Date().toISOString(),
+		owner: "test-user-id",
+		isTrashed: false,
+	},
+};
+
+// Store original StorageService prototype methods
+let originalListFiles: typeof StorageService.prototype.listFiles;
+let originalCreateFile: typeof StorageService.prototype.createFile;
+let originalListRecentFiles: typeof StorageService.prototype.listRecentFiles;
+let originalListTrashFiles: typeof StorageService.prototype.listTrashFiles;
+let originalListFilesPerCategory: typeof StorageService.prototype.listFilesPerCategory;
+let originalGetRawFileData: typeof StorageService.prototype.getRawFileData;
+let originalGetFile: typeof StorageService.prototype.getFile;
+let originalFileExists: typeof StorageService.prototype.fileExists;
+let originalUploadFileBody: typeof StorageService.prototype.uploadFileBody;
+let originalUpdateFile: typeof StorageService.prototype.updateFile;
+let originalDeleteFile: typeof StorageService.prototype.deleteFile;
+let originalGenerateRangeHeaders: typeof StorageService.prototype.generateRangeHeaders;
+let originalGenerateRawFileHeaders: typeof StorageService.prototype.generateRawFileHeaders;
+
+// Create test app with user context
+function createTestApp(user: typeof mockUser | null = mockUser) {
+	const app = new Hono<StorageRouter>();
+
+	// Inject user into context before router
+	app.use("*", async (c, next) => {
+		c.set("user", user);
+		c.set("session", user ? mockSession : null);
+		await next();
+	});
+
+	app.route("/storage/objects", objectsRouter);
+
+	// Add error handler to properly return 401 for UnauthorizedError
+	app.onError((err, c) => {
+		if (err instanceof UnauthorizedError) {
+			return c.json({ message: err.message }, 401);
+		}
+		if (err instanceof FileOrFolderNotFoundError) {
+			return c.json({ message: err.message }, 404);
+		}
+		return c.json({ message: "Internal Server Error" }, 500);
+	});
+
+	return app;
+}
+
+beforeEach(() => {
+	// Save original methods
+	originalListFiles = StorageService.prototype.listFiles;
+	originalCreateFile = StorageService.prototype.createFile;
+	originalListRecentFiles = StorageService.prototype.listRecentFiles;
+	originalListTrashFiles = StorageService.prototype.listTrashFiles;
+	originalListFilesPerCategory = StorageService.prototype.listFilesPerCategory;
+	originalGetRawFileData = StorageService.prototype.getRawFileData;
+	originalGetFile = StorageService.prototype.getFile;
+	originalFileExists = StorageService.prototype.fileExists;
+	originalUploadFileBody = StorageService.prototype.uploadFileBody;
+	originalUpdateFile = StorageService.prototype.updateFile;
+	originalDeleteFile = StorageService.prototype.deleteFile;
+	originalGenerateRangeHeaders = StorageService.prototype.generateRangeHeaders;
+	originalGenerateRawFileHeaders =
+		StorageService.prototype.generateRawFileHeaders;
+
+	// Mock all StorageService methods by default
+	StorageService.prototype.listFiles = mock(() =>
+		Promise.resolve(mockObjectList),
+	);
+	StorageService.prototype.createFile = mock(() =>
+		Promise.resolve(mockUploadResult),
+	);
+	StorageService.prototype.listRecentFiles = mock(() =>
+		Promise.resolve(mockObjectList),
+	);
+	StorageService.prototype.listTrashFiles = mock(() =>
+		Promise.resolve(mockObjectList),
+	);
+	StorageService.prototype.listFilesPerCategory = mock(() =>
+		Promise.resolve(mockObjectList),
+	);
+	StorageService.prototype.getRawFileData = mock(() =>
+		Promise.resolve({
+			file: {
+				size: 1024,
+				slice: () => new Blob(["test content"]),
+			} as unknown as import("bun").BunFile,
+			meta: mockObjectItem,
+		}),
+	);
+	StorageService.prototype.getFile = mock(() =>
+		Promise.resolve(mockObjectItem),
+	);
+	StorageService.prototype.fileExists = mock(() => Promise.resolve(true));
+	StorageService.prototype.uploadFileBody = mock(() => Promise.resolve());
+	StorageService.prototype.updateFile = mock(() => Promise.resolve());
+	StorageService.prototype.deleteFile = mock(() => Promise.resolve());
+	StorageService.prototype.generateRangeHeaders = mock(() => ({
+		headers: new Headers({
+			"Content-Type": "text/plain",
+			"Content-Range": "bytes 0-1023/1024",
+		}),
+		chunk: new Blob(["test content"]),
+	}));
+	StorageService.prototype.generateRawFileHeaders = mock(
+		() =>
+			new Headers({
+				"Content-Type": "text/plain",
+				"Content-Length": "1024",
+			}),
+	);
+});
+
+afterEach(() => {
+	// Restore original methods
+	StorageService.prototype.listFiles = originalListFiles;
+	StorageService.prototype.createFile = originalCreateFile;
+	StorageService.prototype.listRecentFiles = originalListRecentFiles;
+	StorageService.prototype.listTrashFiles = originalListTrashFiles;
+	StorageService.prototype.listFilesPerCategory = originalListFilesPerCategory;
+	StorageService.prototype.getRawFileData = originalGetRawFileData;
+	StorageService.prototype.getFile = originalGetFile;
+	StorageService.prototype.fileExists = originalFileExists;
+	StorageService.prototype.uploadFileBody = originalUploadFileBody;
+	StorageService.prototype.updateFile = originalUpdateFile;
+	StorageService.prototype.deleteFile = originalDeleteFile;
+	StorageService.prototype.generateRangeHeaders = originalGenerateRangeHeaders;
+	StorageService.prototype.generateRawFileHeaders =
+		originalGenerateRawFileHeaders;
+});
+
+describe("Objects Router - Authentication", () => {
+	it("should reject unauthenticated requests", async () => {
+		const app = createTestApp(null);
+
+		const res = await app.request("/storage/objects");
+
+		expect(res.status).toBe(401);
+	});
+
+	it("should allow authenticated requests", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects");
+
+		expect(res.status).toBe(200);
+	});
+});
+
+describe("GET /storage/objects", () => {
+	it("should list files in root folder", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects");
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.count).toBe(1);
+		expect(body.list).toHaveLength(1);
+	});
+
+	it("should list files in specified folder", async () => {
+		const app = createTestApp();
+		const listFilesSpy = spyOn(
+			StorageService.prototype,
+			"listFiles",
+		).mockResolvedValue(mockObjectList);
+
+		await app.request("/storage/objects?folder=Documents");
+
+		expect(listFilesSpy).toHaveBeenCalledWith("Documents");
+	});
+
+	it("should decode URL-encoded folder names", async () => {
+		const app = createTestApp();
+		const listFilesSpy = spyOn(
+			StorageService.prototype,
+			"listFiles",
+		).mockResolvedValue(mockObjectList);
+
+		await app.request("/storage/objects?folder=My%20Documents");
+
+		expect(listFilesSpy).toHaveBeenCalledWith("My Documents");
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.listFiles = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects");
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("POST /storage/objects", () => {
+	it("should create a file", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ name: "newfile.txt", size: 1024 }),
+		});
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.id).toBe("new-file-id");
+		expect(body.finalName).toBe("new-file-id");
+	});
+
+	it("should create a file in specified folder", async () => {
+		const app = createTestApp();
+		const createFileSpy = spyOn(
+			StorageService.prototype,
+			"createFile",
+		).mockResolvedValue(mockUploadResult);
+
+		await app.request("/storage/objects?folder=Documents", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ name: "newfile.txt", size: 512 }),
+		});
+
+		expect(createFileSpy).toHaveBeenCalledWith(
+			{ name: "newfile.txt", size: 512 },
+			"Documents",
+		);
+	});
+
+	it("should reject invalid request body", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({}), // Missing name and size
+		});
+
+		expect(res.status).toBe(400);
+	});
+
+	it("should return 401 on unauthorized error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.createFile = mock(() =>
+			Promise.reject(new UnauthorizedError("Not allowed")),
+		);
+
+		const res = await app.request("/storage/objects", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ name: "newfile.txt", size: 1024 }),
+		});
+
+		expect(res.status).toBe(401);
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.createFile = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ name: "newfile.txt", size: 1024 }),
+		});
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("GET /storage/objects/recent", () => {
+	it("should list recent files", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/recent");
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.count).toBe(1);
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.listRecentFiles = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/recent");
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("GET /storage/objects/trash", () => {
+	it("should list trashed files", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/trash");
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.count).toBe(1);
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.listTrashFiles = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/trash");
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("GET /storage/objects/category/:category", () => {
+	it("should list files by category", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/category/documents");
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.count).toBe(1);
+	});
+
+	it("should handle uppercase categories", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/category/IMAGES");
+
+		expect(res.status).toBe(200);
+	});
+
+	it("should reject invalid category", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/category/invalid");
+
+		expect(res.status).toBe(400);
+		const body = await res.json();
+		expect(body.message).toBe("Invalid category");
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.listFilesPerCategory = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/category/documents");
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("GET /storage/objects/item/:item", () => {
+	it("should get file metadata", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/item/test-file.txt");
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.key).toBe("test-file.txt");
+		expect(body.metadata.owner).toBe("test-user-id");
+	});
+
+	it("should decode URL-encoded item names", async () => {
+		const app = createTestApp();
+		const getFileSpy = spyOn(
+			StorageService.prototype,
+			"getFile",
+		).mockResolvedValue(mockObjectItem);
+
+		await app.request("/storage/objects/item/my%20file.txt");
+
+		expect(getFileSpy).toHaveBeenCalledWith("my file.txt");
+	});
+
+	it("should return 404 when file not found", async () => {
+		const app = createTestApp();
+		StorageService.prototype.getFile = mock(() =>
+			Promise.reject(new FileOrFolderNotFoundError("Not found")),
+		);
+
+		const res = await app.request("/storage/objects/item/nonexistent.txt");
+
+		expect(res.status).toBe(404);
+	});
+
+	it("should return 401 when accessing other users file", async () => {
+		const app = createTestApp();
+		const otherUserFile = {
+			...mockObjectItem,
+			metadata: { ...mockObjectItem.metadata, owner: "other-user-id" },
+		};
+		StorageService.prototype.getFile = mock(() =>
+			Promise.resolve(otherUserFile),
+		);
+
+		const res = await app.request("/storage/objects/item/test-file.txt");
+
+		expect(res.status).toBe(401);
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.getFile = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/item/test-file.txt");
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("GET /storage/objects/item/:item?raw=true", () => {
+	it("should return raw file data", async () => {
+		const app = createTestApp();
+
+		const res = await app.request(
+			"/storage/objects/item/test-file.txt?raw=true",
+		);
+
+		expect(res.status).toBe(200);
+	});
+
+	it("should return 404 when file not found", async () => {
+		const app = createTestApp();
+		StorageService.prototype.getRawFileData = mock(() => Promise.resolve(null));
+
+		const res = await app.request(
+			"/storage/objects/item/nonexistent.txt?raw=true",
+		);
+
+		expect(res.status).toBe(404);
+	});
+
+	it("should return 401 when accessing other users file", async () => {
+		const app = createTestApp();
+		const otherUserMeta = {
+			...mockObjectItem,
+			metadata: { ...mockObjectItem.metadata, owner: "other-user-id" },
+		};
+		StorageService.prototype.getRawFileData = mock(() =>
+			Promise.resolve({
+				file: { size: 1024 } as unknown as import("bun").BunFile,
+				meta: otherUserMeta,
+			}),
+		);
+
+		const res = await app.request(
+			"/storage/objects/item/test-file.txt?raw=true",
+		);
+
+		expect(res.status).toBe(401);
+	});
+
+	it("should handle Range header for partial content", async () => {
+		const app = createTestApp();
+
+		const res = await app.request(
+			"/storage/objects/item/test-file.txt?raw=true",
+			{
+				headers: { Range: "bytes=0-100" },
+			},
+		);
+
+		expect(res.status).toBe(206);
+	});
+});
+
+describe("POST /storage/objects/item/:item", () => {
+	it("should upload file body", async () => {
+		const app = createTestApp();
+		const formData = new FormData();
+		formData.append("file", new Blob(["test content"]), "test.txt");
+
+		const res = await app.request("/storage/objects/item/test-file-id", {
+			method: "POST",
+			body: formData,
+		});
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.message).toBe("File uploaded successfully.");
+	});
+
+	it("should return 400 when no file provided", async () => {
+		const app = createTestApp();
+		const formData = new FormData();
+
+		const res = await app.request("/storage/objects/item/test-file-id", {
+			method: "POST",
+			body: formData,
+		});
+
+		expect(res.status).toBe(400);
+		const body = await res.json();
+		expect(body.message).toBe("No file provided.");
+	});
+
+	it("should return 404 when file does not exist", async () => {
+		const app = createTestApp();
+		StorageService.prototype.fileExists = mock(() => Promise.resolve(false));
+		const formData = new FormData();
+		formData.append("file", new Blob(["test"]), "test.txt");
+
+		const res = await app.request("/storage/objects/item/nonexistent", {
+			method: "POST",
+			body: formData,
+		});
+
+		expect(res.status).toBe(404);
+	});
+
+	it("should return 500 on upload error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.uploadFileBody = mock(() =>
+			Promise.reject(new Error("Write error")),
+		);
+		const formData = new FormData();
+		formData.append("file", new Blob(["test"]), "test.txt");
+
+		const res = await app.request("/storage/objects/item/test-file-id", {
+			method: "POST",
+			body: formData,
+		});
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("PUT /storage/objects/item/:item", () => {
+	it("should update file metadata", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/item/test-file.txt", {
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ tags: ["important"] }),
+		});
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.message).toBe("File metadata updated successfully.");
+	});
+
+	it("should update file with folder query param", async () => {
+		const app = createTestApp();
+		const updateFileSpy = spyOn(
+			StorageService.prototype,
+			"updateFile",
+		).mockResolvedValue();
+
+		await app.request("/storage/objects/item/test-file.txt?folder=Documents", {
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ isTrashed: true }),
+		});
+
+		expect(updateFileSpy).toHaveBeenCalledWith("Documents/test-file.txt", {
+			isTrashed: true,
+		});
+	});
+
+	it("should update isTrashed flag", async () => {
+		const app = createTestApp();
+		const updateFileSpy = spyOn(
+			StorageService.prototype,
+			"updateFile",
+		).mockResolvedValue();
+
+		await app.request("/storage/objects/item/test-file.txt", {
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ isTrashed: true }),
+		});
+
+		expect(updateFileSpy).toHaveBeenCalledWith("test-file.txt", {
+			isTrashed: true,
+		});
+	});
+
+	it("should return 404 when file does not exist", async () => {
+		const app = createTestApp();
+		StorageService.prototype.fileExists = mock(() => Promise.resolve(false));
+
+		const res = await app.request("/storage/objects/item/nonexistent.txt", {
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ tags: ["test"] }),
+		});
+
+		expect(res.status).toBe(404);
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.updateFile = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/item/test-file.txt", {
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ tags: ["test"] }),
+		});
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("DELETE /storage/objects/item/:item", () => {
+	it("should delete a file", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/item/test-file.txt", {
+			method: "DELETE",
+		});
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.message).toBe("File deleted successfully.");
+	});
+
+	it("should decode URL-encoded item names", async () => {
+		const app = createTestApp();
+		const deleteFileSpy = spyOn(
+			StorageService.prototype,
+			"deleteFile",
+		).mockResolvedValue();
+
+		await app.request("/storage/objects/item/my%20file.txt", {
+			method: "DELETE",
+		});
+
+		expect(deleteFileSpy).toHaveBeenCalledWith("my file.txt");
+	});
+
+	it("should return 404 when file does not exist", async () => {
+		const app = createTestApp();
+		StorageService.prototype.fileExists = mock(() => Promise.resolve(false));
+
+		const res = await app.request("/storage/objects/item/nonexistent.txt", {
+			method: "DELETE",
+		});
+
+		expect(res.status).toBe(404);
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.deleteFile = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/item/test-file.txt", {
+			method: "DELETE",
+		});
+
+		expect(res.status).toBe(500);
+	});
+});
