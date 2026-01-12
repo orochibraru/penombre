@@ -116,6 +116,7 @@
     }
 
     function handleLongPress() {
+        navigator.vibrate?.(50);
         return toggleCheck();
     }
 </script>
@@ -142,18 +143,99 @@
         {/if}
         {item.metadata.name ?? item.key.replace("/", "")}
     </button>
+{:else if layout === "grid"}
+    <div class="flex h-full w-full flex-col items-start gap-2">
+        <button
+            use:touchAction
+            onclick={handleClick}
+            ontap={handleClick}
+            onlongpress={() => handleLongPress()}
+            class="flex h-full w-full flex-col items-start gap-2"
+            disabled={getItemStatus() === ItemStatus.UPLOADING}
+        >
+            {#if !isDesktop.current && indeterminate}
+                {#if isSelected}
+                    <CircleCheckIcon class="text-primary" />
+                {:else}
+                    <CircleIcon class="text-muted-foreground" />
+                {/if}
+            {:else if getItemStatus() === ItemStatus.UPLOADING}
+                <div>
+                    {#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
+                        <span class="text-xs">
+                            {Math.round($uploadingItems[item.key] ?? 0)}%
+                        </span>
+                    {:else}
+                        <XIcon class="h-4 w-4 text-red-600" />
+                    {/if}
+                </div>
+            {:else if item.metadata.category}
+                <div class="w-full flex justify-center h-full items-center">
+                    <FilePreview {item} />
+                </div>
+            {:else}
+                <div class="w-full flex justify-center h-full items-center">
+                    <FileIcon class={iconSize} />
+                </div>
+            {/if}
+            <div class="text-start w-full">
+                <p
+                    title={item.metadata.name ?? item.key}
+                    class={cn(
+                        "max-w-72 truncate text-base lg:text-sm",
+                        $playableMusic &&
+                            $playableMusic.title ===
+                                (item.metadata.name ?? item.key)
+                            ? "text-primary font-medium"
+                            : getItemStatus() === ItemStatus.UPLOADING
+                              ? "text-gray-500 dark:text-gray-300"
+                              : "",
+                    )}
+                >
+                    {item.metadata.name ?? stripFolders(item.key)}
+                </p>
+            </div>
+        </button>
+        {#if item.metadata.category || item.parent}
+            <div class="text-start">
+                <p class="text-xs text-muted-foreground">
+                    {#if item.metadata.category}
+                        {item.metadata.category.charAt(0) +
+                            item.metadata.category.slice(1).toLowerCase()}
+                    {/if}
+                    {#if item.parent}
+                        {#if item.metadata.category}
+                            <span class="mx-1">•</span>
+                        {/if}
+                        <a
+                            href="/browse/{item.parentKey || ''}"
+                            class="text-muted-foreground/70 hover:text-primary hover:underline"
+                            onclick={(e) => e.stopPropagation()}
+                        >
+                            {item.parent}
+                        </a>
+                    {/if}
+                </p>
+            </div>
+        {/if}
+        {#if item.metadata.category === "MUSIC"}
+            {#if item.metadata.music?.duration}
+                <Badge
+                    variant="outline"
+                    class="text-muted-foreground px-1.5 text-xs"
+                >
+                    {secondsToMinutes(item.metadata.music.duration)}
+                </Badge>
+            {/if}
+        {/if}
+    </div>
 {:else}
     <button
         use:touchAction
         onclick={handleClick}
         ontap={handleClick}
         onlongpress={() => handleLongPress()}
-        class={cn(
-            "flex h-full w-full gap-2",
-            layout === "grid"
-                ? "flex-col items-start"
-                : "flex-row items-center",
-        )}
+        class="flex h-full w-full flex-row items-center gap-2"
         disabled={getItemStatus() === ItemStatus.UPLOADING}
     >
         {#if !isDesktop.current && indeterminate}
@@ -172,7 +254,7 @@
                     <XIcon class="h-4 w-4 text-red-600" />
                 {/if}
             </div>
-        {:else if item.metadata.category && layout !== "grid"}
+        {:else if item.metadata.category}
             <div class="flex h-full items-center justify-start">
                 {#if item.metadata.category === "DOCUMENTS"}
                     <FileTextIcon class={cn(iconSize, "text-red-600")} />
@@ -198,10 +280,6 @@
                     <FileIcon class={iconSize} />
                 {/if}
             </div>
-        {:else if item.metadata.category && layout === "grid"}
-            <div class="w-full justify-center flex h-full items-center">
-                <FilePreview {item} />
-            </div>
         {:else}
             <FileIcon class={iconSize} />
         {/if}
@@ -221,9 +299,24 @@
             >
                 {item.metadata.name ?? stripFolders(item.key)}
             </p>
-            {#if item.updatedAt}
-                <p class="text-xs dark:text-gray-500">
-                    Modified {prettyDate(item.updatedAt)}
+            {#if item.metadata.category || item.parent}
+                <p class="text-xs text-muted-foreground">
+                    {#if item.metadata.category}
+                        {item.metadata.category.charAt(0) +
+                            item.metadata.category.slice(1).toLowerCase()}
+                    {/if}
+                    {#if item.parent}
+                        {#if item.metadata.category}
+                            <span class="mx-1">•</span>
+                        {/if}
+                        <a
+                            href="/browse/{item.parentKey || ''}"
+                            class="text-muted-foreground/70 hover:text-primary hover:underline"
+                            onclick={(e) => e.stopPropagation()}
+                        >
+                            {item.parent}
+                        </a>
+                    {/if}
                 </p>
             {/if}
         </div>

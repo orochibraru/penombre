@@ -25,18 +25,63 @@ export const allowedFileCategories = [
 ];
 
 export const fileContentTypeSchema = z.enum([
+	// Documents
 	"application/pdf",
+	"application/msword",
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	"application/vnd.ms-excel",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	"application/vnd.ms-powerpoint",
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+	"application/vnd.oasis.opendocument.text",
+	"application/rtf",
+	"application/epub+zip",
+	"text/plain",
+	"text/csv",
+	"text/html",
+	"text/css",
+	"text/yaml",
+	// Images
 	"image/jpeg",
 	"image/png",
 	"image/gif",
+	"image/webp",
+	"image/svg+xml",
+	"image/bmp",
+	"image/x-icon",
+	"image/tiff",
+	"image/heic",
+	// Video
 	"video/mp4",
+	"video/webm",
+	"video/x-msvideo",
+	"video/x-matroska",
+	"video/quicktime",
+	"video/x-ms-wmv",
+	"video/x-flv",
+	"video/mpeg",
+	"video/3gpp",
+	"video/ogg",
+	// Audio
 	"audio/mpeg",
 	"audio/wav",
 	"audio/flac",
-	"text/plain",
-	"application/zip",
+	"audio/aac",
+	"audio/ogg",
+	"audio/mp4",
+	"audio/x-ms-wma",
+	"audio/aiff",
+	// Code/Data
 	"application/json",
-	"text/html",
+	"application/xml",
+	"application/javascript",
+	// Archives
+	"application/zip",
+	"application/vnd.rar",
+	"application/x-7z-compressed",
+	"application/x-tar",
+	"application/gzip",
+	// Fallback
 	"application/octet-stream",
 ]);
 
@@ -70,6 +115,8 @@ export const objectItemSchema = z.object({
 	size: z.number().optional(),
 	metadata: fileMetadataSchema,
 	type: z.enum(["file", "folder"]),
+	parent: z.string().optional(), // Display-friendly folder path for recent files
+	parentKey: z.string().optional(), // ID-based folder path for navigation
 });
 
 export const objectListSchema = z.object({

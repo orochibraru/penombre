@@ -9,6 +9,7 @@ const envVars = [
 	"REGISTRY_USER",
 	"REGISTRY_PASSWORD",
 	"DOCKER_TAG",
+	"DOKPLOY_APP_ID",
 ];
 
 // Validation
@@ -25,6 +26,7 @@ type Config = {
 		url: string;
 		authorization: string;
 		token: string;
+		appId: string;
 	};
 	registry: {
 		user: string;
@@ -33,35 +35,25 @@ type Config = {
 	dockerTag: string;
 };
 
-const baseImage = "git.ombrage.space/opendrive";
+const baseImage = "git.ombrage.space/opendrive/opendrive";
 
 const config: Config = {
 	dokploy: {
 		url: `https://${process.env.DOKPLOY_URL}`,
 		authorization: `Bearer ${process.env.DOKPLOY_AUTH_TOKEN}`,
-		token:
-			process.env.DOKPLOY_AUTH_TOKEN ??
-			(() => {
-				throw new Error("DOKPLOY_AUTH_TOKEN is not defined");
-			})(),
+		// biome-ignore lint/style/noNonNullAssertion: Already checked
+		token: process.env.DOKPLOY_AUTH_TOKEN!,
+		// biome-ignore lint/style/noNonNullAssertion: Already checked
+		appId: process.env.DOKPLOY_APP_ID!,
 	},
 	registry: {
-		user:
-			process.env.REGISTRY_USER ??
-			(() => {
-				throw new Error("REGISTRY_USER is not defined");
-			})(),
-		password:
-			process.env.REGISTRY_PASSWORD ??
-			(() => {
-				throw new Error("REGISTRY_PASSWORD is not defined");
-			})(),
+		// biome-ignore lint/style/noNonNullAssertion: Already checked
+		user: process.env.REGISTRY_USER!,
+		// biome-ignore lint/style/noNonNullAssertion: Already checked
+		password: process.env.REGISTRY_PASSWORD!,
 	},
-	dockerTag:
-		process.env.DOCKER_TAG ??
-		(() => {
-			throw new Error("DOCKER_TAG is not defined");
-		})(),
+	// biome-ignore lint/style/noNonNullAssertion: Already checked
+	dockerTag: process.env.DOCKER_TAG!,
 };
 
 const headers = {
@@ -70,101 +62,16 @@ const headers = {
 	accept: "application/json",
 };
 
-type Application = {
-	applicationId: string;
-	name: string;
-	appName: string;
-	description: string;
-	dockerImage: string;
-	registryUrl: string;
-};
-
-type Environment = {
-	environmentId: string;
-	name: string;
-	description: string;
-	createdAt: string;
-	env: string;
-	projectId: string;
-	applications: Application[];
-	mariadb: string[];
-	postgres: string[];
-	redis: string[];
-	compose: string[];
-	mongo: string[];
-};
-
-type Project = {
-	projectId: string;
-	name: string;
-	createdAt: string;
-	organizationId: string;
-	env: string;
-	environments: Environment[];
-};
-
-async function getAppId() {
-	const req = await fetch(`${config.dokploy.url}/api/project.all`, {
-		method: "GET",
-		headers,
-	});
-
-	if (!req.ok) {
-		throw new Error(`Failed to fetch projects: ${await req.text()}`);
-	}
-
-	const data: Project[] = (await req.json()) as Project[];
-
-	const project = data.find((project) => project.name === "Opendrive");
-	if (!project) {
-		throw new Error("Opendrive project not found");
-	}
-	console.log("Project ID:", project?.projectId);
-
-	const environment = project?.environments.find(
-		(env) => env.name === "production",
-	);
-	if (!environment) {
-		throw new Error("Production environment not found");
-	}
-	console.log("Environment ID:", environment?.environmentId);
-
-	console.log(
-		environment.applications
-			.map((app) => {
-				return `- ${app.name}: ${app.applicationId}`;
-			})
-			.join("\n"),
-	);
-	const opendriveApp = environment?.applications.find(
-		(app) => app.name === "app",
-	);
-	console.log("Opendrive Application ID:", opendriveApp?.applicationId);
-
-	if (!opendriveApp) {
-		throw new Error("Opendrive application not found");
-	}
-
-	return {
-		app: opendriveApp?.applicationId,
-	};
-}
-
-async function updateImage({
-	appId,
-	appName,
-}: {
-	appId: string;
-	appName: string;
-}): Promise<FetchResponse> {
+async function updateImage(): Promise<FetchResponse> {
+	const fullImage = `${baseImage}:${config.dockerTag}`;
 	const req = await fetch(
 		`${config.dokploy.url}/api/application.saveDockerProvider`,
 		{
 			method: "POST",
 			headers,
 			body: JSON.stringify({
-				applicationId: appId,
-				dockerImage: `${baseImage}/${appName}:${config.dockerTag}`,
+				applicationId: config.dokploy.appId,
+				dockerImage: fullImage,
 				username: config.registry.user,
 				password: config.registry.password,
 			}),
@@ -184,12 +91,12 @@ async function updateImage({
 	};
 }
 
-async function deploy(appId: string): Promise<FetchResponse> {
+async function deploy(): Promise<FetchResponse> {
 	const req = await fetch(`${config.dokploy.url}/api/application.deploy`, {
 		method: "POST",
 		headers,
 		body: JSON.stringify({
-			applicationId: appId,
+			applicationId: config.dokploy.appId,
 		}),
 	});
 
@@ -207,10 +114,8 @@ async function deploy(appId: string): Promise<FetchResponse> {
 }
 
 async function main() {
-	console.log("🚀 Starting deployment...");
-	const appIds = await getAppId();
 	console.log("Updating application image for app...");
-	let res = await updateImage({ appId: appIds.app, appName: "opendrive" });
+	let res = await updateImage();
 	if (res.err) {
 		console.error("❌ Failed to update application image for app.", res.err);
 		throw new Error(res.err);
@@ -218,7 +123,7 @@ async function main() {
 
 	console.log(res.success);
 	console.log("Deploying application...");
-	res = await deploy(appIds.app);
+	res = await deploy();
 
 	if (res.err) {
 		console.error("❌ Failed to deploy application.", res.err);

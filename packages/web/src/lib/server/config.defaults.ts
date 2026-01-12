@@ -66,7 +66,7 @@ ENABLE_OAUTH_SIGNIN=${defaultConfigValues.auth.enableOAuthSignIn}
 # Minimum password length for email sign-in
 MIN_PASSWORD_LENGTH=${defaultConfigValues.auth.minPasswordLength}
 
-# Secret key for signing auth tokens (CHANGE THIS IN PRODUCTION!)
+# Secret key for signing auth tokens (CHANGE THIS IN PRODUCTION! - openssl rand -hex 32)
 AUTH_SECRET=${defaultConfigValues.auth.secret}
 
 # ===========================================

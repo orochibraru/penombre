@@ -75,7 +75,6 @@
                     res.error.message || "Error signing in with OAuth2",
                 );
             }
-            console.log(res.data);
             if (res.data.url) {
                 goto(res.data.url);
             }

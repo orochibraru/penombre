@@ -1,7 +1,9 @@
 <script lang="ts">
     import {
         ArchiveRestoreIcon,
+        ArrowUpDownIcon,
         BrushCleaningIcon,
+        CheckIcon,
         CopyIcon,
         DownloadIcon,
         ExternalLinkIcon,
@@ -30,6 +32,7 @@
     import * as Code from "$lib/components/ui/code/index";
     import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
     import * as Dialog from "$lib/components/ui/dialog";
+    import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import { Input } from "$lib/components/ui/input";
     import * as Select from "$lib/components/ui/select/index.js";
     import { determineCodeFileLanguage, isCodeItem } from "$lib/file-utils";
@@ -40,6 +43,11 @@
         layoutStore,
     } from "$lib/store/layout";
     import { playableMusic } from "$lib/store/music";
+    import {
+        pendingUploadFiles,
+        uploadDialogOpen,
+        newFolderDialogOpen,
+    } from "$lib/store/upload";
     import { getObjectUrl } from "$lib/url";
     import {
         capitalizeFirstLetter,
@@ -47,6 +55,8 @@
         type ItemAction,
         type ItemActionGroup,
         type MultipleItemsAction,
+        type SortColumn,
+        type SortDirection,
     } from "$lib/utils";
     import DeleteDialog from "$lib/components/layout/dialogs/delete.svelte";
     import RestoreDialog from "$lib/components/layout/dialogs/restore.svelte";
@@ -58,6 +68,19 @@
     };
 
     let { data, loading = $bindable(false) }: Props = $props();
+
+    function handleFileDrop(files: File[]) {
+        pendingUploadFiles.set(files);
+        $uploadDialogOpen = true;
+    }
+
+    function handleUpload() {
+        $uploadDialogOpen = true;
+    }
+
+    function handleCreateFolder() {
+        $newFolderDialogOpen = true;
+    }
 
     let allSelected: boolean = $state(false);
     let indeterminate: boolean = $state(false);
@@ -73,6 +96,8 @@
     let actionsContextOpen: boolean = $state(false);
     let actionableItem: ObjectItem | undefined = $state();
     let viewFileOpen: boolean = $state(false);
+    let sortColumn: SortColumn = $state(null);
+    let sortDirection: SortDirection = $state("asc");
     let fileToView: {
         item: ObjectItem;
         src: string;
@@ -140,14 +165,17 @@
                 promises.push(getRestoreFolderPromise(itemPath));
             } else {
                 // Restore file via objects PUT
+                const fileName = itemPath.includes("/")
+                    ? itemPath.split("/").pop()!
+                    : itemPath;
+                const folder = itemPath.includes("/")
+                    ? itemPath.split("/").slice(0, -1).join("/")
+                    : undefined;
+
                 const promise = apiClient.storage.objects.item[":item"]
                     .$put({
-                        param: { item: encodeURIComponent(itemPath) },
-                        query: {
-                            folder: itemPath.includes("/")
-                                ? itemPath.split("/").slice(0, -1).join("/")
-                                : undefined,
-                        },
+                        param: { item: encodeURIComponent(fileName) },
+                        query: { folder },
                         json: {
                             isTrashed: false,
                         },
@@ -259,14 +287,17 @@
     }
 
     async function getTrashActionPromise(itemPath: string) {
+        const fileName = itemPath.includes("/")
+            ? itemPath.split("/").pop()!
+            : itemPath;
+        const folder = itemPath.includes("/")
+            ? itemPath.split("/").slice(0, -1).join("/")
+            : undefined;
+
         const promise = apiClient.storage.objects.item[":item"]
             .$put({
-                param: { item: encodeURIComponent(itemPath) },
-                query: {
-                    folder: itemPath.includes("/")
-                        ? itemPath.split("/").slice(0, -1).join("/")
-                        : undefined,
-                },
+                param: { item: encodeURIComponent(fileName) },
+                query: { folder },
                 json: {
                     isTrashed: true,
                 },
@@ -743,42 +774,147 @@
                 debounce();
             }}
         />
-        {#if isDesktop.current}
-            <Select.Root
-                type="single"
-                name="favoriteFruit"
-                bind:value={$layoutStore}
-                onValueChange={(val) => {
-                    if (browser) {
-                        if (
-                            page.url.pathname.startsWith("/browse") &&
-                            val === "list"
-                        ) {
-                            localStorage.removeItem("layout");
-                        } else if (
-                            !page.url.pathname.startsWith("/browse") &&
-                            val === "grid"
-                        ) {
-                            localStorage.removeItem("layout");
-                        } else {
-                            localStorage.setItem("layout", val);
-                        }
-                    }
-                }}
-            >
-                <Select.Trigger class="w-45"
-                    >Layout: {capitalizeFirstLetter(
-                        $layoutStore,
-                    )}</Select.Trigger
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+                {#snippet child({ props })}
+                    <Button variant="outline" size="sm" {...props}>
+                        <ArrowUpDownIcon class="h-4 w-4" />
+                        <span class="hidden sm:inline">
+                            {#if sortColumn}
+                                {sortColumn === "name"
+                                    ? "Name"
+                                    : sortColumn === "size"
+                                      ? "Size"
+                                      : "Date"} ({sortDirection === "asc"
+                                    ? "↑"
+                                    : "↓"})
+                            {:else}
+                                Sort
+                            {/if}
+                        </span>
+                    </Button>
+                {/snippet}
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end">
+                <DropdownMenu.Label>Sort by</DropdownMenu.Label>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item
+                    onclick={() => {
+                        sortColumn = "name";
+                        sortDirection = "asc";
+                    }}
                 >
-                <Select.Content>
-                    <Select.Item value={"list"} label={"List"}>List</Select.Item
-                    >
-                    <Select.Item value={"grid"} label={"Grid"}>Grid</Select.Item
-                    >
-                </Select.Content>
-            </Select.Root>
-        {/if}
+                    {#if sortColumn === "name" && sortDirection === "asc"}
+                        <CheckIcon class="mr-2 h-4 w-4" />
+                    {:else}
+                        <span class="mr-2 w-4"></span>
+                    {/if}
+                    Name (A-Z)
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                    onclick={() => {
+                        sortColumn = "name";
+                        sortDirection = "desc";
+                    }}
+                >
+                    {#if sortColumn === "name" && sortDirection === "desc"}
+                        <CheckIcon class="mr-2 h-4 w-4" />
+                    {:else}
+                        <span class="mr-2 w-4"></span>
+                    {/if}
+                    Name (Z-A)
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item
+                    onclick={() => {
+                        sortColumn = "size";
+                        sortDirection = "desc";
+                    }}
+                >
+                    {#if sortColumn === "size" && sortDirection === "desc"}
+                        <CheckIcon class="mr-2 h-4 w-4" />
+                    {:else}
+                        <span class="mr-2 w-4"></span>
+                    {/if}
+                    Size (Largest)
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                    onclick={() => {
+                        sortColumn = "size";
+                        sortDirection = "asc";
+                    }}
+                >
+                    {#if sortColumn === "size" && sortDirection === "asc"}
+                        <CheckIcon class="mr-2 h-4 w-4" />
+                    {:else}
+                        <span class="mr-2 w-4"></span>
+                    {/if}
+                    Size (Smallest)
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item
+                    onclick={() => {
+                        sortColumn = "updatedAt";
+                        sortDirection = "desc";
+                    }}
+                >
+                    {#if sortColumn === "updatedAt" && sortDirection === "desc"}
+                        <CheckIcon class="mr-2 h-4 w-4" />
+                    {:else}
+                        <span class="mr-2 w-4"></span>
+                    {/if}
+                    Date (Newest)
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                    onclick={() => {
+                        sortColumn = "updatedAt";
+                        sortDirection = "asc";
+                    }}
+                >
+                    {#if sortColumn === "updatedAt" && sortDirection === "asc"}
+                        <CheckIcon class="mr-2 h-4 w-4" />
+                    {:else}
+                        <span class="mr-2 w-4"></span>
+                    {/if}
+                    Date (Oldest)
+                </DropdownMenu.Item>
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
+        <Select.Root
+            type="single"
+            name="layout"
+            bind:value={$layoutStore}
+            onValueChange={(val) => {
+                if (browser) {
+                    if (
+                        page.url.pathname.startsWith("/browse") &&
+                        val === "list"
+                    ) {
+                        localStorage.removeItem("layout");
+                    } else if (
+                        !page.url.pathname.startsWith("/browse") &&
+                        val === "grid"
+                    ) {
+                        localStorage.removeItem("layout");
+                    } else {
+                        localStorage.setItem("layout", val);
+                    }
+                }
+            }}
+        >
+            <Select.Trigger class="w-auto sm:w-45">
+                <span class="hidden sm:inline"
+                    >Layout: {capitalizeFirstLetter($layoutStore)}</span
+                >
+                <span class="sm:hidden"
+                    >{capitalizeFirstLetter($layoutStore)}</span
+                >
+            </Select.Trigger>
+            <Select.Content>
+                <Select.Item value={"list"} label={"List"}>List</Select.Item>
+                <Select.Item value={"grid"} label={"Grid"}>Grid</Select.Item>
+            </Select.Content>
+        </Select.Root>
         {#if isTrash}
             <Button
                 variant="destructive"
@@ -802,13 +938,18 @@
         {searchValue}
         {searchResults}
         {indeterminate}
+        bind:sortColumn
+        bind:sortDirection
+        onDrop={handleFileDrop}
+        onUpload={handleUpload}
+        onCreateFolder={handleCreateFolder}
         bind:checkedItems
         bind:loading
         bind:allSelected
         bind:actionableItem
         bind:actionsContextOpen
     />
-{:else if isDesktop.current && $layoutStore === "grid"}
+{:else if $layoutStore === "grid"}
     <FileGrid
         handleOpenItem={handleOpenItemWrapper}
         files={data}
@@ -816,6 +957,11 @@
         {searchValue}
         {searchResults}
         {indeterminate}
+        {sortColumn}
+        {sortDirection}
+        onDrop={handleFileDrop}
+        onUpload={handleUpload}
+        onCreateFolder={handleCreateFolder}
         bind:checkedItems
         bind:loading
         bind:allSelected
@@ -830,6 +976,11 @@
         {searchValue}
         {searchResults}
         {indeterminate}
+        {sortColumn}
+        {sortDirection}
+        onDrop={handleFileDrop}
+        onUpload={handleUpload}
+        onCreateFolder={handleCreateFolder}
         bind:checkedItems
         bind:loading
         bind:allSelected

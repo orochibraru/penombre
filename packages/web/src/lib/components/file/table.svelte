@@ -1,5 +1,13 @@
 <script lang="ts">
-    import { EllipsisVerticalIcon } from "@lucide/svelte";
+    import {
+        EllipsisVerticalIcon,
+        ArrowUpIcon,
+        ArrowDownIcon,
+        ArrowUpDownIcon,
+        UploadIcon,
+        CloudUploadIcon,
+        FolderPlusIcon,
+    } from "@lucide/svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
     import type { ObjectItem } from "$lib/api-client";
@@ -18,6 +26,8 @@
         readableFileSize,
         isFolderItem,
         type SharedFileDisplayProps,
+        type SortColumn,
+        type SortDirection,
         shouldDisplayAction,
     } from "$lib/utils";
 
@@ -33,12 +43,110 @@
         searchValue,
         searchResults,
         itemActions,
+        onDrop,
+        onUpload,
+        onCreateFolder,
+        sortColumn = $bindable(null),
+        sortDirection = $bindable("asc"),
     }: SharedFileDisplayProps = $props();
 
     const iconSize = "h-5 w-5";
     const loadingAmount = 20;
 
     let isSingleItemAction: boolean = $state(false);
+    let isDragging: boolean = $state(false);
+
+    function handleDragOver(e: DragEvent) {
+        e.preventDefault();
+        if (e.dataTransfer?.types.includes("Files")) {
+            isDragging = true;
+        }
+    }
+
+    function handleDragLeave(e: DragEvent) {
+        e.preventDefault();
+        isDragging = false;
+    }
+
+    function handleDrop(e: DragEvent) {
+        e.preventDefault();
+        isDragging = false;
+
+        if (!onDrop) return;
+
+        const droppedFiles = Array.from(e.dataTransfer?.files ?? []);
+        if (droppedFiles.length > 0) {
+            onDrop(droppedFiles);
+        }
+    }
+
+    function toggleSort(column: SortColumn) {
+        if (sortColumn === column) {
+            sortDirection = sortDirection === "asc" ? "desc" : "asc";
+        } else {
+            sortColumn = column;
+            sortDirection = "asc";
+        }
+    }
+
+    function getItemName(item: ObjectItem): string {
+        return (item.metadata.name || item.key).toLowerCase();
+    }
+
+    function getItemDate(item: ObjectItem): number {
+        const date = item.updatedAt;
+        if (!date) return 0;
+        return typeof date === "string"
+            ? new Date(date).getTime()
+            : date.getTime();
+    }
+
+    function compareItems(a: ObjectItem, b: ObjectItem): number {
+        // Folders always come first
+        const aIsFolder = isFolderItem(a);
+        const bIsFolder = isFolderItem(b);
+        if (aIsFolder && !bIsFolder) return -1;
+        if (!aIsFolder && bIsFolder) return 1;
+
+        let comparison = 0;
+        switch (sortColumn) {
+            case "name":
+                comparison = getItemName(a).localeCompare(getItemName(b));
+                break;
+            case "size":
+                comparison = (a.size ?? 0) - (b.size ?? 0);
+                break;
+            case "updatedAt":
+                comparison = getItemDate(a) - getItemDate(b);
+                break;
+            default:
+                // No column selected, just maintain folder-first order
+                return 0;
+        }
+        return sortDirection === "asc" ? comparison : -comparison;
+    }
+
+    function sortFoldersFirst(items: ObjectItem[]): ObjectItem[] {
+        return [...items].sort((a, b) => {
+            const aIsFolder = isFolderItem(a);
+            const bIsFolder = isFolderItem(b);
+            if (aIsFolder && !bIsFolder) return -1;
+            if (!aIsFolder && bIsFolder) return 1;
+            return 0;
+        });
+    }
+
+    let sortedFiles = $derived.by(() => {
+        if (!files.list) return files.list;
+        if (!sortColumn) return sortFoldersFirst(files.list);
+        return [...files.list].sort(compareItems);
+    });
+
+    let sortedSearchResults = $derived.by(() => {
+        if (!searchResults) return searchResults;
+        if (!sortColumn) return sortFoldersFirst(searchResults);
+        return [...searchResults].sort(compareItems);
+    });
 
     function toggleSelectAll(checked: boolean) {
         isSingleItemAction = false;
@@ -53,14 +161,17 @@
         {
             title: "Name",
             colSpan: 7,
-        },
-        {
-            title: "Category",
-            colSpan: 1,
+            sortKey: "name",
         },
         {
             title: "Size",
             colSpan: 1,
+            sortKey: "size",
+        },
+        {
+            title: "Modified",
+            colSpan: 1,
+            sortKey: "updatedAt",
         },
         {
             title: "Actions",
@@ -73,6 +184,7 @@
         title: string;
         colSpan: number;
         class?: string;
+        sortKey?: typeof sortColumn;
     };
 
     function isChecked(item: ObjectItem): boolean {
@@ -159,19 +271,20 @@
             </ContextMenu.Root>
         </Table.Cell>
         <Table.Cell colspan={1} class="w-32">
-            {#if isFolder}
-                <span>-</span>
-            {:else}
-                <Badge variant="outline" class="text-muted-foreground px-1.5">
-                    {objectItem.metadata.category
-                        ? capitalizeFirstLetter(objectItem.metadata.category)
-                        : "No category"}
-                </Badge>
-            {/if}
-        </Table.Cell>
-        <Table.Cell colspan={1} class="w-32">
             <p class="text-xs">
                 {readableFileSize(objectItem.size as number) ?? "-"}
+            </p>
+        </Table.Cell>
+        <Table.Cell colspan={1} class="w-32">
+            <p class="text-xs text-muted-foreground">
+                {#if objectItem.updatedAt}
+                    {new Date(objectItem.updatedAt).toLocaleString(undefined, {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                    })}
+                {:else}
+                    -
+                {/if}
             </p>
         </Table.Cell>
         <Table.Cell colspan={1} class="w-4">
@@ -220,9 +333,30 @@
 
 {#snippet emptyRow()}
     <Table.Row>
-        <Table.Cell colspan={12} class="h-24 text-center"
-            >No results.</Table.Cell
-        >
+        <Table.Cell colspan={12} class="h-48">
+            <div class="flex flex-col items-center justify-center gap-4">
+                <div class="text-muted-foreground text-center">
+                    <p class="text-lg font-medium">No files yet</p>
+                    <p class="text-sm">
+                        Upload files or create a folder to get started
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    {#if onUpload}
+                        <Button variant="default" onclick={onUpload}>
+                            <CloudUploadIcon class="mr-2 h-4 w-4" />
+                            Upload Files
+                        </Button>
+                    {/if}
+                    {#if onCreateFolder}
+                        <Button variant="outline" onclick={onCreateFolder}>
+                            <FolderPlusIcon class="mr-2 h-4 w-4" />
+                            New Folder
+                        </Button>
+                    {/if}
+                </div>
+            </div>
+        </Table.Cell>
     </Table.Row>
 {/snippet}
 
@@ -233,7 +367,7 @@
                 <Checkbox disabled />
             </Table.Cell>
             <Table.Cell colspan={10} class="text-center">
-                <Skeleton class="h-[30px] w-full rounded-sm" />
+                <Skeleton class="h-7.5 w-full rounded-sm" />
             </Table.Cell>
             <Table.Cell colspan={1} class="w-4">
                 <div class="flex w-full items-center justify-end">
@@ -247,7 +381,28 @@
     {/each}
 {/snippet}
 
-<div class="rounded-lg border">
+<div
+    class={cn(
+        "relative rounded-lg border transition-all",
+        isDragging && "border-primary border-2 bg-primary/5",
+    )}
+    ondragover={handleDragOver}
+    ondragleave={handleDragLeave}
+    ondrop={handleDrop}
+    role="region"
+>
+    {#if isDragging}
+        <div
+            class="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/80 backdrop-blur-sm"
+        >
+            <div
+                class="border-primary text-primary flex size-16 items-center justify-center rounded-full border-2 border-dashed"
+            >
+                <UploadIcon class="size-8" />
+            </div>
+            <p class="text-primary font-medium">Drop files to upload</p>
+        </div>
+    {/if}
     <Table.Root>
         <Table.Header class="bg-muted sticky top-0 z-10">
             <Table.Row>
@@ -263,7 +418,27 @@
                         colspan={headItem.colSpan}
                         class={cn(headItem.class)}
                     >
-                        {headItem.title}
+                        {#if headItem.sortKey}
+                            <button
+                                class="flex items-center gap-1 hover:text-foreground transition-colors"
+                                onclick={() => toggleSort(headItem.sortKey!)}
+                            >
+                                {headItem.title}
+                                {#if sortColumn === headItem.sortKey}
+                                    {#if sortDirection === "asc"}
+                                        <ArrowUpIcon class="h-4 w-4" />
+                                    {:else}
+                                        <ArrowDownIcon class="h-4 w-4" />
+                                    {/if}
+                                {:else}
+                                    <ArrowUpDownIcon
+                                        class="h-4 w-4 opacity-50"
+                                    />
+                                {/if}
+                            </button>
+                        {:else}
+                            {headItem.title}
+                        {/if}
                     </Table.Head>
                 {/each}
             </Table.Row>
@@ -272,15 +447,15 @@
             {#if loading}
                 {@render loadingRows()}
             {:else if searchValue}
-                {#if searchResults.length > 0}
-                    {#each searchResults as item}
+                {#if sortedSearchResults && sortedSearchResults.length > 0}
+                    {#each sortedSearchResults as item}
                         {@render tableRow(item)}
                     {/each}
                 {:else}
                     {@render emptyRow()}
                 {/if}
-            {:else if files.count! > 0}
-                {#each files.list! as item}
+            {:else if files.count! > 0 && sortedFiles}
+                {#each sortedFiles as item}
                     {@render tableRow(item)}
                 {/each}
             {:else}

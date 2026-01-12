@@ -21,7 +21,7 @@ jobs:
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3
+          bun-version: 1.3.3
 
       - name: Setup Node.js for tooling
         uses: actions/setup-node@v4
@@ -29,7 +29,7 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: bun ci --frozen-lockfile --ignore-scripts
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Linting
         run: bun run lint
@@ -44,6 +44,10 @@ jobs:
       - name: Type check
         working-directory: packages/web
         run: bun run check
+
+      - name: Generate SvelteKit types for tests
+        working-directory: packages/web
+        run: bunx --bun svelte-kit sync
 
       - name: Run tests
         run: bun test --coverage

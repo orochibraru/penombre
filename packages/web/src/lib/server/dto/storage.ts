@@ -6,6 +6,7 @@ import { cwd } from "node:process";
 import type { User } from "better-auth";
 import type { BunFile } from "bun";
 import { parseFile } from "music-metadata";
+import sharp from "sharp";
 import { Logger } from "$lib/logger";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
@@ -341,7 +342,56 @@ export class StorageService {
 		}
 	}
 
-	// Removed incrementFileName: files are stored by unique ID to prevent name collisions.
+	/**
+	 * Generates a unique display name by appending (1), (2), etc. if a file/folder
+	 * with the same display name already exists in the target folder.
+	 * Trashed items are ignored - they don't count as duplicates.
+	 */
+	private async getUniqueDisplayName(
+		name: string,
+		folder?: string,
+		type: "file" | "folder" = "file",
+	): Promise<string> {
+		const existingItems = await this.abstractListFiles({
+			parent: folder,
+			includeTrashed: false,
+		});
+
+		// Get all display names of existing non-trashed items of the same type
+		const existingNames = new Set(
+			existingItems.list
+				.filter((item) =>
+					type === "folder" ? item.type === "folder" : item.type === "file",
+				)
+				.map((item) => item.metadata.name?.toLowerCase()),
+		);
+
+		if (!existingNames.has(name.toLowerCase())) {
+			return name;
+		}
+
+		// Extract base name and extension for files
+		let baseName: string;
+		let extension: string;
+		if (type === "file" && name.includes(".")) {
+			const lastDot = name.lastIndexOf(".");
+			baseName = name.slice(0, lastDot);
+			extension = name.slice(lastDot);
+		} else {
+			baseName = name;
+			extension = "";
+		}
+
+		// Find the next available number
+		let counter = 1;
+		let newName = `${baseName} (${counter})${extension}`;
+		while (existingNames.has(newName.toLowerCase())) {
+			counter++;
+			newName = `${baseName} (${counter})${extension}`;
+		}
+
+		return newName;
+	}
 
 	private generateMeta(name: string): FileMetadata {
 		return {
@@ -368,8 +418,14 @@ export class StorageService {
 				? folder.slice(0, -1)
 				: folder
 			: undefined;
-		// Generate metadata using pretty basename, but store by ID as filename
-		const meta = this.generateMeta(basename);
+		// Generate unique display name to avoid confusion with duplicate names
+		const uniqueName = await this.getUniqueDisplayName(
+			basename,
+			normalizedFolder,
+			"file",
+		);
+		// Generate metadata using unique display name, but store by ID as filename
+		const meta = this.generateMeta(uniqueName);
 		const idFilePath = normalizedFolder
 			? `${normalizedFolder}/${meta.id}`
 			: meta.id;
@@ -446,8 +502,8 @@ export class StorageService {
 
 		for (const dirent of dir) {
 			if (!dirent.isDirectory()) continue;
-			// Hide legacy `.trash` folder from listings
-			if (dirent.name === ".trash") continue;
+			// Hide system folders from listings
+			if (dirent.name === ".trash" || dirent.name === ".thumbnails") continue;
 			const folderName = dirent.name;
 			const folderPath = join(dirPath, folderName);
 			let isTrashed = false;
@@ -491,6 +547,7 @@ export class StorageService {
 	private determineContentType(key: string): FileContentType {
 		const extension = key.split(".").pop()?.toLowerCase();
 		switch (extension) {
+			// Images
 			case "jpg":
 			case "jpeg":
 				return "image/jpeg";
@@ -498,22 +555,114 @@ export class StorageService {
 				return "image/png";
 			case "gif":
 				return "image/gif";
+			case "webp":
+				return "image/webp";
+			case "svg":
+				return "image/svg+xml";
+			case "bmp":
+				return "image/bmp";
+			case "ico":
+				return "image/x-icon";
+			case "tiff":
+			case "tif":
+				return "image/tiff";
+			case "heic":
+			case "heif":
+				return "image/heic";
+			// Video
 			case "mp4":
+			case "m4v":
 				return "video/mp4";
+			case "webm":
+				return "video/webm";
+			case "avi":
+				return "video/x-msvideo";
+			case "mkv":
+				return "video/x-matroska";
+			case "mov":
+				return "video/quicktime";
+			case "wmv":
+				return "video/x-ms-wmv";
+			case "flv":
+				return "video/x-flv";
+			case "mpeg":
+			case "mpg":
+				return "video/mpeg";
+			case "3gp":
+				return "video/3gpp";
+			case "ogv":
+				return "video/ogg";
+			// Audio
 			case "mp3":
 				return "audio/mpeg";
 			case "wav":
 				return "audio/wav";
 			case "flac":
 				return "audio/flac";
+			case "aac":
+				return "audio/aac";
+			case "ogg":
+			case "opus":
+				return "audio/ogg";
+			case "m4a":
+				return "audio/mp4";
+			case "wma":
+				return "audio/x-ms-wma";
+			case "aiff":
+				return "audio/aiff";
+			// Documents
 			case "pdf":
 				return "application/pdf";
+			case "doc":
+				return "application/msword";
+			case "docx":
+				return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+			case "xls":
+				return "application/vnd.ms-excel";
+			case "xlsx":
+				return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+			case "ppt":
+				return "application/vnd.ms-powerpoint";
+			case "pptx":
+				return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+			case "odt":
+				return "application/vnd.oasis.opendocument.text";
+			case "rtf":
+				return "application/rtf";
+			case "csv":
+				return "text/csv";
+			case "epub":
+				return "application/epub+zip";
+			// Text/Code
 			case "txt":
+			case "md":
 				return "text/plain";
 			case "html":
+			case "htm":
 				return "text/html";
+			case "css":
+				return "text/css";
+			case "js":
+			case "mjs":
+				return "application/javascript";
 			case "json":
 				return "application/json";
+			case "xml":
+				return "application/xml";
+			case "yaml":
+			case "yml":
+				return "text/yaml";
+			// Archives
+			case "zip":
+				return "application/zip";
+			case "rar":
+				return "application/vnd.rar";
+			case "7z":
+				return "application/x-7z-compressed";
+			case "tar":
+				return "application/x-tar";
+			case "gz":
+				return "application/gzip";
 			default:
 				return "application/octet-stream";
 		}
@@ -522,32 +671,143 @@ export class StorageService {
 	private determineCategory(key: string): FileCategory {
 		const extension = key.split(".").pop()?.toLowerCase();
 		switch (extension) {
+			// Music
 			case "mp3":
 			case "wav":
 			case "flac":
+			case "aac":
+			case "ogg":
+			case "wma":
+			case "m4a":
+			case "aiff":
+			case "alac":
+			case "opus":
 				return "MUSIC";
+			// Documents
 			case "pdf":
 			case "doc":
 			case "docx":
 			case "txt":
+			case "rtf":
+			case "odt":
+			case "xls":
+			case "xlsx":
+			case "ppt":
+			case "pptx":
+			case "csv":
+			case "md":
+			case "epub":
+			case "pages":
+			case "numbers":
+			case "keynote":
 				return "DOCUMENTS";
+			// Images
 			case "jpg":
 			case "jpeg":
 			case "png":
 			case "gif":
 			case "svg":
+			case "webp":
+			case "bmp":
+			case "ico":
+			case "tiff":
+			case "tif":
+			case "heic":
+			case "heif":
+			case "raw":
+			case "cr2":
+			case "nef":
+			case "arw":
+			case "dng":
+			case "psd":
+			case "ai":
+			case "eps":
 				return "IMAGES";
+			// Video
 			case "mp4":
 			case "avi":
 			case "mkv":
 			case "mov":
-				return "VIDEO";
-			case "js":
+			case "wmv":
+			case "flv":
+			case "webm":
+			case "m4v":
+			case "mpeg":
+			case "mpg":
+			case "3gp":
+			case "ogv":
 			case "ts":
+			case "mts":
+			case "m2ts":
+			case "vob":
+				return "VIDEO";
+			// Code
+			case "js":
 			case "py":
 			case "java":
 			case "c":
 			case "cpp":
+			case "h":
+			case "hpp":
+			case "cs":
+			case "go":
+			case "rs":
+			case "rb":
+			case "php":
+			case "swift":
+			case "kt":
+			case "scala":
+			case "sh":
+			case "bash":
+			case "zsh":
+			case "ps1":
+			case "sql":
+			case "html":
+			case "css":
+			case "scss":
+			case "sass":
+			case "less":
+			case "json":
+			case "xml":
+			case "yaml":
+			case "yml":
+			case "toml":
+			case "ini":
+			case "cfg":
+			case "conf":
+			case "env":
+			case "dockerfile":
+			case "makefile":
+			case "cmake":
+			case "gradle":
+			case "jsx":
+			case "tsx":
+			case "vue":
+			case "svelte":
+			case "astro":
+			case "lua":
+			case "r":
+			case "m":
+			case "mm":
+			case "pl":
+			case "pm":
+			case "ex":
+			case "exs":
+			case "erl":
+			case "hrl":
+			case "hs":
+			case "elm":
+			case "clj":
+			case "cljs":
+			case "lisp":
+			case "scm":
+			case "rkt":
+			case "asm":
+			case "s":
+			case "v":
+			case "sv":
+			case "vhd":
+			case "vhdl":
 				return "CODE";
 			default:
 				return "UNKNOWN";
@@ -558,6 +818,7 @@ export class StorageService {
 		parent?: string;
 		category?: FileCategory;
 		includeTrashed?: boolean;
+		recursive?: boolean;
 	}): Promise<ObjectList> {
 		const prefix = options.parent || "";
 		const dirPath = join(this.storagePath, prefix);
@@ -576,8 +837,11 @@ export class StorageService {
 				continue;
 			}
 
-			// Hide legacy `.trash` folder from listings
-			if (contents.isDirectory() && contents.name === ".trash") {
+			// Hide system folders from listings
+			if (
+				contents.isDirectory() &&
+				(contents.name === ".trash" || contents.name === ".thumbnails")
+			) {
 				continue;
 			}
 
@@ -618,6 +882,36 @@ export class StorageService {
 
 				// Exclude trashed folders unless includeTrashed is set
 				if (!options.includeTrashed && metadata.isTrashed) {
+					continue;
+				}
+
+				// If recursive mode, descend into subdirectory and collect files
+				if (options.recursive) {
+					const subPath = prefix ? `${prefix}/${contents.name}` : contents.name;
+					const subResult = await this.abstractListFiles({
+						parent: subPath,
+						category: options.category,
+						includeTrashed: options.includeTrashed,
+						recursive: true,
+					});
+					// Prefix subfiles with the folder ID for key (API operations) and display name for parent (UI)
+					const folderDisplayName = metadata.name || contents.name;
+					for (const item of subResult.list) {
+						if (item.type === "file") {
+							const existingParent = item.parent || "";
+							const existingParentKey = item.parentKey || "";
+							fileList.push({
+								...item,
+								key: `${contents.name}/${item.key}`,
+								parent: existingParent
+									? `${folderDisplayName}/${existingParent}`
+									: folderDisplayName,
+								parentKey: existingParentKey
+									? `${contents.name}/${existingParentKey}`
+									: contents.name,
+							});
+						}
+					}
 					continue;
 				}
 
@@ -709,6 +1003,7 @@ export class StorageService {
 	): Promise<ObjectList> {
 		return await this.abstractListFiles({
 			category,
+			recursive: true,
 		});
 	}
 
@@ -722,7 +1017,7 @@ export class StorageService {
 	}
 
 	public async listRecentFiles(): Promise<ObjectList> {
-		const allFiles = await this.abstractListFiles({});
+		const allFiles = await this.abstractListFiles({ recursive: true });
 		// Sort by updatedAt descending and take the top 10
 		const recentFiles = allFiles.list
 			.filter((item) => item.type === "file")
@@ -737,7 +1032,7 @@ export class StorageService {
 						: new Date(b.updatedAt || 0).getTime();
 				return bTime - aTime;
 			})
-			.slice(0, 10);
+			.slice(0, 25);
 
 		return {
 			list: recentFiles,
@@ -811,6 +1106,69 @@ export class StorageService {
 		return { file, meta };
 	}
 
+	/**
+	 * Generates a thumbnail for an image file.
+	 * Thumbnails are cached in a .thumbnails directory adjacent to the file.
+	 * @param key The file key
+	 * @param size The maximum dimension (width or height) of the thumbnail. Default 300.
+	 * @returns The thumbnail as a Buffer, or null if generation fails
+	 */
+	public async getThumbnail(
+		key: string,
+		size = 300,
+	): Promise<{ buffer: Buffer; contentType: string } | null> {
+		try {
+			const { currentPath } = await this.resolveFileLocation(key);
+			const meta = await this.getFile(key);
+
+			// Only generate thumbnails for images
+			const imageTypes = [
+				"image/jpeg",
+				"image/png",
+				"image/gif",
+				"image/webp",
+				"image/bmp",
+				"image/tiff",
+			];
+			if (!imageTypes.includes(meta.metadata.contentType || "")) {
+				return null;
+			}
+
+			// Cache directory for thumbnails
+			const thumbDir = join(this.storagePath, ".thumbnails");
+			const thumbPath = join(thumbDir, `${key}_${size}.webp`);
+
+			// Check if cached thumbnail exists and is newer than source
+			if (existsSync(thumbPath)) {
+				const thumbStat = await stat(thumbPath);
+				const fileStat = await stat(currentPath);
+				if (thumbStat.mtime >= fileStat.mtime) {
+					const cached = await Bun.file(thumbPath).arrayBuffer();
+					return { buffer: Buffer.from(cached), contentType: "image/webp" };
+				}
+			}
+
+			// Generate thumbnail
+			await mkdir(thumbDir, { recursive: true });
+
+			const thumbnail = await sharp(currentPath)
+				.resize(size, size, {
+					fit: "inside",
+					withoutEnlargement: true,
+				})
+				.webp({ quality: 80 })
+				.toBuffer();
+
+			// Cache the thumbnail
+			await Bun.write(thumbPath, thumbnail);
+
+			return { buffer: thumbnail, contentType: "image/webp" };
+		} catch (error) {
+			logger.error("Error generating thumbnail:", error);
+			return null;
+		}
+	}
+
 	public async deleteFile(key: string): Promise<void> {
 		try {
 			const { currentPath: filePath } = await this.resolveFileLocation(key);
@@ -832,9 +1190,33 @@ export class StorageService {
 			}
 
 			await file.delete();
+
+			// Delete any cached thumbnails
+			await this.deleteThumbnails(key);
 		} catch (error) {
 			logger.error("Error deleting file:", error);
 			throw new Error(`Error deleting file with key: ${key}`);
+		}
+	}
+
+	/**
+	 * Deletes all cached thumbnails for a given file key
+	 */
+	private async deleteThumbnails(key: string): Promise<void> {
+		try {
+			const thumbDir = join(this.storagePath, ".thumbnails");
+			if (!existsSync(thumbDir)) return;
+
+			const thumbFiles = await readdir(thumbDir);
+			for (const thumbFile of thumbFiles) {
+				if (thumbFile.startsWith(`${key}_`)) {
+					const thumbPath = join(thumbDir, thumbFile);
+					await Bun.file(thumbPath).delete();
+				}
+			}
+		} catch (error) {
+			// Non-critical, just log
+			logger.warn("Error deleting thumbnails:", error);
 		}
 	}
 
@@ -973,7 +1355,13 @@ export class StorageService {
 				? parent.slice(0, -1)
 				: parent
 			: undefined;
-		const folderMeta: FileMetadata = this.generateMeta(name);
+		// Generate unique display name to avoid confusion with duplicate names
+		const uniqueName = await this.getUniqueDisplayName(
+			name,
+			normalizedParent,
+			"folder",
+		);
+		const folderMeta: FileMetadata = this.generateMeta(uniqueName);
 		const folderKey = normalizedParent
 			? `${normalizedParent}/${folderMeta.id}`
 			: folderMeta.id;

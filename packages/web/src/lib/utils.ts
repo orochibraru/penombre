@@ -186,6 +186,9 @@ export type ItemActionGroup = {
 	actions: ItemAction[];
 };
 
+export type SortColumn = "name" | "size" | "updatedAt" | null;
+export type SortDirection = "asc" | "desc";
+
 export type SharedFileDisplayProps = {
 	handleOpenItem: (item: ObjectItem) => void;
 	files: ObjectList;
@@ -198,6 +201,11 @@ export type SharedFileDisplayProps = {
 	loading: boolean;
 	searchValue: string;
 	searchResults: ObjectItem[];
+	onDrop?: (files: File[]) => void;
+	onUpload?: () => void;
+	onCreateFolder?: () => void;
+	sortColumn?: SortColumn;
+	sortDirection?: SortDirection;
 };
 
 export type BreadCrumb = {

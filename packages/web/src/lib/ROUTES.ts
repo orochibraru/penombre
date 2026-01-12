@@ -24,7 +24,6 @@ const PAGES = {
   "/categories/[category]": (params: { category: (string | number) }) => {
     return `/categories/${params['category']}`
   },
-  "/create": `/create`,
   "/recent": `/recent`,
   "/settings": `/settings`,
   "/settings/display": `/settings/display`,
@@ -176,7 +175,7 @@ export function route<T extends keyof AllTypes>(key: T, ...params: any[]): strin
 * ```
 */
 export type KIT_ROUTES = {
-  PAGES: { '/': never, '/account': never, '/account/activity': never, '/account/security': never, '/account/sessions': never, '/admin': never, '/admin/storage': never, '/admin/users': never, '/browse': never, '/browse/[...path]': 'path', '/categories/[category]': 'category', '/create': never, '/recent': never, '/settings': never, '/settings/display': never, '/settings/storage': never, '/shared': never, '/starred': never, '/sync': never, '/trash': never, '/auth/callback': never, '/auth/forgot-password': never, '/auth/sign-in': never, '/error': never }
+  PAGES: { '/': never, '/account': never, '/account/activity': never, '/account/security': never, '/account/sessions': never, '/admin': never, '/admin/storage': never, '/admin/users': never, '/browse': never, '/browse/[...path]': 'path', '/categories/[category]': 'category', '/recent': never, '/settings': never, '/settings/display': never, '/settings/storage': never, '/shared': never, '/starred': never, '/sync': never, '/trash': never, '/auth/callback': never, '/auth/forgot-password': never, '/auth/sign-in': never, '/error': never }
   SERVERS: { 'GET /api/[...paths]': 'paths', 'POST /api/[...paths]': 'paths', 'PUT /api/[...paths]': 'paths', 'DELETE /api/[...paths]': 'paths' }
   ACTIONS: Record<string, never>
   LINKS: Record<string, never>

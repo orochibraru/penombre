@@ -27,6 +27,7 @@
     import { route } from "$lib/ROUTES";
     import { playableMusic } from "$lib/store/music";
     import { title } from "$lib/store/title";
+    import { uploadDialogOpen, newFolderDialogOpen } from "$lib/store/upload";
     import { cn } from "$lib/utils";
     import SidebarBranding from "$lib/components/sidebar-branding.svelte";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
@@ -39,8 +40,6 @@
 
     const { children, data } = $props();
 
-    let newFolderOpen: boolean = $state(false);
-    let uploadOpen: boolean = $state(false);
     let mobileCreateDrawerOpen: boolean = $state(false);
     let uploadLoading: boolean = $state(false);
 
@@ -178,14 +177,14 @@
                         <DropdownMenu.Group>
                             <DropdownMenu.Item
                                 class="font-medium"
-                                onclick={() => (newFolderOpen = true)}
+                                onclick={() => ($newFolderDialogOpen = true)}
                             >
                                 <FolderPlusIcon />
                                 Folder
                             </DropdownMenu.Item>
                             <DropdownMenu.Item
                                 class="font-medium"
-                                onclick={() => (uploadOpen = true)}
+                                onclick={() => ($uploadDialogOpen = true)}
                             >
                                 <CloudUploadIcon />
                                 File Upload
@@ -248,9 +247,6 @@
                         class={cn(
                             bottomNavItemClass,
                             "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg  border-transparent border-2 w-12 h-12 flex items-center justify-center",
-                            isActive(route("/create"))
-                                ? "text-primary bg-background border-primary"
-                                : "",
                         )}
                     >
                         <MenuIcon class="w-6! h-6!" />
@@ -262,9 +258,6 @@
                         class={cn(
                             bottomNavItemClass,
                             "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg  border-transparent border-2 w-12 h-12 flex items-center justify-center",
-                            isActive(route("/create"))
-                                ? "text-primary bg-background border-primary"
-                                : "",
                         )}
                     >
                         {#if uploadLoading}
@@ -315,7 +308,7 @@
                 size="lg"
                 variant="outline"
                 onclick={() => {
-                    newFolderOpen = true;
+                    $newFolderDialogOpen = true;
                     mobileCreateDrawerOpen = false;
                 }}
             >
@@ -327,7 +320,7 @@
                 variant="outline"
                 size="lg"
                 onclick={() => {
-                    uploadOpen = true;
+                    $uploadDialogOpen = true;
                     mobileCreateDrawerOpen = false;
                 }}
             >
@@ -343,5 +336,5 @@
     </Drawer.Content>
 </Drawer.Root>
 
-<NewFolderDialog bind:open={newFolderOpen} />
-<UploadDialog bind:open={uploadOpen} bind:loading={uploadLoading} />
+<NewFolderDialog bind:open={$newFolderDialogOpen} />
+<UploadDialog bind:open={$uploadDialogOpen} bind:loading={uploadLoading} />

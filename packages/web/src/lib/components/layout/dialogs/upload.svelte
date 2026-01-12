@@ -18,7 +18,11 @@
         type FileDropZoneProps,
     } from "$lib/components/ui/file-drop-zone";
     import { uploadSchema } from "$lib/schemas/upload";
-    import { uploadedItems, uploadingItems } from "$lib/store/upload";
+    import {
+        uploadedItems,
+        uploadingItems,
+        pendingUploadFiles,
+    } from "$lib/store/upload";
     import { cn } from "$lib/utils";
     import { onMount } from "svelte";
     import { MediaQuery } from "svelte/reactivity";
@@ -42,6 +46,14 @@
 
     let { open = $bindable(false), loading = $bindable(false) }: Props =
         $props();
+
+    // Pick up pending files from drag/drop when dialog opens
+    $effect(() => {
+        if (open && $pendingUploadFiles.length > 0) {
+            files.set([...Array.from($files), ...$pendingUploadFiles]);
+            pendingUploadFiles.set([]);
+        }
+    });
 
     const superform = superForm(page.data.uploadForm, {
         validators: valibotClient(uploadSchema),

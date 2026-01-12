@@ -25,6 +25,8 @@ const folderQuerySchema = z.object({
 
 const rawQuerySchema = z.object({
 	raw: z.string().optional(),
+	thumbnail: z.string().optional(),
+	size: z.string().optional(),
 });
 
 // ============================================================================
@@ -148,10 +150,36 @@ const objectsRouter = new Hono<StorageRouter>()
 		}
 
 		const decodedItemName = decodeURIComponent(c.req.param("item"));
-		const { raw } = c.req.valid("query");
+		const { raw, thumbnail, size } = c.req.valid("query");
 
 		try {
-			if (raw === "true") {
+			// Handle thumbnail requests
+			if (thumbnail === "true") {
+				logger.debug(`Fetching thumbnail for: ${decodedItemName}`);
+				const thumbSize = size ? Number.parseInt(size, 10) : 300;
+				const thumbData = await storageService.getThumbnail(
+					decodedItemName,
+					thumbSize,
+				);
+
+				if (!thumbData) {
+					// Fall back to raw file if thumbnail generation fails
+					logger.debug(
+						`Thumbnail generation failed, falling back to raw for: ${decodedItemName}`,
+					);
+				} else {
+					return new Response(new Uint8Array(thumbData.buffer), {
+						headers: {
+							"Content-Type": thumbData.contentType,
+							"Cache-Control": "public, max-age=31536000, immutable",
+							"Content-Length": thumbData.buffer.length.toString(),
+						},
+						status: 200,
+					});
+				}
+			}
+
+			if (raw === "true" || thumbnail === "true") {
 				logger.debug(`Fetching raw file data for: ${decodedItemName}`);
 				const fileData = await storageService.getRawFileData(decodedItemName);
 				if (!fileData) {

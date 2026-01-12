@@ -5,19 +5,17 @@ type ObjectUrlProps = {
 	baseUrl: URL;
 	itemPath: string;
 	raw?: boolean;
+	thumbnail?: boolean;
+	size?: number;
 };
 
 export function getObjectUrl({
 	baseUrl,
 	itemPath,
 	raw,
+	thumbnail,
+	size,
 }: ObjectUrlProps): string {
-	console.log(
-		"Generating object URL for itemPath:",
-		itemPath,
-		"with raw:",
-		raw,
-	);
 	const fullPath = page.params.path
 		? `${page.params.path}/${itemPath}`
 		: itemPath;
@@ -29,6 +27,12 @@ export function getObjectUrl({
 		? finalBaseUrl.slice(0, -1)
 		: finalBaseUrl;
 
-	const finalUrl = `${normalizedBaseUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${raw ? "?raw=true" : ""}`;
+	const params = new URLSearchParams();
+	if (raw) params.set("raw", "true");
+	if (thumbnail) params.set("thumbnail", "true");
+	if (size) params.set("size", size.toString());
+
+	const queryString = params.toString();
+	const finalUrl = `${normalizedBaseUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${queryString ? `?${queryString}` : ""}`;
 	return finalUrl;
 }
