@@ -113,9 +113,9 @@ See [.example.env](.example.env) for a complete reference.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `APP_ENV` | Environment (`dev`/`production`) | `production` |
-| `PORT` | Server port | `8080` |
-| `ORIGIN` | Public origin URL (used for OAuth callbacks) | Required |
-| `LOG_LEVEL` | `debug`, `info`, `warn`, `error`, `trace` | `info` |
+| `PORT` | Server port | `3000` |
+| `ORIGIN` | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
+| `LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` |
 | `LOG_FORMAT` | `console` or `json` | `console` |
 
 #### Database
@@ -137,22 +137,27 @@ See [.example.env](.example.env) for a complete reference.
 
 Configure OAuth providers using the pattern `OAUTH_<PROVIDER>_<SETTING>`:
 
-```bash
-OAUTH_GITHUB_CLIENT_ID=your-client-id
-OAUTH_GITHUB_CLIENT_SECRET=your-client-secret
-OAUTH_GITHUB_ENABLED=true
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OAUTH_<PROVIDER>_ENABLED` | Enable this provider | `true` |
+| `OAUTH_<PROVIDER>_CLIENT_ID` | OAuth client ID | Required |
+| `OAUTH_<PROVIDER>_CLIENT_SECRET` | OAuth client secret | Required |
+| `OAUTH_<PROVIDER>_DISCOVERY_URL` | OIDC discovery URL | Required |
+| `OAUTH_<PROVIDER>_PRETTY_NAME` | Display name | Provider name |
+| `OAUTH_<PROVIDER>_PKCE` | Use PKCE | `true` |
+| `OAUTH_<PROVIDER>_SCOPES` | Comma-separated scopes | `openid,profile,email` |
 
 #### SMTP (Optional)
 
-| Variable | Description |
-|----------|-------------|
-| `SMTP_HOST` | SMTP server hostname |
-| `SMTP_PORT` | SMTP server port |
-| `SMTP_USER` | SMTP username |
-| `SMTP_PASSWORD` | SMTP password |
-| `SMTP_FROM` | Sender email address |
-| `SMTP_SECURE` | Use TLS (`true`/`false`) |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SMTP_ENABLED` | Enable SMTP | `false` |
+| `SMTP_HOST` | SMTP server hostname | Required if enabled |
+| `SMTP_PORT` | SMTP server port | `587` |
+| `SMTP_USER` | SMTP username | Required if enabled |
+| `SMTP_PASSWORD` | SMTP password | Required if enabled |
+| `SMTP_FROM` | Sender email address | Required if enabled |
+| `SMTP_SECURE` | Use TLS (`true`/`false`) | `false` |
 
 ## 🛠️ Development
 
