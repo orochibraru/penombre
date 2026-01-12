@@ -1,8 +1,8 @@
 import { error } from "@sveltejs/kit";
 import { getApiClient } from "$lib/api-client";
-import type { PageServerLoad } from "./$types";
+import type { PageLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ fetch }) => {
+export const load: PageLoad = async ({ fetch }) => {
 	const client = getApiClient(fetch);
 
 	const res = await client.storage.objects.trash.$get();

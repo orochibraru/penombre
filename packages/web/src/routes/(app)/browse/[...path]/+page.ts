@@ -2,9 +2,9 @@ import { error } from "@sveltejs/kit";
 import { getApiClient } from "$lib/api-client";
 import { route } from "$lib/ROUTES";
 import type { BreadCrumb } from "$lib/utils";
-import type { PageServerLoad } from "./$types";
+import type { PageLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageLoad = async ({ params, fetch }) => {
 	const folders = params.path.split("/");
 
 	const crumbs: BreadCrumb[] = [];
