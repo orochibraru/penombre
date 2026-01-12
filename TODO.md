@@ -1,8 +1,3 @@
-- Assume user is admin if only one user exists (hooks)
-- Rewrite copilot instructions
-- Fix renaming object moving it to root directory
-- Add admin features
+# TODOs
 - Improve profile page
 - Allow user to set password if signing in through Oauth and both providers enabled
-- Signup flow
-- Default user w/admin rights if no user (when seeding/migrating DB)

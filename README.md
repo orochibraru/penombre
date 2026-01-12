@@ -113,7 +113,6 @@ See [.example.env](.example.env) for a complete reference.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `APP_ENV` | Environment (`dev`/`production`) | `production` |
-| `PORT` | Server port | `3000` |
 | `ORIGIN` | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
 | `LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` |
 | `LOG_FORMAT` | `console` or `json` | `console` |

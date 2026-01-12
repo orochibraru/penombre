@@ -26,7 +26,6 @@ const opendriveConfigSchema = z
 		environment: z
 			.enum(["dev", "production"])
 			.default(defaultConfigValues.environment),
-		port: z.number().default(defaultConfigValues.port),
 		origin: z.string().default(defaultConfigValues.origin),
 		logLevel: z
 			.enum(["debug", "info", "warn", "error"])
@@ -198,7 +197,6 @@ export function getOpendriveConfig(): OpendriveConfig {
 
 	const environmentVariables = {
 		environment: env.APP_ENV || defaultConfigValues.environment,
-		port: env.PORT ? Number.parseInt(env.PORT, 10) : defaultConfigValues.port,
 		origin: env.ORIGIN || defaultConfigValues.origin,
 		logLevel:
 			env.LOG_LEVEL === "debug" ||

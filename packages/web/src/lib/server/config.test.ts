@@ -69,7 +69,6 @@ describe("validateOpendriveConfig", () => {
 		const config = validateOpendriveConfig({});
 
 		expect(config.environment).toBe(defaultConfigValues.environment);
-		expect(config.port).toBe(defaultConfigValues.port);
 		expect(config.origin).toBe(defaultConfigValues.origin);
 		expect(config.logLevel).toBe(defaultConfigValues.logLevel);
 		expect(config.logFormat).toBe(defaultConfigValues.logFormat);
@@ -78,7 +77,6 @@ describe("validateOpendriveConfig", () => {
 	it("should accept valid full config", () => {
 		const config = validateOpendriveConfig({
 			environment: "dev",
-			port: 8080,
 			origin: "https://example.com",
 			logLevel: "debug",
 			logFormat: "json",
@@ -95,7 +93,6 @@ describe("validateOpendriveConfig", () => {
 		});
 
 		expect(config.environment).toBe("dev");
-		expect(config.port).toBe(8080);
 		expect(config.origin).toBe("https://example.com");
 		expect(config.logLevel).toBe("debug");
 		expect(config.logFormat).toBe("json");
@@ -301,7 +298,6 @@ describe("getOpendriveConfig", () => {
 		const config = getOpendriveConfig();
 
 		expect(config.environment).toBe(defaultConfigValues.environment);
-		expect(config.port).toBe(defaultConfigValues.port);
 		expect(config.logLevel).toBe(defaultConfigValues.logLevel);
 	});
 
@@ -312,15 +308,6 @@ describe("getOpendriveConfig", () => {
 		const config = getOpendriveConfig();
 
 		expect(config.environment).toBe("dev");
-	});
-
-	it("should read PORT from environment", () => {
-		clearConfigEnvVars();
-		process.env.PORT = "8080";
-
-		const config = getOpendriveConfig();
-
-		expect(config.port).toBe(8080);
 	});
 
 	it("should read LOG_LEVEL from environment", () => {

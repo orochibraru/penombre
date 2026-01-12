@@ -7,7 +7,6 @@
 
 export const defaultConfigValues = {
 	environment: "production" as "dev" | "production",
-	port: 3000,
 	origin: "http://localhost:3000",
 	logLevel: "info" as "debug" | "info" | "warn" | "error",
 	logFormat: "console" as "console" | "json",
@@ -45,9 +44,6 @@ LOG_LEVEL=${defaultConfigValues.logLevel}
 
 # Log format: "console" or "json"
 LOG_FORMAT=${defaultConfigValues.logFormat}
-
-# Server port
-PORT=${defaultConfigValues.port}
 
 # Public origin URL (used for OAuth callbacks, etc.)
 ORIGIN=${defaultConfigValues.origin}

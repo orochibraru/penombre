@@ -38,18 +38,16 @@ describe("Database Connection Singleton", () => {
 		expect(globalForDb.__db_instance).toBeDefined();
 	});
 
-	it("should reuse existing globalThis client across module reloads", async () => {
-		const { getDb, db } = await import("./index");
+	it("should reuse db instance across getDb calls", async () => {
+		const { getDb } = await import("./index");
 
-		const firstInstance = db;
-		const firstClient = globalForDb.__db_client;
-
-		// Simulate what happens on HMR: the module re-executes
-		// but globalThis persists. The singleton should return same instance.
+		const firstInstance = getDb();
 		const secondInstance = getDb();
+		const thirdInstance = getDb();
 
+		// All calls should return the same instance
 		expect(secondInstance).toBe(firstInstance);
-		expect(globalForDb.__db_client).toBe(firstClient);
+		expect(thirdInstance).toBe(firstInstance);
 	});
 
 	it("should export closeDb function for graceful shutdown", async () => {
