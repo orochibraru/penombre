@@ -29,6 +29,9 @@ packages/
 └── mobile/  # Expo/React Native mobile app
 ```
 
+### Database
+![DB Diagram](./resources/db.svg)
+
 ### Web Package (`packages/web`)
 
 The web package is a full-stack SvelteKit application:
