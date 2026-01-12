@@ -49,6 +49,12 @@ export const codeFileExtensions = [
 	".sh",
 	".hcl",
 	".tf",
+
+	// Scripts
+	".ps1",
+	".bat",
+	".cmd",
+	".sh",
 ];
 
 export const codeFileNames = [

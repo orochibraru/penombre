@@ -3,6 +3,7 @@
     import type { ObjectItem } from "$lib/api-client";
     import { isCodeItem } from "$lib/file-utils";
     import { getObjectUrl } from "$lib/url";
+    import { FileCodeIcon } from "@lucide/svelte";
 
     type Props = {
         item: ObjectItem;
@@ -33,13 +34,7 @@
             height="200px"
         />
     {:else if isCodeItem(item.metadata.name ?? item.key)}
-        <embed
-            src={objectUrl}
-            title={item.metadata.name ?? item.key}
-            class="overflow-hidden"
-            width="100%"
-            height="200px"
-        />
+        <FileCodeIcon class="mx-auto h-20 w-20 text-muted-foreground" />
     {:else}
         <img
             src={objectUrl}

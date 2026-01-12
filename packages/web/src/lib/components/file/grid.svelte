@@ -152,7 +152,7 @@
 {#snippet loadingRows()}
     {#each Array(loadingAmount) as _}
         <li class="flex items-center justify-between py-3">
-            <Skeleton class="h-[30px] w-full rounded-sm" />
+            <Skeleton class="h-7.5 w-full rounded-sm" />
         </li>
     {/each}
 {/snippet}

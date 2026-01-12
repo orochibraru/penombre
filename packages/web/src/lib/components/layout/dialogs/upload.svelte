@@ -3,7 +3,7 @@
     import { toast } from "svelte-sonner";
     import { filesProxy, superForm } from "sveltekit-superforms";
     import { valibotClient } from "sveltekit-superforms/adapters";
-    import { invalidateAll } from "$app/navigation";
+    import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
     import {
         getApiClient,
@@ -112,7 +112,7 @@
         delete tmp2[fileNameWithoutFolder(fileName)];
         $uploadedItems = { ...tmp2 };
 
-        await invalidateAll();
+        await invalidate("app:files");
     }
 
     async function resultCallback(results: FullResult[]) {
@@ -305,7 +305,7 @@
         const globalpromise = Promise.all(uploadMetadataPromises).finally(
             async () => {
                 open = false;
-                await invalidateAll();
+                await invalidate("app:files");
                 files.set([]);
 
                 void resultCallback(results).finally(() => {

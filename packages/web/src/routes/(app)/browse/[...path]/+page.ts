@@ -4,7 +4,9 @@ import { route } from "$lib/ROUTES";
 import type { BreadCrumb } from "$lib/utils";
 import type { PageLoad } from "./$types";
 
-export const load: PageLoad = async ({ params, fetch }) => {
+export const load: PageLoad = async ({ params, fetch, depends }) => {
+	depends("app:files");
+
 	const folders = params.path.split("/");
 
 	const crumbs: BreadCrumb[] = [];

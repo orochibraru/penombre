@@ -1,6 +1,6 @@
 <script lang="ts">
     import { toast } from "svelte-sonner";
-    import { invalidateAll } from "$app/navigation";
+    import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
     import { getApiClient } from "$lib/api-client";
     import Button from "$lib/components/ui/button/button.svelte";
@@ -41,7 +41,7 @@
                     throw new Error("Failed to rename");
                 }
                 $itemAction.open = false;
-                invalidateAll();
+                invalidate("app:files");
             })
             .catch((e) => {
                 throw e;

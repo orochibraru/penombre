@@ -1,6 +1,6 @@
 <script lang="ts">
     import { toast } from "svelte-sonner";
-    import { invalidateAll } from "$app/navigation";
+    import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
     import { getApiClient } from "$lib/api-client";
     import Button, {
@@ -41,7 +41,7 @@
                     throw new Error("Failed to create folder");
                 }
 
-                await invalidateAll();
+                await invalidate("app:files");
                 open = false;
                 newFolderName = defaultFolderName;
             });

@@ -15,7 +15,7 @@
     import { MediaQuery } from "svelte/reactivity";
     import { toast } from "svelte-sonner";
     import { browser, dev } from "$app/environment";
-    import { invalidateAll } from "$app/navigation";
+    import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
     import {
         getApiClient,
@@ -178,7 +178,7 @@
                     checkedItems = {};
                     actionsContextOpen = false;
                     actionableItem = undefined;
-                    await invalidateAll();
+                    await invalidate("app:files");
                 }),
             {
                 loading: `Restoring ${count} items`,
@@ -362,7 +362,7 @@
                     checkedItems = {};
                     actionsContextOpen = false;
                     actionableItem = undefined;
-                    await invalidateAll();
+                    await invalidate("app:files");
                 }),
             {
                 loading: isTrash
