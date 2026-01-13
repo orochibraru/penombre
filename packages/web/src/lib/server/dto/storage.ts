@@ -1305,6 +1305,15 @@ export class StorageService {
 		});
 	}
 
+	public getFullFolderPath(id: string, parentId?: string): string {
+		const folderPrefix = id.endsWith("/") ? id : `${id}/`;
+		if (parentId) {
+			const parentPrefix = parentId.endsWith("/") ? parentId : `${parentId}/`;
+			return `${parentPrefix}${folderPrefix}`;
+		}
+		return folderPrefix;
+	}
+
 	public async restoreFolder(key: string): Promise<void> {
 		const folderPrefix = key.endsWith("/") ? key : `${key}/`;
 		const dirPath = join(this.storagePath, folderPrefix);
@@ -1390,10 +1399,10 @@ export class StorageService {
 	}
 
 	public async updateFolderMeta(
-		name: string,
-		data: { isTrashed?: boolean; tags?: string[] },
+		id: string,
+		data: { isTrashed?: boolean; tags?: string[]; name?: string },
 	): Promise<void> {
-		const folderPrefix = name.endsWith("/") ? name : `${name}/`;
+		const folderPrefix = id.endsWith("/") ? id : `${id}/`;
 		const dirPath = join(this.storagePath, folderPrefix);
 		if (!existsSync(dirPath)) {
 			throw new Error("Folder not found");
@@ -1412,6 +1421,9 @@ export class StorageService {
 		}
 		if (Array.isArray(data.tags)) {
 			metadata.tags = data.tags;
+		}
+		if (typeof data.name === "string") {
+			metadata.name = data.name;
 		}
 
 		await Bun.write(keepMetaPath, JSON.stringify(metadata));

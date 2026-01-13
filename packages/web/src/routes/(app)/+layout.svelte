@@ -33,8 +33,8 @@
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
     import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
     import * as Drawer from "$lib/components/ui/drawer/index";
-    import NewFolderDialog from "$lib/components/layout/dialogs/new-folder.svelte";
-    import UploadDialog from "$lib/components/layout/dialogs/upload.svelte";
+    import NewFolderDialog from "$lib/components/layout/dialogs/new-folder-dialog.svelte";
+    import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
     import Spinner from "$lib/components/ui/Spinner.svelte";
     import { MediaQuery } from "svelte/reactivity";
 

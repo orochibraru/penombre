@@ -9,10 +9,6 @@ import { newFolderSchema } from "$lib/server/schema";
 
 const logger = new Logger("FoldersRouter");
 
-const parentQuerySchema = z.object({
-	parent: z.string().optional(),
-});
-
 const foldersRouter = new Hono<StorageRouter>()
 
 	.use("*", async (c, next) => {
@@ -78,15 +74,14 @@ const foldersRouter = new Hono<StorageRouter>()
 		}
 	})
 
-	// GET /storage/folders/folder/:folder - Get a folder
-	.get("/folder/:folder", async (c) => {
+	// GET /storage/folders/folder/:id - Get a folder
+	.get("/folder/:id", async (c) => {
 		const storageService = c.get("storageService");
-		const folderName = decodeURIComponent(c.req.param("folder"));
-
+		const folderId = c.req.param("id");
 		try {
-			logger.debug(`Getting folder: ${folderName}`);
-			const folder = await storageService.getFolder(folderName);
-			logger.debug(`Folder retrieved: ${folderName}`);
+			logger.debug(`Getting folder: ${folderId}`);
+			const folder = await storageService.getFolder(folderId);
+			logger.debug(`Folder retrieved: ${folderId}`);
 			return c.json(folder);
 		} catch (error) {
 			logger.error("Error getting folder:", error);
@@ -94,18 +89,25 @@ const foldersRouter = new Hono<StorageRouter>()
 		}
 	})
 
-	// GET /storage/folders/folder/:folder/meta - Get folder metadata
+	// GET /storage/folders/folder/:id/meta - Get folder metadata
 	.get(
-		"/folder/:folder/meta",
-		zValidator("query", parentQuerySchema),
+		"/folder/:id/meta",
+		zValidator(
+			"query",
+			z.object({
+				parent: z.string().optional(),
+			}),
+		),
 		async (c) => {
 			const storageService = c.get("storageService");
-			const folderName = decodeURIComponent(c.req.param("folder"));
-			const { parent } = c.req.valid("query");
+			const query = c.req.valid("query");
 
-			const folderPath = parent
-				? `${decodeURIComponent(parent)}/${folderName}`
-				: folderName;
+			const folderId = c.req.param("id");
+
+			const folderPath = storageService.getFullFolderPath(
+				folderId,
+				query.parent,
+			);
 
 			try {
 				const meta = await storageService.getFolderMeta(folderPath);
@@ -120,30 +122,28 @@ const foldersRouter = new Hono<StorageRouter>()
 		},
 	)
 
-	// PUT /storage/folders/folder/:folder - Update folder metadata
+	// PUT /storage/folders/folder/:id - Update folder metadata
 	.put(
-		"/folder/:folder",
-		zValidator("query", parentQuerySchema),
+		"/folder/:id",
 		zValidator(
 			"json",
 			z.object({
 				isTrashed: z.boolean().optional(),
 				tags: z.array(z.string()).optional(),
+				name: z.string().optional(),
+				parentFolderId: z.string().optional(),
 			}),
 		),
 		async (c) => {
 			const storageService = c.get("storageService");
-			const { parent } = c.req.valid("query");
 			const body = c.req.valid("json");
 
-			const decoded = {
-				folder: decodeURIComponent(c.req.param("folder")),
-				parent: parent ? decodeURIComponent(parent) : undefined,
-			};
+			const folderId = c.req.param("id");
 
-			const folderPath = decoded.parent
-				? `${decoded.parent}/${decoded.folder}`
-				: decoded.folder;
+			const folderPath = storageService.getFullFolderPath(
+				folderId,
+				body.parentFolderId,
+			);
 
 			try {
 				logger.debug(`Updating folder metadata: ${folderPath}`);
@@ -157,23 +157,26 @@ const foldersRouter = new Hono<StorageRouter>()
 		},
 	)
 
-	// DELETE /storage/folders/folder/:folder - Delete a folder
+	// DELETE /storage/folders/folder/:id - Delete a folder
 	.delete(
-		"/folder/:folder",
-		zValidator("query", parentQuerySchema),
+		"/folder/:id",
+		zValidator(
+			"json",
+			z.object({
+				name: z.string().optional(),
+				parentFolderId: z.string().optional(),
+			}),
+		),
 		async (c) => {
 			const storageService = c.get("storageService");
-			const { parent } = c.req.valid("query");
+			const body = c.req.valid("json");
 
-			const decoded = {
-				folder: decodeURIComponent(c.req.param("folder")),
-				parent: parent ? decodeURIComponent(parent) : undefined,
-			};
+			const folderId = c.req.param("id");
 
-			const folderPath = decoded.parent
-				? `${decoded.parent}/${decoded.folder}`
-				: decoded.folder;
-
+			const folderPath = storageService.getFullFolderPath(
+				folderId,
+				body.parentFolderId,
+			);
 			try {
 				logger.debug(`Hard deleting folder: ${folderPath}`);
 				await storageService.deleteFolder(folderPath);
@@ -186,23 +189,25 @@ const foldersRouter = new Hono<StorageRouter>()
 		},
 	)
 
-	// POST /storage/folders/folder/:folder/trash - Soft-trash a folder
+	// POST /storage/folders/folder/:id/trash - Soft-trash a folder
 	.post(
-		"/folder/:folder/trash",
-		zValidator("query", parentQuerySchema),
+		"/folder/:id/trash",
+		zValidator(
+			"json",
+			z.object({
+				parentFolderId: z.string().optional(),
+			}),
+		),
 		async (c) => {
 			const storageService = c.get("storageService");
-			const { parent } = c.req.valid("query");
+			const body = c.req.valid("json");
 
-			const decoded = {
-				folder: decodeURIComponent(c.req.param("folder")),
-				parent: parent ? decodeURIComponent(parent) : undefined,
-			};
+			const folderId = c.req.param("id");
 
-			const folderPath = decoded.parent
-				? `${decoded.parent}/${decoded.folder}`
-				: decoded.folder;
-
+			const folderPath = storageService.getFullFolderPath(
+				folderId,
+				body.parentFolderId,
+			);
 			try {
 				logger.debug(`Trashing folder: ${folderPath}`);
 				await storageService.trashFolder(folderPath);
@@ -215,22 +220,25 @@ const foldersRouter = new Hono<StorageRouter>()
 		},
 	)
 
-	// POST /storage/folders/folder/:folder/restore - Restore a trashed folder
+	// POST /storage/folders/folder/:id/restore - Restore a trashed folder
 	.post(
-		"/folder/:folder/restore",
-		zValidator("query", parentQuerySchema),
+		"/folder/:id/restore",
+		zValidator(
+			"json",
+			z.object({
+				parentFolderId: z.string().optional(),
+			}),
+		),
 		async (c) => {
 			const storageService = c.get("storageService");
-			const { parent } = c.req.valid("query");
+			const body = c.req.valid("json");
 
-			const decoded = {
-				folder: decodeURIComponent(c.req.param("folder")),
-				parent: parent ? decodeURIComponent(parent) : undefined,
-			};
+			const folderId = c.req.param("id");
 
-			const folderPath = decoded.parent
-				? `${decoded.parent}/${decoded.folder}`
-				: decoded.folder;
+			const folderPath = storageService.getFullFolderPath(
+				folderId,
+				body.parentFolderId,
+			);
 
 			try {
 				logger.debug(`Restoring folder: ${folderPath}`);

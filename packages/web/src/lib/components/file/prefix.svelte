@@ -38,7 +38,7 @@
         iconSize: string;
         handleOpenItem: (item: ObjectItem) => void;
         indeterminate: boolean;
-        checkedItems: Record<string, boolean>;
+        checkedItems: Record<string, string | false>;
         layout: "grid" | "list";
     };
 
@@ -82,7 +82,7 @@
             return;
         }
 
-        checkedItems[item.key] = true;
+        checkedItems[item.key] = item.metadata.name || item.key;
         return;
     }
 

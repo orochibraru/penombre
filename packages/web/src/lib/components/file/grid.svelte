@@ -18,8 +18,6 @@
         cn,
         isFolderItem,
         type SharedFileDisplayProps,
-        type SortColumn,
-        type SortDirection,
         shouldDisplayAction,
     } from "$lib/utils";
 
@@ -71,7 +69,7 @@
     }
 
     function isChecked(item: ObjectItem): boolean {
-        return checkedItems[item.key] || false;
+        return !!checkedItems[item.key];
     }
 
     function getItemName(item: ObjectItem): string {
@@ -242,25 +240,31 @@
         class="col-span-full flex flex-col items-center justify-center gap-4 py-12"
     >
         <div class="text-muted-foreground text-center">
-            <p class="text-lg font-medium">No files yet</p>
-            <p class="text-sm">
-                Upload files or create a folder to get started
-            </p>
-        </div>
-        <div class="flex gap-2">
-            {#if onUpload}
-                <Button variant="default" onclick={onUpload}>
-                    <CloudUploadIcon class="mr-2 h-4 w-4" />
-                    Upload Files
-                </Button>
-            {/if}
-            {#if onCreateFolder}
-                <Button variant="outline" onclick={onCreateFolder}>
-                    <FolderPlusIcon class="mr-2 h-4 w-4" />
-                    New Folder
-                </Button>
+            {#if page.url.pathname.startsWith("/browse")}
+                <p class="text-lg font-medium">No files yet</p>
+                <p class="text-sm">
+                    Upload files or create a folder to get started
+                </p>
+            {:else}
+                <p class="text-lg font-medium">No results.</p>
             {/if}
         </div>
+        {#if page.url.pathname.startsWith("/browse")}
+            <div class="flex gap-2">
+                {#if onUpload}
+                    <Button variant="default" onclick={onUpload}>
+                        <CloudUploadIcon class="mr-2 h-4 w-4" />
+                        Upload Files
+                    </Button>
+                {/if}
+                {#if onCreateFolder}
+                    <Button variant="outline" onclick={onCreateFolder}>
+                        <FolderPlusIcon class="mr-2 h-4 w-4" />
+                        New Folder
+                    </Button>
+                {/if}
+            </div>
+        {/if}
     </li>
 {/snippet}
 

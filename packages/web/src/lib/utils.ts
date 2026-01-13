@@ -194,7 +194,7 @@ export type SharedFileDisplayProps = {
 	files: ObjectList;
 	actionableItem: ObjectItem | undefined;
 	actionsContextOpen: boolean;
-	checkedItems: Record<string, boolean>;
+	checkedItems: Record<string, string | false>;
 	allSelected: boolean;
 	indeterminate: boolean;
 	itemActions: ItemActionGroup[];

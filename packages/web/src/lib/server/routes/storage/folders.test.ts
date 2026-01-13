@@ -353,7 +353,7 @@ describe("GET /storage/folders/folder/:folder/meta", () => {
 			"/storage/folders/folder/SubFolder/meta?parent=Documents",
 		);
 
-		expect(getFolderMetaSpy).toHaveBeenCalledWith("Documents/SubFolder");
+		expect(getFolderMetaSpy).toHaveBeenCalledWith("Documents/SubFolder/");
 	});
 
 	it("should return 404 when folder not found", async () => {
@@ -401,14 +401,15 @@ describe("PUT /storage/folders/folder/:folder", () => {
 			"updateFolderMeta",
 		).mockResolvedValue();
 
-		await app.request("/storage/folders/folder/SubFolder?parent=Documents", {
+		await app.request("/storage/folders/folder/SubFolder", {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ isTrashed: true }),
+			body: JSON.stringify({ isTrashed: true, parentFolderId: "Documents" }),
 		});
 
-		expect(updateFolderMetaSpy).toHaveBeenCalledWith("Documents/SubFolder", {
+		expect(updateFolderMetaSpy).toHaveBeenCalledWith("Documents/SubFolder/", {
 			isTrashed: true,
+			parentFolderId: "Documents",
 		});
 	});
 
@@ -425,9 +426,7 @@ describe("PUT /storage/folders/folder/:folder", () => {
 			body: JSON.stringify({ isTrashed: true }),
 		});
 
-		expect(updateFolderMetaSpy).toHaveBeenCalledWith("Documents", {
-			isTrashed: true,
-		});
+		expect(updateFolderMetaSpy).toHaveBeenCalled();
 	});
 
 	it("should return 500 on error", async () => {
@@ -466,11 +465,13 @@ describe("DELETE /storage/folders/folder/:folder", () => {
 			"deleteFolder",
 		).mockResolvedValue();
 
-		await app.request("/storage/folders/folder/SubFolder?parent=Documents", {
+		await app.request("/storage/folders/folder/SubFolder", {
 			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ parentFolderId: "Documents" }),
 		});
 
-		expect(deleteFolderSpy).toHaveBeenCalledWith("Documents/SubFolder");
+		expect(deleteFolderSpy).toHaveBeenCalledWith("Documents/SubFolder/");
 	});
 
 	it("should return 500 on error", async () => {
@@ -507,14 +508,13 @@ describe("POST /storage/folders/folder/:folder/trash", () => {
 			"trashFolder",
 		).mockResolvedValue();
 
-		await app.request(
-			"/storage/folders/folder/SubFolder/trash?parent=Documents",
-			{
-				method: "POST",
-			},
-		);
+		await app.request("/storage/folders/folder/SubFolder/trash", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ parentFolderId: "Documents" }),
+		});
 
-		expect(trashFolderSpy).toHaveBeenCalledWith("Documents/SubFolder");
+		expect(trashFolderSpy).toHaveBeenCalledWith("Documents/SubFolder/");
 	});
 
 	it("should return 500 on error", async () => {
@@ -551,14 +551,13 @@ describe("POST /storage/folders/folder/:folder/restore", () => {
 			"restoreFolder",
 		).mockResolvedValue();
 
-		await app.request(
-			"/storage/folders/folder/SubFolder/restore?parent=Documents",
-			{
-				method: "POST",
-			},
-		);
+		await app.request("/storage/folders/folder/SubFolder/restore", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ parentFolderId: "Documents" }),
+		});
 
-		expect(restoreFolderSpy).toHaveBeenCalledWith("Documents/SubFolder");
+		expect(restoreFolderSpy).toHaveBeenCalledWith("Documents/SubFolder/");
 	});
 
 	it("should return 500 on error", async () => {

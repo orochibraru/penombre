@@ -7,47 +7,57 @@
     import { MediaQuery } from "svelte/reactivity";
 
     type Props = {
-        confirmRestoreOpen: boolean;
-        restoringItem: boolean;
-        checkedItems: Record<string, boolean>;
-        handleRestoreObject: () => void;
+        confirmDeleteOpen: boolean;
+        deletingItem: boolean;
+        checkedItems: Record<string, string | false>;
+        handleDeleteObject: () => void;
     };
 
     let {
-        confirmRestoreOpen = $bindable(false),
-        restoringItem = $bindable(false),
+        confirmDeleteOpen = $bindable(false),
+        deletingItem = $bindable(false),
         checkedItems = $bindable(),
-        handleRestoreObject,
+        handleDeleteObject,
     }: Props = $props();
 
+    // Get display names from checked items
+    let itemNames = $derived(
+        Object.values(checkedItems).filter((name): name is string => !!name),
+    );
+
+    const isTrash = $derived(page.url.pathname.startsWith("/trash"));
     const isDesktop = new MediaQuery("(min-width: 768px)");
 </script>
 
-{#if isDesktop}
-    <AlertDialog.Root bind:open={confirmRestoreOpen}>
+{#if isDesktop.current}
+    <AlertDialog.Root bind:open={confirmDeleteOpen}>
         <AlertDialog.Content class="max-h-[70%] overflow-y-auto pb-16">
             <AlertDialog.Header>
                 <AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
                 <AlertDialog.Description>
-                    This will permanently restore the following items to their
-                    original location.
+                    {#if isTrash}
+                        This action cannot be undone. This will permanently
+                        delete the following items from your storage device.
+                    {:else}
+                        This will move the following items to the Trash.
+                    {/if}
                 </AlertDialog.Description>
             </AlertDialog.Header>
             <div class="prose">
                 <ul>
-                    {#each Object.keys(checkedItems) as item}
-                        <li class="text-foreground">{item}</li>
+                    {#each itemNames as name}
+                        <li class="text-foreground">{name}</li>
                     {/each}
                 </ul>
             </div>
             <AlertDialog.Footer class="fixed bottom-5 w-full px-10">
                 <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
                 <AlertDialog.Action
-                    onclick={() => handleRestoreObject()}
-                    disabled={restoringItem}
+                    onclick={() => handleDeleteObject()}
+                    disabled={deletingItem}
                     class="bg-red-600"
                 >
-                    {#if restoringItem}
+                    {#if deletingItem}
                         <Spinner />
                     {:else}
                         Continue
@@ -57,26 +67,30 @@
         </AlertDialog.Content>
     </AlertDialog.Root>
 {:else}
-    <Drawer.Root bind:open={confirmRestoreOpen}>
+    <Drawer.Root bind:open={confirmDeleteOpen}>
         <Drawer.Content>
             <Drawer.Header>
                 <Drawer.Title>Are you sure absolutely sure?</Drawer.Title>
                 <Drawer.Description>
-                    This will permanently restore the following items to their
-                    original location.
+                    {#if isTrash}
+                        This action cannot be undone. This will permanently
+                        delete the following items from your storage device.
+                    {:else}
+                        This will move the following items to the Trash.
+                    {/if}
                 </Drawer.Description>
             </Drawer.Header>
             <div class="prose">
                 <ul>
-                    {#each Object.keys(checkedItems) as item}
-                        <li class="text-foreground">{item}</li>
+                    {#each itemNames as name}
+                        <li class="text-foreground">{name}</li>
                     {/each}
                 </ul>
             </div>
             <Drawer.Footer>
                 <Button
-                    loading={restoringItem}
-                    onclick={() => handleRestoreObject()}
+                    loading={deletingItem}
+                    onclick={() => handleDeleteObject()}
                 >
                     Continue
                 </Button>

@@ -8,6 +8,8 @@
         DownloadIcon,
         ExternalLinkIcon,
         FolderInputIcon,
+        LayoutGridIcon,
+        LayoutListIcon,
         PencilLineIcon,
         ShareIcon,
         StarIcon,
@@ -34,7 +36,6 @@
     import * as Dialog from "$lib/components/ui/dialog";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import { Input } from "$lib/components/ui/input";
-    import * as Select from "$lib/components/ui/select/index.js";
     import { determineCodeFileLanguage, isCodeItem } from "$lib/file-utils";
     import { itemAction } from "$lib/store/actions";
     import {
@@ -52,14 +53,13 @@
     import {
         capitalizeFirstLetter,
         readableFileSize,
-        type ItemAction,
         type ItemActionGroup,
         type MultipleItemsAction,
         type SortColumn,
         type SortDirection,
     } from "$lib/utils";
-    import DeleteDialog from "$lib/components/layout/dialogs/delete.svelte";
-    import RestoreDialog from "$lib/components/layout/dialogs/restore.svelte";
+    import DeleteDialog from "$lib/components/layout/dialogs/delete-dialog.svelte";
+    import RestoreDialog from "$lib/components/layout/dialogs/restore-dialog.svelte";
     import VideoPlayer from "$lib/components/layout/video-player.svelte";
 
     type Props = {
@@ -88,7 +88,7 @@
     let confirmRestoreOpen: boolean = $state(false);
     let restoringItem: boolean = $state(false);
     let deletingItem: boolean = $state(false);
-    let checkedItems: Record<string, boolean> = $state({});
+    let checkedItems: Record<string, string | false> = $state({});
     let isSingleItemAction: boolean = $state(false);
     let searchValue: string = $state("");
     let searchResults: ObjectItem[] = $state([]);
@@ -217,16 +217,16 @@
     }
 
     async function getDeleteFolderPromise(itemPath: string) {
-        const folderName =
+        const folderId =
             itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
-        const parentPath = itemPath.slice(0, -1).includes("/")
+        const parentId = itemPath.slice(0, -1).includes("/")
             ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
             : undefined;
 
-        const promise = apiClient.storage.folders.folder[":folder"]
+        const promise = apiClient.storage.folders.folder[":id"]
             .$delete({
-                param: { folder: encodeURIComponent(folderName) },
-                query: { parent: parentPath },
+                param: { id: folderId },
+                json: { parentFolderId: parentId },
             })
             .then(async (res) => {
                 if (!res.ok) {
@@ -243,17 +243,16 @@
     }
 
     async function getTrashFolderPromise(itemPath: string) {
-        const folderName =
+        const folderId =
             itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
-        const parentPath = itemPath.slice(0, -1).includes("/")
+        const parentId = itemPath.slice(0, -1).includes("/")
             ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
             : undefined;
 
-        const promise = apiClient.storage.folders.folder[":folder"]
+        const promise = apiClient.storage.folders.folder[":id"]
             .$put({
-                param: { folder: encodeURIComponent(folderName) },
-                query: { parent: parentPath },
-                json: { isTrashed: true },
+                param: { id: folderId },
+                json: { isTrashed: true, parentFolderId: parentId },
             })
             .then(async (res) => {
                 if (!res.ok) {
@@ -317,17 +316,16 @@
     }
 
     async function getRestoreFolderPromise(itemPath: string) {
-        const folderName =
+        const folderId =
             itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
-        const parentPath = itemPath.slice(0, -1).includes("/")
+        const parentId = itemPath.slice(0, -1).includes("/")
             ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
             : undefined;
 
-        const promise = apiClient.storage.folders.folder[":folder"]
+        const promise = apiClient.storage.folders.folder[":id"]
             .$put({
-                param: { folder: encodeURIComponent(folderName) },
-                query: { parent: parentPath },
-                json: { isTrashed: false },
+                param: { id: folderId },
+                json: { isTrashed: false, parentFolderId: parentId },
             })
             .then(async (res) => {
                 if (!res.ok) {
@@ -447,7 +445,7 @@
                     action: async (item: ObjectItem) => {
                         isSingleItemAction = true;
                         checkedItems = {};
-                        checkedItems[item.key] = true;
+                        checkedItems[item.key] = item.metadata.name || item.key;
                         confirmDeleteOpen = true;
                     },
                     disabled: false,
@@ -458,7 +456,7 @@
                     action: async (item: ObjectItem) => {
                         isSingleItemAction = true;
                         checkedItems = {};
-                        checkedItems[item.key] = true;
+                        checkedItems[item.key] = item.metadata.name || item.key;
                         confirmRestoreOpen = true;
                     },
                     disabled: false,
@@ -496,6 +494,7 @@
                     title: "Rename",
                     icon: PencilLineIcon,
                     action: (item) => {
+                        actionsContextOpen = false;
                         $itemAction = {
                             open: true,
                             item,
@@ -529,7 +528,7 @@
                     action: async (item: ObjectItem) => {
                         isSingleItemAction = true;
                         checkedItems = {};
-                        checkedItems[item.key] = true;
+                        checkedItems[item.key] = item.metadata.name || item.key;
                         await handleDeleteObject();
                     },
                     variant: "destructive",
@@ -595,6 +594,7 @@
             action: async () => {
                 isSingleItemAction = false;
                 confirmRestoreOpen = true;
+                actionsContextOpen = false;
             },
         },
         {
@@ -604,6 +604,7 @@
             action: async () => {
                 isSingleItemAction = false;
                 confirmDeleteOpen = true;
+                actionsContextOpen = false;
             },
         },
     ];
@@ -727,7 +728,7 @@
     function emptyTrash() {
         // Select all items
         for (const item of data.list ?? []) {
-            checkedItems[item.key] = true;
+            checkedItems[item.key] = item.metadata.name || item.key;
         }
         confirmDeleteOpen = true;
         isSingleItemAction = false;
@@ -739,7 +740,7 @@
             (data.list ?? []).every((item) => checkedItems[item.key]);
         indeterminate =
             (data.count ?? 0) > 0 &&
-            (data.list ?? []).some((item) => checkedItems[item.key] === true) &&
+            (data.list ?? []).some((item) => !!checkedItems[item.key]) &&
             !allSelected;
     });
 </script>
@@ -765,11 +766,23 @@
         </div>
     </div>
 {:else}
-    <div class="flex w-full items-center gap-2 pb-5">
+    <Input
+        bind:value={searchValue}
+        type="search"
+        placeholder="Search"
+        class="md:hidden mb-3"
+        onkeyup={() => {
+            debounce();
+        }}
+    />
+    <div
+        class="grid grid-cols-3 md:flex w-full justify-between items-center gap-2 pb-5"
+    >
         <Input
             bind:value={searchValue}
             type="search"
             placeholder="Search"
+            class="hidden md:block"
             onkeyup={() => {
                 debounce();
             }}
@@ -779,15 +792,14 @@
                 {#snippet child({ props })}
                     <Button variant="outline" size="sm" {...props}>
                         <ArrowUpDownIcon class="h-4 w-4" />
-                        <span class="hidden sm:inline">
+                        <span class="inline">
                             {#if sortColumn}
                                 {sortColumn === "name"
                                     ? "Name"
                                     : sortColumn === "size"
                                       ? "Size"
-                                      : "Date"} ({sortDirection === "asc"
-                                    ? "↑"
-                                    : "↓"})
+                                      : "Date"}
+                                {sortDirection === "asc" ? "↑" : "↓"}
                             {:else}
                                 Sort
                             {/if}
@@ -805,9 +817,9 @@
                     }}
                 >
                     {#if sortColumn === "name" && sortDirection === "asc"}
-                        <CheckIcon class="mr-2 h-4 w-4" />
+                        <CheckIcon class="h-4 w-4" />
                     {:else}
-                        <span class="mr-2 w-4"></span>
+                        <span class="w-4"></span>
                     {/if}
                     Name (A-Z)
                 </DropdownMenu.Item>
@@ -818,9 +830,9 @@
                     }}
                 >
                     {#if sortColumn === "name" && sortDirection === "desc"}
-                        <CheckIcon class="mr-2 h-4 w-4" />
+                        <CheckIcon class="h-4 w-4" />
                     {:else}
-                        <span class="mr-2 w-4"></span>
+                        <span class="w-4"></span>
                     {/if}
                     Name (Z-A)
                 </DropdownMenu.Item>
@@ -832,9 +844,9 @@
                     }}
                 >
                     {#if sortColumn === "size" && sortDirection === "desc"}
-                        <CheckIcon class="mr-2 h-4 w-4" />
+                        <CheckIcon class="h-4 w-4" />
                     {:else}
-                        <span class="mr-2 w-4"></span>
+                        <span class="w-4"></span>
                     {/if}
                     Size (Largest)
                 </DropdownMenu.Item>
@@ -845,9 +857,9 @@
                     }}
                 >
                     {#if sortColumn === "size" && sortDirection === "asc"}
-                        <CheckIcon class="mr-2 h-4 w-4" />
+                        <CheckIcon class="h-4 w-4" />
                     {:else}
-                        <span class="mr-2 w-4"></span>
+                        <span class="w-4"></span>
                     {/if}
                     Size (Smallest)
                 </DropdownMenu.Item>
@@ -859,9 +871,9 @@
                     }}
                 >
                     {#if sortColumn === "updatedAt" && sortDirection === "desc"}
-                        <CheckIcon class="mr-2 h-4 w-4" />
+                        <CheckIcon class="h-4 w-4" />
                     {:else}
-                        <span class="mr-2 w-4"></span>
+                        <span class="w-4"></span>
                     {/if}
                     Date (Newest)
                 </DropdownMenu.Item>
@@ -872,53 +884,78 @@
                     }}
                 >
                     {#if sortColumn === "updatedAt" && sortDirection === "asc"}
-                        <CheckIcon class="mr-2 h-4 w-4" />
+                        <CheckIcon class="h-4 w-4" />
                     {:else}
-                        <span class="mr-2 w-4"></span>
+                        <span class="w-4"></span>
                     {/if}
                     Date (Oldest)
                 </DropdownMenu.Item>
             </DropdownMenu.Content>
         </DropdownMenu.Root>
-        <Select.Root
-            type="single"
-            name="layout"
-            bind:value={$layoutStore}
-            onValueChange={(val) => {
-                if (browser) {
-                    if (
-                        page.url.pathname.startsWith("/browse") &&
-                        val === "list"
-                    ) {
-                        localStorage.removeItem("layout");
-                    } else if (
-                        !page.url.pathname.startsWith("/browse") &&
-                        val === "grid"
-                    ) {
-                        localStorage.removeItem("layout");
-                    } else {
-                        localStorage.setItem("layout", val);
-                    }
-                }
-            }}
-        >
-            <Select.Trigger class="w-auto sm:w-45">
-                <span class="hidden sm:inline"
-                    >Layout: {capitalizeFirstLetter($layoutStore)}</span
+
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+                {#snippet child({ props })}
+                    <Button variant="outline" size="sm" {...props}>
+                        {#if $layoutStore === "grid"}
+                            <LayoutGridIcon class="h-4 w-4" />
+                        {:else}
+                            <LayoutListIcon class="h-4 w-4" />
+                        {/if}
+                        <span>
+                            {capitalizeFirstLetter($layoutStore)}
+                        </span>
+                    </Button>
+                {/snippet}
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end">
+                <DropdownMenu.Label>Layout</DropdownMenu.Label>
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item
+                    onclick={() => {
+                        $layoutStore = "list";
+                        if (browser) {
+                            if (page.url.pathname.startsWith("/browse")) {
+                                localStorage.removeItem("layout");
+                            } else {
+                                localStorage.setItem("layout", "list");
+                            }
+                        }
+                    }}
                 >
-                <span class="sm:hidden"
-                    >{capitalizeFirstLetter($layoutStore)}</span
+                    {#if $layoutStore === "list"}
+                        <CheckIcon class="h-4 w-4" />
+                    {:else}
+                        <span class="w-4"></span>
+                    {/if}
+                    List
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                    onclick={() => {
+                        $layoutStore = "grid";
+                        if (browser) {
+                            if (!page.url.pathname.startsWith("/browse")) {
+                                localStorage.removeItem("layout");
+                            } else {
+                                localStorage.setItem("layout", "grid");
+                            }
+                        }
+                    }}
                 >
-            </Select.Trigger>
-            <Select.Content>
-                <Select.Item value={"list"} label={"List"}>List</Select.Item>
-                <Select.Item value={"grid"} label={"Grid"}>Grid</Select.Item>
-            </Select.Content>
-        </Select.Root>
+                    {#if $layoutStore === "grid"}
+                        <CheckIcon class="h-4 w-4" />
+                    {:else}
+                        <span class="w-4"></span>
+                    {/if}
+                    Grid
+                </DropdownMenu.Item>
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
         {#if isTrash}
             <Button
                 variant="destructive"
                 onclick={emptyTrash}
+                size="sm"
                 disabled={data.count === 0}
                 title={data.count === 0 ? "Trash is empty" : "Empty Trash"}
             >
