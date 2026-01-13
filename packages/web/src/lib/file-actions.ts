@@ -21,13 +21,14 @@ export function touchAction(node: HTMLElement) {
 			startY = touch.clientY;
 		}
 
-		if (event.cancelable) {
-			event.preventDefault();
-		}
-
+		// DON'T preventDefault here - it blocks scrolling!
+		// Only start the long press timer
 		timer = window.setTimeout(() => {
-			node.dispatchEvent(new CustomEvent("longpress"));
-			longPressTriggered = true;
+			// Only trigger if user hasn't moved (scrolled)
+			if (!hasMoved) {
+				node.dispatchEvent(new CustomEvent("longpress"));
+				longPressTriggered = true;
+			}
 		}, longPressDuration);
 	}
 
@@ -41,7 +42,7 @@ export function touchAction(node: HTMLElement) {
 
 			if (dx > moveTolerance || dy > moveTolerance) {
 				hasMoved = true;
-				// If it's a move, it can't be a long press
+				// User is scrolling, cancel the long press
 				clearTimeout(timer);
 			}
 		}
@@ -49,7 +50,7 @@ export function touchAction(node: HTMLElement) {
 
 	function handleTouchEnd() {
 		clearTimeout(timer);
-		// Only dispatch tap if it wasn't a long press AND it wasn't a move
+		// Only dispatch tap if it wasn't a long press AND it wasn't a move (scroll)
 		if (!longPressTriggered && !hasMoved) {
 			node.dispatchEvent(new CustomEvent("tap"));
 		}
@@ -59,9 +60,10 @@ export function touchAction(node: HTMLElement) {
 		node.dispatchEvent(new CustomEvent("tap"));
 	}
 
-	node.addEventListener("touchstart", handleTouchStart, { passive: false });
+	// Use passive: true for touchstart to allow smooth scrolling
+	node.addEventListener("touchstart", handleTouchStart, { passive: true });
 	node.addEventListener("touchend", handleTouchEnd);
-	node.addEventListener("touchmove", handleTouchMove);
+	node.addEventListener("touchmove", handleTouchMove, { passive: true });
 	node.addEventListener("click", handleClick);
 
 	return {

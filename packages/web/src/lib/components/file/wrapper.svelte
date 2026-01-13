@@ -61,6 +61,7 @@
     import DeleteDialog from "$lib/components/layout/dialogs/delete-dialog.svelte";
     import RestoreDialog from "$lib/components/layout/dialogs/restore-dialog.svelte";
     import VideoPlayer from "$lib/components/layout/video-player.svelte";
+    import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
 
     type Props = {
         data: ObjectList;
@@ -748,6 +749,16 @@
 <!-- Filters -->
 
 {#if multiObjectActionsOpen}
+    <Input
+        bind:value={searchValue}
+        type="search"
+        disabled
+        placeholder="Search"
+        class="md:hidden mb-3"
+        onkeyup={() => {
+            debounce();
+        }}
+    />
     <div class="ml-auto max-w-xl">
         <div class="flex items-center gap-2 pb-5">
             {#each multipleItemsActions as action}
@@ -775,194 +786,192 @@
             debounce();
         }}
     />
-    <div
-        class="grid grid-cols-3 md:flex w-full justify-between items-center gap-2 pb-5"
-    >
+    <div class="w-full pb-5 flex justify-between items-center gap-3">
         <Input
             bind:value={searchValue}
             type="search"
             placeholder="Search"
-            class="hidden md:block"
+            class="hidden md:block "
             onkeyup={() => {
                 debounce();
             }}
         />
-        <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-                {#snippet child({ props })}
-                    <Button variant="outline" size="sm" {...props}>
-                        <ArrowUpDownIcon class="h-4 w-4" />
-                        <span class="inline">
-                            {#if sortColumn}
-                                {sortColumn === "name"
-                                    ? "Name"
-                                    : sortColumn === "size"
-                                      ? "Size"
-                                      : "Date"}
-                                {sortDirection === "asc" ? "↑" : "↓"}
-                            {:else}
-                                Sort
-                            {/if}
-                        </span>
-                    </Button>
-                {/snippet}
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content align="end">
-                <DropdownMenu.Label>Sort by</DropdownMenu.Label>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item
-                    onclick={() => {
-                        sortColumn = "name";
-                        sortDirection = "asc";
-                    }}
-                >
-                    {#if sortColumn === "name" && sortDirection === "asc"}
-                        <CheckIcon class="h-4 w-4" />
-                    {:else}
-                        <span class="w-4"></span>
-                    {/if}
-                    Name (A-Z)
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                    onclick={() => {
-                        sortColumn = "name";
-                        sortDirection = "desc";
-                    }}
-                >
-                    {#if sortColumn === "name" && sortDirection === "desc"}
-                        <CheckIcon class="h-4 w-4" />
-                    {:else}
-                        <span class="w-4"></span>
-                    {/if}
-                    Name (Z-A)
-                </DropdownMenu.Item>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item
-                    onclick={() => {
-                        sortColumn = "size";
-                        sortDirection = "desc";
-                    }}
-                >
-                    {#if sortColumn === "size" && sortDirection === "desc"}
-                        <CheckIcon class="h-4 w-4" />
-                    {:else}
-                        <span class="w-4"></span>
-                    {/if}
-                    Size (Largest)
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                    onclick={() => {
-                        sortColumn = "size";
-                        sortDirection = "asc";
-                    }}
-                >
-                    {#if sortColumn === "size" && sortDirection === "asc"}
-                        <CheckIcon class="h-4 w-4" />
-                    {:else}
-                        <span class="w-4"></span>
-                    {/if}
-                    Size (Smallest)
-                </DropdownMenu.Item>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item
-                    onclick={() => {
-                        sortColumn = "updatedAt";
-                        sortDirection = "desc";
-                    }}
-                >
-                    {#if sortColumn === "updatedAt" && sortDirection === "desc"}
-                        <CheckIcon class="h-4 w-4" />
-                    {:else}
-                        <span class="w-4"></span>
-                    {/if}
-                    Date (Newest)
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                    onclick={() => {
-                        sortColumn = "updatedAt";
-                        sortDirection = "asc";
-                    }}
-                >
-                    {#if sortColumn === "updatedAt" && sortDirection === "asc"}
-                        <CheckIcon class="h-4 w-4" />
-                    {:else}
-                        <span class="w-4"></span>
-                    {/if}
-                    Date (Oldest)
-                </DropdownMenu.Item>
-            </DropdownMenu.Content>
-        </DropdownMenu.Root>
-
-        <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-                {#snippet child({ props })}
-                    <Button variant="outline" size="sm" {...props}>
-                        {#if $layoutStore === "grid"}
-                            <LayoutGridIcon class="h-4 w-4" />
+        <ButtonGroup.Root>
+            <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                    {#snippet child({ props })}
+                        <Button variant="outline" {...props}>
+                            <ArrowUpDownIcon class="h-4 w-4" />
+                            <span class="inline">
+                                {#if sortColumn}
+                                    {sortColumn === "name"
+                                        ? "Name"
+                                        : sortColumn === "size"
+                                          ? "Size"
+                                          : "Date"}
+                                    {sortDirection === "asc" ? "↑" : "↓"}
+                                {:else}
+                                    Sort
+                                {/if}
+                            </span>
+                        </Button>
+                    {/snippet}
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content align="end">
+                    <DropdownMenu.Label>Sort by</DropdownMenu.Label>
+                    <DropdownMenu.Separator />
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            sortColumn = "name";
+                            sortDirection = "asc";
+                        }}
+                    >
+                        {#if sortColumn === "name" && sortDirection === "asc"}
+                            <CheckIcon class="h-4 w-4" />
                         {:else}
-                            <LayoutListIcon class="h-4 w-4" />
+                            <span class="w-4"></span>
                         {/if}
-                        <span>
-                            {capitalizeFirstLetter($layoutStore)}
-                        </span>
-                    </Button>
-                {/snippet}
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content align="end">
-                <DropdownMenu.Label>Layout</DropdownMenu.Label>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Item
-                    onclick={() => {
-                        $layoutStore = "list";
-                        if (browser) {
-                            if (page.url.pathname.startsWith("/browse")) {
-                                localStorage.removeItem("layout");
-                            } else {
-                                localStorage.setItem("layout", "list");
+                        Name (A-Z)
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            sortColumn = "name";
+                            sortDirection = "desc";
+                        }}
+                    >
+                        {#if sortColumn === "name" && sortDirection === "desc"}
+                            <CheckIcon class="h-4 w-4" />
+                        {:else}
+                            <span class="w-4"></span>
+                        {/if}
+                        Name (Z-A)
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Separator />
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            sortColumn = "size";
+                            sortDirection = "desc";
+                        }}
+                    >
+                        {#if sortColumn === "size" && sortDirection === "desc"}
+                            <CheckIcon class="h-4 w-4" />
+                        {:else}
+                            <span class="w-4"></span>
+                        {/if}
+                        Size (Largest)
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            sortColumn = "size";
+                            sortDirection = "asc";
+                        }}
+                    >
+                        {#if sortColumn === "size" && sortDirection === "asc"}
+                            <CheckIcon class="h-4 w-4" />
+                        {:else}
+                            <span class="w-4"></span>
+                        {/if}
+                        Size (Smallest)
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Separator />
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            sortColumn = "updatedAt";
+                            sortDirection = "desc";
+                        }}
+                    >
+                        {#if sortColumn === "updatedAt" && sortDirection === "desc"}
+                            <CheckIcon class="h-4 w-4" />
+                        {:else}
+                            <span class="w-4"></span>
+                        {/if}
+                        Date (Newest)
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            sortColumn = "updatedAt";
+                            sortDirection = "asc";
+                        }}
+                    >
+                        {#if sortColumn === "updatedAt" && sortDirection === "asc"}
+                            <CheckIcon class="h-4 w-4" />
+                        {:else}
+                            <span class="w-4"></span>
+                        {/if}
+                        Date (Oldest)
+                    </DropdownMenu.Item>
+                </DropdownMenu.Content>
+            </DropdownMenu.Root>
+            <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                    {#snippet child({ props })}
+                        <Button variant="outline" {...props}>
+                            {#if $layoutStore === "grid"}
+                                <LayoutGridIcon class="h-4 w-4" />
+                            {:else}
+                                <LayoutListIcon class="h-4 w-4" />
+                            {/if}
+                            <span>
+                                {capitalizeFirstLetter($layoutStore)}
+                            </span>
+                        </Button>
+                    {/snippet}
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content align="end">
+                    <DropdownMenu.Label>Layout</DropdownMenu.Label>
+                    <DropdownMenu.Separator />
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            $layoutStore = "list";
+                            if (browser) {
+                                if (page.url.pathname.startsWith("/browse")) {
+                                    localStorage.removeItem("layout");
+                                } else {
+                                    localStorage.setItem("layout", "list");
+                                }
                             }
-                        }
-                    }}
-                >
-                    {#if $layoutStore === "list"}
-                        <CheckIcon class="h-4 w-4" />
-                    {:else}
-                        <span class="w-4"></span>
-                    {/if}
-                    List
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                    onclick={() => {
-                        $layoutStore = "grid";
-                        if (browser) {
-                            if (!page.url.pathname.startsWith("/browse")) {
-                                localStorage.removeItem("layout");
-                            } else {
-                                localStorage.setItem("layout", "grid");
+                        }}
+                    >
+                        {#if $layoutStore === "list"}
+                            <CheckIcon class="h-4 w-4" />
+                        {:else}
+                            <span class="w-4"></span>
+                        {/if}
+                        List
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            $layoutStore = "grid";
+                            if (browser) {
+                                if (!page.url.pathname.startsWith("/browse")) {
+                                    localStorage.removeItem("layout");
+                                } else {
+                                    localStorage.setItem("layout", "grid");
+                                }
                             }
-                        }
-                    }}
+                        }}
+                    >
+                        {#if $layoutStore === "grid"}
+                            <CheckIcon class="h-4 w-4" />
+                        {:else}
+                            <span class="w-4"></span>
+                        {/if}
+                        Grid
+                    </DropdownMenu.Item>
+                </DropdownMenu.Content>
+            </DropdownMenu.Root>
+            {#if isTrash}
+                <Button
+                    variant="destructive"
+                    onclick={emptyTrash}
+                    disabled={data.count === 0}
+                    title={data.count === 0 ? "Trash is empty" : "Empty Trash"}
                 >
-                    {#if $layoutStore === "grid"}
-                        <CheckIcon class="h-4 w-4" />
-                    {:else}
-                        <span class="w-4"></span>
-                    {/if}
-                    Grid
-                </DropdownMenu.Item>
-            </DropdownMenu.Content>
-        </DropdownMenu.Root>
-        {#if isTrash}
-            <Button
-                variant="destructive"
-                onclick={emptyTrash}
-                size="sm"
-                disabled={data.count === 0}
-                title={data.count === 0 ? "Trash is empty" : "Empty Trash"}
-            >
-                <BrushCleaningIcon />
-                Empty Trash
-            </Button>
-        {/if}
+                    <BrushCleaningIcon />
+                    Empty Trash
+                </Button>
+            {/if}
+        </ButtonGroup.Root>
     </div>
 {/if}
 
