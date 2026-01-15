@@ -39,6 +39,23 @@ const foldersRouter = new Hono<StorageRouter>()
 		}
 	})
 
+	// GET /storage/folders/tree - List all folders with metadata for folder picker
+	.get("/tree", async (c) => {
+		const storageService = c.get("storageService");
+
+		try {
+			logger.debug("Listing folder tree for user");
+			const folders = await storageService.listFoldersWithMetadata("", {
+				includeTrashed: false,
+			});
+			logger.debug(`Found ${folders.length} folders in tree`);
+			return c.json(folders);
+		} catch (error) {
+			logger.error("Error listing folder tree:", error);
+			return c.json({ message: "Internal Server Error" }, 500);
+		}
+	})
+
 	// GET /storage/folders/trash - List trashed folders
 	.get("/trash", async (c) => {
 		const storageService = c.get("storageService");
@@ -247,6 +264,45 @@ const foldersRouter = new Hono<StorageRouter>()
 				return c.json({ message: "Folder restored from trash." });
 			} catch (error) {
 				logger.error("Error restoring folder:", error);
+				return c.json({ message: "Internal Server Error" }, 500);
+			}
+		},
+	)
+
+	// POST /storage/folders/folder/:id/move - Move a folder to a different parent
+	.post(
+		"/folder/:id/move",
+		zValidator(
+			"json",
+			z.object({
+				parentFolderId: z.string().optional(),
+				destination: z.string(), // Empty string for root
+			}),
+		),
+		async (c) => {
+			const storageService = c.get("storageService");
+			const body = c.req.valid("json");
+			const folderId = c.req.param("id");
+
+			const folderPath = storageService.getFullFolderPath(
+				folderId,
+				body.parentFolderId,
+			);
+
+			try {
+				logger.debug(
+					`Moving folder: ${folderPath} to ${body.destination || "root"}`,
+				);
+				await storageService.moveFolder(folderPath, body.destination);
+				logger.debug(
+					`Folder moved: ${folderPath} to ${body.destination || "root"}`,
+				);
+				return c.json({ message: "Folder moved successfully." });
+			} catch (error) {
+				logger.error("Error moving folder:", error);
+				if (error instanceof Error && error.message.includes("into itself")) {
+					return c.json({ message: "Cannot move a folder into itself." }, 400);
+				}
 				return c.json({ message: "Internal Server Error" }, 500);
 			}
 		},

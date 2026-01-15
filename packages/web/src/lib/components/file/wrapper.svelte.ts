@@ -245,6 +245,8 @@ export function createMainActions(handlers: {
 	onDownload: (item: ObjectItem) => void;
 	onOpenInNewTab: (item: ObjectItem) => void;
 	onRename: (item: ObjectItem) => void;
+	onMove: (item: ObjectItem) => void;
+	onStar: (item: ObjectItem) => void;
 	onMoveToTrash: (item: ObjectItem) => void;
 }): ItemActionGroup[] {
 	return [
@@ -280,7 +282,7 @@ export function createMainActions(handlers: {
 				{
 					title: "Move",
 					icon: FolderInputIcon,
-					action: () => [],
+					action: handlers.onMove,
 				},
 				{
 					title: "Duplicate",
@@ -291,8 +293,8 @@ export function createMainActions(handlers: {
 				{
 					title: "Star",
 					icon: StarIcon,
-					action: () => [],
-					disabled: true,
+					action: handlers.onStar,
+					disabled: false,
 				},
 			],
 		},

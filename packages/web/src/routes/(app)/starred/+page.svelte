@@ -1,11 +1,10 @@
 <script lang="ts">
-	import DataTable from "$lib/components/file/wrapper.svelte";
-	import { title } from "$lib/store/title";
+    import FileLayout from "$lib/components/file/layout.svelte";
+    import { title } from "$lib/store/title";
 
-	const { data } = $props();
-	$title = "Starred";
+    const { data } = $props();
+
+    $title = "Starred";
 </script>
 
-<div>
-	<DataTable data={{ count: 0, list: [], total: 0 }} />
-</div>
+<FileLayout data={data.files} />

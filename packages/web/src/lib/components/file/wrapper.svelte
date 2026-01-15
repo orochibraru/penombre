@@ -10,8 +10,13 @@
     import { MediaQuery } from "svelte/reactivity";
     import { toast } from "svelte-sonner";
     import { browser } from "$app/environment";
+    import { invalidate } from "$app/navigation";
     import { navigating, page } from "$app/state";
-    import { type ObjectItem, type ObjectList } from "$lib/api-client";
+    import {
+        getApiClient,
+        type ObjectItem,
+        type ObjectList,
+    } from "$lib/api-client";
     import FileGrid from "$lib/components/file/grid.svelte";
     import FileList from "$lib/components/file/list.svelte";
     import FileTable from "$lib/components/file/table.svelte";
@@ -39,6 +44,7 @@
     } from "$lib/utils";
     import DeleteDialog from "$lib/components/layout/dialogs/delete-dialog.svelte";
     import RestoreDialog from "$lib/components/layout/dialogs/restore-dialog.svelte";
+    import MoveDialog from "$lib/components/layout/dialogs/move-dialog.svelte";
     import VideoPlayer from "$lib/components/layout/video-player.svelte";
     import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
     import {
@@ -66,6 +72,8 @@
 
     let { data, loading = $bindable(false) }: Props = $props();
 
+    const api = getApiClient(fetch);
+
     function handleFileDrop(files: File[]) {
         pendingUploadFiles.set(files);
         $uploadDialogOpen = true;
@@ -83,8 +91,10 @@
     let indeterminate: boolean = $state(false);
     let confirmDeleteOpen: boolean = $state(false);
     let confirmRestoreOpen: boolean = $state(false);
+    let moveDialogOpen: boolean = $state(false);
     let restoringItem: boolean = $state(false);
     let deletingItem: boolean = $state(false);
+    let movingItem: boolean = $state(false);
     let checkedItems: Record<string, string> = $state({});
     let isSingleItemAction: boolean = $state(false);
     let searchValue: string = $state("");
@@ -96,12 +106,14 @@
     let sortColumn: SortColumn = $state(null);
     let sortDirection: SortDirection = $state("asc");
     let fileToView: FileToView = $state(null);
+    let moveItem: ObjectItem | undefined = $state();
 
     // Close local dialogs on navigation
     $effect(() => {
         if (navigating) {
             confirmDeleteOpen = false;
             confirmRestoreOpen = false;
+            moveDialogOpen = false;
             viewFileOpen = false;
             actionsContextOpen = false;
         }
@@ -117,6 +129,15 @@
     );
 
     let isTrash = $derived(page.url.pathname.startsWith("/trash"));
+
+    // Get current folder from URL path for API calls
+    let currentFolder = $derived.by(() => {
+        const path = page.url.pathname;
+        if (path.startsWith("/browse/")) {
+            return path.slice("/browse/".length);
+        }
+        return "";
+    });
 
     // ================================
     // Callbacks for extracted functions
@@ -189,6 +210,38 @@
         onOpenInNewTab: handleOpenItemInNewTab,
         onRename: (item) =>
             triggerRenameAction(item, () => (actionsContextOpen = false)),
+        onMove: (item) => {
+            moveItem = item;
+            moveDialogOpen = true;
+            actionsContextOpen = false;
+        },
+        onStar: async (item) => {
+            actionsContextOpen = false;
+            const isCurrentlyStarred = item.metadata.isStarred ?? false;
+            const newStarred = !isCurrentlyStarred;
+            const itemName = item.metadata.name ?? item.key;
+
+            try {
+                const res = await api.storage.objects.item[":item"].$put({
+                    param: { item: encodeURIComponent(item.key) },
+                    query: { folder: currentFolder },
+                    json: { isStarred: newStarred },
+                });
+                if (res.ok) {
+                    toast.success(
+                        newStarred
+                            ? `Added "${itemName}" to starred`
+                            : `Removed "${itemName}" from starred`,
+                    );
+                    await invalidate("app:files");
+                } else {
+                    toast.error("Failed to update star status");
+                }
+            } catch (error) {
+                console.error("Star failed:", error);
+                toast.error("Failed to update star status");
+            }
+        },
         onMoveToTrash: (item) => {
             prepareForSingleItemAction(item);
             handleDeleteObject();
@@ -672,6 +725,8 @@
     {checkedItems}
     {handleRestoreObject}
 />
+
+<MoveDialog bind:open={moveDialogOpen} bind:item={moveItem} />
 
 <style lang="postcss">
     @reference "../../../app.css";

@@ -29,6 +29,48 @@ const rawQuerySchema = z.object({
 	size: z.string().optional(),
 });
 
+const moveBodySchema = z.object({
+	destination: z.string(), // Empty string for root
+});
+
+// ============================================================================
+// ITEM SUB-ROUTER - Handles /storage/objects/item/:item/*
+// Using a sub-router ensures specific actions like /move are matched first
+// ============================================================================
+
+const itemRouter = new Hono<StorageRouter>()
+	// POST /move - Move a file to a different folder
+	.post("/move", zValidator("json", moveBodySchema), async (c) => {
+		const storageService = c.get("storageService");
+		const itemParam = c.req.param("item");
+		if (!itemParam) {
+			return c.json({ message: "Item parameter required" }, 400);
+		}
+		const decodedItemName = decodeURIComponent(itemParam);
+		const { destination } = c.req.valid("json");
+
+		logger.debug(
+			`Moving file: ${decodedItemName} to folder: ${destination || "root"}`,
+		);
+
+		const exists = await storageService.fileExists(decodedItemName);
+		if (!exists) {
+			logger.debug("File not found for move:", decodedItemName);
+			return c.json({ message: "File not found" }, 404);
+		}
+
+		try {
+			await storageService.moveFile(decodedItemName, destination);
+			logger.debug(
+				`File moved: ${decodedItemName} to ${destination || "root"}`,
+			);
+			return c.json({ message: "File moved successfully." });
+		} catch (error) {
+			logger.error("Error moving file:", error);
+			return c.json({ message: "Error moving file." }, 500);
+		}
+	});
+
 // ============================================================================
 // OBJECTS ROUTES
 // ============================================================================
@@ -119,6 +161,21 @@ const objectsRouter = new Hono<StorageRouter>()
 		}
 	})
 
+	// GET /storage/objects/starred - List starred files
+	.get("/starred", async (c) => {
+		const storageService = c.get("storageService");
+
+		try {
+			logger.debug("Listing starred files for user");
+			const objects = await storageService.listStarredFiles();
+			logger.debug(`Found ${objects.count} starred files`);
+			return c.json<ObjectList>(objects);
+		} catch (error) {
+			logger.error("Error listing starred files:", error);
+			return c.json({ message: "Internal Server Error" }, 500);
+		}
+	})
+
 	// GET /storage/objects/category/:category - List files by category
 	.get("/category/:category", async (c) => {
 		const cat = c.req.param("category")?.toUpperCase();
@@ -139,6 +196,9 @@ const objectsRouter = new Hono<StorageRouter>()
 			return c.json({ message: "Internal Server Error" }, 500);
 		}
 	})
+
+	// Mount item sub-router for /item/:item/* action routes (e.g. /move)
+	.route("/item/:item", itemRouter)
 
 	// GET /storage/objects/item/:item - Get file metadata or raw file
 	.get("/item/:item", zValidator("query", rawQuerySchema), async (c) => {

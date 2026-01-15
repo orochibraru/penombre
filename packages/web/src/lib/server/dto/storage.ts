@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
-import { mkdir, readdir, rmdir, stat } from "node:fs/promises";
+import { mkdir, readdir, rmdir, stat, unlink } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { cwd } from "node:process";
 import type { User } from "better-auth";
@@ -20,6 +20,7 @@ import type {
 	FileCategory,
 	FileContentType,
 	FileMetadata,
+	FolderItem,
 	NewFile,
 	ObjectItem,
 	ObjectList,
@@ -318,6 +319,8 @@ export class StorageService {
 		if (data.tags !== undefined) metadata.tags = data.tags;
 		if (typeof data.isTrashed === "boolean")
 			metadata.isTrashed = data.isTrashed;
+		if (typeof data.isStarred === "boolean")
+			metadata.isStarred = data.isStarred;
 		// Interpret `data.key` as display name change (not physical rename)
 		if (data.key && data.key.trim().length > 0) {
 			metadata.name = data.key.trim();
@@ -330,6 +333,152 @@ export class StorageService {
 
 		// Persist metadata update
 		await Bun.write(currentMetaPath, JSON.stringify(metadata));
+	}
+
+	/**
+	 * Move a file to a different folder.
+	 * @param fileKey - Current file key (ID-based path)
+	 * @param destinationFolder - Target folder path (empty string for root)
+	 */
+	public async moveFile(
+		fileKey: string,
+		destinationFolder: string,
+	): Promise<void> {
+		const { currentPath, currentMetaPath } =
+			await this.resolveFileLocation(fileKey);
+
+		// Load and verify metadata
+		const metaFile = Bun.file(currentMetaPath);
+		if (!(await metaFile.exists())) {
+			throw new FileOrFolderNotFoundError("File metadata not found");
+		}
+		const metadata: FileMetadata = await metaFile.json();
+		this.permissionsCheck(metadata);
+
+		// Ensure unique display name in destination
+		const uniqueName = await this.getUniqueDisplayName(
+			metadata.name || fileKey.split("/").pop() || fileKey,
+			destinationFolder || undefined,
+			"file",
+		);
+
+		// Construct destination paths
+		const fileName = currentPath.split("/").pop() || fileKey;
+		const normalizedDest = destinationFolder.endsWith("/")
+			? destinationFolder.slice(0, -1)
+			: destinationFolder;
+		const destPath = normalizedDest
+			? join(this.storagePath, normalizedDest, fileName)
+			: join(this.storagePath, fileName);
+		const destMetaPath = `${destPath}.meta.json`;
+
+		// Ensure destination folder exists
+		if (normalizedDest) {
+			const destDir = join(this.storagePath, normalizedDest);
+			if (!existsSync(destDir)) {
+				await mkdir(destDir, { recursive: true });
+			}
+		}
+
+		// Read file content and write to new location
+		const fileContent = await Bun.file(currentPath).arrayBuffer();
+		await Bun.write(destPath, fileContent);
+
+		// Update metadata with new name if it was deduplicated
+		metadata.name = uniqueName;
+
+		// Write metadata to new location
+		await Bun.write(destMetaPath, JSON.stringify(metadata));
+
+		// Delete old file and metadata
+		await fs.promises.unlink(currentPath);
+		await fs.promises.unlink(currentMetaPath);
+
+		await this.activityService.register({
+			userId: this.user.id,
+			action: "update",
+			message: `Moved file "${uniqueName}" to ${normalizedDest || "root"}`,
+			level: "info",
+		});
+	}
+
+	/**
+	 * Move a folder to a different parent folder.
+	 * @param folderKey - Current folder key (path)
+	 * @param destinationFolder - Target parent folder path (empty string for root)
+	 */
+	public async moveFolder(
+		folderKey: string,
+		destinationFolder: string,
+	): Promise<void> {
+		// Normalize folder key (remove trailing slash)
+		const normalizedKey = folderKey.endsWith("/")
+			? folderKey.slice(0, -1)
+			: folderKey;
+		const folderPath = join(this.storagePath, normalizedKey);
+
+		if (!existsSync(folderPath)) {
+			throw new FileOrFolderNotFoundError("Folder not found");
+		}
+
+		// Get folder metadata
+		const keepMetaPath = join(folderPath, ".keep.meta.json");
+		let metadata: FileMetadata | undefined;
+		if (existsSync(keepMetaPath)) {
+			metadata = await Bun.file(keepMetaPath).json();
+			this.permissionsCheck(metadata);
+		}
+
+		const folderName =
+			metadata?.name || normalizedKey.split("/").pop() || normalizedKey;
+
+		// Ensure unique display name in destination
+		const uniqueName = await this.getUniqueDisplayName(
+			folderName,
+			destinationFolder || undefined,
+			"folder",
+		);
+
+		// Construct destination path
+		const normalizedDest = destinationFolder.endsWith("/")
+			? destinationFolder.slice(0, -1)
+			: destinationFolder;
+		const physicalFolderName = normalizedKey.split("/").pop() || normalizedKey;
+		const destPath = normalizedDest
+			? join(this.storagePath, normalizedDest, physicalFolderName)
+			: join(this.storagePath, physicalFolderName);
+
+		// Prevent moving a folder into itself
+		if (destPath.startsWith(folderPath)) {
+			throw new Error("Cannot move a folder into itself");
+		}
+
+		// Ensure destination parent exists
+		if (normalizedDest) {
+			const destDir = join(this.storagePath, normalizedDest);
+			if (!existsSync(destDir)) {
+				await mkdir(destDir, { recursive: true });
+			}
+		}
+
+		// Move the folder (rename)
+		await fs.promises.rename(folderPath, destPath);
+
+		// Update folder metadata with new name if deduplicated
+		if (metadata && uniqueName !== folderName) {
+			metadata.name = uniqueName;
+			await Bun.write(
+				join(destPath, ".keep.meta.json"),
+				JSON.stringify(metadata),
+			);
+		}
+
+		await this.activityService.register({
+			userId: this.user.id,
+			action: "update",
+			message: `Moved folder "${uniqueName}" to ${normalizedDest || "root"}`,
+			level: "info",
+		});
 	}
 
 	public async fileExists(key: string): Promise<boolean> {
@@ -542,6 +691,83 @@ export class StorageService {
 		}
 
 		return folders;
+	}
+
+	/**
+	 * List folders with their metadata (id, display name, path)
+	 * Used for folder picker dialogs
+	 */
+	public async listFoldersWithMetadata(
+		prefix: string,
+		options?: { includeTrashed?: boolean; onlyTrashed?: boolean },
+	): Promise<FolderItem[]> {
+		const results: FolderItem[] = [];
+
+		const collectFolders = async (currentPrefix: string) => {
+			const normalizedPrefix =
+				!currentPrefix || currentPrefix === "/" ? "" : currentPrefix;
+			const dirPath = join(this.storagePath, normalizedPrefix);
+
+			let dir: Awaited<ReturnType<typeof readdir>>;
+			try {
+				dir = await readdir(dirPath, { withFileTypes: true });
+			} catch {
+				return;
+			}
+
+			for (const dirent of dir) {
+				if (!dirent.isDirectory()) continue;
+				if (dirent.name === ".trash" || dirent.name === ".thumbnails") continue;
+
+				const folderId = dirent.name;
+				const folderPath = join(dirPath, folderId);
+				const relativePath = normalizedPrefix
+					? `${normalizedPrefix}/${folderId}`
+					: folderId;
+
+				let isTrashed = false;
+				let displayName = folderId; // Default to ID if no metadata
+
+				try {
+					const metaFile = Bun.file(join(folderPath, ".keep.meta.json"));
+					if (await metaFile.exists()) {
+						const meta: FileMetadata = await metaFile.json();
+						isTrashed = Boolean(meta.isTrashed);
+						displayName = meta.name || folderId;
+					} else {
+						const keepFile = Bun.file(join(folderPath, ".keep"));
+						if (await keepFile.exists()) {
+							const text = await keepFile.text();
+							try {
+								const meta = JSON.parse(text) as Partial<FileMetadata>;
+								if (meta) {
+									isTrashed = Boolean(meta.isTrashed);
+									displayName = meta.name || folderId;
+								}
+							} catch {}
+						}
+					}
+				} catch (err) {
+					logger.warn("Failed to read folder meta:", folderPath, err);
+				}
+
+				// Apply trash filters
+				if (options?.onlyTrashed && !isTrashed) continue;
+				if (!options?.includeTrashed && isTrashed) continue;
+
+				results.push({
+					id: folderId,
+					name: displayName,
+					path: relativePath,
+				});
+
+				// Recursively collect child folders
+				await collectFolders(relativePath);
+			}
+		};
+
+		await collectFolders(prefix);
+		return results;
 	}
 
 	private determineContentType(key: string): FileContentType {
@@ -1041,6 +1267,18 @@ export class StorageService {
 		};
 	}
 
+	public async listStarredFiles(): Promise<ObjectList> {
+		const allFiles = await this.abstractListFiles({ recursive: true });
+		const starredFiles = allFiles.list.filter(
+			(item) => item.metadata.isStarred,
+		);
+		return {
+			list: starredFiles,
+			count: starredFiles.length,
+			total: starredFiles.length,
+		};
+	}
+
 	private permissionsCheck(metadata: FileMetadata) {
 		if (metadata.owner !== this.user.id) {
 			throw new UnauthorizedError("Unauthorized access to file");
@@ -1107,7 +1345,7 @@ export class StorageService {
 	}
 
 	/**
-	 * Generates a thumbnail for an image file.
+	 * Generates a thumbnail for an image or video file.
 	 * Thumbnails are cached in a .thumbnails directory adjacent to the file.
 	 * @param key The file key
 	 * @param size The maximum dimension (width or height) of the thumbnail. Default 300.
@@ -1121,7 +1359,6 @@ export class StorageService {
 			const { currentPath } = await this.resolveFileLocation(key);
 			const meta = await this.getFile(key);
 
-			// Only generate thumbnails for images
 			const imageTypes = [
 				"image/jpeg",
 				"image/png",
@@ -1130,7 +1367,25 @@ export class StorageService {
 				"image/bmp",
 				"image/tiff",
 			];
-			if (!imageTypes.includes(meta.metadata.contentType || "")) {
+
+			const videoTypes = [
+				"video/mp4",
+				"video/webm",
+				"video/x-msvideo",
+				"video/x-matroska",
+				"video/quicktime",
+				"video/x-ms-wmv",
+				"video/x-flv",
+				"video/mpeg",
+				"video/3gpp",
+				"video/ogg",
+			];
+
+			const contentType = meta.metadata.contentType || "";
+			const isImage = imageTypes.includes(contentType);
+			const isVideo = videoTypes.includes(contentType);
+
+			if (!isImage && !isVideo) {
 				return null;
 			}
 
@@ -1151,13 +1406,24 @@ export class StorageService {
 			// Generate thumbnail
 			await mkdir(thumbDir, { recursive: true });
 
-			const thumbnail = await sharp(currentPath)
-				.resize(size, size, {
-					fit: "inside",
-					withoutEnlargement: true,
-				})
-				.webp({ quality: 80 })
-				.toBuffer();
+			let thumbnail: Buffer;
+
+			if (isImage) {
+				thumbnail = await sharp(currentPath)
+					.resize(size, size, {
+						fit: "inside",
+						withoutEnlargement: true,
+					})
+					.webp({ quality: 80 })
+					.toBuffer();
+			} else {
+				// Video thumbnail: extract frame at 1 second using ffmpeg
+				thumbnail = await this.generateVideoThumbnail(
+					currentPath,
+					thumbPath,
+					size,
+				);
+			}
 
 			// Cache the thumbnail
 			await Bun.write(thumbPath, thumbnail);
@@ -1166,6 +1432,76 @@ export class StorageService {
 		} catch (error) {
 			logger.error("Error generating thumbnail:", error);
 			return null;
+		}
+	}
+
+	/**
+	 * Generates a thumbnail from a video file using ffmpeg.
+	 * Extracts a frame at 1 second (or first frame if video is shorter).
+	 */
+	private async generateVideoThumbnail(
+		videoPath: string,
+		outputPath: string,
+		size: number,
+	): Promise<Buffer> {
+		// Use ffmpeg to extract a frame and pipe to sharp for resizing
+		// First, extract a frame as a temporary PNG
+		const tempPng = `${outputPath}.tmp.png`;
+
+		try {
+			// Extract frame at 1 second (or beginning if shorter)
+			const result = await Bun.spawn([
+				"ffmpeg",
+				"-y", // Overwrite output
+				"-ss",
+				"1", // Seek to 1 second
+				"-i",
+				videoPath,
+				"-vframes",
+				"1", // Extract 1 frame
+				"-vf",
+				`scale=${size}:${size}:force_original_aspect_ratio=decrease`,
+				tempPng,
+			]).exited;
+
+			if (result !== 0) {
+				// Try extracting from the beginning if 1 second seek failed
+				const fallbackResult = await Bun.spawn([
+					"ffmpeg",
+					"-y",
+					"-i",
+					videoPath,
+					"-vframes",
+					"1",
+					"-vf",
+					`scale=${size}:${size}:force_original_aspect_ratio=decrease`,
+					tempPng,
+				]).exited;
+
+				if (fallbackResult !== 0) {
+					throw new Error("ffmpeg failed to extract video frame");
+				}
+			}
+
+			// Convert PNG to WebP using sharp
+			const thumbnail = await sharp(tempPng).webp({ quality: 80 }).toBuffer();
+
+			// Clean up temp file
+			try {
+				await unlink(tempPng);
+			} catch {
+				// Ignore cleanup errors
+			}
+
+			return thumbnail;
+		} catch (error) {
+			// Clean up temp file on error
+			try {
+				await unlink(tempPng);
+			} catch {
+				// Ignore cleanup errors
+			}
+			throw error;
 		}
 	}
 

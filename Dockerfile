@@ -59,7 +59,8 @@ RUN mkdir -p /prod && \
 FROM oven/bun:1-alpine AS final
 
 # Only install what's actually needed at runtime
-RUN apk add --no-cache wget
+# ffmpeg is required for video thumbnail generation
+RUN apk add --no-cache wget ffmpeg
 
 WORKDIR /app
 

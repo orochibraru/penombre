@@ -116,6 +116,7 @@ let originalListFiles: typeof StorageService.prototype.listFiles;
 let originalCreateFile: typeof StorageService.prototype.createFile;
 let originalListRecentFiles: typeof StorageService.prototype.listRecentFiles;
 let originalListTrashFiles: typeof StorageService.prototype.listTrashFiles;
+let originalListStarredFiles: typeof StorageService.prototype.listStarredFiles;
 let originalListFilesPerCategory: typeof StorageService.prototype.listFilesPerCategory;
 let originalGetRawFileData: typeof StorageService.prototype.getRawFileData;
 let originalGetFile: typeof StorageService.prototype.getFile;
@@ -123,6 +124,7 @@ let originalFileExists: typeof StorageService.prototype.fileExists;
 let originalUploadFileBody: typeof StorageService.prototype.uploadFileBody;
 let originalUpdateFile: typeof StorageService.prototype.updateFile;
 let originalDeleteFile: typeof StorageService.prototype.deleteFile;
+let originalMoveFile: typeof StorageService.prototype.moveFile;
 let originalGenerateRangeHeaders: typeof StorageService.prototype.generateRangeHeaders;
 let originalGenerateRawFileHeaders: typeof StorageService.prototype.generateRawFileHeaders;
 
@@ -159,6 +161,7 @@ beforeEach(() => {
 	originalCreateFile = StorageService.prototype.createFile;
 	originalListRecentFiles = StorageService.prototype.listRecentFiles;
 	originalListTrashFiles = StorageService.prototype.listTrashFiles;
+	originalListStarredFiles = StorageService.prototype.listStarredFiles;
 	originalListFilesPerCategory = StorageService.prototype.listFilesPerCategory;
 	originalGetRawFileData = StorageService.prototype.getRawFileData;
 	originalGetFile = StorageService.prototype.getFile;
@@ -166,6 +169,7 @@ beforeEach(() => {
 	originalUploadFileBody = StorageService.prototype.uploadFileBody;
 	originalUpdateFile = StorageService.prototype.updateFile;
 	originalDeleteFile = StorageService.prototype.deleteFile;
+	originalMoveFile = StorageService.prototype.moveFile;
 	originalGenerateRangeHeaders = StorageService.prototype.generateRangeHeaders;
 	originalGenerateRawFileHeaders =
 		StorageService.prototype.generateRawFileHeaders;
@@ -181,6 +185,9 @@ beforeEach(() => {
 		Promise.resolve(mockObjectList),
 	);
 	StorageService.prototype.listTrashFiles = mock(() =>
+		Promise.resolve(mockObjectList),
+	);
+	StorageService.prototype.listStarredFiles = mock(() =>
 		Promise.resolve(mockObjectList),
 	);
 	StorageService.prototype.listFilesPerCategory = mock(() =>
@@ -202,6 +209,7 @@ beforeEach(() => {
 	StorageService.prototype.uploadFileBody = mock(() => Promise.resolve());
 	StorageService.prototype.updateFile = mock(() => Promise.resolve());
 	StorageService.prototype.deleteFile = mock(() => Promise.resolve());
+	StorageService.prototype.moveFile = mock(() => Promise.resolve());
 	StorageService.prototype.generateRangeHeaders = mock(() => ({
 		headers: new Headers({
 			"Content-Type": "text/plain",
@@ -224,6 +232,7 @@ afterEach(() => {
 	StorageService.prototype.createFile = originalCreateFile;
 	StorageService.prototype.listRecentFiles = originalListRecentFiles;
 	StorageService.prototype.listTrashFiles = originalListTrashFiles;
+	StorageService.prototype.listStarredFiles = originalListStarredFiles;
 	StorageService.prototype.listFilesPerCategory = originalListFilesPerCategory;
 	StorageService.prototype.getRawFileData = originalGetRawFileData;
 	StorageService.prototype.getFile = originalGetFile;
@@ -231,6 +240,7 @@ afterEach(() => {
 	StorageService.prototype.uploadFileBody = originalUploadFileBody;
 	StorageService.prototype.updateFile = originalUpdateFile;
 	StorageService.prototype.deleteFile = originalDeleteFile;
+	StorageService.prototype.moveFile = originalMoveFile;
 	StorageService.prototype.generateRangeHeaders = originalGenerateRangeHeaders;
 	StorageService.prototype.generateRawFileHeaders =
 		originalGenerateRawFileHeaders;
@@ -421,6 +431,29 @@ describe("GET /storage/objects/trash", () => {
 		);
 
 		const res = await app.request("/storage/objects/trash");
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("GET /storage/objects/starred", () => {
+	it("should list starred files", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/starred");
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.count).toBe(1);
+	});
+
+	it("should return 500 on error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.listStarredFiles = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/starred");
 
 		expect(res.status).toBe(500);
 	});
@@ -775,5 +808,102 @@ describe("DELETE /storage/objects/item/:item", () => {
 		});
 
 		expect(res.status).toBe(500);
+	});
+});
+
+describe("Objects Router - POST /item/:item/move", () => {
+	it("should move a file to a different folder", async () => {
+		const app = createTestApp();
+		const moveFileSpy = spyOn(
+			StorageService.prototype,
+			"moveFile",
+		).mockResolvedValue();
+
+		const res = await app.request("/storage/objects/item/test-file.txt/move", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ destination: "folder-id" }),
+		});
+
+		expect(res.status).toBe(200);
+		const json = await res.json();
+		expect(json.message).toBe("File moved successfully.");
+		expect(moveFileSpy).toHaveBeenCalledWith("test-file.txt", "folder-id");
+	});
+
+	it("should move a file to root when destination is empty", async () => {
+		const app = createTestApp();
+		const moveFileSpy = spyOn(
+			StorageService.prototype,
+			"moveFile",
+		).mockResolvedValue();
+
+		const res = await app.request("/storage/objects/item/test-file.txt/move", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ destination: "" }),
+		});
+
+		expect(res.status).toBe(200);
+		expect(moveFileSpy).toHaveBeenCalledWith("test-file.txt", "");
+	});
+
+	it("should decode URL-encoded item names", async () => {
+		const app = createTestApp();
+		const moveFileSpy = spyOn(
+			StorageService.prototype,
+			"moveFile",
+		).mockResolvedValue();
+
+		await app.request("/storage/objects/item/my%20file.txt/move", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ destination: "folder-id" }),
+		});
+
+		expect(moveFileSpy).toHaveBeenCalledWith("my file.txt", "folder-id");
+	});
+
+	it("should return 404 when file does not exist", async () => {
+		const app = createTestApp();
+		StorageService.prototype.fileExists = mock(() => Promise.resolve(false));
+
+		const res = await app.request(
+			"/storage/objects/item/nonexistent.txt/move",
+			{
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ destination: "folder-id" }),
+			},
+		);
+
+		expect(res.status).toBe(404);
+	});
+
+	it("should return 500 on move error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.moveFile = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/item/test-file.txt/move", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ destination: "folder-id" }),
+		});
+
+		expect(res.status).toBe(500);
+	});
+
+	it("should require destination in request body", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/item/test-file.txt/move", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({}),
+		});
+
+		expect(res.status).toBe(400);
 	});
 });

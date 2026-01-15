@@ -4,6 +4,15 @@ import { activity, sharedWith, sharings } from "$lib/server/db/schema";
 
 export const directoryListSchema: z.ZodType<string[]> = z.array(z.string());
 
+// Folder item with metadata for move dialog, etc.
+export const folderItemSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	path: z.string(), // Full path with IDs
+});
+
+export const folderListSchema = z.array(folderItemSchema);
+
 export const fileCategorySchema = z.enum([
 	"MUSIC",
 	"DOCUMENTS",
@@ -97,6 +106,7 @@ export const fileMetadataSchema = z.object({
 	createdAt: dateSchema,
 	owner: z.string(),
 	isTrashed: z.boolean().default(false),
+	isStarred: z.boolean().default(false),
 	music: z
 		.object({
 			duration: z.number().optional(),
@@ -142,6 +152,7 @@ export const updateFileSchema = z.object({
 	key: z.string().optional(),
 	contentType: fileContentTypeSchema.optional(),
 	isTrashed: z.boolean().optional(),
+	isStarred: z.boolean().optional(),
 });
 
 export const uploadResultSchema = z.object({
@@ -171,6 +182,8 @@ export type ObjectList = z.infer<typeof objectListSchema>;
 export type ObjectItem = z.infer<typeof objectItemSchema>;
 
 export type DirectoryList = z.infer<typeof directoryListSchema>;
+export type FolderItem = z.infer<typeof folderItemSchema>;
+export type FolderList = z.infer<typeof folderListSchema>;
 
 export type FileCategory = z.infer<typeof fileCategorySchema>;
 export type FileContentType = z.infer<typeof fileContentTypeSchema>;

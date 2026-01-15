@@ -75,6 +75,7 @@
 - Add server logic in `StorageService` and expose via Hono routers under `packages/web/src/lib/server/routes/...`.
 - Respect `isTrashed` semantics and metadata locations.
 - Keep file moves/renames atomic where possible; for local FS, `fs.promises.rename` is acceptable if cross-device moves aren’t needed.
+- Remember to add unit/integration tests when addind a new feature and to adapt them if modifying something. If you don't see any and it would seem relevant to you to add some, ask the user if they want to add some. 
 
 ---
 If anything above is unclear (e.g., dev port vs Docker port, DB usage boundaries, or missing API generation flow), tell me what you’re trying to do and I’ll refine these instructions.
