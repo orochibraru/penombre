@@ -403,6 +403,79 @@ export class StorageService {
 	}
 
 	/**
+	 * Duplicate a file in the same folder.
+	 * Creates a copy with a new UUID and unique display name (e.g. "file (1).txt").
+	 * @param fileKey - Current file key (ID-based path)
+	 * @returns The new file's metadata
+	 */
+	public async duplicateFile(fileKey: string): Promise<ObjectItem> {
+		const { currentPath, currentMetaPath } =
+			await this.resolveFileLocation(fileKey);
+
+		// Load and verify source metadata
+		const metaFile = Bun.file(currentMetaPath);
+		if (!(await metaFile.exists())) {
+			throw new FileOrFolderNotFoundError("File metadata not found");
+		}
+		const sourceMetadata: FileMetadata = await metaFile.json();
+		this.permissionsCheck(sourceMetadata);
+
+		// Determine the parent folder
+		const parentFolder = fileKey.includes("/")
+			? fileKey.slice(0, fileKey.lastIndexOf("/"))
+			: undefined;
+
+		// Get unique display name for the copy
+		const sourceName =
+			sourceMetadata.name || fileKey.split("/").pop() || fileKey;
+		const uniqueName = await this.getUniqueDisplayName(
+			sourceName,
+			parentFolder,
+			"file",
+		);
+
+		// Generate new metadata for the duplicate
+		const newMeta: FileMetadata = {
+			...sourceMetadata,
+			id: crypto.randomUUID(),
+			name: uniqueName,
+			createdAt: new Date(),
+			isTrashed: false, // Duplicates are never trashed
+			isStarred: false, // Don't copy starred status
+		};
+
+		// Construct destination paths
+		const newFilePath = parentFolder
+			? join(this.storagePath, parentFolder, newMeta.id)
+			: join(this.storagePath, newMeta.id);
+		const newMetaPath = `${newFilePath}.meta.json`;
+
+		// Copy file content
+		const fileContent = await Bun.file(currentPath).arrayBuffer();
+		await Bun.write(newFilePath, fileContent);
+
+		// Write metadata
+		await Bun.write(newMetaPath, JSON.stringify(newMeta));
+
+		await this.activityService.register({
+			userId: this.user.id,
+			action: "create",
+			message: `Duplicated file "${sourceName}" as "${uniqueName}"`,
+			level: "info",
+		});
+
+		// Return the new file item
+		const file = Bun.file(newFilePath);
+		return {
+			key: newMeta.id,
+			size: file.size,
+			type: "file",
+			updatedAt: new Date(file.lastModified),
+			metadata: newMeta,
+		};
+	}
+
+	/**
 	 * Move a folder to a different parent folder.
 	 * @param folderKey - Current folder key (path)
 	 * @param destinationFolder - Target parent folder path (empty string for root)
@@ -1276,6 +1349,59 @@ export class StorageService {
 			list: starredFiles,
 			count: starredFiles.length,
 			total: starredFiles.length,
+		};
+	}
+
+	/**
+	 * Search for files by name across all folders.
+	 * Uses case-insensitive substring matching on display names.
+	 * @param query - Search query string
+	 * @param limit - Maximum number of results to return (default 50)
+	 */
+	public async searchFiles(query: string, limit = 50): Promise<ObjectList> {
+		if (!query || query.trim().length === 0) {
+			return { list: [], count: 0, total: 0 };
+		}
+
+		const searchTerm = query.toLowerCase().trim();
+		const allFiles = await this.abstractListFiles({ recursive: true });
+
+		// Filter files and folders by display name match
+		const matches = allFiles.list.filter((item) => {
+			const displayName = (item.metadata.name || item.key).toLowerCase();
+			return displayName.includes(searchTerm);
+		});
+
+		// Sort by relevance: exact match > starts with > contains
+		matches.sort((a, b) => {
+			const aName = (a.metadata.name || a.key).toLowerCase();
+			const bName = (b.metadata.name || b.key).toLowerCase();
+
+			const aExact = aName === searchTerm;
+			const bExact = bName === searchTerm;
+			if (aExact && !bExact) return -1;
+			if (bExact && !aExact) return 1;
+
+			const aStarts = aName.startsWith(searchTerm);
+			const bStarts = bName.startsWith(searchTerm);
+			if (aStarts && !bStarts) return -1;
+			if (bStarts && !aStarts) return 1;
+
+			// Sort folders before files, then by name
+			const aIsFolder = a.type === "folder" || a.key.endsWith("/");
+			const bIsFolder = b.type === "folder" || b.key.endsWith("/");
+			if (aIsFolder && !bIsFolder) return -1;
+			if (bIsFolder && !aIsFolder) return 1;
+
+			return aName.localeCompare(bName);
+		});
+
+		const limited = matches.slice(0, limit);
+
+		return {
+			list: limited,
+			count: limited.length,
+			total: matches.length,
 		};
 	}
 

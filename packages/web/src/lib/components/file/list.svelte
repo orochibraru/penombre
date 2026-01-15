@@ -110,7 +110,8 @@
             const bIsFolder = isFolderItem(b);
             if (aIsFolder && !bIsFolder) return -1;
             if (!aIsFolder && bIsFolder) return 1;
-            return 0;
+            // Sort by name within same type
+            return getItemName(a).localeCompare(getItemName(b));
         });
     }
 
@@ -131,7 +132,7 @@
     {@const checked = isChecked(item)}
     <li
         class={cn(
-            "flex items-center justify-between rounded-xl px-1 py-3 transition-colors",
+            "flex min-w-0 items-center justify-between rounded-xl px-1 py-3 transition-colors",
             checked ? "bg-primary/5" : "",
         )}
     >
@@ -148,7 +149,7 @@
                 actionableItem = item;
                 actionsContextOpen = true;
             }}
-            class="py-1 pl-5"
+            class="shrink-0 py-1 pl-5"
         >
             <EllipsisVerticalIcon class="h-5 w-5" />
         </button>

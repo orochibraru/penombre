@@ -125,6 +125,8 @@ let originalUploadFileBody: typeof StorageService.prototype.uploadFileBody;
 let originalUpdateFile: typeof StorageService.prototype.updateFile;
 let originalDeleteFile: typeof StorageService.prototype.deleteFile;
 let originalMoveFile: typeof StorageService.prototype.moveFile;
+let originalDuplicateFile: typeof StorageService.prototype.duplicateFile;
+let originalSearchFiles: typeof StorageService.prototype.searchFiles;
 let originalGenerateRangeHeaders: typeof StorageService.prototype.generateRangeHeaders;
 let originalGenerateRawFileHeaders: typeof StorageService.prototype.generateRawFileHeaders;
 
@@ -170,6 +172,8 @@ beforeEach(() => {
 	originalUpdateFile = StorageService.prototype.updateFile;
 	originalDeleteFile = StorageService.prototype.deleteFile;
 	originalMoveFile = StorageService.prototype.moveFile;
+	originalDuplicateFile = StorageService.prototype.duplicateFile;
+	originalSearchFiles = StorageService.prototype.searchFiles;
 	originalGenerateRangeHeaders = StorageService.prototype.generateRangeHeaders;
 	originalGenerateRawFileHeaders =
 		StorageService.prototype.generateRawFileHeaders;
@@ -193,6 +197,9 @@ beforeEach(() => {
 	StorageService.prototype.listFilesPerCategory = mock(() =>
 		Promise.resolve(mockObjectList),
 	);
+	StorageService.prototype.searchFiles = mock(() =>
+		Promise.resolve(mockObjectList),
+	);
 	StorageService.prototype.getRawFileData = mock(() =>
 		Promise.resolve({
 			file: {
@@ -210,6 +217,23 @@ beforeEach(() => {
 	StorageService.prototype.updateFile = mock(() => Promise.resolve());
 	StorageService.prototype.deleteFile = mock(() => Promise.resolve());
 	StorageService.prototype.moveFile = mock(() => Promise.resolve());
+	StorageService.prototype.duplicateFile = mock(() =>
+		Promise.resolve({
+			key: "duplicated-file-id",
+			size: 1024,
+			type: "file" as const,
+			updatedAt: new Date(),
+			metadata: {
+				id: "duplicated-file-id",
+				name: "test-file (1).txt",
+				category: "DOCUMENTS" as const,
+				contentType: "text/plain" as const,
+				createdAt: new Date().toISOString(),
+				owner: "test-user-id",
+				isTrashed: false,
+			},
+		}),
+	);
 	StorageService.prototype.generateRangeHeaders = mock(() => ({
 		headers: new Headers({
 			"Content-Type": "text/plain",
@@ -241,6 +265,8 @@ afterEach(() => {
 	StorageService.prototype.updateFile = originalUpdateFile;
 	StorageService.prototype.deleteFile = originalDeleteFile;
 	StorageService.prototype.moveFile = originalMoveFile;
+	StorageService.prototype.duplicateFile = originalDuplicateFile;
+	StorageService.prototype.searchFiles = originalSearchFiles;
 	StorageService.prototype.generateRangeHeaders = originalGenerateRangeHeaders;
 	StorageService.prototype.generateRawFileHeaders =
 		originalGenerateRawFileHeaders;
@@ -905,5 +931,164 @@ describe("Objects Router - POST /item/:item/move", () => {
 		});
 
 		expect(res.status).toBe(400);
+	});
+});
+
+describe("Objects Router - POST /item/:item/duplicate", () => {
+	it("should duplicate a file successfully", async () => {
+		const app = createTestApp();
+		const duplicateFileSpy = spyOn(
+			StorageService.prototype,
+			"duplicateFile",
+		).mockResolvedValue({
+			key: "duplicated-file-id",
+			size: 1024,
+			type: "file" as const,
+			updatedAt: new Date(),
+			metadata: {
+				id: "duplicated-file-id",
+				name: "test-file (1).txt",
+				category: "DOCUMENTS" as const,
+				contentType: "text/plain" as const,
+				createdAt: new Date().toISOString(),
+				owner: "test-user-id",
+				isTrashed: false,
+			},
+		});
+
+		const res = await app.request(
+			"/storage/objects/item/test-file.txt/duplicate",
+			{
+				method: "POST",
+			},
+		);
+
+		expect(res.status).toBe(200);
+		const json = await res.json();
+		expect(json.key).toBe("duplicated-file-id");
+		expect(json.metadata.name).toBe("test-file (1).txt");
+		expect(duplicateFileSpy).toHaveBeenCalledWith("test-file.txt");
+	});
+
+	it("should decode URL-encoded item names", async () => {
+		const app = createTestApp();
+		const duplicateFileSpy = spyOn(
+			StorageService.prototype,
+			"duplicateFile",
+		).mockResolvedValue({
+			key: "duplicated-file-id",
+			size: 1024,
+			type: "file" as const,
+			updatedAt: new Date(),
+			metadata: {
+				id: "duplicated-file-id",
+				name: "my file (1).txt",
+				category: "DOCUMENTS" as const,
+				contentType: "text/plain" as const,
+				createdAt: new Date().toISOString(),
+				owner: "test-user-id",
+				isTrashed: false,
+			},
+		});
+
+		await app.request("/storage/objects/item/my%20file.txt/duplicate", {
+			method: "POST",
+		});
+
+		expect(duplicateFileSpy).toHaveBeenCalledWith("my file.txt");
+	});
+
+	it("should return 404 when file does not exist", async () => {
+		const app = createTestApp();
+		StorageService.prototype.fileExists = mock(() => Promise.resolve(false));
+
+		const res = await app.request(
+			"/storage/objects/item/nonexistent.txt/duplicate",
+			{
+				method: "POST",
+			},
+		);
+
+		expect(res.status).toBe(404);
+	});
+
+	it("should return 500 on duplicate error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.duplicateFile = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request(
+			"/storage/objects/item/test-file.txt/duplicate",
+			{
+				method: "POST",
+			},
+		);
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("GET /storage/objects/search", () => {
+	it("should search files by query", async () => {
+		const app = createTestApp();
+		const searchFilesSpy = spyOn(
+			StorageService.prototype,
+			"searchFiles",
+		).mockResolvedValue({
+			list: [mockObjectItem],
+			count: 1,
+			total: 1,
+		});
+
+		const res = await app.request("/storage/objects/search?q=test");
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.count).toBe(1);
+		expect(searchFilesSpy).toHaveBeenCalledWith("test", 50);
+	});
+
+	it("should use custom limit parameter", async () => {
+		const app = createTestApp();
+		const searchFilesSpy = spyOn(
+			StorageService.prototype,
+			"searchFiles",
+		).mockResolvedValue({
+			list: [],
+			count: 0,
+			total: 0,
+		});
+
+		await app.request("/storage/objects/search?q=test&limit=10");
+
+		expect(searchFilesSpy).toHaveBeenCalledWith("test", 10);
+	});
+
+	it("should return 400 when query is missing", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/search");
+
+		expect(res.status).toBe(400);
+	});
+
+	it("should return 400 when query is empty", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/search?q=");
+
+		expect(res.status).toBe(400);
+	});
+
+	it("should return 500 on search error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.searchFiles = mock(() =>
+			Promise.reject(new Error("Search failed")),
+		);
+
+		const res = await app.request("/storage/objects/search?q=test");
+
+		expect(res.status).toBe(500);
 	});
 });

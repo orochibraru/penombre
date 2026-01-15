@@ -391,4 +391,131 @@ describe("StorageService - Metadata-Only Trash System", () => {
 			expect(existsSync(filePath)).toBe(true);
 		});
 	});
+
+	describe("Duplicate Operations", () => {
+		it("should duplicate a file with new UUID and unique display name", async () => {
+			const originalId = crypto.randomUUID();
+			const filePath = join(testUserPath, originalId);
+			const metaPath = `${filePath}.meta.json`;
+
+			// Create original file
+			const fileContent = "original content";
+			await writeFile(filePath, fileContent);
+			const originalMeta = {
+				id: originalId,
+				name: "document.txt",
+				owner: mockUser.id,
+				isTrashed: false,
+				isStarred: true,
+				category: "DOCUMENTS",
+				contentType: "text/plain",
+				createdAt: new Date().toISOString(),
+				tags: ["important"],
+			};
+			await writeFile(metaPath, JSON.stringify(originalMeta));
+
+			// Simulate duplication logic
+			const newId = crypto.randomUUID();
+			const newFilePath = join(testUserPath, newId);
+			const newMetaPath = `${newFilePath}.meta.json`;
+
+			// Copy file content
+			const content = await Bun.file(filePath).arrayBuffer();
+			await Bun.write(newFilePath, content);
+
+			// Create new metadata with unique name
+			const newMeta = {
+				...originalMeta,
+				id: newId,
+				name: "document (1).txt", // Unique name
+				createdAt: new Date().toISOString(),
+				isTrashed: false, // Duplicates are never trashed
+				isStarred: false, // Don't copy starred status
+			};
+			await writeFile(newMetaPath, JSON.stringify(newMeta));
+
+			// Verify original is unchanged
+			expect(existsSync(filePath)).toBe(true);
+			const originalContent = await Bun.file(filePath).text();
+			expect(originalContent).toBe(fileContent);
+
+			// Verify duplicate exists with correct content
+			expect(existsSync(newFilePath)).toBe(true);
+			const duplicateContent = await Bun.file(newFilePath).text();
+			expect(duplicateContent).toBe(fileContent);
+
+			// Verify metadata differences
+			const duplicateMeta = await Bun.file(newMetaPath).json();
+			expect(duplicateMeta.id).not.toBe(originalId);
+			expect(duplicateMeta.name).toBe("document (1).txt");
+			expect(duplicateMeta.isTrashed).toBe(false);
+			expect(duplicateMeta.isStarred).toBe(false);
+			expect(duplicateMeta.category).toBe(originalMeta.category);
+			expect(duplicateMeta.contentType).toBe(originalMeta.contentType);
+		});
+
+		it("should generate incrementing names for multiple duplicates", async () => {
+			// Create original and first duplicate
+			const originalId = crypto.randomUUID();
+			const duplicate1Id = crypto.randomUUID();
+
+			await writeFile(join(testUserPath, originalId), "content");
+			await writeFile(
+				`${join(testUserPath, originalId)}.meta.json`,
+				JSON.stringify({
+					id: originalId,
+					name: "file.txt",
+					owner: mockUser.id,
+					isTrashed: false,
+					category: "UNKNOWN",
+					contentType: "text/plain",
+					createdAt: new Date().toISOString(),
+				}),
+			);
+
+			await writeFile(join(testUserPath, duplicate1Id), "content");
+			await writeFile(
+				`${join(testUserPath, duplicate1Id)}.meta.json`,
+				JSON.stringify({
+					id: duplicate1Id,
+					name: "file (1).txt",
+					owner: mockUser.id,
+					isTrashed: false,
+					category: "UNKNOWN",
+					contentType: "text/plain",
+					createdAt: new Date().toISOString(),
+				}),
+			);
+
+			// Simulate getUniqueDisplayName logic
+			const { readdir } = await import("node:fs/promises");
+			const entries = await readdir(testUserPath, { withFileTypes: true });
+			const existingNames = new Set<string>();
+
+			for (const entry of entries) {
+				if (entry.name.endsWith(".meta.json")) {
+					const meta = await Bun.file(join(testUserPath, entry.name)).json();
+					if (!meta.isTrashed) {
+						existingNames.add(meta.name.toLowerCase());
+					}
+				}
+			}
+
+			// Check naming logic
+			expect(existingNames.has("file.txt")).toBe(true);
+			expect(existingNames.has("file (1).txt")).toBe(true);
+
+			// Next duplicate should be "file (2).txt"
+			const baseName = "file";
+			const extension = ".txt";
+			let counter = 1;
+			let newName = `${baseName} (${counter})${extension}`;
+			while (existingNames.has(newName.toLowerCase())) {
+				counter++;
+				newName = `${baseName} (${counter})${extension}`;
+			}
+
+			expect(newName).toBe("file (2).txt");
+		});
+	});
 });

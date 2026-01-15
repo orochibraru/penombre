@@ -235,7 +235,7 @@
         onclick={handleClick}
         ontap={handleClick}
         onlongpress={() => handleLongPress()}
-        class="flex h-full w-full flex-row items-center gap-2"
+        class="flex h-full w-full min-w-0 flex-row items-center gap-2"
         disabled={getItemStatus() === ItemStatus.UPLOADING}
     >
         {#if !isDesktop.current && indeterminate}
@@ -283,11 +283,11 @@
         {:else}
             <FileIcon class={iconSize} />
         {/if}
-        <div class="text-start">
+        <div class="text-start min-w-0 flex-1">
             <p
                 title={item.metadata.name ?? item.key}
                 class={cn(
-                    "max-w-72 truncate text-base lg:text-sm",
+                    "truncate text-base lg:text-sm",
                     $playableMusic &&
                         $playableMusic.title ===
                             (item.metadata.name ?? item.key)

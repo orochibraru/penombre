@@ -132,7 +132,8 @@
             const bIsFolder = isFolderItem(b);
             if (aIsFolder && !bIsFolder) return -1;
             if (!aIsFolder && bIsFolder) return 1;
-            return 0;
+            // Sort by name within same type
+            return getItemName(a).localeCompare(getItemName(b));
         });
     }
 
@@ -215,11 +216,11 @@
                 }}
             />
         </Table.Cell>
-        <Table.Cell colspan={7}>
+        <Table.Cell colspan={7} class="min-w-0">
             <ContextMenu.Root>
-                <ContextMenu.Trigger>
+                <ContextMenu.Trigger class="w-full">
                     <div
-                        class="flex flex-col items-start gap-2"
+                        class="flex w-full min-w-0 flex-col items-start gap-2"
                         role="button"
                         tabindex={-1}
                         ontap={() => {

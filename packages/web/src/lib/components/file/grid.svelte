@@ -113,7 +113,8 @@
             const bIsFolder = isFolderItem(b);
             if (aIsFolder && !bIsFolder) return -1;
             if (!aIsFolder && bIsFolder) return 1;
-            return 0;
+            // Sort by name within same type
+            return getItemName(a).localeCompare(getItemName(b));
         });
     }
 

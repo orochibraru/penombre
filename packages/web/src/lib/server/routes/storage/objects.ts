@@ -69,6 +69,34 @@ const itemRouter = new Hono<StorageRouter>()
 			logger.error("Error moving file:", error);
 			return c.json({ message: "Error moving file." }, 500);
 		}
+	})
+	// POST /duplicate - Duplicate a file in the same folder
+	.post("/duplicate", async (c) => {
+		const storageService = c.get("storageService");
+		const itemParam = c.req.param("item");
+		if (!itemParam) {
+			return c.json({ message: "Item parameter required" }, 400);
+		}
+		const decodedItemName = decodeURIComponent(itemParam);
+
+		logger.debug(`Duplicating file: ${decodedItemName}`);
+
+		const exists = await storageService.fileExists(decodedItemName);
+		if (!exists) {
+			logger.debug("File not found for duplicate:", decodedItemName);
+			return c.json({ message: "File not found" }, 404);
+		}
+
+		try {
+			const newFile = await storageService.duplicateFile(decodedItemName);
+			logger.debug(
+				`File duplicated: ${decodedItemName} -> ${newFile.metadata.name}`,
+			);
+			return c.json(newFile);
+		} catch (error) {
+			logger.error("Error duplicating file:", error);
+			return c.json({ message: "Error duplicating file." }, 500);
+		}
 	});
 
 // ============================================================================
@@ -145,6 +173,33 @@ const objectsRouter = new Hono<StorageRouter>()
 			return c.json({ message: "Internal Server Error" }, 500);
 		}
 	})
+
+	// GET /storage/objects/search - Search files by name
+	.get(
+		"/search",
+		zValidator(
+			"query",
+			z.object({
+				q: z.string().min(1),
+				limit: z.string().optional(),
+			}),
+		),
+		async (c) => {
+			const storageService = c.get("storageService");
+			const { q, limit } = c.req.valid("query");
+			const parsedLimit = limit ? Number.parseInt(limit, 10) : 50;
+
+			try {
+				logger.debug(`Searching files with query: "${q}"`);
+				const objects = await storageService.searchFiles(q, parsedLimit);
+				logger.debug(`Found ${objects.count} matching files`);
+				return c.json<ObjectList>(objects);
+			} catch (error) {
+				logger.error("Error searching files:", error);
+				return c.json({ message: "Internal Server Error" }, 500);
+			}
+		},
+	)
 
 	// GET /storage/objects/trash - List trashed files
 	.get("/trash", async (c) => {

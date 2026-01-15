@@ -213,6 +213,33 @@ export function getRestoreFilePromise(
 		});
 }
 
+export function getDuplicateFilePromise(
+	itemPath: string,
+	callbacks: { onSuccess: () => void; onError: () => void },
+): Promise<void> {
+	const fileName = itemPath.includes("/")
+		? (itemPath.split("/").pop() ?? itemPath)
+		: itemPath;
+	const folder = itemPath.includes("/")
+		? itemPath.split("/").slice(0, -1).join("/")
+		: undefined;
+
+	const fullPath = folder ? `${folder}/${fileName}` : fileName;
+
+	return apiClient.storage.objects.item[":item"].duplicate
+		.$post({
+			param: { item: encodeURIComponent(fullPath) },
+		})
+		.then(async (res) => {
+			if (!res.ok) {
+				console.error(await res.text());
+				callbacks.onError();
+				throw new Error("Failed to duplicate file");
+			}
+			callbacks.onSuccess();
+		});
+}
+
 // ================================
 // Item Actions Factory
 // ================================
@@ -246,6 +273,7 @@ export function createMainActions(handlers: {
 	onOpenInNewTab: (item: ObjectItem) => void;
 	onRename: (item: ObjectItem) => void;
 	onMove: (item: ObjectItem) => void;
+	onDuplicate: (item: ObjectItem) => void;
 	onStar: (item: ObjectItem) => void;
 	onMoveToTrash: (item: ObjectItem) => void;
 }): ItemActionGroup[] {
@@ -287,8 +315,8 @@ export function createMainActions(handlers: {
 				{
 					title: "Duplicate",
 					icon: CopyIcon,
-					action: () => [],
-					disabled: true,
+					action: handlers.onDuplicate,
+					fileOnly: true,
 				},
 				{
 					title: "Star",

@@ -31,6 +31,7 @@
         availableLayouts,
         layoutStore,
     } from "$lib/store/layout";
+    import { loadSortPreference, saveSortPreference } from "$lib/store/sorting";
     import {
         pendingUploadFiles,
         uploadDialogOpen,
@@ -58,10 +59,10 @@
         createTrashMultipleActions,
         executeRestoreOperation,
         executeDeleteOperation,
-        filterSearchResults,
         computeSelectionState,
         selectAllForEmptyTrash,
         triggerRenameAction,
+        getDuplicateFilePromise,
     } from "./wrapper.svelte.js";
     import { ExternalLinkIcon } from "@lucide/svelte";
 
@@ -103,7 +104,7 @@
     let actionsContextOpen: boolean = $state(false);
     let actionableItem: ObjectItem | undefined = $state();
     let viewFileOpen: boolean = $state(false);
-    let sortColumn: SortColumn = $state(null);
+    let sortColumn: SortColumn = $state("name");
     let sortDirection: SortDirection = $state("asc");
     let fileToView: FileToView = $state(null);
     let moveItem: ObjectItem | undefined = $state();
@@ -155,8 +156,29 @@
     // ================================
     // Search
     // ================================
-    function updateSearchResults() {
-        searchResults = filterSearchResults(data, searchValue);
+    let searchInputRef: HTMLInputElement | null = $state(null);
+
+    async function performSearch() {
+        if (!searchValue || searchValue.trim() === "") {
+            searchResults = [];
+            loading = false;
+            return;
+        }
+
+        try {
+            const res = await api.storage.objects.search.$get({
+                query: { q: searchValue.trim() },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                searchResults = data.list;
+            } else {
+                searchResults = [];
+            }
+        } catch (error) {
+            console.error("Search failed:", error);
+            searchResults = [];
+        }
         loading = false;
     }
 
@@ -168,8 +190,16 @@
         }
         loading = true;
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => updateSearchResults(), 750);
+        searchTimeout = setTimeout(() => performSearch(), 300);
     };
+
+    // Keyboard shortcut: Ctrl+K or Cmd+K to focus search
+    function handleKeydown(e: KeyboardEvent) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+            e.preventDefault();
+            searchInputRef?.focus();
+        }
+    }
 
     // ================================
     // Item Actions
@@ -214,6 +244,27 @@
             moveItem = item;
             moveDialogOpen = true;
             actionsContextOpen = false;
+        },
+        onDuplicate: async (item) => {
+            actionsContextOpen = false;
+            const itemName = item.metadata.name ?? item.key;
+            const fullPath = currentFolder
+                ? `${currentFolder}/${item.key}`
+                : item.key;
+
+            toast.promise(
+                getDuplicateFilePromise(fullPath, {
+                    onSuccess: async () => {
+                        await invalidate("app:files");
+                    },
+                    onError: () => {},
+                }),
+                {
+                    loading: `Duplicating "${itemName}"...`,
+                    success: `Duplicated "${itemName}"`,
+                    error: `Failed to duplicate "${itemName}"`,
+                },
+            );
         },
         onStar: async (item) => {
             actionsContextOpen = false;
@@ -315,6 +366,7 @@
 
     onMount(() => {
         if (browser) {
+            // Load layout preference
             const layoutParam = localStorage.getItem("layout");
 
             if (layoutParam) {
@@ -326,6 +378,21 @@
             } else {
                 setLayoutBasedOnRoute();
             }
+
+            // Load sorting preference
+            const sortPref = loadSortPreference();
+            sortColumn = sortPref.column;
+            sortDirection = sortPref.direction;
+        }
+    });
+
+    // Save sorting preference when it changes
+    $effect(() => {
+        if (browser) {
+            saveSortPreference({
+                column: sortColumn,
+                direction: sortDirection,
+            });
         }
     });
 
@@ -348,6 +415,8 @@
     });
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <!-- Filters -->
 
 {#if multiObjectActionsOpen}
@@ -355,7 +424,7 @@
         bind:value={searchValue}
         type="search"
         disabled
-        placeholder="Search"
+        placeholder="Search (Ctrl+K)"
         class="md:hidden mb-3"
         onkeyup={() => {
             debounce();
@@ -382,7 +451,7 @@
     <Input
         bind:value={searchValue}
         type="search"
-        placeholder="Search"
+        placeholder="Search (Ctrl+K)"
         class="md:hidden mb-3"
         onkeyup={() => {
             debounce();
@@ -390,9 +459,10 @@
     />
     <div class="w-full pb-5 flex justify-between items-center gap-3">
         <Input
+            bind:ref={searchInputRef}
             bind:value={searchValue}
             type="search"
-            placeholder="Search"
+            placeholder="Search (Ctrl+K)"
             class="hidden md:block "
             onkeyup={() => {
                 debounce();

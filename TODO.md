@@ -5,7 +5,5 @@
   - Inject nav menu for mobile view instead of upload button
 
 - Implement "Share" feature
-- Implement "Duplicate" feature
-- Implement "Move" feature
 
 - Implement storage redundancy across multiple storage solutions with backup & restore system
