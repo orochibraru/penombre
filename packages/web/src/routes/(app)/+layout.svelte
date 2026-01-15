@@ -19,7 +19,7 @@
         UsersIcon,
         VideoIcon,
     } from "@lucide/svelte";
-    import { page } from "$app/state";
+    import { navigating, page } from "$app/state";
     import SiteHeader from "$lib/components/layout/header.svelte";
     import MusicPlayer from "$lib/components/layout/music-player.svelte";
     import Nav, { type NavMenus } from "$lib/components/layout/nav.svelte";
@@ -27,7 +27,12 @@
     import { route } from "$lib/ROUTES";
     import { playableMusic } from "$lib/store/music";
     import { title } from "$lib/store/title";
-    import { uploadDialogOpen, newFolderDialogOpen } from "$lib/store/upload";
+    import {
+        uploadDialogOpen,
+        newFolderDialogOpen,
+        closeAllDialogs,
+        globalUploadProgress,
+    } from "$lib/store/upload";
     import { cn } from "$lib/utils";
     import SidebarBranding from "$lib/components/sidebar-branding.svelte";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
@@ -39,6 +44,13 @@
     import { MediaQuery } from "svelte/reactivity";
 
     const { children, data } = $props();
+
+    // Close all dialogs when navigation starts
+    $effect(() => {
+        if (navigating) {
+            closeAllDialogs();
+        }
+    });
 
     let mobileCreateDrawerOpen: boolean = $state(false);
     let uploadLoading: boolean = $state(false);
@@ -151,6 +163,12 @@
     }
 
     const isDesktop = new MediaQuery("(min-width: 768px)");
+
+    // Pages where the upload/new button should be hidden
+    const noUploadPages = ["/settings", "/account", "/admin", "/sync"];
+    let showUploadButton = $derived(
+        !noUploadPages.some((p) => page.url.pathname.startsWith(p)),
+    );
 </script>
 
 <svelte:head>
@@ -163,13 +181,27 @@
     <Sidebar.Root collapsible="icon" variant="inset">
         <Sidebar.Header>
             <SidebarBranding />
-            {#if isDesktop.current}
+            {#if isDesktop.current && showUploadButton}
                 <DropdownMenu.Root>
                     <DropdownMenu.Trigger>
                         {#snippet child({ props })}
-                            <Button {...props} loading={uploadLoading}>
-                                New
-                                <SquarePlusIcon />
+                            <Button
+                                {...props}
+                                loading={uploadLoading}
+                                class="relative overflow-hidden"
+                            >
+                                {#if $globalUploadProgress.isUploading}
+                                    <div
+                                        class="absolute inset-0 bg-primary/20 transition-all"
+                                        style="width: {$globalUploadProgress.progress}%"
+                                    ></div>
+                                    <span class="relative z-10">
+                                        {$globalUploadProgress.progress}% ({$globalUploadProgress.count})
+                                    </span>
+                                {:else}
+                                    New
+                                    <SquarePlusIcon />
+                                {/if}
                             </Button>
                         {/snippet}
                     </DropdownMenu.Trigger>
@@ -241,7 +273,7 @@
                     Recent
                 </a>
 
-                {#if page.data.hasCustomMenu === true}
+                {#if page.data.hasCustomMenu === true || !showUploadButton}
                     <button
                         title="Menu"
                         class={cn(
@@ -257,10 +289,18 @@
                         title="New"
                         class={cn(
                             bottomNavItemClass,
-                            "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg  border-transparent border-2 w-12 h-12 flex items-center justify-center",
+                            "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg border-transparent border-2 w-12 h-12 flex items-center justify-center relative overflow-hidden",
                         )}
                     >
-                        {#if uploadLoading}
+                        {#if $globalUploadProgress.isUploading}
+                            <div
+                                class="absolute inset-0 bg-white/20 transition-all"
+                                style="height: {$globalUploadProgress.progress}%; bottom: 0; top: auto;"
+                            ></div>
+                            <span class="relative z-10 text-xs font-bold">
+                                {$globalUploadProgress.progress}%
+                            </span>
+                        {:else if uploadLoading}
                             <Spinner class="text-white" />
                         {:else}
                             <CloudUploadIcon class="w-6! h-6!" />

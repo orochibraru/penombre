@@ -73,7 +73,9 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 		return await resolve(event);
 	}
 	const res = await resolve(event);
-	if (res.status >= 400) {
+	const isAsset =
+		!event.url.pathname.endsWith("/") && event.url.pathname.includes(".");
+	if (res.status >= 400 && !isAsset) {
 		logger.error(
 			`Error on ${event.request.method} ${event.url.pathname} - ${res.status}`,
 		);

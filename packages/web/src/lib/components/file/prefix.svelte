@@ -144,13 +144,13 @@
         {item.metadata.name ?? item.key.replace("/", "")}
     </button>
 {:else if layout === "grid"}
-    <div class="flex h-full w-full flex-col items-start gap-2">
+    <div class="flex h-full w-full flex-col items-center gap-2">
         <button
             use:touchAction
             onclick={handleClick}
             ontap={handleClick}
             onlongpress={() => handleLongPress()}
-            class="flex h-full w-full flex-col items-start gap-2"
+            class="flex h-full w-full flex-col items-center gap-2"
             disabled={getItemStatus() === ItemStatus.UPLOADING}
         >
             {#if !isDesktop.current && indeterminate}
@@ -178,7 +178,7 @@
                     <FileIcon class={iconSize} />
                 </div>
             {/if}
-            <div class="text-start w-full">
+            <div class="text-center w-full">
                 <p
                     title={item.metadata.name ?? item.key}
                     class={cn(
@@ -197,7 +197,7 @@
             </div>
         </button>
         {#if item.metadata.category || item.parent}
-            <div class="text-start">
+            <div class="text-center">
                 <p class="text-xs text-muted-foreground">
                     {#if item.metadata.category}
                         {item.metadata.category.charAt(0) +

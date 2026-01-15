@@ -1,60 +1,39 @@
 <script lang="ts">
     import {
-        ArchiveRestoreIcon,
         ArrowUpDownIcon,
         BrushCleaningIcon,
         CheckIcon,
-        CopyIcon,
-        DownloadIcon,
-        ExternalLinkIcon,
-        FolderInputIcon,
         LayoutGridIcon,
         LayoutListIcon,
-        PencilLineIcon,
-        ShareIcon,
-        StarIcon,
-        TrashIcon,
     } from "@lucide/svelte";
     import { onMount } from "svelte";
     import { MediaQuery } from "svelte/reactivity";
     import { toast } from "svelte-sonner";
-    import { browser, dev } from "$app/environment";
-    import { invalidate } from "$app/navigation";
-    import { page } from "$app/state";
-    import {
-        getApiClient,
-        type ObjectItem,
-        type ObjectList,
-    } from "$lib/api-client";
+    import { browser } from "$app/environment";
+    import { navigating, page } from "$app/state";
+    import { type ObjectItem, type ObjectList } from "$lib/api-client";
     import FileGrid from "$lib/components/file/grid.svelte";
     import FileList from "$lib/components/file/list.svelte";
     import FileTable from "$lib/components/file/table.svelte";
     import { Badge } from "$lib/components/ui/badge/index";
     import { Button } from "$lib/components/ui/button/index";
     import * as Code from "$lib/components/ui/code/index";
-    import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
     import * as Dialog from "$lib/components/ui/dialog";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import { Input } from "$lib/components/ui/input";
-    import { determineCodeFileLanguage, isCodeItem } from "$lib/file-utils";
-    import { itemAction } from "$lib/store/actions";
     import {
         type AvailableLayouts,
         availableLayouts,
         layoutStore,
     } from "$lib/store/layout";
-    import { playableMusic } from "$lib/store/music";
     import {
         pendingUploadFiles,
         uploadDialogOpen,
         newFolderDialogOpen,
     } from "$lib/store/upload";
-    import { getObjectUrl } from "$lib/url";
     import {
         capitalizeFirstLetter,
         readableFileSize,
-        type ItemActionGroup,
-        type MultipleItemsAction,
         type SortColumn,
         type SortDirection,
     } from "$lib/utils";
@@ -62,6 +41,23 @@
     import RestoreDialog from "$lib/components/layout/dialogs/restore-dialog.svelte";
     import VideoPlayer from "$lib/components/layout/video-player.svelte";
     import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
+    import {
+        type FileToView,
+        handleOpenItem as openItem,
+        handleOpenItemInNewTab,
+        handleDownloadItem,
+        createTrashActions,
+        createMainActions,
+        createMainMultipleActions,
+        createTrashMultipleActions,
+        executeRestoreOperation,
+        executeDeleteOperation,
+        filterSearchResults,
+        computeSelectionState,
+        selectAllForEmptyTrash,
+        triggerRenameAction,
+    } from "./wrapper.svelte.js";
+    import { ExternalLinkIcon } from "@lucide/svelte";
 
     type Props = {
         data: ObjectList;
@@ -89,7 +85,7 @@
     let confirmRestoreOpen: boolean = $state(false);
     let restoringItem: boolean = $state(false);
     let deletingItem: boolean = $state(false);
-    let checkedItems: Record<string, string | false> = $state({});
+    let checkedItems: Record<string, string> = $state({});
     let isSingleItemAction: boolean = $state(false);
     let searchValue: string = $state("");
     let searchResults: ObjectItem[] = $state([]);
@@ -99,36 +95,48 @@
     let viewFileOpen: boolean = $state(false);
     let sortColumn: SortColumn = $state(null);
     let sortDirection: SortDirection = $state("asc");
-    let fileToView: {
-        item: ObjectItem;
-        src: string;
-        type: "image" | "code" | "pdf" | "video";
-        content?: string;
-        language?: SupportedLanguage;
-    } | null = $state(null);
+    let fileToView: FileToView = $state(null);
 
+    // Close local dialogs on navigation
+    $effect(() => {
+        if (navigating) {
+            confirmDeleteOpen = false;
+            confirmRestoreOpen = false;
+            viewFileOpen = false;
+            actionsContextOpen = false;
+        }
+    });
+
+    const isDesktop = new MediaQuery("(min-width: 768px)");
+
+    // ================================
+    // Derived State
+    // ================================
     let multiObjectActionsOpen = $derived(
         (indeterminate || allSelected) && !isSingleItemAction,
     );
 
-    const apiClient = getApiClient(fetch);
-
     let isTrash = $derived(page.url.pathname.startsWith("/trash"));
 
-    async function updateSearchResults() {
-        if (!data.list || data.list.length === 0) {
-            searchResults = [];
-            loading = false;
-            return;
-        }
+    // ================================
+    // Callbacks for extracted functions
+    // ================================
+    const stateCallbacks = {
+        setRestoringItem: (v: boolean) => (restoringItem = v),
+        setConfirmRestoreOpen: (v: boolean) => (confirmRestoreOpen = v),
+        setActionsContextOpen: (v: boolean) => (actionsContextOpen = v),
+        clearCheckedItems: () => (checkedItems = {}),
+        setActionableItem: (v: ObjectItem | undefined) => (actionableItem = v),
+        setDeletingItem: (v: boolean) => (deletingItem = v),
+        setConfirmDeleteOpen: (v: boolean) => (confirmDeleteOpen = v),
+    };
 
-        searchResults = data.list.filter((item) => {
-            const display = (item.metadata.name || item.key).toLowerCase();
-            return display.includes(searchValue.toLowerCase());
-        });
-
+    // ================================
+    // Search
+    // ================================
+    function updateSearchResults() {
+        searchResults = filterSearchResults(data, searchValue);
         loading = false;
-        return;
     }
 
     const debounce = () => {
@@ -139,566 +147,108 @@
         }
         loading = true;
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(async () => {
-            await updateSearchResults();
-        }, 750);
+        searchTimeout = setTimeout(() => updateSearchResults(), 750);
     };
 
-    async function handleRestoreObject() {
-        if (Object.keys(checkedItems).length === 0) {
-            return;
-        }
+    // ================================
+    // Item Actions
+    // ================================
+    function handleRestoreObject() {
+        executeRestoreOperation(checkedItems, stateCallbacks);
+    }
 
-        const promises = [];
+    function handleDeleteObject() {
+        executeDeleteOperation(checkedItems, isTrash, stateCallbacks);
+    }
 
-        actionsContextOpen = false;
+    // Single item action helpers
+    function prepareForSingleItemAction(item: ObjectItem) {
+        isSingleItemAction = true;
+        checkedItems = {};
+        checkedItems[item.key] = item.metadata.name ?? item.key;
+    }
 
-        const count = Object.keys(checkedItems).length;
+    // Create action definitions with handlers
+    const trashActions = createTrashActions({
+        onDeletePermanently: (item) => {
+            prepareForSingleItemAction(item);
+            confirmDeleteOpen = true;
+        },
+        onRestore: (item) => {
+            prepareForSingleItemAction(item);
+            confirmRestoreOpen = true;
+        },
+    });
 
-        for (const checkedItem of Object.keys(checkedItems)) {
-            restoringItem = true;
-            const itemPath = page.params.path
-                ? `${page.params.path}/${checkedItem}`
-                : checkedItem;
+    const mainActions = createMainActions({
+        onDownload: (item) =>
+            handleDownloadItem(
+                item.metadata.name ?? item.key,
+                () => (actionsContextOpen = false),
+            ),
+        onOpenInNewTab: handleOpenItemInNewTab,
+        onRename: (item) =>
+            triggerRenameAction(item, () => (actionsContextOpen = false)),
+        onMoveToTrash: (item) => {
+            prepareForSingleItemAction(item);
+            handleDeleteObject();
+        },
+    });
 
-            if (itemPath.endsWith("/")) {
-                // Restore folder via folders PUT
-                promises.push(getRestoreFolderPromise(itemPath));
-            } else {
-                // Restore file via objects PUT
-                const fileName = itemPath.includes("/")
-                    ? itemPath.split("/").pop()!
-                    : itemPath;
-                const folder = itemPath.includes("/")
-                    ? itemPath.split("/").slice(0, -1).join("/")
-                    : undefined;
+    let itemActions = $derived(isTrash ? trashActions : mainActions);
 
-                const promise = apiClient.storage.objects.item[":item"]
-                    .$put({
-                        param: { item: encodeURIComponent(fileName) },
-                        query: { folder },
-                        json: {
-                            isTrashed: false,
-                        },
-                    })
-                    .then(async (res) => {
-                        if (!res.ok) {
-                            console.error(await res.text());
-                            restoringItem = false;
-                            throw new Error("Failed to restore");
-                        }
-
-                        confirmRestoreOpen = false;
-                        restoringItem = false;
-                    });
-
-                promises.push(promise);
+    // Multiple item actions
+    const mainMultipleActions = createMainMultipleActions({
+        onDownload: () => {
+            if (Object.keys(checkedItems).length === 0) return;
+            for (const checkedItem of Object.values(checkedItems)) {
+                handleDownloadItem(
+                    checkedItem,
+                    () => (actionsContextOpen = false),
+                );
+                delete checkedItems[checkedItem];
             }
-        }
-
-        let failures = 0;
-
-        toast.promise(
-            Promise.all(promises)
-                .catch(() => {
-                    failures += 1;
-                })
-                .finally(async () => {
-                    checkedItems = {};
-                    actionsContextOpen = false;
-                    actionableItem = undefined;
-                    await invalidate("app:files");
-                }),
-            {
-                loading: `Restoring ${count} items`,
-                success: `${count} items restored`,
-                error: `Failed to restore ${failures} items`,
-            },
-        );
-    }
-
-    async function getDeleteFolderPromise(itemPath: string) {
-        const folderId =
-            itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
-        const parentId = itemPath.slice(0, -1).includes("/")
-            ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
-            : undefined;
-
-        const promise = apiClient.storage.folders.folder[":id"]
-            .$delete({
-                param: { id: folderId },
-                json: { parentFolderId: parentId },
-            })
-            .then(async (res) => {
-                if (!res.ok) {
-                    console.error(await res.text());
-                    deletingItem = false;
-                    throw new Error("Failed to delete folder");
-                }
-
-                confirmDeleteOpen = false;
-                deletingItem = false;
-            });
-
-        return promise;
-    }
-
-    async function getTrashFolderPromise(itemPath: string) {
-        const folderId =
-            itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
-        const parentId = itemPath.slice(0, -1).includes("/")
-            ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
-            : undefined;
-
-        const promise = apiClient.storage.folders.folder[":id"]
-            .$put({
-                param: { id: folderId },
-                json: { isTrashed: true, parentFolderId: parentId },
-            })
-            .then(async (res) => {
-                if (!res.ok) {
-                    console.error(await res.text());
-                    deletingItem = false;
-                    throw new Error("Failed to move folder to trash");
-                }
-
-                confirmDeleteOpen = false;
-                deletingItem = false;
-            });
-
-        return promise;
-    }
-
-    async function getDeleteForeverPromise(itemPath: string) {
-        const promise = apiClient.storage.objects.item[":item"]
-            .$delete({
-                param: { item: encodeURIComponent(itemPath) },
-            })
-            .then(async (res) => {
-                if (!res.ok) {
-                    console.error(await res.text());
-                    deletingItem = false;
-                    throw new Error("Failed to delete file");
-                }
-                confirmDeleteOpen = false;
-                deletingItem = false;
-            });
-        return promise;
-    }
-
-    async function getTrashActionPromise(itemPath: string) {
-        const fileName = itemPath.includes("/")
-            ? itemPath.split("/").pop()!
-            : itemPath;
-        const folder = itemPath.includes("/")
-            ? itemPath.split("/").slice(0, -1).join("/")
-            : undefined;
-
-        const promise = apiClient.storage.objects.item[":item"]
-            .$put({
-                param: { item: encodeURIComponent(fileName) },
-                query: { folder },
-                json: {
-                    isTrashed: true,
-                },
-            })
-            .then(async (res) => {
-                if (!res.ok) {
-                    console.error(await res.text());
-                    deletingItem = false;
-                    throw new Error("Failed to trash file");
-                }
-
-                confirmDeleteOpen = false;
-
-                deletingItem = false;
-            });
-        return promise;
-    }
-
-    async function getRestoreFolderPromise(itemPath: string) {
-        const folderId =
-            itemPath.slice(0, -1).split("/").pop() || itemPath.slice(0, -1);
-        const parentId = itemPath.slice(0, -1).includes("/")
-            ? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
-            : undefined;
-
-        const promise = apiClient.storage.folders.folder[":id"]
-            .$put({
-                param: { id: folderId },
-                json: { isTrashed: false, parentFolderId: parentId },
-            })
-            .then(async (res) => {
-                if (!res.ok) {
-                    console.error(await res.text());
-                    restoringItem = false;
-                    throw new Error("Failed to restore folder");
-                }
-
-                confirmRestoreOpen = false;
-                restoringItem = false;
-            });
-
-        return promise;
-    }
-
-    async function handleDeleteObject() {
-        if (Object.keys(checkedItems).length === 0) {
-            return;
-        }
-
-        const promises = [];
-
-        actionsContextOpen = false;
-
-        const amount = Object.keys(checkedItems).length;
-
-        for (const checkedItem of Object.keys(checkedItems)) {
-            deletingItem = true;
-            const itemPath = page.params.path
-                ? `${page.params.path}/${checkedItem}`
-                : checkedItem;
-
-            const isFolder = itemPath.endsWith("/");
-
-            if (isFolder) {
-                // Folder: if in Trash, hard delete; else soft-trash via PUT
-                if (isTrash) {
-                    promises.push(getDeleteFolderPromise(itemPath));
-                } else {
-                    promises.push(getTrashFolderPromise(itemPath));
-                }
-                continue;
-            }
-
-            if (isTrash) {
-                // Is trash, so we delete forever
-                promises.push(getDeleteForeverPromise(itemPath));
-                continue;
-            }
-
-            // Not in trash, so we move to trash
-            promises.push(getTrashActionPromise(itemPath));
-        }
-
-        let failures = 0;
-
-        toast.promise(
-            Promise.all(promises)
-                .catch(() => {
-                    failures += 1;
-                })
-                .finally(async () => {
-                    checkedItems = {};
-                    actionsContextOpen = false;
-                    actionableItem = undefined;
-                    await invalidate("app:files");
-                }),
-            {
-                loading: isTrash
-                    ? `Deleting ${amount} items permanently`
-                    : `Moving ${amount} items to trash`,
-                success: isTrash
-                    ? `${amount} items deleted permanently`
-                    : `${amount} items moved to trash`,
-                error: isTrash
-                    ? `Failed to delete ${failures} items permanently`
-                    : `Failed to move ${failures} items to trash`,
-            },
-        );
-    }
-
-    function handleOpenItemInNewTab(item: ObjectItem) {
-        const finalUrl = getObjectUrl({
-            baseUrl: page.url,
-            itemPath: item.key,
-            raw: true,
-        });
-
-        window.open(finalUrl);
-    }
-
-    async function handleDownloadItem(itemPath: string) {
-        const finalUrl = getObjectUrl({
-            baseUrl: page.url,
-            itemPath,
-            raw: true,
-        });
-
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = finalUrl;
-        a.download = itemPath;
-        document.body.appendChild(a);
-        a.target = "_blank";
-        a.click();
-        window.URL.revokeObjectURL(finalUrl);
-        actionsContextOpen = false;
-        toast.info(`Downloaded ${itemPath}`);
-    }
-
-    const trashActions: ItemActionGroup[] = [
-        {
-            actions: [
-                {
-                    title: "Delete permanently",
-                    icon: TrashIcon,
-                    action: async (item: ObjectItem) => {
-                        isSingleItemAction = true;
-                        checkedItems = {};
-                        checkedItems[item.key] = item.metadata.name || item.key;
-                        confirmDeleteOpen = true;
-                    },
-                    disabled: false,
-                },
-                {
-                    title: "Restore",
-                    icon: ArchiveRestoreIcon,
-                    action: async (item: ObjectItem) => {
-                        isSingleItemAction = true;
-                        checkedItems = {};
-                        checkedItems[item.key] = item.metadata.name || item.key;
-                        confirmRestoreOpen = true;
-                    },
-                    disabled: false,
-                },
-            ],
         },
-    ];
+        onMoveToTrash: handleDeleteObject,
+    });
 
-    const mainActions: ItemActionGroup[] = [
-        {
-            actions: [
-                {
-                    title: "Download",
-                    icon: DownloadIcon,
-                    action: (item) => handleDownloadItem(item.key),
-                    fileOnly: true,
-                },
-                {
-                    title: "Open in new tab",
-                    icon: ExternalLinkIcon,
-                    action: (item) => handleOpenItemInNewTab(item),
-                    fileOnly: true,
-                },
-                {
-                    title: "Share",
-                    icon: ShareIcon,
-                    action: () => [],
-                    disabled: true,
-                },
-            ],
+    const trashMultipleActions = createTrashMultipleActions({
+        onRestore: () => {
+            isSingleItemAction = false;
+            confirmRestoreOpen = true;
+            actionsContextOpen = false;
         },
-        {
-            actions: [
-                {
-                    title: "Rename",
-                    icon: PencilLineIcon,
-                    action: (item) => {
-                        actionsContextOpen = false;
-                        $itemAction = {
-                            open: true,
-                            item,
-                        };
-                    },
-                },
-                {
-                    title: "Move",
-                    icon: FolderInputIcon,
-                    action: () => [],
-                },
-                {
-                    title: "Duplicate",
-                    icon: CopyIcon,
-                    action: () => [],
-                    disabled: true,
-                },
-                {
-                    title: "Star",
-                    icon: StarIcon,
-                    action: () => [],
-                    disabled: true,
-                },
-            ],
+        onDeletePermanently: () => {
+            isSingleItemAction = false;
+            confirmDeleteOpen = true;
+            actionsContextOpen = false;
         },
-        {
-            actions: [
-                {
-                    title: "Move to trash",
-                    icon: TrashIcon,
-                    action: async (item: ObjectItem) => {
-                        isSingleItemAction = true;
-                        checkedItems = {};
-                        checkedItems[item.key] = item.metadata.name || item.key;
-                        await handleDeleteObject();
-                    },
-                    variant: "destructive",
-                    disabled: false,
-                },
-            ],
-        },
-    ];
+    });
 
-    let itemActions: ItemActionGroup[] = $derived(
-        isTrash ? trashActions : mainActions,
-    );
-
-    const mainMultipleActions: MultipleItemsAction[] = [
-        {
-            title: "Download",
-            icon: DownloadIcon,
-            variant: "outline",
-            action: () => {
-                if (Object.keys(checkedItems).length === 0) {
-                    return;
-                }
-
-                for (const checkedItem of Object.keys(checkedItems)) {
-                    handleDownloadItem(checkedItem);
-                    checkedItems[checkedItem] = false;
-                }
-            },
-        },
-        {
-            title: "Move",
-            icon: FolderInputIcon,
-            variant: "outline",
-            action: () => [],
-        },
-        {
-            title: "Star",
-            icon: StarIcon,
-            variant: "outline",
-            action: () => [],
-        },
-        {
-            title: "Share",
-            icon: ShareIcon,
-            variant: "outline",
-            action: () => [],
-        },
-        {
-            title: "Move to Trash",
-            icon: TrashIcon,
-            variant: "destructive",
-            action: async () => {
-                handleDeleteObject();
-            },
-        },
-    ];
-
-    const trashMultipleActions: MultipleItemsAction[] = [
-        {
-            title: "Restore",
-            icon: ArchiveRestoreIcon,
-            variant: "outline",
-            action: async () => {
-                isSingleItemAction = false;
-                confirmRestoreOpen = true;
-                actionsContextOpen = false;
-            },
-        },
-        {
-            title: "Delete permanently",
-            icon: TrashIcon,
-            variant: "destructive",
-            action: async () => {
-                isSingleItemAction = false;
-                confirmDeleteOpen = true;
-                actionsContextOpen = false;
-            },
-        },
-    ];
-
-    const multipleItemsActions: MultipleItemsAction[] = $derived(
+    let multipleItemsActions = $derived(
         isTrash ? trashMultipleActions : mainMultipleActions,
     );
 
+    // ================================
+    // File Opening
+    // ================================
     async function handleOpenItemWrapper(item: ObjectItem) {
         const display = item.metadata.name || item.key;
-        return toast.promise(handleOpenItem(item), {
-            loading: `Opening "${display}"`,
-            error: `Failed to open "${display}"`,
-        });
+        return toast.promise(
+            openItem(item, isDesktop, {
+                setFileToView: (f) => (fileToView = f),
+                openViewDialog: () => (viewFileOpen = true),
+            }),
+            {
+                loading: `Opening "${display}"`,
+                error: `Failed to open "${display}"`,
+            },
+        );
     }
 
-    async function handleOpenItem(item: ObjectItem): Promise<void> {
-        $playableMusic = null;
-
-        const finalUrl = getObjectUrl({
-            baseUrl: page.url,
-            itemPath: item.key,
-            raw: true,
-        });
-
-        if (item.metadata.category === "CODE") {
-            const codeReq = await fetch(finalUrl);
-            if (!codeReq.ok) {
-                toast.error("Failed to open code file.", {
-                    description: codeReq.statusText,
-                });
-                return;
-            }
-            const code = await codeReq.text();
-            fileToView = {
-                item,
-                src: finalUrl,
-                content: code,
-                type: "code",
-                language: determineCodeFileLanguage(item),
-            };
-            viewFileOpen = true;
-            return;
-        }
-
-        if (item.metadata.category === "IMAGES") {
-            fileToView = {
-                item,
-                src: finalUrl,
-                type: "image",
-            };
-            viewFileOpen = true;
-            return;
-        }
-
-        if (item.metadata.category === "MUSIC") {
-            $playableMusic = {
-                title: item.metadata.name || item.key,
-                source: finalUrl,
-                isPlaying: !dev,
-            };
-            return;
-        }
-        if (item.metadata.category === "DOCUMENTS") {
-            if (isDesktop.current) {
-                fileToView = {
-                    item,
-                    src: finalUrl,
-                    type: "pdf",
-                };
-                viewFileOpen = true;
-                return;
-            }
-        }
-
-        if (item.metadata.category === "VIDEO") {
-            fileToView = {
-                item,
-                src: finalUrl,
-                type: "video",
-            };
-            viewFileOpen = true;
-            return;
-        }
-
-        const newTab = window.open(finalUrl, "_blank");
-        if (newTab) {
-            newTab.focus();
-        }
-    }
-
-    const isDesktop = new MediaQuery("(min-width: 768px)");
-
+    // ================================
+    // Layout Management
+    // ================================
     function setLayoutBasedOnRoute() {
         if (
             page.url.pathname.startsWith("/browse") ||
@@ -726,23 +276,22 @@
         }
     });
 
+    // ================================
+    // Trash Operations
+    // ================================
     function emptyTrash() {
-        // Select all items
-        for (const item of data.list ?? []) {
-            checkedItems[item.key] = item.metadata.name || item.key;
-        }
+        checkedItems = selectAllForEmptyTrash(data);
         confirmDeleteOpen = true;
         isSingleItemAction = false;
     }
 
+    // ================================
+    // Selection Effect
+    // ================================
     $effect(() => {
-        allSelected =
-            (data.count ?? 0) > 0 &&
-            (data.list ?? []).every((item) => checkedItems[item.key]);
-        indeterminate =
-            (data.count ?? 0) > 0 &&
-            (data.list ?? []).some((item) => !!checkedItems[item.key]) &&
-            !allSelected;
+        const state = computeSelectionState(data, checkedItems);
+        allSelected = state.allSelected;
+        indeterminate = state.indeterminate;
     });
 </script>
 

@@ -135,14 +135,14 @@
     {@const isFolder = isFolderItem(objectItem)}
     <li
         class={cn(
-            "flex items-end justify-between rounded-xl border p-5 transition-colors",
+            "flex items-stretch justify-between rounded-xl border p-5 transition-colors",
             checked ? "bg-primary/5" : "",
         )}
     >
         <ContextMenu.Root>
             <ContextMenu.Trigger class="h-full w-full">
                 <div
-                    class="flex h-full flex-col items-start justify-center gap-2"
+                    class="flex h-full flex-col items-center justify-center gap-2"
                     role="button"
                     tabindex={-1}
                     ontap={() => {
