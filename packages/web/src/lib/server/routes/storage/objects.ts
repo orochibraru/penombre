@@ -1,9 +1,15 @@
+import { Readable } from "node:stream";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { Logger } from "$lib/logger";
 import type { StorageRouter } from "$lib/server/api-types";
-import { StorageService } from "$lib/server/dto/storage";
+import {
+	createZipFromFolder,
+	createZipFromPaths,
+	generateZipFilename,
+	StorageService,
+} from "$lib/server/dto/storage";
 import {
 	FileOrFolderNotFoundError,
 	UnauthorizedError,
@@ -31,6 +37,14 @@ const rawQuerySchema = z.object({
 
 const moveBodySchema = z.object({
 	destination: z.string(), // Empty string for root
+});
+
+const bulkDownloadSchema = z.object({
+	paths: z.array(z.string()).min(1).max(100), // Limit to 100 items
+});
+
+const folderDownloadQuerySchema = z.object({
+	folder: z.string().optional(), // Parent folder context
 });
 
 // ============================================================================
@@ -246,6 +260,80 @@ const objectsRouter = new Hono<StorageRouter>()
 			return c.json({ message: "Internal Server Error" }, 500);
 		}
 	})
+
+	// POST /storage/objects/download - Bulk download multiple files as zip
+	.post("/download", zValidator("json", bulkDownloadSchema), async (c) => {
+		const storageService = c.get("storageService");
+		const { paths } = c.req.valid("json");
+
+		logger.debug(`Bulk download requested for ${paths.length} items`);
+
+		try {
+			const storagePath = storageService.getStoragePath();
+			const { stream } = await createZipFromPaths(storagePath, paths);
+			const filename = generateZipFilename(paths);
+
+			logger.debug(`Streaming zip download: ${filename}`);
+
+			return new Response(Readable.toWeb(stream) as unknown as ReadableStream, {
+				headers: {
+					"Content-Type": "application/zip",
+					"Content-Disposition": `attachment; filename="${filename}"`,
+					"Cache-Control": "no-cache",
+				},
+			});
+		} catch (error) {
+			logger.error("Error creating bulk download:", error);
+			return c.json({ message: "Error creating download" }, 500);
+		}
+	})
+
+	// GET /storage/objects/download/folder/:folder - Download folder as zip
+	.get(
+		"/download/folder/:folder",
+		zValidator("query", folderDownloadQuerySchema),
+		async (c) => {
+			const storageService = c.get("storageService");
+			const folderParam = c.req.param("folder");
+			const { folder: parentFolder } = c.req.valid("query");
+
+			if (!folderParam) {
+				return c.json({ message: "Folder parameter required" }, 400);
+			}
+
+			const decodedFolder = decodeURIComponent(folderParam);
+			const fullPath = parentFolder
+				? `${parentFolder}/${decodedFolder}`
+				: decodedFolder;
+
+			logger.debug(`Folder download requested: ${fullPath}`);
+
+			try {
+				const storagePath = storageService.getStoragePath();
+				const { stream } = await createZipFromFolder(storagePath, fullPath);
+				const filename = `${decodedFolder}.zip`;
+
+				logger.debug(`Streaming folder zip download: ${filename}`);
+
+				return new Response(
+					Readable.toWeb(stream) as unknown as ReadableStream,
+					{
+						headers: {
+							"Content-Type": "application/zip",
+							"Content-Disposition": `attachment; filename="${filename}"`,
+							"Cache-Control": "no-cache",
+						},
+					},
+				);
+			} catch (error) {
+				logger.error("Error creating folder download:", error);
+				if (error instanceof Error && error.message.includes("not found")) {
+					return c.json({ message: "Folder not found" }, 404);
+				}
+				return c.json({ message: "Error creating download" }, 500);
+			}
+		},
+	)
 
 	// GET /storage/objects/category/:category - List files by category
 	.get("/category/:category", async (c) => {

@@ -60,7 +60,8 @@ FROM oven/bun:1-alpine AS final
 
 # Only install what's actually needed at runtime
 # ffmpeg is required for video thumbnail generation
-RUN apk add --no-cache wget ffmpeg
+# poppler-utils provides pdftoppm for PDF thumbnail generation
+RUN apk add --no-cache wget ffmpeg poppler-utils
 
 WORKDIR /app
 

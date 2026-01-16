@@ -76,8 +76,8 @@
 - Respect `isTrashed` semantics and metadata locations.
 - Keep file moves/renames atomic where possible; for local FS, `fs.promises.rename` is acceptable if cross-device moves aren’t needed.
 - Remember to add unit/integration tests when addind a new feature and to adapt them if modifying something. If you don't see any and it would seem relevant to you to add some, ask the user if they want to add some. 
-- DO NOT leave any typescript errors or warnings in the code. If you see any, fix them.
-- DO NOT leave any linting issues in the code. If you see any, fix them (the tool is Biome)
+- DO NOT leave any typescript errors or warnings in the code. If you see any, fix them. If you don't see any, check anyway by cding into "packages/web" and running `bun run check`, fix them even if you don't think you created them.
+- DO NOT leave any linting issues in the code. If you see any, fix them (the tool is Biome). If you don't see any, check anyway by cding into "packages/web" and running `bun run lint:fix`
 - If your task comes from a TODO.md item, make sure to mark it as complete when done.
 
 ---

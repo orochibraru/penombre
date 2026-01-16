@@ -26,7 +26,6 @@
     import * as Dialog from "$lib/components/ui/dialog";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import { Input } from "$lib/components/ui/input";
-    import { type AvailableLayouts, layoutStore } from "$lib/store/layout";
     import {
         pendingUploadFiles,
         uploadDialogOpen,
@@ -34,6 +33,7 @@
     } from "$lib/store/upload";
     import {
         capitalizeFirstLetter,
+        isFolderItem,
         readableFileSize,
         type SortColumn,
         type SortDirection,
@@ -75,11 +75,11 @@
 
     let { data, loading = $bindable(false), preferences }: Props = $props();
 
-    // Extract initial values from server preferences to avoid Svelte 5 warnings
-    // These are intentionally captured once - we manage state locally after initial load
+    // Extract initial values from server preferences
     const initialSortColumn = $derived(preferences?.sortColumn ?? "name");
     const initialSortDirection = $derived(preferences?.sortDirection ?? "asc");
-    const initialLayout = $derived(preferences?.layout ?? "list");
+    // Layout is always driven by server preferences
+    const layout = $derived(preferences?.layout ?? "list");
 
     const api = getApiClient(fetch);
 
@@ -241,11 +241,51 @@
     });
 
     const mainActions = createMainActions({
-        onDownload: (item) =>
-            handleDownloadItem(
-                item.metadata.name ?? item.key,
-                () => (actionsContextOpen = false),
-            ),
+        onDownload: async (item) => {
+            actionsContextOpen = false;
+            const isFolder = isFolderItem(item);
+            const itemName = item.metadata.name ?? item.key;
+
+            if (isFolder) {
+                // Folder: download as zip via API
+                const folderId = item.key.endsWith("/")
+                    ? item.key.slice(0, -1)
+                    : item.key;
+
+                toast.promise(
+                    (async () => {
+                        const res = await api.storage.objects.download.folder[
+                            ":folder"
+                        ].$get({
+                            param: {
+                                folder: encodeURIComponent(folderId),
+                            },
+                            query: { folder: currentFolder || undefined },
+                        });
+                        if (!res.ok) {
+                            throw new Error("Failed to download folder");
+                        }
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `${itemName}.zip`;
+                        document.body.appendChild(a);
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        a.remove();
+                    })(),
+                    {
+                        loading: `Creating zip of "${itemName}"...`,
+                        success: `Downloaded "${itemName}"`,
+                        error: `Failed to download "${itemName}"`,
+                    },
+                );
+            } else {
+                // File: regular download
+                handleDownloadItem(itemName, () => {});
+            }
+        },
         onOpenInNewTab: handleOpenItemInNewTab,
         onRename: (item) =>
             triggerRenameAction(item, () => (actionsContextOpen = false)),
@@ -280,13 +320,30 @@
             const isCurrentlyStarred = item.metadata.isStarred ?? false;
             const newStarred = !isCurrentlyStarred;
             const itemName = item.metadata.name ?? item.key;
+            const isFolder = isFolderItem(item);
 
             try {
-                const res = await api.storage.objects.item[":item"].$put({
-                    param: { item: encodeURIComponent(item.key) },
-                    query: { folder: currentFolder },
-                    json: { isStarred: newStarred },
-                });
+                let res: Response;
+                if (isFolder) {
+                    // Folder: use folders endpoint
+                    const folderId = item.key.endsWith("/")
+                        ? item.key.slice(0, -1)
+                        : item.key;
+                    res = await api.storage.folders.folder[":id"].$put({
+                        param: { id: encodeURIComponent(folderId) },
+                        json: {
+                            isStarred: newStarred,
+                            parentFolderId: currentFolder || undefined,
+                        },
+                    });
+                } else {
+                    // File: use objects endpoint
+                    res = await api.storage.objects.item[":item"].$put({
+                        param: { item: encodeURIComponent(item.key) },
+                        query: { folder: currentFolder },
+                        json: { isStarred: newStarred },
+                    });
+                }
                 if (res.ok) {
                     toast.success(
                         newStarred
@@ -312,15 +369,47 @@
 
     // Multiple item actions
     const mainMultipleActions = createMainMultipleActions({
-        onDownload: () => {
-            if (Object.keys(checkedItems).length === 0) return;
-            for (const checkedItem of Object.values(checkedItems)) {
-                handleDownloadItem(
-                    checkedItem,
-                    () => (actionsContextOpen = false),
+        onDownload: async () => {
+            const keys = Object.keys(checkedItems);
+            if (keys.length === 0) return;
+
+            if (keys.length === 1 && keys[0]) {
+                // Single file: use regular download
+                handleDownloadItem(keys[0], () => (actionsContextOpen = false));
+            } else {
+                // Multiple files: use bulk download API
+                actionsContextOpen = false;
+                const paths = keys.map((key) =>
+                    currentFolder ? `${currentFolder}/${key}` : key,
                 );
-                delete checkedItems[checkedItem];
+
+                toast.promise(
+                    (async () => {
+                        const res = await api.storage.objects.download.$post({
+                            json: { paths },
+                        });
+                        if (!res.ok) {
+                            throw new Error("Failed to create download");
+                        }
+                        // Trigger download from response
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `opendrive-download-${paths.length}-files.zip`;
+                        document.body.appendChild(a);
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        a.remove();
+                    })(),
+                    {
+                        loading: `Creating zip of ${keys.length} files...`,
+                        success: `Downloaded ${keys.length} files`,
+                        error: "Failed to download files",
+                    },
+                );
             }
+            checkedItems = {};
         },
         onMoveToTrash: handleDeleteObject,
     });
@@ -359,39 +448,31 @@
         );
     }
 
-    // Track previous values to detect changes using $state for reactivity
+    // Track previous sort values to detect changes
     let prevSortColumn: SortColumn = $derived(initialSortColumn);
     let prevSortDirection: SortDirection = $derived(initialSortDirection);
-    let prevLayout: AvailableLayouts = $derived(initialLayout);
 
-    // Save preferences to server when they change
+    // Save sort preferences to server when they change
     $effect(() => {
         if (!browser) return;
 
-        // Capture current values
         const currentSortColumn = sortColumn;
         const currentSortDirection = sortDirection;
-        const currentLayout = $layoutStore;
 
         const sortChanged =
             currentSortColumn !== prevSortColumn ||
             currentSortDirection !== prevSortDirection;
-        const layoutChanged = currentLayout !== prevLayout;
 
-        if (sortChanged || layoutChanged) {
-            // Update prev values
+        if (sortChanged) {
             prevSortColumn = currentSortColumn;
             prevSortDirection = currentSortDirection;
-            prevLayout = currentLayout;
 
-            // Debounce API call to avoid spamming on rapid changes
             const savePreferences = async () => {
                 try {
                     await api.preferences.$put({
                         json: {
                             sortColumn: currentSortColumn,
                             sortDirection: currentSortDirection,
-                            layout: currentLayout,
                         },
                     });
                 } catch (error) {
@@ -584,13 +665,13 @@
                 <DropdownMenu.Trigger>
                     {#snippet child({ props })}
                         <Button variant="outline" {...props}>
-                            {#if $layoutStore === "grid"}
+                            {#if layout === "grid"}
                                 <LayoutGridIcon class="h-4 w-4" />
                             {:else}
                                 <LayoutListIcon class="h-4 w-4" />
                             {/if}
                             <span>
-                                {capitalizeFirstLetter($layoutStore)}
+                                {capitalizeFirstLetter(layout)}
                             </span>
                         </Button>
                     {/snippet}
@@ -599,18 +680,14 @@
                     <DropdownMenu.Label>Layout</DropdownMenu.Label>
                     <DropdownMenu.Separator />
                     <DropdownMenu.Item
-                        onclick={() => {
-                            $layoutStore = "list";
-                            if (browser) {
-                                if (page.url.pathname.startsWith("/browse")) {
-                                    localStorage.removeItem("layout");
-                                } else {
-                                    localStorage.setItem("layout", "list");
-                                }
-                            }
+                        onclick={async () => {
+                            await getApiClient().preferences.$put({
+                                json: { layout: "list" },
+                            });
+                            await invalidate("app:preferences");
                         }}
                     >
-                        {#if $layoutStore === "list"}
+                        {#if layout === "list"}
                             <CheckIcon class="h-4 w-4" />
                         {:else}
                             <span class="w-4"></span>
@@ -618,18 +695,14 @@
                         List
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
-                        onclick={() => {
-                            $layoutStore = "grid";
-                            if (browser) {
-                                if (!page.url.pathname.startsWith("/browse")) {
-                                    localStorage.removeItem("layout");
-                                } else {
-                                    localStorage.setItem("layout", "grid");
-                                }
-                            }
+                        onclick={async () => {
+                            await getApiClient().preferences.$put({
+                                json: { layout: "grid" },
+                            });
+                            await invalidate("app:preferences");
                         }}
                     >
-                        {#if $layoutStore === "grid"}
+                        {#if layout === "grid"}
                             <CheckIcon class="h-4 w-4" />
                         {:else}
                             <span class="w-4"></span>
@@ -654,7 +727,7 @@
 {/if}
 
 <!-- Table -->
-{#if $layoutStore === "list"}
+{#if layout === "list"}
     <div class="hidden md:block">
         <FileTable
             handleOpenItem={handleOpenItemWrapper}

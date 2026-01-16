@@ -72,6 +72,13 @@ export abstract class StorageServiceBase {
 	}
 
 	/**
+	 * Returns the user's storage path for direct filesystem operations.
+	 */
+	public getStoragePath(): string {
+		return this.storagePath;
+	}
+
+	/**
 	 * Resolves a file key to its actual filesystem path.
 	 * Falls back to searching by display name if direct path doesn't exist.
 	 */
@@ -191,13 +198,6 @@ export abstract class StorageServiceBase {
 		}
 
 		return results;
-	}
-
-	/**
-	 * Gets the user's storage path.
-	 */
-	public getStoragePath(): string {
-		return this.storagePath;
 	}
 
 	/**

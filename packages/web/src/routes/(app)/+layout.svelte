@@ -41,16 +41,8 @@
     import NewFolderDialog from "$lib/components/layout/dialogs/new-folder-dialog.svelte";
     import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
     import Spinner from "$lib/components/ui/Spinner.svelte";
-    import { layoutStore } from "$lib/store/layout";
 
     const { children, data } = $props();
-
-    // Initialize layout store from server-loaded preferences
-    $effect(() => {
-        if (data.preferences?.layout) {
-            $layoutStore = data.preferences.layout;
-        }
-    });
 
     // Close all dialogs when navigation starts
     $effect(() => {

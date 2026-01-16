@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { XIcon } from "@lucide/svelte";
+    import { FolderIcon, XIcon } from "@lucide/svelte";
     import { toast } from "svelte-sonner";
     import { filesProxy, superForm } from "sveltekit-superforms";
     import { valibotClient } from "sveltekit-superforms/adapters";
@@ -31,6 +31,66 @@
         loading: boolean;
     };
 
+    type FileWithPath = File & { relativePath?: string };
+
+    /**
+     * Comprehensive list of OS-specific system files to skip during folder uploads.
+     * These files are automatically created by operating systems and typically should not be uploaded.
+     */
+    const SKIP_OS_FILES = new Set([
+        // macOS
+        ".DS_Store",
+        ".AppleDouble",
+        ".LSOverride",
+        "Icon\r", // Icon file with carriage return
+        "Icon", // Icon file without carriage return
+        ".Spotlight-V100",
+        ".Trashes",
+        ".VolumeIcon.icns",
+        ".com.apple.timemachine.donotpresent",
+        ".fseventsd",
+        ".TemporaryItems",
+        ".apdisk",
+        ".DocumentRevisions-V100",
+        ".PKInstallSandboxManager",
+        // Windows
+        "Thumbs.db",
+        "ehthumbs.db",
+        "ehthumbs_vista.db",
+        "Desktop.ini",
+        "$RECYCLE.BIN",
+        "System Volume Information",
+        // Linux
+        ".directory",
+        ".Trash-1000", // Common user trash
+        // General version control (usually want to skip)
+        ".git",
+        ".svn",
+        ".hg",
+        ".bzr",
+    ]);
+
+    /**
+     * Check if a file should be skipped based on OS-specific patterns.
+     */
+    function shouldSkipFile(fileName: string): boolean {
+        // Check exact matches
+        if (SKIP_OS_FILES.has(fileName)) {
+            return true;
+        }
+
+        // Check patterns
+        if (
+            fileName.startsWith("._") || // macOS resource forks
+            fileName.startsWith(".Trash-") || // Linux trash folders
+            fileName.startsWith("~$") // Windows temporary Office files
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
     const concurrency = 3;
 
     onMount(() => {
@@ -59,10 +119,48 @@
 
     const files = filesProxy(superform, "attachments");
 
+    // Track files from folder uploads with their relative paths
+    let folderFiles = $state<FileWithPath[]>([]);
+
     const onUpload: FileDropZoneProps["onUpload"] = async (uploadedFiles) => {
         // we use set instead of an assignment since it accepts a File[]
         files.set([...Array.from($files), ...uploadedFiles]);
     };
+
+    const onFolderUpload: FileDropZoneProps["onFolderUpload"] = async (
+        uploadedFiles,
+    ) => {
+        // Files from folder selection have webkitRelativePath set
+        // Filter out OS-specific system files
+        const filesWithPaths: FileWithPath[] = uploadedFiles
+            .filter((file) => {
+                const fileName = file.name;
+                if (shouldSkipFile(fileName)) {
+                    console.debug(`Skipping OS file: ${fileName}`);
+                    return false;
+                }
+                return true;
+            })
+            .map((file) => {
+                const f = file as FileWithPath;
+                f.relativePath = file.webkitRelativePath || file.name;
+                return f;
+            });
+
+        if (filesWithPaths.length < uploadedFiles.length) {
+            const skippedCount = uploadedFiles.length - filesWithPaths.length;
+            toast.info(
+                `Skipped ${skippedCount} system ${skippedCount === 1 ? "file" : "files"}`,
+            );
+        }
+
+        folderFiles = [...folderFiles, ...filesWithPaths];
+    };
+
+    // Combined file count for display
+    const totalFileCount = $derived(
+        Array.from($files).length + folderFiles.length,
+    );
 
     function removeFile(index: number) {
         // we use set instead of an assignment since it accepts a File[]
@@ -72,8 +170,16 @@
         ]);
     }
 
+    function removeFolderFile(index: number) {
+        folderFiles = [
+            ...folderFiles.slice(0, index),
+            ...folderFiles.slice(index + 1),
+        ];
+    }
+
     function removeFileByRef(fileToRemove: File) {
         files.set(Array.from($files).filter((f) => f !== fileToRemove));
+        folderFiles = folderFiles.filter((f) => f !== fileToRemove);
     }
 
     const onFileRejected: FileDropZoneProps["onFileRejected"] = async ({
@@ -274,11 +380,102 @@
         }
     }
 
+    /**
+     * Extracts unique folder paths from folder files and creates them.
+     */
+    async function createFoldersForUpload(): Promise<Set<string>> {
+        const createdFolders = new Set<string>();
+
+        // Extract unique folder paths from folder files
+        const folderPaths = new Set<string>();
+        for (const file of folderFiles) {
+            if (file.relativePath) {
+                const parts = file.relativePath.split("/");
+                // Build each parent path (exclude the filename)
+                for (let i = 1; i < parts.length; i++) {
+                    const folderPath = parts.slice(0, i).join("/");
+                    folderPaths.add(folderPath);
+                }
+            }
+        }
+
+        // Sort by depth (create parent folders first)
+        const sortedPaths = Array.from(folderPaths).sort(
+            (a, b) => a.split("/").length - b.split("/").length,
+        );
+
+        // Fetch the full folder tree once to check for existing folders
+        let existingFolderPaths: Set<string> | null = null;
+        try {
+            const res = await apiClient.storage.folders.tree.$get();
+            if (res.ok) {
+                const folders = await res.json();
+                existingFolderPaths = new Set(
+                    folders.map((f) => f.path.toLowerCase()),
+                );
+            }
+        } catch (e) {
+            console.warn("Failed to fetch folder tree:", e);
+        }
+
+        // Create each folder
+        for (const folderPath of sortedPaths) {
+            const parts = folderPath.split("/");
+            const folderName = parts[parts.length - 1] ?? "";
+            const parentParts = parts.slice(0, -1);
+
+            // Build the full parent path including current page path
+            let parent = page.params.path || "";
+            if (parentParts.length > 0) {
+                parent = parent
+                    ? `${parent}/${parentParts.join("/")}`
+                    : parentParts.join("/");
+            }
+
+            // Build the full path for this folder
+            const fullPath = parent ? `${parent}/${folderName}` : folderName;
+
+            // Check if this folder already exists
+            if (existingFolderPaths?.has(fullPath.toLowerCase())) {
+                console.debug(`Folder already exists: ${fullPath}`);
+                createdFolders.add(folderPath);
+                continue;
+            }
+
+            try {
+                const res = await apiClient.storage.folders.$post({
+                    json: {
+                        name: folderName,
+                        parent: parent || undefined,
+                    },
+                });
+
+                if (res.ok) {
+                    createdFolders.add(folderPath);
+                    // Add to our local cache so we don't try to create it again
+                    existingFolderPaths?.add(fullPath.toLowerCase());
+                } else {
+                    const errorText = await res.text();
+                    console.warn(
+                        `Failed to create folder ${folderPath}:`,
+                        errorText,
+                    );
+                }
+            } catch (e) {
+                console.warn(`Error creating folder ${folderPath}:`, e);
+            }
+        }
+
+        return createdFolders;
+    }
+
     async function handleUpload() {
         loading = true;
         const results: FullResult[] = [];
 
         const uploadMetadataPromises = [];
+
+        // Handle regular files
         for (const file of $files) {
             const fullPath = page.params.path
                 ? `${page.params.path}/${file.name}`
@@ -321,11 +518,73 @@
             uploadMetadataPromises.push(promise);
         }
 
+        // Handle folder files (files with relative paths)
+        for (const file of folderFiles) {
+            const relativePath = file.relativePath || file.name;
+
+            // Extract filename and folder path from relativePath
+            const pathParts = relativePath.split("/");
+            const fileName = pathParts[pathParts.length - 1] ?? file.name;
+            const folderPath =
+                pathParts.length > 1 ? pathParts.slice(0, -1).join("/") : "";
+
+            // Build the full folder path including current directory
+            const fullFolderPath = page.params.path
+                ? folderPath
+                    ? `${page.params.path}/${folderPath}`
+                    : page.params.path
+                : folderPath || undefined;
+
+            const promise = apiClient.storage.objects
+                .$post({
+                    query: { folder: fullFolderPath },
+                    json: {
+                        name: fileName,
+                        size: file.size,
+                    },
+                })
+                .then(async (res) => {
+                    if (!res.ok) {
+                        const errorText = await res.text();
+                        console.error(
+                            "Upload metadata creation failed:",
+                            errorText,
+                        );
+                        throw new Error(
+                            `Failed to create metadata: ${errorText}`,
+                        );
+                    }
+
+                    const data = await res.json();
+                    const result: FullResult = {
+                        data,
+                        file,
+                    };
+
+                    results.push(result);
+                    $uploadingItems[
+                        fileNameWithoutFolder(result.data.finalName)
+                    ] = 1;
+
+                    return res;
+                })
+                .catch((e) => {
+                    console.error(`Error scheduling ${relativePath}:`, e);
+                    toast.error(
+                        `Failed to schedule ${relativePath} for upload.`,
+                    );
+                    throw e;
+                });
+
+            uploadMetadataPromises.push(promise);
+        }
+
         const globalpromise = Promise.all(uploadMetadataPromises).finally(
             async () => {
                 open = false;
                 await invalidate("app:files");
                 files.set([]);
+                folderFiles = [];
 
                 void resultCallback(results).finally(() => {
                     loading = false;
@@ -354,14 +613,14 @@
     <Button
         type="button"
         {loading}
-        disabled={$files.length === 0}
+        disabled={totalFileCount === 0}
         onclick={() => handleUpload()}
     >
         Upload
-        {#if $files.length > 0 && $files.length === 1}
-            {$files.length} file
-        {:else if $files.length > 1}
-            {$files.length} files
+        {#if totalFileCount === 1}
+            1 file
+        {:else if totalFileCount > 1}
+            {totalFileCount} files
         {/if}
     </Button>
 {/snippet}
@@ -371,7 +630,7 @@
     bind:loading
     size="lg"
     title="Upload new files"
-    description="Drag n' Drop or click to select the files you want to upload."
+    description="Drag n' Drop or click to select the files you want to upload. You can also select entire folders."
     form={{ method: "POST", enctype: "multipart/form-data" }}
     footer={uploadButton}
 >
@@ -379,7 +638,8 @@
     <FileDropZone
         {onUpload}
         {onFileRejected}
-        fileCount={$files.length}
+        {onFolderUpload}
+        fileCount={totalFileCount}
         class="mb-5"
     />
     <input name="attachments" type="file" bind:files={$files} class="hidden" />
@@ -405,6 +665,36 @@
                             size="icon"
                             onclick={() => {
                                 removeFile(i);
+                            }}
+                        >
+                            <XIcon />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        {/each}
+        {#each folderFiles as file, i (`folder-${file.relativePath}`)}
+            <div>
+                <div
+                    class={cn(
+                        "flex place-items-center justify-between gap-3 rounded-xl border p-3",
+                    )}
+                >
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2">
+                            <FolderIcon class="text-muted-foreground size-4" />
+                            <span class="text-sm">{file.relativePath}</span>
+                        </div>
+                        <span class="text-muted-foreground text-xs"
+                            >{displaySize(file.size)}</span
+                        >
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onclick={() => {
+                                removeFolderFile(i);
                             }}
                         >
                             <XIcon />

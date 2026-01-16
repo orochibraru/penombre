@@ -24,6 +24,8 @@ export type FileDropZonePropsWithoutHTML = WithChildren<{
 	maxFileSize?: number;
 	/** Called when a file does not meet the upload criteria (size, or type) */
 	onFileRejected?: (opts: { reason: FileRejectedReason; file: File }) => void;
+	/** Called when folders are selected for upload */
+	onFolderUpload?: (files: File[]) => Promise<void>;
 
 	// just for extra documentation
 	/** Takes a comma separated list of one or more file types.

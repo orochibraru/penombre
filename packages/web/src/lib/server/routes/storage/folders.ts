@@ -146,6 +146,7 @@ const foldersRouter = new Hono<StorageRouter>()
 			"json",
 			z.object({
 				isTrashed: z.boolean().optional(),
+				isStarred: z.boolean().optional(),
 				tags: z.array(z.string()).optional(),
 				name: z.string().optional(),
 				parentFolderId: z.string().optional(),

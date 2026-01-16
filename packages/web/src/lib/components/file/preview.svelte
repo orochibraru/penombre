@@ -3,7 +3,7 @@
     import type { ObjectItem } from "$lib/api-client";
     import { isCodeItem } from "$lib/file-utils";
     import { getObjectUrl } from "$lib/url";
-    import { FileCodeIcon } from "@lucide/svelte";
+    import { FileCodeIcon, FileVideoIcon, FileAudioIcon } from "@lucide/svelte";
 
     type Props = {
         item: ObjectItem;
@@ -20,6 +20,18 @@
             !item.metadata.contentType?.includes("svg"),
     );
 
+    // Check if this is a video type that supports thumbnails
+    const isVideo = $derived(item.metadata.contentType?.startsWith("video/"));
+
+    // Check if this is a PDF
+    const isPdf = $derived(item.metadata.contentType === "application/pdf");
+
+    // Check if this is an audio file
+    const isAudio = $derived(item.metadata.contentType?.startsWith("audio/"));
+
+    // Track thumbnail load errors
+    let thumbnailError = $state(false);
+
     $effect(() => {
         {
             objectUrl = getObjectUrl({
@@ -28,29 +40,67 @@
                 baseUrl: page.url,
             });
 
-            if (isImage) {
+            if (isImage || isVideo || isPdf || isAudio) {
                 thumbnailUrl = getObjectUrl({
                     thumbnail: true,
                     size: 300,
                     itemPath: item.key,
                     baseUrl: page.url,
                 });
+                thumbnailError = false;
             }
         }
     });
 </script>
 
 <div class="flex w-full items-center justify-between">
-    {#if item.metadata.contentType === "application/pdf"}
-        <embed
-            src={objectUrl}
-            title={item.metadata.name ?? item.key}
-            class="overflow-hidden"
-            width="100%"
-            height="200px"
-        />
+    {#if isPdf}
+        {#if thumbnailError}
+            <!-- Fallback to embed if thumbnail fails -->
+            <embed
+                src={objectUrl}
+                title={item.metadata.name ?? item.key}
+                class="overflow-hidden"
+                width="100%"
+                height="200px"
+            />
+        {:else}
+            <img
+                src={thumbnailUrl}
+                alt={item.metadata.name ?? item.key}
+                class="mx-auto max-h-50 min-w-50 rounded-xl w-full object-cover"
+                loading="lazy"
+                onerror={() => (thumbnailError = true)}
+            />
+        {/if}
     {:else if isCodeItem(item.metadata.name ?? item.key)}
         <FileCodeIcon class="mx-auto h-20 w-20 text-muted-foreground" />
+    {:else if isVideo}
+        {#if thumbnailError}
+            <FileVideoIcon class="mx-auto h-20 w-20 text-muted-foreground" />
+        {:else}
+            <img
+                src={thumbnailUrl}
+                alt={item.metadata.name ?? item.key}
+                class="mx-auto max-h-50 min-w-50 rounded-xl w-full object-cover"
+                loading="lazy"
+                onerror={() => (thumbnailError = true)}
+            />
+        {/if}
+    {:else if isAudio}
+        {#if thumbnailError}
+            <FileAudioIcon class="mx-auto h-20 w-20 text-muted-foreground" />
+        {:else}
+            <div class="w-full px-2 py-4 flex items-center justify-center">
+                <img
+                    src={thumbnailUrl}
+                    alt="Waveform for {item.metadata.name ?? item.key}"
+                    class="w-full h-auto rounded-lg bg-muted"
+                    loading="lazy"
+                    onerror={() => (thumbnailError = true)}
+                />
+            </div>
+        {/if}
     {:else if isImage}
         <img
             src={thumbnailUrl}

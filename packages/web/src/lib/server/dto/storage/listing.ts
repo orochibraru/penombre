@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type {
@@ -45,6 +46,18 @@ export abstract class ListingOperations extends FolderOperations {
 		}
 
 		const dirPath = join(this.storagePath, prefix);
+
+		// Check if directory exists before trying to read it
+		if (!existsSync(dirPath)) {
+			logger.debug(
+				`Directory does not exist yet: ${dirPath}, returning empty list`,
+			);
+			const emptyList: ObjectList = { list: [], count: 0, total: 0 };
+			// Cache the empty result briefly
+			this.cache.set(cacheKey, emptyList);
+			return emptyList;
+		}
+
 		const dir = await readdir(dirPath, { withFileTypes: true });
 		if (!dir) {
 			throw new Error("Directory not found");
@@ -296,7 +309,7 @@ export abstract class ListingOperations extends FolderOperations {
 	}
 
 	/**
-	 * Lists starred files.
+	 * Lists starred files and folders.
 	 */
 	public async listStarredFiles(): Promise<ObjectList> {
 		const cacheKey = CacheKeys.starred();
@@ -305,18 +318,98 @@ export abstract class ListingOperations extends FolderOperations {
 			return cached;
 		}
 
+		// Get starred files
 		const allFiles = await this.abstractListFiles({ recursive: true });
 		const starredFiles = allFiles.list.filter(
 			(item) => item.metadata.isStarred,
 		);
+
+		// Get starred folders
+		const starredFolders = await this.collectStarredFolders("");
+
+		// Combine and sort (folders first, then by name)
+		const combined = [...starredFolders, ...starredFiles];
+		combined.sort((a, b) => {
+			const aIsFolder = a.type === "folder";
+			const bIsFolder = b.type === "folder";
+			if (aIsFolder && !bIsFolder) return -1;
+			if (!aIsFolder && bIsFolder) return 1;
+			return (a.metadata.name || a.key).localeCompare(b.metadata.name || b.key);
+		});
+
 		const result: ObjectList = {
-			list: starredFiles,
-			count: starredFiles.length,
-			total: starredFiles.length,
+			list: combined,
+			count: combined.length,
+			total: combined.length,
 		};
 
 		this.cache.set(cacheKey, result);
 		return result;
+	}
+
+	/**
+	 * Recursively collects starred folders.
+	 */
+	private async collectStarredFolders(prefix: string): Promise<ObjectItem[]> {
+		const results: ObjectItem[] = [];
+		const dirPath = join(this.storagePath, prefix);
+
+		let dir: { name: string; isDirectory: () => boolean }[];
+		try {
+			dir = (await readdir(dirPath, {
+				withFileTypes: true,
+			})) as unknown as typeof dir;
+		} catch {
+			return results;
+		}
+
+		for (const dirent of dir) {
+			if (!dirent.isDirectory()) continue;
+			if (dirent.name === ".trash" || dirent.name === ".thumbnails") continue;
+			if (dirent.name === this.userFolder) continue;
+
+			const folderPath = join(dirPath, dirent.name);
+			const relativePath = prefix ? `${prefix}/${dirent.name}` : dirent.name;
+
+			let metadata: FileMetadata = this.generateMeta(dirent.name);
+			let updatedAt = new Date();
+
+			try {
+				const s = await stat(folderPath);
+				updatedAt = new Date(s.mtimeMs);
+			} catch {
+				// Use current date
+			}
+
+			try {
+				const metaFile = Bun.file(join(folderPath, ".keep.meta.json"));
+				if (await metaFile.exists()) {
+					metadata = await metaFile.json();
+				}
+			} catch (err) {
+				logger.warn("Failed to read folder meta:", folderPath, err);
+			}
+
+			// Skip trashed folders
+			if (metadata.isTrashed) continue;
+
+			// Add starred folder to results
+			if (metadata.isStarred) {
+				results.push({
+					key: `${relativePath}/`,
+					size: 0,
+					updatedAt,
+					metadata,
+					type: "folder",
+				});
+			}
+
+			// Recurse into subfolders
+			const subResults = await this.collectStarredFolders(relativePath);
+			results.push(...subResults);
+		}
+
+		return results;
 	}
 
 	/**

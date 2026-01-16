@@ -285,7 +285,7 @@ export function createMainActions(handlers: {
 					title: "Download",
 					icon: DownloadIcon,
 					action: handlers.onDownload,
-					fileOnly: true,
+					// Works for both files and folders (folders download as zip)
 				},
 				{
 					title: "Open in new tab",

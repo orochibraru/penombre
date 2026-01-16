@@ -84,6 +84,7 @@
     {#if isDesktop.current}
         <Dialog.Close
             disabled={loading}
+            type="button"
             class={buttonVariants({ variant: "outline" })}
         >
             Cancel
@@ -91,6 +92,7 @@
     {:else}
         <Drawer.Close
             disabled={loading}
+            type="button"
             class={buttonVariants({ variant: "outline" })}
         >
             Cancel

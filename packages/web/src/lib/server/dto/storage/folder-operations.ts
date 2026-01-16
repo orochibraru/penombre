@@ -286,7 +286,12 @@ export abstract class FolderOperations extends FileOperations {
 	 */
 	public async updateFolderMeta(
 		id: string,
-		data: { isTrashed?: boolean; tags?: string[]; name?: string },
+		data: {
+			isTrashed?: boolean;
+			isStarred?: boolean;
+			tags?: string[];
+			name?: string;
+		},
 	): Promise<void> {
 		const folderPrefix = id.endsWith("/") ? id : `${id}/`;
 		const dirPath = join(this.storagePath, folderPrefix);
@@ -303,6 +308,9 @@ export abstract class FolderOperations extends FileOperations {
 
 		if (typeof data.isTrashed === "boolean") {
 			metadata.isTrashed = data.isTrashed;
+		}
+		if (typeof data.isStarred === "boolean") {
+			metadata.isStarred = data.isStarred;
 		}
 		if (Array.isArray(data.tags)) {
 			metadata.tags = data.tags;

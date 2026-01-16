@@ -54,6 +54,8 @@
 		"@internationalized/date": "^3.10.1",
 		"@kitql/helpers": "^0.8.13",
 		"@lucide/svelte": "^0.545.0",
+		"@types/archiver": "^7.0.0",
+		"archiver": "^7.0.1",
 		"better-auth": "^1.4.10",
 		"bullmq": "^5.66.5",
 		"drizzle-orm": "^0.45.1",

@@ -7,7 +7,8 @@ import { uploadSchema } from "$lib/schemas/upload";
 import { getUserPreferences } from "$lib/server/dto/preferences";
 import type { LayoutServerLoad } from "./$types";
 
-export const load: LayoutServerLoad = async ({ fetch, locals }) => {
+export const load: LayoutServerLoad = async ({ fetch, locals, depends }) => {
+	depends("app:preferences");
 	// Check auth first before making API calls
 
 	if (!locals.user || !locals.session) {
