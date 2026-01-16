@@ -6,4 +6,6 @@
 
 - Implement "Share" feature
 
-- Implement storage redundancy across multiple storage solutions with backup & restore system
+- ~~Implement storage redundancy across multiple storage solutions with backup & restore system~~
+  - ✅ Backup & restore scripts implemented
+  - TODO: Multi-storage redundancy (S3, remote FS, etc.)

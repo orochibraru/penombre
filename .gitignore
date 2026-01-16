@@ -29,6 +29,8 @@ vite.config.ts.timestamp-*
 /temp/
 /tmp/
 
+# Backups
+/backups/
 
 **/node_modules/
 **/*.log

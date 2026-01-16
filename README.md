@@ -158,7 +158,53 @@ Configure OAuth providers using the pattern `OAUTH_<PROVIDER>_<SETTING>`:
 | `SMTP_FROM` | Sender email address | Required if enabled |
 | `SMTP_SECURE` | Use TLS (`true`/`false`) | `false` |
 
-## 🛠️ Development
+## � Backup & Restore
+
+Opendrive includes backup and restore scripts to protect your data. Backups include both the PostgreSQL database and all file storage.
+
+### Creating a Backup
+
+```bash
+# With the stack running:
+bun run backup
+
+# Or specify a custom backup directory:
+./scripts/backup.sh /path/to/backups
+```
+
+This creates a timestamped archive containing:
+- **database.dump** - PostgreSQL custom format dump
+- **storage.tar.gz** - All uploaded files and metadata
+- **backup.json** - Backup metadata
+
+### Restoring from Backup
+
+```bash
+# With the stack running:
+bun run restore ./backups/opendrive_backup_20240115_120000.tar.gz
+
+# Or directly:
+./scripts/restore.sh ./backups/opendrive_backup_20240115_120000.tar.gz
+```
+
+> ⚠️ **Warning**: Restore will **replace all existing data**. Make sure you have a backup of current data before restoring.
+
+### Automated Backups
+
+For automated backups, add a cron job:
+
+```bash
+# Daily backup at 2 AM
+0 2 * * * cd /path/to/opendrive && ./scripts/backup.sh /path/to/backups >> /var/log/opendrive-backup.log 2>&1
+```
+
+### Backup Storage Recommendations
+
+- Store backups on a different drive or remote storage
+- Keep multiple backup generations (e.g., last 7 days)
+- Test restores periodically to verify backup integrity
+
+## �🛠️ Development
 
 ### Tech Stack
 

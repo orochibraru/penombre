@@ -16,7 +16,9 @@
 		"lint:fix": "bunx --bun biome check --fix . && bun run format",
 		"format": "bunx --bun biome format . --write",
 		"format:check": "bunx --bun biome format .",
-		"circular": "bun run ./scripts/circular.ts"
+		"circular": "bun run ./scripts/circular.ts",
+		"backup": "./scripts/backup.sh",
+		"restore": "./scripts/restore.sh"
 	},
 	"keywords": [],
 	"author": "",

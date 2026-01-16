@@ -72,6 +72,7 @@ const mockObjectList = {
 				createdAt: new Date().toISOString(),
 				owner: "test-user-id",
 				isTrashed: false,
+				isStarred: false,
 			},
 		},
 	],
@@ -93,6 +94,7 @@ const mockObjectItem = {
 		createdAt: new Date().toISOString(),
 		owner: "test-user-id",
 		isTrashed: false,
+		isStarred: false,
 	},
 };
 
@@ -108,6 +110,7 @@ const mockUploadResult = {
 		createdAt: new Date().toISOString(),
 		owner: "test-user-id",
 		isTrashed: false,
+		isStarred: false,
 	},
 };
 
@@ -231,6 +234,7 @@ beforeEach(() => {
 				createdAt: new Date().toISOString(),
 				owner: "test-user-id",
 				isTrashed: false,
+				isStarred: false,
 			},
 		}),
 	);
@@ -953,6 +957,7 @@ describe("Objects Router - POST /item/:item/duplicate", () => {
 				createdAt: new Date().toISOString(),
 				owner: "test-user-id",
 				isTrashed: false,
+				isStarred: false,
 			},
 		});
 
@@ -988,6 +993,7 @@ describe("Objects Router - POST /item/:item/duplicate", () => {
 				createdAt: new Date().toISOString(),
 				owner: "test-user-id",
 				isTrashed: false,
+				isStarred: false,
 			},
 		});
 

@@ -62,6 +62,7 @@ const mockFolderMeta = {
 	id: "folder-id",
 	owner: "test-user-id",
 	isTrashed: false,
+	isStarred: false,
 	tags: ["work"],
 	createdAt: "2024-01-01T00:00:00.000Z",
 	category: "UNKNOWN" as const,

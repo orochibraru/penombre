@@ -498,8 +498,9 @@ export class StorageService {
 		const keepMetaPath = join(folderPath, ".keep.meta.json");
 		let metadata: FileMetadata | undefined;
 		if (existsSync(keepMetaPath)) {
-			metadata = await Bun.file(keepMetaPath).json();
-			this.permissionsCheck(metadata);
+			const loadedMeta: FileMetadata = await Bun.file(keepMetaPath).json();
+			this.permissionsCheck(loadedMeta);
+			metadata = loadedMeta;
 		}
 
 		const folderName =
@@ -624,6 +625,7 @@ export class StorageService {
 			category: this.determineCategory(name),
 			contentType: this.determineContentType(name),
 			isTrashed: false,
+			isStarred: false,
 		};
 	}
 
@@ -781,9 +783,11 @@ export class StorageService {
 				!currentPrefix || currentPrefix === "/" ? "" : currentPrefix;
 			const dirPath = join(this.storagePath, normalizedPrefix);
 
-			let dir: Awaited<ReturnType<typeof readdir>>;
+			let dir: { name: string; isDirectory: () => boolean }[];
 			try {
-				dir = await readdir(dirPath, { withFileTypes: true });
+				dir = (await readdir(dirPath, {
+					withFileTypes: true,
+				})) as unknown as typeof dir;
 			} catch {
 				return;
 			}
