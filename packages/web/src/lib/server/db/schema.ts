@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	index,
+	jsonb,
+	pgTable,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -103,7 +110,7 @@ export const activity = pgTable("activity", (t) => ({
 		.references(() => user.id, { onDelete: "cascade" })
 		.notNull(),
 	action: text("action", {
-		enum: ["create", "update", "delete", "share"],
+		enum: ["create", "update", "delete", "share", "rename"],
 	}).notNull(),
 	message: text("message").notNull(),
 	link: text("link"),
@@ -174,3 +181,34 @@ export const sharedWithRelations = relations(sharedWith, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+// =========================================================================
+// USER PREFERENCES
+// =========================================================================
+
+export type UserPreferencesData = {
+	layout?: "grid" | "list";
+	sortColumn?: "name" | "size" | "updatedAt" | null;
+	sortDirection?: "asc" | "desc";
+};
+
+export const userPreferences = pgTable("user_preferences", {
+	userId: text("user_id")
+		.primaryKey()
+		.references(() => user.id, { onDelete: "cascade" }),
+	preferences: jsonb("preferences").$type<UserPreferencesData>().default({}),
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+export const userPreferencesRelations = relations(
+	userPreferences,
+	({ one }) => ({
+		user: one(user, {
+			fields: [userPreferences.userId],
+			references: [user.id],
+		}),
+	}),
+);

@@ -7,6 +7,7 @@ import {
 	PencilLineIcon,
 	ShareIcon,
 	StarIcon,
+	StarOffIcon,
 	TrashIcon,
 } from "@lucide/svelte";
 import type { MediaQuery } from "svelte/reactivity";
@@ -319,10 +320,13 @@ export function createMainActions(handlers: {
 					fileOnly: true,
 				},
 				{
-					title: "Star",
-					icon: StarIcon,
+					title: (item: ObjectItem) =>
+						item.metadata.isStarred ? "Unstar" : "Star",
+					icon: (item: ObjectItem) =>
+						item.metadata.isStarred ? StarOffIcon : StarIcon,
 					action: handlers.onStar,
 					disabled: false,
+					dynamic: true,
 				},
 			],
 		},

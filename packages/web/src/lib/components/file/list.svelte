@@ -257,7 +257,16 @@
                     {#each itemActions as action}
                         {#each action.actions as act}
                             {#if shouldDisplayAction({ action: act, item })}
-                                {@const Icon = act.icon}
+                                {@const Icon = act.dynamic
+                                    ? act.icon(item)
+                                    : act.icon}
+                                {@const title = act.dynamic
+                                    ? (
+                                          act.title as (
+                                              item: ObjectItem,
+                                          ) => string
+                                      )(item)
+                                    : act.title}
                                 <button
                                     onclick={() => act.action(item)}
                                     disabled={act.disabled}
@@ -269,7 +278,7 @@
                                     )}
                                 >
                                     <Icon />
-                                    {act.title}
+                                    {title}
                                 </button>
                             {/if}
                         {/each}

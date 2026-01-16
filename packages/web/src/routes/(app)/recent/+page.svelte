@@ -1,10 +1,10 @@
 <script lang="ts">
-	import FileLayout from "$lib/components/file/layout.svelte";
-	import { title } from "$lib/store/title";
+    import FileLayout from "$lib/components/file/layout.svelte";
+    import { title } from "$lib/store/title";
 
-	const { data } = $props();
+    const { data } = $props();
 
-	$title = "Recent";
+    $title = "Recent";
 </script>
 
-<FileLayout data={data.files} />
+<FileLayout data={data.files} preferences={data.preferences} />

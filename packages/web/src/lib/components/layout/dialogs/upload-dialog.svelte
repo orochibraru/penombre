@@ -127,6 +127,10 @@
         $uploadedItems = { ...tmp2 };
 
         await invalidate("app:files");
+
+        removeFileByRef(
+            uploadErrors.find((e) => e.data.finalName === fileName)?.file!,
+        );
     }
 
     async function resultCallback(results: FullResult[]) {
@@ -239,6 +243,13 @@
                             $uploadedItems[
                                 fileNameWithoutFolder(result.data.finalName)
                             ] = file;
+
+                            // Remove from uploadingItems now that upload is complete
+                            const tmp = $uploadingItems;
+                            delete tmp[
+                                fileNameWithoutFolder(result.data.finalName)
+                            ];
+                            $uploadingItems = { ...tmp };
 
                             removeFileByRef(result.file);
                         }
@@ -371,13 +382,8 @@
         fileCount={$files.length}
         class="mb-5"
     />
-    <input
-        name="attachments"
-        type="file"
-        bind:files={$files}
-        class="hidden"
-    />
-    <div class="mb-5 flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
+    <input name="attachments" type="file" bind:files={$files} class="hidden" />
+    <div class="mb-5 flex flex-col gap-3">
         {#each Array.from($files) as file, i (file.name)}
             <div>
                 <div

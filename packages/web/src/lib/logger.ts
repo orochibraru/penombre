@@ -8,6 +8,7 @@ import {
 	white,
 	yellow,
 } from "@kitql/helpers";
+import { building, dev } from "$app/environment";
 import { getOpendriveConfig } from "$lib/server/config";
 
 export type LogFormats = "console" | "json";
@@ -48,7 +49,7 @@ export class Logger {
 		this.prefix = prefix;
 		this.prettyPrefix = magenta(`[${this.prefix}]`);
 		this.logFormat = config.logFormat;
-		this.logLevel = config.logLevel;
+		this.logLevel = dev && !building ? LOG_LEVELS.DEBUG : config.logLevel;
 	}
 
 	log({

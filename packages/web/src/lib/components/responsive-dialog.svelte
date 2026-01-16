@@ -107,12 +107,16 @@
             onsubmit={form.onsubmit}
         >
             <fieldset disabled={loading} class="flex flex-col gap-4">
-                {@render content()}
+                <div class="overflow-y-auto max-h-[40vh] md:max-h-[50vh]">
+                    {@render content()}
+                </div>
                 {@render footerButtons()}
             </fieldset>
         </form>
     {:else}
-        {@render content()}
+        <div class="overflow-y-auto max-h-[40vh] md:max-h-[50vh]">
+            {@render content()}
+        </div>
         {@render footerButtons()}
     {/if}
 {/snippet}

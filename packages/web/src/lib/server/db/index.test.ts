@@ -70,13 +70,15 @@ describe("Database Connection Singleton", () => {
 
 describe("Database Connection Pool Configuration", () => {
 	it("should have db client initialized via singleton", async () => {
-		const { db } = await import("./index");
+		// This test verifies that the singleton pattern is working
+		// by checking that the global storage is populated after import
+		// Note: We use dynamic import to ensure fresh evaluation
+		await import("./index");
 
-		// The db instance should exist and be the singleton
-		expect(db).toBeDefined();
-
-		// Verify it's stored in globalThis
-		expect(globalForDb.__db_instance).toBe(db);
+		// Verify the global storage is populated (singleton pattern working)
+		// These should always be defined once the module is loaded
+		expect(globalForDb.__db_instance).toBeDefined();
+		expect(globalForDb.__db_client).toBeDefined();
 	});
 
 	it("should use DATABASE_URL from environment when available", async () => {

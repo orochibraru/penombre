@@ -28,7 +28,11 @@
                         class="p-0 hover:bg-transparent"
                     >
                         <Avatar.Root class="size-8 rounded-full">
-                            <Avatar.Image src={user.image} alt={user.name} />
+                            <Avatar.Image
+                                src={user.image}
+                                alt={user.name}
+                                loading="lazy"
+                            />
                             <Avatar.Fallback class="rounded-lg">
                                 NB
                             </Avatar.Fallback>

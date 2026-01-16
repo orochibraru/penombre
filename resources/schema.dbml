@@ -76,6 +76,12 @@ table user {
   ban_expires timestamp
 }
 
+table user_preferences {
+  user_id text [pk, not null]
+  preferences jsonb [default: `{}`]
+  updated_at timestamp [not null, default: `now()`]
+}
+
 table verification {
   id text [pk, not null]
   identifier text [not null]
@@ -100,3 +106,5 @@ ref: shared_with.sharing_id > sharings.id
 ref: shared_with.user_id - user.id
 
 ref: sharings.owner_id - user.id
+
+ref: user_preferences.user_id - user.id

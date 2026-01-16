@@ -12,6 +12,7 @@ export const getApiClient = (customFetch?: typeof fetch): Client => {
 	const origin = isBrowser ? window.location.origin : "";
 
 	if (isBrowser && browserClient) {
+		browserClient = hc<Router>(`${origin}/api`, { fetch: customFetch });
 		return browserClient;
 	}
 

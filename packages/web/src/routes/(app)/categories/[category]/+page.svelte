@@ -10,4 +10,4 @@
     });
 </script>
 
-<FileLayout data={data.files} />
+<FileLayout data={data.files} preferences={data.preferences} />

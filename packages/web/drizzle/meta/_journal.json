@@ -15,6 +15,13 @@
 			"when": 1767784867990,
 			"tag": "0001_flawless_caretaker",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1768563712184,
+			"tag": "0002_freezing_master_mold",
+			"breakpoints": true
 		}
 	]
 }

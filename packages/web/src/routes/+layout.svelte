@@ -27,20 +27,20 @@
     onMount(() => {
         if (!browser) return;
 
-        // Hide the loader once the app is mounted with a smooth fade out
-        const loader = document.getElementById("svelte-loader");
-        if (loader) {
-            // Ensure opacity starts at 1, then transition to 0
-            loader.style.opacity = "1";
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    loader.style.opacity = "0";
-                    setTimeout(() => {
-                        loader.style.display = "none";
-                    }, 300);
-                });
-            });
-        }
+        // // Hide the loader once the app is mounted with a smooth fade out
+        // const loader = document.getElementById("svelte-loader");
+        // if (loader) {
+        //     // Ensure opacity starts at 1, then transition to 0
+        //     loader.style.opacity = "1";
+        //     requestAnimationFrame(() => {
+        //         requestAnimationFrame(() => {
+        //             loader.style.opacity = "0";
+        //             setTimeout(() => {
+        //                 loader.style.display = "none";
+        //             }, 300);
+        //         });
+        //     });
+        // }
     });
 </script>
 

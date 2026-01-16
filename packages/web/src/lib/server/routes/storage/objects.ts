@@ -231,6 +231,22 @@ const objectsRouter = new Hono<StorageRouter>()
 		}
 	})
 
+	// GET /storage/objects/counts - Get counts for trash and starred items
+	.get("/counts", async (c) => {
+		const storageService = c.get("storageService");
+
+		try {
+			const [trashCount, starredCount] = await Promise.all([
+				storageService.countTrashedItems(),
+				storageService.countStarredItems(),
+			]);
+			return c.json({ trash: trashCount, starred: starredCount });
+		} catch (error) {
+			logger.error("Error getting counts:", error);
+			return c.json({ message: "Internal Server Error" }, 500);
+		}
+	})
+
 	// GET /storage/objects/category/:category - List files by category
 	.get("/category/:category", async (c) => {
 		const cat = c.req.param("category")?.toUpperCase();

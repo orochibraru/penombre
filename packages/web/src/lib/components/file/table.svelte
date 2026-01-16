@@ -254,14 +254,23 @@
                         <ContextMenu.Group>
                             {#each action.actions as act}
                                 {#if shouldDisplayAction( { action: act, item: objectItem }, )}
-                                    {@const Icon = act.icon}
+                                    {@const Icon = act.dynamic
+                                        ? act.icon(objectItem)
+                                        : act.icon}
+                                    {@const title = act.dynamic
+                                        ? (
+                                              act.title as (
+                                                  item: typeof objectItem,
+                                              ) => string
+                                          )(objectItem)
+                                        : act.title}
                                     <ContextMenu.Item
                                         onclick={() => act.action(objectItem)}
                                         disabled={act.disabled}
                                         variant={act.variant}
                                     >
                                         <Icon />
-                                        {act.title}
+                                        {title}
                                     </ContextMenu.Item>
                                 {/if}
                             {/each}
@@ -310,7 +319,16 @@
                             <DropdownMenu.Group>
                                 {#each action.actions as act}
                                     {#if shouldDisplayAction( { action: act, item: objectItem }, )}
-                                        {@const Icon = act.icon}
+                                        {@const Icon = act.dynamic
+                                            ? act.icon(objectItem)
+                                            : act.icon}
+                                        {@const title = act.dynamic
+                                            ? (
+                                                  act.title as (
+                                                      item: typeof objectItem,
+                                                  ) => string
+                                              )(objectItem)
+                                            : act.title}
                                         <DropdownMenu.Item
                                             onclick={() =>
                                                 act.action(objectItem)}
@@ -318,7 +336,7 @@
                                             variant={act.variant}
                                         >
                                             <Icon />
-                                            {act.title}
+                                            {title}
                                         </DropdownMenu.Item>
                                     {/if}
                                 {/each}

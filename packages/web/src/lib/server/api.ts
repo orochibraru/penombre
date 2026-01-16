@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import type { CustomRouter } from "$lib/server/api-types";
 import { auth } from "$lib/server/auth";
 import { activityRouter } from "$lib/server/routes/activity";
+import preferencesRouter from "$lib/server/routes/preferences";
 import { foldersRouter, objectsRouter } from "$lib/server/routes/storage";
 
 // Build the router with method chaining for proper type inference
@@ -38,6 +39,7 @@ const app = new Hono<CustomRouter>()
 		return c.json({ status: "ok" });
 	})
 	.route("/activity", activityRouter)
+	.route("/preferences", preferencesRouter)
 	.route("/storage/folders", foldersRouter)
 	.route("/storage/objects", objectsRouter);
 

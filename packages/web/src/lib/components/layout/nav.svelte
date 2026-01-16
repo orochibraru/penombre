@@ -6,6 +6,8 @@
         accentColor?: "indigo" | "orange" | "pink" | "green" | "purple";
         hideOnMobile?: boolean;
         isRoot?: boolean;
+        /** Optional count to display as badge (desktop only) */
+        count?: number;
     };
 
     export type NavMenus = {
@@ -106,6 +108,11 @@
                                 </a>
                             {/snippet}
                         </Sidebar.MenuButton>
+                        {#if item.count !== undefined && item.count > 0}
+                            <Sidebar.MenuBadge class="hidden md:flex">
+                                {item.count}
+                            </Sidebar.MenuBadge>
+                        {/if}
                     </Sidebar.MenuItem>
                 {/each}
             {/if}

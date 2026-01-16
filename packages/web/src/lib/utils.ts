@@ -1,4 +1,3 @@
-import type { Icon as IconType } from "@lucide/svelte";
 import clsx, { type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
@@ -167,19 +166,23 @@ export function isFolderItem(item: ObjectItem) {
 
 export type MultipleItemsAction = {
 	title: string;
-	icon: typeof IconType;
+	// biome-ignore lint/suspicious/noExplicitAny: Lucide icon component type is complex
+	icon: any;
 	action: () => void;
 	variant: ButtonVariant;
 };
 
 export type ItemAction = {
-	title: string;
-	icon: typeof IconType;
+	title: string | ((item: ObjectItem) => string);
+	// biome-ignore lint/suspicious/noExplicitAny: Lucide icon component type is complex
+	icon: any;
 	action: (item: ObjectItem) => void;
 	variant?: "default" | "destructive";
 	disabled?: boolean;
 	fileOnly?: boolean;
 	folderOnly?: boolean;
+	/** Set to true when title/icon are functions that need the item to resolve */
+	dynamic?: boolean;
 };
 
 export type ItemActionGroup = {

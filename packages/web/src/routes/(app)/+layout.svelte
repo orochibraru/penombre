@@ -41,9 +41,16 @@
     import NewFolderDialog from "$lib/components/layout/dialogs/new-folder-dialog.svelte";
     import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
     import Spinner from "$lib/components/ui/Spinner.svelte";
-    import { MediaQuery } from "svelte/reactivity";
+    import { layoutStore } from "$lib/store/layout";
 
     const { children, data } = $props();
+
+    // Initialize layout store from server-loaded preferences
+    $effect(() => {
+        if (data.preferences?.layout) {
+            $layoutStore = data.preferences.layout;
+        }
+    });
 
     // Close all dialogs when navigation starts
     $effect(() => {
@@ -55,7 +62,7 @@
     let mobileCreateDrawerOpen: boolean = $state(false);
     let uploadLoading: boolean = $state(false);
 
-    const nav: NavMenus = {
+    const nav: NavMenus = $derived({
         general: [
             {
                 title: "My Drive",
@@ -73,6 +80,7 @@
                 title: "Starred",
                 url: route("/starred"),
                 icon: StarIcon,
+                count: data.counts?.starred,
             },
             {
                 title: "Shared",
@@ -83,6 +91,7 @@
                 title: "Trash",
                 url: route("/trash"),
                 icon: TrashIcon,
+                count: data.counts?.trash,
             },
         ],
         categories: [
@@ -145,7 +154,7 @@
                 icon: PlugIcon,
             },
         ],
-    };
+    });
 
     const bottomNavItemClass = "flex flex-col gap-1 items-center text-xs";
     const bottomNavItemIconClass = "w-5.5 h-5.5";
@@ -161,8 +170,6 @@
 
         return false;
     }
-
-    const isDesktop = new MediaQuery("(min-width: 768px)");
 
     // Pages where the upload/new button should be hidden
     const noUploadPages = ["/settings", "/account", "/admin", "/sync"];
@@ -181,49 +188,53 @@
     <Sidebar.Root collapsible="icon" variant="inset">
         <Sidebar.Header>
             <SidebarBranding />
-            {#if isDesktop.current && showUploadButton}
-                <DropdownMenu.Root>
-                    <DropdownMenu.Trigger>
-                        {#snippet child({ props })}
-                            <Button
-                                {...props}
-                                loading={uploadLoading}
-                                class="relative overflow-hidden"
-                            >
-                                {#if $globalUploadProgress.isUploading}
-                                    <div
-                                        class="absolute inset-0 bg-primary/20 transition-all"
-                                        style="width: {$globalUploadProgress.progress}%"
-                                    ></div>
-                                    <span class="relative z-10">
-                                        {$globalUploadProgress.progress}% ({$globalUploadProgress.count})
-                                    </span>
-                                {:else}
-                                    New
-                                    <SquarePlusIcon />
-                                {/if}
-                            </Button>
-                        {/snippet}
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content class="w-56" align="start">
-                        <DropdownMenu.Group>
-                            <DropdownMenu.Item
-                                class="font-medium"
-                                onclick={() => ($newFolderDialogOpen = true)}
-                            >
-                                <FolderPlusIcon />
-                                Folder
-                            </DropdownMenu.Item>
-                            <DropdownMenu.Item
-                                class="font-medium"
-                                onclick={() => ($uploadDialogOpen = true)}
-                            >
-                                <CloudUploadIcon />
-                                File Upload
-                            </DropdownMenu.Item>
-                        </DropdownMenu.Group>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Root>
+            {#if showUploadButton}
+                <div class="hidden md:block">
+                    <DropdownMenu.Root>
+                        <DropdownMenu.Trigger>
+                            {#snippet child({ props })}
+                                <Button
+                                    {...props}
+                                    loading={uploadLoading}
+                                    class="relative overflow-hidden w-full"
+                                >
+                                    {#if $globalUploadProgress.isUploading}
+                                        <div
+                                            class="absolute inset-0 bg-primary/20 transition-all"
+                                            style="width: {$globalUploadProgress.progress}%"
+                                        ></div>
+                                        <span class="relative z-10">
+                                            Uploading {$globalUploadProgress.progress}%
+                                            ({$globalUploadProgress.count})
+                                        </span>
+                                    {:else}
+                                        New
+                                        <SquarePlusIcon />
+                                    {/if}
+                                </Button>
+                            {/snippet}
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Content class="w-56" align="start">
+                            <DropdownMenu.Group>
+                                <DropdownMenu.Item
+                                    class="font-medium"
+                                    onclick={() =>
+                                        ($newFolderDialogOpen = true)}
+                                >
+                                    <FolderPlusIcon />
+                                    Folder
+                                </DropdownMenu.Item>
+                                <DropdownMenu.Item
+                                    class="font-medium"
+                                    onclick={() => ($uploadDialogOpen = true)}
+                                >
+                                    <CloudUploadIcon />
+                                    File Upload
+                                </DropdownMenu.Item>
+                            </DropdownMenu.Group>
+                        </DropdownMenu.Content>
+                    </DropdownMenu.Root>
+                </div>
             {/if}
         </Sidebar.Header>
         <Sidebar.Content>

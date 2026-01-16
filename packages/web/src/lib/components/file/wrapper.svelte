@@ -26,12 +26,7 @@
     import * as Dialog from "$lib/components/ui/dialog";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import { Input } from "$lib/components/ui/input";
-    import {
-        type AvailableLayouts,
-        availableLayouts,
-        layoutStore,
-    } from "$lib/store/layout";
-    import { loadSortPreference, saveSortPreference } from "$lib/store/sorting";
+    import { type AvailableLayouts, layoutStore } from "$lib/store/layout";
     import {
         pendingUploadFiles,
         uploadDialogOpen,
@@ -66,12 +61,25 @@
     } from "./wrapper.svelte.js";
     import { ExternalLinkIcon } from "@lucide/svelte";
 
+    type UserPreferences = {
+        layout?: "grid" | "list";
+        sortColumn?: "name" | "size" | "updatedAt" | null;
+        sortDirection?: "asc" | "desc";
+    };
+
     type Props = {
         data: ObjectList;
         loading?: boolean;
+        preferences?: UserPreferences;
     };
 
-    let { data, loading = $bindable(false) }: Props = $props();
+    let { data, loading = $bindable(false), preferences }: Props = $props();
+
+    // Extract initial values from server preferences to avoid Svelte 5 warnings
+    // These are intentionally captured once - we manage state locally after initial load
+    const initialSortColumn = $derived(preferences?.sortColumn ?? "name");
+    const initialSortDirection = $derived(preferences?.sortDirection ?? "asc");
+    const initialLayout = $derived(preferences?.layout ?? "list");
 
     const api = getApiClient(fetch);
 
@@ -104,8 +112,9 @@
     let actionsContextOpen: boolean = $state(false);
     let actionableItem: ObjectItem | undefined = $state();
     let viewFileOpen: boolean = $state(false);
-    let sortColumn: SortColumn = $state("name");
-    let sortDirection: SortDirection = $state("asc");
+    // Initialize from server-provided preferences to avoid hydration flash
+    let sortColumn: SortColumn = $derived(initialSortColumn);
+    let sortDirection: SortDirection = $derived(initialSortDirection);
     let fileToView: FileToView = $state(null);
     let moveItem: ObjectItem | undefined = $state();
 
@@ -350,49 +359,46 @@
         );
     }
 
-    // ================================
-    // Layout Management
-    // ================================
-    function setLayoutBasedOnRoute() {
-        if (
-            page.url.pathname.startsWith("/browse") ||
-            page.url.pathname.startsWith("/trash")
-        ) {
-            $layoutStore = "list";
-        } else {
-            $layoutStore = "grid";
-        }
-    }
+    // Track previous values to detect changes using $state for reactivity
+    let prevSortColumn: SortColumn = $derived(initialSortColumn);
+    let prevSortDirection: SortDirection = $derived(initialSortDirection);
+    let prevLayout: AvailableLayouts = $derived(initialLayout);
 
-    onMount(() => {
-        if (browser) {
-            // Load layout preference
-            const layoutParam = localStorage.getItem("layout");
-
-            if (layoutParam) {
-                if (!availableLayouts.includes(layoutParam)) {
-                    setLayoutBasedOnRoute();
-                } else {
-                    $layoutStore = (layoutParam as AvailableLayouts) ?? "list";
-                }
-            } else {
-                setLayoutBasedOnRoute();
-            }
-
-            // Load sorting preference
-            const sortPref = loadSortPreference();
-            sortColumn = sortPref.column;
-            sortDirection = sortPref.direction;
-        }
-    });
-
-    // Save sorting preference when it changes
+    // Save preferences to server when they change
     $effect(() => {
-        if (browser) {
-            saveSortPreference({
-                column: sortColumn,
-                direction: sortDirection,
-            });
+        if (!browser) return;
+
+        // Capture current values
+        const currentSortColumn = sortColumn;
+        const currentSortDirection = sortDirection;
+        const currentLayout = $layoutStore;
+
+        const sortChanged =
+            currentSortColumn !== prevSortColumn ||
+            currentSortDirection !== prevSortDirection;
+        const layoutChanged = currentLayout !== prevLayout;
+
+        if (sortChanged || layoutChanged) {
+            // Update prev values
+            prevSortColumn = currentSortColumn;
+            prevSortDirection = currentSortDirection;
+            prevLayout = currentLayout;
+
+            // Debounce API call to avoid spamming on rapid changes
+            const savePreferences = async () => {
+                try {
+                    await api.preferences.$put({
+                        json: {
+                            sortColumn: currentSortColumn,
+                            sortDirection: currentSortDirection,
+                            layout: currentLayout,
+                        },
+                    });
+                } catch (error) {
+                    console.error("Failed to save preferences:", error);
+                }
+            };
+            savePreferences();
         }
     });
 
@@ -648,46 +654,49 @@
 {/if}
 
 <!-- Table -->
-{#if isDesktop.current && $layoutStore === "list"}
-    <FileTable
-        handleOpenItem={handleOpenItemWrapper}
-        files={data}
-        {itemActions}
-        {searchValue}
-        {searchResults}
-        {indeterminate}
-        bind:sortColumn
-        bind:sortDirection
-        onDrop={handleFileDrop}
-        onUpload={handleUpload}
-        onCreateFolder={handleCreateFolder}
-        bind:checkedItems
-        bind:loading
-        bind:allSelected
-        bind:actionableItem
-        bind:actionsContextOpen
-    />
-{:else if $layoutStore === "grid"}
-    <FileGrid
-        handleOpenItem={handleOpenItemWrapper}
-        files={data}
-        {itemActions}
-        {searchValue}
-        {searchResults}
-        {indeterminate}
-        {sortColumn}
-        {sortDirection}
-        onDrop={handleFileDrop}
-        onUpload={handleUpload}
-        onCreateFolder={handleCreateFolder}
-        bind:checkedItems
-        bind:loading
-        bind:allSelected
-        bind:actionableItem
-        bind:actionsContextOpen
-    />
+{#if $layoutStore === "list"}
+    <div class="hidden md:block">
+        <FileTable
+            handleOpenItem={handleOpenItemWrapper}
+            files={data}
+            {itemActions}
+            {searchValue}
+            {searchResults}
+            {indeterminate}
+            bind:sortColumn
+            bind:sortDirection
+            onDrop={handleFileDrop}
+            onUpload={handleUpload}
+            onCreateFolder={handleCreateFolder}
+            bind:checkedItems
+            bind:loading
+            bind:allSelected
+            bind:actionableItem
+            bind:actionsContextOpen
+        />
+    </div>
+    <div class="md:hidden">
+        <FileList
+            handleOpenItem={handleOpenItemWrapper}
+            files={data}
+            {itemActions}
+            {searchValue}
+            {searchResults}
+            {indeterminate}
+            {sortColumn}
+            {sortDirection}
+            onDrop={handleFileDrop}
+            onUpload={handleUpload}
+            onCreateFolder={handleCreateFolder}
+            bind:checkedItems
+            bind:loading
+            bind:allSelected
+            bind:actionableItem
+            bind:actionsContextOpen
+        />
+    </div>
 {:else}
-    <FileList
+    <FileGrid
         handleOpenItem={handleOpenItemWrapper}
         files={data}
         {itemActions}

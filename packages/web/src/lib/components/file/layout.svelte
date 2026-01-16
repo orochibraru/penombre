@@ -7,11 +7,18 @@
     import * as ContextMenu from "$lib/components/ui/context-menu/index";
     import { uploadDialogOpen, newFolderDialogOpen } from "$lib/store/upload";
 
-    type Props = {
-        data: { data: ObjectList | undefined; err: unknown };
+    type UserPreferences = {
+        layout?: "grid" | "list";
+        sortColumn?: "name" | "size" | "updatedAt" | null;
+        sortDirection?: "asc" | "desc";
     };
 
-    const { data: res }: Props = $props();
+    type Props = {
+        data: { data: ObjectList | undefined; err: unknown };
+        preferences?: UserPreferences;
+    };
+
+    const { data: res, preferences }: Props = $props();
 
     function handleUpload() {
         $uploadDialogOpen = true;
@@ -28,7 +35,7 @@
             {#if !res.data}
                 <PageError />
             {:else}
-                <FileWrapper data={res.data} />
+                <FileWrapper data={res.data} {preferences} />
             {/if}
         </section>
     </ContextMenu.Trigger>

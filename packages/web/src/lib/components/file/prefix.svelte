@@ -11,6 +11,7 @@
         FileVideoIcon,
         FolderIcon,
         PauseIcon,
+        StarIcon,
         XIcon,
     } from "@lucide/svelte";
     import { MediaQuery } from "svelte/reactivity";
@@ -141,7 +142,12 @@
                 fill="#1447e6"
             />
         {/if}
-        {item.metadata.name ?? item.key.replace("/", "")}
+        <span class="flex items-center gap-1">
+            {item.metadata.name ?? item.key.replace("/", "")}
+            {#if item.metadata.isStarred}
+                <StarIcon class="h-4 w-4 text-yellow-500" fill="#eab308" />
+            {/if}
+        </span>
     </button>
 {:else if layout === "grid"}
     <div class="flex h-full w-full flex-col items-center gap-2">
@@ -182,7 +188,7 @@
                 <p
                     title={item.metadata.name ?? item.key}
                     class={cn(
-                        "max-w-72 truncate text-base lg:text-sm",
+                        "max-w-72 truncate text-base lg:text-sm inline-flex items-center gap-1 justify-center",
                         $playableMusic &&
                             $playableMusic.title ===
                                 (item.metadata.name ?? item.key)
@@ -193,6 +199,12 @@
                     )}
                 >
                     {item.metadata.name ?? stripFolders(item.key)}
+                    {#if item.metadata.isStarred}
+                        <StarIcon
+                            class="h-4 w-4 text-yellow-500 shrink-0"
+                            fill="#eab308"
+                        />
+                    {/if}
                 </p>
             </div>
         </button>
@@ -287,7 +299,7 @@
             <p
                 title={item.metadata.name ?? item.key}
                 class={cn(
-                    "truncate text-base lg:text-sm",
+                    "truncate text-base lg:text-sm inline-flex items-center gap-1",
                     $playableMusic &&
                         $playableMusic.title ===
                             (item.metadata.name ?? item.key)
@@ -298,6 +310,12 @@
                 )}
             >
                 {item.metadata.name ?? stripFolders(item.key)}
+                {#if item.metadata.isStarred}
+                    <StarIcon
+                        class="h-4 w-4 text-yellow-500 shrink-0"
+                        fill="#eab308"
+                    />
+                {/if}
             </p>
             {#if item.metadata.category || item.parent}
                 <p class="text-xs text-muted-foreground">
