@@ -2,6 +2,17 @@
 
 ## 🔴 High Priority
 
+### Media Previews
+- [ ] **Video Thumbnails/Previews** - Extract thumbnail at ~2s mark on upload
+  - Run `ffmpeg` to extract single frame, store as `.thumb.jpg`
+  - Consider GIF preview for hover effect later
+  - Files: `packages/web/src/lib/server/dto/storage/thumbnails.ts`
+
+- [ ] **Document Previews (PDF, then DOCX)**
+  - PDF: Use `pdf.js` or `pdftoppm` (poppler) to render first page as image
+  - DOCX: LibreOffice headless to convert to PDF, then render first page
+  - Files: `packages/web/src/lib/server/dto/storage/thumbnails.ts`
+
 ### Profile Page Improvements
 - [ ] **OAuth Password Setup** - Allow users signing in through OAuth to set a password when email signin is also enabled
   - Files: `packages/web/src/routes/(app)/settings/+page.svelte`, Better Auth config
@@ -43,6 +54,12 @@
   - Preserve folder structure during upload
   - Files: `packages/web/src/lib/components/layout/dialogs/upload-dialog.svelte`
 
+### Audio Waveforms
+- [ ] **Generate audio waveforms** - Nice visual feedback for audio files
+  - Use `audiowaveform` CLI or Web Audio API client-side
+  - Generate waveform data on upload, render with canvas/SVG in UI
+  - Files: `packages/web/src/lib/server/dto/storage/thumbnails.ts`
+
 ---
 
 ## 🟢 Low Priority / Nice-to-Have
@@ -52,6 +69,13 @@
   - Show action type, timestamp, user (no file names or content)
   - Files: `packages/web/src/routes/(app)/admin/activity/+page.svelte` (new)
   - Existing: `packages/web/src/lib/server/dto/activity.ts`
+
+### Office Integration
+- [ ] **OnlyOffice Integration** - Edit docs, sheets, presentations in-browser
+  - Requires running OnlyOffice Document Server (Docker)
+  - WOPI integration, callback handling
+  - Deploy OnlyOffice as separate service, integrate via Document Server API
+  - **Note:** Major undertaking - save for when core features are solid
 
 ---
 

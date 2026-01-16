@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { Hono } from "hono";
 import type { CustomRouter } from "$lib/server/api-types";
+import type { UserPreferencesData } from "$lib/server/db/schema";
 import preferencesRouter from "./preferences";
 
 /**
@@ -37,7 +38,7 @@ const mockSession = {
 };
 
 // Default preferences
-const defaultPreferences = {
+const defaultPreferences: UserPreferencesData = {
 	layout: "list",
 	sortColumn: "name",
 	sortDirection: "asc",
@@ -45,8 +46,9 @@ const defaultPreferences = {
 
 // Mock preferences module
 const mockGetUserPreferences = mock(() => Promise.resolve(defaultPreferences));
-const mockUpdateUserPreferences = mock((userId: string, updates: unknown) =>
-	Promise.resolve({ ...defaultPreferences, ...updates }),
+const mockUpdateUserPreferences = mock(
+	(_userId: string, updates: Partial<UserPreferencesData>) =>
+		Promise.resolve({ ...defaultPreferences, ...updates }),
 );
 
 mock.module("$lib/server/dto/preferences", () => ({
@@ -149,7 +151,7 @@ describe("GET /preferences", () => {
 	});
 
 	it("should return custom preferences when set", async () => {
-		const customPrefs = {
+		const customPrefs: UserPreferencesData = {
 			layout: "grid",
 			sortColumn: "size",
 			sortDirection: "desc",
@@ -167,8 +169,9 @@ describe("GET /preferences", () => {
 describe("PUT /preferences", () => {
 	beforeEach(() => {
 		mockUpdateUserPreferences.mockReset();
-		mockUpdateUserPreferences.mockImplementation((userId, updates) =>
-			Promise.resolve({ ...defaultPreferences, ...updates }),
+		mockUpdateUserPreferences.mockImplementation(
+			(_userId: string, updates: Partial<UserPreferencesData>) =>
+				Promise.resolve({ ...defaultPreferences, ...updates }),
 		);
 	});
 

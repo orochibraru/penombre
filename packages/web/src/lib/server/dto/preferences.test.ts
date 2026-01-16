@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import type { UserPreferencesData } from "$lib/server/db/schema";
 import { getUserPreferences, updateUserPreferences } from "./preferences";
 
 /**
@@ -24,7 +25,7 @@ mock.module("$lib/server/db", () => ({
 }));
 
 // Default preferences as defined in the source
-const defaultPreferences = {
+const defaultPreferences: UserPreferencesData = {
 	layout: "list",
 	sortColumn: "name",
 	sortDirection: "asc",
