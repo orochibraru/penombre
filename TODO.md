@@ -41,6 +41,13 @@
   - Files to create: `packages/web/src/lib/server/routes/share.ts`
   - DB schema: `shares` table with `fileId`, `token`, `expiresAt`, `password`, `permissions`
 
+### Calculate folder sizes
+- [x] **Show folder sizes in UI**
+  - ✅ Update `calculateFolderSize` to recursively sum file sizes in folder
+  - ✅ Update `getFolderDetails` to include size
+  - ✅ Update `FilePreview.svelte` to display folder size
+  - ✅ Optimize with caching to avoid performance hits on large folders
+
 ### Bulk Downloads
 - [x] **Zip file download for multiple items**
   - ✅ When more than 1 file selected, create a zip on-the-fly
