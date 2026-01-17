@@ -520,4 +520,98 @@ export abstract class FolderOperations extends FileOperations {
 		const parentPrefix = parent ? `${parent}/` : "";
 		return `${parentPrefix}${name}`;
 	}
+
+	/**
+	 * Calculates the total size of a folder recursively.
+	 * Results are cached with a 5-minute TTL.
+	 */
+	public async calculateFolderSize(folderKey: string): Promise<number> {
+		const normalizedKey = folderKey.endsWith("/")
+			? folderKey.slice(0, -1)
+			: folderKey;
+
+		// Check cache first
+		const cacheKey = `folder-size:${normalizedKey}`;
+		const cached = this.cache.get<number>(cacheKey);
+		if (cached !== undefined) {
+			logger.debug(`Cache hit for folder size: ${cacheKey}`);
+			return cached;
+		}
+
+		const folderPath = join(this.storagePath, normalizedKey);
+
+		if (!existsSync(folderPath)) {
+			throw new FileOrFolderNotFoundError("Folder not found");
+		}
+
+		let totalSize = 0;
+
+		const walkFolder = async (dirPath: string): Promise<void> => {
+			try {
+				const entries = await readdir(dirPath, { withFileTypes: true });
+				for (const entry of entries) {
+					// Skip metadata files and hidden folders
+					if (entry.name.endsWith(".meta.json") || entry.name.startsWith(".")) {
+						continue;
+					}
+
+					const fullPath = join(dirPath, entry.name);
+					if (entry.isDirectory()) {
+						await walkFolder(fullPath);
+					} else {
+						const stats = await fs.promises.stat(fullPath);
+						totalSize += stats.size;
+					}
+				}
+			} catch (error) {
+				logger.warn(`Error reading directory ${dirPath}:`, error);
+				// Continue on error, partial size is better than failure
+			}
+		};
+
+		await walkFolder(folderPath);
+
+		// Cache the result for 5 minutes (300 seconds)
+		this.cache.set(cacheKey, totalSize, 300);
+
+		return totalSize;
+	}
+
+	/**
+	 * Calculates sizes for all folders in a directory.
+	 * Returns a map of folder key to size in bytes.
+	 */
+	public async calculateFolderSizes(
+		prefix: string,
+	): Promise<Map<string, number>> {
+		const sizes = new Map<string, number>();
+
+		try {
+			const folders = await this.listFolders(prefix, {
+				includeTrashed: true,
+			});
+
+			for (const folderName of folders) {
+				const folderKey = prefix ? `${prefix}/${folderName}` : folderName;
+
+				try {
+					const size = await this.calculateFolderSize(folderKey);
+					sizes.set(folderName, size);
+				} catch (error) {
+					logger.warn(
+						`Failed to calculate size for folder ${folderKey}:`,
+						error,
+					);
+					sizes.set(folderName, 0);
+				}
+			}
+		} catch (error) {
+			logger.error(
+				`Failed to calculate folder sizes for prefix ${prefix}:`,
+				error,
+			);
+		}
+
+		return sizes;
+	}
 }

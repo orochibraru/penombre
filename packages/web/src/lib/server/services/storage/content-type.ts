@@ -89,6 +89,13 @@ export function determineContentType(key: string): FileContentType {
 			return "text/csv";
 		case "epub":
 			return "application/epub+zip";
+		// Google Suite
+		case "gdoc":
+			return "application/vnd.google-apps.document";
+		case "gsheet":
+			return "application/vnd.google-apps.spreadsheet";
+		case "gslide":
+			return "application/vnd.google-apps.presentation";
 		// Text/Code
 		case "txt":
 		case "md":
@@ -156,6 +163,9 @@ export function determineCategory(key: string): FileCategory {
 		case "pages":
 		case "numbers":
 		case "keynote":
+		case "gdoc":
+		case "gsheet":
+		case "gslide":
 			return "DOCUMENTS";
 		// Images
 		case "jpg":

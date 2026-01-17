@@ -1,8 +1,10 @@
 <script lang="ts">
     import { page } from "$app/state";
     import type { ObjectItem } from "$lib/api-client";
+    import DocumentIcon from "$lib/components/file/document-icon.svelte";
     import { isCodeItem } from "$lib/file-utils";
     import { getObjectUrl } from "$lib/url";
+    import { getFileIconType } from "$lib/utils";
     import { FileCodeIcon, FileVideoIcon, FileAudioIcon } from "@lucide/svelte";
 
     type Props = {
@@ -28,6 +30,15 @@
 
     // Check if this is an audio file
     const isAudio = $derived(item.metadata.contentType?.startsWith("audio/"));
+
+    // Check if this is a document type that should use document icons
+    const isDocument = $derived(
+        item.metadata.category === "DOCUMENTS" &&
+            !isImage &&
+            !isVideo &&
+            !isPdf &&
+            !isAudio,
+    );
 
     // Track thumbnail load errors
     let thumbnailError = $state(false);
@@ -73,6 +84,11 @@
                 onerror={() => (thumbnailError = true)}
             />
         {/if}
+    {:else if isDocument}
+        <DocumentIcon
+            type={getFileIconType(item.metadata.contentType)}
+            class="mx-auto h-20 w-20"
+        />
     {:else if isCodeItem(item.metadata.name ?? item.key)}
         <FileCodeIcon class="mx-auto h-20 w-20 text-muted-foreground" />
     {:else if isVideo}

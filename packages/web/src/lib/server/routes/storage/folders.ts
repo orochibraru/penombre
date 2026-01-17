@@ -3,9 +3,9 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { Logger } from "$lib/logger";
 import type { StorageRouter } from "$lib/server/api-types";
-import { StorageService } from "$lib/server/dto/storage";
 import { UnauthorizedError } from "$lib/server/errors";
 import { newFolderSchema } from "$lib/server/schema";
+import { StorageService } from "$lib/server/services/storage";
 
 const logger = new Logger("FoldersRouter");
 
@@ -265,6 +265,54 @@ const foldersRouter = new Hono<StorageRouter>()
 				return c.json({ message: "Folder restored from trash." });
 			} catch (error) {
 				logger.error("Error restoring folder:", error);
+				return c.json({ message: "Internal Server Error" }, 500);
+			}
+		},
+	)
+
+	// GET /storage/folders/sizes/:prefix - Get sizes of all folders in a prefix
+	.get("/sizes/:prefix", async (c) => {
+		const storageService = c.get("storageService");
+		const prefix = c.req.param("prefix");
+
+		try {
+			logger.debug(`Calculating folder sizes for prefix: ${prefix}`);
+			const sizes = await storageService.calculateFolderSizes(prefix || "");
+			const result = Object.fromEntries(sizes);
+			logger.debug(`Calculated sizes for ${sizes.size} folders`);
+			return c.json(result);
+		} catch (error) {
+			logger.error("Error calculating folder sizes:", error);
+			return c.json({ message: "Internal Server Error" }, 500);
+		}
+	})
+
+	// GET /storage/folders/size/:id - Get size of a specific folder
+	.get(
+		"/size/:id",
+		zValidator(
+			"query",
+			z.object({
+				parent: z.string().optional(),
+			}),
+		),
+		async (c) => {
+			const storageService = c.get("storageService");
+			const query = c.req.valid("query");
+			const folderId = c.req.param("id");
+
+			const folderPath = storageService.getFullFolderPath(
+				folderId,
+				query.parent,
+			);
+
+			try {
+				logger.debug(`Calculating folder size: ${folderPath}`);
+				const size = await storageService.calculateFolderSize(folderPath);
+				logger.debug(`Folder size: ${folderPath} = ${size} bytes`);
+				return c.json({ size });
+			} catch (error) {
+				logger.error("Error calculating folder size:", error);
 				return c.json({ message: "Internal Server Error" }, 500);
 			}
 		},

@@ -9,8 +9,8 @@ import { Logger } from "$lib/logger";
 import { getOpendriveConfig, isSmtpEnabled } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import * as schema from "$lib/server/db/schema";
-import { StorageService } from "$lib/server/dto/storage";
 import { Email } from "$lib/server/email";
+import { StorageService } from "$lib/server/services/storage";
 
 const logger = new Logger("Auth");
 

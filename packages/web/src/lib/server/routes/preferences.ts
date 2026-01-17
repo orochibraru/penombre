@@ -4,7 +4,7 @@ import type { UserPreferencesData } from "$lib/server/db/schema";
 import {
 	getUserPreferences,
 	updateUserPreferences,
-} from "$lib/server/dto/preferences";
+} from "$lib/server/services/preferences";
 
 const preferencesRouter = new Hono<CustomRouter>()
 	/**

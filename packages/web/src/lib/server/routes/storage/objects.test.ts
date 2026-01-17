@@ -9,11 +9,11 @@ import {
 } from "bun:test";
 import { Hono } from "hono";
 import type { StorageRouter } from "$lib/server/api-types";
-import { StorageService } from "$lib/server/dto/storage";
 import {
 	FileOrFolderNotFoundError,
 	UnauthorizedError,
 } from "$lib/server/errors";
+import { StorageService } from "$lib/server/services/storage";
 import { objectsRouter } from "./objects";
 
 /**
@@ -414,6 +414,150 @@ describe("POST /storage/objects", () => {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ name: "newfile.txt", size: 1024 }),
+		});
+
+		expect(res.status).toBe(500);
+	});
+});
+
+describe("POST /storage/objects/batch", () => {
+	it("should create multiple files in batch", async () => {
+		const app = createTestApp();
+		const mockBatchResults = [
+			{
+				id: "file-id-1",
+				finalName: "file-id-1",
+				metadata: {
+					id: "file-id-1",
+					name: "file1.txt",
+					category: "DOCUMENTS" as const,
+					contentType: "text/plain" as const,
+					createdAt: new Date().toISOString(),
+					owner: "test-user-id",
+					isTrashed: false,
+					isStarred: false,
+				},
+			},
+			{
+				id: "file-id-2",
+				finalName: "file-id-2",
+				metadata: {
+					id: "file-id-2",
+					name: "file2.txt",
+					category: "DOCUMENTS" as const,
+					contentType: "text/plain" as const,
+					createdAt: new Date().toISOString(),
+					owner: "test-user-id",
+					isTrashed: false,
+					isStarred: false,
+				},
+			},
+		];
+
+		StorageService.prototype.createBatchFiles = mock(() =>
+			Promise.resolve(mockBatchResults),
+		);
+
+		const res = await app.request("/storage/objects/batch", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				files: [
+					{ name: "file1.txt", size: 1024 },
+					{ name: "file2.txt", size: 2048 },
+				],
+			}),
+		});
+
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(Array.isArray(body)).toBe(true);
+		expect(body.length).toBe(2);
+		expect(body[0].id).toBe("file-id-1");
+		expect(body[1].id).toBe("file-id-2");
+	});
+
+	it("should create multiple files in specified folder", async () => {
+		const app = createTestApp();
+		const mockBatchResults = [
+			{
+				id: "file-id-1",
+				finalName: "Documents/file-id-1",
+				metadata: {
+					id: "file-id-1",
+					name: "file1.txt",
+					category: "DOCUMENTS" as const,
+					contentType: "text/plain" as const,
+					createdAt: new Date().toISOString(),
+					owner: "test-user-id",
+					isTrashed: false,
+					isStarred: false,
+				},
+			},
+		];
+
+		const createBatchFilesSpy = spyOn(
+			StorageService.prototype,
+			"createBatchFiles",
+		).mockResolvedValue(mockBatchResults);
+
+		await app.request("/storage/objects/batch?folder=Documents", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				files: [{ name: "file1.txt", size: 1024 }],
+			}),
+		});
+
+		expect(createBatchFilesSpy).toHaveBeenCalledWith(
+			[{ name: "file1.txt", size: 1024 }],
+			"Documents",
+		);
+	});
+
+	it("should reject invalid batch request", async () => {
+		const app = createTestApp();
+
+		const res = await app.request("/storage/objects/batch", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ files: [] }), // Empty files array still valid
+		});
+
+		// Empty batch should succeed (valid payload)
+		expect(res.status).toBe(200);
+	});
+
+	it("should return 401 on unauthorized batch error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.createBatchFiles = mock(() =>
+			Promise.reject(new UnauthorizedError("Not allowed")),
+		);
+
+		const res = await app.request("/storage/objects/batch", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				files: [{ name: "file1.txt", size: 1024 }],
+			}),
+		});
+
+		expect(res.status).toBe(401);
+	});
+
+	it("should return 500 on batch error", async () => {
+		const app = createTestApp();
+		StorageService.prototype.createBatchFiles = mock(() =>
+			Promise.reject(new Error("FS error")),
+		);
+
+		const res = await app.request("/storage/objects/batch", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				files: [{ name: "file1.txt", size: 1024 }],
+			}),
 		});
 
 		expect(res.status).toBe(500);

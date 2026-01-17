@@ -2,12 +2,12 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { User } from "better-auth";
-import { ActivityService } from "$lib/server/dto/activity";
 import {
 	FileOrFolderNotFoundError,
 	UnauthorizedError,
 } from "$lib/server/errors";
 import type { FileMetadata } from "$lib/server/schema";
+import { ActivityService } from "$lib/server/services/activity";
 import { CacheKeys, getUserCache, type MemoryCache } from "./cache";
 import { DEFAULT_STORAGE_PATH, logger } from "./constants";
 import { determineCategory, determineContentType } from "./content-type";
@@ -38,6 +38,7 @@ export abstract class StorageServiceBase {
 		// Clear all listing caches - they're all potentially stale after a mutation
 		this.cache.deleteByPrefix("list:");
 		this.cache.deleteByPrefix("folders:");
+		this.cache.deleteByPrefix("folder-size:");
 		this.cache.delete(CacheKeys.starred());
 		this.cache.delete(CacheKeys.trashed());
 		this.cache.delete(CacheKeys.recent());

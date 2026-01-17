@@ -5,22 +5,23 @@ import { z } from "zod";
 import { Logger } from "$lib/logger";
 import type { StorageRouter } from "$lib/server/api-types";
 import {
-	createZipFromFolder,
-	createZipFromPaths,
-	generateZipFilename,
-	StorageService,
-} from "$lib/server/dto/storage";
-import {
 	FileOrFolderNotFoundError,
 	UnauthorizedError,
 } from "$lib/server/errors";
 import type { ObjectItem, ObjectList } from "$lib/server/schema";
 import {
 	allowedFileCategories,
+	batchFileSchema,
 	type FileCategory,
 	newFileSchema,
 	updateFileSchema,
 } from "$lib/server/schema";
+import {
+	createZipFromFolder,
+	createZipFromPaths,
+	generateZipFilename,
+	StorageService,
+} from "$lib/server/services/storage";
 
 const logger = new Logger("ObjectsRouter");
 
@@ -168,6 +169,38 @@ const objectsRouter = new Hono<StorageRouter>()
 					return c.json({ message: "Unauthorized" }, 401);
 				}
 				logger.error("Error creating file:", error);
+				return c.json({ message: "Internal Server Error" }, 500);
+			}
+		},
+	)
+
+	// POST /storage/objects/batch - Create multiple files in batch
+	.post(
+		"/batch",
+		zValidator("query", folderQuerySchema),
+		zValidator("json", batchFileSchema),
+		async (c) => {
+			const { folder } = c.req.valid("query");
+			const body = c.req.valid("json");
+			const storageService = c.get("storageService");
+
+			try {
+				logger.debug(
+					`Creating batch of ${body.files.length} files in folder: ${folder}`,
+				);
+				const results = await storageService.createBatchFiles(
+					body.files,
+					folder,
+				);
+				logger.debug(
+					`Batch creation completed: ${body.files.length} files created`,
+				);
+				return c.json(results);
+			} catch (error) {
+				if (error instanceof UnauthorizedError) {
+					return c.json({ message: "Unauthorized" }, 401);
+				}
+				logger.error("Error creating batch files:", error);
 				return c.json({ message: "Internal Server Error" }, 500);
 			}
 		},

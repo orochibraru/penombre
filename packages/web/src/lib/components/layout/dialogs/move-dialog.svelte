@@ -99,7 +99,36 @@
         return tree;
     }
 
-    let folderTree = $derived(getFolderTree(folders));
+    // Get current folder from URL path
+    let currentFolder = $derived.by(() => {
+        const path = page.url.pathname;
+        if (path.startsWith("/browse/")) {
+            return decodeURIComponent(path.slice("/browse/".length));
+        }
+        return "";
+    });
+
+    // Get the FULL folder path being moved (if it's a folder)
+    let movingFolderPath = $derived.by(() => {
+        if (!item || item.type !== "folder") return null;
+        const itemKey = item.key.replace(/\/$/, "");
+        // Construct full path from current folder context + item key
+        return currentFolder ? `${currentFolder}/${itemKey}` : itemKey;
+    });
+
+    // Filter out the folder being moved and its children from the list
+    let filteredFolders = $derived.by(() => {
+        if (!movingFolderPath) return folders;
+        return folders.filter((f) => {
+            // Exclude the folder itself and any children
+            return (
+                f.path !== movingFolderPath &&
+                !f.path.startsWith(`${movingFolderPath}/`)
+            );
+        });
+    });
+
+    let folderTree = $derived(getFolderTree(filteredFolders));
 
     function toggleExpand(path: string) {
         const newSet = new Set(expandedFolders);
@@ -115,15 +144,6 @@
         selectedFolder = path;
         selectedFolderName = name;
     }
-
-    // Get current folder from URL path
-    let currentFolder = $derived.by(() => {
-        const path = page.url.pathname;
-        if (path.startsWith("/browse/")) {
-            return path.slice("/browse/".length);
-        }
-        return "";
-    });
 
     // Check if item would be moved to its current location
     let isSameLocation = $derived.by(() => {
@@ -142,13 +162,12 @@
         return selectedFolder === itemParent;
     });
 
-    // Check if trying to move folder into itself
+    // Check if trying to move folder into itself (fallback safety check)
     let isMovingIntoSelf = $derived.by(() => {
-        if (!item || item.type !== "folder") return false;
-        const folderPath = item.key.replace(/\/$/, "");
+        if (!item || item.type !== "folder" || !movingFolderPath) return false;
         return (
-            selectedFolder === folderPath ||
-            selectedFolder.startsWith(`${folderPath}/`)
+            selectedFolder === movingFolderPath ||
+            selectedFolder.startsWith(`${movingFolderPath}/`)
         );
     });
 

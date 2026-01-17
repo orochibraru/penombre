@@ -209,6 +209,11 @@ export type SharedFileDisplayProps = {
 	onCreateFolder?: () => void;
 	sortColumn?: SortColumn;
 	sortDirection?: SortDirection;
+	draggedItem?: ObjectItem | undefined;
+	dropTargetKey?: string | undefined;
+	onDragStart?: (item: ObjectItem) => void;
+	onDragEnd?: () => void;
+	onDropOnFolder?: (targetFolder: string) => void;
 };
 
 export type BreadCrumb = {
@@ -281,4 +286,152 @@ export function getBaseUrl(url: URL): string {
 		stringUrl = stringUrl.slice(0, -1);
 	}
 	return stringUrl;
+}
+/**
+ * Get the icon type for a file based on its content type.
+ * Returns the icon type that should be displayed for the file.
+ */
+export function getFileIconType(
+	contentType?: string,
+):
+	| "word"
+	| "excel"
+	| "powerpoint"
+	| "gdoc"
+	| "gsheet"
+	| "gslide"
+	| "pdf"
+	| "code"
+	| "archive"
+	| "default" {
+	if (!contentType) return "default";
+
+	// Microsoft Office
+	if (
+		contentType === "application/msword" ||
+		contentType ===
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	) {
+		return "word";
+	}
+	if (
+		contentType === "application/vnd.ms-excel" ||
+		contentType ===
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	) {
+		return "excel";
+	}
+	if (
+		contentType === "application/vnd.ms-powerpoint" ||
+		contentType ===
+			"application/vnd.openxmlformats-officedocument.presentationml.presentation"
+	) {
+		return "powerpoint";
+	}
+
+	// Google Suite
+	if (contentType === "application/vnd.google-apps.document") {
+		return "gdoc";
+	}
+	if (contentType === "application/vnd.google-apps.spreadsheet") {
+		return "gsheet";
+	}
+	if (contentType === "application/vnd.google-apps.presentation") {
+		return "gslide";
+	}
+
+	// PDF
+	if (contentType === "application/pdf") {
+		return "pdf";
+	}
+
+	// Code files
+	if (
+		contentType === "application/json" ||
+		contentType === "application/xml" ||
+		contentType === "application/javascript" ||
+		contentType === "text/plain" ||
+		contentType === "text/html" ||
+		contentType === "text/css" ||
+		contentType === "text/yaml"
+	) {
+		return "code";
+	}
+
+	// Archives
+	if (
+		contentType === "application/zip" ||
+		contentType === "application/vnd.rar" ||
+		contentType === "application/x-7z-compressed" ||
+		contentType === "application/x-tar" ||
+		contentType === "application/gzip"
+	) {
+		return "archive";
+	}
+
+	return "default";
+}
+/**
+ * Gets the appropriate document type for icon display based on content type.
+ * Used to show specific icons for different document types.
+ */
+export function getDocumentType(
+	contentType?: string,
+):
+	| "word"
+	| "excel"
+	| "powerpoint"
+	| "pdf"
+	| "gdoc"
+	| "gsheet"
+	| "gslide"
+	| null {
+	if (!contentType) return null;
+
+	// Office Word formats
+	if (
+		contentType === "application/msword" ||
+		contentType ===
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+	) {
+		return "word";
+	}
+
+	// Office Excel formats
+	if (
+		contentType === "application/vnd.ms-excel" ||
+		contentType ===
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	) {
+		return "excel";
+	}
+
+	// Office PowerPoint formats
+	if (
+		contentType === "application/vnd.ms-powerpoint" ||
+		contentType ===
+			"application/vnd.openxmlformats-officedocument.presentationml.presentation"
+	) {
+		return "powerpoint";
+	}
+
+	// PDF
+	if (contentType === "application/pdf") {
+		return "pdf";
+	}
+
+	// Google Suite
+	if (contentType === "application/vnd.google-apps.document") {
+		return "gdoc";
+	}
+
+	if (contentType === "application/vnd.google-apps.spreadsheet") {
+		return "gsheet";
+	}
+
+	if (contentType === "application/vnd.google-apps.presentation") {
+		return "gslide";
+	}
+
+	return null;
 }

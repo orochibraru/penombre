@@ -1,5 +1,5 @@
 import type { auth } from "$lib/server/auth";
-import type { StorageService } from "$lib/server/dto/storage";
+import type { StorageService } from "$lib/server/services/storage";
 
 export type CustomRouter = {
 	Variables: {

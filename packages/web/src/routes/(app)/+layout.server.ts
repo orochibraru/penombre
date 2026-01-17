@@ -4,7 +4,7 @@ import { valibot } from "sveltekit-superforms/adapters";
 import { getApiClient } from "$lib/api-client";
 import { route } from "$lib/ROUTES";
 import { uploadSchema } from "$lib/schemas/upload";
-import { getUserPreferences } from "$lib/server/dto/preferences";
+import { getUserPreferences } from "$lib/server/services/preferences";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({ fetch, locals, depends }) => {

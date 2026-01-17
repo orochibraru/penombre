@@ -30,6 +30,7 @@
         type SortDirection,
         shouldDisplayAction,
     } from "$lib/utils";
+    import FolderSize from "$lib/components/file/folder-size.svelte";
 
     let {
         handleOpenItem,
@@ -48,6 +49,11 @@
         onCreateFolder,
         sortColumn = $bindable(null),
         sortDirection = $bindable("asc"),
+        draggedItem,
+        dropTargetKey = $bindable(),
+        onDragStart,
+        onDragEnd,
+        onDropOnFolder,
     }: SharedFileDisplayProps = $props();
 
     const iconSize = "h-5 w-5";
@@ -78,6 +84,56 @@
         if (droppedFiles.length > 0) {
             onDrop(droppedFiles);
         }
+    }
+
+    function handleItemDragStart(e: DragEvent, item: ObjectItem) {
+        if (!onDragStart) return;
+        e.dataTransfer!.effectAllowed = "move";
+        e.dataTransfer!.setData("text/plain", item.key);
+        onDragStart(item);
+    }
+
+    function handleItemDragEnd(e: DragEvent) {
+        if (!onDragEnd) return;
+        dropTargetKey = undefined;
+        onDragEnd();
+    }
+
+    function handleFolderDragOver(e: DragEvent, folderKey: string) {
+        if (!draggedItem || !onDropOnFolder) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dropTargetKey = folderKey;
+    }
+
+    function handleFolderDragLeave(e: DragEvent, folderKey: string) {
+        if (!draggedItem) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (dropTargetKey === folderKey) {
+            dropTargetKey = undefined;
+        }
+    }
+
+    function handleFolderDrop(e: DragEvent, folderKey: string) {
+        if (!draggedItem || !onDropOnFolder) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Prevent dropping on itself
+        if (draggedItem.key === folderKey) {
+            dropTargetKey = undefined;
+            return;
+        }
+
+        // Build destination path
+        const currentPath = page.params.path;
+        const destination = currentPath
+            ? `${currentPath}/${folderKey.replace(/\/$/, "")}`
+            : folderKey.replace(/\/$/, "");
+
+        onDropOnFolder(destination);
+        dropTargetKey = undefined;
     }
 
     function toggleSort(column: SortColumn) {
@@ -197,7 +253,22 @@
 
 {#snippet tableRow(objectItem: ObjectItem)}
     {@const isFolder = isFolderItem(objectItem)}
-    <Table.Row>
+    {@const isDragTarget = dropTargetKey === objectItem.key}
+    <Table.Row
+        class={cn(isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "")}
+        draggable={onDragStart !== undefined}
+        ondragstart={(e) => handleItemDragStart(e, objectItem)}
+        ondragend={handleItemDragEnd}
+        ondragover={isFolder
+            ? (e) => handleFolderDragOver(e, objectItem.key)
+            : undefined}
+        ondragleave={isFolder
+            ? (e) => handleFolderDragLeave(e, objectItem.key)
+            : undefined}
+        ondrop={isFolder
+            ? (e) => handleFolderDrop(e, objectItem.key)
+            : undefined}
+    >
         <Table.Cell class="w-4">
             <Checkbox
                 checked={isChecked(objectItem)}
@@ -285,9 +356,16 @@
             </ContextMenu.Root>
         </Table.Cell>
         <Table.Cell colspan={1} class="w-32">
-            <p class="text-xs">
-                {readableFileSize(objectItem.size as number) ?? "-"}
-            </p>
+            {#if isFolder}
+                <FolderSize
+                    folderKey={objectItem.key}
+                    parentPath={page.params.path}
+                />
+            {:else}
+                <p class="text-xs">
+                    {readableFileSize(objectItem.size as number) ?? "-"}
+                </p>
+            {/if}
         </Table.Cell>
         <Table.Cell colspan={1} class="w-32">
             <p class="text-xs text-muted-foreground">

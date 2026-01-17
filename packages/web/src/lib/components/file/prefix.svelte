@@ -18,6 +18,7 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
     import type { ObjectItem } from "$lib/api-client";
+    import DocumentIcon from "$lib/components/file/document-icon.svelte";
     import FilePreview from "$lib/components/file/preview.svelte";
     import NowPlaying from "$lib/components/now-playing.svelte";
     import { Badge } from "$lib/components/ui/badge/index";
@@ -32,6 +33,8 @@
         prettyDate,
         secondsToMinutes,
         stripFolders,
+        getFileIconType,
+        getDocumentType,
     } from "$lib/utils";
 
     type Props = {
@@ -269,7 +272,14 @@
         {:else if item.metadata.category}
             <div class="flex h-full items-center justify-start">
                 {#if item.metadata.category === "DOCUMENTS"}
-                    <FileTextIcon class={cn(iconSize, "text-red-600")} />
+                    {@const docType = getDocumentType(
+                        item.metadata.contentType,
+                    )}
+                    {#if docType}
+                        <DocumentIcon type={docType} class={iconSize} />
+                    {:else}
+                        <FileTextIcon class={cn(iconSize, "text-blue-600")} />
+                    {/if}
                 {:else if item.metadata.category === "MUSIC"}
                     {#if $playableMusic && $playableMusic.title === (item.metadata.name ?? item.key)}
                         {#if $playableMusic.isPlaying}

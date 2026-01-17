@@ -80,10 +80,10 @@
     }
 </script>
 
-<div class="flex flex-col w-full">
+<div class="flex flex-col w-full h-full">
     <video
         id="music-player"
-        class="w-full rounded-xl h-120"
+        class="w-full rounded-xl mb-2"
         {title}
         playsinline
         oncanplay={() => {

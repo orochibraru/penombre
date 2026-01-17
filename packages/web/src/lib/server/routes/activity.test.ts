@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { Hono } from "hono";
 import type { CustomRouter } from "$lib/server/api-types";
-import { ActivityService } from "$lib/server/dto/activity";
+import { ActivityService } from "$lib/server/services/activity";
 import { activityRouter } from "./activity";
 
 /**

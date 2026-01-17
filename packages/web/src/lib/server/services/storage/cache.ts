@@ -145,6 +145,9 @@ export const CacheKeys = {
 	/** Key for folder metadata */
 	folderMeta: (key: string) => `folder-meta:${key}`,
 
+	/** Key for folder size */
+	folderSize: (folderKey: string) => `folder-size:${folderKey}`,
+
 	/** Key for starred files list */
 	starred: () => "starred",
 

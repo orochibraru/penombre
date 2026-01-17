@@ -45,6 +45,9 @@ export const fileContentTypeSchema = z.enum([
 	"application/vnd.oasis.opendocument.text",
 	"application/rtf",
 	"application/epub+zip",
+	"application/vnd.google-apps.document",
+	"application/vnd.google-apps.spreadsheet",
+	"application/vnd.google-apps.presentation",
 	"text/plain",
 	"text/csv",
 	"text/html",
@@ -84,6 +87,11 @@ export const fileContentTypeSchema = z.enum([
 	"application/json",
 	"application/xml",
 	"application/javascript",
+	// Google Suite
+	"application/vnd.google-apps.document",
+	"application/vnd.google-apps.spreadsheet",
+	"application/vnd.google-apps.presentation",
+	"application/vnd.google-apps.form",
 	// Archives
 	"application/zip",
 	"application/vnd.rar",
@@ -140,6 +148,15 @@ export const newFileSchema = z.object({
 	size: z.number(),
 });
 
+export const batchFileSchema = z.object({
+	files: z.array(
+		z.object({
+			name: z.string(),
+			size: z.number(),
+		}),
+	),
+});
+
 export const newFolderSchema = z.object({
 	name: z.string(),
 	parent: z.string().optional(),
@@ -190,6 +207,7 @@ export type FileContentType = z.infer<typeof fileContentTypeSchema>;
 export type FileMetadata = z.infer<typeof fileMetadataSchema>;
 
 export type NewFile = z.infer<typeof newFileSchema>;
+export type BatchFile = z.infer<typeof batchFileSchema>;
 
 export type UpdateFile = z.infer<typeof updateFileSchema>;
 export type UploadResult = z.infer<typeof uploadResultSchema>;

@@ -35,6 +35,11 @@
         onCreateFolder,
         sortColumn,
         sortDirection,
+        draggedItem,
+        dropTargetKey = $bindable(),
+        onDragStart,
+        onDragEnd,
+        onDropOnFolder,
     }: SharedFileDisplayProps = $props();
 
     const iconSize = "h-6 w-6";
@@ -63,6 +68,55 @@
         if (droppedFiles.length > 0) {
             onDrop(droppedFiles);
         }
+    }
+
+    function handleItemDragStart(e: DragEvent, item: ObjectItem) {
+        if (!onDragStart) return;
+        e.dataTransfer!.effectAllowed = "move";
+        e.dataTransfer!.setData("text/plain", item.key);
+        onDragStart(item);
+    }
+
+    function handleItemDragEnd(e: DragEvent) {
+        if (!onDragEnd) return;
+        dropTargetKey = undefined;
+        onDragEnd();
+    }
+
+    function handleFolderDragOver(e: DragEvent, folderKey: string) {
+        if (!draggedItem || !onDropOnFolder) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dropTargetKey = folderKey;
+    }
+
+    function handleFolderDragLeave(e: DragEvent, folderKey: string) {
+        if (!draggedItem) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (dropTargetKey === folderKey) {
+            dropTargetKey = undefined;
+        }
+    }
+
+    function handleFolderDrop(e: DragEvent, folderKey: string) {
+        if (!draggedItem || !onDropOnFolder) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Prevent dropping on itself
+        if (draggedItem.key === folderKey) {
+            dropTargetKey = undefined;
+            return;
+        }
+
+        // Build destination path
+        const destination = page.params.path
+            ? `${page.params.path}/${folderKey.replace(/\/$/, "")}`
+            : folderKey.replace(/\/$/, "");
+
+        onDropOnFolder(destination);
+        dropTargetKey = undefined;
     }
 
     function isChecked(item: ObjectItem): boolean {
@@ -130,11 +184,24 @@
 
 {#snippet listItem(item: ObjectItem)}
     {@const checked = isChecked(item)}
+    {@const isFolder = isFolderItem(item)}
+    {@const isDragTarget = dropTargetKey === item.key}
     <li
         class={cn(
             "flex min-w-0 items-center justify-between rounded-xl px-1 py-3 transition-colors",
             checked ? "bg-primary/5" : "",
+            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
         )}
+        draggable={onDragStart !== undefined}
+        ondragstart={(e) => handleItemDragStart(e, item)}
+        ondragend={handleItemDragEnd}
+        ondragover={isFolder
+            ? (e) => handleFolderDragOver(e, item.key)
+            : undefined}
+        ondragleave={isFolder
+            ? (e) => handleFolderDragLeave(e, item.key)
+            : undefined}
+        ondrop={isFolder ? (e) => handleFolderDrop(e, item.key) : undefined}
     >
         <FilePrefix
             layout="list"

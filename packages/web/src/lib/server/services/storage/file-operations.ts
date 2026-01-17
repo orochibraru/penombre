@@ -293,6 +293,61 @@ export abstract class FileOperations extends StorageServiceBase {
 	}
 
 	/**
+	 * Creates multiple files in a batch to avoid excessive DB transactions.
+	 * All files are registered in activity log with a single batch message.
+	 */
+	public async createBatchFiles(
+		files: NewFile[],
+		folder?: string,
+	): Promise<UploadResult[]> {
+		const results: UploadResult[] = [];
+		const normalizedFolder = folder
+			? folder.endsWith("/")
+				? folder.slice(0, -1)
+				: folder
+			: undefined;
+
+		// Create all files first
+		for (const file of files) {
+			const basename = file.name.includes("/")
+				? file.name.split("/").pop() || file.name
+				: file.name;
+
+			const uniqueName = await this.getUniqueDisplayName(
+				basename,
+				normalizedFolder,
+				"file",
+			);
+			const meta = this.generateMeta(uniqueName);
+			const idFilePath = normalizedFolder
+				? `${normalizedFolder}/${meta.id}`
+				: meta.id;
+			await this.writeFile(idFilePath, new Uint8Array(), meta, file.size);
+
+			results.push({
+				id: meta.id,
+				finalName: idFilePath,
+				metadata: meta,
+			});
+		}
+
+		// Register all files with a single activity log entry
+		const fileCount = files.length;
+		const folderDisplay = normalizedFolder || "root";
+		await this.activityService.register({
+			userId: this.user.id,
+			action: "create",
+			message: `Created ${fileCount} file${fileCount === 1 ? "" : "s"} in ${folderDisplay}`,
+			level: "info",
+		});
+
+		// Invalidate listing caches after batch creation
+		this.invalidateListingCaches();
+
+		return results;
+	}
+
+	/**
 	 * Uploads the actual file content and extracts media metadata.
 	 */
 	public async uploadFileBody(

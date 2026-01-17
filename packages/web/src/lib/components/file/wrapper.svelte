@@ -60,6 +60,7 @@
         getDuplicateFilePromise,
     } from "./wrapper.svelte.js";
     import { ExternalLinkIcon } from "@lucide/svelte";
+    import * as Drawer from "$lib/components/ui/drawer/index";
 
     type UserPreferences = {
         layout?: "grid" | "list";
@@ -117,6 +118,8 @@
     let sortDirection: SortDirection = $derived(initialSortDirection);
     let fileToView: FileToView = $state(null);
     let moveItem: ObjectItem | undefined = $state();
+    let draggedItem: ObjectItem | undefined = $state();
+    let dropTargetKey: string | undefined = $state();
 
     // Close local dialogs on navigation
     $effect(() => {
@@ -493,6 +496,112 @@
     }
 
     // ================================
+    // Drag and Drop Operations
+    // ================================
+    function handleDragStart(item: ObjectItem) {
+        draggedItem = item;
+    }
+
+    function handleDragEnd() {
+        draggedItem = undefined;
+        dropTargetKey = undefined;
+    }
+
+    function handleDropOnFolder(targetFolder: string) {
+        if (!draggedItem) return;
+        handleDragAndDropMove(draggedItem, targetFolder);
+        handleDragEnd();
+    }
+
+    async function handleDragAndDropMove(
+        item: ObjectItem,
+        destinationFolder: string,
+    ) {
+        const isFolder = item.type === "folder";
+        const itemKey = item.key.replace(/\/$/, "");
+        const itemName = item.metadata.name ?? item.key;
+
+        // Build full path
+        const fullItemKey = currentFolder
+            ? `${currentFolder}/${itemKey}`
+            : itemKey;
+
+        // Check if trying to move into itself (for folders)
+        if (isFolder) {
+            const folderPath = fullItemKey.replace(/\/$/, "");
+            if (
+                destinationFolder === folderPath ||
+                destinationFolder.startsWith(`${folderPath}/`)
+            ) {
+                toast.error("Cannot move folder into itself");
+                return;
+            }
+        }
+
+        // Check if already in same location
+        let itemParent: string;
+        if (item.parentKey) {
+            itemParent = item.parentKey;
+        } else if (item.key.includes("/")) {
+            itemParent = item.key.split("/").slice(0, -1).join("/");
+        } else {
+            itemParent = currentFolder;
+        }
+
+        if (destinationFolder === itemParent) {
+            toast.info(`"${itemName}" is already in this folder`);
+            return;
+        }
+
+        try {
+            let promise: Promise<Response>;
+
+            if (isFolder) {
+                const folderId = fullItemKey.split("/").pop() || fullItemKey;
+                const parentId = fullItemKey.includes("/")
+                    ? fullItemKey.split("/").slice(0, -1).join("/")
+                    : undefined;
+
+                promise = api.storage.folders.folder[":id"].move.$post({
+                    param: { id: folderId },
+                    json: {
+                        parentFolderId: parentId,
+                        destination: destinationFolder,
+                    },
+                });
+            } else {
+                promise = api.storage.objects.item[":item"].move.$post({
+                    param: { item: encodeURIComponent(fullItemKey) },
+                    json: { destination: destinationFolder },
+                });
+            }
+
+            toast.promise(
+                promise.then(async (res) => {
+                    if (!res.ok) {
+                        const text = await res.text();
+                        throw new Error(text || "Failed to move item");
+                    }
+                    await invalidate("app:files");
+                }),
+                {
+                    loading: `Moving "${itemName}"...`,
+                    success: `Moved "${itemName}"`,
+                    error: (err) => {
+                        const message =
+                            err instanceof Error
+                                ? err.message
+                                : "Unknown error";
+                        return `Failed to move "${itemName}": ${message}`;
+                    },
+                },
+            );
+        } catch (error) {
+            console.error("Move failed:", error);
+        }
+    }
+
+    // ================================
     // Selection Effect
     // ================================
     $effect(() => {
@@ -746,6 +855,11 @@
             bind:allSelected
             bind:actionableItem
             bind:actionsContextOpen
+            {draggedItem}
+            bind:dropTargetKey
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDropOnFolder={handleDropOnFolder}
         />
     </div>
     <div class="md:hidden">
@@ -766,6 +880,11 @@
             bind:allSelected
             bind:actionableItem
             bind:actionsContextOpen
+            {draggedItem}
+            bind:dropTargetKey
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDropOnFolder={handleDropOnFolder}
         />
     </div>
 {:else}
@@ -786,83 +905,101 @@
         bind:allSelected
         bind:actionableItem
         bind:actionsContextOpen
+        {draggedItem}
+        bind:dropTargetKey
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDropOnFolder={handleDropOnFolder}
     />
 {/if}
 
-<Dialog.Root bind:open={viewFileOpen}>
+{#snippet previewContents(fileToView: FileToView)}
     {#if fileToView}
-        <Dialog.Content
-            class="max-h-[70%] pb-16 md:max-w-3xl lg:max-w-5xl xl:max-w-7xl"
+        <div class="flex flex-col justify-between gap-5 lg:flex-row">
+            <Dialog.Header class="text-start lg:text-center">
+                <Dialog.Title>
+                    {fileToView.item.metadata.name ?? fileToView.item.key}
+                </Dialog.Title>
+                <Dialog.Description class="flex items-center gap-2">
+                    <span>
+                        {readableFileSize(fileToView.item.size as number) ??
+                            "-"}
+                    </span>
+                    {#if fileToView.language}
+                        <Badge variant="outline" class="text-xs"
+                            >{fileToView.language}</Badge
+                        >
+                    {/if}
+                </Dialog.Description>
+            </Dialog.Header>
+            <div class="pr-5">
+                <Button
+                    type="button"
+                    class="w-full lg:w-auto"
+                    variant="outline"
+                    size="sm"
+                    href={fileToView.src}
+                    target="_blank"
+                >
+                    Open in new tab
+                    <ExternalLinkIcon />
+                </Button>
+            </div>
+        </div>
+        <div
+            class="flex h-full w-full items-center justify-center overflow-y-auto flex-1"
         >
-            <div class="flex flex-col justify-between gap-5 lg:flex-row">
-                <Dialog.Header class="text-start lg:text-center">
-                    <Dialog.Title>
-                        {fileToView.item.metadata.name ?? fileToView.item.key}
-                    </Dialog.Title>
-                    <Dialog.Description class="flex items-center gap-2">
-                        <span>
-                            {readableFileSize(fileToView.item.size as number) ??
-                                "-"}
-                        </span>
-                        {#if fileToView.language}
-                            <Badge variant="outline" class="text-xs"
-                                >{fileToView.language}</Badge
-                            >
-                        {/if}
-                    </Dialog.Description>
-                </Dialog.Header>
-                <div class="pr-5">
-                    <Button
-                        type="button"
-                        class="w-full lg:w-auto"
-                        variant="outline"
-                        size="sm"
-                        href={fileToView.src}
-                        target="_blank"
-                    >
-                        Open in new tab
-                        <ExternalLinkIcon />
-                    </Button>
-                </div>
-            </div>
-            <div
-                class="flex h-[50vh] w-full items-center justify-center overflow-hidden"
-            >
-                {#if fileToView.type === "image"}
-                    <img
-                        src={fileToView.src}
-                        alt={fileToView.item.metadata.name ??
-                            fileToView.item.key}
-                        class="h-full max-w-full rounded-md object-contain"
-                    />
-                {:else if fileToView.type === "video"}
-                    <VideoPlayer
-                        src={fileToView.src}
-                        title={fileToView.item.metadata.name ??
-                            fileToView.item.key}
-                    />
-                {:else if fileToView.type === "code" && fileToView.language && fileToView.content}
-                    <Code.Root
-                        lang={fileToView.language}
-                        class="w-full"
-                        code={fileToView.content}
-                    >
-                        <Code.CopyButton />
-                    </Code.Root>
-                {:else if fileToView.type === "pdf"}
-                    <embed
-                        src={fileToView.src}
-                        title={fileToView.item.metadata.name ??
-                            fileToView.item.key}
-                        class="h-full w-full"
-                        width="500"
-                        height="700"
-                    />
-                {/if}
-            </div>
-        </Dialog.Content>
+            {#if fileToView.type === "image"}
+                <img
+                    src={fileToView.src}
+                    alt={fileToView.item.metadata.name ?? fileToView.item.key}
+                    class="max-w-full rounded-md object-contain"
+                />
+            {:else if fileToView.type === "video"}
+                <VideoPlayer
+                    src={fileToView.src}
+                    title={fileToView.item.metadata.name ?? fileToView.item.key}
+                />
+            {:else if fileToView.type === "code" && fileToView.language && fileToView.content}
+                <Code.Root
+                    lang={fileToView.language}
+                    class="w-full h-full"
+                    code={fileToView.content}
+                >
+                    <Code.CopyButton />
+                </Code.Root>
+            {:else if fileToView.type === "pdf"}
+                <embed
+                    src={fileToView.src}
+                    title={fileToView.item.metadata.name ?? fileToView.item.key}
+                    class="h-[80vh] w-full"
+                />
+            {/if}
+        </div>
     {/if}
-</Dialog.Root>
+{/snippet}
+
+{#if isDesktop.current}
+    <Dialog.Root bind:open={viewFileOpen}>
+        {#if fileToView}
+            <Dialog.Content
+                class="pb-16 max-w-full md:max-w-full lg:max-w-full xl:max-w-full min-h-screen w-full  flex flex-col max-h-screen rounded-none"
+            >
+                {@render previewContents(fileToView)}
+            </Dialog.Content>
+        {/if}
+    </Dialog.Root>
+{:else}
+    <Drawer.Root bind:open={viewFileOpen}>
+        {#if fileToView}
+            <Drawer.Content
+                class="pb-16 max-w-full md:max-w-full lg:max-w-full xl:max-w-full min-h-screen w-full  flex flex-col max-h-screen rounded-none"
+            >
+                {@render previewContents(fileToView)}
+            </Drawer.Content>
+        {/if}
+    </Drawer.Root>
+{/if}
 
 <DeleteDialog
     bind:confirmDeleteOpen

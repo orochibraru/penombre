@@ -1,4 +1,4 @@
-import { AdminStorageService } from "$lib/server/dto/storage";
+import { AdminStorageService } from "$lib/server/services/storage";
 
 export const load = async () => {
 	return {

@@ -473,56 +473,38 @@
         loading = true;
         const results: FullResult[] = [];
 
-        const uploadMetadataPromises = [];
+        // First, create all necessary folders
+        const createdFolders = await createFoldersForUpload();
 
-        // Handle regular files
+        // Group files by folder for batch creation
+        interface FilesByFolder {
+            [folder: string]: Array<{ file: File; name: string }>;
+        }
+        const filesByFolder: FilesByFolder = {};
+
+        // Process regular files
         for (const file of $files) {
             const fullPath = page.params.path
                 ? `${page.params.path}/${file.name}`
                 : file.name;
-            const promise = apiClient.storage.objects
-                .$post({
-                    query: { folder: page.params.path },
-                    json: {
-                        name: fullPath,
-                        size: file.size,
-                    },
-                })
-                .then(async (res) => {
-                    if (!res.ok) {
-                        throw new Error(
-                            "No data returned from upload endpoint",
-                        );
-                    }
+            const folder = page.params.path || "";
 
-                    const data = await res.json();
-                    const result: FullResult = {
-                        data,
-                        file,
-                    };
+            if (!filesByFolder[folder]) {
+                filesByFolder[folder] = [];
+            }
 
-                    results.push(result);
-                    $uploadingItems[
-                        fileNameWithoutFolder(result.data.finalName)
-                    ] = 1;
-
-                    return res;
-                })
-                .catch((e) => {
-                    console.error(e);
-                    toast.error("Failed to schedule files for upload.");
-                    loading = false;
-                    throw e;
+            const folderArray = filesByFolder[folder];
+            if (folderArray) {
+                folderArray.push({
+                    file,
+                    name: fullPath,
                 });
-
-            uploadMetadataPromises.push(promise);
+            }
         }
 
-        // Handle folder files (files with relative paths)
+        // Process folder files (with relative paths)
         for (const file of folderFiles) {
             const relativePath = file.relativePath || file.name;
-
-            // Extract filename and folder path from relativePath
             const pathParts = relativePath.split("/");
             const fileName = pathParts[pathParts.length - 1] ?? file.name;
             const folderPath =
@@ -535,76 +517,112 @@
                     : page.params.path
                 : folderPath || undefined;
 
-            const promise = apiClient.storage.objects
-                .$post({
-                    query: { folder: fullFolderPath },
+            const fullPath = fullFolderPath
+                ? `${fullFolderPath}/${fileName}`
+                : fileName;
+
+            const folderKey = fullFolderPath || "";
+            if (!filesByFolder[folderKey]) {
+                filesByFolder[folderKey] = [];
+            }
+
+            const folderArray = filesByFolder[folderKey];
+            if (folderArray) {
+                folderArray.push({
+                    file,
+                    name: fileName,
+                });
+            }
+        }
+
+        // Send batch requests for each folder
+        try {
+            for (const [folder, filesInFolder] of Object.entries(
+                filesByFolder,
+            )) {
+                const batchPayload = filesInFolder.map((item) => ({
+                    name: item.name,
+                    size: item.file.size,
+                }));
+
+                console.debug(
+                    `Sending batch of ${filesInFolder.length} files to folder: ${folder}`,
+                );
+
+                const res = await apiClient.storage.objects.batch.$post({
+                    query: { folder: folder || undefined },
                     json: {
-                        name: fileName,
-                        size: file.size,
+                        files: batchPayload,
                     },
-                })
-                .then(async (res) => {
-                    if (!res.ok) {
-                        const errorText = await res.text();
+                });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error(
+                        "Batch upload metadata creation failed:",
+                        errorText,
+                    );
+                    throw new Error(
+                        `Failed to create batch metadata: ${errorText}`,
+                    );
+                }
+
+                const batchResults = (await res.json()) as UploadResult[];
+
+                // Pair each result with its corresponding file
+                for (let i = 0; i < filesInFolder.length; i++) {
+                    const uploadResult = batchResults[i];
+                    const fileItem = filesInFolder[i];
+
+                    if (!uploadResult || !fileItem) {
                         console.error(
-                            "Upload metadata creation failed:",
-                            errorText,
+                            `Missing upload result or file at index ${i}`,
                         );
-                        throw new Error(
-                            `Failed to create metadata: ${errorText}`,
-                        );
+                        continue;
                     }
 
-                    const data = await res.json();
                     const result: FullResult = {
-                        data,
-                        file,
+                        data: uploadResult,
+                        file: fileItem.file,
                     };
 
                     results.push(result);
                     $uploadingItems[
                         fileNameWithoutFolder(result.data.finalName)
                     ] = 1;
+                }
+            }
 
-                    return res;
-                })
-                .catch((e) => {
-                    console.error(`Error scheduling ${relativePath}:`, e);
-                    toast.error(
-                        `Failed to schedule ${relativePath} for upload.`,
-                    );
-                    throw e;
-                });
-
-            uploadMetadataPromises.push(promise);
+            console.debug(
+                `All batch metadata requests completed. Total files: ${results.length}`,
+            );
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to prepare files for upload.");
+            loading = false;
+            throw e;
         }
 
-        const globalpromise = Promise.all(uploadMetadataPromises).finally(
-            async () => {
-                open = false;
-                await invalidate("app:files");
-                files.set([]);
-                folderFiles = [];
+        const globalpromise = resultCallback(results).finally(async () => {
+            open = false;
+            await invalidate("app:files");
+            files.set([]);
+            folderFiles = [];
 
-                void resultCallback(results).finally(() => {
-                    loading = false;
+            loading = false;
 
-                    if (uploadErrors.length > 0) {
-                        console.error(
-                            uploadErrors.map((e) => e.error).join("\n"),
-                        );
-                        toast.error("Failed to upload some items");
-                    } else {
-                        toast.success("Successfully uploaded all items");
-                    }
-                });
-            },
-        );
+            if (uploadErrors.length > 0) {
+                console.error(uploadErrors.map((e) => e.error).join("\n"));
+                toast.error("Failed to upload some items");
+            } else {
+                toast.success("Successfully uploaded all items");
+            }
+        });
 
         toast.promise(globalpromise, {
-            loading: "Queuing files for upload",
-            success: "Files queued for upload",
-            error: "Failed to queue files for upload",
+            loading: "Uploading files",
+            success: "Files uploaded successfully",
+            error: "Failed to upload files",
         });
     }
 </script>

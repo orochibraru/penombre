@@ -2,10 +2,12 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { StorageService } from "./service";
 import {
 	cleanupTestStoragePath,
 	createTestFile,
 	createTestStoragePath,
+	mockUser,
 } from "./test-utils";
 
 /**
@@ -14,12 +16,18 @@ import {
 
 let testStoragePath: string;
 let testUserPath: string;
+let service: StorageService;
 
 beforeAll(async () => {
 	const paths = await createTestStoragePath();
 	testStoragePath = paths.storagePath;
 	testUserPath = paths.userPath;
 	await mkdir(testUserPath, { recursive: true });
+
+	// Create service with overridden storage path
+	service = new StorageService(mockUser);
+	// @ts-expect-error - Override for testing
+	service.storagePath = testUserPath;
 });
 
 afterAll(async () => {
@@ -172,6 +180,40 @@ describe("StorageService - File Operations", () => {
 			}
 
 			expect(newName).toBe("file (2).txt");
+		});
+	});
+
+	describe("File CRUD Operations", () => {
+		it("should get file metadata with getFile", async () => {
+			const { id } = await createTestFile(testUserPath, {
+				name: "test-get.txt",
+			});
+
+			const result = await service.getFile(id);
+
+			expect(result.key).toBeDefined();
+			expect(result.type).toBe("file");
+			expect(result.size).toBeGreaterThan(0);
+			expect(result.metadata.name).toBe("test-get.txt");
+			expect(result.metadata.id).toBe(id);
+		});
+
+		it("should get raw file data", async () => {
+			const content = "Hello, raw file!";
+			const { id } = await createTestFile(testUserPath, {
+				name: "raw.txt",
+				content,
+			});
+
+			const result = await service.getRawFileData(id);
+
+			expect(result).toBeDefined();
+			expect(result?.file).toBeDefined();
+			expect(result?.meta).toBeDefined();
+			expect(result?.meta.metadata.name).toBe("raw.txt");
+
+			const text = await result?.file.text();
+			expect(text).toBe(content);
 		});
 	});
 });

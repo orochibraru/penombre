@@ -9,8 +9,8 @@ import {
 } from "bun:test";
 import { Hono } from "hono";
 import type { StorageRouter } from "$lib/server/api-types";
-import { StorageService } from "$lib/server/dto/storage";
 import { UnauthorizedError } from "$lib/server/errors";
+import { StorageService } from "$lib/server/services/storage";
 import { foldersRouter } from "./folders";
 
 /**

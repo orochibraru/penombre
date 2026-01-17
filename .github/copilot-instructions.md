@@ -79,6 +79,7 @@
 - DO NOT leave any typescript errors or warnings in the code. If you see any, fix them. If you don't see any, check anyway by cding into "packages/web" and running `bun run check`, fix them even if you don't think you created them.
 - DO NOT leave any linting issues in the code. If you see any, fix them (the tool is Biome). If you don't see any, check anyway by cding into "packages/web" and running `bun run lint:fix`
 - If your task comes from a TODO.md item, make sure to mark it as complete when done.
+- If you think what you just did justifies an update to these instructions, don't ask and change them directly. This can include adding new sections if you think they are relevant. Same goes for the main README.md.
 
 ---
 If anything above is unclear (e.g., dev port vs Docker port, DB usage boundaries, or missing API generation flow), tell me what you’re trying to do and I’ll refine these instructions.
