@@ -2,19 +2,33 @@ name: CI/CD
 
 on:
   push:
-    paths-ignore:
-      - '**.md'
-      - '!docs/**'
-      - '.github/instructions/**'
-      - '.github/copilot-instructions.md'
-      - 'LICENSE'
+    branches:
+      - main
+    paths:
+      - 'packages/**'
+      - 'scripts/**'
+      - 'Dockerfile'
+      - 'docker-bake.hcl'
+      - 'compose.yaml'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig.json'
+      - 'biome.json'
+      - '.github/workflows/**'
+      - 'docs/**'
   pull_request:
-    paths-ignore:
-      - '**.md'
-      - '!docs/**'
-      - '.github/instructions/**'
-      - '.github/copilot-instructions.md'
-      - 'LICENSE'
+    paths:
+      - 'packages/**'
+      - 'scripts/**'
+      - 'Dockerfile'
+      - 'docker-bake.hcl'
+      - 'compose.yaml'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig.json'
+      - 'biome.json'
+      - '.github/workflows/**'
+      - 'docs/**'
 
 permissions:
   contents: write
