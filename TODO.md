@@ -68,4 +68,4 @@
   - **Note:** Major undertaking - save for when core features are solid
 
 - Prettier file count in navbvar
-
+- Custom file icons for docx, xlsx, pptx etc..
