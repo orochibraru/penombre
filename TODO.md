@@ -6,6 +6,10 @@
 
 ## 🔴 High Priority
 
+### CI/CD
+- Only trigger TS, docker & deployment pipelines based on relevant changes, not MD files for example (unless it's in docs/)
+- Merge pipeline files into one with conditions to reduce maintenance overhead
+
 ### Profile Page Improvements
 - [ ] **OAuth Password Setup** - Allow users signing in through OAuth to set a password when email signin is also enabled
   - Files: `packages/web/src/routes/(app)/settings/+page.svelte`, Better Auth config
