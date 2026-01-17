@@ -10,13 +10,15 @@
     import { page } from "$app/state";
     import { getApiClient, type ObjectItem } from "$lib/api-client";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-    import { Button } from "$lib/components/ui/button";
     import { cn } from "$lib/utils";
     import Spinner from "$lib/components/ui/Spinner.svelte";
 
     type Props = {
         open: boolean;
-        item: ObjectItem | undefined;
+        /** Single item mode (backwards compatibility) */
+        item?: ObjectItem | undefined;
+        /** Bulk move mode: Record<key, displayName> */
+        items?: Record<string, string>;
     };
 
     type FolderData = {
@@ -32,7 +34,11 @@
         children: FolderNode[];
     };
 
-    let { open = $bindable(false), item = $bindable() }: Props = $props();
+    let {
+        open = $bindable(false),
+        item = $bindable(),
+        items = $bindable({}),
+    }: Props = $props();
 
     let loading: boolean = $state(false);
     let loadingFolders: boolean = $state(false);
@@ -42,6 +48,10 @@
     let expandedFolders: Set<string> = $state(new Set());
 
     const api = getApiClient(fetch);
+
+    // Determine if we're in bulk mode
+    let isBulkMode = $derived(Object.keys(items).length > 0 && !item);
+    let itemCount = $derived(isBulkMode ? Object.keys(items).length : 1);
 
     // Load root folders when dialog opens
     $effect(() => {
@@ -108,22 +118,39 @@
         return "";
     });
 
-    // Get the FULL folder path being moved (if it's a folder)
-    let movingFolderPath = $derived.by(() => {
-        if (!item || item.type !== "folder") return null;
-        const itemKey = item.key.replace(/\/$/, "");
-        // Construct full path from current folder context + item key
-        return currentFolder ? `${currentFolder}/${itemKey}` : itemKey;
+    // Get all folder paths being moved (for filtering)
+    let movingFolderPaths = $derived.by(() => {
+        const paths: string[] = [];
+        if (isBulkMode) {
+            // In bulk mode, check each key that ends with / (folder)
+            for (const key of Object.keys(items)) {
+                if (key.endsWith("/")) {
+                    const itemKey = key.replace(/\/$/, "");
+                    const fullPath = currentFolder
+                        ? `${currentFolder}/${itemKey}`
+                        : itemKey;
+                    paths.push(fullPath);
+                }
+            }
+        } else if (item && item.type === "folder") {
+            const itemKey = item.key.replace(/\/$/, "");
+            const fullPath = currentFolder
+                ? `${currentFolder}/${itemKey}`
+                : itemKey;
+            paths.push(fullPath);
+        }
+        return paths;
     });
 
-    // Filter out the folder being moved and its children from the list
+    // Filter out folders being moved and their children from the list
     let filteredFolders = $derived.by(() => {
-        if (!movingFolderPath) return folders;
+        if (movingFolderPaths.length === 0) return folders;
         return folders.filter((f) => {
-            // Exclude the folder itself and any children
-            return (
-                f.path !== movingFolderPath &&
-                !f.path.startsWith(`${movingFolderPath}/`)
+            // Exclude any folder that is being moved or is a child of one
+            return !movingFolderPaths.some(
+                (movingPath) =>
+                    f.path === movingPath ||
+                    f.path.startsWith(`${movingPath}/`),
             );
         });
     });
@@ -145,90 +172,131 @@
         selectedFolderName = name;
     }
 
-    // Check if item would be moved to its current location
+    // Check if items would be moved to their current location
     let isSameLocation = $derived.by(() => {
-        if (!item) return false;
-        // Use parentKey if available, otherwise use current folder from URL
-        let itemParent: string;
-        if (item.parentKey) {
-            itemParent = item.parentKey;
-        } else if (item.key.includes("/")) {
-            // Key contains path, extract parent
-            itemParent = item.key.split("/").slice(0, -1).join("/");
-        } else {
-            // File is listed in current folder context
-            itemParent = currentFolder;
-        }
-        return selectedFolder === itemParent;
+        // All items in current view share the same parent (currentFolder)
+        return selectedFolder === currentFolder;
     });
 
-    // Check if trying to move folder into itself (fallback safety check)
+    // Check if trying to move folder into itself (only for single folder)
     let isMovingIntoSelf = $derived.by(() => {
-        if (!item || item.type !== "folder" || !movingFolderPath) return false;
-        return (
-            selectedFolder === movingFolderPath ||
-            selectedFolder.startsWith(`${movingFolderPath}/`)
+        return movingFolderPaths.some(
+            (folderPath) =>
+                selectedFolder === folderPath ||
+                selectedFolder.startsWith(`${folderPath}/`),
         );
     });
 
     let canMove = $derived(
-        !isSameLocation && !isMovingIntoSelf && item !== undefined,
+        !isSameLocation &&
+            !isMovingIntoSelf &&
+            (item !== undefined || Object.keys(items).length > 0),
     );
+
+    // Dialog title
+    let dialogTitle = $derived.by(() => {
+        if (isBulkMode) {
+            return `Move ${itemCount} items`;
+        }
+        return `Move ${item?.metadata?.name ?? "item"}`;
+    });
 
     async function handleMove(e: SubmitEvent) {
         e.preventDefault();
-        if (!item || !canMove) return;
+        if (!canMove) return;
 
         loading = true;
 
-        const isFolder = item.type === "folder";
-        const itemKey = item.key.replace(/\/$/, "");
-
-        // Build full path: if item is in a subdirectory, prepend current folder
-        const fullItemKey = currentFolder
-            ? `${currentFolder}/${itemKey}`
-            : itemKey;
-
         try {
-            let promise: Promise<Response>;
-
-            if (isFolder) {
-                // Get folder ID and parent from the full path
-                const folderId = fullItemKey.split("/").pop() || fullItemKey;
-                const parentId = fullItemKey.includes("/")
-                    ? fullItemKey.split("/").slice(0, -1).join("/")
-                    : undefined;
-
-                promise = api.storage.folders.folder[":id"].move.$post({
-                    param: { id: folderId },
-                    json: {
-                        parentFolderId: parentId,
-                        destination: selectedFolder,
-                    },
+            if (isBulkMode) {
+                // Bulk move using the new endpoint
+                const itemsToMove = Object.keys(items).map((key) => {
+                    const isFolder = key.endsWith("/");
+                    const itemKey = isFolder ? key.replace(/\/$/, "") : key;
+                    const fullPath = currentFolder
+                        ? `${currentFolder}/${itemKey}`
+                        : itemKey;
+                    return {
+                        path: fullPath,
+                        type: isFolder
+                            ? ("folder" as const)
+                            : ("file" as const),
+                    };
                 });
-            } else {
-                promise = api.storage.objects.item[":item"].move.$post({
-                    param: { item: encodeURIComponent(fullItemKey) },
-                    json: { destination: selectedFolder },
-                });
-            }
 
-            const toastPromise = promise.then(async (res) => {
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text || "Failed to move item");
+                const promise = api.storage.objects.move
+                    .$post({
+                        json: {
+                            items: itemsToMove,
+                            destination: selectedFolder,
+                        },
+                    })
+                    .then(async (res) => {
+                        if (!res.ok) {
+                            throw new Error("Failed to move items");
+                        }
+                        const result = await res.json();
+                        open = false;
+                        await invalidate("app:files");
+                        return result;
+                    });
+
+                toast.promise(promise, {
+                    loading: `Moving ${itemCount} items...`,
+                    success: (result) =>
+                        `Moved ${result.successCount} of ${itemCount} items to ${selectedFolderName || "My Drive"}`,
+                    error: "Failed to move items",
+                });
+
+                await promise;
+            } else if (item) {
+                // Single item move (existing logic)
+                const isFolder = item.type === "folder";
+                const itemKey = item.key.replace(/\/$/, "");
+                const fullItemKey = currentFolder
+                    ? `${currentFolder}/${itemKey}`
+                    : itemKey;
+
+                let promise: Promise<Response>;
+
+                if (isFolder) {
+                    const folderId =
+                        fullItemKey.split("/").pop() || fullItemKey;
+                    const parentId = fullItemKey.includes("/")
+                        ? fullItemKey.split("/").slice(0, -1).join("/")
+                        : undefined;
+
+                    promise = api.storage.folders.folder[":id"].move.$post({
+                        param: { id: folderId },
+                        json: {
+                            parentFolderId: parentId,
+                            destination: selectedFolder,
+                        },
+                    });
+                } else {
+                    promise = api.storage.objects.item[":item"].move.$post({
+                        param: { item: encodeURIComponent(fullItemKey) },
+                        json: { destination: selectedFolder },
+                    });
                 }
-                open = false;
-                await invalidate("app:files");
-            });
 
-            toast.promise(toastPromise, {
-                loading: `Moving ${item.metadata.name || item.key}...`,
-                success: `Moved to ${selectedFolderName || "My Drive"}`,
-                error: "Failed to move item",
-            });
+                const toastPromise = promise.then(async (res) => {
+                    if (!res.ok) {
+                        const text = await res.text();
+                        throw new Error(text || "Failed to move item");
+                    }
+                    open = false;
+                    await invalidate("app:files");
+                });
 
-            await toastPromise;
+                toast.promise(toastPromise, {
+                    loading: `Moving ${item.metadata.name || item.key}...`,
+                    success: `Moved to ${selectedFolderName || "My Drive"}`,
+                    error: "Failed to move item",
+                });
+
+                await toastPromise;
+            }
         } catch (error) {
             console.error("Move failed:", error);
         } finally {
@@ -298,7 +366,7 @@
 <ResponsiveDialog
     bind:open
     bind:loading
-    title="Move {item?.metadata?.name ?? 'item'}"
+    title={dialogTitle}
     description="Select a destination folder"
     submitLabel="Move here"
     loadingLabel="Moving..."
@@ -343,7 +411,9 @@
 
         {#if isSameLocation}
             <p class="text-xs text-amber-600 mt-2">
-                Item is already in this location
+                {isBulkMode
+                    ? "Items are already in this location"
+                    : "Item is already in this location"}
             </p>
         {/if}
         {#if isMovingIntoSelf}

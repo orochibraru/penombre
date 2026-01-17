@@ -346,6 +346,7 @@ export function createMainActions(handlers: {
 
 export function createMainMultipleActions(handlers: {
 	onDownload: () => void;
+	onMove: () => void;
 	onMoveToTrash: () => void;
 }): MultipleItemsAction[] {
 	return [
@@ -359,7 +360,7 @@ export function createMainMultipleActions(handlers: {
 			title: "Move",
 			icon: FolderInputIcon,
 			variant: "outline",
-			action: () => [],
+			action: handlers.onMove,
 		},
 		{
 			title: "Star",

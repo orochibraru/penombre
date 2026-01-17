@@ -44,6 +44,19 @@ const bulkDownloadSchema = z.object({
 	paths: z.array(z.string()).min(1).max(100), // Limit to 100 items
 });
 
+const bulkMoveSchema = z.object({
+	items: z
+		.array(
+			z.object({
+				path: z.string(), // Full path of the item
+				type: z.enum(["file", "folder"]),
+			}),
+		)
+		.min(1)
+		.max(100),
+	destination: z.string(), // Empty string for root
+});
+
 const folderDownloadQuerySchema = z.object({
 	folder: z.string().optional(), // Parent folder context
 });
@@ -319,6 +332,50 @@ const objectsRouter = new Hono<StorageRouter>()
 			logger.error("Error creating bulk download:", error);
 			return c.json({ message: "Error creating download" }, 500);
 		}
+	})
+
+	// POST /storage/objects/move - Bulk move multiple files/folders
+	.post("/move", zValidator("json", bulkMoveSchema), async (c) => {
+		const storageService = c.get("storageService");
+		const { items, destination } = c.req.valid("json");
+
+		logger.debug(
+			`Bulk move requested: ${items.length} items to ${destination || "root"}`,
+		);
+
+		const results: { path: string; success: boolean; error?: string }[] = [];
+
+		for (const item of items) {
+			try {
+				if (item.type === "folder") {
+					// For folders, the path is the full path including parent
+					const folderPath = item.path.replace(/\/$/, "");
+					await storageService.moveFolder(folderPath, destination);
+				} else {
+					await storageService.moveFile(item.path, destination);
+				}
+				results.push({ path: item.path, success: true });
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : "Unknown error";
+				logger.error(`Failed to move ${item.path}:`, error);
+				results.push({ path: item.path, success: false, error: message });
+			}
+		}
+
+		const successCount = results.filter((r) => r.success).length;
+		const failCount = results.filter((r) => !r.success).length;
+
+		logger.debug(
+			`Bulk move completed: ${successCount} succeeded, ${failCount} failed`,
+		);
+
+		return c.json({
+			message: `Moved ${successCount} of ${items.length} items`,
+			results,
+			successCount,
+			failCount,
+		});
 	})
 
 	// GET /storage/objects/download/folder/:folder - Download folder as zip

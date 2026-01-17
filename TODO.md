@@ -6,6 +6,7 @@
 - [x] When uploading a large amoount of files, getting `PostgresError: Idle timeout reached after 30s` code `ERR_POSTGRES_IDLE_TIMEOUT`
   - SOLUTION IMPLEMENTED: Implemented batch file upload endpoint (POST /storage/objects/batch) that accepts array of files and creates all metadata in one operation with a single activity log entry instead of individual Promise.all calls. Frontend now groups files by folder and sends batches, reducing DB transactions significantly.
 - [] Invalidate data when renaming
+- Add a CI DB service container so tests can run.
 
 ## 🔴 High Priority
 
@@ -31,10 +32,11 @@
   - IMPLEMENTED: Added HTML5 drag-and-drop support to all three view modes (list, grid, table). Files and folders can now be dragged onto folders with visual feedback (ring highlight). Backend move endpoints were already in place.
 
 ### Bulk move
-- [ ] **Implement bulk move functionality**
+- [x] **Implement bulk move functionality**
   - Allow selecting multiple files/folders and moving them to a different folder
   - Update backend to handle bulk move operations
   - Files: `packages/web/src/lib/components/file/wrapper.svelte`, `packages/web/src/lib/server/routes/storage/objects.ts`
+  - IMPLEMENTED: Added POST /storage/objects/move bulk move endpoint accepting up to 100 items with path and type. Updated MoveDialog to support both single item and bulk mode via `items` prop. Added `onMove` handler to multi-select actions menu. Bulk mode correctly filters out all selected folders and their children from destination options.
 
 ### Mobile-only CTA button becomes drawer menu trigger
 - [ ] **Make mobile upload button open a drawer menu** instead of having a nested side drawer

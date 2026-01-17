@@ -1,23 +1,48 @@
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { eq } from "drizzle-orm";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { Hono } from "hono";
 import type { CustomRouter } from "$lib/server/api-types";
-import { db } from "$lib/server/db";
 import type { UserPreferencesData } from "$lib/server/db/schema";
-import { user, userPreferences } from "$lib/server/db/schema";
-import preferencesRouter from "./preferences";
 
 /**
- * Preferences Router integration tests
+ * Preferences Router unit tests
  *
- * Tests the preferences endpoints with real database.
+ * Tests the preferences API endpoints for GET and PUT operations.
+ * Uses mocks to avoid database dependencies.
  */
+
+// Default preferences
+const defaultPreferences: UserPreferencesData = {
+	layout: "list",
+	sortColumn: "name",
+	sortDirection: "asc",
+};
+
+// Mocked preferences state - this simulates the DB
+let mockedPreferences: UserPreferencesData = { ...defaultPreferences };
+
+// Mock the preferences service module BEFORE importing the router
+// This is critical for ESM module mocking to work
+mock.module("$lib/server/services/preferences", () => ({
+	getUserPreferences: (_userId: string) =>
+		Promise.resolve({ ...mockedPreferences }),
+	updateUserPreferences: (
+		_userId: string,
+		updates: Partial<UserPreferencesData>,
+	) => {
+		mockedPreferences = { ...mockedPreferences, ...updates };
+		return Promise.resolve({ ...mockedPreferences });
+	},
+}));
+
+// Import router AFTER mocking - critical for module mocking to work
+const preferencesRouterModule = await import("./preferences");
+const preferencesRouter = preferencesRouterModule.default;
 
 // Mock user for authenticated requests
 const mockUser = {
-	id: "test-prefs-router-user",
+	id: "test-user-id",
 	name: "Test User",
-	email: "test-router@example.com",
+	email: "test@example.com",
 	emailVerified: true,
 	image: null,
 	createdAt: new Date(),
@@ -33,18 +58,11 @@ const mockSession = {
 	id: "session-id",
 	createdAt: new Date(),
 	updatedAt: new Date(),
-	userId: mockUser.id,
+	userId: "test-user-id",
 	expiresAt: new Date(Date.now() + 86400000),
 	token: "test-token",
 	ipAddress: null,
 	userAgent: null,
-};
-
-// Default preferences
-const defaultPreferences: UserPreferencesData = {
-	layout: "list",
-	sortColumn: "name",
-	sortDirection: "asc",
 };
 
 // Create test app with user context
@@ -63,33 +81,12 @@ function createTestApp(user: typeof mockUser | null = mockUser) {
 	return app;
 }
 
+beforeEach(() => {
+	// Reset preferences state before each test
+	mockedPreferences = { ...defaultPreferences };
+});
+
 describe("Preferences Router - Authentication", () => {
-	beforeEach(async () => {
-		// Create test user in DB
-		await db
-			.insert(user)
-			.values({
-				id: mockUser.id,
-				email: mockUser.email,
-				emailVerified: mockUser.emailVerified,
-				name: mockUser.name,
-			})
-			.onConflictDoNothing();
-
-		// Clean up any existing preferences
-		await db
-			.delete(userPreferences)
-			.where(eq(userPreferences.userId, mockUser.id));
-	});
-
-	afterEach(async () => {
-		// Clean up
-		await db
-			.delete(userPreferences)
-			.where(eq(userPreferences.userId, mockUser.id));
-		await db.delete(user).where(eq(user.id, mockUser.id));
-	});
-
 	it("should reject unauthenticated GET requests", async () => {
 		const app = createTestApp(null);
 
@@ -134,83 +131,39 @@ describe("Preferences Router - Authentication", () => {
 });
 
 describe("GET /preferences", () => {
-	beforeEach(async () => {
-		await db
-			.insert(user)
-			.values({
-				id: mockUser.id,
-				email: mockUser.email,
-				emailVerified: mockUser.emailVerified,
-				name: mockUser.name,
-			})
-			.onConflictDoNothing();
-
-		await db
-			.delete(userPreferences)
-			.where(eq(userPreferences.userId, mockUser.id));
-	});
-
-	afterEach(async () => {
-		await db
-			.delete(userPreferences)
-			.where(eq(userPreferences.userId, mockUser.id));
-		await db.delete(user).where(eq(user.id, mockUser.id));
-	});
-
 	it("should return user preferences", async () => {
 		const app = createTestApp();
 
 		const res = await app.request("/preferences");
-		const body = await res.json();
 
 		expect(res.status).toBe(200);
-		expect(body).toEqual(defaultPreferences);
+		const body = await res.json();
+		expect(body.layout).toBe("list");
+		expect(body.sortColumn).toBe("name");
+		expect(body.sortDirection).toBe("asc");
 	});
 
 	it("should return custom preferences when set", async () => {
-		const customPrefs: UserPreferencesData = {
+		// Set custom preferences in mock state
+		mockedPreferences = {
 			layout: "grid",
 			sortColumn: "size",
 			sortDirection: "desc",
 		};
-		await db.insert(userPreferences).values({
-			userId: mockUser.id,
-			preferences: customPrefs,
-		});
 
 		const app = createTestApp();
 
 		const res = await app.request("/preferences");
-		const body = await res.json();
 
-		expect(body).toEqual(customPrefs);
+		expect(res.status).toBe(200);
+		const body = await res.json();
+		expect(body.layout).toBe("grid");
+		expect(body.sortColumn).toBe("size");
+		expect(body.sortDirection).toBe("desc");
 	});
 });
 
 describe("PUT /preferences", () => {
-	beforeEach(async () => {
-		await db
-			.insert(user)
-			.values({
-				id: mockUser.id,
-				email: mockUser.email,
-				emailVerified: mockUser.emailVerified,
-				name: mockUser.name,
-			})
-			.onConflictDoNothing();
-
-		await db
-			.delete(userPreferences)
-			.where(eq(userPreferences.userId, mockUser.id));
-	});
-
-	afterEach(async () => {
-		await db
-			.delete(userPreferences)
-			.where(eq(userPreferences.userId, mockUser.id));
-		await db.delete(user).where(eq(user.id, mockUser.id));
-	});
-
 	it("should update layout preference", async () => {
 		const app = createTestApp();
 
@@ -219,10 +172,13 @@ describe("PUT /preferences", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ layout: "grid" }),
 		});
-		const body = await res.json();
 
 		expect(res.status).toBe(200);
+		const body = await res.json();
 		expect(body.layout).toBe("grid");
+		// Other preferences should remain unchanged
+		expect(body.sortColumn).toBe("name");
+		expect(body.sortDirection).toBe("asc");
 	});
 
 	it("should update sortColumn preference", async () => {
@@ -231,12 +187,12 @@ describe("PUT /preferences", () => {
 		const res = await app.request("/preferences", {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ sortColumn: "size" }),
+			body: JSON.stringify({ sortColumn: "updatedAt" }),
 		});
-		const body = await res.json();
 
 		expect(res.status).toBe(200);
-		expect(body.sortColumn).toBe("size");
+		const body = await res.json();
+		expect(body.sortColumn).toBe("updatedAt");
 	});
 
 	it("should update sortDirection preference", async () => {
@@ -247,44 +203,43 @@ describe("PUT /preferences", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ sortDirection: "desc" }),
 		});
-		const body = await res.json();
 
 		expect(res.status).toBe(200);
+		const body = await res.json();
 		expect(body.sortDirection).toBe("desc");
 	});
 
-	it("should validate layout values", async () => {
+	it("should ignore invalid layout values", async () => {
 		const app = createTestApp();
 
-		// Invalid layout should not be passed to update
 		const res = await app.request("/preferences", {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ layout: "invalid-layout" }),
+			body: JSON.stringify({ layout: "invalid" }),
 		});
 
 		expect(res.status).toBe(200);
 		const body = await res.json();
-		// Invalid value should not change layout - should remain default
+		// Should keep the default since invalid was rejected
 		expect(body.layout).toBe("list");
 	});
 
-	it("should validate sortColumn values", async () => {
+	it("should ignore invalid sortColumn values", async () => {
 		const app = createTestApp();
 
 		const res = await app.request("/preferences", {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ sortColumn: "invalid-column" }),
+			body: JSON.stringify({ sortColumn: "invalid" }),
 		});
 
 		expect(res.status).toBe(200);
 		const body = await res.json();
-		// Invalid value should not change sortColumn - should remain default
+		// Should keep the default since invalid was rejected
 		expect(body.sortColumn).toBe("name");
 	});
 
-	it("should validate sortDirection values", async () => {
+	it("should ignore invalid sortDirection values", async () => {
 		const app = createTestApp();
 
 		const res = await app.request("/preferences", {
@@ -295,7 +250,7 @@ describe("PUT /preferences", () => {
 
 		expect(res.status).toBe(200);
 		const body = await res.json();
-		// Invalid value should not change sortDirection - should remain default
+		// Should keep the default since invalid was rejected
 		expect(body.sortDirection).toBe("asc");
 	});
 
@@ -321,17 +276,15 @@ describe("PUT /preferences", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				layout: "grid",
-				sortColumn: "updatedAt",
+				sortColumn: "size",
 				sortDirection: "desc",
 			}),
 		});
 
 		expect(res.status).toBe(200);
 		const body = await res.json();
-		expect(body).toEqual({
-			layout: "grid",
-			sortColumn: "updatedAt",
-			sortDirection: "desc",
-		});
+		expect(body.layout).toBe("grid");
+		expect(body.sortColumn).toBe("size");
+		expect(body.sortDirection).toBe("desc");
 	});
 });

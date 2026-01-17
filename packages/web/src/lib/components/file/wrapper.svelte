@@ -118,6 +118,7 @@
     let sortDirection: SortDirection = $derived(initialSortDirection);
     let fileToView: FileToView = $state(null);
     let moveItem: ObjectItem | undefined = $state();
+    let moveItems: Record<string, string> = $state({});
     let draggedItem: ObjectItem | undefined = $state();
     let dropTargetKey: string | undefined = $state();
 
@@ -129,6 +130,14 @@
             moveDialogOpen = false;
             viewFileOpen = false;
             actionsContextOpen = false;
+        }
+    });
+
+    // Clear checked items after bulk move dialog closes
+    $effect(() => {
+        if (!moveDialogOpen && Object.keys(moveItems).length > 0) {
+            checkedItems = {};
+            moveItems = {};
         }
     });
 
@@ -294,6 +303,7 @@
             triggerRenameAction(item, () => (actionsContextOpen = false)),
         onMove: (item) => {
             moveItem = item;
+            moveItems = {}; // Clear bulk mode
             moveDialogOpen = true;
             actionsContextOpen = false;
         },
@@ -413,6 +423,13 @@
                 );
             }
             checkedItems = {};
+        },
+        onMove: () => {
+            // Copy checked items to moveItems for bulk move
+            moveItems = { ...checkedItems };
+            moveItem = undefined; // Clear single item mode
+            moveDialogOpen = true;
+            actionsContextOpen = false;
         },
         onMoveToTrash: handleDeleteObject,
     });
@@ -1015,7 +1032,11 @@
     {handleRestoreObject}
 />
 
-<MoveDialog bind:open={moveDialogOpen} bind:item={moveItem} />
+<MoveDialog
+    bind:open={moveDialogOpen}
+    bind:item={moveItem}
+    bind:items={moveItems}
+/>
 
 <style lang="postcss">
     @reference "../../../app.css";
