@@ -2,6 +2,7 @@
 
 ## Bugs
 - [] Fix folder appearing as an option when trying to move offering the option to move into itself
+- [] When uploading a large amoount of files, getting `PostgresError: Idle timeout reached after 30s` code `ERR_POSTGRES_IDLE_TIMEOUT`
 
 ## 🔴 High Priority
 
