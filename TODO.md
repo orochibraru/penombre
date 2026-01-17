@@ -26,6 +26,10 @@
   - Update backend to handle bulk move operations
   - Files: `packages/web/src/lib/components/file/wrapper.svelte`, `packages/web/src/lib/server/routes/storage/objects.ts`
 
+### Mobile-only CTA button becomes drawer menu trigger
+- [ ] **Make mobile upload button open a drawer menu** instead of having a nested side drawer
+  - Drawer to include configured submenu for specific pages including it by specifying the flag `hasCustomMenu: true` in the page or layout's `load` function
+
 ---
 
 ## 🟡 Medium Priority
@@ -62,4 +66,5 @@
   - Deploy OnlyOffice as separate service, integrate via Document Server API
   - **Note:** Major undertaking - save for when core features are solid
 
+- Prettier file count in navbvar
 
