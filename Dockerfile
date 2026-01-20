@@ -79,6 +79,7 @@ RUN mkdir -p /app/data && chown -R bun:bun /app
 ENV STORAGE_PATH=/data
 ENV APP_ENV=production
 ENV BODY_SIZE_LIMIT=Infinity
+ENV PORT=3000
 
 EXPOSE 3000
 

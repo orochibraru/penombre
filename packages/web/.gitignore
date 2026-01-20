@@ -4,3 +4,7 @@
 /dist/
 /build/
 /data/
+
+# Playwright
+/playwright-report/
+/blob-report/

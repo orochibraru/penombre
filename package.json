@@ -7,7 +7,7 @@
 	"scripts": {
 		"prepare": "husky",
 		"preinstall": "bunx only-allow bun",
-		"test": "bun test",
+		"test": "bun test '.test.'",
 		"build": "bun run --workspaces build",
 		"dev": "bun --env-file .env concurrently.config.ts",
 		"db:diagram": "bun run ./scripts/db-diagram.ts",

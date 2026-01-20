@@ -16,6 +16,8 @@
 			"!packages/web/build",
 			"!packages/web/data",
 			"!packages/web/dist",
+			"!packages/web/test-results",
+			"!packages/web/playwright-report",
 			"!packages/web/node_modules",
 			"!packages/web/.svelte-kit/*",
 			"!.svelte-kit",

@@ -19,6 +19,10 @@ export const defaultConfigValues = {
 		minPasswordLength: 8,
 		secret: "change_this_secret_to_a_random_secure_value",
 		oauthProviders: [],
+		defaultAdminCredentials: {
+			email: "admin@example.com",
+			password: "Admin1234!",
+		},
 	},
 	smtp: {
 		enabled: false,
@@ -55,6 +59,14 @@ DATABASE_URL=${defaultConfigValues.db.url}
 
 # ===========================================
 # Authentication
+# ===========================================
+
+# Default admin user credentials (used only during initial seeding)
+ADMIN_EMAIL=${defaultConfigValues.auth.defaultAdminCredentials.email}
+ADMIN_PASSWORD=${defaultConfigValues.auth.defaultAdminCredentials.password}
+
+# ===========================================
+# Auth Settings
 # ===========================================
 
 # Enable email/password sign-in

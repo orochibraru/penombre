@@ -44,6 +44,7 @@
     import * as Dialog from "$lib/components/ui/dialog/index";
     import * as Drawer from "$lib/components/ui/drawer/index";
     import { cn } from "$lib/utils";
+    import { enhance } from "$app/forms";
 
     let {
         open = $bindable(false),
@@ -107,6 +108,7 @@
             method={form.method ?? "POST"}
             enctype={form.enctype}
             onsubmit={form.onsubmit}
+            use:enhance
         >
             <fieldset disabled={loading} class="flex flex-col gap-4">
                 <div class="overflow-y-auto max-h-[40vh] md:max-h-[50vh]">

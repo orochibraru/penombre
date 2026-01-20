@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { admin, genericOAuth, openAPI } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
-import { dev } from "$app/environment";
+import { building, dev } from "$app/environment";
 import { getRequestEvent } from "$app/server";
 import { Logger } from "$lib/logger";
 import { getOpendriveConfig, isSmtpEnabled } from "$lib/server/config";
@@ -14,7 +14,7 @@ import { StorageService } from "$lib/server/services/storage";
 
 const logger = new Logger("Auth");
 
-if (!process.env.ORIGIN && !dev) {
+if (!process.env.ORIGIN && !dev && !building) {
 	throw new Error("ORIGIN environment variable is not set");
 }
 

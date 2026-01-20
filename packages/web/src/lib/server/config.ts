@@ -54,6 +54,12 @@ const opendriveConfigSchema = z
 				oauthProviders: z
 					.array(oauthProviderSchema)
 					.default(defaultConfigValues.auth.oauthProviders),
+				defaultAdminCredentials: z
+					.object({
+						email: z.email(),
+						password: z.string().min(8),
+					})
+					.default(defaultConfigValues.auth.defaultAdminCredentials),
 			})
 			.optional()
 			.default(defaultConfigValues.auth),
@@ -226,6 +232,14 @@ export function getOpendriveConfig(): OpendriveConfig {
 						oauthProviders.length > 0
 							? oauthProviders
 							: defaultConfigValues.auth.oauthProviders,
+					defaultAdminCredentials: {
+						email:
+							env.ADMIN_EMAIL ||
+							defaultConfigValues.auth.defaultAdminCredentials.email,
+						password:
+							env.ADMIN_PASSWORD ||
+							defaultConfigValues.auth.defaultAdminCredentials.password,
+					},
 				}
 			: defaultConfigValues.auth,
 		smtp: smtpEnabled

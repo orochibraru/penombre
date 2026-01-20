@@ -120,7 +120,7 @@
     <Field.FieldSet>
         <Field.Group>
             <div class="flex flex-col items-center gap-1 text-center">
-                <h1 class="text-2xl font-bold">Login to your account</h1>
+                <h1 class="text-2xl font-bold">Sign in to your account</h1>
                 {#if data.authConfig.enableEmailSignIn}
                     <p class="text-muted-foreground text-sm text-balance">
                         Enter your email below to login to your account
@@ -170,7 +170,7 @@
                 </Field.Field>
                 <Field.Field>
                     <Button class="w-full" type="submit" {loading}>
-                        Submit
+                        Sign in
                     </Button>
                 </Field.Field>
                 {#if data.authConfig.oauthProviders.length > 0}

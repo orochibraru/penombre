@@ -14,9 +14,14 @@
 		"gen:api": "bunx --bun openapi-typescript ../api/openapi.json -o ./src/lib/api/schema.d.ts && biome format ./src/lib/api/schema.d.ts --write",
 		"gen:routes": "bunx --bun kit-routes sync",
 		"db:generate": "bunx --bun drizzle-kit generate",
-		"gen:env": "bun run scripts/generate-env-example.ts"
+		"gen:env": "bun run scripts/generate-env-example.ts",
+		"test:e2e": "bunx playwright test",
+		"test:e2e:ci": "bunx playwright test --reporter=github",
+		"test:e2e:ui": "bunx playwright test --ui",
+		"test:e2e:debug": "bunx playwright test --debug"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.57.0",
 		"@shikijs/langs": "^3.21.0",
 		"@shikijs/themes": "^3.21.0",
 		"@sveltejs/adapter-static": "^3.0.10",
