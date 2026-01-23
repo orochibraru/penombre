@@ -21,6 +21,7 @@
     import {
         uploadedItems,
         uploadingItems,
+        uploadingItemsNames,
         pendingUploadFiles,
     } from "$lib/store/upload";
     import { cn } from "$lib/utils";
@@ -96,6 +97,7 @@
     onMount(() => {
         // Reset the upload stores when the component is mounted
         uploadingItems.set({});
+        uploadingItemsNames.set({});
         uploadedItems.set({});
         if (!page.data.uploadForm) {
             throw new Error("uploadForm data is required");
@@ -149,7 +151,7 @@
 
         if (filesWithPaths.length < uploadedFiles.length) {
             const skippedCount = uploadedFiles.length - filesWithPaths.length;
-            toast.info(
+            console.info(
                 `Skipped ${skippedCount} system ${skippedCount === 1 ? "file" : "files"}`,
             );
         }
@@ -382,18 +384,25 @@
 
     /**
      * Extracts unique folder paths from folder files and creates them.
+     * Returns a map of display name paths to UUID paths.
      */
-    async function createFoldersForUpload(): Promise<Set<string>> {
-        const createdFolders = new Set<string>();
+    async function createFoldersForUpload(
+        folderFilesSnapshot: FileWithPath[],
+    ): Promise<Map<string, string>> {
+        const folderPathToUuid = new Map<string, string>();
 
         // Extract unique folder paths from folder files
         const folderPaths = new Set<string>();
-        for (const file of folderFiles) {
+        for (const file of folderFilesSnapshot) {
             if (file.relativePath) {
                 const parts = file.relativePath.split("/");
-                // Build each parent path (exclude the filename)
-                for (let i = 1; i < parts.length; i++) {
-                    const folderPath = parts.slice(0, i).join("/");
+                // Build each parent path (exclude the filename and the root folder)
+                // Start from i=2 to skip the root folder itself (e.g., "MyFolder")
+                // Only create nested folders within it (e.g., "MyFolder/subfolder")
+                // The path we store starts from index 1 (skipping root folder name)
+                for (let i = 2; i < parts.length; i++) {
+                    // Store path starting from index 1 (first subfolder after root)
+                    const folderPath = parts.slice(1, i).join("/");
                     folderPaths.add(folderPath);
                 }
             }
@@ -405,13 +414,14 @@
         );
 
         // Fetch the full folder tree once to check for existing folders
-        let existingFolderPaths: Set<string> | null = null;
+        let existingFolders: Map<string, string> | null = null;
         try {
             const res = await apiClient.storage.folders.tree.$get();
             if (res.ok) {
                 const folders = await res.json();
-                existingFolderPaths = new Set(
-                    folders.map((f) => f.path.toLowerCase()),
+                // Map display name path to UUID path
+                existingFolders = new Map(
+                    folders.map((f) => [f.path.toLowerCase(), f.id]),
                 );
             }
         } catch (e) {
@@ -424,21 +434,47 @@
             const folderName = parts[parts.length - 1] ?? "";
             const parentParts = parts.slice(0, -1);
 
-            // Build the full parent path including current page path
-            let parent = page.params.path || "";
+            // Build the parent display path (used for checking existing folders)
+            const parentDisplayPath =
+                parentParts.length > 0 ? parentParts.join("/") : "";
+
+            // Build parent UUID path by traversing the folder hierarchy
+            let parentUuidPath = page.params.path || "";
             if (parentParts.length > 0) {
-                parent = parent
-                    ? `${parent}/${parentParts.join("/")}`
-                    : parentParts.join("/");
+                // Build path part by part, converting each to UUID
+                for (const part of parentParts) {
+                    const currentDisplayPath = parentParts
+                        .slice(0, parentParts.indexOf(part) + 1)
+                        .join("/");
+                    const uuid = folderPathToUuid.get(currentDisplayPath);
+                    if (uuid) {
+                        parentUuidPath = parentUuidPath
+                            ? `${parentUuidPath}/${uuid}`
+                            : uuid;
+                    }
+                }
             }
 
-            // Build the full path for this folder
-            const fullPath = parent ? `${parent}/${folderName}` : folderName;
+            // Build the full display path for this folder (used for checking existing folders)
+            const fullDisplayPath = page.params.path
+                ? parentDisplayPath
+                    ? `${page.params.path}/${parentDisplayPath}/${folderName}`
+                    : `${page.params.path}/${folderName}`
+                : parentDisplayPath
+                  ? `${parentDisplayPath}/${folderName}`
+                  : folderName;
 
             // Check if this folder already exists
-            if (existingFolderPaths?.has(fullPath.toLowerCase())) {
-                console.debug(`Folder already exists: ${fullPath}`);
-                createdFolders.add(folderPath);
+            if (existingFolders?.has(fullDisplayPath.toLowerCase())) {
+                const existingUuid = existingFolders.get(
+                    fullDisplayPath.toLowerCase(),
+                );
+                console.debug(
+                    `Folder already exists: ${fullDisplayPath} (UUID: ${existingUuid})`,
+                );
+                if (existingUuid) {
+                    folderPathToUuid.set(folderPath, existingUuid);
+                }
                 continue;
             }
 
@@ -446,14 +482,22 @@
                 const res = await apiClient.storage.folders.$post({
                     json: {
                         name: folderName,
-                        parent: parent || undefined,
+                        parent: parentUuidPath || undefined,
                     },
                 });
 
                 if (res.ok) {
-                    createdFolders.add(folderPath);
+                    const result = await res.json();
+                    const folderId = result.id;
+                    folderPathToUuid.set(folderPath, folderId);
+                    console.debug(
+                        `Created folder: ${folderPath} -> UUID: ${folderId}`,
+                    );
                     // Add to our local cache so we don't try to create it again
-                    existingFolderPaths?.add(fullPath.toLowerCase());
+                    existingFolders?.set(
+                        fullDisplayPath.toLowerCase(),
+                        folderId,
+                    );
                 } else {
                     const errorText = await res.text();
                     console.warn(
@@ -466,67 +510,82 @@
             }
         }
 
-        return createdFolders;
+        return folderPathToUuid;
     }
 
     async function handleUpload() {
-        loading = true;
+        // Close dialog immediately - all work happens in background
+        open = false;
+        loading = false;
+
+        // Store files locally before clearing the form
+        const regularFiles = Array.from($files);
+        const folderFilesSnapshot = [...folderFiles];
+
+        // Clear the form immediately
+        files.set([]);
+        folderFiles = [];
+        uploadErrors = [];
+
+        // Do all the work in the background
         const results: FullResult[] = [];
 
-        // First, create all necessary folders
-        const createdFolders = await createFoldersForUpload();
+        // First, create all necessary folders and get UUID mapping
+        const folderPathToUuid =
+            await createFoldersForUpload(folderFilesSnapshot);
 
-        // Group files by folder for batch creation
+        // Group files by folder for batch creation (using UUID paths)
         interface FilesByFolder {
             [folder: string]: Array<{ file: File; name: string }>;
         }
         const filesByFolder: FilesByFolder = {};
 
         // Process regular files
-        for (const file of $files) {
-            const fullPath = page.params.path
-                ? `${page.params.path}/${file.name}`
-                : file.name;
-            const folder = page.params.path || "";
+        for (const file of regularFiles) {
+            const folderUuidPath = page.params.path || "";
 
-            if (!filesByFolder[folder]) {
-                filesByFolder[folder] = [];
+            if (!filesByFolder[folderUuidPath]) {
+                filesByFolder[folderUuidPath] = [];
             }
 
-            const folderArray = filesByFolder[folder];
+            const folderArray = filesByFolder[folderUuidPath];
             if (folderArray) {
                 folderArray.push({
                     file,
-                    name: fullPath,
+                    name: file.name,
                 });
             }
         }
 
         // Process folder files (with relative paths)
-        for (const file of folderFiles) {
+        for (const file of folderFilesSnapshot) {
             const relativePath = file.relativePath || file.name;
             const pathParts = relativePath.split("/");
             const fileName = pathParts[pathParts.length - 1] ?? file.name;
-            const folderPath =
-                pathParts.length > 1 ? pathParts.slice(0, -1).join("/") : "";
+            // Get folder path: skip root folder (index 0) and filename (last item)
+            const displayFolderPath =
+                pathParts.length > 2 ? pathParts.slice(1, -1).join("/") : "";
 
-            // Build the full folder path including current directory
-            const fullFolderPath = page.params.path
-                ? folderPath
-                    ? `${page.params.path}/${folderPath}`
-                    : page.params.path
-                : folderPath || undefined;
-
-            const fullPath = fullFolderPath
-                ? `${fullFolderPath}/${fileName}`
-                : fileName;
-
-            const folderKey = fullFolderPath || "";
-            if (!filesByFolder[folderKey]) {
-                filesByFolder[folderKey] = [];
+            // Convert display folder path to UUID path by building incrementally
+            let folderUuidPath = page.params.path || "";
+            if (displayFolderPath) {
+                const folderParts = displayFolderPath.split("/");
+                for (let i = 0; i < folderParts.length; i++) {
+                    const partialPath = folderParts.slice(0, i + 1).join("/");
+                    const uuid = folderPathToUuid.get(partialPath);
+                    if (uuid) {
+                        folderUuidPath = folderUuidPath
+                            ? `${folderUuidPath}/${uuid}`
+                            : uuid;
+                    }
+                }
             }
 
-            const folderArray = filesByFolder[folderKey];
+            if (!filesByFolder[folderUuidPath]) {
+                filesByFolder[folderUuidPath] = [];
+            }
+
+            const folderArray = filesByFolder[folderUuidPath];
             if (folderArray) {
                 folderArray.push({
                     file,
@@ -587,9 +646,12 @@
                     };
 
                     results.push(result);
-                    $uploadingItems[
-                        fileNameWithoutFolder(result.data.finalName)
-                    ] = 1;
+                    const fileKey = fileNameWithoutFolder(
+                        result.data.finalName,
+                    );
+                    $uploadingItems[fileKey] = 1;
+                    // Store the original filename for display (from item.name which is the display name)
+                    $uploadingItemsNames[fileKey] = fileItem.name;
                 }
             }
 
@@ -599,30 +661,16 @@
         } catch (e) {
             console.error(e);
             toast.error("Failed to prepare files for upload.");
-            loading = false;
             throw e;
         }
 
-        const globalpromise = resultCallback(results).finally(async () => {
-            open = false;
+        // Continue uploads in background
+        resultCallback(results).finally(async () => {
             await invalidate("app:files");
-            files.set([]);
-            folderFiles = [];
-
-            loading = false;
 
             if (uploadErrors.length > 0) {
                 console.error(uploadErrors.map((e) => e.error).join("\n"));
-                toast.error("Failed to upload some items");
-            } else {
-                toast.success("Successfully uploaded all items");
             }
-        });
-
-        toast.promise(globalpromise, {
-            loading: "Uploading files",
-            success: "Files uploaded successfully",
-            error: "Failed to upload files",
         });
     }
 </script>

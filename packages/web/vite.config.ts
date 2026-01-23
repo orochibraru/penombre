@@ -6,6 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type UserConfig } from "vite";
 import { kitRoutes, type Options } from "vite-plugin-kit-routes";
 import type { KIT_ROUTES } from "$lib/ROUTES";
+import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 
 export default defineConfig({
     plugins: [
@@ -16,7 +17,8 @@ export default defineConfig({
         }),
         tailwindcss(), 
         sveltekit(), 
-        kitRoutes()
+        kitRoutes(),
+        SvelteKitPWA()
     ],
     define: {
         SUPERFORMS_LEGACY: true

@@ -7,71 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Opendrive</title>
     %sveltekit.head%
-    <style>
-        #svelte-loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #fff;
-            gap: 1rem;
-            /* Or your app's background color */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        #splash-screen-logo-container {
-            background-image: url('/logo-light-notext.png');
-            background-size: cover;
-            background-position: center center;
-            width: 100px;
-            height: 100px;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            #svelte-loader {
-                background: black;
-            }
-
-            #splash-screen-logo-container {
-                background-image: url('/logo.svg');
-            }
-        }
-
-        .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: #7f2cf3;
-            /* Your brand color */
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Hide loader when SvelteKit is ready */
-        .svelte-kit-started #svelte-loader {
-            opacity: 0;
-            pointer-events: none;
-        }
-    </style>
 </head>
 
 <body data-sveltekit-preload-data="hover">
-    <!-- <div id="svelte-loader">
-			<div id="splash-screen-logo-container"></div>
-			<div class="spinner"></div>
-		</div> -->
     <div style="display: contents">%sveltekit.body%</div>
 </body>
 

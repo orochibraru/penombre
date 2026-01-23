@@ -1,3 +1,4 @@
+import { dev } from "$app/environment";
 import { Logger } from "$lib/logger";
 
 const logger = new Logger("StorageCache");
@@ -26,6 +27,9 @@ class MemoryCache {
 	 * Get a value from cache.
 	 */
 	get<T>(key: string): T | undefined {
+		if (dev) {
+			return undefined;
+		}
 		const entry = this.cache.get(key);
 		if (!entry) {
 			return undefined;
@@ -43,6 +47,9 @@ class MemoryCache {
 	 * Set a value in cache with optional TTL override.
 	 */
 	set<T>(key: string, value: T, ttlSeconds?: number): void {
+		if (dev) {
+			return;
+		}
 		const ttl = ttlSeconds ? ttlSeconds * 1000 : this.defaultTTL;
 		this.cache.set(key, {
 			value,
@@ -103,7 +110,7 @@ export class CacheManager {
 	getUserCache(userId: string): MemoryCache {
 		let cache = this.userCaches.get(userId);
 		if (!cache) {
-			cache = new MemoryCache(300); // 5 minute default TTL (optimized for slow connections)
+			cache = new MemoryCache(30); // 30 seconds default TTL
 			this.userCaches.set(userId, cache);
 			logger.debug(`Created new cache for user ${userId}`);
 		}

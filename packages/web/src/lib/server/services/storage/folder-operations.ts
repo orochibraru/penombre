@@ -18,42 +18,26 @@ import { FileOperations } from "./file-operations";
  */
 export abstract class FolderOperations extends FileOperations {
 	/**
-	 * Gets a folder's path by name, resolving by display name if needed.
+	 * Gets a folder's path by UUID only (no display name resolution).
+	 * Folders MUST be referenced by their UUID, just like files.
 	 */
-	public async getFolder(name: string): Promise<string> {
-		let folderPrefix = name.endsWith("/") ? name : `${name}/`;
-		let dirPath = join(this.storagePath, folderPrefix);
-		let exists = existsSync(dirPath);
+	public async getFolder(folderId: string): Promise<string> {
+		const folderPrefix = folderId.endsWith("/") ? folderId : `${folderId}/`;
+		const dirPath = join(this.storagePath, folderPrefix);
+		const exists = existsSync(dirPath);
 
 		if (!exists) {
-			const parentDir = folderPrefix.includes("/")
-				? folderPrefix.slice(0, folderPrefix.lastIndexOf("/"))
-				: "";
-			const sDir = join(this.storagePath, parentDir);
+			throw new FileOrFolderNotFoundError(
+				`Folder not found: ${folderId}. Folders must be referenced by UUID.`,
+			);
+		}
 
-			try {
-				const entries = await readdir(sDir, { withFileTypes: true });
-				for (const e of entries) {
-					if (!e.isDirectory()) continue;
-					const fPath = join(sDir, e.name);
-					const m = Bun.file(join(fPath, ".keep.meta.json"));
-					if (await m.exists()) {
-						const md: FileMetadata = await m.json();
-						if (md.name === (name.endsWith("/") ? name.slice(0, -1) : name)) {
-							folderPrefix = `${e.name}/`;
-							dirPath = join(this.storagePath, folderPrefix);
-							exists = existsSync(dirPath);
-							break;
-						}
-					}
-				}
-			} catch {
-				// Directory doesn't exist or not readable
-			}
-
-			if (!exists) {
-				throw new FileOrFolderNotFoundError("Folder not found");
-			}
+		// Verify folder has metadata to ensure it's a valid UUID-based folder
+		const metaPath = join(dirPath, ".keep.meta.json");
+		if (!existsSync(metaPath)) {
+			logger.warn(
+				`Folder ${folderId} exists but has no metadata. This may be a legacy folder.`,
+			);
 		}
 
 		return folderPrefix;
@@ -133,9 +117,13 @@ export abstract class FolderOperations extends FileOperations {
 	}
 
 	/**
-	 * Creates a new folder with metadata.
+	 * Creates a new folder with UUID as physical name and display name in metadata.
+	 * This ensures folders work exactly like files: UUID on disk, name in metadata.
 	 */
-	public async createFolder(name: string, parent?: string): Promise<void> {
+	public async createFolder(
+		name: string,
+		parent?: string,
+	): Promise<{ id: string; name: string }> {
 		logger.info(`Creating folder: name=${name}, parent=${parent}`);
 
 		const normalizedParent = parent
@@ -143,12 +131,18 @@ export abstract class FolderOperations extends FileOperations {
 				? parent.slice(0, -1)
 				: parent
 			: undefined;
+
+		// Ensure unique display name
 		const uniqueName = await this.getUniqueDisplayName(
 			name,
 			normalizedParent,
 			"folder",
 		);
+
+		// Generate metadata with UUID and display name
 		const folderMeta: FileMetadata = this.generateMeta(uniqueName);
+
+		// Physical folder name is ALWAYS the UUID
 		const folderKey = normalizedParent
 			? `${normalizedParent}/${folderMeta.id}`
 			: folderMeta.id;
@@ -164,13 +158,18 @@ export abstract class FolderOperations extends FileOperations {
 			await this.activityService.register({
 				userId: this.user.id,
 				action: "create",
-				message: `Created folder: ${name}`,
+				message: `Created folder: ${uniqueName}`,
 				level: "info",
 			});
-			logger.info(`Folder created at path: ${folderPath}`);
+			logger.info(
+				`Folder created: UUID=${folderMeta.id}, name=${uniqueName}, path=${folderPath}`,
+			);
 
 			// Invalidate listing caches after folder creation
 			this.invalidateListingCaches();
+
+			// Return the UUID and display name for the client
+			return { id: folderMeta.id, name: uniqueName };
 		} catch (error) {
 			logger.error("Error creating folder:", error);
 			throw new Error("Failed to create folder");
@@ -332,31 +331,43 @@ export abstract class FolderOperations extends FileOperations {
 	}
 
 	/**
-	 * Gets folder metadata.
+	 * Gets folder metadata by UUID.
 	 */
-	public async getFolderMeta(name: string): Promise<FileMetadata | null> {
-		const folderPrefix = name.endsWith("/") ? name : `${name}/`;
+	public async getFolderMeta(folderId: string): Promise<FileMetadata | null> {
+		const folderPrefix = folderId.endsWith("/") ? folderId : `${folderId}/`;
 		const dirPath = join(this.storagePath, folderPrefix);
 		if (!existsSync(dirPath)) {
+			logger.warn(`Folder not found by UUID: ${folderId}`);
 			return null;
 		}
 		const keepMetaPath = join(dirPath, ".keep.meta.json");
 		const keepMetaFile = Bun.file(keepMetaPath);
 		if (await keepMetaFile.exists()) {
-			return await keepMetaFile.json();
+			const metadata = await keepMetaFile.json();
+			logger.debug(
+				`Retrieved folder metadata: UUID=${folderId}, name=${metadata.name}`,
+			);
+			return metadata;
 		}
+		logger.warn(`Folder ${folderId} missing metadata - may be legacy folder`);
 		return null;
 	}
 
 	/**
-	 * Gets the full path for a folder given its ID and optional parent.
+	 * Gets the full path for a folder given its UUID and optional parent UUID.
+	 * Both ID and parentId MUST be UUIDs, never display names.
 	 */
-	public getFullFolderPath(id: string, parentId?: string): string {
-		const folderPrefix = id.endsWith("/") ? id : `${id}/`;
+	public getFullFolderPath(folderId: string, parentId?: string): string {
+		const folderPrefix = folderId.endsWith("/") ? folderId : `${folderId}/`;
 		if (parentId) {
 			const parentPrefix = parentId.endsWith("/") ? parentId : `${parentId}/`;
-			return `${parentPrefix}${folderPrefix}`;
+			const fullPath = `${parentPrefix}${folderPrefix}`;
+			logger.debug(
+				`Resolved folder path: ${folderId} in parent ${parentId} -> ${fullPath}`,
+			);
+			return fullPath;
 		}
+		logger.debug(`Resolved root folder path: ${folderId} -> ${folderPrefix}`);
 		return folderPrefix;
 	}
 

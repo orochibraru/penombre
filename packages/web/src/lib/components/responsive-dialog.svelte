@@ -118,7 +118,7 @@
             </fieldset>
         </form>
     {:else}
-        <div class="overflow-y-auto max-h-[40vh] md:max-h-[50vh]">
+        <div>
             {@render content()}
         </div>
     {/if}

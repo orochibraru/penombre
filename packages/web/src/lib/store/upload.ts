@@ -3,6 +3,9 @@ import type { ObjectItem } from "$lib/api-client";
 import { itemAction } from "./actions";
 
 export const uploadingItems: Writable<Record<string, number>> = writable({});
+export const uploadingItemsNames: Writable<Record<string, string>> = writable(
+	{},
+); // Maps UUID to display name
 export const uploadedItems: Writable<Record<string, ObjectItem>> = writable({});
 
 // Pending files dropped from drag/drop zones - to be picked up by upload dialog

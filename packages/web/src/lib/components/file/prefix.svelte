@@ -9,7 +9,6 @@
         FileMusicIcon,
         FileTextIcon,
         FileVideoCameraIcon,
-        FileVideoIcon,
         FolderIcon,
         PauseIcon,
         StarIcon,
@@ -31,10 +30,8 @@
         cn,
         ItemStatus,
         isFolderItem,
-        prettyDate,
         secondsToMinutes,
         stripFolders,
-        getFileIconType,
         getDocumentType,
     } from "$lib/utils";
 
@@ -100,18 +97,17 @@
         if (isFolder) {
             if (navigating) return;
             navigating = true;
-            const folder = item.key.replace("/", "");
+            console.log(item);
+            // Use the folder's key (UUID) from disk, strip trailing slash
+            const folderId = item.key.replace(/\/$/, "");
             const basePath = page.params.path
-                ? [page.params.path, encodeURIComponent(folder)]
-                : [encodeURIComponent(folder)];
+                ? [page.params.path, folderId]
+                : [folderId];
 
             await goto(
                 route("/browse/[...path]", {
                     path: basePath,
                 }),
-                {
-                    invalidateAll: true,
-                },
             );
             navigating = false;
             return;

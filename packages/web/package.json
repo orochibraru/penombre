@@ -22,6 +22,8 @@
 		"machine-translate": "inlang machine translate --project project.inlang"
 	},
 	"devDependencies": {
+		"@inlang/cli": "^3.0.0",
+		"@inlang/paraglide-js": "^2.9.0",
 		"@playwright/test": "^1.57.0",
 		"@shikijs/langs": "^3.21.0",
 		"@shikijs/themes": "^3.21.0",
@@ -35,6 +37,7 @@
 		"@types/node": "^24.10.4",
 		"@types/nodemailer": "^7.0.5",
 		"@types/sharp": "^0.32.0",
+		"@vite-pwa/sveltekit": "^1.1.0",
 		"bits-ui": "^2.15.4",
 		"bun": "^1.3.5",
 		"changelogen": "^0.6.2",
@@ -53,9 +56,7 @@
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1",
-		"vite-plugin-kit-routes": "^1.0.2",
-		"@inlang/paraglide-js": "^2.9.0",
-		"@inlang/cli": "^3.0.0"
+		"vite-plugin-kit-routes": "^1.0.2"
 	},
 	"dependencies": {
 		"@hono/zod-validator": "^0.7.6",

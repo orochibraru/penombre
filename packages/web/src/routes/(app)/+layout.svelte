@@ -40,6 +40,7 @@
     import * as Drawer from "$lib/components/ui/drawer/index";
     import NewFolderDialog from "$lib/components/layout/dialogs/new-folder-dialog.svelte";
     import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
+    import UploadProgressIndicator from "$lib/components/layout/upload-progress-indicator.svelte";
     import Spinner from "$lib/components/ui/Spinner.svelte";
 
     const { children, data } = $props();
@@ -381,3 +382,4 @@
 
 <NewFolderDialog bind:open={$newFolderDialogOpen} />
 <UploadDialog bind:open={$uploadDialogOpen} bind:loading={uploadLoading} />
+<UploadProgressIndicator />

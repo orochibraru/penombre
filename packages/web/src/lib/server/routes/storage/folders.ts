@@ -82,9 +82,18 @@ const foldersRouter = new Hono<StorageRouter>()
 			logger.debug(
 				`Creating folder: ${body.name} under parent: ${body.parent}`,
 			);
-			await storageService.createFolder(body.name, body.parent);
-			logger.debug("Folder created successfully");
-			return c.json({ message: "Folder created successfully." }, 201);
+			const result = await storageService.createFolder(body.name, body.parent);
+			logger.debug(
+				`Folder created successfully: UUID=${result.id}, name=${result.name}`,
+			);
+			return c.json(
+				{
+					message: "Folder created successfully.",
+					id: result.id,
+					name: result.name,
+				},
+				201,
+			);
 		} catch (error) {
 			logger.error("Error creating folder:", error);
 			return c.json({ message: "Internal Server Error" }, 500);

@@ -118,7 +118,9 @@ beforeEach(() => {
 	StorageService.prototype.listFolders = mock(() =>
 		Promise.resolve(mockFolderNames),
 	);
-	StorageService.prototype.createFolder = mock(() => Promise.resolve());
+	StorageService.prototype.createFolder = mock(() =>
+		Promise.resolve({ id: "test-uuid-123", name: "Test Folder" }),
+	);
 	StorageService.prototype.getFolder = mock(() =>
 		Promise.resolve(mockFolderPath),
 	);
@@ -250,6 +252,8 @@ describe("POST /storage/folders", () => {
 
 		expect(res.status).toBe(201);
 		expect(body.message).toBe("Folder created successfully.");
+		expect(body.id).toBe("test-uuid-123");
+		expect(body.name).toBe("Test Folder");
 	});
 
 	it("should create a folder with parent", async () => {
@@ -257,7 +261,7 @@ describe("POST /storage/folders", () => {
 		const createFolderSpy = spyOn(
 			StorageService.prototype,
 			"createFolder",
-		).mockResolvedValue();
+		).mockResolvedValue({ id: "child-uuid-456", name: "SubFolder" });
 
 		const res = await app.request("/storage/folders", {
 			method: "POST",

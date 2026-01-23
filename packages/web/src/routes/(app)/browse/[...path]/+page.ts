@@ -7,6 +7,8 @@ import type { PageLoad } from "./$types";
 export const load: PageLoad = async ({ params, fetch, depends }) => {
 	depends("app:files");
 
+	const client = getApiClient(fetch);
+
 	const folders = params.path.split("/");
 
 	const crumbs: BreadCrumb[] = [];
@@ -20,29 +22,37 @@ export const load: PageLoad = async ({ params, fetch, depends }) => {
 	for (const folder of folders) {
 		// Resolve display name via folder metadata
 		const parent = chain.join("/");
+
 		let title = folder;
 		try {
-			const resMeta = await fetch(
-				`/api/storage/folders/folder/${encodeURIComponent(folder)}/meta${
-					parent ? `?parent=${encodeURIComponent(parent)}` : ""
-				}`,
-			);
+			const resMeta = await client.storage.folders.folder[":id"].meta.$get({
+				param: {
+					id: folder,
+				},
+				query: parent ? { parent } : {},
+			});
 			if (resMeta.ok) {
 				const meta = await resMeta.json();
 				if (meta?.name) title = meta.name as string;
 			}
-		} catch {}
 
-		crumbs.push({
-			title,
-			href: route("/browse/[...path]", {
-				path: [...chain, folder],
-			}),
-		});
+			crumbs.push({
+				title,
+				href: route("/browse/[...path]", {
+					path: [...chain, folder],
+				}),
+			});
+		} catch {
+			// Ignore errors and use folder ID as title
+			crumbs.push({
+				title,
+				href: route("/browse/[...path]", {
+					path: [...chain, folder],
+				}),
+			});
+		}
 		chain.push(folder);
 	}
-
-	const client = getApiClient(fetch);
 
 	const res = await client.storage.objects.$get({
 		query: { folder: params.path },

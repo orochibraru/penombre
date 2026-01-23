@@ -72,6 +72,10 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith("/.well-known/")) {
 		return await resolve(event);
 	}
+	// Ignore errors for favicon.ico
+	if (event.url.pathname === "/favicon.ico") {
+		return await resolve(event);
+	}
 	const res = await resolve(event);
 	const isAsset =
 		!event.url.pathname.endsWith("/") && event.url.pathname.includes(".");

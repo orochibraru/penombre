@@ -208,6 +208,7 @@ beforeEach(() => {
 			file: {
 				size: 1024,
 				slice: () => new Blob(["test content"]),
+				arrayBuffer: async () => new ArrayBuffer(1024),
 			} as unknown as import("bun").BunFile,
 			meta: mockObjectItem,
 		}),

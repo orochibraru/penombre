@@ -30,6 +30,10 @@ on:
       - '.github/workflows/**'
       - 'docs/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: write
   pull-requests: write
@@ -120,6 +124,7 @@ jobs:
     name: Docker
     runs-on: ubuntu-latest
     needs: typescript
+    if: github.event_name != 'pull_request' || !startsWith(github.event.pull_request.title, 'WIP')
     env:
       IMAGE: git.ombrage.space/opendrive/opendrive
       TAG: ${{ github.sha }}

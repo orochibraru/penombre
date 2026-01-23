@@ -3,6 +3,7 @@ import { Readable } from "node:stream";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { dev } from "$app/environment";
 import { Logger } from "$lib/logger";
 import type { StorageRouter } from "$lib/server/api-types";
 import {
@@ -545,7 +546,7 @@ const objectsRouter = new Hono<StorageRouter>()
 
 				// Check If-None-Match header for 304 Not Modified
 				const ifNoneMatch = c.req.header("If-None-Match");
-				if (ifNoneMatch === etag) {
+				if (ifNoneMatch === etag && !dev) {
 					logger.debug("ETag match, returning 304 Not Modified");
 					return c.body(null, 304, {
 						ETag: etag,
@@ -583,9 +584,20 @@ const objectsRouter = new Hono<StorageRouter>()
 					object: fileData.meta,
 				});
 
+				// Log all headers for debug
+				logger.debug("headers");
+				for (const header of newHeaders) {
+					logger.debug(header);
+				}
+
 				newHeaders.set("ETag", etag);
-				logger.debug("File response prepared, sending response");
-				return new Response(fileData.file, {
+
+				// Return raw buffer so Content-Disposition header is respected by browser
+				const buffer = await fileData.file.arrayBuffer();
+				logger.debug(
+					"File response prepared, sending response with display name from metadata",
+				);
+				return new Response(buffer, {
 					headers: newHeaders,
 					status: 200,
 				});

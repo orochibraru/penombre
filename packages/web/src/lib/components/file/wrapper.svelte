@@ -931,9 +931,15 @@
     />
 {/if}
 
-{#snippet previewContents(fileToView: FileToView)}
+<ResponsiveDialog
+    bind:open={viewFileOpen}
+    title={fileToView
+        ? (fileToView.item.metadata.name ?? fileToView.item.key)
+        : "File Preview"}
+    size="lg"
+>
     {#if fileToView}
-        <div class="flex flex-col justify-between gap-5 lg:flex-row">
+        <div class="flex flex-col justify-between gap-5 lg:flex-row mb-5">
             <span>
                 {readableFileSize(fileToView.item.size as number) ?? "-"}
             </span>
@@ -963,7 +969,7 @@
                 <img
                     src={fileToView.src}
                     alt={fileToView.item.metadata.name ?? fileToView.item.key}
-                    class="max-w-full rounded-md object-contain"
+                    class="max-w-full rounded-md object-contain h-[50vh]"
                 />
             {:else if fileToView.type === "video"}
                 <VideoPlayer
@@ -982,21 +988,11 @@
                 <embed
                     src={fileToView.src}
                     title={fileToView.item.metadata.name ?? fileToView.item.key}
-                    class="h-[80vh] w-full"
+                    class="w-full h-[50vh]"
                 />
             {/if}
         </div>
     {/if}
-{/snippet}
-
-<ResponsiveDialog
-    bind:open={viewFileOpen}
-    title={fileToView
-        ? (fileToView.item.metadata.name ?? fileToView.item.key)
-        : "File Preview"}
-    size="lg"
->
-    {@render previewContents(fileToView)}
 </ResponsiveDialog>
 
 <DeleteDialog

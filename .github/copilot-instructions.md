@@ -79,6 +79,16 @@
 - Better Auth build-time check: ensure `ORIGIN` is set in any environment running `vite build` (Dockerfile already handles this).
 - Mobile networking: never hardcode `localhost`; parameterize API base URL per platform.
 
+## Upload UX Pattern
+- Upload dialog ([upload-dialog.svelte](packages/web/src/lib/components/layout/dialogs/upload-dialog.svelte)) closes immediately when upload starts - no blocking.
+- Progress tracked via stores: `uploadingItems` (filename → percentage) and `uploadedItems` (filename → ObjectItem).
+- Background progress indicator ([upload-progress-indicator.svelte](packages/web/src/lib/components/layout/upload-progress-indicator.svelte)) appears at bottom-right:
+  - Shows per-file progress bars while uploading
+  - Auto-dismisses 5 seconds after completion
+  - User can manually expand/collapse or dismiss
+  - Positioned fixed at bottom-right, Google Drive style
+- Global progress available via `globalUploadProgress` derived store (count, isUploading, progress percentage).
+
 ## Useful File References
 - Listing/trash filtering: [storage listing](packages/web/src/lib/server/dto/storage.ts#L554-L599), [folder listing](packages/web/src/lib/server/dto/storage.ts#L176-L219)
 - Folder routes: [folders router](packages/web/src/lib/server/routes/storage/folders.ts)

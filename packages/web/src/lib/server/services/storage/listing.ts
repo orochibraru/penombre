@@ -206,7 +206,6 @@ export abstract class ListingOperations extends FolderOperations {
 
 		// Cache the result
 		this.cache.set(cacheKey, result);
-		logger.debug(`Cached listing: ${cacheKey}`);
 
 		return result;
 	}

@@ -525,8 +525,17 @@ export abstract class FileOperations extends StorageServiceBase {
 		const newHeaders = new Headers();
 		newHeaders.append("Content-Type", object.metadata.contentType);
 		newHeaders.append("Accept-Ranges", "bytes");
-		newHeaders.append("Cache-Control", "public, max-age=31536000, immutable");
+		// newHeaders.append("Cache-Control", "public, max-age=31536000, immutable");
 		newHeaders.append("Content-Length", file.size.toString());
+
+		// Set Content-Disposition with the display name so browsers show the correct filename
+		const displayName = object.metadata.name || object.key;
+		const encodedName = encodeURIComponent(displayName);
+		newHeaders.append(
+			"Content-Disposition",
+			`inline; filename*=UTF-8''${encodedName}`,
+		);
+
 		return newHeaders;
 	}
 
