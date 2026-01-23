@@ -1,6 +1,6 @@
 <script lang="ts">
+    import LanguageDropdown from "$lib/components/language-dropdown.svelte";
     import { route } from "$lib/ROUTES";
-
     const { children } = $props();
 </script>
 
@@ -23,6 +23,9 @@
             <div class="w-full max-w-lg">
                 {@render children()}
             </div>
+        </div>
+        <div class="flex">
+            <LanguageDropdown />
         </div>
     </div>
 </div>

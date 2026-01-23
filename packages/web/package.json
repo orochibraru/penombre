@@ -18,7 +18,8 @@
 		"test:e2e": "bunx playwright test",
 		"test:e2e:ci": "bunx playwright test --reporter=github",
 		"test:e2e:ui": "bunx playwright test --ui",
-		"test:e2e:debug": "bunx playwright test --debug"
+		"test:e2e:debug": "bunx playwright test --debug",
+		"machine-translate": "inlang machine translate --project project.inlang"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.57.0",
@@ -52,7 +53,9 @@
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1",
-		"vite-plugin-kit-routes": "^1.0.2"
+		"vite-plugin-kit-routes": "^1.0.2",
+		"@inlang/paraglide-js": "^2.9.0",
+		"@inlang/cli": "^3.0.0"
 	},
 	"dependencies": {
 		"@hono/zod-validator": "^0.7.6",

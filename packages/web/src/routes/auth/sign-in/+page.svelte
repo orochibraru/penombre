@@ -10,6 +10,7 @@
     import * as Field from "$lib/components/ui/field/index.js";
     import { route } from "$lib/ROUTES";
     import { onMount } from "svelte";
+    import { m } from "$lib/paraglide/messages.js";
 
     let { data } = $props();
 
@@ -20,17 +21,16 @@
     let errorMessage: string = $state("");
 
     onMount(() => {
-        title.set("Sign In");
+        title.set(m.sign_in());
     });
 
-    const defaultErrorMessage =
-        "There was an error when signing in. Please try again.";
+    const defaultErrorMessage = m.sign_in_error();
 
     async function handleOauthSignin(provider: string) {
         loading = true;
         return toast.promise(oauthSignInPromise(provider), {
-            loading: `Signing in with ${provider}...`,
-            success: `Redirecting to ${provider}...`,
+            loading: m.signing_in_with_provider({ provider }),
+            success: m.redirecting_to_provider({ provider }),
             error: (e) => {
                 loading = false;
                 errorMessage = defaultErrorMessage;
@@ -47,8 +47,8 @@
     async function handleEmailSignin() {
         loading = true;
         return toast.promise(emailSignInPromise(), {
-            loading: "Signing in...",
-            success: "Signed in successfully!",
+            loading: m.signing_in(),
+            success: m.signed_in_success(),
             error: (e) => {
                 loading = false;
                 errorMessage = defaultErrorMessage;
@@ -87,7 +87,7 @@
 
     async function emailSignInPromise() {
         if (!email || !password) {
-            throw new Error("Email and password are required");
+            throw new Error(m.email_password_required());
         }
         try {
             const res = await authClient.signIn.email({ email, password });
@@ -120,21 +120,22 @@
     <Field.FieldSet>
         <Field.Group>
             <div class="flex flex-col items-center gap-1 text-center">
-                <h1 class="text-2xl font-bold">Sign in to your account</h1>
+                <h1 class="text-2xl font-bold">
+                    {m.sign_in_message()}
+                </h1>
                 {#if data.authConfig.enableEmailSignIn}
                     <p class="text-muted-foreground text-sm text-balance">
-                        Enter your email below to login to your account
+                        {m.sign_in_email_description()}
                     </p>
                 {:else if data.authConfig.oauthProviders.length > 0 && data.authConfig.enableOAuthSignIn}
                     <p class="text-muted-foreground text-sm text-balance">
-                        Choose one of the providers below to login to your
-                        account
+                        {m.sign_in_oauth_description()}
                     </p>
                 {/if}
             </div>
             {#if error}
                 <Alert.Root class="mb-2" variant="destructive">
-                    <Alert.Title>Oops.</Alert.Title>
+                    <Alert.Title>{m.error_title()}</Alert.Title>
                     <Alert.Description>
                         {errorMessage}
                     </Alert.Description>
@@ -142,9 +143,10 @@
             {/if}
             {#if data.authConfig.enableEmailSignIn}
                 <Field.Field>
-                    <Field.Label for="email">Email</Field.Label>
+                    <Field.Label for="email">{m.email()}</Field.Label>
                     <Input
                         id="email"
+                        autocomplete="email"
                         type="email"
                         bind:value={email}
                         placeholder="m@example.com"
@@ -153,16 +155,17 @@
                 </Field.Field>
                 <Field.Field>
                     <div class="flex items-center">
-                        <Field.Label for="password">Password</Field.Label>
+                        <Field.Label for="password">{m.password()}</Field.Label>
                         <a
                             href={route("/auth/forgot-password")}
                             class="ms-auto text-sm underline hover:text-primary transition-colors"
                         >
-                            Forgot your password?
+                            {m.forgot_password()}
                         </a>
                     </div>
                     <Input
                         id="password"
+                        autocomplete="current-password"
                         bind:value={password}
                         type="password"
                         required
@@ -170,11 +173,11 @@
                 </Field.Field>
                 <Field.Field>
                     <Button class="w-full" type="submit" {loading}>
-                        Sign in
+                        {m.sign_in()}
                     </Button>
                 </Field.Field>
                 {#if data.authConfig.oauthProviders.length > 0}
-                    <Field.Separator>Or continue with</Field.Separator>
+                    <Field.Separator>{m.or_continue_with()}</Field.Separator>
                 {/if}
             {/if}
             {#if data.authConfig.oauthProviders.length > 0}
@@ -187,7 +190,7 @@
                             onclick={() => handleOauthSignin(provider.name)}
                         >
                             {#if !data.authConfig.enableEmailSignIn}
-                                Continue with
+                                {m.continue_with()}
                             {/if}
                             {provider.prettyName ?? provider.name}
                         </Button>
@@ -198,7 +201,7 @@
     </Field.FieldSet>
     <div class="grid gap-6">
         <div class="text-center text-sm">
-            Don&apos;t have an account? Too bad.
+            {m.no_account()}
         </div>
     </div>
 </form>

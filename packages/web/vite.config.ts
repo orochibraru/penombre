@@ -1,3 +1,4 @@
+import { paraglideVitePlugin } from '@inlang/paraglide-js'
 // @ts-nocheck
 
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -7,7 +8,16 @@ import { kitRoutes, type Options } from "vite-plugin-kit-routes";
 import type { KIT_ROUTES } from "$lib/ROUTES";
 
 export default defineConfig({
-    plugins: [tailwindcss(), sveltekit(), kitRoutes()],
+    plugins: [
+        paraglideVitePlugin({ 
+            project: './project.inlang', 
+            outdir: './src/lib/paraglide',
+            strategy: ["localStorage", "cookie", "baseLocale"]
+        }),
+        tailwindcss(), 
+        sveltekit(), 
+        kitRoutes()
+    ],
     define: {
         SUPERFORMS_LEGACY: true
     },

@@ -46,7 +46,21 @@
 - Docker Compose defines `db` and `app` services (see [compose.yaml](compose.yaml)). App uses envs like `DATABASE_URL`, `ORIGIN`, `ENV`, `LOG_LEVEL`.
 - Dockerfile builds only the web package; runtime is Bun. `STORAGE_PATH` defaults to `/data` inside container.
 - Admin storage info: `AdminStorageService.getAvailableStorageSize()` uses `statfs` or `df -k` to compute free bytes.
-
+## Internationalization (i18n)
+- Web app uses **Paraglide** for internationalization with localStorage/cookie-based locale storage (NO path-based routing like `/en` or `/fr`).
+- Configuration:
+  - Vite plugin in [vite.config.ts](packages/web/vite.config.ts): `paraglideVitePlugin` with strategy `["localStorage", "cookie", "baseLocale"]`.
+  - Message files: [packages/web/messages/en.json](packages/web/messages/en.json) and [packages/web/messages/fr.json](packages/web/messages/fr.json).
+  - Runtime functions: imported from `$lib/paraglide/runtime` (auto-generated).
+- Usage in components:
+  - Import messages: `import { m } from "$lib/paraglide/messages.js";`
+  - Simple strings: `{m.sign_in()}` or `m.error_title()`
+  - Parameterized messages: `{m.signing_in_with_provider({ provider })}` for messages like `"Signing in with {provider}..."`.
+- Language switching:
+  - Component: [language-dropdown.svelte](packages/web/src/lib/components/language-dropdown.svelte) calls `setLocale(locale)` and reloads the page.
+  - Locale preference is persisted in localStorage and cookies automatically.
+- **Critical**: Do NOT use path-based paraglide middleware (`paraglideMiddleware`). The project explicitly avoids URL prefixes for locales since it's a personal dashboard, not a public website.
+- When adding new UI text, always add entries to both `en.json` and `fr.json` with matching keys. Use descriptive keys like `sign_in_message`, not generic ones.
 ## Mobile App (Expo)
 - Location: [packages/mobile](packages/mobile)
 - Start:
