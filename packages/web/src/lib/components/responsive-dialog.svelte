@@ -121,7 +121,6 @@
         <div class="overflow-y-auto max-h-[40vh] md:max-h-[50vh]">
             {@render content()}
         </div>
-        {@render footerButtons()}
     {/if}
 {/snippet}
 

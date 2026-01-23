@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import type { CustomRouter } from "$lib/server/api-types";
 import { auth } from "$lib/server/auth";
@@ -8,6 +9,8 @@ import { foldersRouter, objectsRouter } from "$lib/server/routes/storage";
 
 // Build the router with method chaining for proper type inference
 const app = new Hono<CustomRouter>()
+	// Enable compression (gzip/brotli) for all routes - 60-80% size reduction
+	.use("*", compress())
 	.use(
 		"/auth/*",
 		cors({

@@ -61,6 +61,7 @@
     } from "./wrapper.svelte.js";
     import { ExternalLinkIcon } from "@lucide/svelte";
     import * as Drawer from "$lib/components/ui/drawer/index";
+    import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
 
     type UserPreferences = {
         layout?: "grid" | "list";
@@ -933,22 +934,14 @@
 {#snippet previewContents(fileToView: FileToView)}
     {#if fileToView}
         <div class="flex flex-col justify-between gap-5 lg:flex-row">
-            <Dialog.Header class="text-start lg:text-center">
-                <Dialog.Title>
-                    {fileToView.item.metadata.name ?? fileToView.item.key}
-                </Dialog.Title>
-                <Dialog.Description class="flex items-center gap-2">
-                    <span>
-                        {readableFileSize(fileToView.item.size as number) ??
-                            "-"}
-                    </span>
-                    {#if fileToView.language}
-                        <Badge variant="outline" class="text-xs"
-                            >{fileToView.language}</Badge
-                        >
-                    {/if}
-                </Dialog.Description>
-            </Dialog.Header>
+            <span>
+                {readableFileSize(fileToView.item.size as number) ?? "-"}
+            </span>
+            {#if fileToView.language}
+                <Badge variant="outline" class="text-xs">
+                    {fileToView.language}
+                </Badge>
+            {/if}
             <div class="pr-5">
                 <Button
                     type="button"
@@ -996,27 +989,15 @@
     {/if}
 {/snippet}
 
-{#if isDesktop.current}
-    <Dialog.Root bind:open={viewFileOpen}>
-        {#if fileToView}
-            <Dialog.Content
-                class="pb-16 max-w-full md:max-w-full lg:max-w-full xl:max-w-full min-h-screen w-full  flex flex-col max-h-screen rounded-none"
-            >
-                {@render previewContents(fileToView)}
-            </Dialog.Content>
-        {/if}
-    </Dialog.Root>
-{:else}
-    <Drawer.Root bind:open={viewFileOpen}>
-        {#if fileToView}
-            <Drawer.Content
-                class="pb-16 max-w-full md:max-w-full lg:max-w-full xl:max-w-full min-h-screen w-full  flex flex-col max-h-screen rounded-none"
-            >
-                {@render previewContents(fileToView)}
-            </Drawer.Content>
-        {/if}
-    </Drawer.Root>
-{/if}
+<ResponsiveDialog
+    bind:open={viewFileOpen}
+    title={fileToView
+        ? (fileToView.item.metadata.name ?? fileToView.item.key)
+        : "File Preview"}
+    size="lg"
+>
+    {@render previewContents(fileToView)}
+</ResponsiveDialog>
 
 <DeleteDialog
     bind:confirmDeleteOpen

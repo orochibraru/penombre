@@ -103,7 +103,7 @@ export class CacheManager {
 	getUserCache(userId: string): MemoryCache {
 		let cache = this.userCaches.get(userId);
 		if (!cache) {
-			cache = new MemoryCache(30); // 30 second default TTL
+			cache = new MemoryCache(300); // 5 minute default TTL (optimized for slow connections)
 			this.userCaches.set(userId, cache);
 			logger.debug(`Created new cache for user ${userId}`);
 		}

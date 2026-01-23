@@ -68,7 +68,7 @@
 		"bullmq": "^5.66.5",
 		"drizzle-orm": "^0.45.1",
 		"drizzle-zod": "^0.8.3",
-		"hono": "^4.11.3",
+		"hono": "^4.11.5",
 		"layerchart": "2.0.0-next.19",
 		"mode-watcher": "^1.1.0",
 		"music-metadata": "^11.10.5",

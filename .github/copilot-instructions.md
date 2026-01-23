@@ -39,7 +39,7 @@
   - `bun run build` → SvelteKit sync + Vite build; Dockerfile uses this to produce `/app/build`.
   - `bun run check` → SvelteKit sync + `svelte-check`.
 - Testing/Linting (root):
-  - `bun run test` → Bun test runner. **Always run from the root of the repo.**
+  - `bun run test` or `bun test '.test.'` → Bun test runner. **Always run from the root of the repo.** Use the `.test.` pattern to avoid running e2e tests unintentionally.
   - `bun run lint` / `bun run lint:fix` → Biome lints/formatting.
 
 ## Environment & Deployment

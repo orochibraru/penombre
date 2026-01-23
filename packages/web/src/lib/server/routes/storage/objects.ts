@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -23,15 +24,27 @@ import {
 
 const logger = new Logger("ObjectsRouter");
 
+/**
+ * Generate ETag from file metadata for conditional requests.
+ */
+function generateETag(data: { size: number; mtime: number }): string {
+	const hash = createHash("md5")
+		.update(`${data.size}-${data.mtime}`)
+		.digest("hex");
+	return `"${hash}"`;
+}
+
 // Query schemas for RPC type inference
 const folderQuerySchema = z.object({
 	folder: z.string().optional(),
+	limit: z.string().optional(),
+	offset: z.string().optional(),
 });
 
 const rawQuerySchema = z.object({
 	raw: z.string().optional(),
 	thumbnail: z.string().optional(),
-	size: z.string().optional(),
+	size: z.enum(["small", "medium", "large"]).optional(),
 });
 
 const moveBodySchema = z.object({
@@ -469,7 +482,9 @@ const objectsRouter = new Hono<StorageRouter>()
 			// Handle thumbnail requests
 			if (thumbnail === "true") {
 				logger.debug(`Fetching thumbnail for: ${decodedItemName}`);
-				const thumbSize = size ? Number.parseInt(size, 10) : 300;
+				// Map size string to pixel dimensions: small=100px, medium=200px, large=300px
+				const thumbSize =
+					size === "small" ? 100 : size === "medium" ? 200 : 300;
 				const thumbData = await storageService.getThumbnail(
 					decodedItemName,
 					thumbSize,
@@ -481,11 +496,24 @@ const objectsRouter = new Hono<StorageRouter>()
 						`Thumbnail generation failed, falling back to raw for: ${decodedItemName}`,
 					);
 				} else {
+					// Generate ETag for thumbnail
+					const etag = generateETag({
+						size: thumbData.buffer.length,
+						mtime: Date.now(),
+					});
+
+					// Check If-None-Match header for 304 Not Modified
+					const ifNoneMatch = c.req.header("If-None-Match");
+					if (ifNoneMatch === etag) {
+						return c.body(null, 304);
+					}
+
 					return new Response(new Uint8Array(thumbData.buffer), {
 						headers: {
 							"Content-Type": thumbData.contentType,
 							"Cache-Control": "public, max-age=31536000, immutable",
 							"Content-Length": thumbData.buffer.length.toString(),
+							ETag: etag,
 						},
 						status: 200,
 					});
@@ -508,6 +536,23 @@ const objectsRouter = new Hono<StorageRouter>()
 				}
 
 				logger.debug(`User authorized: ${user.id}, preparing file response`);
+
+				// Generate ETag for conditional requests
+				const etag = generateETag({
+					size: fileData.file.size,
+					mtime: fileData.file.lastModified,
+				});
+
+				// Check If-None-Match header for 304 Not Modified
+				const ifNoneMatch = c.req.header("If-None-Match");
+				if (ifNoneMatch === etag) {
+					logger.debug("ETag match, returning 304 Not Modified");
+					return c.body(null, 304, {
+						ETag: etag,
+						"Cache-Control": "public, max-age=3600",
+					});
+				}
+
 				logger.debug("Checking for Range header");
 				const rangeHeader =
 					c.req.header("range") || c.req.header("Range") || "";
@@ -524,6 +569,7 @@ const objectsRouter = new Hono<StorageRouter>()
 							headers,
 						});
 
+					newHeaders.set("ETag", etag);
 					logger.debug("Returning partial content response with status 206");
 					return new Response(chunk, {
 						status: 206,
@@ -537,6 +583,7 @@ const objectsRouter = new Hono<StorageRouter>()
 					object: fileData.meta,
 				});
 
+				newHeaders.set("ETag", etag);
 				logger.debug("File response prepared, sending response");
 				return new Response(fileData.file, {
 					headers: newHeaders,

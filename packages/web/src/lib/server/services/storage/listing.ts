@@ -19,12 +19,15 @@ export abstract class ListingOperations extends FolderOperations {
 	/**
 	 * Abstract file listing with various filters.
 	 * Results are cached per directory/options combination.
+	 * Optimized with parallel I/O and efficient filtering.
 	 */
 	public async abstractListFiles(options: {
 		parent?: string;
 		category?: FileCategory;
 		includeTrashed?: boolean;
 		recursive?: boolean;
+		limit?: number;
+		offset?: number;
 	}): Promise<ObjectList> {
 		const prefix = options.parent || "";
 
@@ -33,6 +36,8 @@ export abstract class ListingOperations extends FolderOperations {
 			options.category || "",
 			options.includeTrashed ? "trashed" : "",
 			options.recursive ? "recursive" : "",
+			options.limit ? `limit:${options.limit}` : "",
+			options.offset ? `offset:${options.offset}` : "",
 		]
 			.filter(Boolean)
 			.join(":");
@@ -63,64 +68,40 @@ export abstract class ListingOperations extends FolderOperations {
 			throw new Error("Directory not found");
 		}
 
-		let fileList: ObjectItem[] = [];
-
-		for (const contents of dir) {
-			const fullPath = join(dirPath, contents.name);
-
-			// Skip user folder reference
-			if (contents.name === this.userFolder) {
-				continue;
-			}
-
-			// Skip system directories
+		// Pre-filter directory entries to skip system files/folders
+		const validEntries = dir.filter((entry) => {
+			if (entry.name === this.userFolder) return false;
 			if (
-				contents.isDirectory() &&
-				(contents.name === ".trash" || contents.name === ".thumbnails")
+				entry.isDirectory() &&
+				(entry.name === ".trash" || entry.name === ".thumbnails")
 			) {
-				continue;
+				return false;
 			}
+			if (entry.name.endsWith(".meta.json") || entry.name === ".keep") {
+				return false;
+			}
+			return true;
+		});
+
+		// Process all entries in parallel for maximum performance
+		const itemPromises = validEntries.map(async (contents) => {
+			const fullPath = join(dirPath, contents.name);
 
 			// Handle directories
 			if (contents.isDirectory()) {
-				let updatedAt = new Date();
-				try {
-					const s = await stat(fullPath);
-					updatedAt = new Date(s.mtimeMs);
-				} catch {
-					// Use current date as fallback
-				}
+				// Parallel stat and metadata read
+				const [statResult, metadata] = await Promise.all([
+					stat(fullPath).catch(() => null),
+					this.readFolderMetadata(fullPath, contents.name),
+				]);
 
-				let metadata: FileMetadata = this.generateMeta(contents.name);
-				try {
-					const metaFile = Bun.file(join(fullPath, ".keep.meta.json"));
-					if (await metaFile.exists()) {
-						metadata = await metaFile.json();
-					} else {
-						const keepFile = Bun.file(join(fullPath, ".keep"));
-						if (await keepFile.exists()) {
-							const text = await keepFile.text();
-							try {
-								const meta = JSON.parse(text) as Partial<FileMetadata>;
-								if (typeof meta.isTrashed === "boolean") {
-									metadata.isTrashed = meta.isTrashed;
-								}
-							} catch {
-								// Invalid JSON in .keep
-							}
-						}
-					}
-				} catch (err) {
-					logger.warn(
-						"Failed to read folder meta while listing:",
-						fullPath,
-						err,
-					);
-				}
+				const updatedAt = statResult
+					? new Date(statResult.mtimeMs)
+					: new Date();
 
-				// Skip trashed folders unless explicitly included
+				// Skip trashed folders unless explicitly included (early exit)
 				if (!options.includeTrashed && metadata.isTrashed) {
-					continue;
+					return null;
 				}
 
 				// Recursive listing
@@ -133,91 +114,94 @@ export abstract class ListingOperations extends FolderOperations {
 						recursive: true,
 					});
 					const folderDisplayName = metadata.name || contents.name;
-					for (const item of subResult.list) {
-						if (item.type === "file") {
-							const existingParent = item.parent || "";
-							const existingParentKey = item.parentKey || "";
-							fileList.push({
-								...item,
-								key: `${contents.name}/${item.key}`,
-								parent: existingParent
-									? `${folderDisplayName}/${existingParent}`
-									: folderDisplayName,
-								parentKey: existingParentKey
-									? `${contents.name}/${existingParentKey}`
-									: contents.name,
-							});
-						}
-					}
-					continue;
+
+					// Transform all sub-items in one pass
+					return subResult.list
+						.filter((item) => item.type === "file")
+						.map((item) => ({
+							...item,
+							key: `${contents.name}/${item.key}`,
+							parent: item.parent
+								? `${folderDisplayName}/${item.parent}`
+								: folderDisplayName,
+							parentKey: item.parentKey
+								? `${contents.name}/${item.parentKey}`
+								: contents.name,
+						}));
 				}
 
-				// Non-recursive: add folder to list
-				fileList.push({
+				// Non-recursive: return folder item
+				return {
 					key: `${contents.name}/`,
 					size: 0,
 					updatedAt,
 					metadata,
-					type: "folder",
-				});
-
-				continue;
+					type: "folder" as const,
+				};
 			}
 
-			// Skip metadata files
-			if (contents.name.endsWith(".meta.json") || contents.name === ".keep") {
-				continue;
-			}
+			// Handle regular files - parallel stat and metadata read
+			const [statResult, metadata] = await Promise.all([
+				stat(fullPath).catch(() => null),
+				this.readFileMetadata(`${fullPath}.meta.json`, contents.name),
+			]);
 
-			// Handle regular files
-			let size = 0;
-			let updatedAt = new Date();
-			try {
-				const s = await stat(fullPath);
-				size = s.size;
-				updatedAt = new Date(s.mtimeMs);
-			} catch (err) {
-				logger.warn("Failed to stat file while listing:", fullPath, err);
-				continue;
-			}
-
-			const fileMeta = Bun.file(`${fullPath}.meta.json`);
-			let metadata: FileMetadata = this.generateMeta(contents.name);
-			if (await fileMeta.exists()) {
-				metadata = await fileMeta.json();
+			if (!statResult) {
+				return null; // Skip files that can't be stat'd
 			}
 
 			const fileObject: ObjectItem = {
 				key: contents.name,
-				size,
-				updatedAt,
+				size: statResult.size,
+				updatedAt: new Date(statResult.mtimeMs),
 				metadata,
 				type: "file",
 			};
 
-			this.permissionsCheck(fileObject.metadata);
-			fileList.push(fileObject);
-		}
+			// Perform permission check
+			try {
+				this.permissionsCheck(fileObject.metadata);
+			} catch {
+				return null; // Skip unauthorized files
+			}
 
-		// Sort alphabetically
-		fileList.sort((a, b) => a.key.localeCompare(b.key));
+			return fileObject;
+		});
 
-		// Filter trashed items
-		if (!options.includeTrashed) {
-			fileList = fileList.filter((item) => !item.metadata.isTrashed);
-		}
+		// Await all parallel operations and flatten results
+		const results = await Promise.all(itemPromises);
+		let fileList: ObjectItem[] = results
+			.flat()
+			.filter((item): item is ObjectItem => item !== null);
 
-		// Filter by category
-		if (options.category) {
+		// Apply filters in a single pass (more efficient than multiple filter calls)
+		if (!options.includeTrashed || options.category) {
 			fileList = fileList.filter((item) => {
-				return item.metadata.category === options.category;
+				if (!options.includeTrashed && item.metadata.isTrashed) return false;
+				if (options.category && item.metadata.category !== options.category)
+					return false;
+				return true;
 			});
+		}
+
+		const totalCount = fileList.length;
+
+		// Sort alphabetically (only if we have items to sort)
+		if (fileList.length > 1) {
+			fileList.sort((a, b) => a.key.localeCompare(b.key));
+		}
+
+		// Apply pagination after sorting (more efficient than sorting everything)
+		const offset = options.offset || 0;
+		const limit = options.limit;
+		if (limit !== undefined || offset > 0) {
+			fileList = fileList.slice(offset, limit ? offset + limit : undefined);
 		}
 
 		const result: ObjectList = {
 			list: fileList,
 			count: fileList.length,
-			total: fileList.length,
+			total: totalCount,
 		};
 
 		// Cache the result
@@ -225,6 +209,55 @@ export abstract class ListingOperations extends FolderOperations {
 		logger.debug(`Cached listing: ${cacheKey}`);
 
 		return result;
+	}
+
+	/**
+	 * Reads folder metadata efficiently.
+	 */
+	private async readFolderMetadata(
+		folderPath: string,
+		folderName: string,
+	): Promise<FileMetadata> {
+		const metadata: FileMetadata = this.generateMeta(folderName);
+
+		try {
+			const metaFile = Bun.file(join(folderPath, ".keep.meta.json"));
+			if (await metaFile.exists()) {
+				return await metaFile.json();
+			}
+
+			// Fallback to legacy .keep file
+			const keepFile = Bun.file(join(folderPath, ".keep"));
+			if (await keepFile.exists()) {
+				const text = await keepFile.text();
+				try {
+					const meta = JSON.parse(text) as Partial<FileMetadata>;
+					if (typeof meta.isTrashed === "boolean") {
+						metadata.isTrashed = meta.isTrashed;
+					}
+				} catch {
+					// Invalid JSON in .keep, return default metadata
+				}
+			}
+		} catch (err) {
+			logger.warn("Failed to read folder meta while listing:", folderPath, err);
+		}
+
+		return metadata;
+	}
+
+	/**
+	 * Reads file metadata efficiently.
+	 */
+	private async readFileMetadata(
+		metaPath: string,
+		fileName: string,
+	): Promise<FileMetadata> {
+		const fileMeta = Bun.file(metaPath);
+		if (await fileMeta.exists()) {
+			return await fileMeta.json();
+		}
+		return this.generateMeta(fileName);
 	}
 
 	/**
@@ -264,11 +297,15 @@ export abstract class ListingOperations extends FolderOperations {
 	/**
 	 * Lists files in a directory.
 	 */
-	public async listFiles(prefix?: string): Promise<ObjectList> {
+	public async listFiles(
+		prefix?: string,
+		options?: { limit?: number; offset?: number },
+	): Promise<ObjectList> {
 		const normalizedPrefix =
 			prefix && !prefix.endsWith("/") ? `${prefix}/` : prefix;
 		return await this.abstractListFiles({
 			parent: normalizedPrefix,
+			...options,
 		});
 	}
 
@@ -348,10 +385,9 @@ export abstract class ListingOperations extends FolderOperations {
 	}
 
 	/**
-	 * Recursively collects starred folders.
+	 * Recursively collects starred folders with parallel processing.
 	 */
 	private async collectStarredFolders(prefix: string): Promise<ObjectItem[]> {
-		const results: ObjectItem[] = [];
 		const dirPath = join(this.storagePath, prefix);
 
 		let dir: { name: string; isDirectory: () => boolean }[];
@@ -360,38 +396,35 @@ export abstract class ListingOperations extends FolderOperations {
 				withFileTypes: true,
 			})) as unknown as typeof dir;
 		} catch {
-			return results;
+			return [];
 		}
 
-		for (const dirent of dir) {
-			if (!dirent.isDirectory()) continue;
-			if (dirent.name === ".trash" || dirent.name === ".thumbnails") continue;
-			if (dirent.name === this.userFolder) continue;
+		// Filter valid directories upfront
+		const validDirs = dir.filter((dirent) => {
+			if (!dirent.isDirectory()) return false;
+			if (dirent.name === ".trash" || dirent.name === ".thumbnails")
+				return false;
+			if (dirent.name === this.userFolder) return false;
+			return true;
+		});
 
+		// Process all directories in parallel
+		const folderPromises = validDirs.map(async (dirent) => {
 			const folderPath = join(dirPath, dirent.name);
 			const relativePath = prefix ? `${prefix}/${dirent.name}` : dirent.name;
 
-			let metadata: FileMetadata = this.generateMeta(dirent.name);
-			let updatedAt = new Date();
+			// Parallel stat and metadata read
+			const [statResult, metadata] = await Promise.all([
+				stat(folderPath).catch(() => null),
+				this.readFolderMetadata(folderPath, dirent.name),
+			]);
 
-			try {
-				const s = await stat(folderPath);
-				updatedAt = new Date(s.mtimeMs);
-			} catch {
-				// Use current date
-			}
+			const updatedAt = statResult ? new Date(statResult.mtimeMs) : new Date();
 
-			try {
-				const metaFile = Bun.file(join(folderPath, ".keep.meta.json"));
-				if (await metaFile.exists()) {
-					metadata = await metaFile.json();
-				}
-			} catch (err) {
-				logger.warn("Failed to read folder meta:", folderPath, err);
-			}
+			// Skip trashed folders (early exit)
+			if (metadata.isTrashed) return [];
 
-			// Skip trashed folders
-			if (metadata.isTrashed) continue;
+			const results: ObjectItem[] = [];
 
 			// Add starred folder to results
 			if (metadata.isStarred) {
@@ -404,12 +437,14 @@ export abstract class ListingOperations extends FolderOperations {
 				});
 			}
 
-			// Recurse into subfolders
+			// Recurse into subfolders in parallel
 			const subResults = await this.collectStarredFolders(relativePath);
-			results.push(...subResults);
-		}
+			return [...results, ...subResults];
+		});
 
-		return results;
+		// Await all parallel operations and flatten
+		const allResults = await Promise.all(folderPromises);
+		return allResults.flat();
 	}
 
 	/**
