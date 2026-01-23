@@ -8,9 +8,9 @@ import {
 } from "$lib/server/errors";
 import type { FileMetadata } from "$lib/server/schema";
 import { ActivityService } from "$lib/server/services/activity";
-import { CacheKeys, getUserCache, type MemoryCache } from "./cache";
+import { CacheKeys, type MemoryCache } from "./cache";
 import { DEFAULT_STORAGE_PATH, logger } from "./constants";
-import { determineCategory, determineContentType } from "./content-type";
+import { cacheManager, contentTypeService } from "./shared-instances";
 
 /**
  * Base class for storage operations.
@@ -27,7 +27,7 @@ export abstract class StorageServiceBase {
 		this.userFolder = `user-${user.id}`;
 		this.storagePath = join(DEFAULT_STORAGE_PATH, this.userFolder);
 		this.user = user;
-		this.cache = getUserCache(user.id);
+		this.cache = cacheManager.getUserCache(user.id);
 	}
 
 	/**
@@ -138,8 +138,8 @@ export abstract class StorageServiceBase {
 			name,
 			createdAt: new Date(),
 			owner: this.user.id,
-			category: determineCategory(name),
-			contentType: determineContentType(name),
+			category: contentTypeService.determineCategory(name),
+			contentType: contentTypeService.determineContentType(name),
 			isTrashed: false,
 			isStarred: false,
 		};

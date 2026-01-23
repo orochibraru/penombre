@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import {
-	CacheKeys,
-	clearAllCaches,
-	clearUserCache,
-	getUserCache,
-} from "./cache";
+import { CacheKeys } from "./cache";
+import { cacheManager } from "./shared-instances";
 
 /**
  * Cache tests
@@ -19,15 +15,15 @@ import {
 
 describe("MemoryCache", () => {
 	const userId = "test-user-cache";
-	let cache: ReturnType<typeof getUserCache>;
+	let cache: ReturnType<typeof cacheManager.getUserCache>;
 
 	beforeEach(() => {
-		clearAllCaches();
-		cache = getUserCache(userId);
+		cacheManager.clearAllCaches();
+		cache = cacheManager.getUserCache(userId);
 	});
 
 	afterEach(() => {
-		clearAllCaches();
+		cacheManager.clearAllCaches();
 	});
 
 	describe("Basic Operations", () => {
@@ -177,8 +173,8 @@ describe("MemoryCache", () => {
 
 	describe("Per-User Cache Isolation", () => {
 		it("should create separate caches for different users", () => {
-			const user1Cache = getUserCache("user1");
-			const user2Cache = getUserCache("user2");
+			const user1Cache = cacheManager.getUserCache("user1");
+			const user2Cache = cacheManager.getUserCache("user2");
 
 			user1Cache.set("key", "value1");
 			user2Cache.set("key", "value2");
@@ -188,8 +184,8 @@ describe("MemoryCache", () => {
 		});
 
 		it("should return same cache instance for same user", () => {
-			const cache1 = getUserCache("user1");
-			const cache2 = getUserCache("user1");
+			const cache1 = cacheManager.getUserCache("user1");
+			const cache2 = cacheManager.getUserCache("user1");
 
 			cache1.set("key", "value");
 
@@ -198,13 +194,13 @@ describe("MemoryCache", () => {
 		});
 
 		it("should clear specific user cache", () => {
-			const user1Cache = getUserCache("user1");
-			const user2Cache = getUserCache("user2");
+			const user1Cache = cacheManager.getUserCache("user1");
+			const user2Cache = cacheManager.getUserCache("user2");
 
 			user1Cache.set("key", "value1");
 			user2Cache.set("key", "value2");
 
-			clearUserCache("user1");
+			cacheManager.clearUserCache("user1");
 
 			expect(user1Cache.get<string>("key")).toBeUndefined();
 			expect(user2Cache.get<string>("key")).toBe("value2");
@@ -212,25 +208,25 @@ describe("MemoryCache", () => {
 
 		it("should handle clearing non-existent user cache", () => {
 			// Should not throw
-			clearUserCache("nonexistent-user");
+			cacheManager.clearUserCache("nonexistent-user");
 			expect(true).toBe(true);
 		});
 
 		it("should clear all user caches", () => {
-			const user1Cache = getUserCache("user1");
-			const user2Cache = getUserCache("user2");
-			const user3Cache = getUserCache("user3");
+			const user1Cache = cacheManager.getUserCache("user1");
+			const user2Cache = cacheManager.getUserCache("user2");
+			const user3Cache = cacheManager.getUserCache("user3");
 
 			user1Cache.set("key", "value1");
 			user2Cache.set("key", "value2");
 			user3Cache.set("key", "value3");
 
-			clearAllCaches();
+			cacheManager.clearAllCaches();
 
-			// After clearAllCaches, getting the cache again creates a new instance
-			const newUser1Cache = getUserCache("user1");
-			const newUser2Cache = getUserCache("user2");
-			const newUser3Cache = getUserCache("user3");
+			// After cacheManager.clearAllCaches, getting the cache again creates a new instance
+			const newUser1Cache = cacheManager.getUserCache("user1");
+			const newUser2Cache = cacheManager.getUserCache("user2");
+			const newUser3Cache = cacheManager.getUserCache("user3");
 
 			expect(newUser1Cache.get<string>("key")).toBeUndefined();
 			expect(newUser2Cache.get<string>("key")).toBeUndefined();
@@ -238,8 +234,8 @@ describe("MemoryCache", () => {
 		});
 
 		it("should isolate cache operations between users", () => {
-			const user1Cache = getUserCache("user1");
-			const user2Cache = getUserCache("user2");
+			const user1Cache = cacheManager.getUserCache("user1");
+			const user2Cache = cacheManager.getUserCache("user2");
 
 			user1Cache.set("list:root", ["file1", "file2"]);
 			user2Cache.set("list:root", ["file3", "file4"]);
@@ -307,7 +303,7 @@ describe("MemoryCache", () => {
 
 	describe("Real-World Usage Scenarios", () => {
 		it("should cache file listings with proper invalidation", () => {
-			const user1Cache = getUserCache("user1");
+			const user1Cache = cacheManager.getUserCache("user1");
 
 			// Cache a file listing
 			const files = [
@@ -327,7 +323,7 @@ describe("MemoryCache", () => {
 		});
 
 		it("should cache folder metadata separately from file metadata", () => {
-			const userCache = getUserCache("user1");
+			const userCache = cacheManager.getUserCache("user1");
 
 			const fileMetaKey = CacheKeys.fileMeta("file-123");
 			const folderMetaKey = CacheKeys.folderMeta("folder-456");
@@ -350,7 +346,7 @@ describe("MemoryCache", () => {
 		});
 
 		it("should handle starred and trashed file caching", () => {
-			const userCache = getUserCache("user1");
+			const userCache = cacheManager.getUserCache("user1");
 
 			const starredFiles = [{ id: "1" }, { id: "2" }];
 			const trashedFiles = [{ id: "3" }];
@@ -378,7 +374,7 @@ describe("MemoryCache", () => {
 		});
 
 		it("should cache category listings independently", () => {
-			const userCache = getUserCache("user1");
+			const userCache = cacheManager.getUserCache("user1");
 
 			const documents = [{ id: "1", name: "doc.pdf" }];
 			const images = [{ id: "2", name: "pic.jpg" }];
@@ -398,7 +394,7 @@ describe("MemoryCache", () => {
 		});
 
 		it("should handle counts caching", () => {
-			const userCache = getUserCache("user1");
+			const userCache = cacheManager.getUserCache("user1");
 
 			const counts = { starred: 5, trashed: 2, total: 100 };
 			userCache.set(CacheKeys.counts(), counts);

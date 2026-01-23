@@ -14,8 +14,7 @@ import type {
 } from "$lib/server/schema";
 import { StorageServiceBase } from "./base";
 import { logger } from "./constants";
-import { determineCategory, determineContentType } from "./content-type";
-import { generateThumbnail } from "./thumbnails";
+import { contentTypeService, thumbnailService } from "./shared-instances";
 
 /**
  * File operations for the storage service.
@@ -110,8 +109,10 @@ export abstract class FileOperations extends StorageServiceBase {
 			metadata.isStarred = data.isStarred;
 		if (data.key && data.key.trim().length > 0) {
 			metadata.name = data.key.trim();
-			metadata.contentType = determineContentType(metadata.name);
-			metadata.category = determineCategory(metadata.name);
+			metadata.contentType = contentTypeService.determineContentType(
+				metadata.name,
+			);
+			metadata.category = contentTypeService.determineCategory(metadata.name);
 		}
 
 		await this.activityService.register({
@@ -358,7 +359,7 @@ export abstract class FileOperations extends StorageServiceBase {
 			await this.writeFile(key, body);
 			const file = await this.getFile(key);
 			const displayName = file.metadata.name || key;
-			const category = determineCategory(displayName);
+			const category = contentTypeService.determineCategory(displayName);
 			const isMedia = category === "MUSIC" || category === "VIDEO";
 
 			if (isMedia) {
@@ -465,7 +466,7 @@ export abstract class FileOperations extends StorageServiceBase {
 	): Promise<{ buffer: Buffer; contentType: string } | null> {
 		const { currentPath } = await this.resolveFileLocation(key);
 		const meta = await this.getFile(key);
-		return generateThumbnail(
+		return thumbnailService.generateThumbnail(
 			currentPath,
 			meta.metadata.contentType,
 			this.storagePath,

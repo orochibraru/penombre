@@ -20,6 +20,7 @@ export const fileCategorySchema = z.enum([
 	"VIDEO",
 	"RECENT",
 	"CODE",
+	"ARCHIVES",
 	"UNKNOWN",
 ]);
 
@@ -30,6 +31,7 @@ export const allowedFileCategories = [
 	"VIDEO",
 	"RECENT",
 	"CODE",
+	"ARCHIVES",
 	"UNKNOWN",
 ];
 
@@ -98,6 +100,25 @@ export const fileContentTypeSchema = z.enum([
 	"application/x-7z-compressed",
 	"application/x-tar",
 	"application/gzip",
+	"application/x-bzip2",
+	"application/x-xz",
+	"application/vnd.ms-cab-compressed",
+	"application/x-iso9660-image",
+	"application/x-apple-diskimage",
+	"application/x-xar",
+	"application/vnd.debian.binary-package",
+	"application/x-rpm",
+	"application/vnd.android.package-archive",
+	"application/java-archive",
+	"application/x-webarchive",
+	"application/x-stuffit",
+	"application/x-stuffitx",
+	"application/x-lzip",
+	"application/x-lzma",
+	"application/x-lzop",
+	"application/x-compress",
+	"application/zstd",
+	"application/x-brotli",
 	// Fallback
 	"application/octet-stream",
 ]);

@@ -87,44 +87,50 @@ class MemoryCache {
 }
 
 /**
- * Global cache store - one cache instance per user.
- * This ensures user data isolation while sharing memory efficiently.
+ * Manager for user-specific memory caches with TTL support.
+ * Provides instance methods for accessing and managing per-user cache instances.
  */
-const userCaches = new Map<string, MemoryCache>();
+export class CacheManager {
+	/**
+	 * Cache store - one cache instance per user.
+	 * This ensures user data isolation while sharing memory efficiently.
+	 */
+	private userCaches = new Map<string, MemoryCache>();
 
-/**
- * Get or create a cache instance for a specific user.
- */
-export function getUserCache(userId: string): MemoryCache {
-	let cache = userCaches.get(userId);
-	if (!cache) {
-		cache = new MemoryCache(30); // 30 second default TTL
-		userCaches.set(userId, cache);
-		logger.debug(`Created new cache for user ${userId}`);
+	/**
+	 * Get or create a cache instance for a specific user.
+	 */
+	getUserCache(userId: string): MemoryCache {
+		let cache = this.userCaches.get(userId);
+		if (!cache) {
+			cache = new MemoryCache(30); // 30 second default TTL
+			this.userCaches.set(userId, cache);
+			logger.debug(`Created new cache for user ${userId}`);
+		}
+		return cache;
 	}
-	return cache;
-}
 
-/**
- * Clear cache for a specific user.
- */
-export function clearUserCache(userId: string): void {
-	const cache = userCaches.get(userId);
-	if (cache) {
-		cache.clear();
-		logger.debug(`Cleared cache for user ${userId}`);
+	/**
+	 * Clear cache for a specific user.
+	 */
+	clearUserCache(userId: string): void {
+		const cache = this.userCaches.get(userId);
+		if (cache) {
+			cache.clear();
+			logger.debug(`Cleared cache for user ${userId}`);
+		}
 	}
-}
 
-/**
- * Clear all user caches (useful for testing or admin operations).
- */
-export function clearAllCaches(): void {
-	for (const cache of userCaches.values()) {
-		cache.clear();
+	/**
+	 * Clear all user caches (useful for testing or admin operations).
+	 */
+	clearAllCaches(): void {
+		for (const cache of this.userCaches.values()) {
+			cache.clear();
+		}
+		this.userCaches.clear();
+		logger.debug("Cleared all user caches");
 	}
-	userCaches.clear();
-	logger.debug("Cleared all user caches");
 }
 
 /**

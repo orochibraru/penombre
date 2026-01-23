@@ -17,9 +17,7 @@ import {
 	updateFileSchema,
 } from "$lib/server/schema";
 import {
-	createZipFromFolder,
-	createZipFromPaths,
-	generateZipFilename,
+	bulkDownloadService,
 	StorageService,
 } from "$lib/server/services/storage";
 
@@ -316,8 +314,11 @@ const objectsRouter = new Hono<StorageRouter>()
 
 		try {
 			const storagePath = storageService.getStoragePath();
-			const { stream } = await createZipFromPaths(storagePath, paths);
-			const filename = generateZipFilename(paths);
+			const { stream } = await bulkDownloadService.createZipFromPaths(
+				storagePath,
+				paths,
+			);
+			const filename = bulkDownloadService.generateZipFilename(paths);
 
 			logger.debug(`Streaming zip download: ${filename}`);
 
@@ -400,7 +401,10 @@ const objectsRouter = new Hono<StorageRouter>()
 
 			try {
 				const storagePath = storageService.getStoragePath();
-				const { stream } = await createZipFromFolder(storagePath, fullPath);
+				const { stream } = await bulkDownloadService.createZipFromFolder(
+					storagePath,
+					fullPath,
+				);
 				const filename = `${decodedFolder}.zip`;
 
 				logger.debug(`Streaming folder zip download: ${filename}`);

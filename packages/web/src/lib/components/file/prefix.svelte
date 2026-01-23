@@ -2,6 +2,7 @@
     import {
         CircleCheckIcon,
         CircleIcon,
+        FileArchiveIcon,
         FileCodeIcon,
         FileIcon,
         FileImageIcon,
@@ -298,6 +299,8 @@
                     />
                 {:else if item.metadata.category === "CODE"}
                     <FileCodeIcon class={cn(iconSize, "text-green-400")} />
+                {:else if item.metadata.category === "ARCHIVES"}
+                    <FileArchiveIcon class={cn(iconSize, "text-purple-600")} />
                 {:else}
                     <FileIcon class={iconSize} />
                 {/if}

@@ -5,7 +5,13 @@
     import { isCodeItem } from "$lib/file-utils";
     import { getObjectUrl } from "$lib/url";
     import { getFileIconType } from "$lib/utils";
-    import { FileCodeIcon, FileVideoIcon, FileAudioIcon } from "@lucide/svelte";
+    import {
+        FileCodeIcon,
+        FileVideoIcon,
+        FileAudioIcon,
+        FileVideoCameraIcon,
+        FileArchiveIcon,
+    } from "@lucide/svelte";
 
     type Props = {
         item: ObjectItem;
@@ -27,6 +33,8 @@
 
     // Check if this is a PDF
     const isPdf = $derived(item.metadata.contentType === "application/pdf");
+
+    const isArchive = $derived(item.metadata.category === "ARCHIVES");
 
     // Check if this is an audio file
     const isAudio = $derived(item.metadata.contentType?.startsWith("audio/"));
@@ -84,6 +92,8 @@
                 onerror={() => (thumbnailError = true)}
             />
         {/if}
+    {:else if isArchive}
+        <FileArchiveIcon class="mx-auto h-20 w-20 text-muted-foreground" />
     {:else if isDocument}
         <DocumentIcon
             type={getFileIconType(item.metadata.contentType)}
@@ -93,7 +103,9 @@
         <FileCodeIcon class="mx-auto h-20 w-20 text-muted-foreground" />
     {:else if isVideo}
         {#if thumbnailError}
-            <FileVideoIcon class="mx-auto h-20 w-20 text-muted-foreground" />
+            <FileVideoCameraIcon
+                class="mx-auto h-20 w-20 text-muted-foreground"
+            />
         {:else}
             <img
                 src={thumbnailUrl}

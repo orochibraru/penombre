@@ -7,46 +7,6 @@ import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
 import { DEFAULT_STORAGE_PATH, logger } from "./constants";
 
-export async function cleanupDeletedUserStorage() {
-	const db = getDb();
-	const usersList = await db.select().from(user);
-	if (usersList.length === 0) {
-		logger.info("No users found in database. Skipping storage cleanup.");
-		return;
-	}
-
-	const storageBasePath = resolve(
-		Bun.env.STORAGE_PATH || join(cwd(), "/data/storage"),
-	);
-	const exists = existsSync(storageBasePath);
-	if (!exists) {
-		logger.info("Storage base path does not exist. Skipping storage cleanup.");
-		return;
-	}
-	const storageDir = await readdir(storageBasePath, { withFileTypes: true });
-
-	for (const dirent of storageDir) {
-		if (dirent.isDirectory() && dirent.name.startsWith("user-")) {
-			const userId = dirent.name.replace("user-", "");
-			const userExists = usersList.some((u) => u.id === userId);
-			if (!userExists) {
-				const userStoragePath = join(storageBasePath, dirent.name);
-				try {
-					await rmdir(userStoragePath, { recursive: true });
-					logger.info(
-						`Deleted storage for non-existent user ID: ${userId} at path: ${userStoragePath}`,
-					);
-				} catch (error) {
-					logger.error(
-						`Failed to delete storage for user ID: ${userId} at path: ${userStoragePath}`,
-						error,
-					);
-				}
-			}
-		}
-	}
-}
-
 export class AdminStorageService {
 	private storagePath: string;
 
@@ -112,5 +72,51 @@ export class AdminStorageService {
 
 		// Last resort: unknown free space
 		return 0;
+	}
+
+	/**
+	 * Cleanup storage directories for users that no longer exist in the database.
+	 * This is useful for maintaining storage hygiene after user deletions.
+	 */
+	async cleanupDeletedUserStorage(): Promise<void> {
+		const db = getDb();
+		const usersList = await db.select().from(user);
+		if (usersList.length === 0) {
+			logger.info("No users found in database. Skipping storage cleanup.");
+			return;
+		}
+
+		const storageBasePath = resolve(
+			Bun.env.STORAGE_PATH || join(cwd(), "/data/storage"),
+		);
+		const exists = existsSync(storageBasePath);
+		if (!exists) {
+			logger.info(
+				"Storage base path does not exist. Skipping storage cleanup.",
+			);
+			return;
+		}
+		const storageDir = await readdir(storageBasePath, { withFileTypes: true });
+
+		for (const dirent of storageDir) {
+			if (dirent.isDirectory() && dirent.name.startsWith("user-")) {
+				const userId = dirent.name.replace("user-", "");
+				const userExists = usersList.some((u) => u.id === userId);
+				if (!userExists) {
+					const userStoragePath = join(storageBasePath, dirent.name);
+					try {
+						await rmdir(userStoragePath, { recursive: true });
+						logger.info(
+							`Deleted storage for non-existent user ID: ${userId} at path: ${userStoragePath}`,
+						);
+					} catch (error) {
+						logger.error(
+							`Failed to delete storage for user ID: ${userId} at path: ${userStoragePath}`,
+							error,
+						);
+					}
+				}
+			}
+		}
 	}
 }
