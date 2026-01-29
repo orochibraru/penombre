@@ -39,8 +39,12 @@ export default defineConfig({
 
 	// Start dev server before running tests
 	webServer: {
-		command:
-			"ORIGIN=http://localhost:3000 LOG_LEVEL=DEBUG PORT=3000 bun run ./build/index.js",
+		env: {
+			ORIGIN: "http://localhost:3000",
+			LOG_LEVEL: "DEBUG",
+			PORT: "3000",
+		},
+		command: "bun run ./build/index.js",
 		url: "http://localhost:3000",
 		reuseExistingServer: !process.env.CI,
 		timeout: 120 * 1000,
