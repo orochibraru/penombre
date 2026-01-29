@@ -7,7 +7,7 @@ import { building } from "$app/environment";
 import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
-import { getDb } from "$lib/server/db";
+import { getDb, resetDb } from "$lib/server/db";
 
 const logger = new Logger("Hooks");
 
@@ -21,13 +21,35 @@ async function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function waitForDatabase() {
+	const maxRetries = 30;
+	const retryDelay = 1000;
+
+	for (let i = 0; i < maxRetries; i++) {
+		try {
+			const db = getDb();
+			// Try a simple query to check if DB is ready
+			await db.execute("SELECT 1");
+			logger.info("Database connection established.");
+			return;
+		} catch (error) {
+			if (i === maxRetries - 1) {
+				logger.error("Database not ready after maximum retries.");
+				throw error;
+			}
+			logger.debug(`Waiting for database... (attempt ${i + 1}/${maxRetries})`);
+			await sleep(retryDelay);
+		}
+	}
+}
+
 async function runMigrations() {
-	const db = getDb();
 	logger.info("Migrating database...");
 	let retries = 10;
 	while (retries > 0) {
 		try {
 			logger.info(`Running migrations (retries left: ${retries})`);
+			const db = getDb();
 			await migrate(db, {
 				migrationsFolder,
 			});
@@ -44,6 +66,8 @@ async function runMigrations() {
 				logger.error(error);
 				process.exit(1);
 			}
+			// Reset the database connection before retrying
+			await resetDb();
 			retries -= 1;
 			await sleep(3000);
 		}
@@ -51,6 +75,7 @@ async function runMigrations() {
 }
 
 export const init = async () => {
+	await waitForDatabase();
 	await runMigrations();
 	await seedAuth();
 };

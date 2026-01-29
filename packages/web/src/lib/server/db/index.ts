@@ -66,3 +66,14 @@ export async function closeDb(): Promise<void> {
 		globalForDb.__db_instance = undefined;
 	}
 }
+
+/**
+ * Reset the database connection.
+ * Useful when the connection is in a bad state and needs to be recreated.
+ */
+export async function resetDb(): Promise<void> {
+	await closeDb();
+	// Force recreation on next getDb() call
+	globalForDb.__db_instance = undefined;
+	globalForDb.__db_client = undefined;
+}
