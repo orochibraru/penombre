@@ -16,8 +16,11 @@ test.describe("File Management", () => {
 	test("can open create folder option via New button", async ({ page }) => {
 		await page.goto("/browse");
 
-		// Click New button to open dropdown menu
-		await page.getByRole("button", { name: "New" }).click();
+		// Click New button in sidebar to open dropdown menu
+		await page
+			.getByRole("button", { name: "New", exact: true })
+			.first()
+			.click();
 
 		// Look for "Folder" in dropdown menu
 		const folderOption = page.getByRole("menuitem", { name: /folder/i });
@@ -27,8 +30,11 @@ test.describe("File Management", () => {
 	test("can create a new folder", async ({ page }) => {
 		await page.goto("/browse");
 
-		// Use New button to open menu
-		await page.getByRole("button", { name: "New" }).click();
+		// Use New button in sidebar to open menu
+		await page
+			.getByRole("button", { name: "New", exact: true })
+			.first()
+			.click();
 
 		// Click "Folder" in menu
 		await page.getByRole("menuitem", { name: /folder/i }).click();
@@ -57,8 +63,11 @@ test.describe("File Management", () => {
 		// First create a folder
 		await page.goto("/browse");
 
-		// Use New button to open menu
-		await page.getByRole("button", { name: "New" }).click();
+		// Use New button in sidebar to open menu
+		await page
+			.getByRole("button", { name: "New", exact: true })
+			.first()
+			.click();
 		await page.getByRole("menuitem", { name: /folder/i }).click();
 
 		const navFolderName = `nav-test-${Date.now()}`;
@@ -88,8 +97,11 @@ test.describe("File Management", () => {
 	test("can open upload option via New button", async ({ page }) => {
 		await page.goto("/browse");
 
-		// Click New button to open dropdown menu
-		await page.getByRole("button", { name: "New" }).click();
+		// Click New button in sidebar to open dropdown menu
+		await page
+			.getByRole("button", { name: "New", exact: true })
+			.first()
+			.click();
 
 		// Look for "File" or "Upload" in the menu
 		const uploadOption = page.getByRole("menuitem", { name: /file/i });
@@ -99,8 +111,11 @@ test.describe("File Management", () => {
 	test("upload dialog shows file input", async ({ page }) => {
 		await page.goto("/browse");
 
-		// Use New button to open menu and click upload
-		await page.getByRole("button", { name: "New" }).click();
+		// Use New button in sidebar to open menu and click upload
+		await page
+			.getByRole("button", { name: "New", exact: true })
+			.first()
+			.click();
 		await page.getByRole("menuitem", { name: /file/i }).click();
 
 		// Dialog should open with file input
@@ -118,8 +133,11 @@ test.describe("File Management", () => {
 		fs.writeFileSync(testFilePath, "This is a test file for e2e testing.");
 
 		try {
-			// Open upload dialog via New button
-			await page.getByRole("button", { name: "New" }).click();
+			// Open upload dialog via New button in sidebar
+			await page
+				.getByRole("button", { name: "New", exact: true })
+				.first()
+				.click();
 			await page.getByRole("menuitem", { name: /file/i }).click();
 
 			const dialog = page.getByRole("dialog");
@@ -159,8 +177,11 @@ test.describe("File Actions", () => {
 		fs.writeFileSync(testFilePath, "Test file for actions.");
 
 		try {
-			// Open upload dialog via New button
-			await page.getByRole("button", { name: "New" }).click();
+			// Open upload dialog via New button in sidebar
+			await page
+				.getByRole("button", { name: "New", exact: true })
+				.first()
+				.click();
 			await page.getByRole("menuitem", { name: /file/i }).click();
 
 			const dialog = page.getByRole("dialog");
