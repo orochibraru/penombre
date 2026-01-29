@@ -22,11 +22,15 @@ async function sleep(ms: number) {
 }
 
 async function waitForDatabase() {
-	const maxRetries = 30;
-	const retryDelay = 1000;
+	const maxRetries = 60;
+	const retryDelay = 2000;
 
 	for (let i = 0; i < maxRetries; i++) {
 		try {
+			// Reset connection before each attempt to avoid stale connections
+			if (i > 0) {
+				await resetDb();
+			}
 			const db = getDb();
 			// Try a simple query to check if DB is ready
 			await db.execute("SELECT 1");
@@ -35,9 +39,13 @@ async function waitForDatabase() {
 		} catch (error) {
 			if (i === maxRetries - 1) {
 				logger.error("Database not ready after maximum retries.");
+				logger.error(`Last error: ${error}`);
 				throw error;
 			}
-			logger.debug(`Waiting for database... (attempt ${i + 1}/${maxRetries})`);
+			const isFirstAttempt = i === 0;
+			if (isFirstAttempt || i % 10 === 0) {
+				logger.info(`Waiting for database... (attempt ${i + 1}/${maxRetries})`);
+			}
 			await sleep(retryDelay);
 		}
 	}

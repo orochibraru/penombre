@@ -57,14 +57,14 @@ jobs:
           POSTGRES_PASSWORD: opendrive
           POSTGRES_DB: opendrive
         ports:
-          - 5432:5432
+          - 5432
         options: >-
           --health-cmd="pg_isready -U opendrive"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgres://opendrive:opendrive@localhost:5432/opendrive
+      DATABASE_URL: postgres://opendrive:opendrive@localhost:${{ job.services.postgres.ports[5432] }}/opendrive
     steps:
       - uses: actions/checkout@v5
 
