@@ -49,6 +49,8 @@ jobs:
   typescript:
     name: TypeScript
     runs-on: ubuntu-latest
+    container:
+      image: oven/bun:1.3.8
     services:
       postgres:
         image: postgres:17
@@ -56,15 +58,13 @@ jobs:
           POSTGRES_USER: opendrive
           POSTGRES_PASSWORD: opendrive
           POSTGRES_DB: opendrive
-        ports:
-          - 5432
         options: >-
           --health-cmd="pg_isready -U opendrive"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgres://opendrive:opendrive@localhost:${{ job.services.postgres.ports[5432] }}/opendrive
+      DATABASE_URL: postgres://opendrive:opendrive@postgres:5432/opendrive
     steps:
       - uses: actions/checkout@v5
 
