@@ -1,4 +1,4 @@
-FROM oven/bun:1-alpine AS base
+FROM oven/bun:1.3.8-alpine AS base
 
 WORKDIR /app
 
@@ -56,7 +56,7 @@ RUN mkdir -p /prod && \
     /prod/node_modules/@smithy
 
 # Final stage - minimal runtime
-FROM oven/bun:1-alpine AS final
+FROM base AS final
 
 # Only install what's actually needed at runtime
 # ffmpeg is required for video thumbnail generation

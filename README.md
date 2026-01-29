@@ -5,7 +5,7 @@
 Opendrive is a comprehensive file storage and synchronization platform that provides you with complete control over your data. Built with modern technologies and designed for both individual users and organizations who want the convenience of cloud storage without sacrificing privacy and control.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Bun Version](https://img.shields.io/badge/bun-1.3.1-green.svg)
+![Bun Version](https://img.shields.io/badge/bun-1.3.8-green.svg)
 
 ## ✨ Features
 
