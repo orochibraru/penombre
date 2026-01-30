@@ -248,8 +248,8 @@
             try {
                 const promise = new Promise<boolean>(async (resolve, fail) => {
                     const xhr = new XMLHttpRequest();
-                    // result.data.finalName now includes the full path from the API
-                    const finalUrl = `/api/storage/objects/item/${encodeURIComponent(result.data.finalName)}`;
+                    // Use direct SvelteKit upload endpoint (bypasses Hono routing)
+                    const finalUrl = `/api/upload/${encodeURIComponent(result.data.finalName)}`;
                     xhr.open("POST", finalUrl);
 
                     // Also set credentials to include cookies

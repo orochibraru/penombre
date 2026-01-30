@@ -8,12 +8,19 @@ import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
 import { getDb, resetDb } from "$lib/server/db";
+import { debugLog } from "$lib/server/debug-log";
 
 const logger = new Logger("Hooks");
 
 const migrationsFolder = join(process.cwd(), "drizzle");
 
 export function handleError({ event, error }) {
+	debugLog("HOOKS_ERROR", "handleError triggered", {
+		method: event.request.method,
+		pathname: event.url.pathname,
+		error: String(error),
+		stack: error instanceof Error ? error.stack : "no stack",
+	});
 	logger.error(`Error on ${event.request.method} ${event.url.pathname}`, error);
 }
 
@@ -89,19 +96,67 @@ export const init = async () => {
 };
 
 const authHandler: Handle = async ({ event, resolve }) => {
+	const isUpload =
+		event.request.method === "POST" &&
+		event.url.pathname.includes("/storage/objects/item/");
+
+	if (isUpload) {
+		debugLog("HOOKS_AUTH", "authHandler START for upload", {
+			method: event.request.method,
+			pathname: event.url.pathname,
+			contentType: event.request.headers.get("content-type"),
+			contentLength: event.request.headers.get("content-length"),
+			bodyUsed: event.request.bodyUsed,
+		});
+	}
+
 	const session = await auth.api.getSession({
 		headers: event.request.headers,
 	});
+
+	if (isUpload) {
+		debugLog("HOOKS_AUTH", "getSession complete for upload", {
+			hasSession: !!session,
+			bodyUsed: event.request.bodyUsed,
+		});
+	}
+
 	if (session) {
 		// Make session and user available on server
 		event.locals.session = session.session;
 		event.locals.user = session.user;
 	}
 
-	return svelteKitHandler({ event, resolve, auth, building });
+	if (isUpload) {
+		debugLog("HOOKS_AUTH", "About to call svelteKitHandler for upload", {
+			bodyUsed: event.request.bodyUsed,
+		});
+	}
+
+	const result = svelteKitHandler({ event, resolve, auth, building });
+
+	if (isUpload) {
+		debugLog("HOOKS_AUTH", "svelteKitHandler returned for upload");
+	}
+
+	return result;
 };
 
 const generalHandler: Handle = async ({ event, resolve }) => {
+	const isUpload =
+		event.request.method === "POST" &&
+		event.url.pathname.includes("/storage/objects/item/");
+
+	if (isUpload) {
+		debugLog("HOOKS_GENERAL", "generalHandler START for upload", {
+			method: event.request.method,
+			pathname: event.url.pathname,
+			contentType: event.request.headers.get("content-type"),
+			contentLength: event.request.headers.get("content-length"),
+			bodyUsed: event.request.bodyUsed,
+		});
+	}
+
 	if (event.url.pathname.startsWith("/.well-known/")) {
 		return await resolve(event);
 	}
@@ -109,7 +164,22 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname === "/favicon.ico") {
 		return await resolve(event);
 	}
+
+	if (isUpload) {
+		debugLog("HOOKS_GENERAL", "About to resolve for upload", {
+			bodyUsed: event.request.bodyUsed,
+		});
+	}
+
 	const res = await resolve(event);
+
+	if (isUpload) {
+		debugLog("HOOKS_GENERAL", "resolve complete for upload", {
+			status: res.status,
+			bodyUsed: event.request.bodyUsed,
+		});
+	}
+
 	const isAsset =
 		!event.url.pathname.endsWith("/") && event.url.pathname.includes(".");
 	if (res.status >= 400 && !isAsset) {

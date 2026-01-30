@@ -3,14 +3,37 @@ import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import type { CustomRouter } from "$lib/server/api-types";
 import { auth } from "$lib/server/auth";
+import { debugLog } from "$lib/server/debug-log";
 import { activityRouter } from "$lib/server/routes/activity";
 import preferencesRouter from "$lib/server/routes/preferences";
 import { foldersRouter, objectsRouter } from "$lib/server/routes/storage";
 
 // Build the router with method chaining for proper type inference
 const app = new Hono<CustomRouter>()
-	// Enable compression (gzip/brotli) for all routes - 60-80% size reduction
-	.use("*", compress())
+	// Debug logging for all requests
+	.use("*", async (c, next) => {
+		debugLog("HONO", "Request received", {
+			method: c.req.method,
+			path: c.req.path,
+			url: c.req.url,
+		});
+		await next();
+		debugLog("HONO", "Request completed", {
+			method: c.req.method,
+			path: c.req.path,
+			status: c.res.status,
+		});
+	})
+	// Enable compression (gzip/brotli) for all routes EXCEPT multipart uploads
+	.use("*", async (c, next) => {
+		const contentType = c.req.header("content-type") || "";
+		if (contentType.includes("multipart/form-data")) {
+			debugLog("HONO", "Skipping compression for multipart request");
+			await next();
+			return;
+		}
+		return compress()(c, next);
+	})
 	.use(
 		"/auth/*",
 		cors({
@@ -23,7 +46,9 @@ const app = new Hono<CustomRouter>()
 		}),
 	)
 	.use("*", async (c, next) => {
+		debugLog("SESSION", "Getting session...", { path: c.req.path });
 		const session = await auth.api.getSession({ headers: c.req.raw.headers });
+		debugLog("SESSION", "Session check complete", { hasSession: !!session });
 		if (!session) {
 			c.set("user", null);
 			c.set("session", null);
