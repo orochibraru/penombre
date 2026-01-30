@@ -85,9 +85,13 @@ export const verification = pgTable(
 	(table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ one, many }) => ({
 	sessions: many(session),
 	accounts: many(account),
+	activities: many(activity),
+	ownedSharings: many(sharings),
+	sharedWithMe: many(sharedWith),
+	preferences: one(userPreferences),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -104,21 +108,25 @@ export const accountRelations = relations(account, ({ one }) => ({
 	}),
 }));
 
-export const activity = pgTable("activity", (t) => ({
-	id: t.uuid().notNull().primaryKey().defaultRandom(),
-	userId: text("user_id")
-		.references(() => user.id, { onDelete: "cascade" })
-		.notNull(),
-	action: text("action", {
-		enum: ["create", "update", "delete", "share", "rename"],
-	}).notNull(),
-	message: text("message").notNull(),
-	link: text("link"),
-	level: text("level", { enum: ["info", "warning", "error"] }).notNull(),
-	createdAt: timestamp("created_at")
-		.$defaultFn(() => new Date())
-		.notNull(),
-}));
+export const activity = pgTable(
+	"activity",
+	(t) => ({
+		id: t.uuid().notNull().primaryKey().defaultRandom(),
+		userId: text("user_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		action: text("action", {
+			enum: ["create", "update", "delete", "share", "rename"],
+		}).notNull(),
+		message: text("message").notNull(),
+		link: text("link"),
+		level: text("level", { enum: ["info", "warning", "error"] }).notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	}),
+	(table) => [index("activity_userId_idx").on(table.userId)],
+);
 
 export const activityRelations = relations(activity, ({ one }) => ({
 	user: one(user, {
@@ -127,27 +135,31 @@ export const activityRelations = relations(activity, ({ one }) => ({
 	}),
 }));
 
-export const sharings = pgTable("sharings", (t) => ({
-	id: t.uuid().notNull().primaryKey().defaultRandom(),
-	ownerId: text("owner_id")
-		.references(() => user.id, { onDelete: "cascade" })
-		.notNull(),
-	resourceType: text("resource_type", {
-		enum: ["file", "folder"],
-	}).notNull(),
-	resourceId: text("resource_id").notNull(),
-	permission: text("permission", {
-		enum: ["read", "write", "admin"],
-	}).notNull(),
-	createdAt: timestamp("created_at")
-		.$defaultFn(() => new Date())
-		.notNull(),
-	updatedAt: timestamp("updated_at")
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date())
-		.notNull(),
-	expiration: timestamp("expiration"),
-}));
+export const sharings = pgTable(
+	"sharings",
+	(t) => ({
+		id: t.uuid().notNull().primaryKey().defaultRandom(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		resourceType: text("resource_type", {
+			enum: ["file", "folder"],
+		}).notNull(),
+		resourceId: text("resource_id").notNull(),
+		permission: text("permission", {
+			enum: ["read", "write", "admin"],
+		}).notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+		updatedAt: timestamp("updated_at")
+			.$defaultFn(() => new Date())
+			.$onUpdate(() => new Date())
+			.notNull(),
+		expiration: timestamp("expiration"),
+	}),
+	(table) => [index("sharings_ownerId_idx").on(table.ownerId)],
+);
 
 export const sharingRelations = relations(sharings, ({ one, many }) => ({
 	owner: one(user, {
@@ -157,19 +169,26 @@ export const sharingRelations = relations(sharings, ({ one, many }) => ({
 	sharedWith: many(sharedWith),
 }));
 
-export const sharedWith = pgTable("shared_with", (t) => ({
-	id: t.uuid().notNull().primaryKey().defaultRandom(),
-	sharingId: t
-		.uuid("sharing_id")
-		.references(() => sharings.id, { onDelete: "cascade" })
-		.notNull(),
-	userId: text("user_id")
-		.references(() => user.id, { onDelete: "cascade" })
-		.notNull(),
-	createdAt: timestamp("created_at")
-		.$defaultFn(() => new Date())
-		.notNull(),
-}));
+export const sharedWith = pgTable(
+	"shared_with",
+	(t) => ({
+		id: t.uuid().notNull().primaryKey().defaultRandom(),
+		sharingId: t
+			.uuid("sharing_id")
+			.references(() => sharings.id, { onDelete: "cascade" })
+			.notNull(),
+		userId: text("user_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	}),
+	(table) => [
+		index("sharedWith_sharingId_idx").on(table.sharingId),
+		index("sharedWith_userId_idx").on(table.userId),
+	],
+);
 
 export const sharedWithRelations = relations(sharedWith, ({ one }) => ({
 	sharing: one(sharings, {

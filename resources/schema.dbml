@@ -26,6 +26,10 @@ table activity {
   link text
   level text [not null]
   created_at timestamp [not null]
+
+  indexes {
+    user_id [name: 'activity_userId_idx']
+  }
 }
 
 table session {
@@ -49,6 +53,11 @@ table shared_with {
   sharing_id uuid [not null]
   user_id text [not null]
   created_at timestamp [not null]
+
+  indexes {
+    sharing_id [name: 'sharedWith_sharingId_idx']
+    user_id [name: 'sharedWith_userId_idx']
+  }
 }
 
 table sharings {
@@ -60,6 +69,10 @@ table sharings {
   created_at timestamp [not null]
   updated_at timestamp [not null]
   expiration timestamp
+
+  indexes {
+    owner_id [name: 'sharings_ownerId_idx']
+  }
 }
 
 table user {
@@ -97,14 +110,14 @@ table verification {
 
 ref: account.user_id > user.id
 
-ref: activity.user_id - user.id
+ref: activity.user_id > user.id
 
 ref: session.user_id > user.id
 
 ref: shared_with.sharing_id > sharings.id
 
-ref: shared_with.user_id - user.id
+ref: shared_with.user_id > user.id
 
-ref: sharings.owner_id - user.id
+ref: sharings.owner_id > user.id
 
 ref: user_preferences.user_id - user.id

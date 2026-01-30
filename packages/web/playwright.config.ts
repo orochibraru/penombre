@@ -14,6 +14,7 @@ export default defineConfig({
 	workers: process.env.CI ? 1 : undefined,
 	reporter: [["html", { open: "never" }], ["list"]],
 	globalSetup: "./e2e/global.setup.ts",
+	globalTeardown: "./e2e/global.teardown.ts",
 
 	use: {
 		baseURL: "http://localhost:3000",
@@ -43,6 +44,7 @@ export default defineConfig({
 			ORIGIN: "http://localhost:3000",
 			LOG_LEVEL: "DEBUG",
 			PORT: "3000",
+			STORAGE_PATH: "tmp/e2e-storage",
 		},
 		command: "bun run ./build/index.js",
 		url: "http://localhost:3000",

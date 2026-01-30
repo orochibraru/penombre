@@ -614,9 +614,11 @@ export async function executeDeleteOperation(
 
 	for (const checkedItem of keys) {
 		callbacks.setDeletingItem(true);
-		const itemPath = page.params.path
-			? `${page.params.path}/${checkedItem}`
-			: checkedItem;
+		// On trash page, items already contain full paths; otherwise prepend current folder path
+		const itemPath =
+			isTrash || !page.params.path
+				? checkedItem
+				: `${page.params.path}/${checkedItem}`;
 
 		const isFolder = itemPath.endsWith("/");
 
