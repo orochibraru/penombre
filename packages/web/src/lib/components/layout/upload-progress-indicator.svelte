@@ -36,6 +36,7 @@
 
 {#if $globalUploadProgress.isUploading || isCompleted}
     <div
+        data-testid="upload-progress-indicator"
         transition:fly={{ y: 100, duration: 300 }}
         class={cn(
             "fixed bottom-4 right-4 z-50 w-80 rounded-lg border bg-background shadow-2xl",

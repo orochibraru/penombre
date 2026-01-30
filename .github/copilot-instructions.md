@@ -10,6 +10,7 @@
 - Server (Hono routers within SvelteKit):
   - Folders: [packages/web/src/lib/server/routes/storage/folders.ts](packages/web/src/lib/server/routes/storage/folders.ts)
   - Files/Objects: [packages/web/src/lib/server/routes/storage/objects.ts](packages/web/src/lib/server/routes/storage/objects.ts)
+  - **File Uploads**: Direct SvelteKit endpoint at [packages/web/src/routes/api/upload/[item]/+server.ts](packages/web/src/routes/api/upload/[item]/+server.ts) — NOT through Hono (see Gotchas).
 - Services (business logic):
   - Storage: [packages/web/src/lib/server/dto/storage.ts](packages/web/src/lib/server/dto/storage.ts)
   - Activity: `$lib/server/dto/activity` (used for logging user actions)
@@ -72,6 +73,7 @@
 - Auth: Better Auth runs server-side in web; mobile should call the same Hono endpoints. If you want typed clients on mobile, mirror web’s OpenAPI generation (e.g., `openapi-typescript`) or share a minimal fetch wrapper.
 
 ## Patterns & Gotchas
+- **CRITICAL - File Uploads**: Hono's `formData()` parsing is BROKEN with Vite's dev server (Node HTTP layer aborts the connection during body stream processing). File uploads MUST use direct SvelteKit `+server.ts` endpoints that call `request.formData()` directly. The upload endpoint is at `/api/upload/[item]` — do NOT try to add multipart/formData handling to Hono routes.
 - Always pass folder prefixes carefully; use empty `""` for storage root in `listFolders()` to avoid `join()` resetting to OS root.
 - When creating folders, write both `.keep` and `.keep.meta.json` so downstream filters work.
 - For partial content, range requests are supported via `generateRangeHeaders()`.
@@ -81,6 +83,7 @@
 
 ## Upload UX Pattern
 - Upload dialog ([upload-dialog.svelte](packages/web/src/lib/components/layout/dialogs/upload-dialog.svelte)) closes immediately when upload starts - no blocking.
+- **Upload Endpoint**: Files are uploaded via XHR to `/api/upload/[item]` (direct SvelteKit endpoint, NOT Hono). See [+server.ts](packages/web/src/routes/api/upload/[item]/+server.ts).
 - Progress tracked via stores: `uploadingItems` (filename → percentage) and `uploadedItems` (filename → ObjectItem).
 - Background progress indicator ([upload-progress-indicator.svelte](packages/web/src/lib/components/layout/upload-progress-indicator.svelte)) appears at bottom-right:
   - Shows per-file progress bars while uploading
