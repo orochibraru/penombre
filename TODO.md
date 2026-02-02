@@ -1,8 +1,5 @@
 # TODOs
 
-## Bugs
-- [] New image preview in full size popup looks like trash. Fix styling.
-
 ## 🔴 High Priority
 
 ### Profile Page Improvements
@@ -15,11 +12,6 @@
   - Files: `packages/web/src/routes/(app)/+layout.svelte` (see `mobileCreateDrawerOpen`)
  
 ### Drag n drop to move
-- [x] **Implement drag-and-drop file moving**
-  - Allow dragging files/folders into other folders in the UI
-  - Update backend to handle move operations
-  - Files: `packages/web/src/lib/components/file/wrapper.svelte`, `packages/web/src/lib/server/routes/storage/objects.ts`
-  - IMPLEMENTED: Added HTML5 drag-and-drop support to all three view modes (list, grid, table). Files and folders can now be dragged onto folders with visual feedback (ring highlight). Backend move endpoints were already in place.
 - [] Add a ".." folder at the top of the folder list when moving files to allow moving to parent folder easily
 
 ### Mobile-only CTA button becomes drawer menu trigger
@@ -54,6 +46,9 @@
   - Show action type, timestamp, user (no file names or content)
   - Files: `packages/web/src/routes/(app)/admin/activity/+page.svelte` (new)
   - Existing: `packages/web/src/lib/server/dto/activity.ts`
+- [ ] **Metadata regeneration tool** - Admin tool to regenerate file metadata (thumbnails, previews)
+  - Files: `packages/web/src/routes/(app)/admin/metadata/+page.svelte` (new)
+  - Backend logic to reprocess files and update metadata in DB
 
 ### Office Integration
 - [ ] **OnlyOffice Integration** - Edit docs, sheets, presentations in-browser

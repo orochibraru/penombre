@@ -133,6 +133,7 @@ export abstract class StorageServiceBase {
 	 * Generates default metadata for a file or folder.
 	 */
 	protected generateMeta(name: string): FileMetadata {
+		logger.debug(`Generating meta for ${name}`);
 		return {
 			id: crypto.randomUUID(),
 			name,
@@ -143,6 +144,40 @@ export abstract class StorageServiceBase {
 			isTrashed: false,
 			isStarred: false,
 		};
+	}
+
+	/**
+	 * Generates a filename with UUID and extension from display name.
+	 * Examples:
+	 *   "document.pdf" -> "{uuid}.pdf"
+	 *   "archive.tar.gz" -> "{uuid}.tar.gz"
+	 *   "file" -> "{uuid}"
+	 */
+	protected generateFileNameWithExtension(displayName: string): string {
+		const uuid = crypto.randomUUID();
+		const parts = displayName.split(".");
+		if (parts.length === 1) {
+			// No extension
+			return uuid;
+		}
+		// Handle multi-part extensions like .tar.gz
+		const extension = parts.slice(1).join(".");
+		return `${uuid}.${extension}`;
+	}
+
+	/**
+	 * Extracts the extension from a filename.
+	 * Examples:
+	 *   "document.pdf" -> "pdf"
+	 *   "archive.tar.gz" -> "tar.gz"
+	 *   "file" -> ""
+	 */
+	protected extractExtension(filename: string): string {
+		const parts = filename.split(".");
+		if (parts.length === 1) {
+			return "";
+		}
+		return parts.slice(1).join(".");
 	}
 
 	/**

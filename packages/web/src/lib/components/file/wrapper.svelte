@@ -650,6 +650,7 @@
                 {@const Icon = action.icon}
                 <div class="w-full">
                     <Button
+                        type="button"
                         variant={action.variant}
                         onclick={() => action.action()}
                         class="w-full text-xs"
@@ -840,6 +841,7 @@
             </DropdownMenu.Root>
             {#if isTrash}
                 <Button
+                    type="button"
                     variant="destructive"
                     onclick={emptyTrash}
                     disabled={data.count === 0}

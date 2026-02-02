@@ -9,7 +9,7 @@ import { expect, test } from "@playwright/test";
  */
 test.describe("Large Folder Upload", () => {
 	// 60 seconds should be plenty for 250 files
-	test.setTimeout(60_000);
+	test.setTimeout(120_000);
 
 	const FILE_COUNT = 250;
 
@@ -218,6 +218,107 @@ test.describe("Large Folder Upload", () => {
 			).toBeVisible();
 			await expect(
 				page.getByRole("cell", { name: /nested-040\.txt/ }),
+			).toBeVisible();
+		} finally {
+			if (fs.existsSync(testFolderPath)) {
+				fs.rmSync(testFolderPath, { recursive: true, force: true });
+			}
+		}
+	});
+
+	test("can upload files on slow 3G network without failures", async ({
+		page,
+		context,
+	}) => {
+		await page.goto("/browse");
+
+		// Create a dedicated folder for this test
+		const testContainerName = `slow-network-test-${Date.now()}`;
+
+		await page
+			.getByRole("button", { name: "New", exact: true })
+			.first()
+			.click();
+		await page.getByRole("menuitem", { name: /folder/i }).click();
+
+		const folderDialog = page.getByRole("dialog");
+		await folderDialog.getByRole("textbox").fill(testContainerName);
+		await folderDialog.getByRole("button", { name: /create/i }).click();
+		await expect(folderDialog).not.toBeVisible({ timeout: 5000 });
+
+		// Navigate into the folder
+		await page
+			.getByRole("cell", { name: testContainerName, exact: true })
+			.dblclick();
+		await expect(page).toHaveURL(/\/browse\/.+/, { timeout: 5000 });
+
+		// Create temp folder with 20 files (smaller count for slow network)
+		const tempDir = os.tmpdir();
+		const testFolderName = `slow-upload-${Date.now()}`;
+		const testFolderPath = path.join(tempDir, testFolderName);
+
+		fs.mkdirSync(testFolderPath);
+
+		const slowFileCount = 20;
+		for (let i = 1; i <= slowFileCount; i++) {
+			const fileName = `slow-file-${String(i).padStart(3, "0")}.txt`;
+			// Slightly larger files to make network impact visible
+			fs.writeFileSync(
+				path.join(testFolderPath, fileName),
+				`Content of file ${i}. `.repeat(100), // ~2KB each
+			);
+		}
+
+		try {
+			// Enable slow 3G network throttling ONLY for the upload
+			const cdpSession = await context.newCDPSession(page);
+			await cdpSession.send("Network.emulateNetworkConditions", {
+				offline: false,
+				downloadThroughput: (500 * 1024) / 8, // 500 Kbps
+				uploadThroughput: (500 * 1024) / 8, // 500 Kbps
+				latency: 400, // 400ms latency
+			});
+
+			// Open upload dialog
+			await page
+				.getByRole("button", { name: "New", exact: true })
+				.first()
+				.click();
+			await page.getByRole("menuitem", { name: /file/i }).click();
+
+			const dialog = page.getByRole("dialog");
+			await expect(dialog).toBeVisible({ timeout: 5_000 });
+
+			const folderInput = dialog.locator('input[type="file"][webkitdirectory]');
+			await folderInput.setInputFiles(testFolderPath);
+
+			await dialog.getByRole("button", { name: /upload/i }).click();
+			await expect(dialog).not.toBeVisible({ timeout: 5_000 });
+
+			// Wait longer for slow network - 45s for 20 files on slow 3G
+			await page.waitForTimeout(45_000);
+
+			// Disable throttling before reload so it's fast
+			await cdpSession.send("Network.emulateNetworkConditions", {
+				offline: false,
+				downloadThroughput: -1,
+				uploadThroughput: -1,
+				latency: 0,
+			});
+
+			// Reload to see all files
+			await page.reload();
+
+			// Verify all files uploaded successfully
+			const fileRows = page.locator("table tbody tr");
+			await expect(fileRows).toHaveCount(slowFileCount, { timeout: 10_000 });
+
+			// Verify first and last file
+			await expect(
+				page.getByRole("cell", { name: /slow-file-001\.txt/ }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("cell", { name: /slow-file-020\.txt/ }),
 			).toBeVisible();
 		} finally {
 			if (fs.existsSync(testFolderPath)) {

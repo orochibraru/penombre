@@ -21,6 +21,12 @@ const testPassword =
  * or insert directly into the database.
  */
 setup("authenticate", async ({ page }) => {
+	// Listen for console messages
+	page.on("console", (msg) => console.log(`Browser console: ${msg.text()}`));
+
+	// Listen for page errors
+	page.on("pageerror", (err) => console.error(`Browser error: ${err}`));
+
 	await page.goto("/auth/sign-in");
 
 	// Wait for the sign-in page to load
@@ -30,11 +36,33 @@ setup("authenticate", async ({ page }) => {
 	await page.getByLabel(/email/i).fill(testEmail);
 	await page.getByLabel(/password/i).fill(testPassword);
 
-	// Submit the form
-	await page.getByRole("button", { name: /sign in/i }).click();
+	// Submit the form and wait for navigation
+	const [response] = await Promise.all([
+		page.waitForResponse((resp) => resp.url().includes("/api/auth"), {
+			timeout: 10000,
+		}),
+		page.getByRole("button", { name: /sign in/i }).click(),
+	]);
 
-	// Wait for redirect to the main app (browse page)
-	await expect(page).toHaveURL(/\/browse/, { timeout: 15000 });
+	console.log(`Auth API response status: ${response.status()}`);
+
+	if (!response.ok()) {
+		const body = await response.text();
+		console.error(`Auth failed with body: ${body}`);
+	}
+
+	// Wait for navigation to complete - either to browse or root (which redirects to browse)
+	await page.waitForURL(
+		(url) => url.pathname === "/" || url.pathname === "/browse",
+		{
+			timeout: 15000,
+		},
+	);
+
+	// If we're at root, wait for the redirect to browse
+	if (page.url().endsWith("/")) {
+		await page.waitForURL(/\/browse/, { timeout: 5000 });
+	}
 
 	// Verify we're logged in by checking for a user-specific element
 	await expect(page.locator("body")).not.toContainText("Sign In");

@@ -1,9 +1,7 @@
-import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { dev } from "$app/environment";
 import { Logger } from "$lib/logger";
 import type { StorageRouter } from "$lib/server/api-types";
 import { debugLog } from "$lib/server/debug-log";
@@ -23,18 +21,9 @@ import {
 	bulkDownloadService,
 	StorageService,
 } from "$lib/server/services/storage";
+import { FileProxyService } from "$lib/server/services/storage/fileproxy";
 
-const logger = new Logger("ObjectsRouter");
-
-/**
- * Generate ETag from file metadata for conditional requests.
- */
-function generateETag(data: { size: number; mtime: number }): string {
-	const hash = createHash("md5")
-		.update(`${data.size}-${data.mtime}`)
-		.digest("hex");
-	return `"${hash}"`;
-}
+const logger = new Logger("Router::Storage::Objects");
 
 // Query schemas for RPC type inference
 const folderQuerySchema = z.object({
@@ -447,7 +436,7 @@ const objectsRouter = new Hono<StorageRouter>()
 	// GET /storage/objects/category/:category - List files by category
 	.get("/category/:category", async (c) => {
 		const cat = c.req.param("category")?.toUpperCase();
-		if (!allowedFileCategories.includes(cat || "")) {
+		if (!allowedFileCategories.includes(cat as FileCategory)) {
 			return c.json({ message: "Invalid category" }, 400);
 		}
 		const storageService = c.get("storageService");
@@ -481,150 +470,39 @@ const objectsRouter = new Hono<StorageRouter>()
 		const { raw, thumbnail, size } = c.req.valid("query");
 
 		try {
-			// Handle thumbnail requests
-			if (thumbnail === "true") {
-				logger.debug(`Fetching thumbnail for: ${decodedItemName}`);
-				// Map size string to pixel dimensions: small=100px, medium=200px, large=300px
-				const thumbSize =
-					size === "small" ? 100 : size === "medium" ? 200 : 300;
-				const thumbData = await storageService.getThumbnail(
-					decodedItemName,
-					thumbSize,
-				);
+			const proxyService = new FileProxyService({
+				storageService,
+				userId: user.id,
+			});
 
-				if (!thumbData) {
-					// Fall back to raw file if thumbnail generation fails
-					logger.debug(
-						`Thumbnail generation failed, falling back to raw for: ${decodedItemName}`,
-					);
-				} else {
-					// Generate ETag for thumbnail
-					const etag = generateETag({
-						size: thumbData.buffer.length,
-						mtime: Date.now(),
-					});
+			const headers: Record<string, string> = {};
+			c.req.raw.headers.forEach((value, key) => {
+				headers[key] = value;
+			});
 
-					// Check If-None-Match header for 304 Not Modified
-					const ifNoneMatch = c.req.header("If-None-Match");
-					if (ifNoneMatch === etag) {
-						return c.body(null, 304);
-					}
+			const result = await proxyService.handleRequest({
+				itemName: decodedItemName,
+				raw: raw === "true",
+				thumbnail: thumbnail === "true",
+				size,
+				ifNoneMatch: c.req.header("If-None-Match"),
+				rangeHeader: c.req.header("range") || c.req.header("Range"),
+			});
 
-					return new Response(new Uint8Array(thumbData.buffer), {
-						headers: {
-							"Content-Type": thumbData.contentType,
-							"Cache-Control": "public, max-age=31536000, immutable",
-							"Content-Length": thumbData.buffer.length.toString(),
-							ETag: etag,
-						},
-						status: 200,
-					});
-				}
+			if (result instanceof Response) {
+				return result;
 			}
 
-			if (raw === "true" || thumbnail === "true") {
-				logger.debug(`Fetching raw file data for: ${decodedItemName}`);
-				const fileData = await storageService.getRawFileData(decodedItemName);
-				if (!fileData) {
-					logger.debug(`File not found: ${decodedItemName}`);
-					return c.json({ message: "File not found" }, 404);
-				}
-
-				logger.debug(`Raw file data retrieved for: ${decodedItemName}`);
-				logger.debug(`Checking ownership for user: ${user.id}`);
-				if (fileData.meta.metadata.owner !== user.id) {
-					logger.debug(`Unauthorized access attempt by user: ${user.id}`);
-					return c.json({ message: "Unauthorized" }, 401);
-				}
-
-				logger.debug(`User authorized: ${user.id}, preparing file response`);
-
-				// Generate ETag for conditional requests
-				const etag = generateETag({
-					size: fileData.file.size,
-					mtime: fileData.file.lastModified,
-				});
-
-				// Check If-None-Match header for 304 Not Modified
-				const ifNoneMatch = c.req.header("If-None-Match");
-				if (ifNoneMatch === etag && !dev) {
-					logger.debug("ETag match, returning 304 Not Modified");
-					return c.body(null, 304, {
-						ETag: etag,
-						"Cache-Control": "public, max-age=3600",
-					});
-				}
-
-				logger.debug("Checking for Range header");
-				const rangeHeader =
-					c.req.header("range") || c.req.header("Range") || "";
-				if (rangeHeader) {
-					const headers: Record<string, string> = {};
-					c.req.raw.headers.forEach((value, key) => {
-						headers[key] = value;
-					});
-					logger.debug("Generating range headers for partial content");
-					const { chunk, headers: newHeaders } =
-						storageService.generateRangeHeaders({
-							file: fileData.file,
-							object: fileData.meta,
-							headers,
-						});
-
-					newHeaders.set("ETag", etag);
-					logger.debug("Returning partial content response with status 206");
-					return new Response(chunk, {
-						status: 206,
-						headers: newHeaders,
-					});
-				}
-
-				logger.debug("Returning full file response with status 200");
-				const newHeaders = storageService.generateRawFileHeaders({
-					file: fileData.file,
-					object: fileData.meta,
-				});
-
-				// Log all headers for debug
-				logger.debug("headers");
-				for (const header of newHeaders) {
-					logger.debug(header);
-				}
-
-				newHeaders.set("ETag", etag);
-
-				// Return raw buffer so Content-Disposition header is respected by browser
-				const buffer = await fileData.file.arrayBuffer();
-				logger.debug(
-					"File response prepared, sending response with display name from metadata",
-				);
-				return new Response(buffer, {
-					headers: newHeaders,
-					status: 200,
-				});
-			}
-
-			logger.debug(`Fetching file metadata for: ${decodedItemName}`);
-			const file = await storageService.getFile(decodedItemName);
-			if (!file) {
-				logger.debug(`File not found: ${decodedItemName}`);
-				return c.json({ message: "File not found" }, 404);
-			}
-
-			logger.debug("Checking file ownership");
-			if (file.metadata.owner !== user.id) {
-				logger.debug(`Unauthorized access attempt by user: ${user.id}`);
-				return c.json({ message: "Unauthorized" }, 401);
-			}
-
-			logger.debug("File metadata retrieved successfully");
-			return c.json<ObjectItem>(file);
+			return c.json<ObjectItem>(result);
 		} catch (error) {
 			if (error instanceof FileOrFolderNotFoundError) {
 				return c.json({ message: "File not found" }, 404);
 			}
-			logger.error("Error retrieving file metadata:", error);
-			return c.json({ message: "Error retrieving file metadata." }, 500);
+			if (error instanceof Error && error.message === "Unauthorized") {
+				return c.json({ message: "Unauthorized" }, 401);
+			}
+			logger.error("Error retrieving file:", error);
+			return c.json({ message: "Error retrieving file." }, 500);
 		}
 	})
 

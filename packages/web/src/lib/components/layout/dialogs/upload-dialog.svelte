@@ -138,7 +138,6 @@
             .filter((file) => {
                 const fileName = file.name;
                 if (shouldSkipFile(fileName)) {
-                    console.debug(`Skipping OS file: ${fileName}`);
                     return false;
                 }
                 return true;
@@ -469,9 +468,6 @@
                 const existingUuid = existingFolders.get(
                     fullDisplayPath.toLowerCase(),
                 );
-                console.debug(
-                    `Folder already exists: ${fullDisplayPath} (UUID: ${existingUuid})`,
-                );
                 if (existingUuid) {
                     folderPathToUuid.set(folderPath, existingUuid);
                 }
@@ -490,9 +486,6 @@
                     const result = await res.json();
                     const folderId = result.id;
                     folderPathToUuid.set(folderPath, folderId);
-                    console.debug(
-                        `Created folder: ${folderPath} -> UUID: ${folderId}`,
-                    );
                     // Add to our local cache so we don't try to create it again
                     existingFolders?.set(
                         fullDisplayPath.toLowerCase(),
@@ -604,10 +597,6 @@
                     size: item.file.size,
                 }));
 
-                console.debug(
-                    `Sending batch of ${filesInFolder.length} files to folder: ${folder}`,
-                );
-
                 const res = await apiClient.storage.objects.batch.$post({
                     query: { folder: folder || undefined },
                     json: {
@@ -654,10 +643,6 @@
                     $uploadingItemsNames[fileKey] = fileItem.name;
                 }
             }
-
-            console.debug(
-                `All batch metadata requests completed. Total files: ${results.length}`,
-            );
         } catch (e) {
             console.error(e);
             toast.error("Failed to prepare files for upload.");

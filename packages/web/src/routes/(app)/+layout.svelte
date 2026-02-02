@@ -3,6 +3,7 @@
         ClockFadingIcon,
         CloudUploadIcon,
         CodeIcon,
+        FileArchiveIcon,
         FileIcon,
         FolderIcon,
         FolderPlusIcon,
@@ -11,6 +12,7 @@
         MenuIcon,
         MusicIcon,
         PlugIcon,
+        Rotate3dIcon,
         SettingsIcon,
         SquarePlusIcon,
         StarIcon,
@@ -42,6 +44,7 @@
     import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
     import UploadProgressIndicator from "$lib/components/layout/upload-progress-indicator.svelte";
     import Spinner from "$lib/components/ui/Spinner.svelte";
+    import { FileCategoryEnum } from "$lib/file-helpers";
 
     const { children, data } = $props();
 
@@ -91,7 +94,7 @@
             {
                 title: "Music",
                 url: route("/categories/[category]", {
-                    category: "music",
+                    category: FileCategoryEnum.MUSIC,
                 }),
                 icon: MusicIcon,
                 accentColor: "pink",
@@ -99,7 +102,7 @@
             {
                 title: "Documents",
                 url: route("/categories/[category]", {
-                    category: "documents",
+                    category: FileCategoryEnum.DOCUMENTS,
                 }),
                 icon: FileIcon,
                 accentColor: "indigo",
@@ -107,7 +110,7 @@
             {
                 title: "Images",
                 url: route("/categories/[category]", {
-                    category: "images",
+                    category: FileCategoryEnum.IMAGES,
                 }),
                 icon: ImageIcon,
                 accentColor: "orange",
@@ -115,7 +118,7 @@
             {
                 title: "Code",
                 url: route("/categories/[category]", {
-                    category: "code",
+                    category: FileCategoryEnum.CODE,
                 }),
                 icon: CodeIcon,
                 accentColor: "green",
@@ -123,10 +126,26 @@
             {
                 title: "Video",
                 url: route("/categories/[category]", {
-                    category: "video",
+                    category: FileCategoryEnum.VIDEO,
                 }),
                 icon: VideoIcon,
                 accentColor: "purple",
+            },
+            {
+                title: "Archives",
+                url: route("/categories/[category]", {
+                    category: FileCategoryEnum.ARCHIVES,
+                }),
+                icon: FileArchiveIcon,
+                accentColor: "teal",
+            },
+            {
+                title: "3D Objects",
+                url: route("/categories/[category]", {
+                    category: FileCategoryEnum.THREE_D,
+                }),
+                icon: Rotate3dIcon,
+                accentColor: "rose",
             },
         ],
         help: [

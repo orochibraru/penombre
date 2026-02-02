@@ -1,3 +1,4 @@
+import { FileCategoryEnum } from "$lib/file-helpers";
 import type { FileCategory, FileContentType } from "$lib/server/schema";
 import fileTypesData from "./file-types.json";
 
@@ -27,6 +28,7 @@ export class ContentTypeService {
 		if (!extension) {
 			return "application/octet-stream";
 		}
+		console.debug("Searching content type for", extension);
 		return this.contentTypes[extension] || "application/octet-stream";
 	}
 
@@ -36,8 +38,8 @@ export class ContentTypeService {
 	determineCategory(key: string): FileCategory {
 		const extension = key.split(".").pop()?.toLowerCase();
 		if (!extension) {
-			return "UNKNOWN";
+			return FileCategoryEnum.UNKNOWN;
 		}
-		return this.categories[extension] || "UNKNOWN";
+		return this.categories[extension] || FileCategoryEnum.UNKNOWN;
 	}
 }

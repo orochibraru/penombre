@@ -41,10 +41,14 @@ export default defineConfig({
 	// Start dev server before running tests
 	webServer: {
 		env: {
-			ORIGIN: "http://localhost:3000",
-			LOG_LEVEL: "DEBUG",
-			PORT: "3000",
-			STORAGE_PATH: "tmp/e2e-storage",
+			DATABASE_URL:
+				process.env.DATABASE_URL ||
+				"postgres://postgres:postgres@0.0.0.0:5432/opendrive?sslmode=disable",
+			ORIGIN: process.env.ORIGIN || "http://localhost:3000",
+			AUTH_SECRET: "test_secret_for_e2e_tests_only",
+			LOG_LEVEL: process.env.LOG_LEVEL || "DEBUG",
+			PORT: process.env.PORT || "3000",
+			STORAGE_PATH: process.env.STORAGE_PATH || "tmp/e2e-storage",
 		},
 		command: "bun run ./build/index.js",
 		url: "http://localhost:3000",

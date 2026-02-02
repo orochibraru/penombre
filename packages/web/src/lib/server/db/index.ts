@@ -50,9 +50,13 @@ function createDb(): BunSQLDatabase<Record<string, never>> {
 
 export const db = createDb();
 
-// For backward compatibility
+// For backward compatibility and proper singleton access
 export function getDb() {
-	return db;
+	// If instance was reset, recreate it
+	if (!globalForDb.__db_instance) {
+		return createDb();
+	}
+	return globalForDb.__db_instance;
 }
 
 /**
@@ -73,7 +77,7 @@ export async function closeDb(): Promise<void> {
  */
 export async function resetDb(): Promise<void> {
 	await closeDb();
-	// Force recreation on next getDb() call
+	// Force recreation on next getDb() call by clearing the singleton
 	globalForDb.__db_instance = undefined;
 	globalForDb.__db_client = undefined;
 }

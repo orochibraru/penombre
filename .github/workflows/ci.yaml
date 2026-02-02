@@ -109,6 +109,11 @@ jobs:
 
       - name: Run e2e tests
         working-directory: packages/web
+        env:
+          DATABASE_URL: postgres://opendrive:opendrive@postgres:5432/opendrive
+          ORIGIN: http://localhost:3000
+          LOG_LEVEL: DEBUG
+          PORT: '3000'
         run: bun run test:e2e:ci
         
       - uses: actions/upload-artifact@v4

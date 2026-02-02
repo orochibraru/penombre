@@ -8,6 +8,7 @@ import {
 	spyOn,
 } from "bun:test";
 import { Hono } from "hono";
+import { FileCategoryEnum } from "$lib/file-helpers";
 import type { StorageRouter } from "$lib/server/api-types";
 import { UnauthorizedError } from "$lib/server/errors";
 import { StorageService } from "$lib/server/services/storage";
@@ -65,7 +66,7 @@ const mockFolderMeta = {
 	isStarred: false,
 	tags: ["work"],
 	createdAt: "2024-01-01T00:00:00.000Z",
-	category: "UNKNOWN" as const,
+	category: FileCategoryEnum.UNKNOWN,
 	contentType: "application/octet-stream" as const,
 };
 

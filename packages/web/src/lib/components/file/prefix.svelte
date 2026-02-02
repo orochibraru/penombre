@@ -11,6 +11,7 @@
         FileVideoCameraIcon,
         FolderIcon,
         PauseIcon,
+        Rotate3dIcon,
         StarIcon,
         XIcon,
     } from "@lucide/svelte";
@@ -34,6 +35,7 @@
         stripFolders,
         getDocumentType,
     } from "$lib/utils";
+    import { FileCategoryEnum } from "$lib/file-helpers";
 
     type Props = {
         item: ObjectItem;
@@ -268,7 +270,7 @@
             </div>
         {:else if item.metadata.category}
             <div class="flex h-full items-center justify-start">
-                {#if item.metadata.category === "DOCUMENTS"}
+                {#if item.metadata.category === FileCategoryEnum.DOCUMENTS}
                     {@const docType = getDocumentType(
                         item.metadata.contentType,
                     )}
@@ -277,7 +279,7 @@
                     {:else}
                         <FileTextIcon class={cn(iconSize, "text-blue-600")} />
                     {/if}
-                {:else if item.metadata.category === "MUSIC"}
+                {:else if item.metadata.category === FileCategoryEnum.MUSIC}
                     {#if $playableMusic && $playableMusic.title === (item.metadata.name ?? item.key)}
                         {#if $playableMusic.isPlaying}
                             <NowPlaying />
@@ -287,16 +289,18 @@
                     {:else}
                         <FileMusicIcon class={cn(iconSize, "text-pink-400")} />
                     {/if}
-                {:else if item.metadata.category === "IMAGES"}
+                {:else if item.metadata.category === FileCategoryEnum.IMAGES}
                     <FileImageIcon class={cn(iconSize, "text-orange-400")} />
-                {:else if item.metadata.category === "VIDEO"}
+                {:else if item.metadata.category === FileCategoryEnum.VIDEO}
                     <FileVideoCameraIcon
                         class={cn(iconSize, "text-blue-400")}
                     />
-                {:else if item.metadata.category === "CODE"}
+                {:else if item.metadata.category === FileCategoryEnum.CODE}
                     <FileCodeIcon class={cn(iconSize, "text-green-400")} />
-                {:else if item.metadata.category === "ARCHIVES"}
-                    <FileArchiveIcon class={cn(iconSize, "text-purple-600")} />
+                {:else if item.metadata.category === FileCategoryEnum.ARCHIVES}
+                    <FileArchiveIcon class={cn(iconSize, "text-teal-600")} />
+                {:else if item.metadata.category === FileCategoryEnum.THREE_D}
+                    <Rotate3dIcon class={cn(iconSize, "text-rose-600")} />
                 {:else}
                     <FileIcon class={iconSize} />
                 {/if}

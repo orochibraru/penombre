@@ -8,6 +8,7 @@ import {
 	spyOn,
 } from "bun:test";
 import { Hono } from "hono";
+import { FileCategoryEnum } from "$lib/file-helpers";
 import type { StorageRouter } from "$lib/server/api-types";
 import {
 	FileOrFolderNotFoundError,
@@ -67,7 +68,7 @@ const mockObjectList = {
 			metadata: {
 				id: "file-id-1",
 				name: "test-file.txt",
-				category: "DOCUMENTS" as const,
+				category: FileCategoryEnum.DOCUMENTS,
 				contentType: "text/plain" as const,
 				createdAt: new Date().toISOString(),
 				owner: "test-user-id",
@@ -89,7 +90,7 @@ const mockObjectItem = {
 	metadata: {
 		id: "file-id-1",
 		name: "test-file.txt",
-		category: "DOCUMENTS" as const,
+		category: FileCategoryEnum.DOCUMENTS,
 		contentType: "text/plain" as const,
 		createdAt: new Date().toISOString(),
 		owner: "test-user-id",
@@ -105,7 +106,7 @@ const mockUploadResult = {
 	metadata: {
 		id: "new-file-id",
 		name: "newfile.txt",
-		category: "DOCUMENTS" as const,
+		category: FileCategoryEnum.DOCUMENTS,
 		contentType: "text/plain" as const,
 		createdAt: new Date().toISOString(),
 		owner: "test-user-id",
@@ -230,7 +231,7 @@ beforeEach(() => {
 			metadata: {
 				id: "duplicated-file-id",
 				name: "test-file (1).txt",
-				category: "DOCUMENTS" as const,
+				category: FileCategoryEnum.DOCUMENTS,
 				contentType: "text/plain" as const,
 				createdAt: new Date().toISOString(),
 				owner: "test-user-id",
@@ -431,7 +432,7 @@ describe("POST /storage/objects/batch", () => {
 				metadata: {
 					id: "file-id-1",
 					name: "file1.txt",
-					category: "DOCUMENTS" as const,
+					category: FileCategoryEnum.DOCUMENTS,
 					contentType: "text/plain" as const,
 					createdAt: new Date().toISOString(),
 					owner: "test-user-id",
@@ -445,7 +446,7 @@ describe("POST /storage/objects/batch", () => {
 				metadata: {
 					id: "file-id-2",
 					name: "file2.txt",
-					category: "DOCUMENTS" as const,
+					category: FileCategoryEnum.DOCUMENTS,
 					contentType: "text/plain" as const,
 					createdAt: new Date().toISOString(),
 					owner: "test-user-id",
@@ -488,7 +489,7 @@ describe("POST /storage/objects/batch", () => {
 				metadata: {
 					id: "file-id-1",
 					name: "file1.txt",
-					category: "DOCUMENTS" as const,
+					category: FileCategoryEnum.DOCUMENTS,
 					contentType: "text/plain" as const,
 					createdAt: new Date().toISOString(),
 					owner: "test-user-id",
@@ -1097,7 +1098,7 @@ describe("Objects Router - POST /item/:item/duplicate", () => {
 			metadata: {
 				id: "duplicated-file-id",
 				name: "test-file (1).txt",
-				category: "DOCUMENTS" as const,
+				category: FileCategoryEnum.DOCUMENTS,
 				contentType: "text/plain" as const,
 				createdAt: new Date().toISOString(),
 				owner: "test-user-id",
@@ -1133,7 +1134,7 @@ describe("Objects Router - POST /item/:item/duplicate", () => {
 			metadata: {
 				id: "duplicated-file-id",
 				name: "my file (1).txt",
-				category: "DOCUMENTS" as const,
+				category: FileCategoryEnum.DOCUMENTS,
 				contentType: "text/plain" as const,
 				createdAt: new Date().toISOString(),
 				owner: "test-user-id",

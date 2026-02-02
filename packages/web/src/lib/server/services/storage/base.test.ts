@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { FileCategoryEnum } from "$lib/file-helpers";
 import type { FileMetadata } from "$lib/server/schema";
 import { StorageServiceBase } from "./base";
 import {
@@ -169,10 +170,10 @@ describe("StorageServiceBase", () => {
 
 		it("should determine category from filename", () => {
 			const imageMeta = service.testGenerateMeta("photo.jpg");
-			expect(imageMeta.category).toBe("IMAGES");
+			expect(imageMeta.category).toBe(FileCategoryEnum.IMAGES);
 
 			const docMeta = service.testGenerateMeta("document.pdf");
-			expect(docMeta.category).toBe("DOCUMENTS");
+			expect(docMeta.category).toBe(FileCategoryEnum.DOCUMENTS);
 		});
 
 		it("should determine content type from filename", () => {
@@ -190,7 +191,7 @@ describe("StorageServiceBase", () => {
 				id: "test-id",
 				name: "test.txt",
 				owner: mockUser.id,
-				category: "UNKNOWN",
+				category: FileCategoryEnum.UNKNOWN,
 				contentType: "text/plain",
 				createdAt: new Date(),
 				isTrashed: false,
@@ -205,7 +206,7 @@ describe("StorageServiceBase", () => {
 				id: "test-id",
 				name: "test.txt",
 				owner: "other-user-id",
-				category: "UNKNOWN",
+				category: FileCategoryEnum.UNKNOWN,
 				contentType: "text/plain",
 				createdAt: new Date(),
 				isTrashed: false,

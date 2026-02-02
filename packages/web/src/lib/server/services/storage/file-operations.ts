@@ -30,9 +30,9 @@ export abstract class FileOperations extends StorageServiceBase {
 		const fileMeta = Bun.file(`${filePath}.meta.json`);
 
 		if (!(await fileMeta.exists())) {
-			const baseName = filePath.split("/").pop() || filePath;
-			const metadata = this.generateMeta(baseName);
-			await Bun.write(`${filePath}.meta.json`, JSON.stringify(metadata));
+			throw new FileOrFolderNotFoundError(
+				`File metadata not found for: ${path}`,
+			);
 		}
 
 		const metadata = await Bun.file(`${filePath}.meta.json`).json();
@@ -151,13 +151,18 @@ export abstract class FileOperations extends StorageServiceBase {
 			"file",
 		);
 
-		const fileName = currentPath.split("/").pop() || fileKey;
+		// Extract extension from the current file path to preserve it
+		const currentFileName = currentPath.split("/").pop() || fileKey;
+		const extension = this.extractExtension(currentFileName);
+		const newUUID = crypto.randomUUID();
+		const newFileName = extension ? `${newUUID}.${extension}` : newUUID;
+
 		const normalizedDest = destinationFolder.endsWith("/")
 			? destinationFolder.slice(0, -1)
 			: destinationFolder;
 		const destPath = normalizedDest
-			? join(this.storagePath, normalizedDest, fileName)
-			: join(this.storagePath, fileName);
+			? join(this.storagePath, normalizedDest, newFileName)
+			: join(this.storagePath, newFileName);
 		const destMetaPath = `${destPath}.meta.json`;
 
 		if (normalizedDest) {
@@ -222,9 +227,10 @@ export abstract class FileOperations extends StorageServiceBase {
 			isStarred: false,
 		};
 
+		const newFileNameWithExt = this.generateFileNameWithExtension(uniqueName);
 		const newFilePath = parentFolder
-			? join(this.storagePath, parentFolder, newMeta.id)
-			: join(this.storagePath, newMeta.id);
+			? join(this.storagePath, parentFolder, newFileNameWithExt)
+			: join(this.storagePath, newFileNameWithExt);
 		const newMetaPath = `${newFilePath}.meta.json`;
 
 		const fileContent = await Bun.file(currentPath).arrayBuffer();
@@ -243,7 +249,7 @@ export abstract class FileOperations extends StorageServiceBase {
 
 		const file = Bun.file(newFilePath);
 		return {
-			key: newMeta.id,
+			key: newFileNameWithExt,
 			size: file.size,
 			type: "file",
 			updatedAt: new Date(file.lastModified),
@@ -271,10 +277,14 @@ export abstract class FileOperations extends StorageServiceBase {
 			normalizedFolder,
 			"file",
 		);
+
 		const meta = this.generateMeta(uniqueName);
+		const fileNameWithExt = this.generateFileNameWithExtension(uniqueName);
+		// Override the UUID to use the one with extension
+		const uuidWithExt = fileNameWithExt;
 		const idFilePath = normalizedFolder
-			? `${normalizedFolder}/${meta.id}`
-			: meta.id;
+			? `${normalizedFolder}/${uuidWithExt}`
+			: uuidWithExt;
 		await this.writeFile(idFilePath, new Uint8Array(), meta, file.size);
 		await this.activityService.register({
 			userId: this.user.id,
@@ -287,7 +297,7 @@ export abstract class FileOperations extends StorageServiceBase {
 		this.invalidateListingCaches();
 
 		return {
-			id: meta.id,
+			id: uuidWithExt,
 			finalName: idFilePath,
 			metadata: meta,
 		};
@@ -319,14 +329,17 @@ export abstract class FileOperations extends StorageServiceBase {
 				normalizedFolder,
 				"file",
 			);
+
 			const meta = this.generateMeta(uniqueName);
+			const fileNameWithExt = this.generateFileNameWithExtension(uniqueName);
+			const uuidWithExt = fileNameWithExt;
 			const idFilePath = normalizedFolder
-				? `${normalizedFolder}/${meta.id}`
-				: meta.id;
+				? `${normalizedFolder}/${uuidWithExt}`
+				: uuidWithExt;
 			await this.writeFile(idFilePath, new Uint8Array(), meta, file.size);
 
 			results.push({
-				id: meta.id,
+				id: uuidWithExt,
 				finalName: idFilePath,
 				metadata: meta,
 			});

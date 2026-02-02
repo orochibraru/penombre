@@ -3,7 +3,20 @@
         title: string;
         url: string;
         icon: typeof IconType;
-        accentColor?: "indigo" | "orange" | "pink" | "green" | "purple";
+        accentColor?:
+            | "indigo"
+            | "orange"
+            | "pink"
+            | "green"
+            | "purple"
+            | "blue"
+            | "red"
+            | "yellow"
+            | "teal"
+            | "cyan"
+            | "rose"
+            | "violet"
+            | "amber";
         hideOnMobile?: boolean;
         isRoot?: boolean;
         /** Optional count to display as badge (desktop only) */
@@ -80,6 +93,30 @@
                                         item.accentColor === "purple"
                                             ? "data-[active=true]:text-purple-500"
                                             : "",
+                                        item.accentColor === "blue"
+                                            ? "data-[active=true]:text-blue-500"
+                                            : "",
+                                        item.accentColor === "red"
+                                            ? "data-[active=true]:text-red-500"
+                                            : "",
+                                        item.accentColor === "yellow"
+                                            ? "data-[active=true]:text-yellow-500"
+                                            : "",
+                                        item.accentColor === "teal"
+                                            ? "data-[active=true]:text-teal-500"
+                                            : "",
+                                        item.accentColor === "cyan"
+                                            ? "data-[active=true]:text-cyan-500"
+                                            : "",
+                                        item.accentColor === "rose"
+                                            ? "data-[active=true]:text-rose-500"
+                                            : "",
+                                        item.accentColor === "violet"
+                                            ? "data-[active=true]:text-violet-500"
+                                            : "",
+                                        item.accentColor === "amber"
+                                            ? "data-[active=true]:text-amber-500"
+                                            : "",
                                         "text-sm font-medium",
                                     )}
                                     title={item.title}
@@ -101,6 +138,30 @@
                                                 : "",
                                             item.accentColor === "purple"
                                                 ? "text-purple-500"
+                                                : "",
+                                            item.accentColor === "blue"
+                                                ? "text-blue-500"
+                                                : "",
+                                            item.accentColor === "red"
+                                                ? "text-red-500"
+                                                : "",
+                                            item.accentColor === "yellow"
+                                                ? "text-yellow-500"
+                                                : "",
+                                            item.accentColor === "teal"
+                                                ? "text-teal-500"
+                                                : "",
+                                            item.accentColor === "cyan"
+                                                ? "text-cyan-500"
+                                                : "",
+                                            item.accentColor === "rose"
+                                                ? "text-rose-500"
+                                                : "",
+                                            item.accentColor === "violet"
+                                                ? "text-violet-500"
+                                                : "",
+                                            item.accentColor === "amber"
+                                                ? "text-amber-500"
                                                 : "",
                                         )}
                                     />

@@ -1,5 +1,6 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
+import { FileCategoryEnum } from "$lib/file-helpers";
 import { activity, sharedWith, sharings } from "$lib/server/db/schema";
 
 export const directoryListSchema: z.ZodType<string[]> = z.array(z.string());
@@ -13,27 +14,9 @@ export const folderItemSchema = z.object({
 
 export const folderListSchema = z.array(folderItemSchema);
 
-export const fileCategorySchema = z.enum([
-	"MUSIC",
-	"DOCUMENTS",
-	"IMAGES",
-	"VIDEO",
-	"RECENT",
-	"CODE",
-	"ARCHIVES",
-	"UNKNOWN",
-]);
+export const fileCategorySchema = z.enum(FileCategoryEnum);
 
-export const allowedFileCategories = [
-	"MUSIC",
-	"DOCUMENTS",
-	"IMAGES",
-	"VIDEO",
-	"RECENT",
-	"CODE",
-	"ARCHIVES",
-	"UNKNOWN",
-];
+export const allowedFileCategories = Object.values(FileCategoryEnum);
 
 export const fileContentTypeSchema = z.enum([
 	// Documents
@@ -119,6 +102,17 @@ export const fileContentTypeSchema = z.enum([
 	"application/x-compress",
 	"application/zstd",
 	"application/x-brotli",
+	// 3D Objects
+	"model/stl",
+	"model/obj",
+	"model/gltf+json",
+	"model/gltf-binary",
+	"model/fbx",
+	"model/3mf",
+	"model/x3d+xml",
+	"model/vnd.collada+xml",
+	"application/x-blender",
+	"application/x-tgif",
 	// Fallback
 	"application/octet-stream",
 ]);
@@ -178,11 +172,6 @@ export const batchFileSchema = z.object({
 	),
 });
 
-export const newFolderSchema = z.object({
-	name: z.string(),
-	parent: z.string().optional(),
-});
-
 export const updateFileSchema = z.object({
 	type: z.string().optional(),
 	category: fileCategorySchema.optional(),
@@ -232,3 +221,5 @@ export type BatchFile = z.infer<typeof batchFileSchema>;
 
 export type UpdateFile = z.infer<typeof updateFileSchema>;
 export type UploadResult = z.infer<typeof uploadResultSchema>;
+
+export { FileCategoryEnum };

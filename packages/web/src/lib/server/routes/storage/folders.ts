@@ -4,13 +4,16 @@ import { z } from "zod";
 import { Logger } from "$lib/logger";
 import type { StorageRouter } from "$lib/server/api-types";
 import { UnauthorizedError } from "$lib/server/errors";
-import { newFolderSchema } from "$lib/server/schema";
 import { StorageService } from "$lib/server/services/storage";
 
-const logger = new Logger("FoldersRouter");
+const logger = new Logger("Router::Storage::Folders");
+
+export const newFolderSchema = z.object({
+	name: z.string(),
+	parent: z.string().optional(),
+});
 
 const foldersRouter = new Hono<StorageRouter>()
-
 	.use("*", async (c, next) => {
 		const user = c.get("user");
 		if (!user) {

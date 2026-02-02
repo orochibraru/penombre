@@ -1,0 +1,11 @@
+export enum FileCategoryEnum {
+	MUSIC = "MUSIC",
+	DOCUMENTS = "DOCUMENTS",
+	IMAGES = "IMAGES",
+	THREE_D = "3D",
+	VIDEO = "VIDEO",
+	RECENT = "RECENT",
+	CODE = "CODE",
+	ARCHIVES = "ARCHIVES",
+	UNKNOWN = "UNKNOWN",
+}

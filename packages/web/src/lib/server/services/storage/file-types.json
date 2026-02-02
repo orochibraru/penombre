@@ -86,7 +86,17 @@
 		"lzo": "application/x-lzop",
 		"z": "application/x-compress",
 		"zst": "application/zstd",
-		"br": "application/x-brotli"
+		"br": "application/x-brotli",
+		"stl": "model/stl",
+		"obj": "model/obj",
+		"gltf": "model/gltf+json",
+		"glb": "model/gltf-binary",
+		"fbx": "model/fbx",
+		"3mf": "model/3mf",
+		"x3d": "model/x3d+xml",
+		"dae": "model/vnd.collada+xml",
+		"blend": "application/x-blender",
+		"tgif": "application/x-tgif"
 	},
 	"categories": {
 		"mp3": "MUSIC",
@@ -248,6 +258,16 @@
 		"lzo": "ARCHIVES",
 		"z": "ARCHIVES",
 		"zst": "ARCHIVES",
-		"br": "ARCHIVES"
+		"br": "ARCHIVES",
+		"stl": "3D",
+		"obj": "3D",
+		"gltf": "3D",
+		"glb": "3D",
+		"fbx": "3D",
+		"3mf": "3D",
+		"x3d": "3D",
+		"dae": "3D",
+		"blend": "3D",
+		"tgif": "3D"
 	}
 }

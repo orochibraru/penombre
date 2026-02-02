@@ -67,7 +67,7 @@
             case "code":
                 return "#9C27B0"; // Purple
             case "archive":
-                return "#FF9800"; // Orange
+                return "#14B8A6"; // Teal
             default:
                 return "currentColor";
         }
@@ -77,11 +77,3 @@
 <div class={className} style="color: {color}">
     <Icon class={className} />
 </div>
-
-<style>
-    div {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-</style>
