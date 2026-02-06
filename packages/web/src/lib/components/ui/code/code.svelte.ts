@@ -42,7 +42,20 @@ class CodeRootState {
 	}
 
 	highlight(code: string) {
-		return this.highlighter?.codeToHtml(code, {
+		let processedCode = code;
+
+		// Format JSON if lang is json
+		if (this.opts.lang.current === "json") {
+			try {
+				const parsed = JSON.parse(code);
+				processedCode = JSON.stringify(parsed, null, 2);
+			} catch {
+				// If parsing fails, use original code
+				processedCode = code;
+			}
+		}
+
+		return this.highlighter?.codeToHtml(processedCode, {
 			lang: this.opts.lang.current,
 			themes: {
 				light: "github-light-default",

@@ -7,7 +7,6 @@
     import { getFileIconType } from "$lib/utils";
     import {
         FileCodeIcon,
-        FileVideoIcon,
         FileAudioIcon,
         FileVideoCameraIcon,
         FileArchiveIcon,
