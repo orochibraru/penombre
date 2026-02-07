@@ -10,7 +10,7 @@ async function signOutCallback() {
 }
 
 export async function handleSignOut() {
-	toast.promise(signOutCallback(), {
+	toast.promise(signOutCallback, {
 		loading: "Signing you out",
 		success: "You were signed out",
 		error: "Failed to sign you out",
