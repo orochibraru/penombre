@@ -98,6 +98,10 @@ export class AdminStorageService {
 		}
 		const storageDir = await readdir(storageBasePath, { withFileTypes: true });
 
+		const failures: {
+			message: string;
+			error: unknown;
+		}[] = [];
 		for (const dirent of storageDir) {
 			if (dirent.isDirectory() && dirent.name.startsWith("user-")) {
 				const userId = dirent.name.replace("user-", "");
@@ -110,12 +114,21 @@ export class AdminStorageService {
 							`Deleted storage for non-existent user ID: ${userId} at path: ${userStoragePath}`,
 						);
 					} catch (error) {
-						logger.error(
-							`Failed to delete storage for user ID: ${userId} at path: ${userStoragePath}`,
+						failures.push({
+							message: `Failed to delete storage for user ID: ${userId} at path: ${userStoragePath}`,
 							error,
-						);
+						});
 					}
 				}
+			}
+		}
+
+		if (failures.length > 0) {
+			logger.error(
+				`Recorded ${failures.length} failures during storage cleanup:`,
+			);
+			for (const failure of failures) {
+				logger.error(failure.message, failure.error);
 			}
 		}
 	}
