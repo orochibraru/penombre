@@ -4,7 +4,6 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { Logger } from "$lib/logger";
 import type { StorageRouter } from "$lib/server/api-types";
-import { debugLog } from "$lib/server/debug-log";
 import {
 	FileOrFolderNotFoundError,
 	UnauthorizedError,
@@ -508,7 +507,7 @@ const objectsRouter = new Hono<StorageRouter>()
 
 	// POST /storage/objects/item/:item - Upload file body
 	.post("/item/:item", async (c) => {
-		debugLog("UPLOAD", "=== POST /item/:item ROUTE HIT ===", {
+		logger.debug("UPLOAD", "=== POST /item/:item ROUTE HIT ===", {
 			url: c.req.url,
 			method: c.req.method,
 			item: c.req.param("item"),
@@ -516,14 +515,14 @@ const objectsRouter = new Hono<StorageRouter>()
 			contentLength: c.req.header("content-length"),
 		});
 
-		debugLog("UPLOAD", "About to parse formData using raw request...");
+		logger.debug("UPLOAD", "About to parse formData using raw request...");
 		let formData: FormData;
 		try {
 			// Use raw Request.formData() to bypass any Hono wrapping
 			formData = await c.req.raw.formData();
-			debugLog("UPLOAD", "formData parsed successfully");
+			logger.debug("UPLOAD", "formData parsed successfully");
 		} catch (formError) {
-			debugLog("UPLOAD", "formData PARSE ERROR", {
+			logger.debug("UPLOAD", "formData PARSE ERROR", {
 				error: String(formError),
 				message: formError instanceof Error ? formError.message : "unknown",
 				stack: formError instanceof Error ? formError.stack : "no stack",
@@ -534,12 +533,12 @@ const objectsRouter = new Hono<StorageRouter>()
 		logger.debug("Received form data for file upload");
 		const file = formData.get("file") as File | null;
 		if (!file) {
-			debugLog("UPLOAD", "No file in formData");
+			logger.debug("UPLOAD", "No file in formData");
 			logger.error("No file provided in upload request");
 			return c.json({ message: "No file provided." }, 400);
 		}
 
-		debugLog("UPLOAD", "File received", {
+		logger.debug("UPLOAD", "File received", {
 			name: file.name,
 			size: file.size,
 			type: file.type,
@@ -548,25 +547,25 @@ const objectsRouter = new Hono<StorageRouter>()
 		const storageService = c.get("storageService");
 		const decodedItemName = decodeURIComponent(c.req.param("item"));
 
-		debugLog("UPLOAD", "Checking file exists", { decodedItemName });
+		logger.debug("UPLOAD", "Checking file exists", { decodedItemName });
 
 		logger.debug("Checking if file exists for:", decodedItemName);
 		const exists = await storageService.fileExists(decodedItemName);
 		if (!exists) {
-			debugLog("UPLOAD", "File not found", { decodedItemName });
+			logger.debug("UPLOAD", "File not found", { decodedItemName });
 			logger.debug("File not found for upload:", decodedItemName);
 			return c.json({ message: "File not found" }, 404);
 		}
 
 		try {
-			debugLog("UPLOAD", "Starting uploadFileBody", { decodedItemName });
+			logger.debug("UPLOAD", "Starting uploadFileBody", { decodedItemName });
 			logger.debug("Uploading file body for:", decodedItemName, file);
 			await storageService.uploadFileBody(decodedItemName, file);
-			debugLog("UPLOAD", "Upload complete", { decodedItemName });
+			logger.debug("UPLOAD", "Upload complete", { decodedItemName });
 			logger.debug("File body uploaded for:", decodedItemName);
 			return c.json({ message: "File uploaded successfully." });
 		} catch (error) {
-			debugLog("UPLOAD", "Upload error", { error: String(error) });
+			logger.debug("UPLOAD", "Upload error", { error: String(error) });
 			logger.error("Error uploading file body:", error);
 			return c.json({ message: "Error uploading file body." }, 500);
 		}

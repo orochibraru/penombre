@@ -8,14 +8,13 @@ import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
 import { getDb, resetDb } from "$lib/server/db";
-import { debugLog } from "$lib/server/debug-log";
 
 const logger = new Logger("Hooks");
 
 const migrationsFolder = join(process.cwd(), "drizzle");
 
 export function handleError({ event, error }) {
-	debugLog("HOOKS_ERROR", "handleError triggered", {
+	logger.debug("HOOKS_ERROR", "handleError triggered", {
 		method: event.request.method,
 		pathname: event.url.pathname,
 		error: String(error),
@@ -101,7 +100,7 @@ const authHandler: Handle = async ({ event, resolve }) => {
 		event.url.pathname.includes("/storage/objects/item/");
 
 	if (isUpload) {
-		debugLog("HOOKS_AUTH", "authHandler START for upload", {
+		logger.debug("HOOKS_AUTH", "authHandler START for upload", {
 			method: event.request.method,
 			pathname: event.url.pathname,
 			contentType: event.request.headers.get("content-type"),
@@ -115,7 +114,7 @@ const authHandler: Handle = async ({ event, resolve }) => {
 	});
 
 	if (isUpload) {
-		debugLog("HOOKS_AUTH", "getSession complete for upload", {
+		logger.debug("HOOKS_AUTH", "getSession complete for upload", {
 			hasSession: !!session,
 			bodyUsed: event.request.bodyUsed,
 		});
@@ -128,7 +127,7 @@ const authHandler: Handle = async ({ event, resolve }) => {
 	}
 
 	if (isUpload) {
-		debugLog("HOOKS_AUTH", "About to call svelteKitHandler for upload", {
+		logger.debug("HOOKS_AUTH", "About to call svelteKitHandler for upload", {
 			bodyUsed: event.request.bodyUsed,
 		});
 	}
@@ -136,7 +135,7 @@ const authHandler: Handle = async ({ event, resolve }) => {
 	const result = svelteKitHandler({ event, resolve, auth, building });
 
 	if (isUpload) {
-		debugLog("HOOKS_AUTH", "svelteKitHandler returned for upload");
+		logger.debug("HOOKS_AUTH", "svelteKitHandler returned for upload");
 	}
 
 	return result;
@@ -148,7 +147,7 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 		event.url.pathname.includes("/storage/objects/item/");
 
 	if (isUpload) {
-		debugLog("HOOKS_GENERAL", "generalHandler START for upload", {
+		logger.debug("HOOKS_GENERAL", "generalHandler START for upload", {
 			method: event.request.method,
 			pathname: event.url.pathname,
 			contentType: event.request.headers.get("content-type"),
@@ -166,7 +165,7 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 	}
 
 	if (isUpload) {
-		debugLog("HOOKS_GENERAL", "About to resolve for upload", {
+		logger.debug("HOOKS_GENERAL", "About to resolve for upload", {
 			bodyUsed: event.request.bodyUsed,
 		});
 	}
@@ -174,7 +173,7 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 	const res = await resolve(event);
 
 	if (isUpload) {
-		debugLog("HOOKS_GENERAL", "resolve complete for upload", {
+		logger.debug("HOOKS_GENERAL", "resolve complete for upload", {
 			status: res.status,
 			bodyUsed: event.request.bodyUsed,
 		});

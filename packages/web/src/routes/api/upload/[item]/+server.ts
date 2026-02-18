@@ -1,12 +1,14 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { error, json } from "@sveltejs/kit";
-import { debugLog } from "$lib/server/debug-log";
+import { Logger } from "$lib/logger";
 import { StorageService } from "$lib/server/services/storage";
+
+const logger = new Logger("UPLOAD_DIRECT");
 
 export const POST: RequestHandler = async ({ request, params, locals }) => {
 	const itemId = params.item;
 
-	debugLog("UPLOAD_DIRECT", "=== Direct upload endpoint hit ===", {
+	logger.debug("UPLOAD_DIRECT", "=== Direct upload endpoint hit ===", {
 		itemId,
 		contentType: request.headers.get("content-type"),
 		contentLength: request.headers.get("content-length"),
@@ -14,23 +16,23 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 	});
 
 	if (!locals.user) {
-		debugLog("UPLOAD_DIRECT", "No user in locals");
+		logger.debug("UPLOAD_DIRECT", "No user in locals");
 		return error(401, "Unauthorized");
 	}
 
 	if (!itemId) {
-		debugLog("UPLOAD_DIRECT", "No item ID");
+		logger.debug("UPLOAD_DIRECT", "No item ID");
 		return error(400, "Missing item ID");
 	}
 
-	debugLog("UPLOAD_DIRECT", "About to parse formData...");
+	logger.debug("UPLOAD_DIRECT", "About to parse formData...");
 
 	let formData: FormData;
 	try {
 		formData = await request.formData();
-		debugLog("UPLOAD_DIRECT", "formData parsed successfully!");
+		logger.debug("UPLOAD_DIRECT", "formData parsed successfully!");
 	} catch (err) {
-		debugLog("UPLOAD_DIRECT", "formData PARSE ERROR", {
+		logger.debug("UPLOAD_DIRECT", "formData PARSE ERROR", {
 			error: String(err),
 			message: err instanceof Error ? err.message : "unknown",
 		});
@@ -39,11 +41,11 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const file = formData.get("file") as File | null;
 	if (!file) {
-		debugLog("UPLOAD_DIRECT", "No file in formData");
+		logger.debug("UPLOAD_DIRECT", "No file in formData");
 		return error(400, "No file provided");
 	}
 
-	debugLog("UPLOAD_DIRECT", "File received", {
+	logger.debug("UPLOAD_DIRECT", "File received", {
 		name: file.name,
 		size: file.size,
 		type: file.type,
@@ -54,17 +56,17 @@ export const POST: RequestHandler = async ({ request, params, locals }) => {
 
 	const exists = await storageService.fileExists(decodedItemName);
 	if (!exists) {
-		debugLog("UPLOAD_DIRECT", "File not found", { decodedItemName });
+		logger.debug("UPLOAD_DIRECT", "File not found", { decodedItemName });
 		return error(404, "File not found");
 	}
 
 	try {
-		debugLog("UPLOAD_DIRECT", "Uploading file body...");
+		logger.debug("UPLOAD_DIRECT", "Uploading file body...");
 		await storageService.uploadFileBody(decodedItemName, file);
-		debugLog("UPLOAD_DIRECT", "Upload complete!");
+		logger.debug("UPLOAD_DIRECT", "Upload complete!");
 		return json({ message: "File uploaded successfully." });
 	} catch (err) {
-		debugLog("UPLOAD_DIRECT", "Upload error", { error: String(err) });
+		logger.debug("UPLOAD_DIRECT", "Upload error", { error: String(err) });
 		return error(500, `Upload failed: ${err}`);
 	}
 };
