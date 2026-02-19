@@ -5,10 +5,7 @@
     import { Button } from "$lib/components/ui/button/index";
     import { enhance } from "$app/forms";
     import { cn } from "tailwind-variants";
-    import { route } from "$lib/ROUTES";
     import { m } from "$lib/paraglide/messages.js";
-
-    let loading: boolean = $state(false);
 
     $title = m.forgot_password_title();
 </script>
@@ -44,7 +41,7 @@
             <p>
                 {m.remembered_password()}
                 <a
-                    href={route("/auth/sign-in")}
+                    href={"/auth/sign-in"}
                     class="underline hover:text-primary transition-colors"
                 >
                     {m.sign_in()}

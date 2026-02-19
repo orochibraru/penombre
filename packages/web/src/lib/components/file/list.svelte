@@ -5,7 +5,7 @@
         CloudUploadIcon,
         FolderPlusIcon,
     } from "@lucide/svelte";
-    import type { ObjectItem } from "$lib/api-client";
+    import type { ObjectItem } from "$lib/api";
     import FilePrefix from "$lib/components/file/prefix.svelte";
     import { Button } from "$lib/components/ui/button";
     import * as Drawer from "$lib/components/ui/drawer/index";
@@ -130,9 +130,7 @@
     function getItemDate(item: ObjectItem): number {
         const date = item.updatedAt;
         if (!date) return 0;
-        return typeof date === "string"
-            ? new Date(date).getTime()
-            : date.getTime();
+        return new Date(date).getTime();
     }
 
     function compareItems(a: ObjectItem, b: ObjectItem): number {

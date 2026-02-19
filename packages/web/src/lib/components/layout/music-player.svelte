@@ -15,6 +15,7 @@
     import Spinner from "$lib/components/ui/Spinner.svelte";
     import { Slider } from "$lib/components/ui/slider/index";
     import { playableMusic } from "$lib/store/music";
+    import type { Pathname } from "$app/types";
 
     function clearCurrent() {
         $playableMusic = null;
@@ -130,7 +131,7 @@
         <Button
             variant="outline"
             title="Open in new tab"
-            href={$playableMusic?.source}
+            href={$playableMusic?.source as Pathname}
             target="_blank"
         >
             <ExternalLinkIcon />

@@ -13,6 +13,7 @@
     import { Progress } from "$lib/components/ui/progress/index";
     import Spinner from "$lib/components/ui/Spinner.svelte";
     import { Slider } from "$lib/components/ui/slider/index";
+    import type { Pathname } from "$app/types";
 
     type Props = {
         src: string;
@@ -143,7 +144,7 @@
         <Button
             variant="outline"
             title="Open in new tab"
-            href={src}
+            href={src as Pathname}
             target="_blank"
         >
             <ExternalLinkIcon />

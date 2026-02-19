@@ -15,11 +15,7 @@ import { toast } from "svelte-sonner";
 import { dev } from "$app/environment";
 import { invalidate } from "$app/navigation";
 import { page } from "$app/state";
-import {
-	getApiClient,
-	type ObjectItem,
-	type ObjectList,
-} from "$lib/api-client";
+import { api, type ObjectItem, type ObjectList } from "$lib/api";
 import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
 import { determineCodeFileLanguage } from "$lib/file-utils";
 import { itemAction } from "$lib/store/actions";
@@ -68,8 +64,6 @@ export type WrapperState = {
 // API Promise Builders
 // ================================
 
-const apiClient = getApiClient(fetch);
-
 export function getDeleteFolderPromise(
 	itemPath: string,
 	callbacks: { onSuccess: () => void; onError: () => void },
@@ -80,14 +74,14 @@ export function getDeleteFolderPromise(
 		? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
 		: undefined;
 
-	return apiClient.storage.folders.folder[":id"]
-		.$delete({
-			param: { id: folderId },
-			json: { parentFolderId: parentId },
+	return api
+		.DELETE("/api/v1/storage/folder/{path}", {
+			params: { path: { path: folderId } },
+			body: { parentFolderId: parentId },
 		})
-		.then(async (res) => {
-			if (!res.ok) {
-				console.error(await res.text());
+		.then(async ({ error }) => {
+			if (error) {
+				console.error(error);
 				callbacks.onError();
 				throw new Error("Failed to delete folder");
 			}
@@ -105,14 +99,14 @@ export function getTrashFolderPromise(
 		? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
 		: undefined;
 
-	return apiClient.storage.folders.folder[":id"]
-		.$put({
-			param: { id: folderId },
-			json: { isTrashed: true, parentFolderId: parentId },
+	return api
+		.PUT("/api/v1/storage/folder/{path}", {
+			params: { path: { path: folderId } },
+			body: { isTrashed: true, parentFolderId: parentId },
 		})
-		.then(async (res) => {
-			if (!res.ok) {
-				console.error(await res.text());
+		.then(async ({ error }) => {
+			if (error) {
+				console.error(error);
 				callbacks.onError();
 				throw new Error("Failed to move folder to trash");
 			}
@@ -124,13 +118,13 @@ export function getDeleteForeverPromise(
 	itemPath: string,
 	callbacks: { onSuccess: () => void; onError: () => void },
 ): Promise<void> {
-	return apiClient.storage.objects.item[":item"]
-		.$delete({
-			param: { item: encodeURIComponent(itemPath) },
+	return api
+		.DELETE("/api/v1/storage/file/{id}", {
+			params: { path: { id: encodeURIComponent(itemPath) } },
 		})
-		.then(async (res) => {
-			if (!res.ok) {
-				console.error(await res.text());
+		.then(async ({ error }) => {
+			if (error) {
+				console.error(error);
 				callbacks.onError();
 				throw new Error("Failed to delete file");
 			}
@@ -149,15 +143,14 @@ export function getTrashFilePromise(
 		? itemPath.split("/").slice(0, -1).join("/")
 		: undefined;
 
-	return apiClient.storage.objects.item[":item"]
-		.$put({
-			param: { item: encodeURIComponent(fileName) },
-			query: { folder },
-			json: { isTrashed: true },
+	return api
+		.PUT("/api/v1/storage/file/{id}", {
+			params: { path: { id: encodeURIComponent(fileName) }, query: { folder } },
+			body: { isTrashed: true },
 		})
-		.then(async (res) => {
-			if (!res.ok) {
-				console.error(await res.text());
+		.then(async ({ error }) => {
+			if (error) {
+				console.error(error);
 				callbacks.onError();
 				throw new Error("Failed to trash file");
 			}
@@ -175,12 +168,12 @@ export async function getRestoreFolderPromise(
 		? itemPath.slice(0, -1).split("/").slice(0, -1).join("/")
 		: undefined;
 
-	const res = await apiClient.storage.folders.folder[":id"].$put({
-		param: { id: folderId },
-		json: { isTrashed: false, parentFolderId: parentId },
+	const { error } = await api.PUT("/api/v1/storage/folder/{path}", {
+		params: { path: { path: folderId } },
+		body: { isTrashed: false, parentFolderId: parentId },
 	});
-	if (!res.ok) {
-		console.error(await res.text());
+	if (error) {
+		console.error(error);
 		callbacks.onError();
 		throw new Error("Failed to restore folder");
 	}
@@ -198,15 +191,14 @@ export function getRestoreFilePromise(
 		? itemPath.split("/").slice(0, -1).join("/")
 		: undefined;
 
-	return apiClient.storage.objects.item[":item"]
-		.$put({
-			param: { item: encodeURIComponent(fileName) },
-			query: { folder },
-			json: { isTrashed: false },
+	return api
+		.PUT("/api/v1/storage/file/{id}", {
+			params: { path: { id: encodeURIComponent(fileName) }, query: { folder } },
+			body: { isTrashed: false },
 		})
-		.then(async (res) => {
-			if (!res.ok) {
-				console.error(await res.text());
+		.then(async ({ error }) => {
+			if (error) {
+				console.error(error);
 				callbacks.onError();
 				throw new Error("Failed to restore file");
 			}
@@ -227,13 +219,13 @@ export function getDuplicateFilePromise(
 
 	const fullPath = folder ? `${folder}/${fileName}` : fileName;
 
-	return apiClient.storage.objects.item[":item"].duplicate
-		.$post({
-			param: { item: encodeURIComponent(fullPath) },
+	return api
+		.POST("/api/v1/storage/file/{id}/duplicate", {
+			params: { path: { id: encodeURIComponent(fullPath) } },
 		})
-		.then(async (res) => {
-			if (!res.ok) {
-				console.error(await res.text());
+		.then(async ({ error }) => {
+			if (error) {
+				console.error(error);
 				callbacks.onError();
 				throw new Error("Failed to duplicate file");
 			}

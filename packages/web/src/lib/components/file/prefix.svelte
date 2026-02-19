@@ -18,13 +18,12 @@
     import { MediaQuery } from "svelte/reactivity";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
-    import type { ObjectItem } from "$lib/api-client";
+    import type { ObjectItem } from "$lib/api";
     import DocumentIcon from "$lib/components/file/document-icon.svelte";
     import FilePreview from "$lib/components/file/preview.svelte";
     import NowPlaying from "$lib/components/now-playing.svelte";
     import { Badge } from "$lib/components/ui/badge/index";
     import { touchAction } from "$lib/file-actions";
-    import { route } from "$lib/ROUTES";
     import { playableMusic } from "$lib/store/music";
     import { uploadedItems, uploadingItems } from "$lib/store/upload";
     import {
@@ -36,6 +35,7 @@
         getDocumentType,
     } from "$lib/utils";
     import { FileCategoryEnum } from "$lib/file-helpers";
+    import { resolve } from "$app/paths";
 
     type Props = {
         item: ObjectItem;
@@ -99,7 +99,6 @@
         if (isFolder) {
             if (navigating) return;
             navigating = true;
-            console.log(item);
             // Use the folder's key (UUID) from disk, strip trailing slash
             const folderId = item.key.replace(/\/$/, "");
             const basePath = page.params.path
@@ -107,8 +106,8 @@
                 : [folderId];
 
             await goto(
-                route("/browse/[...path]", {
-                    path: basePath,
+                resolve("/(app)/browse/[...path]", {
+                    path: basePath.join("/"),
                 }),
             );
             navigating = false;

@@ -1,14 +1,13 @@
 <script lang="ts">
-    import { CloudUploadIcon, HardDriveIcon } from "@lucide/svelte";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
-    import { route } from "$lib/ROUTES";
+    import { resolve } from "$app/paths";
 </script>
 
 <Sidebar.Menu>
     <Sidebar.MenuItem>
         <Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:p-1.5!">
             {#snippet child({ props })}
-                <a href={route("/")} {...props}>
+                <a href={resolve("/")} {...props}>
                     <img
                         src="/logo.svg"
                         alt="Opendrive Logo"

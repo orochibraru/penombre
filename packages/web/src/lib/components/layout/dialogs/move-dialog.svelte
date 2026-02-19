@@ -8,7 +8,7 @@
     import { toast } from "svelte-sonner";
     import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient, type ObjectItem } from "$lib/api-client";
+    import { api, type ObjectItem } from "$lib/api";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
     import { cn } from "$lib/utils";
     import Spinner from "$lib/components/ui/Spinner.svelte";
@@ -47,8 +47,6 @@
     let folders: FolderData[] = $state([]);
     let expandedFolders: Set<string> = $state(new Set());
 
-    const api = getApiClient(fetch);
-
     // Determine if we're in bulk mode
     let isBulkMode = $derived(Object.keys(items).length > 0 && !item);
     let itemCount = $derived(isBulkMode ? Object.keys(items).length : 1);
@@ -65,9 +63,9 @@
     async function loadFolders() {
         loadingFolders = true;
         try {
-            const res = await api.storage.folders.tree.$get();
-            if (res.ok) {
-                folders = (await res.json()) as FolderData[];
+            const { data } = await api.GET("/api/v1/storage/folder/tree");
+            if (data?.data) {
+                folders = data.data as FolderData[];
             }
         } catch (e) {
             console.error("Failed to load folders:", e);
@@ -224,18 +222,18 @@
                     };
                 });
 
-                const promise = api.storage.objects.move
-                    .$post({
-                        json: {
+                const promise = api
+                    .POST("/api/v1/storage/move", {
+                        body: {
                             items: itemsToMove,
                             destination: selectedFolder,
                         },
                     })
-                    .then(async (res) => {
-                        if (!res.ok) {
+                    .then(async ({ data, error: moveError }) => {
+                        if (moveError || !data?.data) {
                             throw new Error("Failed to move items");
                         }
-                        const result = await res.json();
+                        const result = data.data;
                         open = false;
                         await invalidate("app:files");
                         return result;
@@ -257,7 +255,7 @@
                     ? `${currentFolder}/${itemKey}`
                     : itemKey;
 
-                let promise: Promise<Response>;
+                let promise: ReturnType<typeof api.POST>;
 
                 if (isFolder) {
                     const folderId =
@@ -266,28 +264,33 @@
                         ? fullItemKey.split("/").slice(0, -1).join("/")
                         : undefined;
 
-                    promise = api.storage.folders.folder[":id"].move.$post({
-                        param: { id: folderId },
-                        json: {
+                    promise = api.POST("/api/v1/storage/folder/{path}/move", {
+                        params: { path: { path: folderId } },
+                        body: {
                             parentFolderId: parentId,
                             destination: selectedFolder,
                         },
                     });
                 } else {
-                    promise = api.storage.objects.item[":item"].move.$post({
-                        param: { item: encodeURIComponent(fullItemKey) },
-                        json: { destination: selectedFolder },
+                    promise = api.POST("/api/v1/storage/file/{id}/move", {
+                        params: {
+                            path: { id: encodeURIComponent(fullItemKey) },
+                        },
+                        body: { destination: selectedFolder },
                     });
                 }
 
-                const toastPromise = promise.then(async (res) => {
-                    if (!res.ok) {
-                        const text = await res.text();
-                        throw new Error(text || "Failed to move item");
-                    }
-                    open = false;
-                    await invalidate("app:files");
-                });
+                const toastPromise = promise.then(
+                    async ({ error: moveError }) => {
+                        if (moveError) {
+                            throw new Error(
+                                String(moveError) || "Failed to move item",
+                            );
+                        }
+                        open = false;
+                        await invalidate("app:files");
+                    },
+                );
 
                 toast.promise(toastPromise, {
                     loading: `Moving ${item.metadata.name || item.key}...`,

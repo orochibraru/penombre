@@ -1,13 +1,10 @@
 import { error } from "@sveltejs/kit";
-import { getApiClient } from "$lib/api-client";
-import { route } from "$lib/ROUTES";
+import { api } from "$lib/api";
 import type { BreadCrumb } from "$lib/utils";
 import type { PageLoad } from "./$types";
 
-export const load: PageLoad = async ({ params, fetch, depends }) => {
+export const load: PageLoad = async ({ params, fetch, url, depends }) => {
 	depends("app:files");
-
-	const client = getApiClient(fetch);
 
 	const folders = params.path.split("/");
 
@@ -16,7 +13,7 @@ export const load: PageLoad = async ({ params, fetch, depends }) => {
 
 	crumbs.push({
 		title: "My Drive",
-		href: route("/browse"),
+		href: "/browse",
 	});
 
 	for (const folder of folders) {
@@ -25,49 +22,60 @@ export const load: PageLoad = async ({ params, fetch, depends }) => {
 
 		let title = folder;
 		try {
-			const resMeta = await client.storage.folders.folder[":id"].meta.$get({
-				param: {
-					id: folder,
+			const { data: meta, error: metaError } = await api.GET(
+				"/api/v1/storage/folder/{path}/meta",
+				{
+					params: {
+						path: { path: folder },
+						query: parent ? { parent } : undefined,
+					},
+					fetch,
+					baseUrl: url.origin,
 				},
-				query: parent ? { parent } : {},
-			});
-			if (resMeta.ok) {
-				const meta = await resMeta.json();
-				if (meta?.name) title = meta.name as string;
+			);
+
+			if (metaError) {
+				console.error("Failed to load folder metadata", metaError);
+			} else {
+				const metaData = meta?.data as Record<string, unknown> | undefined;
+				if (metaData?.name) title = metaData.name as string;
 			}
 
 			crumbs.push({
 				title,
-				href: route("/browse/[...path]", {
-					path: [...chain, folder],
-				}),
+				href: `/browse/${chain.join("/")}/${folder}`,
 			});
 		} catch {
 			// Ignore errors and use folder ID as title
 			crumbs.push({
 				title,
-				href: route("/browse/[...path]", {
-					path: [...chain, folder],
-				}),
+				href: `/browse/${chain.join("/")}/${folder}`,
 			});
 		}
 		chain.push(folder);
 	}
 
-	const res = await client.storage.objects.$get({
-		query: { folder: params.path },
-	});
+	const { data, error: fetchError } = await api.GET(
+		"/api/v1/storage/list/{path}",
+		{
+			params: {
+				path: {
+					path: chain.join("/"),
+				},
+			},
+			fetch,
+			baseUrl: url.origin,
+		},
+	);
 
-	if (!res.ok) {
-		console.error("Failed to load files", res.status);
+	if (fetchError) {
+		console.error("Failed to load files", fetchError);
 		return error(500, "Failed to load files");
 	}
 
-	const data = await res.json();
-
 	return {
 		files: {
-			data,
+			data: data.data,
 			err: undefined,
 		},
 		title: crumbs[crumbs.length - 1]?.title || folders[folders.length - 1],

@@ -26,7 +26,6 @@
     import MusicPlayer from "$lib/components/layout/music-player.svelte";
     import Nav, { type NavMenus } from "$lib/components/layout/nav.svelte";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
-    import { route } from "$lib/ROUTES";
     import { playableMusic } from "$lib/store/music";
     import { title } from "$lib/store/title";
     import {
@@ -62,30 +61,30 @@
         general: [
             {
                 title: "My Drive",
-                url: route("/browse"),
+                url: "/browse",
                 icon: FolderIcon,
                 hideOnMobile: true,
             },
             {
                 title: "Recent",
-                url: route("/recent"),
+                url: "/recent",
                 icon: ClockFadingIcon,
                 hideOnMobile: true,
             },
             {
                 title: "Starred",
-                url: route("/starred"),
+                url: "/starred",
                 icon: StarIcon,
                 count: data.counts?.starred,
             },
             {
                 title: "Shared",
-                url: route("/shared"),
+                url: "/shared",
                 icon: UsersIcon,
             },
             {
                 title: "Trash",
-                url: route("/trash"),
+                url: "/trash",
                 icon: TrashIcon,
                 count: data.counts?.trash,
             },
@@ -93,57 +92,43 @@
         categories: [
             {
                 title: "Music",
-                url: route("/categories/[category]", {
-                    category: FileCategoryEnum.MUSIC,
-                }),
+                url: `/categories/${FileCategoryEnum.MUSIC}`,
                 icon: MusicIcon,
                 accentColor: "pink",
             },
             {
                 title: "Documents",
-                url: route("/categories/[category]", {
-                    category: FileCategoryEnum.DOCUMENTS,
-                }),
+                url: `/categories/${FileCategoryEnum.DOCUMENTS}`,
                 icon: FileIcon,
                 accentColor: "indigo",
             },
             {
                 title: "Images",
-                url: route("/categories/[category]", {
-                    category: FileCategoryEnum.IMAGES,
-                }),
+                url: `/categories/${FileCategoryEnum.IMAGES}`,
                 icon: ImageIcon,
                 accentColor: "orange",
             },
             {
                 title: "Code",
-                url: route("/categories/[category]", {
-                    category: FileCategoryEnum.CODE,
-                }),
+                url: `/categories/${FileCategoryEnum.CODE}`,
                 icon: CodeIcon,
                 accentColor: "green",
             },
             {
                 title: "Video",
-                url: route("/categories/[category]", {
-                    category: FileCategoryEnum.VIDEO,
-                }),
+                url: `/categories/${FileCategoryEnum.VIDEO}`,
                 icon: VideoIcon,
                 accentColor: "purple",
             },
             {
                 title: "Archives",
-                url: route("/categories/[category]", {
-                    category: FileCategoryEnum.ARCHIVES,
-                }),
+                url: `/categories/${FileCategoryEnum.ARCHIVES}`,
                 icon: FileArchiveIcon,
                 accentColor: "teal",
             },
             {
                 title: "3D Objects",
-                url: route("/categories/[category]", {
-                    category: FileCategoryEnum.THREE_D,
-                }),
+                url: `/categories/${FileCategoryEnum.THREE_D}`,
                 icon: Rotate3dIcon,
                 accentColor: "rose",
             },
@@ -151,18 +136,18 @@
         help: [
             {
                 title: "Settings",
-                url: route("/settings"),
+                url: "/settings",
                 icon: SettingsIcon,
                 hideOnMobile: true,
             },
             {
                 title: "Sync",
-                url: route("/sync"),
+                url: "/sync",
                 icon: FolderSyncIcon,
             },
             {
                 title: "API",
-                url: "/docs/index.html",
+                url: "/api/v1/docs",
                 icon: PlugIcon,
             },
         ],
@@ -276,20 +261,20 @@
         >
             <div class="flex items-center justify-between gap-5">
                 <a
-                    href={route("/browse")}
+                    href="/browse"
                     class={cn(
                         bottomNavItemClass,
-                        isActive(route("/browse")) ? "text-primary" : "",
+                        isActive("/browse") ? "text-primary" : "",
                     )}
                 >
                     <FolderIcon class={bottomNavItemIconClass} />
                     Home
                 </a>
                 <a
-                    href={route("/recent")}
+                    href="/recent"
                     class={cn(
                         bottomNavItemClass,
-                        isActive(route("/recent")) ? "text-primary" : "",
+                        isActive("/recent") ? "text-primary" : "",
                     )}
                 >
                     <ClockFadingIcon class={bottomNavItemIconClass} />
@@ -332,10 +317,10 @@
                 {/if}
 
                 <a
-                    href={route("/account")}
+                    href="/account"
                     class={cn(
                         bottomNavItemClass,
-                        isActive(route("/account")) ? "text-primary" : "",
+                        isActive("/account") ? "text-primary" : "",
                     )}
                 >
                     <UserIcon class={bottomNavItemIconClass} />
@@ -343,10 +328,10 @@
                 </a>
 
                 <a
-                    href={route("/settings")}
+                    href="/settings"
                     class={cn(
                         bottomNavItemClass,
-                        isActive(route("/settings")) ? "text-primary" : "",
+                        isActive("/settings") ? "text-primary" : "",
                     )}
                 >
                     <SettingsIcon class={bottomNavItemIconClass} />

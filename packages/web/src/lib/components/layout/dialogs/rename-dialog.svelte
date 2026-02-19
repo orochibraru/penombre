@@ -2,7 +2,7 @@
     import { toast } from "svelte-sonner";
     import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient } from "$lib/api-client";
+    import { api } from "$lib/api";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
     import { Input } from "$lib/components/ui/input";
     import { itemAction } from "$lib/store/actions";
@@ -13,27 +13,26 @@
     let isFolder: boolean = $derived($itemAction?.item?.type === "folder");
     let inputRef: HTMLInputElement = $state(null!);
 
-    async function handleRename(e: SubmitEvent) {
-        e.preventDefault();
+    async function handleRename() {
         loading = true;
 
         if (!$itemAction.item) {
             throw new Error("No item loaded in rename action.");
         }
 
-        const api = getApiClient(fetch);
+        const api_ = api;
 
         if (isFolder) {
-            const promise = api.storage.folders.folder[":id"]
-                .$put({
-                    param: { id: $itemAction.item.key },
-                    json: {
+            const promise = api_
+                .PUT("/api/v1/storage/folder/{path}", {
+                    params: { path: { path: $itemAction.item.key } },
+                    body: {
                         name: newName,
                         parentFolderId: page.params.path,
                     },
                 })
-                .then((res) => {
-                    if (!res.ok) {
+                .then(({ error: fetchError }) => {
+                    if (fetchError) {
                         throw new Error("Failed to rename");
                     }
                     $itemAction.open = false;
@@ -53,19 +52,18 @@
             });
         }
 
-        const promise = api.storage.objects.item[":item"]
-            .$put({
-                param: { item: $itemAction.item.key },
-                query: { folder: page.params.path },
-                json: {
+        const promise = api_
+            .PUT("/api/v1/storage/file/{id}", {
+                params: { path: { id: $itemAction.item.key } },
+                body: {
                     contentType:
                         $itemAction.item.metadata.contentType ||
                         "application/octet-stream",
                     key: newName,
                 },
             })
-            .then((res) => {
-                if (!res.ok) {
+            .then(({ error: fetchError }) => {
+                if (fetchError) {
                     throw new Error("Failed to rename");
                 }
                 $itemAction.open = false;
@@ -85,7 +83,19 @@
         });
     }
 
-    let open = $derived($itemAction?.open || false);
+    let open: boolean = $state(false);
+
+    // Sync store → local state
+    $effect(() => {
+        open = $itemAction?.open ?? false;
+    });
+
+    // Sync local state → store (when dialog is dismissed via Escape/overlay)
+    $effect(() => {
+        if (!open && $itemAction?.open) {
+            $itemAction.open = false;
+        }
+    });
 
     $effect(() => {
         if ($itemAction?.item) {
@@ -119,7 +129,7 @@
     description="This will change the name of this item."
     submitLabel="Rename"
     loadingLabel="Renaming..."
-    form={{ onsubmit: handleRename }}
+    onsubmit={handleRename}
 >
     <div class="flex flex-col gap-1">
         <Input

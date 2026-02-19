@@ -4,12 +4,17 @@ import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type UserConfig } from "vite";
-import { kitRoutes, type Options } from "vite-plugin-kit-routes";
-import type { KIT_ROUTES } from "$lib/ROUTES";
 import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 
 export default defineConfig({
     plugins: [
+        {
+            name: "bun-external",
+            enforce: "pre",
+            resolveId(id) {
+                if (id === "bun") return { id: "bun", external: true };
+            },
+        },
         paraglideVitePlugin({ 
             project: './project.inlang', 
             outdir: './src/lib/paraglide',
@@ -17,11 +22,13 @@ export default defineConfig({
         }),
         tailwindcss(), 
         sveltekit(), 
-        kitRoutes(),
         SvelteKitPWA()
     ],
     define: {
         SUPERFORMS_LEGACY: true
+    },
+    optimizeDeps: {
+        exclude: ["bun"]
     },
     build: {
         rollupOptions: {
@@ -33,4 +40,3 @@ export default defineConfig({
     }
 }) satisfies UserConfig;
 
-export const _kitRoutesConfig: Options<KIT_ROUTES> = {};

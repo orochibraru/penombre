@@ -1,0 +1,6161 @@
+{
+	"openapi": "3.1.0",
+	"info": {
+		"title": "OpenDrive API",
+		"version": "1.0.0",
+		"description": "OpenDrive file storage API"
+	},
+	"servers": [
+		{
+			"url": "/",
+			"description": "Current server"
+		}
+	],
+	"paths": {
+		"/api/v1/activity": {
+			"get": {
+				"summary": "List activities",
+				"description": "Returns a list of recent activities for the current user",
+				"tags": ["Activity"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "string",
+														"format": "uuid",
+														"pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+													},
+													"userId": {
+														"type": "string"
+													},
+													"action": {
+														"type": "string",
+														"enum": [
+															"create",
+															"update",
+															"delete",
+															"share",
+															"rename"
+														]
+													},
+													"message": {
+														"type": "string"
+													},
+													"link": {
+														"anyOf": [
+															{
+																"type": "string"
+															},
+															{
+																"type": "null"
+															}
+														]
+													},
+													"level": {
+														"type": "string",
+														"enum": ["info", "warning", "error"]
+													},
+													"createdAt": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"userId",
+													"action",
+													"message",
+													"link",
+													"level",
+													"createdAt"
+												],
+												"additionalProperties": false
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/preferences": {
+			"get": {
+				"summary": "Get user preferences",
+				"description": "Returns the current user's layout and sort preferences",
+				"tags": ["Preferences"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"layout": {
+													"type": "string",
+													"enum": ["grid", "list"]
+												},
+												"sortColumn": {
+													"anyOf": [
+														{
+															"type": "string",
+															"enum": ["name", "size", "updatedAt"]
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"sortDirection": {
+													"type": "string",
+													"enum": ["asc", "desc"]
+												}
+											},
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			},
+			"put": {
+				"summary": "Update user preferences",
+				"description": "Updates the current user's layout and sort preferences",
+				"tags": ["Preferences"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"layout": {
+													"type": "string",
+													"enum": ["grid", "list"]
+												},
+												"sortColumn": {
+													"anyOf": [
+														{
+															"type": "string",
+															"enum": ["name", "size", "updatedAt"]
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"sortDirection": {
+													"type": "string",
+													"enum": ["asc", "desc"]
+												}
+											},
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"layout": {
+										"type": "string",
+										"enum": ["grid", "list"]
+									},
+									"sortColumn": {
+										"anyOf": [
+											{
+												"type": "string",
+												"enum": ["name", "size", "updatedAt"]
+											},
+											{
+												"type": "null"
+											}
+										]
+									},
+									"sortDirection": {
+										"type": "string",
+										"enum": ["asc", "desc"]
+									}
+								},
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/list": {
+			"get": {
+				"summary": "List all files",
+				"description": "Returns a list of all files in the root directory",
+				"tags": ["Storage"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"list": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"key": {
+																"type": "string"
+															},
+															"updatedAt": {
+																"type": "string"
+															},
+															"size": {
+																"type": "number"
+															},
+															"metadata": {
+																"type": "object",
+																"properties": {
+																	"id": {
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"category": {
+																		"type": "string",
+																		"enum": [
+																			"MUSIC",
+																			"DOCUMENTS",
+																			"IMAGES",
+																			"3D",
+																			"VIDEO",
+																			"RECENT",
+																			"CODE",
+																			"ARCHIVES",
+																			"UNKNOWN"
+																		]
+																	},
+																	"tags": {
+																		"type": "array",
+																		"items": {
+																			"type": "string"
+																		}
+																	},
+																	"contentType": {
+																		"type": "string",
+																		"enum": [
+																			"application/pdf",
+																			"application/msword",
+																			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																			"application/vnd.ms-excel",
+																			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																			"application/vnd.ms-powerpoint",
+																			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																			"application/vnd.oasis.opendocument.text",
+																			"application/rtf",
+																			"application/epub+zip",
+																			"application/vnd.google-apps.document",
+																			"application/vnd.google-apps.spreadsheet",
+																			"application/vnd.google-apps.presentation",
+																			"text/plain",
+																			"text/csv",
+																			"text/html",
+																			"text/css",
+																			"text/yaml",
+																			"image/jpeg",
+																			"image/png",
+																			"image/gif",
+																			"image/webp",
+																			"image/svg+xml",
+																			"image/bmp",
+																			"image/x-icon",
+																			"image/tiff",
+																			"image/heic",
+																			"video/mp4",
+																			"video/webm",
+																			"video/x-msvideo",
+																			"video/x-matroska",
+																			"video/quicktime",
+																			"video/x-ms-wmv",
+																			"video/x-flv",
+																			"video/mpeg",
+																			"video/3gpp",
+																			"video/ogg",
+																			"audio/mpeg",
+																			"audio/wav",
+																			"audio/flac",
+																			"audio/aac",
+																			"audio/ogg",
+																			"audio/mp4",
+																			"audio/x-ms-wma",
+																			"audio/aiff",
+																			"application/json",
+																			"application/xml",
+																			"application/javascript",
+																			"application/vnd.google-apps.form",
+																			"application/zip",
+																			"application/vnd.rar",
+																			"application/x-7z-compressed",
+																			"application/x-tar",
+																			"application/gzip",
+																			"application/x-bzip2",
+																			"application/x-xz",
+																			"application/vnd.ms-cab-compressed",
+																			"application/x-iso9660-image",
+																			"application/x-apple-diskimage",
+																			"application/x-xar",
+																			"application/vnd.debian.binary-package",
+																			"application/x-rpm",
+																			"application/vnd.android.package-archive",
+																			"application/java-archive",
+																			"application/x-webarchive",
+																			"application/x-stuffit",
+																			"application/x-stuffitx",
+																			"application/x-lzip",
+																			"application/x-lzma",
+																			"application/x-lzop",
+																			"application/x-compress",
+																			"application/zstd",
+																			"application/x-brotli",
+																			"model/stl",
+																			"model/obj",
+																			"model/gltf+json",
+																			"model/gltf-binary",
+																			"model/fbx",
+																			"model/3mf",
+																			"model/x3d+xml",
+																			"model/vnd.collada+xml",
+																			"application/x-blender",
+																			"application/x-tgif",
+																			"application/octet-stream"
+																		]
+																	},
+																	"createdAt": {
+																		"type": "string"
+																	},
+																	"owner": {
+																		"type": "string"
+																	},
+																	"isTrashed": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"isStarred": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"music": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	},
+																	"video": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	}
+																},
+																"required": [
+																	"id",
+																	"category",
+																	"contentType",
+																	"createdAt",
+																	"owner",
+																	"isTrashed",
+																	"isStarred"
+																],
+																"additionalProperties": false
+															},
+															"type": {
+																"type": "string",
+																"enum": ["file", "folder"]
+															},
+															"parent": {
+																"type": "string"
+															},
+															"parentKey": {
+																"type": "string"
+															}
+														},
+														"required": ["key", "metadata", "type"],
+														"additionalProperties": false
+													}
+												},
+												"count": {
+													"default": 0,
+													"type": "number"
+												},
+												"total": {
+													"default": 0,
+													"type": "number"
+												}
+											},
+											"required": ["list", "count", "total"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/list/{path}": {
+			"get": {
+				"summary": "List files in folder",
+				"description": "Returns a list of files within a specific folder path",
+				"tags": ["Storage"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"list": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"key": {
+																"type": "string"
+															},
+															"updatedAt": {
+																"type": "string"
+															},
+															"size": {
+																"type": "number"
+															},
+															"metadata": {
+																"type": "object",
+																"properties": {
+																	"id": {
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"category": {
+																		"type": "string",
+																		"enum": [
+																			"MUSIC",
+																			"DOCUMENTS",
+																			"IMAGES",
+																			"3D",
+																			"VIDEO",
+																			"RECENT",
+																			"CODE",
+																			"ARCHIVES",
+																			"UNKNOWN"
+																		]
+																	},
+																	"tags": {
+																		"type": "array",
+																		"items": {
+																			"type": "string"
+																		}
+																	},
+																	"contentType": {
+																		"type": "string",
+																		"enum": [
+																			"application/pdf",
+																			"application/msword",
+																			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																			"application/vnd.ms-excel",
+																			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																			"application/vnd.ms-powerpoint",
+																			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																			"application/vnd.oasis.opendocument.text",
+																			"application/rtf",
+																			"application/epub+zip",
+																			"application/vnd.google-apps.document",
+																			"application/vnd.google-apps.spreadsheet",
+																			"application/vnd.google-apps.presentation",
+																			"text/plain",
+																			"text/csv",
+																			"text/html",
+																			"text/css",
+																			"text/yaml",
+																			"image/jpeg",
+																			"image/png",
+																			"image/gif",
+																			"image/webp",
+																			"image/svg+xml",
+																			"image/bmp",
+																			"image/x-icon",
+																			"image/tiff",
+																			"image/heic",
+																			"video/mp4",
+																			"video/webm",
+																			"video/x-msvideo",
+																			"video/x-matroska",
+																			"video/quicktime",
+																			"video/x-ms-wmv",
+																			"video/x-flv",
+																			"video/mpeg",
+																			"video/3gpp",
+																			"video/ogg",
+																			"audio/mpeg",
+																			"audio/wav",
+																			"audio/flac",
+																			"audio/aac",
+																			"audio/ogg",
+																			"audio/mp4",
+																			"audio/x-ms-wma",
+																			"audio/aiff",
+																			"application/json",
+																			"application/xml",
+																			"application/javascript",
+																			"application/vnd.google-apps.form",
+																			"application/zip",
+																			"application/vnd.rar",
+																			"application/x-7z-compressed",
+																			"application/x-tar",
+																			"application/gzip",
+																			"application/x-bzip2",
+																			"application/x-xz",
+																			"application/vnd.ms-cab-compressed",
+																			"application/x-iso9660-image",
+																			"application/x-apple-diskimage",
+																			"application/x-xar",
+																			"application/vnd.debian.binary-package",
+																			"application/x-rpm",
+																			"application/vnd.android.package-archive",
+																			"application/java-archive",
+																			"application/x-webarchive",
+																			"application/x-stuffit",
+																			"application/x-stuffitx",
+																			"application/x-lzip",
+																			"application/x-lzma",
+																			"application/x-lzop",
+																			"application/x-compress",
+																			"application/zstd",
+																			"application/x-brotli",
+																			"model/stl",
+																			"model/obj",
+																			"model/gltf+json",
+																			"model/gltf-binary",
+																			"model/fbx",
+																			"model/3mf",
+																			"model/x3d+xml",
+																			"model/vnd.collada+xml",
+																			"application/x-blender",
+																			"application/x-tgif",
+																			"application/octet-stream"
+																		]
+																	},
+																	"createdAt": {
+																		"type": "string"
+																	},
+																	"owner": {
+																		"type": "string"
+																	},
+																	"isTrashed": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"isStarred": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"music": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	},
+																	"video": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	}
+																},
+																"required": [
+																	"id",
+																	"category",
+																	"contentType",
+																	"createdAt",
+																	"owner",
+																	"isTrashed",
+																	"isStarred"
+																],
+																"additionalProperties": false
+															},
+															"type": {
+																"type": "string",
+																"enum": ["file", "folder"]
+															},
+															"parent": {
+																"type": "string"
+															},
+															"parentKey": {
+																"type": "string"
+															}
+														},
+														"required": ["key", "metadata", "type"],
+														"additionalProperties": false
+													}
+												},
+												"count": {
+													"default": 0,
+													"type": "number"
+												},
+												"total": {
+													"default": 0,
+													"type": "number"
+												}
+											},
+											"required": ["list", "count", "total"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/list/recent": {
+			"get": {
+				"summary": "List recent files",
+				"description": "Returns a list of recently accessed or modified files",
+				"tags": ["Storage"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"list": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"key": {
+																"type": "string"
+															},
+															"updatedAt": {
+																"type": "string"
+															},
+															"size": {
+																"type": "number"
+															},
+															"metadata": {
+																"type": "object",
+																"properties": {
+																	"id": {
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"category": {
+																		"type": "string",
+																		"enum": [
+																			"MUSIC",
+																			"DOCUMENTS",
+																			"IMAGES",
+																			"3D",
+																			"VIDEO",
+																			"RECENT",
+																			"CODE",
+																			"ARCHIVES",
+																			"UNKNOWN"
+																		]
+																	},
+																	"tags": {
+																		"type": "array",
+																		"items": {
+																			"type": "string"
+																		}
+																	},
+																	"contentType": {
+																		"type": "string",
+																		"enum": [
+																			"application/pdf",
+																			"application/msword",
+																			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																			"application/vnd.ms-excel",
+																			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																			"application/vnd.ms-powerpoint",
+																			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																			"application/vnd.oasis.opendocument.text",
+																			"application/rtf",
+																			"application/epub+zip",
+																			"application/vnd.google-apps.document",
+																			"application/vnd.google-apps.spreadsheet",
+																			"application/vnd.google-apps.presentation",
+																			"text/plain",
+																			"text/csv",
+																			"text/html",
+																			"text/css",
+																			"text/yaml",
+																			"image/jpeg",
+																			"image/png",
+																			"image/gif",
+																			"image/webp",
+																			"image/svg+xml",
+																			"image/bmp",
+																			"image/x-icon",
+																			"image/tiff",
+																			"image/heic",
+																			"video/mp4",
+																			"video/webm",
+																			"video/x-msvideo",
+																			"video/x-matroska",
+																			"video/quicktime",
+																			"video/x-ms-wmv",
+																			"video/x-flv",
+																			"video/mpeg",
+																			"video/3gpp",
+																			"video/ogg",
+																			"audio/mpeg",
+																			"audio/wav",
+																			"audio/flac",
+																			"audio/aac",
+																			"audio/ogg",
+																			"audio/mp4",
+																			"audio/x-ms-wma",
+																			"audio/aiff",
+																			"application/json",
+																			"application/xml",
+																			"application/javascript",
+																			"application/vnd.google-apps.form",
+																			"application/zip",
+																			"application/vnd.rar",
+																			"application/x-7z-compressed",
+																			"application/x-tar",
+																			"application/gzip",
+																			"application/x-bzip2",
+																			"application/x-xz",
+																			"application/vnd.ms-cab-compressed",
+																			"application/x-iso9660-image",
+																			"application/x-apple-diskimage",
+																			"application/x-xar",
+																			"application/vnd.debian.binary-package",
+																			"application/x-rpm",
+																			"application/vnd.android.package-archive",
+																			"application/java-archive",
+																			"application/x-webarchive",
+																			"application/x-stuffit",
+																			"application/x-stuffitx",
+																			"application/x-lzip",
+																			"application/x-lzma",
+																			"application/x-lzop",
+																			"application/x-compress",
+																			"application/zstd",
+																			"application/x-brotli",
+																			"model/stl",
+																			"model/obj",
+																			"model/gltf+json",
+																			"model/gltf-binary",
+																			"model/fbx",
+																			"model/3mf",
+																			"model/x3d+xml",
+																			"model/vnd.collada+xml",
+																			"application/x-blender",
+																			"application/x-tgif",
+																			"application/octet-stream"
+																		]
+																	},
+																	"createdAt": {
+																		"type": "string"
+																	},
+																	"owner": {
+																		"type": "string"
+																	},
+																	"isTrashed": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"isStarred": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"music": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	},
+																	"video": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	}
+																},
+																"required": [
+																	"id",
+																	"category",
+																	"contentType",
+																	"createdAt",
+																	"owner",
+																	"isTrashed",
+																	"isStarred"
+																],
+																"additionalProperties": false
+															},
+															"type": {
+																"type": "string",
+																"enum": ["file", "folder"]
+															},
+															"parent": {
+																"type": "string"
+															},
+															"parentKey": {
+																"type": "string"
+															}
+														},
+														"required": ["key", "metadata", "type"],
+														"additionalProperties": false
+													}
+												},
+												"count": {
+													"default": 0,
+													"type": "number"
+												},
+												"total": {
+													"default": 0,
+													"type": "number"
+												}
+											},
+											"required": ["list", "count", "total"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/file": {
+			"post": {
+				"summary": "Create a file",
+				"description": "Creates a new file entry (metadata only, no body yet)",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "folder",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"id": {
+													"type": "string"
+												},
+												"finalName": {
+													"type": "string"
+												},
+												"metadata": {
+													"type": "object",
+													"properties": {
+														"id": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"category": {
+															"type": "string",
+															"enum": [
+																"MUSIC",
+																"DOCUMENTS",
+																"IMAGES",
+																"3D",
+																"VIDEO",
+																"RECENT",
+																"CODE",
+																"ARCHIVES",
+																"UNKNOWN"
+															]
+														},
+														"tags": {
+															"type": "array",
+															"items": {
+																"type": "string"
+															}
+														},
+														"contentType": {
+															"type": "string",
+															"enum": [
+																"application/pdf",
+																"application/msword",
+																"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																"application/vnd.ms-excel",
+																"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																"application/vnd.ms-powerpoint",
+																"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																"application/vnd.oasis.opendocument.text",
+																"application/rtf",
+																"application/epub+zip",
+																"application/vnd.google-apps.document",
+																"application/vnd.google-apps.spreadsheet",
+																"application/vnd.google-apps.presentation",
+																"text/plain",
+																"text/csv",
+																"text/html",
+																"text/css",
+																"text/yaml",
+																"image/jpeg",
+																"image/png",
+																"image/gif",
+																"image/webp",
+																"image/svg+xml",
+																"image/bmp",
+																"image/x-icon",
+																"image/tiff",
+																"image/heic",
+																"video/mp4",
+																"video/webm",
+																"video/x-msvideo",
+																"video/x-matroska",
+																"video/quicktime",
+																"video/x-ms-wmv",
+																"video/x-flv",
+																"video/mpeg",
+																"video/3gpp",
+																"video/ogg",
+																"audio/mpeg",
+																"audio/wav",
+																"audio/flac",
+																"audio/aac",
+																"audio/ogg",
+																"audio/mp4",
+																"audio/x-ms-wma",
+																"audio/aiff",
+																"application/json",
+																"application/xml",
+																"application/javascript",
+																"application/vnd.google-apps.form",
+																"application/zip",
+																"application/vnd.rar",
+																"application/x-7z-compressed",
+																"application/x-tar",
+																"application/gzip",
+																"application/x-bzip2",
+																"application/x-xz",
+																"application/vnd.ms-cab-compressed",
+																"application/x-iso9660-image",
+																"application/x-apple-diskimage",
+																"application/x-xar",
+																"application/vnd.debian.binary-package",
+																"application/x-rpm",
+																"application/vnd.android.package-archive",
+																"application/java-archive",
+																"application/x-webarchive",
+																"application/x-stuffit",
+																"application/x-stuffitx",
+																"application/x-lzip",
+																"application/x-lzma",
+																"application/x-lzop",
+																"application/x-compress",
+																"application/zstd",
+																"application/x-brotli",
+																"model/stl",
+																"model/obj",
+																"model/gltf+json",
+																"model/gltf-binary",
+																"model/fbx",
+																"model/3mf",
+																"model/x3d+xml",
+																"model/vnd.collada+xml",
+																"application/x-blender",
+																"application/x-tgif",
+																"application/octet-stream"
+															]
+														},
+														"createdAt": {
+															"type": "string"
+														},
+														"owner": {
+															"type": "string"
+														},
+														"isTrashed": {
+															"default": false,
+															"type": "boolean"
+														},
+														"isStarred": {
+															"default": false,
+															"type": "boolean"
+														},
+														"music": {
+															"type": "object",
+															"properties": {
+																"duration": {
+																	"type": "number"
+																}
+															},
+															"additionalProperties": false
+														},
+														"video": {
+															"type": "object",
+															"properties": {
+																"duration": {
+																	"type": "number"
+																}
+															},
+															"additionalProperties": false
+														}
+													},
+													"required": [
+														"id",
+														"category",
+														"contentType",
+														"createdAt",
+														"owner",
+														"isTrashed",
+														"isStarred"
+													],
+													"additionalProperties": false
+												}
+											},
+											"required": ["finalName", "metadata"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"size": {
+										"type": "number"
+									}
+								},
+								"required": ["name", "size"],
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/file/batch": {
+			"post": {
+				"summary": "Create files in batch",
+				"description": "Creates multiple file entries at once (metadata only)",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "folder",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "string"
+													},
+													"finalName": {
+														"type": "string"
+													},
+													"metadata": {
+														"type": "object",
+														"properties": {
+															"id": {
+																"type": "string"
+															},
+															"name": {
+																"type": "string"
+															},
+															"category": {
+																"type": "string",
+																"enum": [
+																	"MUSIC",
+																	"DOCUMENTS",
+																	"IMAGES",
+																	"3D",
+																	"VIDEO",
+																	"RECENT",
+																	"CODE",
+																	"ARCHIVES",
+																	"UNKNOWN"
+																]
+															},
+															"tags": {
+																"type": "array",
+																"items": {
+																	"type": "string"
+																}
+															},
+															"contentType": {
+																"type": "string",
+																"enum": [
+																	"application/pdf",
+																	"application/msword",
+																	"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																	"application/vnd.ms-excel",
+																	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																	"application/vnd.ms-powerpoint",
+																	"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																	"application/vnd.oasis.opendocument.text",
+																	"application/rtf",
+																	"application/epub+zip",
+																	"application/vnd.google-apps.document",
+																	"application/vnd.google-apps.spreadsheet",
+																	"application/vnd.google-apps.presentation",
+																	"text/plain",
+																	"text/csv",
+																	"text/html",
+																	"text/css",
+																	"text/yaml",
+																	"image/jpeg",
+																	"image/png",
+																	"image/gif",
+																	"image/webp",
+																	"image/svg+xml",
+																	"image/bmp",
+																	"image/x-icon",
+																	"image/tiff",
+																	"image/heic",
+																	"video/mp4",
+																	"video/webm",
+																	"video/x-msvideo",
+																	"video/x-matroska",
+																	"video/quicktime",
+																	"video/x-ms-wmv",
+																	"video/x-flv",
+																	"video/mpeg",
+																	"video/3gpp",
+																	"video/ogg",
+																	"audio/mpeg",
+																	"audio/wav",
+																	"audio/flac",
+																	"audio/aac",
+																	"audio/ogg",
+																	"audio/mp4",
+																	"audio/x-ms-wma",
+																	"audio/aiff",
+																	"application/json",
+																	"application/xml",
+																	"application/javascript",
+																	"application/vnd.google-apps.form",
+																	"application/zip",
+																	"application/vnd.rar",
+																	"application/x-7z-compressed",
+																	"application/x-tar",
+																	"application/gzip",
+																	"application/x-bzip2",
+																	"application/x-xz",
+																	"application/vnd.ms-cab-compressed",
+																	"application/x-iso9660-image",
+																	"application/x-apple-diskimage",
+																	"application/x-xar",
+																	"application/vnd.debian.binary-package",
+																	"application/x-rpm",
+																	"application/vnd.android.package-archive",
+																	"application/java-archive",
+																	"application/x-webarchive",
+																	"application/x-stuffit",
+																	"application/x-stuffitx",
+																	"application/x-lzip",
+																	"application/x-lzma",
+																	"application/x-lzop",
+																	"application/x-compress",
+																	"application/zstd",
+																	"application/x-brotli",
+																	"model/stl",
+																	"model/obj",
+																	"model/gltf+json",
+																	"model/gltf-binary",
+																	"model/fbx",
+																	"model/3mf",
+																	"model/x3d+xml",
+																	"model/vnd.collada+xml",
+																	"application/x-blender",
+																	"application/x-tgif",
+																	"application/octet-stream"
+																]
+															},
+															"createdAt": {
+																"type": "string"
+															},
+															"owner": {
+																"type": "string"
+															},
+															"isTrashed": {
+																"default": false,
+																"type": "boolean"
+															},
+															"isStarred": {
+																"default": false,
+																"type": "boolean"
+															},
+															"music": {
+																"type": "object",
+																"properties": {
+																	"duration": {
+																		"type": "number"
+																	}
+																},
+																"additionalProperties": false
+															},
+															"video": {
+																"type": "object",
+																"properties": {
+																	"duration": {
+																		"type": "number"
+																	}
+																},
+																"additionalProperties": false
+															}
+														},
+														"required": [
+															"id",
+															"category",
+															"contentType",
+															"createdAt",
+															"owner",
+															"isTrashed",
+															"isStarred"
+														],
+														"additionalProperties": false
+													}
+												},
+												"required": ["finalName", "metadata"],
+												"additionalProperties": false
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"files": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"name": {
+													"type": "string"
+												},
+												"size": {
+													"type": "number"
+												}
+											},
+											"required": ["name", "size"],
+											"additionalProperties": false
+										}
+									}
+								},
+								"required": ["files"],
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/file/search": {
+			"get": {
+				"summary": "Search files",
+				"description": "Searches files by name",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "q",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"list": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"key": {
+																"type": "string"
+															},
+															"updatedAt": {
+																"type": "string"
+															},
+															"size": {
+																"type": "number"
+															},
+															"metadata": {
+																"type": "object",
+																"properties": {
+																	"id": {
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"category": {
+																		"type": "string",
+																		"enum": [
+																			"MUSIC",
+																			"DOCUMENTS",
+																			"IMAGES",
+																			"3D",
+																			"VIDEO",
+																			"RECENT",
+																			"CODE",
+																			"ARCHIVES",
+																			"UNKNOWN"
+																		]
+																	},
+																	"tags": {
+																		"type": "array",
+																		"items": {
+																			"type": "string"
+																		}
+																	},
+																	"contentType": {
+																		"type": "string",
+																		"enum": [
+																			"application/pdf",
+																			"application/msword",
+																			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																			"application/vnd.ms-excel",
+																			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																			"application/vnd.ms-powerpoint",
+																			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																			"application/vnd.oasis.opendocument.text",
+																			"application/rtf",
+																			"application/epub+zip",
+																			"application/vnd.google-apps.document",
+																			"application/vnd.google-apps.spreadsheet",
+																			"application/vnd.google-apps.presentation",
+																			"text/plain",
+																			"text/csv",
+																			"text/html",
+																			"text/css",
+																			"text/yaml",
+																			"image/jpeg",
+																			"image/png",
+																			"image/gif",
+																			"image/webp",
+																			"image/svg+xml",
+																			"image/bmp",
+																			"image/x-icon",
+																			"image/tiff",
+																			"image/heic",
+																			"video/mp4",
+																			"video/webm",
+																			"video/x-msvideo",
+																			"video/x-matroska",
+																			"video/quicktime",
+																			"video/x-ms-wmv",
+																			"video/x-flv",
+																			"video/mpeg",
+																			"video/3gpp",
+																			"video/ogg",
+																			"audio/mpeg",
+																			"audio/wav",
+																			"audio/flac",
+																			"audio/aac",
+																			"audio/ogg",
+																			"audio/mp4",
+																			"audio/x-ms-wma",
+																			"audio/aiff",
+																			"application/json",
+																			"application/xml",
+																			"application/javascript",
+																			"application/vnd.google-apps.form",
+																			"application/zip",
+																			"application/vnd.rar",
+																			"application/x-7z-compressed",
+																			"application/x-tar",
+																			"application/gzip",
+																			"application/x-bzip2",
+																			"application/x-xz",
+																			"application/vnd.ms-cab-compressed",
+																			"application/x-iso9660-image",
+																			"application/x-apple-diskimage",
+																			"application/x-xar",
+																			"application/vnd.debian.binary-package",
+																			"application/x-rpm",
+																			"application/vnd.android.package-archive",
+																			"application/java-archive",
+																			"application/x-webarchive",
+																			"application/x-stuffit",
+																			"application/x-stuffitx",
+																			"application/x-lzip",
+																			"application/x-lzma",
+																			"application/x-lzop",
+																			"application/x-compress",
+																			"application/zstd",
+																			"application/x-brotli",
+																			"model/stl",
+																			"model/obj",
+																			"model/gltf+json",
+																			"model/gltf-binary",
+																			"model/fbx",
+																			"model/3mf",
+																			"model/x3d+xml",
+																			"model/vnd.collada+xml",
+																			"application/x-blender",
+																			"application/x-tgif",
+																			"application/octet-stream"
+																		]
+																	},
+																	"createdAt": {
+																		"type": "string"
+																	},
+																	"owner": {
+																		"type": "string"
+																	},
+																	"isTrashed": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"isStarred": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"music": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	},
+																	"video": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	}
+																},
+																"required": [
+																	"id",
+																	"category",
+																	"contentType",
+																	"createdAt",
+																	"owner",
+																	"isTrashed",
+																	"isStarred"
+																],
+																"additionalProperties": false
+															},
+															"type": {
+																"type": "string",
+																"enum": ["file", "folder"]
+															},
+															"parent": {
+																"type": "string"
+															},
+															"parentKey": {
+																"type": "string"
+															}
+														},
+														"required": ["key", "metadata", "type"],
+														"additionalProperties": false
+													}
+												},
+												"count": {
+													"default": 0,
+													"type": "number"
+												},
+												"total": {
+													"default": 0,
+													"type": "number"
+												}
+											},
+											"required": ["list", "count", "total"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/file/trash": {
+			"get": {
+				"summary": "List trashed files",
+				"description": "Returns files currently in the trash",
+				"tags": ["Storage - Files"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"list": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"key": {
+																"type": "string"
+															},
+															"updatedAt": {
+																"type": "string"
+															},
+															"size": {
+																"type": "number"
+															},
+															"metadata": {
+																"type": "object",
+																"properties": {
+																	"id": {
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"category": {
+																		"type": "string",
+																		"enum": [
+																			"MUSIC",
+																			"DOCUMENTS",
+																			"IMAGES",
+																			"3D",
+																			"VIDEO",
+																			"RECENT",
+																			"CODE",
+																			"ARCHIVES",
+																			"UNKNOWN"
+																		]
+																	},
+																	"tags": {
+																		"type": "array",
+																		"items": {
+																			"type": "string"
+																		}
+																	},
+																	"contentType": {
+																		"type": "string",
+																		"enum": [
+																			"application/pdf",
+																			"application/msword",
+																			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																			"application/vnd.ms-excel",
+																			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																			"application/vnd.ms-powerpoint",
+																			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																			"application/vnd.oasis.opendocument.text",
+																			"application/rtf",
+																			"application/epub+zip",
+																			"application/vnd.google-apps.document",
+																			"application/vnd.google-apps.spreadsheet",
+																			"application/vnd.google-apps.presentation",
+																			"text/plain",
+																			"text/csv",
+																			"text/html",
+																			"text/css",
+																			"text/yaml",
+																			"image/jpeg",
+																			"image/png",
+																			"image/gif",
+																			"image/webp",
+																			"image/svg+xml",
+																			"image/bmp",
+																			"image/x-icon",
+																			"image/tiff",
+																			"image/heic",
+																			"video/mp4",
+																			"video/webm",
+																			"video/x-msvideo",
+																			"video/x-matroska",
+																			"video/quicktime",
+																			"video/x-ms-wmv",
+																			"video/x-flv",
+																			"video/mpeg",
+																			"video/3gpp",
+																			"video/ogg",
+																			"audio/mpeg",
+																			"audio/wav",
+																			"audio/flac",
+																			"audio/aac",
+																			"audio/ogg",
+																			"audio/mp4",
+																			"audio/x-ms-wma",
+																			"audio/aiff",
+																			"application/json",
+																			"application/xml",
+																			"application/javascript",
+																			"application/vnd.google-apps.form",
+																			"application/zip",
+																			"application/vnd.rar",
+																			"application/x-7z-compressed",
+																			"application/x-tar",
+																			"application/gzip",
+																			"application/x-bzip2",
+																			"application/x-xz",
+																			"application/vnd.ms-cab-compressed",
+																			"application/x-iso9660-image",
+																			"application/x-apple-diskimage",
+																			"application/x-xar",
+																			"application/vnd.debian.binary-package",
+																			"application/x-rpm",
+																			"application/vnd.android.package-archive",
+																			"application/java-archive",
+																			"application/x-webarchive",
+																			"application/x-stuffit",
+																			"application/x-stuffitx",
+																			"application/x-lzip",
+																			"application/x-lzma",
+																			"application/x-lzop",
+																			"application/x-compress",
+																			"application/zstd",
+																			"application/x-brotli",
+																			"model/stl",
+																			"model/obj",
+																			"model/gltf+json",
+																			"model/gltf-binary",
+																			"model/fbx",
+																			"model/3mf",
+																			"model/x3d+xml",
+																			"model/vnd.collada+xml",
+																			"application/x-blender",
+																			"application/x-tgif",
+																			"application/octet-stream"
+																		]
+																	},
+																	"createdAt": {
+																		"type": "string"
+																	},
+																	"owner": {
+																		"type": "string"
+																	},
+																	"isTrashed": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"isStarred": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"music": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	},
+																	"video": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	}
+																},
+																"required": [
+																	"id",
+																	"category",
+																	"contentType",
+																	"createdAt",
+																	"owner",
+																	"isTrashed",
+																	"isStarred"
+																],
+																"additionalProperties": false
+															},
+															"type": {
+																"type": "string",
+																"enum": ["file", "folder"]
+															},
+															"parent": {
+																"type": "string"
+															},
+															"parentKey": {
+																"type": "string"
+															}
+														},
+														"required": ["key", "metadata", "type"],
+														"additionalProperties": false
+													}
+												},
+												"count": {
+													"default": 0,
+													"type": "number"
+												},
+												"total": {
+													"default": 0,
+													"type": "number"
+												}
+											},
+											"required": ["list", "count", "total"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/file/starred": {
+			"get": {
+				"summary": "List starred files",
+				"description": "Returns files marked as starred",
+				"tags": ["Storage - Files"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"list": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"key": {
+																"type": "string"
+															},
+															"updatedAt": {
+																"type": "string"
+															},
+															"size": {
+																"type": "number"
+															},
+															"metadata": {
+																"type": "object",
+																"properties": {
+																	"id": {
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"category": {
+																		"type": "string",
+																		"enum": [
+																			"MUSIC",
+																			"DOCUMENTS",
+																			"IMAGES",
+																			"3D",
+																			"VIDEO",
+																			"RECENT",
+																			"CODE",
+																			"ARCHIVES",
+																			"UNKNOWN"
+																		]
+																	},
+																	"tags": {
+																		"type": "array",
+																		"items": {
+																			"type": "string"
+																		}
+																	},
+																	"contentType": {
+																		"type": "string",
+																		"enum": [
+																			"application/pdf",
+																			"application/msword",
+																			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																			"application/vnd.ms-excel",
+																			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																			"application/vnd.ms-powerpoint",
+																			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																			"application/vnd.oasis.opendocument.text",
+																			"application/rtf",
+																			"application/epub+zip",
+																			"application/vnd.google-apps.document",
+																			"application/vnd.google-apps.spreadsheet",
+																			"application/vnd.google-apps.presentation",
+																			"text/plain",
+																			"text/csv",
+																			"text/html",
+																			"text/css",
+																			"text/yaml",
+																			"image/jpeg",
+																			"image/png",
+																			"image/gif",
+																			"image/webp",
+																			"image/svg+xml",
+																			"image/bmp",
+																			"image/x-icon",
+																			"image/tiff",
+																			"image/heic",
+																			"video/mp4",
+																			"video/webm",
+																			"video/x-msvideo",
+																			"video/x-matroska",
+																			"video/quicktime",
+																			"video/x-ms-wmv",
+																			"video/x-flv",
+																			"video/mpeg",
+																			"video/3gpp",
+																			"video/ogg",
+																			"audio/mpeg",
+																			"audio/wav",
+																			"audio/flac",
+																			"audio/aac",
+																			"audio/ogg",
+																			"audio/mp4",
+																			"audio/x-ms-wma",
+																			"audio/aiff",
+																			"application/json",
+																			"application/xml",
+																			"application/javascript",
+																			"application/vnd.google-apps.form",
+																			"application/zip",
+																			"application/vnd.rar",
+																			"application/x-7z-compressed",
+																			"application/x-tar",
+																			"application/gzip",
+																			"application/x-bzip2",
+																			"application/x-xz",
+																			"application/vnd.ms-cab-compressed",
+																			"application/x-iso9660-image",
+																			"application/x-apple-diskimage",
+																			"application/x-xar",
+																			"application/vnd.debian.binary-package",
+																			"application/x-rpm",
+																			"application/vnd.android.package-archive",
+																			"application/java-archive",
+																			"application/x-webarchive",
+																			"application/x-stuffit",
+																			"application/x-stuffitx",
+																			"application/x-lzip",
+																			"application/x-lzma",
+																			"application/x-lzop",
+																			"application/x-compress",
+																			"application/zstd",
+																			"application/x-brotli",
+																			"model/stl",
+																			"model/obj",
+																			"model/gltf+json",
+																			"model/gltf-binary",
+																			"model/fbx",
+																			"model/3mf",
+																			"model/x3d+xml",
+																			"model/vnd.collada+xml",
+																			"application/x-blender",
+																			"application/x-tgif",
+																			"application/octet-stream"
+																		]
+																	},
+																	"createdAt": {
+																		"type": "string"
+																	},
+																	"owner": {
+																		"type": "string"
+																	},
+																	"isTrashed": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"isStarred": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"music": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	},
+																	"video": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	}
+																},
+																"required": [
+																	"id",
+																	"category",
+																	"contentType",
+																	"createdAt",
+																	"owner",
+																	"isTrashed",
+																	"isStarred"
+																],
+																"additionalProperties": false
+															},
+															"type": {
+																"type": "string",
+																"enum": ["file", "folder"]
+															},
+															"parent": {
+																"type": "string"
+															},
+															"parentKey": {
+																"type": "string"
+															}
+														},
+														"required": ["key", "metadata", "type"],
+														"additionalProperties": false
+													}
+												},
+												"count": {
+													"default": 0,
+													"type": "number"
+												},
+												"total": {
+													"default": 0,
+													"type": "number"
+												}
+											},
+											"required": ["list", "count", "total"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/file/counts": {
+			"get": {
+				"summary": "Get trash and starred counts",
+				"description": "Returns the count of trashed and starred items",
+				"tags": ["Storage - Files"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"trash": {
+													"type": "number"
+												},
+												"starred": {
+													"type": "number"
+												}
+											},
+											"required": ["trash", "starred"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/file/category/{category}": {
+			"get": {
+				"summary": "List files by category",
+				"description": "Returns files matching the specified category",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "category",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"list": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"key": {
+																"type": "string"
+															},
+															"updatedAt": {
+																"type": "string"
+															},
+															"size": {
+																"type": "number"
+															},
+															"metadata": {
+																"type": "object",
+																"properties": {
+																	"id": {
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"category": {
+																		"type": "string",
+																		"enum": [
+																			"MUSIC",
+																			"DOCUMENTS",
+																			"IMAGES",
+																			"3D",
+																			"VIDEO",
+																			"RECENT",
+																			"CODE",
+																			"ARCHIVES",
+																			"UNKNOWN"
+																		]
+																	},
+																	"tags": {
+																		"type": "array",
+																		"items": {
+																			"type": "string"
+																		}
+																	},
+																	"contentType": {
+																		"type": "string",
+																		"enum": [
+																			"application/pdf",
+																			"application/msword",
+																			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																			"application/vnd.ms-excel",
+																			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																			"application/vnd.ms-powerpoint",
+																			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																			"application/vnd.oasis.opendocument.text",
+																			"application/rtf",
+																			"application/epub+zip",
+																			"application/vnd.google-apps.document",
+																			"application/vnd.google-apps.spreadsheet",
+																			"application/vnd.google-apps.presentation",
+																			"text/plain",
+																			"text/csv",
+																			"text/html",
+																			"text/css",
+																			"text/yaml",
+																			"image/jpeg",
+																			"image/png",
+																			"image/gif",
+																			"image/webp",
+																			"image/svg+xml",
+																			"image/bmp",
+																			"image/x-icon",
+																			"image/tiff",
+																			"image/heic",
+																			"video/mp4",
+																			"video/webm",
+																			"video/x-msvideo",
+																			"video/x-matroska",
+																			"video/quicktime",
+																			"video/x-ms-wmv",
+																			"video/x-flv",
+																			"video/mpeg",
+																			"video/3gpp",
+																			"video/ogg",
+																			"audio/mpeg",
+																			"audio/wav",
+																			"audio/flac",
+																			"audio/aac",
+																			"audio/ogg",
+																			"audio/mp4",
+																			"audio/x-ms-wma",
+																			"audio/aiff",
+																			"application/json",
+																			"application/xml",
+																			"application/javascript",
+																			"application/vnd.google-apps.form",
+																			"application/zip",
+																			"application/vnd.rar",
+																			"application/x-7z-compressed",
+																			"application/x-tar",
+																			"application/gzip",
+																			"application/x-bzip2",
+																			"application/x-xz",
+																			"application/vnd.ms-cab-compressed",
+																			"application/x-iso9660-image",
+																			"application/x-apple-diskimage",
+																			"application/x-xar",
+																			"application/vnd.debian.binary-package",
+																			"application/x-rpm",
+																			"application/vnd.android.package-archive",
+																			"application/java-archive",
+																			"application/x-webarchive",
+																			"application/x-stuffit",
+																			"application/x-stuffitx",
+																			"application/x-lzip",
+																			"application/x-lzma",
+																			"application/x-lzop",
+																			"application/x-compress",
+																			"application/zstd",
+																			"application/x-brotli",
+																			"model/stl",
+																			"model/obj",
+																			"model/gltf+json",
+																			"model/gltf-binary",
+																			"model/fbx",
+																			"model/3mf",
+																			"model/x3d+xml",
+																			"model/vnd.collada+xml",
+																			"application/x-blender",
+																			"application/x-tgif",
+																			"application/octet-stream"
+																		]
+																	},
+																	"createdAt": {
+																		"type": "string"
+																	},
+																	"owner": {
+																		"type": "string"
+																	},
+																	"isTrashed": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"isStarred": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"music": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	},
+																	"video": {
+																		"type": "object",
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"additionalProperties": false
+																	}
+																},
+																"required": [
+																	"id",
+																	"category",
+																	"contentType",
+																	"createdAt",
+																	"owner",
+																	"isTrashed",
+																	"isStarred"
+																],
+																"additionalProperties": false
+															},
+															"type": {
+																"type": "string",
+																"enum": ["file", "folder"]
+															},
+															"parent": {
+																"type": "string"
+															},
+															"parentKey": {
+																"type": "string"
+															}
+														},
+														"required": ["key", "metadata", "type"],
+														"additionalProperties": false
+													}
+												},
+												"count": {
+													"default": 0,
+													"type": "number"
+												},
+												"total": {
+													"default": 0,
+													"type": "number"
+												}
+											},
+											"required": ["list", "count", "total"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}": {
+			"get": {
+				"summary": "Get file metadata or raw content",
+				"description": "Returns file metadata as JSON. Pass raw=true or thumbnail=true for binary content.",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "raw",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "thumbnail",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "size",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": ["small", "medium", "large"]
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"key": {
+													"type": "string"
+												},
+												"updatedAt": {
+													"type": "string"
+												},
+												"size": {
+													"type": "number"
+												},
+												"metadata": {
+													"type": "object",
+													"properties": {
+														"id": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"category": {
+															"type": "string",
+															"enum": [
+																"MUSIC",
+																"DOCUMENTS",
+																"IMAGES",
+																"3D",
+																"VIDEO",
+																"RECENT",
+																"CODE",
+																"ARCHIVES",
+																"UNKNOWN"
+															]
+														},
+														"tags": {
+															"type": "array",
+															"items": {
+																"type": "string"
+															}
+														},
+														"contentType": {
+															"type": "string",
+															"enum": [
+																"application/pdf",
+																"application/msword",
+																"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																"application/vnd.ms-excel",
+																"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																"application/vnd.ms-powerpoint",
+																"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																"application/vnd.oasis.opendocument.text",
+																"application/rtf",
+																"application/epub+zip",
+																"application/vnd.google-apps.document",
+																"application/vnd.google-apps.spreadsheet",
+																"application/vnd.google-apps.presentation",
+																"text/plain",
+																"text/csv",
+																"text/html",
+																"text/css",
+																"text/yaml",
+																"image/jpeg",
+																"image/png",
+																"image/gif",
+																"image/webp",
+																"image/svg+xml",
+																"image/bmp",
+																"image/x-icon",
+																"image/tiff",
+																"image/heic",
+																"video/mp4",
+																"video/webm",
+																"video/x-msvideo",
+																"video/x-matroska",
+																"video/quicktime",
+																"video/x-ms-wmv",
+																"video/x-flv",
+																"video/mpeg",
+																"video/3gpp",
+																"video/ogg",
+																"audio/mpeg",
+																"audio/wav",
+																"audio/flac",
+																"audio/aac",
+																"audio/ogg",
+																"audio/mp4",
+																"audio/x-ms-wma",
+																"audio/aiff",
+																"application/json",
+																"application/xml",
+																"application/javascript",
+																"application/vnd.google-apps.form",
+																"application/zip",
+																"application/vnd.rar",
+																"application/x-7z-compressed",
+																"application/x-tar",
+																"application/gzip",
+																"application/x-bzip2",
+																"application/x-xz",
+																"application/vnd.ms-cab-compressed",
+																"application/x-iso9660-image",
+																"application/x-apple-diskimage",
+																"application/x-xar",
+																"application/vnd.debian.binary-package",
+																"application/x-rpm",
+																"application/vnd.android.package-archive",
+																"application/java-archive",
+																"application/x-webarchive",
+																"application/x-stuffit",
+																"application/x-stuffitx",
+																"application/x-lzip",
+																"application/x-lzma",
+																"application/x-lzop",
+																"application/x-compress",
+																"application/zstd",
+																"application/x-brotli",
+																"model/stl",
+																"model/obj",
+																"model/gltf+json",
+																"model/gltf-binary",
+																"model/fbx",
+																"model/3mf",
+																"model/x3d+xml",
+																"model/vnd.collada+xml",
+																"application/x-blender",
+																"application/x-tgif",
+																"application/octet-stream"
+															]
+														},
+														"createdAt": {
+															"type": "string"
+														},
+														"owner": {
+															"type": "string"
+														},
+														"isTrashed": {
+															"default": false,
+															"type": "boolean"
+														},
+														"isStarred": {
+															"default": false,
+															"type": "boolean"
+														},
+														"music": {
+															"type": "object",
+															"properties": {
+																"duration": {
+																	"type": "number"
+																}
+															},
+															"additionalProperties": false
+														},
+														"video": {
+															"type": "object",
+															"properties": {
+																"duration": {
+																	"type": "number"
+																}
+															},
+															"additionalProperties": false
+														}
+													},
+													"required": [
+														"id",
+														"category",
+														"contentType",
+														"createdAt",
+														"owner",
+														"isTrashed",
+														"isStarred"
+													],
+													"additionalProperties": false
+												},
+												"type": {
+													"type": "string",
+													"enum": ["file", "folder"]
+												},
+												"parent": {
+													"type": "string"
+												},
+												"parentKey": {
+													"type": "string"
+												}
+											},
+											"required": ["key", "metadata", "type"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			},
+			"put": {
+				"summary": "Update file metadata",
+				"description": "Updates metadata fields on an existing file",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "folder",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"type": {
+										"type": "string"
+									},
+									"category": {
+										"type": "string",
+										"enum": [
+											"MUSIC",
+											"DOCUMENTS",
+											"IMAGES",
+											"3D",
+											"VIDEO",
+											"RECENT",
+											"CODE",
+											"ARCHIVES",
+											"UNKNOWN"
+										]
+									},
+									"tags": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										}
+									},
+									"key": {
+										"type": "string"
+									},
+									"contentType": {
+										"type": "string",
+										"enum": [
+											"application/pdf",
+											"application/msword",
+											"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+											"application/vnd.ms-excel",
+											"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+											"application/vnd.ms-powerpoint",
+											"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+											"application/vnd.oasis.opendocument.text",
+											"application/rtf",
+											"application/epub+zip",
+											"application/vnd.google-apps.document",
+											"application/vnd.google-apps.spreadsheet",
+											"application/vnd.google-apps.presentation",
+											"text/plain",
+											"text/csv",
+											"text/html",
+											"text/css",
+											"text/yaml",
+											"image/jpeg",
+											"image/png",
+											"image/gif",
+											"image/webp",
+											"image/svg+xml",
+											"image/bmp",
+											"image/x-icon",
+											"image/tiff",
+											"image/heic",
+											"video/mp4",
+											"video/webm",
+											"video/x-msvideo",
+											"video/x-matroska",
+											"video/quicktime",
+											"video/x-ms-wmv",
+											"video/x-flv",
+											"video/mpeg",
+											"video/3gpp",
+											"video/ogg",
+											"audio/mpeg",
+											"audio/wav",
+											"audio/flac",
+											"audio/aac",
+											"audio/ogg",
+											"audio/mp4",
+											"audio/x-ms-wma",
+											"audio/aiff",
+											"application/json",
+											"application/xml",
+											"application/javascript",
+											"application/vnd.google-apps.form",
+											"application/zip",
+											"application/vnd.rar",
+											"application/x-7z-compressed",
+											"application/x-tar",
+											"application/gzip",
+											"application/x-bzip2",
+											"application/x-xz",
+											"application/vnd.ms-cab-compressed",
+											"application/x-iso9660-image",
+											"application/x-apple-diskimage",
+											"application/x-xar",
+											"application/vnd.debian.binary-package",
+											"application/x-rpm",
+											"application/vnd.android.package-archive",
+											"application/java-archive",
+											"application/x-webarchive",
+											"application/x-stuffit",
+											"application/x-stuffitx",
+											"application/x-lzip",
+											"application/x-lzma",
+											"application/x-lzop",
+											"application/x-compress",
+											"application/zstd",
+											"application/x-brotli",
+											"model/stl",
+											"model/obj",
+											"model/gltf+json",
+											"model/gltf-binary",
+											"model/fbx",
+											"model/3mf",
+											"model/x3d+xml",
+											"model/vnd.collada+xml",
+											"application/x-blender",
+											"application/x-tgif",
+											"application/octet-stream"
+										]
+									},
+									"isTrashed": {
+										"type": "boolean"
+									},
+									"isStarred": {
+										"type": "boolean"
+									}
+								},
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"summary": "Delete a file",
+				"description": "Permanently deletes a file",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/upload": {
+			"post": {
+				"summary": "Upload file content",
+				"description": "Uploads or replaces the binary content of an existing file entry",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"file": {
+										"description": "The file to upload"
+									}
+								},
+								"required": ["file"],
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/file/{id}/move": {
+			"post": {
+				"summary": "Move a file",
+				"description": "Moves a file to a different folder",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"destination": {
+										"type": "string"
+									}
+								},
+								"required": ["destination"],
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/file/{id}/duplicate": {
+			"post": {
+				"summary": "Duplicate a file",
+				"description": "Creates a copy of the file in the same folder",
+				"tags": ["Storage - Files"],
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"key": {
+													"type": "string"
+												},
+												"updatedAt": {
+													"type": "string"
+												},
+												"size": {
+													"type": "number"
+												},
+												"metadata": {
+													"type": "object",
+													"properties": {
+														"id": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"category": {
+															"type": "string",
+															"enum": [
+																"MUSIC",
+																"DOCUMENTS",
+																"IMAGES",
+																"3D",
+																"VIDEO",
+																"RECENT",
+																"CODE",
+																"ARCHIVES",
+																"UNKNOWN"
+															]
+														},
+														"tags": {
+															"type": "array",
+															"items": {
+																"type": "string"
+															}
+														},
+														"contentType": {
+															"type": "string",
+															"enum": [
+																"application/pdf",
+																"application/msword",
+																"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																"application/vnd.ms-excel",
+																"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																"application/vnd.ms-powerpoint",
+																"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																"application/vnd.oasis.opendocument.text",
+																"application/rtf",
+																"application/epub+zip",
+																"application/vnd.google-apps.document",
+																"application/vnd.google-apps.spreadsheet",
+																"application/vnd.google-apps.presentation",
+																"text/plain",
+																"text/csv",
+																"text/html",
+																"text/css",
+																"text/yaml",
+																"image/jpeg",
+																"image/png",
+																"image/gif",
+																"image/webp",
+																"image/svg+xml",
+																"image/bmp",
+																"image/x-icon",
+																"image/tiff",
+																"image/heic",
+																"video/mp4",
+																"video/webm",
+																"video/x-msvideo",
+																"video/x-matroska",
+																"video/quicktime",
+																"video/x-ms-wmv",
+																"video/x-flv",
+																"video/mpeg",
+																"video/3gpp",
+																"video/ogg",
+																"audio/mpeg",
+																"audio/wav",
+																"audio/flac",
+																"audio/aac",
+																"audio/ogg",
+																"audio/mp4",
+																"audio/x-ms-wma",
+																"audio/aiff",
+																"application/json",
+																"application/xml",
+																"application/javascript",
+																"application/vnd.google-apps.form",
+																"application/zip",
+																"application/vnd.rar",
+																"application/x-7z-compressed",
+																"application/x-tar",
+																"application/gzip",
+																"application/x-bzip2",
+																"application/x-xz",
+																"application/vnd.ms-cab-compressed",
+																"application/x-iso9660-image",
+																"application/x-apple-diskimage",
+																"application/x-xar",
+																"application/vnd.debian.binary-package",
+																"application/x-rpm",
+																"application/vnd.android.package-archive",
+																"application/java-archive",
+																"application/x-webarchive",
+																"application/x-stuffit",
+																"application/x-stuffitx",
+																"application/x-lzip",
+																"application/x-lzma",
+																"application/x-lzop",
+																"application/x-compress",
+																"application/zstd",
+																"application/x-brotli",
+																"model/stl",
+																"model/obj",
+																"model/gltf+json",
+																"model/gltf-binary",
+																"model/fbx",
+																"model/3mf",
+																"model/x3d+xml",
+																"model/vnd.collada+xml",
+																"application/x-blender",
+																"application/x-tgif",
+																"application/octet-stream"
+															]
+														},
+														"createdAt": {
+															"type": "string"
+														},
+														"owner": {
+															"type": "string"
+														},
+														"isTrashed": {
+															"default": false,
+															"type": "boolean"
+														},
+														"isStarred": {
+															"default": false,
+															"type": "boolean"
+														},
+														"music": {
+															"type": "object",
+															"properties": {
+																"duration": {
+																	"type": "number"
+																}
+															},
+															"additionalProperties": false
+														},
+														"video": {
+															"type": "object",
+															"properties": {
+																"duration": {
+																	"type": "number"
+																}
+															},
+															"additionalProperties": false
+														}
+													},
+													"required": [
+														"id",
+														"category",
+														"contentType",
+														"createdAt",
+														"owner",
+														"isTrashed",
+														"isStarred"
+													],
+													"additionalProperties": false
+												},
+												"type": {
+													"type": "string",
+													"enum": ["file", "folder"]
+												},
+												"parent": {
+													"type": "string"
+												},
+												"parentKey": {
+													"type": "string"
+												}
+											},
+											"required": ["key", "metadata", "type"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/folder": {
+			"get": {
+				"summary": "List folders",
+				"description": "Returns a list of all folders for the current user",
+				"tags": ["Storage - Folders"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"path": {
+														"type": "string"
+													}
+												},
+												"required": ["id", "name", "path"],
+												"additionalProperties": false
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			},
+			"post": {
+				"summary": "Create a folder",
+				"description": "Creates a new folder under an optional parent",
+				"tags": ["Storage - Folders"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												}
+											},
+											"required": ["message", "id", "name"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"parent": {
+										"type": "string"
+									}
+								},
+								"required": ["name"],
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/folder/tree": {
+			"get": {
+				"summary": "Get folder tree",
+				"description": "Returns all folders with metadata for building a folder picker",
+				"tags": ["Storage - Folders"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"path": {
+														"type": "string"
+													}
+												},
+												"required": ["id", "name", "path"],
+												"additionalProperties": false
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/folder/trash": {
+			"get": {
+				"summary": "List trashed folders",
+				"description": "Returns folders currently in the trash",
+				"tags": ["Storage - Folders"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"path": {
+														"type": "string"
+													}
+												},
+												"required": ["id", "name", "path"],
+												"additionalProperties": false
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/folder/sizes/{prefix}": {
+			"get": {
+				"summary": "Get folder sizes by prefix",
+				"description": "Calculates sizes for all folders under a given prefix",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "prefix",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"propertyNames": {
+												"type": "string"
+											},
+											"additionalProperties": {
+												"type": "number"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/folder/{path}": {
+			"get": {
+				"summary": "Get a folder",
+				"description": "Returns a folder by ID",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"id": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"path": {
+													"type": "string"
+												}
+											},
+											"required": ["id", "name", "path"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			},
+			"put": {
+				"summary": "Update folder metadata",
+				"description": "Updates metadata on a folder (trash, star, tags, name)",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"isTrashed": {
+										"type": "boolean"
+									},
+									"isStarred": {
+										"type": "boolean"
+									},
+									"tags": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										}
+									},
+									"name": {
+										"type": "string"
+									},
+									"parentFolderId": {
+										"type": "string"
+									}
+								},
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"summary": "Delete a folder",
+				"description": "Permanently deletes a folder and its contents",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"parentFolderId": {
+										"type": "string"
+									}
+								},
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/folder/{path}/meta": {
+			"get": {
+				"summary": "Get folder metadata",
+				"description": "Returns metadata for a specific folder",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "parent",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/folder/{path}/size": {
+			"get": {
+				"summary": "Get folder size",
+				"description": "Calculates and returns the total size of a folder in bytes",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "parent",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "number"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/folder/{path}/trash": {
+			"post": {
+				"summary": "Trash a folder",
+				"description": "Soft-deletes a folder by moving it to the trash",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"parentFolderId": {
+										"type": "string"
+									}
+								},
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/folder/{path}/restore": {
+			"post": {
+				"summary": "Restore a trashed folder",
+				"description": "Restores a folder from the trash",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"parentFolderId": {
+										"type": "string"
+									}
+								},
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/folder/{path}/move": {
+			"post": {
+				"summary": "Move a folder",
+				"description": "Moves a folder to a different parent",
+				"tags": ["Storage - Folders"],
+				"parameters": [
+					{
+						"name": "path",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": ["message"],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"parentFolderId": {
+										"type": "string"
+									},
+									"destination": {
+										"type": "string"
+									}
+								},
+								"required": ["destination"],
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/download": {
+			"post": {
+				"summary": "Bulk download as ZIP",
+				"description": "Downloads multiple files/folders as a single ZIP archive",
+				"tags": ["Storage - Downloads"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"description": "Binary ZIP stream"
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"paths": {
+										"minItems": 1,
+										"maxItems": 100,
+										"type": "array",
+										"items": {
+											"type": "string"
+										}
+									}
+								},
+								"required": ["paths"],
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/storage/download/folder/{folder}": {
+			"get": {
+				"summary": "Download folder as ZIP",
+				"description": "Downloads an entire folder as a ZIP archive",
+				"tags": ["Storage - Downloads"],
+				"parameters": [
+					{
+						"name": "folder",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "folder",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"description": "Binary ZIP stream"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
+		"/api/v1/storage/move": {
+			"post": {
+				"summary": "Bulk move files and folders",
+				"description": "Moves multiple files and/or folders to a new destination",
+				"tags": ["Storage - Bulk"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"message": {
+													"type": "string"
+												},
+												"results": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"path": {
+																"type": "string"
+															},
+															"success": {
+																"type": "boolean"
+															},
+															"error": {
+																"type": "string"
+															}
+														},
+														"required": ["path", "success"],
+														"additionalProperties": false
+													}
+												},
+												"successCount": {
+													"type": "number"
+												},
+												"failCount": {
+													"type": "number"
+												}
+											},
+											"required": [
+												"message",
+												"results",
+												"successCount",
+												"failCount"
+											],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"items": {
+										"minItems": 1,
+										"maxItems": 100,
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"path": {
+													"type": "string"
+												},
+												"type": {
+													"type": "string",
+													"enum": ["file", "folder"]
+												}
+											},
+											"required": ["path", "type"],
+											"additionalProperties": false
+										}
+									},
+									"destination": {
+										"type": "string"
+									}
+								},
+								"required": ["items", "destination"],
+								"additionalProperties": false
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"ObjectList": {
+				"type": "object",
+				"properties": {
+					"list": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"key": {
+									"type": "string"
+								},
+								"updatedAt": {
+									"type": "string"
+								},
+								"size": {
+									"type": "number"
+								},
+								"metadata": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"category": {
+											"type": "string",
+											"enum": [
+												"MUSIC",
+												"DOCUMENTS",
+												"IMAGES",
+												"3D",
+												"VIDEO",
+												"RECENT",
+												"CODE",
+												"ARCHIVES",
+												"UNKNOWN"
+											]
+										},
+										"tags": {
+											"type": "array",
+											"items": {
+												"type": "string"
+											}
+										},
+										"contentType": {
+											"type": "string",
+											"enum": [
+												"application/pdf",
+												"application/msword",
+												"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+												"application/vnd.ms-excel",
+												"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+												"application/vnd.ms-powerpoint",
+												"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+												"application/vnd.oasis.opendocument.text",
+												"application/rtf",
+												"application/epub+zip",
+												"application/vnd.google-apps.document",
+												"application/vnd.google-apps.spreadsheet",
+												"application/vnd.google-apps.presentation",
+												"text/plain",
+												"text/csv",
+												"text/html",
+												"text/css",
+												"text/yaml",
+												"image/jpeg",
+												"image/png",
+												"image/gif",
+												"image/webp",
+												"image/svg+xml",
+												"image/bmp",
+												"image/x-icon",
+												"image/tiff",
+												"image/heic",
+												"video/mp4",
+												"video/webm",
+												"video/x-msvideo",
+												"video/x-matroska",
+												"video/quicktime",
+												"video/x-ms-wmv",
+												"video/x-flv",
+												"video/mpeg",
+												"video/3gpp",
+												"video/ogg",
+												"audio/mpeg",
+												"audio/wav",
+												"audio/flac",
+												"audio/aac",
+												"audio/ogg",
+												"audio/mp4",
+												"audio/x-ms-wma",
+												"audio/aiff",
+												"application/json",
+												"application/xml",
+												"application/javascript",
+												"application/vnd.google-apps.form",
+												"application/zip",
+												"application/vnd.rar",
+												"application/x-7z-compressed",
+												"application/x-tar",
+												"application/gzip",
+												"application/x-bzip2",
+												"application/x-xz",
+												"application/vnd.ms-cab-compressed",
+												"application/x-iso9660-image",
+												"application/x-apple-diskimage",
+												"application/x-xar",
+												"application/vnd.debian.binary-package",
+												"application/x-rpm",
+												"application/vnd.android.package-archive",
+												"application/java-archive",
+												"application/x-webarchive",
+												"application/x-stuffit",
+												"application/x-stuffitx",
+												"application/x-lzip",
+												"application/x-lzma",
+												"application/x-lzop",
+												"application/x-compress",
+												"application/zstd",
+												"application/x-brotli",
+												"model/stl",
+												"model/obj",
+												"model/gltf+json",
+												"model/gltf-binary",
+												"model/fbx",
+												"model/3mf",
+												"model/x3d+xml",
+												"model/vnd.collada+xml",
+												"application/x-blender",
+												"application/x-tgif",
+												"application/octet-stream"
+											]
+										},
+										"createdAt": {
+											"type": "string"
+										},
+										"owner": {
+											"type": "string"
+										},
+										"isTrashed": {
+											"default": false,
+											"type": "boolean"
+										},
+										"isStarred": {
+											"default": false,
+											"type": "boolean"
+										},
+										"music": {
+											"type": "object",
+											"properties": {
+												"duration": {
+													"type": "number"
+												}
+											},
+											"additionalProperties": false
+										},
+										"video": {
+											"type": "object",
+											"properties": {
+												"duration": {
+													"type": "number"
+												}
+											},
+											"additionalProperties": false
+										}
+									},
+									"required": [
+										"id",
+										"category",
+										"contentType",
+										"createdAt",
+										"owner",
+										"isTrashed",
+										"isStarred"
+									],
+									"additionalProperties": false
+								},
+								"type": {
+									"type": "string",
+									"enum": ["file", "folder"]
+								},
+								"parent": {
+									"type": "string"
+								},
+								"parentKey": {
+									"type": "string"
+								}
+							},
+							"required": ["key", "metadata", "type"],
+							"additionalProperties": false
+						}
+					},
+					"count": {
+						"default": 0,
+						"type": "number"
+					},
+					"total": {
+						"default": 0,
+						"type": "number"
+					}
+				},
+				"required": ["list", "count", "total"],
+				"additionalProperties": false
+			},
+			"ObjectItem": {
+				"type": "object",
+				"properties": {
+					"key": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"size": {
+						"type": "number"
+					},
+					"metadata": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"category": {
+								"type": "string",
+								"enum": [
+									"MUSIC",
+									"DOCUMENTS",
+									"IMAGES",
+									"3D",
+									"VIDEO",
+									"RECENT",
+									"CODE",
+									"ARCHIVES",
+									"UNKNOWN"
+								]
+							},
+							"tags": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"contentType": {
+								"type": "string",
+								"enum": [
+									"application/pdf",
+									"application/msword",
+									"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+									"application/vnd.ms-excel",
+									"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+									"application/vnd.ms-powerpoint",
+									"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+									"application/vnd.oasis.opendocument.text",
+									"application/rtf",
+									"application/epub+zip",
+									"application/vnd.google-apps.document",
+									"application/vnd.google-apps.spreadsheet",
+									"application/vnd.google-apps.presentation",
+									"text/plain",
+									"text/csv",
+									"text/html",
+									"text/css",
+									"text/yaml",
+									"image/jpeg",
+									"image/png",
+									"image/gif",
+									"image/webp",
+									"image/svg+xml",
+									"image/bmp",
+									"image/x-icon",
+									"image/tiff",
+									"image/heic",
+									"video/mp4",
+									"video/webm",
+									"video/x-msvideo",
+									"video/x-matroska",
+									"video/quicktime",
+									"video/x-ms-wmv",
+									"video/x-flv",
+									"video/mpeg",
+									"video/3gpp",
+									"video/ogg",
+									"audio/mpeg",
+									"audio/wav",
+									"audio/flac",
+									"audio/aac",
+									"audio/ogg",
+									"audio/mp4",
+									"audio/x-ms-wma",
+									"audio/aiff",
+									"application/json",
+									"application/xml",
+									"application/javascript",
+									"application/vnd.google-apps.form",
+									"application/zip",
+									"application/vnd.rar",
+									"application/x-7z-compressed",
+									"application/x-tar",
+									"application/gzip",
+									"application/x-bzip2",
+									"application/x-xz",
+									"application/vnd.ms-cab-compressed",
+									"application/x-iso9660-image",
+									"application/x-apple-diskimage",
+									"application/x-xar",
+									"application/vnd.debian.binary-package",
+									"application/x-rpm",
+									"application/vnd.android.package-archive",
+									"application/java-archive",
+									"application/x-webarchive",
+									"application/x-stuffit",
+									"application/x-stuffitx",
+									"application/x-lzip",
+									"application/x-lzma",
+									"application/x-lzop",
+									"application/x-compress",
+									"application/zstd",
+									"application/x-brotli",
+									"model/stl",
+									"model/obj",
+									"model/gltf+json",
+									"model/gltf-binary",
+									"model/fbx",
+									"model/3mf",
+									"model/x3d+xml",
+									"model/vnd.collada+xml",
+									"application/x-blender",
+									"application/x-tgif",
+									"application/octet-stream"
+								]
+							},
+							"createdAt": {
+								"type": "string"
+							},
+							"owner": {
+								"type": "string"
+							},
+							"isTrashed": {
+								"default": false,
+								"type": "boolean"
+							},
+							"isStarred": {
+								"default": false,
+								"type": "boolean"
+							},
+							"music": {
+								"type": "object",
+								"properties": {
+									"duration": {
+										"type": "number"
+									}
+								},
+								"additionalProperties": false
+							},
+							"video": {
+								"type": "object",
+								"properties": {
+									"duration": {
+										"type": "number"
+									}
+								},
+								"additionalProperties": false
+							}
+						},
+						"required": [
+							"id",
+							"category",
+							"contentType",
+							"createdAt",
+							"owner",
+							"isTrashed",
+							"isStarred"
+						],
+						"additionalProperties": false
+					},
+					"type": {
+						"type": "string",
+						"enum": ["file", "folder"]
+					},
+					"parent": {
+						"type": "string"
+					},
+					"parentKey": {
+						"type": "string"
+					}
+				},
+				"required": ["key", "metadata", "type"],
+				"additionalProperties": false
+			},
+			"FileMetadata": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"category": {
+						"type": "string",
+						"enum": [
+							"MUSIC",
+							"DOCUMENTS",
+							"IMAGES",
+							"3D",
+							"VIDEO",
+							"RECENT",
+							"CODE",
+							"ARCHIVES",
+							"UNKNOWN"
+						]
+					},
+					"tags": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"contentType": {
+						"type": "string",
+						"enum": [
+							"application/pdf",
+							"application/msword",
+							"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+							"application/vnd.ms-excel",
+							"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+							"application/vnd.ms-powerpoint",
+							"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+							"application/vnd.oasis.opendocument.text",
+							"application/rtf",
+							"application/epub+zip",
+							"application/vnd.google-apps.document",
+							"application/vnd.google-apps.spreadsheet",
+							"application/vnd.google-apps.presentation",
+							"text/plain",
+							"text/csv",
+							"text/html",
+							"text/css",
+							"text/yaml",
+							"image/jpeg",
+							"image/png",
+							"image/gif",
+							"image/webp",
+							"image/svg+xml",
+							"image/bmp",
+							"image/x-icon",
+							"image/tiff",
+							"image/heic",
+							"video/mp4",
+							"video/webm",
+							"video/x-msvideo",
+							"video/x-matroska",
+							"video/quicktime",
+							"video/x-ms-wmv",
+							"video/x-flv",
+							"video/mpeg",
+							"video/3gpp",
+							"video/ogg",
+							"audio/mpeg",
+							"audio/wav",
+							"audio/flac",
+							"audio/aac",
+							"audio/ogg",
+							"audio/mp4",
+							"audio/x-ms-wma",
+							"audio/aiff",
+							"application/json",
+							"application/xml",
+							"application/javascript",
+							"application/vnd.google-apps.form",
+							"application/zip",
+							"application/vnd.rar",
+							"application/x-7z-compressed",
+							"application/x-tar",
+							"application/gzip",
+							"application/x-bzip2",
+							"application/x-xz",
+							"application/vnd.ms-cab-compressed",
+							"application/x-iso9660-image",
+							"application/x-apple-diskimage",
+							"application/x-xar",
+							"application/vnd.debian.binary-package",
+							"application/x-rpm",
+							"application/vnd.android.package-archive",
+							"application/java-archive",
+							"application/x-webarchive",
+							"application/x-stuffit",
+							"application/x-stuffitx",
+							"application/x-lzip",
+							"application/x-lzma",
+							"application/x-lzop",
+							"application/x-compress",
+							"application/zstd",
+							"application/x-brotli",
+							"model/stl",
+							"model/obj",
+							"model/gltf+json",
+							"model/gltf-binary",
+							"model/fbx",
+							"model/3mf",
+							"model/x3d+xml",
+							"model/vnd.collada+xml",
+							"application/x-blender",
+							"application/x-tgif",
+							"application/octet-stream"
+						]
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"owner": {
+						"type": "string"
+					},
+					"isTrashed": {
+						"default": false,
+						"type": "boolean"
+					},
+					"isStarred": {
+						"default": false,
+						"type": "boolean"
+					},
+					"music": {
+						"type": "object",
+						"properties": {
+							"duration": {
+								"type": "number"
+							}
+						},
+						"additionalProperties": false
+					},
+					"video": {
+						"type": "object",
+						"properties": {
+							"duration": {
+								"type": "number"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
+				"required": [
+					"id",
+					"category",
+					"contentType",
+					"createdAt",
+					"owner",
+					"isTrashed",
+					"isStarred"
+				],
+				"additionalProperties": false
+			},
+			"UploadResult": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"finalName": {
+						"type": "string"
+					},
+					"metadata": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"category": {
+								"type": "string",
+								"enum": [
+									"MUSIC",
+									"DOCUMENTS",
+									"IMAGES",
+									"3D",
+									"VIDEO",
+									"RECENT",
+									"CODE",
+									"ARCHIVES",
+									"UNKNOWN"
+								]
+							},
+							"tags": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"contentType": {
+								"type": "string",
+								"enum": [
+									"application/pdf",
+									"application/msword",
+									"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+									"application/vnd.ms-excel",
+									"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+									"application/vnd.ms-powerpoint",
+									"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+									"application/vnd.oasis.opendocument.text",
+									"application/rtf",
+									"application/epub+zip",
+									"application/vnd.google-apps.document",
+									"application/vnd.google-apps.spreadsheet",
+									"application/vnd.google-apps.presentation",
+									"text/plain",
+									"text/csv",
+									"text/html",
+									"text/css",
+									"text/yaml",
+									"image/jpeg",
+									"image/png",
+									"image/gif",
+									"image/webp",
+									"image/svg+xml",
+									"image/bmp",
+									"image/x-icon",
+									"image/tiff",
+									"image/heic",
+									"video/mp4",
+									"video/webm",
+									"video/x-msvideo",
+									"video/x-matroska",
+									"video/quicktime",
+									"video/x-ms-wmv",
+									"video/x-flv",
+									"video/mpeg",
+									"video/3gpp",
+									"video/ogg",
+									"audio/mpeg",
+									"audio/wav",
+									"audio/flac",
+									"audio/aac",
+									"audio/ogg",
+									"audio/mp4",
+									"audio/x-ms-wma",
+									"audio/aiff",
+									"application/json",
+									"application/xml",
+									"application/javascript",
+									"application/vnd.google-apps.form",
+									"application/zip",
+									"application/vnd.rar",
+									"application/x-7z-compressed",
+									"application/x-tar",
+									"application/gzip",
+									"application/x-bzip2",
+									"application/x-xz",
+									"application/vnd.ms-cab-compressed",
+									"application/x-iso9660-image",
+									"application/x-apple-diskimage",
+									"application/x-xar",
+									"application/vnd.debian.binary-package",
+									"application/x-rpm",
+									"application/vnd.android.package-archive",
+									"application/java-archive",
+									"application/x-webarchive",
+									"application/x-stuffit",
+									"application/x-stuffitx",
+									"application/x-lzip",
+									"application/x-lzma",
+									"application/x-lzop",
+									"application/x-compress",
+									"application/zstd",
+									"application/x-brotli",
+									"model/stl",
+									"model/obj",
+									"model/gltf+json",
+									"model/gltf-binary",
+									"model/fbx",
+									"model/3mf",
+									"model/x3d+xml",
+									"model/vnd.collada+xml",
+									"application/x-blender",
+									"application/x-tgif",
+									"application/octet-stream"
+								]
+							},
+							"createdAt": {
+								"type": "string"
+							},
+							"owner": {
+								"type": "string"
+							},
+							"isTrashed": {
+								"default": false,
+								"type": "boolean"
+							},
+							"isStarred": {
+								"default": false,
+								"type": "boolean"
+							},
+							"music": {
+								"type": "object",
+								"properties": {
+									"duration": {
+										"type": "number"
+									}
+								},
+								"additionalProperties": false
+							},
+							"video": {
+								"type": "object",
+								"properties": {
+									"duration": {
+										"type": "number"
+									}
+								},
+								"additionalProperties": false
+							}
+						},
+						"required": [
+							"id",
+							"category",
+							"contentType",
+							"createdAt",
+							"owner",
+							"isTrashed",
+							"isStarred"
+						],
+						"additionalProperties": false
+					}
+				},
+				"required": ["finalName", "metadata"],
+				"additionalProperties": false
+			},
+			"FolderItem": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"path": {
+						"type": "string"
+					}
+				},
+				"required": ["id", "name", "path"],
+				"additionalProperties": false
+			},
+			"FolderList": {
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						},
+						"path": {
+							"type": "string"
+						}
+					},
+					"required": ["id", "name", "path"],
+					"additionalProperties": false
+				}
+			},
+			"FileCategory": {
+				"type": "string",
+				"enum": [
+					"MUSIC",
+					"DOCUMENTS",
+					"IMAGES",
+					"3D",
+					"VIDEO",
+					"RECENT",
+					"CODE",
+					"ARCHIVES",
+					"UNKNOWN"
+				]
+			},
+			"FileContentType": {
+				"type": "string",
+				"enum": [
+					"application/pdf",
+					"application/msword",
+					"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+					"application/vnd.ms-excel",
+					"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+					"application/vnd.ms-powerpoint",
+					"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+					"application/vnd.oasis.opendocument.text",
+					"application/rtf",
+					"application/epub+zip",
+					"application/vnd.google-apps.document",
+					"application/vnd.google-apps.spreadsheet",
+					"application/vnd.google-apps.presentation",
+					"text/plain",
+					"text/csv",
+					"text/html",
+					"text/css",
+					"text/yaml",
+					"image/jpeg",
+					"image/png",
+					"image/gif",
+					"image/webp",
+					"image/svg+xml",
+					"image/bmp",
+					"image/x-icon",
+					"image/tiff",
+					"image/heic",
+					"video/mp4",
+					"video/webm",
+					"video/x-msvideo",
+					"video/x-matroska",
+					"video/quicktime",
+					"video/x-ms-wmv",
+					"video/x-flv",
+					"video/mpeg",
+					"video/3gpp",
+					"video/ogg",
+					"audio/mpeg",
+					"audio/wav",
+					"audio/flac",
+					"audio/aac",
+					"audio/ogg",
+					"audio/mp4",
+					"audio/x-ms-wma",
+					"audio/aiff",
+					"application/json",
+					"application/xml",
+					"application/javascript",
+					"application/vnd.google-apps.form",
+					"application/zip",
+					"application/vnd.rar",
+					"application/x-7z-compressed",
+					"application/x-tar",
+					"application/gzip",
+					"application/x-bzip2",
+					"application/x-xz",
+					"application/vnd.ms-cab-compressed",
+					"application/x-iso9660-image",
+					"application/x-apple-diskimage",
+					"application/x-xar",
+					"application/vnd.debian.binary-package",
+					"application/x-rpm",
+					"application/vnd.android.package-archive",
+					"application/java-archive",
+					"application/x-webarchive",
+					"application/x-stuffit",
+					"application/x-stuffitx",
+					"application/x-lzip",
+					"application/x-lzma",
+					"application/x-lzop",
+					"application/x-compress",
+					"application/zstd",
+					"application/x-brotli",
+					"model/stl",
+					"model/obj",
+					"model/gltf+json",
+					"model/gltf-binary",
+					"model/fbx",
+					"model/3mf",
+					"model/x3d+xml",
+					"model/vnd.collada+xml",
+					"application/x-blender",
+					"application/x-tgif",
+					"application/octet-stream"
+				]
+			},
+			"NewFile": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"size": {
+						"type": "number"
+					}
+				},
+				"required": ["name", "size"],
+				"additionalProperties": false
+			},
+			"BatchFile": {
+				"type": "object",
+				"properties": {
+					"files": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"name": {
+									"type": "string"
+								},
+								"size": {
+									"type": "number"
+								}
+							},
+							"required": ["name", "size"],
+							"additionalProperties": false
+						}
+					}
+				},
+				"required": ["files"],
+				"additionalProperties": false
+			},
+			"UpdateFile": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string"
+					},
+					"category": {
+						"type": "string",
+						"enum": [
+							"MUSIC",
+							"DOCUMENTS",
+							"IMAGES",
+							"3D",
+							"VIDEO",
+							"RECENT",
+							"CODE",
+							"ARCHIVES",
+							"UNKNOWN"
+						]
+					},
+					"tags": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"key": {
+						"type": "string"
+					},
+					"contentType": {
+						"type": "string",
+						"enum": [
+							"application/pdf",
+							"application/msword",
+							"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+							"application/vnd.ms-excel",
+							"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+							"application/vnd.ms-powerpoint",
+							"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+							"application/vnd.oasis.opendocument.text",
+							"application/rtf",
+							"application/epub+zip",
+							"application/vnd.google-apps.document",
+							"application/vnd.google-apps.spreadsheet",
+							"application/vnd.google-apps.presentation",
+							"text/plain",
+							"text/csv",
+							"text/html",
+							"text/css",
+							"text/yaml",
+							"image/jpeg",
+							"image/png",
+							"image/gif",
+							"image/webp",
+							"image/svg+xml",
+							"image/bmp",
+							"image/x-icon",
+							"image/tiff",
+							"image/heic",
+							"video/mp4",
+							"video/webm",
+							"video/x-msvideo",
+							"video/x-matroska",
+							"video/quicktime",
+							"video/x-ms-wmv",
+							"video/x-flv",
+							"video/mpeg",
+							"video/3gpp",
+							"video/ogg",
+							"audio/mpeg",
+							"audio/wav",
+							"audio/flac",
+							"audio/aac",
+							"audio/ogg",
+							"audio/mp4",
+							"audio/x-ms-wma",
+							"audio/aiff",
+							"application/json",
+							"application/xml",
+							"application/javascript",
+							"application/vnd.google-apps.form",
+							"application/zip",
+							"application/vnd.rar",
+							"application/x-7z-compressed",
+							"application/x-tar",
+							"application/gzip",
+							"application/x-bzip2",
+							"application/x-xz",
+							"application/vnd.ms-cab-compressed",
+							"application/x-iso9660-image",
+							"application/x-apple-diskimage",
+							"application/x-xar",
+							"application/vnd.debian.binary-package",
+							"application/x-rpm",
+							"application/vnd.android.package-archive",
+							"application/java-archive",
+							"application/x-webarchive",
+							"application/x-stuffit",
+							"application/x-stuffitx",
+							"application/x-lzip",
+							"application/x-lzma",
+							"application/x-lzop",
+							"application/x-compress",
+							"application/zstd",
+							"application/x-brotli",
+							"model/stl",
+							"model/obj",
+							"model/gltf+json",
+							"model/gltf-binary",
+							"model/fbx",
+							"model/3mf",
+							"model/x3d+xml",
+							"model/vnd.collada+xml",
+							"application/x-blender",
+							"application/x-tgif",
+							"application/octet-stream"
+						]
+					},
+					"isTrashed": {
+						"type": "boolean"
+					},
+					"isStarred": {
+						"type": "boolean"
+					}
+				},
+				"additionalProperties": false
+			},
+			"DirectoryList": {
+				"type": "array",
+				"items": {
+					"type": "string"
+				}
+			},
+			"StandardizedResponse": {
+				"type": "object",
+				"properties": {
+					"message": {
+						"type": "string"
+					},
+					"data": {},
+					"context": {}
+				}
+			},
+			"ErrorResponse": {
+				"type": "object",
+				"properties": {
+					"message": {
+						"type": "string"
+					},
+					"context": {}
+				}
+			}
+		},
+		"securitySchemes": {
+			"cookieAuth": {
+				"type": "apiKey",
+				"in": "cookie",
+				"name": "better-auth.session_token",
+				"description": "Session cookie set by better-auth"
+			}
+		}
+	},
+	"security": [
+		{
+			"cookieAuth": []
+		}
+	]
+}

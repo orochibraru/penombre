@@ -117,8 +117,8 @@ export const fileContentTypeSchema = z.enum([
 	"application/octet-stream",
 ]);
 
-// Date fields can be Date (server-side) or string (JSON serialized)
-const dateSchema = z.union([z.date(), z.string()]);
+// Date fields are serialized as ISO strings over JSON
+const dateSchema = z.coerce.string();
 
 export const fileMetadataSchema = z.object({
 	id: z.string(),
@@ -188,7 +188,9 @@ export const uploadResultSchema = z.object({
 	metadata: fileMetadataSchema,
 });
 
-export const activitySchema = createSelectSchema(activity);
+export const activitySchema = createSelectSchema(activity, {
+	createdAt: z.coerce.string(),
+});
 export const newActivitySchema = createInsertSchema(activity);
 
 export const sharingSchema = createSelectSchema(sharings);

@@ -1,5 +1,9 @@
 import type { Logger } from "$lib/logger";
 import type { AuthType } from "$lib/server/auth";
+import type { StorageService } from "$lib/server/services/storage";
+import type { HTMLAnchorAttributes } from "svelte/elements";
+import type { Pathname } from "$app/types";
+
 // See https://svelte.dev/docs/kit/types#app.d.ts
 
 // for information about these interfaces
@@ -17,6 +21,7 @@ declare global {
 			logger: Logger;
 			isAdmin: boolean;
 			authCookie: string;
+			storageService: StorageService;
 		}
 		// interface PageData {}
 		// interface PageState {}
@@ -26,11 +31,19 @@ declare global {
 			errorId?: string;
 		}
 	}
-}
 
-declare module "svelte/elements" {
-	interface HTMLAttributes {
-		ontap?: (event: CustomEvent<null>) => void;
-		onlongpress?: (event: CustomEvent<null>) => void;
+	namespace svelteHTML {
+		interface HTMLAttributes<T> {
+			ontap?: (event: CustomEvent<null>) => void;
+			onlongpress?: (event: CustomEvent<null>) => void;
+		}
+
+		interface IntrinsicElements {
+			a: Omit<HTMLAnchorAttributes, "href"> & {
+				// The (string & {}) trick prevents 'string' from collapsing the union,
+				// preserving Intellisense for your Pathnames.
+				href?: Pathname | (string & {}) | null;
+			};
+		}
 	}
 }

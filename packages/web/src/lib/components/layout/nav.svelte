@@ -1,7 +1,7 @@
 <script lang="ts" module>
     export type NavItem = {
         title: string;
-        url: string;
+        url: Pathname;
         icon: typeof IconType;
         accentColor?:
             | "indigo"
@@ -34,6 +34,7 @@
     import { page } from "$app/state";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
     import { cn, type WithoutChildren } from "$lib/utils.js";
+    import type { Pathname } from "$app/types";
 
     type Props = WithoutChildren<ComponentProps<typeof Sidebar.Group>> & {
         title: string;

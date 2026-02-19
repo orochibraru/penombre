@@ -12,18 +12,13 @@
     import { browser } from "$app/environment";
     import { invalidate } from "$app/navigation";
     import { navigating, page } from "$app/state";
-    import {
-        getApiClient,
-        type ObjectItem,
-        type ObjectList,
-    } from "$lib/api-client";
+    import { api, type ObjectItem, type ObjectList } from "$lib/api";
     import FileGrid from "$lib/components/file/grid.svelte";
     import FileList from "$lib/components/file/list.svelte";
     import FileTable from "$lib/components/file/table.svelte";
     import { Badge } from "$lib/components/ui/badge/index";
     import { Button } from "$lib/components/ui/button/index";
     import * as Code from "$lib/components/ui/code/index";
-    import * as Dialog from "$lib/components/ui/dialog";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import { Input } from "$lib/components/ui/input";
     import {
@@ -60,8 +55,8 @@
         getDuplicateFilePromise,
     } from "./wrapper.svelte.js";
     import { ExternalLinkIcon } from "@lucide/svelte";
-    import * as Drawer from "$lib/components/ui/drawer/index";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
+    import type { Pathname } from "$app/types";
 
     type UserPreferences = {
         layout?: "grid" | "list";
@@ -82,8 +77,6 @@
     const initialSortDirection = $derived(preferences?.sortDirection ?? "asc");
     // Layout is always driven by server preferences
     const layout = $derived(preferences?.layout ?? "list");
-
-    const api = getApiClient(fetch);
 
     function handleFileDrop(files: File[]) {
         pendingUploadFiles.set(files);
@@ -188,12 +181,11 @@
         }
 
         try {
-            const res = await api.storage.objects.search.$get({
-                query: { q: searchValue.trim() },
+            const { data } = await api.GET("/api/v1/storage/file/search", {
+                params: { query: { q: searchValue.trim() } },
             });
-            if (res.ok) {
-                const data = await res.json();
-                searchResults = data.list;
+            if (data?.data) {
+                searchResults = data.data.list as unknown as ObjectItem[];
             } else {
                 searchResults = [];
             }
@@ -267,18 +259,24 @@
 
                 toast.promise(
                     (async () => {
-                        const res = await api.storage.objects.download.folder[
-                            ":folder"
-                        ].$get({
-                            param: {
-                                folder: encodeURIComponent(folderId),
+                        const { response, error: dlError } = await api.GET(
+                            "/api/v1/storage/download/folder/{folder}",
+                            {
+                                params: {
+                                    path: {
+                                        folder: encodeURIComponent(folderId),
+                                    },
+                                    query: {
+                                        folder: currentFolder || undefined,
+                                    },
+                                },
+                                parseAs: "blob",
                             },
-                            query: { folder: currentFolder || undefined },
-                        });
-                        if (!res.ok) {
+                        );
+                        if (dlError) {
                             throw new Error("Failed to download folder");
                         }
-                        const blob = await res.blob();
+                        const blob = await response.blob();
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
@@ -337,37 +335,50 @@
             const isFolder = isFolderItem(item);
 
             try {
-                let res: Response;
                 if (isFolder) {
                     // Folder: use folders endpoint
                     const folderId = item.key.endsWith("/")
                         ? item.key.slice(0, -1)
                         : item.key;
-                    res = await api.storage.folders.folder[":id"].$put({
-                        param: { id: encodeURIComponent(folderId) },
-                        json: {
-                            isStarred: newStarred,
-                            parentFolderId: currentFolder || undefined,
+                    const { error: starError } = await api.PUT(
+                        "/api/v1/storage/folder/{path}",
+                        {
+                            params: {
+                                path: { path: encodeURIComponent(folderId) },
+                            },
+                            body: {
+                                isStarred: newStarred,
+                                parentFolderId: currentFolder || undefined,
+                            },
                         },
-                    });
+                    );
+                    if (starError) {
+                        toast.error("Failed to update star status");
+                        return;
+                    }
                 } else {
                     // File: use objects endpoint
-                    res = await api.storage.objects.item[":item"].$put({
-                        param: { item: encodeURIComponent(item.key) },
-                        query: { folder: currentFolder },
-                        json: { isStarred: newStarred },
-                    });
-                }
-                if (res.ok) {
-                    toast.success(
-                        newStarred
-                            ? `Added "${itemName}" to starred`
-                            : `Removed "${itemName}" from starred`,
+                    const { error: starError } = await api.PUT(
+                        "/api/v1/storage/file/{id}",
+                        {
+                            params: {
+                                path: { id: encodeURIComponent(item.key) },
+                                query: { folder: currentFolder },
+                            },
+                            body: { isStarred: newStarred },
+                        },
                     );
-                    await invalidate("app:files");
-                } else {
-                    toast.error("Failed to update star status");
+                    if (starError) {
+                        toast.error("Failed to update star status");
+                        return;
+                    }
                 }
+                toast.success(
+                    newStarred
+                        ? `Added "${itemName}" to starred`
+                        : `Removed "${itemName}" from starred`,
+                );
+                await invalidate("app:files");
             } catch (error) {
                 console.error("Star failed:", error);
                 toast.error("Failed to update star status");
@@ -399,14 +410,18 @@
 
                 toast.promise(
                     (async () => {
-                        const res = await api.storage.objects.download.$post({
-                            json: { paths },
-                        });
-                        if (!res.ok) {
+                        const { response, error: dlError } = await api.POST(
+                            "/api/v1/storage/download",
+                            {
+                                body: { paths },
+                                parseAs: "blob",
+                            },
+                        );
+                        if (dlError) {
                             throw new Error("Failed to create download");
                         }
                         // Trigger download from response
-                        const blob = await res.blob();
+                        const blob = await response.blob();
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
@@ -490,8 +505,8 @@
 
             const savePreferences = async () => {
                 try {
-                    await api.preferences.$put({
-                        json: {
+                    await api.PUT("/api/v1/preferences", {
+                        body: {
                             sortColumn: currentSortColumn,
                             sortDirection: currentSortDirection,
                         },
@@ -572,7 +587,7 @@
         }
 
         try {
-            let promise: Promise<Response>;
+            let movePromise: Promise<{ error?: unknown; response: Response }>;
 
             if (isFolder) {
                 const folderId = fullItemKey.split("/").pop() || fullItemKey;
@@ -580,25 +595,26 @@
                     ? fullItemKey.split("/").slice(0, -1).join("/")
                     : undefined;
 
-                promise = api.storage.folders.folder[":id"].move.$post({
-                    param: { id: folderId },
-                    json: {
+                movePromise = api.POST("/api/v1/storage/folder/{path}/move", {
+                    params: { path: { path: folderId } },
+                    body: {
                         parentFolderId: parentId,
                         destination: destinationFolder,
                     },
                 });
             } else {
-                promise = api.storage.objects.item[":item"].move.$post({
-                    param: { item: encodeURIComponent(fullItemKey) },
-                    json: { destination: destinationFolder },
+                movePromise = api.POST("/api/v1/storage/file/{id}/move", {
+                    params: { path: { id: encodeURIComponent(fullItemKey) } },
+                    body: { destination: destinationFolder },
                 });
             }
 
             toast.promise(
-                promise.then(async (res) => {
-                    if (!res.ok) {
-                        const text = await res.text();
-                        throw new Error(text || "Failed to move item");
+                movePromise.then(async ({ error: moveError }) => {
+                    if (moveError) {
+                        throw new Error(
+                            String(moveError) || "Failed to move item",
+                        );
                     }
                     await invalidate("app:files");
                 }),
@@ -809,8 +825,8 @@
                     <DropdownMenu.Separator />
                     <DropdownMenu.Item
                         onclick={async () => {
-                            await getApiClient().preferences.$put({
-                                json: { layout: "list" },
+                            await api.PUT("/api/v1/preferences", {
+                                body: { layout: "list" },
                             });
                             await invalidate("app:preferences");
                         }}
@@ -824,8 +840,8 @@
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
                         onclick={async () => {
-                            await getApiClient().preferences.$put({
-                                json: { layout: "grid" },
+                            await api.PUT("/api/v1/preferences", {
+                                body: { layout: "grid" },
                             });
                             await invalidate("app:preferences");
                         }}
@@ -956,7 +972,7 @@
                     class="w-full lg:w-auto"
                     variant="outline"
                     size="sm"
-                    href={fileToView.src}
+                    href={fileToView.src as Pathname}
                     target="_blank"
                 >
                     Open in new tab

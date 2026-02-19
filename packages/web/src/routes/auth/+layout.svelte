@@ -1,6 +1,5 @@
 <script lang="ts">
     import LanguageDropdown from "$lib/components/language-dropdown.svelte";
-    import { route } from "$lib/ROUTES";
     const { children } = $props();
 </script>
 
@@ -14,7 +13,7 @@
     </div>
     <div class="flex flex-col gap-4 p-6 md:p-10">
         <div class="flex justify-center gap-2 md:justify-start">
-            <a href={route("/")} class="flex items-center gap-2 font-medium">
+            <a href="/" class="flex items-center gap-2 font-medium">
                 <img src="/logo.svg" alt="Opendrive Logo" class="w-12 h-12" />
                 Opendrive
             </a>

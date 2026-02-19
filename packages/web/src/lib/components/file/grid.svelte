@@ -7,13 +7,13 @@
     } from "@lucide/svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
-    import type { ObjectItem } from "$lib/api-client";
+    import type { ObjectItem } from "$lib/api";
     import FilePrefix from "$lib/components/file/prefix.svelte";
     import { Button } from "$lib/components/ui/button";
     import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import { Skeleton } from "$lib/components/ui/skeleton/index";
-    import { route } from "$lib/ROUTES";
+    import { resolve } from "$app/paths";
     import {
         cn,
         isFolderItem,
@@ -134,9 +134,7 @@
     function getItemDate(item: ObjectItem): number {
         const date = item.updatedAt;
         if (!date) return 0;
-        return typeof date === "string"
-            ? new Date(date).getTime()
-            : date.getTime();
+        return new Date(date).getTime();
     }
 
     function compareItems(a: ObjectItem, b: ObjectItem): number {
@@ -219,10 +217,10 @@
                         if (isFolder) {
                             const folder = objectItem.key.replace("/", "");
                             goto(
-                                route("/browse/[...path]", {
+                                resolve("/(app)/browse/[...path]", {
                                     path: page.params.path
-                                        ? [page.params.path, folder]
-                                        : [folder],
+                                        ? `${page.params.path}/${folder}`
+                                        : folder,
                                 }),
                             );
                             return;

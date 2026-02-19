@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from "$app/state";
-    import type { ObjectItem } from "$lib/api-client";
+    import type { ObjectItem } from "$lib/api";
     import DocumentIcon from "$lib/components/file/document-icon.svelte";
     import { isCodeItem } from "$lib/file-utils";
     import { getObjectUrl } from "$lib/url";

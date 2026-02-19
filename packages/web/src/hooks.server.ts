@@ -8,18 +8,13 @@ import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
 import { getDb, resetDb } from "$lib/server/db";
+import { StorageService } from "$lib/server/services/storage";
 
 const logger = new Logger("Hooks");
 
 const migrationsFolder = join(process.cwd(), "drizzle");
 
 export function handleError({ event, error }) {
-	logger.debug("HOOKS_ERROR", "handleError triggered", {
-		method: event.request.method,
-		pathname: event.url.pathname,
-		error: String(error),
-		stack: error instanceof Error ? error.stack : "no stack",
-	});
 	logger.error(`Error on ${event.request.method} ${event.url.pathname}`, error);
 }
 
@@ -124,6 +119,19 @@ const authHandler: Handle = async ({ event, resolve }) => {
 		// Make session and user available on server
 		event.locals.session = session.session;
 		event.locals.user = session.user;
+
+		// Lazy-init StorageService — created on first access only
+		let _storageService: StorageService | undefined;
+		Object.defineProperty(event.locals, "storageService", {
+			get() {
+				if (!_storageService) {
+					_storageService = new StorageService(session.user);
+				}
+				return _storageService;
+			},
+			configurable: true,
+			enumerable: true,
+		});
 	}
 
 	if (isUpload) {
@@ -170,7 +178,11 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 		});
 	}
 
-	const res = await resolve(event);
+	const res = await resolve(event, {
+		filterSerializedResponseHeaders(name) {
+			return name === "content-length" || name === "content-type";
+		},
+	});
 
 	if (isUpload) {
 		logger.debug("HOOKS_GENERAL", "resolve complete for upload", {

@@ -20,6 +20,8 @@
         submitVariant?: ButtonVariant;
         /** If true, submit button is disabled */
         submitDisabled?: boolean;
+        /** Callback fired when the submit button is clicked (non-form mode) */
+        onsubmit?: () => void;
         /** Form props - if provided, children are wrapped in a form */
         form?: {
             action?: HTMLFormAttributes["action"];
@@ -57,6 +59,7 @@
         loadingLabel = "Loading...",
         submitVariant = "default",
         submitDisabled = false,
+        onsubmit,
         form,
         children,
         footer,
@@ -77,6 +80,7 @@
             type={form ? "submit" : "button"}
             variant={submitVariant}
             disabled={submitDisabled}
+            onclick={!form && onsubmit ? onsubmit : undefined}
             {loading}
         >
             {loading ? loadingLabel : submitLabel}
@@ -103,6 +107,7 @@
 
 {#snippet formWrapper(content: Snippet)}
     {#if form}
+        <h1 class="text-3xl">there is a form</h1>
         <form
             action={form.action}
             method={form.method ?? "POST"}
@@ -118,8 +123,26 @@
             </fieldset>
         </form>
     {:else}
-        <div>
-            {@render content()}
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+        <div
+            class="flex flex-col gap-4"
+            role="group"
+            onkeydown={(e) => {
+                if (
+                    e.key === "Enter" &&
+                    onsubmit &&
+                    !submitDisabled &&
+                    !loading
+                ) {
+                    e.preventDefault();
+                    onsubmit();
+                }
+            }}
+        >
+            <div class="overflow-y-auto max-h-[40vh] md:max-h-[50vh]">
+                {@render content()}
+            </div>
+            {@render footerButtons()}
         </div>
     {/if}
 {/snippet}

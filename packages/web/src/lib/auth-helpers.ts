@@ -1,11 +1,11 @@
 import { toast } from "svelte-sonner";
 import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
 import { authClient } from "$lib/auth-client";
-import { route } from "$lib/ROUTES";
 
 async function signOutCallback() {
 	await authClient.signOut();
-	await goto(route("/auth/sign-in"), { invalidateAll: true });
+	await goto(resolve("/auth/sign-in"), { invalidateAll: true });
 	return true;
 }
 

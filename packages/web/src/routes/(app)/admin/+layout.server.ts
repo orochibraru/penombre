@@ -1,14 +1,14 @@
 import { redirect } from "@sveltejs/kit";
-import { route } from "$lib/ROUTES";
+import { resolve } from "$app/paths";
 
 export const load = ({ locals }) => {
 	if (!locals.user) {
-		throw redirect(307, route("/auth/sign-in"));
+		throw redirect(307, resolve("/auth/sign-in"));
 	}
 
 	const isAdmin = locals.user.role === "admin";
 	if (!isAdmin) {
-		throw redirect(307, route("/"));
+		throw redirect(307, resolve("/"));
 	}
 	return {
 		hasCustomMenu: true,

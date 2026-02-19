@@ -7,7 +7,6 @@
     } from "@lucide/svelte";
     import Nav, { type NavItem } from "$lib/components/layout/nav.svelte";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
-    import { route } from "$lib/ROUTES";
     import { cn } from "$lib/utils";
     import Button from "$lib/components/ui/button/button.svelte";
     import SidebarBranding from "$lib/components/sidebar-branding.svelte";
@@ -15,18 +14,18 @@
     const accountNav: NavItem[] = [
         {
             title: "General",
-            url: route("/settings"),
+            url: "/settings",
             icon: CogIcon,
             isRoot: true,
         },
         {
             title: "Display",
-            url: route("/settings/display"),
+            url: "/settings/display",
             icon: ComputerIcon,
         },
         {
             title: "Storage",
-            url: route("/settings/storage"),
+            url: "/settings/storage",
             icon: HardDriveIcon,
         },
     ];
@@ -37,7 +36,7 @@
 <Sidebar.Root variant="inset">
     <Sidebar.Header>
         <SidebarBranding />
-        <Button class="w-full" variant="outline" href={route("/browse")}>
+        <Button class="w-full" variant="outline" href="/browse">
             <ArrowLeftIcon />
             Back to My Drive
             <HardDriveIcon />

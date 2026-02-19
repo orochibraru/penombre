@@ -1,7 +1,8 @@
 import clsx, { type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
-import type { ObjectItem, ObjectList } from "$lib/api-client";
+import type { Pathname } from "$app/types";
+import type { ObjectItem, ObjectList } from "$lib/api";
 import type { ButtonVariant } from "$lib/components/ui/button";
 
 /**
@@ -218,7 +219,7 @@ export type SharedFileDisplayProps = {
 
 export type BreadCrumb = {
 	title: string;
-	href: string;
+	href: Pathname;
 };
 
 export function stripFolders(filePath: string): string {

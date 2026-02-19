@@ -1,5 +1,12 @@
 import { page } from "$app/state";
+import type { paths } from "$lib/api";
 import { buildOriginUrl } from "$lib/utils";
+
+/**
+ * Typed API path template – changing this string will produce a compile error
+ * if it no longer exists in `paths`, preventing phantom 404s.
+ */
+const FILE_PATH_TEMPLATE: keyof paths = "/api/v1/storage/file/{id}";
 
 type ObjectUrlProps = {
 	baseUrl: URL;
@@ -33,6 +40,10 @@ export function getObjectUrl({
 	if (size) params.set("size", size.toString());
 
 	const queryString = params.toString();
-	const finalUrl = `${normalizedBaseUrl}/api/storage/objects/item/${encodeURIComponent(fullPath)}${queryString ? `?${queryString}` : ""}`;
+	const resolvedPath = FILE_PATH_TEMPLATE.replace(
+		"{id}",
+		encodeURIComponent(fullPath),
+	);
+	const finalUrl = `${normalizedBaseUrl}${resolvedPath}${queryString ? `?${queryString}` : ""}`;
 	return finalUrl;
 }

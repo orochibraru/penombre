@@ -8,7 +8,8 @@
     import { authClient } from "$lib/auth-client";
     import Input from "$lib/components/ui/input/input.svelte";
     import * as Field from "$lib/components/ui/field/index.js";
-    import { route } from "$lib/ROUTES";
+    import { resolve } from "$app/paths";
+
     import { onMount } from "svelte";
     import { m } from "$lib/paraglide/messages.js";
 
@@ -100,7 +101,7 @@
                 );
             }
 
-            goto(route("/"));
+            goto(resolve("/"));
         } catch (e) {
             error = true;
             console.error(e);
@@ -157,7 +158,7 @@
                     <div class="flex items-center">
                         <Field.Label for="password">{m.password()}</Field.Label>
                         <a
-                            href={route("/auth/forgot-password")}
+                            href={"/auth/forgot-password"}
                             class="ms-auto text-sm underline hover:text-primary transition-colors"
                         >
                             {m.forgot_password()}

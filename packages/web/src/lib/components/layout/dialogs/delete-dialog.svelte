@@ -22,11 +22,6 @@
     );
 
     const isTrash = $derived(page.url.pathname.startsWith("/trash"));
-
-    function handleSubmit(e: SubmitEvent) {
-        e.preventDefault();
-        handleDeleteObject();
-    }
 </script>
 
 <ResponsiveDialog
@@ -39,7 +34,7 @@
     submitLabel="Continue"
     loadingLabel="Deleting..."
     submitVariant="destructive"
-    form={{ onsubmit: handleSubmit }}
+    onsubmit={handleDeleteObject}
 >
     <div class="prose">
         <ul>

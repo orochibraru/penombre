@@ -1,13 +1,13 @@
 <script lang="ts">
     import { CircleUserIcon, CogIcon, LogOutIcon } from "@lucide/svelte";
-    import { type User } from "$lib/api-client";
+    import { type User } from "$lib/api";
     import { handleSignOut } from "$lib/auth-helpers";
     import * as Avatar from "$lib/components/ui/avatar/index";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
-    import { route } from "$lib/ROUTES";
     import Button from "$lib/components/ui/button/button.svelte";
     import { page } from "$app/state";
+    import { resolve } from "$app/paths";
 
     type Props = {
         user: User;
@@ -68,7 +68,7 @@
                 <DropdownMenu.Group>
                     <DropdownMenu.Item>
                         {#snippet child({ props })}
-                            <a href={route("/account")} {...props}>
+                            <a href={resolve("/account")} {...props}>
                                 <CircleUserIcon />
                                 <span>Account</span>
                             </a>
@@ -77,7 +77,7 @@
                     {#if page.data.isAdmin}
                         <DropdownMenu.Item>
                             {#snippet child({ props })}
-                                <a href={route("/admin")} {...props}>
+                                <a href={resolve("/admin")} {...props}>
                                     <CogIcon />
                                     <span>Admin</span>
                                 </a>

@@ -5,11 +5,7 @@
     import { valibotClient } from "sveltekit-superforms/adapters";
     import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
-    import {
-        getApiClient,
-        type UploadResult,
-        type ObjectItem,
-    } from "$lib/api-client";
+    import { api, type UploadResult, type ObjectItem } from "$lib/api";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
     import { Button } from "$lib/components/ui/button";
     import {
@@ -26,6 +22,7 @@
     } from "$lib/store/upload";
     import { cn } from "$lib/utils";
     import { onMount } from "svelte";
+    import { resolve } from "$app/paths";
 
     type Props = {
         open: boolean;
@@ -202,22 +199,25 @@
         return name.replace(`${page.params.path}/`, "");
     }
 
-    const apiClient = getApiClient(fetch);
-
     async function cleanup(fileName: string) {
         // Delete the file
-        const res = await apiClient.storage.objects.item[":item"].$delete({
-            param: {
-                item: encodeURIComponent(fileNameWithoutFolder(fileName)),
+        const { error: deleteError } = await api.DELETE(
+            "/api/v1/storage/file/{id}",
+            {
+                params: {
+                    path: {
+                        id: encodeURIComponent(fileNameWithoutFolder(fileName)),
+                    },
+                },
             },
-        });
+        );
 
-        if (!res.ok) {
+        if (deleteError) {
             console.error(
                 `Failed to delete file after upload failure: ${fileNameWithoutFolder(
                     fileName,
                 )}`,
-                await res.text(),
+                deleteError,
             );
         }
 
@@ -245,10 +245,14 @@
 
         for (const result of results) {
             try {
-                const promise = new Promise<boolean>(async (resolve, fail) => {
+                const promise = new Promise<boolean>(async (finish, fail) => {
                     const xhr = new XMLHttpRequest();
-                    // Use direct SvelteKit upload endpoint (bypasses Hono routing)
-                    const finalUrl = `/api/upload/${encodeURIComponent(result.data.finalName)}`;
+                    const finalUrl = resolve(
+                        "/api/v1/storage/file/[id]/upload",
+                        {
+                            id: result.data.metadata.id,
+                        },
+                    );
                     xhr.open("POST", finalUrl);
 
                     // Also set credentials to include cookies
@@ -279,7 +283,7 @@
 
                     xhr.onload = () => {
                         if (xhr.status >= 200 && xhr.status < 300) {
-                            return resolve(true);
+                            return finish(true);
                         }
 
                         console.error(
@@ -325,7 +329,7 @@
                     xhr.send(formData);
 
                     if (xhr.readyState === XMLHttpRequest.DONE) {
-                        resolve(true);
+                        finish(true);
                     }
                 })
                     .then(async (res) => {
@@ -335,17 +339,21 @@
                         }
 
                         // result.data.finalName is now the full path from API
-                        const fileRes = await apiClient.storage.objects.item[
-                            ":item"
-                        ].$get({
-                            param: {
-                                item: encodeURIComponent(result.data.finalName),
+                        const { data: fileData } = await api.GET(
+                            "/api/v1/storage/file/{id}",
+                            {
+                                params: {
+                                    path: {
+                                        id: encodeURIComponent(
+                                            result.data.finalName,
+                                        ),
+                                    },
+                                },
                             },
-                            query: {},
-                        });
+                        );
 
-                        if (fileRes.ok) {
-                            const file = (await fileRes.json()) as ObjectItem;
+                        if (fileData?.data) {
+                            const file = fileData.data as unknown as ObjectItem;
                             file.key = fileNameWithoutFolder(file.key);
                             $uploadedItems[
                                 fileNameWithoutFolder(result.data.finalName)
@@ -415,9 +423,11 @@
         // Fetch the full folder tree once to check for existing folders
         let existingFolders: Map<string, string> | null = null;
         try {
-            const res = await apiClient.storage.folders.tree.$get();
-            if (res.ok) {
-                const folders = await res.json();
+            const { data: treeData } = await api.GET(
+                "/api/v1/storage/folder/tree",
+            );
+            if (treeData?.data) {
+                const folders = treeData.data;
                 // Map display name path to UUID path
                 existingFolders = new Map(
                     folders.map((f) => [f.path.toLowerCase(), f.id]),
@@ -475,27 +485,28 @@
             }
 
             try {
-                const res = await apiClient.storage.folders.$post({
-                    json: {
-                        name: folderName,
-                        parent: parentUuidPath || undefined,
+                const { data: folderData, error: folderError } = await api.POST(
+                    "/api/v1/storage/folder",
+                    {
+                        body: {
+                            name: folderName,
+                            parent: parentUuidPath || undefined,
+                        },
                     },
-                });
+                );
 
-                if (res.ok) {
-                    const result = await res.json();
-                    const folderId = result.id;
+                if (folderData?.data) {
+                    const folderId = folderData.data.id;
                     folderPathToUuid.set(folderPath, folderId);
                     // Add to our local cache so we don't try to create it again
                     existingFolders?.set(
                         fullDisplayPath.toLowerCase(),
                         folderId,
                     );
-                } else {
-                    const errorText = await res.text();
+                } else if (folderError) {
                     console.warn(
                         `Failed to create folder ${folderPath}:`,
-                        errorText,
+                        folderError,
                     );
                 }
             } catch (e) {
@@ -597,25 +608,28 @@
                     size: item.file.size,
                 }));
 
-                const res = await apiClient.storage.objects.batch.$post({
-                    query: { folder: folder || undefined },
-                    json: {
-                        files: batchPayload,
+                const { data: batchData, error: batchError } = await api.POST(
+                    "/api/v1/storage/file/batch",
+                    {
+                        params: { query: { folder: folder || undefined } },
+                        body: {
+                            files: batchPayload,
+                        },
                     },
-                });
+                );
 
-                if (!res.ok) {
-                    const errorText = await res.text();
+                if (batchError || !batchData?.data) {
                     console.error(
                         "Batch upload metadata creation failed:",
-                        errorText,
+                        batchError,
                     );
                     throw new Error(
-                        `Failed to create batch metadata: ${errorText}`,
+                        `Failed to create batch metadata: ${JSON.stringify(batchError)}`,
                     );
                 }
 
-                const batchResults = (await res.json()) as UploadResult[];
+                const batchResults =
+                    batchData.data as unknown as UploadResult[];
 
                 // Pair each result with its corresponding file
                 for (let i = 0; i < filesInFolder.length; i++) {

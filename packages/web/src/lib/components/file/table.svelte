@@ -10,27 +10,24 @@
     } from "@lucide/svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
-    import type { ObjectItem } from "$lib/api-client";
+    import type { ObjectItem } from "$lib/api";
     import FilePrefix from "$lib/components/file/prefix.svelte";
-    import { Badge } from "$lib/components/ui/badge/index";
     import { Button } from "$lib/components/ui/button";
     import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
     import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
     import { Skeleton } from "$lib/components/ui/skeleton/index";
     import * as Table from "$lib/components/ui/table/index";
-    import { route } from "$lib/ROUTES";
     import {
-        capitalizeFirstLetter,
         cn,
         readableFileSize,
         isFolderItem,
         type SharedFileDisplayProps,
         type SortColumn,
-        type SortDirection,
         shouldDisplayAction,
     } from "$lib/utils";
     import FolderSize from "$lib/components/file/folder-size.svelte";
+    import { resolve } from "$app/paths";
 
     let {
         handleOpenItem,
@@ -152,9 +149,7 @@
     function getItemDate(item: ObjectItem): number {
         const date = item.updatedAt;
         if (!date) return 0;
-        return typeof date === "string"
-            ? new Date(date).getTime()
-            : date.getTime();
+        return new Date(date).getTime();
     }
 
     function compareItems(a: ObjectItem, b: ObjectItem): number {
@@ -298,10 +293,10 @@
                             if (isFolder) {
                                 const folder = objectItem.key.replace("/", "");
                                 goto(
-                                    route("/browse/[...path]", {
+                                    resolve("/(app)/browse/[...path]", {
                                         path: page.params.path
-                                            ? [page.params.path, folder]
-                                            : [folder],
+                                            ? `${page.params.path}/${folder}`
+                                            : folder,
                                     }),
                                 );
                                 return;

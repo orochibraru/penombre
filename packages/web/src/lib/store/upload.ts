@@ -1,5 +1,5 @@
 import { derived, type Writable, writable } from "svelte/store";
-import type { ObjectItem } from "$lib/api-client";
+import type { ObjectItem } from "$lib/api";
 import { itemAction } from "./actions";
 
 export const uploadingItems: Writable<Record<string, number>> = writable({});

@@ -3,7 +3,6 @@
     import { dev } from "$app/environment";
     import { page } from "$app/state";
     import { Button } from "$lib/components/ui/button";
-    import { route } from "$lib/ROUTES";
     import { title } from "$lib/store/title";
     import { cn } from "$lib/utils";
     import { m } from "$lib/paraglide/messages.js";
@@ -56,11 +55,11 @@
         {/if}
 
         {#if page.error?.errorId && page.status === 500}
-            <p class="text-muted-foreground max-w-[700px] text-center text-lg">
+            <p class="text-muted-foreground max-w-175 text-center text-lg">
                 {m.error_id({ errorId: page.error.errorId })}
             </p>
         {/if}
     </div>
 
-    <Button href={route("/")}>{m.go_back_home()}</Button>
+    <Button href={"/"}>{m.go_back_home()}</Button>
 </div>

@@ -2,7 +2,7 @@
     import { toast } from "svelte-sonner";
     import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
-    import { getApiClient } from "$lib/api-client";
+    import { api } from "$lib/api";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
     import { Input } from "$lib/components/ui/input";
 
@@ -30,17 +30,17 @@
         e.preventDefault();
         loading = true;
 
-        const promise = getApiClient(fetch)
-            .storage.folders.$post({
-                json: {
+        const promise = api
+            .POST("/api/v1/storage/folder", {
+                body: {
                     name: newFolderName,
                     parent: page.params.path,
                 },
             })
-            .then(async (res) => {
+            .then(async ({ error: fetchError }) => {
                 loading = false;
-                if (!res.ok) {
-                    console.error(await res.text());
+                if (fetchError) {
+                    console.error(fetchError);
                     throw new Error("Failed to create folder");
                 }
 
