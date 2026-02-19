@@ -14,8 +14,18 @@ const logger = new Logger("Hooks");
 
 const migrationsFolder = join(process.cwd(), "drizzle");
 
-export function handleError({ event, error }) {
-	logger.error(`Error on ${event.request.method} ${event.url.pathname}`, error);
+export function handleError({ event, error, status }) {
+	if (status !== 404) {
+		logger.error(
+			`Error on ${event.request.method} ${event.url.pathname}`,
+			error,
+		);
+		if (error instanceof Error) {
+			return new Error(error.message);
+		}
+
+		return new Error("An unknown error occured.");
+	}
 }
 
 async function sleep(ms: number) {
@@ -153,16 +163,6 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 	const isUpload =
 		event.request.method === "POST" &&
 		event.url.pathname.includes("/storage/objects/item/");
-
-	if (isUpload) {
-		logger.debug("HOOKS_GENERAL", "generalHandler START for upload", {
-			method: event.request.method,
-			pathname: event.url.pathname,
-			contentType: event.request.headers.get("content-type"),
-			contentLength: event.request.headers.get("content-length"),
-			bodyUsed: event.request.bodyUsed,
-		});
-	}
 
 	if (event.url.pathname.startsWith("/.well-known/")) {
 		return await resolve(event);
