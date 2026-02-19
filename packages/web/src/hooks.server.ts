@@ -26,6 +26,8 @@ export function handleError({ event, error, status }) {
 
 		return new Error("An unknown error occured.");
 	}
+
+	return;
 }
 
 async function sleep(ms: number) {
@@ -193,7 +195,7 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 
 	const isAsset =
 		!event.url.pathname.endsWith("/") && event.url.pathname.includes(".");
-	if (res.status >= 400 && !isAsset) {
+	if (res.status >= 400 && !isAsset && res.status !== 404) {
 		logger.error(
 			`Error on ${event.request.method} ${event.url.pathname} - ${res.status}`,
 		);
