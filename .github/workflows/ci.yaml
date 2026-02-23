@@ -88,13 +88,13 @@ jobs:
       - name: Format check
         run: bun run format:check
 
-      - name: Build
-        working-directory: packages/web
-        run: bunx --bun svelte-kit sync && bunx --bun vite build
-
       - name: Type check
         working-directory: packages/web
         run: bun run check
+
+      - name: Build
+        working-directory: packages/web
+        run: bunx --bun svelte-kit sync && bunx --bun vite build      
 
   # ===========================================
   # Docker: Build (PR) or Build & Push (main)
