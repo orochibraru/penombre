@@ -75,7 +75,7 @@
 {#snippet footerButtons()}
     {#if footer}
         {@render footer()}
-    {:else}
+    {:else if form || onsubmit}
         <Button
             type={form ? "submit" : "button"}
             variant={submitVariant}
@@ -92,7 +92,11 @@
             type="button"
             class={buttonVariants({ variant: "outline" })}
         >
-            Cancel
+            {#if form || onsubmit}
+                Cancel
+            {:else}
+                Close
+            {/if}
         </Dialog.Close>
     {:else}
         <Drawer.Close
@@ -100,14 +104,17 @@
             type="button"
             class={buttonVariants({ variant: "outline" })}
         >
-            Cancel
+            {#if form || onsubmit}
+                Cancel
+            {:else}
+                Close
+            {/if}
         </Drawer.Close>
     {/if}
 {/snippet}
 
 {#snippet formWrapper(content: Snippet)}
     {#if form}
-        <h1 class="text-3xl">there is a form</h1>
         <form
             action={form.action}
             method={form.method ?? "POST"}

@@ -19,6 +19,8 @@
         uploadingItems,
         uploadingItemsNames,
         pendingUploadFiles,
+        preparingUpload,
+        uploadStats,
     } from "$lib/store/upload";
     import { cn } from "$lib/utils";
     import { onMount } from "svelte";
@@ -89,7 +91,33 @@
         return false;
     }
 
-    const concurrency = 3;
+    const BATCH_SIZE = 25;
+    const MAX_RETRIES = 3;
+    const RETRY_BASE_DELAY_MS = 1000;
+
+    // Per-file byte tracking for speed/ETA calculation
+    const fileBytesUploaded = new Map<string, number>();
+
+    function updateUploadSpeed() {
+        const stats = $uploadStats;
+        const elapsed = (Date.now() - stats.startTime) / 1000;
+        if (elapsed <= 0) return;
+
+        const totalUploaded = Array.from(fileBytesUploaded.values()).reduce(
+            (sum, b) => sum + b,
+            0,
+        );
+        const speed = totalUploaded / elapsed;
+        const remainingBytes = stats.totalBytes - totalUploaded;
+        const eta = speed > 0 ? remainingBytes / speed : 0;
+
+        $uploadStats = {
+            ...stats,
+            uploadedBytes: totalUploaded,
+            speed,
+            eta: Math.max(0, Math.round(eta)),
+        };
+    }
 
     onMount(() => {
         // Reset the upload stores when the component is mounted
@@ -240,152 +268,185 @@
         );
     }
 
-    async function resultCallback(results: FullResult[]) {
-        const uploadPromises: Promise<void>[] = [];
+    /**
+     * Uploads a single file via XHR with retry logic.
+     * Returns true on success, throws on permanent failure.
+     */
+    function uploadSingleFile(
+        result: FullResult,
+        attempt = 1,
+    ): Promise<boolean> {
+        return new Promise<boolean>((finish, fail) => {
+            const xhr = new XMLHttpRequest();
+            const finalUrl = resolve("/api/v1/storage/file/[id]/upload", {
+                id: result.data.metadata.id,
+            });
+            xhr.open("POST", finalUrl);
+            xhr.withCredentials = true;
 
-        for (const result of results) {
-            try {
-                const promise = new Promise<boolean>(async (finish, fail) => {
-                    const xhr = new XMLHttpRequest();
-                    const finalUrl = resolve(
-                        "/api/v1/storage/file/[id]/upload",
-                        {
-                            id: result.data.metadata.id,
-                        },
-                    );
-                    xhr.open("POST", finalUrl);
-
-                    // Also set credentials to include cookies
-                    xhr.withCredentials = true;
-
-                    xhr.upload.onprogress = (event) => {
-                        if (event.lengthComputable) {
-                            // If failed, remove from uploading items
-                            if (
-                                uploadErrors.some(
-                                    (e) =>
-                                        e.data.finalName ===
-                                        result.data.finalName,
-                                )
-                            ) {
-                                delete $uploadingItems[
-                                    fileNameWithoutFolder(result.data.finalName)
-                                ];
-                                return;
-                            }
-                            const percentLoaded =
-                                (event.loaded / event.total) * 100;
-                            $uploadingItems[
-                                fileNameWithoutFolder(result.data.finalName)
-                            ] = percentLoaded;
-                        }
-                    };
-
-                    xhr.onload = () => {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            return finish(true);
-                        }
-
-                        console.error(
-                            `Upload failed for ${result.data.finalName}. Status: ${xhr.status}, Response: ${xhr.responseText}`,
-                        );
-
-                        uploadErrors.push({
-                            error: xhr.responseText || "Upload failed.",
-                            ...result,
-                        });
-
-                        return fail(`Upload failed with status ${xhr.status}.`);
-                    };
-
-                    xhr.onerror = () => {
-                        console.error(
-                            `Network error during upload for ${result.data.finalName}`,
-                        );
-
-                        uploadErrors.push({
-                            error: xhr.responseText || "Network error",
-                            ...result,
-                        });
-
-                        return fail("Network error occurred during upload.");
-                    };
-
-                    xhr.onabort = () => {
-                        uploadErrors.push({
-                            error: xhr.responseText || "Request aborted",
-                            ...result,
-                        });
-                        console.error(
-                            `Upload aborted for ${result.data.finalName}`,
-                        );
-                        return fail("Upload aborted.");
-                    };
-
-                    // Create FormData and append the file
-                    const formData = new FormData();
-                    formData.append("file", result.file);
-
-                    xhr.send(formData);
-
-                    if (xhr.readyState === XMLHttpRequest.DONE) {
-                        finish(true);
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    if (
+                        uploadErrors.some(
+                            (e) => e.data.finalName === result.data.finalName,
+                        )
+                    ) {
+                        delete $uploadingItems[
+                            fileNameWithoutFolder(result.data.finalName)
+                        ];
+                        return;
                     }
-                })
-                    .then(async (res) => {
-                        if (res === false) {
-                            await cleanup(result.data.finalName);
-                            return;
-                        }
+                    const percentLoaded = (event.loaded / event.total) * 100;
+                    $uploadingItems[
+                        fileNameWithoutFolder(result.data.finalName)
+                    ] = percentLoaded;
 
-                        // result.data.finalName is now the full path from API
-                        const { data: fileData } = await api.GET(
-                            "/api/v1/storage/file/{id}",
-                            {
-                                params: {
-                                    path: {
-                                        id: encodeURIComponent(
-                                            result.data.finalName,
-                                        ),
-                                    },
+                    // Track bytes for speed/ETA
+                    fileBytesUploaded.set(result.data.finalName, event.loaded);
+                    updateUploadSpeed();
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    return finish(true);
+                }
+                console.error(
+                    `Upload failed for ${result.data.finalName}. Status: ${xhr.status}, Response: ${xhr.responseText} (attempt ${attempt}/${MAX_RETRIES})`,
+                );
+                return fail({
+                    status: xhr.status,
+                    response: xhr.responseText || "Upload failed.",
+                });
+            };
+
+            xhr.onerror = () => {
+                console.error(
+                    `Network error during upload for ${result.data.finalName} (attempt ${attempt}/${MAX_RETRIES})`,
+                );
+                return fail({
+                    status: 0,
+                    response: xhr.responseText || "Network error",
+                });
+            };
+
+            xhr.onabort = () => {
+                console.error(
+                    `Upload aborted for ${result.data.finalName} (attempt ${attempt}/${MAX_RETRIES})`,
+                );
+                return fail({
+                    status: 0,
+                    response: xhr.responseText || "Request aborted",
+                });
+            };
+
+            const formData = new FormData();
+            formData.append("file", result.file);
+            xhr.send(formData);
+
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                finish(true);
+            }
+        });
+    }
+
+    /**
+     * Uploads a single file with retries, then fetches its metadata on success.
+     */
+    async function uploadWithRetry(result: FullResult): Promise<void> {
+        let lastError: { status: number; response: string } | undefined;
+
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                // Reset progress on retry
+                if (attempt > 1) {
+                    $uploadingItems[
+                        fileNameWithoutFolder(result.data.finalName)
+                    ] = 0;
+                }
+
+                const success = await uploadSingleFile(result, attempt);
+
+                if (success) {
+                    // Mark file bytes as fully uploaded
+                    fileBytesUploaded.set(
+                        result.data.finalName,
+                        result.file.size,
+                    );
+
+                    // Update completed file count
+                    $uploadStats = {
+                        ...$uploadStats,
+                        completedFiles: $uploadStats.completedFiles + 1,
+                    };
+                    updateUploadSpeed();
+
+                    // Fetch file metadata after successful upload
+                    const { data: fileData } = await api.GET(
+                        "/api/v1/storage/file/{id}",
+                        {
+                            params: {
+                                path: {
+                                    id: encodeURIComponent(
+                                        result.data.finalName,
+                                    ),
                                 },
                             },
-                        );
+                        },
+                    );
 
-                        if (fileData?.data) {
-                            const file = fileData.data as unknown as ObjectItem;
-                            file.key = fileNameWithoutFolder(file.key);
-                            $uploadedItems[
-                                fileNameWithoutFolder(result.data.finalName)
-                            ] = file;
+                    if (fileData?.data) {
+                        const file = fileData.data as unknown as ObjectItem;
+                        file.key = fileNameWithoutFolder(file.key);
+                        $uploadedItems[
+                            fileNameWithoutFolder(result.data.finalName)
+                        ] = file;
 
-                            // Remove from uploadingItems now that upload is complete
-                            const tmp = $uploadingItems;
-                            delete tmp[
-                                fileNameWithoutFolder(result.data.finalName)
-                            ];
-                            $uploadingItems = { ...tmp };
+                        const tmp = $uploadingItems;
+                        delete tmp[
+                            fileNameWithoutFolder(result.data.finalName)
+                        ];
+                        $uploadingItems = { ...tmp };
 
-                            removeFileByRef(result.file);
-                        }
-                    })
-                    .catch(async () => {
-                        await cleanup(result.data.finalName);
-                        return;
-                    });
-                uploadPromises.push(promise);
+                        removeFileByRef(result.file);
+                    }
+                    return;
+                }
             } catch (e) {
-                toast.error(
-                    `Upload failed for ${fileNameWithoutFolder(result.data.finalName)}.`,
-                );
-                delete $uploadingItems[
-                    fileNameWithoutFolder(result.data.finalName)
-                ];
+                lastError = e as { status: number; response: string };
+
+                if (attempt < MAX_RETRIES) {
+                    const delay =
+                        RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+                    console.warn(
+                        `Retrying upload for ${result.data.finalName} in ${delay}ms (attempt ${attempt}/${MAX_RETRIES})`,
+                    );
+                    await new Promise((r) => setTimeout(r, delay));
+                }
             }
         }
 
-        while (uploadPromises.length) {
-            await Promise.all(uploadPromises.splice(0, concurrency));
+        // All retries exhausted
+        uploadErrors.push({
+            error: lastError?.response || "Upload failed after retries.",
+            ...result,
+        });
+        await cleanup(result.data.finalName);
+    }
+
+    /**
+     * Processes upload results in batches to avoid overwhelming the browser.
+     */
+    async function resultCallback(results: FullResult[]) {
+        for (let i = 0; i < results.length; i += BATCH_SIZE) {
+            const batch = results.slice(i, i + BATCH_SIZE);
+            await Promise.all(
+                batch.map((result) =>
+                    uploadWithRetry(result).catch(() => {
+                        // Already handled inside uploadWithRetry
+                    }),
+                ),
+            );
         }
     }
 
@@ -420,6 +481,18 @@
             (a, b) => a.split("/").length - b.split("/").length,
         );
 
+        // Group paths by depth so same-depth folders can be created in parallel
+        const pathsByDepth = new Map<number, string[]>();
+        for (const p of sortedPaths) {
+            const depth = p.split("/").length;
+            const group = pathsByDepth.get(depth);
+            if (group) {
+                group.push(p);
+            } else {
+                pathsByDepth.set(depth, [p]);
+            }
+        }
+
         // Fetch the full folder tree once to check for existing folders
         let existingFolders: Map<string, string> | null = null;
         try {
@@ -437,81 +510,90 @@
             console.warn("Failed to fetch folder tree:", e);
         }
 
-        // Create each folder
-        for (const folderPath of sortedPaths) {
-            const parts = folderPath.split("/");
-            const folderName = parts[parts.length - 1] ?? "";
-            const parentParts = parts.slice(0, -1);
+        // Create folders level by level, parallelizing within each depth
+        const sortedDepths = Array.from(pathsByDepth.keys()).sort(
+            (a, b) => a - b,
+        );
 
-            // Build the parent display path (used for checking existing folders)
-            const parentDisplayPath =
-                parentParts.length > 0 ? parentParts.join("/") : "";
+        for (const depth of sortedDepths) {
+            const pathsAtDepth = pathsByDepth.get(depth) ?? [];
 
-            // Build parent UUID path by traversing the folder hierarchy
-            let parentUuidPath = page.params.path || "";
-            if (parentParts.length > 0) {
-                // Build path part by part, converting each to UUID
-                for (const part of parentParts) {
-                    const currentDisplayPath = parentParts
-                        .slice(0, parentParts.indexOf(part) + 1)
-                        .join("/");
-                    const uuid = folderPathToUuid.get(currentDisplayPath);
-                    if (uuid) {
-                        parentUuidPath = parentUuidPath
-                            ? `${parentUuidPath}/${uuid}`
-                            : uuid;
+            await Promise.all(
+                pathsAtDepth.map(async (folderPath) => {
+                    const parts = folderPath.split("/");
+                    const folderName = parts[parts.length - 1] ?? "";
+                    const parentParts = parts.slice(0, -1);
+
+                    // Build the parent display path (used for checking existing folders)
+                    const parentDisplayPath =
+                        parentParts.length > 0 ? parentParts.join("/") : "";
+
+                    // Build parent UUID path by traversing the folder hierarchy
+                    let parentUuidPath = page.params.path || "";
+                    if (parentParts.length > 0) {
+                        // Build path part by part, converting each to UUID
+                        for (const part of parentParts) {
+                            const currentDisplayPath = parentParts
+                                .slice(0, parentParts.indexOf(part) + 1)
+                                .join("/");
+                            const uuid =
+                                folderPathToUuid.get(currentDisplayPath);
+                            if (uuid) {
+                                parentUuidPath = parentUuidPath
+                                    ? `${parentUuidPath}/${uuid}`
+                                    : uuid;
+                            }
+                        }
                     }
-                }
-            }
 
-            // Build the full display path for this folder (used for checking existing folders)
-            const fullDisplayPath = page.params.path
-                ? parentDisplayPath
-                    ? `${page.params.path}/${parentDisplayPath}/${folderName}`
-                    : `${page.params.path}/${folderName}`
-                : parentDisplayPath
-                  ? `${parentDisplayPath}/${folderName}`
-                  : folderName;
+                    // Build the full display path for this folder (used for checking existing folders)
+                    const fullDisplayPath = page.params.path
+                        ? parentDisplayPath
+                            ? `${page.params.path}/${parentDisplayPath}/${folderName}`
+                            : `${page.params.path}/${folderName}`
+                        : parentDisplayPath
+                          ? `${parentDisplayPath}/${folderName}`
+                          : folderName;
 
-            // Check if this folder already exists
-            if (existingFolders?.has(fullDisplayPath.toLowerCase())) {
-                const existingUuid = existingFolders.get(
-                    fullDisplayPath.toLowerCase(),
-                );
-                if (existingUuid) {
-                    folderPathToUuid.set(folderPath, existingUuid);
-                }
-                continue;
-            }
+                    // Check if this folder already exists
+                    if (existingFolders?.has(fullDisplayPath.toLowerCase())) {
+                        const existingUuid = existingFolders.get(
+                            fullDisplayPath.toLowerCase(),
+                        );
+                        if (existingUuid) {
+                            folderPathToUuid.set(folderPath, existingUuid);
+                        }
+                        return;
+                    }
 
-            try {
-                const { data: folderData, error: folderError } = await api.POST(
-                    "/api/v1/storage/folder",
-                    {
-                        body: {
-                            name: folderName,
-                            parent: parentUuidPath || undefined,
-                        },
-                    },
-                );
+                    try {
+                        const { data: folderData, error: folderError } =
+                            await api.POST("/api/v1/storage/folder", {
+                                body: {
+                                    name: folderName,
+                                    parent: parentUuidPath || undefined,
+                                },
+                            });
 
-                if (folderData?.data) {
-                    const folderId = folderData.data.id;
-                    folderPathToUuid.set(folderPath, folderId);
-                    // Add to our local cache so we don't try to create it again
-                    existingFolders?.set(
-                        fullDisplayPath.toLowerCase(),
-                        folderId,
-                    );
-                } else if (folderError) {
-                    console.warn(
-                        `Failed to create folder ${folderPath}:`,
-                        folderError,
-                    );
-                }
-            } catch (e) {
-                console.warn(`Error creating folder ${folderPath}:`, e);
-            }
+                        if (folderData?.data) {
+                            const folderId = folderData.data.id;
+                            folderPathToUuid.set(folderPath, folderId);
+                            // Add to our local cache so we don't try to create it again
+                            existingFolders?.set(
+                                fullDisplayPath.toLowerCase(),
+                                folderId,
+                            );
+                        } else if (folderError) {
+                            console.warn(
+                                `Failed to create folder ${folderPath}:`,
+                                folderError,
+                            );
+                        }
+                    } catch (e) {
+                        console.warn(`Error creating folder ${folderPath}:`, e);
+                    }
+                }),
+            );
         }
 
         return folderPathToUuid;
@@ -534,9 +616,18 @@
         // Do all the work in the background
         const results: FullResult[] = [];
 
+        // Show preparing state in the progress indicator
+        if (folderFilesSnapshot.length > 0) {
+            $preparingUpload = { active: true, status: "Creating folders" };
+        } else {
+            $preparingUpload = { active: true, status: "Initializing" };
+        }
+
         // First, create all necessary folders and get UUID mapping
         const folderPathToUuid =
             await createFoldersForUpload(folderFilesSnapshot);
+
+        $preparingUpload = { active: true, status: "Metadata" };
 
         // Group files by folder for batch creation (using UUID paths)
         interface FilesByFolder {
@@ -598,73 +689,117 @@
             }
         }
 
-        // Send batch requests for each folder
+        // Send batch metadata requests in chunks of BATCH_SIZE per folder, parallelized across folders
         try {
-            for (const [folder, filesInFolder] of Object.entries(
-                filesByFolder,
-            )) {
-                const batchPayload = filesInFolder.map((item) => ({
-                    name: item.name,
-                    size: item.file.size,
-                }));
+            const batchPromises = Object.entries(filesByFolder).map(
+                async ([folder, filesInFolder]) => {
+                    const folderResults: {
+                        result: FullResult;
+                        displayName: string;
+                    }[] = [];
 
-                const { data: batchData, error: batchError } = await api.POST(
-                    "/api/v1/storage/file/batch",
-                    {
-                        params: { query: { folder: folder || undefined } },
-                        body: {
-                            files: batchPayload,
-                        },
-                    },
-                );
+                    // Chunk files within this folder into batches of BATCH_SIZE
+                    for (let i = 0; i < filesInFolder.length; i += BATCH_SIZE) {
+                        const chunk = filesInFolder.slice(i, i + BATCH_SIZE);
+                        const batchPayload = chunk.map((item) => ({
+                            name: item.name,
+                            size: item.file.size,
+                        }));
 
-                if (batchError || !batchData?.data) {
-                    console.error(
-                        "Batch upload metadata creation failed:",
-                        batchError,
-                    );
-                    throw new Error(
-                        `Failed to create batch metadata: ${JSON.stringify(batchError)}`,
-                    );
-                }
+                        const { data: batchData, error: batchError } =
+                            await api.POST("/api/v1/storage/file/batch", {
+                                params: {
+                                    query: { folder: folder || undefined },
+                                },
+                                body: {
+                                    files: batchPayload,
+                                },
+                            });
 
-                const batchResults =
-                    batchData.data as unknown as UploadResult[];
+                        if (batchError || !batchData?.data) {
+                            console.error(
+                                "Batch upload metadata creation failed:",
+                                batchError,
+                            );
+                            throw new Error(
+                                `Failed to create batch metadata: ${JSON.stringify(batchError)}`,
+                            );
+                        }
 
-                // Pair each result with its corresponding file
-                for (let i = 0; i < filesInFolder.length; i++) {
-                    const uploadResult = batchResults[i];
-                    const fileItem = filesInFolder[i];
+                        const batchResults =
+                            batchData.data as unknown as UploadResult[];
 
-                    if (!uploadResult || !fileItem) {
-                        console.error(
-                            `Missing upload result or file at index ${i}`,
-                        );
-                        continue;
+                        for (let j = 0; j < chunk.length; j++) {
+                            const uploadResult = batchResults[j];
+                            const fileItem = chunk[j];
+
+                            if (!uploadResult || !fileItem) {
+                                console.error(
+                                    `Missing upload result or file at index ${j}`,
+                                );
+                                continue;
+                            }
+
+                            folderResults.push({
+                                result: {
+                                    data: uploadResult,
+                                    file: fileItem.file,
+                                },
+                                displayName: fileItem.name,
+                            });
+                        }
                     }
 
-                    const result: FullResult = {
-                        data: uploadResult,
-                        file: fileItem.file,
-                    };
+                    return folderResults;
+                },
+            );
 
+            const allFolderResults = await Promise.all(batchPromises);
+
+            for (const folderResults of allFolderResults) {
+                for (const { result, displayName } of folderResults) {
                     results.push(result);
                     const fileKey = fileNameWithoutFolder(
                         result.data.finalName,
                     );
                     $uploadingItems[fileKey] = 1;
-                    // Store the original filename for display (from item.name which is the display name)
-                    $uploadingItemsNames[fileKey] = fileItem.name;
+                    // Store the original filename for display
+                    $uploadingItemsNames[fileKey] = displayName;
                 }
             }
         } catch (e) {
             console.error(e);
+            $preparingUpload = { active: false, status: "" };
             toast.error("Failed to prepare files for upload.");
             throw e;
         }
 
+        // Clear preparing state and start actual uploads
+        $preparingUpload = { active: false, status: "" };
+
+        // Initialize upload stats
+        const totalBytes = results.reduce((sum, r) => sum + r.file.size, 0);
+        fileBytesUploaded.clear();
+        $uploadStats = {
+            totalFiles: results.length,
+            completedFiles: 0,
+            totalBytes,
+            uploadedBytes: 0,
+            startTime: Date.now(),
+            speed: 0,
+            eta: 0,
+        };
+
         // Continue uploads in background
         resultCallback(results).finally(async () => {
+            // Final stats update
+            $uploadStats = {
+                ...$uploadStats,
+                completedFiles: $uploadStats.totalFiles,
+                uploadedBytes: $uploadStats.totalBytes,
+                speed: 0,
+                eta: 0,
+            };
             await invalidate("app:files");
 
             if (uploadErrors.length > 0) {
