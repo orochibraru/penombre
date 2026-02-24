@@ -177,11 +177,11 @@
                         {m.sign_in()}
                     </Button>
                 </Field.Field>
-                {#if data.authConfig.oauthProviders.length > 0}
+                {#if data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
                     <Field.Separator>{m.or_continue_with()}</Field.Separator>
                 {/if}
             {/if}
-            {#if data.authConfig.oauthProviders.length > 0}
+            {#if data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
                 {#each data.authConfig.oauthProviders as provider}
                     {#if provider.enabled}
                         <Button
