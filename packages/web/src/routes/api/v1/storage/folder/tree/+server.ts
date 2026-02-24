@@ -1,10 +1,9 @@
 import { Http } from "$lib/server/http";
 import { getFolderTree } from "$lib/server/openapi/v1/storage";
 
-export const GET = getFolderTree.handler(async ({ event }) => {
-	const storageService = event.locals.storageService;
+export const GET = getFolderTree.handler(async ({ service }) => {
 	try {
-		const folders = await storageService.listFoldersWithMetadata("", {
+		const folders = await service.listFoldersWithMetadata("", {
 			includeTrashed: false,
 		});
 		return Http.Ok(folders);

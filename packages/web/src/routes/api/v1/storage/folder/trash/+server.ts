@@ -1,10 +1,9 @@
 import { Http } from "$lib/server/http";
 import { listTrashedFolders } from "$lib/server/openapi/v1/storage";
 
-export const GET = listTrashedFolders.handler(async ({ event }) => {
-	const storageService = event.locals.storageService;
+export const GET = listTrashedFolders.handler(async ({ service }) => {
 	try {
-		const folders = await storageService.listFolders("", {
+		const folders = await service.listFolders("", {
 			onlyTrashed: true,
 		});
 		return Http.Ok(folders);

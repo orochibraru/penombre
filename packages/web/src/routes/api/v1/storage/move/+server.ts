@@ -1,18 +1,16 @@
 import { Http } from "$lib/server/http";
 import { bulkMove } from "$lib/server/openapi/v1/storage";
 
-export const POST = bulkMove.handler(async ({ body, event }) => {
-	const storageService = event.locals.storageService;
-
+export const POST = bulkMove.handler(async ({ body, service }) => {
 	const results: { path: string; success: boolean; error?: string }[] = [];
 
 	for (const item of body.items) {
 		try {
 			if (item.type === "folder") {
 				const folderPath = item.path.replace(/\/$/, "");
-				await storageService.moveFolder(folderPath, body.destination);
+				await service.moveFolder(folderPath, body.destination);
 			} else {
-				await storageService.moveFile(item.path, body.destination);
+				await service.moveFile(item.path, body.destination);
 			}
 			results.push({ path: item.path, success: true });
 		} catch (error) {

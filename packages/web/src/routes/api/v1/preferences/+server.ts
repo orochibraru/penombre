@@ -9,8 +9,7 @@ import {
 	updateUserPreferences,
 } from "$lib/server/services/preferences";
 
-export const GET = getPreferences.handler(async ({ event }) => {
-	const user = event.locals.user as NonNullable<typeof event.locals.user>;
+export const GET = getPreferences.handler(async ({ user }) => {
 	try {
 		const preferences = await getUserPreferences(user.id);
 		return Http.Ok(preferences);
@@ -19,9 +18,7 @@ export const GET = getPreferences.handler(async ({ event }) => {
 	}
 });
 
-export const PUT = updatePreferences.handler(async ({ body, event }) => {
-	const user = event.locals.user as NonNullable<typeof event.locals.user>;
-
+export const PUT = updatePreferences.handler(async ({ body, user }) => {
 	const validLayouts = ["grid", "list"];
 	const validSortColumns = ["name", "size", "updatedAt", null];
 	const validSortDirections = ["asc", "desc"];

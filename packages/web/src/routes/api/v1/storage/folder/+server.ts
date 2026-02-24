@@ -1,10 +1,9 @@
 import { Http } from "$lib/server/http";
 import { createFolder, listFolders } from "$lib/server/openapi/v1/storage";
 
-export const GET = listFolders.handler(async ({ event }) => {
-	const storageService = event.locals.storageService;
+export const GET = listFolders.handler(async ({ service }) => {
 	try {
-		const folders = await storageService.listFolders("", {
+		const folders = await service.listFolders("", {
 			includeTrashed: false,
 		});
 		return Http.Ok(folders);
@@ -13,10 +12,9 @@ export const GET = listFolders.handler(async ({ event }) => {
 	}
 });
 
-export const POST = createFolder.handler(async ({ body, event }) => {
-	const storageService = event.locals.storageService;
+export const POST = createFolder.handler(async ({ body, service }) => {
 	try {
-		const result = await storageService.createFolder(body.name, body.parent);
+		const result = await service.createFolder(body.name, body.parent);
 		return Http.StandardizedResponse(
 			{
 				data: {

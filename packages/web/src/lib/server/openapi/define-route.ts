@@ -18,6 +18,7 @@ interface RouteConfig<
 	TQuery extends z.ZodType | undefined = undefined,
 	TBody extends z.ZodType | undefined = undefined,
 	TResponse extends z.ZodType = z.ZodType,
+	TService = undefined,
 > {
 	method: HttpMethod;
 	path: Pathname;
@@ -30,6 +31,7 @@ interface RouteConfig<
 	response: TResponse;
 	errors?: number[];
 	isFormData?: boolean;
+	service?: (user: NonNullable<App.Locals["user"]>) => TService;
 }
 
 type InferOrUndefined<T> = T extends z.ZodType ? z.infer<T> : undefined;
@@ -38,19 +40,23 @@ interface ValidatedData<
 	TParams extends z.ZodType | undefined,
 	TQuery extends z.ZodType | undefined,
 	TBody extends z.ZodType | undefined,
+	TService = undefined,
 > {
 	params: InferOrUndefined<TParams>;
 	query: InferOrUndefined<TQuery>;
 	body: InferOrUndefined<TBody>;
 	event: RequestEvent;
+	user: NonNullable<App.Locals["user"]>;
+	service: TService;
 }
 
 type HandlerCallback<
 	TParams extends z.ZodType | undefined,
 	TQuery extends z.ZodType | undefined,
 	TBody extends z.ZodType | undefined,
+	TService = undefined,
 > = (
-	data: ValidatedData<TParams, TQuery, TBody>,
+	data: ValidatedData<TParams, TQuery, TBody, TService>,
 ) => Promise<Response> | Response;
 
 /**
@@ -81,8 +87,7 @@ type HandlerCallback<
  * // In routes/api/v1/storage/list/+server.ts
  * import { listFiles } from "$lib/server/openapi/v1/storage";
  *
- * export const GET = listFiles.handler(async ({ event }) => {
- *   const service = new StorageService(event.locals.user!);
+ * export const GET = listFiles.handler(async ({ service }) => {
  *   return Http.Ok(await service.listFiles());
  * });
  * ```
@@ -92,7 +97,8 @@ export function defineRoute<
 	TQuery extends z.ZodType | undefined = undefined,
 	TBody extends z.ZodType | undefined = undefined,
 	TResponse extends z.ZodType = z.ZodType,
->(config: RouteConfig<TParams, TQuery, TBody, TResponse>) {
+	TService = undefined,
+>(config: RouteConfig<TParams, TQuery, TBody, TResponse, TService>) {
 	// Register with OpenAPI registry (side effect at import time)
 	registry.registerRoute({
 		method: config.method,
@@ -114,7 +120,7 @@ export function defineRoute<
 		/**
 		 * Creates a SvelteKit RequestHandler with auth + validation.
 		 */
-		handler(callback: HandlerCallback<TParams, TQuery, TBody>) {
+		handler(callback: HandlerCallback<TParams, TQuery, TBody, TService>) {
 			return async (event: RequestEvent): Promise<Response> => {
 				// Auth check
 				if (!event.locals.user) {
@@ -171,6 +177,10 @@ export function defineRoute<
 					query: parsedQuery,
 					body: parsedBody,
 					event,
+					user: event.locals.user,
+					service: config.service
+						? config.service(event.locals.user)
+						: (undefined as TService),
 				});
 			};
 		},
