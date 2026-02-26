@@ -5,6 +5,8 @@ import {
 } from "expo-symbols";
 import type { StyleProp, ViewStyle } from "react-native";
 
+export type IconSymbolName = SymbolViewProps["name"];
+
 export function IconSymbol({
 	name,
 	size = 24,

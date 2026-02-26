@@ -14,14 +14,25 @@ export default function TabLayout() {
 				tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
 				headerShown: false,
 				tabBarButton: HapticTab,
+				tabBarStyle: {
+					borderTopLeftRadius: 20,
+					borderTopRightRadius: 20,
+					borderTopWidth: 1,
+					borderTopColor:
+						colorScheme === "dark"
+							? "rgba(255,255,255,0.1)"
+							: "rgba(0,0,0,0.1)",
+					position: "absolute",
+					paddingTop: 6,
+				},
 			}}
 		>
 			<Tabs.Screen
 				name="index"
 				options={{
-					title: "My Drive",
+					title: "Home",
 					tabBarIcon: ({ color }) => (
-						<IconSymbol size={28} name="folder.fill" color={color} />
+						<IconSymbol size={24} name="folder.fill" color={color} />
 					),
 				}}
 			/>
@@ -30,16 +41,16 @@ export default function TabLayout() {
 				options={{
 					title: "Recent",
 					tabBarIcon: ({ color }) => (
-						<IconSymbol size={28} name="archivebox" color={color} />
+						<IconSymbol size={24} name="clock.fill" color={color} />
 					),
 				}}
 			/>
 			<Tabs.Screen
 				name="profile"
 				options={{
-					title: "Profile",
+					title: "Account",
 					tabBarIcon: ({ color }) => (
-						<IconSymbol size={28} name="person" color={color} />
+						<IconSymbol size={24} name="person.fill" color={color} />
 					),
 				}}
 			/>
@@ -48,7 +59,7 @@ export default function TabLayout() {
 				options={{
 					title: "Settings",
 					tabBarIcon: ({ color }) => (
-						<IconSymbol size={28} name="gear" color={color} />
+						<IconSymbol size={24} name="gear" color={color} />
 					),
 				}}
 			/>

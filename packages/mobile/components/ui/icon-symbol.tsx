@@ -9,7 +9,7 @@ type IconMapping = Record<
 	SymbolViewProps["name"],
 	ComponentProps<typeof MaterialIcons>["name"]
 >;
-type IconSymbolName = keyof typeof MAPPING;
+export type IconSymbolName = keyof typeof MAPPING;
 
 /**
  * Add your SF Symbols to Material Icons mappings here.
@@ -26,6 +26,34 @@ const MAPPING = {
 	"gearshape.fill": "settings",
 	"chevron.left.forwardslash.chevron.right": "code",
 	"chevron.right": "chevron-right",
+	"folder.fill": "folder",
+	folder: "folder",
+	"clock.fill": "schedule",
+	clock: "schedule",
+	"person.fill": "person",
+	person: "person",
+	gear: "settings",
+	trash: "delete",
+	lock: "lock",
+	iphone: "smartphone",
+	"person.2": "people",
+	globe: "language",
+	bell: "notifications",
+	"sun.max": "light-mode",
+	moon: "dark-mode",
+	desktopcomputer: "desktop-windows",
+	externaldrive: "storage",
+	"arrow.triangle.2.circlepath": "sync",
+	"doc.text": "description",
+	"info.circle": "info",
+	"checkmark.circle.fill": "check-circle",
+	doc: "insert-drive-file",
+	"doc.plaintext": "article",
+	photo: "image",
+	film: "movie",
+	"music.note": "music-note",
+	archivebox: "archive",
+	cube: "view-in-ar",
 } as IconMapping;
 
 /**
