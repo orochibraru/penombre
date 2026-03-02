@@ -1280,6 +1280,7 @@ export class StorageService {
 	}
 
 	public async calculateFolderSize(folderKey: string): Promise<number> {
+		logger.info(`Calculating size for folder: ${folderKey}`);
 		const normalizedKey = folderKey.endsWith("/")
 			? folderKey.slice(0, -1)
 			: folderKey;
@@ -1290,7 +1291,10 @@ export class StorageService {
 
 		const folderPath = join(this.storagePath, normalizedKey);
 
+		logger.debug(`Resolved folder path for size calculation: ${folderPath}`);
+
 		if (!existsSync(folderPath)) {
+			logger.debug(`Folder not found for size calculation: ${folderKey}`);
 			throw new FileOrFolderNotFoundError("Folder not found");
 		}
 
@@ -1298,9 +1302,14 @@ export class StorageService {
 
 		const walkFolder = async (dirPath: string): Promise<void> => {
 			try {
+				logger.debug(`Walking folder for size calculation: ${dirPath}`);
 				const entries = await readdir(dirPath, { withFileTypes: true });
+				logger.debug(`Found ${entries.length} entries in folder: ${dirPath}`);
 				for (const entry of entries) {
 					if (entry.name.endsWith(".meta.json") || entry.name.startsWith(".")) {
+						logger.debug(
+							`Skipping entry during size calculation: ${entry.name}`,
+						);
 						continue;
 					}
 
@@ -1317,8 +1326,13 @@ export class StorageService {
 			}
 		};
 
+		logger.debug(`Starting folder size calculation for: ${folderPath}`);
 		await walkFolder(folderPath);
+
 		this.cache.set(cacheKey, totalSize, 300);
+		logger.info(
+			`Calculated size for folder: ${folderKey}, size: ${totalSize} bytes`,
+		);
 		return totalSize;
 	}
 

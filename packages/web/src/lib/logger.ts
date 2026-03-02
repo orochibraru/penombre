@@ -49,7 +49,20 @@ export class Logger {
 		this.prefix = prefix;
 		this.prettyPrefix = magenta(`[${this.prefix}]`);
 		this.logFormat = config.logFormat;
-		this.logLevel = dev && !building ? LOG_LEVELS.DEBUG : config.logLevel;
+		if (dev && !building) {
+			this.logLevel = LOG_LEVELS.DEBUG;
+		} else if (
+			config.logFormat === "console" &&
+			!Object.values(LOG_LEVELS).includes(config.logLevel as LOG_LEVELS)
+		) {
+			throw new Error(
+				`Invalid log level: ${config.logLevel}. Valid levels are: ${Object.values(
+					LOG_LEVELS,
+				).join(", ")}`,
+			);
+		} else {
+			this.logLevel = config.logLevel;
+		}
 	}
 
 	log({

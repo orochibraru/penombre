@@ -7,14 +7,16 @@ export const GET = getFolderSize.handler(async ({ params, query, service }) => {
 	try {
 		folderPath = service.getFullFolderPath(params.path, query.parent);
 	} catch (e) {
-		return Http.ServerError("Failed to calculate folder size", e);
+		return Http.ServerError("Failed to find requested folder", e);
 	}
 
 	try {
 		const data = await service.calculateFolderSize(folderPath);
 
-		if (!data) {
-			return Http.BadRequest("Failed to find requested folder");
+		if (data === null) {
+			return Http.BadRequest(
+				`Failed to calculate folder size for path: ${folderPath}`,
+			);
 		}
 
 		return Http.Ok(data);

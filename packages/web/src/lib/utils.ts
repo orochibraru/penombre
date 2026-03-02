@@ -97,12 +97,12 @@ export function generateUuid() {
 }
 
 export function readableFileSize(bytes: number, si = false, dp = 1) {
-	if (!bytes || Number.isNaN(bytes)) {
+	if (bytes === null || bytes === undefined || Number.isNaN(bytes)) {
 		return "-";
 	}
 
 	if (bytes === 0) {
-		return null;
+		return "0 B";
 	}
 	const thresh = si ? 1000 : 1024;
 

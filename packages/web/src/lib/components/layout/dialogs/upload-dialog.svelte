@@ -2,7 +2,7 @@
     import { FolderIcon, XIcon } from "@lucide/svelte";
     import { toast } from "svelte-sonner";
     import { filesProxy, superForm } from "sveltekit-superforms";
-    import { valibotClient } from "sveltekit-superforms/adapters";
+    import { zod4Client } from "sveltekit-superforms/adapters";
     import { invalidate } from "$app/navigation";
     import { page } from "$app/state";
     import { api, type UploadResult, type ObjectItem } from "$lib/api";
@@ -141,7 +141,7 @@
     });
 
     const superform = superForm(page.data.uploadForm, {
-        validators: valibotClient(uploadSchema),
+        validators: zod4Client(uploadSchema),
     });
 
     const files = filesProxy(superform, "attachments");

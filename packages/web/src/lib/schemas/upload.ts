@@ -1,11 +1,11 @@
-import * as v from "valibot";
+import z from "zod";
 
-export const uploadSchema = v.object({
-	attachments: v.pipe(v.array(v.pipe(v.file())), v.minLength(1)),
-	rootFolder: v.string(),
+export const uploadSchema = z.object({
+	attachments: z.array(z.instanceof(File)).min(1),
+	rootFolder: z.string(),
 });
 
-export type UploadSchema = v.InferInput<typeof uploadSchema>;
+export type UploadSchema = z.infer<typeof uploadSchema>;
 
 export type CustomReq = {
 	file: string;

@@ -1,6 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { zod4 } from "sveltekit-superforms/adapters";
 import { resolve } from "$app/paths";
 import { api } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
@@ -54,7 +54,7 @@ export const load: LayoutServerLoad = async ({
 		activity,
 		counts,
 		preferences,
-		uploadForm: await superValidate({}, valibot(uploadSchema)),
+		uploadForm: await superValidate({}, zod4(uploadSchema)),
 		authCookie: "123",
 		isAdmin,
 	};

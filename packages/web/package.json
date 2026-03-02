@@ -59,7 +59,6 @@
 		"@types/archiver": "^7.0.0",
 		"archiver": "^7.0.1",
 		"better-auth": "^1.4.18",
-		"bullmq": "^5.69.3",
 		"drizzle-orm": "^0.45.1",
 		"drizzle-zod": "^0.8.3",
 		"layerchart": "2.0.0-next.19",
