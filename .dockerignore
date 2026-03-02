@@ -50,7 +50,3 @@ LICENSE
 **/.svelte-kit/
 **/.gitignore
 **/.expo-shared/
-
-packages/api/frontend/
-packages/api/data/
-packages/api/openapi.json
