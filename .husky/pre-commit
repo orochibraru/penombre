@@ -3,6 +3,13 @@ set -euo pipefail
 
 echo "Running pre-commit hooks..."
 
+
+echo "Generating DB diagram..."
+bun run db:diagram
+
+echo "Generating API clients..."
+bun run gen:api
+
 echo "Linting, formatting and fixing issues..."
 if bunx --bun biome check --write; then
     echo "Linting passed."
@@ -11,14 +18,6 @@ else
     exit 1
 fi
 
-echo "Generating DB diagram..."
-bun run db:diagram
-
-echo "Generating API spec..."
-bun run --cwd packages/web gen:api
-
-echo "Generating API clients..."
-bun run gen:api
 
 echo "Staging changes..."
 git add .

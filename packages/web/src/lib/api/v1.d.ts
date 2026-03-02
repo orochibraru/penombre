@@ -4,8443 +4,10117 @@
  */
 
 export interface paths {
-    "/api/v1/activity": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List activities
-         * @description Returns a list of recent activities for the current user
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                /** Format: uuid */
-                                id: string;
-                                userId: string;
-                                /** @enum {string} */
-                                action: "create" | "update" | "delete" | "share" | "rename";
-                                message: string;
-                                link: string | null;
-                                /** @enum {string} */
-                                level: "info" | "warning" | "error";
-                                createdAt: string;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/providers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List authentication providers
-         * @description Returns a list of available authentication providers and their status. Does not require authentication.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                name: string;
-                                prettyName: string;
-                                /** @enum {string} */
-                                type: "oauth" | "email";
-                                enabled: boolean;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get user preferences
-         * @description Returns the current user's layout and sort preferences
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                /** @enum {string} */
-                                layout?: "grid" | "list";
-                                sortColumn?: ("name" | "size" | "updatedAt") | null;
-                                /** @enum {string} */
-                                sortDirection?: "asc" | "desc";
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update user preferences
-         * @description Updates the current user's layout and sort preferences
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @enum {string} */
-                        layout?: "grid" | "list";
-                        sortColumn?: ("name" | "size" | "updatedAt") | null;
-                        /** @enum {string} */
-                        sortDirection?: "asc" | "desc";
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                /** @enum {string} */
-                                layout?: "grid" | "list";
-                                sortColumn?: ("name" | "size" | "updatedAt") | null;
-                                /** @enum {string} */
-                                sortDirection?: "asc" | "desc";
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/list": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List all files
-         * @description Returns a list of all files in the root directory
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                list: {
-                                    key: string;
-                                    updatedAt?: string;
-                                    size?: number;
-                                    metadata: {
-                                        id: string;
-                                        name?: string;
-                                        /** @enum {string} */
-                                        category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                        tags?: string[];
-                                        /** @enum {string} */
-                                        contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                        createdAt: string;
-                                        owner: string;
-                                        /** @default false */
-                                        isTrashed: boolean;
-                                        /** @default false */
-                                        isStarred: boolean;
-                                        music?: {
-                                            duration?: number;
-                                        };
-                                        video?: {
-                                            duration?: number;
-                                        };
-                                    };
-                                    /** @enum {string} */
-                                    type: "file" | "folder";
-                                    parent?: string;
-                                    parentKey?: string;
-                                }[];
-                                /** @default 0 */
-                                count: number;
-                                /** @default 0 */
-                                total: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/list/{path}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List files in folder
-         * @description Returns a list of files within a specific folder path
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                list: {
-                                    key: string;
-                                    updatedAt?: string;
-                                    size?: number;
-                                    metadata: {
-                                        id: string;
-                                        name?: string;
-                                        /** @enum {string} */
-                                        category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                        tags?: string[];
-                                        /** @enum {string} */
-                                        contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                        createdAt: string;
-                                        owner: string;
-                                        /** @default false */
-                                        isTrashed: boolean;
-                                        /** @default false */
-                                        isStarred: boolean;
-                                        music?: {
-                                            duration?: number;
-                                        };
-                                        video?: {
-                                            duration?: number;
-                                        };
-                                    };
-                                    /** @enum {string} */
-                                    type: "file" | "folder";
-                                    parent?: string;
-                                    parentKey?: string;
-                                }[];
-                                /** @default 0 */
-                                count: number;
-                                /** @default 0 */
-                                total: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/list/recent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List recent files
-         * @description Returns a list of recently accessed or modified files
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                list: {
-                                    key: string;
-                                    updatedAt?: string;
-                                    size?: number;
-                                    metadata: {
-                                        id: string;
-                                        name?: string;
-                                        /** @enum {string} */
-                                        category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                        tags?: string[];
-                                        /** @enum {string} */
-                                        contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                        createdAt: string;
-                                        owner: string;
-                                        /** @default false */
-                                        isTrashed: boolean;
-                                        /** @default false */
-                                        isStarred: boolean;
-                                        music?: {
-                                            duration?: number;
-                                        };
-                                        video?: {
-                                            duration?: number;
-                                        };
-                                    };
-                                    /** @enum {string} */
-                                    type: "file" | "folder";
-                                    parent?: string;
-                                    parentKey?: string;
-                                }[];
-                                /** @default 0 */
-                                count: number;
-                                /** @default 0 */
-                                total: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create a file
-         * @description Creates a new file entry (metadata only, no body yet)
-         */
-        post: {
-            parameters: {
-                query?: {
-                    folder?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        name: string;
-                        size: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                id?: string;
-                                finalName: string;
-                                metadata: {
-                                    id: string;
-                                    name?: string;
-                                    /** @enum {string} */
-                                    category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                    tags?: string[];
-                                    /** @enum {string} */
-                                    contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                    createdAt: string;
-                                    owner: string;
-                                    /** @default false */
-                                    isTrashed: boolean;
-                                    /** @default false */
-                                    isStarred: boolean;
-                                    music?: {
-                                        duration?: number;
-                                    };
-                                    video?: {
-                                        duration?: number;
-                                    };
-                                };
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/batch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create files in batch
-         * @description Creates multiple file entries at once (metadata only)
-         */
-        post: {
-            parameters: {
-                query?: {
-                    folder?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        files: {
-                            name: string;
-                            size: number;
-                        }[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                id?: string;
-                                finalName: string;
-                                metadata: {
-                                    id: string;
-                                    name?: string;
-                                    /** @enum {string} */
-                                    category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                    tags?: string[];
-                                    /** @enum {string} */
-                                    contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                    createdAt: string;
-                                    owner: string;
-                                    /** @default false */
-                                    isTrashed: boolean;
-                                    /** @default false */
-                                    isStarred: boolean;
-                                    music?: {
-                                        duration?: number;
-                                    };
-                                    video?: {
-                                        duration?: number;
-                                    };
-                                };
-                            }[];
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Search files
-         * @description Searches files by name
-         */
-        get: {
-            parameters: {
-                query: {
-                    q: string;
-                    limit?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                list: {
-                                    key: string;
-                                    updatedAt?: string;
-                                    size?: number;
-                                    metadata: {
-                                        id: string;
-                                        name?: string;
-                                        /** @enum {string} */
-                                        category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                        tags?: string[];
-                                        /** @enum {string} */
-                                        contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                        createdAt: string;
-                                        owner: string;
-                                        /** @default false */
-                                        isTrashed: boolean;
-                                        /** @default false */
-                                        isStarred: boolean;
-                                        music?: {
-                                            duration?: number;
-                                        };
-                                        video?: {
-                                            duration?: number;
-                                        };
-                                    };
-                                    /** @enum {string} */
-                                    type: "file" | "folder";
-                                    parent?: string;
-                                    parentKey?: string;
-                                }[];
-                                /** @default 0 */
-                                count: number;
-                                /** @default 0 */
-                                total: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/trash": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List trashed files
-         * @description Returns files currently in the trash
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                list: {
-                                    key: string;
-                                    updatedAt?: string;
-                                    size?: number;
-                                    metadata: {
-                                        id: string;
-                                        name?: string;
-                                        /** @enum {string} */
-                                        category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                        tags?: string[];
-                                        /** @enum {string} */
-                                        contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                        createdAt: string;
-                                        owner: string;
-                                        /** @default false */
-                                        isTrashed: boolean;
-                                        /** @default false */
-                                        isStarred: boolean;
-                                        music?: {
-                                            duration?: number;
-                                        };
-                                        video?: {
-                                            duration?: number;
-                                        };
-                                    };
-                                    /** @enum {string} */
-                                    type: "file" | "folder";
-                                    parent?: string;
-                                    parentKey?: string;
-                                }[];
-                                /** @default 0 */
-                                count: number;
-                                /** @default 0 */
-                                total: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/starred": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List starred files
-         * @description Returns files marked as starred
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                list: {
-                                    key: string;
-                                    updatedAt?: string;
-                                    size?: number;
-                                    metadata: {
-                                        id: string;
-                                        name?: string;
-                                        /** @enum {string} */
-                                        category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                        tags?: string[];
-                                        /** @enum {string} */
-                                        contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                        createdAt: string;
-                                        owner: string;
-                                        /** @default false */
-                                        isTrashed: boolean;
-                                        /** @default false */
-                                        isStarred: boolean;
-                                        music?: {
-                                            duration?: number;
-                                        };
-                                        video?: {
-                                            duration?: number;
-                                        };
-                                    };
-                                    /** @enum {string} */
-                                    type: "file" | "folder";
-                                    parent?: string;
-                                    parentKey?: string;
-                                }[];
-                                /** @default 0 */
-                                count: number;
-                                /** @default 0 */
-                                total: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/counts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get trash and starred counts
-         * @description Returns the count of trashed and starred items
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                trash: number;
-                                starred: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/category/{category}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List files by category
-         * @description Returns files matching the specified category
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    category: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                list: {
-                                    key: string;
-                                    updatedAt?: string;
-                                    size?: number;
-                                    metadata: {
-                                        id: string;
-                                        name?: string;
-                                        /** @enum {string} */
-                                        category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                        tags?: string[];
-                                        /** @enum {string} */
-                                        contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                        createdAt: string;
-                                        owner: string;
-                                        /** @default false */
-                                        isTrashed: boolean;
-                                        /** @default false */
-                                        isStarred: boolean;
-                                        music?: {
-                                            duration?: number;
-                                        };
-                                        video?: {
-                                            duration?: number;
-                                        };
-                                    };
-                                    /** @enum {string} */
-                                    type: "file" | "folder";
-                                    parent?: string;
-                                    parentKey?: string;
-                                }[];
-                                /** @default 0 */
-                                count: number;
-                                /** @default 0 */
-                                total: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get file metadata or raw content
-         * @description Returns file metadata as JSON. Pass raw=true or thumbnail=true for binary content.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    raw?: string;
-                    thumbnail?: string;
-                    size?: "small" | "medium" | "large";
-                };
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                key: string;
-                                updatedAt?: string;
-                                size?: number;
-                                metadata: {
-                                    id: string;
-                                    name?: string;
-                                    /** @enum {string} */
-                                    category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                    tags?: string[];
-                                    /** @enum {string} */
-                                    contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                    createdAt: string;
-                                    owner: string;
-                                    /** @default false */
-                                    isTrashed: boolean;
-                                    /** @default false */
-                                    isStarred: boolean;
-                                    music?: {
-                                        duration?: number;
-                                    };
-                                    video?: {
-                                        duration?: number;
-                                    };
-                                };
-                                /** @enum {string} */
-                                type: "file" | "folder";
-                                parent?: string;
-                                parentKey?: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update file metadata
-         * @description Updates metadata fields on an existing file
-         */
-        put: {
-            parameters: {
-                query?: {
-                    folder?: string;
-                };
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        type?: string;
-                        /** @enum {string} */
-                        category?: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                        tags?: string[];
-                        key?: string;
-                        /** @enum {string} */
-                        contentType?: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                        isTrashed?: boolean;
-                        isStarred?: boolean;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        /**
-         * Delete a file
-         * @description Permanently deletes a file
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/{id}/upload": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload file content
-         * @description Uploads or replaces the binary content of an existing file entry
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "multipart/form-data": {
-                        /** @description The file to upload */
-                        file: unknown;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/{id}/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Move a file
-         * @description Moves a file to a different folder
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        destination: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/file/{id}/duplicate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Duplicate a file
-         * @description Creates a copy of the file in the same folder
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                key: string;
-                                updatedAt?: string;
-                                size?: number;
-                                metadata: {
-                                    id: string;
-                                    name?: string;
-                                    /** @enum {string} */
-                                    category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                                    tags?: string[];
-                                    /** @enum {string} */
-                                    contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                                    createdAt: string;
-                                    owner: string;
-                                    /** @default false */
-                                    isTrashed: boolean;
-                                    /** @default false */
-                                    isStarred: boolean;
-                                    music?: {
-                                        duration?: number;
-                                    };
-                                    video?: {
-                                        duration?: number;
-                                    };
-                                };
-                                /** @enum {string} */
-                                type: "file" | "folder";
-                                parent?: string;
-                                parentKey?: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List folders
-         * @description Returns a list of all folders for the current user
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                id: string;
-                                name: string;
-                                path: string;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /**
-         * Create a folder
-         * @description Creates a new folder under an optional parent
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        name: string;
-                        parent?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                                id: string;
-                                name: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/tree": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get folder tree
-         * @description Returns all folders with metadata for building a folder picker
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                id: string;
-                                name: string;
-                                path: string;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/trash": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List trashed folders
-         * @description Returns folders currently in the trash
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                id: string;
-                                name: string;
-                                path: string;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/sizes/{prefix}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get folder sizes by prefix
-         * @description Calculates sizes for all folders under a given prefix
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    prefix: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                [key: string]: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/{path}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get a folder
-         * @description Returns a folder by ID
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                id: string;
-                                name: string;
-                                path: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update folder metadata
-         * @description Updates metadata on a folder (trash, star, tags, name)
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        isTrashed?: boolean;
-                        isStarred?: boolean;
-                        tags?: string[];
-                        name?: string;
-                        parentFolderId?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        /**
-         * Delete a folder
-         * @description Permanently deletes a folder and its contents
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        name?: string;
-                        parentFolderId?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/{path}/meta": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get folder metadata
-         * @description Returns metadata for a specific folder
-         */
-        get: {
-            parameters: {
-                query?: {
-                    parent?: string;
-                };
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: unknown;
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/{path}/size": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get folder size
-         * @description Calculates and returns the total size of a folder in bytes
-         */
-        get: {
-            parameters: {
-                query?: {
-                    parent?: string;
-                };
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: number;
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/{path}/trash": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Trash a folder
-         * @description Soft-deletes a folder by moving it to the trash
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        parentFolderId?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/{path}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Restore a trashed folder
-         * @description Restores a folder from the trash
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        parentFolderId?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/folder/{path}/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Move a folder
-         * @description Moves a folder to a different parent
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    path: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        parentFolderId?: string;
-                        destination: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/download": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Bulk download as ZIP
-         * @description Downloads multiple files/folders as a single ZIP archive
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        paths: string[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Binary ZIP stream */
-                            data?: unknown;
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/download/folder/{folder}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Download folder as ZIP
-         * @description Downloads an entire folder as a ZIP archive
-         */
-        get: {
-            parameters: {
-                query?: {
-                    folder?: string;
-                };
-                header?: never;
-                path: {
-                    folder: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Binary ZIP stream */
-                            data?: unknown;
-                        };
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/storage/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Bulk move files and folders
-         * @description Moves multiple files and/or folders to a new destination
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        items: {
-                            path: string;
-                            /** @enum {string} */
-                            type: "file" | "folder";
-                        }[];
-                        destination: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            data?: {
-                                message: string;
-                                results: {
-                                    path: string;
-                                    success: boolean;
-                                    error?: string;
-                                }[];
-                                successCount: number;
-                                failCount: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/sign-in/social": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Sign in with a social provider */
-        post: operations["socialSignIn"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/get-session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Get the current session */
-        get: operations["getSession"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/sign-out": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Sign out the current user */
-        post: operations["signOut"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/sign-up/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Sign up a user using email and password */
-        post: operations["signUpWithEmailAndPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/sign-in/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Sign in with email and password */
-        post: operations["signInEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/reset-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Reset the password for a user */
-        post: operations["resetPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/verify-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Verify the current user's password */
-        post: operations["verifyPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/verify-email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Verify the email of the user */
-        get: {
-            parameters: {
-                query: {
-                    /** @description The token to verify the email */
-                    token: string;
-                    /** @description The URL to redirect to after email verification */
-                    callbackURL?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            user: components["schemas"]["User"];
-                            /** @description Indicates if the email was verified successfully */
-                            status: boolean;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/send-verification-email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Send a verification email to the user */
-        post: operations["sendVerificationEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/change-email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["changeEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/change-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Change the password of the user */
-        post: operations["changePassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/update-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Update the current user */
-        post: operations["updateUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/delete-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Delete the user */
-        post: operations["deleteUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/request-password-reset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Send a password reset email to the user */
-        post: operations["requestPasswordReset"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/reset-password/{token}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Redirects the user to the callback URL with the token */
-        get: operations["resetPasswordCallback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/list-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List all active sessions for the user */
-        get: operations["listUserSessions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/revoke-session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Revoke a single session */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** @description The token to revoke */
-                        token: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Indicates if the session was revoked successfully */
-                            status: boolean;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/revoke-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Revoke all sessions for the user */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Indicates if all sessions were revoked successfully */
-                            status: boolean;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/revoke-other-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Revoke all other sessions for the user except the current one */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Indicates if all other sessions were revoked successfully */
-                            status: boolean;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/link-social": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Link a social account to the user */
-        post: operations["linkSocialAccount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/list-accounts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List all accounts linked to the user */
-        get: operations["listUserAccounts"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/delete-user/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Callback to complete user deletion with verification token */
-        get: {
-            parameters: {
-                query?: {
-                    token?: string;
-                    callbackURL?: string | null;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User successfully deleted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Indicates if the deletion was successful */
-                            success: boolean;
-                            /**
-                             * @description Confirmation message
-                             * @enum {string}
-                             */
-                            message: "User deleted";
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/unlink-account": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Unlink an account */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        providerId: string;
-                        accountId?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status?: boolean;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/refresh-token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Refresh the access token using a refresh token */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @description The provider ID for the OAuth provider */
-                        providerId: string;
-                        /** @description The account ID associated with the refresh token */
-                        accountId?: string | null;
-                        /** @description The user ID associated with the account */
-                        userId?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Access token refreshed successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            tokenType?: string;
-                            idToken?: string;
-                            accessToken?: string;
-                            refreshToken?: string;
-                            /** Format: date-time */
-                            accessTokenExpiresAt?: string;
-                            /** Format: date-time */
-                            refreshTokenExpiresAt?: string;
-                        };
-                    };
-                };
-                /** @description Invalid refresh token or provider configuration */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/get-access-token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Get a valid access token, doing a refresh if needed */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @description The provider ID for the OAuth provider */
-                        providerId: string;
-                        /** @description The account ID associated with the refresh token */
-                        accountId?: string | null;
-                        /** @description The user ID associated with the account */
-                        userId?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description A Valid access token */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            tokenType?: string;
-                            idToken?: string;
-                            accessToken?: string;
-                            /** Format: date-time */
-                            accessTokenExpiresAt?: string;
-                        };
-                    };
-                };
-                /** @description Invalid refresh token or provider configuration */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/account-info": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Get the account info provided by the provider */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            user: {
-                                id: string;
-                                name?: string;
-                                email?: string;
-                                image?: string;
-                                emailVerified: boolean;
-                            };
-                            data: {
-                                [key: string]: unknown;
-                            };
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/ok": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Check if the API is working */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description API is working */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Indicates if the API is working */
-                            ok: boolean;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/error": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Displays an error page */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/html": string;
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/set-role": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Set the role of a user */
-        post: operations["setUserRole"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/get-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Get an existing user */
-        get: operations["getUser"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/create-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Create a new user */
-        post: operations["createUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/update-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Update a user's details */
-        post: operations["updateUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/list-users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description List users */
-        get: operations["listUsers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/list-user-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description List user sessions */
-        post: operations["listUserSessions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/unban-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Unban a user */
-        post: operations["unbanUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/ban-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Ban a user */
-        post: operations["banUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/impersonate-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Impersonate a user */
-        post: operations["impersonateUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/stop-impersonating": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/revoke-user-session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Revoke a user session */
-        post: operations["revokeUserSession"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/revoke-user-sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Revoke all user sessions */
-        post: operations["revokeUserSessions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/remove-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Delete a user and all their sessions and accounts. Cannot be undone. */
-        post: operations["removeUser"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/set-user-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Set a user's password */
-        post: operations["setUserPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/admin/has-permission": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Check if the user has permission */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /**
-                         * @deprecated
-                         * @description The permission to check
-                         */
-                        permission?: Record<string, never>;
-                        /** @description The permission to check */
-                        permissions: Record<string, never>;
-                    };
-                };
-            };
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error?: string;
-                            success: boolean;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/sign-in/oauth2": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Sign in with OAuth2 */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @description The provider ID for the OAuth provider */
-                        providerId: string;
-                        /** @description The URL to redirect to after sign in */
-                        callbackURL?: string | null;
-                        /** @description The URL to redirect to if an error occurs */
-                        errorCallbackURL?: string | null;
-                        /** @description The URL to redirect to after login if the user is new. Eg: "/welcome" */
-                        newUserCallbackURL?: string | null;
-                        /** @description Disable redirect */
-                        disableRedirect?: boolean | null;
-                        /** @description Scopes to be passed to the provider authorization request. */
-                        scopes?: unknown[] | null;
-                        /** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider. Eg: false */
-                        requestSignUp?: boolean | null;
-                        additionalData?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Sign in with OAuth2 */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            url?: string;
-                            redirect?: boolean;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/oauth2/callback/{providerId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description OAuth2 callback */
-        get: {
-            parameters: {
-                query?: {
-                    code?: string | null;
-                    error?: string | null;
-                    error_description?: string | null;
-                    state?: string | null;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OAuth2 callback */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            url?: string;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/auth/oauth2/link": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description Link an OAuth2 account to the current user session */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        providerId: string;
-                        callbackURL: string;
-                        /** @description Additional scopes to request when linking the account */
-                        scopes?: unknown[] | null;
-                        /** @description The URL to redirect to if there is an error during the link process */
-                        errorCallbackURL?: string | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Authorization URL generated successfully for linking an OAuth2 account */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /**
-                             * Format: uri
-                             * @description The authorization URL to redirect the user to for linking the OAuth2 account
-                             */
-                            url: string;
-                            /**
-                             * @description Indicates that the client should redirect to the provided URL
-                             * @enum {boolean}
-                             */
-                            redirect: true;
-                        };
-                    };
-                };
-                /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Unauthorized. Due to missing or invalid authentication. */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Not Found. The requested resource was not found. */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+	"/api/v1/activity": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List activities
+		 * @description Returns a list of recent activities for the current user
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								/** Format: uuid */
+								id: string;
+								userId: string;
+								/** @enum {string} */
+								action: "create" | "update" | "delete" | "share" | "rename";
+								message: string;
+								link: string | null;
+								/** @enum {string} */
+								level: "info" | "warning" | "error";
+								createdAt: string;
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/providers": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List authentication providers
+		 * @description Returns a list of available authentication providers and their status. Does not require authentication.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								name: string;
+								prettyName: string;
+								/** @enum {string} */
+								type: "oauth" | "email";
+								enabled: boolean;
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/preferences": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get user preferences
+		 * @description Returns the current user's layout and sort preferences
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								/** @enum {string} */
+								layout?: "grid" | "list";
+								sortColumn?: ("name" | "size" | "updatedAt") | null;
+								/** @enum {string} */
+								sortDirection?: "asc" | "desc";
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update user preferences
+		 * @description Updates the current user's layout and sort preferences
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @enum {string} */
+						layout?: "grid" | "list";
+						sortColumn?: ("name" | "size" | "updatedAt") | null;
+						/** @enum {string} */
+						sortDirection?: "asc" | "desc";
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								/** @enum {string} */
+								layout?: "grid" | "list";
+								sortColumn?: ("name" | "size" | "updatedAt") | null;
+								/** @enum {string} */
+								sortDirection?: "asc" | "desc";
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/list": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List all files
+		 * @description Returns a list of all files in the root directory
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								list: {
+									key: string;
+									updatedAt?: string;
+									size?: number;
+									metadata: {
+										id: string;
+										name?: string;
+										/** @enum {string} */
+										category:
+											| "MUSIC"
+											| "DOCUMENTS"
+											| "IMAGES"
+											| "3D"
+											| "VIDEO"
+											| "RECENT"
+											| "CODE"
+											| "ARCHIVES"
+											| "UNKNOWN";
+										tags?: string[];
+										/** @enum {string} */
+										contentType:
+											| "application/pdf"
+											| "application/msword"
+											| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+											| "application/vnd.ms-excel"
+											| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+											| "application/vnd.ms-powerpoint"
+											| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+											| "application/vnd.oasis.opendocument.text"
+											| "application/rtf"
+											| "application/epub+zip"
+											| "application/vnd.google-apps.document"
+											| "application/vnd.google-apps.spreadsheet"
+											| "application/vnd.google-apps.presentation"
+											| "text/plain"
+											| "text/csv"
+											| "text/html"
+											| "text/css"
+											| "text/yaml"
+											| "image/jpeg"
+											| "image/png"
+											| "image/gif"
+											| "image/webp"
+											| "image/svg+xml"
+											| "image/bmp"
+											| "image/x-icon"
+											| "image/tiff"
+											| "image/heic"
+											| "video/mp4"
+											| "video/webm"
+											| "video/x-msvideo"
+											| "video/x-matroska"
+											| "video/quicktime"
+											| "video/x-ms-wmv"
+											| "video/x-flv"
+											| "video/mpeg"
+											| "video/3gpp"
+											| "video/ogg"
+											| "audio/mpeg"
+											| "audio/wav"
+											| "audio/flac"
+											| "audio/aac"
+											| "audio/ogg"
+											| "audio/mp4"
+											| "audio/x-ms-wma"
+											| "audio/aiff"
+											| "application/json"
+											| "application/xml"
+											| "application/javascript"
+											| "application/vnd.google-apps.form"
+											| "application/zip"
+											| "application/vnd.rar"
+											| "application/x-7z-compressed"
+											| "application/x-tar"
+											| "application/gzip"
+											| "application/x-bzip2"
+											| "application/x-xz"
+											| "application/vnd.ms-cab-compressed"
+											| "application/x-iso9660-image"
+											| "application/x-apple-diskimage"
+											| "application/x-xar"
+											| "application/vnd.debian.binary-package"
+											| "application/x-rpm"
+											| "application/vnd.android.package-archive"
+											| "application/java-archive"
+											| "application/x-webarchive"
+											| "application/x-stuffit"
+											| "application/x-stuffitx"
+											| "application/x-lzip"
+											| "application/x-lzma"
+											| "application/x-lzop"
+											| "application/x-compress"
+											| "application/zstd"
+											| "application/x-brotli"
+											| "model/stl"
+											| "model/obj"
+											| "model/gltf+json"
+											| "model/gltf-binary"
+											| "model/fbx"
+											| "model/3mf"
+											| "model/x3d+xml"
+											| "model/vnd.collada+xml"
+											| "application/x-blender"
+											| "application/x-tgif"
+											| "application/octet-stream";
+										createdAt: string;
+										owner: string;
+										/** @default false */
+										isTrashed: boolean;
+										/** @default false */
+										isStarred: boolean;
+										music?: {
+											duration?: number;
+										};
+										video?: {
+											duration?: number;
+										};
+									};
+									/** @enum {string} */
+									type: "file" | "folder";
+									parent?: string;
+									parentKey?: string;
+								}[];
+								/** @default 0 */
+								count: number;
+								/** @default 0 */
+								total: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/list/{path}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List files in folder
+		 * @description Returns a list of files within a specific folder path
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								list: {
+									key: string;
+									updatedAt?: string;
+									size?: number;
+									metadata: {
+										id: string;
+										name?: string;
+										/** @enum {string} */
+										category:
+											| "MUSIC"
+											| "DOCUMENTS"
+											| "IMAGES"
+											| "3D"
+											| "VIDEO"
+											| "RECENT"
+											| "CODE"
+											| "ARCHIVES"
+											| "UNKNOWN";
+										tags?: string[];
+										/** @enum {string} */
+										contentType:
+											| "application/pdf"
+											| "application/msword"
+											| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+											| "application/vnd.ms-excel"
+											| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+											| "application/vnd.ms-powerpoint"
+											| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+											| "application/vnd.oasis.opendocument.text"
+											| "application/rtf"
+											| "application/epub+zip"
+											| "application/vnd.google-apps.document"
+											| "application/vnd.google-apps.spreadsheet"
+											| "application/vnd.google-apps.presentation"
+											| "text/plain"
+											| "text/csv"
+											| "text/html"
+											| "text/css"
+											| "text/yaml"
+											| "image/jpeg"
+											| "image/png"
+											| "image/gif"
+											| "image/webp"
+											| "image/svg+xml"
+											| "image/bmp"
+											| "image/x-icon"
+											| "image/tiff"
+											| "image/heic"
+											| "video/mp4"
+											| "video/webm"
+											| "video/x-msvideo"
+											| "video/x-matroska"
+											| "video/quicktime"
+											| "video/x-ms-wmv"
+											| "video/x-flv"
+											| "video/mpeg"
+											| "video/3gpp"
+											| "video/ogg"
+											| "audio/mpeg"
+											| "audio/wav"
+											| "audio/flac"
+											| "audio/aac"
+											| "audio/ogg"
+											| "audio/mp4"
+											| "audio/x-ms-wma"
+											| "audio/aiff"
+											| "application/json"
+											| "application/xml"
+											| "application/javascript"
+											| "application/vnd.google-apps.form"
+											| "application/zip"
+											| "application/vnd.rar"
+											| "application/x-7z-compressed"
+											| "application/x-tar"
+											| "application/gzip"
+											| "application/x-bzip2"
+											| "application/x-xz"
+											| "application/vnd.ms-cab-compressed"
+											| "application/x-iso9660-image"
+											| "application/x-apple-diskimage"
+											| "application/x-xar"
+											| "application/vnd.debian.binary-package"
+											| "application/x-rpm"
+											| "application/vnd.android.package-archive"
+											| "application/java-archive"
+											| "application/x-webarchive"
+											| "application/x-stuffit"
+											| "application/x-stuffitx"
+											| "application/x-lzip"
+											| "application/x-lzma"
+											| "application/x-lzop"
+											| "application/x-compress"
+											| "application/zstd"
+											| "application/x-brotli"
+											| "model/stl"
+											| "model/obj"
+											| "model/gltf+json"
+											| "model/gltf-binary"
+											| "model/fbx"
+											| "model/3mf"
+											| "model/x3d+xml"
+											| "model/vnd.collada+xml"
+											| "application/x-blender"
+											| "application/x-tgif"
+											| "application/octet-stream";
+										createdAt: string;
+										owner: string;
+										/** @default false */
+										isTrashed: boolean;
+										/** @default false */
+										isStarred: boolean;
+										music?: {
+											duration?: number;
+										};
+										video?: {
+											duration?: number;
+										};
+									};
+									/** @enum {string} */
+									type: "file" | "folder";
+									parent?: string;
+									parentKey?: string;
+								}[];
+								/** @default 0 */
+								count: number;
+								/** @default 0 */
+								total: number;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/list/recent": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List recent files
+		 * @description Returns a list of recently accessed or modified files
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								list: {
+									key: string;
+									updatedAt?: string;
+									size?: number;
+									metadata: {
+										id: string;
+										name?: string;
+										/** @enum {string} */
+										category:
+											| "MUSIC"
+											| "DOCUMENTS"
+											| "IMAGES"
+											| "3D"
+											| "VIDEO"
+											| "RECENT"
+											| "CODE"
+											| "ARCHIVES"
+											| "UNKNOWN";
+										tags?: string[];
+										/** @enum {string} */
+										contentType:
+											| "application/pdf"
+											| "application/msword"
+											| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+											| "application/vnd.ms-excel"
+											| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+											| "application/vnd.ms-powerpoint"
+											| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+											| "application/vnd.oasis.opendocument.text"
+											| "application/rtf"
+											| "application/epub+zip"
+											| "application/vnd.google-apps.document"
+											| "application/vnd.google-apps.spreadsheet"
+											| "application/vnd.google-apps.presentation"
+											| "text/plain"
+											| "text/csv"
+											| "text/html"
+											| "text/css"
+											| "text/yaml"
+											| "image/jpeg"
+											| "image/png"
+											| "image/gif"
+											| "image/webp"
+											| "image/svg+xml"
+											| "image/bmp"
+											| "image/x-icon"
+											| "image/tiff"
+											| "image/heic"
+											| "video/mp4"
+											| "video/webm"
+											| "video/x-msvideo"
+											| "video/x-matroska"
+											| "video/quicktime"
+											| "video/x-ms-wmv"
+											| "video/x-flv"
+											| "video/mpeg"
+											| "video/3gpp"
+											| "video/ogg"
+											| "audio/mpeg"
+											| "audio/wav"
+											| "audio/flac"
+											| "audio/aac"
+											| "audio/ogg"
+											| "audio/mp4"
+											| "audio/x-ms-wma"
+											| "audio/aiff"
+											| "application/json"
+											| "application/xml"
+											| "application/javascript"
+											| "application/vnd.google-apps.form"
+											| "application/zip"
+											| "application/vnd.rar"
+											| "application/x-7z-compressed"
+											| "application/x-tar"
+											| "application/gzip"
+											| "application/x-bzip2"
+											| "application/x-xz"
+											| "application/vnd.ms-cab-compressed"
+											| "application/x-iso9660-image"
+											| "application/x-apple-diskimage"
+											| "application/x-xar"
+											| "application/vnd.debian.binary-package"
+											| "application/x-rpm"
+											| "application/vnd.android.package-archive"
+											| "application/java-archive"
+											| "application/x-webarchive"
+											| "application/x-stuffit"
+											| "application/x-stuffitx"
+											| "application/x-lzip"
+											| "application/x-lzma"
+											| "application/x-lzop"
+											| "application/x-compress"
+											| "application/zstd"
+											| "application/x-brotli"
+											| "model/stl"
+											| "model/obj"
+											| "model/gltf+json"
+											| "model/gltf-binary"
+											| "model/fbx"
+											| "model/3mf"
+											| "model/x3d+xml"
+											| "model/vnd.collada+xml"
+											| "application/x-blender"
+											| "application/x-tgif"
+											| "application/octet-stream";
+										createdAt: string;
+										owner: string;
+										/** @default false */
+										isTrashed: boolean;
+										/** @default false */
+										isStarred: boolean;
+										music?: {
+											duration?: number;
+										};
+										video?: {
+											duration?: number;
+										};
+									};
+									/** @enum {string} */
+									type: "file" | "folder";
+									parent?: string;
+									parentKey?: string;
+								}[];
+								/** @default 0 */
+								count: number;
+								/** @default 0 */
+								total: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create a file
+		 * @description Creates a new file entry (metadata only, no body yet)
+		 */
+		post: {
+			parameters: {
+				query?: {
+					folder?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						name: string;
+						size: number;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id?: string;
+								finalName: string;
+								metadata: {
+									id: string;
+									name?: string;
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "3D"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "ARCHIVES"
+										| "UNKNOWN";
+									tags?: string[];
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "application/msword"
+										| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+										| "application/vnd.ms-excel"
+										| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+										| "application/vnd.ms-powerpoint"
+										| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+										| "application/vnd.oasis.opendocument.text"
+										| "application/rtf"
+										| "application/epub+zip"
+										| "application/vnd.google-apps.document"
+										| "application/vnd.google-apps.spreadsheet"
+										| "application/vnd.google-apps.presentation"
+										| "text/plain"
+										| "text/csv"
+										| "text/html"
+										| "text/css"
+										| "text/yaml"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "image/webp"
+										| "image/svg+xml"
+										| "image/bmp"
+										| "image/x-icon"
+										| "image/tiff"
+										| "image/heic"
+										| "video/mp4"
+										| "video/webm"
+										| "video/x-msvideo"
+										| "video/x-matroska"
+										| "video/quicktime"
+										| "video/x-ms-wmv"
+										| "video/x-flv"
+										| "video/mpeg"
+										| "video/3gpp"
+										| "video/ogg"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "audio/aac"
+										| "audio/ogg"
+										| "audio/mp4"
+										| "audio/x-ms-wma"
+										| "audio/aiff"
+										| "application/json"
+										| "application/xml"
+										| "application/javascript"
+										| "application/vnd.google-apps.form"
+										| "application/zip"
+										| "application/vnd.rar"
+										| "application/x-7z-compressed"
+										| "application/x-tar"
+										| "application/gzip"
+										| "application/x-bzip2"
+										| "application/x-xz"
+										| "application/vnd.ms-cab-compressed"
+										| "application/x-iso9660-image"
+										| "application/x-apple-diskimage"
+										| "application/x-xar"
+										| "application/vnd.debian.binary-package"
+										| "application/x-rpm"
+										| "application/vnd.android.package-archive"
+										| "application/java-archive"
+										| "application/x-webarchive"
+										| "application/x-stuffit"
+										| "application/x-stuffitx"
+										| "application/x-lzip"
+										| "application/x-lzma"
+										| "application/x-lzop"
+										| "application/x-compress"
+										| "application/zstd"
+										| "application/x-brotli"
+										| "model/stl"
+										| "model/obj"
+										| "model/gltf+json"
+										| "model/gltf-binary"
+										| "model/fbx"
+										| "model/3mf"
+										| "model/x3d+xml"
+										| "model/vnd.collada+xml"
+										| "application/x-blender"
+										| "application/x-tgif"
+										| "application/octet-stream";
+									createdAt: string;
+									owner: string;
+									/** @default false */
+									isTrashed: boolean;
+									/** @default false */
+									isStarred: boolean;
+									music?: {
+										duration?: number;
+									};
+									video?: {
+										duration?: number;
+									};
+								};
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/batch": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create files in batch
+		 * @description Creates multiple file entries at once (metadata only)
+		 */
+		post: {
+			parameters: {
+				query?: {
+					folder?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						files: {
+							name: string;
+							size: number;
+						}[];
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id?: string;
+								finalName: string;
+								metadata: {
+									id: string;
+									name?: string;
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "3D"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "ARCHIVES"
+										| "UNKNOWN";
+									tags?: string[];
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "application/msword"
+										| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+										| "application/vnd.ms-excel"
+										| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+										| "application/vnd.ms-powerpoint"
+										| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+										| "application/vnd.oasis.opendocument.text"
+										| "application/rtf"
+										| "application/epub+zip"
+										| "application/vnd.google-apps.document"
+										| "application/vnd.google-apps.spreadsheet"
+										| "application/vnd.google-apps.presentation"
+										| "text/plain"
+										| "text/csv"
+										| "text/html"
+										| "text/css"
+										| "text/yaml"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "image/webp"
+										| "image/svg+xml"
+										| "image/bmp"
+										| "image/x-icon"
+										| "image/tiff"
+										| "image/heic"
+										| "video/mp4"
+										| "video/webm"
+										| "video/x-msvideo"
+										| "video/x-matroska"
+										| "video/quicktime"
+										| "video/x-ms-wmv"
+										| "video/x-flv"
+										| "video/mpeg"
+										| "video/3gpp"
+										| "video/ogg"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "audio/aac"
+										| "audio/ogg"
+										| "audio/mp4"
+										| "audio/x-ms-wma"
+										| "audio/aiff"
+										| "application/json"
+										| "application/xml"
+										| "application/javascript"
+										| "application/vnd.google-apps.form"
+										| "application/zip"
+										| "application/vnd.rar"
+										| "application/x-7z-compressed"
+										| "application/x-tar"
+										| "application/gzip"
+										| "application/x-bzip2"
+										| "application/x-xz"
+										| "application/vnd.ms-cab-compressed"
+										| "application/x-iso9660-image"
+										| "application/x-apple-diskimage"
+										| "application/x-xar"
+										| "application/vnd.debian.binary-package"
+										| "application/x-rpm"
+										| "application/vnd.android.package-archive"
+										| "application/java-archive"
+										| "application/x-webarchive"
+										| "application/x-stuffit"
+										| "application/x-stuffitx"
+										| "application/x-lzip"
+										| "application/x-lzma"
+										| "application/x-lzop"
+										| "application/x-compress"
+										| "application/zstd"
+										| "application/x-brotli"
+										| "model/stl"
+										| "model/obj"
+										| "model/gltf+json"
+										| "model/gltf-binary"
+										| "model/fbx"
+										| "model/3mf"
+										| "model/x3d+xml"
+										| "model/vnd.collada+xml"
+										| "application/x-blender"
+										| "application/x-tgif"
+										| "application/octet-stream";
+									createdAt: string;
+									owner: string;
+									/** @default false */
+									isTrashed: boolean;
+									/** @default false */
+									isStarred: boolean;
+									music?: {
+										duration?: number;
+									};
+									video?: {
+										duration?: number;
+									};
+								};
+							}[];
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/search": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Search files
+		 * @description Searches files by name
+		 */
+		get: {
+			parameters: {
+				query: {
+					q: string;
+					limit?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								list: {
+									key: string;
+									updatedAt?: string;
+									size?: number;
+									metadata: {
+										id: string;
+										name?: string;
+										/** @enum {string} */
+										category:
+											| "MUSIC"
+											| "DOCUMENTS"
+											| "IMAGES"
+											| "3D"
+											| "VIDEO"
+											| "RECENT"
+											| "CODE"
+											| "ARCHIVES"
+											| "UNKNOWN";
+										tags?: string[];
+										/** @enum {string} */
+										contentType:
+											| "application/pdf"
+											| "application/msword"
+											| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+											| "application/vnd.ms-excel"
+											| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+											| "application/vnd.ms-powerpoint"
+											| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+											| "application/vnd.oasis.opendocument.text"
+											| "application/rtf"
+											| "application/epub+zip"
+											| "application/vnd.google-apps.document"
+											| "application/vnd.google-apps.spreadsheet"
+											| "application/vnd.google-apps.presentation"
+											| "text/plain"
+											| "text/csv"
+											| "text/html"
+											| "text/css"
+											| "text/yaml"
+											| "image/jpeg"
+											| "image/png"
+											| "image/gif"
+											| "image/webp"
+											| "image/svg+xml"
+											| "image/bmp"
+											| "image/x-icon"
+											| "image/tiff"
+											| "image/heic"
+											| "video/mp4"
+											| "video/webm"
+											| "video/x-msvideo"
+											| "video/x-matroska"
+											| "video/quicktime"
+											| "video/x-ms-wmv"
+											| "video/x-flv"
+											| "video/mpeg"
+											| "video/3gpp"
+											| "video/ogg"
+											| "audio/mpeg"
+											| "audio/wav"
+											| "audio/flac"
+											| "audio/aac"
+											| "audio/ogg"
+											| "audio/mp4"
+											| "audio/x-ms-wma"
+											| "audio/aiff"
+											| "application/json"
+											| "application/xml"
+											| "application/javascript"
+											| "application/vnd.google-apps.form"
+											| "application/zip"
+											| "application/vnd.rar"
+											| "application/x-7z-compressed"
+											| "application/x-tar"
+											| "application/gzip"
+											| "application/x-bzip2"
+											| "application/x-xz"
+											| "application/vnd.ms-cab-compressed"
+											| "application/x-iso9660-image"
+											| "application/x-apple-diskimage"
+											| "application/x-xar"
+											| "application/vnd.debian.binary-package"
+											| "application/x-rpm"
+											| "application/vnd.android.package-archive"
+											| "application/java-archive"
+											| "application/x-webarchive"
+											| "application/x-stuffit"
+											| "application/x-stuffitx"
+											| "application/x-lzip"
+											| "application/x-lzma"
+											| "application/x-lzop"
+											| "application/x-compress"
+											| "application/zstd"
+											| "application/x-brotli"
+											| "model/stl"
+											| "model/obj"
+											| "model/gltf+json"
+											| "model/gltf-binary"
+											| "model/fbx"
+											| "model/3mf"
+											| "model/x3d+xml"
+											| "model/vnd.collada+xml"
+											| "application/x-blender"
+											| "application/x-tgif"
+											| "application/octet-stream";
+										createdAt: string;
+										owner: string;
+										/** @default false */
+										isTrashed: boolean;
+										/** @default false */
+										isStarred: boolean;
+										music?: {
+											duration?: number;
+										};
+										video?: {
+											duration?: number;
+										};
+									};
+									/** @enum {string} */
+									type: "file" | "folder";
+									parent?: string;
+									parentKey?: string;
+								}[];
+								/** @default 0 */
+								count: number;
+								/** @default 0 */
+								total: number;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/trash": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List trashed files
+		 * @description Returns files currently in the trash
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								list: {
+									key: string;
+									updatedAt?: string;
+									size?: number;
+									metadata: {
+										id: string;
+										name?: string;
+										/** @enum {string} */
+										category:
+											| "MUSIC"
+											| "DOCUMENTS"
+											| "IMAGES"
+											| "3D"
+											| "VIDEO"
+											| "RECENT"
+											| "CODE"
+											| "ARCHIVES"
+											| "UNKNOWN";
+										tags?: string[];
+										/** @enum {string} */
+										contentType:
+											| "application/pdf"
+											| "application/msword"
+											| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+											| "application/vnd.ms-excel"
+											| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+											| "application/vnd.ms-powerpoint"
+											| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+											| "application/vnd.oasis.opendocument.text"
+											| "application/rtf"
+											| "application/epub+zip"
+											| "application/vnd.google-apps.document"
+											| "application/vnd.google-apps.spreadsheet"
+											| "application/vnd.google-apps.presentation"
+											| "text/plain"
+											| "text/csv"
+											| "text/html"
+											| "text/css"
+											| "text/yaml"
+											| "image/jpeg"
+											| "image/png"
+											| "image/gif"
+											| "image/webp"
+											| "image/svg+xml"
+											| "image/bmp"
+											| "image/x-icon"
+											| "image/tiff"
+											| "image/heic"
+											| "video/mp4"
+											| "video/webm"
+											| "video/x-msvideo"
+											| "video/x-matroska"
+											| "video/quicktime"
+											| "video/x-ms-wmv"
+											| "video/x-flv"
+											| "video/mpeg"
+											| "video/3gpp"
+											| "video/ogg"
+											| "audio/mpeg"
+											| "audio/wav"
+											| "audio/flac"
+											| "audio/aac"
+											| "audio/ogg"
+											| "audio/mp4"
+											| "audio/x-ms-wma"
+											| "audio/aiff"
+											| "application/json"
+											| "application/xml"
+											| "application/javascript"
+											| "application/vnd.google-apps.form"
+											| "application/zip"
+											| "application/vnd.rar"
+											| "application/x-7z-compressed"
+											| "application/x-tar"
+											| "application/gzip"
+											| "application/x-bzip2"
+											| "application/x-xz"
+											| "application/vnd.ms-cab-compressed"
+											| "application/x-iso9660-image"
+											| "application/x-apple-diskimage"
+											| "application/x-xar"
+											| "application/vnd.debian.binary-package"
+											| "application/x-rpm"
+											| "application/vnd.android.package-archive"
+											| "application/java-archive"
+											| "application/x-webarchive"
+											| "application/x-stuffit"
+											| "application/x-stuffitx"
+											| "application/x-lzip"
+											| "application/x-lzma"
+											| "application/x-lzop"
+											| "application/x-compress"
+											| "application/zstd"
+											| "application/x-brotli"
+											| "model/stl"
+											| "model/obj"
+											| "model/gltf+json"
+											| "model/gltf-binary"
+											| "model/fbx"
+											| "model/3mf"
+											| "model/x3d+xml"
+											| "model/vnd.collada+xml"
+											| "application/x-blender"
+											| "application/x-tgif"
+											| "application/octet-stream";
+										createdAt: string;
+										owner: string;
+										/** @default false */
+										isTrashed: boolean;
+										/** @default false */
+										isStarred: boolean;
+										music?: {
+											duration?: number;
+										};
+										video?: {
+											duration?: number;
+										};
+									};
+									/** @enum {string} */
+									type: "file" | "folder";
+									parent?: string;
+									parentKey?: string;
+								}[];
+								/** @default 0 */
+								count: number;
+								/** @default 0 */
+								total: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/starred": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List starred files
+		 * @description Returns files marked as starred
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								list: {
+									key: string;
+									updatedAt?: string;
+									size?: number;
+									metadata: {
+										id: string;
+										name?: string;
+										/** @enum {string} */
+										category:
+											| "MUSIC"
+											| "DOCUMENTS"
+											| "IMAGES"
+											| "3D"
+											| "VIDEO"
+											| "RECENT"
+											| "CODE"
+											| "ARCHIVES"
+											| "UNKNOWN";
+										tags?: string[];
+										/** @enum {string} */
+										contentType:
+											| "application/pdf"
+											| "application/msword"
+											| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+											| "application/vnd.ms-excel"
+											| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+											| "application/vnd.ms-powerpoint"
+											| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+											| "application/vnd.oasis.opendocument.text"
+											| "application/rtf"
+											| "application/epub+zip"
+											| "application/vnd.google-apps.document"
+											| "application/vnd.google-apps.spreadsheet"
+											| "application/vnd.google-apps.presentation"
+											| "text/plain"
+											| "text/csv"
+											| "text/html"
+											| "text/css"
+											| "text/yaml"
+											| "image/jpeg"
+											| "image/png"
+											| "image/gif"
+											| "image/webp"
+											| "image/svg+xml"
+											| "image/bmp"
+											| "image/x-icon"
+											| "image/tiff"
+											| "image/heic"
+											| "video/mp4"
+											| "video/webm"
+											| "video/x-msvideo"
+											| "video/x-matroska"
+											| "video/quicktime"
+											| "video/x-ms-wmv"
+											| "video/x-flv"
+											| "video/mpeg"
+											| "video/3gpp"
+											| "video/ogg"
+											| "audio/mpeg"
+											| "audio/wav"
+											| "audio/flac"
+											| "audio/aac"
+											| "audio/ogg"
+											| "audio/mp4"
+											| "audio/x-ms-wma"
+											| "audio/aiff"
+											| "application/json"
+											| "application/xml"
+											| "application/javascript"
+											| "application/vnd.google-apps.form"
+											| "application/zip"
+											| "application/vnd.rar"
+											| "application/x-7z-compressed"
+											| "application/x-tar"
+											| "application/gzip"
+											| "application/x-bzip2"
+											| "application/x-xz"
+											| "application/vnd.ms-cab-compressed"
+											| "application/x-iso9660-image"
+											| "application/x-apple-diskimage"
+											| "application/x-xar"
+											| "application/vnd.debian.binary-package"
+											| "application/x-rpm"
+											| "application/vnd.android.package-archive"
+											| "application/java-archive"
+											| "application/x-webarchive"
+											| "application/x-stuffit"
+											| "application/x-stuffitx"
+											| "application/x-lzip"
+											| "application/x-lzma"
+											| "application/x-lzop"
+											| "application/x-compress"
+											| "application/zstd"
+											| "application/x-brotli"
+											| "model/stl"
+											| "model/obj"
+											| "model/gltf+json"
+											| "model/gltf-binary"
+											| "model/fbx"
+											| "model/3mf"
+											| "model/x3d+xml"
+											| "model/vnd.collada+xml"
+											| "application/x-blender"
+											| "application/x-tgif"
+											| "application/octet-stream";
+										createdAt: string;
+										owner: string;
+										/** @default false */
+										isTrashed: boolean;
+										/** @default false */
+										isStarred: boolean;
+										music?: {
+											duration?: number;
+										};
+										video?: {
+											duration?: number;
+										};
+									};
+									/** @enum {string} */
+									type: "file" | "folder";
+									parent?: string;
+									parentKey?: string;
+								}[];
+								/** @default 0 */
+								count: number;
+								/** @default 0 */
+								total: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/counts": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get trash and starred counts
+		 * @description Returns the count of trashed and starred items
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								trash: number;
+								starred: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/category/{category}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List files by category
+		 * @description Returns files matching the specified category
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					category: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								list: {
+									key: string;
+									updatedAt?: string;
+									size?: number;
+									metadata: {
+										id: string;
+										name?: string;
+										/** @enum {string} */
+										category:
+											| "MUSIC"
+											| "DOCUMENTS"
+											| "IMAGES"
+											| "3D"
+											| "VIDEO"
+											| "RECENT"
+											| "CODE"
+											| "ARCHIVES"
+											| "UNKNOWN";
+										tags?: string[];
+										/** @enum {string} */
+										contentType:
+											| "application/pdf"
+											| "application/msword"
+											| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+											| "application/vnd.ms-excel"
+											| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+											| "application/vnd.ms-powerpoint"
+											| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+											| "application/vnd.oasis.opendocument.text"
+											| "application/rtf"
+											| "application/epub+zip"
+											| "application/vnd.google-apps.document"
+											| "application/vnd.google-apps.spreadsheet"
+											| "application/vnd.google-apps.presentation"
+											| "text/plain"
+											| "text/csv"
+											| "text/html"
+											| "text/css"
+											| "text/yaml"
+											| "image/jpeg"
+											| "image/png"
+											| "image/gif"
+											| "image/webp"
+											| "image/svg+xml"
+											| "image/bmp"
+											| "image/x-icon"
+											| "image/tiff"
+											| "image/heic"
+											| "video/mp4"
+											| "video/webm"
+											| "video/x-msvideo"
+											| "video/x-matroska"
+											| "video/quicktime"
+											| "video/x-ms-wmv"
+											| "video/x-flv"
+											| "video/mpeg"
+											| "video/3gpp"
+											| "video/ogg"
+											| "audio/mpeg"
+											| "audio/wav"
+											| "audio/flac"
+											| "audio/aac"
+											| "audio/ogg"
+											| "audio/mp4"
+											| "audio/x-ms-wma"
+											| "audio/aiff"
+											| "application/json"
+											| "application/xml"
+											| "application/javascript"
+											| "application/vnd.google-apps.form"
+											| "application/zip"
+											| "application/vnd.rar"
+											| "application/x-7z-compressed"
+											| "application/x-tar"
+											| "application/gzip"
+											| "application/x-bzip2"
+											| "application/x-xz"
+											| "application/vnd.ms-cab-compressed"
+											| "application/x-iso9660-image"
+											| "application/x-apple-diskimage"
+											| "application/x-xar"
+											| "application/vnd.debian.binary-package"
+											| "application/x-rpm"
+											| "application/vnd.android.package-archive"
+											| "application/java-archive"
+											| "application/x-webarchive"
+											| "application/x-stuffit"
+											| "application/x-stuffitx"
+											| "application/x-lzip"
+											| "application/x-lzma"
+											| "application/x-lzop"
+											| "application/x-compress"
+											| "application/zstd"
+											| "application/x-brotli"
+											| "model/stl"
+											| "model/obj"
+											| "model/gltf+json"
+											| "model/gltf-binary"
+											| "model/fbx"
+											| "model/3mf"
+											| "model/x3d+xml"
+											| "model/vnd.collada+xml"
+											| "application/x-blender"
+											| "application/x-tgif"
+											| "application/octet-stream";
+										createdAt: string;
+										owner: string;
+										/** @default false */
+										isTrashed: boolean;
+										/** @default false */
+										isStarred: boolean;
+										music?: {
+											duration?: number;
+										};
+										video?: {
+											duration?: number;
+										};
+									};
+									/** @enum {string} */
+									type: "file" | "folder";
+									parent?: string;
+									parentKey?: string;
+								}[];
+								/** @default 0 */
+								count: number;
+								/** @default 0 */
+								total: number;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get file metadata or raw content
+		 * @description Returns file metadata as JSON. Pass raw=true or thumbnail=true for binary content.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					raw?: string;
+					thumbnail?: string;
+					size?: "small" | "medium" | "large";
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								key: string;
+								updatedAt?: string;
+								size?: number;
+								metadata: {
+									id: string;
+									name?: string;
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "3D"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "ARCHIVES"
+										| "UNKNOWN";
+									tags?: string[];
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "application/msword"
+										| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+										| "application/vnd.ms-excel"
+										| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+										| "application/vnd.ms-powerpoint"
+										| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+										| "application/vnd.oasis.opendocument.text"
+										| "application/rtf"
+										| "application/epub+zip"
+										| "application/vnd.google-apps.document"
+										| "application/vnd.google-apps.spreadsheet"
+										| "application/vnd.google-apps.presentation"
+										| "text/plain"
+										| "text/csv"
+										| "text/html"
+										| "text/css"
+										| "text/yaml"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "image/webp"
+										| "image/svg+xml"
+										| "image/bmp"
+										| "image/x-icon"
+										| "image/tiff"
+										| "image/heic"
+										| "video/mp4"
+										| "video/webm"
+										| "video/x-msvideo"
+										| "video/x-matroska"
+										| "video/quicktime"
+										| "video/x-ms-wmv"
+										| "video/x-flv"
+										| "video/mpeg"
+										| "video/3gpp"
+										| "video/ogg"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "audio/aac"
+										| "audio/ogg"
+										| "audio/mp4"
+										| "audio/x-ms-wma"
+										| "audio/aiff"
+										| "application/json"
+										| "application/xml"
+										| "application/javascript"
+										| "application/vnd.google-apps.form"
+										| "application/zip"
+										| "application/vnd.rar"
+										| "application/x-7z-compressed"
+										| "application/x-tar"
+										| "application/gzip"
+										| "application/x-bzip2"
+										| "application/x-xz"
+										| "application/vnd.ms-cab-compressed"
+										| "application/x-iso9660-image"
+										| "application/x-apple-diskimage"
+										| "application/x-xar"
+										| "application/vnd.debian.binary-package"
+										| "application/x-rpm"
+										| "application/vnd.android.package-archive"
+										| "application/java-archive"
+										| "application/x-webarchive"
+										| "application/x-stuffit"
+										| "application/x-stuffitx"
+										| "application/x-lzip"
+										| "application/x-lzma"
+										| "application/x-lzop"
+										| "application/x-compress"
+										| "application/zstd"
+										| "application/x-brotli"
+										| "model/stl"
+										| "model/obj"
+										| "model/gltf+json"
+										| "model/gltf-binary"
+										| "model/fbx"
+										| "model/3mf"
+										| "model/x3d+xml"
+										| "model/vnd.collada+xml"
+										| "application/x-blender"
+										| "application/x-tgif"
+										| "application/octet-stream";
+									createdAt: string;
+									owner: string;
+									/** @default false */
+									isTrashed: boolean;
+									/** @default false */
+									isStarred: boolean;
+									music?: {
+										duration?: number;
+									};
+									video?: {
+										duration?: number;
+									};
+								};
+								/** @enum {string} */
+								type: "file" | "folder";
+								parent?: string;
+								parentKey?: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update file metadata
+		 * @description Updates metadata fields on an existing file
+		 */
+		put: {
+			parameters: {
+				query?: {
+					folder?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						type?: string;
+						/** @enum {string} */
+						category?:
+							| "MUSIC"
+							| "DOCUMENTS"
+							| "IMAGES"
+							| "3D"
+							| "VIDEO"
+							| "RECENT"
+							| "CODE"
+							| "ARCHIVES"
+							| "UNKNOWN";
+						tags?: string[];
+						key?: string;
+						/** @enum {string} */
+						contentType?:
+							| "application/pdf"
+							| "application/msword"
+							| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+							| "application/vnd.ms-excel"
+							| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+							| "application/vnd.ms-powerpoint"
+							| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+							| "application/vnd.oasis.opendocument.text"
+							| "application/rtf"
+							| "application/epub+zip"
+							| "application/vnd.google-apps.document"
+							| "application/vnd.google-apps.spreadsheet"
+							| "application/vnd.google-apps.presentation"
+							| "text/plain"
+							| "text/csv"
+							| "text/html"
+							| "text/css"
+							| "text/yaml"
+							| "image/jpeg"
+							| "image/png"
+							| "image/gif"
+							| "image/webp"
+							| "image/svg+xml"
+							| "image/bmp"
+							| "image/x-icon"
+							| "image/tiff"
+							| "image/heic"
+							| "video/mp4"
+							| "video/webm"
+							| "video/x-msvideo"
+							| "video/x-matroska"
+							| "video/quicktime"
+							| "video/x-ms-wmv"
+							| "video/x-flv"
+							| "video/mpeg"
+							| "video/3gpp"
+							| "video/ogg"
+							| "audio/mpeg"
+							| "audio/wav"
+							| "audio/flac"
+							| "audio/aac"
+							| "audio/ogg"
+							| "audio/mp4"
+							| "audio/x-ms-wma"
+							| "audio/aiff"
+							| "application/json"
+							| "application/xml"
+							| "application/javascript"
+							| "application/vnd.google-apps.form"
+							| "application/zip"
+							| "application/vnd.rar"
+							| "application/x-7z-compressed"
+							| "application/x-tar"
+							| "application/gzip"
+							| "application/x-bzip2"
+							| "application/x-xz"
+							| "application/vnd.ms-cab-compressed"
+							| "application/x-iso9660-image"
+							| "application/x-apple-diskimage"
+							| "application/x-xar"
+							| "application/vnd.debian.binary-package"
+							| "application/x-rpm"
+							| "application/vnd.android.package-archive"
+							| "application/java-archive"
+							| "application/x-webarchive"
+							| "application/x-stuffit"
+							| "application/x-stuffitx"
+							| "application/x-lzip"
+							| "application/x-lzma"
+							| "application/x-lzop"
+							| "application/x-compress"
+							| "application/zstd"
+							| "application/x-brotli"
+							| "model/stl"
+							| "model/obj"
+							| "model/gltf+json"
+							| "model/gltf-binary"
+							| "model/fbx"
+							| "model/3mf"
+							| "model/x3d+xml"
+							| "model/vnd.collada+xml"
+							| "application/x-blender"
+							| "application/x-tgif"
+							| "application/octet-stream";
+						isTrashed?: boolean;
+						isStarred?: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		/**
+		 * Delete a file
+		 * @description Permanently deletes a file
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/upload": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Upload file content
+		 * @description Uploads or replaces the binary content of an existing file entry
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"multipart/form-data": {
+						/** @description The file to upload */
+						file: unknown;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/move": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Move a file
+		 * @description Moves a file to a different folder
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						destination: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/duplicate": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Duplicate a file
+		 * @description Creates a copy of the file in the same folder
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								key: string;
+								updatedAt?: string;
+								size?: number;
+								metadata: {
+									id: string;
+									name?: string;
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "3D"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "ARCHIVES"
+										| "UNKNOWN";
+									tags?: string[];
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "application/msword"
+										| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+										| "application/vnd.ms-excel"
+										| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+										| "application/vnd.ms-powerpoint"
+										| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+										| "application/vnd.oasis.opendocument.text"
+										| "application/rtf"
+										| "application/epub+zip"
+										| "application/vnd.google-apps.document"
+										| "application/vnd.google-apps.spreadsheet"
+										| "application/vnd.google-apps.presentation"
+										| "text/plain"
+										| "text/csv"
+										| "text/html"
+										| "text/css"
+										| "text/yaml"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "image/webp"
+										| "image/svg+xml"
+										| "image/bmp"
+										| "image/x-icon"
+										| "image/tiff"
+										| "image/heic"
+										| "video/mp4"
+										| "video/webm"
+										| "video/x-msvideo"
+										| "video/x-matroska"
+										| "video/quicktime"
+										| "video/x-ms-wmv"
+										| "video/x-flv"
+										| "video/mpeg"
+										| "video/3gpp"
+										| "video/ogg"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "audio/aac"
+										| "audio/ogg"
+										| "audio/mp4"
+										| "audio/x-ms-wma"
+										| "audio/aiff"
+										| "application/json"
+										| "application/xml"
+										| "application/javascript"
+										| "application/vnd.google-apps.form"
+										| "application/zip"
+										| "application/vnd.rar"
+										| "application/x-7z-compressed"
+										| "application/x-tar"
+										| "application/gzip"
+										| "application/x-bzip2"
+										| "application/x-xz"
+										| "application/vnd.ms-cab-compressed"
+										| "application/x-iso9660-image"
+										| "application/x-apple-diskimage"
+										| "application/x-xar"
+										| "application/vnd.debian.binary-package"
+										| "application/x-rpm"
+										| "application/vnd.android.package-archive"
+										| "application/java-archive"
+										| "application/x-webarchive"
+										| "application/x-stuffit"
+										| "application/x-stuffitx"
+										| "application/x-lzip"
+										| "application/x-lzma"
+										| "application/x-lzop"
+										| "application/x-compress"
+										| "application/zstd"
+										| "application/x-brotli"
+										| "model/stl"
+										| "model/obj"
+										| "model/gltf+json"
+										| "model/gltf-binary"
+										| "model/fbx"
+										| "model/3mf"
+										| "model/x3d+xml"
+										| "model/vnd.collada+xml"
+										| "application/x-blender"
+										| "application/x-tgif"
+										| "application/octet-stream";
+									createdAt: string;
+									owner: string;
+									/** @default false */
+									isTrashed: boolean;
+									/** @default false */
+									isStarred: boolean;
+									music?: {
+										duration?: number;
+									};
+									video?: {
+										duration?: number;
+									};
+								};
+								/** @enum {string} */
+								type: "file" | "folder";
+								parent?: string;
+								parentKey?: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List folders
+		 * @description Returns a list of all folders for the current user
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id: string;
+								name: string;
+								path: string;
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Create a folder
+		 * @description Creates a new folder under an optional parent
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						name: string;
+						parent?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+								id: string;
+								name: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/tree": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get folder tree
+		 * @description Returns all folders with metadata for building a folder picker
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id: string;
+								name: string;
+								path: string;
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/trash": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List trashed folders
+		 * @description Returns folders currently in the trash
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id: string;
+								name: string;
+								path: string;
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/sizes/{prefix}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get folder sizes by prefix
+		 * @description Calculates sizes for all folders under a given prefix
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					prefix: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								[key: string]: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/{path}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get a folder
+		 * @description Returns a folder by ID
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id: string;
+								name: string;
+								path: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update folder metadata
+		 * @description Updates metadata on a folder (trash, star, tags, name)
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						isTrashed?: boolean;
+						isStarred?: boolean;
+						tags?: string[];
+						name?: string;
+						parentFolderId?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		/**
+		 * Delete a folder
+		 * @description Permanently deletes a folder and its contents
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						name?: string;
+						parentFolderId?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/{path}/meta": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get folder metadata
+		 * @description Returns metadata for a specific folder
+		 */
+		get: {
+			parameters: {
+				query?: {
+					parent?: string;
+				};
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/{path}/size": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get folder size
+		 * @description Calculates and returns the total size of a folder in bytes
+		 */
+		get: {
+			parameters: {
+				query?: {
+					parent?: string;
+				};
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: number;
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/{path}/trash": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Trash a folder
+		 * @description Soft-deletes a folder by moving it to the trash
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						parentFolderId?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/{path}/restore": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Restore a trashed folder
+		 * @description Restores a folder from the trash
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						parentFolderId?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/folder/{path}/move": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Move a folder
+		 * @description Moves a folder to a different parent
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						parentFolderId?: string;
+						destination: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/download": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Bulk download as ZIP
+		 * @description Downloads multiple files/folders as a single ZIP archive
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						paths: string[];
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Binary ZIP stream */
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/download/folder/{folder}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Download folder as ZIP
+		 * @description Downloads an entire folder as a ZIP archive
+		 */
+		get: {
+			parameters: {
+				query?: {
+					folder?: string;
+				};
+				header?: never;
+				path: {
+					folder: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Binary ZIP stream */
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/move": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Bulk move files and folders
+		 * @description Moves multiple files and/or folders to a new destination
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						items: {
+							path: string;
+							/** @enum {string} */
+							type: "file" | "folder";
+						}[];
+						destination: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+								results: {
+									path: string;
+									success: boolean;
+									error?: string;
+								}[];
+								successCount: number;
+								failCount: number;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/sign-in/social": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign in with a social provider */
+		post: operations["socialSignIn"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/get-session": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Get the current session */
+		get: operations["getSession"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/sign-out": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign out the current user */
+		post: operations["signOut"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/sign-up/email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign up a user using email and password */
+		post: operations["signUpWithEmailAndPassword"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/sign-in/email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign in with email and password */
+		post: operations["signInEmail"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/reset-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Reset the password for a user */
+		post: operations["resetPassword"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/verify-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Verify the current user's password */
+		post: operations["verifyPassword"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/verify-email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Verify the email of the user */
+		get: {
+			parameters: {
+				query: {
+					/** @description The token to verify the email */
+					token: string;
+					/** @description The URL to redirect to after email verification */
+					callbackURL?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							user: components["schemas"]["User"];
+							/** @description Indicates if the email was verified successfully */
+							status: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/send-verification-email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Send a verification email to the user */
+		post: operations["sendVerificationEmail"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/change-email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: operations["changeEmail"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/change-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Change the password of the user */
+		post: operations["changePassword"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/update-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Update the current user */
+		post: operations["updateUser"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/delete-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Delete the user */
+		post: operations["deleteUser"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/request-password-reset": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Send a password reset email to the user */
+		post: operations["requestPasswordReset"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/reset-password/{token}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Redirects the user to the callback URL with the token */
+		get: operations["resetPasswordCallback"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/list-sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List all active sessions for the user */
+		get: operations["listUserSessions"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/revoke-session": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Revoke a single session */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": {
+						/** @description The token to revoke */
+						token: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if the session was revoked successfully */
+							status: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/revoke-sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Revoke all sessions for the user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": Record<string, never>;
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if all sessions were revoked successfully */
+							status: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/revoke-other-sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Revoke all other sessions for the user except the current one */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": Record<string, never>;
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if all other sessions were revoked successfully */
+							status: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/link-social": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Link a social account to the user */
+		post: operations["linkSocialAccount"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/list-accounts": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List all accounts linked to the user */
+		get: operations["listUserAccounts"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/delete-user/callback": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Callback to complete user deletion with verification token */
+		get: {
+			parameters: {
+				query?: {
+					token?: string;
+					callbackURL?: string | null;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description User successfully deleted */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if the deletion was successful */
+							success: boolean;
+							/**
+							 * @description Confirmation message
+							 * @enum {string}
+							 */
+							message: "User deleted";
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/unlink-account": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Unlink an account */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						providerId: string;
+						accountId?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							status?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/refresh-token": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Refresh the access token using a refresh token */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The provider ID for the OAuth provider */
+						providerId: string;
+						/** @description The account ID associated with the refresh token */
+						accountId?: string | null;
+						/** @description The user ID associated with the account */
+						userId?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Access token refreshed successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							tokenType?: string;
+							idToken?: string;
+							accessToken?: string;
+							refreshToken?: string;
+							/** Format: date-time */
+							accessTokenExpiresAt?: string;
+							/** Format: date-time */
+							refreshTokenExpiresAt?: string;
+						};
+					};
+				};
+				/** @description Invalid refresh token or provider configuration */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/get-access-token": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Get a valid access token, doing a refresh if needed */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The provider ID for the OAuth provider */
+						providerId: string;
+						/** @description The account ID associated with the refresh token */
+						accountId?: string | null;
+						/** @description The user ID associated with the account */
+						userId?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description A Valid access token */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							tokenType?: string;
+							idToken?: string;
+							accessToken?: string;
+							/** Format: date-time */
+							accessTokenExpiresAt?: string;
+						};
+					};
+				};
+				/** @description Invalid refresh token or provider configuration */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content?: never;
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/account-info": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Get the account info provided by the provider */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							user: {
+								id: string;
+								name?: string;
+								email?: string;
+								image?: string;
+								emailVerified: boolean;
+							};
+							data: {
+								[key: string]: unknown;
+							};
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/ok": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Check if the API is working */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description API is working */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Indicates if the API is working */
+							ok: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/error": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Displays an error page */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"text/html": string;
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/set-role": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Set the role of a user */
+		post: operations["setUserRole"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/get-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Get an existing user */
+		get: operations["getUser"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/create-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Create a new user */
+		post: operations["createUser"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/update-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Update a user's details */
+		post: operations["updateUser"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/list-users": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description List users */
+		get: operations["listUsers"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/list-user-sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description List user sessions */
+		post: operations["listUserSessions"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/unban-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Unban a user */
+		post: operations["unbanUser"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/ban-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Ban a user */
+		post: operations["banUser"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/impersonate-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Impersonate a user */
+		post: operations["impersonateUser"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/stop-impersonating": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/revoke-user-session": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Revoke a user session */
+		post: operations["revokeUserSession"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/revoke-user-sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Revoke all user sessions */
+		post: operations["revokeUserSessions"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/remove-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Delete a user and all their sessions and accounts. Cannot be undone. */
+		post: operations["removeUser"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/set-user-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Set a user's password */
+		post: operations["setUserPassword"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/admin/has-permission": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Check if the user has permission */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": {
+						/**
+						 * @deprecated
+						 * @description The permission to check
+						 */
+						permission?: Record<string, never>;
+						/** @description The permission to check */
+						permissions: Record<string, never>;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							error?: string;
+							success: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/sign-in/oauth2": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign in with OAuth2 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The provider ID for the OAuth provider */
+						providerId: string;
+						/** @description The URL to redirect to after sign in */
+						callbackURL?: string | null;
+						/** @description The URL to redirect to if an error occurs */
+						errorCallbackURL?: string | null;
+						/** @description The URL to redirect to after login if the user is new. Eg: "/welcome" */
+						newUserCallbackURL?: string | null;
+						/** @description Disable redirect */
+						disableRedirect?: boolean | null;
+						/** @description Scopes to be passed to the provider authorization request. */
+						scopes?: unknown[] | null;
+						/** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider. Eg: false */
+						requestSignUp?: boolean | null;
+						additionalData?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Sign in with OAuth2 */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							url?: string;
+							redirect?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/oauth2/callback/{providerId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description OAuth2 callback */
+		get: {
+			parameters: {
+				query?: {
+					code?: string | null;
+					error?: string | null;
+					error_description?: string | null;
+					state?: string | null;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OAuth2 callback */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							url?: string;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/oauth2/link": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Link an OAuth2 account to the current user session */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						providerId: string;
+						callbackURL: string;
+						/** @description Additional scopes to request when linking the account */
+						scopes?: unknown[] | null;
+						/** @description The URL to redirect to if there is an error during the link process */
+						errorCallbackURL?: string | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Authorization URL generated successfully for linking an OAuth2 account */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/**
+							 * Format: uri
+							 * @description The authorization URL to redirect the user to for linking the OAuth2 account
+							 */
+							url: string;
+							/**
+							 * @description Indicates that the client should redirect to the provided URL
+							 * @enum {boolean}
+							 */
+							redirect: true;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        ObjectList: {
-            list: {
-                key: string;
-                updatedAt?: string;
-                size?: number;
-                metadata: {
-                    id: string;
-                    name?: string;
-                    /** @enum {string} */
-                    category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                    tags?: string[];
-                    /** @enum {string} */
-                    contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                    createdAt: string;
-                    owner: string;
-                    /** @default false */
-                    isTrashed: boolean;
-                    /** @default false */
-                    isStarred: boolean;
-                    music?: {
-                        duration?: number;
-                    };
-                    video?: {
-                        duration?: number;
-                    };
-                };
-                /** @enum {string} */
-                type: "file" | "folder";
-                parent?: string;
-                parentKey?: string;
-            }[];
-            /** @default 0 */
-            count: number;
-            /** @default 0 */
-            total: number;
-        };
-        ObjectItem: {
-            key: string;
-            updatedAt?: string;
-            size?: number;
-            metadata: {
-                id: string;
-                name?: string;
-                /** @enum {string} */
-                category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                tags?: string[];
-                /** @enum {string} */
-                contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                createdAt: string;
-                owner: string;
-                /** @default false */
-                isTrashed: boolean;
-                /** @default false */
-                isStarred: boolean;
-                music?: {
-                    duration?: number;
-                };
-                video?: {
-                    duration?: number;
-                };
-            };
-            /** @enum {string} */
-            type: "file" | "folder";
-            parent?: string;
-            parentKey?: string;
-        };
-        FileMetadata: {
-            id: string;
-            name?: string;
-            /** @enum {string} */
-            category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-            tags?: string[];
-            /** @enum {string} */
-            contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-            createdAt: string;
-            owner: string;
-            /** @default false */
-            isTrashed: boolean;
-            /** @default false */
-            isStarred: boolean;
-            music?: {
-                duration?: number;
-            };
-            video?: {
-                duration?: number;
-            };
-        };
-        UploadResult: {
-            id?: string;
-            finalName: string;
-            metadata: {
-                id: string;
-                name?: string;
-                /** @enum {string} */
-                category: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-                tags?: string[];
-                /** @enum {string} */
-                contentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-                createdAt: string;
-                owner: string;
-                /** @default false */
-                isTrashed: boolean;
-                /** @default false */
-                isStarred: boolean;
-                music?: {
-                    duration?: number;
-                };
-                video?: {
-                    duration?: number;
-                };
-            };
-        };
-        FolderItem: {
-            id: string;
-            name: string;
-            path: string;
-        };
-        FolderList: {
-            id: string;
-            name: string;
-            path: string;
-        }[];
-        /** @enum {string} */
-        FileCategory: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-        /** @enum {string} */
-        FileContentType: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-        NewFile: {
-            name: string;
-            size: number;
-        };
-        BatchFile: {
-            files: {
-                name: string;
-                size: number;
-            }[];
-        };
-        UpdateFile: {
-            type?: string;
-            /** @enum {string} */
-            category?: "MUSIC" | "DOCUMENTS" | "IMAGES" | "3D" | "VIDEO" | "RECENT" | "CODE" | "ARCHIVES" | "UNKNOWN";
-            tags?: string[];
-            key?: string;
-            /** @enum {string} */
-            contentType?: "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/vnd.ms-excel" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-powerpoint" | "application/vnd.openxmlformats-officedocument.presentationml.presentation" | "application/vnd.oasis.opendocument.text" | "application/rtf" | "application/epub+zip" | "application/vnd.google-apps.document" | "application/vnd.google-apps.spreadsheet" | "application/vnd.google-apps.presentation" | "text/plain" | "text/csv" | "text/html" | "text/css" | "text/yaml" | "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "image/svg+xml" | "image/bmp" | "image/x-icon" | "image/tiff" | "image/heic" | "video/mp4" | "video/webm" | "video/x-msvideo" | "video/x-matroska" | "video/quicktime" | "video/x-ms-wmv" | "video/x-flv" | "video/mpeg" | "video/3gpp" | "video/ogg" | "audio/mpeg" | "audio/wav" | "audio/flac" | "audio/aac" | "audio/ogg" | "audio/mp4" | "audio/x-ms-wma" | "audio/aiff" | "application/json" | "application/xml" | "application/javascript" | "application/vnd.google-apps.form" | "application/zip" | "application/vnd.rar" | "application/x-7z-compressed" | "application/x-tar" | "application/gzip" | "application/x-bzip2" | "application/x-xz" | "application/vnd.ms-cab-compressed" | "application/x-iso9660-image" | "application/x-apple-diskimage" | "application/x-xar" | "application/vnd.debian.binary-package" | "application/x-rpm" | "application/vnd.android.package-archive" | "application/java-archive" | "application/x-webarchive" | "application/x-stuffit" | "application/x-stuffitx" | "application/x-lzip" | "application/x-lzma" | "application/x-lzop" | "application/x-compress" | "application/zstd" | "application/x-brotli" | "model/stl" | "model/obj" | "model/gltf+json" | "model/gltf-binary" | "model/fbx" | "model/3mf" | "model/x3d+xml" | "model/vnd.collada+xml" | "application/x-blender" | "application/x-tgif" | "application/octet-stream";
-            isTrashed?: boolean;
-            isStarred?: boolean;
-        };
-        DirectoryList: string[];
-        StandardizedResponse: {
-            message?: string;
-            data?: unknown;
-            context?: unknown;
-        };
-        ErrorResponse: {
-            message?: string;
-            context?: unknown;
-        };
-        User: {
-            id?: string;
-            name: string;
-            email: string;
-            /** @default false */
-            readonly emailVerified: boolean;
-            image?: string;
-            /**
-             * Format: date-time
-             * @default Generated at runtime
-             */
-            createdAt: string;
-            /**
-             * Format: date-time
-             * @default Generated at runtime
-             */
-            updatedAt: string;
-            readonly role?: string;
-            /** @default false */
-            readonly banned: boolean;
-            readonly banReason?: string;
-            /** Format: date-time */
-            readonly banExpires?: string;
-        };
-        Session: {
-            id?: string;
-            /** Format: date-time */
-            expiresAt: string;
-            token: string;
-            /**
-             * Format: date-time
-             * @default Generated at runtime
-             */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            ipAddress?: string;
-            userAgent?: string;
-            userId: string;
-            impersonatedBy?: string;
-        };
-        Account: {
-            id?: string;
-            accountId: string;
-            providerId: string;
-            userId: string;
-            accessToken?: string;
-            refreshToken?: string;
-            idToken?: string;
-            /** Format: date-time */
-            accessTokenExpiresAt?: string;
-            /** Format: date-time */
-            refreshTokenExpiresAt?: string;
-            scope?: string;
-            password?: string;
-            /**
-             * Format: date-time
-             * @default Generated at runtime
-             */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        Verification: {
-            id?: string;
-            identifier: string;
-            value: string;
-            /** Format: date-time */
-            expiresAt: string;
-            /**
-             * Format: date-time
-             * @default Generated at runtime
-             */
-            createdAt: string;
-            /**
-             * Format: date-time
-             * @default Generated at runtime
-             */
-            updatedAt: string;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+	schemas: {
+		ObjectList: {
+			list: {
+				key: string;
+				updatedAt?: string;
+				size?: number;
+				metadata: {
+					id: string;
+					name?: string;
+					/** @enum {string} */
+					category:
+						| "MUSIC"
+						| "DOCUMENTS"
+						| "IMAGES"
+						| "3D"
+						| "VIDEO"
+						| "RECENT"
+						| "CODE"
+						| "ARCHIVES"
+						| "UNKNOWN";
+					tags?: string[];
+					/** @enum {string} */
+					contentType:
+						| "application/pdf"
+						| "application/msword"
+						| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+						| "application/vnd.ms-excel"
+						| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+						| "application/vnd.ms-powerpoint"
+						| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+						| "application/vnd.oasis.opendocument.text"
+						| "application/rtf"
+						| "application/epub+zip"
+						| "application/vnd.google-apps.document"
+						| "application/vnd.google-apps.spreadsheet"
+						| "application/vnd.google-apps.presentation"
+						| "text/plain"
+						| "text/csv"
+						| "text/html"
+						| "text/css"
+						| "text/yaml"
+						| "image/jpeg"
+						| "image/png"
+						| "image/gif"
+						| "image/webp"
+						| "image/svg+xml"
+						| "image/bmp"
+						| "image/x-icon"
+						| "image/tiff"
+						| "image/heic"
+						| "video/mp4"
+						| "video/webm"
+						| "video/x-msvideo"
+						| "video/x-matroska"
+						| "video/quicktime"
+						| "video/x-ms-wmv"
+						| "video/x-flv"
+						| "video/mpeg"
+						| "video/3gpp"
+						| "video/ogg"
+						| "audio/mpeg"
+						| "audio/wav"
+						| "audio/flac"
+						| "audio/aac"
+						| "audio/ogg"
+						| "audio/mp4"
+						| "audio/x-ms-wma"
+						| "audio/aiff"
+						| "application/json"
+						| "application/xml"
+						| "application/javascript"
+						| "application/vnd.google-apps.form"
+						| "application/zip"
+						| "application/vnd.rar"
+						| "application/x-7z-compressed"
+						| "application/x-tar"
+						| "application/gzip"
+						| "application/x-bzip2"
+						| "application/x-xz"
+						| "application/vnd.ms-cab-compressed"
+						| "application/x-iso9660-image"
+						| "application/x-apple-diskimage"
+						| "application/x-xar"
+						| "application/vnd.debian.binary-package"
+						| "application/x-rpm"
+						| "application/vnd.android.package-archive"
+						| "application/java-archive"
+						| "application/x-webarchive"
+						| "application/x-stuffit"
+						| "application/x-stuffitx"
+						| "application/x-lzip"
+						| "application/x-lzma"
+						| "application/x-lzop"
+						| "application/x-compress"
+						| "application/zstd"
+						| "application/x-brotli"
+						| "model/stl"
+						| "model/obj"
+						| "model/gltf+json"
+						| "model/gltf-binary"
+						| "model/fbx"
+						| "model/3mf"
+						| "model/x3d+xml"
+						| "model/vnd.collada+xml"
+						| "application/x-blender"
+						| "application/x-tgif"
+						| "application/octet-stream";
+					createdAt: string;
+					owner: string;
+					/** @default false */
+					isTrashed: boolean;
+					/** @default false */
+					isStarred: boolean;
+					music?: {
+						duration?: number;
+					};
+					video?: {
+						duration?: number;
+					};
+				};
+				/** @enum {string} */
+				type: "file" | "folder";
+				parent?: string;
+				parentKey?: string;
+			}[];
+			/** @default 0 */
+			count: number;
+			/** @default 0 */
+			total: number;
+		};
+		ObjectItem: {
+			key: string;
+			updatedAt?: string;
+			size?: number;
+			metadata: {
+				id: string;
+				name?: string;
+				/** @enum {string} */
+				category:
+					| "MUSIC"
+					| "DOCUMENTS"
+					| "IMAGES"
+					| "3D"
+					| "VIDEO"
+					| "RECENT"
+					| "CODE"
+					| "ARCHIVES"
+					| "UNKNOWN";
+				tags?: string[];
+				/** @enum {string} */
+				contentType:
+					| "application/pdf"
+					| "application/msword"
+					| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+					| "application/vnd.ms-excel"
+					| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+					| "application/vnd.ms-powerpoint"
+					| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+					| "application/vnd.oasis.opendocument.text"
+					| "application/rtf"
+					| "application/epub+zip"
+					| "application/vnd.google-apps.document"
+					| "application/vnd.google-apps.spreadsheet"
+					| "application/vnd.google-apps.presentation"
+					| "text/plain"
+					| "text/csv"
+					| "text/html"
+					| "text/css"
+					| "text/yaml"
+					| "image/jpeg"
+					| "image/png"
+					| "image/gif"
+					| "image/webp"
+					| "image/svg+xml"
+					| "image/bmp"
+					| "image/x-icon"
+					| "image/tiff"
+					| "image/heic"
+					| "video/mp4"
+					| "video/webm"
+					| "video/x-msvideo"
+					| "video/x-matroska"
+					| "video/quicktime"
+					| "video/x-ms-wmv"
+					| "video/x-flv"
+					| "video/mpeg"
+					| "video/3gpp"
+					| "video/ogg"
+					| "audio/mpeg"
+					| "audio/wav"
+					| "audio/flac"
+					| "audio/aac"
+					| "audio/ogg"
+					| "audio/mp4"
+					| "audio/x-ms-wma"
+					| "audio/aiff"
+					| "application/json"
+					| "application/xml"
+					| "application/javascript"
+					| "application/vnd.google-apps.form"
+					| "application/zip"
+					| "application/vnd.rar"
+					| "application/x-7z-compressed"
+					| "application/x-tar"
+					| "application/gzip"
+					| "application/x-bzip2"
+					| "application/x-xz"
+					| "application/vnd.ms-cab-compressed"
+					| "application/x-iso9660-image"
+					| "application/x-apple-diskimage"
+					| "application/x-xar"
+					| "application/vnd.debian.binary-package"
+					| "application/x-rpm"
+					| "application/vnd.android.package-archive"
+					| "application/java-archive"
+					| "application/x-webarchive"
+					| "application/x-stuffit"
+					| "application/x-stuffitx"
+					| "application/x-lzip"
+					| "application/x-lzma"
+					| "application/x-lzop"
+					| "application/x-compress"
+					| "application/zstd"
+					| "application/x-brotli"
+					| "model/stl"
+					| "model/obj"
+					| "model/gltf+json"
+					| "model/gltf-binary"
+					| "model/fbx"
+					| "model/3mf"
+					| "model/x3d+xml"
+					| "model/vnd.collada+xml"
+					| "application/x-blender"
+					| "application/x-tgif"
+					| "application/octet-stream";
+				createdAt: string;
+				owner: string;
+				/** @default false */
+				isTrashed: boolean;
+				/** @default false */
+				isStarred: boolean;
+				music?: {
+					duration?: number;
+				};
+				video?: {
+					duration?: number;
+				};
+			};
+			/** @enum {string} */
+			type: "file" | "folder";
+			parent?: string;
+			parentKey?: string;
+		};
+		FileMetadata: {
+			id: string;
+			name?: string;
+			/** @enum {string} */
+			category:
+				| "MUSIC"
+				| "DOCUMENTS"
+				| "IMAGES"
+				| "3D"
+				| "VIDEO"
+				| "RECENT"
+				| "CODE"
+				| "ARCHIVES"
+				| "UNKNOWN";
+			tags?: string[];
+			/** @enum {string} */
+			contentType:
+				| "application/pdf"
+				| "application/msword"
+				| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+				| "application/vnd.ms-excel"
+				| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+				| "application/vnd.ms-powerpoint"
+				| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+				| "application/vnd.oasis.opendocument.text"
+				| "application/rtf"
+				| "application/epub+zip"
+				| "application/vnd.google-apps.document"
+				| "application/vnd.google-apps.spreadsheet"
+				| "application/vnd.google-apps.presentation"
+				| "text/plain"
+				| "text/csv"
+				| "text/html"
+				| "text/css"
+				| "text/yaml"
+				| "image/jpeg"
+				| "image/png"
+				| "image/gif"
+				| "image/webp"
+				| "image/svg+xml"
+				| "image/bmp"
+				| "image/x-icon"
+				| "image/tiff"
+				| "image/heic"
+				| "video/mp4"
+				| "video/webm"
+				| "video/x-msvideo"
+				| "video/x-matroska"
+				| "video/quicktime"
+				| "video/x-ms-wmv"
+				| "video/x-flv"
+				| "video/mpeg"
+				| "video/3gpp"
+				| "video/ogg"
+				| "audio/mpeg"
+				| "audio/wav"
+				| "audio/flac"
+				| "audio/aac"
+				| "audio/ogg"
+				| "audio/mp4"
+				| "audio/x-ms-wma"
+				| "audio/aiff"
+				| "application/json"
+				| "application/xml"
+				| "application/javascript"
+				| "application/vnd.google-apps.form"
+				| "application/zip"
+				| "application/vnd.rar"
+				| "application/x-7z-compressed"
+				| "application/x-tar"
+				| "application/gzip"
+				| "application/x-bzip2"
+				| "application/x-xz"
+				| "application/vnd.ms-cab-compressed"
+				| "application/x-iso9660-image"
+				| "application/x-apple-diskimage"
+				| "application/x-xar"
+				| "application/vnd.debian.binary-package"
+				| "application/x-rpm"
+				| "application/vnd.android.package-archive"
+				| "application/java-archive"
+				| "application/x-webarchive"
+				| "application/x-stuffit"
+				| "application/x-stuffitx"
+				| "application/x-lzip"
+				| "application/x-lzma"
+				| "application/x-lzop"
+				| "application/x-compress"
+				| "application/zstd"
+				| "application/x-brotli"
+				| "model/stl"
+				| "model/obj"
+				| "model/gltf+json"
+				| "model/gltf-binary"
+				| "model/fbx"
+				| "model/3mf"
+				| "model/x3d+xml"
+				| "model/vnd.collada+xml"
+				| "application/x-blender"
+				| "application/x-tgif"
+				| "application/octet-stream";
+			createdAt: string;
+			owner: string;
+			/** @default false */
+			isTrashed: boolean;
+			/** @default false */
+			isStarred: boolean;
+			music?: {
+				duration?: number;
+			};
+			video?: {
+				duration?: number;
+			};
+		};
+		UploadResult: {
+			id?: string;
+			finalName: string;
+			metadata: {
+				id: string;
+				name?: string;
+				/** @enum {string} */
+				category:
+					| "MUSIC"
+					| "DOCUMENTS"
+					| "IMAGES"
+					| "3D"
+					| "VIDEO"
+					| "RECENT"
+					| "CODE"
+					| "ARCHIVES"
+					| "UNKNOWN";
+				tags?: string[];
+				/** @enum {string} */
+				contentType:
+					| "application/pdf"
+					| "application/msword"
+					| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+					| "application/vnd.ms-excel"
+					| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+					| "application/vnd.ms-powerpoint"
+					| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+					| "application/vnd.oasis.opendocument.text"
+					| "application/rtf"
+					| "application/epub+zip"
+					| "application/vnd.google-apps.document"
+					| "application/vnd.google-apps.spreadsheet"
+					| "application/vnd.google-apps.presentation"
+					| "text/plain"
+					| "text/csv"
+					| "text/html"
+					| "text/css"
+					| "text/yaml"
+					| "image/jpeg"
+					| "image/png"
+					| "image/gif"
+					| "image/webp"
+					| "image/svg+xml"
+					| "image/bmp"
+					| "image/x-icon"
+					| "image/tiff"
+					| "image/heic"
+					| "video/mp4"
+					| "video/webm"
+					| "video/x-msvideo"
+					| "video/x-matroska"
+					| "video/quicktime"
+					| "video/x-ms-wmv"
+					| "video/x-flv"
+					| "video/mpeg"
+					| "video/3gpp"
+					| "video/ogg"
+					| "audio/mpeg"
+					| "audio/wav"
+					| "audio/flac"
+					| "audio/aac"
+					| "audio/ogg"
+					| "audio/mp4"
+					| "audio/x-ms-wma"
+					| "audio/aiff"
+					| "application/json"
+					| "application/xml"
+					| "application/javascript"
+					| "application/vnd.google-apps.form"
+					| "application/zip"
+					| "application/vnd.rar"
+					| "application/x-7z-compressed"
+					| "application/x-tar"
+					| "application/gzip"
+					| "application/x-bzip2"
+					| "application/x-xz"
+					| "application/vnd.ms-cab-compressed"
+					| "application/x-iso9660-image"
+					| "application/x-apple-diskimage"
+					| "application/x-xar"
+					| "application/vnd.debian.binary-package"
+					| "application/x-rpm"
+					| "application/vnd.android.package-archive"
+					| "application/java-archive"
+					| "application/x-webarchive"
+					| "application/x-stuffit"
+					| "application/x-stuffitx"
+					| "application/x-lzip"
+					| "application/x-lzma"
+					| "application/x-lzop"
+					| "application/x-compress"
+					| "application/zstd"
+					| "application/x-brotli"
+					| "model/stl"
+					| "model/obj"
+					| "model/gltf+json"
+					| "model/gltf-binary"
+					| "model/fbx"
+					| "model/3mf"
+					| "model/x3d+xml"
+					| "model/vnd.collada+xml"
+					| "application/x-blender"
+					| "application/x-tgif"
+					| "application/octet-stream";
+				createdAt: string;
+				owner: string;
+				/** @default false */
+				isTrashed: boolean;
+				/** @default false */
+				isStarred: boolean;
+				music?: {
+					duration?: number;
+				};
+				video?: {
+					duration?: number;
+				};
+			};
+		};
+		FolderItem: {
+			id: string;
+			name: string;
+			path: string;
+		};
+		FolderList: {
+			id: string;
+			name: string;
+			path: string;
+		}[];
+		/** @enum {string} */
+		FileCategory:
+			| "MUSIC"
+			| "DOCUMENTS"
+			| "IMAGES"
+			| "3D"
+			| "VIDEO"
+			| "RECENT"
+			| "CODE"
+			| "ARCHIVES"
+			| "UNKNOWN";
+		/** @enum {string} */
+		FileContentType:
+			| "application/pdf"
+			| "application/msword"
+			| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+			| "application/vnd.ms-excel"
+			| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+			| "application/vnd.ms-powerpoint"
+			| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+			| "application/vnd.oasis.opendocument.text"
+			| "application/rtf"
+			| "application/epub+zip"
+			| "application/vnd.google-apps.document"
+			| "application/vnd.google-apps.spreadsheet"
+			| "application/vnd.google-apps.presentation"
+			| "text/plain"
+			| "text/csv"
+			| "text/html"
+			| "text/css"
+			| "text/yaml"
+			| "image/jpeg"
+			| "image/png"
+			| "image/gif"
+			| "image/webp"
+			| "image/svg+xml"
+			| "image/bmp"
+			| "image/x-icon"
+			| "image/tiff"
+			| "image/heic"
+			| "video/mp4"
+			| "video/webm"
+			| "video/x-msvideo"
+			| "video/x-matroska"
+			| "video/quicktime"
+			| "video/x-ms-wmv"
+			| "video/x-flv"
+			| "video/mpeg"
+			| "video/3gpp"
+			| "video/ogg"
+			| "audio/mpeg"
+			| "audio/wav"
+			| "audio/flac"
+			| "audio/aac"
+			| "audio/ogg"
+			| "audio/mp4"
+			| "audio/x-ms-wma"
+			| "audio/aiff"
+			| "application/json"
+			| "application/xml"
+			| "application/javascript"
+			| "application/vnd.google-apps.form"
+			| "application/zip"
+			| "application/vnd.rar"
+			| "application/x-7z-compressed"
+			| "application/x-tar"
+			| "application/gzip"
+			| "application/x-bzip2"
+			| "application/x-xz"
+			| "application/vnd.ms-cab-compressed"
+			| "application/x-iso9660-image"
+			| "application/x-apple-diskimage"
+			| "application/x-xar"
+			| "application/vnd.debian.binary-package"
+			| "application/x-rpm"
+			| "application/vnd.android.package-archive"
+			| "application/java-archive"
+			| "application/x-webarchive"
+			| "application/x-stuffit"
+			| "application/x-stuffitx"
+			| "application/x-lzip"
+			| "application/x-lzma"
+			| "application/x-lzop"
+			| "application/x-compress"
+			| "application/zstd"
+			| "application/x-brotli"
+			| "model/stl"
+			| "model/obj"
+			| "model/gltf+json"
+			| "model/gltf-binary"
+			| "model/fbx"
+			| "model/3mf"
+			| "model/x3d+xml"
+			| "model/vnd.collada+xml"
+			| "application/x-blender"
+			| "application/x-tgif"
+			| "application/octet-stream";
+		NewFile: {
+			name: string;
+			size: number;
+		};
+		BatchFile: {
+			files: {
+				name: string;
+				size: number;
+			}[];
+		};
+		UpdateFile: {
+			type?: string;
+			/** @enum {string} */
+			category?:
+				| "MUSIC"
+				| "DOCUMENTS"
+				| "IMAGES"
+				| "3D"
+				| "VIDEO"
+				| "RECENT"
+				| "CODE"
+				| "ARCHIVES"
+				| "UNKNOWN";
+			tags?: string[];
+			key?: string;
+			/** @enum {string} */
+			contentType?:
+				| "application/pdf"
+				| "application/msword"
+				| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+				| "application/vnd.ms-excel"
+				| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+				| "application/vnd.ms-powerpoint"
+				| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+				| "application/vnd.oasis.opendocument.text"
+				| "application/rtf"
+				| "application/epub+zip"
+				| "application/vnd.google-apps.document"
+				| "application/vnd.google-apps.spreadsheet"
+				| "application/vnd.google-apps.presentation"
+				| "text/plain"
+				| "text/csv"
+				| "text/html"
+				| "text/css"
+				| "text/yaml"
+				| "image/jpeg"
+				| "image/png"
+				| "image/gif"
+				| "image/webp"
+				| "image/svg+xml"
+				| "image/bmp"
+				| "image/x-icon"
+				| "image/tiff"
+				| "image/heic"
+				| "video/mp4"
+				| "video/webm"
+				| "video/x-msvideo"
+				| "video/x-matroska"
+				| "video/quicktime"
+				| "video/x-ms-wmv"
+				| "video/x-flv"
+				| "video/mpeg"
+				| "video/3gpp"
+				| "video/ogg"
+				| "audio/mpeg"
+				| "audio/wav"
+				| "audio/flac"
+				| "audio/aac"
+				| "audio/ogg"
+				| "audio/mp4"
+				| "audio/x-ms-wma"
+				| "audio/aiff"
+				| "application/json"
+				| "application/xml"
+				| "application/javascript"
+				| "application/vnd.google-apps.form"
+				| "application/zip"
+				| "application/vnd.rar"
+				| "application/x-7z-compressed"
+				| "application/x-tar"
+				| "application/gzip"
+				| "application/x-bzip2"
+				| "application/x-xz"
+				| "application/vnd.ms-cab-compressed"
+				| "application/x-iso9660-image"
+				| "application/x-apple-diskimage"
+				| "application/x-xar"
+				| "application/vnd.debian.binary-package"
+				| "application/x-rpm"
+				| "application/vnd.android.package-archive"
+				| "application/java-archive"
+				| "application/x-webarchive"
+				| "application/x-stuffit"
+				| "application/x-stuffitx"
+				| "application/x-lzip"
+				| "application/x-lzma"
+				| "application/x-lzop"
+				| "application/x-compress"
+				| "application/zstd"
+				| "application/x-brotli"
+				| "model/stl"
+				| "model/obj"
+				| "model/gltf+json"
+				| "model/gltf-binary"
+				| "model/fbx"
+				| "model/3mf"
+				| "model/x3d+xml"
+				| "model/vnd.collada+xml"
+				| "application/x-blender"
+				| "application/x-tgif"
+				| "application/octet-stream";
+			isTrashed?: boolean;
+			isStarred?: boolean;
+		};
+		DirectoryList: string[];
+		StandardizedResponse: {
+			message?: string;
+			data?: unknown;
+			context?: unknown;
+		};
+		ErrorResponse: {
+			message?: string;
+			context?: unknown;
+		};
+		User: {
+			id?: string;
+			name: string;
+			email: string;
+			/** @default false */
+			readonly emailVerified: boolean;
+			image?: string;
+			/**
+			 * Format: date-time
+			 * @default Generated at runtime
+			 */
+			createdAt: string;
+			/**
+			 * Format: date-time
+			 * @default Generated at runtime
+			 */
+			updatedAt: string;
+			readonly role?: string;
+			/** @default false */
+			readonly banned: boolean;
+			readonly banReason?: string;
+			/** Format: date-time */
+			readonly banExpires?: string;
+		};
+		Session: {
+			id?: string;
+			/** Format: date-time */
+			expiresAt: string;
+			token: string;
+			/**
+			 * Format: date-time
+			 * @default Generated at runtime
+			 */
+			createdAt: string;
+			/** Format: date-time */
+			updatedAt: string;
+			ipAddress?: string;
+			userAgent?: string;
+			userId: string;
+			impersonatedBy?: string;
+		};
+		Account: {
+			id?: string;
+			accountId: string;
+			providerId: string;
+			userId: string;
+			accessToken?: string;
+			refreshToken?: string;
+			idToken?: string;
+			/** Format: date-time */
+			accessTokenExpiresAt?: string;
+			/** Format: date-time */
+			refreshTokenExpiresAt?: string;
+			scope?: string;
+			password?: string;
+			/**
+			 * Format: date-time
+			 * @default Generated at runtime
+			 */
+			createdAt: string;
+			/** Format: date-time */
+			updatedAt: string;
+		};
+		Verification: {
+			id?: string;
+			identifier: string;
+			value: string;
+			/** Format: date-time */
+			expiresAt: string;
+			/**
+			 * Format: date-time
+			 * @default Generated at runtime
+			 */
+			createdAt: string;
+			/**
+			 * Format: date-time
+			 * @default Generated at runtime
+			 */
+			updatedAt: string;
+		};
+	};
+	responses: never;
+	parameters: never;
+	requestBodies: never;
+	headers: never;
+	pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    socialSignIn: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description Callback URL to redirect to after the user has signed in */
-                    callbackURL?: string | null;
-                    newUserCallbackURL?: string | null;
-                    /** @description Callback URL to redirect to if an error happens */
-                    errorCallbackURL?: string | null;
-                    provider: string;
-                    /** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
-                    disableRedirect?: boolean | null;
-                    idToken?: {
-                        /** @description ID token from the provider */
-                        token: string;
-                        /** @description Nonce used to generate the token */
-                        nonce?: string | null;
-                        /** @description Access token from the provider */
-                        accessToken?: string | null;
-                        /** @description Refresh token from the provider */
-                        refreshToken?: string | null;
-                        /** @description Expiry date of the token */
-                        expiresAt?: number | null;
-                    } | null;
-                    /** @description Array of scopes to request from the provider. This will override the default scopes passed. */
-                    scopes?: unknown[] | null;
-                    /** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider */
-                    requestSignUp?: boolean | null;
-                    /** @description The login hint to use for the authorization code request */
-                    loginHint?: string | null;
-                    additionalData?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Success - Returns either session details or redirect URL */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        token: string;
-                        user: components["schemas"]["User"];
-                        url?: string;
-                        /** @enum {boolean} */
-                        redirect: false;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    getSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        session: components["schemas"]["Session"];
-                        user: components["schemas"]["User"];
-                    } | null;
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    signOut: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        success?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    signUpWithEmailAndPassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /** @description The name of the user */
-                    name: string;
-                    /** @description The email of the user */
-                    email: string;
-                    /** @description The password of the user */
-                    password: string;
-                    /** @description The profile image URL of the user */
-                    image?: string;
-                    /** @description The URL to use for email verification callback */
-                    callbackURL?: string;
-                    /** @description If this is false, the session will not be remembered. Default is `true`. */
-                    rememberMe?: boolean;
-                };
-            };
-        };
-        responses: {
-            /** @description Successfully created user */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Authentication token for the session */
-                        token?: string | null;
-                        user: {
-                            /** @description The unique identifier of the user */
-                            id: string;
-                            /**
-                             * Format: email
-                             * @description The email address of the user
-                             */
-                            email: string;
-                            /** @description The name of the user */
-                            name: string;
-                            /**
-                             * Format: uri
-                             * @description The profile image URL of the user
-                             */
-                            image?: string | null;
-                            /** @description Whether the email has been verified */
-                            emailVerified: boolean;
-                            /**
-                             * Format: date-time
-                             * @description When the user was created
-                             */
-                            createdAt: string;
-                            /**
-                             * Format: date-time
-                             * @description When the user was last updated
-                             */
-                            updatedAt: string;
-                        };
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Unprocessable Entity. User already exists or failed to create user. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    signInEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description Email of the user */
-                    email: string;
-                    /** @description Password of the user */
-                    password: string;
-                    /** @description Callback URL to use as a redirect for email verification */
-                    callbackURL?: string | null;
-                    /**
-                     * @description If this is false, the session will not be remembered. Default is `true`.
-                     * @default true
-                     */
-                    rememberMe?: boolean | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Success - Returns either session details or redirect URL */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @enum {boolean} */
-                        redirect: false;
-                        /** @description Session token */
-                        token: string;
-                        url?: string | null;
-                        user: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    resetPassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The new password to set */
-                    newPassword: string;
-                    /** @description The token to reset the password */
-                    token?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        status?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    verifyPassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The password to verify */
-                    password: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        status?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    sendVerificationEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /**
-                     * @description The email to send the verification email to
-                     * @example user@example.com
-                     */
-                    email: string;
-                    /**
-                     * @description The URL to use for email verification callback
-                     * @example https://example.com/callback
-                     */
-                    callbackURL?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Indicates if the email was sent successfully
-                         * @example true
-                         */
-                        status?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Error message
-                         * @example Verification email isn't enabled
-                         */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    changeEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The new email address to set must be a valid email address */
-                    newEmail: string;
-                    /** @description The URL to redirect to after email verification */
-                    callbackURL?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Email change request processed successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        user?: components["schemas"]["User"];
-                        /** @description Indicates if the request was successful */
-                        status: boolean;
-                        /**
-                         * @description Status message of the email change process
-                         * @enum {string|null}
-                         */
-                        message?: "Email updated" | "Verification email sent" | null;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Unprocessable Entity. Email already exists */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    changePassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The new password to set */
-                    newPassword: string;
-                    /** @description The current password is required */
-                    currentPassword: string;
-                    /** @description Must be a boolean value */
-                    revokeOtherSessions?: boolean | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Password successfully changed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description New session token if other sessions were revoked */
-                        token?: string | null;
-                        user: {
-                            /** @description The unique identifier of the user */
-                            id: string;
-                            /**
-                             * Format: email
-                             * @description The email address of the user
-                             */
-                            email: string;
-                            /** @description The name of the user */
-                            name: string;
-                            /**
-                             * Format: uri
-                             * @description The profile image URL of the user
-                             */
-                            image?: string | null;
-                            /** @description Whether the email has been verified */
-                            emailVerified: boolean;
-                            /**
-                             * Format: date-time
-                             * @description When the user was created
-                             */
-                            createdAt: string;
-                            /**
-                             * Format: date-time
-                             * @description When the user was last updated
-                             */
-                            updatedAt: string;
-                        };
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    updateUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /** @description The name of the user */
-                    name?: string;
-                    /** @description The image of the user */
-                    image?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        user?: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    deleteUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": {
-                    /** @description The callback URL to redirect to after the user is deleted */
-                    callbackURL?: string;
-                    /** @description The user's password. Required if session is not fresh */
-                    password?: string;
-                    /** @description The deletion verification token */
-                    token?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description User deletion processed successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Indicates if the operation was successful */
-                        success: boolean;
-                        /**
-                         * @description Status message of the deletion process
-                         * @enum {string}
-                         */
-                        message: "User deleted" | "Verification email sent";
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    requestPasswordReset: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The email address of the user to send a password reset email to */
-                    email: string;
-                    /** @description The URL to redirect the user to reset their password. If the token isn't valid or expired, it'll be redirected with a query parameter `?error=INVALID_TOKEN`. If the token is valid, it'll be redirected with a query parameter `?token=VALID_TOKEN */
-                    redirectTo?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        status?: boolean;
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    resetPasswordCallback: {
-        parameters: {
-            query: {
-                /** @description The URL to redirect the user to reset their password */
-                callbackURL: string;
-            };
-            header?: never;
-            path: {
-                /** @description The token to reset the password */
-                token: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        token?: string;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    listUserSessions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"][];
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    linkSocialAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The URL to redirect to after the user has signed in */
-                    callbackURL?: string | null;
-                    provider: string;
-                    idToken?: {
-                        token: string;
-                        nonce?: string | null;
-                        accessToken?: string | null;
-                        refreshToken?: string | null;
-                        scopes?: unknown[] | null;
-                    } | null;
-                    requestSignUp?: boolean | null;
-                    /** @description Additional scopes to request from the provider */
-                    scopes?: unknown[] | null;
-                    /** @description The URL to redirect to if there is an error during the link process */
-                    errorCallbackURL?: string | null;
-                    /** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
-                    disableRedirect?: boolean | null;
-                    additionalData?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description The authorization URL to redirect the user to */
-                        url?: string;
-                        /** @description Indicates if the user should be redirected to the authorization URL */
-                        redirect: boolean;
-                        status?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    listUserAccounts: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Success */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: string;
-                        providerId: string;
-                        /** Format: date-time */
-                        createdAt: string;
-                        /** Format: date-time */
-                        updatedAt: string;
-                        accountId: string;
-                        userId: string;
-                        scopes: string[];
-                    }[];
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    setUserRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The user id */
-                    userId: string;
-                    /** @description The role to set, this can be a string or an array of strings. Eg: `admin` or `[admin, user]` */
-                    role: string;
-                };
-            };
-        };
-        responses: {
-            /** @description User role updated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        user?: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    getUser: {
-        parameters: {
-            query?: {
-                id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description User */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        user?: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    createUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The email of the user */
-                    email: string;
-                    password?: string | null;
-                    /** @description The name of the user */
-                    name: string;
-                    role?: string | null;
-                    data?: string | null;
-                };
-            };
-        };
-        responses: {
-            /** @description User created */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        user?: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    updateUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The user id */
-                    userId: string;
-                    /** @description The user data to update */
-                    data: string;
-                };
-            };
-        };
-        responses: {
-            /** @description User updated */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        user?: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    listUsers: {
-        parameters: {
-            query?: {
-                searchValue?: string | null;
-                searchField?: string | null;
-                searchOperator?: string | null;
-                limit?: string | null;
-                offset?: string | null;
-                sortBy?: string | null;
-                sortDirection?: string | null;
-                filterField?: string | null;
-                filterValue?: string | null;
-                filterOperator?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of users */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        users: components["schemas"]["User"][];
-                        total: number;
-                        limit?: number;
-                        offset?: number;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    listUserSessions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The user id */
-                    userId: string;
-                };
-            };
-        };
-        responses: {
-            /** @description List of user sessions */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        sessions?: components["schemas"]["Session"][];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    unbanUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The user id */
-                    userId: string;
-                };
-            };
-        };
-        responses: {
-            /** @description User unbanned */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        user?: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    banUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The user id */
-                    userId: string;
-                    /** @description The reason for the ban */
-                    banReason?: string | null;
-                    /** @description The number of seconds until the ban expires */
-                    banExpiresIn?: number | null;
-                };
-            };
-        };
-        responses: {
-            /** @description User banned */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        user?: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    impersonateUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The user id */
-                    userId: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Impersonation session created */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        session?: components["schemas"]["Session"];
-                        user?: components["schemas"]["User"];
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    revokeUserSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The session token */
-                    sessionToken: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Session revoked */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        success?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    revokeUserSessions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The user id */
-                    userId: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Sessions revoked */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        success?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    removeUser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The user id */
-                    userId: string;
-                };
-            };
-        };
-        responses: {
-            /** @description User removed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        success?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
-    setUserPassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description The new password */
-                    newPassword: string;
-                    /** @description The user id */
-                    userId: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Password set */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        status?: boolean;
-                    };
-                };
-            };
-            /** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Unauthorized. Due to missing or invalid authentication. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message: string;
-                    };
-                };
-            };
-            /** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Not Found. The requested resource was not found. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        message?: string;
-                    };
-                };
-            };
-        };
-    };
+	socialSignIn: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Callback URL to redirect to after the user has signed in */
+					callbackURL?: string | null;
+					newUserCallbackURL?: string | null;
+					/** @description Callback URL to redirect to if an error happens */
+					errorCallbackURL?: string | null;
+					provider: string;
+					/** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
+					disableRedirect?: boolean | null;
+					idToken?: {
+						/** @description ID token from the provider */
+						token: string;
+						/** @description Nonce used to generate the token */
+						nonce?: string | null;
+						/** @description Access token from the provider */
+						accessToken?: string | null;
+						/** @description Refresh token from the provider */
+						refreshToken?: string | null;
+						/** @description Expiry date of the token */
+						expiresAt?: number | null;
+					} | null;
+					/** @description Array of scopes to request from the provider. This will override the default scopes passed. */
+					scopes?: unknown[] | null;
+					/** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider */
+					requestSignUp?: boolean | null;
+					/** @description The login hint to use for the authorization code request */
+					loginHint?: string | null;
+					additionalData?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Success - Returns either session details or redirect URL */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						token: string;
+						user: components["schemas"]["User"];
+						url?: string;
+						/** @enum {boolean} */
+						redirect: false;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	getSession: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						session: components["schemas"]["Session"];
+						user: components["schemas"]["User"];
+					} | null;
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	signOut: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": Record<string, never>;
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	signUpWithEmailAndPassword: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": {
+					/** @description The name of the user */
+					name: string;
+					/** @description The email of the user */
+					email: string;
+					/** @description The password of the user */
+					password: string;
+					/** @description The profile image URL of the user */
+					image?: string;
+					/** @description The URL to use for email verification callback */
+					callbackURL?: string;
+					/** @description If this is false, the session will not be remembered. Default is `true`. */
+					rememberMe?: boolean;
+				};
+			};
+		};
+		responses: {
+			/** @description Successfully created user */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @description Authentication token for the session */
+						token?: string | null;
+						user: {
+							/** @description The unique identifier of the user */
+							id: string;
+							/**
+							 * Format: email
+							 * @description The email address of the user
+							 */
+							email: string;
+							/** @description The name of the user */
+							name: string;
+							/**
+							 * Format: uri
+							 * @description The profile image URL of the user
+							 */
+							image?: string | null;
+							/** @description Whether the email has been verified */
+							emailVerified: boolean;
+							/**
+							 * Format: date-time
+							 * @description When the user was created
+							 */
+							createdAt: string;
+							/**
+							 * Format: date-time
+							 * @description When the user was last updated
+							 */
+							updatedAt: string;
+						};
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Unprocessable Entity. User already exists or failed to create user. */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	signInEmail: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Email of the user */
+					email: string;
+					/** @description Password of the user */
+					password: string;
+					/** @description Callback URL to use as a redirect for email verification */
+					callbackURL?: string | null;
+					/**
+					 * @description If this is false, the session will not be remembered. Default is `true`.
+					 * @default true
+					 */
+					rememberMe?: boolean | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Success - Returns either session details or redirect URL */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @enum {boolean} */
+						redirect: false;
+						/** @description Session token */
+						token: string;
+						url?: string | null;
+						user: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	resetPassword: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The new password to set */
+					newPassword: string;
+					/** @description The token to reset the password */
+					token?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						status?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	verifyPassword: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The password to verify */
+					password: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						status?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	sendVerificationEmail: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": {
+					/**
+					 * @description The email to send the verification email to
+					 * @example user@example.com
+					 */
+					email: string;
+					/**
+					 * @description The URL to use for email verification callback
+					 * @example https://example.com/callback
+					 */
+					callbackURL?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/**
+						 * @description Indicates if the email was sent successfully
+						 * @example true
+						 */
+						status?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/**
+						 * @description Error message
+						 * @example Verification email isn't enabled
+						 */
+						message?: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	changeEmail: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The new email address to set must be a valid email address */
+					newEmail: string;
+					/** @description The URL to redirect to after email verification */
+					callbackURL?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Email change request processed successfully */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						user?: components["schemas"]["User"];
+						/** @description Indicates if the request was successful */
+						status: boolean;
+						/**
+						 * @description Status message of the email change process
+						 * @enum {string|null}
+						 */
+						message?: "Email updated" | "Verification email sent" | null;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Unprocessable Entity. Email already exists */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	changePassword: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The new password to set */
+					newPassword: string;
+					/** @description The current password is required */
+					currentPassword: string;
+					/** @description Must be a boolean value */
+					revokeOtherSessions?: boolean | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Password successfully changed */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @description New session token if other sessions were revoked */
+						token?: string | null;
+						user: {
+							/** @description The unique identifier of the user */
+							id: string;
+							/**
+							 * Format: email
+							 * @description The email address of the user
+							 */
+							email: string;
+							/** @description The name of the user */
+							name: string;
+							/**
+							 * Format: uri
+							 * @description The profile image URL of the user
+							 */
+							image?: string | null;
+							/** @description Whether the email has been verified */
+							emailVerified: boolean;
+							/**
+							 * Format: date-time
+							 * @description When the user was created
+							 */
+							createdAt: string;
+							/**
+							 * Format: date-time
+							 * @description When the user was last updated
+							 */
+							updatedAt: string;
+						};
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	updateUser: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": {
+					/** @description The name of the user */
+					name?: string;
+					/** @description The image of the user */
+					image?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						user?: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	deleteUser: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: {
+			content: {
+				"application/json": {
+					/** @description The callback URL to redirect to after the user is deleted */
+					callbackURL?: string;
+					/** @description The user's password. Required if session is not fresh */
+					password?: string;
+					/** @description The deletion verification token */
+					token?: string;
+				};
+			};
+		};
+		responses: {
+			/** @description User deletion processed successfully */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @description Indicates if the operation was successful */
+						success: boolean;
+						/**
+						 * @description Status message of the deletion process
+						 * @enum {string}
+						 */
+						message: "User deleted" | "Verification email sent";
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	requestPasswordReset: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The email address of the user to send a password reset email to */
+					email: string;
+					/** @description The URL to redirect the user to reset their password. If the token isn't valid or expired, it'll be redirected with a query parameter `?error=INVALID_TOKEN`. If the token is valid, it'll be redirected with a query parameter `?token=VALID_TOKEN */
+					redirectTo?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						status?: boolean;
+						message?: string;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	resetPasswordCallback: {
+		parameters: {
+			query: {
+				/** @description The URL to redirect the user to reset their password */
+				callbackURL: string;
+			};
+			header?: never;
+			path: {
+				/** @description The token to reset the password */
+				token: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						token?: string;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	listUserSessions: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Session"][];
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	linkSocialAccount: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The URL to redirect to after the user has signed in */
+					callbackURL?: string | null;
+					provider: string;
+					idToken?: {
+						token: string;
+						nonce?: string | null;
+						accessToken?: string | null;
+						refreshToken?: string | null;
+						scopes?: unknown[] | null;
+					} | null;
+					requestSignUp?: boolean | null;
+					/** @description Additional scopes to request from the provider */
+					scopes?: unknown[] | null;
+					/** @description The URL to redirect to if there is an error during the link process */
+					errorCallbackURL?: string | null;
+					/** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
+					disableRedirect?: boolean | null;
+					additionalData?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @description The authorization URL to redirect the user to */
+						url?: string;
+						/** @description Indicates if the user should be redirected to the authorization URL */
+						redirect: boolean;
+						status?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	listUserAccounts: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						id: string;
+						providerId: string;
+						/** Format: date-time */
+						createdAt: string;
+						/** Format: date-time */
+						updatedAt: string;
+						accountId: string;
+						userId: string;
+						scopes: string[];
+					}[];
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	setUserRole: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The user id */
+					userId: string;
+					/** @description The role to set, this can be a string or an array of strings. Eg: `admin` or `[admin, user]` */
+					role: string;
+				};
+			};
+		};
+		responses: {
+			/** @description User role updated */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						user?: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	getUser: {
+		parameters: {
+			query?: {
+				id?: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description User */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						user?: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	createUser: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The email of the user */
+					email: string;
+					password?: string | null;
+					/** @description The name of the user */
+					name: string;
+					role?: string | null;
+					data?: string | null;
+				};
+			};
+		};
+		responses: {
+			/** @description User created */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						user?: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	updateUser: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The user id */
+					userId: string;
+					/** @description The user data to update */
+					data: string;
+				};
+			};
+		};
+		responses: {
+			/** @description User updated */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						user?: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	listUsers: {
+		parameters: {
+			query?: {
+				searchValue?: string | null;
+				searchField?: string | null;
+				searchOperator?: string | null;
+				limit?: string | null;
+				offset?: string | null;
+				sortBy?: string | null;
+				sortDirection?: string | null;
+				filterField?: string | null;
+				filterValue?: string | null;
+				filterOperator?: string | null;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description List of users */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						users: components["schemas"]["User"][];
+						total: number;
+						limit?: number;
+						offset?: number;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	listUserSessions: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The user id */
+					userId: string;
+				};
+			};
+		};
+		responses: {
+			/** @description List of user sessions */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						sessions?: components["schemas"]["Session"][];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	unbanUser: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The user id */
+					userId: string;
+				};
+			};
+		};
+		responses: {
+			/** @description User unbanned */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						user?: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	banUser: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The user id */
+					userId: string;
+					/** @description The reason for the ban */
+					banReason?: string | null;
+					/** @description The number of seconds until the ban expires */
+					banExpiresIn?: number | null;
+				};
+			};
+		};
+		responses: {
+			/** @description User banned */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						user?: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	impersonateUser: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The user id */
+					userId: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Impersonation session created */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						session?: components["schemas"]["Session"];
+						user?: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	revokeUserSession: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The session token */
+					sessionToken: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Session revoked */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	revokeUserSessions: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The user id */
+					userId: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Sessions revoked */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	removeUser: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The user id */
+					userId: string;
+				};
+			};
+		};
+		responses: {
+			/** @description User removed */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	setUserPassword: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description The new password */
+					newPassword: string;
+					/** @description The user id */
+					userId: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Password set */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						status?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
 }
