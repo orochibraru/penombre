@@ -15,16 +15,11 @@
 		"gen:routes": "bunx --bun kit-routes sync",
 		"db:generate": "bunx --bun drizzle-kit generate",
 		"gen:env": "bun run scripts/generate-env-example.ts",
-		"test:e2e": "bunx playwright test",
-		"test:e2e:ci": "bunx playwright test --reporter=github",
-		"test:e2e:ui": "bunx playwright test --ui",
-		"test:e2e:debug": "bunx playwright test --debug",
 		"machine-translate": "inlang machine translate --project project.inlang"
 	},
 	"devDependencies": {
 		"@inlang/cli": "^3.1.6",
 		"@inlang/paraglide-js": "^2.12.0",
-		"@playwright/test": "^1.58.2",
 		"@shikijs/langs": "^3.22.0",
 		"@shikijs/themes": "^3.22.0",
 		"@sveltejs/adapter-static": "^3.0.10",
