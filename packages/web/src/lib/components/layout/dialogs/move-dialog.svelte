@@ -255,42 +255,52 @@
                     ? `${currentFolder}/${itemKey}`
                     : itemKey;
 
-                let promise: ReturnType<typeof api.POST>;
+                const doMove = async () => {
+                    if (isFolder) {
+                        const folderId =
+                            fullItemKey.split("/").pop() || fullItemKey;
+                        const parentId = fullItemKey.includes("/")
+                            ? fullItemKey.split("/").slice(0, -1).join("/")
+                            : undefined;
 
-                if (isFolder) {
-                    const folderId =
-                        fullItemKey.split("/").pop() || fullItemKey;
-                    const parentId = fullItemKey.includes("/")
-                        ? fullItemKey.split("/").slice(0, -1).join("/")
-                        : undefined;
-
-                    promise = api.POST("/api/v1/storage/folder/{path}/move", {
-                        params: { path: { path: folderId } },
-                        body: {
-                            parentFolderId: parentId,
-                            destination: selectedFolder,
-                        },
-                    });
-                } else {
-                    promise = api.POST("/api/v1/storage/file/{id}/move", {
-                        params: {
-                            path: { id: encodeURIComponent(fullItemKey) },
-                        },
-                        body: { destination: selectedFolder },
-                    });
-                }
-
-                const toastPromise = promise.then(
-                    async ({ error: moveError }) => {
+                        const { error: moveError } = await api.POST(
+                            "/api/v1/storage/folder/{path}/move",
+                            {
+                                params: { path: { path: folderId } },
+                                body: {
+                                    parentFolderId: parentId,
+                                    destination: selectedFolder,
+                                },
+                            },
+                        );
                         if (moveError) {
                             throw new Error(
                                 String(moveError) || "Failed to move item",
                             );
                         }
-                        open = false;
-                        await invalidate("app:files");
-                    },
-                );
+                    } else {
+                        const { error: moveError } = await api.POST(
+                            "/api/v1/storage/file/{id}/move",
+                            {
+                                params: {
+                                    path: {
+                                        id: encodeURIComponent(fullItemKey),
+                                    },
+                                },
+                                body: { destination: selectedFolder },
+                            },
+                        );
+                        if (moveError) {
+                            throw new Error(
+                                String(moveError) || "Failed to move item",
+                            );
+                        }
+                    }
+                    open = false;
+                    await invalidate("app:files");
+                };
+
+                const toastPromise = doMove();
 
                 toast.promise(toastPromise, {
                     loading: `Moving ${item.metadata.name || item.key}...`,
