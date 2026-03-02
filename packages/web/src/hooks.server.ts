@@ -101,31 +101,13 @@ export const init = async () => {
 	await seedAuth();
 };
 
+/** Paths under the auth basePath that are handled by SvelteKit, not better-auth */
+const customAuthPaths = new Set(["/api/v1/auth/providers"]);
+
 const authHandler: Handle = async ({ event, resolve }) => {
-	const isUpload =
-		event.request.method === "POST" &&
-		event.url.pathname.includes("/storage/objects/item/");
-
-	if (isUpload) {
-		logger.debug("HOOKS_AUTH", "authHandler START for upload", {
-			method: event.request.method,
-			pathname: event.url.pathname,
-			contentType: event.request.headers.get("content-type"),
-			contentLength: event.request.headers.get("content-length"),
-			bodyUsed: event.request.bodyUsed,
-		});
-	}
-
 	const session = await auth.api.getSession({
 		headers: event.request.headers,
 	});
-
-	if (isUpload) {
-		logger.debug("HOOKS_AUTH", "getSession complete for upload", {
-			hasSession: !!session,
-			bodyUsed: event.request.bodyUsed,
-		});
-	}
 
 	if (session) {
 		// Make session and user available on server
@@ -146,19 +128,12 @@ const authHandler: Handle = async ({ event, resolve }) => {
 		});
 	}
 
-	if (isUpload) {
-		logger.debug("HOOKS_AUTH", "About to call svelteKitHandler for upload", {
-			bodyUsed: event.request.bodyUsed,
-		});
+	// Skip better-auth handler for custom SvelteKit-managed auth routes
+	if (customAuthPaths.has(event.url.pathname)) {
+		return resolve(event);
 	}
 
-	const result = svelteKitHandler({ event, resolve, auth, building });
-
-	if (isUpload) {
-		logger.debug("HOOKS_AUTH", "svelteKitHandler returned for upload");
-	}
-
-	return result;
+	return svelteKitHandler({ event, resolve, auth, building });
 };
 
 const generalHandler: Handle = async ({ event, resolve }) => {

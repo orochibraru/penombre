@@ -23,8 +23,9 @@ const config = getOpendriveConfig();
 export const auth = betterAuth({
 	baseURL: dev ? "http://localhost:5173" : config.origin,
 	secret: config.auth.secret,
+	basePath: "/api/v1/auth",
 	logger: {
-		level: config.logLevel,
+		level: dev ? "debug" : config.logLevel,
 		log: (level, message, ...metadata) => {
 			// Send logs to a custom logging service
 			logger.log({
@@ -39,6 +40,7 @@ export const auth = betterAuth({
 				"http://localhost:5173",
 				"http://localhost:4173",
 				"http://localhost:3000",
+				"exp://**",
 			]
 		: [config.origin],
 	database: drizzleAdapter(getDb(), {

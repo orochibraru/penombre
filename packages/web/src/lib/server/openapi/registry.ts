@@ -15,11 +15,26 @@ interface RouteDefinition {
 	response: z.ZodType;
 	errors?: number[];
 	isFormData?: boolean;
+	requireAuth?: boolean; // Default: true
 }
 
 interface SchemaRegistration {
 	name: string;
 	schema: z.ZodType;
+}
+
+/**
+ * A full or partial OpenAPI 3.x document that can be merged into the registry.
+ */
+interface ExternalOpenAPISpec {
+	paths?: Record<string, Record<string, unknown>>;
+	components?: {
+		schemas?: Record<string, unknown>;
+		securitySchemes?: Record<string, unknown>;
+		[key: string]: unknown;
+	};
+	tags?: Array<{ name: string; description?: string }>;
+	[key: string]: unknown;
 }
 
 const ERROR_DESCRIPTIONS: Record<number, string> = {
@@ -56,16 +71,37 @@ class OpenAPIRegistry {
 		this.schemas.push({ name, schema });
 	}
 
-	toOpenAPISpec(): Record<string, unknown> {
-		const components: Record<string, unknown> = {};
+	/**
+	 * Build the final OpenAPI spec, optionally merging one or more external specs.
+	 *
+	 * External specs (e.g. from better-auth's openAPI plugin) are deep-merged:
+	 *   - paths are prefixed with `pathPrefix` and merged per-method (no duplicates)
+	 *   - components/schemas are merged (external wins on conflict)
+	 *   - tags are unioned by name
+	 *   - securitySchemes are merged (ours win on conflict)
+	 */
+	toOpenAPISpec(
+		externalSpecs: Array<{
+			spec: ExternalOpenAPISpec;
+			/** Prefix prepended to every path key, e.g. "/api/v1/auth" */
+			pathPrefix?: string;
+			/** Tag applied to every operation that has no tags */
+			defaultTag?: string;
+			/**
+			 * Rename or remove tags from the external spec.
+			 * Map original tag name → new name, or `null` to drop it entirely.
+			 * e.g. `{ "Default": "Auth" }` or `{ "Default": null }`
+			 */
+			tagOverrides?: Record<string, string | null>;
+		}> = [],
+	): Record<string, unknown> {
+		// ── 1. Build our own schemas ────────────────────────────────────
 		const schemaComponents: Record<string, unknown> = {};
 
-		// Register named schemas as components
 		for (const { name, schema } of this.schemas) {
 			schemaComponents[name] = toJsonSchema(schema);
 		}
 
-		// StandardizedResponse wrapper
 		schemaComponents.StandardizedResponse = {
 			type: "object",
 			properties: {
@@ -83,8 +119,7 @@ class OpenAPIRegistry {
 			},
 		};
 
-		components.schemas = schemaComponents;
-		components.securitySchemes = {
+		const securitySchemes: Record<string, unknown> = {
 			cookieAuth: {
 				type: "apiKey",
 				in: "cookie",
@@ -93,6 +128,10 @@ class OpenAPIRegistry {
 			},
 		};
 
+		const tags: Array<{ name: string; description?: string }> = [];
+		const tagNames = new Set<string>();
+
+		// ── 2. Build paths from registered routes ───────────────────────
 		const paths: Record<string, Record<string, unknown>> = {};
 
 		for (const route of this.routes) {
@@ -100,10 +139,8 @@ class OpenAPIRegistry {
 			const parameters: Record<string, unknown>[] = [];
 			const responses: Record<string, unknown> = {};
 
-			// Path parameters
 			if (route.params) {
 				const paramSchema = toJsonSchema(route.params);
-
 				const properties = paramSchema.properties as
 					| Record<string, unknown>
 					| undefined;
@@ -114,17 +151,15 @@ class OpenAPIRegistry {
 						parameters.push({
 							name,
 							in: "path",
-							required: required.includes(name) || true, // path params always required
+							required: required.includes(name) || true,
 							schema,
 						});
 					}
 				}
 			}
 
-			// Query parameters
 			if (route.query) {
 				const querySchema = toJsonSchema(route.query);
-
 				const properties = querySchema.properties as
 					| Record<string, unknown>
 					| undefined;
@@ -142,24 +177,19 @@ class OpenAPIRegistry {
 				}
 			}
 
-			// 200 response with StandardizedResponse envelope
 			const responseSchema = toJsonSchema(route.response);
-
 			responses["200"] = {
 				description: "Successful response",
 				content: {
 					"application/json": {
 						schema: {
 							type: "object",
-							properties: {
-								data: responseSchema,
-							},
+							properties: { data: responseSchema },
 						},
 					},
 				},
 			};
 
-			// Error responses
 			const errorCodes = route.errors ?? [401, 500];
 			if (!errorCodes.includes(401)) errorCodes.push(401);
 			if (!errorCodes.includes(500)) errorCodes.push(500);
@@ -180,29 +210,20 @@ class OpenAPIRegistry {
 			if (route.tags?.length) pathEntry.tags = route.tags;
 			if (parameters.length) pathEntry.parameters = parameters;
 			pathEntry.responses = responses;
-			pathEntry.security = [{ cookieAuth: [] }];
 
-			// Request body (JSON or FormData)
+			const requireAuth = route.requireAuth !== false;
+			if (requireAuth) {
+				pathEntry.security = [{ cookieAuth: [] }];
+			}
+
 			if (route.body) {
-				if (route.isFormData) {
-					pathEntry.requestBody = {
-						required: true,
-						content: {
-							"multipart/form-data": {
-								schema: toJsonSchema(route.body),
-							},
-						},
-					};
-				} else {
-					pathEntry.requestBody = {
-						required: true,
-						content: {
-							"application/json": {
-								schema: toJsonSchema(route.body),
-							},
-						},
-					};
-				}
+				const contentType = route.isFormData
+					? "multipart/form-data"
+					: "application/json";
+				pathEntry.requestBody = {
+					required: true,
+					content: { [contentType]: { schema: toJsonSchema(route.body) } },
+				};
 			}
 
 			if (!paths[route.path]) {
@@ -211,6 +232,90 @@ class OpenAPIRegistry {
 			const pathObj = paths[route.path];
 			if (pathObj) {
 				pathObj[route.method] = pathEntry;
+			}
+		}
+
+		// ── 3. Merge external specs ─────────────────────────────────────
+		for (const {
+			spec,
+			pathPrefix = "",
+			defaultTag,
+			tagOverrides = {},
+		} of externalSpecs) {
+			/** Apply tag overrides: rename or drop tags from an array */
+			const remapTags = (operationTags: string[]): string[] => {
+				if (!operationTags || Object.keys(tagOverrides).length === 0)
+					return operationTags;
+				return operationTags
+					.map((t) => (t in tagOverrides ? tagOverrides[t] : t))
+					.filter((t): t is string => t !== null);
+			};
+			// 3a. Merge schemas (external schemas first, ours win on conflict)
+			if (spec.components?.schemas) {
+				for (const [name, schema] of Object.entries(spec.components.schemas)) {
+					if (!(name in schemaComponents)) {
+						schemaComponents[name] = schema;
+					}
+				}
+			}
+
+			// 3b. Merge security schemes (ours win on conflict)
+			if (spec.components?.securitySchemes) {
+				for (const [name, scheme] of Object.entries(
+					spec.components.securitySchemes,
+				)) {
+					if (!(name in securitySchemes)) {
+						securitySchemes[name] = scheme;
+					}
+				}
+			}
+
+			// 3c. Merge tags (deduplicate by name, apply overrides)
+			if (spec.tags) {
+				for (const tag of spec.tags) {
+					const mapped =
+						tag.name in tagOverrides ? tagOverrides[tag.name] : tag.name;
+					if (mapped === null || mapped === undefined) continue; // drop tag
+					if (!tagNames.has(mapped)) {
+						tagNames.add(mapped);
+						tags.push({ ...tag, name: mapped });
+					}
+				}
+			}
+
+			// 3d. Merge paths with prefix, per-method (no overwrite)
+			if (spec.paths) {
+				for (const [rawPath, methods] of Object.entries(spec.paths)) {
+					const fullPath = `${pathPrefix}${rawPath}`;
+
+					if (!paths[fullPath]) {
+						paths[fullPath] = {};
+					}
+
+					for (const [method, operation] of Object.entries(
+						methods as Record<string, unknown>,
+					)) {
+						const pathObj = paths[fullPath];
+						// Don't overwrite methods already defined by our routes
+						if (pathObj && !(method in pathObj)) {
+							if (typeof operation === "object" && operation !== null) {
+								const op = operation as Record<string, unknown>;
+								// Remap tags on the operation
+								if (Array.isArray(op.tags)) {
+									op.tags = remapTags(op.tags as string[]);
+								}
+								// Inject default tag if operation has no tags after remapping
+								if (
+									defaultTag &&
+									(!op.tags || (Array.isArray(op.tags) && op.tags.length === 0))
+								) {
+									op.tags = [defaultTag];
+								}
+							}
+							pathObj[method] = operation;
+						}
+					}
+				}
 			}
 		}
 
@@ -223,11 +328,15 @@ class OpenAPIRegistry {
 			},
 			servers: [{ url: "/", description: "Current server" }],
 			paths,
-			components,
+			components: {
+				schemas: schemaComponents,
+				securitySchemes,
+			},
+			...(tags.length > 0 ? { tags } : {}),
 			security: [{ cookieAuth: [] }],
 		};
 	}
 }
 
 export const registry = new OpenAPIRegistry();
-export type { RouteDefinition, HttpMethod };
+export type { RouteDefinition, HttpMethod, ExternalOpenAPISpec };

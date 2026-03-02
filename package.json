@@ -18,7 +18,8 @@
 		"format:check": "bunx --bun biome format .",
 		"circular": "bun run ./scripts/circular.ts",
 		"backup": "./scripts/backup.sh",
-		"restore": "./scripts/restore.sh"
+		"restore": "./scripts/restore.sh",
+		"gen:api": "bun run --workspaces gen:api"
 	},
 	"keywords": [],
 	"author": "",

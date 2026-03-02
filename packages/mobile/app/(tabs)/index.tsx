@@ -1,3 +1,4 @@
+import { Button } from "@react-navigation/elements";
 import { useCallback } from "react";
 import { Text, View } from "react-native";
 import { FileList } from "@/components/file-list";
@@ -7,7 +8,7 @@ import { listFiles, type ObjectItem } from "@/lib/api";
 
 export default function HomeScreen() {
 	const fetchFiles = useCallback(() => listFiles(), []);
-	const { data, loading, refetch } = useApiQuery(fetchFiles);
+	const { data, loading, refetch, error } = useApiQuery(fetchFiles);
 
 	const handleItemPress = (item: ObjectItem) => {
 		if (item.type === "folder") {
@@ -16,6 +17,22 @@ export default function HomeScreen() {
 			// TODO: Open file preview
 		}
 	};
+
+	const handleRefresh = () => {
+		refetch();
+	};
+
+	if (error) {
+		return (
+			<ThemedView
+				style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+			>
+				<Text className="text-red-500">Failed to load files</Text>
+				<Text className="text-gray-500">{error}</Text>
+				<Button onPress={handleRefresh}>Retry</Button>
+			</ThemedView>
+		);
+	}
 
 	return (
 		<ThemedView style={{ flex: 1 }}>

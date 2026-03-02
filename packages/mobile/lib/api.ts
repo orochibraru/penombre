@@ -5,169 +5,233 @@
  * (e.g. "http://192.168.1.x:8080" during dev, or production URL).
  */
 
-// ─── Types (mirrored from the web OpenAPI schema) ────────────────────────────
+import createClient from "openapi-fetch";
+import type { components, paths } from "./api.v1.d";
+
+// ─── Re-export types from OpenAPI schema ─────────────────────────────────────
 
 export type FileCategory =
-	| "MUSIC"
-	| "DOCUMENTS"
-	| "IMAGES"
-	| "3D"
-	| "VIDEO"
-	| "RECENT"
-	| "CODE"
-	| "ARCHIVES"
-	| "UNKNOWN";
-
-export type ObjectItemMetadata = {
-	id: string;
-	name?: string;
-	category: FileCategory;
-	tags?: string[];
-	contentType: string;
-	createdAt: string;
-	owner: string;
-	isTrashed: boolean;
-	isStarred: boolean;
-	music?: { duration?: number };
-	video?: { duration?: number };
-};
-
-export type ObjectItem = {
-	key: string;
-	updatedAt?: string;
-	size?: number;
-	metadata: ObjectItemMetadata;
-	type: "file" | "folder";
-	parent?: string;
-	parentKey?: string;
-};
-
-export type ObjectList = {
-	list: ObjectItem[];
-	count: number;
-	total: number;
-};
-
-export type Activity = {
-	id: string;
-	userId: string;
-	action: string;
-	message: string;
-	link?: string;
-	level: string;
-	createdAt: string;
-};
-
-export type UserSession = {
-	id: string;
-	email: string;
-	name: string;
-	image?: string;
-	role?: string;
-};
-
-export type FileCounts = {
-	trash: number;
-	starred: number;
-};
+	components["schemas"]["ObjectList"]["list"][number]["metadata"]["category"];
+export type ObjectItem = components["schemas"]["ObjectItem"];
+export type ObjectList = components["schemas"]["ObjectList"];
+export type Activity = NonNullable<
+	paths["/api/v1/activity"]["get"]["responses"]["200"]["content"]["application/json"]["data"]
+>[number];
+export type FileCounts = NonNullable<
+	paths["/api/v1/storage/file/counts"]["get"]["responses"]["200"]["content"]["application/json"]["data"]
+>;
 
 // ─── API client ──────────────────────────────────────────────────────────────
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080";
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:5173";
 
-async function apiFetch<T>(
-	path: string,
-	options?: RequestInit,
-): Promise<{ data?: T; error?: string }> {
-	try {
-		const res = await fetch(`${API_BASE}${path}`, {
-			headers: {
-				"Content-Type": "application/json",
-				...options?.headers,
-			},
-			credentials: "include",
-			...options,
-		});
-		if (!res.ok) {
-			const body = await res.text().catch(() => "");
-			return { error: `${res.status}: ${body || res.statusText}` };
+const client = createClient<paths>({
+	baseUrl: API_BASE,
+	credentials: "include",
+	headers: {
+		"Content-Type": "application/json",
+	},
+});
+
+// Add logging middleware
+client.use({
+	async onRequest({ request }) {
+		// React Native doesn't set Origin automatically — better-auth requires it for CSRF
+		if (!request.headers.get("origin")) {
+			request.headers.set("origin", API_BASE);
 		}
-		const json = await res.json();
-		return { data: json.data ?? json };
-	} catch (err) {
-		return {
-			error: err instanceof Error ? err.message : "Unknown error",
-		};
+		console.log(`API Request: ${request.method} ${request.url}`);
+		return request;
+	},
+	async onResponse({ response }) {
+		console.log(`API Response: ${response.status} ${response.statusText}`);
+		return response;
+	},
+});
+
+function handleError(error?: unknown) {
+	if (error instanceof Error) {
+		return String(error.message);
 	}
+
+	if (error && typeof error === "object" && "message" in error) {
+		return String((error as { message: string }).message);
+	}
+
+	return String(error);
+}
+
+function handleResponse<T>(response: { data?: T; error?: unknown }) {
+	return {
+		data: response.data,
+		error: handleError(response.error),
+	};
 }
 
 /** List files at the root (My Drive) */
-export function listFiles(path?: string) {
-	const params = path ? `?prefix=${encodeURIComponent(path)}` : "";
-	return apiFetch<ObjectList>(`/api/v1/storage/list${params}`);
+export async function listFiles(_path?: string) {
+	const { data, error } = await client.GET("/api/v1/storage/list");
+	return handleResponse({ data: data?.data, error });
 }
 
 /** List recently modified files */
-export function listRecentFiles() {
-	return apiFetch<ObjectList>("/api/v1/storage/list/recent");
+export async function listRecentFiles() {
+	const { data, error } = await client.GET("/api/v1/storage/list/recent");
+	return handleResponse({ data: data?.data, error });
 }
 
 /** List starred files */
-export function listStarredFiles() {
-	return apiFetch<ObjectList>("/api/v1/storage/list/starred");
+export async function listStarredFiles() {
+	const { data, error } = await client.GET("/api/v1/storage/file/starred");
+	return handleResponse({ data: data?.data, error });
 }
 
 /** List trashed files */
-export function listTrashedFiles() {
-	return apiFetch<ObjectList>("/api/v1/storage/list/trash");
+export async function listTrashedFiles() {
+	const { data, error } = await client.GET("/api/v1/storage/file/trash");
+	return handleResponse({ data: data?.data, error });
 }
 
 /** List shared files */
-export function listSharedFiles() {
-	return apiFetch<ObjectList>("/api/v1/storage/list/shared");
+export async function listSharedFiles() {
+	// Note: Shared files endpoint may not be in the current API spec
+	// Falling back to regular list for now
+	const { data, error } = await client.GET("/api/v1/storage/list");
+	return handleResponse({ data: data?.data, error });
 }
 
 /** List files by category */
-export function listFilesByCategory(category: FileCategory) {
-	return apiFetch<ObjectList>(`/api/v1/storage/list/category/${category}`);
+export async function listFilesByCategory(category: FileCategory) {
+	const { data, error } = await client.GET(
+		"/api/v1/storage/file/category/{category}",
+		{
+			params: { path: { category } },
+		},
+	);
+	return handleResponse({ data: data?.data, error });
 }
 
 /** Get file counts (trash, starred) */
-export function getFileCounts() {
-	return apiFetch<FileCounts>("/api/v1/storage/file/counts");
+export async function getFileCounts() {
+	const { data, error } = await client.GET("/api/v1/storage/file/counts");
+	return handleResponse({ data: data?.data, error });
 }
 
 /** Get recent activity */
-export function getActivity() {
-	return apiFetch<Activity[]>("/api/v1/activity");
+export async function getActivity() {
+	const { data, error } = await client.GET("/api/v1/activity");
+	return handleResponse({ data: data?.data, error });
 }
 
 /** Toggle star on a file */
-export function toggleStar(fileId: string) {
-	return apiFetch<void>(`/api/v1/storage/file/${fileId}/star`, {
-		method: "POST",
+export async function toggleStar(fileId: string, isStarred: boolean) {
+	const { data, error } = await client.PUT("/api/v1/storage/file/{id}", {
+		params: { path: { id: fileId } },
+		body: { isStarred },
 	});
+	return handleResponse({ data: data?.data, error });
 }
 
 /** Move a file to trash */
-export function trashFile(fileId: string) {
-	return apiFetch<void>(`/api/v1/storage/file/${fileId}/trash`, {
-		method: "POST",
+export async function trashFile(fileId: string) {
+	const { data, error } = await client.PUT("/api/v1/storage/file/{id}", {
+		params: { path: { id: fileId } },
+		body: { isTrashed: true },
 	});
+	return handleResponse({ data: data?.data, error });
 }
 
 /** Restore a file from trash */
-export function restoreFile(fileId: string) {
-	return apiFetch<void>(`/api/v1/storage/file/${fileId}/restore`, {
-		method: "POST",
+export async function restoreFile(fileId: string) {
+	const { data, error } = await client.PUT("/api/v1/storage/file/{id}", {
+		params: { path: { id: fileId } },
+		body: { isTrashed: false },
 	});
+	return handleResponse({ data: data?.data, error });
 }
 
 /** Permanently delete a file */
-export function deleteFile(fileId: string) {
-	return apiFetch<void>(`/api/v1/storage/file/${fileId}`, {
-		method: "DELETE",
+export async function deleteFile(fileId: string) {
+	const { data, error } = await client.DELETE("/api/v1/storage/file/{id}", {
+		params: { path: { id: fileId } },
 	});
+	return handleResponse({ data: data?.data, error });
+}
+
+// ─── Authentication ──────────────────────────────────────────────────────────
+
+export type AuthProvider = NonNullable<
+	paths["/api/v1/auth/providers"]["get"]["responses"]["200"]["content"]["application/json"]["data"]
+>[number];
+
+export type User = components["schemas"]["User"];
+
+/** Fetch available auth providers from the server */
+export async function fetchAuthProviders() {
+	const { data, error } = await client.GET("/api/v1/auth/providers");
+	return handleResponse({ data: data?.data, error });
+}
+
+/** Check if user is authenticated by fetching activity (uses typed endpoint) */
+export async function checkAuth(): Promise<{
+	authenticated: boolean;
+	error?: string;
+}> {
+	const { data, error } = await client.GET("/api/v1/activity");
+	return {
+		authenticated: !error && !!data,
+		error: error ? handleError(error) : undefined,
+	};
+}
+
+/** Sign in with email and password */
+export async function signIn(
+	email: string,
+	password: string,
+): Promise<{ success: boolean; error?: string }> {
+	const { error } = await client.POST("/api/v1/auth/sign-in/email", {
+		body: { email, password },
+	});
+
+	if (error) {
+		return { success: false, error: handleError(error) };
+	}
+
+	return { success: true };
+}
+
+/**
+ * Sign in with an OAuth provider.
+ * Posts to /api/v1/auth/sign-in/oauth2 and returns the redirect URL to open in a browser.
+ */
+export async function signInWithOAuth(
+	providerId: string,
+	callbackURL: string,
+): Promise<{ url?: string; error?: string }> {
+	const { data, error } = await client.POST("/api/v1/auth/sign-in/oauth2", {
+		body: { providerId, callbackURL },
+	});
+
+	if (error) {
+		return { error: handleError(error) };
+	}
+
+	if (data?.url) {
+		return { url: data.url };
+	}
+
+	return { error: "OAuth sign-in failed: no redirect URL returned" };
+}
+
+/** Sign out the current user */
+export async function signOut(): Promise<{ success: boolean; error?: string }> {
+	const { error } = await client.POST("/api/v1/auth/sign-out", {});
+
+	if (error) {
+		return { success: false, error: handleError(error) };
+	}
+
+	return { success: true };
 }
 
 export default {
@@ -183,4 +247,9 @@ export default {
 	trashFile,
 	restoreFile,
 	deleteFile,
+	fetchAuthProviders,
+	checkAuth,
+	signIn,
+	signOut,
+	signInWithOAuth,
 };

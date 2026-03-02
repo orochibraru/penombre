@@ -31,6 +31,7 @@ interface RouteConfig<
 	response: TResponse;
 	errors?: number[];
 	isFormData?: boolean;
+	requireAuth?: boolean; // Default: true
 	service?: (user: NonNullable<App.Locals["user"]>) => TService;
 }
 
@@ -112,6 +113,7 @@ export function defineRoute<
 		response: config.response,
 		errors: config.errors,
 		isFormData: config.isFormData,
+		requireAuth: config.requireAuth,
 	});
 
 	return {
@@ -122,8 +124,9 @@ export function defineRoute<
 		 */
 		handler(callback: HandlerCallback<TParams, TQuery, TBody, TService>) {
 			return async (event: RequestEvent): Promise<Response> => {
-				// Auth check
-				if (!event.locals.user) {
+				// Auth check (skip if requireAuth is false)
+				const requireAuth = config.requireAuth !== false; // Default to true
+				if (requireAuth && !event.locals.user) {
 					return Http.Unauthorized();
 				}
 
@@ -177,10 +180,12 @@ export function defineRoute<
 					query: parsedQuery,
 					body: parsedBody,
 					event,
-					user: event.locals.user,
-					service: config.service
-						? config.service(event.locals.user)
-						: (undefined as TService),
+					// biome-ignore lint/style/noNonNullAssertion: User is guaranteed to exist at this point if requireAuth !== false
+					user: event.locals.user!,
+					service:
+						config.service && event.locals.user
+							? config.service(event.locals.user)
+							: (undefined as TService),
 				});
 			};
 		},

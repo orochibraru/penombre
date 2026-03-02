@@ -14,9 +14,11 @@ fi
 echo "Generating DB diagram..."
 bun run db:diagram
 
-echo "Generating .example.env file..."
-bun run --cwd packages/web gen:env
+echo "Generating API spec..."
+bun run --cwd packages/web gen:api
 
+echo "Generating API clients..."
+bun run gen:api
 
 echo "Staging changes..."
 git add .
