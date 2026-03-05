@@ -52,7 +52,7 @@ export function getPayloadConfigFromPayload(
 	) {
 		configLabelKey = payload[key as keyof typeof payload] as string;
 	} else if (
-		payloadPayload &&
+		payloadPayload !== undefined &&
 		key in payloadPayload &&
 		typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
 	) {

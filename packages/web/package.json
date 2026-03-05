@@ -64,7 +64,7 @@
 		"better-auth": "^1.5.3",
 		"drizzle-orm": "^0.45.1",
 		"drizzle-zod": "^0.8.3",
-		"layerchart": "1.0.13",
+		"layerchart": "2.0.0-next.43",
 		"mode-watcher": "^1.1.0",
 		"music-metadata": "^11.12.1",
 		"nodemailer": "^8.0.1",
