@@ -1,6 +1,37 @@
 import { auth } from "$lib/server/auth";
 
+export const load = async ({ request }) => {
+	const apiKeys = await auth.api.listApiKeys({
+		headers: request.headers,
+	});
+	console.log("API Keys:", apiKeys);
+	return {
+		apiKeys,
+	};
+};
+
 export const actions = {
+	createApiKey: async ({ request }) => {
+		const formData = await request.formData();
+		const name = formData.get("name");
+		if (typeof name !== "string" || !name.trim()) {
+			return { success: false, error: "API key name is required." };
+		}
+		try {
+			const newApiKey = await auth.api.createApiKey({
+				headers: request.headers,
+				body: {
+					name,
+				},
+			});
+			return { success: true, apiKey: newApiKey.key };
+		} catch (error) {
+			return {
+				success: false,
+				error: (error as Error).message || "Failed to create API key.",
+			};
+		}
+	},
 	changePassword: async ({ request }) => {
 		const formData = await request.formData();
 		const currentPassword = formData.get("currentPassword");

@@ -126,6 +126,40 @@ const authHandler: Handle = async ({ event, resolve }) => {
 			configurable: true,
 			enumerable: true,
 		});
+	} else {
+		// Fallback: try API key authentication
+		// Accepts either `x-api-key: <key>` or `Authorization: Bearer <key>`
+		const authHeader = event.request.headers.get("authorization");
+		const rawKey =
+			event.request.headers.get("x-api-key") ??
+			(authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
+
+		if (rawKey) {
+			const result = await auth.api
+				.verifyApiKey({ body: { key: rawKey } })
+				.catch(() => null);
+
+			if (!result?.valid) {
+				logger.warn("Invalid API key authentication attempt", {
+					key: rawKey,
+				});
+
+				return new Response(JSON.stringify({ error: "Unauthorized" }), {
+					status: 401,
+				});
+			}
+
+			const session = await auth.api.getSession({
+				headers: new Headers({
+					"x-api-key": rawKey,
+				}),
+			});
+
+			if (session?.session && session.user) {
+				event.locals.user = session.user;
+				event.locals.storageService = new StorageService(session.user);
+			}
+		}
 	}
 
 	// Skip better-auth handler for custom SvelteKit-managed auth routes

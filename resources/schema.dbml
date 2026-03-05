@@ -32,6 +32,31 @@ table activity {
   }
 }
 
+table apikey {
+  id text [pk, not null]
+  config_id text [not null]
+  name text
+  start text
+  prefix text
+  key text [not null]
+  reference_id text [not null]
+  refill_interval integer
+  refill_amount integer
+  last_refill_at "timestamp (6) with time zone"
+  enabled boolean [not null]
+  rate_limit_enabled boolean [not null]
+  rate_limit_time_window integer
+  rate_limit_max integer
+  request_count integer [not null]
+  remaining integer
+  last_request "timestamp (6) with time zone"
+  expires_at "timestamp (6) with time zone"
+  created_at "timestamp (6) with time zone" [not null]
+  updated_at "timestamp (6) with time zone" [not null]
+  permissions text
+  metadata jsonb [default: `{}`]
+}
+
 table session {
   id text [pk, not null]
   expires_at timestamp [not null]

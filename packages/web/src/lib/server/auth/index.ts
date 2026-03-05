@@ -1,7 +1,9 @@
+import { apiKey } from "@better-auth/api-key";
+import { dash, sentinel } from "@better-auth/infra";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
-import { admin, genericOAuth, openAPI } from "better-auth/plugins";
+import { admin, bearer, genericOAuth, openAPI } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
 import { building, dev } from "$app/environment";
 import { getRequestEvent } from "$app/server";
@@ -24,6 +26,13 @@ export const auth = betterAuth({
 	baseURL: dev ? "http://localhost:5173" : config.origin,
 	secret: config.auth.secret,
 	basePath: "/api/v1/auth",
+	rateLimit: {
+		windowMs: 15 * 60 * 1000, // 15 minutes
+		max: 100, // limit each IP to 100 requests per windowMs
+		message:
+			"Too many authentication attempts from this IP, please try again later.",
+		enabled: !dev, // Disable rate limiting in development for easier testing
+	},
 	logger: {
 		level: dev ? "debug" : config.logLevel,
 		log: (level, message, ...metadata) => {
@@ -88,7 +97,26 @@ export const auth = betterAuth({
 			path: "/openapi",
 			disableDefaultReference: true,
 		}),
+		dash({
+			apiKey: process.env.BETTER_AUTH_API_KEY,
+			activityTracking: {
+				enabled: true,
+				updateInterval: 300000, // Update interval in ms (default: 5 minutes)
+			},
+		}),
+		sentinel({
+			apiKey: process.env.BETTER_AUTH_API_KEY,
+		}),
 		admin(),
+		bearer(),
+		apiKey({
+			enableSessionForAPIKeys: true,
+			rateLimit: {
+				enabled: !dev,
+				timeWindow: 60 * 1000, // 1 minute
+				maxRequests: 100,
+			},
+		}),
 		genericOAuth({
 			config: config.auth.oauthProviders.map((provider) => ({
 				providerId: provider.name,
