@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
-import { mkdir, readdir, rmdir, stat, unlink } from "node:fs/promises";
+import { mkdir, readdir, rm, stat, unlink } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { cwd } from "node:process";
 import type { Readable } from "node:stream";
@@ -1022,7 +1022,7 @@ export class StorageService {
 				throw new Error("Folder not found");
 			}
 
-			await rmdir(dirPath, { recursive: true });
+			await rm(dirPath, { recursive: true });
 			await this.activityService.register({
 				userId: this.user.id,
 				action: "delete",
@@ -2489,7 +2489,7 @@ export class StorageService {
 				if (!userExists) {
 					const userStoragePath = join(storageBasePath, dirent.name);
 					try {
-						await rmdir(userStoragePath, { recursive: true });
+						await rm(userStoragePath, { recursive: true });
 						logger.info(
 							`Deleted storage for non-existent user ID: ${userId} at path: ${userStoragePath}`,
 						);
