@@ -7,11 +7,7 @@
     import { onMount } from "svelte";
     import { toast } from "svelte-sonner";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-    import {
-        CheckCircle2Icon,
-        CircleCheckIcon,
-        EllipsisVerticalIcon,
-    } from "@lucide/svelte";
+    import { CircleCheckIcon, EllipsisVerticalIcon } from "@lucide/svelte";
     import { authClient } from "$lib/auth-client";
     import { invalidateAll } from "$app/navigation";
     import * as Alert from "$lib/components/ui/alert/index.js";
@@ -24,12 +20,17 @@
 
     let changePasswordDialogOpen: boolean = $state(false);
     let deleteApiKeyDialogOpen: boolean = $state(false);
+    let passkeyToDelete: string = $state("");
+    let deletePasskeyDialogOpen: boolean = $state(false);
     let apiKeyToDelete: string = $state("");
     let loading: boolean = $state(false);
     let newPasswordError: string = $state("");
     let currentPassword: string = $state("");
     let newPassword: string = $state("");
     let newPasswordConfirm: string = $state("");
+    let passkeyNameDialogOpen: boolean = $state(false);
+    let passkeyName: string = $state("");
+    let passkeyNameError: string = $state("");
 
     async function passwordChangeHandler(e: SubmitEvent) {
         e.preventDefault();
@@ -73,9 +74,54 @@
             error: "Failed to delete API key",
         });
     }
+
+    async function registerPasskey() {
+        loading = true;
+        const { error } = await authClient.passkey.addPasskey({
+            name: passkeyName,
+        });
+
+        loading = false;
+        passkeyNameDialogOpen = false;
+        passkeyName = "";
+
+        if (error) {
+            if (error.message) {
+                throw new Error(error.message);
+            }
+            throw new Error("Failed to register passkey");
+        }
+
+        await invalidateAll();
+    }
+
+    async function handleRegisterPasskey() {
+        return toast.promise(registerPasskey(), {
+            loading: "Registering passkey...",
+            success: "Passkey registered successfully",
+            error: "Failed to register passkey",
+        });
+    }
+
+    async function handleDeletePasskey(passkeyId: string) {
+        loading = true;
+        const promise = await authClient.passkey.deletePasskey({
+            id: passkeyId,
+        });
+
+        if (promise.error) {
+            throw new Error(promise.error.message);
+        }
+
+        await invalidateAll();
+
+        deletePasskeyDialogOpen = false;
+        passkeyToDelete = "";
+        loading = false;
+    }
 </script>
 
-<section>
+<section class="p-3 border rounded-xl">
     <h2 class="text-lg font-medium">Password Management</h2>
 
     <div class="flex">
@@ -86,7 +132,50 @@
     </div>
 </section>
 
-<section>
+<section class="p-3 border rounded-xl">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-lg font-medium">Passkeys</h2>
+            <p class="text-xs text-muted-foreground">
+                Passkeys allow you to sign in without a password using
+                biometrics or a security key.
+            </p>
+        </div>
+        <Button onclick={() => (passkeyNameDialogOpen = true)}
+            >Register a new Passkey</Button
+        >
+    </div>
+
+    <div class="flex flex-col gap-2 mt-3">
+        {#if data.passkeys.length > 0}
+            {#each data.passkeys as passkey}
+                <div
+                    class="border rounded-xl w-full p-3 flex items-center justify-between"
+                >
+                    <div>
+                        <p class="text-sm">{passkey.name}</p>
+                        <p class="text-xs text-muted-foreground">
+                            Created at: {new Date(
+                                passkey.createdAt,
+                            ).toLocaleString()}
+                        </p>
+                    </div>
+                    <Button
+                        variant="destructive"
+                        onclick={() => {
+                            passkeyToDelete = passkey.id;
+                            deletePasskeyDialogOpen = true;
+                        }}>Delete</Button
+                    >
+                </div>
+            {/each}
+        {:else}
+            <p class="text-sm text-muted-foreground">No passkeys registered.</p>
+        {/if}
+    </div>
+</section>
+
+<section class="p-3 border rounded-xl">
     {#if form?.success && form?.apiKey}
         <Alert.Root class="bg-primary/10 border-primary mb-3">
             <CircleCheckIcon class="text-primary" />
@@ -177,11 +266,53 @@
     </div>
 </section>
 
+<!-- Passkey name dialog -->
+
+<ResponsiveDialog
+    bind:open={passkeyNameDialogOpen}
+    bind:loading
+    title="Name your passkey"
+    description="Give your passkey a name to help you identify it later."
+    submitLabel="Save"
+    loadingLabel="Saving..."
+    onsubmit={() => handleRegisterPasskey()}
+>
+    <Input
+        required
+        bind:value={passkeyName}
+        placeholder="Passkey name"
+        class="w-full"
+        aria-invalid={passkeyNameError !== ""}
+    />
+    {#if passkeyNameError !== ""}
+        <p class="text-xs text-destructive">{passkeyNameError}</p>
+    {/if}
+</ResponsiveDialog>
+
+<!-- Delete Passkey Dialog -->
+<ResponsiveDialog
+    bind:open={deletePasskeyDialogOpen}
+    bind:loading
+    title="Confirm Passkey deletion"
+    description="This will delete your passkey."
+    submitLabel="Delete"
+    loadingLabel="Deleting..."
+    submitVariant="destructive"
+    onsubmit={() => handleDeletePasskey(passkeyToDelete)}
+>
+    <p>
+        Are you sure you want to delete this passkey? This action cannot be
+        undone.
+    </p>
+</ResponsiveDialog>
+
+<!-- Delete API Key Dialog -->
 <ResponsiveDialog
     bind:open={deleteApiKeyDialogOpen}
     bind:loading
     title="Confirm API key deletion"
     description="This will delete your API key."
+    submitVariant="destructive"
     submitLabel="Delete"
     loadingLabel="Deleting..."
     onsubmit={() => handleDeleteApiKey(apiKeyToDelete)}
@@ -192,6 +323,7 @@
     </p>
 </ResponsiveDialog>
 
+<!-- Change Password Dialog -->
 <ResponsiveDialog
     bind:open={changePasswordDialogOpen}
     bind:loading

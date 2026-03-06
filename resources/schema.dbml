@@ -57,6 +57,20 @@ table apikey {
   metadata jsonb [default: `{}`]
 }
 
+table passkey {
+  id text [pk, not null]
+  name text
+  public_key text [not null]
+  user_id text [not null]
+  credential_id text [not null]
+  counter integer [not null]
+  device_type text [not null]
+  backed_up boolean [not null]
+  transports text
+  created_at "timestamp (6) with time zone"
+  aaguid text
+}
+
 table session {
   id text [pk, not null]
   expires_at timestamp [not null]

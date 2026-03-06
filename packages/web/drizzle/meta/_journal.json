@@ -43,6 +43,13 @@
 			"when": 1772720751318,
 			"tag": "0005_graceful_shiver_man",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1772805107104,
+			"tag": "0006_wealthy_whistler",
+			"breakpoints": true
 		}
 	]
 }

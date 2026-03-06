@@ -25,6 +25,45 @@
         title.set(m.sign_in());
     });
 
+    async function passkeySignIn() {
+        if (
+            !PublicKeyCredential.isConditionalMediationAvailable ||
+            !PublicKeyCredential.isConditionalMediationAvailable()
+        ) {
+            toast.error("Passkey not supported");
+            return;
+        }
+        loading = true;
+        const { error } = await authClient.signIn.passkey({
+            autoFill: true,
+        });
+
+        if (error) {
+            loading = false;
+            throw new Error(error.message ?? "Error signing in with passkey");
+        }
+
+        goto(resolve("/"), { replaceState: true, invalidateAll: true });
+    }
+
+    async function handlePasskeySignIn() {
+        return toast.promise(passkeySignIn(), {
+            loading: m.signing_in_with_passkey(),
+            success: m.signed_in_success(),
+            error: (e) => {
+                loading = false;
+                errorMessage = defaultErrorMessage;
+
+                if (e instanceof Error) {
+                    errorMessage = e.message;
+                    return e.message;
+                }
+
+                return defaultErrorMessage;
+            },
+        });
+    }
+
     const defaultErrorMessage = m.sign_in_error();
 
     async function handleOauthSignin(provider: string) {
@@ -77,7 +116,7 @@
                 );
             }
             if (res.data.url) {
-                goto(res.data.url);
+                goto(res.data.url, { replaceState: true, invalidateAll: true });
             }
         } catch (e) {
             console.error(e);
@@ -101,7 +140,7 @@
                 );
             }
 
-            goto(resolve("/"));
+            goto(resolve("/"), { replaceState: true, invalidateAll: true });
         } catch (e) {
             error = true;
             console.error(e);
@@ -142,12 +181,13 @@
                     </Alert.Description>
                 </Alert.Root>
             {/if}
+
             {#if data.authConfig.enableEmailSignIn}
                 <Field.Field>
                     <Field.Label for="email">{m.email()}</Field.Label>
                     <Input
                         id="email"
-                        autocomplete="email"
+                        autocomplete="email webauthn"
                         type="email"
                         bind:value={email}
                         placeholder="m@example.com"
@@ -166,7 +206,7 @@
                     </div>
                     <Input
                         id="password"
-                        autocomplete="current-password"
+                        autocomplete="current-password webauthn"
                         bind:value={password}
                         type="password"
                         required
@@ -198,6 +238,14 @@
                     {/if}
                 {/each}
             {/if}
+            <Button
+                variant="outline"
+                class="w-full"
+                {loading}
+                onclick={handlePasskeySignIn}
+            >
+                Sign in with a passkey
+            </Button>
         </Field.Group>
     </Field.FieldSet>
     <div class="grid gap-6">

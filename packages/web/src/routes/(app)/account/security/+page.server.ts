@@ -4,9 +4,14 @@ export const load = async ({ request }) => {
 	const apiKeys = await auth.api.listApiKeys({
 		headers: request.headers,
 	});
-	console.log("API Keys:", apiKeys);
+
+	const passkeys = await auth.api.listPasskeys({
+		headers: request.headers,
+	});
+
 	return {
 		apiKeys,
+		passkeys,
 	};
 };
 

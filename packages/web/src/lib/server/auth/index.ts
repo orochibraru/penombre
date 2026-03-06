@@ -1,5 +1,6 @@
 import { apiKey } from "@better-auth/api-key";
 import { dash, sentinel } from "@better-auth/infra";
+import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
@@ -107,6 +108,7 @@ export const auth = betterAuth({
 		sentinel({
 			apiKey: process.env.BETTER_AUTH_API_KEY,
 		}),
+		passkey(),
 		admin(),
 		bearer(),
 		apiKey({

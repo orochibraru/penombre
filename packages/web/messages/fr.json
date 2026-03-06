@@ -30,5 +30,11 @@
 	"error_contact_admin": "Veuillez contacter l'administrateur du site si vous pensez que cela ne devrait pas se produire.",
 	"error_id": "ID d'erreur : {errorId}",
 	"go_back_home": "Retour à l'accueil",
-	"authenticating_redirect": "Authentification en cours, vous serez bientôt redirigé."
+	"authenticating_redirect": "Authentification en cours, vous serez bientôt redirigé.",
+	"signing_in_with_passkey": "Connexion avec passkey...",
+	"sign_in_passkey_error": "Une erreur s'est produite lors de la connexion avec passkey. Veuillez réessayer.",
+	"delete_passkey": "Supprimer Passkey",
+	"delete_passkey_confirmation": "Êtes-vous sûr de vouloir supprimer ce passkey ? Cette action ne peut pas être annulée.",
+	"delete_passkey_success": "Passkey supprimé avec succès.",
+	"delete_passkey_error": "Une erreur s'est produite lors de la suppression du passkey. Veuillez réessayer."
 }
