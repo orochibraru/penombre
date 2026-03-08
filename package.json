@@ -19,7 +19,8 @@
 		"circular": "bun run ./scripts/circular.ts",
 		"backup": "./scripts/backup.sh",
 		"restore": "./scripts/restore.sh",
-		"gen:api": "bun run --workspaces gen:api"
+		"gen:api": "bun run --workspaces gen:api",
+		"release": "light-release"
 	},
 	"keywords": [],
 	"author": "",
@@ -36,6 +37,7 @@
 		"concurrently": "^9.2.1",
 		"drizzle-dbml-generator": "^0.10.0",
 		"husky": "^9.1.7",
+		"light-release": "^2.9.1",
 		"madge": "^8.0.0",
 		"wait-on": "^9.0.3"
 	},
