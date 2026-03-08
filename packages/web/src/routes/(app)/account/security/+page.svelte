@@ -28,9 +28,6 @@
     let currentPassword: string = $state("");
     let newPassword: string = $state("");
     let newPasswordConfirm: string = $state("");
-    let passkeyNameDialogOpen: boolean = $state(false);
-    let passkeyName: string = $state("");
-    let passkeyNameError: string = $state("");
 
     async function passwordChangeHandler(e: SubmitEvent) {
         e.preventDefault();
@@ -78,12 +75,10 @@
     async function registerPasskey() {
         loading = true;
         const { error } = await authClient.passkey.addPasskey({
-            name: passkeyName,
+            useAutoRegister: true,
         });
 
         loading = false;
-        passkeyNameDialogOpen = false;
-        passkeyName = "";
 
         if (error) {
             if (error.message) {
@@ -121,6 +116,7 @@
     }
 </script>
 
+<!-- Password Management -->
 <section class="p-3 border rounded-xl">
     <h2 class="text-lg font-medium">Password Management</h2>
 
@@ -132,6 +128,7 @@
     </div>
 </section>
 
+<!-- Passkeys -->
 <section class="p-3 border rounded-xl">
     <div class="flex justify-between items-center">
         <div>
@@ -141,9 +138,9 @@
                 biometrics or a security key.
             </p>
         </div>
-        <Button onclick={() => (passkeyNameDialogOpen = true)}
-            >Register a new Passkey</Button
-        >
+        <Button onclick={() => handleRegisterPasskey()}>
+            Register a new Passkey
+        </Button>
     </div>
 
     <div class="flex flex-col gap-2 mt-3">
@@ -175,6 +172,7 @@
     </div>
 </section>
 
+<!-- API Keys -->
 <section class="p-3 border rounded-xl">
     {#if form?.success && form?.apiKey}
         <Alert.Root class="bg-primary/10 border-primary mb-3">
@@ -265,29 +263,6 @@
         {/if}
     </div>
 </section>
-
-<!-- Passkey name dialog -->
-
-<ResponsiveDialog
-    bind:open={passkeyNameDialogOpen}
-    bind:loading
-    title="Name your passkey"
-    description="Give your passkey a name to help you identify it later."
-    submitLabel="Save"
-    loadingLabel="Saving..."
-    onsubmit={() => handleRegisterPasskey()}
->
-    <Input
-        required
-        bind:value={passkeyName}
-        placeholder="Passkey name"
-        class="w-full"
-        aria-invalid={passkeyNameError !== ""}
-    />
-    {#if passkeyNameError !== ""}
-        <p class="text-xs text-destructive">{passkeyNameError}</p>
-    {/if}
-</ResponsiveDialog>
 
 <!-- Delete Passkey Dialog -->
 <ResponsiveDialog
