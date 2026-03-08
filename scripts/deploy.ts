@@ -97,6 +97,7 @@ async function deploy(): Promise<FetchResponse> {
 		headers,
 		body: JSON.stringify({
 			applicationId: config.dokploy.appId,
+			registryUrl: "git.ombrage.space",
 		}),
 	});
 
