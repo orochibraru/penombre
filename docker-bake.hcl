@@ -6,6 +6,14 @@ variable "TAG" {
   }
 }
 
+variable "IMAGE" {
+  default = "git.ombrage.space/opendrive/opendrive"
+  validation {
+    condition = IMAGE != ""
+    error_message = "The variable 'IMAGE' must not be empty."
+  }
+}
+
 group "default" {
   targets = ["app"]
 }
