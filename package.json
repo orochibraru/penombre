@@ -8,7 +8,7 @@
 		"prepare": "husky",
 		"preinstall": "bunx only-allow bun",
 		"test": "bun test '.test.'",
-		"build": "bun run --workspaces build",
+		"build": "bun run --filter @opendrive/web build",
 		"dev": "bun --env-file .env concurrently.config.ts",
 		"db:diagram": "bun run ./scripts/db-diagram.ts",
 		"check": "bun run --workspaces check",

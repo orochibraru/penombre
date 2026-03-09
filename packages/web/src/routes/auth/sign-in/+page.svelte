@@ -220,6 +220,22 @@
                 {#if data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
                     <Field.Separator>{m.or_continue_with()}</Field.Separator>
                 {/if}
+            {:else}
+                <!-- Hidden fields for passkey sign-in -->
+                <label class="sr-only" for="name">Username:</label>
+                <input
+                    class="sr-only"
+                    type="text"
+                    name="name"
+                    autocomplete="username webauthn"
+                />
+                <label class="sr-only" for="password">Password:</label>
+                <input
+                    class="sr-only"
+                    type="password"
+                    name="password"
+                    autocomplete="current-password webauthn"
+                />
             {/if}
             {#if data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
                 {#each data.authConfig.oauthProviders as provider}
