@@ -71,6 +71,7 @@ async function updateImage(): Promise<FetchResponse> {
 			headers,
 			body: JSON.stringify({
 				applicationId: config.dokploy.appId,
+				registryUrl: "git.ombrage.space",
 				dockerImage: fullImage,
 				username: config.registry.user,
 				password: config.registry.password,
