@@ -122,37 +122,17 @@ jobs:
           username: salokain
           password: ${{ secrets.PACKAGES_TOKEN }}
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        if: github.ref == 'refs/heads/main'
-        with:
-          images: git.ombrage.space/opendrive/opendrive
-          tags: |
-            type=ref,event=pr
-            type=semver,pattern={{version}},value=${{ github.sha }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=sha
-
-      - name: Build (PR)
-        uses: docker/build-push-action@v6
+      # PR: Build only (no push)
+      - name: Build (PR validation)
         if: github.event_name == 'pull_request'
-        with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          tags: ${{ github.sha }}
+        shell: bash
+        run: docker buildx bake --file ./docker-bake.hcl app
 
       # Main: Build and push
-      - name: Build and push (main)
-        uses: docker/build-push-action@v6
+      - name: Build and push
         if: github.ref == 'refs/heads/main'
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+        shell: bash
+        run: docker buildx bake --file ./docker-bake.hcl --push
 
   # ===========================================
   # Deploy: Only on main branch after docker
