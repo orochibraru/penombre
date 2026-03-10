@@ -1,13 +1,15 @@
-import { useCallback } from "react";
+import { Button } from "@react-navigation/elements";
 import { Text, View } from "react-native";
+import useSWR from "swr";
 import { FileList } from "@/components/file-list";
 import { ThemedView } from "@/components/themed-view";
-import { useApiQuery } from "@/hooks/use-api-query";
 import { listRecentFiles, type ObjectItem } from "@/lib/api";
 
 export default function RecentScreen() {
-	const fetchRecent = useCallback(() => listRecentFiles(), []);
-	const { data, loading, refetch } = useApiQuery(fetchRecent);
+	const { data, error, mutate, isLoading } = useSWR(
+		"/api/v1/storage/list/recent",
+		listRecentFiles,
+	);
 
 	const handleItemPress = (item: ObjectItem) => {
 		if (item.type === "folder") {
@@ -17,6 +19,20 @@ export default function RecentScreen() {
 		}
 	};
 
+	if (error) {
+		return (
+			<ThemedView
+				style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+			>
+				<Text className="text-red-500">Failed to load files</Text>
+				<Text className="text-gray-500">{error}</Text>
+				<Button onPress={() => mutate()}>Retry</Button>
+			</ThemedView>
+		);
+	}
+
+	console.log("Files data:", data);
+
 	return (
 		<ThemedView style={{ flex: 1 }}>
 			<View className="px-4 pt-4 pb-2">
@@ -25,13 +41,13 @@ export default function RecentScreen() {
 				</Text>
 			</View>
 			<FileList
-				items={data?.list ?? []}
-				loading={loading}
-				onRefresh={refetch}
+				items={data?.data?.list ?? []}
+				loading={isLoading}
+				onRefresh={mutate}
 				onItemPress={handleItemPress}
-				emptyIcon="clock.fill"
+				emptyIcon="folder"
 				emptyTitle="No recent files"
-				emptyDescription="Files you've recently accessed will appear here"
+				emptyDescription="Upload files from the web app to see them here"
 			/>
 		</ThemedView>
 	);

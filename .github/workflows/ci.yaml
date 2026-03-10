@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "packages/**"
+      - "packages/web/**"
       - "scripts/**"
       - "Dockerfile"
       - "docker-bake.hcl"
@@ -16,6 +16,7 @@ on:
       - "biome.json"
       - ".github/workflows/**"
       - "docs/**"
+
   pull_request:
     paths:
       - "packages/**"

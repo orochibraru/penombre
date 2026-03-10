@@ -1,5 +1,5 @@
 import { apiKey } from "@better-auth/api-key";
-import { dash, sentinel } from "@better-auth/infra";
+import { expo } from "@better-auth/expo";
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -24,14 +24,27 @@ if (!process.env.ORIGIN && !dev && !building) {
 const config = getOpendriveConfig();
 
 export const auth = betterAuth({
-	baseURL: dev ? "http://localhost:5173" : config.origin,
+	baseURL: config.origin
+		? config.origin
+		: dev
+			? "http://localhost:5173"
+			: (() => {
+					throw new Error("ORIGIN environment variable is not set");
+				})(),
+	trustedOrigins: dev
+		? [
+				"opendrive://*/**",
+				"http://localhost:*/**",
+				"http://192.168.*.*:*/**",
+				"exp://localhost:*/**",
+				"exp://192.168.*.*:*/**",
+			]
+		: [config.origin],
 	secret: config.auth.secret,
 	basePath: "/api/v1/auth",
 	rateLimit: {
-		windowMs: 15 * 60 * 1000, // 15 minutes
-		max: 100, // limit each IP to 100 requests per windowMs
-		message:
-			"Too many authentication attempts from this IP, please try again later.",
+		window: 15 * 60 * 1000, // 15 minutes
+		max: 100, // limit each IP to 100 requests per window
 		enabled: !dev, // Disable rate limiting in development for easier testing
 	},
 	logger: {
@@ -45,14 +58,6 @@ export const auth = betterAuth({
 			});
 		},
 	},
-	trustedOrigins: dev
-		? [
-				"http://localhost:5173",
-				"http://localhost:4173",
-				"http://localhost:3000",
-				"exp://**",
-			]
-		: [config.origin],
 	database: drizzleAdapter(getDb(), {
 		provider: "pg",
 		schema,
@@ -60,6 +65,16 @@ export const auth = betterAuth({
 	hooks: {
 		after: createAuthMiddleware(async (ctx) => {
 			const session = ctx.context.session;
+			const data = ctx.context.returned;
+			logger.debug("Data returned from auth middleware hook:", {
+				data,
+			});
+			// @ts-expect-error - BetterAuth types are not great, so we need to assert the type here
+			if (data?.url) {
+				// @ts-expect-error - BetterAuth types are not great, so we need to assert the type here
+				const redirectUrl = new URL(data.url as string);
+				logger.debug("Redirect URL:", redirectUrl);
+			}
 			if (session) {
 				const storageService = new StorageService(session.user);
 				try {
@@ -98,18 +113,9 @@ export const auth = betterAuth({
 			path: "/openapi",
 			disableDefaultReference: true,
 		}),
-		dash({
-			apiKey: process.env.BETTER_AUTH_API_KEY,
-			activityTracking: {
-				enabled: true,
-				updateInterval: 300000, // Update interval in ms (default: 5 minutes)
-			},
-		}),
-		sentinel({
-			apiKey: process.env.BETTER_AUTH_API_KEY,
-		}),
 		passkey(),
 		admin(),
+		expo(),
 		bearer(),
 		apiKey({
 			enableSessionForAPIKeys: true,

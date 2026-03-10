@@ -43,7 +43,7 @@ export function FileList({
 		setTimeout(() => setRefreshing(false), 500);
 	}, [onRefresh]);
 
-	if (loading && items.length === 0) {
+	if (loading) {
 		return (
 			<View className="flex-1 items-center justify-center py-20">
 				<ActivityIndicator size="large" />

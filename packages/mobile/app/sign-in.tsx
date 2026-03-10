@@ -1,6 +1,4 @@
-import * as Linking from "expo-linking";
-import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
@@ -10,36 +8,29 @@ import {
 	TextInput,
 	View,
 } from "react-native";
-import { useAuth } from "@/contexts/auth-context";
-import {
-	type AuthProvider,
-	fetchAuthProviders,
-	signInWithOAuth,
-} from "@/lib/api";
+import useSWR from "swr";
+import { type AuthProvider, fetchAuthProviders } from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
 
 export default function SignInScreen() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
-	const [providers, setProviders] = useState<AuthProvider[]>([]);
-	const [providersLoading, setProvidersLoading] = useState(true);
-	const { signIn, checkAuthStatus } = useAuth();
-	const router = useRouter();
 
-	const emailProvider = providers.find((p) => p.type === "email" && p.enabled);
-	const oauthProviders = providers.filter(
-		(p) => p.type === "oauth" && p.enabled,
-	);
+	const { data: session, isPending } = authClient.useSession();
 
 	useEffect(() => {
-		fetchAuthProviders().then((result) => {
-			if (result.data) {
-				setProviders(result.data);
-			}
+		if (session && !isPending) {
+			router.push("/(tabs)");
+		}
+	}, [session, isPending]);
 
-			setProvidersLoading(false);
-		});
-	}, []);
+	const {
+		data: providers,
+		error: providersError,
+		isLoading: providersLoading,
+		mutate,
+	} = useSWR("/api/v1/auth/providers", fetchAuthProviders);
 
 	const handleSignIn = async () => {
 		if (!email || !password) {
@@ -48,47 +39,77 @@ export default function SignInScreen() {
 		}
 
 		setLoading(true);
-		try {
-			const result = await signIn(email, password);
-			if (result.success) {
-				router.replace("/(tabs)");
-			} else {
-				Alert.alert("Sign In Failed", result.error || "Unknown error");
-			}
-		} catch (_error) {
-			Alert.alert("Error", "An unexpected error occurred");
-		} finally {
+		const { error } = await authClient.signIn.email({
+			email,
+			password,
+		});
+		if (error) {
 			setLoading(false);
+			console.log("Sign-in error:", error);
+			Alert.alert("Error", error.message || "Failed to sign in");
+			return;
 		}
 	};
 
 	const handleOAuthSignIn = async (provider: AuthProvider) => {
-		const callbackURL = Linking.createURL("/");
+		setLoading(true);
+		const { error } = await authClient.signIn.oauth2({
+			providerId: provider.name,
+			callbackURL: "/(tabs)",
+		});
 
-		try {
-			const { url, error } = await signInWithOAuth(provider.name, callbackURL);
-			if (error || !url) {
-				Alert.alert("Error", error || "Failed to start OAuth flow");
-				return;
-			}
-
-			const result = await WebBrowser.openAuthSessionAsync(url, callbackURL);
-			if (result.type === "success") {
-				await checkAuthStatus();
-				router.replace("/(tabs)");
-			}
-		} catch (_error) {
-			Alert.alert("Error", "OAuth sign in failed");
+		if (error) {
+			setLoading(false);
+			console.log("OAuth sign-in error:", error);
+			Alert.alert("Error", "Failed to initiate OAuth sign-in");
+			return;
 		}
 	};
 
-	if (providersLoading) {
+	if (providersLoading || isPending) {
 		return (
 			<View className="flex-1 items-center justify-center bg-white dark:bg-black">
 				<ActivityIndicator size="large" color="#9333ea" />
 			</View>
 		);
 	}
+
+	if (providersError) {
+		console.log("Error fetching auth providers:", providersError);
+		return (
+			<View className="flex-1 items-center justify-center bg-white dark:bg-black p-6">
+				<Text className="text-red-500 text-center mb-4">
+					Failed to load auth providers
+				</Text>
+				<Pressable
+					className="bg-purple-600 py-3 px-6 rounded-lg"
+					onPress={() => mutate()}
+				>
+					<Text className="text-white font-semibold">Reload</Text>
+				</Pressable>
+			</View>
+		);
+	}
+
+	if (!providers || !providers.data || providers.data.length === 0) {
+		return (
+			<View className="flex-1 items-center justify-center bg-white dark:bg-black p-6">
+				<Text className="text-gray-500 dark:text-gray-400 text-center mb-4">
+					No authentication providers are configured.
+				</Text>
+				<Text className="text-gray-500 dark:text-gray-400 text-center">
+					Please contact the administrator.
+				</Text>
+			</View>
+		);
+	}
+
+	const emailProvider = providers.data.find(
+		(p) => p.type === "email" && p.enabled,
+	);
+	const oauthProviders = providers.data.filter(
+		(p) => p.type === "oauth" && p.enabled,
+	);
 
 	return (
 		<View className="flex-1 items-center justify-center bg-white dark:bg-black p-6">
@@ -109,9 +130,13 @@ export default function SignInScreen() {
 								onPress={() => handleOAuthSignIn(provider)}
 								disabled={loading}
 							>
-								<Text className="text-black dark:text-white font-semibold text-base">
-									Continue with {provider.prettyName}
-								</Text>
+								{loading ? (
+									<ActivityIndicator color="#9333ea" />
+								) : (
+									<Text className="text-black dark:text-white font-semibold text-base">
+										Continue with {provider.prettyName}
+									</Text>
+								)}
 							</Pressable>
 						))}
 					</View>

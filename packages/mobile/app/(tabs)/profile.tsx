@@ -1,6 +1,8 @@
+import { router } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol, type IconSymbolName } from "@/components/ui/icon-symbol";
+import { authClient } from "@/lib/auth-client";
 
 type MenuItemProps = {
 	icon: IconSymbolName;
@@ -59,6 +61,16 @@ function Divider() {
 }
 
 export default function ProfileScreen() {
+	const { data: session } = authClient.useSession();
+	if (!session || !session.user) {
+		return (
+			<View className="flex-1 items-center justify-center bg-white dark:bg-black">
+				<Text className="text-gray-500 dark:text-gray-400">
+					Please sign in to view your profile.
+				</Text>
+			</View>
+		);
+	}
 	return (
 		<ThemedView style={{ flex: 1 }}>
 			<ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
@@ -75,10 +87,10 @@ export default function ProfileScreen() {
 					</View>
 					<View className="flex-1">
 						<Text className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-							User
+							{session.user.name}
 						</Text>
 						<Text className="text-sm text-gray-500 dark:text-gray-400">
-							user@example.com
+							{session.user.email}
 						</Text>
 					</View>
 				</View>
@@ -139,7 +151,18 @@ export default function ProfileScreen() {
 				</View>
 
 				<View className="mx-4 mt-8">
-					<Pressable className="rounded-xl border border-red-200 dark:border-red-900/50 p-4 items-center active:bg-red-50 dark:active:bg-red-900/20">
+					<Pressable
+						className="rounded-xl border border-red-200 dark:border-red-900/50 p-4 items-center active:bg-red-50 dark:active:bg-red-900/20"
+						onPress={async () => {
+							await authClient.signOut({
+								fetchOptions: {
+									onSuccess: () => {
+										router.push("/");
+									},
+								},
+							});
+						}}
+					>
 						<Text className="text-base font-medium text-red-500">Sign Out</Text>
 					</Pressable>
 				</View>

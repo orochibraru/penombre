@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { authClient } from "$lib/auth-client";
     import Badge from "$lib/components/ui/badge/badge.svelte";
     import { title } from "$lib/store/title";
     import { onMount } from "svelte";
@@ -9,22 +8,6 @@
     });
 
     const { data } = $props();
-
-    async function getstats() {
-        console.log("Getting stats...");
-        const session = await authClient.getSession();
-        const logs = await authClient.dash.getAuditLogs({
-            session: session.data,
-            limit: 50,
-            offset: 0,
-        });
-
-        console.log(logs);
-    }
-
-    onMount(() => {
-        getstats();
-    });
 </script>
 
 <div class="w-full">

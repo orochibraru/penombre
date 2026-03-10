@@ -6,6 +6,7 @@
  */
 
 import createClient from "openapi-fetch";
+import { authClient } from "@/lib/auth-client";
 import type { components, paths } from "./api.v1.d";
 
 // ─── Re-export types from OpenAPI schema ─────────────────────────────────────
@@ -23,11 +24,12 @@ export type FileCounts = NonNullable<
 
 // ─── API client ──────────────────────────────────────────────────────────────
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:5173";
+export const API_BASE =
+	process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
 const client = createClient<paths>({
 	baseUrl: API_BASE,
-	credentials: "include",
+	credentials: "omit",
 	headers: {
 		"Content-Type": "application/json",
 	},
@@ -40,12 +42,43 @@ client.use({
 		if (!request.headers.get("origin")) {
 			request.headers.set("origin", API_BASE);
 		}
-		console.log(`API Request: ${request.method} ${request.url}`);
+
+		const isAuthenticated = await authClient
+			.getSession()
+			.then((data) => {
+				if (data.error) {
+					return false;
+				}
+				if (data.data?.user) {
+					return true;
+				}
+				return false;
+			})
+			.catch(() => false);
+		if (isAuthenticated) {
+			console.debug("User is authenticated, attaching cookies to API request");
+			const cookies = authClient.getCookie();
+			if (cookies) {
+				console.debug("Attaching cookies to API request:", cookies);
+				request.headers.set("cookie", cookies);
+			}
+		} else {
+			console.debug("No authenticated user, proceeding without cookies");
+		}
+
 		return request;
 	},
 	async onResponse({ response }) {
-		console.log(`API Response: ${response.status} ${response.statusText}`);
+		console.debug(`API Response: ${response.status} ${response.statusText}`);
 		return response;
+	},
+	async onError({ error }) {
+		if (error instanceof Error) {
+			console.debug(`API Error: ${error.message}`);
+			return new Response(error.message, { status: 500 });
+		}
+		console.debug("API Error", error);
+		return new Response("Unknown API error", { status: 500 });
 	},
 });
 
@@ -68,31 +101,26 @@ function handleResponse<T>(response: { data?: T; error?: unknown }) {
 	};
 }
 
-/** List files at the root (My Drive) */
 export async function listFiles(_path?: string) {
 	const { data, error } = await client.GET("/api/v1/storage/list");
 	return handleResponse({ data: data?.data, error });
 }
 
-/** List recently modified files */
 export async function listRecentFiles() {
 	const { data, error } = await client.GET("/api/v1/storage/list/recent");
 	return handleResponse({ data: data?.data, error });
 }
 
-/** List starred files */
 export async function listStarredFiles() {
 	const { data, error } = await client.GET("/api/v1/storage/file/starred");
 	return handleResponse({ data: data?.data, error });
 }
 
-/** List trashed files */
 export async function listTrashedFiles() {
 	const { data, error } = await client.GET("/api/v1/storage/file/trash");
 	return handleResponse({ data: data?.data, error });
 }
 
-/** List shared files */
 export async function listSharedFiles() {
 	// Note: Shared files endpoint may not be in the current API spec
 	// Falling back to regular list for now
@@ -100,7 +128,6 @@ export async function listSharedFiles() {
 	return handleResponse({ data: data?.data, error });
 }
 
-/** List files by category */
 export async function listFilesByCategory(category: FileCategory) {
 	const { data, error } = await client.GET(
 		"/api/v1/storage/file/category/{category}",
@@ -111,19 +138,16 @@ export async function listFilesByCategory(category: FileCategory) {
 	return handleResponse({ data: data?.data, error });
 }
 
-/** Get file counts (trash, starred) */
 export async function getFileCounts() {
 	const { data, error } = await client.GET("/api/v1/storage/file/counts");
 	return handleResponse({ data: data?.data, error });
 }
 
-/** Get recent activity */
 export async function getActivity() {
 	const { data, error } = await client.GET("/api/v1/activity");
 	return handleResponse({ data: data?.data, error });
 }
 
-/** Toggle star on a file */
 export async function toggleStar(fileId: string, isStarred: boolean) {
 	const { data, error } = await client.PUT("/api/v1/storage/file/{id}", {
 		params: { path: { id: fileId } },
@@ -132,7 +156,6 @@ export async function toggleStar(fileId: string, isStarred: boolean) {
 	return handleResponse({ data: data?.data, error });
 }
 
-/** Move a file to trash */
 export async function trashFile(fileId: string) {
 	const { data, error } = await client.PUT("/api/v1/storage/file/{id}", {
 		params: { path: { id: fileId } },
@@ -141,7 +164,6 @@ export async function trashFile(fileId: string) {
 	return handleResponse({ data: data?.data, error });
 }
 
-/** Restore a file from trash */
 export async function restoreFile(fileId: string) {
 	const { data, error } = await client.PUT("/api/v1/storage/file/{id}", {
 		params: { path: { id: fileId } },
@@ -150,7 +172,6 @@ export async function restoreFile(fileId: string) {
 	return handleResponse({ data: data?.data, error });
 }
 
-/** Permanently delete a file */
 export async function deleteFile(fileId: string) {
 	const { data, error } = await client.DELETE("/api/v1/storage/file/{id}", {
 		params: { path: { id: fileId } },
@@ -166,25 +187,33 @@ export type AuthProvider = NonNullable<
 
 export type User = components["schemas"]["User"];
 
-/** Fetch available auth providers from the server */
 export async function fetchAuthProviders() {
 	const { data, error } = await client.GET("/api/v1/auth/providers");
 	return handleResponse({ data: data?.data, error });
 }
 
-/** Check if user is authenticated by fetching activity (uses typed endpoint) */
 export async function checkAuth(): Promise<{
 	authenticated: boolean;
 	error?: string;
 }> {
-	const { data, error } = await client.GET("/api/v1/activity");
-	return {
-		authenticated: !error && !!data,
-		error: error ? handleError(error) : undefined,
-	};
+	const { data, error } = await client.GET("/api/v1/auth/get-session");
+
+	if (error) {
+		console.log("Auth check failed:", handleError(error));
+		return { authenticated: false, error: handleError(error) };
+	}
+
+	if (!data) {
+		return { authenticated: false, error: "No data returned from auth check" };
+	}
+
+	if (!data.session || !data.user) {
+		return { authenticated: false, error: "No active session" };
+	}
+
+	return { authenticated: true, error: undefined };
 }
 
-/** Sign in with email and password */
 export async function signIn(
 	email: string,
 	password: string,
@@ -223,7 +252,6 @@ export async function signInWithOAuth(
 	return { error: "OAuth sign-in failed: no redirect URL returned" };
 }
 
-/** Sign out the current user */
 export async function signOut(): Promise<{ success: boolean; error?: string }> {
 	const { error } = await client.POST("/api/v1/auth/sign-out", {});
 

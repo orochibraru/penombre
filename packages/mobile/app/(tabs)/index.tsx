@@ -1,14 +1,15 @@
 import { Button } from "@react-navigation/elements";
-import { useCallback } from "react";
 import { Text, View } from "react-native";
+import useSWR from "swr";
 import { FileList } from "@/components/file-list";
 import { ThemedView } from "@/components/themed-view";
-import { useApiQuery } from "@/hooks/use-api-query";
 import { listFiles, type ObjectItem } from "@/lib/api";
 
 export default function HomeScreen() {
-	const fetchFiles = useCallback(() => listFiles(), []);
-	const { data, loading, refetch, error } = useApiQuery(fetchFiles);
+	const { data, error, mutate, isLoading } = useSWR(
+		"/api/v1/storage/list",
+		listFiles,
+	);
 
 	const handleItemPress = (item: ObjectItem) => {
 		if (item.type === "folder") {
@@ -18,10 +19,6 @@ export default function HomeScreen() {
 		}
 	};
 
-	const handleRefresh = () => {
-		refetch();
-	};
-
 	if (error) {
 		return (
 			<ThemedView
@@ -29,10 +26,12 @@ export default function HomeScreen() {
 			>
 				<Text className="text-red-500">Failed to load files</Text>
 				<Text className="text-gray-500">{error}</Text>
-				<Button onPress={handleRefresh}>Retry</Button>
+				<Button onPress={() => mutate()}>Retry</Button>
 			</ThemedView>
 		);
 	}
+
+	console.log("Files data:", data);
 
 	return (
 		<ThemedView style={{ flex: 1 }}>
@@ -42,9 +41,9 @@ export default function HomeScreen() {
 				</Text>
 			</View>
 			<FileList
-				items={data?.list ?? []}
-				loading={loading}
-				onRefresh={refetch}
+				items={data?.data?.list ?? []}
+				loading={isLoading}
+				onRefresh={mutate}
 				onItemPress={handleItemPress}
 				emptyIcon="folder"
 				emptyTitle="No files yet"
