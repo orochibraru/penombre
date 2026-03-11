@@ -138,8 +138,12 @@ jobs:
 
       - name: Configure Git
         run: |
+          # User
           git config --global user.name "Gitea Bot"
           git config --global user.email "no-reply@ombrage.space"
+          # Credentials
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.GITEA_TOKEN }}@git.ombrage.space" > ~/.git-credentials
 
       - name: Create Release
         run: bun run ./scripts/bump-version.ts
