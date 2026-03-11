@@ -1,7 +1,6 @@
 {
 	"name": "@opendrive/web",
 	"private": true,
-	"version": "0.0.7",
 	"type": "module",
 	"packageManager": "bun@1.3.10",
 	"scripts": {
