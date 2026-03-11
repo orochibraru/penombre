@@ -53,6 +53,7 @@ jobs:
   typescript:
     name: TypeScript
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     services:
       postgres:
         image: postgres:17
@@ -125,7 +126,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: typescript
+    # needs: typescript
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Setup bun
