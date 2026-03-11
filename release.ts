@@ -10,6 +10,9 @@ async function main() {
 	await $`bunx changelogen@latest --release`;
 	const newVersion = JSON.parse(await Bun.file("package.json").text()).version;
 	console.log(`New version: ${newVersion}`);
+
+	// commit the changes
+	await $`git push origin main --tags`;
 }
 
 void main();
