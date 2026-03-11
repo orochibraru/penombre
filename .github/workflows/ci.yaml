@@ -143,6 +143,7 @@ jobs:
         with:
           ssh-key: ${{ secrets.DEPLOY_KEY }}
           ssh-known-hosts: 'git.ombrage.space'
+          ssh-strict: "false"
 
       - name: Create Release
         run: bun run ./scripts/bump-version.ts
