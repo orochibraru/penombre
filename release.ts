@@ -7,7 +7,7 @@ async function main() {
 	console.log(`Current version: ${currentVersion}`);
 
 	// Increment the patch version
-	await $`bun run release`;
+	await $`bunx changelogen@latest --release`;
 	const newVersion = JSON.parse(await Bun.file("package.json").text()).version;
 	console.log(`New version: ${newVersion}`);
 }
