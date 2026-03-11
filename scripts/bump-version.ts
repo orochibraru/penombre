@@ -15,9 +15,6 @@ async function main() {
 		console.log("Version did not change, skipping release.");
 		return;
 	}
-
-	// commit the changes
-	await $`git push origin main --tags`;
 }
 
 void main();
