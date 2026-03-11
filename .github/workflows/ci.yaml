@@ -136,8 +136,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "Gitea Bot"
-          git config user.email "no-reply@ombrage.space"
+          git config --global user.name "Gitea Bot"
+          git config --global user.email "no-reply@ombrage.space"
 
       - uses: actions/checkout@v5
         with:
