@@ -1,15 +1,7 @@
-/**
- * API client for the OpenDrive v1 API.
- *
- * The base URL should be configured via the EXPO_PUBLIC_API_URL env var
- * (e.g. "http://192.168.1.x:8080" during dev, or production URL).
- */
-
 import createClient from "openapi-fetch";
 import { authClient } from "@/lib/auth-client";
+import { API_BASE } from "@/lib/constants";
 import type { components, paths } from "./api.v1.d";
-
-// ─── Re-export types from OpenAPI schema ─────────────────────────────────────
 
 export type FileCategory =
 	components["schemas"]["ObjectList"]["list"][number]["metadata"]["category"];
@@ -23,9 +15,6 @@ export type FileCounts = NonNullable<
 >;
 
 // ─── API client ──────────────────────────────────────────────────────────────
-
-export const API_BASE =
-	process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
 const client = createClient<paths>({
 	baseUrl: API_BASE,
