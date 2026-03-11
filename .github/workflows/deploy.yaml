@@ -1,37 +1,9 @@
 name: Deploy
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*.*.*'
-    paths:
-      - "packages/web/**"
-      - "scripts/**"
-      - "Dockerfile"
-      - "docker-bake.hcl"
-      - "compose.yaml"
-      - "package.json"
-      - "bun.lock"
-      - "tsconfig.json"
-      - "biome.json"
-      - ".github/workflows/**"
-      - "docs/**"
-
-  pull_request:
-    paths:
-      - "packages/**"
-      - "scripts/**"
-      - "Dockerfile"
-      - "docker-bake.hcl"
-      - "compose.yaml"
-      - "package.json"
-      - "bun.lock"
-      - "tsconfig.json"
-      - "biome.json"
-      - ".github/workflows/**"
-      - "docs/**"
-
+      
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-deploy
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -52,7 +24,7 @@ jobs:
     name: Docker
     runs-on: ubuntu-latest
     env:
-      TAG: ${{ github.ref }}
+      TAG: ${{ github.ref_name }}
       IMAGE: git.ombrage.space/opendrive/opendrive
     if: github.event_name != 'pull_request' || !startsWith(github.event.pull_request.title, 'WIP')
     steps:
@@ -91,7 +63,7 @@ jobs:
       REGISTRY_PASSWORD: ${{ secrets.PACKAGES_TOKEN }}
       DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
       DOKPLOY_AUTH_TOKEN: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
-      DOCKER_TAG: ${{ github.ref }}
+      DOCKER_TAG: ${{ github.ref_name }}
       DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
 
     steps:
