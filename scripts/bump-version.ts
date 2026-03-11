@@ -10,11 +10,6 @@ async function main() {
 	await $`bunx changelogen@latest --release`;
 	const newVersion = JSON.parse(await Bun.file("package.json").text()).version;
 	console.log(`New version: ${newVersion}`);
-
-	if (currentVersion === newVersion) {
-		console.log("Version did not change, skipping release.");
-		return;
-	}
 }
 
 void main();
