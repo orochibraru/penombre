@@ -97,6 +97,35 @@ jobs:
         working-directory: packages/web
         run: bun run check
 
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: typescript
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Create Release
+        run: bun run release
+
+      - name: Push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "norepl@ombrage.space"
+          git push origin main --follow-tags
+
+      - name: Create Gitea Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            CHANGELOG.md
+
   # ===========================================
   # Docker: Build (PR) or Build & Push (main)
   # ===========================================
