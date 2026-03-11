@@ -72,7 +72,7 @@ jobs:
       LOG_LEVEL: DEBUG
       PORT: 3000
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -115,7 +115,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # PR: Build only (no push)
       - name: Build (PR validation)
@@ -139,7 +139,7 @@ jobs:
           git config --global user.name "Gitea Bot"
           git config --global user.email "no-reply@ombrage.space"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ssh-key: ${{ secrets.DEPLOY_KEY }}
 

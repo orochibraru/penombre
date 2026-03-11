@@ -34,7 +34,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # Only login and push on main branch
       - name: Login to Container registry
@@ -67,7 +67,7 @@ jobs:
       DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
