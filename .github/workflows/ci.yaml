@@ -105,7 +105,7 @@ jobs:
     env:
       TAG: ${{ github.sha }}
       IMAGE: git.ombrage.space/opendrive/opendrive
-    if: github.event_name != 'pull_request' || !startsWith(github.event.pull_request.title, 'WIP')
+    if: github.event_name == 'pull_request'
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
