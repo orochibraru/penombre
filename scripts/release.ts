@@ -56,6 +56,11 @@ async function main() {
 	const newVersion = JSON.parse(await Bun.file("package.json").text()).version;
 	console.log(`New version: ${newVersion}`);
 
+	if (currentVersion === newVersion) {
+		console.log("Version did not change, skipping release.");
+		return;
+	}
+
 	// commit the changes
 	await $`git push origin main --tags`;
 
