@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.1.7
+
+[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.6...v1.1.7)
+
+### 🩹 Fixes
+
+- Release stage (0e1699b)
+
+### ❤️ Contributors
+
+- Oro <boyer63nicolas@gmail.com>
+
 ## v1.1.6
 
 [compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.5...v1.1.6)
