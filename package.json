@@ -20,7 +20,7 @@
 		"backup": "./scripts/backup.sh",
 		"restore": "./scripts/restore.sh",
 		"gen:api": "bun run --workspaces gen:api",
-		"release": "changelogen --release"
+		"release": "bun run ./scripts/release.ts"
 	},
 	"keywords": [],
 	"author": "",

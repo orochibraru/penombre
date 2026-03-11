@@ -52,7 +52,7 @@ jobs:
     name: Docker
     runs-on: ubuntu-latest
     env:
-      TAG: ${{ github.sha }}
+      TAG: ${{ github.ref }}
       IMAGE: git.ombrage.space/opendrive/opendrive
     if: github.event_name != 'pull_request' || !startsWith(github.event.pull_request.title, 'WIP')
     steps:
@@ -66,22 +66,14 @@ jobs:
 
       # Only login and push on main branch
       - name: Login to Container registry
-        if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           registry: git.ombrage.space
           username: salokain
           password: ${{ secrets.PACKAGES_TOKEN }}
 
-      # PR: Build only (no push)
-      - name: Build (PR validation)
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: docker buildx bake --file ./docker-bake.hcl app
-
       # Main: Build and push
       - name: Build and push
-        if: github.ref == 'refs/heads/main'
         shell: bash
         run: docker buildx bake --file ./docker-bake.hcl --push
 
@@ -92,7 +84,6 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     needs: docker
-    if: github.ref == 'refs/heads/main'
     env:
       URL: https://drive.ombrage.space
       HOSTNAME: drive.ombrage.space
@@ -100,7 +91,7 @@ jobs:
       REGISTRY_PASSWORD: ${{ secrets.PACKAGES_TOKEN }}
       DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
       DOKPLOY_AUTH_TOKEN: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
-      DOCKER_TAG: ${{ github.sha }}
+      DOCKER_TAG: ${{ github.ref }}
       DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
 
     steps:

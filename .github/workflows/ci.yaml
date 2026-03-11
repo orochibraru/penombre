@@ -2,6 +2,8 @@ name: CI/CD
 
 on:
   push:
+    tags-ignore:
+      - 'v*.*.*'
     branches:
       - main
     paths:
@@ -96,6 +98,28 @@ jobs:
       - name: Type check
         working-directory: packages/web
         run: bun run check
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.sha }}
+      IMAGE: git.ombrage.space/opendrive/opendrive
+    if: github.event_name != 'pull_request' || !startsWith(github.event.pull_request.title, 'WIP')
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - uses: actions/checkout@v5
+
+      # PR: Build only (no push)
+      - name: Build (PR validation)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: docker buildx bake --file ./docker-bake.hcl app
 
   release:
     name: Release
