@@ -1,6 +1,10 @@
 # Changelog
 
 
+## v1.1.1
+
+[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.0...v1.1.1)
+
 ## v1.1.0
 
 [compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v0.0.7...v1.1.0)
