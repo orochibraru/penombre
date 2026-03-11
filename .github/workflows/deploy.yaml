@@ -3,10 +3,10 @@ on:
   push:
     tags:
       - 'v*.*.*'
-      
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-deploy
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
