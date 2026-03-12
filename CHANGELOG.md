@@ -1,6 +1,8 @@
 # Changelog
 
 
+## v1.1.8
+
 ## v1.1.7
 
 [compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.6...v1.1.7)
