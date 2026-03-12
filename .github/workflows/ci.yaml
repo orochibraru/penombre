@@ -128,7 +128,7 @@ jobs:
         run: bun run ./scripts/bump-version.ts
 
       - name: Push to git
-        run: git push origin main --follow-tags
+        run: git push origin main --tags
 
       - name: Create Release
         run: bun run ./scripts/release.ts
