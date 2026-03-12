@@ -7,7 +7,7 @@ variable "TAG" {
 }
 
 variable "IMAGE" {
-  default = "penombre/penombre"
+  default = "orochibraru/penombre"
   validation {
     condition = IMAGE != ""
     error_message = "The variable 'IMAGE' must not be empty."
@@ -25,7 +25,7 @@ target "app" {
     APP_VERSION = "${TAG}"
   }
   dockerfile = "./Dockerfile"
-  tags       = ["penombre/penombre:latest","penombre/penombre:${TAG}"]
+  tags       = ["orochibraru/penombre:latest","orochibraru/penombre:${TAG}"]
   platforms = ["linux/amd64", "linux/arm64"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]

@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.ref_name }}
-      IMAGE: penombre/penombre
+      IMAGE: orochibraru/penombre
     if: github.event_name != 'pull_request' || !startsWith(github.event.pull_request.title, 'WIP')
     steps:
       - name: Set up Docker Buildx

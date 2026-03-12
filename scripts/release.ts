@@ -1,5 +1,5 @@
 const GITHUB_URL = "https://github.com";
-const GITHUB_REPO = "penombre/penombre";
+const GITHUB_REPO = "orochibraru/penombre";
 
 async function getChangelogSection(version: string): Promise<string> {
 	const changelog = await Bun.file("CHANGELOG.md").text();

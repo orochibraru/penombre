@@ -114,7 +114,7 @@
 
 ## v1.2.0
 
-[compare changes](https://github.com/penombre/penombre/compare/v1.1.7...v1.2.0)
+[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.7...v1.2.0)
 
 ### 🚀 Enhancements
 
@@ -140,7 +140,7 @@
 
 ## v1.1.7
 
-[compare changes](https://github.com/penombre/penombre/compare/v1.1.6...v1.1.7)
+[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.6...v1.1.7)
 
 ### 🩹 Fixes
 
@@ -152,31 +152,31 @@
 
 ## v1.1.6
 
-[compare changes](https://github.com/penombre/penombre/compare/v1.1.5...v1.1.6)
+[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.5...v1.1.6)
 
 ## v1.1.5
 
-[compare changes](https://github.com/penombre/penombre/compare/v1.1.4...v1.1.5)
+[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.4...v1.1.5)
 
 ## v1.1.4
 
-[compare changes](https://github.com/penombre/penombre/compare/v1.1.3...v1.1.4)
+[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.3...v1.1.4)
 
 ## v1.1.3
 
-[compare changes](https://github.com/penombre/penombre/compare/v1.1.2...v1.1.3)
+[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.2...v1.1.3)
 
 ## v1.1.2
 
-[compare changes](https://github.com/penombre/penombre/compare/v1.1.1...v1.1.2)
+[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.1...v1.1.2)
 
 ## v1.1.1
 
-[compare changes](https://github.com/penombre/penombre/compare/v1.1.0...v1.1.1)
+[compare changes](https://github.com/orochibraru/penombre/compare/v1.1.0...v1.1.1)
 
 ## v1.1.0
 
-[compare changes](https://github.com/penombre/penombre/compare/v0.0.7...v1.1.0)
+[compare changes](https://github.com/orochibraru/penombre/compare/v0.0.7...v1.1.0)
 
 ### 🚀 Enhancements
 
