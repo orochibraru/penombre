@@ -7,6 +7,8 @@ Penombre is a comprehensive file storage and synchronization platform that provi
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Bun Version](https://img.shields.io/badge/bun-1.3.8-green.svg)
 
+## Getting Started
+
 ## Features
 
 - **Web Interface**: Modern, responsive web application built with SvelteKit
@@ -18,93 +20,6 @@ Penombre is a comprehensive file storage and synchronization platform that provi
 - **Self-Hosted**: Complete control over your data and infrastructure
 - **Docker Support**: Easy deployment with Docker Compose
 - **Recent Files**: Quick access to recently modified files
-
-## Architecture
-
-Penombre is a **monorepo** with the following packages:
-
-```
-packages/
-├── web/     # SvelteKit app (frontend + Hono API backend)
-└── mobile/  # Expo/React Native mobile app
-```
-
-### Database
-
-![DB Diagram](./resources/db.svg)
-
-### Web Package (`packages/web`)
-
-The web package is a full-stack SvelteKit application:
-
-- **Frontend**: SvelteKit with Svelte 5, TailwindCSS, and shadcn-svelte components
-- **Backend API**: Hono routers integrated into SvelteKit server routes
-- **Database**: PostgreSQL with Drizzle ORM (user accounts, activity logging)
-- **Storage**: Local filesystem storage under `STORAGE_PATH` (default `/data`)
-- **Auth**: Better Auth for authentication
-
-### Mobile Package (`packages/mobile`)
-
-- **Framework**: Expo with React Native
-- **Styling**: NativeWind (TailwindCSS for React Native)
-- **Routing**: Expo Router (file-based routing)
-
-## Quick Start
-
-### Prerequisites
-
-- **Bun 1.3+** (primary runtime)
-- **Docker and Docker Compose** (for PostgreSQL)
-- **Node.js** (for Expo/mobile development)
-
-### Development Setup
-
-1.  **Clone the repository**
-
-    ```bash
-    git clone https://github.com/orochibraru/penombre.git
-    cd penombre
-    ```
-
-2.  **Install dependencies**
-
-    ```bash
-    bun install
-    ```
-
-3.  **Start development services**
-
-    ```bash
-    bun run dev
-    ```
-
-    This starts PostgreSQL via Docker Compose and the Vite dev server for the web app.
-
-4.  **Access the application**
-    - Web UI: http://localhost:5173 (Vite default)
-
-### Mobile Development
-
-```bash
-cd packages/mobile
-bun install
-bunx expo start
-```
-
-> **Note**: When connecting to the web API from a device/emulator, don't use `localhost`:
->
-> - **iOS Simulator**: Use your host machine IP (e.g., `http://192.168.x.x:3000`)
-> - **Android Emulator**: Use `http://10.0.2.2:3000` or set up `adb reverse`
-
-## Docker Deployment
-
-Build and run the production container:
-
-```bash
-docker compose up --build
-```
-
-The app will be available at http://localhost:3000.
 
 ### Environment Variables
 
@@ -161,6 +76,93 @@ Configure OAuth providers using the pattern `OAUTH_<PROVIDER>_<SETTING>`:
 | `SMTP_PASSWORD` | SMTP password            | Required if enabled |
 | `SMTP_FROM`     | Sender email address     | Required if enabled |
 | `SMTP_SECURE`   | Use TLS (`true`/`false`) | `false`             |
+
+## Architecture
+
+Penombre is a **monorepo** with the following packages:
+
+```
+packages/
+├── web/     # SvelteKit app (frontend + Hono API backend)
+└── mobile/  # Expo/React Native mobile app
+```
+
+### Database
+
+![DB Diagram](./resources/db.svg)
+
+### Web Package (`packages/web`)
+
+The web package is a full-stack SvelteKit application:
+
+- **Frontend**: SvelteKit with Svelte 5, TailwindCSS, and shadcn-svelte components
+- **Backend API**: Hono routers integrated into SvelteKit server routes
+- **Database**: PostgreSQL with Drizzle ORM (user accounts, activity logging)
+- **Storage**: Local filesystem storage under `STORAGE_PATH` (default `/data`)
+- **Auth**: Better Auth for authentication
+
+### Mobile Package (`packages/mobile`)
+
+- **Framework**: Expo with React Native
+- **Styling**: NativeWind (TailwindCSS for React Native)
+- **Routing**: Expo Router (file-based routing)
+
+## Development
+
+### Prerequisites
+
+- **Bun 1.3+** (primary runtime)
+- **Docker and Docker Compose** (for PostgreSQL)
+- **Node.js** (for Expo/mobile development)
+
+### Setup
+
+1.  **Clone the repository**
+
+    ```bash
+    git clone https://github.com/orochibraru/penombre.git
+    cd penombre
+    ```
+
+2.  **Install dependencies**
+
+    ```bash
+    bun install
+    ```
+
+3.  **Start development services**
+
+    ```bash
+    bun run dev
+    ```
+
+    This starts PostgreSQL via Docker Compose and the Vite dev server for the web app.
+
+4.  **Access the application**
+    - Web UI: http://localhost:5173 (Vite default)
+
+### Mobile Development
+
+```bash
+cd packages/mobile
+bun install
+bunx expo start
+```
+
+> **Note**: When connecting to the web API from a device/emulator, don't use `localhost`:
+>
+> - **iOS Simulator**: Use your host machine IP (e.g., `http://192.168.x.x:3000`)
+> - **Android Emulator**: Use `http://10.0.2.2:3000` or set up `adb reverse`
+
+## Docker Deployment
+
+Build and run the production container:
+
+```bash
+docker compose up --build
+```
+
+The app will be available at http://localhost:3000.
 
 ## Backup & Restore
 
@@ -261,8 +263,3 @@ Built with these open-source technologies:
 - [Better Auth](https://www.better-auth.com/) - Authentication library
 - [PostgreSQL](https://postgresql.org/) - Database
 - [Biome](https://biomejs.dev/) - Linter and formatter
-
-## Support
-
-- [Issue Tracker](https://github.com/orochibraru/penombre/issues)
-- [Discussions](https://github.com/orochibraru/penombre/discussions)
