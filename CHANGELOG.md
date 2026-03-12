@@ -114,7 +114,7 @@
 
 ### ❤️ Contributors
 
-- Oro <boyer63nicolas@gmail.com>
+- Oro 
 
 ## v1.1.7
 
@@ -126,7 +126,7 @@
 
 ### ❤️ Contributors
 
-- Oro <boyer63nicolas@gmail.com>
+- Oro 
 
 ## v1.1.6
 
