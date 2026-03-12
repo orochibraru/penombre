@@ -1,6 +1,32 @@
 # Changelog
 
 
+## v1.2.0
+
+[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.7...v1.2.0)
+
+### 🚀 Enhancements
+
+- Release mechanism (5a3afb1)
+- Deploy key (1fbd989)
+
+### 🩹 Fixes
+
+- Release (558121c)
+- Release ci (2146271)
+- Ci (59de4d5)
+- Version check (514b147)
+- Flow (fcfe8be)
+- Ci (4abb8a1)
+- Ci order (c7cfebc)
+- Git config (0dc72cc)
+- V6 checkout action (fbc9226)
+- Known hosts (6d6f4bc)
+
+### ❤️ Contributors
+
+- Oro <boyer63nicolas@gmail.com>
+
 ## v1.1.7
 
 [compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.6...v1.1.7)
