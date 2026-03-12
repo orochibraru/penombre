@@ -9,6 +9,57 @@ Penombre is a comprehensive file storage and synchronization platform that provi
 
 ## Getting Started
 
+1. Get the `.env` file
+   `curl -o .env https://raw.githubusercontent.com/orochibraru/penombre/refs/heads/main/.example.env`
+2. Edit the `.env` file with your configuration (see below for details)
+
+3. Start the application with Docker Compose:
+
+```yaml
+services:
+    app:
+        image: orochibraru/penombre:latest
+        depends_on:
+            db:
+                condition: service_healthy
+        ports:
+            - 3000:3000
+        restart: unless-stopped
+        volumes:
+            - storage_data:/data
+        env_file: .env
+        environment:
+            - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
+
+    db:
+        image: postgres:17-alpine
+        restart: unless-stopped
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER-postgres}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
+            - POSTGRES_DB=${POSTGRES_DB-penombre}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    CMD-SHELL,
+                    "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-penombre}'",
+                ]
+            interval: 1s
+            timeout: 2s
+            retries: 10
+            start_period: 3s
+
+volumes:
+    postgres_data:
+        driver: local
+    storage_data:
+        driver: local
+```
+
 ## Features
 
 - **Web Interface**: Modern, responsive web application built with SvelteKit
