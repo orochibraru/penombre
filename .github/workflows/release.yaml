@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - "v*.*.*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-release
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: write
+
+env:
+  TZ: Europe/Paris
+  BUN_VERSION: 1.3.10
+
+jobs:
+  check:
+    uses: ./.github/workflows/pr.yaml
+    if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    env:
+      GITEA_TOKEN: ${{ secrets.CI_TOKEN }}
+    needs: [check]
+    if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ env.GITEA_TOKEN }}
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Configure Git
+        run: |
+          # User
+          git config --global user.name "Release Bot"
+          git config --global user.email "no-reply@ombrage.space"
+          # Credentials
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.GITEA_TOKEN }}@git.ombrage.space" > ~/.git-credentials
+
+      - name: Create Release
+        run: bun run ./scripts/bump-version.ts
+
+      - name: Push to git
+        run: git push origin main --tags
+
+      - name: Create Release
+        run: bun run ./scripts/release.ts

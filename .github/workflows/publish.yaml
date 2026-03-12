@@ -1,17 +1,12 @@
-name: Deploy
+name: Publish
 on:
   push:
     tags:
       - "v*.*.*"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-deploy
+  group: ${{ github.workflow }}-${{ github.ref }}-publish
   cancel-in-progress: false
-
-permissions:
-  contents: write
-  pull-requests: write
-  id-token: write
 
 env:
   TZ: Europe/Paris
@@ -48,33 +43,3 @@ jobs:
       - name: Build and push
         shell: bash
         run: docker buildx bake --file ./docker-bake.hcl --push
-
-  # ===========================================
-  # Deploy: Only on main branch after docker
-  # ===========================================
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    needs: docker
-    environment: production
-    env:
-      URL: https://drive.ombrage.space
-      HOSTNAME: drive.ombrage.space
-      REGISTRY_USER: orochibraru
-      REGISTRY_PASSWORD: ${{ secrets.PACKAGES_TOKEN }}
-      DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
-      DOKPLOY_AUTH_TOKEN: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
-      DOCKER_TAG: ${{ github.ref_name }}
-      DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Deploy to Dokploy
-        shell: bash
-        run: bun run ./scripts/deploy.ts
