@@ -410,6 +410,5 @@
 
 ### ❤️ Contributors
 
-- Oro <boyer63nicolas@gmail.com>
-- Nicolas Boyer <boyer63nicolas@gmail.com>
+- Oro 
 
