@@ -23,6 +23,8 @@ const oauthProviderSchema = z.object({
 
 const opendriveConfigSchema = z
 	.object({
+		appName: z.string().default(defaultConfigValues.appName),
+		appVersion: z.string().default(defaultConfigValues.appVersion),
 		environment: z
 			.enum(["dev", "production"])
 			.default(defaultConfigValues.environment),
@@ -202,6 +204,8 @@ export function getOpendriveConfig(): OpendriveConfig {
 		env.MIN_PASSWORD_LENGTH;
 
 	const environmentVariables = {
+		appName: env.APP_NAME || defaultConfigValues.appName,
+		appVersion: env.APP_VERSION || defaultConfigValues.appVersion,
 		environment: env.APP_ENV || defaultConfigValues.environment,
 		origin: env.ORIGIN || defaultConfigValues.origin,
 		logLevel:

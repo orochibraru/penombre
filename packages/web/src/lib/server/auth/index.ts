@@ -66,9 +66,6 @@ export const auth = betterAuth({
 		after: createAuthMiddleware(async (ctx) => {
 			const session = ctx.context.session;
 			const data = ctx.context.returned;
-			logger.debug("Data returned from auth middleware hook:", {
-				data,
-			});
 			// @ts-expect-error - BetterAuth types are not great, so we need to assert the type here
 			if (data?.url) {
 				// @ts-expect-error - BetterAuth types are not great, so we need to assert the type here

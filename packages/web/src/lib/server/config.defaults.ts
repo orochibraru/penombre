@@ -6,6 +6,8 @@
  */
 
 export const defaultConfigValues = {
+	appName: "Opendrive",
+	appVersion: "development",
 	environment: "production" as "dev" | "production",
 	origin: "http://localhost:3000",
 	logLevel: "info" as "debug" | "info" | "warn" | "error",
@@ -39,6 +41,9 @@ export function generateExampleDotenvFile(): string {
 	return `# ===========================================
 # Opendrive Configuration
 # ===========================================
+
+APP_NAME=${defaultConfigValues.appName}
+APP_VERSION=${defaultConfigValues.appVersion}
 
 # Environment: "dev" or "production"
 APP_ENV=${defaultConfigValues.environment}

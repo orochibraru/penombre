@@ -64,4 +64,7 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget 
 
 USER bun
 
+ARG APP_VERSION
+ENV APP_VERSION=${APP_VERSION:-unknown}
+
 CMD ["bun", "run", "/app/build/index.js"]

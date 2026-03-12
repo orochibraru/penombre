@@ -238,6 +238,9 @@
             <Nav title="General" items={nav.general} />
             <Nav title="Categories" items={nav.categories} />
             <Nav title="Help" items={nav.help} class="mt-auto" />
+            <p class="text-xs text-muted-foreground">
+                {data.config.appName} version {data.config.appVersion}
+            </p>
         </Sidebar.Content>
     </Sidebar.Root>
 

@@ -21,6 +21,9 @@ group "default" {
 
 target "app" {
   context    = "."
+  args = {
+    APP_VERSION = "${TAG}"
+  }
   dockerfile = "./Dockerfile"
   tags       = ["git.ombrage.space/opendrive/opendrive:latest","git.ombrage.space/opendrive/opendrive:${TAG}"]
   platforms = ["linux/amd64"]

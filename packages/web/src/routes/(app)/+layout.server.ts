@@ -4,6 +4,7 @@ import { zod4 } from "sveltekit-superforms/adapters";
 import { resolve } from "$app/paths";
 import { api } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
+import { getOpendriveConfig } from "$lib/server/config";
 import { getUserPreferences } from "$lib/server/services/preferences";
 import type { LayoutServerLoad } from "./$types";
 
@@ -48,8 +49,11 @@ export const load: LayoutServerLoad = async ({
 
 	const isAdmin = locals.user.role === "admin";
 
+	const config = getOpendriveConfig();
+
 	return {
 		user: locals.user,
+		config,
 		session: locals.session,
 		activity,
 		counts,
