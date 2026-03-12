@@ -9,7 +9,7 @@
     import { Toaster } from "$lib/components/ui/sonner/index";
     import { title } from "$lib/store/title";
 
-    let { children } = $props();
+    let { children, data } = $props();
 
     onNavigate((navigation) => {
         if (!browser) return;
@@ -47,7 +47,7 @@
 <ModeWatcher />
 
 <svelte:head>
-    <title>Penombre - {$title ?? "Home"}</title>
+    <title>{data.config.appName} - {$title ?? "Home"}</title>
 </svelte:head>
 
 <TopLoadingbar />

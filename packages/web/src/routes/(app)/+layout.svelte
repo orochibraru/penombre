@@ -176,7 +176,7 @@
 </script>
 
 <svelte:head>
-    <title>Penombre - {$title ?? "Home"}</title>
+    <title>{data.config.appName} - {$title ?? "Home"}</title>
 </svelte:head>
 
 <Sidebar.Provider

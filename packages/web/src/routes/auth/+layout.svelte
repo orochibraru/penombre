@@ -1,6 +1,6 @@
 <script lang="ts">
     import LanguageDropdown from "$lib/components/language-dropdown.svelte";
-    const { children } = $props();
+    const { children, data } = $props();
 </script>
 
 <div class="grid min-h-svh lg:grid-cols-2">
@@ -14,8 +14,12 @@
     <div class="flex flex-col gap-4 p-6 md:p-10">
         <div class="flex justify-center gap-2 md:justify-start">
             <a href="/" class="flex items-center gap-2 font-medium">
-                <img src="/logo.svg" alt="Penombre Logo" class="w-12 h-12" />
-                Penombre
+                <img
+                    src="/logo.svg"
+                    alt={`${data.config.appName} logo`}
+                    class="w-12 h-12"
+                />
+                {data.config.appName}
             </a>
         </div>
         <div class="flex flex-1 items-center justify-center">
