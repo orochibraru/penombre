@@ -1,6 +1,17 @@
 # Changelog
 
 
+## v1.2.14
+
+
+### 🩹 Fixes
+
+- Email (8c4c213)
+
+### ❤️ Contributors
+
+- Oro
+
 ## v1.2.13
 
 ## v1.2.12
