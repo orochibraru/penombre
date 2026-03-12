@@ -28,6 +28,8 @@ jobs:
   typescript:
     name: TypeScript
     runs-on: ubuntu-latest
+    # Skip if the commit message starts with "chore(release)"
+    if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
     services:
       postgres:
         image: postgres:17
@@ -104,7 +106,7 @@ jobs:
       GITEA_TOKEN: ${{ secrets.CI_TOKEN }}
     needs: typescript
     # If branch is main and its commit message doesn't start with "chore(release)", then create a release
-    if: github.ref == 'refs/heads/main' && !startsWith(github.event.head_commit.message, 'chore(release)')
+    if: "github.ref == 'refs/heads/main' && !startsWith(github.event.head_commit.message, 'chore(release)')"
     steps:
       - uses: actions/checkout@v6
         with:
