@@ -1,6 +1,52 @@
 # Changelog
 
 
+## v1.2.5
+
+
+### 🏡 Chore
+
+- **release:** V1.2.4 (579193f)
+
+### ❤️ Contributors
+
+- Release Bot <no-reply@ombrage.space>
+
+## v1.2.4
+
+
+### 🏡 Chore
+
+- **release:** V1.2.3 (307c292)
+
+### ❤️ Contributors
+
+- Release Bot <no-reply@ombrage.space>
+
+## v1.2.3
+
+
+### 🏡 Chore
+
+- **release:** V1.2.2 (4eabdfc)
+
+### ❤️ Contributors
+
+- Release Bot <no-reply@ombrage.space>
+
+## v1.2.2
+
+
+### 🏡 Chore
+
+- **release:** V1.2.1 (755ada0)
+
+### ❤️ Contributors
+
+- Release Bot <no-reply@ombrage.space>
+
+## v1.2.1
+
 ## v1.2.0
 
 [compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.7...v1.2.0)
