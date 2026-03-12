@@ -25,7 +25,7 @@ target "app" {
     APP_VERSION = "${TAG}"
   }
   dockerfile = "./Dockerfile"
-  tags       = ["git.ombrage.space/opendrive/opendrive:latest","git.ombrage.space/opendrive/opendrive:${TAG}"]
+  tags       = ["git.ombrage.space/opendrive/opendrive:latest","git.ombrage.space/opendrive/opendrive:${TAG}", "orochibraru/opendrive:${TAG}", "orochibraru/opendrive:latest"]
   platforms = ["linux/amd64"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]
