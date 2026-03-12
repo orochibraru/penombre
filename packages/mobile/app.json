@@ -1,16 +1,16 @@
 {
 	"expo": {
-		"name": "opendrive",
-		"slug": "opendrive",
+		"name": "penombre",
+		"slug": "penombre",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
-		"scheme": "opendrive",
+		"scheme": "penombre",
 		"userInterfaceStyle": "automatic",
 		"newArchEnabled": true,
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "com.anonymous.opendrive"
+			"bundleIdentifier": "com.anonymous.penombre"
 		},
 		"android": {
 			"adaptiveIcon": {
@@ -21,7 +21,7 @@
 			},
 			"edgeToEdgeEnabled": true,
 			"predictiveBackGestureEnabled": false,
-			"package": "com.anonymous.opendrive"
+			"package": "com.anonymous.penombre"
 		},
 		"plugins": [
 			"expo-router",

@@ -1,5 +1,5 @@
 {
-	"name": "@opendrive/web",
+	"name": "@penombre/web",
 	"private": true,
 	"type": "module",
 	"packageManager": "bun@1.3.10",

@@ -1,5 +1,5 @@
 {
-	"name": "@opendrive/mobile",
+	"name": "@penombre/mobile",
 	"main": "expo-router/entry",
 	"version": "1.0.0",
 	"scripts": {

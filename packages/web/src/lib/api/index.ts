@@ -2,7 +2,7 @@ import createClient from "openapi-fetch";
 import type { components, paths } from "./v1";
 
 /**
- * Typed API client for the OpenDrive v1 API.
+ * Typed API client for the Penombre v1 API.
  *
  * Uses `openapi-fetch` backed by the generated OpenAPI types, providing
  * full autocomplete and type safety for paths, params, query, body, and responses.

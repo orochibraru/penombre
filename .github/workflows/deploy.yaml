@@ -2,7 +2,7 @@ name: Deploy
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-deploy
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.ref_name }}
-      IMAGE: git.ombrage.space/opendrive/opendrive
+      IMAGE: git.ombrage.space/penombre/penombre
     if: github.event_name != 'pull_request' || !startsWith(github.event.pull_request.title, 'WIP')
     steps:
       - name: Set up Docker Buildx
@@ -41,7 +41,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: git.ombrage.space
-          username: salokain
+          username: orochibraru
           password: ${{ secrets.PACKAGES_TOKEN }}
 
       # Main: Build and push
@@ -60,7 +60,7 @@ jobs:
     env:
       URL: https://drive.ombrage.space
       HOSTNAME: drive.ombrage.space
-      REGISTRY_USER: salokain
+      REGISTRY_USER: orochibraru
       REGISTRY_PASSWORD: ${{ secrets.PACKAGES_TOKEN }}
       DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
       DOKPLOY_AUTH_TOKEN: ${{ secrets.DOKPLOY_AUTH_TOKEN }}
@@ -78,4 +78,3 @@ jobs:
       - name: Deploy to Dokploy
         shell: bash
         run: bun run ./scripts/deploy.ts
-

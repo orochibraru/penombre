@@ -9,7 +9,7 @@ import { sveltekitCookies } from "better-auth/svelte-kit";
 import { building, dev } from "$app/environment";
 import { getRequestEvent } from "$app/server";
 import { Logger } from "$lib/logger";
-import { getOpendriveConfig, isSmtpEnabled } from "$lib/server/config";
+import { getPenombreConfig, isSmtpEnabled } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import * as schema from "$lib/server/db/schema";
 import { Email } from "$lib/server/email";
@@ -21,7 +21,7 @@ if (!process.env.ORIGIN && !dev && !building) {
 	throw new Error("ORIGIN environment variable is not set");
 }
 
-const config = getOpendriveConfig();
+const config = getPenombreConfig();
 
 export const auth = betterAuth({
 	baseURL: config.origin
@@ -33,7 +33,7 @@ export const auth = betterAuth({
 				})(),
 	trustedOrigins: dev
 		? [
-				"opendrive://*/**",
+				"penombre://*/**",
 				"http://localhost:*/**",
 				"http://192.168.*.*:*/**",
 				"exp://localhost:*/**",

@@ -9,7 +9,7 @@ import {
 	yellow,
 } from "@kitql/helpers";
 import { building, dev } from "$app/environment";
-import { getOpendriveConfig } from "$lib/server/config";
+import { getPenombreConfig } from "$lib/server/config";
 
 export type LogFormats = "console" | "json";
 
@@ -44,7 +44,7 @@ export class Logger {
 	 * is not set, defaults to 'console'. Throws an error if the format is invalid.
 	 */
 	constructor(prefix?: string) {
-		const config = getOpendriveConfig();
+		const config = getPenombreConfig();
 
 		this.prefix = prefix;
 		this.prettyPrefix = magenta(`[${this.prefix}]`);

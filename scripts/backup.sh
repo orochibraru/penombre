@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Opendrive Backup Script
+# Penombre Backup Script
 # Creates a timestamped backup of both PostgreSQL database and file storage
 #
 # Usage: ./scripts/backup.sh [backup_directory]
@@ -8,7 +8,7 @@
 # Environment variables (optional):
 #   COMPOSE_PROJECT_NAME - Docker Compose project name (default: auto-detected)
 #   POSTGRES_USER        - PostgreSQL user (default: postgres)
-#   POSTGRES_DB          - PostgreSQL database (default: opendrive)
+#   POSTGRES_DB          - PostgreSQL database (default: penombre)
 #
 
 set -euo pipefail
@@ -26,11 +26,11 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 # Configuration
 BACKUP_DIR="${1:-./backups}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_NAME="opendrive_backup_${TIMESTAMP}"
+BACKUP_NAME="penombre_backup_${TIMESTAMP}"
 BACKUP_PATH="${BACKUP_DIR}/${BACKUP_NAME}"
 
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
-POSTGRES_DB="${POSTGRES_DB:-opendrive}"
+POSTGRES_DB="${POSTGRES_DB:-penombre}"
 
 # Detect docker compose command
 if docker compose version &>/dev/null; then

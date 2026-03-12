@@ -6,7 +6,7 @@ export type Database = BunSQLDatabase<Record<string, never>>;
 export function getDbUrl() {
 	return (
 		Bun.env.DATABASE_URL ??
-		"postgres://postgres:postgres@localhost:5432/opendrive?sslmode=disable"
+		"postgres://postgres:postgres@localhost:5432/penombre?sslmode=disable"
 	);
 }
 

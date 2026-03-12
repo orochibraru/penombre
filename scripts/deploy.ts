@@ -35,7 +35,7 @@ type Config = {
 	dockerTag: string;
 };
 
-const baseImage = "git.ombrage.space/opendrive/opendrive";
+const baseImage = "git.ombrage.space/penombre/penombre";
 
 const config: Config = {
 	dokploy: {

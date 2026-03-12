@@ -1,19 +1,19 @@
 /**
- * Default configuration values for Opendrive.
+ * Default configuration values for Penombre.
  * Extracted to a separate file so it can be used by both:
  * - The runtime config loader (config.ts)
  * - The .example.env generator script (scripts/generate-env-example.ts)
  */
 
 export const defaultConfigValues = {
-	appName: "Opendrive",
+	appName: "Penombre",
 	appVersion: "development",
 	environment: "production" as "dev" | "production",
 	origin: "http://localhost:3000",
 	logLevel: "info" as "debug" | "info" | "warn" | "error",
 	logFormat: "console" as "console" | "json",
 	db: {
-		url: "postgresql://opendrive:opendrive@localhost:5432/opendrive",
+		url: "postgresql://penombre:penombre@localhost:5432/penombre",
 	},
 	auth: {
 		enableEmailSignIn: true,
@@ -39,7 +39,7 @@ export const defaultConfigValues = {
 
 export function generateExampleDotenvFile(): string {
 	return `# ===========================================
-# Opendrive Configuration
+# Penombre Configuration
 # ===========================================
 
 APP_NAME=${defaultConfigValues.appName}

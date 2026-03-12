@@ -34,16 +34,16 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_USER: opendrive
-          POSTGRES_PASSWORD: opendrive
-          POSTGRES_DB: opendrive
+          POSTGRES_USER: penombre
+          POSTGRES_PASSWORD: penombre
+          POSTGRES_DB: penombre
         options: >-
-          --health-cmd="pg_isready -U opendrive"
+          --health-cmd="pg_isready -U penombre"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgres://opendrive:opendrive@postgres:5432/opendrive
+      DATABASE_URL: postgres://penombre:penombre@postgres:5432/penombre
       ORIGIN: http://localhost:3000
       LOG_LEVEL: DEBUG
       PORT: 3000
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.sha }}
-      IMAGE: git.ombrage.space/opendrive/opendrive
+      IMAGE: git.ombrage.space/penombre/penombre
     if: github.event_name == 'pull_request'
     steps:
       - name: Set up Docker Buildx

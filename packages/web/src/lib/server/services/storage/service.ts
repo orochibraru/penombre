@@ -2244,7 +2244,7 @@ export class StorageService {
 	}
 
 	public generateZipFilename(_paths: string[]): string {
-		return "opendrive-download.zip";
+		return "penombre-download.zip";
 	}
 
 	// =========================================================================

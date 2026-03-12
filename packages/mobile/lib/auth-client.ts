@@ -13,8 +13,8 @@ export const authClient = createAuthClient({
 		adminClient(),
 		passkeyClient(),
 		expoClient({
-			scheme: "opendrive",
-			storagePrefix: "opendrive",
+			scheme: "penombre",
+			storagePrefix: "penombre",
 			storage: SecureStore,
 		}),
 	],

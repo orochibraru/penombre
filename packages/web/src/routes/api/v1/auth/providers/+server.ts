@@ -1,10 +1,10 @@
-import { getOpendriveConfig } from "$lib/server/config";
+import { getPenombreConfig } from "$lib/server/config";
 import { Http } from "$lib/server/http";
 import { listAuthProviders } from "$lib/server/openapi/v1/auth";
 
 export const GET = listAuthProviders.handler(async () => {
 	try {
-		const config = getOpendriveConfig();
+		const config = getPenombreConfig();
 		const providers = [];
 
 		if (config.auth.enableEmailSignIn) {

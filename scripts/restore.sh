@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Opendrive Restore Script
+# Penombre Restore Script
 # Restores a backup created by backup.sh
 #
 # Usage: ./scripts/restore.sh <backup_file.tar.gz>
@@ -11,7 +11,7 @@
 # Environment variables (optional):
 #   COMPOSE_PROJECT_NAME - Docker Compose project name (default: auto-detected)
 #   POSTGRES_USER        - PostgreSQL user (default: postgres)
-#   POSTGRES_DB          - PostgreSQL database (default: opendrive)
+#   POSTGRES_DB          - PostgreSQL database (default: penombre)
 #
 
 set -euo pipefail
@@ -30,7 +30,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 if [[ $# -lt 1 ]]; then
     echo "Usage: $0 <backup_file.tar.gz>"
     echo ""
-    echo "Restores an Opendrive backup created by backup.sh"
+    echo "Restores an Penombre backup created by backup.sh"
     echo ""
     echo "WARNING: This will REPLACE all existing data!"
     exit 1
@@ -45,7 +45,7 @@ fi
 
 # Configuration
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
-POSTGRES_DB="${POSTGRES_DB:-opendrive}"
+POSTGRES_DB="${POSTGRES_DB:-penombre}"
 
 # Detect docker compose command
 if docker compose version &>/dev/null; then

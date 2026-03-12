@@ -1,7 +1,7 @@
-import { getOpendriveConfig } from "$lib/server/config";
+import { getPenombreConfig } from "$lib/server/config";
 
 export const load = () => {
-	const config = getOpendriveConfig();
+	const config = getPenombreConfig();
 	return {
 		authConfig: config.auth,
 	};

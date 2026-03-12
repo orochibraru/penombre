@@ -14,8 +14,8 @@
     <div class="flex flex-col gap-4 p-6 md:p-10">
         <div class="flex justify-center gap-2 md:justify-start">
             <a href="/" class="flex items-center gap-2 font-medium">
-                <img src="/logo.svg" alt="Opendrive Logo" class="w-12 h-12" />
-                Opendrive
+                <img src="/logo.svg" alt="Penombre Logo" class="w-12 h-12" />
+                Penombre
             </a>
         </div>
         <div class="flex flex-1 items-center justify-center">

@@ -425,7 +425,7 @@
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
-                        a.download = `opendrive-download-${paths.length}-files.zip`;
+                        a.download = `penombre-download-${paths.length}-files.zip`;
                         document.body.appendChild(a);
                         a.click();
                         URL.revokeObjectURL(url);

@@ -2,13 +2,13 @@ import { eq } from "drizzle-orm";
 import { Logger } from "$lib/logger";
 import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
-import { getOpendriveConfig } from "$lib/server/config";
+import { getPenombreConfig } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
 
 const logger = new Logger("auth:seed");
 
-const config = getOpendriveConfig();
+const config = getPenombreConfig();
 
 export const defaultEmail = config.auth.defaultAdminCredentials.email;
 export const defaultPassword = config.auth.defaultAdminCredentials.password;

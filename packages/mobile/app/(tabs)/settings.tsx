@@ -161,7 +161,7 @@ export default function SettingsScreen() {
 						icon="info.circle"
 						iconColor="#6B7280"
 						title="About"
-						subtitle="OpenDrive v1.0.0"
+						subtitle="Penombre v1.0.0"
 					/>
 				</View>
 			</ScrollView>

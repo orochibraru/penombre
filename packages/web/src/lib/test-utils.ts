@@ -1,7 +1,7 @@
-import type { OpendriveConfig } from "$lib/server/config";
+import type { PenombreConfig } from "$lib/server/config";
 
 export function extractFirstOidcProvider(
-	providers: OpendriveConfig["auth"]["oauthProviders"],
+	providers: PenombreConfig["auth"]["oauthProviders"],
 ) {
 	const firstProvider = providers[0];
 

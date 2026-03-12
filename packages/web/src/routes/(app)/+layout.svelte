@@ -176,7 +176,7 @@
 </script>
 
 <svelte:head>
-    <title>Opendrive - {$title ?? "Home"}</title>
+    <title>Penombre - {$title ?? "Home"}</title>
 </svelte:head>
 
 <Sidebar.Provider

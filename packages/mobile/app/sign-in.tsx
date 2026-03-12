@@ -115,7 +115,7 @@ export default function SignInScreen() {
 		<View className="flex-1 items-center justify-center bg-white dark:bg-black p-6">
 			<View className="w-full max-w-md">
 				<Text className="text-3xl font-bold text-center mb-2 text-black dark:text-white">
-					OpenDrive
+					Penombre
 				</Text>
 				<Text className="text-center mb-8 text-gray-600 dark:text-gray-400">
 					Sign in to continue

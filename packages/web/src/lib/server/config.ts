@@ -21,7 +21,7 @@ const oauthProviderSchema = z.object({
 	enabled: z.boolean().default(true),
 });
 
-const opendriveConfigSchema = z
+const penombreConfigSchema = z
 	.object({
 		appName: z.string().default(defaultConfigValues.appName),
 		appVersion: z.string().default(defaultConfigValues.appVersion),
@@ -135,17 +135,17 @@ const opendriveConfigSchema = z
 		}
 	});
 
-export type OpendriveConfig = z.infer<typeof opendriveConfigSchema>;
+export type PenombreConfig = z.infer<typeof penombreConfigSchema>;
 
 export type OAuthProviderSchema = z.infer<typeof oauthProviderSchema>;
 
 export type OAuthProviderInput = z.input<typeof oauthProviderSchema>;
 
-export function validateOpendriveConfig(config: unknown): OpendriveConfig {
-	return opendriveConfigSchema.parse(config);
+export function validatePenombreConfig(config: unknown): PenombreConfig {
+	return penombreConfigSchema.parse(config);
 }
 
-export function getOpendriveConfig(): OpendriveConfig {
+export function getPenombreConfig(): PenombreConfig {
 	// Oauth config env variable format: OAUTH_<PROVIDER_NAME>_CLIENT_ID, OAUTH_<PROVIDER_NAME>_CLIENT_SECRET, OAUTH_<PROVIDER_NAME>_DISCOVERY_URL
 	const oauthProviders: OAuthProviderInput[] = [];
 
@@ -259,10 +259,10 @@ export function getOpendriveConfig(): OpendriveConfig {
 			: defaultConfigValues.smtp,
 	};
 
-	return validateOpendriveConfig(environmentVariables);
+	return validatePenombreConfig(environmentVariables);
 }
 
 export function isSmtpEnabled(): boolean {
-	const config = getOpendriveConfig();
+	const config = getPenombreConfig();
 	return config.smtp !== undefined;
 }

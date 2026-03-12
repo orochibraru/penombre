@@ -1,27 +1,27 @@
-# 🚗 Opendrive
+# Penombre
 
 **A modern, self-hosted cloud storage solution with mobile and web clients**
 
-Opendrive is a comprehensive file storage and synchronization platform that provides you with complete control over your data. Built with modern technologies and designed for both individual users and organizations who want the convenience of cloud storage without sacrificing privacy and control.
+Penombre is a comprehensive file storage and synchronization platform that provides you with complete control over your data. Built with modern technologies and designed for both individual users and organizations who want the convenience of cloud storage without sacrificing privacy and control.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Bun Version](https://img.shields.io/badge/bun-1.3.8-green.svg)
 
-## ✨ Features
+## Features
 
-- **🌐 Web Interface**: Modern, responsive web application built with SvelteKit
-- **� Mobile App**: Native mobile experience with Expo/React Native
-- **🔐 Authentication**: Secure authentication via Better Auth with OAuth providers
-- **📂 File Management**: Upload, download, organize files and folders
-- **🏷️ Smart Categories**: Automatic categorization of files (images, documents, music, etc.)
-- **🗑️ Soft Trash**: Recoverable file deletion with trash support
-- **🔒 Self-Hosted**: Complete control over your data and infrastructure
-- **🐳 Docker Support**: Easy deployment with Docker Compose
-- **📊 Recent Files**: Quick access to recently modified files
+- **Web Interface**: Modern, responsive web application built with SvelteKit
+- **Mobile App**: Native mobile experience with Expo/React Native
+- **Authentication**: Secure authentication via Better Auth with OAuth providers
+- **File Management**: Upload, download, organize files and folders
+- **Smart Categories**: Automatic categorization of files (images, documents, music, etc.)
+- **Soft Trash**: Recoverable file deletion with trash support
+- **Self-Hosted**: Complete control over your data and infrastructure
+- **Docker Support**: Easy deployment with Docker Compose
+- **Recent Files**: Quick access to recently modified files
 
-## 🏗️ Architecture
+## Architecture
 
-Opendrive is a **monorepo** with the following packages:
+Penombre is a **monorepo** with the following packages:
 
 ```
 packages/
@@ -30,6 +30,7 @@ packages/
 ```
 
 ### Database
+
 ![DB Diagram](./resources/db.svg)
 
 ### Web Package (`packages/web`)
@@ -48,7 +49,7 @@ The web package is a full-stack SvelteKit application:
 - **Styling**: NativeWind (TailwindCSS for React Native)
 - **Routing**: Expo Router (file-based routing)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -58,20 +59,20 @@ The web package is a full-stack SvelteKit application:
 
 ### Development Setup
 
-1. **Clone the repository**
+1.  **Clone the repository**
 
     ```bash
-    git clone https://github.com/boyer-nicolas/opendrive.git
-    cd opendrive
+    git clone https://github.com/orochibraru/penombre.git
+    cd penombre
     ```
 
-2. **Install dependencies**
+2.  **Install dependencies**
 
     ```bash
     bun install
     ```
 
-3. **Start development services**
+3.  **Start development services**
 
     ```bash
     bun run dev
@@ -79,22 +80,23 @@ The web package is a full-stack SvelteKit application:
 
     This starts PostgreSQL via Docker Compose and the Vite dev server for the web app.
 
-4. **Access the application**
+4.  **Access the application**
     - Web UI: http://localhost:5173 (Vite default)
 
 ### Mobile Development
 
 ```bash
 cd packages/mobile
-npm install
-npx expo start
+bun install
+bunx expo start
 ```
 
 > **Note**: When connecting to the web API from a device/emulator, don't use `localhost`:
+>
 > - **iOS Simulator**: Use your host machine IP (e.g., `http://192.168.x.x:3000`)
 > - **Android Emulator**: Use `http://10.0.2.2:3000` or set up `adb reverse`
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 Build and run the production container:
 
@@ -110,57 +112,59 @@ See [.example.env](.example.env) for a complete reference.
 
 #### Core
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `APP_ENV` | Environment (`dev`/`production`) | `production` |
-| `ORIGIN` | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
-| `LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` |
-| `LOG_FORMAT` | `console` or `json` | `console` |
+| Variable      | Description                                  | Default                 |
+| ------------- | -------------------------------------------- | ----------------------- |
+| `APP_NAME`    | Application name (used in UI and emails)     | `Penombre`              |
+| `APP_VERSION` | Application version (used in metadata)       | /                       |
+| `APP_ENV`     | Environment (`dev`/`production`)             | `production`            |
+| `ORIGIN`      | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
+| `LOG_LEVEL`   | `debug`, `info`, `warn`, `error`             | `info`                  |
+| `LOG_FORMAT`  | `console` or `json`                          | `console`               |
 
 #### Database
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable       | Description                  | Default  |
+| -------------- | ---------------------------- | -------- |
 | `DATABASE_URL` | PostgreSQL connection string | Required |
 
 #### Authentication
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AUTH_SECRET` | Secret key for signing auth tokens | Required |
-| `ENABLE_EMAIL_SIGNIN` | Enable email/password sign-in | `true` |
-| `ENABLE_OAUTH_SIGNIN` | Enable OAuth sign-in | `false` |
-| `MIN_PASSWORD_LENGTH` | Minimum password length | `8` |
+| Variable              | Description                        | Default  |
+| --------------------- | ---------------------------------- | -------- |
+| `AUTH_SECRET`         | Secret key for signing auth tokens | Required |
+| `ENABLE_EMAIL_SIGNIN` | Enable email/password sign-in      | `true`   |
+| `ENABLE_OAUTH_SIGNIN` | Enable OAuth sign-in               | `false`  |
+| `MIN_PASSWORD_LENGTH` | Minimum password length            | `8`      |
 
 #### OAuth Providers (Optional)
 
 Configure OAuth providers using the pattern `OAUTH_<PROVIDER>_<SETTING>`:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OAUTH_<PROVIDER>_ENABLED` | Enable this provider | `true` |
-| `OAUTH_<PROVIDER>_CLIENT_ID` | OAuth client ID | Required |
-| `OAUTH_<PROVIDER>_CLIENT_SECRET` | OAuth client secret | Required |
-| `OAUTH_<PROVIDER>_DISCOVERY_URL` | OIDC discovery URL | Required |
-| `OAUTH_<PROVIDER>_PRETTY_NAME` | Display name | Provider name |
-| `OAUTH_<PROVIDER>_PKCE` | Use PKCE | `true` |
-| `OAUTH_<PROVIDER>_SCOPES` | Comma-separated scopes | `openid,profile,email` |
+| Variable                         | Description            | Default                |
+| -------------------------------- | ---------------------- | ---------------------- |
+| `OAUTH_<PROVIDER>_ENABLED`       | Enable this provider   | `true`                 |
+| `OAUTH_<PROVIDER>_CLIENT_ID`     | OAuth client ID        | Required               |
+| `OAUTH_<PROVIDER>_CLIENT_SECRET` | OAuth client secret    | Required               |
+| `OAUTH_<PROVIDER>_DISCOVERY_URL` | OIDC discovery URL     | Required               |
+| `OAUTH_<PROVIDER>_PRETTY_NAME`   | Display name           | Provider name          |
+| `OAUTH_<PROVIDER>_PKCE`          | Use PKCE               | `true`                 |
+| `OAUTH_<PROVIDER>_SCOPES`        | Comma-separated scopes | `openid,profile,email` |
 
 #### SMTP (Optional)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SMTP_ENABLED` | Enable SMTP | `false` |
-| `SMTP_HOST` | SMTP server hostname | Required if enabled |
-| `SMTP_PORT` | SMTP server port | `587` |
-| `SMTP_USER` | SMTP username | Required if enabled |
-| `SMTP_PASSWORD` | SMTP password | Required if enabled |
-| `SMTP_FROM` | Sender email address | Required if enabled |
-| `SMTP_SECURE` | Use TLS (`true`/`false`) | `false` |
+| Variable        | Description              | Default             |
+| --------------- | ------------------------ | ------------------- |
+| `SMTP_ENABLED`  | Enable SMTP              | `false`             |
+| `SMTP_HOST`     | SMTP server hostname     | Required if enabled |
+| `SMTP_PORT`     | SMTP server port         | `587`               |
+| `SMTP_USER`     | SMTP username            | Required if enabled |
+| `SMTP_PASSWORD` | SMTP password            | Required if enabled |
+| `SMTP_FROM`     | Sender email address     | Required if enabled |
+| `SMTP_SECURE`   | Use TLS (`true`/`false`) | `false`             |
 
-## � Backup & Restore
+## Backup & Restore
 
-Opendrive includes backup and restore scripts to protect your data. Backups include both the PostgreSQL database and all file storage.
+Penombre includes backup and restore scripts to protect your data. Backups include both the PostgreSQL database and all file storage.
 
 ### Creating a Backup
 
@@ -173,6 +177,7 @@ bun run backup
 ```
 
 This creates a timestamped archive containing:
+
 - **database.dump** - PostgreSQL custom format dump
 - **storage.tar.gz** - All uploaded files and metadata
 - **backup.json** - Backup metadata
@@ -181,13 +186,13 @@ This creates a timestamped archive containing:
 
 ```bash
 # With the stack running:
-bun run restore ./backups/opendrive_backup_20240115_120000.tar.gz
+bun run restore ./backups/penombre_backup_20240115_120000.tar.gz
 
 # Or directly:
-./scripts/restore.sh ./backups/opendrive_backup_20240115_120000.tar.gz
+./scripts/restore.sh ./backups/penombre_backup_20240115_120000.tar.gz
 ```
 
-> ⚠️ **Warning**: Restore will **replace all existing data**. Make sure you have a backup of current data before restoring.
+> **Warning**: Restore will **replace all existing data**. Make sure you have a backup of current data before restoring.
 
 ### Automated Backups
 
@@ -195,7 +200,7 @@ For automated backups, add a cron job:
 
 ```bash
 # Daily backup at 2 AM
-0 2 * * * cd /path/to/opendrive && ./scripts/backup.sh /path/to/backups >> /var/log/opendrive-backup.log 2>&1
+0 2 * * * cd /path/to/penombre && ./scripts/backup.sh /path/to/backups >> /var/log/penombre-backup.log 2>&1
 ```
 
 ### Backup Storage Recommendations
@@ -204,7 +209,7 @@ For automated backups, add a cron job:
 - Keep multiple backup generations (e.g., last 7 days)
 - Test restores periodically to verify backup integrity
 
-## �🛠️ Development
+## Development
 
 ### Tech Stack
 
@@ -234,16 +239,16 @@ bun run check        # Type-check with svelte-check
 bun run db:generate  # Generate Drizzle migrations
 
 # Mobile package (packages/mobile)
-npx expo start       # Start Expo dev server
-npm run android      # Run on Android
-npm run ios          # Run on iOS
+bunx expo start       # Start Expo dev server
+bunx expo run:android # Run on Android
+bunx expo run:ios     # Run on iOS
 ```
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with these open-source technologies:
 
@@ -257,7 +262,7 @@ Built with these open-source technologies:
 - [PostgreSQL](https://postgresql.org/) - Database
 - [Biome](https://biomejs.dev/) - Linter and formatter
 
-## 🆘 Support
+## Support
 
-- 🐛 [Issue Tracker](https://github.com/boyer-nicolas/opendrive/issues)
-- 💬 [Discussions](https://github.com/boyer-nicolas/opendrive/discussions)
+- [Issue Tracker](https://github.com/orochibraru/penombre/issues)
+- [Discussions](https://github.com/orochibraru/penombre/discussions)

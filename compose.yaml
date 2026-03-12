@@ -11,7 +11,7 @@ services:
       - storage_data:/data
     env_file: .env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/opendrive
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
 
   db:
     image: postgres:17-alpine
@@ -21,14 +21,14 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
-      - POSTGRES_DB=${POSTGRES_DB-opendrive}
+      - POSTGRES_DB=${POSTGRES_DB-penombre}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
         [
           CMD-SHELL,
-          "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-opendrive}'",
+          "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-penombre}'",
         ]
       interval: 1s
       timeout: 2s

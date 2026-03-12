@@ -10,10 +10,10 @@
                 <a href={resolve("/")} {...props}>
                     <img
                         src="/logo.svg"
-                        alt="Opendrive Logo"
+                        alt="Penombre Logo"
                         class="w-10 h-10"
                     />
-                    <span class="text-base font-semibold"> Opendrive. </span>
+                    <span class="text-base font-semibold"> Penombre. </span>
                 </a>
             {/snippet}
         </Sidebar.MenuButton>

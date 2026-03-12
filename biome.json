@@ -23,7 +23,8 @@
 			"!packages/web/.svelte-kit/*",
 			"!.svelte-kit",
 			"!test-results",
-			"!packages/mobile/.expo"
+			"!packages/mobile/.expo",
+			"!packages/web/src/app.html"
 		]
 	},
 	"formatter": {

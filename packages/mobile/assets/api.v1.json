@@ -1,9 +1,9 @@
 {
 	"openapi": "3.1.0",
 	"info": {
-		"title": "OpenDrive API",
+		"title": "Penombre API",
 		"version": "1.0.0",
-		"description": "OpenDrive file storage API"
+		"description": "Penombre file storage API"
 	},
 	"servers": [
 		{
@@ -5205,6 +5205,26 @@
 											"expiresAt": {
 												"type": ["number", "null"],
 												"description": "Expiry date of the token"
+											},
+											"user": {
+												"type": ["object", "null"],
+												"properties": {
+													"name": {
+														"type": ["object", "null"],
+														"properties": {
+															"firstName": {
+																"type": ["string", "null"]
+															},
+															"lastName": {
+																"type": ["string", "null"]
+															}
+														}
+													},
+													"email": {
+														"type": ["string", "null"]
+													}
+												},
+												"description": "The user object from the provider. Only available for some providers like Apple."
 											}
 										},
 										"required": ["token"]

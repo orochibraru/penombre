@@ -103,7 +103,7 @@
 
 ## v1.2.0
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.7...v1.2.0)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.7...v1.2.0)
 
 ### 🚀 Enhancements
 
@@ -129,7 +129,7 @@
 
 ## v1.1.7
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.6...v1.1.7)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.6...v1.1.7)
 
 ### 🩹 Fixes
 
@@ -141,31 +141,31 @@
 
 ## v1.1.6
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.5...v1.1.6)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.5...v1.1.6)
 
 ## v1.1.5
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.4...v1.1.5)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.4...v1.1.5)
 
 ## v1.1.4
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.3...v1.1.4)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.3...v1.1.4)
 
 ## v1.1.3
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.2...v1.1.3)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.2...v1.1.3)
 
 ## v1.1.2
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.1...v1.1.2)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.1...v1.1.2)
 
 ## v1.1.1
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v1.1.0...v1.1.1)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.0...v1.1.1)
 
 ## v1.1.0
 
-[compare changes](https://git.ombrage.space/opendrive/opendrive/compare/v0.0.7...v1.1.0)
+[compare changes](https://git.ombrage.space/penombre/penombre/compare/v0.0.7...v1.1.0)
 
 ### 🚀 Enhancements
 
@@ -264,7 +264,7 @@
 - Migrations if db isn't available directly and dev command conflicting with a container (fb0fcfb)
 - Engines (3a49ac2)
 - Bun install (0a28680)
-- Opendrive docs tag (9946fbe)
+- Penombre docs tag (9946fbe)
 - Scripts path (9fdbba0)
 - Deploy script (6fc30da)
 - Deployment (c0afd19)

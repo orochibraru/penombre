@@ -1,5 +1,5 @@
 const GITEA_URL = "https://git.ombrage.space";
-const GITEA_REPO = "opendrive/opendrive";
+const GITEA_REPO = "penombre/penombre";
 
 async function getChangelogSection(version: string): Promise<string> {
 	const changelog = await Bun.file("CHANGELOG.md").text();

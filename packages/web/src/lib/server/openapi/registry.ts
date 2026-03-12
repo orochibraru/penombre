@@ -322,9 +322,9 @@ class OpenAPIRegistry {
 		return {
 			openapi: "3.1.0",
 			info: {
-				title: "OpenDrive API",
+				title: "Penombre API",
 				version: "1.0.0",
-				description: "OpenDrive file storage API",
+				description: "Penombre file storage API",
 			},
 			servers: [{ url: "/", description: "Current server" }],
 			paths,
