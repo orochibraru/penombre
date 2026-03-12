@@ -7,7 +7,7 @@ variable "TAG" {
 }
 
 variable "IMAGE" {
-  default = "git.ombrage.space/penombre/penombre"
+  default = "penombre/penombre"
   validation {
     condition = IMAGE != ""
     error_message = "The variable 'IMAGE' must not be empty."
@@ -25,8 +25,8 @@ target "app" {
     APP_VERSION = "${TAG}"
   }
   dockerfile = "./Dockerfile"
-  tags       = ["git.ombrage.space/penombre/penombre:latest","git.ombrage.space/penombre/penombre:${TAG}"]
-  platforms = ["linux/amd64"]
+  tags       = ["penombre/penombre:latest","penombre/penombre:${TAG}"]
+  platforms = ["linux/amd64", "linux/arm64"]
   cache-from = ["type=gha"]
   cache-to = ["type=gha,mode=max"]
 }

@@ -27,13 +27,13 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     env:
-      GITEA_TOKEN: ${{ secrets.CI_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
     needs: [check]
     if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
     steps:
       - uses: actions/checkout@v6
         with:
-          token: ${{ env.GITEA_TOKEN }}
+          token: ${{ env.GITHUB_TOKEN }}
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -47,7 +47,7 @@ jobs:
           git config --global user.email "no-reply@ombrage.space"
           # Credentials
           git config --global credential.helper store
-          echo "https://x-access-token:${{ secrets.GITEA_TOKEN }}@git.ombrage.space" > ~/.git-credentials
+          echo "https://x-access-token:${{ secrets.CI_TOKEN }}@github.com" > ~/.git-credentials
 
       - name: Create Release
         run: bun run ./scripts/bump-version.ts

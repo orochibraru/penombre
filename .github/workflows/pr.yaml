@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.sha }}
-      IMAGE: git.ombrage.space/penombre/penombre
+      IMAGE: penombre/penombre
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

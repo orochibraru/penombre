@@ -1,5 +1,5 @@
-const GITEA_URL = "https://git.ombrage.space";
-const GITEA_REPO = "penombre/penombre";
+const GITHUB_URL = "https://github.com";
+const GITHUB_REPO = "penombre/penombre";
 
 async function getChangelogSection(version: string): Promise<string> {
 	const changelog = await Bun.file("CHANGELOG.md").text();
@@ -13,12 +13,12 @@ async function getChangelogSection(version: string): Promise<string> {
 		.trim();
 }
 
-async function createGiteaRelease(version: string, body: string) {
-	const token = process.env.GITEA_TOKEN;
-	if (!token) throw new Error("GITEA_TOKEN environment variable is not set");
+async function createGithubRelease(version: string, body: string) {
+	const token = process.env.GITHUB_TOKEN;
+	if (!token) throw new Error("GITHUB_TOKEN environment variable is not set");
 
 	const response = await fetch(
-		`${GITEA_URL}/api/v1/repos/${GITEA_REPO}/releases`,
+		`${GITHUB_URL}/api/v1/repos/${GITHUB_REPO}/releases`,
 		{
 			method: "POST",
 			headers: {
@@ -36,19 +36,19 @@ async function createGiteaRelease(version: string, body: string) {
 	if (!response.ok) {
 		const text = await response.text();
 		throw new Error(
-			`Failed to create Gitea release: ${response.status} ${text}`,
+			`Failed to create Github release: ${response.status} ${text}`,
 		);
 	}
 
-	console.log(`Gitea release ${version} created.`);
+	console.log(`Github release ${version} created.`);
 }
 
 async function main() {
 	const newVersion = JSON.parse(await Bun.file("package.json").text()).version;
 	console.log(`New version: ${newVersion}`);
-	// Create Gitea release
+	// Create Github release
 	const releaseNotes = await getChangelogSection(`v${newVersion}`);
-	await createGiteaRelease(`v${newVersion}`, releaseNotes);
+	await createGithubRelease(`v${newVersion}`, releaseNotes);
 }
 
 void main();

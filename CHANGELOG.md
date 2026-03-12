@@ -1,12 +1,10 @@
 # Changelog
 
-
 ## v1.2.18
 
 ## v1.2.17
 
 ## v1.2.16
-
 
 ### 🩹 Fixes
 
@@ -19,7 +17,6 @@
 ## v1.2.15
 
 ## v1.2.14
-
 
 ### 🩹 Fixes
 
@@ -39,7 +36,6 @@
 
 ## v1.2.9
 
-
 ### 🏡 Chore
 
 - **release:** V1.2.8 (fec1cac)
@@ -50,7 +46,6 @@
 
 ## v1.2.8
 
-
 ### 🏡 Chore
 
 - **release:** V1.2.7 (f16d539)
@@ -60,7 +55,6 @@
 - Release Bot <no-reply@ombrage.space>
 
 ## v1.2.7
-
 
 ### 🏡 Chore
 
@@ -74,7 +68,6 @@
 
 ## v1.2.5
 
-
 ### 🏡 Chore
 
 - **release:** V1.2.4 (579193f)
@@ -84,7 +77,6 @@
 - Release Bot <no-reply@ombrage.space>
 
 ## v1.2.4
-
 
 ### 🏡 Chore
 
@@ -96,7 +88,6 @@
 
 ## v1.2.3
 
-
 ### 🏡 Chore
 
 - **release:** V1.2.2 (4eabdfc)
@@ -106,7 +97,6 @@
 - Release Bot <no-reply@ombrage.space>
 
 ## v1.2.2
-
 
 ### 🏡 Chore
 
@@ -120,7 +110,7 @@
 
 ## v1.2.0
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.7...v1.2.0)
+[compare changes](https://github.com/penombre/penombre/compare/v1.1.7...v1.2.0)
 
 ### 🚀 Enhancements
 
@@ -142,11 +132,11 @@
 
 ### ❤️ Contributors
 
-- Oro 
+- Oro
 
 ## v1.1.7
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.6...v1.1.7)
+[compare changes](https://github.com/penombre/penombre/compare/v1.1.6...v1.1.7)
 
 ### 🩹 Fixes
 
@@ -154,35 +144,35 @@
 
 ### ❤️ Contributors
 
-- Oro 
+- Oro
 
 ## v1.1.6
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.5...v1.1.6)
+[compare changes](https://github.com/penombre/penombre/compare/v1.1.5...v1.1.6)
 
 ## v1.1.5
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.4...v1.1.5)
+[compare changes](https://github.com/penombre/penombre/compare/v1.1.4...v1.1.5)
 
 ## v1.1.4
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.3...v1.1.4)
+[compare changes](https://github.com/penombre/penombre/compare/v1.1.3...v1.1.4)
 
 ## v1.1.3
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.2...v1.1.3)
+[compare changes](https://github.com/penombre/penombre/compare/v1.1.2...v1.1.3)
 
 ## v1.1.2
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.1...v1.1.2)
+[compare changes](https://github.com/penombre/penombre/compare/v1.1.1...v1.1.2)
 
 ## v1.1.1
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v1.1.0...v1.1.1)
+[compare changes](https://github.com/penombre/penombre/compare/v1.1.0...v1.1.1)
 
 ## v1.1.0
 
-[compare changes](https://git.ombrage.space/penombre/penombre/compare/v0.0.7...v1.1.0)
+[compare changes](https://github.com/penombre/penombre/compare/v0.0.7...v1.1.0)
 
 ### 🚀 Enhancements
 
@@ -440,5 +430,4 @@
 
 ### ❤️ Contributors
 
-- Oro 
-
+- Oro
