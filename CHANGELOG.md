@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.2.20
+
+
+### 🩹 Fixes
+
+- Docker token ([1f19b80](https://github.com/orochibraru/penombre/commit/1f19b80))
+
+### ❤️ Contributors
+
+- Oro
+
 ## v1.2.19
 
 ## v1.2.19
