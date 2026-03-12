@@ -1,6 +1,17 @@
 # Changelog
 
 
+## v1.2.16
+
+
+### 🩹 Fixes
+
+- Types (6e99ddb)
+
+### ❤️ Contributors
+
+- Oro
+
 ## v1.2.15
 
 ## v1.2.14
