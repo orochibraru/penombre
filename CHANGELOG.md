@@ -1,6 +1,17 @@
 # Changelog
 
 
+## v1.2.8
+
+
+### 🏡 Chore
+
+- **release:** V1.2.7 (f16d539)
+
+### ❤️ Contributors
+
+- Release Bot <no-reply@ombrage.space>
+
 ## v1.2.7
 
 
