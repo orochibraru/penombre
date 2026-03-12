@@ -6,35 +6,10 @@ on:
       - 'v*.*.*'
     branches:
       - main
-    paths:
-      - "packages/web/**"
-      - "scripts/**"
-      - "Dockerfile"
-      - "docker-bake.hcl"
-      - "compose.yaml"
-      - "package.json"
-      - "bun.lock"
-      - "tsconfig.json"
-      - "biome.json"
-      - ".github/workflows/**"
-      - "docs/**"
-
   pull_request:
-    paths:
-      - "packages/**"
-      - "scripts/**"
-      - "Dockerfile"
-      - "docker-bake.hcl"
-      - "compose.yaml"
-      - "package.json"
-      - "bun.lock"
-      - "tsconfig.json"
-      - "biome.json"
-      - ".github/workflows/**"
-      - "docs/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-ci
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -53,7 +28,6 @@ jobs:
   typescript:
     name: TypeScript
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     services:
       postgres:
         image: postgres:17
@@ -128,8 +102,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITEA_TOKEN: ${{ secrets.CI_TOKEN }}
-    # needs: typescript
-    if: github.ref == 'refs/heads/main'
+    needs: typescript
+    # If branch is main and its commit message doesn't start with "chore(release)", then create a release
+    if: github.ref == 'refs/heads/main' && !startsWith(github.event.head_commit.message, 'chore(release)')
     steps:
       - uses: actions/checkout@v6
         with:
