@@ -126,12 +126,14 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    env:
+      GITEA_TOKEN: ${{ secrets.CI_TOKEN }}
     # needs: typescript
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v6
         with:
-          token: ${{ secrets.CI_TOKEN }}
+          token: ${{ env.GITEA_TOKEN }}
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
