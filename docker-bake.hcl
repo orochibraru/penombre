@@ -14,20 +14,38 @@ variable "IMAGE" {
   }
 }
 
-group "default" {
-  targets = ["app"]
+// Special target: https://github.com/docker/metadata-action#bake-definition
+target "docker-metadata-action" {
+  tags = ["orochibraru/penombre:latest","orochibraru/penombre:${TAG}"]
 }
 
+group "default" {
+  targets = ["image-local"]
+}
 
-target "app" {
+target "image" {
+  inherits = ["docker-metadata-action"]
   context    = "."
+  dockerfile = "./Dockerfile"
   args = {
     APP_VERSION = "${TAG}"
   }
-  dockerfile = "./Dockerfile"
-  tags       = ["orochibraru/penombre:latest","orochibraru/penombre:${TAG}"]
-  platforms = ["linux/amd64", "linux/arm64"]
-  cache-from = ["type=gha"]
-  cache-to = ["type=gha,mode=max"]
 }
 
+target "image-local" {
+  inherits = ["image"]
+  output = ["type=docker"]
+}
+
+
+target "image-all" {
+  inherits = ["image"]
+  cache-from = ["type=gha"]
+  cache-to = ["type=gha,mode=max"]
+  platforms = [
+    "linux/amd64",
+    "linux/arm/v6",
+    "linux/arm/v7",
+    "linux/arm64"
+  ]
+}
