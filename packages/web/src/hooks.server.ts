@@ -35,7 +35,7 @@ async function sleep(ms: number) {
 }
 
 async function waitForDatabase() {
-	const maxRetries = 60;
+	const maxRetries = 10;
 	const retryDelay = 2000;
 
 	for (let i = 0; i < maxRetries; i++) {
