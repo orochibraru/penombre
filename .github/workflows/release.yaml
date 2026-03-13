@@ -6,6 +6,9 @@ on:
       - main
     tags-ignore:
       - "v*.*.*"
+    paths-ignore:
+      - "**/*.md"
+      - ".husky/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-release
