@@ -11,6 +11,9 @@ on:
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+      IMAGE: ${{ inputs.image-name }}
     outputs:
       matrix: ${{ steps.platforms.outputs.matrix }}
     steps:
@@ -26,6 +29,7 @@ jobs:
       - name: Create matrix
         id: platforms
         run: |
+          touch .env
           docker buildx bake image-all --print
           echo "matrix=$(docker buildx bake image-all --print | jq -cr '.target."image-all".platforms')" >>${GITHUB_OUTPUT}
 
