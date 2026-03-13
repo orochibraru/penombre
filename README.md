@@ -6,6 +6,7 @@ Penombre is a comprehensive file storage and synchronization platform that provi
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Latest Release](https://img.shields.io/github/v/release/orochibraru/penombre)
+![Docker Pulls](https://img.shields.io/docker/pulls/orochibraru/penombre)
 
 ## Getting Started
 
