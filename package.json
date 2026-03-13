@@ -19,9 +19,7 @@
 		"circular": "bun run ./scripts/circular.ts",
 		"backup": "./scripts/backup.sh",
 		"restore": "./scripts/restore.sh",
-		"gen:api": "bun run --workspaces gen:api",
-		"bump": "bun run ./scripts/bump-version.ts",
-		"release": "bun run ./scripts/release.ts"
+		"gen:api": "bun run --workspaces gen:api"
 	},
 	"keywords": [],
 	"author": "",

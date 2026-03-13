@@ -50,10 +50,7 @@ jobs:
           echo "https://x-access-token:${{ secrets.CI_TOKEN }}@github.com" > ~/.git-credentials
 
       - name: Create Release
-        run: bun run ./scripts/bump-version.ts
-
-      - name: Push to git
-        run: git push origin main --tags
+        run: bunx changelogen@latest --release --hideAuthorEmail
 
       - name: Create Release
-        run: bun run ./scripts/release.ts
+        run: bunx changelogen@latest gh release
