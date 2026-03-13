@@ -30,6 +30,7 @@ jobs:
       - name: Create matrix
         id: platforms
         run: |
+          docker buildx bake image-all --print
           echo "matrix=$(docker buildx bake image-all --print | jq -cr '.target."image-all".platforms')" >>${GITHUB_OUTPUT}
 
       - name: Show matrix
