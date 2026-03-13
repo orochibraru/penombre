@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.2.24
+
+
+### 🩹 Fixes
+
+- Db max retries ([0e8ebfd](https://github.com/orochibraru/penombre/commit/0e8ebfd))
+
+### ❤️ Contributors
+
+- Oro
+
 ## v1.2.23
 
 
