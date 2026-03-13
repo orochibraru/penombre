@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.2.23
+
+
+### 🩹 Fixes
+
+- Remove armV6/7 ([4a09c45](https://github.com/orochibraru/penombre/commit/4a09c45))
+
+### ❤️ Contributors
+
+- Oro
+
 ## v1.2.21
 
 ## v1.2.20
