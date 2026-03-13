@@ -307,7 +307,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Built with these open-source technologies:
 
 - [SvelteKit](https://kit.svelte.dev/) - Full-stack web framework
-- [Hono](https://hono.dev/) - Lightweight web framework for API routes
 - [shadcn-svelte](https://shadcn-svelte.com/) - UI components
 - [Bun](https://bun.sh/) - JavaScript runtime and toolkit
 - [Expo](https://expo.dev/) - React Native framework
