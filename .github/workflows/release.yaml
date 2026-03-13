@@ -19,7 +19,6 @@ permissions:
 
 env:
   TZ: Europe/Paris
-  BUN_VERSION: 1.3.10
 
 jobs:
   check:
@@ -40,8 +39,6 @@ jobs:
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Configure Git
         run: |
