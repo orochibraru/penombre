@@ -8,7 +8,7 @@ on:
         type: string
         default: orochibraru/penombre
     secrets:
-      docker-hub-token:
+      docker_hub_token:
         required: true
 
 jobs:
@@ -97,7 +97,7 @@ jobs:
         uses: docker/login-action@v4
         with:
           username: orochibraru
-          password: ${{ secrets.docker-hub-token }}
+          password: ${{ secrets.docker_hub_token }}
 
       - name: Build
         id: bake

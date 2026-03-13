@@ -53,4 +53,4 @@ jobs:
       publish: false
       image-name: orochibraru/penombre
     secrets:
-      docker-hub-token: ${{ secrets.DOCKER_HUB_TOKEN }}
+      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}

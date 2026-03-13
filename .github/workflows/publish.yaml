@@ -19,7 +19,7 @@ jobs:
       publish: true
       image-name: orochibraru/penombre
     secrets:
-      docker-hub-token: ${{ secrets.DOCKER_HUB_TOKEN }}
+      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}
 
   publish:
     runs-on: ubuntu-latest
