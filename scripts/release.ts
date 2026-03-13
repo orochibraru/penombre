@@ -48,7 +48,8 @@ async function main() {
 	console.log(`New version: ${newVersion}`);
 	// Create Github release
 	const releaseNotes = await getChangelogSection(`v${newVersion}`);
-	await createGithubRelease(`v${newVersion}`, releaseNotes);
+	const dockerPullInfo = `\n\nYou can pull the new Docker image with:\n\n\`\`\`bash\ndocker pull orochibraru/penombre:${newVersion}\n\`\`\``;
+	await createGithubRelease(`v${newVersion}`, releaseNotes + dockerPullInfo);
 }
 
 void main();
