@@ -97,7 +97,7 @@ jobs:
         uses: docker/login-action@v4
         with:
           username: orochibraru
-          password: ${{ inputs.docker-hub-token }}
+          password: ${{ secrets.docker-hub-token }}
 
       - name: Build
         id: bake
