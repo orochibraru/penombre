@@ -7,6 +7,9 @@ on:
       image-name:
         type: string
         default: orochibraru/penombre
+    secrets:
+      docker-hub-token:
+        required: true
 
 jobs:
   prepare:
@@ -94,7 +97,7 @@ jobs:
         uses: docker/login-action@v4
         with:
           username: orochibraru
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          password: ${{ inputs.docker-hub-token }}
 
       - name: Build
         id: bake
