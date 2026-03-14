@@ -49,6 +49,7 @@ jobs:
 
   docker-prepare:
     uses: ./.github/workflows/docker.yaml
+    name: Docker Prepare
     with:
       publish: false
       image-name: orochibraru/penombre
