@@ -1,4 +1,5 @@
 import type { HandleClientError } from "@sveltejs/kit";
+import { dev } from "$app/environment";
 
 function makeid(length: number) {
 	var result = "";
@@ -15,6 +16,20 @@ export const handleError: HandleClientError = ({ error, event, message }) => {
 	const errorId = makeid(24);
 
 	console.error("An error occurred on the client side:", error, event, message);
+
+	if (dev) {
+		if (error instanceof Error) {
+			return {
+				message: error.message,
+				errorId,
+			};
+		}
+
+		return {
+			message: String(error),
+			errorId,
+		};
+	}
 
 	return {
 		message: "Whoops!",
