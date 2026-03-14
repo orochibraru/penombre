@@ -21,7 +21,6 @@ export const handleError: HandleClientError = ({ error, event, message }) => {
 		if (error instanceof Error) {
 			return {
 				message: error.message,
-				stack: error.stack,
 				errorId,
 			};
 		}
