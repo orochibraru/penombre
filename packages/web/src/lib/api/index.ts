@@ -37,4 +37,4 @@ export type UploadResult = components["schemas"]["UploadResult"];
 // Re-export User from better-auth for convenience
 export type { User } from "better-auth";
 
-export type { paths, components };
+export type { components, paths };

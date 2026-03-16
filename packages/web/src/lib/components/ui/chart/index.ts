@@ -8,7 +8,7 @@ export {
 
 export {
 	ChartContainer,
-	ChartTooltip,
 	ChartContainer as Container,
+	ChartTooltip,
 	ChartTooltip as Tooltip,
 };
