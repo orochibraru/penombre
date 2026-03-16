@@ -26,4 +26,4 @@ export const ACCEPT_IMAGE = "image/*";
 export const ACCEPT_VIDEO = "video/*";
 export const ACCEPT_AUDIO = "audio/*";
 
-export { FileDropZone, type FileRejectedReason, type FileDropZoneProps };
+export { FileDropZone, type FileDropZoneProps, type FileRejectedReason };

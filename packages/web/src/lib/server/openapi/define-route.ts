@@ -192,4 +192,4 @@ export function defineRoute<
 	};
 }
 
-export type { RouteConfig, ValidatedData, HandlerCallback };
+export type { HandlerCallback, RouteConfig, ValidatedData };

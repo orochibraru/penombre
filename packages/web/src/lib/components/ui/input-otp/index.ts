@@ -4,12 +4,12 @@ import Separator from "./input-otp-separator.svelte";
 import Slot from "./input-otp-slot.svelte";
 
 export {
-	Root,
 	Group,
-	Slot,
-	Separator,
-	Root as InputOTP,
 	Group as InputOTPGroup,
-	Slot as InputOTPSlot,
+	Root,
+	Root as InputOTP,
+	Separator,
 	Separator as InputOTPSeparator,
+	Slot,
+	Slot as InputOTPSlot,
 };

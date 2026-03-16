@@ -339,4 +339,4 @@ class OpenAPIRegistry {
 }
 
 export const registry = new OpenAPIRegistry();
-export type { RouteDefinition, HttpMethod, ExternalOpenAPISpec };
+export type { ExternalOpenAPISpec, HttpMethod, RouteDefinition };
