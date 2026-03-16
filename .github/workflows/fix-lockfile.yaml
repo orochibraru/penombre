@@ -1,0 +1,39 @@
+name: Fix corrupted bun.lock
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix-lockfile:
+    name: Fix corrupted bun.lock
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Try install (frozen)
+        id: install
+        run: bun install --frozen-lockfile
+        continue-on-error: true
+
+      - name: Regenerate lockfile
+        if: steps.install.outcome == 'failure'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull origin main --rebase
+          rm -f bun.lock
+          bun install
+          git add bun.lock
+          git commit -m "fix: regenerate corrupted bun.lock"
+          git push
