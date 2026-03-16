@@ -38,4 +38,5 @@ jobs:
           bun install
           git add bun.lock
           git commit -m "fix: regenerate corrupted bun.lock"
-          git push
+          BRANCH="${GITHUB_REF_NAME:-${{ github.ref_name }}}"
+          git push origin HEAD:"$BRANCH"
