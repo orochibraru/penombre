@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from "./routes/__root";
 import { Route as ApiSearchRouteImport } from "./routes/api/search";
+import { Route as ChangelogRouteImport } from "./routes/changelog";
 import { Route as DocsSplatRouteImport } from "./routes/docs/$";
 import { Route as IndexRouteImport } from "./routes/index";
 import { Route as LlmsFullDottxtRouteImport } from "./routes/llms-full[.]txt";
@@ -24,6 +25,11 @@ const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
 const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
 	id: "/llms-full.txt",
 	path: "/llms-full.txt",
+	getParentRoute: () => rootRouteImport,
+} as any);
+const ChangelogRoute = ChangelogRouteImport.update({
+	id: "/changelog",
+	path: "/changelog",
 	getParentRoute: () => rootRouteImport,
 } as any);
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +55,7 @@ const LlmsDotmdxDocsSplatRoute = LlmsDotmdxDocsSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
 	"/": typeof IndexRoute;
+	"/changelog": typeof ChangelogRoute;
 	"/llms-full.txt": typeof LlmsFullDottxtRoute;
 	"/llms.txt": typeof LlmsDottxtRoute;
 	"/api/search": typeof ApiSearchRoute;
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
 	"/": typeof IndexRoute;
+	"/changelog": typeof ChangelogRoute;
 	"/llms-full.txt": typeof LlmsFullDottxtRoute;
 	"/llms.txt": typeof LlmsDottxtRoute;
 	"/api/search": typeof ApiSearchRoute;
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
 	__root__: typeof rootRouteImport;
 	"/": typeof IndexRoute;
+	"/changelog": typeof ChangelogRoute;
 	"/llms-full.txt": typeof LlmsFullDottxtRoute;
 	"/llms.txt": typeof LlmsDottxtRoute;
 	"/api/search": typeof ApiSearchRoute;
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
 	fileRoutesByFullPath: FileRoutesByFullPath;
 	fullPaths:
 		| "/"
+		| "/changelog"
 		| "/llms-full.txt"
 		| "/llms.txt"
 		| "/api/search"
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
 	fileRoutesByTo: FileRoutesByTo;
 	to:
 		| "/"
+		| "/changelog"
 		| "/llms-full.txt"
 		| "/llms.txt"
 		| "/api/search"
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
 	id:
 		| "__root__"
 		| "/"
+		| "/changelog"
 		| "/llms-full.txt"
 		| "/llms.txt"
 		| "/api/search"
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
 	IndexRoute: typeof IndexRoute;
+	ChangelogRoute: typeof ChangelogRoute;
 	LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute;
 	LlmsDottxtRoute: typeof LlmsDottxtRoute;
 	ApiSearchRoute: typeof ApiSearchRoute;
@@ -122,6 +135,13 @@ declare module "@tanstack/react-router" {
 			path: "/llms-full.txt";
 			fullPath: "/llms-full.txt";
 			preLoaderRoute: typeof LlmsFullDottxtRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/changelog": {
+			id: "/changelog";
+			path: "/changelog";
+			fullPath: "/changelog";
+			preLoaderRoute: typeof ChangelogRouteImport;
 			parentRoute: typeof rootRouteImport;
 		};
 		"/": {
@@ -157,6 +177,7 @@ declare module "@tanstack/react-router" {
 
 const rootRouteChildren: RootRouteChildren = {
 	IndexRoute: IndexRoute,
+	ChangelogRoute: ChangelogRoute,
 	LlmsFullDottxtRoute: LlmsFullDottxtRoute,
 	LlmsDottxtRoute: LlmsDottxtRoute,
 	ApiSearchRoute: ApiSearchRoute,

@@ -1,4 +1,5 @@
 {
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
@@ -24,7 +25,10 @@
 			"!.svelte-kit",
 			"!test-results",
 			"!packages/mobile/.expo",
-			"!packages/web/src/app.html"
+			"!packages/web/src/app.html",
+			"!packages/docs/.vitepress",
+			"!**/*.md",
+			"!**/*.mdx"
 		]
 	},
 	"formatter": {

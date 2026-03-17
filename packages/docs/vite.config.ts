@@ -21,6 +21,9 @@ export default defineConfig({
 		// please see https://tanstack.com/start/latest/docs/framework/react/guide/hosting#nitro for guides on hosting
 		nitro({
 			preset: "vercel",
+			rollupConfig: {
+				external: [/^shiki/, /^@shikijs/],
+			},
 		}),
 	],
 	resolve: {
@@ -28,5 +31,8 @@ export default defineConfig({
 		alias: {
 			tslib: "tslib/tslib.es6.js",
 		},
+	},
+	ssr: {
+		external: ["shiki"],
 	},
 });

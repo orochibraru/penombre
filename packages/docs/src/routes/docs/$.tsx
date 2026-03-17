@@ -33,7 +33,6 @@ const serverLoader = createServerFn({
 	.handler(async ({ data: slugs }) => {
 		const page = source.getPage(slugs);
 		if (!page) throw notFound();
-
 		return {
 			slugs: page.slugs,
 			path: page.path,

@@ -13,5 +13,19 @@ export function baseOptions(): BaseLayoutProps {
 			title: "Penombre",
 		},
 		githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
+		links: [
+			{
+				text: "Docs",
+				url: "/docs",
+			},
+			{
+				text: "API",
+				url: "/docs/api",
+			},
+			{
+				text: "Changelog",
+				url: "/changelog",
+			},
+		],
 	};
 }

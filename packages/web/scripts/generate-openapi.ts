@@ -63,10 +63,16 @@ try {
 
 const spec = registry.toOpenAPISpec(externalSpecs);
 const outputPath = new URL("../src/lib/api/v1.json", import.meta.url).pathname;
-const copyPath = new URL("../../mobile/assets/api.v1.json", import.meta.url)
+const mobileCopyPath = new URL(
+	"../../mobile/assets/api.v1.json",
+	import.meta.url,
+).pathname;
+const docsCopyPath = new URL("../../docs/content/api.v1.json", import.meta.url)
 	.pathname;
 
 await Bun.write(outputPath, JSON.stringify(spec, null, "\t"));
-await Bun.write(copyPath, JSON.stringify(spec, null, "\t"));
 console.log(`✓ Generated OpenAPI spec → ${outputPath}`);
-console.log(`✓ Copied OpenAPI spec → ${copyPath}`);
+await Bun.write(mobileCopyPath, JSON.stringify(spec, null, "\t"));
+console.log(`✓ Copied OpenAPI spec → ${mobileCopyPath}`);
+await Bun.write(docsCopyPath, JSON.stringify(spec, null, "\t"));
+console.log(`✓ Copied OpenAPI spec → ${docsCopyPath}`);
