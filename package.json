@@ -19,7 +19,7 @@
 		"circular": "bun run ./scripts/circular.ts",
 		"backup": "./scripts/backup.sh",
 		"restore": "./scripts/restore.sh",
-		"gen:api": "bun run --workspaces gen:api"
+		"gen:api": "bun run --filter @penombre/mobile --filter @penombre/web gen:api"
 	},
 	"keywords": [],
 	"author": "",

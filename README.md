@@ -11,9 +11,9 @@ Penombre is a comprehensive file storage and synchronization platform that provi
 ## Getting Started
 
 1. Get the `.env` file
-   ```bash
-   curl -o .env https://raw.githubusercontent.com/orochibraru/penombre/refs/heads/main/.example.env
-   ```
+    ```bash
+    curl -o .env https://raw.githubusercontent.com/orochibraru/penombre/refs/heads/main/.example.env
+    ```
 2. Edit the `.env` file with your configuration (see below for details)
 
 3. Start the application with Docker Compose:
@@ -137,8 +137,9 @@ Penombre is a **monorepo** with the following packages:
 
 ```
 packages/
-├── web/     # SvelteKit app (frontend + Hono API backend)
-└── mobile/  # Expo/React Native mobile app
+├── web/     # SvelteKit app (frontend + backend API)
+├── mobile/  # Expo/React Native mobile app
+└── docs/    # Documentation site (Fumadocs)
 ```
 
 ### Database
