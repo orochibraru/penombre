@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "bun.lock"
+      - "package.json"
+      - "packages/**/package.json"
 
 permissions:
   contents: write
