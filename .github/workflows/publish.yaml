@@ -5,7 +5,7 @@ on:
       - "v*.*.*"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-publish
+  group: publish
   cancel-in-progress: false
 
 env:
