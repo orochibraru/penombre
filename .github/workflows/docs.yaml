@@ -1,4 +1,4 @@
-name: Deploy Docs to GitHub Pages
+name: Documentation
 
 on:
   push:
@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build Docs
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
           path: packages/docs/.output/public
 
   deploy:
-    name: Deploy to GitHub Pages
+    name: Deploy
     needs: build
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
