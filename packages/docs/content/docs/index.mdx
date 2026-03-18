@@ -1,0 +1,75 @@
+---
+title: Getting Started
+description: Spin up a Penombre instance in minutes with Docker Compose
+icon: Rocket
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+<Steps>
+    <Step>
+        <span> Get the `.env` file</span>
+```bash 
+curl -o .env https://raw.githubusercontent.com/orochibraru/penombre/refs/heads/main/.example.env
+```
+    </Step>
+    <Step>
+        Edit the `.env` file with your configuration (see [Environment
+        variables](/docs/env) for details)
+    </Step>
+    <Step>
+        <span>Setup your Docker Compose configuration</span>
+```yaml
+services:
+    app:
+        image: orochibraru/penombre:latest
+        depends_on:
+            db:
+                condition: service_healthy
+        ports:
+            - 3000:3000
+        restart: unless-stopped
+        volumes:
+            - storage_data:/data
+        env_file: .env
+        environment:
+            - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
+
+    db:
+        image: postgres:17-alpine
+        restart: unless-stopped
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER-postgres}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
+            - POSTGRES_DB=${POSTGRES_DB-penombre}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    CMD-SHELL,
+                    "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-penombre}'",
+                ]
+            interval: 1s
+            timeout: 2s
+            retries: 10
+            start_period: 3s
+
+volumes:
+    postgres_data:
+        driver: local
+    storage_data:
+        driver: local
+```
+    </Step>
+    <Step>
+        <span>Start the application</span>
+```bash
+docker compose up -d
+```
+<span>After a few moments, you should be able to access the application at `http://localhost:3000`.</span>
+    </Step>
+</Steps>
+

@@ -1,16 +1,16 @@
 {
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
 	"vcs": {
-		"enabled": false,
+		"enabled": true,
 		"clientKind": "git",
-		"useIgnoreFile": false
+		"useIgnoreFile": true
 	},
 	"files": {
 		"ignoreUnknown": false,
 		"includes": [
 			"**",
-			"node_modules/**",
+			"!**/node_modules",
 			"!**/*.svelte",
-			"!packages/web/src/lib/ROUTES.ts",
 			"!packages/web/src/app.css",
 			"!packages/web/vite.config.ts",
 			"!packages/web/build",
@@ -18,13 +18,18 @@
 			"!packages/web/dist",
 			"!packages/web/test-results",
 			"!packages/web/playwright-report",
-			"!packages/web/node_modules",
 			"!packages/web/src/lib/paraglide",
-			"!packages/web/.svelte-kit/*",
+			"!packages/web/.svelte-kit",
 			"!.svelte-kit",
 			"!test-results",
 			"!packages/mobile/.expo",
-			"!packages/web/src/app.html"
+			"!packages/web/src/app.html",
+			"!packages/docs/.vercel",
+			"!packages/docs/.tanstack",
+			"!packages/docs/.source",
+			"!packages/docs/src/routeTree.gen.ts",
+			"!tmp",
+			"!dist"
 		]
 	},
 	"formatter": {
@@ -41,6 +46,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"complexity": {
+				"useMaxParams": "error"
+			},
 			"style": {
 				"useConst": "error",
 				"noParameterAssign": "error",

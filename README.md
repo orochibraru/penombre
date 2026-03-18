@@ -10,58 +10,7 @@ Penombre is a comprehensive file storage and synchronization platform that provi
 
 ## Getting Started
 
-1. Get the `.env` file
-   ```bash
-   curl -o .env https://raw.githubusercontent.com/orochibraru/penombre/refs/heads/main/.example.env
-   ```
-2. Edit the `.env` file with your configuration (see below for details)
-
-3. Start the application with Docker Compose:
-
-```yaml
-services:
-    app:
-        image: orochibraru/penombre:latest
-        depends_on:
-            db:
-                condition: service_healthy
-        ports:
-            - 3000:3000
-        restart: unless-stopped
-        volumes:
-            - storage_data:/data
-        env_file: .env
-        environment:
-            - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
-
-    db:
-        image: postgres:17-alpine
-        restart: unless-stopped
-        ports:
-            - 5432:5432
-        environment:
-            - POSTGRES_USER=${POSTGRES_USER-postgres}
-            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
-            - POSTGRES_DB=${POSTGRES_DB-penombre}
-        volumes:
-            - postgres_data:/var/lib/postgresql/data
-        healthcheck:
-            test:
-                [
-                    CMD-SHELL,
-                    "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-penombre}'",
-                ]
-            interval: 1s
-            timeout: 2s
-            retries: 10
-            start_period: 3s
-
-volumes:
-    postgres_data:
-        driver: local
-    storage_data:
-        driver: local
-```
+Follow the [installation guide](packages/docs/content/docs/index.mdx) to set up your Penombre instance in minutes. For configuration options, see the [environment variables documentation](packages/docs/content/docs/env.mdx).
 
 ## Features
 
@@ -77,59 +26,7 @@ volumes:
 
 ### Environment Variables
 
-See [.example.env](.example.env) for a complete reference.
-
-#### Core
-
-| Variable      | Description                                  | Default                 |
-| ------------- | -------------------------------------------- | ----------------------- |
-| `APP_NAME`    | Application name (used in UI and emails)     | `Penombre`              |
-| `APP_VERSION` | Application version (used in metadata)       | /                       |
-| `APP_ENV`     | Environment (`dev`/`production`)             | `production`            |
-| `ORIGIN`      | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
-| `LOG_LEVEL`   | `debug`, `info`, `warn`, `error`             | `info`                  |
-| `LOG_FORMAT`  | `console` or `json`                          | `console`               |
-
-#### Database
-
-| Variable       | Description                  | Default  |
-| -------------- | ---------------------------- | -------- |
-| `DATABASE_URL` | PostgreSQL connection string | Required |
-
-#### Authentication
-
-| Variable              | Description                        | Default  |
-| --------------------- | ---------------------------------- | -------- |
-| `AUTH_SECRET`         | Secret key for signing auth tokens | Required |
-| `ENABLE_EMAIL_SIGNIN` | Enable email/password sign-in      | `true`   |
-| `ENABLE_OAUTH_SIGNIN` | Enable OAuth sign-in               | `false`  |
-| `MIN_PASSWORD_LENGTH` | Minimum password length            | `8`      |
-
-#### OAuth Providers (Optional)
-
-Configure OAuth providers using the pattern `OAUTH_<PROVIDER>_<SETTING>`:
-
-| Variable                         | Description            | Default                |
-| -------------------------------- | ---------------------- | ---------------------- |
-| `OAUTH_<PROVIDER>_ENABLED`       | Enable this provider   | `true`                 |
-| `OAUTH_<PROVIDER>_CLIENT_ID`     | OAuth client ID        | Required               |
-| `OAUTH_<PROVIDER>_CLIENT_SECRET` | OAuth client secret    | Required               |
-| `OAUTH_<PROVIDER>_DISCOVERY_URL` | OIDC discovery URL     | Required               |
-| `OAUTH_<PROVIDER>_PRETTY_NAME`   | Display name           | Provider name          |
-| `OAUTH_<PROVIDER>_PKCE`          | Use PKCE               | `true`                 |
-| `OAUTH_<PROVIDER>_SCOPES`        | Comma-separated scopes | `openid,profile,email` |
-
-#### SMTP (Optional)
-
-| Variable        | Description              | Default             |
-| --------------- | ------------------------ | ------------------- |
-| `SMTP_ENABLED`  | Enable SMTP              | `false`             |
-| `SMTP_HOST`     | SMTP server hostname     | Required if enabled |
-| `SMTP_PORT`     | SMTP server port         | `587`               |
-| `SMTP_USER`     | SMTP username            | Required if enabled |
-| `SMTP_PASSWORD` | SMTP password            | Required if enabled |
-| `SMTP_FROM`     | Sender email address     | Required if enabled |
-| `SMTP_SECURE`   | Use TLS (`true`/`false`) | `false`             |
+See [the docs](packages/docs/content/docs/env.mdx) for a complete reference.
 
 ## Architecture
 
@@ -137,8 +34,9 @@ Penombre is a **monorepo** with the following packages:
 
 ```
 packages/
-├── web/     # SvelteKit app (frontend + Hono API backend)
-└── mobile/  # Expo/React Native mobile app
+├── web/     # SvelteKit app (frontend + backend API)
+├── mobile/  # Expo/React Native mobile app
+└── docs/    # Documentation site (Fumadocs)
 ```
 
 ### Database

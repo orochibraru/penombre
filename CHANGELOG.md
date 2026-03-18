@@ -2,7 +2,6 @@
 
 ## v1.2.24
 
-
 ### 🩹 Fixes
 
 - Db max retries ([0e8ebfd](https://github.com/orochibraru/penombre/commit/0e8ebfd))
@@ -12,7 +11,6 @@
 - Oro
 
 ## v1.2.23
-
 
 ### 🩹 Fixes
 
@@ -26,7 +24,6 @@
 
 ## v1.2.20
 
-
 ### 🩹 Fixes
 
 - Docker token ([1f19b80](https://github.com/orochibraru/penombre/commit/1f19b80))
@@ -34,8 +31,6 @@
 ### ❤️ Contributors
 
 - Oro
-
-## v1.2.19
 
 ## v1.2.19
 

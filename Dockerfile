@@ -1,9 +1,10 @@
-FROM oven/bun:1.3.10-alpine AS base
+FROM oven/bun:1.3.11-alpine AS base
 
 WORKDIR /app
 
 ARG FRONTEND_DIR=/app/packages/web
 ARG MOBILE_DIR=/app/packages/mobile
+ARG DOCS_DIR=/app/packages/docs
 
 FROM base AS builder
 
@@ -12,6 +13,7 @@ RUN mkdir -p ${FRONTEND_DIR} ${MOBILE_DIR}
 COPY package.json bun.lock /app/
 COPY packages/web/package.json ${FRONTEND_DIR}/
 COPY packages/mobile/package.json ${MOBILE_DIR}/
+COPY packages/docs/package.json ${DOCS_DIR}/
 
 RUN bun i --frozen-lockfile --ignore-scripts
 
