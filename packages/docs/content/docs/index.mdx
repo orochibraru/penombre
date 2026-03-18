@@ -4,16 +4,21 @@ description: Your self-hosted drive solution.
 icon: Rocket
 ---
 
-1. Get the `.env` file
+import { Step, Steps } from "fumadocs-ui/components/steps";
 
-```bash
+<Steps>
+    <Step>
+        <span> Get the `.env` file</span>
+```bash 
 curl -o .env https://raw.githubusercontent.com/orochibraru/penombre/refs/heads/main/.example.env
 ```
-
-2. Edit the `.env` file with your configuration (see below for details)
-
-3. Start the application with Docker Compose:
-
+    </Step>
+    <Step>
+        Edit the `.env` file with your configuration (see [Environment
+        variables](/docs/env) for details)
+    </Step>
+    <Step>
+        <span>Setup your Docker Compose configuration</span>
 ```yaml
 services:
     app:
@@ -58,3 +63,13 @@ volumes:
     storage_data:
         driver: local
 ```
+    </Step>
+    <Step>
+        <span>Start the application</span>
+```bash
+docker compose up -d
+```
+<span>After a few moments, you should be able to access the application at `http://localhost:3000`.</span>
+    </Step>
+</Steps>
+

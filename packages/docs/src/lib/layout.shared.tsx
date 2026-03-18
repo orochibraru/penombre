@@ -19,10 +19,6 @@ export function baseOptions(): BaseLayoutProps {
 				url: "/docs",
 			},
 			{
-				text: "API",
-				url: "/docs/api",
-			},
-			{
 				text: "Changelog",
 				url: "/changelog",
 			},

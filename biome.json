@@ -27,8 +27,7 @@
 			"!packages/mobile/.expo",
 			"!packages/web/src/app.html",
 			"!packages/docs/.vitepress",
-			"!**/*.md",
-			"!**/*.mdx"
+			"!packages/docs/"
 		]
 	},
 	"formatter": {
@@ -45,6 +44,9 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"complexity": {
+				"useMaxParams": "error"
+			},
 			"style": {
 				"useConst": "error",
 				"noParameterAssign": "error",

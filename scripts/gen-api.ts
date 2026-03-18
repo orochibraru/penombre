@@ -13,12 +13,3 @@ if (mobileClientApiDoc.exitCode !== 0) {
 	console.error(mobileClientApiDoc.stderr);
 	process.exit(1);
 }
-
-const docsWebsiteApiDoc = await $`bun run --filter @penombre/docs gen:api`;
-if (docsWebsiteApiDoc.exitCode !== 0) {
-	console.error("Failed to generate docs website API documentation:");
-	console.error(docsWebsiteApiDoc.stderr);
-	process.exit(1);
-}
-
-console.log("API documentation generated successfully.");
