@@ -1,22 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { baseOptions } from "@/lib/layout.shared";
-
-const loadChangelog = createServerFn({ method: "GET" }).handler(async () => {
-	const { readFileSync } = await import("node:fs");
-	const { resolve } = await import("node:path");
-	// process.cwd() during build is packages/docs; go up two levels to monorepo root
-	return readFileSync(resolve(process.cwd(), "../../CHANGELOG.md"), "utf-8");
-});
-
-export const Route = createFileRoute("/changelog")({
-	component: ChangelogPage,
-	loader: async () => {
-		const content = await loadChangelog();
-		return { entries: parseChangelog(content) };
-	},
-});
 
 // ---------------------------------------------------------------------------
 // Parser
@@ -239,8 +224,12 @@ function VersionCard({ entry }: { entry: VersionEntry }) {
 // Page
 // ---------------------------------------------------------------------------
 
-function ChangelogPage() {
-	const { entries } = Route.useLoaderData();
+export default function ChangelogPage() {
+	const content = readFileSync(
+		resolve(process.cwd(), "../../CHANGELOG.md"),
+		"utf-8",
+	);
+	const entries = parseChangelog(content);
 	return (
 		<HomeLayout {...baseOptions()}>
 			<div className="mx-auto w-full max-w-3xl px-4 py-16">

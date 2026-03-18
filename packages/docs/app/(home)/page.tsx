@@ -1,6 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
-import { HomeLayout } from "fumadocs-ui/layouts/home";
 import {
 	Activity,
 	Clock,
@@ -15,11 +13,8 @@ import {
 	Trash2,
 	Users,
 } from "lucide-react";
-import { baseOptions } from "@/lib/layout.shared";
-
-export const Route = createFileRoute("/")({
-	component: Home,
-});
+import Image from "next/image";
+import Link from "next/link";
 
 const features = [
 	{
@@ -118,9 +113,9 @@ function FeatureCard({
 	);
 }
 
-function Home() {
+export default function HomePage() {
 	return (
-		<HomeLayout {...baseOptions()}>
+		<>
 			{/* Hero */}
 			<section className="flex flex-col items-center gap-6 px-4 py-20 text-center">
 				<div className="inline-flex items-center gap-2 rounded-full border border-fd-border bg-fd-card px-4 py-1.5 text-xs font-medium text-fd-muted-foreground">
@@ -137,8 +132,7 @@ function Home() {
 				</p>
 				<div className="flex flex-wrap items-center justify-center gap-3">
 					<Link
-						to="/docs/$"
-						params={{ _splat: "" }}
+						href="/docs/"
 						className="rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground transition-opacity hover:opacity-90"
 					>
 						Get Started
@@ -157,9 +151,11 @@ function Home() {
 			{/* Screenshot */}
 			<section className="mx-auto w-full max-w-5xl px-4 pb-16">
 				<div className="overflow-hidden rounded-2xl border border-fd-border shadow-xl">
-					<img
-						src="/content/screenshot.png"
+					<Image
+						src="/screenshot.png"
 						alt="Penombre web interface"
+						width={1200}
+						height={800}
 						className="w-full"
 					/>
 				</div>
@@ -207,14 +203,13 @@ docker compose up
 `}
 					/>
 					<Link
-						to="/docs/$"
-						params={{ _splat: "" }}
+						href="/docs/"
 						className="rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground transition-opacity hover:opacity-90"
 					>
 						Read the docs
 					</Link>
 				</div>
 			</section>
-		</HomeLayout>
+		</>
 	);
 }

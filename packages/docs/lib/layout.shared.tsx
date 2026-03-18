@@ -10,7 +10,7 @@ export const gitConfig = {
 export function baseOptions(): BaseLayoutProps {
 	return {
 		nav: {
-			title: "Penombre",
+			title: "Penombre Docs",
 		},
 		githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
 		links: [

@@ -35,8 +35,6 @@ jobs:
 
       - name: Build Docs
         working-directory: packages/docs
-        env:
-          NITRO_PRESET: github-pages
         run: bun run build
 
       - name: Type check Docs
@@ -49,7 +47,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: packages/docs/.output/public
+          path: packages/docs/out
 
   deploy:
     name: Deploy
