@@ -1,0 +1,118 @@
+---
+title: Backup & Restore
+description: Back up and restore your Penombre instance.
+icon: HardDrive
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Callout } from "fumadocs-ui/components/callout";
+
+Penombre ships with scripts to back up and restore both the **PostgreSQL database** and the **file storage volume**. Both scripts operate on a running Docker Compose deployment.
+
+## Backup
+
+The backup script creates a single compressed archive containing the database dump, all uploaded files, and a metadata file.
+
+```bash
+./scripts/backup.sh [directory]
+```
+
+The optional `directory` argument controls where the archive is saved (default: `./backups`).
+
+### What's included
+
+```
+penombre_backup_20260318_143000.tar.gz
+├── database.dump    # PostgreSQL custom-format dump (gzip level 9)
+├── storage.tar.gz   # Contents of /data (all uploaded files)
+└── backup.json      # Metadata (timestamp, file sizes, version)
+```
+
+### How it works
+
+<Steps>
+    <Step>
+        Locates the running `db` and `app` containers via `docker compose ps`.
+    </Step>
+    <Step>
+        Runs `pg_dump` inside the database container to produce a compressed
+        custom-format dump.
+    </Step>
+    <Step>
+        Creates a tar archive of the `/data` directory from the app container.
+    </Step>
+    <Step>
+        Writes a `backup.json` metadata file with timestamps and file sizes.
+    </Step>
+    <Step>
+        Packages everything into a single `.tar.gz` archive and reports its
+        size.
+    </Step>
+</Steps>
+
+### Environment variables
+
+| Variable                 | Description                        | Default    |
+| ------------------------ | ---------------------------------- | ---------- |
+| `POSTGRES_USER`          | PostgreSQL user for `pg_dump`      | `postgres` |
+| `POSTGRES_DB`            | Database name to dump              | `penombre` |
+| `COMPOSE_PROJECT_NAME`   | Docker Compose project name        | Auto       |
+
+### Scheduling backups
+
+Use cron to run backups automatically. For example, daily at 3 AM:
+
+```bash
+0 3 * * * cd /path/to/penombre && ./scripts/backup.sh /mnt/backups
+```
+
+## Restore
+
+<Callout type="error">
+    Restoring is **destructive** — it drops the existing database and replaces
+    all files in storage. Always verify you have the correct backup before
+    proceeding.
+</Callout>
+
+```bash
+./scripts/restore.sh path/to/penombre_backup_20260318_143000.tar.gz
+```
+
+The script prompts for confirmation before making any changes. You must type `yes` to proceed.
+
+### How it works
+
+<Steps>
+    <Step>
+        Extracts the archive and verifies that `database.dump`,
+        `storage.tar.gz`, and `backup.json` are present.
+    </Step>
+    <Step>
+        Stops the `app` container to prevent writes during restore.
+    </Step>
+    <Step>
+        Drops the existing PostgreSQL database and restores from
+        `database.dump` using `pg_restore`.
+    </Step>
+    <Step>
+        Starts the `app` container, clears the current `/data` directory, and
+        extracts `storage.tar.gz` into it.
+    </Step>
+    <Step>
+        Restarts the `app` service to pick up the restored data.
+    </Step>
+</Steps>
+
+### Environment variables
+
+| Variable                 | Description                        | Default    |
+| ------------------------ | ---------------------------------- | ---------- |
+| `POSTGRES_USER`          | PostgreSQL user for `pg_restore`   | `postgres` |
+| `POSTGRES_DB`            | Database name to restore into      | `penombre` |
+| `COMPOSE_PROJECT_NAME`   | Docker Compose project name        | Auto       |
+
+## Tips
+
+- **Test restores regularly.** A backup is only useful if you can restore from it. Spin up a separate Compose stack and verify the archive works.
+- **Store backups off-site.** Copy archives to a remote location (S3, another server, etc.) in case the host fails.
+- **Back up before upgrading.** Always run `./scripts/backup.sh` before pulling a new Penombre image.

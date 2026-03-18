@@ -58,7 +58,7 @@ export async function generateMetadata(
 	if (!page) notFound();
 
 	return {
-		title: page.data.title,
+		title: `Penombre - ${page.data.title}`,
 		description: page.data.description,
 		openGraph: {
 			images: getPageImage(page).url,

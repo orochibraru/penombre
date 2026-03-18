@@ -2459,6 +2459,8 @@
 
     "invariant": ["invariant@2.2.4", "", { "dependencies": { "loose-envify": "^1.0.0" } }, "sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA=="],
 
+    "ip-address": ["ip-address@10.1.0", "", {}, "sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q=="],
+
     "is": ["is@3.3.2", "", {}, "sha512-a2xr4E3s1PjDS8ORcGgXpWx6V+liNs+O3JRD2mb9aeugD7rtkkZ0zgLdYgw0tWsKhsdiezGYptSiMlVazCBTuQ=="],
 
     "is-alphabetical": ["is-alphabetical@2.0.1", "", {}, "sha512-FWyyY60MeTNyeSRpkM2Iry0G9hpr7/9kD40mD/cGQEuilcZYS4okz8SN2Q6rLCJ8gbCt6fN+rC+6tMGS99LaxQ=="],
@@ -3431,9 +3433,13 @@
 
     "slugify": ["slugify@1.6.8", "", {}, "sha512-HVk9X1E0gz3mSpoi60h/saazLKXKaZThMLU3u/aNwoYn8/xQyX2MGxL0ui2eaokkD7tF+Zo+cKTHUbe1mmmGzA=="],
 
+    "smart-buffer": ["smart-buffer@4.2.0", "", {}, "sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg=="],
+
     "smob": ["smob@1.6.1", "", {}, "sha512-KAkBqZl3c2GvNgNhcoyJae1aKldDW0LO279wF9bk1PnluRTETKBq0WyzRXxEhoQLk56yHaOY4JCBEKDuJIET5g=="],
 
     "snowflake-sdk": ["snowflake-sdk@2.3.5", "", { "dependencies": { "@aws-crypto/sha256-js": "^5.2.0", "@aws-sdk/client-s3": "^3.983.0", "@aws-sdk/client-sts": "^3.983.0", "@aws-sdk/credential-provider-node": "^3.972.5", "@aws-sdk/ec2-metadata-service": "^3.983.0", "@azure/identity": "^4.10.1", "@azure/storage-blob": "12.26.x", "@google-cloud/storage": "^7.19.0", "@smithy/node-http-handler": "^4.4.9", "@smithy/protocol-http": "^5.3.8", "@smithy/signature-v4": "^5.3.8", "@techteamer/ocsp": "1.0.1", "asn1.js": "^5.0.0", "asn1.js-rfc2560": "^5.0.0", "asn1.js-rfc5280": "^3.0.0", "axios": "^1.13.4", "big-integer": "^1.6.43", "bignumber.js": "^9.1.2", "browser-request": "^0.3.3", "expand-tilde": "^2.0.2", "fast-xml-parser": "^5.4.1", "fastest-levenshtein": "^1.0.16", "generic-pool": "^3.8.2", "google-auth-library": "^10.1.0", "https-proxy-agent": "^7.0.2", "jsonwebtoken": "^9.0.3", "mime-types": "^2.1.29", "moment": "^2.29.4", "moment-timezone": "^0.5.15", "oauth4webapi": "^3.0.1", "open": "^7.3.1", "simple-lru-cache": "^0.0.2", "toml": "^3.0.0", "uuid": "^8.3.2", "winston": "^3.1.0" } }, "sha512-WppYbQK4R8/yDV2iUz6Tux5/Dms3cvbyp7qmkp4Evz9Z0NXUSLl0Sxoz7wK3oNIviME1fqBPozcQ19c03xUGuA=="],
+
+    "socks": ["socks@2.8.7", "", { "dependencies": { "ip-address": "^10.0.1", "smart-buffer": "^4.2.0" } }, "sha512-HLpt+uLy/pxB+bum/9DzAgiKS8CX1EvbWxI4zlmgGCExImLdiad2iCwXT5Z4c9c3Eq8rP2318mPW2c+QbtjK8A=="],
 
     "source-map": ["source-map@0.7.6", "", {}, "sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ=="],
 

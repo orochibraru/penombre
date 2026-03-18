@@ -1,0 +1,19 @@
+{
+	"title": "Framework",
+	"description": "The docs framework",
+	"icon": "Building",
+	"root": true,
+	"pages": [
+		"---Introduction---",
+		"index",
+		"env",
+		"---Guides---",
+		"deployment",
+		"backup",
+		"reverse-proxy",
+		"troubleshooting",
+		"---Principles---",
+		"authentication",
+		"architecture"
+	]
+}

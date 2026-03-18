@@ -1,0 +1,157 @@
+---
+title: Reverse Proxy
+description: Expose Penombre behind a reverse proxy with HTTPS.
+icon: Shield
+---
+
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Callout } from "fumadocs-ui/components/callout";
+
+Penombre listens on port **3000** by default. In production you should place it behind a reverse proxy to handle HTTPS termination and forward traffic to the container.
+
+<Callout type="warn">
+    Set the `ORIGIN` environment variable to your public URL (e.g.
+    `https://cloud.example.com`). This is required for OAuth callbacks, email
+    links, and passkey registration to work correctly.
+</Callout>
+
+## Requirements
+
+Your reverse proxy must:
+
+- Forward the `Host`, `X-Real-IP`, `X-Forwarded-For`, and `X-Forwarded-Proto` headers so Penombre can resolve client addresses and detect HTTPS.
+- Allow large request bodies — Penombre sets `BODY_SIZE_LIMIT=Infinity` for file uploads, so limit enforcement should happen at the proxy level if needed.
+- Not buffer responses — streaming is used for file downloads.
+
+## Examples
+
+<Tabs items={["Caddy", "Nginx", "Traefik"]}>
+    <Tab value="Caddy">
+        [Caddy](https://caddyserver.com/) handles HTTPS automatically via Let's Encrypt.
+
+        ```txt title="Caddyfile"
+        cloud.example.com {
+            reverse_proxy localhost:3000
+        }
+        ```
+
+        That's it — Caddy provisions and renews TLS certificates automatically.
+    </Tab>
+    <Tab value="Nginx">
+        ```nginx title="/etc/nginx/sites-available/penombre"
+        server {
+            listen 80;
+            server_name cloud.example.com;
+            return 301 https://$host$request_uri;
+        }
+
+        server {
+            listen 443 ssl http2;
+            server_name cloud.example.com;
+
+            ssl_certificate     /etc/letsencrypt/live/cloud.example.com/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/cloud.example.com/privkey.pem;
+
+            client_max_body_size 0; # No upload size limit
+
+            location / {
+                proxy_pass http://localhost:3000;
+                proxy_http_version 1.1;
+
+                proxy_set_header Host              $host;
+                proxy_set_header X-Real-IP         $remote_addr;
+                proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                # WebSocket support
+                proxy_set_header Upgrade    $http_upgrade;
+                proxy_set_header Connection "upgrade";
+
+                proxy_buffering off;
+
+                proxy_connect_timeout 60s;
+                proxy_send_timeout    60s;
+                proxy_read_timeout    60s;
+            }
+        }
+        ```
+
+        Use [Certbot](https://certbot.eff.org/) to provision certificates:
+
+        ```bash
+        sudo certbot --nginx -d cloud.example.com
+        ```
+    </Tab>
+    <Tab value="Traefik">
+        Add labels to the `app` service in your `compose.yaml`:
+
+        ```yaml title="compose.yaml"
+        services:
+            app:
+                image: orochibraru/penombre:latest
+                labels:
+                    - "traefik.enable=true"
+                    - "traefik.http.routers.penombre.rule=Host(`cloud.example.com`)"
+                    - "traefik.http.routers.penombre.entrypoints=websecure"
+                    - "traefik.http.routers.penombre.tls.certresolver=letsencrypt"
+                    - "traefik.http.services.penombre.loadbalancer.server.port=3000"
+                # Remove the ports mapping — Traefik handles routing
+                # ports:
+                #   - 3000:3000
+        ```
+
+        Make sure Traefik is configured with an ACME certificate resolver named `letsencrypt` and an entrypoint named `websecure` on port 443.
+    </Tab>
+</Tabs>
+
+## Docker Compose with a proxy network
+
+When running both your reverse proxy and Penombre in Docker, place them on a shared network so the proxy can reach the app container by service name:
+
+```yaml title="compose.yaml"
+services:
+    app:
+        image: orochibraru/penombre:latest
+        depends_on:
+            db:
+                condition: service_healthy
+        restart: unless-stopped
+        volumes:
+            - storage_data:/data
+        env_file: .env
+        environment:
+            - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
+        networks:
+            - default
+            - proxy
+
+    db:
+        image: postgres:17-alpine
+        restart: unless-stopped
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER-postgres}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
+            - POSTGRES_DB=${POSTGRES_DB-penombre}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    CMD-SHELL,
+                    "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d ${POSTGRES_DB-penombre}'",
+                ]
+            interval: 1s
+            timeout: 2s
+            retries: 10
+            start_period: 3s
+
+volumes:
+    postgres_data:
+    storage_data:
+
+networks:
+    proxy:
+        external: true
+```
+
+With this setup, remove the `ports` mapping from the `app` service — the reverse proxy accesses it via `http://app:3000` on the shared `proxy` network. The database port is also no longer exposed to the host.

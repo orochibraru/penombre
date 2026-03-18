@@ -1,0 +1,154 @@
+---
+title: Authentication
+description: Configure authentication methods for your Penombre instance.
+icon: Lock
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Penombre supports multiple authentication methods powered by [Better Auth](https://www.better-auth.com/).
+
+## Auth secret
+
+`AUTH_SECRET` is required and used to sign session tokens. Generate a secure random value:
+
+```bash
+openssl rand -hex 32
+```
+
+<Callout type="error">
+    Never reuse the same secret across environments. Rotating the secret
+    invalidates all existing sessions.
+</Callout>
+
+## Email and password
+
+Enabled by default. Users sign in with an email address and a password.
+
+| Variable              | Description                   | Default |
+| --------------------- | ----------------------------- | ------- |
+| `ENABLE_EMAIL_SIGNIN` | Enable email/password sign-in | `true`  |
+| `MIN_PASSWORD_LENGTH` | Minimum password length       | `8`     |
+
+### Email verification
+
+If SMTP is configured, Penombre sends a verification email on signup with a link the user must click before they can sign in. Without SMTP, email verification is skipped.
+
+| Variable        | Description          | Default             |
+| --------------- | -------------------- | ------------------- |
+| `SMTP_ENABLED`  | Enable SMTP          | `false`             |
+| `SMTP_HOST`     | SMTP server hostname | Required if enabled |
+| `SMTP_PORT`     | SMTP server port     | `587`               |
+| `SMTP_USER`     | SMTP username        | Required if enabled |
+| `SMTP_PASSWORD` | SMTP password        | Required if enabled |
+| `SMTP_FROM`     | Sender address       | Required if enabled |
+| `SMTP_SECURE`   | Use TLS              | `false`             |
+
+Set `SMTP_SECURE=true` for port 465 (implicit TLS) and `false` for port 587 (STARTTLS).
+
+### Forgot password
+
+Password reset is available when SMTP is enabled. Users receive an email with a reset link. If SMTP is disabled, the forgot-password flow is not available.
+
+## OAuth
+
+Penombre supports any **OIDC-compliant** provider (Google, GitHub, Authentik, Pocket ID, etc.). Enable it with `ENABLE_OAUTH_SIGNIN=true` and configure one or more providers using environment variables.
+
+### Provider configuration
+
+Each provider is configured with the naming pattern `OAUTH_<PROVIDER>_<SETTING>`, where `<PROVIDER>` is an uppercase identifier of your choice.
+
+| Variable                         | Description                    | Default                |
+| -------------------------------- | ------------------------------ | ---------------------- |
+| `OAUTH_<PROVIDER>_CLIENT_ID`     | OAuth client ID                | Required               |
+| `OAUTH_<PROVIDER>_CLIENT_SECRET` | OAuth client secret            | Required               |
+| `OAUTH_<PROVIDER>_DISCOVERY_URL` | OIDC discovery URL             | Required               |
+| `OAUTH_<PROVIDER>_ENABLED`       | Enable this provider           | `true`                 |
+| `OAUTH_<PROVIDER>_PRETTY_NAME`   | Display name in the UI         | Provider name          |
+| `OAUTH_<PROVIDER>_PKCE`          | Use PKCE                       | `true`                 |
+| `OAUTH_<PROVIDER>_SCOPES`        | Comma-separated scopes         | `openid,profile,email` |
+
+The discovery URL must point to the provider's `/.well-known/openid-configuration` endpoint. Penombre auto-discovers authorization, token, and userinfo endpoints from it.
+
+### Example: Pocket ID
+
+```bash title=".env"
+ENABLE_OAUTH_SIGNIN=true
+
+OAUTH_POCKET_ID_CLIENT_ID=05a0dd79-...
+OAUTH_POCKET_ID_CLIENT_SECRET=U8QJvEK8...
+OAUTH_POCKET_ID_DISCOVERY_URL=https://auth.example.com/.well-known/openid-configuration
+OAUTH_POCKET_ID_PRETTY_NAME=Pocket ID
+```
+
+### Example: Google
+
+```bash title=".env"
+ENABLE_OAUTH_SIGNIN=true
+
+OAUTH_GOOGLE_CLIENT_ID=123456789.apps.googleusercontent.com
+OAUTH_GOOGLE_CLIENT_SECRET=GOCSPX-...
+OAUTH_GOOGLE_DISCOVERY_URL=https://accounts.google.com/.well-known/openid-configuration
+OAUTH_GOOGLE_PRETTY_NAME=Google
+```
+
+### Redirect URI
+
+When registering your OAuth application, set the redirect URI to:
+
+```
+https://<your-domain>/api/v1/auth/callback/<provider-name>
+```
+
+The `<provider-name>` is the lowercase, hyphenated version of `<PROVIDER>`. For example, `OAUTH_POCKET_ID_*` becomes `pocket-id`, so the callback URL is:
+
+```
+https://cloud.example.com/api/v1/auth/callback/pocket-id
+```
+
+## Passkeys
+
+Passkeys (WebAuthn/FIDO2) allow passwordless authentication using biometrics or hardware security keys. They are always available — users can register passkeys from the settings page.
+
+Passkeys work with:
+- Platform authenticators (Touch ID, Face ID, Windows Hello)
+- Roaming authenticators (YubiKey, security keys)
+
+<Callout type="warn">
+    Passkeys are bound to the origin domain. If you change your `ORIGIN`, existing
+    passkeys will stop working and users will need to register new ones.
+</Callout>
+
+## API keys
+
+API keys provide programmatic access to the Penombre API. Users can create and manage API keys from the settings page.
+
+Keys are sent via request headers:
+
+```bash
+# Preferred
+curl -H "x-api-key: pen_..." https://cloud.example.com/api/v1/storage/files
+
+# Alternative
+curl -H "Authorization: Bearer pen_..." https://cloud.example.com/api/v1/storage/files
+```
+
+API keys are rate-limited to **100 requests per minute** in production. Each key tracks its own request count and automatically refills.
+
+## Initial admin account
+
+On first startup, if no users exist, Penombre creates an admin account using:
+
+| Variable         | Description           | Default            |
+| ---------------- | --------------------- | ------------------ |
+| `ADMIN_EMAIL`    | Admin account email    | `admin@example.com` |
+| `ADMIN_PASSWORD` | Admin account password | `Admin1234!`        |
+
+<Callout type="warn">
+    Change the default admin credentials immediately after your first login.
+    These variables can be removed from your environment after the initial setup.
+</Callout>
+
+## Rate limiting
+
+In production, all authentication endpoints are rate-limited to **100 requests per 15 minutes per IP address**. This protects against brute-force attacks. Rate limiting is disabled in development mode.

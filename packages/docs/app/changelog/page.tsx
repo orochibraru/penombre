@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
+import type { Metadata } from "next";
 import { baseOptions } from "@/lib/layout.shared";
 
 // ---------------------------------------------------------------------------
@@ -250,3 +251,10 @@ export default function ChangelogPage() {
 		</HomeLayout>
 	);
 }
+
+export const metadata: Metadata = {
+	title: "Penombre - Changelog",
+	description:
+		"A detailed log of all notable changes to Penombre, organized by version.",
+	metadataBase: new URL("https://penombre.space"),
+};

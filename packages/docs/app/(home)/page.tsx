@@ -13,6 +13,7 @@ import {
 	Trash2,
 	Users,
 } from "lucide-react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -213,3 +214,10 @@ docker compose up
 		</>
 	);
 }
+
+export const metadata: Metadata = {
+	title: "Penombre - Your self-hosted cloud drive",
+	description:
+		"Penombre is a self-hosted cloud drive solution, built with Next.js and App Router.",
+	metadataBase: new URL("https://penombre.space"),
+};
