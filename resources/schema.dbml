@@ -151,6 +151,10 @@ ref: account.user_id > user.id
 
 ref: activity.user_id > user.id
 
+ref: apikey.reference_id > user.id
+
+ref: passkey.user_id > user.id
+
 ref: session.user_id > user.id
 
 ref: shared_with.sharing_id > sharings.id

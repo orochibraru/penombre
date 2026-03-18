@@ -93,6 +93,8 @@ export const userRelations = relations(user, ({ one, many }) => ({
 	ownedSharings: many(sharings),
 	sharedWithMe: many(sharedWith),
 	preferences: one(userPreferences),
+	passkeys: many(passkey),
+	apikeys: many(apikey),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -240,7 +242,9 @@ export const apikey = pgTable("apikey", {
 	start: text("start"),
 	prefix: text("prefix"),
 	key: text("key").notNull(),
-	referenceId: text("reference_id").notNull(),
+	referenceId: text("reference_id")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
 	refillInterval: integer("refill_interval"),
 	refillAmount: integer("refill_amount"),
 	lastRefillAt: timestamp("last_refill_at", {
@@ -270,6 +274,13 @@ export const apikey = pgTable("apikey", {
 	metadata: jsonb("metadata").default({}),
 });
 
+export const apikeyRelations = relations(apikey, ({ one }) => ({
+	user: one(user, {
+		fields: [apikey.referenceId],
+		references: [user.id],
+	}),
+}));
+
 export const passkey = pgTable("passkey", {
 	id: text("id").primaryKey(),
 	name: text("name"),
@@ -285,3 +296,10 @@ export const passkey = pgTable("passkey", {
 	createdAt: timestamp("created_at", { precision: 6, withTimezone: true }),
 	aaguid: text("aaguid"),
 });
+
+export const passkeyRelations = relations(passkey, ({ one }) => ({
+	user: one(user, {
+		fields: [passkey.userId],
+		references: [user.id],
+	}),
+}));
