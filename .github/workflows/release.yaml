@@ -48,20 +48,8 @@ jobs:
           git config --global credential.helper store
           echo "https://x-access-token:${{ secrets.CI_TOKEN }}@github.com" > ~/.git-credentials
 
-      - name: Generate a changelog
-        uses: orhun/git-cliff-action@v4
-        id: git-cliff
-        with:
-          config: cliff.toml
-          args: --verbose
+      - name: Semantic Release
+        id: semantic # We need this ID to grab the version output in the next steps
+        uses: cycjimmy/semantic-release-action@v4
         env:
-          OUTPUT: CHANGELOG.md
-
-      - name: Print the changelog
-        run: cat "${{ steps.git-cliff.outputs.changelog }}"
-
-      - name: Create a release commit
-        run: |
-          git add CHANGELOG.md
-          git commit -m "chore(release): update changelog [skip ci]"
-          git push origin HEAD:main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

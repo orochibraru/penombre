@@ -19,7 +19,8 @@
 		"circular": "bun run ./scripts/circular.ts",
 		"backup": "./scripts/backup.sh",
 		"restore": "./scripts/restore.sh",
-		"gen:api": "bun run ./scripts/gen-api.ts"
+		"gen:api": "bun run ./scripts/gen-api.ts",
+		"release": "semantic-release"
 	},
 	"keywords": [],
 	"author": "",
@@ -35,6 +36,7 @@
 		"drizzle-dbml-generator": "^0.10.0",
 		"husky": "^9.1.7",
 		"madge": "^8.0.0",
+		"semantic-release": "^25.0.3",
 		"wait-on": "^9.0.4"
 	},
 	"workspaces": [
