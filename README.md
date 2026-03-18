@@ -10,7 +10,7 @@ Penombre is a comprehensive file storage and synchronization platform that provi
 
 ## Getting Started
 
-Follow the [installation guide](packages/docs/content/docs/index.mdx) to set up your Penombre instance in minutes. For configuration options, see the [environment variables documentation](packages/docs/content/docs/env.mdx).
+Follow the [installation guide](https://penombre.space/docs) to set up your Penombre instance in minutes. For configuration options, see the [environment variables documentation](https://penombre.space/docs/env).
 
 ## Features
 
@@ -26,7 +26,7 @@ Follow the [installation guide](packages/docs/content/docs/index.mdx) to set up 
 
 ### Environment Variables
 
-See [the docs](packages/docs/content/docs/env.mdx) for a complete reference.
+See [the docs](https://penombre.space/docs/env) for a complete reference.
 
 ## Architecture
 
