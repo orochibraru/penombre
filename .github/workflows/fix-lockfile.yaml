@@ -7,7 +7,9 @@ on:
     paths:
       - "bun.lock"
       - "package.json"
-      - "packages/**/package.json"
+      - "packages/web/package.json"
+      - "packages/docs/package.json"
+      - "packages/mobile/package.json"
 
 permissions:
   contents: write
