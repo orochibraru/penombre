@@ -36,6 +36,10 @@ jobs:
           NITRO_PRESET: github-pages
         run: bun run build
 
+      - name: Type check Docs
+        working-directory: packages/docs
+        run: bun run check
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

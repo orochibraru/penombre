@@ -43,16 +43,8 @@ jobs:
         working-directory: packages/web
         run: bun run build
 
-      - name: Build Docs
-        working-directory: packages/docs
-        run: bun run build
-
       - name: Type check Webapp
         working-directory: packages/web
-        run: bun run check
-
-      - name: Type check Docs
-        working-directory: packages/docs
         run: bun run check
 
   docker-prepare:
