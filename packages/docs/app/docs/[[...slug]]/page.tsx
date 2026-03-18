@@ -42,6 +42,17 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
 					})}
 				/>
 			</DocsBody>
+			<p className="text-xs text-gray-500">
+				Found an issue or want to contribute?{" "}
+				<a
+					href={`https://github.com/orochibraru/penombre/edit/main/packages/docs/content/docs/${page.path}`}
+					rel="noreferrer noopener"
+					target="_blank"
+					className="hover:text-gray-700 transition-colors underline text-end"
+				>
+					Edit this page on GitHub
+				</a>
+			</p>
 		</DocsPage>
 	);
 }
