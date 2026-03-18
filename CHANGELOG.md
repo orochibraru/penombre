@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/orochibraru/penombre/compare/v1.4.0...v1.5.0) (2026-03-18)
+
+
+### Features
+
+* changelog plugin ([25ec6c0](https://github.com/orochibraru/penombre/commit/25ec6c00bd38351eed36e3bc751eea9bd4dd8954))
+
 # Changelog
 
 ## v1.2.24
