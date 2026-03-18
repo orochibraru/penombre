@@ -166,8 +166,8 @@ function Section({ section }: { section: ChangeSection }) {
 			</span>
 			<ul className="space-y-1">
 				{section.items.map((item, i) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: static list
 					<li
+						// biome-ignore lint/suspicious/noArrayIndexKey: static list
 						key={i}
 						className="flex items-start gap-2 text-sm text-fd-foreground"
 					>
