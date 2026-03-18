@@ -7,7 +7,7 @@
 				"releaseRules": [
 					{
 						"breaking": true,
-						"release": "minor"
+						"release": "major"
 					},
 					{
 						"type": "feat",
@@ -15,15 +15,15 @@
 					},
 					{
 						"type": "fix",
-						"release": "minor"
+						"release": "patch"
 					},
 					{
 						"type": "perf",
-						"release": "minor"
+						"release": "patch"
 					},
 					{
 						"type": "revert",
-						"release": "minor"
+						"release": "patch"
 					}
 				]
 			}
