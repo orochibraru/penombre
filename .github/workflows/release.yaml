@@ -21,16 +21,16 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # check:
-  #   uses: ./.github/workflows/pr.yaml
-  #   if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
+  check:
+    uses: ./.github/workflows/pr.yaml
+    if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
 
   release:
     name: Release
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
-    # needs: [check]
+    needs: [check]
     if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
     steps:
       - uses: actions/checkout@v6
