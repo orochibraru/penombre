@@ -1,6 +1,9 @@
 name: Dependabot auto-merge
 on: pull_request
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write
   pull-requests: write
