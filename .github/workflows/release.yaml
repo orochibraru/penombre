@@ -9,6 +9,7 @@ on:
     paths-ignore:
       - ".husky/**"
       - "packages/docs/**"
+      - "**/*.md"
 
 concurrency:
   group: release
