@@ -17,6 +17,7 @@
 			"!packages/web/data",
 			"!packages/web/dist",
 			"!packages/web/test-results",
+			"!packages/web/project.inlang",
 			"!packages/web/playwright-report",
 			"!packages/web/src/lib/paraglide",
 			"!packages/web/.svelte-kit",
