@@ -43,6 +43,7 @@
     import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
     import UploadProgressIndicator from "$lib/components/layout/upload-progress-indicator.svelte";
     import Spinner from "$lib/components/ui/Spinner.svelte";
+    import VersionCheck from "$lib/components/layout/version-check.svelte";
     import { FileCategoryEnum } from "$lib/file-helpers";
 
     const { children, data } = $props();
@@ -238,9 +239,7 @@
             <Nav title="General" items={nav.general} />
             <Nav title="Categories" items={nav.categories} />
             <Nav title="Help" items={nav.help} class="mt-auto" />
-            <p class="text-xs text-muted-foreground">
-                {data.config.appName} version {data.config.appVersion}
-            </p>
+            <VersionCheck config={data.config} version={data.versionCheck} />
         </Sidebar.Content>
     </Sidebar.Root>
 
