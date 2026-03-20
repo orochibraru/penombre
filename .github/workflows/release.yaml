@@ -51,7 +51,7 @@ jobs:
 
       - name: Semantic Release
         id: semantic # We need this ID to grab the version output in the next steps
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@v6
         with:
           extra_plugins: |
             @semantic-release/changelog

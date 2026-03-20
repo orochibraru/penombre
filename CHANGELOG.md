@@ -1,3 +1,20 @@
+## [1.8.2](https://github.com/orochibraru/penombre/compare/v1.8.1...v1.8.2) (2026-03-20)
+
+
+### Bug Fixes
+
+* bump semantic release action ([8d94ec9](https://github.com/orochibraru/penombre/commit/8d94ec99143bd149a7a3b6be241b593bfe6fa4c1))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.2
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 # [1.5.0](https://github.com/orochibraru/penombre/compare/v1.4.0...v1.5.0) (2026-03-18)
 
 
