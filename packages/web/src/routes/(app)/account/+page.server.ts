@@ -35,17 +35,28 @@ export const actions = {
 					error: "Email change is not allowed without SMTP enabled",
 				});
 			}
-			const emailRes = await auth.api.adminUpdateUser({
-				body: {
-					userId: authRes.user.id,
-					data: {
-						email: String(email),
+			try {
+				await auth.api.adminUpdateUser({
+					body: {
+						userId: authRes.user.id,
+						data: {
+							email: String(email),
+							emailVerified: false,
+						},
 					},
-				},
-				headers: request.headers,
-			});
-			logger.error("Email change attempted, which is not allowed");
-			return fail(400, { error: "Email change is not allowed" });
+					headers: request.headers,
+				});
+			} catch (error) {
+				logger.error("Error updating email:", error);
+				return fail(500, {
+					error: "An unexpected error occurred while updating email",
+				});
+			}
+		}
+
+		if (name === authRes.user.name) {
+			logger.debug("Name is unchanged, skipping update");
+			return { success: true };
 		}
 
 		try {
