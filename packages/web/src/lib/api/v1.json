@@ -5147,6 +5147,90 @@
 				}
 			}
 		},
+		"/api/v1/version/check": {
+			"get": {
+				"summary": "Check for updates",
+				"description": "Checks if a newer version of Penombre is available on GitHub releases",
+				"tags": ["Version"],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "object",
+											"properties": {
+												"currentVersion": {
+													"type": "string"
+												},
+												"latestVersion": {
+													"anyOf": [
+														{
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"updateAvailable": {
+													"type": "boolean"
+												},
+												"releaseUrl": {
+													"anyOf": [
+														{
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												}
+											},
+											"required": [
+												"currentVersion",
+												"latestVersion",
+												"updateAvailable",
+												"releaseUrl"
+											],
+											"additionalProperties": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				]
+			}
+		},
 		"/api/v1/auth/sign-in/social": {
 			"post": {
 				"tags": ["Auth"],

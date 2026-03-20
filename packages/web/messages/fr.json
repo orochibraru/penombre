@@ -36,5 +36,6 @@
 	"delete_passkey": "Supprimer Passkey",
 	"delete_passkey_confirmation": "Êtes-vous sûr de vouloir supprimer ce passkey ? Cette action ne peut pas être annulée.",
 	"delete_passkey_success": "Passkey supprimé avec succès.",
-	"delete_passkey_error": "Une erreur s'est produite lors de la suppression du passkey. Veuillez réessayer."
+	"delete_passkey_error": "Une erreur s'est produite lors de la suppression du passkey. Veuillez réessayer.",
+	"update_available": "Version {version} disponible"
 }

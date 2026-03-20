@@ -14,3 +14,4 @@ import "$lib/server/openapi/v1/activity";
 import "$lib/server/openapi/v1/auth";
 import "$lib/server/openapi/v1/preferences";
 import "$lib/server/openapi/v1/storage";
+import "$lib/server/openapi/v1/version";

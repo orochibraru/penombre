@@ -36,5 +36,6 @@
 	"delete_passkey": "Delete Passkey",
 	"delete_passkey_confirmation": "Are you sure you want to delete this passkey? This action cannot be undone.",
 	"delete_passkey_success": "Passkey deleted successfully.",
-	"delete_passkey_error": "There was an error deleting the passkey. Please try again."
+	"delete_passkey_error": "There was an error deleting the passkey. Please try again.",
+	"update_available": "Version {version} available"
 }

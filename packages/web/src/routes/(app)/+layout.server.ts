@@ -5,7 +5,6 @@ import { resolve } from "$app/paths";
 import { api } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
 import { getPenombreConfig } from "$lib/server/config";
-import { getUserPreferences } from "$lib/server/services/preferences";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({
@@ -21,30 +20,20 @@ export const load: LayoutServerLoad = async ({
 		return redirect(302, resolve("/auth/sign-in"));
 	}
 
-	const [activityResult, countsResult, preferences] = await Promise.all([
-		api.GET("/api/v1/activity", { fetch, baseUrl: url.origin }),
-		api.GET("/api/v1/storage/file/counts", { fetch, baseUrl: url.origin }),
-		getUserPreferences(locals.user.id),
-	]);
-
-	// If 401, user is not authenticated - redirect to signin
-	if (activityResult.response.status === 401) {
-		return redirect(302, resolve("/auth/sign-in"));
-	}
-	if (activityResult.error) {
-		throw new Error(
-			`Failed to retrieve user activity: ${activityResult.response.status}`,
-		);
-	}
-
-	const activity = activityResult.data?.data;
+	const [activityResult, fileCount, preferences, versionCheck] =
+		await Promise.all([
+			api.GET("/api/v1/activity", { fetch, baseUrl: url.origin }),
+			api.GET("/api/v1/storage/file/counts", { fetch, baseUrl: url.origin }),
+			api.GET("/api/v1/preferences", { fetch, baseUrl: url.origin }),
+			api.GET("/api/v1/version/check", { fetch, baseUrl: url.origin }),
+		]);
 
 	// Parse counts, default to 0 if failed
 	let counts = { trash: 0, starred: 0 };
-	if (countsResult.error) {
-		console.error("Failed to load counts", countsResult.error);
-	} else if (countsResult.data?.data) {
-		counts = countsResult.data.data as { trash: number; starred: number };
+	if (fileCount.error) {
+		console.error("Failed to load counts", fileCount.error);
+	} else if (fileCount.data?.data) {
+		counts = fileCount.data.data as { trash: number; starred: number };
 	}
 
 	const isAdmin = locals.user.role === "admin";
@@ -55,11 +44,12 @@ export const load: LayoutServerLoad = async ({
 		user: locals.user,
 		config,
 		session: locals.session,
-		activity,
+		activity: activityResult.data?.data,
 		counts,
-		preferences,
+		preferences: preferences.data?.data,
 		uploadForm: await superValidate({}, zod4(uploadSchema)),
 		authCookie: "123",
 		isAdmin,
+		versionCheck: versionCheck.data?.data,
 	};
 };
