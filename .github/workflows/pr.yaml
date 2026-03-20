@@ -1,4 +1,4 @@
-name: PR Validation
+name: PR TypeScript Validation
 
 on:
   pull_request:
@@ -51,10 +51,3 @@ jobs:
       - name: Test Webapp
         working-directory: packages/web
         run: bun run test
-
-  docker-prepare:
-    uses: ./.github/workflows/docker.yaml
-    name: Docker Prepare
-    with:
-      publish: false
-      image-name: orochibraru/penombre
