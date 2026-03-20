@@ -1,3 +1,20 @@
+## [1.8.3](https://github.com/orochibraru/penombre/compare/v1.8.2...v1.8.3) (2026-03-20)
+
+
+### Bug Fixes
+
+* publish flow ([992a880](https://github.com/orochibraru/penombre/commit/992a8801ae3b32130d0ea410cded1f9d3fb1b16c))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.3
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.2](https://github.com/orochibraru/penombre/compare/v1.8.1...v1.8.2) (2026-03-20)
 
 
