@@ -24,7 +24,7 @@ env:
 
 jobs:
   check:
-    uses: ./.github/workflows/pr.yaml
+    uses: ./.github/workflows/ci.yaml
     if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
 
   release:
