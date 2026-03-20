@@ -74,7 +74,7 @@ jobs:
 
       - name: Test Webapp
         working-directory: packages/web
-        run: bun run test
+        run: bun test
 
   # ===========================================
   # Docker: Build — only when Docker files change
