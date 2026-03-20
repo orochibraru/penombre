@@ -12,6 +12,7 @@
     import Button from "$lib/components/ui/button/button.svelte";
     import SidebarBranding from "$lib/components/sidebar-branding.svelte";
     import * as m from "$lib/paraglide/messages.js";
+    import { customMenu } from "$lib/store/custom-menu";
 
     const accountNav: NavItem[] = [
         {
@@ -38,6 +39,11 @@
     ];
 
     const { children } = $props();
+
+    $effect(() => {
+        customMenu.set({ title: m.account(), items: accountNav });
+        return () => customMenu.set(null);
+    });
 </script>
 
 <Sidebar.Root variant="inset">

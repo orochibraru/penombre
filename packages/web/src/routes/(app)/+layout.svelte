@@ -46,6 +46,7 @@
     import VersionCheck from "$lib/components/layout/version-check.svelte";
     import { FileCategoryEnum } from "$lib/file-helpers";
     import { m } from "$lib/paraglide/messages.js";
+    import { customMenu } from "$lib/store/custom-menu";
 
     const { children, data } = $props();
 
@@ -57,6 +58,7 @@
     });
 
     let mobileCreateDrawerOpen: boolean = $state(false);
+    let mobileMenuDrawerOpen: boolean = $state(false);
     let uploadLoading: boolean = $state(false);
 
     const nav: NavMenus = $derived({
@@ -292,6 +294,7 @@
 
                 {#if page.data.hasCustomMenu === true || !showUploadButton}
                     <button
+                        onclick={() => (mobileMenuDrawerOpen = true)}
                         title={m.menu()}
                         class={cn(
                             bottomNavItemClass,
@@ -396,3 +399,41 @@
 <NewFolderDialog bind:open={$newFolderDialogOpen} />
 <UploadDialog bind:open={$uploadDialogOpen} bind:loading={uploadLoading} />
 <UploadProgressIndicator />
+
+<Drawer.Root bind:open={mobileMenuDrawerOpen}>
+    <Drawer.Content class="z-50">
+        <Drawer.Header>
+            <Drawer.Title class="text-lg"
+                >{$customMenu?.title ?? m.menu()}</Drawer.Title
+            >
+        </Drawer.Header>
+        <div class="mx-auto flex w-full flex-col items-start gap-3 p-4">
+            {#if $customMenu}
+                {#each $customMenu.items as item (item.url)}
+                    {@const Icon = item.icon}
+                    <a
+                        href={item.url}
+                        class={cn(
+                            buttonVariants({
+                                variant: isActive(item.url)
+                                    ? "default"
+                                    : "outline",
+                                size: "lg",
+                            }),
+                            "w-full justify-start",
+                        )}
+                        onclick={() => (mobileMenuDrawerOpen = false)}
+                    >
+                        <Icon class="w-5! h-5!" />
+                        {item.title}
+                    </a>
+                {/each}
+            {/if}
+        </div>
+        <Drawer.Footer>
+            <Drawer.Close class={buttonVariants({ variant: "destructive" })}>
+                {m.cancel()}
+            </Drawer.Close>
+        </Drawer.Footer>
+    </Drawer.Content>
+</Drawer.Root>
