@@ -45,7 +45,7 @@ jobs:
   # TypeScript: Lint, Format, Build — always runs
   # ===========================================
   ts-build-check:
-    name: TypeScript
+    name: TypeScript Build & Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
