@@ -75,8 +75,7 @@ jobs:
         working-directory: packages/web
         run: bun run check
 
-      - name: Test Webapp
-        working-directory: packages/web
+      - name: Test
         run: bun test
 
   # ===========================================
