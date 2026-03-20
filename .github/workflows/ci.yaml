@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-ci
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TZ: Europe/Paris
+  REGISTRY_IMAGE: orochibraru/penombre
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # ===========================================
+  # Detect which file groups changed
+  # ===========================================
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      docker: ${{ steps.filter.outputs.docker }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            docker:
+              - "Dockerfile"
+              - ".github/workflows/docker.yaml"
+              - "docker-bake.hcl"
+              - ".dockerignore"
+            docs:
+              - "packages/docs/**"
+
+  # ===========================================
+  # TypeScript: Lint, Format, Build — always runs
+  # ===========================================
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js for tooling
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Linting
+        run: bun run lint
+
+      - name: Format check
+        run: bun run format:check
+
+      - name: Build Webapp
+        working-directory: packages/web
+        run: bun run build
+
+      - name: Type check Webapp
+        working-directory: packages/web
+        run: bun run check
+
+      - name: Test Webapp
+        working-directory: packages/web
+        run: bun run test
+
+  # ===========================================
+  # Docker: Build — only when Docker files change
+  # ===========================================
+  docker:
+    name: Docker
+    needs: changes
+    if: needs.changes.outputs.docker == 'true'
+    uses: ./.github/workflows/docker.yaml
+    with:
+      publish: false
+      image-name: orochibraru/penombre
+
+  # ===========================================
+  # Docs: Build & type-check — only when docs change
+  # ===========================================
+  docs:
+    name: Docs
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Build Docs
+        working-directory: packages/docs
+        run: bun run build
+
+      - name: Type check Docs
+        working-directory: packages/docs
+        run: bun run check
+
+  # ===========================================
+  # Gate — always runs; set this as the single
+  # required status check in branch protection
+  # ===========================================
+  gate:
+    name: CI Gate
+    if: always()
+    needs: [typescript, docker, docs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          results=("${{ needs.typescript.result }}" "${{ needs.docker.result }}" "${{ needs.docs.result }}")
+          for result in "${results[@]}"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "::error::One or more jobs failed or were cancelled"
+              exit 1
+            fi
+          done
+          echo "All checks passed (skipped jobs are OK)"
