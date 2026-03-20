@@ -1,5 +1,6 @@
 <script lang="ts">
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
+    import * as m from "$lib/paraglide/messages.js";
 
     type Props = {
         confirmRestoreOpen: boolean;
@@ -29,10 +30,10 @@
 <ResponsiveDialog
     bind:open={confirmRestoreOpen}
     bind:loading={restoringItem}
-    title="Are you absolutely sure?"
-    description="This will permanently restore the following items to their original location."
-    submitLabel="Continue"
-    loadingLabel="Restoring..."
+    title={m.confirm_restore_title()}
+    description={m.confirm_restore_description()}
+    submitLabel={m.continue()}
+    loadingLabel={m.restoring()}
     form={{ onsubmit: handleSubmit }}
 >
     <div class="prose">

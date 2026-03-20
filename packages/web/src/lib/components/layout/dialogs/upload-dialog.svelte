@@ -25,6 +25,7 @@
     import { cn } from "$lib/utils";
     import { onMount } from "svelte";
     import { resolve } from "$app/paths";
+    import * as m from "$lib/paraglide/messages.js";
 
     type Props = {
         open: boolean;
@@ -212,7 +213,9 @@
         reason,
         file,
     }) => {
-        toast.error(`${file.name} failed to upload.`, { description: reason });
+        toast.error(m.toast_file_upload_failed({ name: file.name }), {
+            description: reason,
+        });
     };
 
     type FullResult = {
@@ -770,7 +773,7 @@
         } catch (e) {
             console.error(e);
             $preparingUpload = { active: false, status: "" };
-            toast.error("Failed to prepare files for upload.");
+            toast.error(m.toast_prepare_upload_error());
             throw e;
         }
 
@@ -829,8 +832,8 @@
     bind:open
     bind:loading
     size="lg"
-    title="Upload new files"
-    description="Drag n' Drop or click to select the files you want to upload. You can also select entire folders."
+    title={m.upload_title()}
+    description={m.upload_description()}
     form={{ method: "POST", enctype: "multipart/form-data" }}
     footer={uploadButton}
 >

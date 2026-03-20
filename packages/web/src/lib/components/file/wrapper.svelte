@@ -57,6 +57,7 @@
     import { ExternalLinkIcon } from "@lucide/svelte";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
     import type { Pathname } from "$app/types";
+    import * as m from "$lib/paraglide/messages.js";
 
     type UserPreferences = {
         layout?: "grid" | "list";
@@ -287,9 +288,9 @@
                         a.remove();
                     })(),
                     {
-                        loading: `Creating zip of "${itemName}"...`,
-                        success: `Downloaded "${itemName}"`,
-                        error: `Failed to download "${itemName}"`,
+                        loading: m.toast_creating_zip({ name: itemName }),
+                        success: m.toast_downloaded({ name: itemName }),
+                        error: m.toast_download_error({ name: itemName }),
                     },
                 );
             } else {
@@ -321,9 +322,9 @@
                     onError: () => {},
                 }),
                 {
-                    loading: `Duplicating "${itemName}"...`,
-                    success: `Duplicated "${itemName}"`,
-                    error: `Failed to duplicate "${itemName}"`,
+                    loading: m.toast_duplicating({ name: itemName }),
+                    success: m.toast_duplicated({ name: itemName }),
+                    error: m.toast_duplicate_error({ name: itemName }),
                 },
             );
         },
@@ -353,7 +354,7 @@
                         },
                     );
                     if (starError) {
-                        toast.error("Failed to update star status");
+                        toast.error(m.toast_star_error());
                         return;
                     }
                 } else {
@@ -369,19 +370,19 @@
                         },
                     );
                     if (starError) {
-                        toast.error("Failed to update star status");
+                        toast.error(m.toast_star_error());
                         return;
                     }
                 }
                 toast.success(
                     newStarred
-                        ? `Added "${itemName}" to starred`
-                        : `Removed "${itemName}" from starred`,
+                        ? m.toast_added_to_starred({ name: itemName })
+                        : m.toast_removed_from_starred({ name: itemName }),
                 );
                 await invalidate("app:files");
             } catch (error) {
                 console.error("Star failed:", error);
-                toast.error("Failed to update star status");
+                toast.error(m.toast_star_error());
             }
         },
         onMoveToTrash: (item) => {
@@ -432,9 +433,13 @@
                         a.remove();
                     })(),
                     {
-                        loading: `Creating zip of ${keys.length} files...`,
-                        success: `Downloaded ${keys.length} files`,
-                        error: "Failed to download files",
+                        loading: m.toast_creating_zip_files({
+                            count: String(keys.length),
+                        }),
+                        success: m.toast_downloaded_files({
+                            count: String(keys.length),
+                        }),
+                        error: m.toast_download_files_error(),
                     },
                 );
             }
@@ -478,8 +483,8 @@
                 openViewDialog: () => (viewFileOpen = true),
             }),
             {
-                loading: `Opening "${display}"`,
-                error: `Failed to open "${display}"`,
+                loading: m.toast_opening({ name: display }),
+                error: m.toast_open_error({ name: display }),
             },
         );
     }
@@ -566,7 +571,7 @@
                 destinationFolder === folderPath ||
                 destinationFolder.startsWith(`${folderPath}/`)
             ) {
-                toast.error("Cannot move folder into itself");
+                toast.error(m.cannot_move_into_self());
                 return;
             }
         }
@@ -582,7 +587,7 @@
         }
 
         if (destinationFolder === itemParent) {
-            toast.info(`"${itemName}" is already in this folder`);
+            toast.info(m.toast_already_in_folder({ name: itemName }));
             return;
         }
 
@@ -619,14 +624,17 @@
                     await invalidate("app:files");
                 }),
                 {
-                    loading: `Moving "${itemName}"...`,
-                    success: `Moved "${itemName}"`,
+                    loading: m.toast_moving_item({ name: itemName }),
+                    success: m.toast_moved({ name: itemName }),
                     error: (err) => {
                         const message =
                             err instanceof Error
                                 ? err.message
                                 : "Unknown error";
-                        return `Failed to move "${itemName}": ${message}`;
+                        return m.toast_move_error_detail({
+                            name: itemName,
+                            message,
+                        });
                     },
                 },
             );
@@ -654,7 +662,7 @@
         bind:value={searchValue}
         type="search"
         disabled
-        placeholder="Search (Ctrl+K)"
+        placeholder={m.search_placeholder()}
         class="md:hidden mb-3"
         onkeyup={() => {
             debounce();
@@ -682,7 +690,7 @@
     <Input
         bind:value={searchValue}
         type="search"
-        placeholder="Search (Ctrl+K)"
+        placeholder={m.search_placeholder()}
         class="md:hidden mb-3"
         onkeyup={() => {
             debounce();
@@ -693,7 +701,7 @@
             bind:ref={searchInputRef}
             bind:value={searchValue}
             type="search"
-            placeholder="Search (Ctrl+K)"
+            placeholder={m.search_placeholder()}
             class="hidden md:block "
             onkeyup={() => {
                 debounce();
@@ -708,20 +716,20 @@
                             <span class="inline">
                                 {#if sortColumn}
                                     {sortColumn === "name"
-                                        ? "Name"
+                                        ? m.sort_name()
                                         : sortColumn === "size"
-                                          ? "Size"
-                                          : "Date"}
+                                          ? m.sort_size()
+                                          : m.sort_date()}
                                     {sortDirection === "asc" ? "↑" : "↓"}
                                 {:else}
-                                    Sort
+                                    {m.sort()}
                                 {/if}
                             </span>
                         </Button>
                     {/snippet}
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content align="end">
-                    <DropdownMenu.Label>Sort by</DropdownMenu.Label>
+                    <DropdownMenu.Label>{m.sort_by()}</DropdownMenu.Label>
                     <DropdownMenu.Separator />
                     <DropdownMenu.Item
                         onclick={() => {
@@ -734,7 +742,7 @@
                         {:else}
                             <span class="w-4"></span>
                         {/if}
-                        Name (A-Z)
+                        {m.sort_name_asc()}
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
                         onclick={() => {
@@ -747,7 +755,7 @@
                         {:else}
                             <span class="w-4"></span>
                         {/if}
-                        Name (Z-A)
+                        {m.sort_name_desc()}
                     </DropdownMenu.Item>
                     <DropdownMenu.Separator />
                     <DropdownMenu.Item
@@ -761,7 +769,7 @@
                         {:else}
                             <span class="w-4"></span>
                         {/if}
-                        Size (Largest)
+                        {m.sort_size_largest()}
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
                         onclick={() => {
@@ -774,7 +782,7 @@
                         {:else}
                             <span class="w-4"></span>
                         {/if}
-                        Size (Smallest)
+                        {m.sort_size_smallest()}
                     </DropdownMenu.Item>
                     <DropdownMenu.Separator />
                     <DropdownMenu.Item
@@ -788,7 +796,7 @@
                         {:else}
                             <span class="w-4"></span>
                         {/if}
-                        Date (Newest)
+                        {m.sort_date_newest()}
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
                         onclick={() => {
@@ -801,7 +809,7 @@
                         {:else}
                             <span class="w-4"></span>
                         {/if}
-                        Date (Oldest)
+                        {m.sort_date_oldest()}
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Root>
@@ -821,7 +829,7 @@
                     {/snippet}
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content align="end">
-                    <DropdownMenu.Label>Layout</DropdownMenu.Label>
+                    <DropdownMenu.Label>{m.layout()}</DropdownMenu.Label>
                     <DropdownMenu.Separator />
                     <DropdownMenu.Item
                         onclick={async () => {
@@ -836,7 +844,7 @@
                         {:else}
                             <span class="w-4"></span>
                         {/if}
-                        List
+                        {m.layout_list()}
                     </DropdownMenu.Item>
                     <DropdownMenu.Item
                         onclick={async () => {
@@ -851,7 +859,7 @@
                         {:else}
                             <span class="w-4"></span>
                         {/if}
-                        Grid
+                        {m.layout_grid()}
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Root>
@@ -861,10 +869,12 @@
                     variant="destructive"
                     onclick={emptyTrash}
                     disabled={data.count === 0}
-                    title={data.count === 0 ? "Trash is empty" : "Empty Trash"}
+                    title={data.count === 0
+                        ? m.trash_is_empty()
+                        : m.empty_trash()}
                 >
                     <BrushCleaningIcon />
-                    Empty Trash
+                    {m.empty_trash()}
                 </Button>
             {/if}
         </ButtonGroup.Root>
@@ -953,7 +963,7 @@
     bind:open={viewFileOpen}
     title={fileToView
         ? (fileToView.item.metadata.name ?? fileToView.item.key)
-        : "File Preview"}
+        : m.file_preview()}
     size="lg"
 >
     {#if fileToView}
@@ -975,7 +985,7 @@
                     href={fileToView.src as Pathname}
                     target="_blank"
                 >
-                    Open in new tab
+                    {m.open_in_new_tab()}
                     <ExternalLinkIcon />
                 </Button>
             </div>

@@ -2,6 +2,7 @@ import { toast } from "svelte-sonner";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { authClient } from "$lib/auth-client";
+import * as m from "$lib/paraglide/messages.js";
 
 async function signOutCallback() {
 	await authClient.signOut();
@@ -11,8 +12,8 @@ async function signOutCallback() {
 
 export async function handleSignOut() {
 	toast.promise(signOutCallback, {
-		loading: "Signing you out",
-		success: "You were signed out",
-		error: "Failed to sign you out",
+		loading: m.toast_signing_out(),
+		success: m.toast_signed_out(),
+		error: m.toast_sign_out_error(),
 	});
 }

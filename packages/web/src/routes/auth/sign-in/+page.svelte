@@ -30,7 +30,7 @@
             !PublicKeyCredential.isConditionalMediationAvailable ||
             !PublicKeyCredential.isConditionalMediationAvailable()
         ) {
-            toast.error("Passkey not supported");
+            toast.error(m.toast_passkey_not_supported());
             return;
         }
         loading = true;

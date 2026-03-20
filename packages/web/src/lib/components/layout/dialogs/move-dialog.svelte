@@ -12,6 +12,7 @@
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
     import { cn } from "$lib/utils";
     import Spinner from "$lib/components/ui/Spinner.svelte";
+    import * as m from "$lib/paraglide/messages.js";
 
     type Props = {
         open: boolean;
@@ -240,10 +241,14 @@
                     });
 
                 toast.promise(promise, {
-                    loading: `Moving ${itemCount} items...`,
+                    loading: m.toast_moving_items({ count: String(itemCount) }),
                     success: (result) =>
-                        `Moved ${result.successCount} of ${itemCount} items to ${selectedFolderName || "My Drive"}`,
-                    error: "Failed to move items",
+                        m.toast_items_moved({
+                            successCount: String(result.successCount),
+                            total: String(itemCount),
+                            destination: selectedFolderName || m.nav_my_drive(),
+                        }),
+                    error: m.toast_move_items_error(),
                 });
 
                 await promise;
@@ -303,9 +308,13 @@
                 const toastPromise = doMove();
 
                 toast.promise(toastPromise, {
-                    loading: `Moving ${item.metadata.name || item.key}...`,
-                    success: `Moved to ${selectedFolderName || "My Drive"}`,
-                    error: "Failed to move item",
+                    loading: m.toast_moving_item({
+                        name: item.metadata.name || item.key,
+                    }),
+                    success: m.toast_moved_to({
+                        destination: selectedFolderName || m.nav_my_drive(),
+                    }),
+                    error: m.toast_move_item_error(),
                 });
 
                 await toastPromise;
@@ -380,9 +389,9 @@
     bind:open
     bind:loading
     title={dialogTitle}
-    description="Select a destination folder"
-    submitLabel="Move here"
-    loadingLabel="Moving..."
+    description={m.select_destination()}
+    submitLabel={m.move_here()}
+    loadingLabel={m.moving()}
     submitDisabled={!canMove}
     form={{ onsubmit: handleMove }}
 >
@@ -390,7 +399,7 @@
         <!-- Root folder option -->
         <button
             type="button"
-            onclick={() => selectFolder("", "My Drive")}
+            onclick={() => selectFolder("", m.nav_my_drive())}
             class={cn(
                 "flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors",
                 selectedFolder === ""
@@ -400,20 +409,20 @@
         >
             <span class="w-5"></span>
             <HomeIcon class="h-5 w-5" />
-            <span class="text-sm font-medium">My Drive</span>
+            <span class="text-sm font-medium">{m.nav_my_drive()}</span>
         </button>
 
         {#if loadingFolders}
             <div class="flex items-center justify-center py-8">
                 <span class="text-muted-foreground text-sm">
-                    Loading folders
+                    {m.loading_folders()}
                     <Spinner />
                 </span>
             </div>
         {:else if folderTree.length === 0}
             <div class="flex items-center justify-center py-8">
                 <span class="text-muted-foreground text-sm">
-                    No folders available
+                    {m.no_folders_available()}
                 </span>
             </div>
         {:else}
@@ -425,13 +434,13 @@
         {#if isSameLocation}
             <p class="text-xs text-amber-600 mt-2">
                 {isBulkMode
-                    ? "Items are already in this location"
-                    : "Item is already in this location"}
+                    ? m.items_already_in_location()
+                    : m.item_already_in_location()}
             </p>
         {/if}
         {#if isMovingIntoSelf}
             <p class="text-xs text-red-600 mt-2">
-                Cannot move a folder into itself
+                {m.cannot_move_into_self()}
             </p>
         {/if}
     </div>

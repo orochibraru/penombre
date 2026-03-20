@@ -5,6 +5,7 @@
     import { api } from "$lib/api";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
     import { Input } from "$lib/components/ui/input";
+    import * as m from "$lib/paraglide/messages.js";
 
     type Props = {
         open: boolean;
@@ -12,7 +13,7 @@
 
     let { open = $bindable(false) }: Props = $props();
 
-    const defaultFolderName = "New Folder";
+    const defaultFolderName = m.new_folder_default();
 
     let newFolderError: string = $state("");
     let newFolderName: string = $state(defaultFolderName);
@@ -50,9 +51,9 @@
             });
 
         return toast.promise(promise, {
-            loading: "Creating folder",
-            success: "Folder created",
-            error: "Failed to create folder",
+            loading: m.toast_creating_folder(),
+            success: m.toast_folder_created(),
+            error: m.toast_create_folder_error(),
         });
     }
 </script>
@@ -60,10 +61,10 @@
 <ResponsiveDialog
     bind:open
     bind:loading
-    title="Create a new folder"
-    description="This will create a new folder in the current directory."
-    submitLabel="Create"
-    loadingLabel="Creating..."
+    title={m.create_folder_title()}
+    description={m.create_folder_description()}
+    submitLabel={m.create()}
+    loadingLabel={m.creating()}
     form={{ onsubmit: handleNewFolder }}
 >
     <div class="flex flex-col gap-1">
@@ -72,7 +73,7 @@
             type="text"
             bind:value={newFolderName}
             bind:ref={inputRef}
-            placeholder="Folder name"
+            placeholder={m.folder_name_placeholder()}
             class="w-full"
             aria-invalid={newFolderError !== ""}
         />

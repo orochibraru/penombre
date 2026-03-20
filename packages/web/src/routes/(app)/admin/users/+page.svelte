@@ -1,6 +1,7 @@
 <script lang="ts">
     import { title } from "$lib/store/title";
     import { onMount } from "svelte";
+    import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
         title.set("Admin - Users");
@@ -9,7 +10,7 @@
     const { data } = $props();
 </script>
 
-<h2 class="text-lg font-medium">User Management</h2>
+<h2 class="text-lg font-medium">{m.user_management()}</h2>
 <p>
     This instance currently has {data.users.total} user{data.users.total === 1
         ? ""

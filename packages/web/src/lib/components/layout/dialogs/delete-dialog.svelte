@@ -1,6 +1,7 @@
 <script lang="ts">
     import { page } from "$app/state";
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
+    import * as m from "$lib/paraglide/messages.js";
 
     type Props = {
         confirmDeleteOpen: boolean;
@@ -27,12 +28,12 @@
 <ResponsiveDialog
     bind:open={confirmDeleteOpen}
     bind:loading={deletingItem}
-    title="Are you absolutely sure?"
+    title={m.confirm_delete_title()}
     description={isTrash
-        ? "This action cannot be undone. This will permanently delete the following items from your storage device."
-        : "This will move the following items to the Trash."}
-    submitLabel="Continue"
-    loadingLabel="Deleting..."
+        ? m.confirm_delete_permanent()
+        : m.confirm_delete_trash()}
+    submitLabel={m.continue()}
+    loadingLabel={m.deleting()}
     submitVariant="destructive"
     onsubmit={handleDeleteObject}
 >

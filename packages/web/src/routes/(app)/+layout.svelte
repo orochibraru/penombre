@@ -292,7 +292,7 @@
 
                 {#if page.data.hasCustomMenu === true || !showUploadButton}
                     <button
-                        title="Menu"
+                        title={m.menu()}
                         class={cn(
                             bottomNavItemClass,
                             "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg  border-transparent border-2 w-12 h-12 flex items-center justify-center",
@@ -303,7 +303,7 @@
                 {:else}
                     <button
                         onclick={() => (mobileCreateDrawerOpen = true)}
-                        title="New"
+                        title={m.new()}
                         class={cn(
                             bottomNavItemClass,
                             "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg border-transparent border-2 w-12 h-12 flex items-center justify-center relative overflow-hidden",

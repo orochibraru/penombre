@@ -6,6 +6,7 @@
     import PageError from "$lib/components/layout/page-error.svelte";
     import * as ContextMenu from "$lib/components/ui/context-menu/index";
     import { uploadDialogOpen, newFolderDialogOpen } from "$lib/store/upload";
+    import * as m from "$lib/paraglide/messages.js";
 
     type UserPreferences = {
         layout?: "grid" | "list";
@@ -42,11 +43,11 @@
     <ContextMenu.Content>
         <ContextMenu.Item onclick={handleUpload}>
             <UploadIcon class="h-4 w-4" />
-            Upload files
+            {m.upload_files_context()}
         </ContextMenu.Item>
         <ContextMenu.Item onclick={handleCreateFolder}>
             <FolderPlusIcon class="h-4 w-4" />
-            Create folder
+            {m.create_folder_context()}
         </ContextMenu.Item>
     </ContextMenu.Content>
 </ContextMenu.Root>

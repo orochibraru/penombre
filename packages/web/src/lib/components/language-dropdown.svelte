@@ -8,6 +8,7 @@
         type Locale,
     } from "$lib/paraglide/runtime";
     import { capitalizeFirstLetter } from "$lib/utils";
+    import * as m from "$lib/paraglide/messages.js";
 
     let currentLanguage = $derived(getLocale());
 
@@ -22,13 +23,13 @@
     <DropdownMenu.Trigger>
         {#snippet child({ props })}
             <Button {...props} variant="outline">
-                Language ({currentLanguage})
+                {m.language({ locale: currentLanguage })}
             </Button>
         {/snippet}
     </DropdownMenu.Trigger>
     <DropdownMenu.Content>
         <DropdownMenu.Group>
-            <DropdownMenu.Label>Select language</DropdownMenu.Label>
+            <DropdownMenu.Label>{m.select_language()}</DropdownMenu.Label>
             <DropdownMenu.RadioGroup value={currentLanguage}>
                 {#each locales as locale}
                     <DropdownMenu.RadioItem

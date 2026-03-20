@@ -10,21 +10,22 @@
     import { cn } from "$lib/utils";
     import Button from "$lib/components/ui/button/button.svelte";
     import SidebarBranding from "$lib/components/sidebar-branding.svelte";
+    import * as m from "$lib/paraglide/messages.js";
 
     const accountNav: NavItem[] = [
         {
-            title: "General",
+            title: m.settings_nav_general(),
             url: "/settings",
             icon: CogIcon,
             isRoot: true,
         },
         {
-            title: "Display",
+            title: m.settings_nav_display(),
             url: "/settings/display",
             icon: ComputerIcon,
         },
         {
-            title: "Storage",
+            title: m.settings_nav_storage(),
             url: "/settings/storage",
             icon: HardDriveIcon,
         },
@@ -38,12 +39,12 @@
         <SidebarBranding />
         <Button class="w-full" variant="outline" href="/browse">
             <ArrowLeftIcon />
-            Back to My Drive
+            {m.back_to_my_drive()}
             <HardDriveIcon />
         </Button>
     </Sidebar.Header>
     <Sidebar.Content>
-        <Nav title="Account" items={accountNav} />
+        <Nav title={m.nav_settings()} items={accountNav} />
     </Sidebar.Content>
 </Sidebar.Root>
 <Sidebar.Inset>

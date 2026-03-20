@@ -6,6 +6,7 @@
     import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
     import { Input } from "$lib/components/ui/input";
     import { itemAction } from "$lib/store/actions";
+    import * as m from "$lib/paraglide/messages.js";
 
     let error: string = $state("");
     let newName: string = $state("");
@@ -46,9 +47,9 @@
                 });
 
             return toast.promise(promise, {
-                loading: "Renaming item",
-                success: "Item renamed",
-                error: "Failed to rename item",
+                loading: m.toast_renaming_item(),
+                success: m.toast_item_renamed(),
+                error: m.toast_rename_item_error(),
             });
         }
 
@@ -77,9 +78,9 @@
             });
 
         return toast.promise(promise, {
-            loading: "Renaming item",
-            success: "Item renamed",
-            error: "Failed to rename item",
+            loading: m.toast_renaming_item(),
+            success: m.toast_item_renamed(),
+            error: m.toast_rename_item_error(),
         });
     }
 
@@ -125,10 +126,12 @@
 <ResponsiveDialog
     bind:open
     bind:loading
-    title="Rename {$itemAction?.item?.metadata?.name ?? 'this file'}"
-    description="This will change the name of this item."
-    submitLabel="Rename"
-    loadingLabel="Renaming..."
+    title={m.rename_title({
+        name: $itemAction?.item?.metadata?.name ?? "this file",
+    })}
+    description={m.rename_description()}
+    submitLabel={m.rename()}
+    loadingLabel={m.renaming()}
     onsubmit={handleRename}
 >
     <div class="flex flex-col gap-1">
@@ -137,7 +140,7 @@
             type="text"
             bind:value={newName}
             bind:ref={inputRef}
-            placeholder="New name"
+            placeholder={m.new_name_placeholder()}
             class="w-full"
             aria-invalid={error !== ""}
         />

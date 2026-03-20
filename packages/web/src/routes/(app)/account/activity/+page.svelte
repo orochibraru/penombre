@@ -2,6 +2,7 @@
     import Badge from "$lib/components/ui/badge/badge.svelte";
     import { title } from "$lib/store/title";
     import { onMount } from "svelte";
+    import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
         title.set("Account - Activity");
@@ -11,9 +12,11 @@
 </script>
 
 <div class="w-full">
-    <h2 class="text-lg font-medium">Activity Log</h2>
+    <h2 class="text-lg font-medium">{m.activity_log()}</h2>
     {#if !data.activity || data.activity?.length === 0}
-        <p class="mt-3 text-sm text-muted-foreground">No recent activity.</p>
+        <p class="mt-3 text-sm text-muted-foreground">
+            {m.no_recent_activity()}
+        </p>
     {:else}
         <ul class="mt-3 space-y-2">
             {#each data.activity as item}

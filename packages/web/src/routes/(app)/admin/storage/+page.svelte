@@ -2,6 +2,7 @@
     import { title } from "$lib/store/title";
     import { readableFileSize } from "$lib/utils";
     import { onMount } from "svelte";
+    import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
         title.set("Admin - Storage");
@@ -10,5 +11,5 @@
     let { data } = $props();
 </script>
 
-<h2 class="text-lg font-medium">Storage Management</h2>
+<h2 class="text-lg font-medium">{m.storage_management()}</h2>
 <p>Available Storage space: {readableFileSize(data.storageSize)}</p>

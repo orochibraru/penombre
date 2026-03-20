@@ -18,6 +18,7 @@ import { page } from "$app/state";
 import { api, type ObjectItem, type ObjectList } from "$lib/api";
 import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
 import { determineCodeFileLanguage } from "$lib/file-utils";
+import * as m from "$lib/paraglide/messages.js";
 import { itemAction } from "$lib/store/actions";
 import { playableMusic } from "$lib/store/music";
 import { getObjectUrl } from "$lib/url";
@@ -427,7 +428,7 @@ export function handleDownloadItem(
 	a.click();
 	window.URL.revokeObjectURL(finalUrl);
 	onComplete?.();
-	toast.info(`Downloaded ${itemPath}`);
+	toast.info(m.toast_downloaded_item({ name: itemPath }));
 }
 
 export async function handleOpenItem(
@@ -449,7 +450,7 @@ export async function handleOpenItem(
 	if (item.metadata.category === "CODE") {
 		const codeReq = await fetch(finalUrl);
 		if (!codeReq.ok) {
-			toast.error("Failed to open code file.", {
+			toast.error(m.toast_open_code_error(), {
 				description: codeReq.statusText,
 			});
 			return;
@@ -578,9 +579,9 @@ export async function executeRestoreOperation(
 				await invalidate("app:files");
 			}),
 		{
-			loading: `Restoring ${count} items`,
-			success: `${count} items restored`,
-			error: `Failed to restore ${failures} items`,
+			loading: m.toast_restoring_items({ count: String(count) }),
+			success: m.toast_items_restored({ count: String(count) }),
+			error: m.toast_restore_items_error({ count: String(failures) }),
 		},
 	);
 }
@@ -678,14 +679,14 @@ export async function executeDeleteOperation(
 			}),
 		{
 			loading: isTrash
-				? `Deleting ${amount} items permanently`
-				: `Moving ${amount} items to trash`,
+				? m.toast_deleting_permanently({ count: String(amount) })
+				: m.toast_moving_to_trash({ count: String(amount) }),
 			success: isTrash
-				? `${amount} items deleted permanently`
-				: `${amount} items moved to trash`,
+				? m.toast_items_deleted_permanently({ count: String(amount) })
+				: m.toast_items_moved_to_trash({ count: String(amount) }),
 			error: isTrash
-				? `Failed to delete ${failures} items permanently`
-				: `Failed to move ${failures} items to trash`,
+				? m.toast_delete_permanently_error({ count: String(failures) })
+				: m.toast_move_to_trash_error({ count: String(failures) }),
 		},
 	);
 }

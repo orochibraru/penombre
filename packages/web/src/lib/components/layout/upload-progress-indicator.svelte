@@ -20,6 +20,7 @@
         uploadStats,
     } from "$lib/store/upload";
     import Spinner from "$lib/components/ui/Spinner.svelte";
+    import * as m from "$lib/paraglide/messages.js";
 
     let expanded = $state(true);
     let isUploading = $derived(
@@ -52,9 +53,7 @@
     // Block SvelteKit client-side navigation while uploading
     beforeNavigate(({ cancel }) => {
         if (isUploading) {
-            const confirmed = window.confirm(
-                "Files are still uploading. Leaving this page will cancel all in-progress uploads. Are you sure?",
-            );
+            const confirmed = window.confirm(m.upload_cancel_warning());
             if (!confirmed) {
                 cancel();
             }
@@ -125,19 +124,25 @@
                     <div class="flex items-center gap-2">
                         <CheckIcon class="size-5 text-green-600" />
                         <div>
-                            <p class="font-medium">Upload complete</p>
+                            <p class="font-medium">{m.upload_complete()}</p>
                             <p class="text-sm">
-                                {Object.keys($uploadedItems).length} items
+                                {m.items_count({
+                                    count: String(
+                                        Object.keys($uploadedItems).length,
+                                    ),
+                                })}
                             </p>
                         </div>
                     </div>
                 {:else if $preparingUpload.active}
                     <span class="font-medium flex items-center gap-2">
-                        Preparing upload <Spinner />
+                        {m.preparing_upload()}
+                        <Spinner />
                     </span>
                 {:else}
                     <span class="font-medium flex items-center gap-2">
-                        Uploading <Spinner />
+                        {m.uploading()}
+                        <Spinner />
                     </span>
                 {/if}
             </button>
@@ -199,7 +204,7 @@
                             class="mb-1 flex items-center justify-between text-sm"
                         >
                             <span class="text-muted-foreground">
-                                Overall progress
+                                {m.overall_progress()}
                             </span>
                             <span class="font-medium">
                                 {$globalUploadProgress.progress}%
@@ -213,14 +218,19 @@
                             class="mt-1.5 flex items-center justify-between text-xs text-muted-foreground"
                         >
                             <span>
-                                {$uploadStats.completedFiles} of {$uploadStats.totalFiles}
-                                files
+                                {m.files_progress({
+                                    completed: String(
+                                        $uploadStats.completedFiles,
+                                    ),
+                                    total: String($uploadStats.totalFiles),
+                                })}
                             </span>
                             <span>
                                 {#if $uploadStats.speed > 0}
                                     {formatSpeed($uploadStats.speed)}
                                     {#if $uploadStats.eta > 0}
-                                        &middot; {formatEta($uploadStats.eta)} left
+                                        &middot; {formatEta($uploadStats.eta)}
+                                        {m.left()}
                                     {/if}
                                 {/if}
                             </span>
