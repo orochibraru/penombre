@@ -5,7 +5,7 @@
     import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Admin - Storage");
+        title.set(m.title_admin_storage());
     });
 
     let { data } = $props();

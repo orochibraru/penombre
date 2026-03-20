@@ -10,7 +10,7 @@
     import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Account - Details");
+        title.set(m.title_account_details());
     });
 
     const { data, form } = $props();

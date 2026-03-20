@@ -4,7 +4,7 @@
     import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Admin - Users");
+        title.set(m.title_admin_users());
     });
 
     const { data } = $props();

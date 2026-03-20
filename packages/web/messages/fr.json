@@ -268,5 +268,16 @@
 	"toast_delete_permanently_error": "Échec de la suppression définitive de {count} éléments",
 	"toast_moving_to_trash": "Déplacement de {count} éléments vers la corbeille",
 	"toast_items_moved_to_trash": "{count} éléments déplacés vers la corbeille",
-	"toast_move_to_trash_error": "Échec du déplacement de {count} éléments vers la corbeille"
+	"toast_move_to_trash_error": "Échec du déplacement de {count} éléments vers la corbeille",
+	"title_settings_general": "Paramètres - Général",
+	"title_settings_storage": "Paramètres - Stockage",
+	"title_account_details": "Compte - Détails",
+	"title_account_activity": "Compte - Activité",
+	"title_account_security": "Compte - Sécurité",
+	"title_account_sessions": "Compte - Sessions",
+	"title_admin_dashboard": "Admin - Tableau de bord",
+	"title_admin_users": "Admin - Utilisateurs",
+	"title_admin_storage": "Admin - Stockage",
+	"title_unknown_category": "Catégorie inconnue",
+	"unknown": "Inconnu"
 }

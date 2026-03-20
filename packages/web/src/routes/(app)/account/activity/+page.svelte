@@ -5,7 +5,7 @@
     import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Account - Activity");
+        title.set(m.title_account_activity());
     });
 
     const { data } = $props();

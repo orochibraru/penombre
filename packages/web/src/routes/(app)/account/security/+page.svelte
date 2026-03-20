@@ -14,7 +14,7 @@
     import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Account - Security");
+        title.set(m.title_account_security());
     });
 
     const { data, form } = $props();

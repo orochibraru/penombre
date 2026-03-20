@@ -268,5 +268,16 @@
 	"toast_delete_permanently_error": "Error al eliminar {count} elementos permanentemente",
 	"toast_moving_to_trash": "Moviendo {count} elementos a la papelera",
 	"toast_items_moved_to_trash": "{count} elementos movidos a la papelera",
-	"toast_move_to_trash_error": "Error al mover {count} elementos a la papelera"
+	"toast_move_to_trash_error": "Error al mover {count} elementos a la papelera",
+	"title_settings_general": "Configuración - General",
+	"title_settings_storage": "Configuración - Almacenamiento",
+	"title_account_details": "Cuenta - Detalles",
+	"title_account_activity": "Cuenta - Actividad",
+	"title_account_security": "Cuenta - Seguridad",
+	"title_account_sessions": "Cuenta - Sesiones",
+	"title_admin_dashboard": "Admin - Panel de control",
+	"title_admin_users": "Admin - Usuarios",
+	"title_admin_storage": "Admin - Almacenamiento",
+	"title_unknown_category": "Categoría desconocida",
+	"unknown": "Desconocido"
 }

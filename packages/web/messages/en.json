@@ -268,5 +268,16 @@
 	"toast_delete_permanently_error": "Failed to delete {count} items permanently",
 	"toast_moving_to_trash": "Moving {count} items to trash",
 	"toast_items_moved_to_trash": "{count} items moved to trash",
-	"toast_move_to_trash_error": "Failed to move {count} items to trash"
+	"toast_move_to_trash_error": "Failed to move {count} items to trash",
+	"title_settings_general": "Settings - General",
+	"title_settings_storage": "Settings - Storage",
+	"title_account_details": "Account - Details",
+	"title_account_activity": "Account - Activity",
+	"title_account_security": "Account - Security",
+	"title_account_sessions": "Account - Sessions",
+	"title_admin_dashboard": "Admin - Dashboard",
+	"title_admin_users": "Admin - Users",
+	"title_admin_storage": "Admin - Storage",
+	"title_unknown_category": "Unknown Category",
+	"unknown": "Unknown"
 }

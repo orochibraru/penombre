@@ -8,7 +8,7 @@
     import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Account - Sessions");
+        title.set(m.title_account_sessions());
     });
 
     const { data } = $props();
@@ -64,7 +64,7 @@
                     })}
                 </p>
                 <p>
-                    {m.device({ userAgent: session.userAgent })}
+                    {m.device({ userAgent: session.userAgent ?? m.unknown() })}
                 </p>
             </div>
             <Button

@@ -4,7 +4,7 @@
     import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Admin - Dashboard");
+        title.set(m.title_admin_dashboard());
     });
 </script>
 
