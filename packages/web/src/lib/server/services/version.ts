@@ -41,9 +41,14 @@ function isNewerVersion(current: string, latest: string): boolean {
 export async function checkForUpdate(): Promise<VersionCheckResult> {
 	const config = getPenombreConfig();
 	const currentVersion = config.appVersion;
+	logger.debug(`Current app version: ${currentVersion}`);
 
 	if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
-		logger.debug("Returning cached version check result");
+		logger.debug("Returning cached version check result", {
+			currentVersion,
+			latestVersion: cache.data.latestVersion,
+			updateAvailable: cache.data.updateAvailable,
+		});
 		return { ...cache.data, currentVersion };
 	}
 
