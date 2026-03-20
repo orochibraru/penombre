@@ -403,7 +403,9 @@
 <Drawer.Root bind:open={mobileMenuDrawerOpen}>
     <Drawer.Content class="z-50">
         <Drawer.Header>
-            <Drawer.Title class="text-lg">{$customMenu?.title ?? m.menu()}</Drawer.Title>
+            <Drawer.Title class="text-lg"
+                >{$customMenu?.title ?? m.menu()}</Drawer.Title
+            >
         </Drawer.Header>
         <div class="mx-auto flex w-full flex-col items-start gap-3 p-4">
             {#if $customMenu}
@@ -412,7 +414,12 @@
                     <a
                         href={item.url}
                         class={cn(
-                            buttonVariants({ variant: isActive(item.url) ? "default" : "outline", size: "lg" }),
+                            buttonVariants({
+                                variant: isActive(item.url)
+                                    ? "default"
+                                    : "outline",
+                                size: "lg",
+                            }),
                             "w-full justify-start",
                         )}
                         onclick={() => (mobileMenuDrawerOpen = false)}
