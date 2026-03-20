@@ -11,9 +11,10 @@
     import { authClient } from "$lib/auth-client";
     import { invalidateAll } from "$app/navigation";
     import * as Alert from "$lib/components/ui/alert/index.js";
+    import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Account - Security");
+        title.set(m.title_account_security());
     });
 
     const { data, form } = $props();
@@ -41,9 +42,9 @@
 
     async function handleChangePassword(e: SubmitEvent) {
         return toast.promise(passwordChangeHandler(e), {
-            loading: "Changing password...",
-            success: "Password changed successfully",
-            error: "Failed to change password",
+            loading: m.toast_changing_password(),
+            success: m.toast_password_changed(),
+            error: m.toast_change_password_error(),
         });
     }
 
@@ -66,9 +67,9 @@
 
     async function handleDeleteApiKey(keyId: string) {
         return toast.promise(deleteApiKeyHandler(keyId), {
-            loading: "Deleting API key...",
-            success: "API key deleted successfully",
-            error: "Failed to delete API key",
+            loading: m.toast_deleting_api_key(),
+            success: m.toast_api_key_deleted(),
+            error: m.toast_delete_api_key_error(),
         });
     }
 
@@ -92,9 +93,9 @@
 
     async function handleRegisterPasskey() {
         return toast.promise(registerPasskey(), {
-            loading: "Registering passkey...",
-            success: "Passkey registered successfully",
-            error: "Failed to register passkey",
+            loading: m.toast_registering_passkey(),
+            success: m.toast_passkey_registered(),
+            error: m.toast_register_passkey_error(),
         });
     }
 
@@ -118,12 +119,12 @@
 
 <!-- Password Management -->
 <section class="p-3 border rounded-xl">
-    <h2 class="text-lg font-medium">Password Management</h2>
+    <h2 class="text-lg font-medium">{m.password_management()}</h2>
 
     <div class="flex">
         <Button
             onclick={() => (changePasswordDialogOpen = true)}
-            variant="destructive">Change Password</Button
+            variant="destructive">{m.change_password()}</Button
         >
     </div>
 </section>
@@ -132,14 +133,13 @@
 <section class="p-3 border rounded-xl">
     <div class="flex justify-between items-center">
         <div>
-            <h2 class="text-lg font-medium">Passkeys</h2>
+            <h2 class="text-lg font-medium">{m.passkeys()}</h2>
             <p class="text-xs text-muted-foreground">
-                Passkeys allow you to sign in without a password using
-                biometrics or a security key.
+                {m.passkeys_description()}
             </p>
         </div>
         <Button onclick={() => handleRegisterPasskey()}>
-            Register a new Passkey
+            {m.register_passkey()}
         </Button>
     </div>
 
@@ -152,9 +152,11 @@
                     <div>
                         <p class="text-sm">{passkey.name}</p>
                         <p class="text-xs text-muted-foreground">
-                            Created at: {new Date(
-                                passkey.createdAt,
-                            ).toLocaleString()}
+                            {m.created_at({
+                                date: new Date(
+                                    passkey.createdAt,
+                                ).toLocaleString(),
+                            })}
                         </p>
                     </div>
                     <Button
@@ -162,12 +164,12 @@
                         onclick={() => {
                             passkeyToDelete = passkey.id;
                             deletePasskeyDialogOpen = true;
-                        }}>Delete</Button
+                        }}>{m.delete()}</Button
                     >
                 </div>
             {/each}
         {:else}
-            <p class="text-sm text-muted-foreground">No passkeys registered.</p>
+            <p class="text-sm text-muted-foreground">{m.no_passkeys()}</p>
         {/if}
     </div>
 </section>
@@ -178,22 +180,23 @@
         <Alert.Root class="bg-primary/10 border-primary mb-3">
             <CircleCheckIcon class="text-primary" />
             <Alert.Title class="text-primary"
-                >Success! Your API key has been created.</Alert.Title
+                >{m.api_key_created_success()}</Alert.Title
             >
             <Alert.Description class="text-primary">
                 <p>
-                    Please copy your API key now. You won't be able to see it
-                    again!
+                    {m.api_key_copy_warning()}
                 </p>
                 <pre class="mt-2 p-2 bg-muted rounded">{form.apiKey}</pre>
             </Alert.Description>
         </Alert.Root>
     {/if}
     <div class="mb-3">
-        <h2 class="text-lg font-medium">API Keys ({data.apiKeys.total})</h2>
+        <h2 class="text-lg font-medium">
+            {m.api_keys_title({ count: String(data.apiKeys.total) })}
+        </h2>
 
         <p class="text-xs text-muted-foreground">
-            API keys allow you to access your account programmatically.
+            {m.api_keys_description()}
         </p>
     </div>
 
@@ -203,10 +206,10 @@
                 <Input
                     required
                     name="name"
-                    placeholder="API Key Name"
+                    placeholder={m.api_key_name_placeholder()}
                     class="w-full"
                 />
-                <Button type="submit" class="mt-2">Create API Key</Button>
+                <Button type="submit" class="mt-2">{m.create_api_key()}</Button>
             </fieldset>
         </form>
     </div>
@@ -221,17 +224,20 @@
                         <div>
                             <p class="text-sm">{apiKey.name}</p>
                             <p class="text-xs text-muted-foreground">
-                                Created at: {new Date(
-                                    apiKey.createdAt,
-                                ).toLocaleString()}
+                                {m.created_at({
+                                    date: new Date(
+                                        apiKey.createdAt,
+                                    ).toLocaleString(),
+                                })}
                             </p>
                             <p class="text-xs text-muted-foreground">
-                                Expires at:{" "}
-                                {apiKey.expiresAt
-                                    ? new Date(
-                                          apiKey.expiresAt,
-                                      ).toLocaleString()
-                                    : "Never"}
+                                {m.expires_at({
+                                    date: apiKey.expiresAt
+                                        ? new Date(
+                                              apiKey.expiresAt,
+                                          ).toLocaleString()
+                                        : m.never(),
+                                })}
                             </p>
                         </div>
 
@@ -250,7 +256,7 @@
                                             apiKeyToDelete = apiKey.id;
                                         }}
                                     >
-                                        Delete
+                                        {m.delete()}
                                     </DropdownMenu.Item>
                                 </DropdownMenu.Group>
                             </DropdownMenu.Content>
@@ -259,7 +265,7 @@
                 {/each}
             </ul>
         {:else}
-            <p class="text-sm text-muted-foreground">No API keys found.</p>
+            <p class="text-sm text-muted-foreground">{m.no_api_keys()}</p>
         {/if}
     </div>
 </section>
@@ -268,16 +274,15 @@
 <ResponsiveDialog
     bind:open={deletePasskeyDialogOpen}
     bind:loading
-    title="Confirm Passkey deletion"
-    description="This will delete your passkey."
-    submitLabel="Delete"
-    loadingLabel="Deleting..."
+    title={m.confirm_passkey_deletion()}
+    description={m.passkey_deletion_description()}
+    submitLabel={m.delete()}
+    loadingLabel={m.deleting()}
     submitVariant="destructive"
     onsubmit={() => handleDeletePasskey(passkeyToDelete)}
 >
     <p>
-        Are you sure you want to delete this passkey? This action cannot be
-        undone.
+        {m.confirm_passkey_deletion_body()}
     </p>
 </ResponsiveDialog>
 
@@ -285,16 +290,15 @@
 <ResponsiveDialog
     bind:open={deleteApiKeyDialogOpen}
     bind:loading
-    title="Confirm API key deletion"
-    description="This will delete your API key."
+    title={m.confirm_api_key_deletion()}
+    description={m.api_key_deletion_description()}
     submitVariant="destructive"
-    submitLabel="Delete"
-    loadingLabel="Deleting..."
+    submitLabel={m.delete()}
+    loadingLabel={m.deleting()}
     onsubmit={() => handleDeleteApiKey(apiKeyToDelete)}
 >
     <p>
-        Are you sure you want to delete this API key? This action cannot be
-        undone.
+        {m.confirm_api_key_deletion_body()}
     </p>
 </ResponsiveDialog>
 
@@ -302,10 +306,10 @@
 <ResponsiveDialog
     bind:open={changePasswordDialogOpen}
     bind:loading
-    title="Change Password"
-    description="This will change your account password."
-    submitLabel="Change"
-    loadingLabel="Changing..."
+    title={m.change_password()}
+    description={m.change_password_description()}
+    submitLabel={m.change()}
+    loadingLabel={m.changing()}
     form={{ action: "?/changePassword" }}
 >
     <div class="flex flex-col gap-3">
@@ -313,7 +317,7 @@
             required
             type="password"
             bind:value={currentPassword}
-            placeholder="Current password"
+            placeholder={m.current_password()}
             class="w-full"
             aria-invalid={newPasswordError !== ""}
         />
@@ -321,7 +325,7 @@
             required
             type="password"
             bind:value={newPassword}
-            placeholder="New password"
+            placeholder={m.new_password()}
             class="w-full"
             aria-invalid={newPasswordError !== ""}
         />
@@ -329,7 +333,7 @@
             required
             type="password"
             bind:value={newPasswordConfirm}
-            placeholder="Confirm new password"
+            placeholder={m.confirm_new_password()}
             class="w-full"
             aria-invalid={newPasswordError !== ""}
         />

@@ -17,6 +17,7 @@
         shouldDisplayAction,
     } from "$lib/utils";
     import { page } from "$app/state";
+    import * as m from "$lib/paraglide/messages.js";
 
     let {
         handleOpenItem,
@@ -225,12 +226,12 @@
     <li class="flex flex-col items-center justify-center gap-4 py-12">
         <div class="text-muted-foreground text-center">
             {#if page.url.pathname.startsWith("/browse")}
-                <p class="text-lg font-medium">No files yet</p>
+                <p class="text-lg font-medium">{m.no_files_yet()}</p>
                 <p class="text-sm">
-                    Upload files or create a folder to get started
+                    {m.no_files_get_started()}
                 </p>
             {:else}
-                <p class="text-lg font-medium">No results.</p>
+                <p class="text-lg font-medium">{m.no_results()}</p>
             {/if}
         </div>
         {#if page.url.pathname.startsWith("/browse")}
@@ -238,13 +239,13 @@
                 {#if onUpload}
                     <Button variant="default" onclick={onUpload}>
                         <CloudUploadIcon class="mr-2 h-4 w-4" />
-                        Upload Files
+                        {m.upload_files()}
                     </Button>
                 {/if}
                 {#if onCreateFolder}
                     <Button variant="outline" onclick={onCreateFolder}>
                         <FolderPlusIcon class="mr-2 h-4 w-4" />
-                        New Folder
+                        {m.new_folder()}
                     </Button>
                 {/if}
             </div>
@@ -279,7 +280,7 @@
             >
                 <UploadIcon class="size-8" />
             </div>
-            <p class="text-primary font-medium">Drop files to upload</p>
+            <p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
         </div>
     {/if}
     <ul class="flex flex-col gap-1">

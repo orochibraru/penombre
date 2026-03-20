@@ -16,6 +16,7 @@
     import { Slider } from "$lib/components/ui/slider/index";
     import { playableMusic } from "$lib/store/music";
     import type { Pathname } from "$app/types";
+    import * as m from "$lib/paraglide/messages.js";
 
     function clearCurrent() {
         $playableMusic = null;
@@ -101,7 +102,7 @@
                             $playableMusic.isPlaying = true;
                         }
                     }}
-                    title="Play"
+                    title={m.play()}
                 >
                     <PlayIcon />
                 </Button>
@@ -113,7 +114,7 @@
                             $playableMusic.isPlaying = false;
                         }
                     }}
-                    title="Pause"
+                    title={m.pause()}
                 >
                     <PauseIcon />
                 </Button>
@@ -130,14 +131,14 @@
         />
         <Button
             variant="outline"
-            title="Open in new tab"
+            title={m.open_in_new_tab()}
             href={$playableMusic?.source as Pathname}
             target="_blank"
         >
             <ExternalLinkIcon />
         </Button>
         <Popover.Root>
-            <Popover.Trigger title="Change Volume">
+            <Popover.Trigger title={m.change_volume()}>
                 <Button variant="outline">
                     {#if volume === 1}
                         <Volume2Icon />

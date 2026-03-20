@@ -1,9 +1,10 @@
 <script lang="ts">
     import FileLayout from "$lib/components/file/layout.svelte";
     import { title } from "$lib/store/title";
+    import * as m from "$lib/paraglide/messages.js";
 
     const { data } = $props();
-    $title = "Trash";
+    $title = m.nav_trash();
 </script>
 
 <FileLayout data={data.files} preferences={data.preferences} />

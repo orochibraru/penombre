@@ -45,6 +45,7 @@
     import Spinner from "$lib/components/ui/Spinner.svelte";
     import VersionCheck from "$lib/components/layout/version-check.svelte";
     import { FileCategoryEnum } from "$lib/file-helpers";
+    import { m } from "$lib/paraglide/messages.js";
 
     const { children, data } = $props();
 
@@ -61,30 +62,30 @@
     const nav: NavMenus = $derived({
         general: [
             {
-                title: "My Drive",
+                title: m.nav_my_drive(),
                 url: "/browse",
                 icon: FolderIcon,
                 hideOnMobile: true,
             },
             {
-                title: "Recent",
+                title: m.nav_recent(),
                 url: "/recent",
                 icon: ClockFadingIcon,
                 hideOnMobile: true,
             },
             {
-                title: "Starred",
+                title: m.nav_starred(),
                 url: "/starred",
                 icon: StarIcon,
                 count: data.counts?.starred,
             },
             {
-                title: "Shared",
+                title: m.nav_shared(),
                 url: "/shared",
                 icon: UsersIcon,
             },
             {
-                title: "Trash",
+                title: m.nav_trash(),
                 url: "/trash",
                 icon: TrashIcon,
                 count: data.counts?.trash,
@@ -92,43 +93,43 @@
         ],
         categories: [
             {
-                title: "Music",
+                title: m.nav_music(),
                 url: `/categories/${FileCategoryEnum.MUSIC}`,
                 icon: MusicIcon,
                 accentColor: "pink",
             },
             {
-                title: "Documents",
+                title: m.nav_documents(),
                 url: `/categories/${FileCategoryEnum.DOCUMENTS}`,
                 icon: FileIcon,
                 accentColor: "indigo",
             },
             {
-                title: "Images",
+                title: m.nav_images(),
                 url: `/categories/${FileCategoryEnum.IMAGES}`,
                 icon: ImageIcon,
                 accentColor: "orange",
             },
             {
-                title: "Code",
+                title: m.nav_code(),
                 url: `/categories/${FileCategoryEnum.CODE}`,
                 icon: CodeIcon,
                 accentColor: "green",
             },
             {
-                title: "Video",
+                title: m.nav_video(),
                 url: `/categories/${FileCategoryEnum.VIDEO}`,
                 icon: VideoIcon,
                 accentColor: "purple",
             },
             {
-                title: "Archives",
+                title: m.nav_archives(),
                 url: `/categories/${FileCategoryEnum.ARCHIVES}`,
                 icon: FileArchiveIcon,
                 accentColor: "teal",
             },
             {
-                title: "3D Objects",
+                title: m.nav_3d_objects(),
                 url: `/categories/${FileCategoryEnum.THREE_D}`,
                 icon: Rotate3dIcon,
                 accentColor: "rose",
@@ -136,18 +137,18 @@
         ],
         help: [
             {
-                title: "Settings",
+                title: m.nav_settings(),
                 url: "/settings",
                 icon: SettingsIcon,
                 hideOnMobile: true,
             },
             {
-                title: "Sync",
+                title: m.nav_sync(),
                 url: "/sync",
                 icon: FolderSyncIcon,
             },
             {
-                title: "API",
+                title: m.nav_api(),
                 url: "/api/v1/docs",
                 icon: PlugIcon,
             },
@@ -177,7 +178,7 @@
 </script>
 
 <svelte:head>
-    <title>{data.config.appName} - {$title ?? "Home"}</title>
+    <title>{data.config.appName} - {$title ?? m.home()}</title>
 </svelte:head>
 
 <Sidebar.Provider
@@ -202,11 +203,17 @@
                                             style="width: {$globalUploadProgress.progress}%"
                                         ></div>
                                         <span class="relative z-10">
-                                            Uploading {$globalUploadProgress.progress}%
-                                            ({$globalUploadProgress.count})
+                                            {m.uploading_progress({
+                                                progress: String(
+                                                    $globalUploadProgress.progress,
+                                                ),
+                                                count: String(
+                                                    $globalUploadProgress.count,
+                                                ),
+                                            })}
                                         </span>
                                     {:else}
-                                        New
+                                        {m.new()}
                                         <SquarePlusIcon />
                                     {/if}
                                 </Button>
@@ -220,14 +227,14 @@
                                         ($newFolderDialogOpen = true)}
                                 >
                                     <FolderPlusIcon />
-                                    Folder
+                                    {m.folder()}
                                 </DropdownMenu.Item>
                                 <DropdownMenu.Item
                                     class="font-medium"
                                     onclick={() => ($uploadDialogOpen = true)}
                                 >
                                     <CloudUploadIcon />
-                                    File Upload
+                                    {m.file_upload()}
                                 </DropdownMenu.Item>
                             </DropdownMenu.Group>
                         </DropdownMenu.Content>
@@ -236,9 +243,9 @@
             {/if}
         </Sidebar.Header>
         <Sidebar.Content>
-            <Nav title="General" items={nav.general} />
-            <Nav title="Categories" items={nav.categories} />
-            <Nav title="Help" items={nav.help} class="mt-auto" />
+            <Nav title={m.nav_general()} items={nav.general} />
+            <Nav title={m.nav_categories()} items={nav.categories} />
+            <Nav title={m.nav_help()} items={nav.help} class="mt-auto" />
             <VersionCheck config={data.config} version={data.versionCheck} />
         </Sidebar.Content>
     </Sidebar.Root>
@@ -270,7 +277,7 @@
                     )}
                 >
                     <FolderIcon class={bottomNavItemIconClass} />
-                    Home
+                    {m.home()}
                 </a>
                 <a
                     href="/recent"
@@ -280,12 +287,12 @@
                     )}
                 >
                     <ClockFadingIcon class={bottomNavItemIconClass} />
-                    Recent
+                    {m.nav_recent()}
                 </a>
 
                 {#if page.data.hasCustomMenu === true || !showUploadButton}
                     <button
-                        title="Menu"
+                        title={m.menu()}
                         class={cn(
                             bottomNavItemClass,
                             "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg  border-transparent border-2 w-12 h-12 flex items-center justify-center",
@@ -296,7 +303,7 @@
                 {:else}
                     <button
                         onclick={() => (mobileCreateDrawerOpen = true)}
-                        title="New"
+                        title={m.new()}
                         class={cn(
                             bottomNavItemClass,
                             "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg border-transparent border-2 w-12 h-12 flex items-center justify-center relative overflow-hidden",
@@ -326,7 +333,7 @@
                     )}
                 >
                     <UserIcon class={bottomNavItemIconClass} />
-                    Account
+                    {m.account()}
                 </a>
 
                 <a
@@ -337,7 +344,7 @@
                     )}
                 >
                     <SettingsIcon class={bottomNavItemIconClass} />
-                    Settings
+                    {m.nav_settings()}
                 </a>
             </div>
         </div>
@@ -347,9 +354,9 @@
 <Drawer.Root bind:open={mobileCreateDrawerOpen}>
     <Drawer.Content class="z-50">
         <Drawer.Header>
-            <Drawer.Title class="text-lg">New</Drawer.Title>
+            <Drawer.Title class="text-lg">{m.new()}</Drawer.Title>
             <Drawer.Description class="text-sm text-muted-foreground">
-                Create a new folder, upload some files.
+                {m.create_drawer_description()}
             </Drawer.Description>
         </Drawer.Header>
         <div class="mx-auto flex w-full flex-col items-start gap-5 p-4">
@@ -363,7 +370,7 @@
                 }}
             >
                 <FolderPlusIcon class="text-primary w-5! h-5!" />
-                Folder
+                {m.folder()}
             </Button>
             <Button
                 class="w-full"
@@ -375,12 +382,12 @@
                 }}
             >
                 <CloudUploadIcon class="text-primary w-5! h-5!" />
-                File upload
+                {m.file_upload()}
             </Button>
         </div>
         <Drawer.Footer>
             <Drawer.Close class={buttonVariants({ variant: "destructive" })}>
-                Cancel
+                {m.cancel()}
             </Drawer.Close>
         </Drawer.Footer>
     </Drawer.Content>

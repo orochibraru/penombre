@@ -28,6 +28,7 @@
     } from "$lib/utils";
     import FolderSize from "$lib/components/file/folder-size.svelte";
     import { resolve } from "$app/paths";
+    import * as m from "$lib/paraglide/messages.js";
 
     let {
         handleOpenItem,
@@ -213,22 +214,22 @@
 
     const columns: TableHeadItem[] = [
         {
-            title: "Name",
+            title: m.sort_name(),
             colSpan: 7,
             sortKey: "name",
         },
         {
-            title: "Size",
+            title: m.sort_size(),
             colSpan: 1,
             sortKey: "size",
         },
         {
-            title: "Modified",
+            title: m.modified(),
             colSpan: 1,
             sortKey: "updatedAt",
         },
         {
-            title: "Actions",
+            title: "",
             colSpan: 1,
             class: "w-4 text-right",
         },
@@ -383,7 +384,7 @@
                         {#snippet child({ props })}
                             <Button variant="ghost" size="icon" {...props}>
                                 <EllipsisVerticalIcon />
-                                <span class="sr-only">Open menu</span>
+                                <span class="sr-only">{m.open_menu()}</span>
                             </Button>
                         {/snippet}
                     </DropdownMenu.Trigger>
@@ -433,12 +434,12 @@
             <div class="flex flex-col items-center justify-center gap-4">
                 <div class="text-muted-foreground text-center">
                     {#if page.url.pathname.startsWith("/browse")}
-                        <p class="text-lg font-medium">No files yet</p>
+                        <p class="text-lg font-medium">{m.no_files_yet()}</p>
                         <p class="text-sm">
-                            Upload files or create a folder to get started
+                            {m.no_files_get_started()}
                         </p>
                     {:else}
-                        <p class="text-lg font-medium">No results.</p>
+                        <p class="text-lg font-medium">{m.no_results()}</p>
                     {/if}
                 </div>
                 {#if page.url.pathname.startsWith("/browse")}
@@ -446,13 +447,13 @@
                         {#if onUpload}
                             <Button variant="default" onclick={onUpload}>
                                 <CloudUploadIcon class="mr-2 h-4 w-4" />
-                                Upload Files
+                                {m.upload_files()}
                             </Button>
                         {/if}
                         {#if onCreateFolder}
                             <Button variant="outline" onclick={onCreateFolder}>
                                 <FolderPlusIcon class="mr-2 h-4 w-4" />
-                                New Folder
+                                {m.new_folder()}
                             </Button>
                         {/if}
                     </div>
@@ -475,7 +476,7 @@
                 <div class="flex w-full items-center justify-end">
                     <Button variant="ghost" size="icon" disabled>
                         <EllipsisVerticalIcon />
-                        <span class="sr-only">Open menu</span>
+                        <span class="sr-only">{m.open_menu()}</span>
                     </Button>
                 </div>
             </Table.Cell>
@@ -502,7 +503,7 @@
             >
                 <UploadIcon class="size-8" />
             </div>
-            <p class="text-primary font-medium">Drop files to upload</p>
+            <p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
         </div>
     {/if}
     <Table.Root>

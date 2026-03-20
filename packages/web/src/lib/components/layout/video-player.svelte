@@ -14,6 +14,7 @@
     import Spinner from "$lib/components/ui/Spinner.svelte";
     import { Slider } from "$lib/components/ui/slider/index";
     import type { Pathname } from "$app/types";
+    import * as m from "$lib/paraglide/messages.js";
 
     type Props = {
         src: string;
@@ -117,7 +118,7 @@
                     onclick={() => {
                         player?.play();
                     }}
-                    title="Play"
+                    title={m.play()}
                 >
                     <PlayIcon />
                 </Button>
@@ -126,7 +127,7 @@
                     onclick={() => {
                         player?.pause();
                     }}
-                    title="Pause"
+                    title={m.pause()}
                 >
                     <PauseIcon />
                 </Button>
@@ -143,14 +144,14 @@
         />
         <Button
             variant="outline"
-            title="Open in new tab"
+            title={m.open_in_new_tab()}
             href={src as Pathname}
             target="_blank"
         >
             <ExternalLinkIcon />
         </Button>
         <Popover.Root>
-            <Popover.Trigger title="Change Volume">
+            <Popover.Trigger title={m.change_volume()}>
                 <Button variant="outline">
                     {#if volume === 1}
                         <Volume2Icon />

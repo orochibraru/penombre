@@ -8,6 +8,7 @@
     import Button from "$lib/components/ui/button/button.svelte";
     import { page } from "$app/state";
     import { resolve } from "$app/paths";
+    import * as m from "$lib/paraglide/messages.js";
 
     type Props = {
         user: User;
@@ -70,7 +71,7 @@
                         {#snippet child({ props })}
                             <a href={resolve("/account")} {...props}>
                                 <CircleUserIcon />
-                                <span>Account</span>
+                                <span>{m.account()}</span>
                             </a>
                         {/snippet}
                     </DropdownMenu.Item>
@@ -79,7 +80,7 @@
                             {#snippet child({ props })}
                                 <a href={resolve("/admin")} {...props}>
                                     <CogIcon />
-                                    <span>Admin</span>
+                                    <span>{m.admin()}</span>
                                 </a>
                             {/snippet}
                         </DropdownMenu.Item>
@@ -87,7 +88,7 @@
                 </DropdownMenu.Group>
                 <DropdownMenu.Item onclick={() => handleSignOut()}>
                     <LogOutIcon />
-                    Sign out
+                    {m.sign_out()}
                 </DropdownMenu.Item>
             </DropdownMenu.Content>
         </DropdownMenu.Root>

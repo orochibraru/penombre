@@ -9,8 +9,9 @@
     import { Label } from "$lib/components/ui/label";
     import * as RadioGroup from "$lib/components/ui/radio-group";
     import { title } from "$lib/store/title";
+    import * as m from "$lib/paraglide/messages.js";
 
-    $title = "Settings - Display";
+    $title = m.settings_display();
 
     type Theme = {
         id: "dark" | "light" | "system";
@@ -22,20 +23,20 @@
     const themes: Theme[] = [
         {
             id: "system",
-            name: "System",
-            description: "Follows your system's preferences",
+            name: m.theme_system(),
+            description: m.theme_system_description(),
             icon: MonitorIcon,
         },
         {
             id: "light",
-            name: "Light",
-            description: "Clear white-ish theme.",
+            name: m.theme_light(),
+            description: m.theme_light_description(),
             icon: SunIcon,
         },
         {
             id: "dark",
-            name: "Dark",
-            description: "Everything black.",
+            name: m.theme_dark(),
+            description: m.theme_dark_description(),
             icon: MoonIcon,
         },
     ];
@@ -43,9 +44,9 @@
 
 <section>
     <fieldset class="flex flex-col gap-3">
-        <legend class="text-sm font-medium">Theme</legend>
+        <legend class="text-sm font-medium">{m.theme()}</legend>
         <p class="text-muted-foreground text-sm">
-            Select the theme that matches your style.
+            {m.theme_description()}
         </p>
         <RadioGroup.Root
             class="grid gap-3 md:grid-cols-3"

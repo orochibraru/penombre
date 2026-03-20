@@ -7,9 +7,10 @@
     import { onMount } from "svelte";
     import { enhance } from "$app/forms";
     import { toast } from "svelte-sonner";
+    import * as m from "$lib/paraglide/messages.js";
 
     onMount(() => {
-        title.set("Account - Details");
+        title.set(m.title_account_details());
     });
 
     const { data, form } = $props();
@@ -27,12 +28,12 @@
         }
 
         if (form?.success) {
-            toast.success("Account details updated successfully");
+            toast.success(m.toast_account_updated());
             hasChanged = false;
         }
 
         if (form?.error) {
-            toast.error("Failed to update account details", {
+            toast.error(m.toast_account_update_error(), {
                 description: form.error,
             });
         }
@@ -40,7 +41,7 @@
 </script>
 
 <div class="w-full max-w-lg">
-    <h2 class="mb-5 text-lg font-medium">Account Details</h2>
+    <h2 class="mb-5 text-lg font-medium">{m.account_details()}</h2>
     <form
         class="mb-5"
         method="POST"
@@ -63,7 +64,7 @@
                 />
             {/if}
             <div class="flex w-full flex-col gap-1.5">
-                <Label>Email</Label>
+                <Label>{m.email()}</Label>
                 <Input
                     type="email"
                     autocomplete="email"
@@ -72,7 +73,7 @@
                 />
             </div>
             <div class="flex w-full flex-col gap-1.5">
-                <Label>Name</Label>
+                <Label>{m.name()}</Label>
                 <Input
                     type="text"
                     autocomplete="name"
@@ -86,7 +87,7 @@
                 {loading}
                 type="submit"
             >
-                Save user preferences
+                {m.save()}
                 <SaveIcon />
             </Button>
         </fieldset>
