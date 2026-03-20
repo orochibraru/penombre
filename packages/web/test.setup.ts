@@ -17,3 +17,28 @@ mock.module("$env/dynamic/private", () => ({
 mock.module("$app/server", () => ({
 	getRequestEvent: () => null,
 }));
+
+mock.module("$lib/server/auth", () => ({
+	auth: {
+		api: {
+			getSession: mock(() => Promise.resolve(null)),
+			updateUser: mock(() => Promise.resolve({ status: true })),
+			adminUpdateUser: mock(() => Promise.resolve({})),
+		},
+	},
+}));
+
+mock.module("$lib/server/config", () => ({
+	getPenombreConfig: mock(() => ({
+		smtp: undefined,
+	})),
+}));
+
+mock.module("$lib/logger", () => ({
+	Logger: class {
+		debug() {}
+		error() {}
+		info() {}
+		warn() {}
+	},
+}));
