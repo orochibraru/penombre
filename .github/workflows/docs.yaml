@@ -6,9 +6,6 @@ on:
       - main
     paths:
       - "packages/docs/**"
-  pull_request:
-    paths:
-      - "packages/docs/**"
   workflow_dispatch:
 
 env:

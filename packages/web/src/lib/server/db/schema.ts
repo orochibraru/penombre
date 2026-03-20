@@ -303,3 +303,22 @@ export const passkeyRelations = relations(passkey, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+// =========================================================================
+// INFERRED TYPES
+// =========================================================================
+
+export type User = typeof user.$inferSelect;
+export type Session = typeof session.$inferSelect;
+export type UserWithSession = {
+	user: User;
+	session: Session;
+};
+export type Account = typeof account.$inferSelect;
+export type Verification = typeof verification.$inferSelect;
+export type Activity = typeof activity.$inferSelect;
+export type Sharing = typeof sharings.$inferSelect;
+export type SharedWith = typeof sharedWith.$inferSelect;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type Apikey = typeof apikey.$inferSelect;
+export type Passkey = typeof passkey.$inferSelect;
