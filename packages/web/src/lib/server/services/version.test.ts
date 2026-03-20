@@ -23,7 +23,7 @@ function mockFetchFailure(error: Error) {
 async function importFresh() {
 	// Clear the module from cache so we get a fresh `cache = null`
 	const modulePath = import.meta.resolveSync("$lib/server/services/version");
-	// biome-ignore lint/performance/noDelete: Need to clear module cache for test isolation
+
 	delete require.cache[modulePath];
 	return await import("./version");
 }
