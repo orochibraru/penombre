@@ -64,3 +64,41 @@ mock.module("$lib/logger", () => ({
 		warn() {}
 	},
 }));
+
+// Chainable mock query builder for Drizzle ORM
+function createMockQueryBuilder(resolveValue: unknown[] = []) {
+	const builder: Record<string, unknown> = {};
+	const chain = () =>
+		new Proxy(builder, {
+			get: (_target, prop) => {
+				if (prop === "then") {
+					return (
+						resolve: (v: unknown) => void,
+						reject: (e: unknown) => void,
+					) => Promise.resolve(resolveValue).then(resolve, reject);
+				}
+				return mock(() => chain());
+			},
+		});
+	return chain();
+}
+
+const mockDbSelect = mock(() => createMockQueryBuilder([]));
+const mockDbInsert = mock(() => createMockQueryBuilder([]));
+const mockDbTransaction = mock((fn: (tx: unknown) => Promise<unknown>) =>
+	fn({
+		insert: mock(() => createMockQueryBuilder([])),
+		select: mock(() => createMockQueryBuilder([])),
+	}),
+);
+
+const mockDb = {
+	select: mockDbSelect,
+	insert: mockDbInsert,
+	transaction: mockDbTransaction,
+};
+
+mock.module("$lib/server/db", () => ({
+	db: mockDb,
+	getDb: () => mockDb,
+}));

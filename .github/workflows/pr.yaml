@@ -48,6 +48,10 @@ jobs:
         working-directory: packages/web
         run: bun run check
 
+      - name: Test Webapp
+        working-directory: packages/web
+        run: bun run test
+
   docker-prepare:
     uses: ./.github/workflows/docker.yaml
     name: Docker Prepare

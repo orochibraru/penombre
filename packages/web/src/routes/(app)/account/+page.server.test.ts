@@ -18,7 +18,7 @@ const mockGetPenombreConfig = getPenombreConfig as Mock<
 	typeof getPenombreConfig
 >;
 
-const { actions } = await import("./+page.server");
+const { actions, load } = await import("./+page.server");
 
 function createRequest(data: Record<string, string>) {
 	const formData = new FormData();
@@ -60,7 +60,19 @@ const sessionUser: UserWithSession = {
 	},
 };
 
+describe("load", () => {
+	test("returns undefined", () => {
+		const result = load();
+		expect(result).toBeUndefined();
+	});
+});
+
 describe("updateAccount", () => {
+	test("returns 400 when both name and email are missing", async () => {
+		const result = await actions.updateAccount(createRequest({}) as never);
+		expect(result).toEqual(fail(400, { error: "Name and email are required" }));
+	});
+
 	test("returns 400 when name is missing", async () => {
 		const result = await actions.updateAccount(
 			createRequest({ email: "john@example.com" }) as never,
@@ -77,6 +89,15 @@ describe("updateAccount", () => {
 
 	test("returns 401 when no session exists", async () => {
 		mockGetSession.mockResolvedValueOnce(null);
+
+		const result = await actions.updateAccount(
+			createRequest({ name: "John", email: "john@example.com" }) as never,
+		);
+		expect(result).toEqual(fail(401, { error: "Unauthorized" }));
+	});
+
+	test("returns 401 when session has no user", async () => {
+		mockGetSession.mockResolvedValueOnce({ session: {}, user: null } as never);
 
 		const result = await actions.updateAccount(
 			createRequest({ name: "John", email: "john@example.com" }) as never,
