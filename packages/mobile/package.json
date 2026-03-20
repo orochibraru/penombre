@@ -22,7 +22,7 @@
 		"better-auth": "^1.5.4",
 		"expo": "~55.0.6",
 		"expo-constants": "^55.0.7",
-		"expo-font": "~14.0.10",
+		"expo-font": "~55.0.4",
 		"expo-haptics": "~15.0.8",
 		"expo-image": "~3.0.11",
 		"expo-linking": "^55.0.7",
