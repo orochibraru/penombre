@@ -13,6 +13,14 @@ bun run db:diagram
 echo "Generating API clients..."
 bun run gen:api
 
+echo "Running tests..."
+if bun test --coverage; then
+    echo "Tests passed."
+else
+    echo "Tests failed. Please fix the issues before committing."
+    exit 1
+fi
+
 echo "Linting, formatting and fixing issues..."
 if bunx --bun biome check --write; then
     echo "Linting passed."
