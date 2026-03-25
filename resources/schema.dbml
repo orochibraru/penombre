@@ -29,6 +29,7 @@ table activity {
 
   indexes {
     user_id [name: 'activity_userId_idx']
+    created_at [name: 'activity_createdAt_idx']
   }
 }
 
@@ -111,6 +112,7 @@ table sharings {
 
   indexes {
     owner_id [name: 'sharings_ownerId_idx']
+    resource_id [name: 'sharings_resourceId_idx']
   }
 }
 

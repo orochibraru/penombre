@@ -1,8 +1,11 @@
+import { Logger } from "$lib/logger";
 import { Http } from "$lib/server/http";
 import { listFilesInFolder } from "$lib/server/openapi/v1/storage";
 
+const logger = new Logger("Storage List API");
+
 export const GET = listFilesInFolder.handler(async ({ params, service }) => {
-	console.debug(params.path);
+	logger.debug(`Listing files in: ${params.path}`);
 	try {
 		const data = await service.listFiles(params.path);
 		if (!data) {

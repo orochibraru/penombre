@@ -59,47 +59,77 @@ export class Http {
 		);
 	}
 
-	public static Unauthorized() {
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+	public static Unauthorized(details?: any) {
 		return Http.StandardizedResponse(
-			{ message: "Unauthorized" },
+			{ message: "Unauthorized", context: details },
 			{ status: 401 },
 		);
 	}
 
-	public static Forbidden() {
-		return Http.StandardizedResponse({ message: "Forbidden" }, { status: 403 });
-	}
-
-	public static BadRequest(message: string) {
-		return Http.StandardizedResponse({ message }, { status: 400 });
-	}
-
-	public static NotFound(message = "Not found") {
-		return Http.StandardizedResponse({ message }, { status: 404 });
-	}
-
-	public static Conflict(message: string) {
-		return Http.StandardizedResponse({ message }, { status: 409 });
-	}
-
-	public static UnprocessableEntity(message: string) {
-		return Http.StandardizedResponse({ message }, { status: 422 });
-	}
-
-	public static TooManyRequests(message = "Too many requests") {
-		return Http.StandardizedResponse({ message }, { status: 429 });
-	}
-
-	public static NotImplemented() {
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+	public static Forbidden(details?: any) {
 		return Http.StandardizedResponse(
-			{ message: "Not implemented" },
+			{ message: "Forbidden", context: details },
+			{ status: 403 },
+		);
+	}
+
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+	public static BadRequest(message: string, details?: any) {
+		return Http.StandardizedResponse(
+			{ message, context: details },
+			{ status: 400 },
+		);
+	}
+
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+	public static NotFound(message = "Not found", details?: any) {
+		return Http.StandardizedResponse(
+			{ message, context: details },
+			{ status: 404 },
+		);
+	}
+
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+	public static Conflict(message: string, details?: any) {
+		return Http.StandardizedResponse(
+			{ message, context: details },
+			{ status: 409 },
+		);
+	}
+
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+	public static UnprocessableEntity(message: string, details?: any) {
+		return Http.StandardizedResponse(
+			{ message, context: details },
+			{ status: 422 },
+		);
+	}
+
+	public static TooManyRequests(
+		message = "Too many requests",
+		// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+		details?: any,
+	) {
+		return Http.StandardizedResponse(
+			{ message, context: details },
+			{ status: 429 },
+		);
+	}
+
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+	public static NotImplemented(details?: any) {
+		return Http.StandardizedResponse(
+			{ message: "Not implemented", context: details },
 			{ status: 501 },
 		);
 	}
 
-	public static ServiceUnavailable() {
+	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
+	public static ServiceUnavailable(details?: any) {
 		return Http.StandardizedResponse(
-			{ message: "Service unavailable" },
+			{ message: "Service unavailable", context: details },
 			{ status: 503 },
 		);
 	}

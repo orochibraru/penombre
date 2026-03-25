@@ -31,7 +31,7 @@ export const load: LayoutServerLoad = async ({
 	// Parse counts, default to 0 if failed
 	let counts = { trash: 0, starred: 0 };
 	if (fileCount.error) {
-		console.error("Failed to load counts", fileCount.error);
+		// Count fetch failure is non-critical, fall through to defaults
 	} else if (fileCount.data?.data) {
 		counts = fileCount.data.data as { trash: number; starred: number };
 	}

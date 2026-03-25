@@ -6,5 +6,5 @@
 </script>
 
 <div>
-    <p>da sync</p>
+    <p>{m.sync_coming_soon()}</p>
 </div>

@@ -55,14 +55,15 @@ export class ActivityService {
 		}
 	}
 
-	async get(userId: string) {
+	async get(userId: string, limit = 50) {
 		try {
 			this.logger.debug(`Fetching activities for user: ${userId}`);
 			const activities = await this.db
 				.select()
 				.from(activity)
 				.where(eq(activity.userId, userId))
-				.orderBy(desc(activity.createdAt));
+				.orderBy(desc(activity.createdAt))
+				.limit(limit);
 
 			this.logger.debug(
 				`Fetched ${activities.length} activities for user: ${userId}`,

@@ -106,7 +106,8 @@ describe("ActivityService", () => {
 					createdAt: new Date(),
 				},
 			];
-			const mockOrderBy = mock(() => Promise.resolve(activities));
+			const mockLimit = mock(() => Promise.resolve(activities));
+			const mockOrderBy = mock(() => ({ limit: mockLimit }));
 			const mockWhere = mock(() => ({ orderBy: mockOrderBy }));
 			const mockFrom = mock(() => ({ where: mockWhere }));
 			mockSelect.mockReturnValueOnce({ from: mockFrom } as never);
@@ -117,7 +118,8 @@ describe("ActivityService", () => {
 		});
 
 		test("returns empty array when user has no activities", async () => {
-			const mockOrderBy = mock(() => Promise.resolve([]));
+			const mockLimit = mock(() => Promise.resolve([]));
+			const mockOrderBy = mock(() => ({ limit: mockLimit }));
 			const mockWhere = mock(() => ({ orderBy: mockOrderBy }));
 			const mockFrom = mock(() => ({ where: mockWhere }));
 			mockSelect.mockReturnValueOnce({ from: mockFrom } as never);
@@ -128,9 +130,10 @@ describe("ActivityService", () => {
 		});
 
 		test("throws when DB query fails", async () => {
-			const mockOrderBy = mock(() =>
+			const mockLimit = mock(() =>
 				Promise.reject(new Error("Connection lost")),
 			);
+			const mockOrderBy = mock(() => ({ limit: mockLimit }));
 			const mockWhere = mock(() => ({ orderBy: mockOrderBy }));
 			const mockFrom = mock(() => ({ where: mockWhere }));
 			mockSelect.mockReturnValueOnce({ from: mockFrom } as never);

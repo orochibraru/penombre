@@ -162,6 +162,7 @@ export class StorageService {
 		this.cache.delete(CacheKeys.recent());
 		this.cache.delete(CacheKeys.counts());
 		this.cache.deleteByPrefix("category:");
+		this.cache.delete(CacheKeys.fileIdIndex());
 	}
 
 	// =========================================================================
@@ -661,19 +662,30 @@ export class StorageService {
 		return results;
 	}
 
-	public async findFileById(id: string): Promise<string | null> {
-		try {
-			const allFiles = await this.walkFilesRecursively(this.storagePath);
-			for (const filePath of allFiles) {
-				const metaFile = Bun.file(`${filePath}.meta.json`);
-				if (await metaFile.exists()) {
-					const metadata: FileMetadata = await metaFile.json();
-					if (metadata.id === id) {
-						return filePath.slice(this.storagePath.length + 1);
-					}
+	private async getFileIdIndex(): Promise<Map<string, string>> {
+		const cacheKey = CacheKeys.fileIdIndex();
+		const cached = this.cache.get<Map<string, string>>(cacheKey);
+		if (cached) return cached;
+
+		const index = new Map<string, string>();
+		const allFiles = await this.walkFilesRecursively(this.storagePath);
+		for (const filePath of allFiles) {
+			const metaFile = Bun.file(`${filePath}.meta.json`);
+			if (await metaFile.exists()) {
+				const metadata: FileMetadata = await metaFile.json();
+				if (metadata.id) {
+					index.set(metadata.id, filePath.slice(this.storagePath.length + 1));
 				}
 			}
-			return null;
+		}
+		this.cache.set(cacheKey, index, 120);
+		return index;
+	}
+
+	public async findFileById(id: string): Promise<string | null> {
+		try {
+			const index = await this.getFileIdIndex();
+			return index.get(id) ?? null;
 		} catch {
 			return null;
 		}
@@ -781,15 +793,8 @@ export class StorageService {
 
 	public async fileExistsById(id: string): Promise<boolean> {
 		try {
-			const allFiles = await this.walkFilesRecursively(this.storagePath);
-			for (const filePath of allFiles) {
-				const metaFile = Bun.file(`${filePath}.meta.json`);
-				if (await metaFile.exists()) {
-					const metadata: FileMetadata = await metaFile.json();
-					if (metadata.id === id) return true;
-				}
-			}
-			return false;
+			const index = await this.getFileIdIndex();
+			return index.has(id);
 		} catch {
 			return false;
 		}
@@ -1584,58 +1589,61 @@ export class StorageService {
 	}
 
 	private async collectStarredFolders(prefix: string): Promise<ObjectItem[]> {
-		const dirPath = join(this.storagePath, prefix);
+		const results: ObjectItem[] = [];
+		const stack: string[] = [prefix];
 
-		let dir: { name: string; isDirectory: () => boolean }[];
-		try {
-			dir = (await readdir(dirPath, {
-				withFileTypes: true,
-			})) as unknown as typeof dir;
-		} catch {
-			return [];
-		}
+		while (stack.length > 0) {
+			const current = stack.pop() as string;
+			const dirPath = join(this.storagePath, current);
 
-		const validDirs = dir.filter((dirent) => {
-			if (!dirent.isDirectory()) return false;
-			if (dirent.name === ".trash" || dirent.name === ".thumbnails")
-				return false;
-			if (dirent.name === this.userFolder) return false;
-			return true;
-		});
-
-		const folderPromises = validDirs.map(async (dirent) => {
-			const folderPath = join(dirPath, dirent.name);
-			const relativePath = prefix ? `${prefix}/${dirent.name}` : dirent.name;
-
-			const [statResult, metadata] = await Promise.all([
-				stat(folderPath).catch(() => null),
-				this.readFolderMetadataOrGenerate(folderPath),
-			]);
-
-			const updatedAt = statResult
-				? new Date(statResult.mtimeMs).toLocaleString()
-				: new Date().toLocaleString();
-
-			if (metadata.isTrashed) return [];
-
-			const results: ObjectItem[] = [];
-
-			if (metadata.isStarred) {
-				results.push({
-					key: `${relativePath}/`,
-					size: 0,
-					updatedAt,
-					metadata,
-					type: "folder",
-				});
+			let entries: { name: string; isDirectory: () => boolean }[];
+			try {
+				entries = (await readdir(dirPath, {
+					withFileTypes: true,
+				})) as unknown as typeof entries;
+			} catch {
+				continue;
 			}
 
-			const subResults = await this.collectStarredFolders(relativePath);
-			return [...results, ...subResults];
-		});
+			const validDirs = entries.filter((dirent) => {
+				if (!dirent.isDirectory()) return false;
+				if (dirent.name === ".trash" || dirent.name === ".thumbnails")
+					return false;
+				if (dirent.name === this.userFolder) return false;
+				return true;
+			});
 
-		const allResults = await Promise.all(folderPromises);
-		return allResults.flat();
+			for (const dirent of validDirs) {
+				const folderPath = join(dirPath, dirent.name);
+				const relativePath = current
+					? `${current}/${dirent.name}`
+					: dirent.name;
+
+				const [statResult, metadata] = await Promise.all([
+					stat(folderPath).catch(() => null),
+					this.readFolderMetadataOrGenerate(folderPath),
+				]);
+
+				if (metadata.isTrashed) continue;
+
+				if (metadata.isStarred) {
+					const updatedAt = statResult
+						? new Date(statResult.mtimeMs).toLocaleString()
+						: new Date().toLocaleString();
+					results.push({
+						key: `${relativePath}/`,
+						size: 0,
+						updatedAt,
+						metadata,
+						type: "folder",
+					});
+				}
+
+				stack.push(relativePath);
+			}
+		}
+
+		return results;
 	}
 
 	public async searchFiles(query: string, limit = 50): Promise<ObjectList> {
