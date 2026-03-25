@@ -50,6 +50,13 @@
 			"when": 1772805107104,
 			"tag": "0006_wealthy_whistler",
 			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "7",
+			"when": 1774437464889,
+			"tag": "0007_reflective_fenris",
+			"breakpoints": true
 		}
 	]
 }

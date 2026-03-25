@@ -14,8 +14,13 @@ export const POST = uploadFile.handler(async ({ params, event, service }) => {
 		return Http.BadRequest("No file provided");
 	}
 
-	const exists = await service.fileExistsById(params.id);
-	if (!exists) {
+	const filePath = await service.findFileById(params.id);
+	if (!filePath) {
+		return Http.BadRequest(`File ${params.id} not found`);
+	}
+
+	const fileData = await service.getFile(filePath);
+	if (!fileData) {
 		return Http.BadRequest(`File ${params.id} not found`);
 	}
 

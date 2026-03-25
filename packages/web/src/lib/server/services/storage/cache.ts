@@ -175,6 +175,9 @@ export const CacheKeys = {
 
 	/** Key for counts (trash/starred) */
 	counts: () => "counts",
+
+	/** Key for the file ID → relative path index */
+	fileIdIndex: () => "file-id-index",
 };
 
 export type { MemoryCache };

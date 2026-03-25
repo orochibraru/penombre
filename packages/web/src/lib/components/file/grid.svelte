@@ -75,9 +75,9 @@
     }
 
     function handleItemDragStart(e: DragEvent, item: ObjectItem) {
-        if (!onDragStart) return;
-        e.dataTransfer!.effectAllowed = "move";
-        e.dataTransfer!.setData("text/plain", item.key);
+        if (!onDragStart || !e.dataTransfer) return;
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", item.key);
         onDragStart(item);
     }
 

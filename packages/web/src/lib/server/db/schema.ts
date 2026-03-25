@@ -128,7 +128,10 @@ export const activity = pgTable(
 			.$defaultFn(() => new Date())
 			.notNull(),
 	}),
-	(table) => [index("activity_userId_idx").on(table.userId)],
+	(table) => [
+		index("activity_userId_idx").on(table.userId),
+		index("activity_createdAt_idx").on(table.createdAt),
+	],
 );
 
 export const activityRelations = relations(activity, ({ one }) => ({
@@ -161,7 +164,10 @@ export const sharings = pgTable(
 			.notNull(),
 		expiration: timestamp("expiration"),
 	}),
-	(table) => [index("sharings_ownerId_idx").on(table.ownerId)],
+	(table) => [
+		index("sharings_ownerId_idx").on(table.ownerId),
+		index("sharings_resourceId_idx").on(table.resourceId),
+	],
 );
 
 export const sharingRelations = relations(sharings, ({ one, many }) => ({
