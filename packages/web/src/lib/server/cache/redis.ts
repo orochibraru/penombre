@@ -40,6 +40,19 @@ export function getRedisClient(url?: string): Redis {
 		},
 	});
 
+	// Attach basic event handlers to avoid unhandled 'error' events and to log connectivity changes.
+	client.on("error", (err) => {
+		console.error("[redis] Client error:", err);
+	});
+	client.on("connect", () => {
+		console.info("[redis] Connected to Redis");
+	});
+	client.on("reconnecting", (delay) => {
+		console.warn("[redis] Reconnecting to Redis in", delay, "ms");
+	});
+	client.on("end", () => {
+		console.warn("[redis] Redis connection closed");
+	});
 	globalForRedis.__redis_client = client;
 	return client;
 }
