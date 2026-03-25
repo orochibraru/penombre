@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { CacheBackend } from "$lib/server/cache";
 import { MemoryCacheBackend, NullCacheBackend } from "$lib/server/cache";
 import { CacheKeys, CacheManager } from "./cache";
@@ -71,6 +71,18 @@ describe("MemoryCacheBackend", () => {
 });
 
 describe("CacheManager", () => {
+	const savedRedisUrl = process.env.REDIS_URL;
+
+	beforeAll(() => {
+		delete process.env.REDIS_URL;
+	});
+
+	afterAll(() => {
+		if (savedRedisUrl !== undefined) {
+			process.env.REDIS_URL = savedRedisUrl;
+		}
+	});
+
 	test("creates and returns the same cache for a user", () => {
 		const manager = new CacheManager();
 		const cache1 = manager.getUserCache("user-1");

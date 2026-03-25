@@ -101,6 +101,18 @@ Better Auth handles authentication with the following plugins:
 
 On startup, the server hook (`hooks.server.ts`) waits for the database, runs Drizzle migrations, and seeds the initial admin account if no users exist.
 
+#### Caching
+
+The storage service uses a per-user cache to avoid repeated database and filesystem queries for file listings, metadata, and folder sizes. The cache layer is pluggable — the backend is selected automatically based on the environment:
+
+| Environment | Backend | Behavior |
+| ----------- | ------- | -------- |
+| Development (no Redis) | **Null** | Caching disabled to avoid stale data during development |
+| Production (no Redis) | **Memory** | In-process `Map` with TTL (default 30 s) |
+| Any (with `REDIS_URL`) | **Redis** | Distributed cache shared across instances |
+
+All three backends implement the same async `CacheBackend` interface, so the rest of the codebase is backend-agnostic. See [Environment variables](/docs/env#redis-optional) for configuration.
+
 #### Configuration
 
 Runtime configuration is loaded from environment variables and validated with Zod at startup. Defaults are defined in `config.defaults.ts`. See [Environment variables](/docs/env) for the full reference.
@@ -177,6 +189,8 @@ The default `compose.yaml` defines two services:
 
 - **app** — the Penombre web server on port `3000`, with a persistent `/data` volume for file storage
 - **db** — PostgreSQL 17 Alpine with a health check and persistent data volume
+
+An optional **redis** service can be added for distributed caching (see [Deployment](/docs/deployment)).
 
 ### Shared scripts
 

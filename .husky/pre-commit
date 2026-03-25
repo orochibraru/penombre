@@ -6,7 +6,6 @@ echo "Running pre-commit hooks..."
 echo "Generating default env config"
 bun run --filter @penombre/web gen:env
 
-
 echo "Generating DB diagram..."
 bun run db:diagram
 
