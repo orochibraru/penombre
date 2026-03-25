@@ -13,6 +13,7 @@ import sharp from "sharp";
 import { dev } from "$app/environment";
 import { FileCategoryEnum } from "$lib/file-helpers";
 import { Logger } from "$lib/logger";
+import type { CacheBackend } from "$lib/server/cache";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
 import {
@@ -32,7 +33,7 @@ import type {
 	UploadResult,
 } from "$lib/server/schema";
 import { ActivityService } from "$lib/server/services/activity";
-import { CacheKeys, CacheManager, type MemoryCache } from "./cache";
+import { CacheKeys, CacheManager } from "./cache";
 import { DEFAULT_STORAGE_PATH, logger } from "./constants";
 import fileTypesData from "./file-types.json";
 
@@ -139,7 +140,7 @@ export class StorageService {
 	private userFolder: string;
 	private user: User;
 	private activityService: ActivityService = new ActivityService();
-	private cache: MemoryCache;
+	private cache: CacheBackend;
 	private static thumbnailSemaphore = new ThumbnailSemaphore(4);
 
 	constructor(user: User) {
@@ -153,16 +154,18 @@ export class StorageService {
 	// CACHE
 	// =========================================================================
 
-	private invalidateListingCaches(): void {
-		this.cache.deleteByPrefix("list:");
-		this.cache.deleteByPrefix("folders:");
-		this.cache.deleteByPrefix("folder-size:");
-		this.cache.delete(CacheKeys.starred());
-		this.cache.delete(CacheKeys.trashed());
-		this.cache.delete(CacheKeys.recent());
-		this.cache.delete(CacheKeys.counts());
-		this.cache.deleteByPrefix("category:");
-		this.cache.delete(CacheKeys.fileIdIndex());
+	private async invalidateListingCaches(): Promise<void> {
+		await Promise.all([
+			this.cache.deleteByPrefix("list:"),
+			this.cache.deleteByPrefix("folders:"),
+			this.cache.deleteByPrefix("folder-size:"),
+			this.cache.delete(CacheKeys.starred()),
+			this.cache.delete(CacheKeys.trashed()),
+			this.cache.delete(CacheKeys.recent()),
+			this.cache.delete(CacheKeys.counts()),
+			this.cache.deleteByPrefix("category:"),
+			this.cache.delete(CacheKeys.fileIdIndex()),
+		]);
 	}
 
 	// =========================================================================
@@ -404,7 +407,7 @@ export class StorageService {
 			});
 		}
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 	}
 
 	public async updateFile(name: string, data: UpdateFile): Promise<void> {
@@ -442,7 +445,7 @@ export class StorageService {
 		});
 
 		await Bun.write(currentMetaPath, JSON.stringify(metadata));
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 	}
 
 	public async moveFile(
@@ -501,7 +504,7 @@ export class StorageService {
 			level: "info",
 		});
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 	}
 
 	public async duplicateFile(fileKey: string): Promise<ObjectItem> {
@@ -553,7 +556,7 @@ export class StorageService {
 			level: "info",
 		});
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 
 		const file = Bun.file(newFilePath);
 		return {
@@ -600,7 +603,7 @@ export class StorageService {
 			level: "info",
 		});
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 
 		return {
 			id: uuidWithExt,
@@ -658,13 +661,13 @@ export class StorageService {
 			level: "info",
 		});
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 		return results;
 	}
 
 	private async getFileIdIndex(): Promise<Map<string, string>> {
 		const cacheKey = CacheKeys.fileIdIndex();
-		const cached = this.cache.get<Map<string, string>>(cacheKey);
+		const cached = await this.cache.get<Map<string, string>>(cacheKey);
 		if (cached) return cached;
 
 		const index = new Map<string, string>();
@@ -678,7 +681,7 @@ export class StorageService {
 				}
 			}
 		}
-		this.cache.set(cacheKey, index, 120);
+		await this.cache.set(cacheKey, index, 120);
 		return index;
 	}
 
@@ -758,7 +761,7 @@ export class StorageService {
 
 			await file.delete();
 			await this.deleteThumbnails(key);
-			this.invalidateListingCaches();
+			await this.invalidateListingCaches();
 		} catch (error) {
 			logger.error("Error deleting file:", error);
 			throw new Error(`Error deleting file with key: ${key}`);
@@ -965,7 +968,7 @@ export class StorageService {
 			level: "info",
 		});
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 	}
 
 	public async createFolder(
@@ -1010,7 +1013,7 @@ export class StorageService {
 				`Folder created: UUID=${folderMeta.id}, name=${uniqueName}, path=${folderPath}`,
 			);
 
-			this.invalidateListingCaches();
+			await this.invalidateListingCaches();
 			return { id: folderMeta.id, name: uniqueName };
 		} catch (error) {
 			logger.error("Error creating folder:", error);
@@ -1035,7 +1038,7 @@ export class StorageService {
 				level: "info",
 			});
 			logger.info(`Folder deleted at path: ${dirPath}`);
-			this.invalidateListingCaches();
+			await this.invalidateListingCaches();
 		} catch (error) {
 			logger.error("Error deleting folder:", error);
 			throw new Error(`Error deleting folder with key: ${key}`);
@@ -1073,7 +1076,7 @@ export class StorageService {
 			level: "info",
 		});
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 	}
 
 	public async restoreFolder(key: string): Promise<void> {
@@ -1104,7 +1107,7 @@ export class StorageService {
 			level: "info",
 		});
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 	}
 
 	public async updateFolderMeta(
@@ -1148,7 +1151,7 @@ export class StorageService {
 			level: "info",
 		});
 
-		this.invalidateListingCaches();
+		await this.invalidateListingCaches();
 	}
 
 	public async getFolderMeta(folderId: string): Promise<FileMetadata | null> {
@@ -1198,7 +1201,7 @@ export class StorageService {
 			normalizedPrefix,
 			Boolean(options?.onlyTrashed),
 		);
-		const cached = this.cache.get<DirectoryList>(cacheKey);
+		const cached = await this.cache.get<DirectoryList>(cacheKey);
 		if (cached) return cached;
 
 		const dirPath = join(this.storagePath, normalizedPrefix);
@@ -1229,7 +1232,7 @@ export class StorageService {
 			folders.push(dirent.name);
 		}
 
-		this.cache.set(cacheKey, folders);
+		await this.cache.set(cacheKey, folders);
 		return folders;
 	}
 
@@ -1291,7 +1294,7 @@ export class StorageService {
 			: folderKey;
 
 		const cacheKey = `folder-size:${normalizedKey}`;
-		const cached = this.cache.get<number>(cacheKey);
+		const cached = await this.cache.get<number>(cacheKey);
 		if (cached !== undefined) return cached;
 
 		const folderPath = join(this.storagePath, normalizedKey);
@@ -1334,7 +1337,7 @@ export class StorageService {
 		logger.debug(`Starting folder size calculation for: ${folderPath}`);
 		await walkFolder(folderPath);
 
-		this.cache.set(cacheKey, totalSize, 300);
+		await this.cache.set(cacheKey, totalSize, 300);
 		logger.info(
 			`Calculated size for folder: ${folderKey}, size: ${totalSize} bytes`,
 		);
@@ -1389,13 +1392,13 @@ export class StorageService {
 		const prefix = options.parent || "";
 		const cacheKey = CacheKeys.listing(prefix, JSON.stringify(options));
 
-		const cached = this.cache.get<ObjectList>(cacheKey);
+		const cached = await this.cache.get<ObjectList>(cacheKey);
 		if (cached) return cached;
 
 		const dirPath = join(this.storagePath, prefix);
 		if (!existsSync(dirPath)) {
 			const empty: ObjectList = { list: [], count: 0, total: 0 };
-			this.cache.set(cacheKey, empty);
+			await this.cache.set(cacheKey, empty);
 			return empty;
 		}
 
@@ -1493,13 +1496,13 @@ export class StorageService {
 			count: filtered.length,
 			total,
 		};
-		this.cache.set(cacheKey, result);
+		await this.cache.set(cacheKey, result);
 		return result;
 	}
 
 	public async listTrashFiles(): Promise<ObjectList> {
 		const cacheKey = CacheKeys.trashed();
-		const cached = this.cache.get<ObjectList>(cacheKey);
+		const cached = await this.cache.get<ObjectList>(cacheKey);
 		if (cached) return cached;
 
 		const files = await this.abstractListFiles({ includeTrashed: true });
@@ -1510,7 +1513,7 @@ export class StorageService {
 			total: filtered.length,
 		};
 
-		this.cache.set(cacheKey, result);
+		await this.cache.set(cacheKey, result);
 		return result;
 	}
 
@@ -1534,7 +1537,7 @@ export class StorageService {
 
 	public async listRecentFiles(): Promise<ObjectList> {
 		const cacheKey = CacheKeys.recent();
-		const cached = this.cache.get<ObjectList>(cacheKey);
+		const cached = await this.cache.get<ObjectList>(cacheKey);
 		if (cached) return cached;
 
 		const allFiles = await this.abstractListFiles({ recursive: true });
@@ -1553,13 +1556,13 @@ export class StorageService {
 			total: allFiles.total,
 		};
 
-		this.cache.set(cacheKey, result);
+		await this.cache.set(cacheKey, result);
 		return result;
 	}
 
 	public async listStarredFiles(): Promise<ObjectList> {
 		const cacheKey = CacheKeys.starred();
-		const cached = this.cache.get<ObjectList>(cacheKey);
+		const cached = await this.cache.get<ObjectList>(cacheKey);
 		if (cached) return cached;
 
 		const allFiles = await this.abstractListFiles({ recursive: true });
@@ -1584,7 +1587,7 @@ export class StorageService {
 			total: combined.length,
 		};
 
-		this.cache.set(cacheKey, result);
+		await this.cache.set(cacheKey, result);
 		return result;
 	}
 
@@ -1739,25 +1742,25 @@ export class StorageService {
 
 	public async countTrashedItems(): Promise<number> {
 		const cacheKey = `${CacheKeys.counts()}:trashed`;
-		const cached = this.cache.get<number>(cacheKey);
+		const cached = await this.cache.get<number>(cacheKey);
 		if (cached !== undefined) return cached;
 
 		const files = await this.abstractListFiles({ includeTrashed: true });
 		const count = files.list.filter((item) => item.metadata.isTrashed).length;
-		this.cache.set(cacheKey, count);
+		await this.cache.set(cacheKey, count);
 		return count;
 	}
 
 	public async countStarredItems(): Promise<number> {
 		const cacheKey = `${CacheKeys.counts()}:starred`;
-		const cached = this.cache.get<number>(cacheKey);
+		const cached = await this.cache.get<number>(cacheKey);
 		if (cached !== undefined) return cached;
 
 		const allFiles = await this.abstractListFiles({ recursive: true });
 		const count = allFiles.list.filter(
 			(item) => item.metadata.isStarred,
 		).length;
-		this.cache.set(cacheKey, count);
+		await this.cache.set(cacheKey, count);
 		return count;
 	}
 

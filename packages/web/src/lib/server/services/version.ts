@@ -21,11 +21,11 @@ interface CachedResult {
 
 let cache: CachedResult | null = null;
 
-function normalizeVersion(version: string): string {
+export function normalizeVersion(version: string): string {
 	return version.replace(/^v/, "");
 }
 
-function isNewerVersion(current: string, latest: string): boolean {
+export function isNewerVersion(current: string, latest: string): boolean {
 	const currentParts = normalizeVersion(current).split(".").map(Number);
 	const latestParts = normalizeVersion(latest).split(".").map(Number);
 

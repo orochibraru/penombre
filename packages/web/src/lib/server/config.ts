@@ -65,6 +65,11 @@ const penombreConfigSchema = z
 			})
 			.optional()
 			.default(defaultConfigValues.auth),
+		redis: z
+			.object({
+				url: z.string().min(1),
+			})
+			.optional(),
 		smtp: z
 			.object({
 				enabled: z.boolean().default(false),
@@ -194,6 +199,8 @@ export function getPenombreConfig(): PenombreConfig {
 		});
 	}
 
+	const redisUrl = env.REDIS_URL;
+
 	const smtpEnabled = env.SMTP_ENABLED === "true";
 
 	const anyDbVariableConfigured = env.DATABASE_URL;
@@ -246,6 +253,7 @@ export function getPenombreConfig(): PenombreConfig {
 					},
 				}
 			: defaultConfigValues.auth,
+		redis: redisUrl ? { url: redisUrl } : defaultConfigValues.redis,
 		smtp: smtpEnabled
 			? {
 					enabled: env.SMTP_ENABLED === "true",

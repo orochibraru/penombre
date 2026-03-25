@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, type Mock, mock, test } from "bun:test";
 import { getPenombreConfig } from "$lib/server/config";
+import { isNewerVersion, normalizeVersion } from "./version";
 
 const mockGetPenombreConfig = getPenombreConfig as Mock<
 	typeof getPenombreConfig
@@ -199,5 +200,50 @@ describe("checkForUpdate", () => {
 		const result = await checkForUpdate();
 
 		expect(result.updateAvailable).toBe(true);
+	});
+});
+
+describe("normalizeVersion", () => {
+	test("strips v prefix", () => {
+		expect(normalizeVersion("v1.2.3")).toBe("1.2.3");
+	});
+
+	test("returns version without prefix as-is", () => {
+		expect(normalizeVersion("1.2.3")).toBe("1.2.3");
+	});
+});
+
+describe("isNewerVersion", () => {
+	test("returns true when latest major is higher", () => {
+		expect(isNewerVersion("1.0.0", "2.0.0")).toBe(true);
+	});
+
+	test("returns true when latest minor is higher", () => {
+		expect(isNewerVersion("1.0.0", "1.1.0")).toBe(true);
+	});
+
+	test("returns true when latest patch is higher", () => {
+		expect(isNewerVersion("1.0.0", "1.0.1")).toBe(true);
+	});
+
+	test("returns false when versions are equal", () => {
+		expect(isNewerVersion("1.0.0", "1.0.0")).toBe(false);
+	});
+
+	test("returns false when current is newer", () => {
+		expect(isNewerVersion("2.0.0", "1.0.0")).toBe(false);
+	});
+
+	test("returns false when current minor is higher", () => {
+		expect(isNewerVersion("1.5.0", "1.4.0")).toBe(false);
+	});
+
+	test("handles versions with different segment counts", () => {
+		expect(isNewerVersion("1.0", "1.0.1")).toBe(true);
+		expect(isNewerVersion("1.0.1", "1.0")).toBe(false);
+	});
+
+	test("handles v prefix in versions", () => {
+		expect(isNewerVersion("v1.0.0", "v1.1.0")).toBe(true);
 	});
 });

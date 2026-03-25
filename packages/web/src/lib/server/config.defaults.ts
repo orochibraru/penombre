@@ -26,6 +26,7 @@ export const defaultConfigValues = {
 			password: "Admin1234!",
 		},
 	},
+	redis: undefined as { url: string } | undefined,
 	smtp: {
 		enabled: false,
 		host: "smtp.example.com",
@@ -100,6 +101,11 @@ OAUTH_DEFAULT_DISCOVERY_URL=https://auth.example.com/.well-known/openid-configur
 OAUTH_DEFAULT_PRETTY_NAME=Default OIDC Provider
 OAUTH_DEFAULT_PKCE=true
 OAUTH_DEFAULT_SCOPES=openid,profile,email
+
+# ===========================================
+# Redis (Optional - for distributed caching)
+# ===========================================
+# REDIS_URL=redis://localhost:6379
 
 # ===========================================
 # SMTP (Optional - for email features)

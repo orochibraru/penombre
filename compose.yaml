@@ -13,6 +13,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
       - LOG_LEVEL=debug
+      # - REDIS_URL=redis://redis:6379
 
   db:
     image: postgres:17-alpine
@@ -36,8 +37,23 @@ services:
       retries: 10
       start_period: 3s
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   postgres_data:
     driver: local
   storage_data:
+    driver: local
+  redis_data:
     driver: local

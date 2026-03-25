@@ -1,71 +1,72 @@
 import { describe, expect, test } from "bun:test";
-import { CacheKeys, CacheManager, type MemoryCache } from "./cache";
+import type { CacheBackend } from "$lib/server/cache";
+import { MemoryCacheBackend, NullCacheBackend } from "$lib/server/cache";
+import { CacheKeys, CacheManager } from "./cache";
 
-describe("MemoryCache", () => {
-	function createCache(): MemoryCache {
-		const manager = new CacheManager();
-		return manager.getUserCache("test-user");
+describe("MemoryCacheBackend", () => {
+	function createCache(): CacheBackend {
+		return new MemoryCacheBackend(30);
 	}
 
-	test("returns undefined for missing key", () => {
+	test("returns undefined for missing key", async () => {
 		const cache = createCache();
-		expect(cache.get("nonexistent")).toBeUndefined();
+		expect(await cache.get("nonexistent")).toBeUndefined();
 	});
 
-	test("stores and retrieves a value", () => {
+	test("stores and retrieves a value", async () => {
 		const cache = createCache();
-		cache.set("key1", { name: "hello" });
-		expect(cache.get("key1")).toEqual({ name: "hello" });
+		await cache.set("key1", { name: "hello" });
+		expect(await cache.get("key1")).toEqual({ name: "hello" });
 	});
 
 	test("returns undefined for expired entries", async () => {
 		const cache = createCache();
-		cache.set("key1", "value", 0.001); // 1ms TTL
+		await cache.set("key1", "value", 0.001); // 1ms TTL
 		await new Promise((r) => setTimeout(r, 10));
-		expect(cache.get("key1")).toBeUndefined();
+		expect(await cache.get("key1")).toBeUndefined();
 	});
 
-	test("deletes a specific key", () => {
+	test("deletes a specific key", async () => {
 		const cache = createCache();
-		cache.set("key1", "value1");
-		cache.set("key2", "value2");
-		const deleted = cache.delete("key1");
+		await cache.set("key1", "value1");
+		await cache.set("key2", "value2");
+		const deleted = await cache.delete("key1");
 		expect(deleted).toBe(true);
-		expect(cache.get("key1")).toBeUndefined();
-		expect(cache.get("key2")).toBe("value2");
+		expect(await cache.get("key1")).toBeUndefined();
+		expect(await cache.get("key2")).toBe("value2");
 	});
 
-	test("delete returns false for nonexistent key", () => {
+	test("delete returns false for nonexistent key", async () => {
 		const cache = createCache();
-		expect(cache.delete("nope")).toBe(false);
+		expect(await cache.delete("nope")).toBe(false);
 	});
 
-	test("deletes entries by prefix", () => {
+	test("deletes entries by prefix", async () => {
 		const cache = createCache();
-		cache.set("list:root", "a");
-		cache.set("list:sub", "b");
-		cache.set("meta:file1", "c");
-		const count = cache.deleteByPrefix("list:");
+		await cache.set("list:root", "a");
+		await cache.set("list:sub", "b");
+		await cache.set("meta:file1", "c");
+		const count = await cache.deleteByPrefix("list:");
 		expect(count).toBe(2);
-		expect(cache.get("list:root")).toBeUndefined();
-		expect(cache.get("list:sub")).toBeUndefined();
-		expect(cache.get("meta:file1")).toBe("c");
+		expect(await cache.get("list:root")).toBeUndefined();
+		expect(await cache.get("list:sub")).toBeUndefined();
+		expect(await cache.get("meta:file1")).toBe("c");
 	});
 
-	test("clears all entries", () => {
+	test("clears all entries", async () => {
 		const cache = createCache();
-		cache.set("a", 1);
-		cache.set("b", 2);
-		cache.clear();
-		expect(cache.size).toBe(0);
+		await cache.set("a", 1);
+		await cache.set("b", 2);
+		await cache.clear();
+		expect(await cache.getSize()).toBe(0);
 	});
 
-	test("reports correct size", () => {
+	test("reports correct size", async () => {
 		const cache = createCache();
-		expect(cache.size).toBe(0);
-		cache.set("a", 1);
-		cache.set("b", 2);
-		expect(cache.size).toBe(2);
+		expect(await cache.getSize()).toBe(0);
+		await cache.set("a", 1);
+		await cache.set("b", 2);
+		expect(await cache.getSize()).toBe(2);
 	});
 });
 
@@ -77,20 +78,20 @@ describe("CacheManager", () => {
 		expect(cache1).toBe(cache2);
 	});
 
-	test("creates separate caches for different users", () => {
+	test("creates separate caches for different users", async () => {
 		const manager = new CacheManager();
 		const cache1 = manager.getUserCache("user-1");
 		const cache2 = manager.getUserCache("user-2");
-		cache1.set("key", "value-1");
-		expect(cache2.get("key")).toBeUndefined();
+		await cache1.set("key", "value-1");
+		expect(await cache2.get("key")).toBeUndefined();
 	});
 
-	test("clears cache for a specific user", () => {
+	test("clears cache for a specific user", async () => {
 		const manager = new CacheManager();
 		const cache = manager.getUserCache("user-1");
-		cache.set("key", "value");
-		manager.clearUserCache("user-1");
-		expect(cache.size).toBe(0);
+		await cache.set("key", "value");
+		await manager.clearUserCache("user-1");
+		expect(await cache.getSize()).toBe(0);
 	});
 
 	test("clearUserCache is no-op for unknown user", () => {
@@ -99,16 +100,16 @@ describe("CacheManager", () => {
 		manager.clearUserCache("nonexistent");
 	});
 
-	test("clears all user caches", () => {
+	test("clears all user caches", async () => {
 		const manager = new CacheManager();
 		const c1 = manager.getUserCache("user-1");
 		const c2 = manager.getUserCache("user-2");
-		c1.set("a", 1);
-		c2.set("b", 2);
-		manager.clearAllCaches();
+		await c1.set("a", 1);
+		await c2.set("b", 2);
+		await manager.clearAllCaches();
 		// After clearAll, getting a cache creates a new empty one
 		const c3 = manager.getUserCache("user-1");
-		expect(c3.size).toBe(0);
+		expect(await c3.getSize()).toBe(0);
 	});
 });
 
@@ -169,5 +170,44 @@ describe("CacheKeys", () => {
 
 	test("counts", () => {
 		expect(CacheKeys.counts()).toBe("counts");
+	});
+});
+
+describe("NullCacheBackend", () => {
+	function createCache(): CacheBackend {
+		return new NullCacheBackend();
+	}
+
+	test("get always returns undefined", async () => {
+		const cache = createCache();
+		await cache.set("key", "value");
+		expect(await cache.get("key")).toBeUndefined();
+	});
+
+	test("set is a no-op", async () => {
+		const cache = createCache();
+		await cache.set("key", "value");
+		expect(await cache.getSize()).toBe(0);
+	});
+
+	test("delete always returns false", async () => {
+		const cache = createCache();
+		expect(await cache.delete("key")).toBe(false);
+	});
+
+	test("deleteByPrefix always returns 0", async () => {
+		const cache = createCache();
+		expect(await cache.deleteByPrefix("prefix")).toBe(0);
+	});
+
+	test("clear is a no-op", async () => {
+		const cache = createCache();
+		await cache.clear();
+		expect(await cache.getSize()).toBe(0);
+	});
+
+	test("getSize always returns 0", async () => {
+		const cache = createCache();
+		expect(await cache.getSize()).toBe(0);
 	});
 });
