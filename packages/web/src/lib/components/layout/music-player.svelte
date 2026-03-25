@@ -29,6 +29,7 @@
     let duration = $state(0);
     let volume = $state(1);
     let loading: boolean = $state(true);
+    let seeking: boolean = $state(false);
 
     $effect(() => {
         const music = $playableMusic;
@@ -77,8 +78,13 @@
 
         // If the duration is a valid number, calculate and set the new time
         if (!Number.isNaN(duration)) {
+            seeking = true;
             // Svelte's two-way binding will update the audio element automatically
             currentTime = clickPosition * duration;
+            // Re-enable transition after the DOM has updated
+            requestAnimationFrame(() => {
+                seeking = false;
+            });
         }
     }
 </script>
@@ -126,7 +132,9 @@
         <Progress
             value={currentTime}
             max={duration}
-            class="w-full cursor-pointer"
+            class="w-full cursor-pointer {seeking
+                ? '**:data-[slot=progress-indicator]:transition-none!'
+                : ''}"
             onclick={seek}
         />
         <Button

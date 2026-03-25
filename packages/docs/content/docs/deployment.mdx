@@ -53,6 +53,7 @@ services:
         env_file: .env
         environment:
             - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
+      # - REDIS_URL=redis://redis:6379  # Uncomment to enable Redis caching
 
     db:
         image: postgres:17-alpine
@@ -74,9 +75,22 @@ services:
             retries: 10
             start_period: 3s
 
+    # Optional: uncomment to enable distributed caching with Redis
+    # redis:
+    #     image: redis:7-alpine
+    #     restart: unless-stopped
+    #     volumes:
+    #         - redis_data:/data
+    #     healthcheck:
+    #         test: [CMD, redis-cli, ping]
+    #         interval: 5s
+    #         timeout: 3s
+    #         retries: 5
+
 volumes:
     postgres_data:
     storage_data:
+    # redis_data:
 ```
     </Step>
     <Step>

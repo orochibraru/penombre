@@ -1,142 +1,66 @@
 import { dev } from "$app/environment";
 import { Logger } from "$lib/logger";
+import type { CacheBackend } from "$lib/server/cache";
+import {
+	getRedisClient,
+	MemoryCacheBackend,
+	NullCacheBackend,
+	RedisCacheBackend,
+} from "$lib/server/cache";
 
 const logger = new Logger("StorageCache");
 
 /**
- * Cache entry with value and expiration timestamp.
- */
-interface CacheEntry<T> {
-	value: T;
-	expiresAt: number;
-}
-
-/**
- * Simple in-memory cache with TTL support.
- * Per-user cache instances are stored in a global map.
- */
-class MemoryCache {
-	private cache = new Map<string, CacheEntry<unknown>>();
-	private readonly defaultTTL: number;
-
-	constructor(defaultTTLSeconds = 60) {
-		this.defaultTTL = defaultTTLSeconds * 1000;
-	}
-
-	/**
-	 * Get a value from cache.
-	 */
-	get<T>(key: string): T | undefined {
-		if (dev) {
-			return undefined;
-		}
-		const entry = this.cache.get(key);
-		if (!entry) {
-			return undefined;
-		}
-
-		if (Date.now() > entry.expiresAt) {
-			this.cache.delete(key);
-			return undefined;
-		}
-
-		return entry.value as T;
-	}
-
-	/**
-	 * Set a value in cache with optional TTL override.
-	 */
-	set<T>(key: string, value: T, ttlSeconds?: number): void {
-		if (dev) {
-			return;
-		}
-		const ttl = ttlSeconds ? ttlSeconds * 1000 : this.defaultTTL;
-		this.cache.set(key, {
-			value,
-			expiresAt: Date.now() + ttl,
-		});
-	}
-
-	/**
-	 * Delete a specific key from cache.
-	 */
-	delete(key: string): boolean {
-		return this.cache.delete(key);
-	}
-
-	/**
-	 * Delete all keys matching a prefix.
-	 */
-	deleteByPrefix(prefix: string): number {
-		let count = 0;
-		for (const key of this.cache.keys()) {
-			if (key.startsWith(prefix)) {
-				this.cache.delete(key);
-				count++;
-			}
-		}
-		return count;
-	}
-
-	/**
-	 * Clear all entries from cache.
-	 */
-	clear(): void {
-		this.cache.clear();
-	}
-
-	/**
-	 * Get the number of entries in cache.
-	 */
-	get size(): number {
-		return this.cache.size;
-	}
-}
-
-/**
- * Manager for user-specific memory caches with TTL support.
- * Provides instance methods for accessing and managing per-user cache instances.
+ * Manager for user-specific cache instances.
+ * Selects the appropriate backend (Redis, memory, or null) based on
+ * environment and configuration.
  */
 export class CacheManager {
-	/**
-	 * Cache store - one cache instance per user.
-	 * This ensures user data isolation while sharing memory efficiently.
-	 */
-	private userCaches = new Map<string, MemoryCache>();
+	private userCaches = new Map<string, CacheBackend>();
+	private redisUrl: string | undefined;
 
-	/**
-	 * Get or create a cache instance for a specific user.
-	 */
-	getUserCache(userId: string): MemoryCache {
+	constructor() {
+		this.redisUrl = process.env.REDIS_URL;
+	}
+
+	getUserCache(userId: string): CacheBackend {
 		let cache = this.userCaches.get(userId);
 		if (!cache) {
-			cache = new MemoryCache(30); // 30 seconds default TTL
+			cache = this.createBackend(userId);
 			this.userCaches.set(userId, cache);
 			logger.debug(`Created new cache for user ${userId}`);
 		}
 		return cache;
 	}
 
-	/**
-	 * Clear cache for a specific user.
-	 */
-	clearUserCache(userId: string): void {
+	async clearUserCache(userId: string): Promise<void> {
 		const cache = this.userCaches.get(userId);
 		if (cache) {
-			cache.clear();
+			await cache.clear();
 			logger.debug(`Cleared cache for user ${userId}`);
 		}
 	}
 
-	/**
-	 * Clear all user caches (useful for testing or admin operations).
-	 */
-	clearAllCaches(): void {
-		for (const cache of this.userCaches.values()) {
-			cache.clear();
-		}
+	async clearAllCaches(): Promise<void> {
+		await Promise.all(
+			Array.from(this.userCaches.values()).map((cache) => cache.clear()),
+		);
 		this.userCaches.clear();
 		logger.debug("Cleared all user caches");
+	}
+
+	private createBackend(userId: string): CacheBackend {
+		// In dev mode without Redis, disable caching to avoid stale data
+		if (dev && !this.redisUrl) {
+			return new NullCacheBackend();
+		}
+
+		if (this.redisUrl) {
+			const client = getRedisClient(this.redisUrl);
+			return new RedisCacheBackend(client, `penombre:cache:${userId}`, 30);
+		}
+
+		return new MemoryCacheBackend(30);
 	}
 }
 
@@ -179,5 +103,3 @@ export const CacheKeys = {
 	/** Key for the file ID → relative path index */
 	fileIdIndex: () => "file-id-index",
 };
-
-export type { MemoryCache };

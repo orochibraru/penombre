@@ -5,7 +5,7 @@ import concurrently, { type ConcurrentlyResult } from "concurrently";
 const tasks: ConcurrentlyResult = concurrently([
 	{
 		name: "db",
-		command: "docker compose up db",
+		command: "docker compose up",
 		prefixColor: "cyan",
 	},
 	{
