@@ -1,6 +1,10 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test } from "bun:test";
 import type Redis from "ioredis";
-import { RedisCacheBackend } from "./redis";
+import { closeRedis, getRedisClient, RedisCacheBackend } from "./redis";
+import { isRedisAvailable } from "./test-helpers";
+
+const redisUrl = process.env.REDIS_URL;
+const redisRunning = await isRedisAvailable(redisUrl);
 
 /**
  * Minimal in-memory mock of ioredis that satisfies the methods
@@ -57,7 +61,9 @@ describe("RedisCacheBackend", () => {
 	test("stores and retrieves a value", async () => {
 		const cache = createCache();
 		await cache.set("key1", { name: "hello" });
-		expect(await cache.get("key1")).toEqual({ name: "hello" });
+		expect(await cache.get<{ name: string }>("key1")).toEqual({
+			name: "hello",
+		});
 	});
 
 	test("stores and retrieves a Map value", async () => {
@@ -80,7 +86,7 @@ describe("RedisCacheBackend", () => {
 		const deleted = await cache.delete("key1");
 		expect(deleted).toBe(true);
 		expect(await cache.get("key1")).toBeUndefined();
-		expect(await cache.get("key2")).toBe("value2");
+		expect(await cache.get<string>("key2")).toBe("value2");
 	});
 
 	test("delete returns false for nonexistent key", async () => {
@@ -97,7 +103,7 @@ describe("RedisCacheBackend", () => {
 		expect(count).toBe(2);
 		expect(await cache.get("list:root")).toBeUndefined();
 		expect(await cache.get("list:sub")).toBeUndefined();
-		expect(await cache.get("meta:file1")).toBe("c");
+		expect(await cache.get<string>("meta:file1")).toBe("c");
 	});
 
 	test("clears all entries", async () => {
@@ -120,12 +126,91 @@ describe("RedisCacheBackend", () => {
 		const client = createMockRedis();
 		const cache = new RedisCacheBackend(client, "ns", 30);
 		await cache.set("key", "val");
-		expect(await cache.get("key")).toBe("val");
+		expect(await cache.get<string>("key")).toBe("val");
 	});
 
 	test("uses custom TTL when specified", async () => {
 		const cache = createCache();
 		await cache.set("key", "val", 120);
-		expect(await cache.get("key")).toBe("val");
+		expect(await cache.get<string>("key")).toBe("val");
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Integration tests — only run when a real Redis instance is available
+// ---------------------------------------------------------------------------
+
+describe.if(redisRunning)("RedisCacheBackend (integration)", () => {
+	const namespace = `penombre:test:${Date.now()}`;
+
+	function createCache() {
+		const client = getRedisClient(redisUrl);
+		return new RedisCacheBackend(client, namespace, 60);
+	}
+
+	afterAll(async () => {
+		// Clean up test keys then close the connection
+		const cache = createCache();
+		await cache.clear();
+		await closeRedis();
+	});
+
+	test("stores and retrieves a value", async () => {
+		const cache = createCache();
+		await cache.set("key1", { name: "hello" });
+		expect(await cache.get<{ name: string }>("key1")).toEqual({
+			name: "hello",
+		});
+	});
+
+	test("stores and retrieves a Map value", async () => {
+		const cache = createCache();
+		const map = new Map([
+			["a", 1],
+			["b", 2],
+		]);
+		await cache.set("integration:map", map);
+		const result = await cache.get<Map<string, number>>("integration:map");
+		expect(result).toBeInstanceOf(Map);
+		expect(result?.get("a")).toBe(1);
+		expect(result?.get("b")).toBe(2);
+	});
+
+	test("returns undefined for missing key", async () => {
+		const cache = createCache();
+		expect(await cache.get("nonexistent")).toBeUndefined();
+	});
+
+	test("deletes a key", async () => {
+		const cache = createCache();
+		await cache.set("del-me", "value");
+		expect(await cache.delete("del-me")).toBe(true);
+		expect(await cache.get("del-me")).toBeUndefined();
+	});
+
+	test("delete returns false for nonexistent key", async () => {
+		const cache = createCache();
+		expect(await cache.delete("nope")).toBe(false);
+	});
+
+	test("deletes entries by prefix", async () => {
+		const cache = createCache();
+		await cache.set("pfx:a", 1);
+		await cache.set("pfx:b", 2);
+		await cache.set("other", 3);
+		const count = await cache.deleteByPrefix("pfx:");
+		expect(count).toBe(2);
+		expect(await cache.get("pfx:a")).toBeUndefined();
+		expect(await cache.get<number>("other")).toBe(3);
+		await cache.delete("other");
+	});
+
+	test("clears all entries and reports correct size", async () => {
+		const cache = createCache();
+		await cache.set("s1", 1);
+		await cache.set("s2", 2);
+		expect(await cache.getSize()).toBeGreaterThanOrEqual(2);
+		await cache.clear();
+		expect(await cache.getSize()).toBe(0);
 	});
 });
