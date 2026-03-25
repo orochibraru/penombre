@@ -16,7 +16,9 @@ describe("MemoryCacheBackend", () => {
 	test("stores and retrieves a value", async () => {
 		const cache = createCache();
 		await cache.set("key1", { name: "hello" });
-		expect(await cache.get("key1")).toEqual({ name: "hello" });
+		expect(await cache.get<{ name: string }>("key1")).toEqual({
+			name: "hello",
+		});
 	});
 
 	test("returns undefined for expired entries", async () => {
@@ -33,7 +35,7 @@ describe("MemoryCacheBackend", () => {
 		const deleted = await cache.delete("key1");
 		expect(deleted).toBe(true);
 		expect(await cache.get("key1")).toBeUndefined();
-		expect(await cache.get("key2")).toBe("value2");
+		expect(await cache.get<string>("key2")).toBe("value2");
 	});
 
 	test("delete returns false for nonexistent key", async () => {
@@ -50,7 +52,7 @@ describe("MemoryCacheBackend", () => {
 		expect(count).toBe(2);
 		expect(await cache.get("list:root")).toBeUndefined();
 		expect(await cache.get("list:sub")).toBeUndefined();
-		expect(await cache.get("meta:file1")).toBe("c");
+		expect(await cache.get<string>("meta:file1")).toBe("c");
 	});
 
 	test("clears all entries", async () => {
@@ -106,10 +108,10 @@ describe("CacheManager", () => {
 		expect(await cache.getSize()).toBe(0);
 	});
 
-	test("clearUserCache is no-op for unknown user", () => {
+	test("clearUserCache is no-op for unknown user", async () => {
 		const manager = new CacheManager();
 		// Should not throw
-		manager.clearUserCache("nonexistent");
+		await manager.clearUserCache("nonexistent");
 	});
 
 	test("clears all user caches", async () => {

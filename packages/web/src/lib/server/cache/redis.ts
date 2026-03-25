@@ -47,8 +47,8 @@ export function getRedisClient(url?: string): Redis {
 	client.on("connect", () => {
 		console.info("[redis] Connected to Redis");
 	});
-	client.on("reconnecting", (delay) => {
-		console.warn("[redis] Reconnecting to Redis in", delay, "ms");
+	client.on("reconnecting", () => {
+		console.warn("[redis] Reconnecting to Redis...");
 	});
 	client.on("end", () => {
 		console.warn("[redis] Redis connection closed");
