@@ -7,7 +7,7 @@ import { cwd } from "node:process";
 // ---------------------------------------------------------------------------
 
 const mockGetPenombreConfig = mock(() => ({
-	storage: { backend: "local" as const },
+	storage: { backend: "local" as "local" | "s3" },
 	s3: undefined as unknown,
 }));
 
@@ -33,9 +33,7 @@ mock.module("./driver", () => ({
 // at test-run time (after all top-level code) allowing us to win the race.
 // ---------------------------------------------------------------------------
 
-// biome-ignore lint/style/useConst: populated by beforeAll
 let createUserStorageDriver!: (folder: string) => unknown;
-// biome-ignore lint/style/useConst: populated by beforeAll
 let DEFAULT_STORAGE_PATH!: string;
 
 beforeAll(async () => {
