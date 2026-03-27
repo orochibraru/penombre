@@ -11,4 +11,5 @@ export {
 	type StorageDriver,
 	type StorageDriverOptions,
 } from "./driver";
+export { migrateStorageMeta } from "./migrate-meta";
 export { type FileProxyRequest, StorageService } from "./service";
