@@ -66,7 +66,7 @@ mock.module("./cache", () => ({
 // ---------------------------------------------------------------------------
 import { getDb } from "$lib/server/db";
 
-const rawDb = getDb() as Record<string, unknown>;
+const rawDb = getDb() as unknown as Record<string, unknown>;
 
 /** Infinite proxy chain that resolves to `value` when awaited. */
 function makeChain(value: unknown[] = []): unknown {
@@ -670,8 +670,11 @@ describe("StorageService", () => {
 			expect(result.total).toBe(2);
 			expect(result.count).toBe(2);
 			// Folders are preferred when name matches
+			// @ts-expect-error - type is ObjectItem[] but we know the order here
 			expect(result.list[0].type).toBe("folder");
+			// @ts-expect-error - type is ObjectItem[] but we know the order here
 			expect(result.list[0].metadata.name).toBe("reports");
+			// @ts-expect-error - type is ObjectItem[] but we know the order here
 			expect(result.list[1].type).toBe("file");
 		});
 
@@ -689,6 +692,7 @@ describe("StorageService", () => {
 			const service = new StorageService(testUser);
 			const result = await service.searchFiles("doc");
 
+			// @ts-expect-error - type is ObjectItem[] but we know the order here
 			expect(result.list[0].metadata.name).toBe("doc");
 		});
 
@@ -727,7 +731,9 @@ describe("StorageService", () => {
 			expect(result.count).toBe(2);
 			expect(result.total).toBe(2);
 			// Folders come first in the result (folders are prepended)
+			// @ts-expect-error - type is ObjectItem[] but we know the order here
 			expect(result.list[0].type).toBe("folder");
+			// @ts-expect-error - type is ObjectItem[] but we know the order here
 			expect(result.list[1].type).toBe("file");
 		});
 
