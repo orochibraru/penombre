@@ -9,9 +9,10 @@
 import { existsSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
+import { inArray } from "drizzle-orm";
 import { Logger } from "$lib/logger";
 import { getDb } from "$lib/server/db";
-import { files, folders } from "$lib/server/db/schema";
+import { files, folders, user } from "$lib/server/db/schema";
 import { DEFAULT_STORAGE_PATH } from "./constants";
 
 const logger = new Logger("MigrateStorageMeta");
@@ -138,9 +139,9 @@ async function collectFileItems(
 	return result;
 }
 
-export async function migrateStorageMeta(): Promise<void> {
-	const storagePath = DEFAULT_STORAGE_PATH;
-
+export async function migrateStorageMeta(
+	storagePath = DEFAULT_STORAGE_PATH,
+): Promise<void> {
 	if (!existsSync(storagePath)) {
 		return;
 	}
@@ -163,10 +164,23 @@ export async function migrateStorageMeta(): Promise<void> {
 	if (userDirs.length === 0) return;
 
 	const db = getDb();
+
+	// Only migrate data for users that actually exist in the database.
+	// Directories for deleted/orphaned users are silently skipped.
+	const userIds = userDirs.map((d) => d.userId);
+	const existingUsers = await db
+		.select({ id: user.id })
+		.from(user)
+		.where(inArray(user.id, userIds));
+	const existingUserIds = new Set(existingUsers.map((u) => u.id));
+	const validUserDirs = userDirs.filter((d) => existingUserIds.has(d.userId));
+
+	if (validUserDirs.length === 0) return;
+
 	let totalFolders = 0;
 	let totalFiles = 0;
 
-	for (const { userId, absPath: userRoot } of userDirs) {
+	for (const { userId, absPath: userRoot } of validUserDirs) {
 		const folderItems = await collectFolderItems(userRoot, userRoot);
 		const folderPathToId = new Map<string, string>();
 
