@@ -1,5 +1,5 @@
-import { LocalStorageDriver } from "./drivers/local";
-import { S3StorageDriver } from "./drivers/s3";
+import { LocalStorageDriver } from "$lib/server/services/storage/drivers/local";
+import { S3StorageDriver } from "$lib/server/services/storage/drivers/s3";
 
 /**
  * Unified interface for all storage backends (local filesystem, S3-compatible).

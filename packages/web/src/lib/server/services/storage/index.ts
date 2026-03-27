@@ -1,5 +1,9 @@
 export { CacheKeys, CacheManager } from "./cache";
-export { DEFAULT_STORAGE_PATH, logger } from "./constants";
+export {
+	createUserStorageDriver,
+	DEFAULT_STORAGE_PATH,
+	logger,
+} from "./constants";
 export {
 	createStorageDriver,
 	type LocalDriverConfig,
