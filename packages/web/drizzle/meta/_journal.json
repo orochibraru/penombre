@@ -57,6 +57,13 @@
 			"when": 1774437464889,
 			"tag": "0007_reflective_fenris",
 			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1774611552602,
+			"tag": "0008_superb_puma",
+			"breakpoints": true
 		}
 	]
 }
