@@ -1,4 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
+import type { S3DriverConfig } from "$lib/server/services/storage/driver";
 import { LocalStorageDriver } from "$lib/server/services/storage/drivers/local";
 import { S3StorageDriver } from "$lib/server/services/storage/drivers/s3";
 
@@ -13,11 +14,18 @@ mock.module("./driver", () => ({
 	createStorageDriver: (config: {
 		backend: string;
 		local?: { storagePath: string };
-		s3?: unknown;
+		s3?: S3DriverConfig;
 	}) => {
-		if (config.backend === "local")
-			return new LocalStorageDriver(config.local!.storagePath);
-		if (config.backend === "s3") return new S3StorageDriver(config.s3!);
+		if (config.backend === "local") {
+			// @ts-expect-error test file
+			return new LocalStorageDriver(config.local.storagePath);
+		}
+		if (config.backend === "s3") {
+			if (!config.s3) {
+				throw new Error("Missing S3 config");
+			}
+			return new S3StorageDriver(config.s3);
+		}
 		throw new Error(`Unsupported backend: ${config.backend}`);
 	},
 }));
