@@ -112,12 +112,12 @@ jobs:
   # ===========================================
   docker:
     name: Docker
-    needs: changes
-    if: needs.changes.outputs.docker == 'true'
     uses: ./.github/workflows/docker.yaml
     with:
-      publish: false
+      publish: true
       image-name: orochibraru/penombre
+    secrets:
+      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}
 
   # ===========================================
   # Docs: Build & type-check — only when docs change

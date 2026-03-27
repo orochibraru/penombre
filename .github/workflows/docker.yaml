@@ -40,11 +40,22 @@ jobs:
         run: |
           echo ${{ steps.platforms.outputs.matrix }}
 
+      - name: Compute branch tag
+        id: branch
+        run: |
+          tag="${{ github.head_ref || github.ref_name }}"
+          echo "tag=$(echo "$tag" | sed 's/[^a-zA-Z0-9._-]/-/g')" >> $GITHUB_OUTPUT
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v6
         with:
           images: ${{ inputs.image-name }}
+          tags: |
+            type=raw,value=${{ steps.branch.outputs.tag }},enable=${{ github.event_name == 'pull_request' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
       - name: Rename meta bake definition file
         run: |
