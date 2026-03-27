@@ -15,7 +15,7 @@ import { getDb } from "$lib/server/db";
 import { files, folders, user } from "$lib/server/db/schema";
 import { DEFAULT_STORAGE_PATH } from "./constants";
 
-const logger = new Logger("StorageMetaMigrator");
+const logger = new Logger("StorageMetaMigration");
 
 interface OldMeta {
 	id: string;
