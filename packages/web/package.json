@@ -17,7 +17,7 @@
 	},
 	"devDependencies": {
 		"@inlang/cli": "^3.1.9",
-		"@inlang/paraglide-js": "^2.15.0",
+		"@inlang/paraglide-js": "^2.15.1",
 		"@shikijs/langs": "^4.0.2",
 		"@shikijs/themes": "^4.0.2",
 		"@sveltejs/adapter-static": "^3.0.10",
