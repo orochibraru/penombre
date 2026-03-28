@@ -28,6 +28,18 @@ else
     exit 1
 fi
 
+# Formatting is bound to change some files, let's check out which ones and stage them if needed
+FORMATTED_FILES=$(git diff --name-only --diff-filter=ACM)
 
-echo "Staging changes..."
-git add .
+if [[ -z "$FORMATTED_FILES" ]]; then
+    echo "No files were formatted."
+    exit 0
+fi
+
+# Loop over the staged files and add any changes made by the pre-commit hooks
+for file in $FORMATTED_FILES; do
+    if [[ -f "$file" ]]; then
+        echo "Staging changes for $file after formatting."
+        git add "$file"
+    fi
+done
