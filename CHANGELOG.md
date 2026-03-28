@@ -1,3 +1,20 @@
+## [1.8.6](https://github.com/orochibraru/penombre/compare/v1.8.5...v1.8.6) (2026-03-28)
+
+
+### Features
+
+* add support for docker, github-actions, and docker-compose in dependabot configuration ([c48cc27](https://github.com/orochibraru/penombre/commit/c48cc2784fbb37fb7a238b8511b59887c9cc6de9))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.6
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.5](https://github.com/orochibraru/penombre/compare/v1.8.4...v1.8.5) (2026-03-28)
 
 
