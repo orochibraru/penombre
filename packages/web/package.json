@@ -12,8 +12,10 @@
 		"gen:api": "bun run scripts/generate-openapi.ts && openapi-typescript ./src/lib/api/v1.json -o ./src/lib/api/v1.d.ts",
 		"gen:routes": "kit-routes sync",
 		"db:generate": "drizzle-kit generate",
+		"migrate:storage": "bun run scripts/migrate-storage-meta.ts",
 		"gen:env": "bun run scripts/generate-env-example.ts",
-		"machine-translate": "inlang machine translate --project project.inlang"
+		"machine-translate": "inlang machine translate --project project.inlang",
+		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
 		"@inlang/cli": "^3.1.9",
@@ -52,6 +54,7 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
+		"@aws-sdk/client-s3": "^3.1018.0",
 		"@better-auth/api-key": "^1.5.5",
 		"@better-auth/core": "^1.5.5",
 		"@better-auth/expo": "^1.5.5",

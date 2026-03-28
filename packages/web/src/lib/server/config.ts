@@ -81,6 +81,21 @@ const penombreConfigSchema = z
 				secure: z.boolean(),
 			})
 			.optional(),
+		storage: z
+			.object({
+				backend: z.enum(["local", "s3"]).default("local"),
+			})
+			.default({ backend: "local" }),
+		s3: z
+			.object({
+				endpoint: z.string().optional(),
+				region: z.string().default("us-east-1"),
+				bucket: z.string().min(1),
+				accessKeyId: z.string().min(1),
+				secretAccessKey: z.string().min(1),
+				pathStyle: z.boolean().default(false),
+			})
+			.optional(),
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
@@ -137,6 +152,14 @@ const penombreConfigSchema = z
 					});
 				}
 			}
+		}
+
+		if (config.storage?.backend === "s3" && !config.s3) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"S3 configuration (S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY) is required when STORAGE_BACKEND=s3",
+			});
 		}
 	});
 
@@ -203,6 +226,14 @@ export function getPenombreConfig(): PenombreConfig {
 
 	const smtpEnabled = env.SMTP_ENABLED === "true";
 
+	const storageBackend = env.STORAGE_BACKEND === "s3" ? "s3" : "local";
+
+	const s3Bucket = env.S3_BUCKET;
+	const s3AccessKeyId = env.S3_ACCESS_KEY_ID;
+	const s3SecretAccessKey = env.S3_SECRET_ACCESS_KEY;
+	const anyS3VariableConfigured =
+		s3Bucket || s3AccessKeyId || s3SecretAccessKey;
+
 	const anyDbVariableConfigured = env.DATABASE_URL;
 
 	const anyAuthVariableConfigured =
@@ -254,6 +285,17 @@ export function getPenombreConfig(): PenombreConfig {
 				}
 			: defaultConfigValues.auth,
 		redis: redisUrl ? { url: redisUrl } : defaultConfigValues.redis,
+		storage: { backend: storageBackend },
+		s3: anyS3VariableConfigured
+			? {
+					endpoint: env.S3_ENDPOINT || undefined,
+					region: env.S3_REGION || "us-east-1",
+					bucket: s3Bucket,
+					accessKeyId: s3AccessKeyId,
+					secretAccessKey: s3SecretAccessKey,
+					pathStyle: env.S3_PATH_STYLE === "true",
+				}
+			: undefined,
 		smtp: smtpEnabled
 			? {
 					enabled: env.SMTP_ENABLED === "true",
@@ -273,4 +315,9 @@ export function getPenombreConfig(): PenombreConfig {
 export function isSmtpEnabled(): boolean {
 	const config = getPenombreConfig();
 	return config.smtp !== undefined;
+}
+
+export function isS3Backend(): boolean {
+	const config = getPenombreConfig();
+	return config.storage.backend === "s3";
 }

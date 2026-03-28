@@ -36,6 +36,9 @@ export const defaultConfigValues = {
 		from: "noreply@example.com",
 		secure: false,
 	},
+	storage: {
+		backend: "local" as "local" | "s3",
+	},
 };
 
 export function generateExampleDotenvFile(): string {
@@ -106,6 +109,28 @@ OAUTH_DEFAULT_SCOPES=openid,profile,email
 # Redis (Optional - for distributed caching)
 # ===========================================
 # REDIS_URL=redis://localhost:6379
+
+# ===========================================
+# Storage Backend
+# ===========================================
+# Backend to use for file storage: "local" (default) or "s3"
+STORAGE_BACKEND=local
+
+# Local storage path (used for both backends: files on local, thumbnails on s3)
+# STORAGE_PATH=/data/storage
+
+# ===========================================
+# S3-compatible Storage (required when STORAGE_BACKEND=s3)
+# ===========================================
+# Works with AWS S3, MinIO, Cloudflare R2, Backblaze B2, and any S3-compatible API.
+# S3_BUCKET=my-bucket
+# S3_ACCESS_KEY_ID=your-access-key-id
+# S3_SECRET_ACCESS_KEY=your-secret-access-key
+# S3_REGION=us-east-1
+# Custom endpoint for S3-compatible providers (omit for AWS S3):
+# S3_ENDPOINT=https://s3.example.com
+# Use path-style URLs (required for MinIO and some providers):
+# S3_PATH_STYLE=false
 
 # ===========================================
 # SMTP (Optional - for email features)

@@ -13,7 +13,14 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
       - LOG_LEVEL=debug
-      # - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://redis:6379
+      - STORAGE_BACKEND=s3
+      - S3_ENDPOINT=http://localstack:4566
+      - S3_REGION=us-east-1
+      - S3_BUCKET=penombre
+      - S3_ACCESS_KEY_ID=test
+      - S3_SECRET_ACCESS_KEY=test
+      - S3_PATH_STYLE=true
 
   db:
     image: postgres:17-alpine
@@ -50,22 +57,16 @@ services:
       timeout: 3s
       retries: 5
 
-  localstack:
-    image: localstack/localstack
+  garage:
+    build:
+      context: .
+      dockerfile: docker/garage.Dockerfile
     restart: unless-stopped
     ports:
-      - 4566:4566
-    environment:
-      - SERVICES=s3
-      - AWS_DEFAULT_REGION=us-east-1
+      - 3900:3900
     volumes:
-      - localstack_data:/var/lib/localstack
-    healthcheck:
-      test: [CMD, curl, -f, "http://localhost:4566/_localstack/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 5s
+      - garage_meta:/var/lib/garage/meta/
+      - garage_data:/var/lib/garage/data/
 
 volumes:
   postgres_data:
@@ -74,5 +75,7 @@ volumes:
     driver: local
   redis_data:
     driver: local
-  localstack_data:
+  garage_meta:
+    driver: local
+  garage_data:
     driver: local
