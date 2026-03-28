@@ -16,7 +16,7 @@
 		"machine-translate": "inlang machine translate --project project.inlang"
 	},
 	"devDependencies": {
-		"@inlang/cli": "^3.1.7",
+		"@inlang/cli": "^3.1.9",
 		"@inlang/paraglide-js": "^2.15.0",
 		"@shikijs/langs": "^4.0.2",
 		"@shikijs/themes": "^4.0.2",
@@ -68,7 +68,7 @@
 		"layerchart": "2.0.0-next.46",
 		"mode-watcher": "^1.1.0",
 		"music-metadata": "^11.12.3",
-		"nodemailer": "^8.0.2",
+		"nodemailer": "^8.0.4",
 		"openapi-fetch": "^0.17.0",
 		"paneforge": "1.0.2",
 		"postgres": "^3.4.8",
