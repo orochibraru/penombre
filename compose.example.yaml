@@ -49,10 +49,29 @@ services:
       timeout: 3s
       retries: 5
 
+  localstack:
+    image: localstack/localstack
+    restart: unless-stopped
+    ports:
+      - 4566:4566
+    environment:
+      - SERVICES=s3
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: [CMD, curl, -f, "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
 volumes:
   postgres_data:
     driver: local
   storage_data:
     driver: local
   redis_data:
+    driver: local
+  localstack_data:
     driver: local
