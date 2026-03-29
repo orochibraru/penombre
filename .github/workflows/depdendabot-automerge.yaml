@@ -14,7 +14,7 @@ permissions:
 jobs:
   dependabot:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'orochibraru/penombre'
+    if: (github.event_name == 'schedule' || github.event.pull_request.user.login == 'dependabot[bot]') && github.repository == 'orochibraru/penombre'
     steps:
       - name: Dependabot metadata
         id: metadata

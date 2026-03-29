@@ -1,3 +1,20 @@
+## [1.8.7](https://github.com/orochibraru/penombre/compare/v1.8.6...v1.8.7) (2026-03-28)
+
+
+### Bug Fixes
+
+* automerge cron ([b4e041f](https://github.com/orochibraru/penombre/commit/b4e041f88e2d00e8cd37b9ab229e48c02c566143))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.7
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.6](https://github.com/orochibraru/penombre/compare/v1.8.5...v1.8.6) (2026-03-28)
 
 
