@@ -3,6 +3,7 @@ on:
   pull_request:
   schedule:
     - cron: "*/5 * * * *"
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -14,7 +15,7 @@ permissions:
 jobs:
   auto-update:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' && github.repository == 'orochibraru/penombre'
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository == 'orochibraru/penombre'
     steps:
       - uses: actions/checkout@v5
       - name: Auto-update branch for Dependabot PRs
