@@ -6,10 +6,10 @@ on:
       - main
     tags-ignore:
       - "v*.*.*"
-    paths-ignore:
-      - ".husky/**"
-      - "packages/docs/**"
-      - "**/*.md"
+    paths:
+      - "packages/**"
+      - "bun.lock"
+      - "Dockerfile"
 
 concurrency:
   group: release
