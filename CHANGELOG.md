@@ -1,3 +1,21 @@
+## [1.8.9](https://github.com/orochibraru/penombre/compare/v1.8.8...v1.8.9) (2026-03-30)
+
+
+### Bug Fixes
+
+* don't trigger releases unless a package changed ([f5dc5e9](https://github.com/orochibraru/penombre/commit/f5dc5e9aa682d949ab6def4d3482f7f35c8e1db7))
+* trigger releases on dockerfile changes ([f5b7c72](https://github.com/orochibraru/penombre/commit/f5b7c7223ce1b94287a5b489ae9b8f50301b7b0e))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.9
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.8](https://github.com/orochibraru/penombre/compare/v1.8.7...v1.8.8) (2026-03-30)
 
 
