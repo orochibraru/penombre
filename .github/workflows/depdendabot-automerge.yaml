@@ -2,7 +2,8 @@ name: Dependabot auto-merge
 on:
   pull_request:
   schedule:
-    - cron: "0 12 * * *"
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -12,6 +13,17 @@ permissions:
   pull-requests: write
 
 jobs:
+  auto-update:
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository == 'orochibraru/penombre'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Auto-update branch for Dependabot PRs
+        run: gh pr update-branch "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
   dependabot:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'orochibraru/penombre'
@@ -21,12 +33,6 @@ jobs:
         uses: dependabot/fetch-metadata@v2
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Auto-update branch for Dependabot PRs
-        run: gh pr update-branch "$PR_URL"
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Enable auto-merge for Dependabot PRs
         if: steps.metadata.outputs.update-type == 'version-update:semver-patch'

@@ -1,3 +1,56 @@
+## [1.8.9](https://github.com/orochibraru/penombre/compare/v1.8.8...v1.8.9) (2026-03-30)
+
+
+### Bug Fixes
+
+* don't trigger releases unless a package changed ([f5dc5e9](https://github.com/orochibraru/penombre/commit/f5dc5e9aa682d949ab6def4d3482f7f35c8e1db7))
+* trigger releases on dockerfile changes ([f5b7c72](https://github.com/orochibraru/penombre/commit/f5b7c7223ce1b94287a5b489ae9b8f50301b7b0e))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.9
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
+## [1.8.8](https://github.com/orochibraru/penombre/compare/v1.8.7...v1.8.8) (2026-03-30)
+
+
+### Bug Fixes
+
+* ci schedule ([03e78ff](https://github.com/orochibraru/penombre/commit/03e78ff8aa67aad8e8096ac9dbdddbc16b098516))
+* dependabot conditions ([13596bb](https://github.com/orochibraru/penombre/commit/13596bb2696a8b834e9b63bd976f43ff557c5305))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.8
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
+## [1.8.7](https://github.com/orochibraru/penombre/compare/v1.8.6...v1.8.7) (2026-03-28)
+
+
+### Bug Fixes
+
+* automerge cron ([b4e041f](https://github.com/orochibraru/penombre/commit/b4e041f88e2d00e8cd37b9ab229e48c02c566143))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.7
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.6](https://github.com/orochibraru/penombre/compare/v1.8.5...v1.8.6) (2026-03-28)
 
 

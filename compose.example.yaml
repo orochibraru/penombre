@@ -15,7 +15,7 @@ services:
       - REDIS_URL=redis://redis:6379
 
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     ports:
       - 5432:5432
@@ -37,7 +37,7 @@ services:
       start_period: 3s
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     restart: unless-stopped
     ports:
       - 6379:6379
@@ -49,29 +49,10 @@ services:
       timeout: 3s
       retries: 5
 
-  localstack:
-    image: localstack/localstack
-    restart: unless-stopped
-    ports:
-      - 4566:4566
-    environment:
-      - SERVICES=s3
-      - AWS_DEFAULT_REGION=us-east-1
-    volumes:
-      - localstack_data:/var/lib/localstack
-    healthcheck:
-      test: [CMD, curl, -f, "http://localhost:4566/_localstack/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 5s
-
 volumes:
   postgres_data:
     driver: local
   storage_data:
     driver: local
   redis_data:
-    driver: local
-  localstack_data:
     driver: local
