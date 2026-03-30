@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository == 'orochibraru/penombre'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Auto-update branch for Dependabot PRs
         run: gh pr update-branch "$PR_URL"
         env:
