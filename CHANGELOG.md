@@ -1,3 +1,21 @@
+## [1.8.8](https://github.com/orochibraru/penombre/compare/v1.8.7...v1.8.8) (2026-03-30)
+
+
+### Bug Fixes
+
+* ci schedule ([03e78ff](https://github.com/orochibraru/penombre/commit/03e78ff8aa67aad8e8096ac9dbdddbc16b098516))
+* dependabot conditions ([13596bb](https://github.com/orochibraru/penombre/commit/13596bb2696a8b834e9b63bd976f43ff557c5305))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.8
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.7](https://github.com/orochibraru/penombre/compare/v1.8.6...v1.8.7) (2026-03-28)
 
 
