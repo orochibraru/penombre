@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import type { CacheBackend } from "$lib/server/cache";
 import {
+	type CacheBackend,
 	closeRedis,
 	MemoryCacheBackend,
 	NullCacheBackend,
 } from "$lib/server/cache";
 import { isRedisAvailable } from "$lib/server/cache/test-helpers";
-import { CacheKeys, CacheManager } from "./cache";
+import { CacheKeys, CacheManager } from "$lib/server/services/storage/cache";
 
 const redisUrl = process.env.REDIS_URL;
 const redisRunning = await isRedisAvailable(redisUrl);
