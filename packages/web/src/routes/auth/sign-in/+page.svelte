@@ -40,7 +40,11 @@
 
         if (error) {
             loading = false;
-            throw new Error(error.message ? String(error.message) : "Error signing in with passkey");
+            throw new Error(
+                error.message
+                    ? String(error.message)
+                    : "Error signing in with passkey",
+            );
         }
 
         goto(resolve("/"), { replaceState: true, invalidateAll: true });
