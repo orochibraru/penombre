@@ -28,7 +28,7 @@ export class Email {
 		this.content = content;
 
 		const smtpConfig = getPenombreConfig().smtp;
-		if (!smtpConfig || !smtpConfig.enabled) {
+		if (!smtpConfig?.enabled) {
 			logger.error("SMTP configuration is not defined or not enabled");
 			throw new Error("SMTP configuration is not defined or not enabled");
 		}
