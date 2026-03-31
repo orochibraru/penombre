@@ -1,6 +1,7 @@
 <script lang="ts">
     import "../app.css";
 
+    import { pwaInfo } from "virtual:pwa-info";
     import { ModeWatcher } from "mode-watcher";
     import { onMount } from "svelte";
     import { browser } from "$app/environment";
@@ -10,6 +11,7 @@
     import { title } from "$lib/store/title";
 
     let { children, data } = $props();
+    let webManifestLink = $state<string>("");
 
     onNavigate((navigation) => {
         if (!browser) return;
@@ -24,23 +26,8 @@
         });
     });
 
-    onMount(() => {
-        if (!browser) return;
-
-        // // Hide the loader once the app is mounted with a smooth fade out
-        // const loader = document.getElementById("svelte-loader");
-        // if (loader) {
-        //     // Ensure opacity starts at 1, then transition to 0
-        //     loader.style.opacity = "1";
-        //     requestAnimationFrame(() => {
-        //         requestAnimationFrame(() => {
-        //             loader.style.opacity = "0";
-        //             setTimeout(() => {
-        //                 loader.style.display = "none";
-        //             }, 300);
-        //         });
-        //     });
-        // }
+    $effect(() => {
+        webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : "";
     });
 </script>
 
@@ -48,6 +35,7 @@
 
 <svelte:head>
     <title>{data.config.appName} - {$title ?? "Home"}</title>
+    {@html webManifestLink}
 </svelte:head>
 
 <TopLoadingbar />
