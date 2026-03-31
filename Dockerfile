@@ -17,6 +17,16 @@ COPY packages/docs/package.json ${DOCS_DIR}/
 
 RUN bun i --frozen-lockfile --ignore-scripts
 
+FROM builder AS test-runner
+
+COPY ./packages/web ${FRONTEND_DIR}
+COPY ./tsconfig.json /app/
+COPY ./bunfig.toml /app/
+
+RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync
+
+CMD ["bun", "test", ".test."]
+
 FROM builder AS frontend-builder
 
 COPY ./packages/web ${FRONTEND_DIR}
