@@ -83,7 +83,7 @@
 
         if (error) {
             if (error.message) {
-                throw new Error(error.message);
+                throw new Error(String(error.message));
             }
             throw new Error("Failed to register passkey");
         }

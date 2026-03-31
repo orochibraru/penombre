@@ -42,5 +42,9 @@
 	},
 	"workspaces": [
 		"packages/*"
-	]
+	],
+	"overrides": {
+		"@better-auth/core": "1.5.6",
+		"@better-auth/utils": "0.3.1"
+	}
 }
