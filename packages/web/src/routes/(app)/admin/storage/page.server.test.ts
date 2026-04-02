@@ -1,13 +1,6 @@
 import type { Mock } from "bun:test";
-import { describe, expect, mock, test } from "bun:test";
-
-mock.module("$lib/server/services/storage", () => ({
-	StorageService: {
-		getAvailableStorageSize: mock(() => 1073741824),
-	},
-}));
-
-const { StorageService } = await import("$lib/server/services/storage");
+import { describe, expect, test } from "bun:test";
+import { StorageService } from "$lib/server/services/storage";
 
 const mockGetAvailableStorageSize =
 	StorageService.getAvailableStorageSize as unknown as Mock<
