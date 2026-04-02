@@ -15,6 +15,7 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check --fix . && bun run format",
 		"format": "biome format . --write",
+		"test:docker": "docker-compose -f compose.test.yaml up --build",
 		"format:check": "biome format .",
 		"circular": "bun run ./scripts/circular.ts",
 		"backup": "./scripts/backup.sh",

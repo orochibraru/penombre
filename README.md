@@ -185,6 +185,8 @@ bun run build        # Build all packages
 bun run lint         # Lint with Biome
 bun run lint:fix     # Lint and fix issues
 bun run check        # Type-check all packages
+bun test             # Run tests with Bun's test runner
+bun run test:docker  # Run tests in a Docker container (Simulates CI environment w/ Redis)
 
 # Web package (packages/web)
 bun run dev          # Start Vite dev server
