@@ -103,7 +103,7 @@ jobs:
         run: bun run format:check
 
       - name: Test
-        run: bun test .test.
+        run: bun test .test. --only-failures
         env:
           REDIS_URL: redis://localhost:6379
 
