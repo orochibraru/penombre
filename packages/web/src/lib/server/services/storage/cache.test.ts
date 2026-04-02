@@ -14,7 +14,7 @@ import {
 	NullCacheBackend,
 } from "$lib/server/cache";
 import { isRedisAvailable } from "$lib/server/cache/test-helpers";
-import { CacheKeys, CacheManager } from "./cache";
+import { CacheKeys, CacheManager } from "../storage/cache";
 
 const redisUrl = process.env.REDIS_URL;
 const redisRunning = await isRedisAvailable(redisUrl);
