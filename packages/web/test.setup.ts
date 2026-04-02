@@ -59,17 +59,7 @@ mock.module("$lib/logger", () => ({
 	},
 }));
 
-// Dynamically import real CacheManager/CacheKeys AFTER logger mock is registered.
-// Bun on AMD64 resolves sub-path imports (e.g. "$lib/server/services/storage/cache")
-// by prefix-matching against registered barrel mocks. Including the real implementations
-// here ensures that cache tests get the correct exports regardless of architecture.
-const { CacheManager, CacheKeys } = await import(
-	"$lib/server/services/storage/cache"
-);
-
 mock.module("$lib/server/services/storage", () => ({
-	CacheManager,
-	CacheKeys,
 	StorageService: {
 		getAvailableStorageSize: mock(() => 1073741824),
 	},
