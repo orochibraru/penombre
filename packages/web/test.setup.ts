@@ -50,12 +50,6 @@ mock.module("$lib/server/config", () => ({
 	})),
 }));
 
-mock.module("$lib/server/services/storage", () => ({
-	StorageService: {
-		getAvailableStorageSize: mock(() => 1073741824),
-	},
-}));
-
 mock.module("$lib/logger", () => ({
 	Logger: class {
 		debug() {}
