@@ -72,16 +72,6 @@ jobs:
   ts-lint-test:
     name: TypeScript Lint & Test
     runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:8-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v6
 
@@ -103,9 +93,7 @@ jobs:
         run: bun run format:check
 
       - name: Test
-        run: bun test .test. --only-failures
-        env:
-          REDIS_URL: redis://localhost:6379
+        run: bun run test:docker
 
   # ===========================================
   # Docker: Build — only when Docker files change
