@@ -25,7 +25,7 @@ COPY ./bunfig.toml /app/
 
 RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync
 
-CMD ["bun", "test", ".test."]
+CMD ["bun", "test", ".test.", "--only-failures"]
 
 FROM builder AS frontend-builder
 
