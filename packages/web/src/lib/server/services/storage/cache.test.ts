@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import {
+	afterAll,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	jest,
+	test,
+} from "bun:test";
 import {
 	type CacheBackend,
 	closeRedis,
@@ -11,10 +19,21 @@ import { CacheKeys, CacheManager } from "$lib/server/services/storage/cache";
 const redisUrl = process.env.REDIS_URL;
 const redisRunning = await isRedisAvailable(redisUrl);
 
+// Fixed origin so all time-based tests are fully deterministic.
+const BASE_TIME = 1_000_000;
+
 describe("MemoryCacheBackend", () => {
 	function createCache(): CacheBackend {
 		return new MemoryCacheBackend(30);
 	}
+
+	beforeEach(() => {
+		jest.setSystemTime(BASE_TIME);
+	});
+
+	afterEach(() => {
+		jest.restoreAllMocks();
+	});
 
 	test("returns undefined for missing key", async () => {
 		const cache = createCache();
@@ -29,10 +48,17 @@ describe("MemoryCacheBackend", () => {
 		});
 	});
 
+	test("returns value before TTL elapses", async () => {
+		const cache = createCache();
+		await cache.set("key1", "value", 1); // 1 second TTL
+		jest.setSystemTime(BASE_TIME + 999); // 1 ms before expiry
+		expect(await cache.get<string>("key1")).toBe("value");
+	});
+
 	test("returns undefined for expired entries", async () => {
 		const cache = createCache();
-		await cache.set("key1", "value", 0.001); // 1ms TTL
-		await new Promise((r) => setTimeout(r, 10));
+		await cache.set("key1", "value", 1); // 1 second TTL
+		jest.setSystemTime(BASE_TIME + 1_001); // 1 ms past expiry
 		expect(await cache.get("key1")).toBeUndefined();
 	});
 
@@ -81,26 +107,29 @@ describe("MemoryCacheBackend", () => {
 });
 
 describe("CacheManager", () => {
-	const savedRedisUrl = process.env.REDIS_URL;
+	let savedRedisUrl: string | undefined;
 
-	beforeAll(() => {
+	beforeEach(() => {
+		savedRedisUrl = process.env.REDIS_URL;
 		delete process.env.REDIS_URL;
 	});
 
-	afterAll(() => {
+	afterEach(() => {
 		if (savedRedisUrl !== undefined) {
 			process.env.REDIS_URL = savedRedisUrl;
+		} else {
+			delete process.env.REDIS_URL;
 		}
 	});
 
-	test("creates and returns the same cache for a user (memory)", () => {
+	test("creates and returns the same cache instance for a user", () => {
 		const manager = new CacheManager();
 		const cache1 = manager.getUserCache("user-1");
 		const cache2 = manager.getUserCache("user-1");
 		expect(cache1).toBe(cache2);
 	});
 
-	test("creates separate caches for different users (memory)", async () => {
+	test("creates separate cache instances for different users", async () => {
 		const manager = new CacheManager();
 		const cache1 = manager.getUserCache("user-1");
 		const cache2 = manager.getUserCache("user-2");
@@ -108,7 +137,7 @@ describe("CacheManager", () => {
 		expect(await cache2.get("key")).toBeUndefined();
 	});
 
-	test("clears cache for a specific user (memory)", async () => {
+	test("clears cache for a specific user", async () => {
 		const manager = new CacheManager();
 		const cache = manager.getUserCache("user-1");
 		await cache.set("key", "value");
@@ -116,22 +145,28 @@ describe("CacheManager", () => {
 		expect(await cache.getSize()).toBe(0);
 	});
 
-	test("clearUserCache is no-op for unknown user (memory)", async () => {
+	test("clearUserCache is a no-op for an unknown user", async () => {
 		const manager = new CacheManager();
-		// Should not throw
-		await manager.clearUserCache("nonexistent");
+		await expect(
+			manager.clearUserCache("nonexistent"),
+		).resolves.toBeUndefined();
 	});
 
-	test("clears all user caches (memory)", async () => {
+	test("clearAllCaches empties every user cache and resets the registry", async () => {
 		const manager = new CacheManager();
 		const c1 = manager.getUserCache("user-1");
 		const c2 = manager.getUserCache("user-2");
 		await c1.set("a", 1);
 		await c2.set("b", 2);
 		await manager.clearAllCaches();
-		// After clearAll, getting a cache creates a new empty one
-		const c3 = manager.getUserCache("user-1");
-		expect(await c3.getSize()).toBe(0);
+		// New instance created after reset starts empty
+		expect(await manager.getUserCache("user-1").getSize()).toBe(0);
+	});
+
+	test("uses MemoryCacheBackend when no Redis URL is configured", () => {
+		const manager = new CacheManager();
+		const cache = manager.getUserCache("user-1");
+		expect(cache).toBeInstanceOf(MemoryCacheBackend);
 	});
 });
 
