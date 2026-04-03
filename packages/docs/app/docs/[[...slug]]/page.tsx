@@ -1,3 +1,4 @@
+import type { LoaderConfig, LoaderOutput } from "fumadocs-core/source";
 import {
 	DocsBody,
 	DocsDescription,
@@ -38,7 +39,10 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
 				<MDX
 					components={getMDXComponents({
 						// this allows you to link to other pages with relative file paths
-						a: createRelativeLink(source, page),
+						a: createRelativeLink(
+							source as unknown as LoaderOutput<LoaderConfig>,
+							page,
+						),
 					})}
 				/>
 			</DocsBody>
