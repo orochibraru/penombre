@@ -1,3 +1,20 @@
+## [1.8.11](https://github.com/orochibraru/penombre/compare/v1.8.10...v1.8.11) (2026-04-03)
+
+
+### Bug Fixes
+
+* workflow permissions ([f0f11bf](https://github.com/orochibraru/penombre/commit/f0f11bf41115b4a70ec46fd9896f0a993de8930a))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.11
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.10](https://github.com/orochibraru/penombre/compare/v1.8.9...v1.8.10) (2026-04-03)
 
 
