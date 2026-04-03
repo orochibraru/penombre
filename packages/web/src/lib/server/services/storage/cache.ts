@@ -8,6 +8,8 @@ import {
 
 const logger = new Logger("StorageCache");
 
+// TODO: refactor this.
+
 /**
  * Manager for user-specific cache instances.
  * Selects the appropriate backend (Redis, memory, or null) based on

@@ -37,29 +37,44 @@ mock.module("$lib/server/services/activity", () => ({
 	},
 }));
 
-mock.module("./cache", () => ({
-	CacheKeys: {
-		starred: () => "starred",
-		trashed: () => "trashed",
-		recent: () => "recent",
-		counts: () => "counts",
-		fileIdIndex: () => "fileIdIndex",
-		listing: (p: string, o: string) => `list:${p}:${o}`,
-		folders: (p: string, t: boolean) => `folders:${p}:${t}`,
-	},
-	CacheManager: class {
-		getUserCache() {
-			return {
-				get: async () => undefined,
-				set: async () => {},
-				delete: async () => false,
-				deleteByPrefix: async () => 0,
-				clear: async () => {},
-				getSize: async () => 0,
-			};
-		}
-	},
-}));
+mock.module("./cache", () => {
+	function makeUserCache() {
+		return {
+			get: async () => undefined,
+			set: async () => {},
+			delete: async () => false as const,
+			deleteByPrefix: async () => 0 as const,
+			clear: async () => {},
+			getSize: async () => 0 as const,
+		};
+	}
+	return {
+		CacheKeys: {
+			starred: () => "starred",
+			trashed: () => "trashed",
+			recent: () => "recent",
+			counts: () => "counts",
+			fileIdIndex: () => "fileIdIndex",
+			listing: (p: string, o: string) => `list:${p}:${o}`,
+			folders: (p: string, t: boolean) => `folders:${p}:${t}`,
+		},
+		CacheManager: class {
+			_caches = new Map<string, ReturnType<typeof makeUserCache>>();
+			getUserCache(userId: string) {
+				if (!this._caches.has(userId)) {
+					this._caches.set(userId, makeUserCache());
+				}
+				return this._caches.get(userId)!;
+			}
+			async clearUserCache(userId: string): Promise<void> {
+				this._caches.delete(userId);
+			}
+			async clearAllCaches(): Promise<void> {
+				this._caches.clear();
+			}
+		},
+	};
+});
 
 // ---------------------------------------------------------------------------
 // Extend the shared mockDb with update + delete chains
