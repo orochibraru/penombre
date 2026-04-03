@@ -60,7 +60,7 @@ jobs:
         with:
           images: ${{ inputs.image-name }}
           tags: |
-            type=raw,value=${{ steps.branch.outputs.tag }},enable=${{ github.event_name == 'pull_request' }}
+            type=raw,value=${{ steps.branch.outputs.tag }},enable=${{ github.ref_type == 'branch' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
