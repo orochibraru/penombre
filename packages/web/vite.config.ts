@@ -8,13 +8,6 @@ import { SvelteKitPWA } from '@vite-pwa/sveltekit'
 
 export default defineConfig({
     plugins: [
-        {
-            name: "bun-external",
-            enforce: "pre",
-            resolveId(id) {
-                if (id === "bun") return { id: "bun", external: true };
-            },
-        },
         paraglideVitePlugin({ 
             project: './project.inlang', 
             outdir: './src/lib/paraglide',
@@ -24,19 +17,5 @@ export default defineConfig({
         sveltekit(), 
         SvelteKitPWA()
     ],
-    define: {
-        SUPERFORMS_LEGACY: true
-    },
-    optimizeDeps: {
-        exclude: ["bun"]
-    },
-    build: {
-        rollupOptions: {
-            external: ["bun"]
-        }
-    },
-    ssr: {
-        external: ["bun"]
-    }
 }) satisfies UserConfig;
 

@@ -7,6 +7,7 @@ on:
     tags-ignore:
       - "v*.*.*"
     paths:
+      - ".github/workflows/**"
       - "packages/**"
       - "bun.lock"
       - "Dockerfile"
@@ -26,6 +27,8 @@ jobs:
   check:
     uses: ./.github/workflows/ci.yaml
     if: "!startsWith(github.event.head_commit.message, 'chore(release)')"
+    secrets:
+      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}
 
   release:
     name: Release

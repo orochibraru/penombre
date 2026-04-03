@@ -1,13 +1,25 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
-import { mkdir, readdir, rm, stat, unlink } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { mkdir, rm, unlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { cwd } from "node:process";
 import type { Readable } from "node:stream";
+import { Readable as NodeReadable } from "node:stream";
 import archiver from "archiver";
 import type { User } from "better-auth";
-import type { BunFile } from "bun";
+import {
+	and,
+	desc,
+	eq,
+	ilike,
+	inArray,
+	isNull,
+	like,
+	or,
+	sql,
+} from "drizzle-orm";
 import { parseFile } from "music-metadata";
 import sharp from "sharp";
 import { dev } from "$app/environment";
@@ -15,7 +27,8 @@ import { FileCategoryEnum } from "$lib/file-helpers";
 import { Logger } from "$lib/logger";
 import type { CacheBackend } from "$lib/server/cache";
 import { getDb } from "$lib/server/db";
-import { user } from "$lib/server/db/schema";
+import type { File as DbFile, Folder as DbFolder } from "$lib/server/db/schema";
+import { files, folders, user } from "$lib/server/db/schema";
 import {
 	FileOrFolderNotFoundError,
 	UnauthorizedError,
@@ -34,7 +47,12 @@ import type {
 } from "$lib/server/schema";
 import { ActivityService } from "$lib/server/services/activity";
 import { CacheKeys, CacheManager } from "./cache";
-import { DEFAULT_STORAGE_PATH, logger } from "./constants";
+import {
+	createUserStorageDriver,
+	DEFAULT_STORAGE_PATH,
+	logger,
+} from "./constants";
+import type { StorageDriver } from "./driver";
 import fileTypesData from "./file-types.json";
 
 // =========================================================================
@@ -134,13 +152,17 @@ export interface FileProxyRequest {
 /**
  * Unified storage service handling all file, folder, listing, thumbnail,
  * content-type, bulk-download, file-proxy, and admin operations.
+ * Phase 4: all metadata read/write via PostgreSQL; file I/O via StorageDriver.
  */
 export class StorageService {
+	/** Local filesystem base used for thumbnail caching (always local). */
 	private storagePath: string;
 	private userFolder: string;
 	private user: User;
 	private activityService: ActivityService = new ActivityService();
 	private cache: CacheBackend;
+	private driver: StorageDriver;
+	private db: ReturnType<typeof getDb>;
 	private static thumbnailSemaphore = new ThumbnailSemaphore(4);
 
 	constructor(user: User) {
@@ -148,6 +170,8 @@ export class StorageService {
 		this.storagePath = join(DEFAULT_STORAGE_PATH, this.userFolder);
 		this.user = user;
 		this.cache = cacheManager.getUserCache(user.id);
+		this.driver = createUserStorageDriver(this.userFolder);
+		this.db = getDb();
 	}
 
 	// =========================================================================
@@ -185,21 +209,90 @@ export class StorageService {
 	}
 
 	// =========================================================================
+	// DB → SCHEMA CONVERTERS
+	// =========================================================================
+
+	private fileDbToMetadata(file: DbFile): FileMetadata {
+		return {
+			id: file.id,
+			name: file.name,
+			category: file.category as FileCategory,
+			contentType: file.contentType as FileContentType,
+			tags: file.tags ?? [],
+			createdAt: file.createdAt.toISOString(),
+			owner: file.ownerId,
+			isTrashed: file.isTrashed,
+			isStarred: file.isStarred,
+			music:
+				file.musicDuration != null
+					? { duration: file.musicDuration }
+					: undefined,
+			video:
+				file.videoDuration != null
+					? { duration: file.videoDuration }
+					: undefined,
+		};
+	}
+
+	private folderDbToMetadata(folder: DbFolder): FileMetadata {
+		return {
+			id: folder.id,
+			name: folder.name,
+			category: FileCategoryEnum.UNKNOWN,
+			contentType: "application/octet-stream",
+			tags: folder.tags ?? [],
+			createdAt: folder.createdAt.toISOString(),
+			owner: folder.ownerId,
+			isTrashed: folder.isTrashed,
+			isStarred: folder.isStarred,
+		};
+	}
+
+	private fileDbToObjectItem(file: DbFile): ObjectItem {
+		const pathSegment = file.path.includes("/")
+			? (file.path.split("/").pop() ?? file.path)
+			: file.path;
+		return {
+			key: pathSegment,
+			size: file.size,
+			updatedAt: file.updatedAt.toISOString(),
+			metadata: this.fileDbToMetadata(file),
+			type: "file",
+		};
+	}
+
+	private folderDbToObjectItem(folder: DbFolder): ObjectItem {
+		const pathSegment = folder.path.includes("/")
+			? (folder.path.split("/").pop() ?? folder.path)
+			: folder.path;
+		return {
+			key: `${pathSegment}/`,
+			size: 0,
+			updatedAt: folder.updatedAt.toISOString(),
+			metadata: this.folderDbToMetadata(folder),
+			type: "folder",
+		};
+	}
+
+	/** Resolve a folder's DB id from its storage path. Returns null for root. */
+	private async getFolderIdByPath(path: string): Promise<string | null> {
+		const normalized = path.endsWith("/") ? path.slice(0, -1) : path;
+		if (!normalized) return null;
+		const [folder] = await this.db
+			.select({ id: folders.id })
+			.from(folders)
+			.where(
+				and(eq(folders.path, normalized), eq(folders.ownerId, this.user.id)),
+			);
+		return folder?.id ?? null;
+	}
+
+	// =========================================================================
 	// UTILITY
 	// =========================================================================
 
 	public async ensureUserDirectory(): Promise<void> {
-		try {
-			if (!existsSync(this.storagePath)) {
-				logger.info(
-					`Creating user storage folder at path: ${this.storagePath}...`,
-				);
-				await mkdir(this.storagePath, { recursive: true });
-			}
-		} catch (error) {
-			logger.error("Error creating storage folder:", error);
-			throw new Error("Failed to create storage folder");
-		}
+		await this.driver.ensureRootExists();
 	}
 
 	public getStoragePath(): string {
@@ -208,109 +301,6 @@ export class StorageService {
 
 	public getUserFolder(): string {
 		return this.userFolder;
-	}
-
-	private async resolveFileLocation(key: string): Promise<{
-		currentPath: string;
-		currentMetaPath: string;
-	}> {
-		let currentPath = join(this.storagePath, key);
-		let currentMetaPath = `${currentPath}.meta.json`;
-
-		if (!(await Bun.file(currentPath).exists())) {
-			const parentDir = key.includes("/")
-				? key.slice(0, key.lastIndexOf("/"))
-				: "";
-			const sDir = join(this.storagePath, parentDir);
-			const name = key.includes("/")
-				? key.slice(key.lastIndexOf("/") + 1)
-				: key;
-
-			try {
-				const entries = await readdir(sDir, { withFileTypes: true });
-				for (const e of entries) {
-					if (e.isDirectory()) continue;
-					if (e.name.endsWith(".meta.json")) continue;
-					const abs = join(sDir, e.name);
-					const m = Bun.file(`${abs}.meta.json`);
-					if (await m.exists()) {
-						const md: FileMetadata = await m.json();
-						if (md.name === name) {
-							currentPath = abs;
-							currentMetaPath = `${abs}.meta.json`;
-							return { currentPath, currentMetaPath };
-						}
-					}
-				}
-			} catch {
-				// Directory doesn't exist or not readable
-			}
-
-			if (!(await Bun.file(currentPath).exists())) {
-				throw new FileOrFolderNotFoundError("File not found");
-			}
-		}
-
-		return { currentPath, currentMetaPath };
-	}
-
-	private async generateMeta(
-		name: string,
-		filePath?: string,
-	): Promise<FileMetadata> {
-		logger.debug(`Generating meta for ${name}`);
-		const meta: FileMetadata = {
-			id: crypto.randomUUID(),
-			name,
-			createdAt: new Date().toLocaleString(),
-			owner: this.user.id,
-			category: this.determineCategory(name),
-			contentType: this.determineContentType(name),
-			isTrashed: false,
-			isStarred: false,
-		};
-		if (filePath) {
-			await Bun.write(`${filePath}.meta.json`, JSON.stringify(meta));
-		}
-		return meta;
-	}
-
-	private getFolderMetaPath(folderPath: string): string {
-		return join(folderPath, ".keep.meta.json");
-	}
-
-	private async readFolderMeta(
-		folderPath: string,
-	): Promise<FileMetadata | null> {
-		try {
-			const metaFile = Bun.file(this.getFolderMetaPath(folderPath));
-			if (await metaFile.exists()) {
-				return await metaFile.json();
-			}
-			return null;
-		} catch {
-			return null;
-		}
-	}
-
-	private async readFolderMetadataOrGenerate(
-		folderPath: string,
-	): Promise<FileMetadata> {
-		return (
-			(await this.readFolderMeta(folderPath)) ??
-			(await this.generateMeta(folderPath))
-		);
-	}
-
-	private async readFileMetadata(
-		metaPath: string,
-		fileName: string,
-	): Promise<FileMetadata> {
-		const fileMeta = Bun.file(metaPath);
-		if (await fileMeta.exists()) {
-			return await fileMeta.json();
-		}
-		return await this.generateMeta(fileName);
 	}
 
 	private generateFileNameWithExtension(displayName: string): string {
@@ -327,56 +317,19 @@ export class StorageService {
 		return parts.slice(1).join(".");
 	}
 
-	private permissionsCheck(metadata: FileMetadata): void {
-		if (metadata.owner !== this.user.id) {
-			throw new UnauthorizedError("Unauthorized access to file");
-		}
-	}
-
-	private async walkFilesRecursively(basePath: string): Promise<string[]> {
-		const results: string[] = [];
-		const entries = await readdir(basePath, { withFileTypes: true });
-
-		for (const entry of entries) {
-			const fullPath = join(basePath, entry.name);
-			if (entry.isDirectory()) {
-				const nested = await this.walkFilesRecursively(fullPath);
-				results.push(...nested);
-				continue;
-			}
-			if (entry.name.endsWith(".meta.json")) continue;
-			results.push(fullPath);
-		}
-
-		return results;
-	}
-
 	// =========================================================================
 	// FILE OPERATIONS
 	// =========================================================================
 
 	public async getFile(path: string): Promise<ObjectItem> {
-		const { currentPath: filePath } = await this.resolveFileLocation(path);
-		const file = Bun.file(filePath);
-		const fileMeta = Bun.file(`${filePath}.meta.json`);
-
-		if (!(await fileMeta.exists())) {
-			throw new FileOrFolderNotFoundError(
-				`File metadata not found for: ${path}`,
-			);
+		const [file] = await this.db
+			.select()
+			.from(files)
+			.where(and(eq(files.path, path), eq(files.ownerId, this.user.id)));
+		if (!file) {
+			throw new FileOrFolderNotFoundError(`File not found: ${path}`);
 		}
-
-		const metadata = await fileMeta.json();
-		this.permissionsCheck(metadata);
-
-		const sanitizedNameWithoutFullPath = filePath.split("/").pop() || filePath;
-		return {
-			key: sanitizedNameWithoutFullPath,
-			size: file.size,
-			type: "file",
-			updatedAt: new Date(file.lastModified).toLocaleString(),
-			metadata,
-		};
+		return this.fileDbToObjectItem(file);
 	}
 
 	public async writeFile(
@@ -386,56 +339,59 @@ export class StorageService {
 		size?: number,
 	): Promise<void> {
 		if (contents) {
-			logger.info(`Writing file at path: ${path}`);
-			await Bun.write(join(this.storagePath, path), contents);
+			await this.driver.writeObject(path, contents);
 		} else if (!(await this.fileExists(path))) {
-			const file = new Uint8Array(size || 0);
-			logger.info(`Creating empty file at path: ${path} with size: ${size}`);
-			await Bun.write(join(this.storagePath, path), file);
+			await this.driver.writeObject(path, new Uint8Array(size ?? 0));
 		}
 
 		if (metadata) {
-			await Bun.write(
-				join(this.storagePath, `${path}.meta.json`),
-				JSON.stringify(metadata),
-			);
-			await this.activityService.register({
-				userId: this.user.id,
-				action: "update",
-				message: `Updated metadata for file: ${path}`,
-				level: "info",
-			});
+			await this.db
+				.update(files)
+				.set({
+					name: metadata.name ?? undefined,
+					contentType: metadata.contentType,
+					category: metadata.category,
+					tags: metadata.tags ?? [],
+					isTrashed: metadata.isTrashed,
+					isStarred: metadata.isStarred,
+					musicDuration: metadata.music?.duration ?? null,
+					videoDuration: metadata.video?.duration ?? null,
+					updatedAt: new Date(),
+				})
+				.where(and(eq(files.path, path), eq(files.ownerId, this.user.id)));
 		}
 
 		await this.invalidateListingCaches();
 	}
 
 	public async updateFile(name: string, data: UpdateFile): Promise<void> {
-		const { currentPath, currentMetaPath } =
-			await this.resolveFileLocation(name);
-
-		let metadata: FileMetadata;
-		const metaFile = Bun.file(currentMetaPath);
-		if (await metaFile.exists()) {
-			metadata = await metaFile.json();
-		} else {
-			const baseName = currentPath.split("/").pop() || name;
-			metadata = await this.generateMeta(baseName);
+		const [file] = await this.db
+			.select()
+			.from(files)
+			.where(and(eq(files.path, name), eq(files.ownerId, this.user.id)));
+		if (!file) {
+			throw new FileOrFolderNotFoundError(`File not found: ${name}`);
 		}
-		this.permissionsCheck(metadata);
 
-		if (data.contentType !== undefined) metadata.contentType = data.contentType;
-		if (data.category !== undefined) metadata.category = data.category;
-		if (data.tags !== undefined) metadata.tags = data.tags;
-		if (typeof data.isTrashed === "boolean")
-			metadata.isTrashed = data.isTrashed;
-		if (typeof data.isStarred === "boolean")
-			metadata.isStarred = data.isStarred;
+		const updates: Partial<typeof files.$inferInsert> = {
+			updatedAt: new Date(),
+		};
+		if (data.contentType !== undefined) updates.contentType = data.contentType;
+		if (data.category !== undefined) updates.category = data.category;
+		if (data.tags !== undefined) updates.tags = data.tags;
+		if (typeof data.isTrashed === "boolean") updates.isTrashed = data.isTrashed;
+		if (typeof data.isStarred === "boolean") updates.isStarred = data.isStarred;
 		if (data.key && data.key.trim().length > 0) {
-			metadata.name = data.key.trim();
-			metadata.contentType = this.determineContentType(metadata.name);
-			metadata.category = this.determineCategory(metadata.name);
+			const newName = data.key.trim();
+			updates.name = newName;
+			updates.contentType = this.determineContentType(newName);
+			updates.category = this.determineCategory(newName);
 		}
+
+		await this.db
+			.update(files)
+			.set(updates)
+			.where(and(eq(files.path, name), eq(files.ownerId, this.user.id)));
 
 		await this.activityService.register({
 			userId: this.user.id,
@@ -444,7 +400,6 @@ export class StorageService {
 			level: "info",
 		});
 
-		await Bun.write(currentMetaPath, JSON.stringify(metadata));
 		await this.invalidateListingCaches();
 	}
 
@@ -452,23 +407,23 @@ export class StorageService {
 		fileKey: string,
 		destinationFolder: string,
 	): Promise<void> {
-		const { currentPath, currentMetaPath } =
-			await this.resolveFileLocation(fileKey);
-
-		const metaFile = Bun.file(currentMetaPath);
-		if (!(await metaFile.exists())) {
-			throw new FileOrFolderNotFoundError("File metadata not found");
+		const [file] = await this.db
+			.select()
+			.from(files)
+			.where(and(eq(files.path, fileKey), eq(files.ownerId, this.user.id)));
+		if (!file) {
+			throw new FileOrFolderNotFoundError(`File not found: ${fileKey}`);
 		}
-		const metadata: FileMetadata = await metaFile.json();
-		this.permissionsCheck(metadata);
 
 		const uniqueName = await this.getUniqueDisplayName(
-			metadata.name || fileKey.split("/").pop() || fileKey,
+			file.name,
 			destinationFolder || undefined,
 			"file",
 		);
 
-		const currentFileName = currentPath.split("/").pop() || fileKey;
+		const currentFileName = fileKey.includes("/")
+			? (fileKey.split("/").pop() ?? fileKey)
+			: fileKey;
 		const extension = this.extractExtension(currentFileName);
 		const newUUID = crypto.randomUUID();
 		const newFileName = extension ? `${newUUID}.${extension}` : newUUID;
@@ -476,26 +431,26 @@ export class StorageService {
 		const normalizedDest = destinationFolder.endsWith("/")
 			? destinationFolder.slice(0, -1)
 			: destinationFolder;
-		const destPath = normalizedDest
-			? join(this.storagePath, normalizedDest, newFileName)
-			: join(this.storagePath, newFileName);
-		const destMetaPath = `${destPath}.meta.json`;
+		const newPath = normalizedDest
+			? `${normalizedDest}/${newFileName}`
+			: newFileName;
 
-		if (normalizedDest) {
-			const destDir = join(this.storagePath, normalizedDest);
-			if (!existsSync(destDir)) {
-				await mkdir(destDir, { recursive: true });
-			}
-		}
+		await this.driver.copyObject(fileKey, newPath);
+		await this.driver.deleteObject(fileKey);
 
-		const fileContent = await Bun.file(currentPath).arrayBuffer();
-		await Bun.write(destPath, fileContent);
+		const newFolderId = normalizedDest
+			? await this.getFolderIdByPath(normalizedDest)
+			: null;
 
-		metadata.name = uniqueName;
-		await Bun.write(destMetaPath, JSON.stringify(metadata));
-
-		await fs.promises.unlink(currentPath);
-		await fs.promises.unlink(currentMetaPath);
+		await this.db
+			.update(files)
+			.set({
+				path: newPath,
+				name: uniqueName,
+				folderId: newFolderId,
+				updatedAt: new Date(),
+			})
+			.where(and(eq(files.id, file.id), eq(files.ownerId, this.user.id)));
 
 		await this.activityService.register({
 			userId: this.user.id,
@@ -508,64 +463,62 @@ export class StorageService {
 	}
 
 	public async duplicateFile(fileKey: string): Promise<ObjectItem> {
-		const { currentPath, currentMetaPath } =
-			await this.resolveFileLocation(fileKey);
-
-		const metaFile = Bun.file(currentMetaPath);
-		if (!(await metaFile.exists())) {
-			throw new FileOrFolderNotFoundError("File metadata not found");
+		const [file] = await this.db
+			.select()
+			.from(files)
+			.where(and(eq(files.path, fileKey), eq(files.ownerId, this.user.id)));
+		if (!file) {
+			throw new FileOrFolderNotFoundError(`File not found: ${fileKey}`);
 		}
-		const sourceMetadata: FileMetadata = await metaFile.json();
-		this.permissionsCheck(sourceMetadata);
 
 		const parentFolder = fileKey.includes("/")
 			? fileKey.slice(0, fileKey.lastIndexOf("/"))
 			: undefined;
 
-		const sourceName =
-			sourceMetadata.name || fileKey.split("/").pop() || fileKey;
 		const uniqueName = await this.getUniqueDisplayName(
-			sourceName,
+			file.name,
 			parentFolder,
 			"file",
 		);
 
-		const newMeta: FileMetadata = {
-			...sourceMetadata,
-			id: crypto.randomUUID(),
-			name: uniqueName,
-			createdAt: new Date().toLocaleString(),
-			isTrashed: false,
-			isStarred: false,
-		};
-
 		const newFileNameWithExt = this.generateFileNameWithExtension(uniqueName);
-		const newFilePath = parentFolder
-			? join(this.storagePath, parentFolder, newFileNameWithExt)
-			: join(this.storagePath, newFileNameWithExt);
-		const newMetaPath = `${newFilePath}.meta.json`;
+		const newPath = parentFolder
+			? `${parentFolder}/${newFileNameWithExt}`
+			: newFileNameWithExt;
 
-		const fileContent = await Bun.file(currentPath).arrayBuffer();
-		await Bun.write(newFilePath, fileContent);
-		await Bun.write(newMetaPath, JSON.stringify(newMeta));
+		await this.driver.copyObject(fileKey, newPath);
+
+		const newId = crypto.randomUUID();
+		const [newFile] = await this.db
+			.insert(files)
+			.values({
+				id: newId,
+				name: uniqueName,
+				ownerId: this.user.id,
+				path: newPath,
+				folderId: file.folderId,
+				contentType: file.contentType,
+				category: file.category,
+				size: file.size,
+				isTrashed: false,
+				isStarred: false,
+				tags: [],
+				musicDuration: file.musicDuration,
+				videoDuration: file.videoDuration,
+			})
+			.returning();
 
 		await this.activityService.register({
 			userId: this.user.id,
 			action: "create",
-			message: `Duplicated file "${sourceName}" as "${uniqueName}"`,
+			message: `Duplicated file "${file.name}" as "${uniqueName}"`,
 			level: "info",
 		});
 
+		if (!newFile)
+			throw new Error("Failed to insert duplicated file into database");
 		await this.invalidateListingCaches();
-
-		const file = Bun.file(newFilePath);
-		return {
-			key: newFileNameWithExt,
-			size: file.size,
-			type: "file",
-			updatedAt: new Date(file.lastModified).toLocaleString(),
-			metadata: newMeta,
-		};
+		return this.fileDbToObjectItem(newFile);
 	}
 
 	public async createFile(
@@ -573,13 +526,14 @@ export class StorageService {
 		folder?: string,
 	): Promise<UploadResult> {
 		const name = file.name.includes("/")
-			? file.name.split("/").pop() || file.name
+			? (file.name.split("/").pop() ?? file.name)
 			: file.name;
 		const normalizedFolder = folder
 			? folder.endsWith("/")
 				? folder.slice(0, -1)
 				: folder
 			: undefined;
+
 		const uniqueName = await this.getUniqueDisplayName(
 			name,
 			normalizedFolder,
@@ -587,15 +541,35 @@ export class StorageService {
 		);
 
 		const fileNameWithExt = this.generateFileNameWithExtension(uniqueName);
-		const uuidWithExt = fileNameWithExt;
-		const idFilePath = normalizedFolder
-			? `${normalizedFolder}/${uuidWithExt}`
-			: uuidWithExt;
-		const meta = await this.generateMeta(
-			uniqueName,
-			join(this.storagePath, idFilePath),
-		);
-		await this.writeFile(idFilePath, new Uint8Array(), undefined, file.size);
+		const filePath = normalizedFolder
+			? `${normalizedFolder}/${fileNameWithExt}`
+			: fileNameWithExt;
+
+		const folderId = normalizedFolder
+			? await this.getFolderIdByPath(normalizedFolder)
+			: null;
+
+		const id = crypto.randomUUID();
+		const [newFile] = await this.db
+			.insert(files)
+			.values({
+				id,
+				name: uniqueName,
+				ownerId: this.user.id,
+				path: filePath,
+				folderId,
+				contentType: this.determineContentType(uniqueName),
+				category: this.determineCategory(uniqueName),
+				size: file.size,
+				isTrashed: false,
+				isStarred: false,
+				tags: [],
+			})
+			.returning();
+
+		await this.driver.writeObject(filePath, new Uint8Array());
+
+		if (!newFile) throw new Error("Failed to insert file into database");
 		await this.activityService.register({
 			userId: this.user.id,
 			action: "create",
@@ -606,14 +580,14 @@ export class StorageService {
 		await this.invalidateListingCaches();
 
 		return {
-			id: uuidWithExt,
-			finalName: idFilePath,
-			metadata: meta,
+			id: newFile.id,
+			finalName: filePath,
+			metadata: this.fileDbToMetadata(newFile),
 		};
 	}
 
 	public async createBatchFiles(
-		files: NewFile[],
+		fileList: NewFile[],
 		folder?: string,
 	): Promise<UploadResult[]> {
 		const results: UploadResult[] = [];
@@ -623,36 +597,53 @@ export class StorageService {
 				: folder
 			: undefined;
 
-		for (const file of files) {
-			const name = file.name.includes("/")
-				? file.name.split("/").pop() || file.name
-				: file.name;
+		const folderId = normalizedFolder
+			? await this.getFolderIdByPath(normalizedFolder)
+			: null;
 
+		for (const file of fileList) {
+			const name = file.name.includes("/")
+				? (file.name.split("/").pop() ?? file.name)
+				: file.name;
 			const uniqueName = await this.getUniqueDisplayName(
 				name,
 				normalizedFolder,
 				"file",
 			);
-
 			const fileNameWithExt = this.generateFileNameWithExtension(uniqueName);
-			const uuidWithExt = fileNameWithExt;
-			const idFilePath = normalizedFolder
-				? `${normalizedFolder}/${uuidWithExt}`
-				: uuidWithExt;
-			const meta = await this.generateMeta(
-				uniqueName,
-				join(this.storagePath, idFilePath),
-			);
-			await this.writeFile(idFilePath, new Uint8Array(), undefined, file.size);
+			const filePath = normalizedFolder
+				? `${normalizedFolder}/${fileNameWithExt}`
+				: fileNameWithExt;
 
+			const id = crypto.randomUUID();
+			const [newFile] = await this.db
+				.insert(files)
+				.values({
+					id,
+					name: uniqueName,
+					ownerId: this.user.id,
+					path: filePath,
+					folderId,
+					contentType: this.determineContentType(uniqueName),
+					category: this.determineCategory(uniqueName),
+					size: file.size,
+					isTrashed: false,
+					isStarred: false,
+					tags: [],
+				})
+				.returning();
+
+			await this.driver.writeObject(filePath, new Uint8Array());
+
+			if (!newFile) throw new Error("Failed to insert file into database");
 			results.push({
-				id: uuidWithExt,
-				finalName: idFilePath,
-				metadata: meta,
+				id: newFile.id,
+				finalName: filePath,
+				metadata: this.fileDbToMetadata(newFile),
 			});
 		}
 
-		const fileCount = files.length;
+		const fileCount = fileList.length;
 		const folderDisplay = normalizedFolder || "root";
 		await this.activityService.register({
 			userId: this.user.id,
@@ -665,92 +656,102 @@ export class StorageService {
 		return results;
 	}
 
-	private async getFileIdIndex(): Promise<Map<string, string>> {
-		const cacheKey = CacheKeys.fileIdIndex();
-		const cached = await this.cache.get<Map<string, string>>(cacheKey);
-		if (cached) return cached;
-
-		const index = new Map<string, string>();
-		const allFiles = await this.walkFilesRecursively(this.storagePath);
-		for (const filePath of allFiles) {
-			const metaFile = Bun.file(`${filePath}.meta.json`);
-			if (await metaFile.exists()) {
-				const metadata: FileMetadata = await metaFile.json();
-				if (metadata.id) {
-					index.set(metadata.id, filePath.slice(this.storagePath.length + 1));
-				}
-			}
-		}
-		await this.cache.set(cacheKey, index, 120);
-		return index;
-	}
-
 	public async findFileById(id: string): Promise<string | null> {
-		try {
-			const index = await this.getFileIdIndex();
-			return index.get(id) ?? null;
-		} catch {
-			return null;
-		}
+		const [file] = await this.db
+			.select({ path: files.path })
+			.from(files)
+			.where(and(eq(files.id, id), eq(files.ownerId, this.user.id)));
+		return file?.path ?? null;
 	}
 
 	public async uploadFileBody(
 		id: string,
 		body: Blob | Buffer | Uint8Array,
 	): Promise<void> {
-		const key = await this.findFileById(id);
-
-		if (!key) {
-			throw new Error("Failed to find file");
+		const [file] = await this.db
+			.select()
+			.from(files)
+			.where(and(eq(files.id, id), eq(files.ownerId, this.user.id)));
+		if (!file) {
+			throw new Error(`Failed to find file with id: ${id}`);
 		}
 
+		const key = file.path;
 		try {
-			await this.writeFile(key, body);
-			const file = await this.getFile(key);
-			const displayName = file.metadata.name || key;
-			const category = this.determineCategory(displayName);
-			const isMedia = category === "MUSIC" || category === "VIDEO";
+			let data: Uint8Array;
+			let actualSize: number;
+			if (body instanceof Uint8Array) {
+				data = body;
+				actualSize = body.byteLength;
+			} else if (Buffer.isBuffer(body)) {
+				data = new Uint8Array(body);
+				actualSize = body.length;
+			} else {
+				const ab = await (body as Blob).arrayBuffer();
+				data = new Uint8Array(ab);
+				actualSize = ab.byteLength;
+			}
 
+			await this.driver.writeObject(key, data);
+
+			const updates: Partial<typeof files.$inferInsert> = {
+				size: actualSize,
+				updatedAt: new Date(),
+			};
+
+			const category = this.determineCategory(file.name);
+			const isMedia = category === "MUSIC" || category === "VIDEO";
 			if (isMedia) {
 				try {
-					const mediaMeta = await parseFile(join(this.storagePath, key));
-					const duration = mediaMeta.format.duration || 0;
-
+					const { path: localPath, isTemp } =
+						await this.getLocalOrTempPath(key);
+					const mediaMeta = await parseFile(localPath);
+					const duration = mediaMeta.format.duration ?? 0;
 					if (category === "MUSIC") {
-						file.metadata.music = file.metadata.music || {};
-						file.metadata.music.duration = duration;
-					} else if (category === "VIDEO") {
-						file.metadata.video = file.metadata.video || {};
-						file.metadata.video.duration = duration;
+						updates.musicDuration = duration;
+					} else {
+						updates.videoDuration = duration;
 					}
-
-					await this.writeFile(key, undefined, file.metadata);
+					if (isTemp) {
+						try {
+							await unlink(localPath);
+						} catch {}
+					}
 				} catch (metaError) {
-					logger.warn(`Failed to extract metadata for ${key}:`, metaError);
+					logger.warn(
+						`Failed to extract media metadata for ${key}:`,
+						metaError,
+					);
 				}
 			}
+
+			await this.db
+				.update(files)
+				.set(updates)
+				.where(and(eq(files.id, id), eq(files.ownerId, this.user.id)));
 		} catch (error) {
 			logger.error("Error uploading file body:", error);
 			await this.activityService.register({
 				userId: this.user.id,
 				action: "update",
-				message: `Failed to upload file body for key: ${key}`,
+				message: `Failed to upload file body for id: ${id}`,
 				level: "error",
 			});
-			throw new Error(`Error uploading file body for key: ${key}`);
+			throw new Error(`Error uploading file body for id: ${id}`);
 		}
 	}
 
 	public async deleteFile(key: string): Promise<void> {
 		try {
-			const { currentPath: filePath } = await this.resolveFileLocation(key);
-			const file = Bun.file(filePath);
+			const [file] = await this.db
+				.select()
+				.from(files)
+				.where(and(eq(files.path, key), eq(files.ownerId, this.user.id)));
 
-			const metaPath = `${filePath}.meta.json`;
-			const metaFile = Bun.file(metaPath);
-			if (await metaFile.exists()) {
-				await this.getFile(key);
-				await metaFile.delete();
+			if (file) {
+				await this.db
+					.delete(files)
+					.where(and(eq(files.id, file.id), eq(files.ownerId, this.user.id)));
 				await this.activityService.register({
 					userId: this.user.id,
 					action: "delete",
@@ -759,7 +760,7 @@ export class StorageService {
 				});
 			}
 
-			await file.delete();
+			await this.driver.deleteObject(key);
 			await this.deleteThumbnails(key);
 			await this.invalidateListingCaches();
 		} catch (error) {
@@ -772,12 +773,11 @@ export class StorageService {
 		try {
 			const thumbDir = join(this.storagePath, ".thumbnails");
 			if (!existsSync(thumbDir)) return;
-
-			const thumbFiles = await readdir(thumbDir);
+			const safeKey = key.replace(/\//g, "_");
+			const thumbFiles = await fs.promises.readdir(thumbDir);
 			for (const thumbFile of thumbFiles) {
-				if (thumbFile.startsWith(`${key}_`)) {
-					const thumbPath = join(thumbDir, thumbFile);
-					await Bun.file(thumbPath).delete();
+				if (thumbFile.startsWith(`${safeKey}_`)) {
+					await unlink(join(thumbDir, thumbFile));
 				}
 			}
 		} catch (error) {
@@ -786,100 +786,76 @@ export class StorageService {
 	}
 
 	public async fileExists(key: string): Promise<boolean> {
-		try {
-			const filePath = join(this.storagePath, key);
-			return await Bun.file(filePath).exists();
-		} catch {
-			return false;
-		}
+		const [file] = await this.db
+			.select({ id: files.id })
+			.from(files)
+			.where(and(eq(files.path, key), eq(files.ownerId, this.user.id)));
+		return !!file;
 	}
 
 	public async fileExistsById(id: string): Promise<boolean> {
-		try {
-			const index = await this.getFileIdIndex();
-			return index.has(id);
-		} catch {
-			return false;
-		}
+		const [file] = await this.db
+			.select({ id: files.id })
+			.from(files)
+			.where(and(eq(files.id, id), eq(files.ownerId, this.user.id)));
+		return !!file;
 	}
 
-	public async getRawFileData(
-		key: string,
-	): Promise<{ file: BunFile; meta: ObjectItem } | null> {
-		const { currentPath } = await this.resolveFileLocation(key);
-		const file = Bun.file(currentPath);
-		const meta = await this.getFile(key);
-		return { file, meta };
+	public async getRawFileData(key: string): Promise<{
+		buffer: ArrayBuffer;
+		meta: ObjectItem;
+		size: number;
+		mtime: number;
+	} | null> {
+		const [file] = await this.db
+			.select()
+			.from(files)
+			.where(and(eq(files.path, key), eq(files.ownerId, this.user.id)));
+		if (!file) return null;
+		const buffer = await this.driver.readObject(key);
+		return {
+			buffer,
+			meta: this.fileDbToObjectItem(file),
+			size: file.size,
+			mtime: file.updatedAt.getTime(),
+		};
 	}
 
 	public async getThumbnail(
 		key: string,
 		size = 300,
 	): Promise<{ buffer: Buffer; contentType: string } | null> {
-		const { currentPath } = await this.resolveFileLocation(key);
-		const meta = await this.getFile(key);
-		return this.generateThumbnail(
-			currentPath,
-			meta.metadata.contentType,
-			key,
-			size,
-		);
+		const [file] = await this.db
+			.select({ contentType: files.contentType })
+			.from(files)
+			.where(and(eq(files.path, key), eq(files.ownerId, this.user.id)));
+		if (!file) return null;
+		return this.generateThumbnail(key, file.contentType, size);
 	}
 
-	public generateRangeHeaders({
-		file,
-		object,
-		headers,
-	}: {
-		file: BunFile;
-		object: ObjectItem;
-		headers: Record<string, string>;
-	}): { headers: Headers; chunk: Blob } {
-		const range = headers.range || headers.Range;
-		if (!range) {
-			throw new Error("Range header is required for partial content");
+	// =========================================================================
+	// LOCAL/TEMP PATH HELPER
+	// =========================================================================
+
+	/**
+	 * For tools that need a local filesystem path (ffmpeg, pdftoppm, sharp),
+	 * return the actual path for local backends or write a temp file for S3.
+	 * Caller is responsible for deleting the temp file when isTemp=true.
+	 */
+	private async getLocalOrTempPath(
+		key: string,
+	): Promise<{ path: string; isTemp: boolean }> {
+		const localPath = join(this.storagePath, key);
+		if (existsSync(localPath)) {
+			return { path: localPath, isTemp: false };
 		}
-		const size = file.size;
-		const parts = range.replace(/bytes=/, "").split("-");
-		const start = Number(parts[0]);
-		const end = parts[1] ? Number(parts[1]) : undefined;
-
-		if (Number.isNaN(start)) {
-			throw new Error("Invalid range");
-		}
-
-		const chunkEnd = end || size - 1;
-		const chunk = file.slice(start, chunkEnd + 1);
-
-		const newHeaders = new Headers();
-		newHeaders.set("Content-Type", object.metadata.contentType);
-		newHeaders.set("Content-Range", `bytes ${start}-${chunkEnd}/${size}`);
-		newHeaders.set("Content-Length", String(chunkEnd - start + 1));
-		newHeaders.set("Accept-Ranges", "bytes");
-
-		return { headers: newHeaders, chunk };
-	}
-
-	public generateRawFileHeaders({
-		file,
-		object,
-	}: {
-		file: BunFile;
-		object: ObjectItem;
-	}): Headers {
-		const newHeaders = new Headers();
-		newHeaders.append("Content-Type", object.metadata.contentType);
-		newHeaders.append("Accept-Ranges", "bytes");
-		newHeaders.append("Content-Length", file.size.toString());
-
-		const displayName = object.metadata.name || object.key;
-		const encodedName = encodeURIComponent(displayName);
-		newHeaders.append(
-			"Content-Disposition",
-			`inline; filename*=UTF-8''${encodedName}`,
+		const content = await this.driver.readObject(key);
+		const tmpPath = join(
+			tmpdir(),
+			`penombre-${Date.now()}-${Math.random().toString(36).slice(2)}`,
 		);
-
-		return newHeaders;
+		await Bun.write(tmpPath, content);
+		return { path: tmpPath, isTemp: true };
 	}
 
 	// =========================================================================
@@ -887,22 +863,19 @@ export class StorageService {
 	// =========================================================================
 
 	public async getFolder(folderId: string): Promise<string> {
-		const folderPrefix = folderId.endsWith("/") ? folderId : `${folderId}/`;
-		const dirPath = join(this.storagePath, folderPrefix);
-
-		if (!existsSync(dirPath)) {
-			throw new FileOrFolderNotFoundError(
-				`Folder not found: ${folderId}. Folders must be referenced by UUID.`,
+		const normalizedId = folderId.endsWith("/")
+			? folderId.slice(0, -1)
+			: folderId;
+		const [folder] = await this.db
+			.select()
+			.from(folders)
+			.where(
+				and(eq(folders.path, normalizedId), eq(folders.ownerId, this.user.id)),
 			);
+		if (!folder) {
+			throw new FileOrFolderNotFoundError(`Folder not found: ${folderId}`);
 		}
-
-		if (!existsSync(this.getFolderMetaPath(dirPath))) {
-			logger.warn(
-				`Folder ${folderId} exists but has no metadata. This may be a legacy folder.`,
-			);
-		}
-
-		return folderPrefix;
+		return `${normalizedId}/`;
 	}
 
 	public async moveFolder(
@@ -912,54 +885,93 @@ export class StorageService {
 		const normalizedKey = folderKey.endsWith("/")
 			? folderKey.slice(0, -1)
 			: folderKey;
-		const folderPath = join(this.storagePath, normalizedKey);
-
-		if (!existsSync(folderPath)) {
+		const [folder] = await this.db
+			.select()
+			.from(folders)
+			.where(
+				and(eq(folders.path, normalizedKey), eq(folders.ownerId, this.user.id)),
+			);
+		if (!folder) {
 			throw new FileOrFolderNotFoundError("Folder not found");
 		}
 
-		const metadata = await this.readFolderMeta(folderPath);
-		if (metadata) {
-			this.permissionsCheck(metadata);
-		}
-
-		const folderName =
-			metadata?.name || normalizedKey.split("/").pop() || normalizedKey;
-
 		const uniqueName = await this.getUniqueDisplayName(
-			folderName,
+			folder.name,
 			destinationFolder || undefined,
 			"folder",
 		);
 
+		const physicalName = normalizedKey.includes("/")
+			? (normalizedKey.split("/").pop() ?? normalizedKey)
+			: normalizedKey;
 		const normalizedDest = destinationFolder.endsWith("/")
 			? destinationFolder.slice(0, -1)
 			: destinationFolder;
-		const physicalFolderName = normalizedKey.split("/").pop() || normalizedKey;
-		const destPath = normalizedDest
-			? join(this.storagePath, normalizedDest, physicalFolderName)
-			: join(this.storagePath, physicalFolderName);
+		const newFolderPath = normalizedDest
+			? `${normalizedDest}/${physicalName}`
+			: physicalName;
 
-		if (destPath.startsWith(folderPath)) {
+		if (newFolderPath.startsWith(`${normalizedKey}/`)) {
 			throw new Error("Cannot move a folder into itself");
 		}
 
-		if (normalizedDest) {
-			const destDir = join(this.storagePath, normalizedDest);
-			if (!existsSync(destDir)) {
-				await mkdir(destDir, { recursive: true });
-			}
+		// Move all objects in storage
+		const allFileKeys = await this.driver.listObjectKeys(`${normalizedKey}/`);
+		for (const oldKey of allFileKeys) {
+			const newKey = newFolderPath + oldKey.slice(normalizedKey.length);
+			await this.driver.copyObject(oldKey, newKey);
+			await this.driver.deleteObject(oldKey);
 		}
 
-		await fs.promises.rename(folderPath, destPath);
-
-		if (metadata && uniqueName !== folderName) {
-			metadata.name = uniqueName;
-			await Bun.write(
-				this.getFolderMetaPath(destPath),
-				JSON.stringify(metadata),
+		// Update all file paths in DB
+		const allFilesUnder = await this.db
+			.select()
+			.from(files)
+			.where(
+				and(
+					eq(files.ownerId, this.user.id),
+					like(files.path, `${normalizedKey}/%`),
+				),
 			);
+		for (const f of allFilesUnder) {
+			const newPath = newFolderPath + f.path.slice(normalizedKey.length);
+			await this.db
+				.update(files)
+				.set({ path: newPath, updatedAt: new Date() })
+				.where(eq(files.id, f.id));
 		}
+
+		// Update all subfolder paths in DB
+		const allSubFolders = await this.db
+			.select()
+			.from(folders)
+			.where(
+				and(
+					eq(folders.ownerId, this.user.id),
+					like(folders.path, `${normalizedKey}/%`),
+				),
+			);
+		for (const sf of allSubFolders) {
+			const newPath = newFolderPath + sf.path.slice(normalizedKey.length);
+			await this.db
+				.update(folders)
+				.set({ path: newPath, updatedAt: new Date() })
+				.where(eq(folders.id, sf.id));
+		}
+
+		// Update the root folder itself
+		const newParentId = normalizedDest
+			? await this.getFolderIdByPath(normalizedDest)
+			: null;
+		await this.db
+			.update(folders)
+			.set({
+				path: newFolderPath,
+				name: uniqueName,
+				parentId: newParentId,
+				updatedAt: new Date(),
+			})
+			.where(eq(folders.id, folder.id));
 
 		await this.activityService.register({
 			userId: this.user.id,
@@ -967,7 +979,6 @@ export class StorageService {
 			message: `Moved folder "${uniqueName}" to ${normalizedDest || "root"}`,
 			level: "info",
 		});
-
 		await this.invalidateListingCaches();
 	}
 
@@ -989,20 +1000,26 @@ export class StorageService {
 			"folder",
 		);
 
-		const folderMeta: FileMetadata = await this.generateMeta(uniqueName);
+		const folderId = crypto.randomUUID();
+		const folderPath = normalizedParent
+			? `${normalizedParent}/${folderId}`
+			: folderId;
 
-		const folderKey = normalizedParent
-			? `${normalizedParent}/${folderMeta.id}`
-			: folderMeta.id;
-		const folderPath = join(this.storagePath, folderKey);
+		const parentId = normalizedParent
+			? await this.getFolderIdByPath(normalizedParent)
+			: null;
 
 		try {
-			await mkdir(folderPath);
-			await Bun.write(join(folderPath, ".keep"), new Uint8Array());
-			await Bun.write(
-				this.getFolderMetaPath(folderPath),
-				JSON.stringify(folderMeta),
-			);
+			await this.db.insert(folders).values({
+				id: folderId,
+				name: uniqueName,
+				ownerId: this.user.id,
+				path: folderPath,
+				parentId,
+				isTrashed: false,
+				isStarred: false,
+				tags: [],
+			});
 			await this.activityService.register({
 				userId: this.user.id,
 				action: "create",
@@ -1010,11 +1027,10 @@ export class StorageService {
 				level: "info",
 			});
 			logger.info(
-				`Folder created: UUID=${folderMeta.id}, name=${uniqueName}, path=${folderPath}`,
+				`Folder created: UUID=${folderId}, name=${uniqueName}, path=${folderPath}`,
 			);
-
 			await this.invalidateListingCaches();
-			return { id: folderMeta.id, name: uniqueName };
+			return { id: folderId, name: uniqueName };
 		} catch (error) {
 			logger.error("Error creating folder:", error);
 			throw new Error("Failed to create folder");
@@ -1023,21 +1039,37 @@ export class StorageService {
 
 	public async deleteFolder(key: string): Promise<void> {
 		try {
-			const folderPrefix = key.endsWith("/") ? key : `${key}/`;
-			const dirPath = join(this.storagePath, folderPrefix);
-			const dir = await readdir(dirPath, { withFileTypes: true });
-			if (!dir) {
-				throw new Error("Folder not found");
-			}
+			const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
 
-			await rm(dirPath, { recursive: true });
+			await this.driver.deleteObjectsByPrefix(`${normalizedKey}/`);
+
+			await this.db
+				.delete(files)
+				.where(
+					and(
+						eq(files.ownerId, this.user.id),
+						like(files.path, `${normalizedKey}/%`),
+					),
+				);
+			await this.db
+				.delete(folders)
+				.where(
+					and(
+						eq(folders.ownerId, this.user.id),
+						or(
+							eq(folders.path, normalizedKey),
+							like(folders.path, `${normalizedKey}/%`),
+						),
+					),
+				);
+
 			await this.activityService.register({
 				userId: this.user.id,
 				action: "delete",
-				message: `Deleted folder: ${folderPrefix}`,
+				message: `Deleted folder: ${normalizedKey}`,
 				level: "info",
 			});
-			logger.info(`Folder deleted at path: ${dirPath}`);
+			logger.info(`Folder deleted: ${normalizedKey}`);
 			await this.invalidateListingCaches();
 		} catch (error) {
 			logger.error("Error deleting folder:", error);
@@ -1046,67 +1078,88 @@ export class StorageService {
 	}
 
 	public async trashFolder(key: string): Promise<void> {
-		const folderPrefix = key.endsWith("/") ? key : `${key}/`;
-		const dirPath = join(this.storagePath, folderPrefix);
-		if (!existsSync(dirPath)) {
+		const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
+		const [folder] = await this.db
+			.select({ id: folders.id })
+			.from(folders)
+			.where(
+				and(eq(folders.path, normalizedKey), eq(folders.ownerId, this.user.id)),
+			);
+		if (!folder) {
 			throw new Error("Folder not found");
 		}
 
-		const files = await this.walkFilesRecursively(dirPath);
-		for (const abs of files) {
-			const relKey = abs.replace(`${this.storagePath}/`, "");
-			const metaPath = `${abs}.meta.json`;
-			let metadata: FileMetadata = await this.generateMeta(
-				relKey.split("/").pop() || relKey,
+		await this.db
+			.update(files)
+			.set({ isTrashed: true, updatedAt: new Date() })
+			.where(
+				and(
+					eq(files.ownerId, this.user.id),
+					like(files.path, `${normalizedKey}/%`),
+				),
 			);
-			const metaFile = Bun.file(metaPath);
-			if (await metaFile.exists()) {
-				metadata = await metaFile.json();
-			}
-			metadata.isTrashed = true;
-			await this.writeFile(relKey, undefined, metadata);
-		}
-
-		await this.updateFolderMeta(folderPrefix, { isTrashed: true });
+		await this.db
+			.update(folders)
+			.set({ isTrashed: true, updatedAt: new Date() })
+			.where(
+				and(
+					eq(folders.ownerId, this.user.id),
+					or(
+						eq(folders.path, normalizedKey),
+						like(folders.path, `${normalizedKey}/%`),
+					),
+				),
+			);
 
 		await this.activityService.register({
 			userId: this.user.id,
 			action: "update",
-			message: `Moved folder to trash: ${folderPrefix}`,
+			message: `Moved folder to trash: ${normalizedKey}`,
 			level: "info",
 		});
-
 		await this.invalidateListingCaches();
 	}
 
 	public async restoreFolder(key: string): Promise<void> {
-		const folderPrefix = key.endsWith("/") ? key : `${key}/`;
-		const dirPath = join(this.storagePath, folderPrefix);
-		if (!existsSync(dirPath)) {
+		const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
+		const [folder] = await this.db
+			.select({ id: folders.id })
+			.from(folders)
+			.where(
+				and(eq(folders.path, normalizedKey), eq(folders.ownerId, this.user.id)),
+			);
+		if (!folder) {
 			throw new Error("Folder not found");
 		}
 
-		const files = await this.walkFilesRecursively(dirPath);
-		for (const abs of files) {
-			const relKey = abs.replace(`${this.storagePath}/`, "");
-			const metaPath = `${abs}.meta.json`;
-			const metaFile = Bun.file(metaPath);
-			if (await metaFile.exists()) {
-				const metadata: FileMetadata = await metaFile.json();
-				metadata.isTrashed = false;
-				await this.writeFile(relKey, undefined, metadata);
-			}
-		}
-
-		await this.updateFolderMeta(folderPrefix, { isTrashed: false });
+		await this.db
+			.update(files)
+			.set({ isTrashed: false, updatedAt: new Date() })
+			.where(
+				and(
+					eq(files.ownerId, this.user.id),
+					like(files.path, `${normalizedKey}/%`),
+				),
+			);
+		await this.db
+			.update(folders)
+			.set({ isTrashed: false, updatedAt: new Date() })
+			.where(
+				and(
+					eq(folders.ownerId, this.user.id),
+					or(
+						eq(folders.path, normalizedKey),
+						like(folders.path, `${normalizedKey}/%`),
+					),
+				),
+			);
 
 		await this.activityService.register({
 			userId: this.user.id,
 			action: "update",
-			message: `Restored folder from trash: ${folderPrefix}`,
+			message: `Restored folder from trash: ${normalizedKey}`,
 			level: "info",
 		});
-
 		await this.invalidateListingCaches();
 	}
 
@@ -1119,57 +1172,51 @@ export class StorageService {
 			name?: string;
 		},
 	): Promise<void> {
-		const folderPrefix = id.endsWith("/") ? id : `${id}/`;
-		const dirPath = join(this.storagePath, folderPrefix);
-		if (!existsSync(dirPath)) {
+		const normalizedId = id.endsWith("/") ? id.slice(0, -1) : id;
+		const [folder] = await this.db
+			.select()
+			.from(folders)
+			.where(
+				and(eq(folders.path, normalizedId), eq(folders.ownerId, this.user.id)),
+			);
+		if (!folder) {
 			throw new Error("Folder not found");
 		}
 
-		const keepMetaPath = this.getFolderMetaPath(dirPath);
-		const metadata =
-			(await this.readFolderMeta(dirPath)) ??
-			(await this.generateMeta(folderPrefix));
+		const updates: Partial<typeof folders.$inferInsert> = {
+			updatedAt: new Date(),
+		};
+		if (typeof data.isTrashed === "boolean") updates.isTrashed = data.isTrashed;
+		if (typeof data.isStarred === "boolean") updates.isStarred = data.isStarred;
+		if (Array.isArray(data.tags)) updates.tags = data.tags;
+		if (typeof data.name === "string") updates.name = data.name;
 
-		if (typeof data.isTrashed === "boolean") {
-			metadata.isTrashed = data.isTrashed;
-		}
-		if (typeof data.isStarred === "boolean") {
-			metadata.isStarred = data.isStarred;
-		}
-		if (Array.isArray(data.tags)) {
-			metadata.tags = data.tags;
-		}
-		if (typeof data.name === "string") {
-			metadata.name = data.name;
-		}
+		await this.db.update(folders).set(updates).where(eq(folders.id, folder.id));
 
-		await Bun.write(keepMetaPath, JSON.stringify(metadata));
 		await this.activityService.register({
 			userId: this.user.id,
 			action: "update",
-			message: `Updated folder metadata: ${folderPrefix}`,
+			message: `Updated folder metadata: ${normalizedId}`,
 			level: "info",
 		});
-
 		await this.invalidateListingCaches();
 	}
 
 	public async getFolderMeta(folderId: string): Promise<FileMetadata | null> {
-		const folderPrefix = folderId.endsWith("/") ? folderId : `${folderId}/`;
-		const dirPath = join(this.storagePath, folderPrefix);
-		if (!existsSync(dirPath)) {
-			logger.warn(`Folder not found by UUID: ${folderId}`);
+		const normalizedId = folderId.endsWith("/")
+			? folderId.slice(0, -1)
+			: folderId;
+		const [folder] = await this.db
+			.select()
+			.from(folders)
+			.where(
+				and(eq(folders.path, normalizedId), eq(folders.ownerId, this.user.id)),
+			);
+		if (!folder) {
+			logger.warn(`Folder not found: ${folderId}`);
 			return null;
 		}
-		const metadata = await this.readFolderMeta(dirPath);
-		if (metadata) {
-			logger.debug(
-				`Retrieved folder metadata: UUID=${folderId}, name=${metadata.name}`,
-			);
-			return metadata;
-		}
-		logger.warn(`Folder ${folderId} missing metadata - may be legacy folder`);
-		return null;
+		return this.folderDbToMetadata(folder);
 	}
 
 	public getFullFolderPath(folderId: string, parentId?: string): string {
@@ -1182,13 +1229,14 @@ export class StorageService {
 	}
 
 	public async folderExists(key: string): Promise<boolean> {
-		const folderPrefix = key.endsWith("/") ? key : `${key}/`;
-		try {
-			const dirPath = join(this.storagePath, folderPrefix);
-			return existsSync(dirPath);
-		} catch {
-			return false;
-		}
+		const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
+		const [folder] = await this.db
+			.select({ id: folders.id })
+			.from(folders)
+			.where(
+				and(eq(folders.path, normalizedKey), eq(folders.ownerId, this.user.id)),
+			);
+		return !!folder;
 	}
 
 	public async listFolders(
@@ -1196,7 +1244,6 @@ export class StorageService {
 		options?: { includeTrashed?: boolean; onlyTrashed?: boolean },
 	): Promise<DirectoryList> {
 		const normalizedPrefix = !prefix || prefix === "/" ? "" : prefix;
-
 		const cacheKey = CacheKeys.folders(
 			normalizedPrefix,
 			Boolean(options?.onlyTrashed),
@@ -1204,87 +1251,56 @@ export class StorageService {
 		const cached = await this.cache.get<DirectoryList>(cacheKey);
 		if (cached) return cached;
 
-		const dirPath = join(this.storagePath, normalizedPrefix);
-		const dir = await readdir(dirPath, { withFileTypes: true });
-		if (!dir) {
-			throw new Error("Directory not found");
-		}
+		const parentFolderId = normalizedPrefix
+			? await this.getFolderIdByPath(normalizedPrefix)
+			: null;
 
-		const folders: string[] = [];
+		const rows = await this.db
+			.select({ id: folders.id, isTrashed: folders.isTrashed })
+			.from(folders)
+			.where(
+				and(
+					eq(folders.ownerId, this.user.id),
+					options?.onlyTrashed
+						? eq(folders.isTrashed, true)
+						: parentFolderId
+							? eq(folders.parentId, parentFolderId)
+							: isNull(folders.parentId),
+				),
+			);
 
-		for (const dirent of dir) {
-			if (!dirent.isDirectory()) continue;
-			if (dirent.name === ".trash" || dirent.name === ".thumbnails") continue;
+		const result: string[] = rows
+			.filter((r) => {
+				if (!options?.includeTrashed && !options?.onlyTrashed)
+					return !r.isTrashed;
+				return true;
+			})
+			.map((r) => r.id);
 
-			const folderPath = join(dirPath, dirent.name);
-			let isTrashed = false;
-
-			const meta = await this.readFolderMeta(folderPath);
-			if (meta) {
-				isTrashed = Boolean(meta.isTrashed);
-			}
-
-			if (options?.onlyTrashed) {
-				if (isTrashed) folders.push(dirent.name);
-				continue;
-			}
-			if (!options?.includeTrashed && isTrashed) continue;
-			folders.push(dirent.name);
-		}
-
-		await this.cache.set(cacheKey, folders);
-		return folders;
+		await this.cache.set(cacheKey, result);
+		return result;
 	}
 
 	public async listFoldersWithMetadata(
-		prefix: string,
+		_prefix: string,
 		options?: { includeTrashed?: boolean; onlyTrashed?: boolean },
 	): Promise<FolderItem[]> {
-		const results: FolderItem[] = [];
+		const allFolders = await this.db
+			.select()
+			.from(folders)
+			.where(eq(folders.ownerId, this.user.id));
 
-		const collectFolders = async (currentPrefix: string) => {
-			const normalizedPrefix =
-				!currentPrefix || currentPrefix === "/" ? "" : currentPrefix;
-			const dirPath = join(this.storagePath, normalizedPrefix);
-
-			let dir: { name: string; isDirectory: () => boolean }[];
-			try {
-				dir = (await readdir(dirPath, {
-					withFileTypes: true,
-				})) as unknown as typeof dir;
-			} catch {
-				return;
-			}
-
-			for (const dirent of dir) {
-				if (!dirent.isDirectory()) continue;
-				if (dirent.name === ".trash" || dirent.name === ".thumbnails") continue;
-
-				const folderId = dirent.name;
-				const folderPath = join(dirPath, folderId);
-				const relativePath = normalizedPrefix
-					? `${normalizedPrefix}/${folderId}`
-					: folderId;
-
-				const meta = await this.readFolderMeta(folderPath);
-				const isTrashed = meta ? Boolean(meta.isTrashed) : false;
-				const displayName = meta?.name || folderId;
-
-				if (options?.onlyTrashed && !isTrashed) continue;
-				if (!options?.includeTrashed && isTrashed) continue;
-
-				results.push({
-					id: folderId,
-					name: displayName,
-					path: relativePath,
-				});
-
-				await collectFolders(relativePath);
-			}
-		};
-
-		await collectFolders(prefix);
-		return results;
+		return allFolders
+			.filter((f) => {
+				if (options?.onlyTrashed) return f.isTrashed;
+				if (!options?.includeTrashed) return !f.isTrashed;
+				return true;
+			})
+			.map((f) => ({
+				id: f.id,
+				name: f.name,
+				path: f.path,
+			}));
 	}
 
 	public async calculateFolderSize(folderKey: string): Promise<number> {
@@ -1292,51 +1308,20 @@ export class StorageService {
 		const normalizedKey = folderKey.endsWith("/")
 			? folderKey.slice(0, -1)
 			: folderKey;
-
 		const cacheKey = `folder-size:${normalizedKey}`;
 		const cached = await this.cache.get<number>(cacheKey);
 		if (cached !== undefined) return cached;
 
-		const folderPath = join(this.storagePath, normalizedKey);
-
-		logger.debug(`Resolved folder path for size calculation: ${folderPath}`);
-
-		if (!existsSync(folderPath)) {
-			logger.debug(`Folder not found for size calculation: ${folderKey}`);
-			throw new FileOrFolderNotFoundError("Folder not found");
-		}
-
-		let totalSize = 0;
-
-		const walkFolder = async (dirPath: string): Promise<void> => {
-			try {
-				logger.debug(`Walking folder for size calculation: ${dirPath}`);
-				const entries = await readdir(dirPath, { withFileTypes: true });
-				logger.debug(`Found ${entries.length} entries in folder: ${dirPath}`);
-				for (const entry of entries) {
-					if (entry.name.endsWith(".meta.json") || entry.name.startsWith(".")) {
-						logger.debug(
-							`Skipping entry during size calculation: ${entry.name}`,
-						);
-						continue;
-					}
-
-					const fullPath = join(dirPath, entry.name);
-					if (entry.isDirectory()) {
-						await walkFolder(fullPath);
-					} else {
-						const stats = await fs.promises.stat(fullPath);
-						totalSize += stats.size;
-					}
-				}
-			} catch (error) {
-				logger.warn(`Error reading directory ${dirPath}:`, error);
-			}
-		};
-
-		logger.debug(`Starting folder size calculation for: ${folderPath}`);
-		await walkFolder(folderPath);
-
+		const [result] = await this.db
+			.select({ totalSize: sql<number>`COALESCE(SUM(${files.size}), 0)` })
+			.from(files)
+			.where(
+				and(
+					eq(files.ownerId, this.user.id),
+					like(files.path, `${normalizedKey}/%`),
+				),
+			);
+		const totalSize = Number(result?.totalSize ?? 0);
 		await this.cache.set(cacheKey, totalSize, 300);
 		logger.info(
 			`Calculated size for folder: ${folderKey}, size: ${totalSize} bytes`,
@@ -1348,32 +1333,16 @@ export class StorageService {
 		prefix: string,
 	): Promise<Map<string, number>> {
 		const sizes = new Map<string, number>();
-
-		try {
-			const folders = await this.listFolders(prefix, {
-				includeTrashed: true,
-			});
-
-			for (const folderName of folders) {
-				const folderKey = prefix ? `${prefix}/${folderName}` : folderName;
-				try {
-					const size = await this.calculateFolderSize(folderKey);
-					sizes.set(folderName, size);
-				} catch (error) {
-					logger.warn(
-						`Failed to calculate size for folder ${folderKey}:`,
-						error,
-					);
-					sizes.set(folderName, 0);
-				}
+		const folderList = await this.listFolders(prefix, { includeTrashed: true });
+		for (const folderId of folderList) {
+			const folderPath = prefix ? `${prefix}/${folderId}` : folderId;
+			try {
+				const size = await this.calculateFolderSize(folderPath);
+				sizes.set(folderId, size);
+			} catch {
+				sizes.set(folderId, 0);
 			}
-		} catch (error) {
-			logger.error(
-				`Failed to calculate folder sizes for prefix ${prefix}:`,
-				error,
-			);
 		}
-
 		return sizes;
 	}
 
@@ -1389,115 +1358,126 @@ export class StorageService {
 		limit?: number;
 		offset?: number;
 	}): Promise<ObjectList> {
-		const prefix = options.parent || "";
+		const prefix = options.parent ?? "";
 		const cacheKey = CacheKeys.listing(prefix, JSON.stringify(options));
-
 		const cached = await this.cache.get<ObjectList>(cacheKey);
 		if (cached) return cached;
 
-		const dirPath = join(this.storagePath, prefix);
-		if (!existsSync(dirPath)) {
+		if (options.recursive) {
+			const result = await this.listFilesRecursive(options);
+			await this.cache.set(cacheKey, result);
+			return result;
+		}
+
+		const normalizedPrefix = prefix.endsWith("/")
+			? prefix.slice(0, -1)
+			: prefix;
+		const folderId = normalizedPrefix
+			? await this.getFolderIdByPath(normalizedPrefix)
+			: null;
+
+		// Prefix given but folder not found → return empty
+		if (normalizedPrefix && folderId === null) {
 			const empty: ObjectList = { list: [], count: 0, total: 0 };
 			await this.cache.set(cacheKey, empty);
 			return empty;
 		}
 
-		const entries = (await readdir(dirPath, { withFileTypes: true })).filter(
-			(e) =>
-				e.name !== this.userFolder &&
-				e.name !== ".keep" &&
-				!e.name.endsWith(".meta.json") &&
-				!(e.isDirectory() && (e.name === ".trash" || e.name === ".thumbnails")),
-		);
+		const [childFiles, childFolders] = await Promise.all([
+			this.db
+				.select()
+				.from(files)
+				.where(
+					and(
+						eq(files.ownerId, this.user.id),
+						folderId ? eq(files.folderId, folderId) : isNull(files.folderId),
+						options.includeTrashed ? undefined : eq(files.isTrashed, false),
+						options.category ? eq(files.category, options.category) : undefined,
+					),
+				),
+			this.db
+				.select()
+				.from(folders)
+				.where(
+					and(
+						eq(folders.ownerId, this.user.id),
+						folderId
+							? eq(folders.parentId, folderId)
+							: isNull(folders.parentId),
+						options.includeTrashed ? undefined : eq(folders.isTrashed, false),
+					),
+				),
+		]);
 
-		const items: ObjectItem[] = [];
+		const items: ObjectItem[] = [
+			...childFolders.map((f) => this.folderDbToObjectItem(f)),
+			...childFiles.map((f) => this.fileDbToObjectItem(f)),
+		];
 
-		for (const entry of entries) {
-			const fullPath = join(dirPath, entry.name);
-			const statResult = await stat(fullPath).catch(() => null);
-			if (!statResult) continue;
+		const total = items.length;
+		items.sort((a, b) => a.key.localeCompare(b.key));
 
-			const updatedAt = new Date(statResult.mtimeMs).toLocaleString();
-
-			if (entry.isDirectory()) {
-				const metadata = await this.readFolderMetadataOrGenerate(fullPath);
-				if (!options.includeTrashed && metadata.isTrashed) continue;
-
-				if (options.recursive) {
-					const subPath = prefix ? `${prefix}/${entry.name}` : entry.name;
-					const subResult = await this.abstractListFiles({
-						...options,
-						parent: subPath,
-					});
-					const folderName = metadata.name || entry.name;
-					for (const item of subResult.list) {
-						if (item.type === "file") {
-							items.push({
-								...item,
-								key: `${entry.name}/${item.key}`,
-								parent: item.parent
-									? `${folderName}/${item.parent}`
-									: folderName,
-								parentKey: item.parentKey
-									? `${entry.name}/${item.parentKey}`
-									: entry.name,
-							});
-						}
-					}
-				} else {
-					items.push({
-						key: `${entry.name}/`,
-						size: 0,
-						updatedAt,
-						metadata,
-						type: "folder",
-					});
-				}
-			} else {
-				const metadata = await this.readFileMetadata(
-					`${fullPath}.meta.json`,
-					entry.name,
-				);
-				try {
-					this.permissionsCheck(metadata);
-				} catch {
-					continue;
-				}
-				items.push({
-					key: entry.name,
-					size: statResult.size,
-					updatedAt,
-					metadata,
-					type: "file",
-				});
-			}
-		}
-
-		let filtered = items.filter((item) => {
-			if (!options.includeTrashed && item.metadata.isTrashed) return false;
-			if (options.category && item.metadata.category !== options.category)
-				return false;
-			return true;
-		});
-
-		const total = filtered.length;
-		filtered.sort((a, b) => a.key.localeCompare(b.key));
-
-		const offset = options.offset || 0;
-		if (options.limit || offset) {
-			filtered = filtered.slice(
-				offset,
-				options.limit ? offset + options.limit : undefined,
-			);
-		}
+		const offset = options.offset ?? 0;
+		const paginated =
+			options.limit || offset
+				? items.slice(
+						offset,
+						options.limit ? offset + options.limit : undefined,
+					)
+				: items;
 
 		const result: ObjectList = {
-			list: filtered,
-			count: filtered.length,
+			list: paginated,
+			count: paginated.length,
 			total,
 		};
 		await this.cache.set(cacheKey, result);
 		return result;
+	}
+
+	private async listFilesRecursive(options: {
+		parent?: string;
+		category?: FileCategory;
+		includeTrashed?: boolean;
+	}): Promise<ObjectList> {
+		const prefix = options.parent ?? "";
+		const normalizedPrefix = prefix.endsWith("/")
+			? prefix.slice(0, -1)
+			: prefix;
+
+		const allUserFolders = await this.db
+			.select()
+			.from(folders)
+			.where(eq(folders.ownerId, this.user.id));
+		const folderById = new Map(allUserFolders.map((f) => [f.id, f]));
+
+		const allFiles = await this.db
+			.select()
+			.from(files)
+			.where(
+				and(
+					eq(files.ownerId, this.user.id),
+					normalizedPrefix
+						? like(files.path, `${normalizedPrefix}/%`)
+						: undefined,
+					options.includeTrashed ? undefined : eq(files.isTrashed, false),
+					options.category ? eq(files.category, options.category) : undefined,
+				),
+			);
+
+		const items: ObjectItem[] = allFiles.map((f) => {
+			const item = this.fileDbToObjectItem(f);
+			if (f.folderId) {
+				const parentFolder = folderById.get(f.folderId);
+				if (parentFolder) {
+					item.parent = parentFolder.name;
+					item.parentKey = parentFolder.path;
+				}
+			}
+			return item;
+		});
+
+		return { list: items, count: items.length, total: items.length };
 	}
 
 	public async listTrashFiles(): Promise<ObjectList> {
@@ -1505,14 +1485,24 @@ export class StorageService {
 		const cached = await this.cache.get<ObjectList>(cacheKey);
 		if (cached) return cached;
 
-		const files = await this.abstractListFiles({ includeTrashed: true });
-		const filtered = files.list.filter((item) => item.metadata.isTrashed);
-		const result: ObjectList = {
-			list: filtered,
-			count: filtered.length,
-			total: filtered.length,
-		};
+		const [trashedFiles, trashedFolders] = await Promise.all([
+			this.db
+				.select()
+				.from(files)
+				.where(and(eq(files.ownerId, this.user.id), eq(files.isTrashed, true))),
+			this.db
+				.select()
+				.from(folders)
+				.where(
+					and(eq(folders.ownerId, this.user.id), eq(folders.isTrashed, true)),
+				),
+		]);
 
+		const list = [
+			...trashedFolders.map((f) => this.folderDbToObjectItem(f)),
+			...trashedFiles.map((f) => this.fileDbToObjectItem(f)),
+		];
+		const result: ObjectList = { list, count: list.length, total: list.length };
 		await this.cache.set(cacheKey, result);
 		return result;
 	}
@@ -1520,7 +1510,24 @@ export class StorageService {
 	public async listFilesPerCategory(
 		category: FileCategory,
 	): Promise<ObjectList> {
-		return await this.abstractListFiles({ category, recursive: true });
+		const cacheKey = `category:${category}`;
+		const cached = await this.cache.get<ObjectList>(cacheKey);
+		if (cached) return cached;
+
+		const categoryFiles = await this.db
+			.select()
+			.from(files)
+			.where(
+				and(
+					eq(files.ownerId, this.user.id),
+					eq(files.category, category),
+					eq(files.isTrashed, false),
+				),
+			);
+		const list = categoryFiles.map((f) => this.fileDbToObjectItem(f));
+		const result: ObjectList = { list, count: list.length, total: list.length };
+		await this.cache.set(cacheKey, result);
+		return result;
 	}
 
 	public async listFiles(
@@ -1529,10 +1536,7 @@ export class StorageService {
 	): Promise<ObjectList> {
 		const normalizedPrefix =
 			prefix && !prefix.endsWith("/") ? `${prefix}/` : prefix;
-		return await this.abstractListFiles({
-			parent: normalizedPrefix,
-			...options,
-		});
+		return this.abstractListFiles({ parent: normalizedPrefix, ...options });
 	}
 
 	public async listRecentFiles(): Promise<ObjectList> {
@@ -1540,22 +1544,53 @@ export class StorageService {
 		const cached = await this.cache.get<ObjectList>(cacheKey);
 		if (cached) return cached;
 
-		const allFiles = await this.abstractListFiles({ recursive: true });
-		const recentFiles = allFiles.list
-			.filter((item) => item.type === "file")
-			.sort((a, b) => {
-				const aTime = new Date(a.updatedAt || 0).getTime();
-				const bTime = new Date(b.updatedAt || 0).getTime();
-				return bTime - aTime;
-			})
-			.slice(0, 25);
+		const recentFiles = await this.db
+			.select()
+			.from(files)
+			.where(and(eq(files.ownerId, this.user.id), eq(files.isTrashed, false)))
+			.orderBy(desc(files.updatedAt))
+			.limit(25);
 
-		const result: ObjectList = {
-			list: recentFiles,
-			count: recentFiles.length,
-			total: allFiles.total,
-		};
+		const folderIds = [
+			...new Set(
+				recentFiles
+					.filter(
+						(f): f is typeof f & { folderId: string } => f.folderId !== null,
+					)
+					.map((f) => f.folderId),
+			),
+		];
+		const parentFolders =
+			folderIds.length > 0
+				? await this.db
+						.select({
+							id: folders.id,
+							name: folders.name,
+							path: folders.path,
+						})
+						.from(folders)
+						.where(
+							and(
+								eq(folders.ownerId, this.user.id),
+								inArray(folders.id, folderIds),
+							),
+						)
+				: [];
+		const folderMap = new Map(parentFolders.map((f) => [f.id, f]));
 
+		const list = recentFiles.map((f) => {
+			const item = this.fileDbToObjectItem(f);
+			if (f.folderId) {
+				const pf = folderMap.get(f.folderId);
+				if (pf) {
+					item.parent = pf.name;
+					item.parentKey = pf.path;
+				}
+			}
+			return item;
+		});
+
+		const result: ObjectList = { list, count: list.length, total: list.length };
 		await this.cache.set(cacheKey, result);
 		return result;
 	}
@@ -1565,15 +1600,32 @@ export class StorageService {
 		const cached = await this.cache.get<ObjectList>(cacheKey);
 		if (cached) return cached;
 
-		const allFiles = await this.abstractListFiles({ recursive: true });
-		const starredFiles = allFiles.list.filter(
-			(item) => item.metadata.isStarred,
-		);
+		const [starredFiles, starredFolders] = await Promise.all([
+			this.db
+				.select()
+				.from(files)
+				.where(
+					and(
+						eq(files.ownerId, this.user.id),
+						eq(files.isStarred, true),
+						eq(files.isTrashed, false),
+					),
+				),
+			this.db
+				.select()
+				.from(folders)
+				.where(
+					and(
+						eq(folders.ownerId, this.user.id),
+						eq(folders.isStarred, true),
+						eq(folders.isTrashed, false),
+					),
+				),
+		]);
 
-		const starredFolders = await this.collectStarredFolders("");
-
-		const combined = [...starredFolders, ...starredFiles];
-		combined.sort((a, b) => {
+		const fileItems = starredFiles.map((f) => this.fileDbToObjectItem(f));
+		const folderItems = starredFolders.map((f) => this.folderDbToObjectItem(f));
+		const combined = [...folderItems, ...fileItems].sort((a, b) => {
 			const aIsFolder = a.type === "folder";
 			const bIsFolder = b.type === "folder";
 			if (aIsFolder && !bIsFolder) return -1;
@@ -1586,111 +1638,62 @@ export class StorageService {
 			count: combined.length,
 			total: combined.length,
 		};
-
 		await this.cache.set(cacheKey, result);
 		return result;
-	}
-
-	private async collectStarredFolders(prefix: string): Promise<ObjectItem[]> {
-		const results: ObjectItem[] = [];
-		const stack: string[] = [prefix];
-
-		while (stack.length > 0) {
-			const current = stack.pop() as string;
-			const dirPath = join(this.storagePath, current);
-
-			let entries: { name: string; isDirectory: () => boolean }[];
-			try {
-				entries = (await readdir(dirPath, {
-					withFileTypes: true,
-				})) as unknown as typeof entries;
-			} catch {
-				continue;
-			}
-
-			const validDirs = entries.filter((dirent) => {
-				if (!dirent.isDirectory()) return false;
-				if (dirent.name === ".trash" || dirent.name === ".thumbnails")
-					return false;
-				if (dirent.name === this.userFolder) return false;
-				return true;
-			});
-
-			for (const dirent of validDirs) {
-				const folderPath = join(dirPath, dirent.name);
-				const relativePath = current
-					? `${current}/${dirent.name}`
-					: dirent.name;
-
-				const [statResult, metadata] = await Promise.all([
-					stat(folderPath).catch(() => null),
-					this.readFolderMetadataOrGenerate(folderPath),
-				]);
-
-				if (metadata.isTrashed) continue;
-
-				if (metadata.isStarred) {
-					const updatedAt = statResult
-						? new Date(statResult.mtimeMs).toLocaleString()
-						: new Date().toLocaleString();
-					results.push({
-						key: `${relativePath}/`,
-						size: 0,
-						updatedAt,
-						metadata,
-						type: "folder",
-					});
-				}
-
-				stack.push(relativePath);
-			}
-		}
-
-		return results;
 	}
 
 	public async searchFiles(query: string, limit = 50): Promise<ObjectList> {
 		if (!query || query.trim().length === 0) {
 			return { list: [], count: 0, total: 0 };
 		}
-
 		const searchTerm = query.toLowerCase().trim();
-		const allFiles = await this.abstractListFiles({ recursive: true });
 
-		const matches = allFiles.list.filter((item) => {
-			const displayName = (item.metadata.name || item.key).toLowerCase();
-			return displayName.includes(searchTerm);
-		});
+		const [matchedFiles, matchedFolders] = await Promise.all([
+			this.db
+				.select()
+				.from(files)
+				.where(
+					and(
+						eq(files.ownerId, this.user.id),
+						ilike(files.name, `%${searchTerm}%`),
+					),
+				),
+			this.db
+				.select()
+				.from(folders)
+				.where(
+					and(
+						eq(folders.ownerId, this.user.id),
+						ilike(folders.name, `%${searchTerm}%`),
+					),
+				),
+		]);
 
-		matches.sort((a, b) => {
+		const allMatches: ObjectItem[] = [
+			...matchedFolders.map((f) => this.folderDbToObjectItem(f)),
+			...matchedFiles.map((f) => this.fileDbToObjectItem(f)),
+		];
+
+		allMatches.sort((a, b) => {
 			const aName = (a.metadata.name || a.key).toLowerCase();
 			const bName = (b.metadata.name || b.key).toLowerCase();
-
 			const aExact = aName === searchTerm;
 			const bExact = bName === searchTerm;
 			if (aExact && !bExact) return -1;
 			if (bExact && !aExact) return 1;
-
 			const aStarts = aName.startsWith(searchTerm);
 			const bStarts = bName.startsWith(searchTerm);
 			if (aStarts && !bStarts) return -1;
 			if (bStarts && !aStarts) return 1;
-
-			const aIsFolder = a.type === "folder" || a.key.endsWith("/");
-			const bIsFolder = b.type === "folder" || b.key.endsWith("/");
+			const aIsFolder = a.type === "folder";
+			const bIsFolder = b.type === "folder";
 			if (aIsFolder && !bIsFolder) return -1;
 			if (bIsFolder && !aIsFolder) return 1;
-
 			return aName.localeCompare(bName);
 		});
 
-		const limited = matches.slice(0, limit);
-
-		return {
-			list: limited,
-			count: limited.length,
-			total: matches.length,
-		};
+		const limited = allMatches.slice(0, limit);
+		return { list: limited, count: limited.length, total: allMatches.length };
 	}
 
 	private async getUniqueDisplayName(
@@ -1698,18 +1701,36 @@ export class StorageService {
 		folder?: string,
 		type: "file" | "folder" = "file",
 	): Promise<string> {
-		const existingItems = await this.abstractListFiles({
-			parent: folder,
-			includeTrashed: false,
-		});
+		const folderId = folder ? await this.getFolderIdByPath(folder) : null;
 
-		const existingNames = new Set(
-			existingItems.list
-				.filter((item) =>
-					type === "folder" ? item.type === "folder" : item.type === "file",
-				)
-				.map((item) => item.metadata.name?.toLowerCase()),
-		);
+		let existingNames: Set<string>;
+		if (type === "folder") {
+			const existing = await this.db
+				.select({ name: folders.name })
+				.from(folders)
+				.where(
+					and(
+						eq(folders.ownerId, this.user.id),
+						eq(folders.isTrashed, false),
+						folderId
+							? eq(folders.parentId, folderId)
+							: isNull(folders.parentId),
+					),
+				);
+			existingNames = new Set(existing.map((r) => r.name.toLowerCase()));
+		} else {
+			const existing = await this.db
+				.select({ name: files.name })
+				.from(files)
+				.where(
+					and(
+						eq(files.ownerId, this.user.id),
+						eq(files.isTrashed, false),
+						folderId ? eq(files.folderId, folderId) : isNull(files.folderId),
+					),
+				);
+			existingNames = new Set(existing.map((r) => r.name.toLowerCase()));
+		}
 
 		if (!existingNames.has(name.toLowerCase())) {
 			return name;
@@ -1732,7 +1753,6 @@ export class StorageService {
 			counter++;
 			newName = `${baseName} (${counter})${extension}`;
 		}
-
 		return newName;
 	}
 
@@ -1745,8 +1765,11 @@ export class StorageService {
 		const cached = await this.cache.get<number>(cacheKey);
 		if (cached !== undefined) return cached;
 
-		const files = await this.abstractListFiles({ includeTrashed: true });
-		const count = files.list.filter((item) => item.metadata.isTrashed).length;
+		const [result] = await this.db
+			.select({ count: sql<number>`COUNT(*)` })
+			.from(files)
+			.where(and(eq(files.ownerId, this.user.id), eq(files.isTrashed, true)));
+		const count = Number(result?.count ?? 0);
 		await this.cache.set(cacheKey, count);
 		return count;
 	}
@@ -1756,10 +1779,11 @@ export class StorageService {
 		const cached = await this.cache.get<number>(cacheKey);
 		if (cached !== undefined) return cached;
 
-		const allFiles = await this.abstractListFiles({ recursive: true });
-		const count = allFiles.list.filter(
-			(item) => item.metadata.isStarred,
-		).length;
+		const [result] = await this.db
+			.select({ count: sql<number>`COUNT(*)` })
+			.from(files)
+			.where(and(eq(files.ownerId, this.user.id), eq(files.isStarred, true)));
+		const count = Number(result?.count ?? 0);
 		await this.cache.set(cacheKey, count);
 		return count;
 	}
@@ -1814,27 +1838,20 @@ export class StorageService {
 			}
 
 			const thumbnail = await sharp(tempPng).webp({ quality: 80 }).toBuffer();
-
 			const elapsed = (performance.now() - startTime).toFixed(0);
 			logger.debug(
 				`[thumbnail:video] Generated ${thumbnail.length} bytes in ${elapsed}ms`,
 			);
-
 			try {
 				await unlink(tempPng);
-			} catch {
-				// Ignore cleanup errors
-			}
-
+			} catch {}
 			return thumbnail;
 		} catch (error) {
 			const elapsed = (performance.now() - startTime).toFixed(0);
 			logger.debug(`[thumbnail:video] Failed after ${elapsed}ms: ${error}`);
 			try {
 				await unlink(tempPng);
-			} catch {
-				// Ignore cleanup errors
-			}
+			} catch {}
 			throw error;
 		}
 	}
@@ -1868,12 +1885,8 @@ export class StorageService {
 			}
 
 			const tempPng = `${tempPrefix}.png`;
-
 			const thumbnail = await sharp(tempPng)
-				.resize(size, size, {
-					fit: "inside",
-					withoutEnlargement: true,
-				})
+				.resize(size, size, { fit: "inside", withoutEnlargement: true })
 				.webp({ quality: 80 })
 				.toBuffer();
 
@@ -1881,22 +1894,16 @@ export class StorageService {
 			logger.debug(
 				`[thumbnail:pdf] Generated ${thumbnail.length} bytes in ${elapsed}ms`,
 			);
-
 			try {
 				await unlink(tempPng);
-			} catch {
-				// Ignore cleanup errors
-			}
-
+			} catch {}
 			return thumbnail;
 		} catch (error) {
 			const elapsed = (performance.now() - startTime).toFixed(0);
 			logger.debug(`[thumbnail:pdf] Failed after ${elapsed}ms: ${error}`);
 			try {
 				await unlink(`${tempPrefix}.png`);
-			} catch {
-				// Ignore cleanup errors
-			}
+			} catch {}
 			throw error;
 		}
 	}
@@ -1931,35 +1938,27 @@ export class StorageService {
 			}
 
 			const waveform = await sharp(tempPng).webp({ quality: 90 }).toBuffer();
-
 			const elapsed = (performance.now() - startTime).toFixed(0);
 			logger.debug(
 				`[thumbnail:audio] Generated waveform ${waveform.length} bytes in ${elapsed}ms`,
 			);
-
 			try {
 				await unlink(tempPng);
-			} catch {
-				// Ignore cleanup errors
-			}
-
+			} catch {}
 			return waveform;
 		} catch (error) {
 			const elapsed = (performance.now() - startTime).toFixed(0);
 			logger.debug(`[thumbnail:audio] Failed after ${elapsed}ms: ${error}`);
 			try {
 				await unlink(tempPng);
-			} catch {
-				// Ignore cleanup errors
-			}
+			} catch {}
 			throw error;
 		}
 	}
 
 	private async generateThumbnail(
-		currentPath: string,
-		contentType: string,
 		key: string,
+		contentType: string,
 		size = 300,
 	): Promise<{ buffer: Buffer; contentType: string } | null> {
 		const isImage = IMAGE_TYPES.includes(
@@ -1980,21 +1979,13 @@ export class StorageService {
 		}
 
 		const thumbDir = join(this.storagePath, ".thumbnails");
-		const thumbPath = join(thumbDir, `${key}_${size}.webp`);
+		const safeKey = key.replace(/\//g, "_");
+		const thumbPath = join(thumbDir, `${safeKey}_${size}.webp`);
 
 		if (existsSync(thumbPath)) {
-			try {
-				const thumbStat = await stat(thumbPath);
-				const fileStat = await stat(currentPath);
-				if (thumbStat.mtime >= fileStat.mtime) {
-					logger.debug(`[thumbnail] Cache hit for ${key}`);
-					const cached = await Bun.file(thumbPath).arrayBuffer();
-					return { buffer: Buffer.from(cached), contentType: "image/webp" };
-				}
-				logger.debug(`[thumbnail] Cache stale for ${key}, regenerating`);
-			} catch {
-				// Cache check failed, regenerate
-			}
+			logger.debug(`[thumbnail] Cache hit for ${key}`);
+			const cached = await Bun.file(thumbPath).arrayBuffer();
+			return { buffer: Buffer.from(cached), contentType: "image/webp" };
 		}
 
 		const stats = StorageService.thumbnailSemaphore.stats;
@@ -2004,68 +1995,56 @@ export class StorageService {
 		await StorageService.thumbnailSemaphore.acquire();
 
 		try {
-			// Double-check cache after waiting
+			// Double-check cache after acquiring slot
 			if (existsSync(thumbPath)) {
-				try {
-					const thumbStat = await stat(thumbPath);
-					const fileStat = await stat(currentPath);
-					if (thumbStat.mtime >= fileStat.mtime) {
-						logger.debug(`[thumbnail] Cache hit after wait for ${key}`);
-						const cached = await Bun.file(thumbPath).arrayBuffer();
-						return { buffer: Buffer.from(cached), contentType: "image/webp" };
-					}
-				} catch {
-					// Continue with generation
-				}
+				logger.debug(`[thumbnail] Cache hit after wait for ${key}`);
+				const cached = await Bun.file(thumbPath).arrayBuffer();
+				return { buffer: Buffer.from(cached), contentType: "image/webp" };
 			}
 
 			await mkdir(thumbDir, { recursive: true });
 
-			const mediaType = isImage
-				? "image"
-				: isVideo
-					? "video"
-					: isAudio
-						? "audio"
-						: "pdf";
-			logger.debug(`[thumbnail] Generating ${mediaType} thumbnail for ${key}`);
-
+			const { path: localPath, isTemp } = await this.getLocalOrTempPath(key);
 			let thumbnail: Buffer;
 
-			if (isImage) {
-				thumbnail = await sharp(currentPath)
-					.resize(size, size, {
-						fit: "inside",
-						withoutEnlargement: true,
-					})
-					.webp({ quality: 80 })
-					.toBuffer();
-			} else if (isVideo) {
-				thumbnail = await this.generateVideoThumbnail(
-					currentPath,
-					thumbPath,
-					size,
-				);
-			} else if (isAudio) {
-				thumbnail = await this.generateAudioWaveform(
-					currentPath,
-					thumbPath,
-					size,
-					100,
-				);
-			} else {
-				thumbnail = await this.generatePdfThumbnail(
-					currentPath,
-					thumbPath,
-					size,
-				);
+			try {
+				if (isImage) {
+					thumbnail = await sharp(localPath)
+						.resize(size, size, { fit: "inside", withoutEnlargement: true })
+						.webp({ quality: 80 })
+						.toBuffer();
+				} else if (isVideo) {
+					thumbnail = await this.generateVideoThumbnail(
+						localPath,
+						thumbPath,
+						size,
+					);
+				} else if (isAudio) {
+					thumbnail = await this.generateAudioWaveform(
+						localPath,
+						thumbPath,
+						size,
+						100,
+					);
+				} else {
+					thumbnail = await this.generatePdfThumbnail(
+						localPath,
+						thumbPath,
+						size,
+					);
+				}
+			} finally {
+				if (isTemp) {
+					try {
+						await unlink(localPath);
+					} catch {}
+				}
 			}
 
 			await Bun.write(thumbPath, thumbnail);
 			logger.debug(
 				`[thumbnail] Cached ${thumbnail.length} bytes to ${thumbPath}`,
 			);
-
 			return { buffer: thumbnail, contentType: "image/webp" };
 		} catch (error) {
 			logger.error(`[thumbnail] Error generating thumbnail for ${key}:`, error);
@@ -2079,93 +2058,45 @@ export class StorageService {
 	// BULK DOWNLOAD
 	// =========================================================================
 
-	private async getFileDisplayName(fullPath: string): Promise<string> {
-		const metaPath = `${fullPath}.meta.json`;
-		try {
-			const metaFile = Bun.file(metaPath);
-			if (await metaFile.exists()) {
-				const meta: FileMetadata = await metaFile.json();
-				return meta.name ?? basename(fullPath);
-			}
-		} catch {
-			// Fallback to basename
+	private buildDisplayPathForFile(opts: {
+		filePath: string;
+		displayName: string;
+		folderBasePath: string;
+		folderDisplayName: string;
+		folderDisplayMap: Map<string, string>;
+	}): string {
+		const {
+			filePath,
+			displayName,
+			folderBasePath,
+			folderDisplayName,
+			folderDisplayMap,
+		} = opts;
+		const relPath = filePath.slice(folderBasePath.length + 1);
+		const parts = relPath.split("/");
+		parts.pop(); // remove filename segment
+
+		const displayParts = [folderDisplayName];
+		let currentPath = folderBasePath;
+		for (const part of parts) {
+			currentPath = `${currentPath}/${part}`;
+			displayParts.push(folderDisplayMap.get(currentPath) ?? part);
 		}
-		return basename(fullPath);
-	}
-
-	private async getFolderDisplayName(folderPath: string): Promise<string> {
-		try {
-			const metaFile = Bun.file(join(folderPath, ".keep.meta.json"));
-			if (await metaFile.exists()) {
-				const meta: FileMetadata = await metaFile.json();
-				return meta.name ?? basename(folderPath);
-			}
-		} catch {
-			// Fallback to basename
-		}
-		return basename(folderPath);
-	}
-
-	private async walkDirectoryWithNames(
-		dirPath: string,
-		displayPrefix: string,
-	): Promise<Array<{ fullPath: string; displayPath: string }>> {
-		const results: Array<{ fullPath: string; displayPath: string }> = [];
-		const entries = await readdir(dirPath, { withFileTypes: true });
-
-		for (const entry of entries) {
-			const fullPath = join(dirPath, entry.name);
-
-			if (
-				entry.name.endsWith(".meta.json") ||
-				entry.name === ".keep" ||
-				entry.name === ".thumbnails"
-			) {
-				continue;
-			}
-
-			if (entry.isDirectory()) {
-				const folderDisplayName = await this.getFolderDisplayName(fullPath);
-				const newPrefix = displayPrefix
-					? `${displayPrefix}/${folderDisplayName}`
-					: folderDisplayName;
-
-				const subEntries = await this.walkDirectoryWithNames(
-					fullPath,
-					newPrefix,
-				);
-				results.push(...subEntries);
-			} else {
-				const displayName = await this.getFileDisplayName(fullPath);
-				results.push({
-					fullPath,
-					displayPath: displayPrefix
-						? `${displayPrefix}/${displayName}`
-						: displayName,
-				});
-			}
-		}
-
-		return results;
+		displayParts.push(displayName);
+		return displayParts.join("/");
 	}
 
 	public async createZipFromPaths(
 		filePaths: string[],
 	): Promise<{ stream: Readable; archive: archiver.Archiver }> {
-		const archive = archiver("zip", {
-			zlib: { level: 6 },
-		});
-
+		const archive = archiver("zip", { zlib: { level: 6 } });
 		const startTime = performance.now();
-		logger.debug(
-			`[bulk-download] Creating zip with ${filePaths.length} items from ${this.storagePath}`,
-		);
+		logger.debug(`[bulk-download] Creating zip with ${filePaths.length} items`);
 
 		archive.on("error", (err) => {
 			logger.error("[bulk-download] Archive error:", err);
 			throw err;
 		});
-
 		archive.on("warning", (err) => {
 			if (err.code === "ENOENT") {
 				logger.warn("[bulk-download] File not found during archiving:", err);
@@ -2175,31 +2106,81 @@ export class StorageService {
 		});
 
 		for (const filePath of filePaths) {
-			const fullPath = join(this.storagePath, filePath);
+			const normalizedPath = filePath.endsWith("/")
+				? filePath.slice(0, -1)
+				: filePath;
 
-			if (!existsSync(fullPath)) {
-				logger.warn(`[bulk-download] Skipping missing file: ${filePath}`);
+			const [fileRecord] = await this.db
+				.select()
+				.from(files)
+				.where(
+					and(eq(files.path, normalizedPath), eq(files.ownerId, this.user.id)),
+				);
+
+			if (fileRecord) {
+				const stream = await this.driver.getObjectStream(fileRecord.path);
+				archive.append(
+					NodeReadable.fromWeb(
+						stream as unknown as Parameters<typeof NodeReadable.fromWeb>[0],
+					),
+					{ name: fileRecord.name },
+				);
 				continue;
 			}
 
-			const fileStat = await stat(fullPath);
-
-			if (fileStat.isDirectory()) {
-				logger.debug(`[bulk-download] Adding directory: ${filePath}`);
-				const folderDisplayName = await this.getFolderDisplayName(fullPath);
-				const files = await this.walkDirectoryWithNames(fullPath, "");
-
-				for (const file of files) {
-					archive.file(file.fullPath, {
-						name: `${folderDisplayName}/${file.displayPath}`,
-					});
-				}
-			} else if (!filePath.endsWith(".meta.json")) {
-				const displayName = await this.getFileDisplayName(fullPath);
-				logger.debug(
-					`[bulk-download] Adding file: ${filePath} as ${displayName}`,
+			const [folderRecord] = await this.db
+				.select()
+				.from(folders)
+				.where(
+					and(
+						eq(folders.path, normalizedPath),
+						eq(folders.ownerId, this.user.id),
+					),
 				);
-				archive.file(fullPath, { name: displayName });
+
+			if (folderRecord) {
+				const allSubFolders = await this.db
+					.select()
+					.from(folders)
+					.where(
+						and(
+							eq(folders.ownerId, this.user.id),
+							like(folders.path, `${normalizedPath}/%`),
+						),
+					);
+				const folderDisplayMap = new Map<string, string>([
+					[normalizedPath, folderRecord.name],
+					...allSubFolders.map((sf): [string, string] => [sf.path, sf.name]),
+				]);
+
+				const allFilesUnder = await this.db
+					.select()
+					.from(files)
+					.where(
+						and(
+							eq(files.ownerId, this.user.id),
+							like(files.path, `${normalizedPath}/%`),
+						),
+					);
+
+				for (const f of allFilesUnder) {
+					const displayPath = this.buildDisplayPathForFile({
+						filePath: f.path,
+						displayName: f.name,
+						folderBasePath: normalizedPath,
+						folderDisplayName: folderRecord.name,
+						folderDisplayMap,
+					});
+					const stream = await this.driver.getObjectStream(f.path);
+					archive.append(
+						NodeReadable.fromWeb(
+							stream as unknown as Parameters<typeof NodeReadable.fromWeb>[0],
+						),
+						{ name: displayPath },
+					);
+				}
+			} else {
+				logger.warn(`[bulk-download] Skipping unknown path: ${filePath}`);
 			}
 		}
 
@@ -2214,20 +2195,26 @@ export class StorageService {
 	public async createZipFromFolder(
 		folderPath: string,
 	): Promise<{ stream: Readable; archive: archiver.Archiver }> {
-		const fullPath = join(this.storagePath, folderPath);
+		const normalizedPath = folderPath.endsWith("/")
+			? folderPath.slice(0, -1)
+			: folderPath;
 
-		if (!existsSync(fullPath)) {
+		const [folderRecord] = await this.db
+			.select()
+			.from(folders)
+			.where(
+				and(
+					eq(folders.path, normalizedPath),
+					eq(folders.ownerId, this.user.id),
+				),
+			);
+		if (!folderRecord) {
 			throw new Error(`Folder not found: ${folderPath}`);
 		}
 
-		const archive = archiver("zip", {
-			zlib: { level: 6 },
-		});
-
+		const archive = archiver("zip", { zlib: { level: 6 } });
 		const startTime = performance.now();
-
-		const folderDisplayName =
-			(await this.getFolderDisplayName(fullPath)) || "download";
+		const folderDisplayName = folderRecord.name;
 
 		logger.debug(
 			`[bulk-download] Creating zip for folder: ${folderPath} as ${folderDisplayName}`,
@@ -2238,12 +2225,45 @@ export class StorageService {
 			throw err;
 		});
 
-		const files = await this.walkDirectoryWithNames(fullPath, "");
+		const allSubFolders = await this.db
+			.select()
+			.from(folders)
+			.where(
+				and(
+					eq(folders.ownerId, this.user.id),
+					like(folders.path, `${normalizedPath}/%`),
+				),
+			);
+		const folderDisplayMap = new Map<string, string>([
+			[normalizedPath, folderDisplayName],
+			...allSubFolders.map((sf): [string, string] => [sf.path, sf.name]),
+		]);
 
-		for (const file of files) {
-			archive.file(file.fullPath, {
-				name: `${folderDisplayName}/${file.displayPath}`,
+		const allFiles = await this.db
+			.select()
+			.from(files)
+			.where(
+				and(
+					eq(files.ownerId, this.user.id),
+					like(files.path, `${normalizedPath}/%`),
+				),
+			);
+
+		for (const f of allFiles) {
+			const displayPath = this.buildDisplayPathForFile({
+				filePath: f.path,
+				displayName: f.name,
+				folderBasePath: normalizedPath,
+				folderDisplayName,
+				folderDisplayMap,
 			});
+			const stream = await this.driver.getObjectStream(f.path);
+			archive.append(
+				NodeReadable.fromWeb(
+					stream as unknown as Parameters<typeof NodeReadable.fromWeb>[0],
+				),
+				{ name: displayPath },
+			);
 		}
 
 		archive.finalize().then(() => {
@@ -2275,7 +2295,6 @@ export class StorageService {
 		ifNoneMatch?: string,
 	): Promise<Response | null> {
 		proxyLogger.debug(`Fetching thumbnail for: ${itemName}`);
-
 		const thumbSize = size === "small" ? 100 : size === "medium" ? 200 : 300;
 		const thumbData = await this.getThumbnail(itemName, thumbSize);
 
@@ -2313,81 +2332,76 @@ export class StorageService {
 	): Promise<Response> {
 		proxyLogger.debug(`Fetching raw file data for: ${itemName}`);
 
-		const fileData = await this.getRawFileData(itemName);
-		if (!fileData) {
-			proxyLogger.debug(`File not found: ${itemName}`);
+		const [file] = await this.db
+			.select()
+			.from(files)
+			.where(and(eq(files.path, itemName), eq(files.ownerId, this.user.id)));
+
+		if (!file) {
 			throw new FileOrFolderNotFoundError(`File not found: ${itemName}`);
 		}
 
-		proxyLogger.debug(`Raw file data retrieved for: ${itemName}`);
-
-		if (fileData.meta.metadata.owner !== this.user.id) {
-			proxyLogger.debug(`Unauthorized access attempt by user: ${this.user.id}`);
-			throw new Error("Unauthorized");
-		}
-
 		const etag = this.generateETag({
-			size: fileData.file.size,
-			mtime: fileData.file.lastModified,
+			size: file.size,
+			mtime: file.updatedAt.getTime(),
 		});
 
 		if (ifNoneMatch === etag && !dev) {
 			proxyLogger.debug("ETag match, returning 304 Not Modified");
 			return new Response(null, {
 				status: 304,
-				headers: {
-					ETag: etag,
-					"Cache-Control": "public, max-age=3600",
-				},
+				headers: { ETag: etag, "Cache-Control": "public, max-age=3600" },
 			});
 		}
 
 		if (rangeHeader) {
 			proxyLogger.debug("Generating range headers for partial content");
-			const { chunk, headers: newHeaders } = this.generateRangeHeaders({
-				file: fileData.file,
-				object: fileData.meta,
-				headers: { range: rangeHeader },
-			});
+			const size = file.size;
+			const parts = rangeHeader.replace(/bytes=/, "").split("-");
+			const start = Number(parts[0]);
+			const end = parts[1] ? Number(parts[1]) : size - 1;
 
-			newHeaders.set("ETag", etag);
-			proxyLogger.debug("Returning partial content response with status 206");
-			return new Response(chunk, {
+			if (Number.isNaN(start)) {
+				throw new Error("Invalid range");
+			}
+
+			const stream = await this.driver.getObjectStream(itemName, start, end);
+
+			return new Response(stream, {
 				status: 206,
-				headers: newHeaders,
+				headers: {
+					"Content-Type": file.contentType,
+					"Content-Range": `bytes ${start}-${end}/${size}`,
+					"Content-Length": String(end - start + 1),
+					"Accept-Ranges": "bytes",
+					ETag: etag,
+				},
 			});
 		}
 
-		proxyLogger.debug("Returning full file response with status 200");
-		const newHeaders = this.generateRawFileHeaders({
-			file: fileData.file,
-			object: fileData.meta,
-		});
+		proxyLogger.debug("Returning full file response");
+		const stream = await this.driver.getObjectStream(itemName);
+		const encodedName = encodeURIComponent(file.name);
 
-		newHeaders.set("ETag", etag);
-
-		const buffer = await fileData.file.arrayBuffer();
-
-		return new Response(buffer, {
-			headers: newHeaders,
+		return new Response(stream, {
 			status: 200,
+			headers: {
+				"Content-Type": file.contentType,
+				"Accept-Ranges": "bytes",
+				"Content-Length": String(file.size),
+				"Content-Disposition": `inline; filename*=UTF-8''${encodedName}`,
+				ETag: etag,
+			},
 		});
 	}
 
 	public async handleMetadata(itemName: string): Promise<ObjectItem> {
 		proxyLogger.debug(`Fetching file metadata for: ${itemName}`);
-
 		const file = await this.getFile(itemName);
-		if (!file) {
-			proxyLogger.debug(`File not found: ${itemName}`);
-			throw new FileOrFolderNotFoundError(`File not found: ${itemName}`);
-		}
-
 		if (file.metadata.owner !== this.user.id) {
 			proxyLogger.debug(`Unauthorized access attempt by user: ${this.user.id}`);
-			throw new Error("Unauthorized");
+			throw new UnauthorizedError("Unauthorized");
 		}
-
 		return file;
 	}
 
@@ -2490,7 +2504,9 @@ export class StorageService {
 			);
 			return;
 		}
-		const storageDir = await readdir(storageBasePath, { withFileTypes: true });
+		const storageDir = await fs.promises.readdir(storageBasePath, {
+			withFileTypes: true,
+		});
 
 		const failures: { message: string; error: unknown }[] = [];
 		for (const dirent of storageDir) {

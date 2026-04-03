@@ -91,7 +91,7 @@ export default function SignInScreen() {
 		);
 	}
 
-	if (!providers || !providers.data || providers.data.length === 0) {
+	if (!providers?.data || providers.data.length === 0) {
 		return (
 			<View className="flex-1 items-center justify-center bg-white dark:bg-black p-6">
 				<Text className="text-gray-500 dark:text-gray-400 text-center mb-4">

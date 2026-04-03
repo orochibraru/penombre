@@ -14,7 +14,7 @@ env:
   REGISTRY_IMAGE: orochibraru/penombre
 
 jobs:
-  prepare:
+  build:
     uses: ./.github/workflows/docker.yaml
     with:
       publish: true
@@ -25,7 +25,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs:
-      - prepare
+      - build
     steps:
       - name: Download meta bake definition
         uses: actions/download-artifact@v8
@@ -52,7 +52,8 @@ jobs:
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
         run: |
-          docker buildx imagetools create $(jq -cr '.target."docker-metadata-action".tags | map(select(startswith("${{ env.REGISTRY_IMAGE }}")) | "-t " + .) | join(" ")' ${{ runner.temp }}/bake-meta.json) \
+          docker buildx imagetools create \
+            $(jq -cr '.target."docker-metadata-action".tags | map("-t " + .) | join(" ")' "$RUNNER_TEMP/bake-meta.json") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image

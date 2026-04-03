@@ -1,10 +1,12 @@
 import { relations } from "drizzle-orm";
 import {
+	bigint,
 	boolean,
 	index,
 	integer,
 	jsonb,
 	pgTable,
+	real,
 	text,
 	timestamp,
 } from "drizzle-orm/pg-core";
@@ -95,6 +97,8 @@ export const userRelations = relations(user, ({ one, many }) => ({
 	preferences: one(userPreferences),
 	passkeys: many(passkey),
 	apikeys: many(apikey),
+	files: many(files),
+	folders: many(folders),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -311,6 +315,106 @@ export const passkeyRelations = relations(passkey, ({ one }) => ({
 }));
 
 // =========================================================================
+// FOLDERS
+// =========================================================================
+
+export const folders = pgTable(
+	"folders",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		/** Storage key relative to user root, e.g. "folder-uuid" or "parent-uuid/child-uuid" */
+		path: text("path").notNull(),
+		parentId: text("parent_id"),
+		isTrashed: boolean("is_trashed").default(false).notNull(),
+		isStarred: boolean("is_starred").default(false).notNull(),
+		tags: text("tags").array().default([]).notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+		updatedAt: timestamp("updated_at")
+			.$defaultFn(() => new Date())
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("folders_ownerId_idx").on(table.ownerId),
+		index("folders_parentId_idx").on(table.parentId),
+		index("folders_path_ownerId_idx").on(table.path, table.ownerId),
+	],
+);
+
+export const foldersRelations = relations(folders, ({ one, many }) => ({
+	owner: one(user, {
+		fields: [folders.ownerId],
+		references: [user.id],
+	}),
+	parent: one(folders, {
+		fields: [folders.parentId],
+		references: [folders.id],
+		relationName: "parentFolder",
+	}),
+	children: many(folders, { relationName: "parentFolder" }),
+	files: many(files),
+}));
+
+// =========================================================================
+// FILES
+// =========================================================================
+
+export const files = pgTable(
+	"files",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		/** Storage key relative to user root, e.g. "uuid.txt" or "folder-uuid/uuid.txt" */
+		path: text("path").notNull(),
+		folderId: text("folder_id").references(() => folders.id, {
+			onDelete: "set null",
+		}),
+		contentType: text("content_type")
+			.default("application/octet-stream")
+			.notNull(),
+		category: text("category").default("UNKNOWN").notNull(),
+		size: bigint("size", { mode: "number" }).default(0).notNull(),
+		isTrashed: boolean("is_trashed").default(false).notNull(),
+		isStarred: boolean("is_starred").default(false).notNull(),
+		tags: text("tags").array().default([]).notNull(),
+		musicDuration: real("music_duration"),
+		videoDuration: real("video_duration"),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+		updatedAt: timestamp("updated_at")
+			.$defaultFn(() => new Date())
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("files_ownerId_idx").on(table.ownerId),
+		index("files_folderId_idx").on(table.folderId),
+		index("files_path_ownerId_idx").on(table.path, table.ownerId),
+	],
+);
+
+export const filesRelations = relations(files, ({ one }) => ({
+	owner: one(user, {
+		fields: [files.ownerId],
+		references: [user.id],
+	}),
+	folder: one(folders, {
+		fields: [files.folderId],
+		references: [folders.id],
+	}),
+}));
+
+// =========================================================================
 // INFERRED TYPES
 // =========================================================================
 
@@ -328,3 +432,5 @@ export type SharedWith = typeof sharedWith.$inferSelect;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type Apikey = typeof apikey.$inferSelect;
 export type Passkey = typeof passkey.$inferSelect;
+export type Folder = typeof folders.$inferSelect;
+export type File = typeof files.$inferSelect;

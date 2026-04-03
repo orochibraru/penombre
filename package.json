@@ -1,6 +1,6 @@
 {
 	"name": "@penombre/root",
-	"version": "1.8.9",
+	"version": "1.8.10",
 	"description": "",
 	"main": "index.js",
 	"packageManager": "bun@1.3.11",
@@ -15,6 +15,7 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check --fix . && bun run format",
 		"format": "biome format . --write",
+		"test:docker": "docker compose -f compose.test.yaml up --build --exit-code-from test --abort-on-container-exit",
 		"format:check": "biome format .",
 		"circular": "bun run ./scripts/circular.ts",
 		"backup": "./scripts/backup.sh",
@@ -26,20 +27,25 @@
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.7",
-		"@dbml/cli": "^6.4.0",
+		"@biomejs/biome": "^2.4.10",
+		"@dbml/cli": "^6.6.0",
 		"@softwaretechnik/dbml-renderer": "^1.0.31",
 		"@types/bun": "^1.3.11",
 		"@types/madge": "^5.0.3",
-		"@types/node": "^25.5.0",
+		"@types/node": "^25.5.1",
 		"concurrently": "^9.2.1",
 		"drizzle-dbml-generator": "^0.10.0",
 		"husky": "^9.1.7",
 		"madge": "^8.0.0",
 		"semantic-release": "^25.0.3",
+		"typescript": "^6.0.2",
 		"wait-on": "^9.0.4"
 	},
 	"workspaces": [
 		"packages/*"
-	]
+	],
+	"overrides": {
+		"@better-auth/core": "1.5.6",
+		"@better-auth/utils": "0.3.1"
+	}
 }

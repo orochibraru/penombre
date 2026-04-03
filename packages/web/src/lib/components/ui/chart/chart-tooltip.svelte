@@ -12,7 +12,6 @@
     } from "./chart-utils.js";
     import { getTooltipContext, Tooltip as TooltipPrimitive } from "layerchart";
     import type { Snippet } from "svelte";
-    import { it } from "node:test";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function defaultFormatter(value: any, _payload: TooltipPayload[]) {

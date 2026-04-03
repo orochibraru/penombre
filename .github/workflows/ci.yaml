@@ -3,6 +3,9 @@ name: CI
 on:
   pull_request:
   workflow_call:
+    secrets:
+      docker_hub_token:
+        required: false
 
 permissions:
   contents: read
@@ -74,13 +77,13 @@ jobs:
     runs-on: ubuntu-latest
     services:
       redis:
-        image: redis:7-alpine
+        image: redis:8-alpine
         ports:
           - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
+          --health-interval 10s
+          --health-timeout 5s
           --health-retries 5
     steps:
       - uses: actions/checkout@v6
@@ -112,12 +115,12 @@ jobs:
   # ===========================================
   docker:
     name: Docker
-    needs: changes
-    if: needs.changes.outputs.docker == 'true'
     uses: ./.github/workflows/docker.yaml
     with:
-      publish: false
+      publish: true
       image-name: orochibraru/penombre
+    secrets:
+      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}
 
   # ===========================================
   # Docs: Build & type-check — only when docs change

@@ -1,14 +1,14 @@
-import { dev } from "$app/environment";
 import { Logger } from "$lib/logger";
 import type { CacheBackend } from "$lib/server/cache";
 import {
 	getRedisClient,
 	MemoryCacheBackend,
-	NullCacheBackend,
 	RedisCacheBackend,
 } from "$lib/server/cache";
 
 const logger = new Logger("StorageCache");
+
+// TODO: refactor this.
 
 /**
  * Manager for user-specific cache instances.
@@ -50,11 +50,6 @@ export class CacheManager {
 	}
 
 	private createBackend(userId: string): CacheBackend {
-		// In dev mode without Redis, disable caching to avoid stale data
-		if (dev && !this.redisUrl) {
-			return new NullCacheBackend();
-		}
-
 		if (this.redisUrl) {
 			const client = getRedisClient(this.redisUrl);
 			return new RedisCacheBackend(client, `penombre:cache:${userId}`, 30);

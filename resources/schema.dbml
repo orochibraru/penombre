@@ -58,6 +58,49 @@ table apikey {
   metadata jsonb [default: `{}`]
 }
 
+table files {
+  id text [pk, not null]
+  name text [not null]
+  owner_id text [not null]
+  path text [not null]
+  folder_id text
+  content_type text [not null, default: 'application/octet-stream']
+  category text [not null, default: 'UNKNOWN']
+  size bigint [not null, default: 0]
+  is_trashed boolean [not null, default: false]
+  is_starred boolean [not null, default: false]
+  tags text[] [not null, default: `[]`]
+  music_duration real
+  video_duration real
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  indexes {
+    owner_id [name: 'files_ownerId_idx']
+    folder_id [name: 'files_folderId_idx']
+    (path, owner_id) [name: 'files_path_ownerId_idx']
+  }
+}
+
+table folders {
+  id text [pk, not null]
+  name text [not null]
+  owner_id text [not null]
+  path text [not null]
+  parent_id text
+  is_trashed boolean [not null, default: false]
+  is_starred boolean [not null, default: false]
+  tags text[] [not null, default: `[]`]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  indexes {
+    owner_id [name: 'folders_ownerId_idx']
+    parent_id [name: 'folders_parentId_idx']
+    (path, owner_id) [name: 'folders_path_ownerId_idx']
+  }
+}
+
 table passkey {
   id text [pk, not null]
   name text
@@ -154,6 +197,14 @@ ref: account.user_id > user.id
 ref: activity.user_id > user.id
 
 ref: apikey.reference_id > user.id
+
+ref: files.owner_id > user.id
+
+ref: files.folder_id > folders.id
+
+ref: folders.owner_id > user.id
+
+ref: folders.parent_id > folders.id
 
 ref: passkey.user_id > user.id
 
