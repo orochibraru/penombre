@@ -133,6 +133,15 @@ STORAGE_BACKEND=local
 # S3_PATH_STYLE=false
 
 # ===========================================
+# Garage (self-hosted S3 — required when using the bundled Garage service)
+# ===========================================
+# RPC secret shared between all Garage nodes. Must be a 32-byte hex string.
+# Generate with: openssl rand -hex 32
+# GARAGE_RPC_SECRET=
+
+# The S3_* variables below are also passed to the Garage container to provision
+# the bucket and key pair on first start. Override them in .env for production.
+# ===========================================
 # SMTP (Optional - for email features)
 # ===========================================
 SMTP_ENABLED=${defaultConfigValues.smtp.enabled}
