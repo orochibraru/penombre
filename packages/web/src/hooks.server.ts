@@ -8,7 +8,10 @@ import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
 import { getDb, resetDb } from "$lib/server/db";
-import { StorageService } from "$lib/server/services/storage";
+import {
+	migrateStorageMeta,
+	StorageService,
+} from "$lib/server/services/storage";
 
 const logger = new Logger("Hooks");
 
@@ -99,6 +102,7 @@ export const init = async () => {
 	await waitForDatabase();
 	await runMigrations();
 	await seedAuth();
+	await migrateStorageMeta();
 };
 
 /** Paths under the auth basePath that are handled by SvelteKit, not better-auth */

@@ -1,0 +1,21 @@
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test-runner
+    restart: "no"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=redis://redis:6379
+
+  redis:
+    image: redis:8-alpine
+    restart: "no"
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 1s
+      timeout: 2s
+      retries: 10

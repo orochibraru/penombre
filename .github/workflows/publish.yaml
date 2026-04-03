@@ -14,7 +14,7 @@ env:
   REGISTRY_IMAGE: orochibraru/penombre
 
 jobs:
-  prepare:
+  build:
     uses: ./.github/workflows/docker.yaml
     with:
       publish: true

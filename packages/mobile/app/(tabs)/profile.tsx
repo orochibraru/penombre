@@ -62,7 +62,7 @@ function Divider() {
 
 export default function ProfileScreen() {
 	const { data: session } = authClient.useSession();
-	if (!session || !session.user) {
+	if (!session?.user) {
 		return (
 			<View className="flex-1 items-center justify-center bg-white dark:bg-black">
 				<Text className="text-gray-500 dark:text-gray-400">
