@@ -70,7 +70,7 @@ mock.module("./cache", () => {
 				if (!this._caches.has(userId)) {
 					this._caches.set(userId, makeUserCache());
 				}
-				return this._caches.get(userId)!;
+				return this._caches.get(userId);
 			}
 			async clearUserCache(userId: string): Promise<void> {
 				this._caches.delete(userId);
