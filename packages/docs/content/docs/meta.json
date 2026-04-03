@@ -9,6 +9,7 @@
 		"env",
 		"---Guides---",
 		"deployment",
+		"storage",
 		"backup",
 		"reverse-proxy",
 		"troubleshooting",

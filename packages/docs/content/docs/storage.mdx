@@ -1,0 +1,138 @@
+---
+title: Storage
+description: Configure local filesystem or S3-compatible object storage.
+icon: HardDrive
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+Penombre supports two storage backends: **local filesystem** (default) and **S3-compatible object storage**. Switch between them using the `STORAGE_BACKEND` environment variable.
+
+## Local storage (default)
+
+Files are stored on the host filesystem at the path configured by `STORAGE_PATH`. The default is `/data/storage`, which maps to the `storage_data` Docker volume in the bundled `compose.yaml`.
+
+No additional configuration is required. This is the recommended option for single-node deployments.
+
+| Variable       | Description                   | Default         |
+| -------------- | ----------------------------- | --------------- |
+| `STORAGE_PATH` | Absolute path to storage root | `/data/storage` |
+
+To change the storage location, update `STORAGE_PATH` in your `.env` file and make sure the path is mounted in your container:
+
+```yaml
+volumes:
+  - /your/host/path:/data/storage
+```
+
+## S3-compatible storage
+
+Set `STORAGE_BACKEND=s3` to store files in any S3-compatible service (AWS S3, Cloudflare R2, Backblaze B2, self-hosted Garage, etc.).
+
+When `STORAGE_BACKEND=s3` is set, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, and `S3_SECRET_ACCESS_KEY` are required. The app will refuse to start if they are missing.
+
+| Variable              | Description                                 | Default       |
+| --------------------- | ------------------------------------------- | ------------- |
+| `STORAGE_BACKEND`     | `local` or `s3`                             | `local`       |
+| `S3_BUCKET`           | Bucket name                                 | Required      |
+| `S3_ACCESS_KEY_ID`    | Access key ID                               | Required      |
+| `S3_SECRET_ACCESS_KEY`| Secret access key                           | Required      |
+| `S3_ENDPOINT`         | Custom endpoint URL (for non-AWS providers) | /             |
+| `S3_REGION`           | Bucket region                               | `us-east-1`   |
+| `S3_PATH_STYLE`       | Use path-style URLs (`true`/`false`)        | `false`       |
+
+<Callout type="info">
+  `S3_PATH_STYLE=true` is required for most self-hosted providers (Garage, MinIO, etc.) that do not support virtual-hosted-style URLs.
+</Callout>
+
+### Provider examples
+
+<Tabs items={["AWS S3", "Cloudflare R2", "Backblaze B2", "Garage (self-hosted)"]}>
+  <Tab value="AWS S3">
+```ini
+STORAGE_BACKEND=s3
+S3_BUCKET=my-penombre-bucket
+S3_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+S3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+S3_REGION=us-east-1
+```
+  </Tab>
+  <Tab value="Cloudflare R2">
+```ini
+STORAGE_BACKEND=s3
+S3_BUCKET=my-penombre-bucket
+S3_ACCESS_KEY_ID=<r2-access-key-id>
+S3_SECRET_ACCESS_KEY=<r2-secret-access-key>
+S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+S3_REGION=auto
+S3_PATH_STYLE=false
+```
+  </Tab>
+  <Tab value="Backblaze B2">
+```ini
+STORAGE_BACKEND=s3
+S3_BUCKET=my-penombre-bucket
+S3_ACCESS_KEY_ID=<b2-key-id>
+S3_SECRET_ACCESS_KEY=<b2-application-key>
+S3_ENDPOINT=https://s3.<region>.backblazeb2.com
+S3_REGION=<region>
+S3_PATH_STYLE=false
+```
+  </Tab>
+  <Tab value="Garage (self-hosted)">
+```ini
+STORAGE_BACKEND=s3
+S3_BUCKET=penombre
+S3_ACCESS_KEY_ID=<garage-key-id>
+S3_SECRET_ACCESS_KEY=<garage-secret-key>
+S3_ENDPOINT=http://<garage-host>:3900
+S3_REGION=garage
+S3_PATH_STYLE=true
+```
+
+See [Self-hosted with Garage](#self-hosted-with-garage) below for a complete setup guide.
+  </Tab>
+</Tabs>
+
+## Self-hosted with Garage
+
+[Garage](https://garagehq.deuxfleurs.fr/) is a lightweight, open-source (AGPLv3) S3-compatible object store designed for self-hosted deployments. The bundled `compose.yaml` includes a pre-configured Garage service.
+
+### Using the bundled compose stack
+
+The bundled development `compose.yaml` already includes a Garage service. To enable it, uncomment the S3 environment variables in your `compose.yaml` app service:
+
+```yaml
+environment:
+  - STORAGE_BACKEND=s3
+  - S3_ENDPOINT=http://garage:3900
+  - S3_REGION=garage
+  - S3_BUCKET=penombre
+  - S3_ACCESS_KEY_ID=GK0000000000000000cafe0000
+  - S3_SECRET_ACCESS_KEY=cafecafe00000000000000000000000000000000000000000000000000000000
+  - S3_PATH_STYLE=true
+```
+
+The Garage container initializes automatically on first start: it assigns a cluster layout, creates a fixed key pair, and creates the `penombre` bucket. No manual setup needed.
+
+### Custom Garage deployment
+
+If you are running Garage separately, create a bucket and key pair using the Garage CLI:
+
+```bash
+# Assign layout (run once after first start)
+garage layout assign -z dc1 -c 10G <node-id>
+garage layout apply --version 1
+
+# Create bucket
+garage bucket create penombre
+
+# Create access key
+garage key create penombre-key
+
+# Allow key to access bucket
+garage bucket allow --read --write --owner penombre --key penombre-key
+```
+
+Then configure Penombre with the key ID and secret printed by `garage key create`.
