@@ -54,9 +54,15 @@ mock.module("./cache", () => {
 			trashed: () => "trashed",
 			recent: () => "recent",
 			counts: () => "counts",
-			fileIdIndex: () => "fileIdIndex",
-			listing: (p: string, o: string) => `list:${p}:${o}`,
-			folders: (p: string, t: boolean) => `folders:${p}:${t}`,
+			fileIdIndex: () => "file-id-index",
+			listing: (p: string, o?: string) =>
+				`list:${p || "root"}${o ? `:${o}` : ""}`,
+			folders: (p: string, trashedOnly = false) =>
+				`folders:${p || "root"}:${trashedOnly ? "trashed" : "normal"}`,
+			fileMeta: (k: string) => `meta:${k}`,
+			folderMeta: (k: string) => `folder-meta:${k}`,
+			folderSize: (k: string) => `folder-size:${k}`,
+			category: (c: string) => `category:${c}`,
 		},
 		CacheManager: class {
 			_caches = new Map<string, ReturnType<typeof makeUserCache>>();
