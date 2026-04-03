@@ -3,6 +3,9 @@ name: CI
 on:
   pull_request:
   workflow_call:
+    secrets:
+      docker_hub_token:
+        required: false
 
 permissions:
   contents: read
