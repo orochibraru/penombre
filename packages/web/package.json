@@ -15,11 +15,17 @@
 		"migrate:storage": "bun run scripts/migrate-storage-meta.ts",
 		"gen:env": "bun run scripts/generate-env-example.ts",
 		"machine-translate": "inlang machine translate --project project.inlang",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"test:e2e": "playwright test --config=playwright.local.config.ts",
+		"test:e2e:s3": "playwright test --config=playwright.config.ts",
+		"test:e2e:local": "playwright test --config=playwright.local.config.ts",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:headed": "playwright test --headed"
 	},
 	"devDependencies": {
 		"@inlang/cli": "^3.1.9",
 		"@inlang/paraglide-js": "^2.15.1",
+		"@playwright/test": "^1.59.1",
 		"@shikijs/langs": "^4.0.2",
 		"@shikijs/themes": "^4.0.2",
 		"@sveltejs/adapter-static": "^3.0.10",
