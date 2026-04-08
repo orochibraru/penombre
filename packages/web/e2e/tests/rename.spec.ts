@@ -37,7 +37,7 @@ test.describe("Rename", () => {
 	test.afterEach(async ({ page }) => {
 		if (folderId) {
 			await page.request
-				.delete(`/api/v1/storage/folder/${folderId}`)
+				.delete(`/api/v1/storage/folder/${folderId}`, { data: {} })
 				.catch(() => {
 					/* ignore */
 				});

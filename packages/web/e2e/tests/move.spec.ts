@@ -79,9 +79,11 @@ test.describe("Move", () => {
 	test.afterEach(async ({ page }) => {
 		const ids = [srcFolderId, destFolderId, extraFolderId].filter(Boolean);
 		for (const id of ids) {
-			await page.request.delete(`/api/v1/storage/folder/${id}`).catch(() => {
-				/* ignore */
-			});
+			await page.request
+				.delete(`/api/v1/storage/folder/${id}`, { data: {} })
+				.catch(() => {
+					/* ignore */
+				});
 		}
 	});
 

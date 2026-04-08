@@ -72,39 +72,43 @@ async function cleanupTestData(baseURL: string): Promise<void> {
 	const headers = { Authorization: `Bearer ${token}` };
 
 	// Delete active e2e-* folders in the drive root
-	const listResp = await fetch(`${baseURL}/api/v1/storage/list`, { headers });
+	const listResp = await fetch(`${baseURL}/api/v1/storage/folder`, { headers });
 	const listData = (await listResp.json()) as {
-		data: {
-			list: Array<{ type: string; metadata: { id: string; name: string } }>;
-		};
+		data: Array<{ id: string; name: string }>;
 	};
-	const activeFolders = (listData.data?.list ?? []).filter(
-		(item) => item.type === "folder" && item.metadata?.name?.startsWith("e2e-"),
+	const activeFolders = (listData.data ?? []).filter((f) =>
+		f.name?.startsWith("e2e-"),
 	);
 	for (const folder of activeFolders) {
-		await fetch(`${baseURL}/api/v1/storage/folder/${folder.metadata.id}`, {
+		await fetch(`${baseURL}/api/v1/storage/folder/${folder.id}`, {
 			method: "DELETE",
-			headers,
+			headers: { ...headers, "Content-Type": "application/json" },
+			body: "{}",
 		});
 	}
 
-	// Delete trashed e2e-* folders (trash list returns IDs directly)
+	// Delete trashed e2e-* folders (trash list returns full folder objects)
 	const trashResp = await fetch(`${baseURL}/api/v1/storage/folder/trash`, {
 		headers,
 	});
-	const trashData = (await trashResp.json()) as { data: string[] };
-	const trashedIds = trashData.data ?? [];
-	for (const id of trashedIds) {
-		await fetch(`${baseURL}/api/v1/storage/folder/${id}`, {
+	const trashData = (await trashResp.json()) as {
+		data: Array<{ id: string; name: string }>;
+	};
+	const trashedFolders = (trashData.data ?? []).filter((f) =>
+		f.name?.startsWith("e2e-"),
+	);
+	for (const folder of trashedFolders) {
+		await fetch(`${baseURL}/api/v1/storage/folder/${folder.id}`, {
 			method: "DELETE",
-			headers,
+			headers: { ...headers, "Content-Type": "application/json" },
+			body: "{}",
 		});
 	}
 
-	const total = activeFolders.length + trashedIds.length;
+	const total = activeFolders.length + trashedFolders.length;
 	if (total > 0) {
 		console.log(
-			`[global-setup] Cleaned up ${activeFolders.length} active + ${trashedIds.length} trashed e2e-* folders`,
+			`[global-setup] Cleaned up ${activeFolders.length} active + ${trashedFolders.length} trashed e2e-* folders`,
 		);
 	}
 }

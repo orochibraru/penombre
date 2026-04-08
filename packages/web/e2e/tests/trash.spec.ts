@@ -48,9 +48,11 @@ async function forceDeleteFolder(
 	page: import("@playwright/test").Page,
 	id: string,
 ) {
-	await page.request.delete(`/api/v1/storage/folder/${id}`).catch(() => {
-		/* ignore */
-	});
+	await page.request
+		.delete(`/api/v1/storage/folder/${id}`, { data: {} })
+		.catch(() => {
+			/* ignore */
+		});
 }
 
 /**

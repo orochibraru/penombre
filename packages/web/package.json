@@ -16,9 +16,9 @@
 		"gen:env": "bun run scripts/generate-env-example.ts",
 		"machine-translate": "inlang machine translate --project project.inlang",
 		"db:studio": "drizzle-kit studio",
-		"test:e2e": "playwright test --config=playwright.local.config.ts",
-		"test:e2e:s3": "playwright test --config=playwright.config.ts",
-		"test:e2e:local": "playwright test --config=playwright.local.config.ts",
+		"test:e2e": "docker compose -f ../../compose.e2e.yaml -p penombre-e2e build && playwright test --config=playwright.local.config.ts",
+		"test:e2e:s3": "docker compose -f ../../compose.e2e.yaml --profile s3 -p penombre-e2e-s3 build && playwright test --config=playwright.config.ts",
+		"test:e2e:local": "docker compose -f ../../compose.e2e.yaml -p penombre-e2e build && playwright test --config=playwright.local.config.ts",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:headed": "playwright test --headed"
 	},

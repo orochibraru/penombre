@@ -61,7 +61,9 @@ test.describe("Create Folder", () => {
 			await expectItemVisible(page, childName);
 		} finally {
 			// Clean up parent (and its contents) via API
-			await page.request.delete(`/api/v1/storage/folder/${parentId}`);
+			await page.request.delete(`/api/v1/storage/folder/${parentId}`, {
+				data: {},
+			});
 		}
 	});
 
@@ -92,7 +94,9 @@ test.describe("Create Folder", () => {
 
 			await expectItemVisible(page, childName);
 		} finally {
-			await page.request.delete(`/api/v1/storage/folder/${parentId}`);
+			await page.request.delete(`/api/v1/storage/folder/${parentId}`, {
+				data: {},
+			});
 		}
 	});
 

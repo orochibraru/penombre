@@ -26,6 +26,7 @@ export default defineConfig({
 			"http://localhost:3001",
 		trace: "on-first-retry",
 		screenshot: "only-on-failure",
+		reducedMotion: "reduce",
 	},
 	// S3-dependent tests are tagged @s3 and excluded from the local run.
 	grepInvert: /@s3/,
@@ -43,13 +44,11 @@ export default defineConfig({
 	],
 	webServer: {
 		// Self-contained E2E stack on port 3001 — isolated from the dev stack.
-		command: process.env.CI
-			? "docker compose -f ../../compose.e2e.yaml -p penombre-e2e up"
-			: "docker compose -f ../../compose.e2e.yaml -p penombre-e2e up --build",
+		command: "docker compose -f ../../compose.e2e.yaml -p penombre-e2e up",
 		cwd: "./",
 		url: process.env.PLAYWRIGHT_BASE_URL_LOCAL ?? "http://localhost:3001",
 		reuseExistingServer: !process.env.CI,
-		timeout: 3_000,
+		timeout: 30_000,
 		stdout: "pipe",
 		stderr: "pipe",
 		env: {

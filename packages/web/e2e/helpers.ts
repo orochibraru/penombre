@@ -26,7 +26,6 @@ export async function rightClickItem(page: Page, name: string) {
 		.or(page.locator("[data-item]").filter({ hasText: name }));
 	const target = item.first();
 	await target.scrollIntoViewIfNeeded();
-	await page.waitForTimeout(100); // let scroll animation settle
 
 	// Retry the right-click until the context menu is visible (up to 3 attempts).
 	// A single right-click can silently fail if the element isn't fully stable.

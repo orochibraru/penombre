@@ -108,7 +108,7 @@ test.describe("File Upload @s3", () => {
 		const folderId: string = data.id;
 
 		try {
-			await goToBrowse(page, folderName);
+			await goToBrowse(page, folderId);
 			await openUploadDialog(page);
 
 			const dialog = page.getByRole("dialog");
@@ -122,7 +122,7 @@ test.describe("File Upload @s3", () => {
 			await expectItemVisible(page, fileName);
 		} finally {
 			await page.request
-				.delete(`/api/v1/storage/folder/${folderId}`)
+				.delete(`/api/v1/storage/folder/${folderId}`, { data: {} })
 				.catch(() => {
 					/* ignore */
 				});

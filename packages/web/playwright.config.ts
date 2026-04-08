@@ -21,8 +21,9 @@ export default defineConfig({
 	globalSetup: "./e2e/global-setup.ts",
 	use: {
 		baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3002",
-		trace: "on-first-retry",
-		screenshot: "only-on-failure",
+		trace: "on",
+		screenshot: "on",
+		reducedMotion: "reduce",
 	},
 	projects: [
 		{
@@ -40,11 +41,11 @@ export default defineConfig({
 		// Playwright waits for the URL to respond before running any tests.
 		// The globalSetup further confirms the DB is healthy before tests begin.
 		command:
-			"docker compose -f ../../compose.e2e.yaml --profile s3 -p penombre-e2e-s3 up --build",
+			"docker compose -f ../../compose.e2e.yaml --profile s3 -p penombre-e2e-s3 up",
 		cwd: "./",
 		url: "http://localhost:3002",
 		reuseExistingServer: !process.env.CI,
-		timeout: 3_000,
+		timeout: 30_000,
 		stdout: "pipe",
 		stderr: "pipe",
 		env: {
