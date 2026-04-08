@@ -134,6 +134,10 @@ jobs:
         working-directory: packages/web
         run: bunx playwright install --with-deps chromium
 
+      - name: Build docker image
+        run: |
+          docker compose --progress=plain -f compose.e2e.yaml build --pull --no-cache
+
       - name: Run E2E tests
         working-directory: packages/web
         run: bun run test:e2e:local
