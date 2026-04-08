@@ -39,10 +39,9 @@ else
 fi
 
 # Import key (idempotent)
-/garage key import \
-  --key-id "$S3_ACCESS_KEY_ID" \
-  --secret-key "$S3_SECRET_ACCESS_KEY" \
-  penombre-key 2>/dev/null && echo "[garage] Key imported" || echo "[garage] Key already exists"
+/garage key import --yes -n penombre-key \
+  "$S3_ACCESS_KEY_ID" "$S3_SECRET_ACCESS_KEY" \
+  2>/dev/null && echo "[garage] Key imported" || echo "[garage] Key already exists"
 
 # Create bucket (idempotent)
 /garage bucket create "$S3_BUCKET" 2>/dev/null && echo "[garage] Bucket created" || echo "[garage] Bucket already exists"

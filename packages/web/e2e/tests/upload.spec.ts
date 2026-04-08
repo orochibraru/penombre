@@ -63,8 +63,8 @@ test.describe("File Upload @s3", () => {
 		const fileName = "test-upload.txt";
 		const filePath = path.join(FIXTURE_DIR, fileName);
 
-		// Simulate a drop event on the main file area
-		const dropZone = page.locator("main");
+		// Simulate a drop event on the file list drop zone
+		const dropZone = page.locator("[role=region]").first();
 		await dropZone.dispatchEvent("dragover", {
 			dataTransfer: await page.evaluateHandle(() => new DataTransfer()),
 		});
@@ -130,7 +130,8 @@ test.describe("File Upload @s3", () => {
 	});
 
 	test("cancelling the upload dialog does not add a file", async ({ page }) => {
-		const fileName = "test-upload.txt";
+		// Use a fixture file not uploaded by any other test to keep this test isolated
+		const fileName = "e2e-cancel.txt";
 
 		await openUploadDialog(page);
 

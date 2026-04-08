@@ -43,7 +43,7 @@ export default defineConfig({
 		// Playwright waits for the URL to respond before running any tests.
 		// The globalSetup further confirms the DB is healthy before tests begin.
 		command:
-			"docker compose -f ../../compose.e2e.yaml --profile s3 -p penombre-e2e-s3 up",
+			"docker compose -f ../../compose.e2e.yaml --profile s3 -p penombre-e2e-s3 up --wait",
 		cwd: "./",
 		url: "http://localhost:3002",
 		reuseExistingServer: !process.env.CI,

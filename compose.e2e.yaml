@@ -37,8 +37,8 @@ services:
       S3_ENDPOINT: "http://garage:3900"
       S3_REGION: "garage"
       S3_BUCKET: "penombre-e2e"
-      S3_ACCESS_KEY_ID: "GKe2e00000000000000penombre"
-      S3_SECRET_ACCESS_KEY: "000000000000000000000000000000e2ecafebabe00000000000000000000cafe"
+      S3_ACCESS_KEY_ID: "GKe2e000000000000000000000"
+      S3_SECRET_ACCESS_KEY: "000000000000000000000000000000e2e0000000000000000000000000000000"
       S3_PATH_STYLE: "true"
 
   db:
@@ -76,11 +76,19 @@ services:
       # Fixed secret — safe for an ephemeral test-only Garage instance
       GARAGE_RPC_SECRET: "e2e0000000000000000000000000000000000000000000000000000000000e2e"
       S3_BUCKET: "penombre-e2e"
-      S3_ACCESS_KEY_ID: "GKe2e00000000000000penombre"
-      S3_SECRET_ACCESS_KEY: "000000000000000000000000000000e2ecafebabe00000000000000000000cafe"
+      S3_ACCESS_KEY_ID: "GKe2e000000000000000000000"
+      S3_SECRET_ACCESS_KEY: "000000000000000000000000000000e2e0000000000000000000000000000000"
     volumes:
       - e2e_garage_meta:/var/lib/garage/meta/
       - e2e_garage_data:/var/lib/garage/data/
+    healthcheck:
+      # Passes once the bucket exists, which means the entrypoint finished
+      # importing the key, creating the bucket, and granting access.
+      test: ["CMD-SHELL", '/garage bucket list | grep -q "$S3_BUCKET"']
+      interval: 2s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
 
 volumes:
   e2e_db:

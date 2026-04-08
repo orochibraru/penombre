@@ -46,7 +46,8 @@ export default defineConfig({
 	],
 	webServer: {
 		// Self-contained E2E stack on port 3001 — isolated from the dev stack.
-		command: "docker compose -f ../../compose.e2e.yaml -p penombre-e2e up",
+		command:
+			"docker compose -f ../../compose.e2e.yaml -p penombre-e2e up --wait",
 		cwd: "./",
 		url: process.env.PLAYWRIGHT_BASE_URL_LOCAL ?? "http://localhost:3001",
 		reuseExistingServer: !process.env.CI,
