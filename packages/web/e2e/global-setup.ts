@@ -1,6 +1,7 @@
 import type { FullConfig } from "@playwright/test";
+import { $ } from "bun";
 
-const MAX_ATTEMPTS = 40;
+const MAX_ATTEMPTS = 10;
 const RETRY_DELAY_MS = 3_000;
 
 const E2E_EMAIL = process.env.E2E_EMAIL ?? "admin@example.com";

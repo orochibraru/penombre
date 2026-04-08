@@ -18,6 +18,7 @@ env:
   TZ: Europe/Paris
   REGISTRY_IMAGE: orochibraru/penombre
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CI: true
 
 jobs:
   # ===========================================
@@ -133,6 +134,16 @@ jobs:
       - name: Install Playwright browsers
         working-directory: packages/web
         run: bunx playwright install --with-deps chromium
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build docker image
+        run: |
+          docker buildx build -t penombre-e2e .
 
       - name: Run E2E tests
         working-directory: packages/web

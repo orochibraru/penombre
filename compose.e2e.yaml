@@ -17,8 +17,10 @@
 services:
   app:
     build: .
+    image: penombre-e2e
+    restart: unless-stopped
     ports:
-      - "${E2E_PORT:-3001}:3000"
+      - "3001:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -26,7 +28,7 @@ services:
       - e2e_storage:/data
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/penombre_e2e"
-      ORIGIN: "http://localhost:${E2E_PORT:-3001}"
+      ORIGIN: "http://localhost:3001"
       LOG_LEVEL: "debug"
       REDIS_URL: "redis://redis:6379"
       STORAGE_BACKEND: "${STORAGE_BACKEND:-local}"
@@ -41,6 +43,7 @@ services:
 
   db:
     image: postgres:18-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -56,6 +59,7 @@ services:
 
   redis:
     image: redis:8-alpine
+    restart: unless-stopped
     healthcheck:
       test: [CMD, redis-cli, ping]
       interval: 1s
@@ -64,6 +68,7 @@ services:
 
   garage:
     profiles: [s3]
+    restart: unless-stopped
     build:
       context: .
       dockerfile: docker/garage.Dockerfile
