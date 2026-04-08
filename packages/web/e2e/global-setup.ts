@@ -1,5 +1,4 @@
 import type { FullConfig } from "@playwright/test";
-import { $ } from "bun";
 
 const MAX_ATTEMPTS = 10;
 const RETRY_DELAY_MS = 3_000;
