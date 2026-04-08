@@ -66,6 +66,24 @@ export default function TabLayout() {
 					}}
 				/>
 				<Tabs.Screen
+					name="starred"
+					options={{
+						title: "Starred",
+						tabBarIcon: ({ color }) => (
+							<IconSymbol size={24} name="star.fill" color={color} />
+						),
+					}}
+				/>
+				<Tabs.Screen
+					name="browse"
+					options={{
+						title: "Browse",
+						tabBarIcon: ({ color }) => (
+							<IconSymbol size={24} name="rectangle.grid.2x2" color={color} />
+						),
+					}}
+				/>
+				<Tabs.Screen
 					name="profile"
 					options={{
 						title: "Account",
@@ -77,10 +95,8 @@ export default function TabLayout() {
 				<Tabs.Screen
 					name="settings"
 					options={{
+						tabBarItemStyle: { display: "none" },
 						title: "Settings",
-						tabBarIcon: ({ color }) => (
-							<IconSymbol size={24} name="gear" color={color} />
-						),
 					}}
 				/>
 			</Tabs>

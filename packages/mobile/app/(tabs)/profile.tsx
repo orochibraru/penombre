@@ -1,6 +1,5 @@
 import { router } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { ThemedView } from "@/components/themed-view";
 import { IconSymbol, type IconSymbolName } from "@/components/ui/icon-symbol";
 import { authClient } from "@/lib/auth-client";
 
@@ -124,6 +123,14 @@ export default function ProfileScreen() {
 						title="Sessions"
 						subtitle="Active sign-in sessions"
 					/>
+					<Divider />
+					<MenuItem
+						icon="gear"
+						iconColor="#6B7280"
+						title="Settings"
+						subtitle="Display, storage, sync"
+						onPress={() => router.push("/(tabs)/settings")}
+					/>
 				</View>
 
 				<SectionHeader title="Storage" />
@@ -133,6 +140,7 @@ export default function ProfileScreen() {
 						iconColor="#EAB308"
 						title="Starred"
 						subtitle="Your starred files"
+						onPress={() => router.push("/(tabs)/starred")}
 					/>
 					<Divider />
 					<MenuItem
@@ -140,6 +148,7 @@ export default function ProfileScreen() {
 						iconColor="#EF4444"
 						title="Trash"
 						subtitle="Deleted files"
+						onPress={() => router.push("/trash")}
 					/>
 					<Divider />
 					<MenuItem
@@ -147,6 +156,7 @@ export default function ProfileScreen() {
 						iconColor="#6366F1"
 						title="Shared"
 						subtitle="Files shared with you"
+						onPress={() => router.push("/shared")}
 					/>
 				</View>
 
