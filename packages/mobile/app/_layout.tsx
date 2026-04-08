@@ -41,6 +41,9 @@ function RootLayoutNav() {
 			<Stack>
 				<Stack.Screen name="sign-in" options={{ headerShown: false }} />
 				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+				<Stack.Screen name="trash" options={{ title: "Trash" }} />
+				<Stack.Screen name="shared" options={{ title: "Shared" }} />
+				<Stack.Screen name="category/[name]" />
 			</Stack>
 			<StatusBar style="auto" />
 		</ThemeProvider>

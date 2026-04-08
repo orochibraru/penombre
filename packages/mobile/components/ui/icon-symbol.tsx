@@ -54,6 +54,8 @@ const MAPPING = {
 	"music.note": "music-note",
 	archivebox: "archive",
 	cube: "view-in-ar",
+	"rectangle.grid.2x2": "grid-view",
+	"person.2.fill": "people",
 } as IconMapping;
 
 /**
