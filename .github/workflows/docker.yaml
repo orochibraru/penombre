@@ -39,6 +39,8 @@ jobs:
 
       - name: Create matrix
         id: platforms
+        env:
+          GARAGE_RPC_SECRET: "e2e"
         run: |
           touch .env
           docker buildx bake image-all --print
