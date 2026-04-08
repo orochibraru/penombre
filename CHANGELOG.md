@@ -1,3 +1,25 @@
+## [1.8.12](https://github.com/orochibraru/penombre/compare/v1.8.11...v1.8.12) (2026-04-08)
+
+
+### Bug Fixes
+
+* release system ([22bb1ba](https://github.com/orochibraru/penombre/commit/22bb1ba32126947105274018468bd8c64ebbfe35))
+
+
+### Features
+
+* mobile app features ([#56](https://github.com/orochibraru/penombre/issues/56)) ([726cf84](https://github.com/orochibraru/penombre/commit/726cf84427e43129951d6b79622d5bf4267662df))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.12
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.11](https://github.com/orochibraru/penombre/compare/v1.8.10...v1.8.11) (2026-04-03)
 
 
