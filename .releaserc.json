@@ -24,6 +24,9 @@
 					{
 						"type": "revert",
 						"release": "patch"
+					},
+					{
+						"release": "patch"
 					}
 				]
 			}
