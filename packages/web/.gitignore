@@ -8,5 +8,8 @@
 # Playwright
 /playwright-report/
 /blob-report/
+/e2e/.auth/
 
 /Users
+/playwright-report/
+/playwright-report-local/

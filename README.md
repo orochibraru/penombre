@@ -180,19 +180,20 @@ For automated backups, add a cron job:
 ```bash
 # Root commands
 bun run dev          # Start dev servers (DB + web)
-bun run test         # Run tests
 bun run build        # Build all packages
 bun run lint         # Lint with Biome
 bun run lint:fix     # Lint and fix issues
 bun run check        # Type-check all packages
-bun test             # Run tests with Bun's test runner
-bun run test:docker  # Run tests in a Docker container (Simulates CI environment w/ Redis)
+bun test             # Run unit tests with Bun's test runner
+bun run test:docker  # Run unit tests in a Docker container (Simulates CI environment w/ Redis)
 
 # Web package (packages/web)
 bun run dev          # Start Vite dev server
 bun run build        # Build for production
 bun run check        # Type-check with svelte-check
 bun run db:generate  # Generate Drizzle migrations
+bun run test:e2e:local  # Run E2E tests (local filesystem backend, no S3 required)
+bun run test:e2e:s3     # Run E2E tests (S3/Garage backend)
 
 # Mobile package (packages/mobile)
 bunx expo start       # Start Expo dev server

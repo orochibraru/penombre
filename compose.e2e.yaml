@@ -1,0 +1,97 @@
+# Dedicated E2E test stack. Isolated from the dev stack:
+#   - Separate database (penombre_e2e) with its own named volumes.
+#   - No app or DB ports shared with the dev stack.
+#   - No env_file dependency — all values are self-contained.
+#
+# Profiles:
+#   (none) — local filesystem storage (STORAGE_BACKEND=local)
+#   s3     — adds the Garage S3-compatible storage backend
+#
+# Usage:
+#   Local:  E2E_PORT=3001 docker compose -f compose.e2e.yaml -p penombre-e2e up --build
+#   S3:     E2E_PORT=3002 STORAGE_BACKEND=s3 docker compose -f compose.e2e.yaml --profile s3 -p penombre-e2e-s3 up --build
+#
+# Playwright invokes the appropriate variant via the webServer command in
+# playwright.local.config.ts and playwright.config.ts respectively.
+
+services:
+  app:
+    build: .
+    image: penombre-e2e
+    restart: unless-stopped
+    ports:
+      - "${E2E_PORT:-3001}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - e2e_storage:/data
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/penombre_e2e"
+      ORIGIN: "http://localhost:${E2E_PORT:-3001}"
+      LOG_LEVEL: "debug"
+      REDIS_URL: "redis://redis:6379"
+      STORAGE_BACKEND: "${STORAGE_BACKEND:-local}"
+      STORAGE_PATH: "/data/storage"
+      # S3 settings — only active when STORAGE_BACKEND=s3
+      S3_ENDPOINT: "http://garage:3900"
+      S3_REGION: "garage"
+      S3_BUCKET: "penombre-e2e"
+      S3_ACCESS_KEY_ID: "GKe2e000000000000000000000"
+      S3_SECRET_ACCESS_KEY: "000000000000000000000000000000e2e0000000000000000000000000000000"
+      S3_PATH_STYLE: "true"
+
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: penombre_e2e
+    volumes:
+      - e2e_db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d penombre_e2e'"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+      start_period: 3s
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 1s
+      timeout: 2s
+      retries: 10
+
+  garage:
+    profiles: [s3]
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: docker/garage.Dockerfile
+    environment:
+      # Fixed secret — safe for an ephemeral test-only Garage instance
+      GARAGE_RPC_SECRET: "e2e0000000000000000000000000000000000000000000000000000000000e2e"
+      S3_BUCKET: "penombre-e2e"
+      S3_ACCESS_KEY_ID: "GKe2e000000000000000000000"
+      S3_SECRET_ACCESS_KEY: "000000000000000000000000000000e2e0000000000000000000000000000000"
+    volumes:
+      - e2e_garage_meta:/var/lib/garage/meta/
+      - e2e_garage_data:/var/lib/garage/data/
+    healthcheck:
+      # Passes once the bucket exists, which means the entrypoint finished
+      # importing the key, creating the bucket, and granting access.
+      test: ["CMD-SHELL", '/garage bucket list | grep -q "$S3_BUCKET"']
+      interval: 2s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
+
+volumes:
+  e2e_db:
+  e2e_storage:
+  e2e_garage_meta:
+  e2e_garage_data:

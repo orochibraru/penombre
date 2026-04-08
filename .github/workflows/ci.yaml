@@ -18,6 +18,7 @@ env:
   TZ: Europe/Paris
   REGISTRY_IMAGE: orochibraru/penombre
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CI: true
 
 jobs:
   # ===========================================
@@ -106,9 +107,101 @@ jobs:
         run: bun run format:check
 
       - name: Test
-        run: bun test
+        run: bun test .test. --ci --reporter=dots --testTimeout=30000
         env:
           REDIS_URL: redis://localhost:6379
+
+  # ===========================================
+  # E2E Tests — local filesystem backend
+  # ===========================================
+  e2e-local:
+    name: E2E Tests (local backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js for tooling
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: packages/web
+        run: bunx playwright install --with-deps chromium
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build docker image
+        run: |
+          docker buildx build -t penombre-e2e .
+
+      - name: Run E2E tests
+        working-directory: packages/web
+        run: bun run test:e2e:local
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-local
+          path: packages/web/playwright-report-local/
+          retention-days: 7
+
+  # ===========================================
+  # E2E Tests — S3 (Garage) backend
+  # ===========================================
+  e2e-s3:
+    name: E2E Tests (S3 backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js for tooling
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: packages/web
+        run: bunx playwright install --with-deps chromium
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build docker image
+        run: |
+          docker buildx build -t penombre-e2e .
+
+      - name: Run E2E tests (S3)
+        working-directory: packages/web
+        run: bun run test:e2e:s3
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-s3
+          path: packages/web/playwright-report/
+          retention-days: 7
 
   # ===========================================
   # Docker: Build — only when Docker files change
@@ -154,12 +247,12 @@ jobs:
   gate:
     name: CI Gate
     if: always()
-    needs: [ts-build-check, ts-lint-test, docker, docs]
+    needs: [ts-build-check, ts-lint-test, e2e-local, e2e-s3, docker, docs]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
         run: |
-          results=("${{ needs.ts-build-check.result }}" "${{ needs.ts-lint-test.result }}" "${{ needs.docker.result }}" "${{ needs.docs.result }}")
+          results=("${{ needs.ts-build-check.result }}" "${{ needs.ts-lint-test.result }}" "${{ needs.e2e-local.result }}" "${{ needs.e2e-s3.result }}" "${{ needs.docker.result }}" "${{ needs.docs.result }}")
           for result in "${results[@]}"; do
             if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
               echo "::error::One or more jobs failed or were cancelled"
