@@ -1045,20 +1045,7 @@ export class StorageService {
 		try {
 			const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
 
-			// Check DB first; only hit S3 if there are tracked files to remove
-			const trackedFiles = await this.db
-				.select({ id: files.id })
-				.from(files)
-				.where(
-					and(
-						eq(files.ownerId, this.user.id),
-						like(files.path, `${normalizedKey}/%`),
-					),
-				);
-
-			if (trackedFiles.length > 0) {
-				await this.driver.deleteObjectsByPrefix(`${normalizedKey}/`);
-			}
+			await this.driver.deleteObjectsByPrefix(`${normalizedKey}/`);
 
 			await this.db
 				.delete(files)
