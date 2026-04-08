@@ -20,7 +20,7 @@ services:
     image: penombre-e2e
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "${E2E_PORT:-3001}:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -28,7 +28,7 @@ services:
       - e2e_storage:/data
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/penombre_e2e"
-      ORIGIN: "http://localhost:3001"
+      ORIGIN: "http://localhost:${E2E_PORT:-3001}"
       LOG_LEVEL: "debug"
       REDIS_URL: "redis://redis:6379"
       STORAGE_BACKEND: "${STORAGE_BACKEND:-local}"
