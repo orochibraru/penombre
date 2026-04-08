@@ -9,7 +9,13 @@
 		"ios": "expo run:ios",
 		"gen:api": "openapi-typescript ./assets/api.v1.json --output ./lib/api.v1.d.ts",
 		"web": "expo start --web",
-		"check": "tsc --noEmit"
+		"check": "tsc --noEmit",
+		"build:dev": "eas build --profile development --platform all",
+		"build:preview": "eas build --profile preview --platform all",
+		"build:preview:android": "eas build --profile preview --platform android",
+		"build:preview:ios": "eas build --profile preview --platform ios",
+		"build:prod": "eas build --profile production --platform all",
+		"submit:prod": "eas submit --profile production --platform all"
 	},
 	"dependencies": {
 		"@better-auth/expo": "^1.6.0",
@@ -49,6 +55,7 @@
 		"swr": "^2.4.1"
 	},
 	"devDependencies": {
+		"eas-cli": "latest",
 		"@expo/metro-config": "~55.0.14",
 		"@tailwindcss/postcss": "^4.2.2",
 		"@types/react": "~19.2.14",
