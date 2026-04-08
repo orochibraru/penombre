@@ -26,7 +26,9 @@ export default defineConfig({
 			"http://localhost:3001",
 		trace: "on-first-retry",
 		screenshot: "only-on-failure",
-		reducedMotion: "reduce",
+		contextOptions: {
+			reducedMotion: "reduce",
+		},
 	},
 	// S3-dependent tests are tagged @s3 and excluded from the local run.
 	grepInvert: /@s3/,

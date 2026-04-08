@@ -23,7 +23,9 @@ export default defineConfig({
 		baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3002",
 		trace: "on",
 		screenshot: "on",
-		reducedMotion: "reduce",
+		contextOptions: {
+			reducedMotion: "reduce",
+		},
 	},
 	projects: [
 		{
