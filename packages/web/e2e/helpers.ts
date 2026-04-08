@@ -26,9 +26,20 @@ export async function rightClickItem(page: Page, name: string) {
 		.or(page.locator("[data-item]").filter({ hasText: name }));
 	const target = item.first();
 	await target.scrollIntoViewIfNeeded();
-	await target.click({ button: "right" });
-	// Small pause to let the context menu fully mount before resolving menu items
-	await page.waitForTimeout(150);
+	await page.waitForTimeout(100); // let scroll animation settle
+
+	// Retry the right-click until the context menu is visible (up to 3 attempts).
+	// A single right-click can silently fail if the element isn't fully stable.
+	const menu = page.locator('[role="menu"]');
+	for (let i = 0; i < 3; i++) {
+		await target.click({ button: "right" });
+		const appeared = await menu
+			.isVisible({ timeout: 1_000 })
+			.catch(() => false);
+		if (appeared) return;
+	}
+	// Final assertion — surfaces a clear error if all retries failed
+	await expect(menu).toBeVisible({ timeout: 3_000 });
 }
 
 /** Open the ellipsis dropdown menu on an item by its visible name. */
