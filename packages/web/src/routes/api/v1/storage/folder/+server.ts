@@ -3,7 +3,7 @@ import { createFolder, listFolders } from "$lib/server/openapi/v1/storage";
 
 export const GET = listFolders.handler(async ({ service }) => {
 	try {
-		const folders = await service.listFolders("", {
+		const folders = await service.listFoldersWithMetadata("", {
 			includeTrashed: false,
 		});
 		return Http.Ok(folders);

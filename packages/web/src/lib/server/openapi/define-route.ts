@@ -161,18 +161,20 @@ export function defineRoute<
 				// Validate request body (skip for FormData routes)
 				let parsedBody = undefined as InferOrUndefined<TBody>;
 				if (config.body && !config.isFormData) {
+					let rawBody: unknown = {};
 					try {
-						const rawBody = await event.request.json();
-						const result = config.body.safeParse(rawBody);
-						if (!result.success) {
-							return Http.UnprocessableEntity(
-								`Invalid request body: ${formatZodErrors(result)}`,
-							);
-						}
-						parsedBody = result.data as InferOrUndefined<TBody>;
+						rawBody = await event.request.json();
 					} catch {
-						return Http.BadRequest("Invalid JSON in request body");
+						// No body or empty body — fall back to empty object so that
+						// routes with all-optional fields (e.g. DELETE) work without a body.
 					}
+					const result = config.body.safeParse(rawBody);
+					if (!result.success) {
+						return Http.UnprocessableEntity(
+							`Invalid request body: ${formatZodErrors(result)}`,
+						);
+					}
+					parsedBody = result.data as InferOrUndefined<TBody>;
 				}
 
 				return callback({

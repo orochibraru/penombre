@@ -3,7 +3,7 @@ import { listTrashedFolders } from "$lib/server/openapi/v1/storage";
 
 export const GET = listTrashedFolders.handler(async ({ service }) => {
 	try {
-		const folders = await service.listFolders("", {
+		const folders = await service.listFoldersWithMetadata("", {
 			onlyTrashed: true,
 		});
 		return Http.Ok(folders);

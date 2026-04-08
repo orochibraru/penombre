@@ -11,12 +11,6 @@
 		// Bundler mode
 		"moduleResolution": "bundler",
 
-		// Path aliases for Bun tests (mirrors SvelteKit's $lib)
-		"baseUrl": ".",
-		"paths": {
-			"$lib": ["packages/web/src/lib"],
-			"$lib/*": ["packages/web/src/lib/*"]
-		},
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,
 		"noEmit": true,

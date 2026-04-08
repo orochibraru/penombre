@@ -1,0 +1,13 @@
+{
+	"hooks": {
+		"PostToolUse": [
+			{
+				"type": "command",
+				"command": "bunx biome check --fix ${filePath}",
+				"cwd": "/Users/nicolasboyer/Dev/penombre",
+				"timeout": 15,
+				"when": "toolName == 'replace_string_in_file' || toolName == 'create_file' || toolName == 'multi_replace_string_in_file'"
+			}
+		]
+	}
+}

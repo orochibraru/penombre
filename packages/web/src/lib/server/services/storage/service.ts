@@ -915,15 +915,7 @@ export class StorageService {
 			throw new Error("Cannot move a folder into itself");
 		}
 
-		// Move all objects in storage
-		const allFileKeys = await this.driver.listObjectKeys(`${normalizedKey}/`);
-		for (const oldKey of allFileKeys) {
-			const newKey = newFolderPath + oldKey.slice(normalizedKey.length);
-			await this.driver.copyObject(oldKey, newKey);
-			await this.driver.deleteObject(oldKey);
-		}
-
-		// Update all file paths in DB
+		// Query DB-tracked files under this folder path first
 		const allFilesUnder = await this.db
 			.select()
 			.from(files)
@@ -933,6 +925,18 @@ export class StorageService {
 					like(files.path, `${normalizedKey}/%`),
 				),
 			);
+
+		// Only call S3 when there are actual files to move (avoids errors on empty folders)
+		if (allFilesUnder.length > 0) {
+			const allFileKeys = await this.driver.listObjectKeys(`${normalizedKey}/`);
+			for (const oldKey of allFileKeys) {
+				const newKey = newFolderPath + oldKey.slice(normalizedKey.length);
+				await this.driver.copyObject(oldKey, newKey);
+				await this.driver.deleteObject(oldKey);
+			}
+		}
+
+		// Update all file paths in DB
 		for (const f of allFilesUnder) {
 			const newPath = newFolderPath + f.path.slice(normalizedKey.length);
 			await this.db
