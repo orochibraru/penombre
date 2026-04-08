@@ -1,6 +1,7 @@
 import type { FullConfig } from "@playwright/test";
+import { $ } from "bun";
 
-const MAX_ATTEMPTS = 40;
+const MAX_ATTEMPTS = 10;
 const RETRY_DELAY_MS = 3_000;
 
 /**
@@ -43,7 +44,29 @@ async function waitForApp(baseURL: string): Promise<void> {
 }
 
 export default async function globalSetup(_config: FullConfig): Promise<void> {
-	const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+	const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3001";
+
+	const composeFile = "../../compose.e2e.yaml";
+	const composeProjectName = "penombre-e2e";
+
+	// Run docker compose PS before waiting for the app, to ensure the containers are up and running.
+	// This is necessary because the web server command in the Playwright config starts the containers,
+	// but they may not be fully up by the time we start polling the health endpoint.
+	console.log(
+		`[global-setup] Checking Docker containers with docker compose ps on ${composeFile} (${composeProjectName})…`,
+	);
+	const cmd =
+		await $`docker compose -f ${composeFile} -p ${composeProjectName} ps`;
+
+	if (cmd.exitCode !== 0) {
+		console.error("[global-setup] Failed to start Docker containers:");
+		console.error(cmd.stderr);
+		throw new Error("Failed to start Docker containers");
+	}
+
+	console.log(
+		`[global-setup] Starting Docker containers with docker compose on ${composeFile} (${composeProjectName})…`,
+	);
 
 	await waitForApp(baseURL);
 }
