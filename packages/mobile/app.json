@@ -10,7 +10,10 @@
 		"newArchEnabled": true,
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "com.anonymous.penombre"
+			"bundleIdentifier": "com.anonymous.penombre",
+			"infoPlist": {
+				"ITSAppUsesNonExemptEncryption": false
+			}
 		},
 		"android": {
 			"adaptiveIcon": {
@@ -41,6 +44,13 @@
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
-		}
+		},
+		"extra": {
+			"router": {},
+			"eas": {
+				"projectId": "dea37075-68ea-49f2-b150-2f826cb1d6c1"
+			}
+		},
+		"owner": "orochibraru"
 	}
 }

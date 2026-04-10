@@ -1,50 +1,78 @@
-# Welcome to your Expo app 👋
+# Penombre Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native / Expo app for [Penombre](https://github.com/nicholasgasior/penombre) — a self-hosted cloud storage platform.
 
-## Get started
+## Stack
 
-1. Install dependencies
+- **Expo SDK 55** with React Native 0.83.4
+- **Expo Router** — file-based navigation
+- **NativeWind** — TailwindCSS utility classes via `className`
+- **SWR** + **openapi-fetch** — typed API client generated from the OpenAPI spec
+- **Better Auth** — session-based auth with Expo support
 
-    ```bash
-    bun install
-    ```
+## Getting started
 
-2. Start the app
-
-    ```bash
-    bunx expo start
-    ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+**Prerequisites:** Node 22+, Bun, and either Android Studio (Android) or Xcode (iOS).
 
 ```bash
-bun run reset-project
+# From the monorepo root
+bun install
+
+# Start the dev server
+cd packages/mobile
+bun run dev
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Then press `a` to open on Android emulator or `i` for iOS simulator.
 
-## Learn more
+## Development commands
 
-To learn more about developing your project with Expo, look at the following resources:
+| Command           | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `bun run dev`     | Start Expo dev server                          |
+| `bun run android` | Run on connected Android device / emulator     |
+| `bun run ios`     | Run on iOS simulator                           |
+| `bun run check`   | TypeScript type-check                          |
+| `bun run gen:api` | Regenerate API types from `assets/api.v1.json` |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Building
 
-## Join the community
+| Command                       | Output                                                 |
+| ----------------------------- | ------------------------------------------------------ |
+| `bun run build:android`       | Release APK → `android/app/build/outputs/apk/release/` |
+| `bun run build:android:debug` | Debug APK → `android/app/build/outputs/apk/debug/`     |
+| `bun run build:ios`           | Release simulator build (requires CocoaPods + Xcode)   |
+| `bun run build:ios:debug`     | Debug simulator build (requires CocoaPods + Xcode)     |
 
-Join our community of developers creating universal apps.
+For full Android build setup (SDK, NDK, signing), see [docs/android-build-setup.md](docs/android-build-setup.md).
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+For iOS builds, install CocoaPods first:
+
+```bash
+gem install --user-install cocoapods
+```
+
+Also ensure the iOS platform is installed in Xcode:
+
+1. Open Xcode.
+2. Go to Settings, then Components.
+3. Install the iOS platform/runtime matching your Xcode version.
+
+## Environment
+
+Copy `.env.example` to `.env` and set:
+
+```bash
+EXPO_PUBLIC_API_URL=http://localhost:3000   # URL of the Penombre web server
+```
+
+## API types
+
+Types are generated from the web package's OpenAPI spec. To regenerate after backend changes:
+
+```bash
+# From monorepo root
+bun run gen:api
+```
+
+Do **not** manually edit `lib/api.v1.d.ts` or `assets/api.v1.json`.
