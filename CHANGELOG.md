@@ -1,3 +1,20 @@
+## [1.8.13](https://github.com/orochibraru/penombre/compare/v1.8.12...v1.8.13) (2026-04-14)
+
+
+### Bug Fixes
+
+* better auth types AGAIN ([5c50b38](https://github.com/orochibraru/penombre/commit/5c50b387f57cba299c8ed6cca95349bdf8cec0b1))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.13
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.12](https://github.com/orochibraru/penombre/compare/v1.8.11...v1.8.12) (2026-04-08)
 
 
