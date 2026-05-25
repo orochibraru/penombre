@@ -1,8 +1,9 @@
 [test]
 preload = ["./packages/web/test.setup.ts"]
 coverage = true
+rerunEach = 3
 coveragePathIgnorePatterns = [
-    "**/setup.ts",
+    "**/test.setup.ts",
     "**/test.setup.ts",
     "**/*.spec.ts",
     "**/test-utils.ts",
@@ -21,14 +22,13 @@ coveragePathIgnorePatterns = [
     "src/utils/constants.ts",
     "src/types/**",
 ]
+pathIgnorePatterns = ["node_modules/**", "**/e2e/**", "fixtures/**"]
 
-# Note: Bun does not support pathIgnorePatterns — use `bun test '.test.'` to
-# exclude *.spec.ts (Playwright) files from unit-test runs.
+coverageThreshold = { line = 0.7, function = 0.8, statement = 0.9 }
 
-[test.coverageThreshold]
-line = 0.7
-function = 0.8
-statement = 0.9
+
+[test.reporter]
+dots = true
 
 [run]
 bun = true

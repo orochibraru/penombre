@@ -107,7 +107,7 @@ jobs:
         run: bun run format:check
 
       - name: Test
-        run: bun test .test. --ci --reporter=dots --testTimeout=30000
+        run: bun test --bail
         env:
           REDIS_URL: redis://localhost:6379
 

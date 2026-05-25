@@ -7,7 +7,6 @@
 	"scripts": {
 		"prepare": "husky",
 		"preinstall": "bunx only-allow bun",
-		"test": "bun test '.test.'",
 		"build": "bun run --filter @penombre/web build",
 		"dev": "bun --env-file .env concurrently.config.ts",
 		"db:diagram": "bun run ./scripts/db-diagram.ts",
