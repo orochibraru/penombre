@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { ThemedView } from "@/components/themed-view";
 import { IconSymbol, type IconSymbolName } from "@/components/ui/icon-symbol";
 import { authClient } from "@/lib/auth-client";
 
