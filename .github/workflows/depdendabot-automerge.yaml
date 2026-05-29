@@ -15,7 +15,7 @@ permissions:
 jobs:
   auto-update:
     runs-on: ubuntu-latest
-    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository == 'orochibraru/penombre'
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository == 'orochibraru/penombre' && github.ref != 'refs/heads/main'
     steps:
       - uses: actions/checkout@v6
       - name: Auto-update branch for Dependabot PRs
@@ -26,7 +26,7 @@ jobs:
 
   dependabot:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'orochibraru/penombre'
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'orochibraru/penombre' && github.ref != 'refs/heads/main'
     steps:
       - name: Dependabot metadata
         id: metadata

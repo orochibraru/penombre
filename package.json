@@ -1,13 +1,12 @@
 {
 	"name": "@penombre/root",
-	"version": "1.8.13",
+	"version": "1.8.14",
 	"description": "",
 	"main": "index.js",
-	"packageManager": "bun@1.3.11",
+	"packageManager": "bun@1.3.14",
 	"scripts": {
 		"prepare": "husky",
 		"preinstall": "bunx only-allow bun",
-		"test": "bun test '.test.'",
 		"build": "bun run --filter @penombre/web build",
 		"dev": "bun --env-file .env concurrently.config.ts",
 		"db:diagram": "bun run ./scripts/db-diagram.ts",
