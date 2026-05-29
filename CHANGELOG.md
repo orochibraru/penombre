@@ -1,3 +1,21 @@
+## [1.8.14](https://github.com/orochibraru/penombre/compare/v1.8.13...v1.8.14) (2026-05-29)
+
+
+### Bug Fixes
+
+* don't run dependabot automerge on main ([829d283](https://github.com/orochibraru/penombre/commit/829d28317c5bb2b7efe77c149f8ddaba0dbb646c))
+* test cfg ([2ad5c97](https://github.com/orochibraru/penombre/commit/2ad5c9796f6dd136268a606bdab38889f866ab1d))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.14
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.13](https://github.com/orochibraru/penombre/compare/v1.8.12...v1.8.13) (2026-04-14)
 
 
