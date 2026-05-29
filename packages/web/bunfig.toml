@@ -1,0 +1,46 @@
+[test]
+preload = ["./packages/web/test.setup.ts"]
+coverage = true
+rerunEach = 3
+coveragePathIgnorePatterns = [
+    "**/test.setup.ts",
+    "**/test.setup.ts",
+    "**/*.spec.ts",
+    "**/test-utils.ts",
+    "**/mocks/**",
+    "**/types/**",
+    "**/schema.ts",
+    "**/*.test.ts",
+    "**/*.e2e.ts",
+    "*.config.js",
+    "*.config.ts",
+    "dist/**",
+    "build/**",
+    ".next/**",
+    "generated/**",
+    "vendor/**",
+    "src/utils/constants.ts",
+    "src/types/**",
+]
+pathIgnorePatterns = ["node_modules/**", "**/e2e/**", "fixtures/**"]
+
+coverageThreshold = { line = 0.7, function = 0.8, statement = 0.9 }
+
+
+[test.reporter]
+dots = true
+
+[run]
+bun = true
+
+[install]
+linker = "isolated"
+
+[install.lockfile]
+save = true
+
+[runtime]
+telemetry = false
+
+[console]
+depth = 3
