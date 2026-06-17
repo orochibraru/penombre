@@ -17,6 +17,7 @@
 			"!packages/web/data",
 			"!packages/web/dist",
 			"!packages/web/test-results",
+			"!packages/web/static",
 			"!packages/web/project.inlang",
 			"!packages/web/playwright-report",
 			"!packages/web/src/lib/paraglide",
@@ -29,6 +30,9 @@
 			"!packages/docs/.tanstack",
 			"!packages/docs/.source",
 			"!packages/docs/src/routeTree.gen.ts",
+			"!packages/docs/public",
+			"!resources",
+			"!assets",
 			"!tmp",
 			"!dist"
 		]
@@ -44,9 +48,8 @@
 		}
 	},
 	"linter": {
-		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"complexity": {
 				"useMaxParams": "error"
 			},
