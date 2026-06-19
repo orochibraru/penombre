@@ -31,7 +31,7 @@ jobs:
       docker: ${{ steps.filter.outputs.docker }}
       docs: ${{ steps.filter.outputs.docs }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: dorny/paths-filter@v4
         id: filter
@@ -52,7 +52,7 @@ jobs:
     name: TypeScript Build & Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -87,7 +87,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -118,7 +118,7 @@ jobs:
     name: E2E Tests (local backend)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -164,7 +164,7 @@ jobs:
     name: E2E Tests (S3 backend)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -224,7 +224,7 @@ jobs:
     if: needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
