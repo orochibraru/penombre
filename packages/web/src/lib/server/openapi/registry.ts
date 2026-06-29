@@ -23,6 +23,20 @@ interface SchemaRegistration {
 	schema: z.ZodType;
 }
 
+export type ExternalSpec = {
+	spec: ExternalOpenAPISpec;
+	/** Prefix prepended to every path key, e.g. "/api/v1/auth" */
+	pathPrefix?: string;
+	/** Tag applied to every operation that has no tags */
+	defaultTag?: string;
+	/**
+	 * Rename or remove tags from the external spec.
+	 * Map original tag name → new name, or `null` to drop it entirely.
+	 * e.g. `{ "Default": "Auth" }` or `{ "Default": null }`
+	 */
+	tagOverrides?: Record<string, string | null>;
+};
+
 /**
  * A full or partial OpenAPI 3.x document that can be merged into the registry.
  */
@@ -80,21 +94,7 @@ class OpenAPIRegistry {
 	 *   - tags are unioned by name
 	 *   - securitySchemes are merged (ours win on conflict)
 	 */
-	toOpenAPISpec(
-		externalSpecs: Array<{
-			spec: ExternalOpenAPISpec;
-			/** Prefix prepended to every path key, e.g. "/api/v1/auth" */
-			pathPrefix?: string;
-			/** Tag applied to every operation that has no tags */
-			defaultTag?: string;
-			/**
-			 * Rename or remove tags from the external spec.
-			 * Map original tag name → new name, or `null` to drop it entirely.
-			 * e.g. `{ "Default": "Auth" }` or `{ "Default": null }`
-			 */
-			tagOverrides?: Record<string, string | null>;
-		}> = [],
-	): Record<string, unknown> {
+	toOpenAPISpec(externalSpecs: ExternalSpec[] = []): Record<string, unknown> {
 		// ── 1. Build our own schemas ────────────────────────────────────
 		const schemaComponents: Record<string, unknown> = {};
 
