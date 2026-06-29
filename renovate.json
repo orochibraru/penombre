@@ -1,0 +1,37 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended", ":keepLockFilesPinned"],
+	"packageRules": [
+		{
+			"matchUpdateTypes": ["pin", "digest"],
+			"automerge": true
+		},
+		{
+			"groupName": "Bun & JavaScript Ecosystem",
+			"matchManagers": ["bun", "npm"],
+			"matchPackagePatterns": ["*"],
+			"groupSlug": "bun-js-monorepo"
+		},
+		{
+			"groupName": "Docker & Compose Infrastructure",
+			"matchManagers": ["dockerfile", "docker-compose"],
+			"matchPackagePatterns": ["*"],
+			"groupSlug": "docker-infra"
+		},
+		{
+			"groupName": "GitHub Actions",
+			"matchManagers": ["github-actions"],
+			"matchPackagePatterns": ["*"]
+		},
+		{
+			"matchDepTypes": ["devDependencies"],
+			"automerge": true,
+			"labels": ["dependencies", "devDependencies"]
+		}
+	],
+	"bun": {
+		"enabled": true
+	},
+	"labels": ["dependencies"],
+	"assignees": ["orochibraru"]
+}
