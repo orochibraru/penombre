@@ -133,6 +133,7 @@ jobs:
             *.tags=${{ env.IMAGE }}
             *.platform=${{ matrix.platform }}
             *.output=type=image,push-by-digest=true,name-canonical=true,push=${{ inputs.publish }}
+            *.args.APP_VERSION=${{ github.ref_name }}
 
       - name: Export digest
         run: |
