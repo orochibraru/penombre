@@ -6,14 +6,6 @@ variable "TAG" {
   }
 }
 
-variable "IMAGE" {
-  default = "orochibraru/penombre"
-  validation {
-    condition = IMAGE != ""
-    error_message = "The variable 'IMAGE' must not be empty."
-  }
-}
-
 // Special target: https://github.com/docker/metadata-action#bake-definition
 target "docker-metadata-action" {
   tags = ["orochibraru/penombre:latest","orochibraru/penombre:${TAG}"]
@@ -28,7 +20,7 @@ target "image" {
   context    = "."
   dockerfile = "./Dockerfile"
   args = {
-    APP_VERSION = "${var.TAG}"
+    APP_VERSION = "${TAG}"
   }
 }
 
