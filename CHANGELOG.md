@@ -1,3 +1,20 @@
+## [1.8.16](https://github.com/orochibraru/penombre/compare/v1.8.15...v1.8.16) (2026-06-29)
+
+
+### Bug Fixes
+
+* deps + openapi ([ccf9450](https://github.com/orochibraru/penombre/commit/ccf945045afe4ae2cfccebf8b3046e5d15f5db53))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.16
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.15](https://github.com/orochibraru/penombre/compare/v1.8.14...v1.8.15) (2026-05-29)
 
 ---
