@@ -10,7 +10,6 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"gen:api": "bun run scripts/generate-openapi.ts && openapi-typescript ./src/lib/api/v1.json -o ./src/lib/api/v1.d.ts",
-		"gen:routes": "kit-routes sync",
 		"db:generate": "drizzle-kit generate",
 		"migrate:storage": "bun run scripts/migrate-storage-meta.ts",
 		"gen:env": "bun run scripts/generate-env-example.ts",

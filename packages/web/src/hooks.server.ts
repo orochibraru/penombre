@@ -8,6 +8,7 @@ import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
 import { getDb, resetDb } from "$lib/server/db";
+import { genOpenApiSpec } from "$lib/server/generate-openapi";
 import {
 	migrateStorageMeta,
 	StorageService,
@@ -99,6 +100,25 @@ async function runMigrations() {
 }
 
 export const init = async () => {
+	if (building) {
+		const spec = genOpenApiSpec();
+		const outputPath = new URL("./lib/api/v1.json", import.meta.url).pathname;
+		const mobileCopyPath = new URL(
+			"../../mobile/assets/api.v1.json",
+			import.meta.url,
+		).pathname;
+		const docsCopyPath = new URL(
+			"../../docs/content/api.v1.json",
+			import.meta.url,
+		).pathname;
+
+		await Bun.write(outputPath, JSON.stringify(spec, null, "\t"));
+		console.log(`✓ Generated OpenAPI spec → ${outputPath}`);
+		await Bun.write(mobileCopyPath, JSON.stringify(spec, null, "\t"));
+		console.log(`✓ Copied OpenAPI spec → ${mobileCopyPath}`);
+		await Bun.write(docsCopyPath, JSON.stringify(spec, null, "\t"));
+		console.log(`✓ Copied OpenAPI spec → ${docsCopyPath}`);
+	}
 	await waitForDatabase();
 	await runMigrations();
 	await seedAuth();
