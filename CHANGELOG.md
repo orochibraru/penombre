@@ -1,3 +1,20 @@
+## [1.8.17](https://github.com/orochibraru/penombre/compare/v1.8.16...v1.8.17) (2026-06-29)
+
+
+### Bug Fixes
+
+* pass tag to docker build ([4829235](https://github.com/orochibraru/penombre/commit/482923502790ed424059b0ba2d30a93229d9970f))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.17
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.16](https://github.com/orochibraru/penombre/compare/v1.8.15...v1.8.16) (2026-06-29)
 
 
