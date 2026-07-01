@@ -1,3 +1,20 @@
+## [1.8.18](https://github.com/orochibraru/penombre/compare/v1.8.17...v1.8.18) (2026-07-01)
+
+
+### Bug Fixes
+
+* semantic release packages ([9b82473](https://github.com/orochibraru/penombre/commit/9b824730a0f0a39861a474fca641cbe002b98ca2))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.18
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.17](https://github.com/orochibraru/penombre/compare/v1.8.16...v1.8.17) (2026-06-29)
 
 
