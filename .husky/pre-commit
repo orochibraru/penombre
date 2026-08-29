@@ -15,3 +15,5 @@ bun run gen:api
 echo "Linting, formatting and fixing issues..."
 bun run tailwint --fix
 bun run biome check --write
+
+git add .
