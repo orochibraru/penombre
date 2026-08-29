@@ -124,6 +124,7 @@
         "openapi-fetch": "^0.17.0",
         "paneforge": "1.0.2",
         "postgres": "^3.4.9",
+        "reflect-metadata": "^0.2.2",
         "sharp": "^0.35.3",
         "svelte-sonner": "^1.1.1",
         "sveltekit-superforms": "^2.30.1",
@@ -136,7 +137,7 @@
       "devDependencies": {
         "@inlang/cli": "^3.1.11",
         "@inlang/paraglide-js": "^2.18.1",
-        "@orochibraru/svelte-smol": "^1.4.0",
+        "@orochibraru/svelte-smol": "^1.5.1",
         "@playwright/test": "^1.60.0",
         "@shikijs/langs": "^4.1.0",
         "@shikijs/themes": "^4.1.0",
@@ -974,7 +975,7 @@
 
     "@orama/orama": ["@orama/orama@3.1.18", "", {}, "sha512-a61ljmRVVyG5MC/698C8/FfFDw5a8LOIvyOLW5fztgUXqUpc1jOfQzOitSCbge657OgXXThmY3Tk8fpiDb4UcA=="],
 
-    "@orochibraru/svelte-smol": ["@orochibraru/svelte-smol@1.4.0", "", { "peerDependencies": { "@sveltejs/kit": "^2.0.0" } }, "sha512-duO+OlarDAwHONlf4Ob5khpNk+PF9oqlNcLQcB2BSApBg5n7XfsKDRtxBFtVq48WAP3u4e9Vx6HxSfsGYBcWDQ=="],
+    "@orochibraru/svelte-smol": ["@orochibraru/svelte-smol@1.5.1", "", { "peerDependencies": { "@sveltejs/kit": "^2.0.0" } }, "sha512-ri5TZGbkDCGtahxpbXWGDKcxtLTWeGeE8vqUGhpkWEagSnjJ9odtM5XN8DciogwsoKqxCxni2kmmmWwNI4SkRQ=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.139.0", "", {}, "sha512-r9gHphtCs+1M7J0pw6Sn/hh/Wpa/iQrOOkrNAlVLF/gHq+/CJmHIWKKUUhdWjcD6CIa8idarspCsASiXCXvFUw=="],
 

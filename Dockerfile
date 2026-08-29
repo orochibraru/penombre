@@ -79,4 +79,4 @@ USER bun
 ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION:-unknown}
 
-CMD ["/app/build/server"]
+CMD ["bun", "run", "/app/build/index.js"]
