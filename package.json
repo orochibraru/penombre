@@ -1,6 +1,6 @@
 {
 	"name": "@penombre/root",
-	"version": "1.8.18",
+	"version": "1.8.19",
 	"description": "",
 	"main": "index.js",
 	"packageManager": "bun@1.4.0",

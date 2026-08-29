@@ -1,3 +1,28 @@
+## [1.8.19](https://github.com/orochibraru/penombre/compare/v1.8.18...v1.8.19) (2026-08-29)
+
+
+### Bug Fixes
+
+* bump svelte smol ([e5824be](https://github.com/orochibraru/penombre/commit/e5824be193344b9d913ac36f060e6a43fb08b11d))
+* formatting ([b04e5d7](https://github.com/orochibraru/penombre/commit/b04e5d7867884effeca3da8ce4193c11dea62d95))
+* tailwind & biome ([89b5a67](https://github.com/orochibraru/penombre/commit/89b5a67524875d1810f50f4b941224a2945985f2))
+
+
+### Features
+
+* replace svelte-adapter-bun with @orochibraru/svelte-smol ([b5d7569](https://github.com/orochibraru/penombre/commit/b5d756952e0eceeb7984b97dd38aa78901b3232c))
+* use bun 1.4 ([2dbf8a6](https://github.com/orochibraru/penombre/commit/2dbf8a630d04ce3abaad0bcb1fe7489a2fada398))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.19
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.18](https://github.com/orochibraru/penombre/compare/v1.8.17...v1.8.18) (2026-07-01)
 
 
