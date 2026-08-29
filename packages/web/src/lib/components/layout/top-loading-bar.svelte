@@ -40,7 +40,7 @@
 
 {#if showLoadingBar}
 	<div
-		class="fixed top-0 z-50 h-[2px] w-full bg-white transition-all will-change-transform"
+		class="fixed top-0 z-50 h-0.5 w-full bg-white transition-all will-change-transform"
 		transition:fade
 	>
 		<div class="bg-primary h-full" style="width: {progress.current * 100}%"></div>

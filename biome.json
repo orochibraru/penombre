@@ -11,6 +11,7 @@
 			"**",
 			"!**/node_modules",
 			"!**/*.svelte",
+			"!**/*.svg",
 			"!packages/web/src/app.css",
 			"!packages/web/vite.config.ts",
 			"!packages/web/build",
@@ -46,7 +47,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"complexity": {
 				"useMaxParams": "error"
 			},

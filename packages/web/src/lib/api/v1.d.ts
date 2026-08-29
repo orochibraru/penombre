@@ -4058,7 +4058,9 @@ export interface paths {
 			parameters: {
 				query?: never;
 				header?: never;
-				path?: never;
+				path: {
+					id: string;
+				};
 				cookie?: never;
 			};
 			requestBody?: never;
@@ -4136,12 +4138,21 @@ export interface paths {
 			parameters: {
 				query?: never;
 				header?: never;
-				path?: never;
+				path: {
+					id: string;
+				};
 				cookie?: never;
 			};
 			requestBody?: {
 				content: {
-					"application/json": Record<string, never>;
+					"application/json": {
+						code?: string;
+						error?: string;
+						device_id?: string;
+						error_description?: string;
+						state?: string;
+						user?: string;
+					};
 				};
 			};
 			responses: {
@@ -4230,7 +4241,7 @@ export interface paths {
 		get: operations["getSession"];
 		put?: never;
 		/** @description Get the current session */
-		post: operations["getSession"];
+		post: operations["getSessionPost"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -4961,7 +4972,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					token?: string;
-					callbackURL?: string | null;
+					callbackURL?: string;
 				};
 				header?: never;
 				path?: never;
@@ -5083,7 +5094,7 @@ export interface paths {
 				content: {
 					"application/json": {
 						providerId: string;
-						accountId?: string | null;
+						accountId?: string;
 					};
 				};
 			};
@@ -5196,9 +5207,9 @@ export interface paths {
 						/** @description The provider ID for the OAuth provider */
 						providerId: string;
 						/** @description The account ID associated with the refresh token */
-						accountId?: string | null;
+						accountId?: string;
 						/** @description The user ID associated with the account */
-						userId?: string | null;
+						userId?: string;
 					};
 				};
 			};
@@ -5314,9 +5325,9 @@ export interface paths {
 						/** @description The provider ID for the OAuth provider */
 						providerId: string;
 						/** @description The account ID associated with the refresh token */
-						accountId?: string | null;
+						accountId?: string;
 						/** @description The user ID associated with the account */
-						userId?: string | null;
+						userId?: string;
 					};
 				};
 			};
@@ -6182,7 +6193,7 @@ export interface paths {
 		get?: never;
 		put?: never;
 		/** @description Update a user's details */
-		post: operations["updateUser"];
+		post: operations["adminUpdateUser"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -6216,7 +6227,7 @@ export interface paths {
 		get?: never;
 		put?: never;
 		/** @description List user sessions */
-		post: operations["listUserSessions"];
+		post: operations["adminListUserSessions"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -6557,7 +6568,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					authorizationURL?: string;
-					oauthState?: string | null;
+					oauthState?: string;
 				};
 				header?: never;
 				path?: never;
@@ -6662,32 +6673,34 @@ export interface paths {
 				content: {
 					"application/json": {
 						/** @description The configuration ID to use for the API key. If not provided, the default configuration will be used. */
-						configId?: string | null;
+						configId?: string;
 						/** @description Name of the Api Key */
-						name?: string | null;
-						/** @default null */
-						expiresIn: string;
+						name?: string;
+						/** @description Expiration time of the Api Key in seconds */
+						expiresIn?: number | null;
 						/** @description Prefix of the Api Key */
-						prefix?: string | null;
-						/** @default null */
-						remaining: string;
-						metadata?: string | null;
+						prefix?: string;
+						/** @description Remaining number of requests. Server side only */
+						remaining?: number | null;
+						metadata?: unknown;
 						/** @description Amount to refill the remaining count of the Api Key. server-only. Eg: 100 */
-						refillAmount?: number | null;
+						refillAmount?: number;
 						/** @description Interval to refill the Api Key in milliseconds. server-only. Eg: 1000 */
-						refillInterval?: number | null;
+						refillInterval?: number;
 						/** @description The duration in milliseconds where each request is counted. Once the `maxRequests` is reached, the request will be rejected until the `timeWindow` has passed, at which point the `timeWindow` will be reset. server-only. Eg: 1000 */
-						rateLimitTimeWindow?: number | null;
+						rateLimitTimeWindow?: number;
 						/** @description Maximum amount of requests allowed within a window. Once the `maxRequests` is reached, the request will be rejected until the `timeWindow` has passed, at which point the `timeWindow` will be reset. server-only. Eg: 100 */
-						rateLimitMax?: number | null;
+						rateLimitMax?: number;
 						/** @description Whether the key has rate limiting enabled. server-only. Eg: true */
-						rateLimitEnabled?: boolean | null;
+						rateLimitEnabled?: boolean;
 						/** @description Permissions of the Api Key. */
-						permissions?: string | null;
+						permissions?: {
+							[key: string]: string[];
+						};
 						/** @description User Id of the user that the Api Key belongs to. server-only. Eg: "user-id" */
-						userId?: string | null;
+						userId?: string;
 						/** @description Organization Id of the organization that the Api Key belongs to. Eg: 'org-id' */
-						organizationId?: string | null;
+						organizationId?: string;
 					};
 				};
 			};
@@ -6848,7 +6861,7 @@ export interface paths {
 		get: {
 			parameters: {
 				query?: {
-					configId?: string | null;
+					configId?: string;
 					id?: string;
 				};
 				header?: never;
@@ -7024,30 +7037,34 @@ export interface paths {
 				content: {
 					"application/json": {
 						/** @description The configuration ID to use for the API key lookup. If not provided, the default configuration will be used. */
-						configId?: string | null;
+						configId?: string;
 						/** @description The id of the Api Key */
 						keyId: string;
 						/** @description The id of the user which the api key belongs to. server-only. Eg: "some-user-id" */
-						userId?: string | null;
+						userId?: string;
 						/** @description The name of the key */
-						name?: string | null;
+						name?: string;
 						/** @description Whether the Api Key is enabled or not */
-						enabled?: boolean | null;
+						enabled?: boolean;
 						/** @description The number of remaining requests */
-						remaining?: number | null;
+						remaining?: number;
 						/** @description The refill amount */
-						refillAmount?: number | null;
+						refillAmount?: number;
 						/** @description The refill interval */
-						refillInterval?: number | null;
-						metadata?: string | null;
-						expiresIn: string;
+						refillInterval?: number;
+						metadata?: unknown;
+						/** @description Expiration time of the Api Key in seconds */
+						expiresIn?: number | null;
 						/** @description Whether the key has rate limiting enabled. */
-						rateLimitEnabled?: boolean | null;
+						rateLimitEnabled?: boolean;
 						/** @description The duration in milliseconds where each request is counted. server-only. Eg: 1000 */
-						rateLimitTimeWindow?: number | null;
+						rateLimitTimeWindow?: number;
 						/** @description Maximum amount of requests allowed within a window. Once the `maxRequests` is reached, the request will be rejected until the `timeWindow` has passed, at which point the `timeWindow` will be reset. server-only. Eg: 100 */
-						rateLimitMax?: number | null;
-						permissions: string;
+						rateLimitMax?: number;
+						/** @description Update the permissions on the API Key. server-only. */
+						permissions?: {
+							[key: string]: string[];
+						} | null;
 					};
 				};
 			};
@@ -7502,18 +7519,20 @@ export interface paths {
 						/** @description The provider ID for the OAuth provider */
 						providerId: string;
 						/** @description The URL to redirect to after sign in */
-						callbackURL?: string | null;
+						callbackURL?: string;
 						/** @description The URL to redirect to if an error occurs */
-						errorCallbackURL?: string | null;
+						errorCallbackURL?: string;
 						/** @description The URL to redirect to after login if the user is new. Eg: "/welcome" */
-						newUserCallbackURL?: string | null;
+						newUserCallbackURL?: string;
 						/** @description Disable redirect */
-						disableRedirect?: boolean | null;
+						disableRedirect?: boolean;
 						/** @description Scopes to be passed to the provider authorization request. */
-						scopes?: unknown[] | null;
+						scopes?: string[];
 						/** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider. Eg: false */
-						requestSignUp?: boolean | null;
-						additionalData?: string | null;
+						requestSignUp?: boolean;
+						additionalData?: {
+							[key: string]: unknown;
+						};
 					};
 				};
 			};
@@ -7615,14 +7634,16 @@ export interface paths {
 		get: {
 			parameters: {
 				query?: {
-					code?: string | null;
-					error?: string | null;
-					error_description?: string | null;
-					state?: string | null;
-					iss?: string | null;
+					code?: string;
+					error?: string;
+					error_description?: string;
+					state?: string;
+					iss?: string;
 				};
 				header?: never;
-				path?: never;
+				path: {
+					providerId: string;
+				};
 				cookie?: never;
 			};
 			requestBody?: never;
@@ -7737,9 +7758,9 @@ export interface paths {
 						providerId: string;
 						callbackURL: string;
 						/** @description Additional scopes to request when linking the account */
-						scopes?: unknown[] | null;
+						scopes?: string[];
 						/** @description The URL to redirect to if there is an error during the link process */
-						errorCallbackURL?: string | null;
+						errorCallbackURL?: string;
 					};
 				};
 			};
@@ -8558,21 +8579,15 @@ export interface components {
 			context?: unknown;
 		};
 		User: {
-			id?: string;
+			readonly id: string;
 			name: string;
 			email: string;
 			/** @default false */
 			readonly emailVerified: boolean;
 			image?: string;
-			/**
-			 * Format: date-time
-			 * @default Generated at runtime
-			 */
+			/** Format: date-time */
 			createdAt: string;
-			/**
-			 * Format: date-time
-			 * @default Generated at runtime
-			 */
+			/** Format: date-time */
 			updatedAt: string;
 			readonly role?: string;
 			/** @default false */
@@ -8582,24 +8597,21 @@ export interface components {
 			readonly banExpires?: string;
 		};
 		Session: {
-			id?: string;
+			readonly id: string;
 			/** Format: date-time */
 			expiresAt: string;
 			token: string;
-			/**
-			 * Format: date-time
-			 * @default Generated at runtime
-			 */
+			/** Format: date-time */
 			createdAt: string;
 			/** Format: date-time */
 			updatedAt: string;
 			ipAddress?: string;
 			userAgent?: string;
 			userId: string;
-			impersonatedBy?: string;
+			readonly impersonatedBy?: string;
 		};
 		Account: {
-			id?: string;
+			readonly id: string;
 			accountId: string;
 			providerId: string;
 			userId: string;
@@ -8612,33 +8624,24 @@ export interface components {
 			refreshTokenExpiresAt?: string;
 			scope?: string;
 			password?: string;
-			/**
-			 * Format: date-time
-			 * @default Generated at runtime
-			 */
+			/** Format: date-time */
 			createdAt: string;
 			/** Format: date-time */
 			updatedAt: string;
 		};
 		Verification: {
-			id?: string;
+			readonly id: string;
 			identifier: string;
 			value: string;
 			/** Format: date-time */
 			expiresAt: string;
-			/**
-			 * Format: date-time
-			 * @default Generated at runtime
-			 */
+			/** Format: date-time */
 			createdAt: string;
-			/**
-			 * Format: date-time
-			 * @default Generated at runtime
-			 */
+			/** Format: date-time */
 			updatedAt: string;
 		};
 		Passkey: {
-			id?: string;
+			readonly id: string;
 			name?: string;
 			publicKey: string;
 			userId: string;
@@ -8652,14 +8655,14 @@ export interface components {
 			aaguid?: string;
 		};
 		Apikey: {
-			id?: string;
+			readonly id: string;
 			/** @default default */
 			readonly configId: string;
 			readonly name?: string;
 			readonly start?: string;
-			readonly referenceId?: string;
+			readonly referenceId: string;
 			readonly prefix?: string;
-			readonly key?: string;
+			readonly key: string;
 			readonly refillInterval?: number;
 			readonly refillAmount?: number;
 			/** Format: date-time */
@@ -8680,9 +8683,9 @@ export interface components {
 			/** Format: date-time */
 			readonly expiresAt?: string;
 			/** Format: date-time */
-			readonly createdAt?: string;
+			readonly createdAt: string;
 			/** Format: date-time */
-			readonly updatedAt?: string;
+			readonly updatedAt: string;
 			readonly permissions?: string;
 			metadata?: string;
 		};
@@ -8706,56 +8709,95 @@ export interface operations {
 			content: {
 				"application/json": {
 					/** @description Callback URL to redirect to after the user has signed in */
-					callbackURL?: string | null;
-					newUserCallbackURL?: string | null;
+					callbackURL?: string;
+					newUserCallbackURL?: string;
 					/** @description Callback URL to redirect to if an error happens */
-					errorCallbackURL?: string | null;
-					provider: string;
+					errorCallbackURL?: string;
+					provider:
+						| (
+								| "apple"
+								| "atlassian"
+								| "cognito"
+								| "discord"
+								| "facebook"
+								| "figma"
+								| "github"
+								| "microsoft"
+								| "google"
+								| "huggingface"
+								| "slack"
+								| "spotify"
+								| "twitch"
+								| "twitter"
+								| "dropbox"
+								| "kick"
+								| "linear"
+								| "linkedin"
+								| "gitlab"
+								| "tiktok"
+								| "reddit"
+								| "roblox"
+								| "salesforce"
+								| "vk"
+								| "zoom"
+								| "notion"
+								| "kakao"
+								| "naver"
+								| "line"
+								| "paybin"
+								| "paypal"
+								| "polar"
+								| "railway"
+								| "vercel"
+								| "wechat"
+						  )
+						| string;
 					/** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
-					disableRedirect?: boolean | null;
+					disableRedirect?: boolean;
 					idToken?: {
 						/** @description ID token from the provider */
 						token: string;
 						/** @description Nonce used to generate the token */
-						nonce?: string | null;
+						nonce?: string;
 						/** @description Access token from the provider */
-						accessToken?: string | null;
+						accessToken?: string;
 						/** @description Refresh token from the provider */
-						refreshToken?: string | null;
+						refreshToken?: string;
 						/** @description Expiry date of the token */
-						expiresAt?: number | null;
+						expiresAt?: number;
 						/** @description The user object from the provider. Only available for some providers like Apple. */
 						user?: {
 							name?: {
-								firstName?: string | null;
-								lastName?: string | null;
-							} | null;
-							email?: string | null;
-						} | null;
-					} | null;
+								firstName?: string;
+								lastName?: string;
+							};
+							email?: string;
+						};
+					};
 					/** @description Array of scopes to request from the provider. This will override the default scopes passed. */
-					scopes?: unknown[] | null;
+					scopes?: string[];
 					/** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider */
-					requestSignUp?: boolean | null;
+					requestSignUp?: boolean;
 					/** @description The login hint to use for the authorization code request */
-					loginHint?: string | null;
-					additionalData?: string | null;
+					loginHint?: string;
+					additionalData?: {
+						[key: string]: unknown;
+					};
 				};
 			};
 		};
 		responses: {
-			/** @description Success - Returns either session details or redirect URL */
+			/** @description Success - Returns session details (idToken branch) or an authorize URL (redirect branch) */
 			200: {
 				headers: {
 					[name: string]: unknown;
 				};
 				content: {
 					"application/json": {
-						token: string;
-						user: components["schemas"]["User"];
+						token?: string;
+						user?: components["schemas"]["User"];
 						url?: string;
-						/** @enum {boolean} */
-						redirect: false;
+						redirect: boolean;
 					};
 				};
 			};
@@ -8916,7 +8958,7 @@ export interface operations {
 			};
 		};
 	};
-	getSession: {
+	getSessionPost: {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -9261,12 +9303,9 @@ export interface operations {
 					/** @description Password of the user */
 					password: string;
 					/** @description Callback URL to use as a redirect for email verification */
-					callbackURL?: string | null;
-					/**
-					 * @description If this is false, the session will not be remembered. Default is `true`.
-					 * @default true
-					 */
-					rememberMe?: boolean | null;
+					callbackURL?: string;
+					/** @description If this is false, the session will not be remembered. Default is `true`. */
+					rememberMe?: boolean;
 				};
 			};
 		};
@@ -9368,7 +9407,7 @@ export interface operations {
 					/** @description The new password to set */
 					newPassword: string;
 					/** @description The token to reset the password */
-					token?: string | null;
+					token?: string;
 				};
 			};
 		};
@@ -9671,7 +9710,7 @@ export interface operations {
 					/** @description The new email address to set must be a valid email address */
 					newEmail: string;
 					/** @description The URL to redirect to after email verification */
-					callbackURL?: string | null;
+					callbackURL?: string;
 				};
 			};
 		};
@@ -9777,7 +9816,7 @@ export interface operations {
 					/** @description The current password is required */
 					currentPassword: string;
 					/** @description Must be a boolean value */
-					revokeOtherSessions?: boolean | null;
+					revokeOtherSessions?: boolean;
 				};
 			};
 		};
@@ -9897,9 +9936,11 @@ export interface operations {
 			path?: never;
 			cookie?: never;
 		};
-		requestBody?: {
+		requestBody: {
 			content: {
-				"application/json": Record<string, never>;
+				"application/json": {
+					[key: string]: unknown;
+				};
 			};
 		};
 		responses: {
@@ -10197,7 +10238,7 @@ export interface operations {
 					/** @description The email address of the user to send a password reset email to */
 					email: string;
 					/** @description The URL to redirect the user to reset their password. If the token isn't valid or expired, it'll be redirected with a query parameter `?error=INVALID_TOKEN`. If the token is valid, it'll be redirected with a query parameter `?token=VALID_TOKEN */
-					redirectTo?: string | null;
+					redirectTo?: string;
 				};
 			};
 		};
@@ -10473,23 +10514,63 @@ export interface operations {
 			content: {
 				"application/json": {
 					/** @description The URL to redirect to after the user has signed in */
-					callbackURL?: string | null;
-					provider: string;
+					callbackURL?: string;
+					provider:
+						| (
+								| "apple"
+								| "atlassian"
+								| "cognito"
+								| "discord"
+								| "facebook"
+								| "figma"
+								| "github"
+								| "microsoft"
+								| "google"
+								| "huggingface"
+								| "slack"
+								| "spotify"
+								| "twitch"
+								| "twitter"
+								| "dropbox"
+								| "kick"
+								| "linear"
+								| "linkedin"
+								| "gitlab"
+								| "tiktok"
+								| "reddit"
+								| "roblox"
+								| "salesforce"
+								| "vk"
+								| "zoom"
+								| "notion"
+								| "kakao"
+								| "naver"
+								| "line"
+								| "paybin"
+								| "paypal"
+								| "polar"
+								| "railway"
+								| "vercel"
+								| "wechat"
+						  )
+						| string;
 					idToken?: {
 						token: string;
-						nonce?: string | null;
-						accessToken?: string | null;
-						refreshToken?: string | null;
-						scopes?: unknown[] | null;
-					} | null;
-					requestSignUp?: boolean | null;
+						nonce?: string;
+						accessToken?: string;
+						refreshToken?: string;
+						scopes?: string[];
+					};
+					requestSignUp?: boolean;
 					/** @description Additional scopes to request from the provider */
-					scopes?: unknown[] | null;
+					scopes?: string[];
 					/** @description The URL to redirect to if there is an error during the link process */
-					errorCallbackURL?: string | null;
+					errorCallbackURL?: string;
 					/** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
-					disableRedirect?: boolean | null;
-					additionalData?: string | null;
+					disableRedirect?: boolean;
+					additionalData?: {
+						[key: string]: unknown;
+					};
 				};
 			};
 		};
@@ -10675,7 +10756,21 @@ export interface operations {
 	};
 	generatePasskeyRegistrationOptions: {
 		parameters: {
-			query?: never;
+			query?: {
+				/**
+				 * @description Type of authenticator to use for registration.
+				 *                               "platform" for device-specific authenticators,
+				 *                               "cross-platform" for authenticators that can be used across devices.
+				 */
+				authenticatorAttachment?: string;
+				/**
+				 * @description Optional custom name for the passkey.
+				 *                               This can help identify the passkey when managing multiple credentials.
+				 */
+				name?: string;
+				/** @description Optional context for passkey-first registration flows. */
+				context?: string;
+			};
 			header?: never;
 			path?: never;
 			cookie?: never;
@@ -10907,9 +11002,9 @@ export interface operations {
 		requestBody: {
 			content: {
 				"application/json": {
-					response: string;
+					response: unknown;
 					/** @description Name of the passkey */
-					name?: string | null;
+					name?: string;
 				};
 			};
 		};
@@ -10997,7 +11092,9 @@ export interface operations {
 		requestBody: {
 			content: {
 				"application/json": {
-					response: string;
+					response: {
+						[key: string]: unknown;
+					};
 				};
 			};
 		};
@@ -11095,7 +11192,7 @@ export interface operations {
 					/** @description The user id */
 					userId: string;
 					/** @description The role to set, this can be a string or an array of strings. Eg: `admin` or `[admin, user]` */
-					role: string;
+					role: string | string[];
 				};
 			};
 		};
@@ -11281,11 +11378,13 @@ export interface operations {
 				"application/json": {
 					/** @description The email of the user */
 					email: string;
-					password?: string | null;
+					password?: string;
 					/** @description The name of the user */
 					name: string;
-					role?: string | null;
-					data?: string | null;
+					role?: string | string[];
+					data?: {
+						[key: string]: unknown;
+					};
 				};
 			};
 		};
@@ -11369,7 +11468,7 @@ export interface operations {
 			};
 		};
 	};
-	updateUser: {
+	adminUpdateUser: {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -11382,7 +11481,9 @@ export interface operations {
 					/** @description The user id */
 					userId: string;
 					/** @description The user data to update */
-					data: string;
+					data: {
+						[key: string]: unknown;
+					};
 				};
 			};
 		};
@@ -11469,16 +11570,27 @@ export interface operations {
 	listUsers: {
 		parameters: {
 			query?: {
-				searchValue?: string | null;
-				searchField?: string | null;
-				searchOperator?: string | null;
-				limit?: string | null;
-				offset?: string | null;
-				sortBy?: string | null;
-				sortDirection?: string | null;
-				filterField?: string | null;
-				filterValue?: string | null;
-				filterOperator?: string | null;
+				searchValue?: string;
+				searchField?: "email" | "name";
+				searchOperator?: "contains" | "starts_with" | "ends_with";
+				limit?: string | number;
+				offset?: string | number;
+				sortBy?: string;
+				sortDirection?: "asc" | "desc";
+				filterField?: string;
+				filterValue?: (((string | number) | boolean) | string[]) | number[];
+				filterOperator?:
+					| "eq"
+					| "ne"
+					| "lt"
+					| "lte"
+					| "gt"
+					| "gte"
+					| "in"
+					| "not_in"
+					| "contains"
+					| "starts_with"
+					| "ends_with";
 			};
 			header?: never;
 			path?: never;
@@ -11568,7 +11680,7 @@ export interface operations {
 			};
 		};
 	};
-	listUserSessions: {
+	adminListUserSessions: {
 		parameters: {
 			query?: never;
 			header?: never;
@@ -11771,9 +11883,9 @@ export interface operations {
 					/** @description The user id */
 					userId: string;
 					/** @description The reason for the ban */
-					banReason?: string | null;
+					banReason?: string;
 					/** @description The number of seconds until the ban expires */
-					banExpiresIn?: number | null;
+					banExpiresIn?: number;
 				};
 			};
 		};
