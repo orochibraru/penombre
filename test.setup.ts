@@ -46,7 +46,7 @@ mock.module("$lib/server/auth", () => ({
 }));
 
 mock.module("$lib/server/config", () => ({
-	getPenombreConfig: mock(() => ({
+	getConfig: mock(() => ({
 		smtp: undefined,
 	})),
 }));

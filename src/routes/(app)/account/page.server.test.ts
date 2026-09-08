@@ -2,7 +2,7 @@ import type { Mock } from "bun:test";
 import { describe, expect, test } from "bun:test";
 import { fail } from "@sveltejs/kit";
 import { auth } from "$lib/server/auth";
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 import type { UserWithSession } from "$lib/server/db/schema";
 
 const mockGetSession = auth.api.getSession as unknown as Mock<
@@ -14,9 +14,7 @@ const mockUpdateUser = auth.api.updateUser as unknown as Mock<
 const mockAdminUpdateUser = auth.api.adminUpdateUser as unknown as Mock<
 	typeof auth.api.adminUpdateUser
 >;
-const mockGetPenombreConfig = getPenombreConfig as Mock<
-	typeof getPenombreConfig
->;
+const mockGetConfig = getConfig as Mock<typeof getConfig>;
 
 const { actions } = await import("./+page.server");
 
@@ -122,7 +120,7 @@ describe("updateAccount", () => {
 
 	test("returns 400 when email changes but SMTP is disabled", async () => {
 		mockGetSession.mockResolvedValueOnce(sessionUser as never);
-		mockGetPenombreConfig.mockReturnValueOnce({ smtp: undefined } as never);
+		mockGetConfig.mockReturnValueOnce({ smtp: undefined } as never);
 
 		const result = await actions.updateAccount(
 			createRequest({ name: "John Doe", email: "new@example.com" }) as never,
@@ -134,7 +132,7 @@ describe("updateAccount", () => {
 
 	test("updates email when SMTP is enabled", async () => {
 		mockGetSession.mockResolvedValueOnce(sessionUser as never);
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			smtp: { enabled: true },
 		} as never);
 
@@ -154,7 +152,7 @@ describe("updateAccount", () => {
 
 	test("returns 500 when email update fails", async () => {
 		mockGetSession.mockResolvedValueOnce(sessionUser as never);
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			smtp: { enabled: true },
 		} as never);
 		mockAdminUpdateUser.mockRejectedValueOnce(new Error("DB error"));
@@ -171,7 +169,7 @@ describe("updateAccount", () => {
 
 	test("updates both name and email when SMTP is enabled", async () => {
 		mockGetSession.mockResolvedValueOnce(sessionUser as never);
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			smtp: { enabled: true },
 		} as never);
 		mockUpdateUser.mockResolvedValueOnce({ status: true } as never);

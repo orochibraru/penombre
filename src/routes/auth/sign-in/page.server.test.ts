@@ -1,10 +1,8 @@
 import type { Mock } from "bun:test";
 import { describe, expect, test } from "bun:test";
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 
-const mockGetPenombreConfig = getPenombreConfig as Mock<
-	typeof getPenombreConfig
->;
+const mockGetConfig = getConfig as Mock<typeof getConfig>;
 
 const { load } = await import("./+page.server");
 
@@ -15,7 +13,7 @@ describe("load", () => {
 			enableOAuth: false,
 			enablePasskeys: true,
 		};
-		mockGetPenombreConfig.mockReturnValueOnce({ auth: authConfig } as never);
+		mockGetConfig.mockReturnValueOnce({ auth: authConfig } as never);
 
 		const result = load();
 		expect(result).toEqual({ authConfig });
@@ -27,7 +25,7 @@ describe("load", () => {
 			enableOAuth: true,
 			enablePasskeys: false,
 		};
-		mockGetPenombreConfig.mockReturnValueOnce({ auth: authConfig } as never);
+		mockGetConfig.mockReturnValueOnce({ auth: authConfig } as never);
 
 		const result = load();
 		expect(result).toEqual({ authConfig });

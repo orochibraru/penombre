@@ -2,33 +2,20 @@
 	"hooks": {
 		"PostToolUse": [
 			{
-				"matcher": "*",
+				"matcher": "Bash|Edit|Write",
 				"hooks": [
 					{
 						"type": "command",
-						"command": "prek run --all-files",
+						"command": "prek",
 						"timeout": 120,
 						"statusMessage": "Running prek..."
-					},
-					{
-						"type": "command",
-						"command": "bun test",
-						"timeout": 120,
-						"statusMessage": "Running tests..."
-					},
-					{
-						"type": "command",
-						"command": "bun run test:e2e",
-						"timeout": 120000,
-						"statusMessage": "Running e2e tests..."
 					}
 				]
 			}
 		]
 	},
 	"enabledPlugins": {
-		"svelte@svelte": true,
-		"ponytail@ponytail": true
+		"svelte@svelte": true
 	},
 	"extraKnownMarketplaces": {
 		"svelte": {

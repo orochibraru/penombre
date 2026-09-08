@@ -6,7 +6,7 @@ import { cwd } from "node:process";
 // Mock dependencies
 // ---------------------------------------------------------------------------
 
-const mockGetPenombreConfig = mock(() => ({
+const mockGetConfig = mock(() => ({
 	storage: { backend: "local" as "local" | "s3" },
 	s3: undefined as unknown,
 }));
@@ -16,7 +16,7 @@ const mockCreateStorageDriver = mock((_opts: unknown) => ({
 }));
 
 mock.module("$lib/server/config", () => ({
-	getPenombreConfig: mockGetPenombreConfig,
+	getConfig: mockGetConfig,
 }));
 
 mock.module("./driver", () => ({
@@ -47,7 +47,7 @@ beforeAll(async () => {
 	mock.module("./constants", () => ({
 		DEFAULT_STORAGE_PATH: computedPath,
 		createUserStorageDriver: (userFolder: string) => {
-			const config = mockGetPenombreConfig();
+			const config = mockGetConfig();
 			if (config.storage.backend === "s3") {
 				if (!config.s3) {
 					throw new Error(
@@ -92,7 +92,7 @@ describe("DEFAULT_STORAGE_PATH", () => {
 
 describe("createUserStorageDriver", () => {
 	test("creates a local driver when backend is local", () => {
-		mockGetPenombreConfig.mockReturnValue({
+		mockGetConfig.mockReturnValue({
 			storage: { backend: "local" },
 			s3: undefined as unknown,
 		});
@@ -117,7 +117,7 @@ describe("createUserStorageDriver", () => {
 			secretAccessKey: "mysecret",
 			pathStyle: true,
 		};
-		mockGetPenombreConfig.mockReturnValue({
+		mockGetConfig.mockReturnValue({
 			storage: { backend: "s3" },
 			s3: s3Config,
 		});
@@ -140,7 +140,7 @@ describe("createUserStorageDriver", () => {
 	});
 
 	test("throws when backend is s3 but s3 config is missing", () => {
-		mockGetPenombreConfig.mockReturnValue({
+		mockGetConfig.mockReturnValue({
 			storage: { backend: "s3" },
 			s3: undefined as unknown,
 		});
@@ -158,7 +158,7 @@ describe("createUserStorageDriver", () => {
 			secretAccessKey: "s",
 			pathStyle: false,
 		};
-		mockGetPenombreConfig.mockReturnValue({
+		mockGetConfig.mockReturnValue({
 			storage: { backend: "s3" },
 			s3: s3Config,
 		});

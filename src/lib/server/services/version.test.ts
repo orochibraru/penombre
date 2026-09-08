@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, type Mock, mock, test } from "bun:test";
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 import { isNewerVersion, normalizeVersion } from "./version";
 
-const mockGetPenombreConfig = getPenombreConfig as Mock<
-	typeof getPenombreConfig
->;
+const mockGetConfig = getConfig as Mock<typeof getConfig>;
 
 const originalFetch = globalThis.fetch;
 
@@ -36,7 +34,7 @@ describe("checkForUpdate", () => {
 
 	test("returns update available when latest is newer", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({
@@ -56,7 +54,7 @@ describe("checkForUpdate", () => {
 
 	test("returns no update when versions are equal", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({
@@ -72,7 +70,7 @@ describe("checkForUpdate", () => {
 
 	test("returns no update when current is newer than latest", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "2.0.0",
 		} as never);
 		mockFetchResponse({
@@ -89,7 +87,7 @@ describe("checkForUpdate", () => {
 
 	test("returns no update when version is development", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "development",
 		} as never);
 		mockFetchResponse({
@@ -106,7 +104,7 @@ describe("checkForUpdate", () => {
 
 	test("handles GitHub API non-ok response", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({ message: "rate limited" }, 403);
@@ -123,7 +121,7 @@ describe("checkForUpdate", () => {
 
 	test("handles fetch network error", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchFailure(new Error("Network error"));
@@ -140,7 +138,7 @@ describe("checkForUpdate", () => {
 
 	test("returns cached result on subsequent calls within TTL", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValue({ appVersion: "1.0.0" } as never);
+		mockGetConfig.mockReturnValue({ appVersion: "1.0.0" } as never);
 		mockFetchResponse({
 			tag_name: "v1.1.0",
 			html_url: "https://github.com/orochibraru/penombre/releases/tag/v1.1.0",
@@ -159,7 +157,7 @@ describe("checkForUpdate", () => {
 
 	test("normalizes tag_name with v prefix", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({
@@ -174,7 +172,7 @@ describe("checkForUpdate", () => {
 
 	test("handles patch version comparison correctly", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({
@@ -189,7 +187,7 @@ describe("checkForUpdate", () => {
 
 	test("handles major version comparison correctly", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetPenombreConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValueOnce({
 			appVersion: "1.9.9",
 		} as never);
 		mockFetchResponse({
