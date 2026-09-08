@@ -18,12 +18,12 @@
 	let newFolderError: string = $state("");
 	let newFolderName: string = $state(defaultFolderName);
 	let loading: boolean = $state(false);
-	let inputRef: HTMLInputElement = $state(null);
+	let inputRef: HTMLInputElement | undefined = $state();
 
 	// Select text when dialog opens
 	$effect(() => {
 		if (open && inputRef) {
-			setTimeout(() => inputRef.select(), 0);
+			setTimeout(() => inputRef?.select(), 0);
 		}
 	});
 

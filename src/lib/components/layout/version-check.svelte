@@ -2,13 +2,13 @@
 	import { CircleArrowUpIcon } from "@lucide/svelte";
 
 	import { m } from "$lib/paraglide/messages.js";
-	import type { PenombreConfig } from "$lib/server/config";
+	import type { AppConfig } from "$lib/server/config";
 
 	import type { VersionCheckResult } from "$lib/server/services/version";
 
 	interface Props {
 		version: VersionCheckResult | undefined;
-		config: PenombreConfig;
+		config: AppConfig;
 	}
 
 	const { version, config }: Props = $props();

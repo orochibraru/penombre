@@ -29,9 +29,9 @@ than editing them here.
 
 ## Deploying it
 
-CI builds this on every push to `main` that touches `packages/docs/` and
-publishes `build/` to GitHub Pages (`static/CNAME` holds the domain). See
-`.github/workflows/docs.yaml`.
+CI builds this on every pull request and every push to `main`, as the
+`Docs (Checks)` job of `.github/workflows/code_quality.yaml`. Nothing is
+deployed from there yet (`static/CNAME` holds the domain for whenever it is).
 
 ### Anywhere else
 

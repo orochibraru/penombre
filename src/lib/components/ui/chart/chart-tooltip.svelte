@@ -63,6 +63,10 @@
 		}
 
 		const [item] = tooltipCtx.payload;
+		// biome-ignore lint/suspicious/noUnnecessaryConditions: noUncheckedIndexedAccess makes this possibly undefined
+		if (!item) {
+			return null;
+		}
 		const key = labelKey ?? item.label ?? item.name ?? "value";
 
 		const itemConfig = getPayloadConfigFromPayload(chart.config, item, key);

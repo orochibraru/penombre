@@ -7,7 +7,8 @@ import type { CacheBackend } from "./types";
  */
 export class NullCacheBackend implements CacheBackend {
 	async get<T>(): Promise<T | undefined> {
-		// no-op: nothing is ever cached
+		// biome-ignore lint/complexity/noUselessUndefined: TS requires an explicit return for this signature
+		return undefined;
 	}
 	async set(): Promise<void> {
 		// no-op: nothing is ever cached
