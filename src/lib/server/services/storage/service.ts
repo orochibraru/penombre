@@ -7,6 +7,7 @@ import type { Readable } from "node:stream";
 import type archiver from "archiver";
 import type { User } from "better-auth";
 import type { CacheBackend } from "$lib/server/cache";
+import { isSimpleMode } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
 import type {
@@ -77,7 +78,9 @@ export class StorageService {
 	private readonly listingOperations: ListingOperations;
 
 	constructor(user: User) {
-		this.userFolder = `user-${user.id}`;
+		// Simple mode: one shared volume for everyone, mounted directly at
+		// STORAGE_PATH instead of a per-user subfolder.
+		this.userFolder = isSimpleMode() ? "" : `user-${user.id}`;
 		this.storagePath = join(DEFAULT_STORAGE_PATH, this.userFolder);
 		this.user = user;
 		this.cache = cacheManager.getUserCache(user.id);

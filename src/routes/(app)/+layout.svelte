@@ -27,7 +27,10 @@
 	import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
 	import SiteHeader from "$lib/components/layout/header.svelte";
 	import MusicPlayer from "$lib/components/layout/music-player.svelte";
-	import Nav, { type NavMenus } from "$lib/components/layout/nav.svelte";
+	import Nav, {
+		type NavItem,
+		type NavMenus,
+	} from "$lib/components/layout/nav.svelte";
 	import UploadProgressIndicator from "$lib/components/layout/upload-progress-indicator.svelte";
 	import VersionCheck from "$lib/components/layout/version-check.svelte";
 	import SidebarBranding from "$lib/components/sidebar-branding.svelte";
@@ -51,6 +54,10 @@
 
 	const { children, data } = $props();
 
+	// Simple mode: bare shared file browser, drop drive-only concepts
+	// (recent/starred/shared/categories/sync) but keep trash for undo safety.
+	const simpleMode = $derived(data.config?.simpleMode ?? false);
+
 	// Close all dialogs when navigation starts
 	$effect(() => {
 		if (navigating) {
@@ -70,23 +77,27 @@
 				icon: FolderIcon,
 				hideOnMobile: true,
 			},
-			{
-				title: m.nav_recent(),
-				url: "/recent",
-				icon: ClockFadingIcon,
-				hideOnMobile: true,
-			},
-			{
-				title: m.nav_starred(),
-				url: "/starred",
-				icon: StarIcon,
-				count: data.counts?.starred,
-			},
-			{
-				title: m.nav_shared(),
-				url: "/shared",
-				icon: UsersIcon,
-			},
+			...(simpleMode
+				? []
+				: ([
+						{
+							title: m.nav_recent(),
+							url: "/recent",
+							icon: ClockFadingIcon,
+							hideOnMobile: true,
+						},
+						{
+							title: m.nav_starred(),
+							url: "/starred",
+							icon: StarIcon,
+							count: data.counts?.starred,
+						},
+						{
+							title: m.nav_shared(),
+							url: "/shared",
+							icon: UsersIcon,
+						},
+					] satisfies NavItem[])),
 			{
 				title: m.nav_trash(),
 				url: "/trash",
@@ -94,50 +105,52 @@
 				count: data.counts?.trash,
 			},
 		],
-		categories: [
-			{
-				title: m.nav_music(),
-				url: `/categories/${FileCategoryEnum.MUSIC}`,
-				icon: MusicIcon,
-				accentColor: "pink",
-			},
-			{
-				title: m.nav_documents(),
-				url: `/categories/${FileCategoryEnum.DOCUMENTS}`,
-				icon: FileIcon,
-				accentColor: "indigo",
-			},
-			{
-				title: m.nav_images(),
-				url: `/categories/${FileCategoryEnum.IMAGES}`,
-				icon: ImageIcon,
-				accentColor: "orange",
-			},
-			{
-				title: m.nav_code(),
-				url: `/categories/${FileCategoryEnum.CODE}`,
-				icon: CodeIcon,
-				accentColor: "green",
-			},
-			{
-				title: m.nav_video(),
-				url: `/categories/${FileCategoryEnum.VIDEO}`,
-				icon: VideoIcon,
-				accentColor: "purple",
-			},
-			{
-				title: m.nav_archives(),
-				url: `/categories/${FileCategoryEnum.ARCHIVES}`,
-				icon: FileArchiveIcon,
-				accentColor: "teal",
-			},
-			{
-				title: m.nav_3d_objects(),
-				url: `/categories/${FileCategoryEnum.THREE_D}`,
-				icon: Rotate3dIcon,
-				accentColor: "rose",
-			},
-		],
+		categories: simpleMode
+			? []
+			: ([
+					{
+						title: m.nav_music(),
+						url: `/categories/${FileCategoryEnum.MUSIC}`,
+						icon: MusicIcon,
+						accentColor: "pink",
+					},
+					{
+						title: m.nav_documents(),
+						url: `/categories/${FileCategoryEnum.DOCUMENTS}`,
+						icon: FileIcon,
+						accentColor: "indigo",
+					},
+					{
+						title: m.nav_images(),
+						url: `/categories/${FileCategoryEnum.IMAGES}`,
+						icon: ImageIcon,
+						accentColor: "orange",
+					},
+					{
+						title: m.nav_code(),
+						url: `/categories/${FileCategoryEnum.CODE}`,
+						icon: CodeIcon,
+						accentColor: "green",
+					},
+					{
+						title: m.nav_video(),
+						url: `/categories/${FileCategoryEnum.VIDEO}`,
+						icon: VideoIcon,
+						accentColor: "purple",
+					},
+					{
+						title: m.nav_archives(),
+						url: `/categories/${FileCategoryEnum.ARCHIVES}`,
+						icon: FileArchiveIcon,
+						accentColor: "teal",
+					},
+					{
+						title: m.nav_3d_objects(),
+						url: `/categories/${FileCategoryEnum.THREE_D}`,
+						icon: Rotate3dIcon,
+						accentColor: "rose",
+					},
+				] satisfies NavItem[]),
 		help: [
 			{
 				title: m.nav_settings(),
@@ -145,11 +158,15 @@
 				icon: SettingsIcon,
 				hideOnMobile: true,
 			},
-			{
-				title: m.nav_sync(),
-				url: "/sync",
-				icon: FolderSyncIcon,
-			},
+			...(simpleMode
+				? []
+				: ([
+						{
+							title: m.nav_sync(),
+							url: "/sync",
+							icon: FolderSyncIcon,
+						},
+					] satisfies NavItem[])),
 			{
 				title: m.nav_api(),
 				url: "/api/v1/docs",
@@ -247,7 +264,9 @@
         </Sidebar.Header>
         <Sidebar.Content>
             <Nav title={m.nav_general()} items={nav.general} />
-            <Nav title={m.nav_categories()} items={nav.categories} />
+            {#if !simpleMode}
+                <Nav title={m.nav_categories()} items={nav.categories} />
+            {/if}
             <Nav title={m.nav_help()} items={nav.help} class="mt-auto" />
             <VersionCheck config={data.config} version={data.versionCheck} />
         </Sidebar.Content>
@@ -282,16 +301,18 @@
                     <FolderIcon class={bottomNavItemIconClass} />
                     {m.home()}
                 </a>
-                <a
-                    href={resolve("/recent")}
-                    class={cn(
-                        bottomNavItemClass,
-                        isActive("/recent") ? "text-primary" : "",
-                    )}
-                >
-                    <ClockFadingIcon class={bottomNavItemIconClass} />
-                    {m.nav_recent()}
-                </a>
+                {#if !simpleMode}
+                    <a
+                        href={resolve("/recent")}
+                        class={cn(
+                            bottomNavItemClass,
+                            isActive("/recent") ? "text-primary" : "",
+                        )}
+                    >
+                        <ClockFadingIcon class={bottomNavItemIconClass} />
+                        {m.nav_recent()}
+                    </a>
+                {/if}
 
                 {#if page.data.hasCustomMenu === true || !showUploadButton}
                     <button

@@ -121,3 +121,13 @@ service instead. See [Storage](storage.md) for a full setup guide.
 | `S3_ENDPOINT`          | Custom endpoint URL (non-AWS providers)    | /               |
 | `S3_REGION`            | Bucket region                              | `us-east-1`     |
 | `S3_PATH_STYLE`        | Use path-style URLs (`true`/`false`)       | `false`         |
+
+## Simple Mode (Optional)
+
+Turns Penombre into a bare shared file browser: one storage volume shared by
+every account instead of a drive per user. See [Simple mode](simple-mode.md) for
+the full guide.
+
+| Variable      | Description                         | Default |
+| ------------- | ----------------------------------- | ------- |
+| `SIMPLE_MODE` | Enable simple mode (`true`/`false`) | `false` |

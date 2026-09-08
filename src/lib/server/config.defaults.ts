@@ -39,6 +39,7 @@ export const defaultConfigValues = {
 	storage: {
 		backend: "local" as "local" | "s3",
 	},
+	simpleMode: false,
 };
 
 export function generateExampleDotenvFile(): string {
@@ -109,6 +110,13 @@ OAUTH_DEFAULT_SCOPES=openid,profile,email
 # Redis (Optional - for distributed caching)
 # ===========================================
 # REDIS_URL=redis://localhost:6379
+
+# ===========================================
+# Simple mode
+# ===========================================
+# Turns the app into a bare shared file browser: one storage volume shared by
+# every account, no per-user drives. Mount your files at STORAGE_PATH directly.
+SIMPLE_MODE=${defaultConfigValues.simpleMode}
 
 # ===========================================
 # Storage Backend

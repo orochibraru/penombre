@@ -82,6 +82,7 @@ export const config: DocsConfig = {
 		"env",
 		"deployment",
 		"storage",
+		"simple-mode",
 		"backup",
 		"reverse-proxy",
 		"troubleshooting",

@@ -49,6 +49,7 @@ mock.module("$lib/server/config", () => ({
 	getConfig: mock(() => ({
 		smtp: undefined,
 	})),
+	isSimpleMode: mock(() => false),
 }));
 
 mock.module("$lib/logger", () => ({

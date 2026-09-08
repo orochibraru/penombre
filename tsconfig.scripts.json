@@ -5,10 +5,5 @@
 		"types": ["bun"]
 	},
 	"extends": "./.svelte-kit/tsconfig.json",
-	"include": [
-		".svelte-kit/ambient.d.ts",
-		"concurrently.config.ts",
-		"scripts/**/*.ts",
-		"src/app.d.ts"
-	]
+	"include": [".svelte-kit/ambient.d.ts", "scripts/**/*.ts", "src/app.d.ts"]
 }

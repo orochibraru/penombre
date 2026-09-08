@@ -13,7 +13,6 @@ README.md
 .git
 **/*.md
 Dockerfile
-concurrently.config.ts
 **/*.log
 
 # Docker

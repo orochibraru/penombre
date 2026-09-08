@@ -2,13 +2,17 @@ import { join } from "node:path";
 import process from "node:process";
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
+import type { User } from "better-auth";
 import { svelteKitHandler } from "better-auth/svelte-kit";
+import { asc } from "drizzle-orm";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
 import { building } from "$app/environment";
 import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
+import { isSimpleMode } from "$lib/server/config";
 import { getDb, resetDb } from "$lib/server/db";
+import { user as userTable } from "$lib/server/db/schema";
 import { genOpenApiSpec } from "$lib/server/generate-openapi";
 import {
 	migrateStorageMeta,
@@ -124,6 +128,34 @@ export const init = async () => {
 /** Paths under the auth basePath that are handled by SvelteKit, not better-auth */
 const customAuthPaths = new Set(["/api/v1/auth/providers"]);
 
+let sharedOwnerPromise: Promise<User | undefined> | undefined;
+
+/**
+ * Simple mode: every account's storage routes through one shared owner (the
+ * first account ever created), so everyone reads/writes the same file tree
+ * instead of each login getting its own siloed drive.
+ *
+ * ponytail: cached forever for process lifetime and untested (hooks.server.ts
+ * has no unit-test seam yet, would need mocking svelte-kit/drizzle-migrator
+ * imports). Covered indirectly by e2e for now — add a focused test here if
+ * this logic grows past "cache the first user".
+ */
+function getSharedStorageOwner(fallback: User): Promise<User> {
+	sharedOwnerPromise ??= getDb()
+		.select()
+		.from(userTable)
+		.orderBy(asc(userTable.createdAt))
+		.limit(1)
+		.then((rows) => rows[0] as User | undefined);
+	return sharedOwnerPromise.then((owner) => owner ?? fallback);
+}
+
+async function resolveStorageOwner(sessionUser: User): Promise<User> {
+	return isSimpleMode()
+		? await getSharedStorageOwner(sessionUser)
+		: sessionUser;
+}
+
 const authHandler: Handle = async ({ event, resolve }) => {
 	const session = await auth.api.getSession({
 		headers: event.request.headers,
@@ -135,11 +167,12 @@ const authHandler: Handle = async ({ event, resolve }) => {
 		event.locals.user = session.user;
 
 		// Lazy-init StorageService — created on first access only
+		const storageOwner = await resolveStorageOwner(session.user);
 		let _storageService: StorageService | undefined;
 		Object.defineProperty(event.locals, "storageService", {
 			get() {
 				if (!_storageService) {
-					_storageService = new StorageService(session.user);
+					_storageService = new StorageService(storageOwner);
 				}
 				return _storageService;
 			},
@@ -177,7 +210,9 @@ const authHandler: Handle = async ({ event, resolve }) => {
 
 			if (session?.session && session.user) {
 				event.locals.user = session.user;
-				event.locals.storageService = new StorageService(session.user);
+				event.locals.storageService = new StorageService(
+					await resolveStorageOwner(session.user),
+				);
 			}
 		}
 	}

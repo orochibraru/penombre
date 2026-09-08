@@ -39,13 +39,35 @@
   - DB schema: `shares` table with `fileId`, `token`, `expiresAt`, `password`,
     `permissions`
 
-### Sync client
+### Bugs
 
-- [ ] **Develop a desktop sync client** OR use SyncThing?
-  - Cross-platform (Windows, macOS, Linux)
-  - Sync selected local folders with cloud storage
-  - Handle file changes, conflicts, deletions
-  - Features: Selective sync, bandwidth throttling, auto-start on login
+- [ ] Fix the version being treated as "unknown" and always prompting to update
+      when on latest. Instead of using a docker arg, just set it at build time.
+      Each build has its version that can't be tempered with.
+- [ ] Openapi swagger shouldn't be a separate page, embed the swagger files in
+      the UI (just like the docs) within the body.
+- [ ] When audio is buffering in the player, show a loader instead of the pause
+      button to indicate it's buffering, not stuck.
+
+### Features
+
+- [ ] Simple mode, like Filebrowser but it's just lightweight Penombre via
+      mounted volumes
+- [ ] Mounted volumes in full mode, appear in the sidenav as extra volumes
+- [ ] Curated settings for optimal UX
+- [ ] Finish the sharing feature.
+- [ ] Storage stats. What's available on the server, what's used, what's left,
+      what could be cleaned up.
+- [ ] Admin settings, to manage users, storage allowed per user, permissions.
+
+### Nits
+
+- [ ] Since there are only two layout modes, replace the select with a toggle.
+
+### Decisions
+
+- [ ] Drop the "coming soon" sync feature, explain instead how to use Syncthing
+      with the app.
 
 ---
 

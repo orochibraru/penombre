@@ -94,6 +94,7 @@ const configSchema = z
 				backend: z.enum(["local", "s3"]).default("local"),
 			})
 			.default({ backend: "local" }),
+		simpleMode: z.boolean().default(defaultConfigValues.simpleMode),
 		s3: z
 			.object({
 				endpoint: z.string().optional(),
@@ -310,6 +311,7 @@ export function getConfig(): AppConfig {
 		storage: { backend: env.STORAGE_BACKEND === "s3" ? "s3" : "local" },
 		s3: resolveS3Config(),
 		smtp: resolveSmtpConfig(),
+		simpleMode: env.SIMPLE_MODE === "true",
 	});
 }
 
@@ -321,4 +323,10 @@ export function isSmtpEnabled(): boolean {
 export function isS3Backend(): boolean {
 	const config = getConfig();
 	return config.storage.backend === "s3";
+}
+
+/** Simple mode: one shared storage volume/drive for every account, no per-user drives. */
+export function isSimpleMode(): boolean {
+	const config = getConfig();
+	return config.simpleMode;
 }

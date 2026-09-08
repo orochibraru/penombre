@@ -150,7 +150,7 @@ repos:
         entry: bun run check:scripts
         language: system
         pass_filenames: false
-        files: ^(scripts/|concurrently\.config\.ts$|tsconfig\.scripts\.json$)
+        files: ^(scripts/|tsconfig\.scripts\.json$)
 
       - id: check-docs
         name: tsc (packages/docs)

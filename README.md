@@ -29,6 +29,9 @@ Penombre instance in minutes. For configuration options, see the
 - **Self-Hosted**: Complete control over your data and infrastructure
 - **Docker Support**: Easy deployment with Docker Compose
 - **Recent Files**: Quick access to recently modified files
+- **Simple Mode**: Run it as a bare shared file browser — mount a volume, share
+  the login, browse together. See
+  [the docs](https://penombre.space/docs/simple-mode)
 
 ### Environment Variables
 

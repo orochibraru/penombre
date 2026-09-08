@@ -15,6 +15,9 @@ Docker volume in the bundled `compose.yaml`.
 No additional configuration is required. This is the recommended option for
 single-node deployments.
 
+> Running as a shared file browser instead of a multi-user drive? See
+> [Simple mode](simple-mode.md) — it changes what lives at `STORAGE_PATH`.
+
 | Variable       | Description                   | Default         |
 | -------------- | ----------------------------- | --------------- |
 | `STORAGE_PATH` | Absolute path to storage root | `/data/storage` |
