@@ -18,7 +18,7 @@ repos:
           (?x)^(
             src/lib/api/v1\.(json|d\.ts)|
             packages/mobile/assets/api\.v1\.json|
-            packages/docs/content/api\.v1\.json|
+            packages/docs/static/api\.v1\.json|
             \.example\.env|
             resources/|
             drizzle/|

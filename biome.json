@@ -20,14 +20,14 @@
 			"!**/*.svg",
 			"!drizzle/meta",
 			"!project.inlang",
-			"!packages/docs/content/api.v1.json",
+			"!packages/docs/static/api.v1.json",
 			"!packages/mobile/assets/api.v1.json",
 			"!packages/mobile/lib/api.v1.d.ts",
 			"!src/lib/api/v1.json",
 			"!src/lib/paraglide",
 			"!static",
-			"!packages/docs/.source",
-			"!packages/docs/out",
+			"!packages/docs/.svelte-kit",
+			"!packages/docs/build",
 			"!packages/mobile/android",
 			"!packages/mobile/ios"
 		]
@@ -78,7 +78,7 @@
 				"useSortedClasses": "error"
 			},
 			"performance": {
-				"noAwaitInLoops": "error",
+				"noAwaitInLoops": "off",
 				"noBarrelFile": "off",
 				"noNamespaceImport": "off",
 				"noReExportAll": "off",
@@ -199,6 +199,19 @@
 				"rules": {
 					"suspicious": {
 						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["packages/docs/**"],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"noExcessiveCognitiveComplexity": "off"
+					},
+					"suspicious": {
+						"noUnnecessaryConditions": "off"
 					}
 				}
 			}

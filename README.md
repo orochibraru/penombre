@@ -46,7 +46,7 @@ clients live under `packages/`.
 ├── drizzle/
 └── packages/
     ├── mobile/    # Expo/React Native mobile app
-    └── docs/      # Documentation site (Fumadocs)
+    └── docs/      # Documentation site (SvelteKit, @orochibraru/docs)
 ```
 
 ### Database

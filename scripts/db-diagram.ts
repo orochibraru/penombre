@@ -24,7 +24,7 @@ if (res.exitCode !== 0) {
 }
 console.log("✅ SVG generated successfully");
 
-const copyPath = "packages/docs/public/db.svg";
+const copyPath = "packages/docs/static/db.svg";
 const fullCopyPath = `${process.cwd()}/${copyPath}`;
 try {
 	console.log(`Copying SVG to ${copyPath}...`);

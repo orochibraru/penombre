@@ -107,7 +107,7 @@ export const init = async () => {
 			import.meta.url,
 		).pathname;
 		const docsCopyPath = new URL(
-			"../../docs/content/api.v1.json",
+			"../../docs/static/api.v1.json",
 			import.meta.url,
 		).pathname;
 

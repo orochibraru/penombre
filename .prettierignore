@@ -1,7 +1,6 @@
 CHANGELOG.md
 build
 dist
-packages/docs/.source
 packages/mobile/.expo
 packages/mobile/android
 packages/mobile/ios

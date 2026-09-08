@@ -40,7 +40,6 @@ await import("$lib/server/openapi/routes");
 const { registry } = await import("$lib/server/openapi");
 
 // Merge better-auth's OpenAPI spec
-// biome-ignore lint/suspicious/noExplicitAny: build script, ExternalOpenAPISpec is a type-only export
 const externalSpecs: any[] = [];
 
 try {
@@ -70,7 +69,7 @@ const mobileCopyPath = new URL(
 	import.meta.url,
 ).pathname;
 const docsCopyPath = new URL(
-	"../packages/docs/content/api.v1.json",
+	"../packages/docs/static/api.v1.json",
 	import.meta.url,
 ).pathname;
 
