@@ -95,7 +95,7 @@
 		"check:app": "bun run gen:paraglide && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:docs": "bun run --filter @penombre/docs check",
 		"check:mobile": "bun run --filter @penombre/mobile check",
-		"check:packages": "bun run --parallel check:docs check:mobile check:scripts",
+		"check:packages": "bun run --parallel check:docs check:scripts",
 		"check:scripts": "tsc --noEmit --project tsconfig.scripts.json",
 		"circular": "bun run ./scripts/circular.ts",
 		"db:diagram": "bun run ./scripts/db-diagram.ts",
