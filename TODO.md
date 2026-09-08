@@ -3,7 +3,7 @@
 ## Low effort
 
 - [ ] [Feature] Add a `..` entry to the move-file folder list to jump to the
-      parent
+      parent via drag n drop
 - [ ] [Bug] Version always shows "unknown" and prompts to update on latest — set
       it at build time instead of a docker arg
 - [ ] [Nit] Embed Swagger UI in-page instead of a separate page
@@ -29,6 +29,8 @@
 
 ## High effort
 
+- [ ] [Feature] Enable sqlite support. Single container, most useful in simple
+      mode.
 - [ ] [Feature] Sharing: shareable links with expiry & password,
       public/authenticated access, new `shares` DB table
 - [ ] [Feature] Admin settings: manage users, storage quotas, permissions
