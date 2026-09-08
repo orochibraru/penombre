@@ -40,24 +40,3 @@ jobs:
       - name: Type check Docs
         working-directory: packages/docs
         run: bun run check
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: packages/docs/build
-
-  deploy:
-    name: Deploy
-    needs: build
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    environment:
-      name: prod
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
