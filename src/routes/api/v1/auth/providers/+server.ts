@@ -2,10 +2,15 @@ import { getPenombreConfig } from "$lib/server/config";
 import { Http } from "$lib/server/http";
 import { listAuthProviders } from "$lib/server/openapi/v1/auth";
 
-export const GET = listAuthProviders.handler(async () => {
+export const GET = listAuthProviders.handler(() => {
 	try {
 		const config = getPenombreConfig();
-		const providers = [];
+		const providers: {
+			name: string;
+			prettyName: string;
+			type: "email" | "oauth";
+			enabled: boolean;
+		}[] = [];
 
 		if (config.auth.enableEmailSignIn) {
 			providers.push({

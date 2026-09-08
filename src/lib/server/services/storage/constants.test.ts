@@ -169,6 +169,6 @@ describe("createUserStorageDriver", () => {
 		const call = mockCreateStorageDriver.mock.calls.at(-1)?.[0] as {
 			s3: { userPrefix: string };
 		};
-		expect(call?.s3?.userPrefix).toBe("user-007");
+		expect(call.s3.userPrefix).toBe("user-007");
 	});
 });

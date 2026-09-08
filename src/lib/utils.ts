@@ -91,13 +91,13 @@ export function generateUuid() {
 		return uuidv4();
 	}
 
-	registeredUuids.push;
+	registeredUuids.push(generated);
 
 	return generated;
 }
 
 export function readableFileSize(bytes: number, si = false, dp = 1) {
-	if (bytes === null || bytes === undefined || Number.isNaN(bytes)) {
+	if (Number.isNaN(bytes)) {
 		return "-";
 	}
 
@@ -237,7 +237,7 @@ export function stripFolders(filePath: string): string {
 
 	// If a separator is found, return the part of the string after it.
 	// Otherwise, the string is just a filename, so return it as is.
-	return filePath.substring(lastSlashIndex + 1);
+	return filePath.slice(lastSlashIndex + 1);
 }
 
 export function shouldDisplayAction({

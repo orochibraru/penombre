@@ -26,13 +26,18 @@
 		uploadStats,
 	} from "$lib/store/upload";
 	import { cn } from "$lib/utils";
+	import {
+		createFoldersForUpload,
+		createUploadMetadata,
+		type FileWithPath,
+		type FullResult,
+		groupFilesByFolder,
+	} from "./upload-dialog.svelte.js";
 
 	interface Props {
 		open: boolean;
 		loading: boolean;
 	}
-
-	type FileWithPath = File & { relativePath?: string };
 
 	/**
 	 * Comprehensive list of OS-specific system files to skip during folder uploads.
@@ -151,12 +156,12 @@
 	// Track files from folder uploads with their relative paths
 	let folderFiles = $state<FileWithPath[]>([]);
 
-	const onUpload: FileDropZoneProps["onUpload"] = async (uploadedFiles) => {
+	const onUpload: FileDropZoneProps["onUpload"] = (uploadedFiles) => {
 		// we use set instead of an assignment since it accepts a File[]
 		files.set([...Array.from($files), ...uploadedFiles]);
 	};
 
-	const onFolderUpload: FileDropZoneProps["onFolderUpload"] = async (
+	const onFolderUpload: FileDropZoneProps["onFolderUpload"] = (
 		uploadedFiles,
 	) => {
 		// Files from folder selection have webkitRelativePath set
@@ -174,10 +179,6 @@
 				f.relativePath = file.webkitRelativePath || file.name;
 				return f;
 			});
-
-		if (filesWithPaths.length < uploadedFiles.length) {
-			const skippedCount = uploadedFiles.length - filesWithPaths.length;
-		}
 
 		folderFiles = [...folderFiles, ...filesWithPaths];
 	};
@@ -207,7 +208,7 @@
 		folderFiles = folderFiles.filter((f) => f !== fileToRemove);
 	}
 
-	const onFileRejected: FileDropZoneProps["onFileRejected"] = async ({
+	const onFileRejected: FileDropZoneProps["onFileRejected"] = ({
 		reason,
 		file,
 	}) => {
@@ -215,11 +216,6 @@
 			description: reason,
 		});
 	};
-
-	interface FullResult {
-		data: UploadResult;
-		file: File;
-	}
 
 	type ErrorResult = FullResult & { error: string };
 	let uploadErrors: ErrorResult[] = $state([]);
@@ -241,9 +237,6 @@
 			},
 		);
 
-		if (deleteError) {
-		}
-
 		const tmp = $uploadingItems;
 
 		// The below doesn't work since Svelte doesn't track changes to nested objects in stores
@@ -258,9 +251,12 @@
 
 		await invalidate("app:files");
 
-		removeFileByRef(
-			uploadErrors.find((e) => e.data.finalName === fileName)?.file!,
+		const failedUpload = uploadErrors.find(
+			(e) => e.data.finalName === fileName,
 		);
+		if (failedUpload) {
+			removeFileByRef(failedUpload.file);
+		}
 	}
 
 	/**
@@ -416,141 +412,6 @@
 		}
 	}
 
-	/**
-	 * Extracts unique folder paths from folder files and creates them.
-	 * Returns a map of display name paths to UUID paths.
-	 */
-	async function createFoldersForUpload(
-		folderFilesSnapshot: FileWithPath[],
-	): Promise<Map<string, string>> {
-		const folderPathToUuid = new Map<string, string>();
-
-		// Extract unique folder paths from folder files
-		const folderPaths = new Set<string>();
-		for (const file of folderFilesSnapshot) {
-			if (file.relativePath) {
-				const parts = file.relativePath.split("/");
-				// Build each parent path (exclude the filename and the root folder)
-				// Start from i=2 to skip the root folder itself (e.g., "MyFolder")
-				// Only create nested folders within it (e.g., "MyFolder/subfolder")
-				// The path we store starts from index 1 (skipping root folder name)
-				for (let i = 2; i < parts.length; i++) {
-					// Store path starting from index 1 (first subfolder after root)
-					const folderPath = parts.slice(1, i).join("/");
-					folderPaths.add(folderPath);
-				}
-			}
-		}
-
-		// Sort by depth (create parent folders first)
-		const sortedPaths = Array.from(folderPaths).sort(
-			(a, b) => a.split("/").length - b.split("/").length,
-		);
-
-		// Group paths by depth so same-depth folders can be created in parallel
-		const pathsByDepth = new Map<number, string[]>();
-		for (const p of sortedPaths) {
-			const depth = p.split("/").length;
-			const group = pathsByDepth.get(depth);
-			if (group) {
-				group.push(p);
-			} else {
-				pathsByDepth.set(depth, [p]);
-			}
-		}
-
-		// Fetch the full folder tree once to check for existing folders
-		let existingFolders: Map<string, string> | null = null;
-		try {
-			const { data: treeData } = await api.GET("/api/v1/storage/folder/tree");
-			if (treeData?.data) {
-				const folders = treeData.data;
-				// Map display name path to UUID path
-				existingFolders = new Map(
-					folders.map((f) => [f.path.toLowerCase(), f.id]),
-				);
-			}
-		} catch {}
-
-		// Create folders level by level, parallelizing within each depth
-		const sortedDepths = Array.from(pathsByDepth.keys()).sort((a, b) => a - b);
-
-		for (const depth of sortedDepths) {
-			const pathsAtDepth = pathsByDepth.get(depth) ?? [];
-
-			await Promise.all(
-				pathsAtDepth.map(async (folderPath) => {
-					const parts = folderPath.split("/");
-					const folderName = parts[parts.length - 1] ?? "";
-					const parentParts = parts.slice(0, -1);
-
-					// Build the parent display path (used for checking existing folders)
-					const parentDisplayPath =
-						parentParts.length > 0 ? parentParts.join("/") : "";
-
-					// Build parent UUID path by traversing the folder hierarchy
-					let parentUuidPath = page.params.path || "";
-					if (parentParts.length > 0) {
-						// Build path part by part, converting each to UUID
-						for (const part of parentParts) {
-							const currentDisplayPath = parentParts
-								.slice(0, parentParts.indexOf(part) + 1)
-								.join("/");
-							const uuid = folderPathToUuid.get(currentDisplayPath);
-							if (uuid) {
-								parentUuidPath = parentUuidPath
-									? `${parentUuidPath}/${uuid}`
-									: uuid;
-							}
-						}
-					}
-
-					// Build the full display path for this folder (used for checking existing folders)
-					const fullDisplayPath = page.params.path
-						? parentDisplayPath
-							? `${page.params.path}/${parentDisplayPath}/${folderName}`
-							: `${page.params.path}/${folderName}`
-						: parentDisplayPath
-							? `${parentDisplayPath}/${folderName}`
-							: folderName;
-
-					// Check if this folder already exists
-					if (existingFolders?.has(fullDisplayPath.toLowerCase())) {
-						const existingUuid = existingFolders.get(
-							fullDisplayPath.toLowerCase(),
-						);
-						if (existingUuid) {
-							folderPathToUuid.set(folderPath, existingUuid);
-						}
-						return;
-					}
-
-					try {
-						const { data: folderData, error: folderError } = await api.POST(
-							"/api/v1/storage/folder",
-							{
-								body: {
-									name: folderName,
-									parent: parentUuidPath || undefined,
-								},
-							},
-						);
-
-						if (folderData?.data) {
-							const folderId = folderData.data.id;
-							folderPathToUuid.set(folderPath, folderId);
-							// Add to our local cache so we don't try to create it again
-							existingFolders?.set(fullDisplayPath.toLowerCase(), folderId);
-						} else if (folderError) {
-						}
-					} catch {}
-				}),
-			);
-		}
-
-		return folderPathToUuid;
-	}
-
 	async function handleUpload() {
 		// Close dialog immediately - all work happens in background
 		open = false;
@@ -565,150 +426,30 @@
 		folderFiles = [];
 		uploadErrors = [];
 
-		// Do all the work in the background
-		const results: FullResult[] = [];
-
-		// Show preparing state in the progress indicator
-		if (folderFilesSnapshot.length > 0) {
-			$preparingUpload = { active: true, status: "Creating folders" };
-		} else {
-			$preparingUpload = { active: true, status: "Initializing" };
-		}
+		$preparingUpload = {
+			active: true,
+			status:
+				folderFilesSnapshot.length > 0 ? "Creating folders" : "Initializing",
+		};
 
 		// First, create all necessary folders and get UUID mapping
 		const folderPathToUuid = await createFoldersForUpload(folderFilesSnapshot);
 
 		$preparingUpload = { active: true, status: "Metadata" };
 
-		// Group files by folder for batch creation (using UUID paths)
-		interface FilesByFolder {
-			[folder: string]: Array<{ file: File; name: string }>;
-		}
-		const filesByFolder: FilesByFolder = {};
-
-		// Process regular files
-		for (const file of regularFiles) {
-			const folderUuidPath = page.params.path || "";
-
-			if (!filesByFolder[folderUuidPath]) {
-				filesByFolder[folderUuidPath] = [];
-			}
-
-			const folderArray = filesByFolder[folderUuidPath];
-			if (folderArray) {
-				folderArray.push({
-					file,
-					name: file.name,
-				});
-			}
-		}
-
-		// Process folder files (with relative paths)
-		for (const file of folderFilesSnapshot) {
-			const relativePath = file.relativePath || file.name;
-			const pathParts = relativePath.split("/");
-			const fileName = pathParts[pathParts.length - 1] ?? file.name;
-			// Get folder path: skip root folder (index 0) and filename (last item)
-			const displayFolderPath =
-				pathParts.length > 2 ? pathParts.slice(1, -1).join("/") : "";
-
-			// Convert display folder path to UUID path by building incrementally
-			let folderUuidPath = page.params.path || "";
-			if (displayFolderPath) {
-				const folderParts = displayFolderPath.split("/");
-				for (let i = 0; i < folderParts.length; i++) {
-					const partialPath = folderParts.slice(0, i + 1).join("/");
-					const uuid = folderPathToUuid.get(partialPath);
-					if (uuid) {
-						folderUuidPath = folderUuidPath
-							? `${folderUuidPath}/${uuid}`
-							: uuid;
-					}
-				}
-			}
-
-			if (!filesByFolder[folderUuidPath]) {
-				filesByFolder[folderUuidPath] = [];
-			}
-
-			const folderArray = filesByFolder[folderUuidPath];
-			if (folderArray) {
-				folderArray.push({
-					file,
-					name: fileName,
-				});
-			}
-		}
-
-		// Send batch metadata requests in chunks of BATCH_SIZE per folder, parallelized across folders
+		const results: FullResult[] = [];
 		try {
-			const batchPromises = Object.entries(filesByFolder).map(
-				async ([folder, filesInFolder]) => {
-					const folderResults: {
-						result: FullResult;
-						displayName: string;
-					}[] = [];
-
-					// Chunk files within this folder into batches of BATCH_SIZE
-					for (let i = 0; i < filesInFolder.length; i += BATCH_SIZE) {
-						const chunk = filesInFolder.slice(i, i + BATCH_SIZE);
-						const batchPayload = chunk.map((item) => ({
-							name: item.name,
-							size: item.file.size,
-						}));
-
-						const { data: batchData, error: batchError } = await api.POST(
-							"/api/v1/storage/file/batch",
-							{
-								params: {
-									query: { folder: folder || undefined },
-								},
-								body: {
-									files: batchPayload,
-								},
-							},
-						);
-
-						if (batchError || !batchData?.data) {
-							throw new Error(
-								`Failed to create batch metadata: ${JSON.stringify(batchError)}`,
-							);
-						}
-
-						const batchResults = batchData.data as unknown as UploadResult[];
-
-						for (let j = 0; j < chunk.length; j++) {
-							const uploadResult = batchResults[j];
-							const fileItem = chunk[j];
-
-							if (!(uploadResult && fileItem)) {
-								continue;
-							}
-
-							folderResults.push({
-								result: {
-									data: uploadResult,
-									file: fileItem.file,
-								},
-								displayName: fileItem.name,
-							});
-						}
-					}
-
-					return folderResults;
-				},
+			const metadata = await createUploadMetadata(
+				groupFilesByFolder(regularFiles, folderFilesSnapshot, folderPathToUuid),
+				BATCH_SIZE,
 			);
 
-			const allFolderResults = await Promise.all(batchPromises);
-
-			for (const folderResults of allFolderResults) {
-				for (const { result, displayName } of folderResults) {
-					results.push(result);
-					const fileKey = fileNameWithoutFolder(result.data.finalName);
-					$uploadingItems[fileKey] = 1;
-					// Store the original filename for display
-					$uploadingItemsNames[fileKey] = displayName;
-				}
+			for (const { result, displayName } of metadata) {
+				results.push(result);
+				const fileKey = fileNameWithoutFolder(result.data.finalName);
+				$uploadingItems[fileKey] = 1;
+				// Store the original filename for display
+				$uploadingItemsNames[fileKey] = displayName;
 			}
 		} catch (e) {
 			$preparingUpload = { active: false, status: "" };
@@ -720,12 +461,11 @@
 		$preparingUpload = { active: false, status: "" };
 
 		// Initialize upload stats
-		const totalBytes = results.reduce((sum, r) => sum + r.file.size, 0);
 		fileBytesUploaded.clear();
 		$uploadStats = {
 			totalFiles: results.length,
 			completedFiles: 0,
-			totalBytes,
+			totalBytes: results.reduce((sum, r) => sum + r.file.size, 0),
 			uploadedBytes: 0,
 			startTime: Date.now(),
 			speed: 0,
@@ -733,20 +473,18 @@
 		};
 
 		// Continue uploads in background
-		await resultCallback(results).finally(async () => {
-			// Final stats update
-			$uploadStats = {
-				...$uploadStats,
-				completedFiles: $uploadStats.totalFiles,
-				uploadedBytes: $uploadStats.totalBytes,
-				speed: 0,
-				eta: 0,
-			};
-			await invalidate("app:files");
-
-			if (uploadErrors.length > 0) {
-			}
-		});
+		await resultCallback(results)
+			.finally(() => {
+				// Final stats update
+				$uploadStats = {
+					...$uploadStats,
+					completedFiles: $uploadStats.totalFiles,
+					uploadedBytes: $uploadStats.totalBytes,
+					speed: 0,
+					eta: 0,
+				};
+			})
+			.then(() => invalidate("app:files"));
 	}
 </script>
 

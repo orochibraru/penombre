@@ -25,7 +25,7 @@
 		await invalidateAll();
 	}
 
-	async function handleRevokeSession(sessionToken: string) {
+	function handleRevokeSession(sessionToken: string) {
 		return toast.promise(revokeSession(sessionToken), {
 			loading: m.toast_revoking_session(),
 			success: m.toast_session_revoked(),

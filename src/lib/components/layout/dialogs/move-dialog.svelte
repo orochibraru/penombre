@@ -55,7 +55,7 @@
 	// Load root folders when dialog opens
 	$effect(() => {
 		if (open) {
-			loadFolders();
+			void loadFolders();
 			// Default to root selection
 			selectedFolder = "";
 		}
@@ -69,6 +69,7 @@
 				folders = data.data as FolderData[];
 			}
 		} catch {
+			// leave `folders` empty; the dialog renders an empty tree
 		} finally {
 			loadingFolders = false;
 		}
@@ -195,6 +196,99 @@
 		return `Move ${item?.metadata?.name ?? "item"}`;
 	});
 
+	/** Move every checked item in one request */
+	async function moveCheckedItems() {
+		const itemsToMove = Object.keys(items).map((key) => {
+			const isFolder = key.endsWith("/");
+			const itemKey = isFolder ? key.replace(/\/$/, "") : key;
+			return {
+				path: currentFolder ? `${currentFolder}/${itemKey}` : itemKey,
+				type: isFolder ? ("folder" as const) : ("file" as const),
+			};
+		});
+
+		const promise = api
+			.POST("/api/v1/storage/move", {
+				body: { items: itemsToMove, destination: selectedFolder },
+			})
+			.then(async ({ data, error: moveError }) => {
+				if (moveError || !data?.data) {
+					throw new Error("Failed to move items");
+				}
+				const result = data.data;
+				open = false;
+				await invalidate("app:files");
+				return result;
+			});
+
+		toast.promise(promise, {
+			loading: m.toast_moving_items({ count: String(itemCount) }),
+			success: (result) =>
+				m.toast_items_moved({
+					successCount: String(result.successCount),
+					total: String(itemCount),
+					destination: selectedFolderName || m.nav_my_drive(),
+				}),
+			error: m.toast_move_items_error(),
+		});
+
+		await promise;
+	}
+
+	/** Folders and files move through different endpoints */
+	async function moveOneItem(target: ObjectItem) {
+		const itemKey = target.key.replace(/\/$/, "");
+		const fullItemKey = currentFolder ? `${currentFolder}/${itemKey}` : itemKey;
+
+		if (target.type === "folder") {
+			const folderId = fullItemKey.split("/").pop() || fullItemKey;
+			const parentId = fullItemKey.includes("/")
+				? fullItemKey.split("/").slice(0, -1).join("/")
+				: undefined;
+
+			const { error: moveError } = await api.POST(
+				"/api/v1/storage/folder/{path}/move",
+				{
+					params: { path: { path: folderId } },
+					body: { parentFolderId: parentId, destination: selectedFolder },
+				},
+			);
+			if (moveError) {
+				throw new Error(String(moveError) || "Failed to move item");
+			}
+		} else {
+			const { error: moveError } = await api.POST(
+				"/api/v1/storage/file/{id}/move",
+				{
+					params: { path: { id: encodeURIComponent(fullItemKey) } },
+					body: { destination: selectedFolder },
+				},
+			);
+			if (moveError) {
+				throw new Error(String(moveError) || "Failed to move item");
+			}
+		}
+
+		open = false;
+		await invalidate("app:files");
+	}
+
+	async function moveSingleItem(target: ObjectItem) {
+		const toastPromise = moveOneItem(target);
+
+		toast.promise(toastPromise, {
+			loading: m.toast_moving_item({
+				name: target.metadata.name || target.key,
+			}),
+			success: m.toast_moved_to({
+				destination: selectedFolderName || m.nav_my_drive(),
+			}),
+			error: m.toast_move_item_error(),
+		});
+
+		await toastPromise;
+	}
+
 	async function handleMove(e: SubmitEvent) {
 		e.preventDefault();
 		if (!canMove) {
@@ -205,111 +299,12 @@
 
 		try {
 			if (isBulkMode) {
-				// Bulk move using the new endpoint
-				const itemsToMove = Object.keys(items).map((key) => {
-					const isFolder = key.endsWith("/");
-					const itemKey = isFolder ? key.replace(/\/$/, "") : key;
-					const fullPath = currentFolder
-						? `${currentFolder}/${itemKey}`
-						: itemKey;
-					return {
-						path: fullPath,
-						type: isFolder ? ("folder" as const) : ("file" as const),
-					};
-				});
-
-				const promise = api
-					.POST("/api/v1/storage/move", {
-						body: {
-							items: itemsToMove,
-							destination: selectedFolder,
-						},
-					})
-					.then(async ({ data, error: moveError }) => {
-						if (moveError || !data?.data) {
-							throw new Error("Failed to move items");
-						}
-						const result = data.data;
-						open = false;
-						await invalidate("app:files");
-						return result;
-					});
-
-				toast.promise(promise, {
-					loading: m.toast_moving_items({ count: String(itemCount) }),
-					success: (result) =>
-						m.toast_items_moved({
-							successCount: String(result.successCount),
-							total: String(itemCount),
-							destination: selectedFolderName || m.nav_my_drive(),
-						}),
-					error: m.toast_move_items_error(),
-				});
-
-				await promise;
+				await moveCheckedItems();
 			} else if (item) {
-				// Single item move (existing logic)
-				const isFolder = item.type === "folder";
-				const itemKey = item.key.replace(/\/$/, "");
-				const fullItemKey = currentFolder
-					? `${currentFolder}/${itemKey}`
-					: itemKey;
-
-				const doMove = async () => {
-					if (isFolder) {
-						const folderId = fullItemKey.split("/").pop() || fullItemKey;
-						const parentId = fullItemKey.includes("/")
-							? fullItemKey.split("/").slice(0, -1).join("/")
-							: undefined;
-
-						const { error: moveError } = await api.POST(
-							"/api/v1/storage/folder/{path}/move",
-							{
-								params: { path: { path: folderId } },
-								body: {
-									parentFolderId: parentId,
-									destination: selectedFolder,
-								},
-							},
-						);
-						if (moveError) {
-							throw new Error(String(moveError) || "Failed to move item");
-						}
-					} else {
-						const { error: moveError } = await api.POST(
-							"/api/v1/storage/file/{id}/move",
-							{
-								params: {
-									path: {
-										id: encodeURIComponent(fullItemKey),
-									},
-								},
-								body: { destination: selectedFolder },
-							},
-						);
-						if (moveError) {
-							throw new Error(String(moveError) || "Failed to move item");
-						}
-					}
-					open = false;
-					await invalidate("app:files");
-				};
-
-				const toastPromise = doMove();
-
-				toast.promise(toastPromise, {
-					loading: m.toast_moving_item({
-						name: item.metadata.name || item.key,
-					}),
-					success: m.toast_moved_to({
-						destination: selectedFolderName || m.nav_my_drive(),
-					}),
-					error: m.toast_move_item_error(),
-				});
-
-				await toastPromise;
+				await moveSingleItem(item);
 			}
 		} catch {
+			// toast.promise already surfaced the failure to the user
 		} finally {
 			loading = false;
 		}

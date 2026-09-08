@@ -18,7 +18,7 @@ const mockGetPenombreConfig = getPenombreConfig as Mock<
 	typeof getPenombreConfig
 >;
 
-const { actions, load } = await import("./+page.server");
+const { actions } = await import("./+page.server");
 
 function createRequest(data: Record<string, string>) {
 	const formData = new FormData();
@@ -59,13 +59,6 @@ const sessionUser: UserWithSession = {
 		impersonatedBy: null,
 	},
 };
-
-describe("load", () => {
-	test("returns undefined", () => {
-		const result = load();
-		expect(result).toBeUndefined();
-	});
-});
 
 describe("updateAccount", () => {
 	test("returns 400 when both name and email are missing", async () => {

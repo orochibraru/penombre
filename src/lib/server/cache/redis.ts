@@ -1,6 +1,9 @@
 import process from "node:process";
 import Redis from "ioredis";
+import { Logger } from "$lib/logger";
 import type { CacheBackend } from "./types";
+
+const logger = new Logger("RedisCache");
 
 // ---------------------------------------------------------------------------
 // Serialization helpers — handles Map objects that JSON.stringify loses
@@ -41,11 +44,10 @@ export function getRedisClient(url?: string): Redis {
 		},
 	});
 
-	// Attach basic event handlers to avoid unhandled 'error' events and to log connectivity changes.
-	client.on("error", (_err) => {});
-	client.on("connect", () => {});
-	client.on("reconnecting", () => {});
-	client.on("end", () => {});
+	// ioredis throws on unhandled 'error' events, so this listener is required.
+	client.on("error", (err) => {
+		logger.warn("Redis client error:", err);
+	});
 	globalForRedis.__redis_client = client;
 	return client;
 }

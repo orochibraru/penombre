@@ -14,7 +14,7 @@
 	let isFolder: boolean = $derived($itemAction?.item?.type === "folder");
 	let inputRef: HTMLInputElement = $state(null!);
 
-	async function handleRename() {
+	function handleRename() {
 		loading = true;
 
 		if (!$itemAction.item) {

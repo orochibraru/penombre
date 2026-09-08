@@ -21,7 +21,7 @@ const CATEGORY_TITLES: Record<string, string> = {
 
 export default function CategoryScreen() {
 	const { name } = useLocalSearchParams<{ name: string }>();
-	const category = (name ?? "UNKNOWN") as FileCategory;
+	const category = name as FileCategory;
 	const title = CATEGORY_TITLES[category] ?? category;
 
 	const { data, error, mutate, isLoading } = useSWR(

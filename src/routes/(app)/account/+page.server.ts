@@ -3,8 +3,6 @@ import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { getPenombreConfig } from "$lib/server/config";
 
-export const load = () => {};
-
 const logger = new Logger("account-page.server.ts");
 
 export const actions = {

@@ -16,7 +16,7 @@ export type FileDropZonePropsWithoutHTML = WithChildren<{
 	 *
 	 * @param files
 	 */
-	onUpload: (files: File[]) => Promise<void>;
+	onUpload: (files: File[]) => Promise<void> | void;
 	/** The maximum amount files allowed to be uploaded */
 	maxFiles?: number;
 	fileCount?: number;
@@ -25,7 +25,7 @@ export type FileDropZonePropsWithoutHTML = WithChildren<{
 	/** Called when a file does not meet the upload criteria (size, or type) */
 	onFileRejected?: (opts: { reason: FileRejectedReason; file: File }) => void;
 	/** Called when folders are selected for upload */
-	onFolderUpload?: (files: File[]) => Promise<void>;
+	onFolderUpload?: (files: File[]) => Promise<void> | void;
 
 	// just for extra documentation
 	/** Takes a comma separated list of one or more file types.

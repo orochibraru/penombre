@@ -34,8 +34,7 @@ export const load: PageLoad = async ({ params, fetch, url, depends }) => {
 				},
 			);
 
-			if (metaError) {
-			} else {
+			if (!metaError) {
 				const metaData = meta?.data as Record<string, unknown> | undefined;
 				if (metaData?.name) {
 					title = metaData.name as string;

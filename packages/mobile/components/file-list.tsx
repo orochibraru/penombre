@@ -35,7 +35,7 @@ export function FileList({
 }: FileListProps) {
 	const [refreshing, setRefreshing] = useState(false);
 
-	const handleRefresh = useCallback(async () => {
+	const handleRefresh = useCallback(() => {
 		if (!onRefresh) {
 			return;
 		}

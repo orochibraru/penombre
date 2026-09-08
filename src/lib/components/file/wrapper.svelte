@@ -48,16 +48,21 @@
 		createMainMultipleActions,
 		createTrashActions,
 		createTrashMultipleActions,
-		executeDeleteOperation,
-		executeRestoreOperation,
 		type FileToView,
 		getDuplicateFilePromise,
 		handleDownloadItem,
 		handleOpenItemInNewTab,
+		movesIntoItself,
 		handleOpenItem as openItem,
+		requestMove,
+		resolveItemParent,
 		selectAllForEmptyTrash,
 		triggerRenameAction,
 	} from "./wrapper.svelte.js";
+	import {
+		executeDeleteOperation,
+		executeRestoreOperation,
+	} from "./wrapper-bulk.svelte.js";
 
 	interface UserPreferences {
 		layout?: "grid" | "list";
@@ -246,7 +251,7 @@
 	});
 
 	const mainActions = createMainActions({
-		onDownload: async (item) => {
+		onDownload: (item) => {
 			actionsContextOpen = false;
 			const isFolder = isFolderItem(item);
 			const itemName = item.metadata.name ?? item.key;
@@ -294,7 +299,9 @@
 				);
 			} else {
 				// File: regular download
-				handleDownloadItem(itemName, () => {});
+				handleDownloadItem(itemName, () => {
+					// no progress reporting needed for a single-file download
+				});
 			}
 		},
 		onOpenInNewTab: handleOpenItemInNewTab,
@@ -306,7 +313,7 @@
 			moveDialogOpen = true;
 			actionsContextOpen = false;
 		},
-		onDuplicate: async (item) => {
+		onDuplicate: (item) => {
 			actionsContextOpen = false;
 			const itemName = item.metadata.name ?? item.key;
 			const fullPath = currentFolder
@@ -318,7 +325,9 @@
 					onSuccess: async () => {
 						await invalidate("app:files");
 					},
-					onError: () => {},
+					onError: () => {
+						// the surrounding toast.promise already reports the failure
+					},
 				}),
 				{
 					loading: m.toast_duplicating({ name: itemName }),
@@ -393,7 +402,7 @@
 
 	// Multiple item actions
 	const mainMultipleActions = createMainMultipleActions({
-		onDownload: async () => {
+		onDownload: () => {
 			const keys = Object.keys(checkedItems);
 			if (keys.length === 0) {
 				return;
@@ -475,7 +484,7 @@
 	// ================================
 	// File Opening
 	// ================================
-	async function handleOpenItemWrapper(item: ObjectItem) {
+	function handleOpenItemWrapper(item: ObjectItem) {
 		const display = item.metadata.name || item.key;
 		return toast.promise(
 			openItem(item, isDesktop, {
@@ -518,9 +527,11 @@
 							sortDirection: currentSortDirection,
 						},
 					});
-				} catch {}
+				} catch {
+					// preferences are a convenience; failing to persist them is not worth surfacing
+				}
 			};
-			savePreferences();
+			void savePreferences();
 		}
 	});
 
@@ -553,88 +564,42 @@
 		handleDragEnd();
 	}
 
-	async function handleDragAndDropMove(
-		item: ObjectItem,
-		destinationFolder: string,
-	) {
-		const isFolder = item.type === "folder";
+	function handleDragAndDropMove(item: ObjectItem, destinationFolder: string) {
 		const itemKey = item.key.replace(/\/$/, "");
 		const itemName = item.metadata.name ?? item.key;
-
-		// Build full path
 		const fullItemKey = currentFolder ? `${currentFolder}/${itemKey}` : itemKey;
 
-		// Check if trying to move into itself (for folders)
-		if (isFolder) {
-			const folderPath = fullItemKey.replace(/\/$/, "");
-			if (
-				destinationFolder === folderPath ||
-				destinationFolder.startsWith(`${folderPath}/`)
-			) {
-				toast.error(m.cannot_move_into_self());
-				return;
-			}
+		if (
+			item.type === "folder" &&
+			movesIntoItself(fullItemKey, destinationFolder)
+		) {
+			toast.error(m.cannot_move_into_self());
+			return;
 		}
 
-		// Check if already in same location
-		let itemParent: string;
-		if (item.parentKey) {
-			itemParent = item.parentKey;
-		} else if (item.key.includes("/")) {
-			itemParent = item.key.split("/").slice(0, -1).join("/");
-		} else {
-			itemParent = currentFolder;
-		}
-
-		if (destinationFolder === itemParent) {
+		if (destinationFolder === resolveItemParent(item, currentFolder)) {
 			toast.info(m.toast_already_in_folder({ name: itemName }));
 			return;
 		}
 
-		try {
-			let movePromise: Promise<{ error?: unknown; response: Response }>;
-
-			if (isFolder) {
-				const folderId = fullItemKey.split("/").pop() || fullItemKey;
-				const parentId = fullItemKey.includes("/")
-					? fullItemKey.split("/").slice(0, -1).join("/")
-					: undefined;
-
-				movePromise = api.POST("/api/v1/storage/folder/{path}/move", {
-					params: { path: { path: folderId } },
-					body: {
-						parentFolderId: parentId,
-						destination: destinationFolder,
-					},
-				});
-			} else {
-				movePromise = api.POST("/api/v1/storage/file/{id}/move", {
-					params: { path: { id: encodeURIComponent(fullItemKey) } },
-					body: { destination: destinationFolder },
-				});
-			}
-
-			toast.promise(
-				movePromise.then(async ({ error: moveError }) => {
+		toast.promise(
+			requestMove(item, fullItemKey, destinationFolder).then(
+				async ({ error: moveError }) => {
 					if (moveError) {
 						throw new Error(String(moveError) || "Failed to move item");
 					}
 					await invalidate("app:files");
-				}),
-				{
-					loading: m.toast_moving_item({ name: itemName }),
-					success: m.toast_moved({ name: itemName }),
-					error: (err) => {
-						const message =
-							err instanceof Error ? err.message : "Unknown error";
-						return m.toast_move_error_detail({
-							name: itemName,
-							message,
-						});
-					},
 				},
-			);
-		} catch {}
+			),
+			{
+				loading: m.toast_moving_item({ name: itemName }),
+				success: m.toast_moved({ name: itemName }),
+				error: (err) => {
+					const message = err instanceof Error ? err.message : "Unknown error";
+					return m.toast_move_error_detail({ name: itemName, message });
+				},
+			},
+		);
 	}
 
 	// ================================

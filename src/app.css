@@ -133,6 +133,7 @@
 		width: calc(100% - 2.5rem);
 
 		@variant lg {
+			/* biome-ignore lint/suspicious/noDuplicateProperties: @variant scopes this to a media query, so it is an intentional override */
 			width: calc(100% - (var(--sidebar-width) + 2rem));
 		}
 	}

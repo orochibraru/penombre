@@ -73,6 +73,197 @@ function toJsonSchema(schema: z.ZodType): Record<string, unknown> {
 	return rest;
 }
 
+/** Path and query parameters, flattened into OpenAPI `parameters` entries */
+function buildParameters(route: RouteDefinition): Record<string, unknown>[] {
+	const parameters: Record<string, unknown>[] = [];
+
+	if (route.params) {
+		const paramSchema = toJsonSchema(route.params);
+		const properties = paramSchema.properties as
+			| Record<string, unknown>
+			| undefined;
+		for (const [name, schema] of Object.entries(properties ?? {})) {
+			parameters.push({ name, in: "path", required: true, schema });
+		}
+	}
+
+	if (route.query) {
+		const querySchema = toJsonSchema(route.query);
+		const properties = querySchema.properties as
+			| Record<string, unknown>
+			| undefined;
+		const required = (querySchema.required as string[] | undefined) ?? [];
+		for (const [name, schema] of Object.entries(properties ?? {})) {
+			parameters.push({
+				name,
+				in: "query",
+				required: required.includes(name),
+				schema,
+			});
+		}
+	}
+
+	return parameters;
+}
+
+/** The 200 response plus every declared error code (401 and 500 are always present) */
+function buildResponses(route: RouteDefinition): Record<string, unknown> {
+	const responses: Record<string, unknown> = {
+		"200": {
+			description: "Successful response",
+			content: {
+				"application/json": {
+					schema: {
+						type: "object",
+						properties: { data: toJsonSchema(route.response) },
+					},
+				},
+			},
+		},
+	};
+
+	for (const code of new Set([...(route.errors ?? [401, 500]), 401, 500])) {
+		responses[String(code)] = {
+			description: ERROR_DESCRIPTIONS[code] ?? `Error ${code}`,
+			content: {
+				"application/json": {
+					schema: { $ref: "#/components/schemas/ErrorResponse" },
+				},
+			},
+		};
+	}
+
+	return responses;
+}
+
+/** The OpenAPI operation object for a single registered route */
+function buildPathEntry(route: RouteDefinition): Record<string, unknown> {
+	const pathEntry: Record<string, unknown> = { summary: route.summary };
+
+	if (route.description) {
+		pathEntry.description = route.description;
+	}
+	if (route.tags?.length) {
+		pathEntry.tags = route.tags;
+	}
+
+	const parameters = buildParameters(route);
+	if (parameters.length) {
+		pathEntry.parameters = parameters;
+	}
+
+	pathEntry.responses = buildResponses(route);
+
+	if (route.requireAuth !== false) {
+		pathEntry.security = [{ cookieAuth: [] }];
+	}
+
+	if (route.body) {
+		const contentType = route.isFormData
+			? "multipart/form-data"
+			: "application/json";
+		pathEntry.requestBody = {
+			required: true,
+			content: { [contentType]: { schema: toJsonSchema(route.body) } },
+		};
+	}
+
+	return pathEntry;
+}
+
+/** Apply tag overrides: rename or drop tags from an array */
+function remapTags(
+	operationTags: string[],
+	tagOverrides: Record<string, string | null>,
+): string[] {
+	if (Object.keys(tagOverrides).length === 0) {
+		return operationTags;
+	}
+	return operationTags
+		.map((t) => (t in tagOverrides ? tagOverrides[t] : t))
+		.filter((t): t is string => t !== null);
+}
+
+/** Merge external schemas and security schemes; ours win on conflict */
+function mergeExternalComponents(
+	spec: ExternalOpenAPISpec,
+	schemaComponents: Record<string, unknown>,
+	securitySchemes: Record<string, unknown>,
+): void {
+	for (const [name, schema] of Object.entries(spec.components?.schemas ?? {})) {
+		if (!(name in schemaComponents)) {
+			schemaComponents[name] = schema;
+		}
+	}
+	for (const [name, scheme] of Object.entries(
+		spec.components?.securitySchemes ?? {},
+	)) {
+		if (!(name in securitySchemes)) {
+			securitySchemes[name] = scheme;
+		}
+	}
+}
+
+/** Merge external tags, deduplicating by name and applying overrides */
+function mergeExternalTags(
+	spec: ExternalOpenAPISpec,
+	tagOverrides: Record<string, string | null>,
+	tags: Array<{ name: string; description?: string }>,
+	tagNames: Set<string>,
+): void {
+	for (const tag of spec.tags ?? []) {
+		const mapped = tag.name in tagOverrides ? tagOverrides[tag.name] : tag.name;
+		if (mapped === null || mapped === undefined) {
+			continue; // drop tag
+		}
+		if (!tagNames.has(mapped)) {
+			tagNames.add(mapped);
+			tags.push({ ...tag, name: mapped });
+		}
+	}
+}
+
+/** Retag an external operation in place, falling back to `defaultTag` */
+function retagOperation(
+	operation: unknown,
+	tagOverrides: Record<string, string | null>,
+	defaultTag?: string,
+): void {
+	if (typeof operation !== "object" || operation === null) {
+		return;
+	}
+	const op = operation as Record<string, unknown>;
+	if (Array.isArray(op.tags)) {
+		op.tags = remapTags(op.tags as string[], tagOverrides);
+	}
+	if (defaultTag && (!Array.isArray(op.tags) || op.tags.length === 0)) {
+		op.tags = [defaultTag];
+	}
+}
+
+/** Merge external paths under `pathPrefix`, never overwriting our own routes */
+function mergeExternalPaths(
+	{ spec, pathPrefix = "", defaultTag, tagOverrides = {} }: ExternalSpec,
+	paths: Record<string, Record<string, unknown>>,
+): void {
+	for (const [rawPath, methods] of Object.entries(spec.paths ?? {})) {
+		const fullPath = `${pathPrefix}${rawPath}`;
+		const pathObj = paths[fullPath] ?? {};
+		paths[fullPath] = pathObj;
+
+		for (const [method, operation] of Object.entries(
+			methods as Record<string, unknown>,
+		)) {
+			// Don't overwrite methods already defined by our routes
+			if (method in pathObj) {
+				continue;
+			}
+			retagOperation(operation, tagOverrides, defaultTag);
+			pathObj[method] = operation;
+		}
+	}
+}
+
 class OpenAPIRegistry {
 	private readonly routes: RouteDefinition[] = [];
 	private readonly schemas: SchemaRegistration[] = [];
@@ -85,17 +276,8 @@ class OpenAPIRegistry {
 		this.schemas.push({ name, schema });
 	}
 
-	/**
-	 * Build the final OpenAPI spec, optionally merging one or more external specs.
-	 *
-	 * External specs (e.g. from better-auth's openAPI plugin) are deep-merged:
-	 *   - paths are prefixed with `pathPrefix` and merged per-method (no duplicates)
-	 *   - components/schemas are merged (external wins on conflict)
-	 *   - tags are unioned by name
-	 *   - securitySchemes are merged (ours win on conflict)
-	 */
-	toOpenAPISpec(externalSpecs: ExternalSpec[] = []): Record<string, unknown> {
-		// ── 1. Build our own schemas ────────────────────────────────────
+	/** Component schemas for every registered Zod schema, plus the shared envelopes */
+	private buildSchemaComponents(): Record<string, unknown> {
 		const schemaComponents: Record<string, unknown> = {};
 
 		for (const { name, schema } of this.schemas) {
@@ -119,6 +301,33 @@ class OpenAPIRegistry {
 			},
 		};
 
+		return schemaComponents;
+	}
+
+	/** Paths keyed by route path, each holding one entry per HTTP method */
+	private buildPaths(): Record<string, Record<string, unknown>> {
+		const paths: Record<string, Record<string, unknown>> = {};
+
+		for (const route of this.routes) {
+			const pathObj = paths[route.path] ?? {};
+			pathObj[route.method] = buildPathEntry(route);
+			paths[route.path] = pathObj;
+		}
+
+		return paths;
+	}
+
+	/**
+	 * Build the final OpenAPI spec, optionally merging one or more external specs.
+	 *
+	 * External specs (e.g. from better-auth's openAPI plugin) are deep-merged:
+	 *   - paths are prefixed with `pathPrefix` and merged per-method (no duplicates)
+	 *   - components/schemas are merged (external wins on conflict)
+	 *   - tags are unioned by name
+	 *   - securitySchemes are merged (ours win on conflict)
+	 */
+	toOpenAPISpec(externalSpecs: ExternalSpec[] = []): Record<string, unknown> {
+		const schemaComponents = this.buildSchemaComponents();
 		const securitySchemes: Record<string, unknown> = {
 			cookieAuth: {
 				type: "apiKey",
@@ -127,209 +336,23 @@ class OpenAPIRegistry {
 				description: "Session cookie set by better-auth",
 			},
 		};
-
+		const paths = this.buildPaths();
 		const tags: Array<{ name: string; description?: string }> = [];
 		const tagNames = new Set<string>();
 
-		// ── 2. Build paths from registered routes ───────────────────────
-		const paths: Record<string, Record<string, unknown>> = {};
-
-		for (const route of this.routes) {
-			const pathEntry: Record<string, unknown> = {};
-			const parameters: Record<string, unknown>[] = [];
-			const responses: Record<string, unknown> = {};
-
-			if (route.params) {
-				const paramSchema = toJsonSchema(route.params);
-				const properties = paramSchema.properties as
-					| Record<string, unknown>
-					| undefined;
-				const _required = (paramSchema.required as string[]) ?? [];
-
-				if (properties) {
-					for (const [name, schema] of Object.entries(properties)) {
-						parameters.push({
-							name,
-							in: "path",
-							required: true,
-							schema,
-						});
-					}
-				}
-			}
-
-			if (route.query) {
-				const querySchema = toJsonSchema(route.query);
-				const properties = querySchema.properties as
-					| Record<string, unknown>
-					| undefined;
-				const required = (querySchema.required as string[]) ?? [];
-
-				if (properties) {
-					for (const [name, schema] of Object.entries(properties)) {
-						parameters.push({
-							name,
-							in: "query",
-							required: required.includes(name),
-							schema,
-						});
-					}
-				}
-			}
-
-			const responseSchema = toJsonSchema(route.response);
-			responses["200"] = {
-				description: "Successful response",
-				content: {
-					"application/json": {
-						schema: {
-							type: "object",
-							properties: { data: responseSchema },
-						},
-					},
-				},
-			};
-
-			const errorCodes = route.errors ?? [401, 500];
-			if (!errorCodes.includes(401)) {
-				errorCodes.push(401);
-			}
-			if (!errorCodes.includes(500)) {
-				errorCodes.push(500);
-			}
-
-			for (const code of errorCodes) {
-				responses[String(code)] = {
-					description: ERROR_DESCRIPTIONS[code] ?? `Error ${code}`,
-					content: {
-						"application/json": {
-							schema: { $ref: "#/components/schemas/ErrorResponse" },
-						},
-					},
-				};
-			}
-
-			pathEntry.summary = route.summary;
-			if (route.description) {
-				pathEntry.description = route.description;
-			}
-			if (route.tags?.length) {
-				pathEntry.tags = route.tags;
-			}
-			if (parameters.length) {
-				pathEntry.parameters = parameters;
-			}
-			pathEntry.responses = responses;
-
-			const requireAuth = route.requireAuth !== false;
-			if (requireAuth) {
-				pathEntry.security = [{ cookieAuth: [] }];
-			}
-
-			if (route.body) {
-				const contentType = route.isFormData
-					? "multipart/form-data"
-					: "application/json";
-				pathEntry.requestBody = {
-					required: true,
-					content: { [contentType]: { schema: toJsonSchema(route.body) } },
-				};
-			}
-
-			if (!paths[route.path]) {
-				paths[route.path] = {};
-			}
-			const pathObj = paths[route.path];
-			if (pathObj) {
-				pathObj[route.method] = pathEntry;
-			}
-		}
-
-		// ── 3. Merge external specs ─────────────────────────────────────
-		for (const {
-			spec,
-			pathPrefix = "",
-			defaultTag,
-			tagOverrides = {},
-		} of externalSpecs) {
-			/** Apply tag overrides: rename or drop tags from an array */
-			const remapTags = (operationTags: string[]): string[] => {
-				if (!operationTags || Object.keys(tagOverrides).length === 0) {
-					return operationTags;
-				}
-				return operationTags
-					.map((t) => (t in tagOverrides ? tagOverrides[t] : t))
-					.filter((t): t is string => t !== null);
-			};
-			// 3a. Merge schemas (external schemas first, ours win on conflict)
-			if (spec.components?.schemas) {
-				for (const [name, schema] of Object.entries(spec.components.schemas)) {
-					if (!(name in schemaComponents)) {
-						schemaComponents[name] = schema;
-					}
-				}
-			}
-
-			// 3b. Merge security schemes (ours win on conflict)
-			if (spec.components?.securitySchemes) {
-				for (const [name, scheme] of Object.entries(
-					spec.components.securitySchemes,
-				)) {
-					if (!(name in securitySchemes)) {
-						securitySchemes[name] = scheme;
-					}
-				}
-			}
-
-			// 3c. Merge tags (deduplicate by name, apply overrides)
-			if (spec.tags) {
-				for (const tag of spec.tags) {
-					const mapped =
-						tag.name in tagOverrides ? tagOverrides[tag.name] : tag.name;
-					if (mapped === null || mapped === undefined) {
-						continue; // drop tag
-					}
-					if (!tagNames.has(mapped)) {
-						tagNames.add(mapped);
-						tags.push({ ...tag, name: mapped });
-					}
-				}
-			}
-
-			// 3d. Merge paths with prefix, per-method (no overwrite)
-			if (spec.paths) {
-				for (const [rawPath, methods] of Object.entries(spec.paths)) {
-					const fullPath = `${pathPrefix}${rawPath}`;
-
-					if (!paths[fullPath]) {
-						paths[fullPath] = {};
-					}
-
-					for (const [method, operation] of Object.entries(
-						methods as Record<string, unknown>,
-					)) {
-						const pathObj = paths[fullPath];
-						// Don't overwrite methods already defined by our routes
-						if (pathObj && !(method in pathObj)) {
-							if (typeof operation === "object" && operation !== null) {
-								const op = operation as Record<string, unknown>;
-								// Remap tags on the operation
-								if (Array.isArray(op.tags)) {
-									op.tags = remapTags(op.tags as string[]);
-								}
-								// Inject default tag if operation has no tags after remapping
-								if (
-									defaultTag &&
-									(!op.tags || (Array.isArray(op.tags) && op.tags.length === 0))
-								) {
-									op.tags = [defaultTag];
-								}
-							}
-							pathObj[method] = operation;
-						}
-					}
-				}
-			}
+		for (const externalSpec of externalSpecs) {
+			mergeExternalComponents(
+				externalSpec.spec,
+				schemaComponents,
+				securitySchemes,
+			);
+			mergeExternalTags(
+				externalSpec.spec,
+				externalSpec.tagOverrides ?? {},
+				tags,
+				tagNames,
+			);
+			mergeExternalPaths(externalSpec, paths);
 		}
 
 		return {

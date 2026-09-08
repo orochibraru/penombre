@@ -23,7 +23,7 @@ export function useApiQuery<T>(fn: AsyncFn<T>) {
 	}, [fn]);
 
 	useEffect(() => {
-		fetchData();
+		void fetchData();
 	}, [fetchData]);
 
 	return { data, error, loading, refetch: fetchData };

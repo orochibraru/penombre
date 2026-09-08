@@ -44,7 +44,7 @@
 		goto(resolve("/"), { replaceState: true, invalidateAll: true });
 	}
 
-	async function handlePasskeySignIn() {
+	function handlePasskeySignIn() {
 		return toast.promise(passkeySignIn(), {
 			loading: m.signing_in_with_passkey(),
 			success: m.signed_in_success(),
@@ -64,7 +64,7 @@
 
 	const defaultErrorMessage = m.sign_in_error();
 
-	async function handleOauthSignin(provider: string) {
+	function handleOauthSignin(provider: string) {
 		loading = true;
 		return toast.promise(oauthSignInPromise(provider), {
 			loading: m.signing_in_with_provider({ provider }),
@@ -82,7 +82,7 @@
 		});
 	}
 
-	async function handleEmailSignin() {
+	function handleEmailSignin() {
 		loading = true;
 		return toast.promise(emailSignInPromise(), {
 			loading: m.signing_in(),

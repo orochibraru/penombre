@@ -14,7 +14,9 @@
 	let {
 		ref = $bindable(null),
 		open = $bindable(true),
-		onOpenChange = () => {},
+		onOpenChange = () => {
+			// uncontrolled by default: the provider owns `open`
+		},
 		class: className,
 		style,
 		children,

@@ -10,7 +10,7 @@ async function signOutCallback() {
 	return true;
 }
 
-export async function handleSignOut() {
+export function handleSignOut() {
 	toast.promise(signOutCallback, {
 		loading: m.toast_signing_out(),
 		success: m.toast_signed_out(),

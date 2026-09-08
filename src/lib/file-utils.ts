@@ -86,6 +86,46 @@ export function isCodeItem(fileName: string) {
 	);
 }
 
+const EXTENSION_LANGUAGES: Record<string, SupportedLanguage> = {
+	js: "javascript",
+	mjs: "javascript",
+	cjs: "javascript",
+	ts: "typescript",
+	tsx: "typescript",
+	py: "python",
+	java: "java",
+	c: "c",
+	cpp: "cpp",
+	cs: "csharp",
+	go: "go",
+	rs: "rust",
+	php: "php",
+	html: "html",
+	htm: "html",
+	css: "css",
+	json: "json",
+	jsonc: "json",
+	xml: "xml",
+	yaml: "yaml",
+	yml: "yaml",
+	md: "markdown",
+	sql: "sql",
+	sh: "bash",
+	rb: "ruby",
+	swift: "swift",
+	kt: "kotlin",
+	vue: "vue",
+	svelte: "svelte",
+	scss: "scss",
+	sass: "scss",
+	less: "less",
+	toml: "toml",
+	ini: "ini",
+	env: "dotenv",
+	hcl: "hcl",
+	tf: "hcl",
+};
+
 export function determineCodeFileLanguage(item: ObjectItem): SupportedLanguage {
 	const display = item.metadata?.name || item.key;
 	const fileExtension = getFileExtension(display);
@@ -102,74 +142,5 @@ export function determineCodeFileLanguage(item: ObjectItem): SupportedLanguage {
 		}
 	}
 
-	switch (fileExtension) {
-		case "js":
-		case "mjs":
-		case "cjs":
-			return "javascript";
-		case "ts":
-		case "tsx":
-			return "typescript";
-		case "py":
-			return "python";
-		case "java":
-			return "java";
-		case "c":
-			return "c";
-		case "cpp":
-			return "cpp";
-		case "cs":
-			return "csharp";
-		case "go":
-			return "go";
-		case "rs":
-			return "rust";
-		case "php":
-			return "php";
-		case "html":
-		case "htm":
-			return "html";
-		case "css":
-			return "css";
-		case "json":
-		case "jsonc":
-			return "json";
-		case "xml":
-			return "xml";
-		case "yaml":
-		case "yml":
-			return "yaml";
-		case "md":
-			return "markdown";
-		case "sql":
-			return "sql";
-		case "sh":
-			return "bash";
-		case "rb":
-			return "ruby";
-		case "swift":
-			return "swift";
-		case "kt":
-			return "kotlin";
-		case "vue":
-			return "vue";
-		case "svelte":
-			return "svelte";
-		case "scss":
-		case "sass":
-			return "scss";
-		case "less":
-			return "less";
-		case "toml":
-			return "toml";
-		case "ini":
-			return "ini";
-		case "env":
-			return "dotenv";
-		case "hcl":
-		case "tf":
-			return "hcl";
-		default:
-			return "text";
-	}
+	return EXTENSION_LANGUAGES[fileExtension] ?? "text";
 }

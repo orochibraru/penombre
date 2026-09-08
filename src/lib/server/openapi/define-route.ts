@@ -13,6 +13,108 @@ function formatZodErrors(result: {
 		.join(", ");
 }
 
+/** Either the parsed value, or the error Response to return instead. */
+type ParseOutcome<T> = { data: T } | { response: Response };
+
+/** Validate `value` against `schema`, turning a failure into an error Response. */
+function parseOrRespond<T extends z.ZodType>(
+	schema: T,
+	value: unknown,
+	toResponse: (message: string) => Response,
+): ParseOutcome<z.infer<T>> {
+	const result = schema.safeParse(value);
+	if (!result.success) {
+		return { response: toResponse(formatZodErrors(result)) };
+	}
+	return { data: result.data };
+}
+
+function parseQueryParams<T extends z.ZodType>(
+	schema: T,
+	url: URL,
+): ParseOutcome<z.infer<T>> {
+	const queryObj: Record<string, string> = {};
+	for (const [key, value] of url.searchParams.entries()) {
+		queryObj[key] = value;
+	}
+	return parseOrRespond(schema, queryObj, (message) =>
+		Http.BadRequest(`Invalid query parameters: ${message}`),
+	);
+}
+
+async function parseJsonBody<T extends z.ZodType>(
+	schema: T,
+	request: Request,
+): Promise<ParseOutcome<z.infer<T>>> {
+	let rawBody: unknown = {};
+	try {
+		rawBody = await request.json();
+	} catch {
+		// No body or empty body — fall back to empty object so that
+		// routes with all-optional fields (e.g. DELETE) work without a body.
+	}
+	return parseOrRespond(schema, rawBody, (message) =>
+		Http.UnprocessableEntity(`Invalid request body: ${message}`),
+	);
+}
+
+/**
+ * Validate path params, query params and JSON body against the route's schemas.
+ * Returns the first error Response, or the parsed values.
+ */
+async function validateRequest<
+	TParams extends z.ZodType | undefined,
+	TQuery extends z.ZodType | undefined,
+	TBody extends z.ZodType | undefined,
+>(
+	config: {
+		params?: TParams;
+		query?: TQuery;
+		body?: TBody;
+		isFormData?: boolean;
+	},
+	event: RequestEvent,
+): Promise<
+	| { response: Response }
+	| {
+			params: InferOrUndefined<TParams>;
+			query: InferOrUndefined<TQuery>;
+			body: InferOrUndefined<TBody>;
+	  }
+> {
+	let params = undefined as InferOrUndefined<TParams>;
+	if (config.params) {
+		const result = parseOrRespond(config.params, event.params, (message) =>
+			Http.BadRequest(`Invalid path parameters: ${message}`),
+		);
+		if ("response" in result) {
+			return result;
+		}
+		params = result.data as InferOrUndefined<TParams>;
+	}
+
+	let query = undefined as InferOrUndefined<TQuery>;
+	if (config.query) {
+		const result = parseQueryParams(config.query, event.url);
+		if ("response" in result) {
+			return result;
+		}
+		query = result.data as InferOrUndefined<TQuery>;
+	}
+
+	// FormData routes parse their own body inside the handler
+	let body = undefined as InferOrUndefined<TBody>;
+	if (config.body && !config.isFormData) {
+		const result = await parseJsonBody(config.body, event.request);
+		if ("response" in result) {
+			return result;
+		}
+		body = result.data as InferOrUndefined<TBody>;
+	}
+
+	return { params, query, body };
+}
+
 interface RouteConfig<
 	TParams extends z.ZodType | undefined = undefined,
 	TQuery extends z.ZodType | undefined = undefined,
@@ -130,57 +232,15 @@ export function defineRoute<
 					return Http.Unauthorized();
 				}
 
-				// Validate path params
-				let parsedParams = undefined as InferOrUndefined<TParams>;
-				if (config.params) {
-					const result = config.params.safeParse(event.params);
-					if (!result.success) {
-						return Http.BadRequest(
-							`Invalid path parameters: ${formatZodErrors(result)}`,
-						);
-					}
-					parsedParams = result.data as InferOrUndefined<TParams>;
-				}
-
-				// Validate query params
-				let parsedQuery = undefined as InferOrUndefined<TQuery>;
-				if (config.query) {
-					const queryObj: Record<string, string> = {};
-					for (const [key, value] of event.url.searchParams.entries()) {
-						queryObj[key] = value;
-					}
-					const result = config.query.safeParse(queryObj);
-					if (!result.success) {
-						return Http.BadRequest(
-							`Invalid query parameters: ${formatZodErrors(result)}`,
-						);
-					}
-					parsedQuery = result.data as InferOrUndefined<TQuery>;
-				}
-
-				// Validate request body (skip for FormData routes)
-				let parsedBody = undefined as InferOrUndefined<TBody>;
-				if (config.body && !config.isFormData) {
-					let rawBody: unknown = {};
-					try {
-						rawBody = await event.request.json();
-					} catch {
-						// No body or empty body — fall back to empty object so that
-						// routes with all-optional fields (e.g. DELETE) work without a body.
-					}
-					const result = config.body.safeParse(rawBody);
-					if (!result.success) {
-						return Http.UnprocessableEntity(
-							`Invalid request body: ${formatZodErrors(result)}`,
-						);
-					}
-					parsedBody = result.data as InferOrUndefined<TBody>;
+				const validated = await validateRequest(config, event);
+				if ("response" in validated) {
+					return validated.response;
 				}
 
 				return callback({
-					params: parsedParams,
-					query: parsedQuery,
-					body: parsedBody,
+					params: validated.params,
+					query: validated.query,
+					body: validated.body,
 					event,
 					// biome-ignore lint/style/noNonNullAssertion: User is guaranteed to exist at this point if requireAuth !== false
 					user: event.locals.user!,

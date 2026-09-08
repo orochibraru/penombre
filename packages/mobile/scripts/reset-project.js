@@ -6,11 +6,10 @@
  * You can remove the `reset-project` script from package.json and safely delete this file after running it.
  */
 
+import fs from "node:fs";
+import path from "node:path";
 import process from "node:process";
-
-const fs = require("node:fs");
-const path = require("node:path");
-const readline = require("node:readline");
+import readline from "node:readline";
 
 const root = process.cwd();
 const oldDirs = ["app", "components", "hooks", "constants", "scripts"];
@@ -105,7 +104,7 @@ rl.question(
 	(answer) => {
 		const userInput = answer.trim().toLowerCase() || "y";
 		if (userInput === "y" || userInput === "n") {
-			moveDirectories(userInput).finally(() => rl.close());
+			void moveDirectories(userInput).finally(() => rl.close());
 		} else {
 			console.log("❌ Invalid input. Please enter 'Y' or 'N'.");
 			rl.close();

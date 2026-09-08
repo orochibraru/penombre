@@ -274,11 +274,8 @@ describe("getObjectStream", () => {
 
 describe("getAvailableDiskSpace", () => {
 	test("returns a positive number", () => {
-		const space = driver.getAvailableDiskSpace();
-		// May be undefined if statfsSync and df both fail in CI, but should be >= 0
-		if (space !== undefined) {
-			expect(space).toBeGreaterThanOrEqual(0);
-		}
+		// Falls back to 0 if statfsSync and df both fail in CI
+		expect(driver.getAvailableDiskSpace()).toBeGreaterThanOrEqual(0);
 	});
 
 	test("works even when called on a newly created root", async () => {
@@ -286,9 +283,6 @@ describe("getAvailableDiskSpace", () => {
 		await writeFile(join(tmpDir, ".keep"), "");
 		const d = new LocalStorageDriver(newRoot);
 		await d.ensureRootExists();
-		const space = d.getAvailableDiskSpace();
-		if (space !== undefined) {
-			expect(space).toBeGreaterThanOrEqual(0);
-		}
+		expect(d.getAvailableDiskSpace()).toBeGreaterThanOrEqual(0);
 	});
 });

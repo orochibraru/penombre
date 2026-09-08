@@ -90,6 +90,7 @@
 			},
 			"style": {
 				"noContinue": "off",
+				"noEnum": "off",
 				"noDefaultExport": "off",
 				"noExcessiveClassesPerFile": "off",
 				"noExcessiveLinesPerFile": {

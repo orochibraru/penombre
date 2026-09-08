@@ -21,6 +21,14 @@ const oauthProviderSchema = z.object({
 	enabled: z.boolean().default(true),
 });
 
+const REQUIRED_SMTP_FIELDS = [
+	"host",
+	"port",
+	"user",
+	"password",
+	"from",
+] as const;
+
 const penombreConfigSchema = z
 	.object({
 		appName: z.string().default(defaultConfigValues.appName),
@@ -99,37 +107,15 @@ const penombreConfigSchema = z
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
-			if (!config.smtp.host) {
-				ctx.addIssue({
-					code: "custom",
-					message: "SMTP 'host' field must be defined when SMTP is configured",
-				});
+			for (const field of REQUIRED_SMTP_FIELDS) {
+				if (!config.smtp[field]) {
+					ctx.addIssue({
+						code: "custom",
+						message: `SMTP '${field}' field must be defined when SMTP is configured`,
+					});
+				}
 			}
-			if (!config.smtp.port) {
-				ctx.addIssue({
-					code: "custom",
-					message: "SMTP 'port' field must be defined when SMTP is configured",
-				});
-			}
-			if (!config.smtp.user) {
-				ctx.addIssue({
-					code: "custom",
-					message: "SMTP 'user' field must be defined when SMTP is configured",
-				});
-			}
-			if (!config.smtp.password) {
-				ctx.addIssue({
-					code: "custom",
-					message:
-						"SMTP 'password' field must be defined when SMTP is configured",
-				});
-			}
-			if (!config.smtp.from) {
-				ctx.addIssue({
-					code: "custom",
-					message: "SMTP 'from' field must be defined when SMTP is configured",
-				});
-			}
+			// `secure` is a boolean, so `false` is a valid value — only absence is an error
 			if (config.smtp.secure === undefined) {
 				ctx.addIssue({
 					code: "custom",
@@ -171,11 +157,8 @@ export function validatePenombreConfig(config: unknown): PenombreConfig {
 	return penombreConfigSchema.parse(config);
 }
 
-export function getPenombreConfig(): PenombreConfig {
-	// Oauth config env variable format: OAUTH_<PROVIDER_NAME>_CLIENT_ID, OAUTH_<PROVIDER_NAME>_CLIENT_SECRET, OAUTH_<PROVIDER_NAME>_DISCOVERY_URL
-	const oauthProviders: OAuthProviderInput[] = [];
-
-	// Extract unique provider names from env vars
+/** Provider names appearing in any OAUTH_<NAME>_<FIELD> env var */
+function collectOAuthProviderNames(): Set<string> {
 	const providerNames = new Set<string>();
 	for (const key of Object.keys(env)) {
 		const match = key.match(
@@ -185,126 +168,149 @@ export function getPenombreConfig(): PenombreConfig {
 			providerNames.add(match[1]);
 		}
 	}
+	return providerNames;
+}
 
-	// Build provider configs from env vars
-	for (const providerName of providerNames) {
+/**
+ * Build OAuth provider configs from env vars.
+ * Format: OAUTH_<PROVIDER_NAME>_CLIENT_ID, OAUTH_<PROVIDER_NAME>_CLIENT_SECRET, ...
+ * Providers missing a client id, secret or discovery URL are skipped.
+ */
+function parseOAuthProviders(): OAuthProviderInput[] {
+	const oauthProviders: OAuthProviderInput[] = [];
+
+	for (const providerName of collectOAuthProviderNames()) {
 		const clientId = env[`OAUTH_${providerName}_CLIENT_ID`];
 		const clientSecret = env[`OAUTH_${providerName}_CLIENT_SECRET`];
 		const discoveryUrl = env[`OAUTH_${providerName}_DISCOVERY_URL`];
-		const enabled = env[`OAUTH_${providerName}_ENABLED`] !== "false";
-		const scopesEnv = env[`OAUTH_${providerName}_SCOPES`];
-		const prettyName = env[`OAUTH_${providerName}_PRETTY_NAME`];
-		const pkceEnv = env[`OAUTH_${providerName}_PKCE`];
-		const pkce = pkceEnv === undefined ? true : pkceEnv === "true";
-		const scopes = scopesEnv
-			? scopesEnv.split(",").map((s) => s.trim())
-			: undefined;
 
 		// Skip incomplete provider configs
 		if (!(clientId && clientSecret && discoveryUrl)) {
 			continue;
 		}
 
+		const scopesEnv = env[`OAUTH_${providerName}_SCOPES`];
+		const scopes = scopesEnv
+			? scopesEnv.split(",").map((s) => s.trim())
+			: undefined;
+		const pkceEnv = env[`OAUTH_${providerName}_PKCE`];
+
 		oauthProviders.push({
 			name: providerName.toLowerCase().replace(/_/g, "-"),
 			clientId,
 			clientSecret,
 			discoveryUrl,
-			prettyName,
-			pkce,
-			enabled,
+			prettyName: env[`OAUTH_${providerName}_PRETTY_NAME`],
+			pkce: pkceEnv === undefined ? true : pkceEnv === "true",
+			enabled: env[`OAUTH_${providerName}_ENABLED`] !== "false",
 			...(scopes && { scopes }),
 		});
 	}
 
-	const redisUrl = env.REDIS_URL;
+	return oauthProviders;
+}
 
-	const smtpEnabled = env.SMTP_ENABLED === "true";
-
-	const storageBackend = env.STORAGE_BACKEND === "s3" ? "s3" : "local";
-
-	const s3Bucket = env.S3_BUCKET;
-	const s3AccessKeyId = env.S3_ACCESS_KEY_ID;
-	const s3SecretAccessKey = env.S3_SECRET_ACCESS_KEY;
-	const anyS3VariableConfigured =
-		s3Bucket || s3AccessKeyId || s3SecretAccessKey;
-
-	const anyDbVariableConfigured = env.DATABASE_URL;
-
-	const anyAuthVariableConfigured =
+function resolveAuthConfig() {
+	const configured =
 		env.ENABLE_EMAIL_SIGNIN ||
 		env.ENABLE_OAUTH_SIGNIN ||
 		env.MIN_PASSWORD_LENGTH;
+	if (!configured) {
+		return defaultConfigValues.auth;
+	}
 
-	const environmentVariables = {
+	const oauthProviders = parseOAuthProviders();
+	return {
+		enableEmailSignIn: env.ENABLE_EMAIL_SIGNIN !== "false",
+		enableOAuthSignIn: env.ENABLE_OAUTH_SIGNIN !== "false",
+		minPasswordLength: env.MIN_PASSWORD_LENGTH
+			? Number.parseInt(env.MIN_PASSWORD_LENGTH, 10)
+			: defaultConfigValues.auth.minPasswordLength,
+		secret: env.AUTH_SECRET || defaultConfigValues.auth.secret,
+		oauthProviders:
+			oauthProviders.length > 0
+				? oauthProviders
+				: defaultConfigValues.auth.oauthProviders,
+		defaultAdminCredentials: {
+			email:
+				env.ADMIN_EMAIL ||
+				defaultConfigValues.auth.defaultAdminCredentials.email,
+			password:
+				env.ADMIN_PASSWORD ||
+				defaultConfigValues.auth.defaultAdminCredentials.password,
+		},
+	};
+}
+
+function resolveS3Config() {
+	const bucket = env.S3_BUCKET;
+	const accessKeyId = env.S3_ACCESS_KEY_ID;
+	const secretAccessKey = env.S3_SECRET_ACCESS_KEY;
+
+	if (!(bucket || accessKeyId || secretAccessKey)) {
+		return;
+	}
+
+	return {
+		endpoint: env.S3_ENDPOINT || undefined,
+		region: env.S3_REGION || "us-east-1",
+		bucket,
+		accessKeyId,
+		secretAccessKey,
+		pathStyle: env.S3_PATH_STYLE === "true",
+	};
+}
+
+function resolveSmtpConfig() {
+	if (env.SMTP_ENABLED !== "true") {
+		return defaultConfigValues.smtp;
+	}
+
+	return {
+		enabled: true,
+		host: env.SMTP_HOST,
+		port: env.SMTP_PORT ? Number.parseInt(env.SMTP_PORT, 10) : undefined,
+		user: env.SMTP_USER,
+		password: env.SMTP_PASSWORD,
+		from: env.SMTP_FROM,
+		secure: env.SMTP_SECURE === "true",
+	};
+}
+
+function resolveLogLevel() {
+	const level = env.LOG_LEVEL;
+	return level === "debug" ||
+		level === "info" ||
+		level === "warn" ||
+		level === "error"
+		? level
+		: defaultConfigValues.logLevel;
+}
+
+function resolveLogFormat() {
+	const format = env.LOG_FORMAT;
+	return format === "console" || format === "json"
+		? format
+		: defaultConfigValues.logFormat;
+}
+
+export function getPenombreConfig(): PenombreConfig {
+	const redisUrl = env.REDIS_URL;
+
+	return validatePenombreConfig({
 		appName: env.APP_NAME || defaultConfigValues.appName,
 		appVersion: env.APP_VERSION || defaultConfigValues.appVersion,
 		environment: env.APP_ENV || defaultConfigValues.environment,
 		origin: env.ORIGIN || defaultConfigValues.origin,
-		logLevel:
-			env.LOG_LEVEL === "debug" ||
-			env.LOG_LEVEL === "info" ||
-			env.LOG_LEVEL === "warn" ||
-			env.LOG_LEVEL === "error"
-				? env.LOG_LEVEL
-				: defaultConfigValues.logLevel,
-		logFormat:
-			env.LOG_FORMAT === "console" || env.LOG_FORMAT === "json"
-				? env.LOG_FORMAT
-				: defaultConfigValues.logFormat,
-		db: anyDbVariableConfigured
-			? {
-					url: env.DATABASE_URL,
-				}
-			: defaultConfigValues.db,
-		auth: anyAuthVariableConfigured
-			? {
-					enableEmailSignIn: env.ENABLE_EMAIL_SIGNIN !== "false",
-					enableOAuthSignIn: env.ENABLE_OAUTH_SIGNIN !== "false",
-					minPasswordLength: env.MIN_PASSWORD_LENGTH
-						? Number.parseInt(env.MIN_PASSWORD_LENGTH, 10)
-						: defaultConfigValues.auth.minPasswordLength,
-					secret: env.AUTH_SECRET || defaultConfigValues.auth.secret,
-					oauthProviders:
-						oauthProviders.length > 0
-							? oauthProviders
-							: defaultConfigValues.auth.oauthProviders,
-					defaultAdminCredentials: {
-						email:
-							env.ADMIN_EMAIL ||
-							defaultConfigValues.auth.defaultAdminCredentials.email,
-						password:
-							env.ADMIN_PASSWORD ||
-							defaultConfigValues.auth.defaultAdminCredentials.password,
-					},
-				}
-			: defaultConfigValues.auth,
+		logLevel: resolveLogLevel(),
+		logFormat: resolveLogFormat(),
+		db: env.DATABASE_URL ? { url: env.DATABASE_URL } : defaultConfigValues.db,
+		auth: resolveAuthConfig(),
 		redis: redisUrl ? { url: redisUrl } : defaultConfigValues.redis,
-		storage: { backend: storageBackend },
-		s3: anyS3VariableConfigured
-			? {
-					endpoint: env.S3_ENDPOINT || undefined,
-					region: env.S3_REGION || "us-east-1",
-					bucket: s3Bucket,
-					accessKeyId: s3AccessKeyId,
-					secretAccessKey: s3SecretAccessKey,
-					pathStyle: env.S3_PATH_STYLE === "true",
-				}
-			: undefined,
-		smtp: smtpEnabled
-			? {
-					enabled: env.SMTP_ENABLED === "true",
-					host: env.SMTP_HOST,
-					port: env.SMTP_PORT ? Number.parseInt(env.SMTP_PORT, 10) : undefined,
-					user: env.SMTP_USER,
-					password: env.SMTP_PASSWORD,
-					from: env.SMTP_FROM,
-					secure: env.SMTP_SECURE === "true",
-				}
-			: defaultConfigValues.smtp,
-	};
-
-	return validatePenombreConfig(environmentVariables);
+		storage: { backend: env.STORAGE_BACKEND === "s3" ? "s3" : "local" },
+		s3: resolveS3Config(),
+		smtp: resolveSmtpConfig(),
+	});
 }
 
 export function isSmtpEnabled(): boolean {

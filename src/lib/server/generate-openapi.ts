@@ -1,6 +1,9 @@
+import { Logger } from "$lib/logger";
 import { auth } from "./auth";
 import { registry } from "./openapi";
 import type { ExternalSpec } from "./openapi/registry";
+
+const logger = new Logger("OpenAPI");
 
 export async function genOpenApiSpec() {
 	const externalSpecs: ExternalSpec[] = [];
@@ -22,7 +25,9 @@ export async function genOpenApiSpec() {
 				tagOverrides: { Default: "Auth" },
 			});
 		}
-	} catch {}
+	} catch (error) {
+		logger.warn("Failed to generate the auth OpenAPI schema:", error);
+	}
 
 	const spec = registry.toOpenAPISpec(externalSpecs);
 	return spec;

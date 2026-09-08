@@ -27,11 +27,6 @@
 
 	const folderId = $derived(`${id}-folder`);
 
-	$effect(() => {
-		if (maxFiles !== undefined && fileCount === undefined) {
-		}
-	});
-
 	let uploading = $state(false);
 
 	const drop = async (

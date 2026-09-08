@@ -33,7 +33,7 @@ export function handleError({ event, error, status }) {
 	}
 }
 
-async function sleep(ms: number) {
+function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 

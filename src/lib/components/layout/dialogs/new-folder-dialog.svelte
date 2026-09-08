@@ -18,7 +18,7 @@
 	let newFolderError: string = $state("");
 	let newFolderName: string = $state(defaultFolderName);
 	let loading: boolean = $state(false);
-	let inputRef: HTMLInputElement = $state(null!);
+	let inputRef: HTMLInputElement = $state(null);
 
 	// Select text when dialog opens
 	$effect(() => {
@@ -27,7 +27,7 @@
 		}
 	});
 
-	async function handleNewFolder(e: SubmitEvent) {
+	function handleNewFolder(e: SubmitEvent) {
 		e.preventDefault();
 		loading = true;
 

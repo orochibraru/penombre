@@ -221,5 +221,7 @@ export class S3StorageDriver implements StorageDriver {
 	}
 
 	/** No-op for S3 — buckets must be created externally. */
-	async ensureRootExists(): Promise<void> {}
+	async ensureRootExists(): Promise<void> {
+		// no-op: S3 buckets must be created externally
+	}
 }

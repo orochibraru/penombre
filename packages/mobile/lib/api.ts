@@ -57,11 +57,11 @@ client.use({
 
 		return request;
 	},
-	async onResponse({ response }) {
+	onResponse({ response }) {
 		console.debug(`API Response: ${response.status} ${response.statusText}`);
 		return response;
 	},
-	async onError({ error }) {
+	onError({ error }) {
 		if (error instanceof Error) {
 			console.debug(`API Error: ${error.message}`);
 			return new Response(error.message, { status: 500 });

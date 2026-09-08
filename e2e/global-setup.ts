@@ -74,7 +74,7 @@ async function cleanupTestData(baseURL: string): Promise<void> {
 	// Delete active e2e-* folders in the drive root
 	const listResp = await fetch(`${baseURL}/api/v1/storage/folder`, { headers });
 	const listData = (await listResp.json()) as {
-		data: Array<{ id: string; name: string }>;
+		data?: Array<{ id: string; name: string }>;
 	};
 	const activeFolders = (listData.data ?? []).filter((f) =>
 		f.name?.startsWith("e2e-"),
@@ -92,7 +92,7 @@ async function cleanupTestData(baseURL: string): Promise<void> {
 		headers,
 	});
 	const trashData = (await trashResp.json()) as {
-		data: Array<{ id: string; name: string }>;
+		data?: Array<{ id: string; name: string }>;
 	};
 	const trashedFolders = (trashData.data ?? []).filter((f) =>
 		f.name?.startsWith("e2e-"),

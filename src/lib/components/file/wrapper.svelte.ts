@@ -13,7 +13,6 @@ import {
 import type { MediaQuery } from "svelte/reactivity";
 import { toast } from "svelte-sonner";
 import { dev } from "$app/environment";
-import { invalidate } from "$app/navigation";
 import { page } from "$app/state";
 import { api, type ObjectItem, type ObjectList } from "$lib/api";
 import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
@@ -80,7 +79,7 @@ export function getDeleteFolderPromise(
 			params: { path: { path: folderId } },
 			body: { parentFolderId: parentId },
 		})
-		.then(async ({ error }) => {
+		.then(({ error }) => {
 			if (error) {
 				callbacks.onError();
 				throw new Error("Failed to delete folder");
@@ -104,7 +103,7 @@ export function getTrashFolderPromise(
 			params: { path: { path: folderId } },
 			body: { isTrashed: true, parentFolderId: parentId },
 		})
-		.then(async ({ error }) => {
+		.then(({ error }) => {
 			if (error) {
 				callbacks.onError();
 				throw new Error("Failed to move folder to trash");
@@ -121,7 +120,7 @@ export function getDeleteForeverPromise(
 		.DELETE("/api/v1/storage/file/{id}", {
 			params: { path: { id: encodeURIComponent(itemPath) } },
 		})
-		.then(async ({ error }) => {
+		.then(({ error }) => {
 			if (error) {
 				callbacks.onError();
 				throw new Error("Failed to delete file");
@@ -146,7 +145,7 @@ export function getTrashFilePromise(
 			params: { path: { id: encodeURIComponent(fileName) }, query: { folder } },
 			body: { isTrashed: true },
 		})
-		.then(async ({ error }) => {
+		.then(({ error }) => {
 			if (error) {
 				callbacks.onError();
 				throw new Error("Failed to trash file");
@@ -192,7 +191,7 @@ export function getRestoreFilePromise(
 			params: { path: { id: encodeURIComponent(fileName) }, query: { folder } },
 			body: { isTrashed: false },
 		})
-		.then(async ({ error }) => {
+		.then(({ error }) => {
 			if (error) {
 				callbacks.onError();
 				throw new Error("Failed to restore file");
@@ -218,7 +217,7 @@ export function getDuplicateFilePromise(
 		.POST("/api/v1/storage/file/{id}/duplicate", {
 			params: { path: { id: encodeURIComponent(fullPath) } },
 		})
-		.then(async ({ error }) => {
+		.then(({ error }) => {
 			if (error) {
 				callbacks.onError();
 				throw new Error("Failed to duplicate file");
@@ -506,184 +505,57 @@ export async function handleOpenItem(
 }
 
 // ================================
-// Bulk Operations
+// Drag-and-drop Move
 // ================================
 
-export async function executeRestoreOperation(
-	checkedItems: Record<string, string | false>,
-	callbacks: {
-		setRestoringItem: (v: boolean) => void;
-		setConfirmRestoreOpen: (v: boolean) => void;
-		setActionsContextOpen: (v: boolean) => void;
-		clearCheckedItems: () => void;
-		setActionableItem: (v: ObjectItem | undefined) => void;
-	},
-): Promise<void> {
-	const keys = Object.keys(checkedItems);
-	if (keys.length === 0) {
-		return;
+/** Folder a dragged item currently lives in */
+export function resolveItemParent(
+	item: ObjectItem,
+	currentFolder: string,
+): string {
+	if (item.parentKey) {
+		return item.parentKey;
 	}
-
-	const promises: Promise<void>[] = [];
-	const count = keys.length;
-
-	callbacks.setActionsContextOpen(false);
-
-	for (const checkedItem of keys) {
-		callbacks.setRestoringItem(true);
-		const itemPath = page.params.path
-			? `${page.params.path}/${checkedItem}`
-			: checkedItem;
-
-		if (itemPath.endsWith("/")) {
-			promises.push(
-				getRestoreFolderPromise(itemPath, {
-					onSuccess: () => {
-						callbacks.setConfirmRestoreOpen(false);
-						callbacks.setRestoringItem(false);
-					},
-					onError: () => callbacks.setRestoringItem(false),
-				}),
-			);
-		} else {
-			promises.push(
-				getRestoreFilePromise(itemPath, {
-					onSuccess: () => {
-						callbacks.setConfirmRestoreOpen(false);
-						callbacks.setRestoringItem(false);
-					},
-					onError: () => callbacks.setRestoringItem(false),
-				}),
-			);
-		}
+	if (item.key.includes("/")) {
+		return item.key.split("/").slice(0, -1).join("/");
 	}
+	return currentFolder;
+}
 
-	let failures = 0;
-
-	toast.promise(
-		Promise.all(promises)
-			.catch(() => {
-				failures += 1;
-			})
-			.finally(async () => {
-				callbacks.clearCheckedItems();
-				callbacks.setActionsContextOpen(false);
-				callbacks.setActionableItem(undefined);
-				await invalidate("app:files");
-			}),
-		{
-			loading: m.toast_restoring_items({ count: String(count) }),
-			success: m.toast_items_restored({ count: String(count) }),
-			error: m.toast_restore_items_error({ count: String(failures) }),
-		},
+/** True when a folder is being dropped onto itself or one of its descendants */
+export function movesIntoItself(
+	fullItemKey: string,
+	destinationFolder: string,
+): boolean {
+	const folderPath = fullItemKey.replace(/\/$/, "");
+	return (
+		destinationFolder === folderPath ||
+		destinationFolder.startsWith(`${folderPath}/`)
 	);
 }
 
-export async function executeDeleteOperation(
-	checkedItems: Record<string, string | false>,
-	isTrash: boolean,
-	callbacks: {
-		setDeletingItem: (v: boolean) => void;
-		setConfirmDeleteOpen: (v: boolean) => void;
-		setActionsContextOpen: (v: boolean) => void;
-		clearCheckedItems: () => void;
-		setActionableItem: (v: ObjectItem | undefined) => void;
-	},
-): Promise<void> {
-	const keys = Object.keys(checkedItems);
-	if (keys.length === 0) {
-		return;
+/** Folders and files move through different endpoints */
+export function requestMove(
+	item: ObjectItem,
+	fullItemKey: string,
+	destinationFolder: string,
+): Promise<{ error?: unknown; response: Response }> {
+	if (item.type !== "folder") {
+		return api.POST("/api/v1/storage/file/{id}/move", {
+			params: { path: { id: encodeURIComponent(fullItemKey) } },
+			body: { destination: destinationFolder },
+		});
 	}
 
-	const promises: Promise<void>[] = [];
-	const amount = keys.length;
+	const folderId = fullItemKey.split("/").pop() || fullItemKey;
+	const parentId = fullItemKey.includes("/")
+		? fullItemKey.split("/").slice(0, -1).join("/")
+		: undefined;
 
-	callbacks.setActionsContextOpen(false);
-
-	for (const checkedItem of keys) {
-		callbacks.setDeletingItem(true);
-		// On trash page, items already contain full paths; otherwise prepend current folder path
-		const itemPath =
-			isTrash || !page.params.path
-				? checkedItem
-				: `${page.params.path}/${checkedItem}`;
-
-		const isFolder = itemPath.endsWith("/");
-
-		if (isFolder) {
-			if (isTrash) {
-				promises.push(
-					getDeleteFolderPromise(itemPath, {
-						onSuccess: () => {
-							callbacks.setConfirmDeleteOpen(false);
-							callbacks.setDeletingItem(false);
-						},
-						onError: () => callbacks.setDeletingItem(false),
-					}),
-				);
-			} else {
-				promises.push(
-					getTrashFolderPromise(itemPath, {
-						onSuccess: () => {
-							callbacks.setConfirmDeleteOpen(false);
-							callbacks.setDeletingItem(false);
-						},
-						onError: () => callbacks.setDeletingItem(false),
-					}),
-				);
-			}
-			continue;
-		}
-
-		if (isTrash) {
-			promises.push(
-				getDeleteForeverPromise(itemPath, {
-					onSuccess: () => {
-						callbacks.setConfirmDeleteOpen(false);
-						callbacks.setDeletingItem(false);
-					},
-					onError: () => callbacks.setDeletingItem(false),
-				}),
-			);
-			continue;
-		}
-
-		promises.push(
-			getTrashFilePromise(itemPath, {
-				onSuccess: () => {
-					callbacks.setConfirmDeleteOpen(false);
-					callbacks.setDeletingItem(false);
-				},
-				onError: () => callbacks.setDeletingItem(false),
-			}),
-		);
-	}
-
-	let failures = 0;
-
-	toast.promise(
-		Promise.all(promises)
-			.catch(() => {
-				failures += 1;
-			})
-			.finally(async () => {
-				callbacks.clearCheckedItems();
-				callbacks.setActionsContextOpen(false);
-				callbacks.setActionableItem(undefined);
-				await invalidate("app:files");
-			}),
-		{
-			loading: isTrash
-				? m.toast_deleting_permanently({ count: String(amount) })
-				: m.toast_moving_to_trash({ count: String(amount) }),
-			success: isTrash
-				? m.toast_items_deleted_permanently({ count: String(amount) })
-				: m.toast_items_moved_to_trash({ count: String(amount) }),
-			error: isTrash
-				? m.toast_delete_permanently_error({ count: String(failures) })
-				: m.toast_move_to_trash_error({ count: String(failures) }),
-		},
-	);
+	return api.POST("/api/v1/storage/folder/{path}/move", {
+		params: { path: { path: folderId } },
+		body: { parentFolderId: parentId, destination: destinationFolder },
+	});
 }
 
 // ================================

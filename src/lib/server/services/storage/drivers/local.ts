@@ -1,8 +1,10 @@
+// biome-ignore-all lint/suspicious/useAwait: methods implement the async StorageDriver contract; `async` keeps the Promise return type without wrapping every result.
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { mkdir, readdir, rm, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { Logger } from "$lib/logger";
+import { availableDiskSpace } from "../disk-space";
 import type { StorageDriver } from "../driver";
 
 const logger = new Logger("LocalStorageDriver");
@@ -73,7 +75,9 @@ export class LocalStorageDriver implements StorageDriver {
 						if (entry.isDirectory()) {
 							await rm(entryPath, { recursive: true, force: true });
 						} else {
-							await unlink(entryPath).catch(() => {});
+							await unlink(entryPath).catch(() => {
+								// best-effort: the entry may already be gone
+							});
 						}
 					}),
 				);
@@ -81,7 +85,9 @@ export class LocalStorageDriver implements StorageDriver {
 			return;
 		}
 
-		await unlink(targetPath).catch(() => {});
+		await unlink(targetPath).catch(() => {
+			// best-effort: the object may already be gone
+		});
 	}
 
 	async copyObject(src: string, dest: string): Promise<void> {
@@ -129,51 +135,6 @@ export class LocalStorageDriver implements StorageDriver {
 	}
 
 	getAvailableDiskSpace(): number {
-		try {
-			// biome-ignore lint/suspicious/noExplicitAny: statfsSync types are complex
-			const anyFs = fs as unknown as { statfsSync?: (path: string) => any };
-			if (typeof anyFs.statfsSync === "function") {
-				const sfs = anyFs.statfsSync(this.storagePath);
-				const blockSize = Number(sfs?.bsize ?? sfs?.frsize ?? 4096);
-				const availBlocks = Number(sfs?.bavail ?? sfs?.bfree ?? 0);
-				if (Number.isFinite(blockSize) && Number.isFinite(availBlocks)) {
-					return blockSize * availBlocks;
-				}
-			}
-		} catch (err) {
-			logger.warn("statfsSync unavailable or failed:", err);
-		}
-
-		try {
-			const proc = Bun.spawnSync(["df", "-k", this.storagePath]);
-			const output = new TextDecoder().decode(proc.stdout || new Uint8Array());
-			const lines = output.trim().split("\n");
-			if (lines.length >= 2) {
-				if (!(lines[0] && lines[1])) {
-					throw new Error("df output parsing error");
-				}
-				const headers = lines[0].trim().split(/\s+/);
-				const values = lines[1].trim().split(/\s+/);
-				let availIdx = headers.findIndex((h) => /avail|available/i.test(h));
-				if (availIdx === -1) {
-					const mountedIdx = headers.findIndex((h) => /mounted/i.test(h));
-					if (mountedIdx > 0) {
-						availIdx = mountedIdx - 2;
-					} else if (values.length >= 4) {
-						availIdx = values.length - 2;
-					}
-				}
-				const availStr = values[availIdx];
-				const availKiB = availStr ? Number.parseInt(availStr, 10) : Number.NaN;
-				if (Number.isFinite(availKiB)) {
-					return availKiB * 1024;
-				}
-			}
-			logger.warn("Failed to parse df output:", output);
-		} catch (err) {
-			logger.warn("df command failed:", err);
-		}
-
-		return 0;
+		return availableDiskSpace(this.storagePath);
 	}
 }

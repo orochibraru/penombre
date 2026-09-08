@@ -30,17 +30,20 @@
 	let newPassword: string = $state("");
 	let newPasswordConfirm: string = $state("");
 
-	async function passwordChangeHandler(e: SubmitEvent) {
+	function passwordChangeHandler(e: SubmitEvent) {
 		e.preventDefault();
 		loading = true;
 
-		setTimeout(() => {
-			loading = false;
-			changePasswordDialogOpen = false;
-		}, 1000);
+		return new Promise<void>((resolve) => {
+			setTimeout(() => {
+				loading = false;
+				changePasswordDialogOpen = false;
+				resolve();
+			}, 1000);
+		});
 	}
 
-	async function handleChangePassword(e: SubmitEvent) {
+	function handleChangePassword(e: SubmitEvent) {
 		return toast.promise(passwordChangeHandler(e), {
 			loading: m.toast_changing_password(),
 			success: m.toast_password_changed(),
@@ -65,7 +68,7 @@
 		loading = false;
 	}
 
-	async function handleDeleteApiKey(keyId: string) {
+	function handleDeleteApiKey(keyId: string) {
 		return toast.promise(deleteApiKeyHandler(keyId), {
 			loading: m.toast_deleting_api_key(),
 			success: m.toast_api_key_deleted(),
@@ -91,7 +94,7 @@
 		await invalidateAll();
 	}
 
-	async function handleRegisterPasskey() {
+	function handleRegisterPasskey() {
 		return toast.promise(registerPasskey(), {
 			loading: m.toast_registering_passkey(),
 			success: m.toast_passkey_registered(),

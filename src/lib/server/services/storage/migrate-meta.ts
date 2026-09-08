@@ -156,6 +156,145 @@ async function collectFileItems(
 	return result;
 }
 
+type Db = ReturnType<typeof getDb>;
+
+interface UserDir {
+	userId: string;
+	absPath: string;
+}
+
+/** `user-<id>` directories directly under the storage root */
+async function listUserDirs(storagePath: string): Promise<UserDir[]> {
+	try {
+		const entries = (await readdir(storagePath, {
+			withFileTypes: true,
+		})) as unknown as DirEntry[];
+		return entries
+			.filter((e) => e.isDirectory() && e.name.startsWith("user-"))
+			.map((e) => ({
+				userId: e.name.replace("user-", ""),
+				absPath: join(storagePath, e.name),
+			}));
+	} catch {
+		// Unreadable storage root — nothing to migrate
+		return [];
+	}
+}
+
+/**
+ * Keep only directories belonging to users that still exist in the database.
+ * Directories for deleted/orphaned users are silently skipped.
+ */
+async function keepExistingUsers(
+	db: Db,
+	userDirs: UserDir[],
+): Promise<UserDir[]> {
+	const existingUsers = await db
+		.select({ id: user.id })
+		.from(user)
+		.where(
+			inArray(
+				user.id,
+				userDirs.map((d) => d.userId),
+			),
+		);
+	const existingUserIds = new Set(existingUsers.map((u) => u.id));
+	return userDirs.filter((d) => existingUserIds.has(d.userId));
+}
+
+/** Parent folder id for a relative path, or null when it sits at the root */
+function parentIdFor(
+	relPath: string,
+	folderPathToId: Map<string, string>,
+): string | null {
+	if (!relPath.includes("/")) {
+		return null;
+	}
+	return folderPathToId.get(relPath.slice(0, relPath.lastIndexOf("/"))) ?? null;
+}
+
+/** Insert this user's folders, returning the row count and a path → id index */
+async function migrateUserFolders(
+	db: Db,
+	userId: string,
+	userRoot: string,
+): Promise<{ inserted: number; folderPathToId: Map<string, string> }> {
+	const folderPathToId = new Map<string, string>();
+	let insertedCount = 0;
+
+	for (const { relPath, meta } of await collectFolderItems(
+		userRoot,
+		userRoot,
+	)) {
+		const folderId = meta.id;
+		folderPathToId.set(relPath, folderId);
+
+		const [inserted] = await db
+			.insert(folders)
+			.values({
+				id: folderId,
+				name: meta.name ?? folderId,
+				ownerId: userId,
+				path: relPath,
+				parentId: parentIdFor(relPath, folderPathToId),
+				isTrashed: meta.isTrashed ?? false,
+				isStarred: meta.isStarred ?? false,
+				tags: meta.tags ?? [],
+				createdAt: meta.createdAt ? new Date(meta.createdAt) : new Date(),
+			})
+			.onConflictDoNothing()
+			.returning({ id: folders.id });
+
+		if (inserted) {
+			insertedCount++;
+		}
+	}
+
+	return { inserted: insertedCount, folderPathToId };
+}
+
+/** Insert this user's files, returning the row count */
+async function migrateUserFiles(
+	db: Db,
+	userId: string,
+	userRoot: string,
+	folderPathToId: Map<string, string>,
+): Promise<number> {
+	let insertedCount = 0;
+
+	for (const { relPath, absDataPath, meta } of await collectFileItems(
+		userRoot,
+		userRoot,
+	)) {
+		const [inserted] = await db
+			.insert(files)
+			.values({
+				id: meta.id,
+				name: meta.name ?? relPath.split("/").pop() ?? relPath,
+				ownerId: userId,
+				path: relPath,
+				folderId: parentIdFor(relPath, folderPathToId),
+				contentType: meta.contentType ?? "application/octet-stream",
+				category: meta.category ?? "UNKNOWN",
+				size: await getFileSize(absDataPath),
+				isTrashed: meta.isTrashed ?? false,
+				isStarred: meta.isStarred ?? false,
+				tags: meta.tags ?? [],
+				musicDuration: meta.music?.duration ?? null,
+				videoDuration: meta.video?.duration ?? null,
+				createdAt: meta.createdAt ? new Date(meta.createdAt) : new Date(),
+			})
+			.onConflictDoNothing()
+			.returning({ id: files.id });
+
+		if (inserted) {
+			insertedCount++;
+		}
+	}
+
+	return insertedCount;
+}
+
 export async function migrateStorageMeta(
 	storagePath = DEFAULT_STORAGE_PATH,
 ): Promise<void> {
@@ -163,37 +302,13 @@ export async function migrateStorageMeta(
 		return;
 	}
 
-	let userDirs: Array<{ userId: string; absPath: string }>;
-	try {
-		const entries = (await readdir(storagePath, {
-			withFileTypes: true,
-		})) as unknown as DirEntry[];
-		userDirs = entries
-			.filter((e) => e.isDirectory() && e.name.startsWith("user-"))
-			.map((e) => ({
-				userId: e.name.replace("user-", ""),
-				absPath: join(storagePath, e.name),
-			}));
-	} catch {
-		return;
-	}
-
+	const userDirs = await listUserDirs(storagePath);
 	if (userDirs.length === 0) {
 		return;
 	}
 
 	const db = getDb();
-
-	// Only migrate data for users that actually exist in the database.
-	// Directories for deleted/orphaned users are silently skipped.
-	const userIds = userDirs.map((d) => d.userId);
-	const existingUsers = await db
-		.select({ id: user.id })
-		.from(user)
-		.where(inArray(user.id, userIds));
-	const existingUserIds = new Set(existingUsers.map((u) => u.id));
-	const validUserDirs = userDirs.filter((d) => existingUserIds.has(d.userId));
-
+	const validUserDirs = await keepExistingUsers(db, userDirs);
 	if (validUserDirs.length === 0) {
 		return;
 	}
@@ -202,77 +317,13 @@ export async function migrateStorageMeta(
 	let totalFiles = 0;
 
 	for (const { userId, absPath: userRoot } of validUserDirs) {
-		const folderItems = await collectFolderItems(userRoot, userRoot);
-		const folderPathToId = new Map<string, string>();
-
-		for (const { relPath, meta } of folderItems) {
-			const folderId = meta.id;
-			folderPathToId.set(relPath, folderId);
-
-			const parentRelPath = relPath.includes("/")
-				? relPath.slice(0, relPath.lastIndexOf("/"))
-				: null;
-			const parentId = parentRelPath
-				? (folderPathToId.get(parentRelPath) ?? null)
-				: null;
-
-			const [inserted] = await db
-				.insert(folders)
-				.values({
-					id: folderId,
-					name: meta.name ?? folderId,
-					ownerId: userId,
-					path: relPath,
-					parentId,
-					isTrashed: meta.isTrashed ?? false,
-					isStarred: meta.isStarred ?? false,
-					tags: meta.tags ?? [],
-					createdAt: meta.createdAt ? new Date(meta.createdAt) : new Date(),
-				})
-				.onConflictDoNothing()
-				.returning({ id: folders.id });
-
-			if (inserted) {
-				totalFolders++;
-			}
-		}
-
-		const fileItems = await collectFileItems(userRoot, userRoot);
-
-		for (const { relPath, absDataPath, meta } of fileItems) {
-			const parentRelPath = relPath.includes("/")
-				? relPath.slice(0, relPath.lastIndexOf("/"))
-				: null;
-			const folderId = parentRelPath
-				? (folderPathToId.get(parentRelPath) ?? null)
-				: null;
-			const size = await getFileSize(absDataPath);
-
-			const [inserted] = await db
-				.insert(files)
-				.values({
-					id: meta.id,
-					name: meta.name ?? relPath.split("/").pop() ?? relPath,
-					ownerId: userId,
-					path: relPath,
-					folderId,
-					contentType: meta.contentType ?? "application/octet-stream",
-					category: meta.category ?? "UNKNOWN",
-					size,
-					isTrashed: meta.isTrashed ?? false,
-					isStarred: meta.isStarred ?? false,
-					tags: meta.tags ?? [],
-					musicDuration: meta.music?.duration ?? null,
-					videoDuration: meta.video?.duration ?? null,
-					createdAt: meta.createdAt ? new Date(meta.createdAt) : new Date(),
-				})
-				.onConflictDoNothing()
-				.returning({ id: files.id });
-
-			if (inserted) {
-				totalFiles++;
-			}
-		}
+		const { inserted, folderPathToId } = await migrateUserFolders(
+			db,
+			userId,
+			userRoot,
+		);
+		totalFolders += inserted;
+		totalFiles += await migrateUserFiles(db, userId, userRoot, folderPathToId);
 	}
 
 	if (totalFolders > 0 || totalFiles > 0) {
