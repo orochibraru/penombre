@@ -1,7 +1,7 @@
 import { join, resolve } from "node:path";
 import { cwd } from "node:process";
 import { Logger } from "$lib/logger";
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 import type { StorageDriver } from "./driver";
 import { createStorageDriver } from "./driver";
 
@@ -17,7 +17,7 @@ export const DEFAULT_STORAGE_PATH = join(
  * from the application config. Call once per request / service construction.
  */
 export function createUserStorageDriver(userFolder: string): StorageDriver {
-	const config = getPenombreConfig();
+	const config = getConfig();
 
 	if (config.storage.backend === "s3") {
 		if (!config.s3) {

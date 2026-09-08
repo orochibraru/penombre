@@ -1,7 +1,7 @@
-import type { PenombreConfig } from "$lib/server/config";
+import type { AppConfig } from "$lib/server/config";
 
 export function extractFirstOidcProvider(
-	providers: PenombreConfig["auth"]["oauthProviders"],
+	providers: AppConfig["auth"]["oauthProviders"],
 ) {
 	const firstProvider = providers[0];
 

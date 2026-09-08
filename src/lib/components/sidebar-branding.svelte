@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { resolve } from "$app/paths";
-	import { page } from "$app/state";
-	import * as Sidebar from "$lib/components/ui/sidebar/index";
-	import type { PenombreConfig } from "$lib/server/config";
+    import { resolve } from "$app/paths";
+    import { page } from "$app/state";
+    import * as Sidebar from "$lib/components/ui/sidebar/index";
+    import type { PenombreConfig } from "$lib/server/config";
 
-	let config: PenombreConfig = $derived(page.data.config);
+    AppConfig;
+    leAppConfigmbreConfig = $derived(page.data.config);
 </script>
 
 <Sidebar.Menu>

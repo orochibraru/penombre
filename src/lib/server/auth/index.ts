@@ -10,7 +10,7 @@ import { sveltekitCookies } from "better-auth/svelte-kit";
 import { building, dev } from "$app/environment";
 import { getRequestEvent } from "$app/server";
 import { Logger } from "$lib/logger";
-import { getPenombreConfig, isSmtpEnabled } from "$lib/server/config";
+import { getConfig, isSmtpEnabled } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import * as schema from "$lib/server/db/schema";
 import { Email } from "$lib/server/email";
@@ -22,7 +22,7 @@ if (!(process.env.ORIGIN || dev || building)) {
 	throw new Error("ORIGIN environment variable is not set");
 }
 
-const config = getPenombreConfig();
+const config = getConfig();
 
 export const auth = betterAuth({
 	baseURL: config.origin
@@ -30,16 +30,16 @@ export const auth = betterAuth({
 		: dev
 			? "http://localhost:5173"
 			: (() => {
-					throw new Error("ORIGIN environment variable is not set");
-				})(),
+				throw new Error("ORIGIN environment variable is not set");
+			})(),
 	trustedOrigins: dev
 		? [
-				"penombre://*/**",
-				"http://localhost:*/**",
-				"http://192.168.*.*:*/**",
-				"exp://localhost:*/**",
-				"exp://192.168.*.*:*/**",
-			]
+			"penombre://*/**",
+			"http://localhost:*/**",
+			"http://192.168.*.*:*/**",
+			"exp://localhost:*/**",
+			"exp://192.168.*.*:*/**",
+		]
 		: [config.origin],
 	secret: config.auth.secret,
 	basePath: "/api/v1/auth",

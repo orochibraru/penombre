@@ -4,7 +4,7 @@ import { zod4 } from "sveltekit-superforms/adapters";
 import { resolve } from "$app/paths";
 import { api } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 import type { LayoutServerLoad } from "./$types";
 
 export const load: LayoutServerLoad = async ({
@@ -38,7 +38,7 @@ export const load: LayoutServerLoad = async ({
 
 	const isAdmin = locals.user.role === "admin";
 
-	const config = getPenombreConfig();
+	const config = getConfig();
 
 	return {
 		user: locals.user,

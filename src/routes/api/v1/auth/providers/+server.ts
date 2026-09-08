@@ -1,10 +1,10 @@
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 import { Http } from "$lib/server/http";
 import { listAuthProviders } from "$lib/server/openapi/v1/auth";
 
 export const GET = listAuthProviders.handler(() => {
 	try {
-		const config = getPenombreConfig();
+		const config = getConfig();
 		const providers: {
 			name: string;
 			prettyName: string;

@@ -1,5 +1,5 @@
 import { Logger } from "$lib/logger";
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 
 const logger = new Logger("VERSION_CHECK");
 
@@ -43,7 +43,7 @@ export function isNewerVersion(current: string, latest: string): boolean {
 }
 
 export async function checkForUpdate(): Promise<VersionCheckResult> {
-	const config = getPenombreConfig();
+	const config = getConfig();
 	const currentVersion = config.appVersion;
 	logger.debug(`Current app version: ${currentVersion}`);
 

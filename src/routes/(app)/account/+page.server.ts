@@ -1,7 +1,7 @@
 import { fail } from "@sveltejs/kit";
 import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 
 const logger = new Logger("account-page.server.ts");
 
@@ -15,7 +15,7 @@ export const actions = {
 			return fail(400, { error: "Name and email are required" });
 		}
 
-		const config = getPenombreConfig();
+		const config = getConfig();
 
 		// Here you would typically update the user's account details in your database
 		logger.debug("Updating account with name:", name, "and email:", email);

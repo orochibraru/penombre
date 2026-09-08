@@ -1,7 +1,7 @@
 import { createTransport, type Transporter } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import { Logger } from "$lib/logger";
-import { getPenombreConfig } from "$lib/server/config";
+import { getConfig } from "$lib/server/config";
 
 const logger = new Logger("Email");
 
@@ -27,7 +27,7 @@ export class Email {
 		this.subject = subject;
 		this.content = content;
 
-		const smtpConfig = getPenombreConfig().smtp;
+		const smtpConfig = getConfig().smtp;
 		if (!smtpConfig?.enabled) {
 			logger.error("SMTP configuration is not defined or not enabled");
 			throw new Error("SMTP configuration is not defined or not enabled");
