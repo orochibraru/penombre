@@ -133,7 +133,7 @@
 		"test:e2e:ui": "playwright test --ui"
 	},
 	"type": "module",
-	"version": "1.8.19",
+	"version": "1.8.20",
 	"workspaces": [
 		"packages/*"
 	]

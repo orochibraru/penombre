@@ -1,3 +1,20 @@
+## [1.8.20](https://github.com/orochibraru/penombre/compare/v1.8.19...v1.8.20) (2026-09-08)
+
+
+### Features
+
+* new code style rules & org ([#84](https://github.com/orochibraru/penombre/issues/84)) ([db7967d](https://github.com/orochibraru/penombre/commit/db7967d115102405f6b287bc11d777de8cba2ba1))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.20
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.19](https://github.com/orochibraru/penombre/compare/v1.8.18...v1.8.19) (2026-08-29)
 
 ### Bug Fixes
