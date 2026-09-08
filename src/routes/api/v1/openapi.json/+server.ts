@@ -1,5 +1,4 @@
 import { json } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
 
 // Side-effect: registers all route definitions + shared schemas
 import "$lib/server/openapi/routes";
@@ -10,7 +9,7 @@ import type { ExternalOpenAPISpec } from "$lib/server/openapi/registry";
 
 const logger = new Logger("openapi+server");
 
-export const GET: RequestHandler = async () => {
+export const GET = async () => {
 	try {
 		const externalSpecs: Array<{
 			spec: ExternalOpenAPISpec;

@@ -222,7 +222,9 @@
                             <span class="mx-1">•</span>
                         {/if}
                         <a
-                            href="/browse/{item.parentKey || ''}"
+                            href={resolve("/(app)/browse/[...path]", {
+                                path: item.parentKey || "",
+                            })}
                             class="text-muted-foreground/70 hover:text-primary hover:underline"
                             onclick={(e) => e.stopPropagation()}
                         >
@@ -341,7 +343,9 @@
                             <span class="mx-1">•</span>
                         {/if}
                         <a
-                            href="/browse/{item.parentKey || ''}"
+                            href={resolve("/(app)/browse/[...path]", {
+                                path: item.parentKey || "",
+                            })}
                             class="text-muted-foreground/70 hover:text-primary hover:underline"
                             onclick={(e) => e.stopPropagation()}
                         >

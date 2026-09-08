@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from "$app/paths";
 	import LanguageDropdown from "$lib/components/language-dropdown.svelte";
 
 	const { children, data } = $props();
@@ -14,7 +15,7 @@
     </div>
     <div class="flex flex-col gap-4 p-6 md:p-10">
         <div class="flex justify-center gap-2 md:justify-start">
-            <a href="/" class="flex items-center gap-2 font-medium">
+            <a href={resolve("/")} class="flex items-center gap-2 font-medium">
                 <img
                     src="/logo.svg"
                     alt={`${data.config.appName} logo`}

@@ -39,10 +39,15 @@ jobs:
       # hooks autofix in place, so CI fails on any file one of them had to modify,
       # with the diff printed. test-unit is skipped here — the ts-test job below
       # runs it with the Redis service wired up.
+      # fail_fast in .pre-commit-config.yaml is for local commits (stop at
+      # the first problem); --no-fail-fast overrides it here so a CI run
+      # reports every broken hook in one go instead of one per push.
       - name: Run prek
         uses: j178/prek-action@v3.0.0
         env:
           SKIP: test-unit
+        with:
+          extra-args: --all-files --no-fail-fast
 
   docs-check:
     name: Docs (Checks)

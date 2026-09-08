@@ -1,8 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { api } from "$lib/api";
-import type { PageLoad } from "./$types";
 
-export const load: PageLoad = async ({ fetch, url, depends }) => {
+export const load = async ({ fetch, url, depends }) => {
 	// Register dependency for targeted invalidation
 	depends("app:files");
 

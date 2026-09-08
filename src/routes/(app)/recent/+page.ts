@@ -1,8 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { api } from "$lib/api";
-import type { PageLoad } from "./$types";
 
-export const load: PageLoad = async ({ fetch, url, depends }) => {
+export const load = async ({ fetch, url, depends }) => {
 	depends("app:files");
 
 	const { data, error: fetchError } = await api.GET(

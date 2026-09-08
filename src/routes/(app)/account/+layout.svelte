@@ -49,7 +49,7 @@
 <Sidebar.Root variant="inset">
     <Sidebar.Header>
         <SidebarBranding />
-        <Button class="w-full" variant="outline" href="/browse">
+        <Button class="w-full" variant="outline" href={"/browse"}>
             <ArrowLeftIcon />
             {m.back_to_my_drive()}
             <HardDriveIcon />

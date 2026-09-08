@@ -5,14 +5,8 @@ import { resolve } from "$app/paths";
 import { api } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
 import { getConfig } from "$lib/server/config";
-import type { LayoutServerLoad } from "./$types";
 
-export const load: LayoutServerLoad = async ({
-	fetch,
-	url,
-	locals,
-	depends,
-}) => {
+export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:preferences");
 	// Check auth first before making API calls
 

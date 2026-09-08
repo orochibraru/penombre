@@ -1,5 +1,3 @@
-import type { RequestHandler } from "./$types";
-
 const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,7 +28,7 @@ const html = `<!DOCTYPE html>
 </body>
 </html>`;
 
-export const GET: RequestHandler = async () =>
+export const GET = async () =>
 	new Response(html, {
 		headers: {
 			"Content-Type": "text/html; charset=utf-8",

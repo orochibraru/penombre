@@ -21,6 +21,7 @@
 		UsersIcon,
 		VideoIcon,
 	} from "@lucide/svelte";
+	import { resolve } from "$app/paths";
 	import { navigating, page } from "$app/state";
 	import NewFolderDialog from "$lib/components/layout/dialogs/new-folder-dialog.svelte";
 	import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
@@ -272,7 +273,7 @@
         >
             <div class="flex items-center justify-between gap-5">
                 <a
-                    href="/browse"
+                    href={resolve("/browse")}
                     class={cn(
                         bottomNavItemClass,
                         isActive("/browse") ? "text-primary" : "",
@@ -282,7 +283,7 @@
                     {m.home()}
                 </a>
                 <a
-                    href="/recent"
+                    href={resolve("/recent")}
                     class={cn(
                         bottomNavItemClass,
                         isActive("/recent") ? "text-primary" : "",
@@ -329,7 +330,7 @@
                 {/if}
 
                 <a
-                    href="/account"
+                    href={resolve("/account")}
                     class={cn(
                         bottomNavItemClass,
                         isActive("/account") ? "text-primary" : "",
@@ -340,7 +341,7 @@
                 </a>
 
                 <a
-                    href="/settings"
+                    href={resolve("/settings")}
                     class={cn(
                         bottomNavItemClass,
                         isActive("/settings") ? "text-primary" : "",

@@ -1,9 +1,8 @@
 import { error } from "@sveltejs/kit";
 import { api } from "$lib/api";
 import type { BreadCrumb } from "$lib/utils";
-import type { PageLoad } from "./$types";
 
-export const load: PageLoad = async ({ params, fetch, url, depends }) => {
+export const load = async ({ params, fetch, url, depends }) => {
 	depends("app:files");
 
 	const folders = params.path.split("/");
