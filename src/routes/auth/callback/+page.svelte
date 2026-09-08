@@ -2,7 +2,7 @@
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
-	import Spinner from "$lib/components/ui/Spinner.svelte";
+	import Spinner from "$lib/components/ui/spinner.svelte";
 	import { m } from "$lib/paraglide/messages.js";
 
 	// This page exists only to load cookies in the browser

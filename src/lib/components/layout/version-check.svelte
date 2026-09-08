@@ -4,14 +4,13 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import type { PenombreConfig } from "$lib/server/config";
 
-	iAppConfigersionCheckResult;
-	} from "$lib/server/services/version"
+	import type { VersionCheckResult } from "$lib/server/services/version";
 
 	interface Props {
 		version: VersionCheckResult | undefined;
 		config: PenombreConfig;
 	}
-	AppConfig;
+
 	const { version, config }: Props = $props();
 </script>
 

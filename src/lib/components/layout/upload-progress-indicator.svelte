@@ -10,7 +10,7 @@
 	import { beforeNavigate } from "$app/navigation";
 	import { Button } from "$lib/components/ui/button";
 	import { Progress } from "$lib/components/ui/progress";
-	import Spinner from "$lib/components/ui/Spinner.svelte";
+	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
 	import {
 		globalUploadProgress,
@@ -53,6 +53,7 @@
 	// Block SvelteKit client-side navigation while uploading
 	beforeNavigate(({ cancel }) => {
 		if (isUploading) {
+			// biome-ignore lint/suspicious/noAlert: navigation guard must block synchronously
 			const confirmed = window.confirm(m.upload_cancel_warning());
 			if (!confirmed) {
 				cancel();

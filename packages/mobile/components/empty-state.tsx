@@ -18,11 +18,11 @@ export function EmptyState({
 			<Text className="font-semibold text-gray-500 text-lg dark:text-gray-400">
 				{title}
 			</Text>
-			{description && (
+			{description ? (
 				<Text className="px-8 text-center text-gray-400 text-sm dark:text-gray-500">
 					{description}
 				</Text>
-			)}
+			) : null}
 		</View>
 	);
 }

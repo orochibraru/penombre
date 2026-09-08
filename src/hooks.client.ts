@@ -12,7 +12,7 @@ function makeid(length: number) {
 	return result;
 }
 
-export const handleError: HandleClientError = ({ error, event, message }) => {
+export const handleError: HandleClientError = ({ error }) => {
 	const errorId = makeid(24);
 
 	if (dev) {

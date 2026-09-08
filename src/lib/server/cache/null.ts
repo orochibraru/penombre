@@ -6,7 +6,9 @@ import type { CacheBackend } from "./types";
  * Used in dev mode when no Redis is configured to avoid stale data.
  */
 export class NullCacheBackend implements CacheBackend {
-	async get<T>(): Promise<T | undefined> {}
+	async get<T>(): Promise<T | undefined> {
+		// no-op: nothing is ever cached
+	}
 	async set(): Promise<void> {
 		// no-op: nothing is ever cached
 	}

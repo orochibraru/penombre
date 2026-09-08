@@ -96,6 +96,16 @@ repos:
         pass_filenames: false
         files: ^(src/lib/server/db/schema\.ts|scripts/db-diagram\.ts)$
 
+        # tailwint discards explicit file arguments (verified: any path/glob form
+      # reports "0 files scanned"), so it always scans the whole repo. Only the
+      # decision to run it at all is staged-scoped.
+      - id: tailwint
+        name: tailwint --fix
+        entry: bunx tailwint --fix
+        language: system
+        pass_filenames: false
+        files: \.(tsx|jsx|html|vue|svelte|astro|mdx|css)$
+
       - id: biome
         name: biome check --write --unsafe
         entry: bunx biome check --write --unsafe --no-errors-on-unmatched
@@ -113,16 +123,6 @@ repos:
         entry: bunx markdownlint-cli2 --fix
         language: system
         types: [markdown]
-
-      # tailwint discards explicit file arguments (verified: any path/glob form
-      # reports "0 files scanned"), so it always scans the whole repo. Only the
-      # decision to run it at all is staged-scoped.
-      - id: tailwint
-        name: tailwint --fix
-        entry: bunx tailwint --fix
-        language: system
-        pass_filenames: false
-        files: \.(tsx|jsx|html|vue|svelte|astro|mdx|css)$
 
       # `bun.lock` drifting from `package.json` (a manual edit, a bad merge)
       # is otherwise only caught by CI's own `--frozen-lockfile` install,

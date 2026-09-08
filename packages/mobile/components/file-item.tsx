@@ -41,21 +41,21 @@ export function FileItemRow({ item, onPress, onLongPress }: FileItemProps) {
 					{name}
 				</Text>
 				<View className="flex-row items-center gap-2">
-					{!isFolder && item.size != null && (
+					{!isFolder && item.size != null ? (
 						<Text className="text-gray-500 text-xs dark:text-gray-400">
 							{readableFileSize(item.size)}
 						</Text>
-					)}
-					{item.updatedAt && (
+					) : null}
+					{item.updatedAt ? (
 						<Text className="text-gray-400 text-xs dark:text-gray-500">
 							{relativeTime(item.updatedAt)}
 						</Text>
-					)}
+					) : null}
 				</View>
 			</View>
-			{item.metadata.isStarred && (
+			{item.metadata.isStarred ? (
 				<IconSymbol size={16} name="star.fill" color="#EAB308" />
-			)}
+			) : null}
 			<IconSymbol size={18} name="chevron.right" color="#9CA3AF" />
 		</Pressable>
 	);

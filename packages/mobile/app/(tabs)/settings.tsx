@@ -32,11 +32,11 @@ function SettingsRow({
 				<Text className="font-medium text-base text-gray-900 dark:text-gray-100">
 					{title}
 				</Text>
-				{subtitle && (
+				{subtitle ? (
 					<Text className="text-gray-400 text-xs dark:text-gray-500">
 						{subtitle}
 					</Text>
-				)}
+				) : null}
 			</View>
 			{trailing ?? (
 				<IconSymbol size={16} name="chevron.right" color="#9CA3AF" />

@@ -90,8 +90,10 @@
 		if (!onDragStart) {
 			return;
 		}
-		e.dataTransfer!.effectAllowed = "move";
-		e.dataTransfer?.setData("text/plain", item.key);
+		if (e.dataTransfer) {
+			e.dataTransfer.effectAllowed = "move";
+			e.dataTransfer.setData("text/plain", item.key);
+		}
 		onDragStart(item);
 	}
 
@@ -234,11 +236,11 @@
 	function toggleSelectAll(checked: boolean) {
 		isSingleItemAction = false;
 		if (files.list) {
-			files.list.forEach((item) => {
+			for (const item of files.list) {
 				checkedItems[item.key] = checked
 					? item.metadata.name || item.key
 					: false;
-			});
+			}
 		}
 	}
 

@@ -76,7 +76,7 @@ export function getFileExtension(filename: string): string {
 		return filename;
 	}
 
-	return filename.substring(lastDotIndex + 1);
+	return filename.slice(lastDotIndex + 1);
 }
 
 export function isCodeItem(fileName: string) {

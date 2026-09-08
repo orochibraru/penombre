@@ -33,8 +33,8 @@
 	import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
 	import * as Drawer from "$lib/components/ui/drawer/index";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-	import Spinner from "$lib/components/ui/Spinner.svelte";
 	import * as Sidebar from "$lib/components/ui/sidebar/index";
+	import Spinner from "$lib/components/ui/spinner.svelte";
 	import { FileCategoryEnum } from "$lib/file-helpers";
 	import { m } from "$lib/paraglide/messages.js";
 	import { customMenu } from "$lib/store/custom-menu";

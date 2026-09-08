@@ -10,7 +10,7 @@
 	import { page } from "$app/state";
 	import { api, type ObjectItem } from "$lib/api";
 	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import Spinner from "$lib/components/ui/Spinner.svelte";
+	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
 

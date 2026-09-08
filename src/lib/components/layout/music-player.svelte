@@ -13,8 +13,8 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Popover from "$lib/components/ui/popover/index";
 	import { Progress } from "$lib/components/ui/progress/index";
-	import Spinner from "$lib/components/ui/Spinner.svelte";
 	import { Slider } from "$lib/components/ui/slider/index";
+	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
 	import { playableMusic } from "$lib/store/music";
 
@@ -22,6 +22,7 @@
 		$playableMusic = null;
 	}
 
+	// biome-ignore lint/suspicious/noUnassignedVariables: assigned by bind:this in the markup
 	let player: HTMLAudioElement;
 
 	let paused = $state(!!dev);

@@ -77,8 +77,10 @@
 		if (!onDragStart) {
 			return;
 		}
-		e.dataTransfer!.effectAllowed = "move";
-		e.dataTransfer?.setData("text/plain", item.key);
+		if (e.dataTransfer) {
+			e.dataTransfer.effectAllowed = "move";
+			e.dataTransfer.setData("text/plain", item.key);
+		}
 		onDragStart(item);
 	}
 

@@ -205,6 +205,36 @@
 			}
 		},
 		{
+			"includes": ["packages/mobile/**"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noSolidDestructuredProps": "off"
+					},
+					"performance": {
+						"noJsxPropsBind": "off",
+						"useSolidForComponent": "off"
+					},
+					"style": {
+						"noJsxLiterals": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["packages/mobile/metro.config.js"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noGlobalDirnameFilename": "off"
+					},
+					"style": {
+						"noCommonJs": "off"
+					}
+				}
+			}
+		},
+		{
 			"includes": ["packages/docs/**"],
 			"linter": {
 				"rules": {

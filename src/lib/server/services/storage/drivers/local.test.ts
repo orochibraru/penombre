@@ -170,7 +170,9 @@ describe("listObjectKeys", () => {
 		await driver.writeObject("a.txt", new Uint8Array());
 		await driver.writeObject("sub/b.txt", new Uint8Array());
 		const keys = await driver.listObjectKeys();
-		expect(keys.sort()).toEqual(["a.txt", "sub/b.txt"].sort());
+		expect(keys.toSorted((a, b) => a.localeCompare(b)).join()).toBe(
+			"a.txt,sub/b.txt",
+		);
 	});
 
 	test("lists keys under a prefix", async () => {
@@ -178,7 +180,9 @@ describe("listObjectKeys", () => {
 		await driver.writeObject("a/2.txt", new Uint8Array());
 		await driver.writeObject("b/3.txt", new Uint8Array());
 		const keys = await driver.listObjectKeys("a/");
-		expect(keys.sort()).toEqual(["a/1.txt", "a/2.txt"].sort());
+		expect(keys.toSorted((a, b) => a.localeCompare(b)).join()).toBe(
+			"a/1.txt,a/2.txt",
+		);
 	});
 
 	test("returns empty array for non-existent prefix", async () => {

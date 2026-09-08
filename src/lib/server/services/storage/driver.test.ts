@@ -39,7 +39,6 @@ describe("createStorageDriver", () => {
 			local: { storagePath: "/tmp/test" },
 		});
 		expect(driver).toBeInstanceOf(LocalStorageDriver);
-		// biome-ignore lint/suspicious/noExplicitAny: test access
 		expect((driver as any).storagePath).toBe("/tmp/test");
 	});
 
@@ -60,7 +59,6 @@ describe("createStorageDriver", () => {
 			backend: "local",
 			local: { storagePath: "/data/user-abc" },
 		});
-		// biome-ignore lint/suspicious/noExplicitAny: test access
 		expect((driver as any).storagePath).toBe("/data/user-abc");
 	});
 
@@ -77,9 +75,7 @@ describe("createStorageDriver", () => {
 		const driver = createStorageDriver({ backend: "s3", s3: s3Config });
 		expect(driver).toBeInstanceOf(S3StorageDriver);
 		// Verify the bucket and userPrefix were wired into the driver
-		// biome-ignore lint/suspicious/noExplicitAny: test access
 		expect((driver as any).bucket).toBe("penombre");
-		// biome-ignore lint/suspicious/noExplicitAny: test access
 		expect((driver as any).userPrefix).toBe("user-42");
 	});
 });
