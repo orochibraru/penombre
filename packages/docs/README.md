@@ -1,47 +1,53 @@
-# docs-next
+# Docs site
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
-
-It is a Next.js app with [Static Export](https://nextjs.org/docs/app/guides/static-exports) configured.
-
-Run development server:
+A static docs site scaffolded with
+[`@orochibraru/docs`](https://github.com/orochibraru/docs).
 
 ```bash
-npm run dev
-# or
-pnpm dev
-# or
-yarn dev
+bun install
+bun run dev      # http://localhost:5173
+bun run build    # -> build/, plain files, host them anywhere
+bun run check    # svelte-check
+bun test         # the markdown/search logic
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+## Editing it
 
-## Explore
+- **Content** — `docs/*.md`. One file per page, at `/docs/<filename>`; the first
+  `#` heading is the title. `docs/README.md` is the index for people reading the
+  repo and gets no page of its own.
+- **Everything else** — `src/lib/config.ts`: name, description, logo letter,
+  repo URL, sidebar order, the landing page, the footer. Nothing else in `src/`
+  hardcodes a project-specific string.
+- **Icon** — `static/favicon.svg`.
 
-In the project, you can see:
+## Generated assets
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+`static/api.v1.json` and `static/db.svg` are written by root scripts
+(`bun run gen:openapi`, `bun run db:diagram`) — regenerate them there rather
+than editing them here.
 
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
+## Deploying it
 
-### Fumadocs MDX
+CI builds this on every pull request and every push to `main`, as the
+`Docs (Checks)` job of `.github/workflows/code_quality.yaml`. Nothing is
+deployed from there yet (`static/CNAME` holds the domain for whenever it is).
 
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
+### Anywhere else
 
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
+`bun run build` writes `build/`, which is the whole site. Serve it with
+anything; `nginx.conf` (used by the `Dockerfile` here) has the one non-obvious
+bit — a `try_files $uri $uri.html` fallback, since the static adapter writes
+`docs/getting-started.html` rather than `docs/getting-started/index.html`.
 
-## Learn More
+```bash
+docker build -t my-docs . && docker run -p 8080:80 my-docs
+```
 
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
+## API reference page
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+Set `openapi` in `src/lib/config.ts` to the path of a spec you've dropped in
+`static/` (say `/openapi.json`) and `/docs/api` renders it with Swagger UI, with
+a sidebar link to match. Leave it unset and neither exists — you can then delete
+`src/routes/docs/api/`, `src/swagger-ui-dist.d.ts` and the `swagger-ui-dist`
+dependency.

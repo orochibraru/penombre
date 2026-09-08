@@ -1,15 +1,42 @@
 name: Docker
+# Builds docker images for this app via the Bake conf.
+
 on:
   workflow_call:
     inputs:
-      publish:
-        type: boolean
-        default: false
-      image-name:
+      image_name:
+        required: true
+        description: "Subpath and image to push to, example myorg/myimage"
         type: string
-        default: orochibraru/penombre
+      image_tag:
+        required: true
+        description:
+          "Tag to apply to the built image, e.g. pr-123 or a commit SHA"
+        type: string
+      registry_name:
+        required: true
+        description:
+          "Docker registry target to authenticate against and push to"
+        type: string
+      registry_username:
+        required: true
+        description: "Docker registry username"
+        type: string
+      bake_target:
+        required: true
+        description: "Target to build from the root docker-bake.hcl, e.g. image"
+        type: string
+      push:
+        required: false
+        default: true
+        description:
+          "Whether to push the built image. False builds and discards it,
+          still populating the layer cache. Callers pass false for pull
+          requests from a fork: GitHub withholds secrets from those, so a
+          registry login there can only fail."
+        type: boolean
     secrets:
-      docker_hub_token:
+      registry_password:
         required: false
     outputs:
       image-tag:
@@ -19,107 +46,80 @@ on:
 permissions:
   contents: read
 
+env:
+  IMAGE: ${{ inputs.registry_name }}/${{ inputs.image_name }}
+  TZ: Europe/Paris
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CI: true
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
-    env:
-      TAG: ${{ github.ref_name }}
-      IMAGE: ${{ inputs.image-name }}
+    name: "Matrix & Metadata"
     outputs:
-      matrix: ${{ steps.platforms.outputs.matrix }}
+      matrix: '["linux/amd64", "linux/arm64"]'
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Create matrix
-        id: platforms
-        env:
-          GARAGE_RPC_SECRET: "e2e"
-        run: |
-          touch .env
-          docker buildx bake image-all --print
-          echo "matrix=$(docker buildx bake image-all --print | jq -cr '.target."image-all".platforms')" >>${GITHUB_OUTPUT}
-
-      - name: Show matrix
-        run: |
-          echo ${{ steps.platforms.outputs.matrix }}
-
-      - name: Compute branch tag
-        id: branch
-        run: |
-          tag="${{ github.head_ref || github.ref_name }}"
-          echo "tag=$(echo "$tag" | sed 's/[^a-zA-Z0-9._-]/-/g')" >> $GITHUB_OUTPUT
+        uses: actions/checkout@v6
 
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ inputs.image-name }}
+          images: ${{ env.IMAGE }}
           tags: |
-            type=raw,value=${{ steps.branch.outputs.tag }},enable=${{ github.ref_type == 'branch' }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=raw,value=${{ inputs.image_tag }}
+            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
 
       - name: Rename meta bake definition file
         run: |
           mv "${{ steps.meta.outputs.bake-file }}" "${{ runner.temp }}/bake-meta.json"
 
       - name: Upload meta bake definition
-        uses: actions/upload-artifact@v7
+        uses: orochibraru/upload-artifact@v8
         with:
-          name: bake-meta
+          name: bake-meta-${{ inputs.bake_target }}
           path: ${{ runner.temp }}/bake-meta.json
           if-no-files-found: error
           retention-days: 1
 
   # ===========================================
-  # Docker: Build (PR) or Build & Push (main)
+  # Docker: Build & push per-platform digests
   # ===========================================
   build:
-    name: Docker
-    runs-on: ${{ startsWith(matrix.platform, 'linux/arm') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    name: Build Images
+    runs-on:
+      ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' ||
+      'ubuntu-latest' }}
     needs: prepare
     strategy:
       fail-fast: false
       matrix:
         platform: ${{ fromJson(needs.prepare.outputs.matrix) }}
-    env:
-      TAG: ${{ github.ref_name }}
-      IMAGE: ${{ inputs.image-name }}
     steps:
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+          echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
 
       - name: Download meta bake definition
-        uses: actions/download-artifact@v8
+        uses: orochibraru/download-artifact@v8
         with:
-          name: bake-meta
+          name: bake-meta-${{ inputs.bake_target }}
           path: ${{ runner.temp }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/checkout@v7
-
-      # Only login and push when publishing
       - name: Login to Container registry
-        if: ${{ inputs.publish }}
+        if: inputs.push
         uses: docker/login-action@v4
         with:
-          username: orochibraru
-          password: ${{ secrets.docker_hub_token }}
+          registry: ${{ inputs.registry_name }}
+          username: ${{ inputs.registry_username }}
+          password: ${{ secrets.registry_password }}
 
       - name: Build
         id: bake
@@ -128,23 +128,27 @@ jobs:
           files: |
             ./docker-bake.hcl
             cwd://${{ runner.temp }}/bake-meta.json
-          targets: image
+          targets: ${{ inputs.bake_target }}
           set: |
             *.tags=${{ env.IMAGE }}
             *.platform=${{ matrix.platform }}
-            *.output=type=image,push-by-digest=true,name-canonical=true,push=${{ inputs.publish }}
-            *.args.APP_VERSION=${{ github.ref_name }}
+            *.args.APP_VERSION=${{ inputs.image_tag }}
+            *.output=${{ inputs.push && 'type=image,push-by-digest=true,name-canonical=true,push=true' || 'type=cacheonly' }}
+            ${{ inputs.bake_target }}.cache-from=type=gha,scope=${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}-${{ github.ref_name }}
+            ${{ inputs.bake_target }}.cache-to=type=gha,mode=max,scope=${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}-${{ github.ref_name }}
 
       - name: Export digest
+        if: inputs.push
         run: |
           mkdir -p ${{ runner.temp }}/digests
-          digest="${{ fromJSON(steps.bake.outputs.metadata).image['containerimage.digest'] }}"
+          digest="${{ fromJSON(steps.bake.outputs.metadata)[inputs.bake_target]['containerimage.digest'] }}"
           touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v7
+        if: inputs.push
+        uses: orochibraru/upload-artifact@v8
         with:
-          name: digests-${{ env.PLATFORM_PAIR }}
+          name: digests-${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}
           path: ${{ runner.temp }}/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -153,49 +157,49 @@ jobs:
   # Merge per-platform digests into a manifest
   # ===========================================
   merge:
-    name: Create Manifest & Tag
+    name: Create Manifest and Tag then Push
+    if: inputs.push
     runs-on: ubuntu-latest
     needs: [prepare, build]
-    env:
-      IMAGE: ${{ inputs.image-name }}
     outputs:
       image-tag: ${{ steps.inspect.outputs.tag }}
     steps:
       - name: Download meta bake definition
-        uses: actions/download-artifact@v8
+        uses: orochibraru/download-artifact@v8
         with:
-          name: bake-meta
+          name: bake-meta-${{ inputs.bake_target }}
           path: ${{ runner.temp }}
 
       - name: Download digests
-        uses: actions/download-artifact@v8
+        uses: orochibraru/download-artifact@v8
         with:
           path: ${{ runner.temp }}/digests
-          pattern: digests-*
+          pattern: digests-${{ inputs.bake_target }}-*
           merge-multiple: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
       - name: Login to Container registry
-        if: ${{ inputs.publish }}
         uses: docker/login-action@v4
         with:
-          username: orochibraru
-          password: ${{ secrets.docker_hub_token }}
+          registry: ${{ inputs.registry_name }}
+          username: ${{ inputs.registry_username }}
+          password: ${{ secrets.registry_password }}
 
       - name: Create manifest list and push
-        if: ${{ inputs.publish }}
         working-directory: ${{ runner.temp }}/digests
         run: |
+          # Both expansions are deliberately unquoted: each produces several
+          # separate argv words (one `-t <tag>` pair per tag, one ref per digest).
+          # shellcheck disable=SC2046
           docker buildx imagetools create \
             $(jq -cr '.target."docker-metadata-action".tags | map("-t " + .) | join(" ")' "$RUNNER_TEMP/bake-meta.json") \
             $(printf '${{ env.IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image
-        if: ${{ inputs.publish }}
         id: inspect
         run: |
-          tag=$(jq -r '.target."docker-metadata-action".args.DOCKER_META_VERSION' ${{ runner.temp }}/bake-meta.json)
-          echo "tag=$tag" >> $GITHUB_OUTPUT
-          docker buildx imagetools inspect ${{ env.IMAGE }}:$tag
+          tag=$(jq -r '.target."docker-metadata-action".args.DOCKER_META_VERSION' "${{ runner.temp }}/bake-meta.json")
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          docker buildx imagetools inspect "${{ env.IMAGE }}:$tag"

@@ -51,6 +51,8 @@
 	"devDependencies": {
 		"@expo/metro-config": "~55.0.11",
 		"@tailwindcss/postcss": "^4.2.2",
+		"@types/bun": "^1.4.2",
+		"@types/node": "^26.5.0",
 		"@types/react": "~19.1.0",
 		"openapi-typescript": "^7.13.0",
 		"postcss": "^8.5.6",

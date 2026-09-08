@@ -1,0 +1,10 @@
+CHANGELOG.md
+build
+dist
+packages/mobile/.expo
+packages/mobile/android
+packages/mobile/ios
+project.inlang
+src/lib/paraglide
+src/paraglide
+test-results

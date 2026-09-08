@@ -1,17 +1,20 @@
 ## [1.8.19](https://github.com/orochibraru/penombre/compare/v1.8.18...v1.8.19) (2026-08-29)
 
-
 ### Bug Fixes
 
-* bump svelte smol ([e5824be](https://github.com/orochibraru/penombre/commit/e5824be193344b9d913ac36f060e6a43fb08b11d))
-* formatting ([b04e5d7](https://github.com/orochibraru/penombre/commit/b04e5d7867884effeca3da8ce4193c11dea62d95))
-* tailwind & biome ([89b5a67](https://github.com/orochibraru/penombre/commit/89b5a67524875d1810f50f4b941224a2945985f2))
-
+- bump svelte smol
+  ([e5824be](https://github.com/orochibraru/penombre/commit/e5824be193344b9d913ac36f060e6a43fb08b11d))
+- formatting
+  ([b04e5d7](https://github.com/orochibraru/penombre/commit/b04e5d7867884effeca3da8ce4193c11dea62d95))
+- tailwind & biome
+  ([89b5a67](https://github.com/orochibraru/penombre/commit/89b5a67524875d1810f50f4b941224a2945985f2))
 
 ### Features
 
-* replace svelte-adapter-bun with @orochibraru/svelte-smol ([b5d7569](https://github.com/orochibraru/penombre/commit/b5d756952e0eceeb7984b97dd38aa78901b3232c))
-* use bun 1.4 ([2dbf8a6](https://github.com/orochibraru/penombre/commit/2dbf8a630d04ce3abaad0bcb1fe7489a2fada398))
+- replace svelte-adapter-bun with @orochibraru/svelte-smol
+  ([b5d7569](https://github.com/orochibraru/penombre/commit/b5d756952e0eceeb7984b97dd38aa78901b3232c))
+- use bun 1.4
+  ([2dbf8a6](https://github.com/orochibraru/penombre/commit/2dbf8a630d04ce3abaad0bcb1fe7489a2fada398))
 
 ---
 
@@ -25,10 +28,10 @@ docker pull orochibraru/penombre:1.8.19
 
 ## [1.8.18](https://github.com/orochibraru/penombre/compare/v1.8.17...v1.8.18) (2026-07-01)
 
-
 ### Bug Fixes
 
-* semantic release packages ([9b82473](https://github.com/orochibraru/penombre/commit/9b824730a0f0a39861a474fca641cbe002b98ca2))
+- semantic release packages
+  ([9b82473](https://github.com/orochibraru/penombre/commit/9b824730a0f0a39861a474fca641cbe002b98ca2))
 
 ---
 
@@ -42,10 +45,10 @@ docker pull orochibraru/penombre:1.8.18
 
 ## [1.8.17](https://github.com/orochibraru/penombre/compare/v1.8.16...v1.8.17) (2026-06-29)
 
-
 ### Bug Fixes
 
-* pass tag to docker build ([4829235](https://github.com/orochibraru/penombre/commit/482923502790ed424059b0ba2d30a93229d9970f))
+- pass tag to docker build
+  ([4829235](https://github.com/orochibraru/penombre/commit/482923502790ed424059b0ba2d30a93229d9970f))
 
 ---
 
@@ -59,10 +62,10 @@ docker pull orochibraru/penombre:1.8.17
 
 ## [1.8.16](https://github.com/orochibraru/penombre/compare/v1.8.15...v1.8.16) (2026-06-29)
 
-
 ### Bug Fixes
 
-* deps + openapi ([ccf9450](https://github.com/orochibraru/penombre/commit/ccf945045afe4ae2cfccebf8b3046e5d15f5db53))
+- deps + openapi
+  ([ccf9450](https://github.com/orochibraru/penombre/commit/ccf945045afe4ae2cfccebf8b3046e5d15f5db53))
 
 ---
 
@@ -88,11 +91,12 @@ docker pull orochibraru/penombre:1.8.15
 
 ## [1.8.14](https://github.com/orochibraru/penombre/compare/v1.8.13...v1.8.14) (2026-05-29)
 
-
 ### Bug Fixes
 
-* don't run dependabot automerge on main ([829d283](https://github.com/orochibraru/penombre/commit/829d28317c5bb2b7efe77c149f8ddaba0dbb646c))
-* test cfg ([2ad5c97](https://github.com/orochibraru/penombre/commit/2ad5c9796f6dd136268a606bdab38889f866ab1d))
+- don't run dependabot automerge on main
+  ([829d283](https://github.com/orochibraru/penombre/commit/829d28317c5bb2b7efe77c149f8ddaba0dbb646c))
+- test cfg
+  ([2ad5c97](https://github.com/orochibraru/penombre/commit/2ad5c9796f6dd136268a606bdab38889f866ab1d))
 
 ---
 
@@ -106,10 +110,10 @@ docker pull orochibraru/penombre:1.8.14
 
 ## [1.8.13](https://github.com/orochibraru/penombre/compare/v1.8.12...v1.8.13) (2026-04-14)
 
-
 ### Bug Fixes
 
-* better auth types AGAIN ([5c50b38](https://github.com/orochibraru/penombre/commit/5c50b387f57cba299c8ed6cca95349bdf8cec0b1))
+- better auth types AGAIN
+  ([5c50b38](https://github.com/orochibraru/penombre/commit/5c50b387f57cba299c8ed6cca95349bdf8cec0b1))
 
 ---
 
@@ -123,15 +127,15 @@ docker pull orochibraru/penombre:1.8.13
 
 ## [1.8.12](https://github.com/orochibraru/penombre/compare/v1.8.11...v1.8.12) (2026-04-08)
 
-
 ### Bug Fixes
 
-* release system ([22bb1ba](https://github.com/orochibraru/penombre/commit/22bb1ba32126947105274018468bd8c64ebbfe35))
-
+- release system
+  ([22bb1ba](https://github.com/orochibraru/penombre/commit/22bb1ba32126947105274018468bd8c64ebbfe35))
 
 ### Features
 
-* mobile app features ([#56](https://github.com/orochibraru/penombre/issues/56)) ([726cf84](https://github.com/orochibraru/penombre/commit/726cf84427e43129951d6b79622d5bf4267662df))
+- mobile app features ([#56](https://github.com/orochibraru/penombre/issues/56))
+  ([726cf84](https://github.com/orochibraru/penombre/commit/726cf84427e43129951d6b79622d5bf4267662df))
 
 ---
 
@@ -145,10 +149,10 @@ docker pull orochibraru/penombre:1.8.12
 
 ## [1.8.11](https://github.com/orochibraru/penombre/compare/v1.8.10...v1.8.11) (2026-04-03)
 
-
 ### Bug Fixes
 
-* workflow permissions ([f0f11bf](https://github.com/orochibraru/penombre/commit/f0f11bf41115b4a70ec46fd9896f0a993de8930a))
+- workflow permissions
+  ([f0f11bf](https://github.com/orochibraru/penombre/commit/f0f11bf41115b4a70ec46fd9896f0a993de8930a))
 
 ---
 
@@ -162,25 +166,35 @@ docker pull orochibraru/penombre:1.8.11
 
 ## [1.8.10](https://github.com/orochibraru/penombre/compare/v1.8.9...v1.8.10) (2026-04-03)
 
-
 ### Bug Fixes
 
-* cache import ([831f669](https://github.com/orochibraru/penombre/commit/831f669ee5d4abdfe3a4cb2bd4dfda76134f0660))
-* checkout for automerge ([19d4114](https://github.com/orochibraru/penombre/commit/19d41146d648b5dfc2037e2760d7254bc6640c5f))
-* ci ([72e794e](https://github.com/orochibraru/penombre/commit/72e794eb286e0d6ab3376285bb86792ac633a1ef))
-* Docker flow name ([11535e5](https://github.com/orochibraru/penombre/commit/11535e52d5f7b23955be5b1ab5c71b88675332ee))
-* docker manifest meta job ([34694ff](https://github.com/orochibraru/penombre/commit/34694ff1e93d4164b988f2c984d631e05bc7f58e))
-* metadata refs ([f3397e2](https://github.com/orochibraru/penombre/commit/f3397e2ede97241a54f5cecc9f58b661593784a8))
-* new pg volume ([021e6ff](https://github.com/orochibraru/penombre/commit/021e6ffb1df73d0b8a97787c15541d57a58ef618))
-* publish flow ([d4504d8](https://github.com/orochibraru/penombre/commit/d4504d8809ea5193ff01439cd94de23e846b59a5))
-* types ([8a338aa](https://github.com/orochibraru/penombre/commit/8a338aa45a094c620a5c310516003a53a4c5835a))
-* workflow triggers ([774e774](https://github.com/orochibraru/penombre/commit/774e77452551ea1b07950d2f81c1860a2beffa6e))
-
+- cache import
+  ([831f669](https://github.com/orochibraru/penombre/commit/831f669ee5d4abdfe3a4cb2bd4dfda76134f0660))
+- checkout for automerge
+  ([19d4114](https://github.com/orochibraru/penombre/commit/19d41146d648b5dfc2037e2760d7254bc6640c5f))
+- ci
+  ([72e794e](https://github.com/orochibraru/penombre/commit/72e794eb286e0d6ab3376285bb86792ac633a1ef))
+- Docker flow name
+  ([11535e5](https://github.com/orochibraru/penombre/commit/11535e52d5f7b23955be5b1ab5c71b88675332ee))
+- docker manifest meta job
+  ([34694ff](https://github.com/orochibraru/penombre/commit/34694ff1e93d4164b988f2c984d631e05bc7f58e))
+- metadata refs
+  ([f3397e2](https://github.com/orochibraru/penombre/commit/f3397e2ede97241a54f5cecc9f58b661593784a8))
+- new pg volume
+  ([021e6ff](https://github.com/orochibraru/penombre/commit/021e6ffb1df73d0b8a97787c15541d57a58ef618))
+- publish flow
+  ([d4504d8](https://github.com/orochibraru/penombre/commit/d4504d8809ea5193ff01439cd94de23e846b59a5))
+- types
+  ([8a338aa](https://github.com/orochibraru/penombre/commit/8a338aa45a094c620a5c310516003a53a4c5835a))
+- workflow triggers
+  ([774e774](https://github.com/orochibraru/penombre/commit/774e77452551ea1b07950d2f81c1860a2beffa6e))
 
 ### Features
 
-* automerge on workflow dispatch ([d301460](https://github.com/orochibraru/penombre/commit/d3014603c0af1ac700430ee1c9605b5d42e47ef6))
-* bundle dependabot ([3930804](https://github.com/orochibraru/penombre/commit/393080441e83bbfa1c4f8e5af667cc0479bd0c0a))
+- automerge on workflow dispatch
+  ([d301460](https://github.com/orochibraru/penombre/commit/d3014603c0af1ac700430ee1c9605b5d42e47ef6))
+- bundle dependabot
+  ([3930804](https://github.com/orochibraru/penombre/commit/393080441e83bbfa1c4f8e5af667cc0479bd0c0a))
 
 ---
 
@@ -194,11 +208,12 @@ docker pull orochibraru/penombre:1.8.10
 
 ## [1.8.9](https://github.com/orochibraru/penombre/compare/v1.8.8...v1.8.9) (2026-03-30)
 
-
 ### Bug Fixes
 
-* don't trigger releases unless a package changed ([f5dc5e9](https://github.com/orochibraru/penombre/commit/f5dc5e9aa682d949ab6def4d3482f7f35c8e1db7))
-* trigger releases on dockerfile changes ([f5b7c72](https://github.com/orochibraru/penombre/commit/f5b7c7223ce1b94287a5b489ae9b8f50301b7b0e))
+- don't trigger releases unless a package changed
+  ([f5dc5e9](https://github.com/orochibraru/penombre/commit/f5dc5e9aa682d949ab6def4d3482f7f35c8e1db7))
+- trigger releases on dockerfile changes
+  ([f5b7c72](https://github.com/orochibraru/penombre/commit/f5b7c7223ce1b94287a5b489ae9b8f50301b7b0e))
 
 ---
 
@@ -212,11 +227,12 @@ docker pull orochibraru/penombre:1.8.9
 
 ## [1.8.8](https://github.com/orochibraru/penombre/compare/v1.8.7...v1.8.8) (2026-03-30)
 
-
 ### Bug Fixes
 
-* ci schedule ([03e78ff](https://github.com/orochibraru/penombre/commit/03e78ff8aa67aad8e8096ac9dbdddbc16b098516))
-* dependabot conditions ([13596bb](https://github.com/orochibraru/penombre/commit/13596bb2696a8b834e9b63bd976f43ff557c5305))
+- ci schedule
+  ([03e78ff](https://github.com/orochibraru/penombre/commit/03e78ff8aa67aad8e8096ac9dbdddbc16b098516))
+- dependabot conditions
+  ([13596bb](https://github.com/orochibraru/penombre/commit/13596bb2696a8b834e9b63bd976f43ff557c5305))
 
 ---
 
@@ -230,10 +246,10 @@ docker pull orochibraru/penombre:1.8.8
 
 ## [1.8.7](https://github.com/orochibraru/penombre/compare/v1.8.6...v1.8.7) (2026-03-28)
 
-
 ### Bug Fixes
 
-* automerge cron ([b4e041f](https://github.com/orochibraru/penombre/commit/b4e041f88e2d00e8cd37b9ab229e48c02c566143))
+- automerge cron
+  ([b4e041f](https://github.com/orochibraru/penombre/commit/b4e041f88e2d00e8cd37b9ab229e48c02c566143))
 
 ---
 
@@ -247,10 +263,11 @@ docker pull orochibraru/penombre:1.8.7
 
 ## [1.8.6](https://github.com/orochibraru/penombre/compare/v1.8.5...v1.8.6) (2026-03-28)
 
-
 ### Features
 
-* add support for docker, github-actions, and docker-compose in dependabot configuration ([c48cc27](https://github.com/orochibraru/penombre/commit/c48cc2784fbb37fb7a238b8511b59887c9cc6de9))
+- add support for docker, github-actions, and docker-compose in dependabot
+  configuration
+  ([c48cc27](https://github.com/orochibraru/penombre/commit/c48cc2784fbb37fb7a238b8511b59887c9cc6de9))
 
 ---
 
@@ -264,15 +281,15 @@ docker pull orochibraru/penombre:1.8.6
 
 ## [1.8.5](https://github.com/orochibraru/penombre/compare/v1.8.4...v1.8.5) (2026-03-28)
 
-
 ### Bug Fixes
 
-* dependabot automerge ([cd5d8e3](https://github.com/orochibraru/penombre/commit/cd5d8e33ea3c8d6fe7e7977441a6d691b5e72c31))
-
+- dependabot automerge
+  ([cd5d8e3](https://github.com/orochibraru/penombre/commit/cd5d8e33ea3c8d6fe7e7977441a6d691b5e72c31))
 
 ### Features
 
-* auto update branch ([069e134](https://github.com/orochibraru/penombre/commit/069e134d22ab2a80c6dc95a3f7d3e736198b0fef))
+- auto update branch
+  ([069e134](https://github.com/orochibraru/penombre/commit/069e134d22ab2a80c6dc95a3f7d3e736198b0fef))
 
 ---
 
@@ -286,10 +303,10 @@ docker pull orochibraru/penombre:1.8.5
 
 ## [1.8.4](https://github.com/orochibraru/penombre/compare/v1.8.3...v1.8.4) (2026-03-25)
 
-
 ### Bug Fixes
 
-* tests ([#29](https://github.com/orochibraru/penombre/issues/29)) ([bfdf6eb](https://github.com/orochibraru/penombre/commit/bfdf6ebb4ea455006bd0a3ad10f7a689c277122c))
+- tests ([#29](https://github.com/orochibraru/penombre/issues/29))
+  ([bfdf6eb](https://github.com/orochibraru/penombre/commit/bfdf6ebb4ea455006bd0a3ad10f7a689c277122c))
 
 ---
 
@@ -303,10 +320,10 @@ docker pull orochibraru/penombre:1.8.4
 
 ## [1.8.3](https://github.com/orochibraru/penombre/compare/v1.8.2...v1.8.3) (2026-03-20)
 
-
 ### Bug Fixes
 
-* publish flow ([992a880](https://github.com/orochibraru/penombre/commit/992a8801ae3b32130d0ea410cded1f9d3fb1b16c))
+- publish flow
+  ([992a880](https://github.com/orochibraru/penombre/commit/992a8801ae3b32130d0ea410cded1f9d3fb1b16c))
 
 ---
 
@@ -320,10 +337,10 @@ docker pull orochibraru/penombre:1.8.3
 
 ## [1.8.2](https://github.com/orochibraru/penombre/compare/v1.8.1...v1.8.2) (2026-03-20)
 
-
 ### Bug Fixes
 
-* bump semantic release action ([8d94ec9](https://github.com/orochibraru/penombre/commit/8d94ec99143bd149a7a3b6be241b593bfe6fa4c1))
+- bump semantic release action
+  ([8d94ec9](https://github.com/orochibraru/penombre/commit/8d94ec99143bd149a7a3b6be241b593bfe6fa4c1))
 
 ---
 
@@ -337,10 +354,10 @@ docker pull orochibraru/penombre:1.8.2
 
 # [1.5.0](https://github.com/orochibraru/penombre/compare/v1.4.0...v1.5.0) (2026-03-18)
 
-
 ### Features
 
-* changelog plugin ([25ec6c0](https://github.com/orochibraru/penombre/commit/25ec6c00bd38351eed36e3bc751eea9bd4dd8954))
+- changelog plugin
+  ([25ec6c0](https://github.com/orochibraru/penombre/commit/25ec6c00bd38351eed36e3bc751eea9bd4dd8954))
 
 # Changelog
 
@@ -348,7 +365,8 @@ docker pull orochibraru/penombre:1.8.2
 
 ### 🩹 Fixes
 
-- Db max retries ([0e8ebfd](https://github.com/orochibraru/penombre/commit/0e8ebfd))
+- Db max retries
+  ([0e8ebfd](https://github.com/orochibraru/penombre/commit/0e8ebfd))
 
 ### ❤️ Contributors
 
@@ -358,7 +376,8 @@ docker pull orochibraru/penombre:1.8.2
 
 ### 🩹 Fixes
 
-- Remove armV6/7 ([4a09c45](https://github.com/orochibraru/penombre/commit/4a09c45))
+- Remove armV6/7
+  ([4a09c45](https://github.com/orochibraru/penombre/commit/4a09c45))
 
 ### ❤️ Contributors
 
@@ -370,7 +389,8 @@ docker pull orochibraru/penombre:1.8.2
 
 ### 🩹 Fixes
 
-- Docker token ([1f19b80](https://github.com/orochibraru/penombre/commit/1f19b80))
+- Docker token
+  ([1f19b80](https://github.com/orochibraru/penombre/commit/1f19b80))
 
 ### ❤️ Contributors
 
@@ -646,7 +666,8 @@ docker pull orochibraru/penombre:1.8.2
 - Formatting (c811905)
 - Golang server start in playwright (110395d)
 - Raw deploy job (aaf5530)
-- Migrations if db isn't available directly and dev command conflicting with a container (fb0fcfb)
+- Migrations if db isn't available directly and dev command conflicting with a
+  container (fb0fcfb)
 - Engines (3a49ac2)
 - Bun install (0a28680)
 - Penombre docs tag (9946fbe)

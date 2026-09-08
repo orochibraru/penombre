@@ -1,0 +1,184 @@
+name: Code Quality
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  TZ: Europe/Paris
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  CI: "true"
+  COLUMNS: "9999"
+  NO_COLOR: "1"
+
+jobs:
+  lint:
+    name: Linting / Formatting / Type checking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      # The hooks shell out to the repo's own tooling (bun run gen:*, bunx
+      # biome/prettier/markdownlint/tailwint), so deps have to exist first.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      # --ignore-scripts above skips the "prepare" script, so generate the
+      # $lib alias types the hooks below resolve against.
+      - name: Sync SvelteKit
+        run: bunx svelte-kit sync
+
+      # Same .pre-commit-config.yaml the local pre-commit hook runs: hygiene,
+      # gitleaks, typos, actionlint, hadolint, biome, prettier + markdownlint on
+      # markdown, tailwint, a regen of the derived .example.env/OpenAPI/DB-diagram
+      # files, and svelte-check/tsc over the app and every sub-project. The fixer
+      # hooks autofix in place, so CI fails on any file one of them had to modify,
+      # with the diff printed. test-unit is skipped here — the ts-test job below
+      # runs it with the Redis service wired up.
+      # fail_fast in .pre-commit-config.yaml is for local commits (stop at
+      # the first problem); --no-fail-fast overrides it here so a CI run
+      # reports every broken hook in one go instead of one per push.
+      - name: Run prek
+        uses: j178/prek-action@v3.0.0
+        env:
+          SKIP: test-unit
+        with:
+          extra-args: --all-files --no-fail-fast
+
+  docs-check:
+    name: Docs (Checks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      # --ignore-scripts above skips the "prepare" script. Bun hoists
+      # node_modules to the workspace root, so rolldown's tsconfig
+      # resolution for packages/docs climbs up to the root tsconfig too —
+      # it needs root's .svelte-kit/tsconfig.json, not just docs' own.
+      - name: Sync SvelteKit
+        run: bunx svelte-kit sync
+
+      - name: Build docs
+        working-directory: packages/docs
+        run: bun run build
+
+  ts-test:
+    name: Tests (TS)
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s
+          --health-retries 20
+    env:
+      REDIS_URL: redis://127.0.0.1:6379
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      # --ignore-scripts above skips the "prepare" script; the app's $lib
+      # alias needs .svelte-kit/tsconfig.json to resolve at runtime.
+      - name: Sync SvelteKit
+        run: bunx svelte-kit sync
+
+      - name: Tests (Unit)
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 20
+          retry_on: any
+          command: bun test --bail
+
+  e2e-local:
+    name: Tests (E2E, local backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      # --ignore-scripts above skips the "prepare" script; the app's $lib
+      # alias needs .svelte-kit/tsconfig.json to resolve at runtime.
+      - name: Sync SvelteKit
+        run: bunx svelte-kit sync
+
+      - name: Install Playwright's Chromium
+        run: bunx playwright install --with-deps chromium
+
+      # test:e2e:local builds the compose stack itself, so there is no separate
+      # image build step here.
+      - name: Tests (E2E)
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          retry_on: any
+          command: bun run test:e2e:local
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: orochibraru/upload-artifact@v8
+        with:
+          name: playwright-report-local
+          path: playwright-report-local/
+          if-no-files-found: warn
+          retention-days: 7
+
+  e2e-s3:
+    name: Tests (E2E, S3 backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      # --ignore-scripts above skips the "prepare" script; the app's $lib
+      # alias needs .svelte-kit/tsconfig.json to resolve at runtime.
+      - name: Sync SvelteKit
+        run: bunx svelte-kit sync
+
+      - name: Install Playwright's Chromium
+        run: bunx playwright install --with-deps chromium
+
+      - name: Tests (E2E, S3)
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          retry_on: any
+          command: bun run test:e2e:s3
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: orochibraru/upload-artifact@v8
+        with:
+          name: playwright-report-s3
+          path: playwright-report/
+          if-no-files-found: warn
+          retention-days: 7

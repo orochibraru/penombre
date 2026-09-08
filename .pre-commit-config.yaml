@@ -1,0 +1,186 @@
+fail_fast: true
+
+repos:
+  # Cheap, generic hygiene the language tooling below does not cover: biome
+  # owns the code files and prettier the markdown, but nothing was looking at
+  # YAML, the Dockerfile, .editorconfig or a stray conflict marker.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude: &generated |-
+          (?x)^(
+            src/lib/api/v1\.(json|d\.ts)|
+            packages/mobile/assets/api\.v1\.json|
+            packages/docs/static/api\.v1\.json|
+            \.example\.env|
+            resources/|
+            drizzle/|
+            CHANGELOG\.md|
+            bun\.lock
+          )
+      - id: end-of-file-fixer
+        # Machine-generated/vendored files: reformatting them makes the next
+        # `bun run gen:api`/`db:generate`/release diff our own whitespace forever.
+        exclude: *generated
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        exclude: *generated
+
+  # semantic-release computes the next version from the commit messages, so a
+  # malformed subject silently costs a release rather than failing loudly.
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
+  # Secrets are introduced at commit time, which is exactly where this runs.
+  # Note it scans the *staged* diff, so it is a no-op under `--all-files` in
+  # CI: GitHub's own push protection is the second line, not this hook.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.50.1
+    hooks:
+      - id: typos
+        # Report, do not rewrite. The upstream hook defaults to
+        # --write-changes, and an unattended "fix" to an identifier is worse
+        # than the typo it corrects.
+        args: [--force-exclude]
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
+  # The Docker image, not the system binary: CI runners have a daemon but no
+  # hadolint on PATH. Rule exemptions and their reasons are in `.hadolint.yaml`.
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.15.1
+    hooks:
+      - id: hadolint-docker
+
+  - repo: local
+    hooks:
+      # These run first: .example.env, the OpenAPI spec + its typed client, and
+      # the DB diagram are all derived from source that may itself be part of
+      # this commit.
+      - id: gen-env
+        name: regenerate .example.env
+        entry: bun run gen:env
+        language: system
+        pass_filenames: false
+        files: ^(src/lib/server/config\.defaults\.ts|scripts/generate-env-example\.ts)$
+
+      - id: gen-api
+        name: regenerate openapi spec + typed client
+        entry: bun run gen:api
+        language: system
+        pass_filenames: false
+        files: ^(src/lib/server/|src/lib/schemas/|scripts/generate-openapi\.ts)
+
+      - id: db-diagram
+        name: regenerate DB diagram
+        entry: bun run db:diagram
+        language: system
+        pass_filenames: false
+        files: ^(src/lib/server/db/schema\.ts|scripts/db-diagram\.ts)$
+
+        # tailwint discards explicit file arguments (verified: any path/glob form
+      # reports "0 files scanned"), so it always scans the whole repo. Only the
+      # decision to run it at all is staged-scoped.
+      - id: tailwint
+        name: tailwint --fix
+        entry: bunx tailwint --fix
+        language: system
+        pass_filenames: false
+        files: \.(tsx|jsx|html|vue|svelte|astro|mdx|css)$
+
+      - id: biome
+        name: biome check --write --unsafe
+        entry: bunx biome check --write --unsafe --no-errors-on-unmatched
+        language: system
+        files: \.(ts|tsx|js|jsx|mjs|cjs|json|jsonc|css|svelte|html)$
+
+      - id: prettier-md
+        name: prettier (markdown)
+        entry: bunx prettier --log-level warn --write
+        language: system
+        types: [markdown]
+
+      - id: markdownlint
+        name: markdownlint-cli2 --fix
+        entry: bunx markdownlint-cli2 --fix
+        language: system
+        types: [markdown]
+
+      # The unit suite is fully mocked (see test.setup.ts) — no Postgres, no
+      # Redis — so it is cheap enough to run before the commit rather than
+      # after the push.
+      - id: test-unit
+        name: bun test
+        entry: bun test
+        language: system
+        pass_filenames: false
+        files: ^(src/|test\.setup\.ts$|bunfig\.toml$)
+
+      # Type checks last, after the fixers have had their turn. Each one is
+      # whole-project by nature (a change in one file can break the types of a
+      # file it imports), so the staged paths only decide whether a project is
+      # worth checking at all, never what gets checked.
+      - id: check-app
+        name: svelte-check (app)
+        entry: bun run check:app
+        language: system
+        pass_filenames: false
+        files: ^(src/|vite\.config\.ts$|tsconfig\.json$)
+
+      - id: check-scripts
+        name: tsc (scripts)
+        entry: bun run check:scripts
+        language: system
+        pass_filenames: false
+        files: ^(scripts/|concurrently\.config\.ts$|tsconfig\.scripts\.json$)
+
+      - id: check-docs
+        name: tsc (packages/docs)
+        entry: bun run check:docs
+        language: system
+        pass_filenames: false
+        files: ^packages/docs/
+
+      # packages/mobile is excluded for now: a duplicate better-auth install
+      # under Bun's isolated linker (bunfig.toml) makes tsc fail there with
+      # unrelated type errors. Re-add a check-mobile hook once that's sorted.
+
+  # The conventions no linter knows about. Ported from homerun.
+  - repo: local
+    hooks:
+      - id: no-manual-route-typing
+        name: "route files: no manual $props()/load/actions typing (./$types is inferred)"
+        language: pygrep
+        entry: |-
+          (: (PageData|PageProps|LayoutData|ActionData|LayoutProps|PageServerLoad|LayoutServerLoad|Actions|RequestHandler)\b|from "\./\$types")
+        files: ^src/routes/.*\.(ts|svelte)$
+
+      - id: no-raw-drizzle-in-routes
+        name: "route files: no raw Drizzle queries (go through a DTO)"
+        language: pygrep
+        entry: \bdb\.(select|insert|update|delete)\(
+        files: ^src/routes/.*\.ts$
+
+      - id: internal-links-resolve
+        name: "internal links go through resolve() from $app/paths"
+        language: pygrep
+        entry: href="/
+        files: ^src/.*\.svelte$

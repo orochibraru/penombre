@@ -1,6 +1,6 @@
 import madge from "madge";
 
-const packages = ["./packages/api", "./packages/web"];
+const packages = ["./src", "./packages/mobile"];
 
 madge(packages, {
 	fileExtensions: ["ts"],
@@ -8,7 +8,7 @@ madge(packages, {
 	const circular = res.circular();
 	if (circular.length > 0) {
 		console.error(`Found ${circular.length} circular dependencies`, circular);
-		throw new Error();
+		throw new Error(`Found ${circular.length} circular dependencies`);
 	}
 
 	console.log("No circular dependencies found.");

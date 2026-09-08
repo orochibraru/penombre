@@ -1,0 +1,28 @@
+{
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Bash|Edit|Write",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "prek",
+						"timeout": 120,
+						"statusMessage": "Running prek..."
+					}
+				]
+			}
+		]
+	},
+	"enabledPlugins": {
+		"svelte@svelte": true
+	},
+	"extraKnownMarketplaces": {
+		"svelte": {
+			"source": {
+				"source": "github",
+				"repo": "sveltejs/ai-tools"
+			}
+		}
+	}
+}

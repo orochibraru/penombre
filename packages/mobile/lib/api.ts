@@ -57,11 +57,11 @@ client.use({
 
 		return request;
 	},
-	async onResponse({ response }) {
+	onResponse({ response }) {
 		console.debug(`API Response: ${response.status} ${response.statusText}`);
 		return response;
 	},
-	async onError({ error }) {
+	onError({ error }) {
 		if (error instanceof Error) {
 			console.debug(`API Error: ${error.message}`);
 			return new Response(error.message, { status: 500 });
@@ -196,7 +196,7 @@ export async function checkAuth(): Promise<{
 		return { authenticated: false, error: "No data returned from auth check" };
 	}
 
-	if (!data.session || !data.user) {
+	if (!(data.session && data.user)) {
 		return { authenticated: false, error: "No active session" };
 	}
 

@@ -1,7 +1,8 @@
+import process from "node:process";
 import { $ } from "bun";
 
 try {
-	const baseApiDoc = await $`bun run --filter @penombre/web gen:api`;
+	const baseApiDoc = await $`bun run gen:openapi`;
 	if (baseApiDoc.exitCode !== 0) {
 		console.error("Failed to generate API documentation:");
 		console.error(baseApiDoc.stderr);

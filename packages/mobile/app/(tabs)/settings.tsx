@@ -3,14 +3,14 @@ import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol, type IconSymbolName } from "@/components/ui/icon-symbol";
 
-type SettingsRowProps = {
+interface SettingsRowProps {
 	icon: IconSymbolName;
 	iconColor?: string;
 	title: string;
 	subtitle?: string;
 	onPress?: () => void;
 	trailing?: React.ReactNode;
-};
+}
 
 function SettingsRow({
 	icon,
@@ -25,18 +25,18 @@ function SettingsRow({
 			onPress={onPress}
 			className="flex-row items-center gap-3 px-4 py-3.5 active:bg-gray-100 dark:active:bg-gray-800"
 		>
-			<View className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 items-center justify-center">
+			<View className="h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
 				<IconSymbol size={18} name={icon} color={iconColor} />
 			</View>
 			<View className="flex-1">
-				<Text className="text-base font-medium text-gray-900 dark:text-gray-100">
+				<Text className="font-medium text-base text-gray-900 dark:text-gray-100">
 					{title}
 				</Text>
-				{subtitle && (
-					<Text className="text-xs text-gray-400 dark:text-gray-500">
+				{subtitle ? (
+					<Text className="text-gray-400 text-xs dark:text-gray-500">
 						{subtitle}
 					</Text>
-				)}
+				) : null}
 			</View>
 			{trailing ?? (
 				<IconSymbol size={16} name="chevron.right" color="#9CA3AF" />
@@ -47,14 +47,14 @@ function SettingsRow({
 
 function SectionHeader({ title }: { title: string }) {
 	return (
-		<Text className="text-xs font-semibold uppercase text-gray-400 dark:text-gray-500 px-4 pt-5 pb-1">
+		<Text className="px-4 pt-5 pb-1 font-semibold text-gray-400 text-xs uppercase dark:text-gray-500">
 			{title}
 		</Text>
 	);
 }
 
 function Divider() {
-	return <View className="h-px bg-gray-100 dark:bg-gray-800 ml-16" />;
+	return <View className="ml-16 h-px bg-gray-100 dark:bg-gray-800" />;
 }
 
 type ThemeOption = "system" | "light" | "dark";
@@ -72,13 +72,13 @@ export default function SettingsScreen() {
 		<ThemedView style={{ flex: 1 }}>
 			<ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
 				<View className="px-4 pt-4 pb-2">
-					<Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+					<Text className="font-bold text-2xl text-gray-900 dark:text-gray-100">
 						Settings
 					</Text>
 				</View>
 
 				<SectionHeader title="General" />
-				<View className="mx-4 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+				<View className="mx-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
 					<SettingsRow
 						icon="globe"
 						iconColor="#3B82F6"
@@ -95,7 +95,7 @@ export default function SettingsScreen() {
 				</View>
 
 				<SectionHeader title="Theme" />
-				<View className="mx-4 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+				<View className="mx-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
 					{themes.map((theme, i) => (
 						<View key={theme.id}>
 							{i > 0 && <Divider />}
@@ -103,7 +103,7 @@ export default function SettingsScreen() {
 								onPress={() => setSelectedTheme(theme.id)}
 								className="flex-row items-center gap-3 px-4 py-3.5 active:bg-gray-100 dark:active:bg-gray-800"
 							>
-								<View className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 items-center justify-center">
+								<View className="h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
 									<IconSymbol
 										size={18}
 										name={theme.icon}
@@ -111,7 +111,7 @@ export default function SettingsScreen() {
 									/>
 								</View>
 								<Text
-									className={`flex-1 text-base font-medium ${
+									className={`flex-1 font-medium text-base ${
 										selectedTheme === theme.id
 											? "text-blue-500"
 											: "text-gray-900 dark:text-gray-100"
@@ -132,7 +132,7 @@ export default function SettingsScreen() {
 				</View>
 
 				<SectionHeader title="Storage" />
-				<View className="mx-4 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+				<View className="mx-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
 					<SettingsRow
 						icon="externaldrive"
 						iconColor="#10B981"
@@ -149,7 +149,7 @@ export default function SettingsScreen() {
 				</View>
 
 				<SectionHeader title="Help" />
-				<View className="mx-4 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+				<View className="mx-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
 					<SettingsRow
 						icon="doc.text"
 						iconColor="#6366F1"

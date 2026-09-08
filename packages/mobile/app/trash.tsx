@@ -23,7 +23,7 @@ export default function TrashScreen() {
 				text: "Restore",
 				onPress: async () => {
 					await restoreFile(item.metadata.id);
-					mutate();
+					await mutate();
 				},
 			},
 			{
@@ -37,7 +37,7 @@ export default function TrashScreen() {
 							style: "destructive",
 							onPress: async () => {
 								await deleteFile(item.metadata.id);
-								mutate();
+								await mutate();
 							},
 						},
 					]);

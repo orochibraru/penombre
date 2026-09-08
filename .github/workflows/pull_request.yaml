@@ -1,0 +1,53 @@
+name: Pull Request
+on:
+  pull_request:
+
+concurrency:
+  group: pull-request-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  TZ: Europe/Paris
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CI: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  code_quality:
+    name: Code Quality
+    uses: ./.github/workflows/code_quality.yaml
+    secrets: inherit
+
+  build-app:
+    name: Docker Build (App)
+    needs: [code_quality]
+    uses: ./.github/workflows/docker.yaml
+    with:
+      image_tag: pr-${{ github.event.pull_request.number }}
+      push: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+      image_name: orochibraru/penombre
+      registry_name: docker.io
+      registry_username: orochibraru
+      bake_target: image
+    secrets:
+      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+  gate:
+    name: CI Gate
+    if: always()
+    needs: [code_quality, build-app]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          results=("${{ needs.code_quality.result }}" "${{ needs.build-app.result }}")
+          for result in "${results[@]}"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "::error::One or more jobs failed or were cancelled"
+              exit 1
+            fi
+          done
+          echo "All checks passed (skipped jobs are OK)"

@@ -3,7 +3,7 @@
 .vscode
 .idea
 .github
-.husky
+.pre-commit-config.yaml
 .vscode
 .example.env
 Makefile

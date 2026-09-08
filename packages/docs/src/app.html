@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script>"use strict";
+			// Applies a saved theme override before first paint, so a visitor
+			// who picked "light" or "dark" via the header toggle doesn't see a
+			// flash of the system-preference theme first. No stored value =
+			// no attribute set = app.css's prefers-color-scheme media query
+			// alone decides, which is the "based on device" default.
+			(() => {
+				try {
+					const theme = localStorage.getItem("theme");
+					if (theme === "light" || theme === "dark") {
+						document.documentElement.setAttribute("data-theme", theme);
+					}
+				} catch {
+					// localStorage unreadable (private mode) : fall through to the system default.
+				}
+			})();
+		</script>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

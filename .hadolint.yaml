@@ -1,0 +1,14 @@
+# Rule exemptions and their reasons, kept alongside the Dockerfile.
+ignored:
+  # Alpine's own package index doesn't keep old versions around long enough
+  # to pin reliably: a version pinned today routinely 404s a few weeks later
+  # once alpine:3/oven/bun:1-alpine roll forward, breaking the build for
+  # reasons unrelated to this repo. Every `apk add` here is already
+  # `--no-cache` (no stale index left behind either way).
+  - DL3018
+  # The healthcheck deliberately uses the shell form: it needs `||` to turn
+  # wget's exit code into the 0/1 Docker expects. JSON notation has no shell.
+  - DL3025
+  # `bun` is the user oven/bun:1-alpine ships with; there is no numeric
+  # equivalent to reference and the image would break if we invented one.
+  - DL3066
