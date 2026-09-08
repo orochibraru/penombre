@@ -12,7 +12,7 @@
 	let newName: string = $state("");
 	let loading: boolean = $state(false);
 	let isFolder: boolean = $derived($itemAction?.item?.type === "folder");
-	let inputRef: HTMLInputElement | undefined = $state();
+	let inputRef: HTMLInputElement | null = $state(null);
 
 	function handleRename() {
 		loading = true;

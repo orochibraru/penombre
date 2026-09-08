@@ -18,7 +18,7 @@
 	let newFolderError: string = $state("");
 	let newFolderName: string = $state(defaultFolderName);
 	let loading: boolean = $state(false);
-	let inputRef: HTMLInputElement | undefined = $state();
+	let inputRef: HTMLInputElement | null = $state(null);
 
 	// Select text when dialog opens
 	$effect(() => {
