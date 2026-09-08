@@ -66,11 +66,9 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build Webapp
-        working-directory: packages/web
         run: bun run build
 
       - name: Type check Webapp
-        working-directory: packages/web
         run: bun run check
 
   ts-lint-test:
@@ -100,11 +98,17 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Linting
-        run: bun run lint
-
-      - name: Format check
-        run: bun run format:check
+      # Same .pre-commit-config.yaml the local pre-commit hook runs: hygiene,
+      # gitleaks, typos, actionlint, hadolint, biome, prettier + markdownlint on
+      # markdown, tailwint, a regen of the derived .example.env/OpenAPI/DB-diagram
+      # files, and svelte-check/tsc over the app and every sub-project. The fixer
+      # hooks autofix in place, so CI fails on any file one of them had to modify,
+      # with the diff printed. test-unit is skipped here — the step below runs it
+      # with the Redis service wired up.
+      - name: Run prek
+        uses: j178/prek-action@v3.0.0
+        env:
+          SKIP: test-unit
 
       - name: Test
         run: bun test --bail
@@ -132,7 +136,6 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
-        working-directory: packages/web
         run: bunx playwright install --with-deps chromium
 
       - name: Set up QEMU
@@ -146,7 +149,6 @@ jobs:
           docker buildx build -t penombre-e2e .
 
       - name: Run E2E tests
-        working-directory: packages/web
         run: bun run test:e2e:local
 
       - name: Upload Playwright report
@@ -154,7 +156,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-local
-          path: packages/web/playwright-report-local/
+          path: playwright-report-local/
           retention-days: 7
 
   # ===========================================
@@ -178,7 +180,6 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
-        working-directory: packages/web
         run: bunx playwright install --with-deps chromium
 
       - name: Set up QEMU
@@ -192,7 +193,6 @@ jobs:
           docker buildx build -t penombre-e2e .
 
       - name: Run E2E tests (S3)
-        working-directory: packages/web
         run: bun run test:e2e:s3
 
       - name: Upload Playwright report
@@ -200,7 +200,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-s3
-          path: packages/web/playwright-report/
+          path: playwright-report/
           retention-days: 7
 
   # ===========================================

@@ -3,7 +3,8 @@
 This is a Next.js application generated with
 [Create Fumadocs](https://github.com/fuma-nama/fumadocs).
 
-It is a Next.js app with [Static Export](https://nextjs.org/docs/app/guides/static-exports) configured.
+It is a Next.js app with
+[Static Export](https://nextjs.org/docs/app/guides/static-exports) configured.
 
 Run development server:
 
@@ -15,14 +16,17 @@ pnpm dev
 yarn dev
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+Open <http://localhost:3000> with your browser to see the result.
 
 ## Explore
 
 In the project, you can see:
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+- `lib/source.ts`: Code for content source adapter,
+  [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the
+  interface to access your content.
+- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to
+  keep.
 
 | Route                     | Description                                            |
 | ------------------------- | ------------------------------------------------------ |
@@ -32,7 +36,8 @@ In the project, you can see:
 
 ### Fumadocs MDX
 
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
+A `source.config.ts` config file has been included, you can customise different
+options like frontmatter schema.
 
 Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
 

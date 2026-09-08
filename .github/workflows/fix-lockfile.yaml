@@ -7,7 +7,6 @@ on:
     paths:
       - "bun.lock"
       - "package.json"
-      - "packages/web/package.json"
       - "packages/docs/package.json"
       - "packages/mobile/package.json"
 

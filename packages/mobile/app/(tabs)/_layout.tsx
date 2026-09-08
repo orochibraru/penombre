@@ -12,7 +12,7 @@ export default function TabLayout() {
 	const { data: session, isPending } = authClient.useSession();
 
 	useEffect(() => {
-		if (!session && !isPending) {
+		if (!(session || isPending)) {
 			router.replace("/sign-in");
 		}
 	}, [session, isPending]);

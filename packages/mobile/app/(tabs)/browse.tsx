@@ -4,13 +4,13 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol, type IconSymbolName } from "@/components/ui/icon-symbol";
 import type { FileCategory } from "@/lib/api";
 
-type CategoryItem = {
+interface CategoryItem {
 	id: FileCategory;
 	title: string;
 	icon: IconSymbolName;
 	color: string;
 	bgClass: string;
-};
+}
 
 const CATEGORIES: CategoryItem[] = [
 	{
@@ -68,15 +68,15 @@ function CategoryCard({ item }: { item: CategoryItem }) {
 	return (
 		<Pressable
 			onPress={() => router.push(`/category/${item.id}`)}
-			className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 gap-3 active:bg-gray-100 dark:active:bg-gray-800"
+			className="gap-3 rounded-xl border border-gray-200 p-4 active:bg-gray-100 dark:border-gray-700 dark:active:bg-gray-800"
 			style={{ width: "47%" }}
 		>
 			<View
-				className={`w-12 h-12 rounded-xl items-center justify-center ${item.bgClass}`}
+				className={`h-12 w-12 items-center justify-center rounded-xl ${item.bgClass}`}
 			>
 				<IconSymbol size={24} name={item.icon} color={item.color} />
 			</View>
-			<Text className="text-base font-semibold text-gray-900 dark:text-gray-100">
+			<Text className="font-semibold text-base text-gray-900 dark:text-gray-100">
 				{item.title}
 			</Text>
 		</Pressable>
@@ -88,11 +88,11 @@ export default function BrowseScreen() {
 		<ThemedView style={{ flex: 1 }}>
 			<ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
 				<View className="px-4 pt-4 pb-2">
-					<Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+					<Text className="font-bold text-2xl text-gray-900 dark:text-gray-100">
 						Browse
 					</Text>
 				</View>
-				<View className="px-4 pt-2 flex-row flex-wrap gap-3">
+				<View className="flex-row flex-wrap gap-3 px-4 pt-2">
 					{CATEGORIES.map((cat) => (
 						<CategoryCard key={cat.id} item={cat} />
 					))}

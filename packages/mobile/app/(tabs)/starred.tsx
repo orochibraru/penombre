@@ -29,7 +29,7 @@ export default function StarredScreen() {
 	return (
 		<ThemedView style={{ flex: 1 }}>
 			<View className="px-4 pt-4 pb-2">
-				<Text className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+				<Text className="font-bold text-2xl text-gray-900 dark:text-gray-100">
 					Starred
 				</Text>
 			</View>

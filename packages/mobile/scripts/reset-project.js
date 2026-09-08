@@ -6,6 +6,8 @@
  * You can remove the `reset-project` script from package.json and safely delete this file after running it.
  */
 
+import process from "node:process";
+
 const fs = require("node:fs");
 const path = require("node:path");
 const readline = require("node:readline");

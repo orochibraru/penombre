@@ -1,3 +1,4 @@
+import process from "node:process";
 import type { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { PlatformPressable } from "@react-navigation/elements";
 import * as Haptics from "expo-haptics";

@@ -17,7 +17,9 @@ import { getPageImage, source } from "@/lib/source";
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
 	const params = await props.params;
 	const page = source.getPage(params.slug);
-	if (!page) notFound();
+	if (!page) {
+		notFound();
+	}
 
 	const MDX = page.data.body;
 	const markdownUrl = `/llms.mdx/docs/${[...page.slugs, "index.mdx"].join("/")}`;
@@ -28,7 +30,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
 			<DocsDescription className="mb-0">
 				{page.data.description}
 			</DocsDescription>
-			<div className="flex flex-row gap-2 items-center border-b pb-6">
+			<div className="flex flex-row items-center gap-2 border-b pb-6">
 				<MarkdownCopyButton markdownUrl={markdownUrl} />
 				<ViewOptionsPopover
 					markdownUrl={markdownUrl}
@@ -46,13 +48,13 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
 					})}
 				/>
 			</DocsBody>
-			<p className="text-xs text-gray-500">
+			<p className="text-gray-500 text-xs">
 				Found an issue or want to contribute?{" "}
 				<a
 					href={`https://github.com/orochibraru/penombre/edit/main/packages/docs/content/docs/${page.path}`}
 					rel="noreferrer noopener"
 					target="_blank"
-					className="hover:text-gray-700 transition-colors underline text-end"
+					className="text-end underline transition-colors hover:text-gray-700"
 				>
 					Edit this page on GitHub
 				</a>
@@ -70,7 +72,9 @@ export async function generateMetadata(
 ): Promise<Metadata> {
 	const params = await props.params;
 	const page = source.getPage(params.slug);
-	if (!page) notFound();
+	if (!page) {
+		notFound();
+	}
 
 	return {
 		title: `Penombre - ${page.data.title}`,

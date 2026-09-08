@@ -2,16 +2,14 @@ FROM oven/bun:1-alpine AS base
 
 WORKDIR /app
 
-ARG FRONTEND_DIR=/app/packages/web
 ARG MOBILE_DIR=/app/packages/mobile
 ARG DOCS_DIR=/app/packages/docs
 
 FROM base AS builder
 
-RUN mkdir -p ${FRONTEND_DIR} ${MOBILE_DIR}
+RUN mkdir -p ${MOBILE_DIR} ${DOCS_DIR}
 
 COPY package.json bun.lock /app/
-COPY packages/web/package.json ${FRONTEND_DIR}/
 COPY packages/mobile/package.json ${MOBILE_DIR}/
 COPY packages/docs/package.json ${DOCS_DIR}/
 
@@ -19,31 +17,28 @@ RUN bun i --frozen-lockfile --ignore-scripts
 
 FROM builder AS test-runner
 
-COPY ./packages/web ${FRONTEND_DIR}
-COPY ./tsconfig.json /app/
-COPY ./bunfig.toml /app/
+COPY . /app
 
-RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync
+RUN bun x svelte-kit sync
 
 CMD ["bun", "test", ".test.", "--only-failures"]
 
 FROM builder AS frontend-builder
 
-COPY ./packages/web ${FRONTEND_DIR}
+COPY . /app
 
-RUN cd ${FRONTEND_DIR} && bun i --frozen-lockfile --ignore-scripts
-
-RUN rm -rf ${FRONTEND_DIR}/build ${FRONTEND_DIR}/.svelte-kit
+RUN bun i --frozen-lockfile --ignore-scripts && rm -rf /app/build /app/.svelte-kit
 
 # ORIGIN is required at build time for better-auth import validation
-RUN cd ${FRONTEND_DIR} && bun x svelte-kit sync && ORIGIN=http://localhost bunx --bun vite build
+RUN bun x svelte-kit sync && ORIGIN=http://localhost bunx --bun vite build
 
 # Create a standalone production install outside workspace context
 # This avoids Bun's symlink hell from workspace hoisting
-RUN mkdir -p /prod && \
-    cp ${FRONTEND_DIR}/package.json /prod/ && \
-    cd /prod && \
-    bun i --production --frozen-lockfile --ignore-scripts
+RUN mkdir -p /prod && cp /app/package.json /prod/
+
+WORKDIR /prod
+
+RUN bun i --production --frozen-lockfile --ignore-scripts
 
 # Final stage - minimal runtime
 FROM base AS final
@@ -59,9 +54,9 @@ RUN mkdir -p /app/data
 
 # Copy with --chown to avoid a separate chown layer that duplicates all files
 COPY --from=frontend-builder --chown=bun:bun /prod/node_modules /app/node_modules
-COPY --from=frontend-builder --chown=bun:bun /app/packages/web/build/ /app/build
-COPY --from=frontend-builder --chown=bun:bun /app/packages/web/drizzle/ /app/drizzle
-COPY --from=frontend-builder --chown=bun:bun /app/packages/web/drizzle.config.ts /app/drizzle.config.ts
+COPY --from=frontend-builder --chown=bun:bun /app/build/ /app/build
+COPY --from=frontend-builder --chown=bun:bun /app/drizzle/ /app/drizzle
+COPY --from=frontend-builder --chown=bun:bun /app/drizzle.config.ts /app/drizzle.config.ts
 
 RUN chown bun:bun /app /app/data
 

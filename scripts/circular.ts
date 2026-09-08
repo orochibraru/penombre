@@ -1,6 +1,6 @@
 import madge from "madge";
 
-const packages = ["./packages/api", "./packages/web"];
+const packages = ["./src", "./packages/mobile"];
 
 madge(packages, {
 	fileExtensions: ["ts"],

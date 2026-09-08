@@ -10,7 +10,7 @@ import { FileItemRow } from "@/components/file-item";
 import type { IconSymbolName } from "@/components/ui/icon-symbol";
 import type { ObjectItem } from "@/lib/api";
 
-type FileListProps = {
+interface FileListProps {
 	items: ObjectItem[];
 	loading?: boolean;
 	onRefresh?: () => void;
@@ -20,7 +20,7 @@ type FileListProps = {
 	emptyTitle?: string;
 	emptyDescription?: string;
 	ListHeaderComponent?: React.ReactElement;
-};
+}
 
 export function FileList({
 	items,
@@ -36,7 +36,9 @@ export function FileList({
 	const [refreshing, setRefreshing] = useState(false);
 
 	const handleRefresh = useCallback(async () => {
-		if (!onRefresh) return;
+		if (!onRefresh) {
+			return;
+		}
 		setRefreshing(true);
 		onRefresh();
 		// Allow visual feedback
@@ -53,8 +55,12 @@ export function FileList({
 
 	// Sort: folders first, then by name
 	const sorted = [...items].sort((a, b) => {
-		if (a.type === "folder" && b.type !== "folder") return -1;
-		if (a.type !== "folder" && b.type === "folder") return 1;
+		if (a.type === "folder" && b.type !== "folder") {
+			return -1;
+		}
+		if (a.type !== "folder" && b.type === "folder") {
+			return 1;
+		}
 		const nameA = a.metadata.name ?? a.key;
 		const nameB = b.metadata.name ?? b.key;
 		return nameA.localeCompare(nameB);
@@ -72,7 +78,7 @@ export function FileList({
 				/>
 			)}
 			ItemSeparatorComponent={() => (
-				<View className="h-px bg-gray-100 dark:bg-gray-800 ml-16" />
+				<View className="ml-16 h-px bg-gray-100 dark:bg-gray-800" />
 			)}
 			ListHeaderComponent={ListHeaderComponent}
 			ListEmptyComponent={

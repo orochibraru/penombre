@@ -1,79 +1,232 @@
 {
 	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-	"vcs": {
-		"enabled": true,
-		"clientKind": "git",
-		"useIgnoreFile": true
-	},
-	"files": {
-		"ignoreUnknown": false,
-		"includes": [
-			"**",
-			"!**/node_modules",
-			"!**/*.svelte",
-			"!**/*.svg",
-			"!packages/web/src/app.css",
-			"!packages/web/vite.config.ts",
-			"!packages/web/build",
-			"!packages/web/data",
-			"!packages/web/dist",
-			"!packages/web/test-results",
-			"!packages/web/project.inlang",
-			"!packages/web/playwright-report",
-			"!packages/web/src/lib/paraglide",
-			"!packages/web/.svelte-kit",
-			"!.svelte-kit",
-			"!test-results",
-			"!packages/mobile/.expo",
-			"!packages/web/src/app.html",
-			"!packages/docs/.vercel",
-			"!packages/docs/.tanstack",
-			"!packages/docs/.source",
-			"!packages/docs/src/routeTree.gen.ts",
-			"!tmp",
-			"!dist"
-		]
-	},
-	"formatter": {
-		"enabled": true
-	},
 	"assist": {
 		"actions": {
 			"source": {
 				"organizeImports": "on"
 			}
+		},
+		"enabled": true
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
 		}
 	},
-	"linter": {
+	"files": {
+		"ignoreUnknown": false,
+		"includes": [
+			"**",
+			"!**/*.svg",
+			"!drizzle/meta",
+			"!project.inlang",
+			"!packages/docs/content/api.v1.json",
+			"!packages/mobile/assets/api.v1.json",
+			"!packages/mobile/lib/api.v1.d.ts",
+			"!src/lib/api/v1.json",
+			"!src/lib/paraglide",
+			"!static",
+			"!packages/docs/.source",
+			"!packages/docs/out",
+			"!packages/mobile/android",
+			"!packages/mobile/ios"
+		]
+	},
+	"formatter": {
 		"enabled": true,
-		"rules": {
-			"preset": "recommended",
-			"complexity": {
-				"useMaxParams": "error"
-			},
-			"style": {
-				"useConst": "error",
-				"noParameterAssign": "error",
-				"useAsConstAssertion": "error",
-				"useDefaultParameterLast": "error",
-				"useEnumInitializers": "error",
-				"useSelfClosingElements": "error",
-				"useSingleVarDeclarator": "error",
-				"noUnusedTemplateLiteral": "error",
-				"useNumberNamespace": "error",
-				"noInferrableTypes": "error",
-				"noUselessElse": "error"
-			}
-		}
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "double"
-		}
+		"indentStyle": "tab"
 	},
 	"html": {
 		"formatter": {
 			"indentScriptAndStyle": true
 		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		},
+		"globals": ["Bun"]
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"complexity": {
+				"noExcessiveCognitiveComplexity": "error",
+				"noExcessiveLinesPerFunction": {
+					"level": "error",
+					"options": {
+						"maxLines": 80
+					}
+				},
+				"noImplicitCoercions": "off",
+				"noRedundantDefaultExport": "off",
+				"noVoid": "off",
+				"useMaxParams": "error"
+			},
+			"correctness": {
+				"noNodejsModules": "off",
+				"noUnresolvedImports": "off",
+				"noUnusedImports": "warn",
+				"useImportExtensions": "off",
+				"useQwikValidLexicalScope": "off"
+			},
+			"nursery": {
+				"noFloatingPromises": "error",
+				"noMisusedPromises": "error",
+				"recommended": true,
+				"useExplicitType": "off",
+				"useSortedClasses": "error"
+			},
+			"performance": {
+				"noAwaitInLoops": "error",
+				"noBarrelFile": "off",
+				"noNamespaceImport": "off",
+				"noReExportAll": "off",
+				"useTopLevelRegex": "off"
+			},
+			"preset": "all",
+			"security": {
+				"noSecrets": "off"
+			},
+			"style": {
+				"noContinue": "off",
+				"noDefaultExport": "off",
+				"noExcessiveClassesPerFile": "off",
+				"noExcessiveLinesPerFile": {
+					"level": "error",
+					"options": {
+						"maxLines": 680
+					}
+				},
+				"noExportedImports": "off",
+				"noHexColors": "off",
+				"noImplicitBoolean": "off",
+				"noIncrementDecrement": "off",
+				"noMagicNumbers": "off",
+				"noNamespace": "off",
+				"noNegationElse": "off",
+				"noNestedTernary": "off",
+				"noParameterProperties": "off",
+				"noProcessEnv": "off",
+				"noTernary": "off",
+				"useAtIndex": "off",
+				"useBlockStatements": "error",
+				"useComponentExportOnlyModules": "off",
+				"useConsistentArrayType": "off",
+				"useConsistentMemberAccessibility": "off",
+				"useConsistentTypeDefinitions": "error",
+				"useDestructuring": "off",
+				"useErrorCause": "off",
+				"useExplicitLengthCheck": "off",
+				"useExportsLast": "off",
+				"useGlobalThis": "off",
+				"useNamingConvention": "off",
+				"useSingleVarDeclarator": "off"
+			},
+			"suspicious": {
+				"noBitwiseOperators": "off",
+				"noConsole": "error",
+				"noEmptyBlockStatements": "error",
+				"noEqualsToNull": "off",
+				"noImportCycles": "off",
+				"noReactSpecificProps": "off",
+				"noReturnAssign": "off",
+				"noShadow": "off",
+				"noUnnecessaryConditions": "error",
+				"useAwait": "error",
+				"useStaticResponseMethods": "off"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.svelte", "**/*.astro", "**/*.vue"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedImports": "off",
+						"noUnusedVariables": "off",
+						"useHookAtTopLevel": "off"
+					},
+					"style": {
+						"useConst": "off",
+						"useImportType": "off"
+					},
+					"suspicious": {
+						"noEmptySource": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": [
+				"e2e/**",
+				"scripts/**",
+				"test.setup.ts",
+				"**/*.test.ts",
+				"**/*.spec.ts",
+				"**/*.config.ts",
+				"**/*.config.js",
+				"**/*.config.mjs"
+			],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"noExcessiveCognitiveComplexity": "off",
+						"noExcessiveLinesPerFunction": "off"
+					},
+					"performance": {
+						"noAwaitInLoops": "off"
+					},
+					"style": {
+						"noExcessiveLinesPerFile": "off",
+						"noIncrementDecrement": "off",
+						"noNonNullAssertion": "off"
+					},
+					"suspicious": {
+						"noConsole": "off",
+						"noEmptyBlockStatements": "off",
+						"noExplicitAny": "off",
+						"noSkippedTests": "off",
+						"useAwait": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["packages/docs/**", "packages/mobile/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/lib/logger.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/lib/api/v1.d.ts", "src/lib/server/db/schema.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noExcessiveLinesPerFile": "off"
+					}
+				}
+			}
+		}
+	],
+	"vcs": {
+		"clientKind": "git",
+		"enabled": true,
+		"useIgnoreFile": true
 	}
 }

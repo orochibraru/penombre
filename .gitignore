@@ -1,5 +1,5 @@
-test-results
 node_modules
+**/node_modules/
 
 # Output
 .output
@@ -8,7 +8,10 @@ node_modules
 .wrangler
 /.svelte-kit
 /build
+/dist/
+/test-results/
 src/lib/ROUTES.ts
+src/lib/paraglide
 
 # OS
 .DS_Store
@@ -23,18 +26,18 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
-/dist/
-/.pnpm-store/
-/docs/.vitepress/cache/
+
+# Playwright
+/playwright-report/
+/playwright-report-local/
+/blob-report/
+/e2e/.auth/
+
+# Local runtime data
+/data/
+/backups/
 /temp/
 /tmp/
+/.pnpm-store/
 
-# Backups
-/backups/
-
-**/node_modules/
 **/*.log
-
-*.env
-!.example.env
-data/storage/

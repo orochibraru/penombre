@@ -1,3 +1,4 @@
+import process from "node:process";
 import { type Href, Link } from "expo-router";
 import {
 	openBrowserAsync,

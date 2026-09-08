@@ -10,7 +10,9 @@ export async function GET(
 	const { slug } = await params;
 	// remove the appended "index.mdx"
 	const page = source.getPage(slug?.slice(0, -1));
-	if (!page) notFound();
+	if (!page) {
+		notFound();
+	}
 
 	return new Response(await getLLMText(page), {
 		headers: {

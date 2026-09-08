@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import process from "node:process";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import type { Metadata } from "next";
 import { baseOptions } from "@/lib/layout.shared";
@@ -89,7 +90,9 @@ function parseChangelog(content: string): VersionEntry[] {
 			entries.push(current);
 		} else if (line.startsWith("[compare changes]") && current) {
 			const m = line.match(/\(([^)]+)\)/);
-			if (m) current.compareUrl = m[1];
+			if (m) {
+				current.compareUrl = m[1];
+			}
 		} else if (line.startsWith("### ") && current) {
 			const typeRaw = line.slice(4).trim();
 			if (SECTION_LABELS[typeRaw] === "__contributors") {
@@ -146,7 +149,7 @@ function Section({ section }: { section: ChangeSection }) {
 	return (
 		<div>
 			<span
-				className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${color} ${bg} mb-2`}
+				className={`inline-block rounded-full px-2.5 py-0.5 font-semibold text-xs ${color} ${bg} mb-2`}
 			>
 				{section.type}
 			</span>
@@ -155,7 +158,7 @@ function Section({ section }: { section: ChangeSection }) {
 					<li
 						// biome-ignore lint/suspicious/noArrayIndexKey: static list
 						key={i}
-						className="flex items-start gap-2 text-sm text-fd-foreground"
+						className="flex items-start gap-2 text-fd-foreground text-sm"
 					>
 						<span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-fd-border" />
 						<span className="flex-1">
@@ -165,7 +168,7 @@ function Section({ section }: { section: ChangeSection }) {
 									href={item.ref.url}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="ml-1.5 font-mono text-xs text-fd-muted-foreground hover:text-fd-primary"
+									className="ml-1.5 font-mono text-fd-muted-foreground text-xs hover:text-fd-primary"
 								>
 									{item.ref.hash}
 								</a>
@@ -184,13 +187,13 @@ function VersionCard({ entry }: { entry: VersionEntry }) {
 		<div className="flex gap-6">
 			{/* Timeline spine */}
 			<div className="flex flex-col items-center">
-				<div className="size-3 shrink-0 rounded-full border-2 border-fd-primary bg-fd-background mt-1" />
-				<div className="w-px flex-1 bg-fd-border mt-1" />
+				<div className="mt-1 size-3 shrink-0 rounded-full border-2 border-fd-primary bg-fd-background" />
+				<div className="mt-1 w-px flex-1 bg-fd-border" />
 			</div>
 			{/* Content */}
 			<div className="flex-1 pb-10">
-				<div className="flex flex-wrap items-center gap-3 mb-4">
-					<h2 className="text-xl font-bold text-fd-foreground">
+				<div className="mb-4 flex flex-wrap items-center gap-3">
+					<h2 className="font-bold text-fd-foreground text-xl">
 						{entry.version}
 					</h2>
 					{entry.compareUrl && (
@@ -198,13 +201,13 @@ function VersionCard({ entry }: { entry: VersionEntry }) {
 							href={entry.compareUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="text-xs text-fd-muted-foreground hover:text-fd-primary border border-fd-border rounded px-2 py-0.5"
+							className="rounded border border-fd-border px-2 py-0.5 text-fd-muted-foreground text-xs hover:text-fd-primary"
 						>
 							compare changes →
 						</a>
 					)}
 					{!hasSections && (
-						<span className="text-xs text-fd-muted-foreground italic">
+						<span className="text-fd-muted-foreground text-xs italic">
 							No changes recorded
 						</span>
 					)}
@@ -235,7 +238,7 @@ export default function ChangelogPage() {
 		<HomeLayout {...baseOptions()}>
 			<div className="mx-auto w-full max-w-3xl px-4 py-16">
 				<div className="mb-12">
-					<h1 className="text-4xl font-bold tracking-tight text-fd-foreground">
+					<h1 className="font-bold text-4xl text-fd-foreground tracking-tight">
 						Changelog
 					</h1>
 					<p className="mt-2 text-fd-muted-foreground">

@@ -196,7 +196,7 @@ export async function checkAuth(): Promise<{
 		return { authenticated: false, error: "No data returned from auth check" };
 	}
 
-	if (!data.session || !data.user) {
+	if (!(data.session && data.user)) {
 		return { authenticated: false, error: "No active session" };
 	}
 

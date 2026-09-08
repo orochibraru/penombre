@@ -1,7 +1,8 @@
 import { cp } from "node:fs/promises";
+import process from "node:process";
 import { $ } from "bun";
 import { pgGenerate } from "drizzle-dbml-generator";
-import * as schema from "../packages/web/src/lib/server/db/schema";
+import * as schema from "../src/lib/server/db/schema";
 
 const schemaDestination = "./resources/schema.dbml";
 const svgDestination = "./resources/db.svg";

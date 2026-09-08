@@ -16,7 +16,9 @@
 			"get": {
 				"summary": "List activities",
 				"description": "Returns a list of recent activities for the current user",
-				"tags": ["Activity"],
+				"tags": [
+					"Activity"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -63,7 +65,11 @@
 													},
 													"level": {
 														"type": "string",
-														"enum": ["info", "warning", "error"]
+														"enum": [
+															"info",
+															"warning",
+															"error"
+														]
 													},
 													"createdAt": {
 														"type": "string"
@@ -118,7 +124,9 @@
 			"get": {
 				"summary": "List authentication providers",
 				"description": "Returns a list of available authentication providers and their status. Does not require authentication.",
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -140,13 +148,21 @@
 													},
 													"type": {
 														"type": "string",
-														"enum": ["oauth", "email"]
+														"enum": [
+															"oauth",
+															"email"
+														]
 													},
 													"enabled": {
 														"type": "boolean"
 													}
 												},
-												"required": ["name", "prettyName", "type", "enabled"],
+												"required": [
+													"name",
+													"prettyName",
+													"type",
+													"enabled"
+												],
 												"additionalProperties": false
 											}
 										}
@@ -182,7 +198,9 @@
 			"get": {
 				"summary": "Get user preferences",
 				"description": "Returns the current user's layout and sort preferences",
-				"tags": ["Preferences"],
+				"tags": [
+					"Preferences"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -196,13 +214,20 @@
 											"properties": {
 												"layout": {
 													"type": "string",
-													"enum": ["grid", "list"]
+													"enum": [
+														"grid",
+														"list"
+													]
 												},
 												"sortColumn": {
 													"anyOf": [
 														{
 															"type": "string",
-															"enum": ["name", "size", "updatedAt"]
+															"enum": [
+																"name",
+																"size",
+																"updatedAt"
+															]
 														},
 														{
 															"type": "null"
@@ -211,7 +236,10 @@
 												},
 												"sortDirection": {
 													"type": "string",
-													"enum": ["asc", "desc"]
+													"enum": [
+														"asc",
+														"desc"
+													]
 												}
 											},
 											"additionalProperties": false
@@ -251,7 +279,9 @@
 			"put": {
 				"summary": "Update user preferences",
 				"description": "Updates the current user's layout and sort preferences",
-				"tags": ["Preferences"],
+				"tags": [
+					"Preferences"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -265,13 +295,20 @@
 											"properties": {
 												"layout": {
 													"type": "string",
-													"enum": ["grid", "list"]
+													"enum": [
+														"grid",
+														"list"
+													]
 												},
 												"sortColumn": {
 													"anyOf": [
 														{
 															"type": "string",
-															"enum": ["name", "size", "updatedAt"]
+															"enum": [
+																"name",
+																"size",
+																"updatedAt"
+															]
 														},
 														{
 															"type": "null"
@@ -280,7 +317,10 @@
 												},
 												"sortDirection": {
 													"type": "string",
-													"enum": ["asc", "desc"]
+													"enum": [
+														"asc",
+														"desc"
+													]
 												}
 											},
 											"additionalProperties": false
@@ -335,13 +375,20 @@
 								"properties": {
 									"layout": {
 										"type": "string",
-										"enum": ["grid", "list"]
+										"enum": [
+											"grid",
+											"list"
+										]
 									},
 									"sortColumn": {
 										"anyOf": [
 											{
 												"type": "string",
-												"enum": ["name", "size", "updatedAt"]
+												"enum": [
+													"name",
+													"size",
+													"updatedAt"
+												]
 											},
 											{
 												"type": "null"
@@ -350,7 +397,10 @@
 									},
 									"sortDirection": {
 										"type": "string",
-										"enum": ["asc", "desc"]
+										"enum": [
+											"asc",
+											"desc"
+										]
 									}
 								},
 								"additionalProperties": false
@@ -364,7 +414,9 @@
 			"get": {
 				"summary": "List all files",
 				"description": "Returns a list of all files in the root directory",
-				"tags": ["Storage"],
+				"tags": [
+					"Storage"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -554,7 +606,10 @@
 															},
 															"type": {
 																"type": "string",
-																"enum": ["file", "folder"]
+																"enum": [
+																	"file",
+																	"folder"
+																]
 															},
 															"parent": {
 																"type": "string"
@@ -563,7 +618,11 @@
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"additionalProperties": false
 													}
 												},
@@ -576,7 +635,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -616,7 +679,9 @@
 			"get": {
 				"summary": "List files in folder",
 				"description": "Returns a list of files within a specific folder path",
-				"tags": ["Storage"],
+				"tags": [
+					"Storage"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -816,7 +881,10 @@
 															},
 															"type": {
 																"type": "string",
-																"enum": ["file", "folder"]
+																"enum": [
+																	"file",
+																	"folder"
+																]
 															},
 															"parent": {
 																"type": "string"
@@ -825,7 +893,11 @@
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"additionalProperties": false
 													}
 												},
@@ -838,7 +910,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -888,7 +964,9 @@
 			"get": {
 				"summary": "List recent files",
 				"description": "Returns a list of recently accessed or modified files",
-				"tags": ["Storage"],
+				"tags": [
+					"Storage"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -1078,7 +1156,10 @@
 															},
 															"type": {
 																"type": "string",
-																"enum": ["file", "folder"]
+																"enum": [
+																	"file",
+																	"folder"
+																]
 															},
 															"parent": {
 																"type": "string"
@@ -1087,7 +1168,11 @@
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"additionalProperties": false
 													}
 												},
@@ -1100,7 +1185,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -1140,7 +1229,9 @@
 			"post": {
 				"summary": "Create a file",
 				"description": "Creates a new file entry (metadata only, no body yet)",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "folder",
@@ -1331,7 +1422,10 @@
 													"additionalProperties": false
 												}
 											},
-											"required": ["finalName", "metadata"],
+											"required": [
+												"finalName",
+												"metadata"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -1389,7 +1483,10 @@
 										"type": "number"
 									}
 								},
-								"required": ["name", "size"],
+								"required": [
+									"name",
+									"size"
+								],
 								"additionalProperties": false
 							}
 						}
@@ -1401,7 +1498,9 @@
 			"post": {
 				"summary": "Create files in batch",
 				"description": "Creates multiple file entries at once (metadata only)",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "folder",
@@ -1594,7 +1693,10 @@
 														"additionalProperties": false
 													}
 												},
-												"required": ["finalName", "metadata"],
+												"required": [
+													"finalName",
+													"metadata"
+												],
 												"additionalProperties": false
 											}
 										}
@@ -1658,12 +1760,17 @@
 													"type": "number"
 												}
 											},
-											"required": ["name", "size"],
+											"required": [
+												"name",
+												"size"
+											],
 											"additionalProperties": false
 										}
 									}
 								},
-								"required": ["files"],
+								"required": [
+									"files"
+								],
 								"additionalProperties": false
 							}
 						}
@@ -1675,7 +1782,9 @@
 			"get": {
 				"summary": "Search files",
 				"description": "Searches files by name",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "q",
@@ -1883,7 +1992,10 @@
 															},
 															"type": {
 																"type": "string",
-																"enum": ["file", "folder"]
+																"enum": [
+																	"file",
+																	"folder"
+																]
 															},
 															"parent": {
 																"type": "string"
@@ -1892,7 +2004,11 @@
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"additionalProperties": false
 													}
 												},
@@ -1905,7 +2021,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -1955,7 +2075,9 @@
 			"get": {
 				"summary": "List trashed files",
 				"description": "Returns files currently in the trash",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -2145,7 +2267,10 @@
 															},
 															"type": {
 																"type": "string",
-																"enum": ["file", "folder"]
+																"enum": [
+																	"file",
+																	"folder"
+																]
 															},
 															"parent": {
 																"type": "string"
@@ -2154,7 +2279,11 @@
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"additionalProperties": false
 													}
 												},
@@ -2167,7 +2296,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -2207,7 +2340,9 @@
 			"get": {
 				"summary": "List starred files",
 				"description": "Returns files marked as starred",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -2397,7 +2532,10 @@
 															},
 															"type": {
 																"type": "string",
-																"enum": ["file", "folder"]
+																"enum": [
+																	"file",
+																	"folder"
+																]
 															},
 															"parent": {
 																"type": "string"
@@ -2406,7 +2544,11 @@
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"additionalProperties": false
 													}
 												},
@@ -2419,7 +2561,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -2459,7 +2605,9 @@
 			"get": {
 				"summary": "Get trash and starred counts",
 				"description": "Returns the count of trashed and starred items",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -2478,7 +2626,10 @@
 													"type": "number"
 												}
 											},
-											"required": ["trash", "starred"],
+											"required": [
+												"trash",
+												"starred"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -2518,7 +2669,9 @@
 			"get": {
 				"summary": "List files by category",
 				"description": "Returns files matching the specified category",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "category",
@@ -2718,7 +2871,10 @@
 															},
 															"type": {
 																"type": "string",
-																"enum": ["file", "folder"]
+																"enum": [
+																	"file",
+																	"folder"
+																]
 															},
 															"parent": {
 																"type": "string"
@@ -2727,7 +2883,11 @@
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"additionalProperties": false
 													}
 												},
@@ -2740,7 +2900,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -2790,7 +2954,9 @@
 			"get": {
 				"summary": "Get file metadata or raw content",
 				"description": "Returns file metadata as JSON. Pass raw=true or thumbnail=true for binary content.",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "id",
@@ -2822,7 +2988,11 @@
 						"required": false,
 						"schema": {
 							"type": "string",
-							"enum": ["small", "medium", "large"]
+							"enum": [
+								"small",
+								"medium",
+								"large"
+							]
 						}
 					}
 				],
@@ -3010,7 +3180,10 @@
 												},
 												"type": {
 													"type": "string",
-													"enum": ["file", "folder"]
+													"enum": [
+														"file",
+														"folder"
+													]
 												},
 												"parent": {
 													"type": "string"
@@ -3019,7 +3192,11 @@
 													"type": "string"
 												}
 											},
-											"required": ["key", "metadata", "type"],
+											"required": [
+												"key",
+												"metadata",
+												"type"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -3067,7 +3244,9 @@
 			"put": {
 				"summary": "Update file metadata",
 				"description": "Updates metadata fields on an existing file",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "id",
@@ -3101,7 +3280,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -3283,7 +3464,9 @@
 			"delete": {
 				"summary": "Delete a file",
 				"description": "Permanently deletes a file",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "id",
@@ -3309,7 +3492,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -3359,7 +3544,9 @@
 			"post": {
 				"summary": "Upload file content",
 				"description": "Uploads or replaces the binary content of an existing file entry",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "id",
@@ -3385,7 +3572,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -3440,7 +3629,9 @@
 										"description": "The file to upload"
 									}
 								},
-								"required": ["file"],
+								"required": [
+									"file"
+								],
 								"additionalProperties": false
 							}
 						}
@@ -3452,7 +3643,9 @@
 			"post": {
 				"summary": "Move a file",
 				"description": "Moves a file to a different folder",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "id",
@@ -3478,7 +3671,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -3533,7 +3728,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["destination"],
+								"required": [
+									"destination"
+								],
 								"additionalProperties": false
 							}
 						}
@@ -3545,7 +3742,9 @@
 			"post": {
 				"summary": "Duplicate a file",
 				"description": "Creates a copy of the file in the same folder",
-				"tags": ["Storage - Files"],
+				"tags": [
+					"Storage - Files"
+				],
 				"parameters": [
 					{
 						"name": "id",
@@ -3740,7 +3939,10 @@
 												},
 												"type": {
 													"type": "string",
-													"enum": ["file", "folder"]
+													"enum": [
+														"file",
+														"folder"
+													]
 												},
 												"parent": {
 													"type": "string"
@@ -3749,7 +3951,11 @@
 													"type": "string"
 												}
 											},
-											"required": ["key", "metadata", "type"],
+											"required": [
+												"key",
+												"metadata",
+												"type"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -3799,7 +4005,9 @@
 			"get": {
 				"summary": "List folders",
 				"description": "Returns a list of all folders for the current user",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -3823,7 +4031,11 @@
 														"type": "string"
 													}
 												},
-												"required": ["id", "name", "path"],
+												"required": [
+													"id",
+													"name",
+													"path"
+												],
 												"additionalProperties": false
 											}
 										}
@@ -3862,7 +4074,9 @@
 			"post": {
 				"summary": "Create a folder",
 				"description": "Creates a new folder under an optional parent",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -3884,7 +4098,11 @@
 													"type": "string"
 												}
 											},
-											"required": ["message", "id", "name"],
+											"required": [
+												"message",
+												"id",
+												"name"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -3942,7 +4160,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["name"],
+								"required": [
+									"name"
+								],
 								"additionalProperties": false
 							}
 						}
@@ -3954,7 +4174,9 @@
 			"get": {
 				"summary": "Get folder tree",
 				"description": "Returns all folders with metadata for building a folder picker",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -3978,7 +4200,11 @@
 														"type": "string"
 													}
 												},
-												"required": ["id", "name", "path"],
+												"required": [
+													"id",
+													"name",
+													"path"
+												],
 												"additionalProperties": false
 											}
 										}
@@ -4019,7 +4245,9 @@
 			"get": {
 				"summary": "List trashed folders",
 				"description": "Returns folders currently in the trash",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -4043,7 +4271,11 @@
 														"type": "string"
 													}
 												},
-												"required": ["id", "name", "path"],
+												"required": [
+													"id",
+													"name",
+													"path"
+												],
 												"additionalProperties": false
 											}
 										}
@@ -4084,7 +4316,9 @@
 			"get": {
 				"summary": "Get folder sizes by prefix",
 				"description": "Calculates sizes for all folders under a given prefix",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "prefix",
@@ -4149,7 +4383,9 @@
 			"get": {
 				"summary": "Get a folder",
 				"description": "Returns a folder by ID",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -4181,7 +4417,11 @@
 													"type": "string"
 												}
 											},
-											"required": ["id", "name", "path"],
+											"required": [
+												"id",
+												"name",
+												"path"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -4229,7 +4469,9 @@
 			"put": {
 				"summary": "Update folder metadata",
 				"description": "Updates metadata on a folder (trash, star, tags, name)",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -4255,7 +4497,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -4334,7 +4578,9 @@
 			"delete": {
 				"summary": "Delete a folder",
 				"description": "Permanently deletes a folder and its contents",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -4360,7 +4606,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -4429,7 +4677,9 @@
 			"get": {
 				"summary": "Get folder metadata",
 				"description": "Returns metadata for a specific folder",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -4504,7 +4754,9 @@
 			"get": {
 				"summary": "Get folder size",
 				"description": "Calculates and returns the total size of a folder in bytes",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -4581,7 +4833,9 @@
 			"post": {
 				"summary": "Trash a folder",
 				"description": "Soft-deletes a folder by moving it to the trash",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -4607,7 +4861,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -4673,7 +4929,9 @@
 			"post": {
 				"summary": "Restore a trashed folder",
 				"description": "Restores a folder from the trash",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -4699,7 +4957,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -4765,7 +5025,9 @@
 			"post": {
 				"summary": "Move a folder",
 				"description": "Moves a folder to a different parent",
-				"tags": ["Storage - Folders"],
+				"tags": [
+					"Storage - Folders"
+				],
 				"parameters": [
 					{
 						"name": "path",
@@ -4791,7 +5053,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"additionalProperties": false
 										}
 									}
@@ -4849,7 +5113,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["destination"],
+								"required": [
+									"destination"
+								],
 								"additionalProperties": false
 							}
 						}
@@ -4861,7 +5127,9 @@
 			"post": {
 				"summary": "Bulk download as ZIP",
 				"description": "Downloads multiple files/folders as a single ZIP archive",
-				"tags": ["Storage - Downloads"],
+				"tags": [
+					"Storage - Downloads"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -4930,7 +5198,9 @@
 										}
 									}
 								},
-								"required": ["paths"],
+								"required": [
+									"paths"
+								],
 								"additionalProperties": false
 							}
 						}
@@ -4942,7 +5212,9 @@
 			"get": {
 				"summary": "Download folder as ZIP",
 				"description": "Downloads an entire folder as a ZIP archive",
-				"tags": ["Storage - Downloads"],
+				"tags": [
+					"Storage - Downloads"
+				],
 				"parameters": [
 					{
 						"name": "folder",
@@ -5019,7 +5291,9 @@
 			"post": {
 				"summary": "Bulk move files and folders",
 				"description": "Moves multiple files and/or folders to a new destination",
-				"tags": ["Storage - Bulk"],
+				"tags": [
+					"Storage - Bulk"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -5049,7 +5323,10 @@
 																"type": "string"
 															}
 														},
-														"required": ["path", "success"],
+														"required": [
+															"path",
+															"success"
+														],
 														"additionalProperties": false
 													}
 												},
@@ -5128,10 +5405,16 @@
 												},
 												"type": {
 													"type": "string",
-													"enum": ["file", "folder"]
+													"enum": [
+														"file",
+														"folder"
+													]
 												}
 											},
-											"required": ["path", "type"],
+											"required": [
+												"path",
+												"type"
+											],
 											"additionalProperties": false
 										}
 									},
@@ -5139,7 +5422,10 @@
 										"type": "string"
 									}
 								},
-								"required": ["items", "destination"],
+								"required": [
+									"items",
+									"destination"
+								],
 								"additionalProperties": false
 							}
 						}
@@ -5151,7 +5437,9 @@
 			"get": {
 				"summary": "Check for updates",
 				"description": "Checks if a newer version of Penombre is available on GitHub releases",
-				"tags": ["Version"],
+				"tags": [
+					"Version"
+				],
 				"responses": {
 					"200": {
 						"description": "Successful response",
@@ -5233,7 +5521,9 @@
 		},
 		"/api/v1/auth/sign-in/social": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Sign in with a social provider",
 				"operationId": "socialSignIn",
 				"security": [
@@ -5355,7 +5645,9 @@
 												"description": "The user object from the provider. Only available for some providers like Apple."
 											}
 										},
-										"required": ["token"]
+										"required": [
+											"token"
+										]
 									},
 									"scopes": {
 										"type": "array",
@@ -5380,7 +5672,9 @@
 										"additionalProperties": {}
 									}
 								},
-								"required": ["provider"]
+								"required": [
+									"provider"
+								]
 							}
 						}
 					}
@@ -5408,7 +5702,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["redirect"]
+									"required": [
+										"redirect"
+									]
 								}
 							}
 						}
@@ -5423,7 +5719,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5439,7 +5737,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5510,7 +5810,9 @@
 		},
 		"/api/v1/auth/callback/{id}": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"security": [
 					{
 						"bearerAuth": []
@@ -5537,7 +5839,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5553,7 +5857,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5622,7 +5928,9 @@
 				}
 			},
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"security": [
 					{
 						"bearerAuth": []
@@ -5679,7 +5987,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5695,7 +6005,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5766,7 +6078,9 @@
 		},
 		"/api/v1/auth/get-session": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Get the current session",
 				"operationId": "getSession",
 				"security": [
@@ -5781,7 +6095,10 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"type": ["object", "null"],
+									"type": [
+										"object",
+										"null"
+									],
 									"properties": {
 										"session": {
 											"$ref": "#/components/schemas/Session"
@@ -5790,7 +6107,10 @@
 											"$ref": "#/components/schemas/User"
 										}
 									},
-									"required": ["session", "user"]
+									"required": [
+										"session",
+										"user"
+									]
 								}
 							}
 						}
@@ -5805,7 +6125,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5821,7 +6143,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5890,7 +6214,9 @@
 				}
 			},
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Get the current session",
 				"operationId": "getSessionPost",
 				"security": [
@@ -5915,7 +6241,10 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"type": ["object", "null"],
+									"type": [
+										"object",
+										"null"
+									],
 									"properties": {
 										"session": {
 											"$ref": "#/components/schemas/Session"
@@ -5924,7 +6253,10 @@
 											"$ref": "#/components/schemas/User"
 										}
 									},
-									"required": ["session", "user"]
+									"required": [
+										"session",
+										"user"
+									]
 								}
 							}
 						}
@@ -5939,7 +6271,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -5955,7 +6289,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6026,7 +6362,9 @@
 		},
 		"/api/v1/auth/sign-out": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Sign out the current user",
 				"operationId": "signOut",
 				"security": [
@@ -6071,7 +6409,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6087,7 +6427,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6158,7 +6500,9 @@
 		},
 		"/api/v1/auth/sign-up/email": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Sign up a user using email and password",
 				"operationId": "signUpWithEmailAndPassword",
 				"security": [
@@ -6198,7 +6542,11 @@
 										"description": "If this is false, the session will not be remembered. Default is `true`."
 									}
 								},
-								"required": ["name", "email", "password"]
+								"required": [
+									"name",
+									"email",
+									"password"
+								]
 							}
 						}
 					}
@@ -6263,7 +6611,9 @@
 											]
 										}
 									},
-									"required": ["user"]
+									"required": [
+										"user"
+									]
 								}
 							}
 						}
@@ -6278,7 +6628,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6294,7 +6646,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6380,7 +6734,9 @@
 		},
 		"/api/v1/auth/sign-in/email": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Sign in with email and password",
 				"operationId": "signInEmail",
 				"security": [
@@ -6413,7 +6769,10 @@
 										"description": "If this is false, the session will not be remembered. Default is `true`."
 									}
 								},
-								"required": ["email", "password"]
+								"required": [
+									"email",
+									"password"
+								]
 							}
 						}
 					}
@@ -6429,7 +6788,9 @@
 									"properties": {
 										"redirect": {
 											"type": "boolean",
-											"enum": [false]
+											"enum": [
+												false
+											]
 										},
 										"token": {
 											"type": "string",
@@ -6444,7 +6805,11 @@
 											"$ref": "#/components/schemas/User"
 										}
 									},
-									"required": ["redirect", "token", "user"]
+									"required": [
+										"redirect",
+										"token",
+										"user"
+									]
 								}
 							}
 						}
@@ -6459,7 +6824,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6475,7 +6842,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6546,7 +6915,9 @@
 		},
 		"/api/v1/auth/reset-password": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Reset the password for a user",
 				"operationId": "resetPassword",
 				"security": [
@@ -6571,7 +6942,9 @@
 										"description": "The token to reset the password"
 									}
 								},
-								"required": ["newPassword"]
+								"required": [
+									"newPassword"
+								]
 							}
 						}
 					}
@@ -6602,7 +6975,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6618,7 +6993,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6689,7 +7066,9 @@
 		},
 		"/api/v1/auth/verify-password": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Verify the current user's password",
 				"operationId": "verifyPassword",
 				"security": [
@@ -6710,7 +7089,9 @@
 										"description": "The password to verify"
 									}
 								},
-								"required": ["password"]
+								"required": [
+									"password"
+								]
 							}
 						}
 					}
@@ -6741,7 +7122,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6757,7 +7140,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6828,7 +7213,9 @@
 		},
 		"/api/v1/auth/verify-email": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Verify the email of the user",
 				"security": [
 					{
@@ -6872,7 +7259,10 @@
 											"description": "Indicates if the email was verified successfully"
 										}
 									},
-									"required": ["user", "status"]
+									"required": [
+										"user",
+										"status"
+									]
 								}
 							}
 						}
@@ -6887,7 +7277,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6903,7 +7295,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -6974,7 +7368,9 @@
 		},
 		"/api/v1/auth/send-verification-email": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Send a verification email to the user",
 				"operationId": "sendVerificationEmail",
 				"security": [
@@ -7001,7 +7397,9 @@
 										"nullable": true
 									}
 								},
-								"required": ["email"]
+								"required": [
+									"email"
+								]
 							}
 						}
 					}
@@ -7051,7 +7449,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7122,7 +7522,9 @@
 		},
 		"/api/v1/auth/change-email": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"operationId": "changeEmail",
 				"security": [
 					{
@@ -7146,7 +7548,9 @@
 										"description": "The URL to redirect to after email verification"
 									}
 								},
-								"required": ["newEmail"]
+								"required": [
+									"newEmail"
+								]
 							}
 						}
 					}
@@ -7169,12 +7573,17 @@
 										},
 										"message": {
 											"type": "string",
-											"enum": ["Email updated", "Verification email sent"],
+											"enum": [
+												"Email updated",
+												"Verification email sent"
+											],
 											"description": "Status message of the email change process",
 											"nullable": true
 										}
 									},
-									"required": ["status"]
+									"required": [
+										"status"
+									]
 								}
 							}
 						}
@@ -7189,7 +7598,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7205,7 +7616,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7276,7 +7689,9 @@
 		},
 		"/api/v1/auth/change-password": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Change the password of the user",
 				"operationId": "changePassword",
 				"security": [
@@ -7305,7 +7720,10 @@
 										"description": "Must be a boolean value"
 									}
 								},
-								"required": ["newPassword", "currentPassword"]
+								"required": [
+									"newPassword",
+									"currentPassword"
+								]
 							}
 						}
 					}
@@ -7370,7 +7788,9 @@
 											]
 										}
 									},
-									"required": ["user"]
+									"required": [
+										"user"
+									]
 								}
 							}
 						}
@@ -7385,7 +7805,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7401,7 +7823,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7472,7 +7896,9 @@
 		},
 		"/api/v1/auth/update-session": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Update the current session",
 				"operationId": "updateSession",
 				"security": [
@@ -7523,7 +7949,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7539,7 +7967,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7610,7 +8040,9 @@
 		},
 		"/api/v1/auth/update-user": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Update the current user",
 				"operationId": "updateUser",
 				"security": [
@@ -7666,7 +8098,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7682,7 +8116,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7753,7 +8189,9 @@
 		},
 		"/api/v1/auth/delete-user": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Delete the user",
 				"operationId": "deleteUser",
 				"security": [
@@ -7799,11 +8237,17 @@
 										},
 										"message": {
 											"type": "string",
-											"enum": ["User deleted", "Verification email sent"],
+											"enum": [
+												"User deleted",
+												"Verification email sent"
+											],
 											"description": "Status message of the deletion process"
 										}
 									},
-									"required": ["success", "message"]
+									"required": [
+										"success",
+										"message"
+									]
 								}
 							}
 						}
@@ -7818,7 +8262,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7834,7 +8280,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7905,7 +8353,9 @@
 		},
 		"/api/v1/auth/request-password-reset": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Send a password reset email to the user",
 				"operationId": "requestPasswordReset",
 				"security": [
@@ -7930,7 +8380,9 @@
 										"description": "The URL to redirect the user to reset their password. If the token isn't valid or expired, it'll be redirected with a query parameter `?error=INVALID_TOKEN`. If the token is valid, it'll be redirected with a query parameter `?token=VALID_TOKEN"
 									}
 								},
-								"required": ["email"]
+								"required": [
+									"email"
+								]
 							}
 						}
 					}
@@ -7964,7 +8416,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -7980,7 +8434,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8051,7 +8507,9 @@
 		},
 		"/api/v1/auth/reset-password/{token}": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Redirects the user to the callback URL with the token",
 				"operationId": "resetPasswordCallback",
 				"security": [
@@ -8105,7 +8563,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8121,7 +8581,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8192,7 +8654,9 @@
 		},
 		"/api/v1/auth/list-sessions": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "List all active sessions for the user",
 				"operationId": "listUserSessions",
 				"security": [
@@ -8225,7 +8689,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8241,7 +8707,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8312,7 +8780,9 @@
 		},
 		"/api/v1/auth/revoke-session": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Revoke a single session",
 				"security": [
 					{
@@ -8331,7 +8801,9 @@
 										"description": "The token to revoke"
 									}
 								},
-								"required": ["token"]
+								"required": [
+									"token"
+								]
 							}
 						}
 					}
@@ -8349,7 +8821,9 @@
 											"description": "Indicates if the session was revoked successfully"
 										}
 									},
-									"required": ["status"]
+									"required": [
+										"status"
+									]
 								}
 							}
 						}
@@ -8364,7 +8838,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8380,7 +8856,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8451,7 +8929,9 @@
 		},
 		"/api/v1/auth/revoke-sessions": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Revoke all sessions for the user",
 				"security": [
 					{
@@ -8482,7 +8962,9 @@
 											"description": "Indicates if all sessions were revoked successfully"
 										}
 									},
-									"required": ["status"]
+									"required": [
+										"status"
+									]
 								}
 							}
 						}
@@ -8497,7 +8979,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8513,7 +8997,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8584,7 +9070,9 @@
 		},
 		"/api/v1/auth/revoke-other-sessions": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Revoke all other sessions for the user except the current one",
 				"security": [
 					{
@@ -8615,7 +9103,9 @@
 											"description": "Indicates if all other sessions were revoked successfully"
 										}
 									},
-									"required": ["status"]
+									"required": [
+										"status"
+									]
 								}
 							}
 						}
@@ -8630,7 +9120,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8646,7 +9138,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8717,7 +9211,9 @@
 		},
 		"/api/v1/auth/link-social": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Link a social account to the user",
 				"operationId": "linkSocialAccount",
 				"security": [
@@ -8806,7 +9302,9 @@
 												}
 											}
 										},
-										"required": ["token"]
+										"required": [
+											"token"
+										]
 									},
 									"requestSignUp": {
 										"type": "boolean"
@@ -8834,7 +9332,9 @@
 										"additionalProperties": {}
 									}
 								},
-								"required": ["provider"]
+								"required": [
+									"provider"
+								]
 							}
 						}
 					}
@@ -8859,7 +9359,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["redirect"]
+									"required": [
+										"redirect"
+									]
 								}
 							}
 						}
@@ -8874,7 +9376,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8890,7 +9394,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -8961,7 +9467,9 @@
 		},
 		"/api/v1/auth/list-accounts": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "List all accounts linked to the user",
 				"operationId": "listUserAccounts",
 				"security": [
@@ -9031,7 +9539,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9047,7 +9557,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9118,7 +9630,9 @@
 		},
 		"/api/v1/auth/delete-user/callback": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Callback to complete user deletion with verification token",
 				"security": [
 					{
@@ -9157,11 +9671,16 @@
 										},
 										"message": {
 											"type": "string",
-											"enum": ["User deleted"],
+											"enum": [
+												"User deleted"
+											],
 											"description": "Confirmation message"
 										}
 									},
-									"required": ["success", "message"]
+									"required": [
+										"success",
+										"message"
+									]
 								}
 							}
 						}
@@ -9176,7 +9695,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9192,7 +9713,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9263,7 +9786,9 @@
 		},
 		"/api/v1/auth/unlink-account": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Unlink an account",
 				"security": [
 					{
@@ -9285,7 +9810,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["providerId"]
+								"required": [
+									"providerId"
+								]
 							}
 						}
 					}
@@ -9316,7 +9843,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9332,7 +9861,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9403,7 +9934,9 @@
 		},
 		"/api/v1/auth/refresh-token": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Refresh the access token using a refresh token",
 				"security": [
 					{
@@ -9431,7 +9964,9 @@
 										"description": "The user ID associated with the account"
 									}
 								},
-								"required": ["providerId"]
+								"required": [
+									"providerId"
+								]
 							}
 						}
 					}
@@ -9482,7 +10017,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9553,7 +10090,9 @@
 		},
 		"/api/v1/auth/get-access-token": {
 			"post": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Get a valid access token, doing a refresh if needed",
 				"security": [
 					{
@@ -9581,7 +10120,9 @@
 										"description": "The user ID associated with the account"
 									}
 								},
-								"required": ["providerId"]
+								"required": [
+									"providerId"
+								]
 							}
 						}
 					}
@@ -9625,7 +10166,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9696,7 +10239,9 @@
 		},
 		"/api/v1/auth/account-info": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Get the account info provided by the provider",
 				"security": [
 					{
@@ -9731,7 +10276,10 @@
 													"type": "boolean"
 												}
 											},
-											"required": ["id", "emailVerified"]
+											"required": [
+												"id",
+												"emailVerified"
+											]
 										},
 										"data": {
 											"type": "object",
@@ -9739,7 +10287,10 @@
 											"additionalProperties": true
 										}
 									},
-									"required": ["user", "data"],
+									"required": [
+										"user",
+										"data"
+									],
 									"additionalProperties": false
 								}
 							}
@@ -9755,7 +10306,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9771,7 +10324,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9842,7 +10397,9 @@
 		},
 		"/api/v1/auth/ok": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Check if the API is working",
 				"security": [
 					{
@@ -9863,7 +10420,9 @@
 											"description": "Indicates if the API is working"
 										}
 									},
-									"required": ["ok"]
+									"required": [
+										"ok"
+									]
 								}
 							}
 						}
@@ -9878,7 +10437,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9894,7 +10455,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -9965,7 +10528,9 @@
 		},
 		"/api/v1/auth/error": {
 			"get": {
-				"tags": ["Auth"],
+				"tags": [
+					"Auth"
+				],
 				"description": "Displays an error page",
 				"security": [
 					{
@@ -9995,7 +10560,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10011,7 +10578,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10082,7 +10651,9 @@
 		},
 		"/api/v1/auth/passkey/generate-register-options": {
 			"get": {
-				"tags": ["Passkey"],
+				"tags": [
+					"Passkey"
+				],
 				"description": "Generate registration options for a new passkey",
 				"operationId": "generatePasskeyRegistrationOptions",
 				"security": [
@@ -10227,7 +10798,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10243,7 +10816,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10314,7 +10889,9 @@
 		},
 		"/api/v1/auth/passkey/generate-authenticate-options": {
 			"get": {
-				"tags": ["Passkey"],
+				"tags": [
+					"Passkey"
+				],
 				"description": "Generate authentication options for a passkey",
 				"operationId": "passkeyGenerateAuthenticateOptions",
 				"security": [
@@ -10417,7 +10994,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10433,7 +11012,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10504,7 +11085,9 @@
 		},
 		"/api/v1/auth/passkey/verify-registration": {
 			"post": {
-				"tags": ["Passkey"],
+				"tags": [
+					"Passkey"
+				],
 				"description": "Verify registration of a new passkey",
 				"operationId": "passkeyVerifyRegistration",
 				"security": [
@@ -10526,7 +11109,9 @@
 										"description": "Name of the passkey"
 									}
 								},
-								"required": ["response"]
+								"required": [
+									"response"
+								]
 							}
 						}
 					}
@@ -10555,7 +11140,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10626,7 +11213,9 @@
 		},
 		"/api/v1/auth/passkey/verify-authentication": {
 			"post": {
-				"tags": ["Passkey"],
+				"tags": [
+					"Passkey"
+				],
 				"description": "Verify authentication of a passkey",
 				"operationId": "passkeyVerifyAuthentication",
 				"security": [
@@ -10648,7 +11237,9 @@
 										"additionalProperties": {}
 									}
 								},
-								"required": ["response"]
+								"required": [
+									"response"
+								]
 							}
 						}
 					}
@@ -10682,7 +11273,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10698,7 +11291,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10769,7 +11364,9 @@
 		},
 		"/api/v1/auth/passkey/list-user-passkeys": {
 			"get": {
-				"tags": ["Passkey"],
+				"tags": [
+					"Passkey"
+				],
 				"description": "List all passkeys for the authenticated user",
 				"security": [
 					{
@@ -10809,7 +11406,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10825,7 +11424,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10896,7 +11497,9 @@
 		},
 		"/api/v1/auth/passkey/delete-passkey": {
 			"post": {
-				"tags": ["Passkey"],
+				"tags": [
+					"Passkey"
+				],
 				"description": "Delete a specific passkey",
 				"security": [
 					{
@@ -10916,7 +11519,9 @@
 										"description": "The ID of the passkey to delete. Eg: \"some-passkey-id\""
 									}
 								},
-								"required": ["id"]
+								"required": [
+									"id"
+								]
 							}
 						}
 					}
@@ -10934,7 +11539,9 @@
 											"description": "Indicates whether the deletion was successful"
 										}
 									},
-									"required": ["status"]
+									"required": [
+										"status"
+									]
 								}
 							}
 						}
@@ -10949,7 +11556,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -10965,7 +11574,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11036,7 +11647,9 @@
 		},
 		"/api/v1/auth/passkey/update-passkey": {
 			"post": {
-				"tags": ["Passkey"],
+				"tags": [
+					"Passkey"
+				],
 				"description": "Update a specific passkey's name",
 				"security": [
 					{
@@ -11061,7 +11674,10 @@
 										"description": "The new name which the passkey will be updated to. Eg: \"my-new-passkey-name\""
 									}
 								},
-								"required": ["id", "name"]
+								"required": [
+									"id",
+									"name"
+								]
 							}
 						}
 					}
@@ -11078,7 +11694,9 @@
 											"$ref": "#/components/schemas/Passkey"
 										}
 									},
-									"required": ["passkey"]
+									"required": [
+										"passkey"
+									]
 								}
 							}
 						}
@@ -11093,7 +11711,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11109,7 +11729,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11180,7 +11802,9 @@
 		},
 		"/api/v1/auth/admin/set-role": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Set the role of a user",
 				"operationId": "setUserRole",
 				"security": [
@@ -11217,7 +11841,10 @@
 										"description": "The role to set, this can be a string or an array of strings. Eg: `admin` or `[admin, user]`"
 									}
 								},
-								"required": ["userId", "role"]
+								"required": [
+									"userId",
+									"role"
+								]
 							}
 						}
 					}
@@ -11248,7 +11875,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11264,7 +11893,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11335,7 +11966,9 @@
 		},
 		"/api/v1/auth/admin/get-user": {
 			"get": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Get an existing user",
 				"operationId": "getUser",
 				"security": [
@@ -11379,7 +12012,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11395,7 +12030,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11466,7 +12103,9 @@
 		},
 		"/api/v1/auth/admin/create-user": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Create a new user",
 				"operationId": "createUser",
 				"security": [
@@ -11516,7 +12155,10 @@
 										"additionalProperties": {}
 									}
 								},
-								"required": ["email", "name"]
+								"required": [
+									"email",
+									"name"
+								]
 							}
 						}
 					}
@@ -11547,7 +12189,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11563,7 +12207,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11634,7 +12280,9 @@
 		},
 		"/api/v1/auth/admin/update-user": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Update a user's details",
 				"operationId": "adminUpdateUser",
 				"security": [
@@ -11661,7 +12309,10 @@
 										"description": "The user data to update"
 									}
 								},
-								"required": ["userId", "data"]
+								"required": [
+									"userId",
+									"data"
+								]
 							}
 						}
 					}
@@ -11692,7 +12343,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11708,7 +12361,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11779,7 +12434,9 @@
 		},
 		"/api/v1/auth/admin/list-users": {
 			"get": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "List users",
 				"operationId": "listUsers",
 				"security": [
@@ -11800,7 +12457,10 @@
 						"in": "query",
 						"schema": {
 							"type": "string",
-							"enum": ["email", "name"],
+							"enum": [
+								"email",
+								"name"
+							],
 							"description": "The field to search in, defaults to email. Can be `email` or `name`. Eg: \"name\""
 						}
 					},
@@ -11809,7 +12469,11 @@
 						"in": "query",
 						"schema": {
 							"type": "string",
-							"enum": ["contains", "starts_with", "ends_with"],
+							"enum": [
+								"contains",
+								"starts_with",
+								"ends_with"
+							],
 							"description": "The operator to use for the search. Can be `contains`, `starts_with` or `ends_with`. Eg: \"contains\""
 						}
 					},
@@ -11856,7 +12520,10 @@
 						"in": "query",
 						"schema": {
 							"type": "string",
-							"enum": ["asc", "desc"],
+							"enum": [
+								"asc",
+								"desc"
+							],
 							"description": "The direction to sort by"
 						}
 					},
@@ -11956,7 +12623,10 @@
 											"type": "number"
 										}
 									},
-									"required": ["users", "total"]
+									"required": [
+										"users",
+										"total"
+									]
 								}
 							}
 						}
@@ -11971,7 +12641,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -11987,7 +12659,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12058,7 +12732,9 @@
 		},
 		"/api/v1/auth/admin/list-user-sessions": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "List user sessions",
 				"operationId": "adminListUserSessions",
 				"security": [
@@ -12079,7 +12755,9 @@
 										"description": "The user id"
 									}
 								},
-								"required": ["userId"]
+								"required": [
+									"userId"
+								]
 							}
 						}
 					}
@@ -12113,7 +12791,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12129,7 +12809,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12200,7 +12882,9 @@
 		},
 		"/api/v1/auth/admin/unban-user": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Unban a user",
 				"operationId": "unbanUser",
 				"security": [
@@ -12221,7 +12905,9 @@
 										"description": "The user id"
 									}
 								},
-								"required": ["userId"]
+								"required": [
+									"userId"
+								]
 							}
 						}
 					}
@@ -12252,7 +12938,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12268,7 +12956,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12339,7 +13029,9 @@
 		},
 		"/api/v1/auth/admin/ban-user": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Ban a user",
 				"operationId": "banUser",
 				"security": [
@@ -12368,7 +13060,9 @@
 										"description": "The number of seconds until the ban expires"
 									}
 								},
-								"required": ["userId"]
+								"required": [
+									"userId"
+								]
 							}
 						}
 					}
@@ -12399,7 +13093,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12415,7 +13111,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12486,7 +13184,9 @@
 		},
 		"/api/v1/auth/admin/impersonate-user": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Impersonate a user",
 				"operationId": "impersonateUser",
 				"security": [
@@ -12507,7 +13207,9 @@
 										"description": "The user id"
 									}
 								},
-								"required": ["userId"]
+								"required": [
+									"userId"
+								]
 							}
 						}
 					}
@@ -12541,7 +13243,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12557,7 +13261,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12628,7 +13334,9 @@
 		},
 		"/api/v1/auth/admin/stop-impersonating": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"security": [
 					{
 						"bearerAuth": []
@@ -12646,7 +13354,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12662,7 +13372,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12733,7 +13445,9 @@
 		},
 		"/api/v1/auth/admin/revoke-user-session": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Revoke a user session",
 				"operationId": "revokeUserSession",
 				"security": [
@@ -12754,7 +13468,9 @@
 										"description": "The session token"
 									}
 								},
-								"required": ["sessionToken"]
+								"required": [
+									"sessionToken"
+								]
 							}
 						}
 					}
@@ -12785,7 +13501,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12801,7 +13519,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12872,7 +13592,9 @@
 		},
 		"/api/v1/auth/admin/revoke-user-sessions": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Revoke all user sessions",
 				"operationId": "revokeUserSessions",
 				"security": [
@@ -12893,7 +13615,9 @@
 										"description": "The user id"
 									}
 								},
-								"required": ["userId"]
+								"required": [
+									"userId"
+								]
 							}
 						}
 					}
@@ -12924,7 +13648,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -12940,7 +13666,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13011,7 +13739,9 @@
 		},
 		"/api/v1/auth/admin/remove-user": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Delete a user and all their sessions and accounts. Cannot be undone.",
 				"operationId": "removeUser",
 				"security": [
@@ -13032,7 +13762,9 @@
 										"description": "The user id"
 									}
 								},
-								"required": ["userId"]
+								"required": [
+									"userId"
+								]
 							}
 						}
 					}
@@ -13063,7 +13795,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13079,7 +13813,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13150,7 +13886,9 @@
 		},
 		"/api/v1/auth/admin/set-user-password": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Set a user's password",
 				"operationId": "setUserPassword",
 				"security": [
@@ -13177,7 +13915,10 @@
 										"description": "The user id"
 									}
 								},
-								"required": ["newPassword", "userId"]
+								"required": [
+									"newPassword",
+									"userId"
+								]
 							}
 						}
 					}
@@ -13208,7 +13949,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13224,7 +13967,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13295,7 +14040,9 @@
 		},
 		"/api/v1/auth/admin/has-permission": {
 			"post": {
-				"tags": ["Admin"],
+				"tags": [
+					"Admin"
+				],
 				"description": "Check if the user has permission",
 				"security": [
 					{
@@ -13314,7 +14061,9 @@
 										"description": "The permission to check"
 									}
 								},
-								"required": ["permissions"]
+								"required": [
+									"permissions"
+								]
 							}
 						}
 					}
@@ -13334,7 +14083,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["success"]
+									"required": [
+										"success"
+									]
 								}
 							}
 						}
@@ -13349,7 +14100,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13365,7 +14118,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13436,7 +14191,9 @@
 		},
 		"/api/v1/auth/expo-authorization-proxy": {
 			"get": {
-				"tags": ["Expo"],
+				"tags": [
+					"Expo"
+				],
 				"security": [
 					{
 						"bearerAuth": []
@@ -13469,7 +14226,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13485,7 +14244,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13556,7 +14317,9 @@
 		},
 		"/api/v1/auth/api-key/create": {
 			"post": {
-				"tags": ["Api-key"],
+				"tags": [
+					"Api-key"
+				],
 				"description": "Create a new API key for a user",
 				"security": [
 					{
@@ -13580,7 +14343,10 @@
 										"description": "Name of the Api Key"
 									},
 									"expiresIn": {
-										"type": ["number", "null"],
+										"type": [
+											"number",
+											"null"
+										],
 										"description": "Expiration time of the Api Key in seconds"
 									},
 									"prefix": {
@@ -13588,7 +14354,10 @@
 										"description": "Prefix of the Api Key"
 									},
 									"remaining": {
-										"type": ["number", "null"],
+										"type": [
+											"number",
+											"null"
+										],
 										"description": "Remaining number of requests. Server side only"
 									},
 									"metadata": {},
@@ -13780,7 +14549,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13796,7 +14567,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -13867,7 +14640,9 @@
 		},
 		"/api/v1/auth/api-key/get": {
 			"get": {
-				"tags": ["Api-key"],
+				"tags": [
+					"Api-key"
+				],
 				"description": "Retrieve an existing API key by ID",
 				"security": [
 					{
@@ -14024,7 +14799,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14040,7 +14817,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14111,7 +14890,9 @@
 		},
 		"/api/v1/auth/api-key/update": {
 			"post": {
-				"tags": ["Api-key"],
+				"tags": [
+					"Api-key"
+				],
 				"description": "Update an existing API key by ID",
 				"security": [
 					{
@@ -14160,7 +14941,10 @@
 									},
 									"metadata": {},
 									"expiresIn": {
-										"type": ["number", "null"],
+										"type": [
+											"number",
+											"null"
+										],
 										"description": "Expiration time of the Api Key in seconds"
 									},
 									"rateLimitEnabled": {
@@ -14176,7 +14960,10 @@
 										"description": "Maximum amount of requests allowed within a window. Once the `maxRequests` is reached, the request will be rejected until the `timeWindow` has passed, at which point the `timeWindow` will be reset. server-only. Eg: 100"
 									},
 									"permissions": {
-										"type": ["object", "null"],
+										"type": [
+											"object",
+											"null"
+										],
 										"propertyNames": {
 											"type": "string"
 										},
@@ -14189,7 +14976,9 @@
 										"description": "Update the permissions on the API Key. server-only."
 									}
 								},
-								"required": ["keyId"]
+								"required": [
+									"keyId"
+								]
 							}
 						}
 					}
@@ -14326,7 +15115,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14342,7 +15133,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14413,7 +15206,9 @@
 		},
 		"/api/v1/auth/api-key/delete": {
 			"post": {
-				"tags": ["Api-key"],
+				"tags": [
+					"Api-key"
+				],
 				"description": "Delete an existing API key",
 				"security": [
 					{
@@ -14432,7 +15227,9 @@
 										"description": "The id of the API key to delete"
 									}
 								},
-								"required": ["keyId"]
+								"required": [
+									"keyId"
+								]
 							}
 						}
 					}
@@ -14450,7 +15247,9 @@
 											"description": "Indicates if the API key was successfully deleted"
 										}
 									},
-									"required": ["success"]
+									"required": [
+										"success"
+									]
 								}
 							}
 						}
@@ -14465,7 +15264,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14481,7 +15282,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14552,7 +15355,9 @@
 		},
 		"/api/v1/auth/api-key/list": {
 			"get": {
-				"tags": ["Api-key"],
+				"tags": [
+					"Api-key"
+				],
 				"description": "List all API keys for the authenticated user or for a specific organization",
 				"security": [
 					{
@@ -14700,7 +15505,10 @@
 											"description": "The offset used for pagination"
 										}
 									},
-									"required": ["apiKeys", "total"]
+									"required": [
+										"apiKeys",
+										"total"
+									]
 								}
 							}
 						}
@@ -14715,7 +15523,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14731,7 +15541,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14802,7 +15614,9 @@
 		},
 		"/api/v1/auth/sign-in/oauth2": {
 			"post": {
-				"tags": ["Generic-oauth"],
+				"tags": [
+					"Generic-oauth"
+				],
 				"description": "Sign in with OAuth2",
 				"security": [
 					{
@@ -14856,7 +15670,9 @@
 										"additionalProperties": {}
 									}
 								},
-								"required": ["providerId"]
+								"required": [
+									"providerId"
+								]
 							}
 						}
 					}
@@ -14890,7 +15706,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14906,7 +15724,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -14977,7 +15797,9 @@
 		},
 		"/api/v1/auth/oauth2/callback/{providerId}": {
 			"get": {
-				"tags": ["Generic-oauth"],
+				"tags": [
+					"Generic-oauth"
+				],
 				"description": "OAuth2 callback",
 				"security": [
 					{
@@ -15060,7 +15882,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -15076,7 +15900,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -15147,7 +15973,9 @@
 		},
 		"/api/v1/auth/oauth2/link": {
 			"post": {
-				"tags": ["Generic-oauth"],
+				"tags": [
+					"Generic-oauth"
+				],
 				"description": "Link an OAuth2 account to the current user session",
 				"security": [
 					{
@@ -15180,7 +16008,10 @@
 										"description": "The URL to redirect to if there is an error during the link process"
 									}
 								},
-								"required": ["providerId", "callbackURL"]
+								"required": [
+									"providerId",
+									"callbackURL"
+								]
 							}
 						}
 					}
@@ -15201,10 +16032,15 @@
 										"redirect": {
 											"type": "boolean",
 											"description": "Indicates that the client should redirect to the provided URL",
-											"enum": [true]
+											"enum": [
+												true
+											]
 										}
 									},
-									"required": ["url", "redirect"]
+									"required": [
+										"url",
+										"redirect"
+									]
 								}
 							}
 						}
@@ -15219,7 +16055,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -15235,7 +16073,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"]
+									"required": [
+										"message"
+									]
 								}
 							}
 						},
@@ -15488,7 +16328,10 @@
 								},
 								"type": {
 									"type": "string",
-									"enum": ["file", "folder"]
+									"enum": [
+										"file",
+										"folder"
+									]
 								},
 								"parent": {
 									"type": "string"
@@ -15497,7 +16340,11 @@
 									"type": "string"
 								}
 							},
-							"required": ["key", "metadata", "type"],
+							"required": [
+								"key",
+								"metadata",
+								"type"
+							],
 							"additionalProperties": false
 						}
 					},
@@ -15510,7 +16357,11 @@
 						"type": "number"
 					}
 				},
-				"required": ["list", "count", "total"],
+				"required": [
+					"list",
+					"count",
+					"total"
+				],
 				"additionalProperties": false
 			},
 			"ObjectItem": {
@@ -15689,7 +16540,10 @@
 					},
 					"type": {
 						"type": "string",
-						"enum": ["file", "folder"]
+						"enum": [
+							"file",
+							"folder"
+						]
 					},
 					"parent": {
 						"type": "string"
@@ -15698,7 +16552,11 @@
 						"type": "string"
 					}
 				},
-				"required": ["key", "metadata", "type"],
+				"required": [
+					"key",
+					"metadata",
+					"type"
+				],
 				"additionalProperties": false
 			},
 			"FileMetadata": {
@@ -16035,7 +16893,10 @@
 						"additionalProperties": false
 					}
 				},
-				"required": ["finalName", "metadata"],
+				"required": [
+					"finalName",
+					"metadata"
+				],
 				"additionalProperties": false
 			},
 			"FolderItem": {
@@ -16051,7 +16912,11 @@
 						"type": "string"
 					}
 				},
-				"required": ["id", "name", "path"],
+				"required": [
+					"id",
+					"name",
+					"path"
+				],
 				"additionalProperties": false
 			},
 			"FolderList": {
@@ -16069,7 +16934,11 @@
 							"type": "string"
 						}
 					},
-					"required": ["id", "name", "path"],
+					"required": [
+						"id",
+						"name",
+						"path"
+					],
 					"additionalProperties": false
 				}
 			},
@@ -16186,7 +17055,10 @@
 						"type": "number"
 					}
 				},
-				"required": ["name", "size"],
+				"required": [
+					"name",
+					"size"
+				],
 				"additionalProperties": false
 			},
 			"BatchFile": {
@@ -16204,12 +17076,17 @@
 									"type": "number"
 								}
 							},
-							"required": ["name", "size"],
+							"required": [
+								"name",
+								"size"
+							],
 							"additionalProperties": false
 						}
 					}
 				},
-				"required": ["files"],
+				"required": [
+					"files"
+				],
 				"additionalProperties": false
 			},
 			"UpdateFile": {

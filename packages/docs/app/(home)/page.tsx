@@ -107,7 +107,7 @@ function FeatureCard({
 				<Icon size={20} />
 			</div>
 			<h3 className="font-semibold text-fd-foreground">{title}</h3>
-			<p className="text-sm leading-relaxed text-fd-muted-foreground">
+			<p className="text-fd-muted-foreground text-sm leading-relaxed">
 				{description}
 			</p>
 		</div>
@@ -119,14 +119,14 @@ export default function HomePage() {
 		<>
 			{/* Hero */}
 			<section className="flex flex-col items-center gap-6 px-4 py-20 text-center">
-				<div className="inline-flex items-center gap-2 rounded-full border border-fd-border bg-fd-card px-4 py-1.5 text-xs font-medium text-fd-muted-foreground">
+				<div className="inline-flex items-center gap-2 rounded-full border border-fd-border bg-fd-card px-4 py-1.5 font-medium text-fd-muted-foreground text-xs">
 					Open Source · Self-Hosted · MIT License
 				</div>
-				<h1 className="max-w-3xl text-balance text-5xl font-bold tracking-tight text-fd-foreground md:text-6xl">
+				<h1 className="max-w-3xl text-balance font-bold text-5xl text-fd-foreground tracking-tight md:text-6xl">
 					Your data. <span className="text-fd-primary">Your server.</span> Your
 					drive.
 				</h1>
-				<p className="max-w-xl text-balance text-lg text-fd-muted-foreground">
+				<p className="max-w-xl text-balance text-fd-muted-foreground text-lg">
 					Penombre is a modern, self-hosted cloud storage solution with web and
 					mobile clients. All the convenience of a cloud drive — none of the
 					third-party surveillance.
@@ -134,7 +134,7 @@ export default function HomePage() {
 				<div className="flex flex-wrap items-center justify-center gap-3">
 					<Link
 						href="/docs/"
-						className="rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground transition-opacity hover:opacity-90"
+						className="rounded-lg bg-fd-primary px-5 py-2.5 font-semibold text-fd-primary-foreground text-sm transition-opacity hover:opacity-90"
 					>
 						Get Started
 					</Link>
@@ -142,7 +142,7 @@ export default function HomePage() {
 						href="https://github.com/orochibraru/penombre"
 						target="_blank"
 						rel="noopener noreferrer"
-						className="rounded-lg border border-fd-border bg-fd-card px-5 py-2.5 text-sm font-semibold text-fd-foreground transition-colors hover:bg-fd-accent"
+						className="rounded-lg border border-fd-border bg-fd-card px-5 py-2.5 font-semibold text-fd-foreground text-sm transition-colors hover:bg-fd-accent"
 					>
 						View on GitHub
 					</a>
@@ -165,7 +165,7 @@ export default function HomePage() {
 			{/* Features */}
 			<section className="mx-auto w-full max-w-6xl px-4 pb-24">
 				<div className="mb-12 text-center">
-					<h2 className="text-3xl font-bold tracking-tight text-fd-foreground">
+					<h2 className="font-bold text-3xl text-fd-foreground tracking-tight">
 						Everything you need in a drive
 					</h2>
 					<p className="mt-3 text-fd-muted-foreground">
@@ -187,7 +187,7 @@ export default function HomePage() {
 						<Server size={28} />
 					</div>
 					<div className="text-center">
-						<h2 className="text-2xl font-bold text-fd-foreground">
+						<h2 className="font-bold text-2xl text-fd-foreground">
 							Easy deployment
 						</h2>
 						<p className="mt-2 text-fd-muted-foreground">
@@ -205,7 +205,7 @@ docker compose up
 					/>
 					<Link
 						href="/docs/"
-						className="rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-semibold text-fd-primary-foreground transition-opacity hover:opacity-90"
+						className="rounded-lg bg-fd-primary px-5 py-2.5 font-semibold text-fd-primary-foreground text-sm transition-opacity hover:opacity-90"
 					>
 						Read the docs
 					</Link>

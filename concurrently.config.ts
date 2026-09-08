@@ -1,5 +1,4 @@
-import path from "node:path";
-import { cwd } from "node:process";
+import process from "node:process";
 import concurrently, { type ConcurrentlyResult } from "concurrently";
 
 const tasks: ConcurrentlyResult = concurrently([
@@ -10,9 +9,8 @@ const tasks: ConcurrentlyResult = concurrently([
 	},
 	{
 		name: "ui",
-		command: "bun run dev",
+		command: "bun run dev:app",
 		prefixColor: "green",
-		cwd: path.resolve(cwd(), "packages/web"),
 	},
 ]);
 
