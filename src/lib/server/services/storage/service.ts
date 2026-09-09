@@ -103,7 +103,7 @@ export class StorageService {
 		this.fileOperations = new FileOperations(this.ctx, this.thumbnails);
 		this.folderOperations = new FolderOperations(this.ctx);
 		this.listingOperations = new ListingOperations(this.ctx);
-		this.scanOperations = new ScanOperations(this.ctx);
+		this.scanOperations = new ScanOperations(this.ctx, this.thumbnails);
 		this.proxy = new ProxyService(this.ctx, this.thumbnails, (path) =>
 			this.getFile(path),
 		);

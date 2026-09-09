@@ -26,6 +26,13 @@ on:
         required: true
         description: "Target to build from the root docker-bake.hcl, e.g. image"
         type: string
+      app_version:
+        required: false
+        default: ""
+        description:
+          "Version to bake into the image as APP_VERSION. Empty falls back to
+          the package.json version in the tree."
+        type: string
       push:
         required: false
         default: true
@@ -132,6 +139,7 @@ jobs:
           set: |
             *.tags=${{ env.IMAGE }}
             *.platform=${{ matrix.platform }}
+            *.args.APP_VERSION=${{ inputs.app_version }}
             *.output=${{ inputs.push && 'type=image,push-by-digest=true,name-canonical=true,push=true' || 'type=cacheonly' }}
             ${{ inputs.bake_target }}.cache-from=type=gha,scope=${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}-${{ github.ref_name }}
             ${{ inputs.bake_target }}.cache-to=type=gha,mode=max,scope=${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}-${{ github.ref_name }}

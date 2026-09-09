@@ -15,13 +15,14 @@ mode, and logging behavior.
 used to generate absolute URLs in OAuth callbacks and email links. In
 development this is typically `http://localhost:3000`.
 
-| Variable     | Description                                  | Default                 |
-| ------------ | -------------------------------------------- | ----------------------- |
-| `APP_NAME`   | Application name (used in UI and emails)     | `Penombre`              |
-| `APP_ENV`    | Environment (`dev`/`production`)             | `production`            |
-| `ORIGIN`     | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
-| `LOG_LEVEL`  | `debug`, `info`, `warn`, `error`, `trace`    | `info`                  |
-| `LOG_FORMAT` | `console` or `json`                          | `console`               |
+| Variable      | Description                                  | Default                 |
+| ------------- | -------------------------------------------- | ----------------------- |
+| `APP_NAME`    | Application name (used in UI and emails)     | `Penombre`              |
+| `APP_ENV`     | Environment (`dev`/`production`)             | `production`            |
+| `APP_VERSION` | Version shown by the update check            | build-time version      |
+| `ORIGIN`      | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
+| `LOG_LEVEL`   | `debug`, `info`, `warn`, `error`, `trace`    | `info`                  |
+| `LOG_FORMAT`  | `console` or `json`                          | `console`               |
 
 ## Database
 

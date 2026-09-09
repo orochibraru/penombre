@@ -78,6 +78,7 @@ jobs:
       - version
     with:
       image_tag: ${{ needs.version.outputs.tag }}
+      app_version: ${{ needs.version.outputs.version }}
       image_name: orochibraru/penombre
       registry_name: docker.io
       registry_username: orochibraru

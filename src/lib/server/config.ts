@@ -262,7 +262,7 @@ export function getConfig(): AppConfig {
 
 	return validateConfig({
 		appName: env.APP_NAME || defaultConfigValues.appName,
-		appVersion: defaultConfigValues.appVersion,
+		appVersion: env.APP_VERSION || defaultConfigValues.appVersion,
 		environment: env.APP_ENV || defaultConfigValues.environment,
 		origin: env.ORIGIN || defaultConfigValues.origin,
 		logLevel: resolveLogLevel(),

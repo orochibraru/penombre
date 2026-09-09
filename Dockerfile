@@ -55,6 +55,12 @@ COPY --from=app-builder --chown=bun:bun /app/drizzle ./drizzle
 
 RUN mkdir -p /data/storage /data/db && chown -R bun:bun /data
 
+# The image is built before semantic-release bumps package.json, so the
+# in-tree version is one release behind. CI passes the computed version here;
+# empty locally, where config falls back to package.json.
+ARG APP_VERSION=""
+ENV APP_VERSION=${APP_VERSION}
+
 ENV DATABASE_URL=file:/data/db/penombre.sqlite
 ENV STORAGE_PATH=/data/storage
 ENV APP_ENV=production

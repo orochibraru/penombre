@@ -12,9 +12,9 @@ want the convenience of cloud storage without sacrificing privacy and control.
 
 ## Getting Started
 
-Follow the [installation guide](https://penombre.space/docs) to set up your
-Penombre instance in minutes. For configuration options, see the
-[environment variables documentation](https://penombre.space/docs/env).
+Follow the [installation guide](https://penombre.orochibraru.com/docs) to set up
+your Penombre instance in minutes. For configuration options, see the
+[environment variables documentation](https://penombre.orochibraru.com/docs/env).
 
 ## Features
 
@@ -30,7 +30,7 @@ Penombre instance in minutes. For configuration options, see the
 - **REST API**: OpenAPI-documented `/api/v1` endpoints with API-key auth
 - **Simple Mode**: Run it as a bare shared file browser — mount a volume, share
   the login, browse together. See
-  [the docs](https://penombre.space/docs/simple-mode)
+  [the docs](https://penombre.orochibraru.com/docs/simple-mode)
 - **No database server**: Runs on SQLite out of the box — one container, one
   volume. PostgreSQL stays supported if you want it
 
@@ -44,8 +44,8 @@ docker compose up --build
 
 The app will be available at <http://localhost:3000>.
 
-See [the docs](https://penombre.space/docs/env) for the full environment
-variable reference.
+See [the docs](https://penombre.orochibraru.com/docs/env) for the full
+environment variable reference.
 
 ## Architecture
 

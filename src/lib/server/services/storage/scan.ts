@@ -11,18 +11,22 @@
  */
 
 import { existsSync } from "node:fs";
+import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
+import { parseFile } from "music-metadata";
 import { Logger } from "$lib/logger";
 import { files, folders } from "$lib/server/db/schema";
 import type { StorageContext } from "./context";
 import { determineCategory, determineContentType } from "./mappers";
+import type { ThumbnailService } from "./thumbnails";
 
 const logger = new Logger("StorageScan");
 
 export interface ScanResult {
 	addedFolders: number;
 	addedFiles: number;
+	updatedFiles: number;
 	removedFolders: number;
 	removedFiles: number;
 }
@@ -30,6 +34,7 @@ export interface ScanResult {
 const EMPTY_RESULT: ScanResult = {
 	addedFolders: 0,
 	addedFiles: 0,
+	updatedFiles: 0,
 	removedFolders: 0,
 	removedFiles: 0,
 };
@@ -67,7 +72,10 @@ function parentPath(path: string): string | null {
 }
 
 export class ScanOperations {
-	constructor(private readonly ctx: StorageContext) {}
+	constructor(
+		private readonly ctx: StorageContext,
+		private readonly thumbnails: ThumbnailService,
+	) {}
 
 	async scan(): Promise<ScanResult> {
 		const keys = (await this.ctx.driver.listObjectKeys()).filter(isScannable);
@@ -78,7 +86,7 @@ export class ScanOperations {
 				.from(folders)
 				.where(eq(folders.ownerId, this.ctx.user.id)),
 			this.ctx.db
-				.select({ id: files.id, path: files.path })
+				.select({ id: files.id, path: files.path, size: files.size })
 				.from(files)
 				.where(eq(files.ownerId, this.ctx.user.id)),
 		]);
@@ -100,12 +108,14 @@ export class ScanOperations {
 			knownFilePaths,
 			folderIdByPath,
 		);
+		result.updatedFiles = await this.refreshChangedFiles(existingFiles, keys);
 		result.removedFiles = await this.removeVanishedFiles(existingFiles, keys);
 		result.removedFolders = await this.removeVanishedFolders(existingFolders);
 
 		const changed =
 			result.addedFolders +
 			result.addedFiles +
+			result.updatedFiles +
 			result.removedFolders +
 			result.removedFiles;
 
@@ -113,6 +123,7 @@ export class ScanOperations {
 			await this.ctx.invalidateListingCaches();
 			logger.info(
 				`Scan: +${result.addedFolders} folder(s), +${result.addedFiles} file(s), ` +
+					`~${result.updatedFiles} file(s), ` +
 					`-${result.removedFolders} folder(s), -${result.removedFiles} file(s)`,
 			);
 		}
@@ -172,6 +183,85 @@ export class ScanOperations {
 			added++;
 		}
 		return added;
+	}
+
+	/**
+	 * Re-read files whose bytes changed under us. A sync client (Syncthing,
+	 * rclone) writes a file progressively, so a scan that lands mid-transfer
+	 * records a partial size — and `insertMissingFiles` never revisits a path it
+	 * already knows. That matters because `proxy.ts` builds `Content-Length` and
+	 * `Content-Range` from the stored size, so a stale row serves a truncated
+	 * stream forever (an 80MB track playing as 19 seconds).
+	 *
+	 * ponytail: size-only comparison, one stat per known file per scan. Cheap
+	 * enough for a mounted library; switch to mtime (or a stat cache) if a scan
+	 * over a very large tree starts showing up.
+	 */
+	private async refreshChangedFiles(
+		existingFiles: Array<{ id: string; path: string; size: number }>,
+		keys: string[],
+	): Promise<number> {
+		const knownByPath = new Map(existingFiles.map((f) => [f.path, f] as const));
+
+		let updated = 0;
+		for (const key of keys) {
+			const known = knownByPath.get(key);
+			if (!known) {
+				continue;
+			}
+
+			const size = await this.ctx.driver.getObjectSize(key).catch(() => null);
+			if (size === null || size === known.size) {
+				continue;
+			}
+
+			await this.ctx.db
+				.update(files)
+				.set({
+					size,
+					...(await this.readMediaDuration(key)),
+					updatedAt: new Date(),
+				})
+				.where(
+					and(eq(files.id, known.id), eq(files.ownerId, this.ctx.user.id)),
+				);
+
+			// Cover art and waveforms are cached by key, so they describe the
+			// partial file until dropped.
+			await this.thumbnails.deleteThumbnails(key);
+			updated++;
+		}
+		return updated;
+	}
+
+	/** Media duration for the changed bytes; `{}` for anything not playable. */
+	private async readMediaDuration(
+		key: string,
+	): Promise<{ musicDuration?: number } | { videoDuration?: number } | object> {
+		const category = determineCategory(key);
+		if (category !== "MUSIC" && category !== "VIDEO") {
+			return {};
+		}
+
+		let localPath: string | undefined;
+		let isTemp = false;
+		try {
+			({ path: localPath, isTemp } =
+				await this.thumbnails.getLocalOrTempPath(key));
+			const duration = (await parseFile(localPath)).format.duration ?? 0;
+			return category === "MUSIC"
+				? { musicDuration: duration }
+				: { videoDuration: duration };
+		} catch (error) {
+			logger.warn(`Failed to re-read media metadata for ${key}`, error);
+			return {};
+		} finally {
+			if (isTemp && localPath) {
+				await unlink(localPath).catch(() => {
+					// best-effort cleanup of the temp file
+				});
+			}
+		}
 	}
 
 	private async removeVanishedFiles(
