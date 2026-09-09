@@ -118,5 +118,5 @@
 		"test:e2e:ui": "playwright test --ui"
 	},
 	"type": "module",
-	"version": "1.8.21"
+	"version": "1.8.22"
 }
