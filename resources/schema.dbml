@@ -6,12 +6,12 @@ table account {
   access_token text
   refresh_token text
   id_token text
-  access_token_expires_at timestamp
-  refresh_token_expires_at timestamp
+  access_token_expires_at integer
+  refresh_token_expires_at integer
   scope text
   password text
-  created_at timestamp [not null, default: `now()`]
-  updated_at timestamp [not null]
+  created_at integer [not null]
+  updated_at integer [not null]
 
   indexes {
     user_id [name: 'account_userId_idx']
@@ -19,13 +19,13 @@ table account {
 }
 
 table activity {
-  id uuid [pk, not null, default: `gen_random_uuid()`]
+  id text [pk, not null]
   user_id text [not null]
   action text [not null]
   message text [not null]
   link text
   level text [not null]
-  created_at timestamp [not null]
+  created_at integer [not null]
 
   indexes {
     user_id [name: 'activity_userId_idx']
@@ -43,19 +43,19 @@ table apikey {
   reference_id text [not null]
   refill_interval integer
   refill_amount integer
-  last_refill_at "timestamp (6) with time zone"
-  enabled boolean [not null]
-  rate_limit_enabled boolean [not null]
+  last_refill_at integer
+  enabled integer [not null]
+  rate_limit_enabled integer [not null]
   rate_limit_time_window integer
   rate_limit_max integer
   request_count integer [not null]
   remaining integer
-  last_request "timestamp (6) with time zone"
-  expires_at "timestamp (6) with time zone"
-  created_at "timestamp (6) with time zone" [not null]
-  updated_at "timestamp (6) with time zone" [not null]
+  last_request integer
+  expires_at integer
+  created_at integer [not null]
+  updated_at integer [not null]
   permissions text
-  metadata jsonb [default: `{}`]
+  metadata text [default: `{}`]
 }
 
 table files {
@@ -66,14 +66,14 @@ table files {
   folder_id text
   content_type text [not null, default: 'application/octet-stream']
   category text [not null, default: 'UNKNOWN']
-  size bigint [not null, default: 0]
-  is_trashed boolean [not null, default: false]
-  is_starred boolean [not null, default: false]
-  tags text[] [not null, default: `[]`]
+  size integer [not null, default: 0]
+  is_trashed integer [not null, default: false]
+  is_starred integer [not null, default: false]
+  tags text [not null, default: `[]`]
   music_duration real
   video_duration real
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  created_at integer [not null]
+  updated_at integer [not null]
 
   indexes {
     owner_id [name: 'files_ownerId_idx']
@@ -88,11 +88,11 @@ table folders {
   owner_id text [not null]
   path text [not null]
   parent_id text
-  is_trashed boolean [not null, default: false]
-  is_starred boolean [not null, default: false]
-  tags text[] [not null, default: `[]`]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  is_trashed integer [not null, default: false]
+  is_starred integer [not null, default: false]
+  tags text [not null, default: `[]`]
+  created_at integer [not null]
+  updated_at integer [not null]
 
   indexes {
     owner_id [name: 'folders_ownerId_idx']
@@ -109,18 +109,18 @@ table passkey {
   credential_id text [not null]
   counter integer [not null]
   device_type text [not null]
-  backed_up boolean [not null]
+  backed_up integer [not null]
   transports text
-  created_at "timestamp (6) with time zone"
+  created_at integer
   aaguid text
 }
 
 table session {
   id text [pk, not null]
-  expires_at timestamp [not null]
+  expires_at integer [not null]
   token text [not null, unique]
-  created_at timestamp [not null, default: `now()`]
-  updated_at timestamp [not null]
+  created_at integer [not null]
+  updated_at integer [not null]
   ip_address text
   user_agent text
   user_id text [not null]
@@ -132,10 +132,10 @@ table session {
 }
 
 table shared_with {
-  id uuid [pk, not null, default: `gen_random_uuid()`]
-  sharing_id uuid [not null]
+  id text [pk, not null]
+  sharing_id text [not null]
   user_id text [not null]
-  created_at timestamp [not null]
+  created_at integer [not null]
 
   indexes {
     sharing_id [name: 'sharedWith_sharingId_idx']
@@ -144,14 +144,14 @@ table shared_with {
 }
 
 table sharings {
-  id uuid [pk, not null, default: `gen_random_uuid()`]
+  id text [pk, not null]
   owner_id text [not null]
   resource_type text [not null]
   resource_id text [not null]
   permission text [not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
-  expiration timestamp
+  created_at integer [not null]
+  updated_at integer [not null]
+  expiration integer
 
   indexes {
     owner_id [name: 'sharings_ownerId_idx']
@@ -163,29 +163,29 @@ table user {
   id text [pk, not null]
   name text [not null]
   email text [not null, unique]
-  email_verified boolean [not null, default: false]
+  email_verified integer [not null, default: false]
   image text
-  created_at timestamp [not null, default: `now()`]
-  updated_at timestamp [not null, default: `now()`]
+  created_at integer [not null]
+  updated_at integer [not null]
   role text
-  banned boolean [default: false]
+  banned integer [default: false]
   ban_reason text
-  ban_expires timestamp
+  ban_expires integer
 }
 
 table user_preferences {
   user_id text [pk, not null]
-  preferences jsonb [default: `{}`]
-  updated_at timestamp [not null, default: `now()`]
+  preferences text [default: `{}`]
+  updated_at integer [not null]
 }
 
 table verification {
   id text [pk, not null]
   identifier text [not null]
   value text [not null]
-  expires_at timestamp [not null]
-  created_at timestamp [not null, default: `now()`]
-  updated_at timestamp [not null, default: `now()`]
+  expires_at integer [not null]
+  created_at integer [not null]
+  updated_at integer [not null]
 
   indexes {
     identifier [name: 'verification_identifier_idx']

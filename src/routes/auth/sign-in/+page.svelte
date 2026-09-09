@@ -1,148 +1,143 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { toast } from "svelte-sonner";
-    import { goto } from "$app/navigation";
-    import { resolve } from "$app/paths";
-    import { authClient } from "$lib/auth-client";
-    import * as Alert from "$lib/components/ui/alert/index";
-    import { Button } from "$lib/components/ui/button/index";
-    import * as Field from "$lib/components/ui/field/index.js";
-    import Input from "$lib/components/ui/input/input.svelte";
-    import { m } from "$lib/paraglide/messages.js";
-    import { title } from "$lib/store/title";
-    import { cn } from "$lib/utils.js";
+	import { onMount } from "svelte";
+	import { toast } from "svelte-sonner";
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { authClient } from "$lib/auth-client";
+	import * as Alert from "$lib/components/ui/alert/index";
+	import { Button } from "$lib/components/ui/button/index";
+	import * as Field from "$lib/components/ui/field/index.js";
+	import Input from "$lib/components/ui/input/input.svelte";
+	import { m } from "$lib/paraglide/messages.js";
+	import { title } from "$lib/store/title";
+	import { cn } from "$lib/utils.js";
 
-    let { data } = $props();
+	let { data } = $props();
 
-    let loading: boolean = $state(false);
-    let email: string = $state("");
-    let password: string = $state("");
-    let error: boolean = $state(false);
-    let errorMessage: string = $state("");
+	let loading: boolean = $state(false);
+	let email: string = $state("");
+	let password: string = $state("");
+	let error: boolean = $state(false);
+	let errorMessage: string = $state("");
 
-    onMount(() => {
-        title.set(m.sign_in());
-    });
+	onMount(() => {
+		title.set(m.sign_in());
+	});
 
-    async function passkeySignIn() {
-        if (!PublicKeyCredential.isConditionalMediationAvailable?.()) {
-            toast.error(m.toast_passkey_not_supported());
-            return;
-        }
-        loading = true;
-        const { error } = await authClient.signIn.passkey({
-            autoFill: true,
-        });
+	async function passkeySignIn() {
+		if (!PublicKeyCredential.isConditionalMediationAvailable?.()) {
+			toast.error(m.toast_passkey_not_supported());
+			return;
+		}
+		loading = true;
+		const { error } = await authClient.signIn.passkey({
+			autoFill: true,
+		});
 
-        if (error) {
-            loading = false;
-            throw new Error(
-                error.message
-                    ? String(error.message)
-                    : "Error signing in with passkey",
-            );
-        }
+		if (error) {
+			loading = false;
+			throw new Error(
+				error.message ? String(error.message) : "Error signing in with passkey",
+			);
+		}
 
-        goto(resolve("/"), { replaceState: true, invalidateAll: true });
-    }
+		goto(resolve("/"), { replaceState: true, invalidateAll: true });
+	}
 
-    function handlePasskeySignIn() {
-        return toast.promise(passkeySignIn(), {
-            loading: m.signing_in_with_passkey(),
-            success: m.signed_in_success(),
-            error: (e) => {
-                loading = false;
-                errorMessage = defaultErrorMessage;
+	function handlePasskeySignIn() {
+		return toast.promise(passkeySignIn(), {
+			loading: m.signing_in_with_passkey(),
+			success: m.signed_in_success(),
+			error: (e) => {
+				loading = false;
+				errorMessage = defaultErrorMessage;
 
-                if (e instanceof Error) {
-                    errorMessage = e.message;
-                    return e.message;
-                }
+				if (e instanceof Error) {
+					errorMessage = e.message;
+					return e.message;
+				}
 
-                return defaultErrorMessage;
-            },
-        });
-    }
+				return defaultErrorMessage;
+			},
+		});
+	}
 
-    const defaultErrorMessage = m.sign_in_error();
+	const defaultErrorMessage = m.sign_in_error();
 
-    function handleOauthSignin(provider: string) {
-        loading = true;
-        return toast.promise(oauthSignInPromise(provider), {
-            loading: m.signing_in_with_provider({ provider }),
-            success: m.redirecting_to_provider({ provider }),
-            error: (e) => {
-                loading = false;
-                errorMessage = defaultErrorMessage;
+	function handleOauthSignin(provider: string) {
+		loading = true;
+		return toast.promise(oauthSignInPromise(provider), {
+			loading: m.signing_in_with_provider({ provider }),
+			success: m.redirecting_to_provider({ provider }),
+			error: (e) => {
+				loading = false;
+				errorMessage = defaultErrorMessage;
 
-                if (e instanceof Error) {
-                    errorMessage = e.message;
-                    return e.message;
-                }
-                return defaultErrorMessage;
-            },
-        });
-    }
+				if (e instanceof Error) {
+					errorMessage = e.message;
+					return e.message;
+				}
+				return defaultErrorMessage;
+			},
+		});
+	}
 
-    function handleEmailSignin() {
-        loading = true;
-        return toast.promise(emailSignInPromise(), {
-            loading: m.signing_in(),
-            success: m.signed_in_success(),
-            error: (e) => {
-                loading = false;
-                errorMessage = defaultErrorMessage;
+	function handleEmailSignin() {
+		loading = true;
+		return toast.promise(emailSignInPromise(), {
+			loading: m.signing_in(),
+			success: m.signed_in_success(),
+			error: (e) => {
+				loading = false;
+				errorMessage = defaultErrorMessage;
 
-                if (e instanceof Error) {
-                    errorMessage = e.message;
-                    return e.message;
-                }
+				if (e instanceof Error) {
+					errorMessage = e.message;
+					return e.message;
+				}
 
-                return defaultErrorMessage;
-            },
-        });
-    }
+				return defaultErrorMessage;
+			},
+		});
+	}
 
-    async function oauthSignInPromise(provider: string) {
-        try {
-            const res = await authClient.signIn.social({
-                provider,
-            });
-            if (res.error) {
-                error = true;
-                throw new Error(
-                    res.error.message || "Error signing in with OAuth2",
-                );
-            }
-            if (res.data.url) {
-                goto(res.data.url, { replaceState: true, invalidateAll: true });
-            }
-        } catch (e) {
-            error = true;
-            throw e;
-        }
-    }
+	async function oauthSignInPromise(provider: string) {
+		try {
+			const res = await authClient.signIn.social({
+				provider,
+			});
+			if (res.error) {
+				error = true;
+				throw new Error(res.error.message || "Error signing in with OAuth2");
+			}
+			if (res.data.url) {
+				goto(res.data.url, { replaceState: true, invalidateAll: true });
+			}
+		} catch (e) {
+			error = true;
+			throw e;
+		}
+	}
 
-    async function emailSignInPromise() {
-        if (!(email && password)) {
-            throw new Error(m.email_password_required());
-        }
-        try {
-            const res = await authClient.signIn.email({ email, password });
-            if (res.error) {
-                error = true;
-                throw new Error(
-                    res.error.message ||
-                        "Error signing in with email and password",
-                );
-            }
+	async function emailSignInPromise() {
+		if (!(email && password)) {
+			throw new Error(m.email_password_required());
+		}
+		try {
+			const res = await authClient.signIn.email({ email, password });
+			if (res.error) {
+				error = true;
+				throw new Error(
+					res.error.message || "Error signing in with email and password",
+				);
+			}
 
-            goto(resolve("/"), { replaceState: true, invalidateAll: true });
-        } catch (e) {
-            error = true;
-            throw e;
-        }
-    }
+			goto(resolve("/"), { replaceState: true, invalidateAll: true });
+		} catch (e) {
+			error = true;
+			throw e;
+		}
+	}
 </script>
 
 <form
