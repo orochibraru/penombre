@@ -1,3 +1,20 @@
+## [1.8.26](https://github.com/orochibraru/penombre/compare/v1.8.25...v1.8.26) (2026-09-09)
+
+
+### Bug Fixes
+
+* cache control on updated files outside the app ([7f304df](https://github.com/orochibraru/penombre/commit/7f304dff5aff303bf7c92d7182e703a8d158b942))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.26
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.25](https://github.com/orochibraru/penombre/compare/v1.8.24...v1.8.25) (2026-09-09)
 
 
