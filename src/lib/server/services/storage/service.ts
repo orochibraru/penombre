@@ -2,7 +2,6 @@ import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { cwd } from "node:process";
 import type { Readable } from "node:stream";
 import type archiver from "archiver";
 import type { User } from "better-auth";
@@ -37,6 +36,7 @@ import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
 import { ListingOperations } from "./listings";
 import { type FileProxyRequest, ProxyService } from "./proxy";
+import { ScanOperations, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
 import { ZipService } from "./zip";
 
@@ -76,6 +76,7 @@ export class StorageService {
 	private readonly fileOperations: FileOperations;
 	private readonly folderOperations: FolderOperations;
 	private readonly listingOperations: ListingOperations;
+	private readonly scanOperations: ScanOperations;
 
 	constructor(user: User) {
 		// Simple mode: one shared volume for everyone, mounted directly at
@@ -102,6 +103,7 @@ export class StorageService {
 		this.fileOperations = new FileOperations(this.ctx, this.thumbnails);
 		this.folderOperations = new FolderOperations(this.ctx);
 		this.listingOperations = new ListingOperations(this.ctx);
+		this.scanOperations = new ScanOperations(this.ctx);
 		this.proxy = new ProxyService(this.ctx, this.thumbnails, (path) =>
 			this.getFile(path),
 		);
@@ -287,6 +289,11 @@ export class StorageService {
 		return this.listingOperations.searchFiles(query, limit);
 	}
 
+	/** Reconcile the DB with the files actually present in the storage backend. */
+	scanStorage(): Promise<ScanResult> {
+		return this.scanOperations.scan();
+	}
+
 	countTrashedItems(): Promise<number> {
 		return this.listingOperations.countTrashedItems();
 	}
@@ -459,9 +466,7 @@ export class StorageService {
 			return;
 		}
 
-		const storageBasePath = resolve(
-			Bun.env.STORAGE_PATH || join(cwd(), "/data/storage"),
-		);
+		const storageBasePath = DEFAULT_STORAGE_PATH;
 		if (!existsSync(storageBasePath)) {
 			logger.info(
 				"Storage base path does not exist. Skipping storage cleanup.",

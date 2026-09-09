@@ -20,16 +20,11 @@
 			"!**/*.svg",
 			"!drizzle/meta",
 			"!project.inlang",
-			"!packages/docs/static/api.v1.json",
-			"!packages/mobile/assets/api.v1.json",
-			"!packages/mobile/lib/api.v1.d.ts",
-			"!src/lib/api/v1.json",
+			"!openapi.json",
 			"!src/lib/paraglide",
 			"!static",
 			"!packages/docs/.svelte-kit",
-			"!packages/docs/build",
-			"!packages/mobile/android",
-			"!packages/mobile/ios"
+			"!packages/docs/build"
 		]
 	},
 	"formatter": {
@@ -195,41 +190,11 @@
 			}
 		},
 		{
-			"includes": ["packages/docs/**", "packages/mobile/**"],
+			"includes": ["packages/docs/**"],
 			"linter": {
 				"rules": {
 					"suspicious": {
 						"noConsole": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["packages/mobile/**"],
-			"linter": {
-				"rules": {
-					"correctness": {
-						"noSolidDestructuredProps": "off"
-					},
-					"performance": {
-						"noJsxPropsBind": "off",
-						"useSolidForComponent": "off"
-					},
-					"style": {
-						"noJsxLiterals": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["packages/mobile/metro.config.js"],
-			"linter": {
-				"rules": {
-					"correctness": {
-						"noGlobalDirnameFilename": "off"
-					},
-					"style": {
-						"noCommonJs": "off"
 					}
 				}
 			}

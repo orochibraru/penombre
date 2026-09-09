@@ -18,7 +18,7 @@ import {
  * a literal glob, which is why `docs/` lives inside the site rather than
  * being a configurable path elsewhere on disk.
  */
-const rawDocs = import.meta.glob("../../docs/*.md", {
+const rawDocs = import.meta.glob("../../../../docs/*.md", {
 	eager: true,
 	import: "default",
 	query: "?raw",

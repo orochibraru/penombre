@@ -12,6 +12,7 @@ import { getRequestEvent } from "$app/server";
 import { Logger } from "$lib/logger";
 import { getConfig, isSmtpEnabled } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
+import { isSqliteDialect } from "$lib/server/db/dialect";
 import * as schema from "$lib/server/db/schema";
 import { Email } from "$lib/server/email";
 import { StorageService } from "$lib/server/services/storage";
@@ -60,7 +61,7 @@ export const auth = betterAuth({
 		},
 	},
 	database: drizzleAdapter(getDb(), {
-		provider: "pg",
+		provider: isSqliteDialect() ? "sqlite" : "pg",
 		schema,
 	}),
 	hooks: {

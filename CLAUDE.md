@@ -82,8 +82,9 @@ Every `/api/v1/...` endpoint is defined in two places:
    whether auth is required. This call also registers the route with the OpenAPI
    registry as an import-time side effect — that's why
    `src/lib/server/openapi/routes.ts` exists purely to import every contract
-   module before the spec is generated (`gen:openapi`/`gen:api`, and at build
-   time in `hooks.server.ts`'s `init()`).
+   module before the spec is generated. `$lib/server/generate-openapi.ts` pulls
+   that module in itself, so both the live spec route and `gen:openapi`/`gen:api`
+   always see every contract.
 2. **Handler** (`src/routes/api/v1/.../+server.ts`): imports the contract object
    and calls
    `.handler(async ({ params, query, body, user, service, event }) => ...)`. The
@@ -118,9 +119,7 @@ session two ways: a better-auth cookie session, or an API key fallback
 — either path sets `event.locals.user`/`.storageService`. Non-auth paths are
 then handed to `svelteKitHandler` (better-auth's SvelteKit adapter). `init()`
 (SvelteKit's app-init hook) waits for the DB, runs Drizzle migrations, seeds the
-default admin user, and migrates legacy storage metadata on every boot — and at
-build time also writes the OpenAPI spec to `src/lib/api/v1.json` plus copies
-into `packages/mobile` and `packages/docs`.
+default admin user, and migrates legacy storage metadata on every boot.
 
 ### Config
 

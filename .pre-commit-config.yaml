@@ -17,8 +17,7 @@ repos:
         exclude: &generated |-
           (?x)^(
             src/lib/api/v1\.(json|d\.ts)|
-            packages/mobile/assets/api\.v1\.json|
-            packages/docs/static/api\.v1\.json|
+            openapi.json|
             \.example\.env|
             resources/|
             drizzle/|
@@ -158,10 +157,6 @@ repos:
         language: system
         pass_filenames: false
         files: ^packages/docs/
-
-      # packages/mobile is excluded for now: a duplicate better-auth install
-      # under Bun's isolated linker (bunfig.toml) makes tsc fail there with
-      # unrelated type errors. Re-add a check-mobile hook once that's sorted.
 
   # The conventions no linter knows about. Ported from homerun.
   - repo: local

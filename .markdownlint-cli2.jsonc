@@ -16,10 +16,6 @@
 		"build",
 		"CHANGELOG.md",
 		"dist",
-		// Vendored native dependencies (CocoaPods / Gradle), not ours to format.
-		"packages/mobile/.expo",
-		"packages/mobile/android",
-		"packages/mobile/ios",
 		"project.inlang",
 		"src/lib/paraglide",
 		"src/paraglide",

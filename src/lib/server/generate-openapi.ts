@@ -1,11 +1,32 @@
 import { Logger } from "$lib/logger";
 import { auth } from "./auth";
+// Side-effect: registers every v1 route definition and shared schema
+import "./openapi/routes";
 import { registry } from "./openapi";
-import type { ExternalSpec } from "./openapi/registry";
+import type { ExternalOpenAPISpec, ExternalSpec } from "./openapi/registry";
 
 const logger = new Logger("OpenAPI");
 
-export async function genOpenApiSpec() {
+function sortKeysDeep(value: unknown): unknown {
+	if (Array.isArray(value)) {
+		return value.map(sortKeysDeep);
+	}
+	if (value !== null && typeof value === "object") {
+		const sorted: Record<string, unknown> = {};
+		for (const key of Object.keys(value).sort()) {
+			sorted[key] = sortKeysDeep((value as Record<string, unknown>)[key]);
+		}
+		return sorted;
+	}
+	return value;
+}
+
+/**
+ * The one OpenAPI document: served by GET /api/v1/openapi.json and written to
+ * disk by scripts/generate-openapi.ts, so the served spec and the committed
+ * one can't drift. Keys are sorted to keep regenerations diff-stable.
+ */
+export async function genOpenApiSpec(): Promise<Record<string, unknown>> {
 	const externalSpecs: ExternalSpec[] = [];
 
 	try {
@@ -17,9 +38,7 @@ export async function genOpenApiSpec() {
 			authSpec.paths
 		) {
 			externalSpecs.push({
-				spec: authSpec as unknown as {
-					paths?: Record<string, Record<string, unknown>>;
-				},
+				spec: authSpec as unknown as ExternalOpenAPISpec,
 				pathPrefix: "/api/v1/auth",
 				defaultTag: "Auth",
 				tagOverrides: { Default: "Auth" },
@@ -29,6 +48,8 @@ export async function genOpenApiSpec() {
 		logger.warn("Failed to generate the auth OpenAPI schema:", error);
 	}
 
-	const spec = registry.toOpenAPISpec(externalSpecs);
-	return spec;
+	return sortKeysDeep(registry.toOpenAPISpec(externalSpecs)) as Record<
+		string,
+		unknown
+	>;
 }

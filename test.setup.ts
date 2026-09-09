@@ -50,6 +50,7 @@ mock.module("$lib/server/config", () => ({
 		smtp: undefined,
 	})),
 	isSimpleMode: mock(() => false),
+	isS3Backend: mock(() => false),
 }));
 
 mock.module("$lib/logger", () => ({

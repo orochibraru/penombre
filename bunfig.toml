@@ -1,7 +1,6 @@
 [test]
 preload = ["./test.setup.ts"]
 coverage = true
-rerunEach = 3
 coveragePathIgnorePatterns = [
     "**/test.setup.ts",
     "**/test.setup.ts",
@@ -26,21 +25,5 @@ pathIgnorePatterns = ["node_modules/**", "**/e2e/**", "fixtures/**"]
 
 coverageThreshold = { line = 0.7, function = 0.8, statement = 0.9 }
 
-
-[test.reporter]
-dots = true
-
 [run]
 bun = true
-
-[install]
-linker = "isolated"
-
-[install.lockfile]
-save = true
-
-[runtime]
-telemetry = false
-
-[console]
-depth = 3

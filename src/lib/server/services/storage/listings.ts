@@ -6,6 +6,7 @@
  */
 
 import { and, desc, eq, ilike, inArray, isNull, like, sql } from "drizzle-orm";
+import { isSqliteDialect } from "$lib/server/db/dialect";
 import type { File as DbFile, Folder as DbFolder } from "$lib/server/db/schema";
 import { files, folders } from "$lib/server/db/schema";
 import type { FileCategory, ObjectItem, ObjectList } from "$lib/server/schema";
@@ -18,6 +19,12 @@ import {
 	folderDbToObjectItem,
 	paginateItems,
 } from "./mappers";
+
+/**
+ * SQLite has no ILIKE — its LIKE is already case-insensitive for ASCII.
+ * Same signature either way, so the call sites don't care which one this is.
+ */
+const nameLike = isSqliteDialect() ? like : ilike;
 
 export class ListingOperations {
 	constructor(private readonly ctx: StorageContext) {}
@@ -345,7 +352,7 @@ export class ListingOperations {
 				.where(
 					and(
 						eq(files.ownerId, this.ctx.user.id),
-						ilike(files.name, `%${searchTerm}%`),
+						nameLike(files.name, `%${searchTerm}%`),
 					),
 				),
 			this.ctx.db
@@ -354,7 +361,7 @@ export class ListingOperations {
 				.where(
 					and(
 						eq(folders.ownerId, this.ctx.user.id),
-						ilike(folders.name, `%${searchTerm}%`),
+						nameLike(folders.name, `%${searchTerm}%`),
 					),
 				),
 		]);

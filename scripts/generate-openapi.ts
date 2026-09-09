@@ -1,16 +1,17 @@
 #!/usr/bin/env bun
 
 /**
- * Generates a static OpenAPI spec JSON file from the runtime registry.
- * This file is consumed by openapi-typescript to generate typed client types.
- *
- * Run with: bun run gen:api
+ * Writes the OpenAPI spec to disk from the same genOpenApiSpec() the live
+ * /api/v1/openapi.json route serves, so the served and committed specs can't
+ * drift. Consumed by openapi-typescript (see `gen:openapi`), the mobile
+ * package and the docs site.
  */
 
 import process from "node:process";
 import { plugin } from "bun";
 
-// Mock SvelteKit virtual modules that aren't available outside the dev server
+// $lib/server/auth pulls in SvelteKit virtual modules that only exist inside
+// the dev server; stub them so the spec can be built from a plain bun run.
 plugin({
 	name: "sveltekit-mocks",
 	setup(build) {
@@ -33,49 +34,24 @@ plugin({
 	},
 });
 
-// Use dynamic imports so the plugin is registered before module resolution
-// Side-effect: register all route definitions with the OpenAPI registry
-await import("$lib/server/openapi/routes");
+// Dynamic import so the plugin above is registered before module resolution.
+const { genOpenApiSpec } = await import("$lib/server/generate-openapi");
 
-const { registry } = await import("$lib/server/openapi");
+const doc = await genOpenApiSpec();
 
-// Merge better-auth's OpenAPI spec
-const externalSpecs: any[] = [];
-
-try {
-	const { auth } = await import("$lib/server/auth");
-	const authSpec = await auth.api.generateOpenAPISchema();
-	if (
-		authSpec &&
-		typeof authSpec === "object" &&
-		"paths" in authSpec &&
-		authSpec.paths
-	) {
-		externalSpecs.push({
-			spec: authSpec as { paths: Record<string, unknown> },
-			pathPrefix: "/api/v1/auth",
-			defaultTag: "Auth",
-			tagOverrides: { Default: "Auth" },
-		});
-	}
-} catch (error) {
-	console.warn("⚠ Could not merge better-auth OpenAPI spec:", error);
+// These three files are tracked; refuse to overwrite them with an empty spec
+// (a missing `await` here once wrote "{}" over all of them).
+if (!doc.paths || Object.keys(doc.paths).length === 0) {
+	throw new Error("Refusing to write an OpenAPI spec with no paths");
 }
 
-const spec = registry.toOpenAPISpec(externalSpecs);
-const outputPath = new URL("../src/lib/api/v1.json", import.meta.url).pathname;
-const mobileCopyPath = new URL(
-	"../packages/mobile/assets/api.v1.json",
-	import.meta.url,
-).pathname;
-const docsCopyPath = new URL(
-	"../packages/docs/static/api.v1.json",
-	import.meta.url,
-).pathname;
+const spec = JSON.stringify(doc, null, "\t");
 
-await Bun.write(outputPath, JSON.stringify(spec, null, "\t"));
-console.log(`✓ Generated OpenAPI spec → ${outputPath}`);
-await Bun.write(mobileCopyPath, JSON.stringify(spec, null, "\t"));
-console.log(`✓ Copied OpenAPI spec → ${mobileCopyPath}`);
-await Bun.write(docsCopyPath, JSON.stringify(spec, null, "\t"));
-console.log(`✓ Copied OpenAPI spec → ${docsCopyPath}`);
+// Every consumer of the spec. `gen:openapi` runs openapi-typescript against
+// the first of these, and the mobile package against the second.
+const outputs = ["openapi.json"];
+
+for (const output of outputs) {
+	await Bun.write(output, spec);
+	console.log(`✓ Wrote ${output}`);
+}

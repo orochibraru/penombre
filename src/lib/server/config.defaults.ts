@@ -1,3 +1,5 @@
+import packageJson from "../../../package.json" with { type: "json" };
+
 /**
  * Default configuration values for Penombre.
  * Extracted to a separate file so it can be used by both:
@@ -7,7 +9,7 @@
 
 export const defaultConfigValues = {
 	appName: "Penombre",
-	appVersion: "development",
+	appVersion: packageJson.version,
 	environment: "production" as "dev" | "production",
 	origin: "http://localhost:3000",
 	logLevel: "info" as "debug" | "info" | "warn" | "error",
@@ -65,6 +67,8 @@ ORIGIN=${defaultConfigValues.origin}
 # ===========================================
 # Database
 # ===========================================
+# PostgreSQL connection string, or a "file:"/"sqlite:" path to run on SQLite
+# with no database server (e.g. DATABASE_URL=file:/data/db/penombre.sqlite).
 DATABASE_URL=${defaultConfigValues.db.url}
 
 # ===========================================

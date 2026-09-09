@@ -4,16 +4,17 @@ import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import type { User } from "better-auth";
 import { svelteKitHandler } from "better-auth/svelte-kit";
-import { asc } from "drizzle-orm";
-import { migrate } from "drizzle-orm/bun-sql/migrator";
+import { asc, sql } from "drizzle-orm";
+import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
+import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
 import { building } from "$app/environment";
 import { Logger } from "$lib/logger";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
 import { isSimpleMode } from "$lib/server/config";
 import { getDb, resetDb } from "$lib/server/db";
+import { isSqliteDialect } from "$lib/server/db/dialect";
 import { user as userTable } from "$lib/server/db/schema";
-import { genOpenApiSpec } from "$lib/server/generate-openapi";
 import {
 	migrateStorageMeta,
 	StorageService,
@@ -21,7 +22,11 @@ import {
 
 const logger = new Logger("Hooks");
 
-const migrationsFolder = join(process.cwd(), "drizzle");
+const migrationsFolder = join(
+	process.cwd(),
+	"drizzle",
+	isSqliteDialect() ? "sqlite" : "pg",
+);
 
 export function handleError({ event, error, status }) {
 	if (status !== 404) {
@@ -42,6 +47,15 @@ function sleep(ms: number) {
 }
 
 async function waitForDatabase() {
+	// SQLite is a local file opened synchronously — there's no server coming
+	// up to wait for, and its driver has no `.execute()`. Opening it (which
+	// creates the file and sets PRAGMAs) either works or throws right here.
+	if (isSqliteDialect()) {
+		getDb();
+		logger.info("Database connection established.");
+		return;
+	}
+
 	const maxRetries = 10;
 	const retryDelay = 2000;
 
@@ -53,7 +67,7 @@ async function waitForDatabase() {
 			}
 			const db = getDb();
 			// Try a simple query to check if DB is ready
-			await db.execute("SELECT 1");
+			await db.execute(sql`SELECT 1`);
 			logger.info("Database connection established.");
 			return;
 		} catch (error) {
@@ -78,9 +92,12 @@ async function runMigrations() {
 		try {
 			logger.info(`Running migrations (retries left: ${retries})`);
 			const db = getDb();
-			await migrate(db, {
-				migrationsFolder,
-			});
+			if (isSqliteDialect()) {
+				// biome-ignore lint/suspicious/noExplicitAny: db is typed as the pg dialect; the runtime instance is a real SQLite one in this branch
+				migrateSqlite(db as any, { migrationsFolder });
+			} else {
+				await migratePg(db, { migrationsFolder });
+			}
 			logger.info("Database migrated successfully.");
 			return;
 		} catch (error) {
@@ -102,27 +119,55 @@ async function runMigrations() {
 	}
 }
 
-export const init = async () => {
-	if (building) {
-		const spec = genOpenApiSpec();
-		const outputPath = new URL("./lib/api/v1.json", import.meta.url).pathname;
-		const mobileCopyPath = new URL(
-			"../../mobile/assets/api.v1.json",
-			import.meta.url,
-		).pathname;
-		const docsCopyPath = new URL(
-			"../../docs/static/api.v1.json",
-			import.meta.url,
-		).pathname;
+/** How often simple mode re-scans the mounted volume for outside changes. */
+const SCAN_INTERVAL_MS = 60_000;
 
-		await Bun.write(outputPath, JSON.stringify(spec, null, "\t"));
-		await Bun.write(mobileCopyPath, JSON.stringify(spec, null, "\t"));
-		await Bun.write(docsCopyPath, JSON.stringify(spec, null, "\t"));
+/** Survives Vite HMR, so a hot reload doesn't stack up duplicate timers. */
+const globalForScan = globalThis as unknown as {
+	__scan_timer?: ReturnType<typeof setInterval>;
+	__scan_running?: boolean;
+};
+
+/**
+ * Simple mode browses a volume that's written to from outside the app, so the
+ * DB only matches reality if we look. Skipped entirely in drive mode, where
+ * every file arrives through an upload that already wrote its row.
+ */
+async function scanLibrary(): Promise<void> {
+	// A scan of a big library can outlast the interval — let it finish.
+	if (globalForScan.__scan_running) {
+		return;
 	}
+	globalForScan.__scan_running = true;
+	try {
+		const owner = await loadSharedOwner();
+		if (!owner) {
+			return;
+		}
+		await new StorageService(owner).scanStorage();
+	} catch (error) {
+		logger.error("Library scan failed", error);
+	} finally {
+		globalForScan.__scan_running = false;
+	}
+}
+
+function startLibraryScanner(): void {
+	if (!isSimpleMode() || globalForScan.__scan_timer) {
+		return;
+	}
+	void scanLibrary();
+	globalForScan.__scan_timer = setInterval(() => {
+		void scanLibrary();
+	}, SCAN_INTERVAL_MS);
+}
+
+export const init = async () => {
 	await waitForDatabase();
 	await runMigrations();
 	await seedAuth();
 	await migrateStorageMeta();
+	startLibraryScanner();
 };
 
 /** Paths under the auth basePath that are handled by SvelteKit, not better-auth */
@@ -140,20 +185,21 @@ let sharedOwnerPromise: Promise<User | undefined> | undefined;
  * imports). Covered indirectly by e2e for now — add a focused test here if
  * this logic grows past "cache the first user".
  */
-function getSharedStorageOwner(fallback: User): Promise<User> {
+function loadSharedOwner(): Promise<User | undefined> {
 	sharedOwnerPromise ??= getDb()
 		.select()
 		.from(userTable)
 		.orderBy(asc(userTable.createdAt))
 		.limit(1)
 		.then((rows) => rows[0] as User | undefined);
-	return sharedOwnerPromise.then((owner) => owner ?? fallback);
+	return sharedOwnerPromise;
 }
 
 async function resolveStorageOwner(sessionUser: User): Promise<User> {
-	return isSimpleMode()
-		? await getSharedStorageOwner(sessionUser)
-		: sessionUser;
+	if (!isSimpleMode()) {
+		return sessionUser;
+	}
+	return (await loadSharedOwner()) ?? sessionUser;
 }
 
 const authHandler: Handle = async ({ event, resolve }) => {
