@@ -29,9 +29,10 @@ Penombre runs on **SQLite** by default — no database server to install, back u
 or keep patched. The Docker image ships pointing at a file inside its data
 volume, so a fresh install needs no database configuration at all.
 
-The dialect is picked from the `DATABASE_URL` scheme: a `file:`/`sqlite:` URL
-runs SQLite (the rest of the value is the path to the database file, created on
-first boot), anything else is treated as a PostgreSQL connection string.
+The dialect is picked from the `DATABASE_URL` scheme: a `postgres:`/
+`postgresql:` URL runs PostgreSQL, anything else runs SQLite — including an
+empty value, which falls back to the default below. With a `file:`/`sqlite:` URL
+the rest of the value is the path to the database file, created on first boot.
 
 ```ini
 # SQLite (default) — no database server needed

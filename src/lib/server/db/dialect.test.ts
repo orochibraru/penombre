@@ -18,6 +18,11 @@ describe("resolveDbDialect", () => {
 			resolveDbDialect("postgresql://user:pass@localhost:5432/penombre"),
 		).toBe("pg");
 	});
+
+	test("anything else falls back to sqlite rather than pg", () => {
+		expect(resolveDbDialect("")).toBe("sqlite");
+		expect(resolveDbDialect("/data/db/penombre.sqlite")).toBe("sqlite");
+	});
 });
 
 describe("getSqliteFilePath", () => {
@@ -43,11 +48,14 @@ describe("getSqliteFilePath", () => {
 });
 
 describe("getDbUrl", () => {
-	test("an empty DATABASE_URL falls back to the sqlite default", () => {
+	test("an empty or whitespace DATABASE_URL falls back to the sqlite default", () => {
 		const previous = Bun.env.DATABASE_URL;
-		Bun.env.DATABASE_URL = "";
 		try {
-			expect(resolveDbDialect(getDbUrl())).toBe("sqlite");
+			for (const value of ["", "   "]) {
+				Bun.env.DATABASE_URL = value;
+				expect(getDbUrl()).toBe("file:./data/penombre.sqlite");
+				expect(resolveDbDialect(getDbUrl())).toBe("sqlite");
+			}
 		} finally {
 			if (previous === undefined) {
 				Bun.env.DATABASE_URL = undefined;

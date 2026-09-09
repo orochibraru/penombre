@@ -10,14 +10,20 @@ export type DbDialect = "pg" | "sqlite";
 /** SQLite is the default: no database server to run for a homelab install. */
 const DEFAULT_URL = "file:./data/penombre.sqlite";
 
-/** `file:`/`sqlite:` scheme → SQLite (rest of the value is a file path). Anything else → Postgres (optional). */
+/**
+ * Postgres is opt-in and only via an explicit `postgres:`/`postgresql:` scheme.
+ * Everything else — `file:`/`sqlite:`, but also an empty or malformed value —
+ * resolves to SQLite, so a bad `DATABASE_URL` can never silently turn a
+ * single-container install into a Postgres client dialing a server that isn't
+ * there.
+ */
 export function resolveDbDialect(url: string): DbDialect {
-	return /^(file:|sqlite:)/i.test(url) ? "sqlite" : "pg";
+	return /^postgres(ql)?:/i.test(url) ? "pg" : "sqlite";
 }
 
-/** `||` on purpose: an empty `DATABASE_URL` (unset var rendered by a deploy UI/compose) must fall back to SQLite, not be read as a Postgres URL. */
+/** Trimmed and `||`: an empty or whitespace `DATABASE_URL` (an unset var rendered by a deploy UI or compose) means "not set". */
 export function getDbUrl(): string {
-	return Bun.env.DATABASE_URL || DEFAULT_URL;
+	return Bun.env.DATABASE_URL?.trim() || DEFAULT_URL;
 }
 
 /**
