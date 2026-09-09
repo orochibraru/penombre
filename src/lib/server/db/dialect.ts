@@ -7,10 +7,10 @@
 
 export type DbDialect = "pg" | "sqlite";
 
-const DEFAULT_URL =
-	"postgres://postgres:postgres@localhost:5432/penombre?sslmode=disable";
+/** SQLite is the default: no database server to run for a homelab install. */
+const DEFAULT_URL = "file:./data/penombre.sqlite";
 
-/** `file:`/`sqlite:` scheme → SQLite (rest of the value is a file path). Anything else → Postgres. */
+/** `file:`/`sqlite:` scheme → SQLite (rest of the value is a file path). Anything else → Postgres (optional). */
 export function resolveDbDialect(url: string): DbDialect {
 	return /^(file:|sqlite:)/i.test(url) ? "sqlite" : "pg";
 }

@@ -10,9 +10,8 @@ import {
 
 test.use({ storageState: AUTH_STORAGE_STATE });
 
-// NOTE: File creation via the API requires S3 storage access, which is currently
-// unavailable in the test environment. All trash tests use folders instead,
-// which are stored entirely in the database with no S3 dependency.
+// These tests use folders rather than files: folder state lives entirely in
+// the database, so they exercise the operation without depending on uploads.
 // Folder trash: POST /api/v1/storage/folder/{id}/trash
 // Folder restore: POST /api/v1/storage/folder/{id}/restore
 // Folder delete: DELETE /api/v1/storage/folder/{id}

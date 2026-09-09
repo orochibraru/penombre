@@ -15,51 +15,31 @@ Edit the `.env` file with your configuration — see
 
 ## 3. Set up Docker Compose
 
+Penombre runs on SQLite out of the box, so this is the whole stack — one
+container, one volume:
+
 ```yaml
 services:
   app:
     image: orochibraru/penombre:latest
-    depends_on:
-      db:
-        condition: service_healthy
     ports:
       - 3000:3000
     restart: unless-stopped
     volumes:
       - storage_data:/data
     env_file: .env
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
-
-  db:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD-postgres}
-      - POSTGRES_DB=${POSTGRES_DB-penombre}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test:
-        [
-          CMD-SHELL,
-          "sh -c 'pg_isready -U ${POSTGRES_USER-postgres} -d
-          ${POSTGRES_DB-penombre}'",
-        ]
-      interval: 1s
-      timeout: 2s
-      retries: 10
-      start_period: 3s
 
 volumes:
-  postgres_data:
-    driver: local
   storage_data:
     driver: local
 ```
+
+The `/data` volume holds both the SQLite database (`/data/db`) and your files
+(`/data/storage`).
+
+> Prefer PostgreSQL? It is optional — see
+> [Deployment](deployment.md#running-on-postgresql-optional) for the
+> two-container version.
 
 ## 4. Start the application
 

@@ -7,11 +7,9 @@
 .vscode
 .example.env
 Makefile
-README.md
 .prettierrc
 .prettierignore
 .git
-**/*.md
 Dockerfile
 **/*.log
 
@@ -50,16 +48,12 @@ LICENSE
 **/.expo-shared/
 
 **/playwright-report/
-**/playwright-local-report/
 **/e2e/
 
-**/*.{test,spec}.{ts,tsx,js,jsx}
-
-compose.e2e.yaml
-compose.test.yaml
+tools/compose.e2e.yaml
+tools/compose.test.yaml
 
 **/playwright.config.ts
-**/playwright.local.config.ts
 **/playwright.test.config.ts
 **/global-setup.ts
 **/global-teardown.ts

@@ -1,45 +1,45 @@
 <script lang="ts">
-	import {
-		type Icon as IconType,
-		MonitorIcon,
-		MoonIcon,
-		SunIcon,
-	} from "@lucide/svelte";
-	import { setMode, userPrefersMode } from "mode-watcher";
-	import { Label } from "$lib/components/ui/label";
-	import * as RadioGroup from "$lib/components/ui/radio-group";
-	import * as m from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
+    import {
+        type LucideIcon,
+        MonitorIcon,
+        MoonIcon,
+        SunIcon,
+    } from "@lucide/svelte";
+    import { setMode, userPrefersMode } from "mode-watcher";
+    import { Label } from "$lib/components/ui/label";
+    import * as RadioGroup from "$lib/components/ui/radio-group";
+    import * as m from "$lib/paraglide/messages.js";
+    import { title } from "$lib/store/title";
 
-	$title = m.settings_display();
+    $title = m.settings_display();
 
-	interface Theme {
-		id: "dark" | "light" | "system";
-		name: string;
-		description: string;
-		icon: typeof IconType;
-	}
+    interface Theme {
+        id: "dark" | "light" | "system";
+        name: string;
+        description: string;
+        icon: LucideIcon;
+    }
 
-	const themes: Theme[] = [
-		{
-			id: "system",
-			name: m.theme_system(),
-			description: m.theme_system_description(),
-			icon: MonitorIcon,
-		},
-		{
-			id: "light",
-			name: m.theme_light(),
-			description: m.theme_light_description(),
-			icon: SunIcon,
-		},
-		{
-			id: "dark",
-			name: m.theme_dark(),
-			description: m.theme_dark_description(),
-			icon: MoonIcon,
-		},
-	];
+    const themes: Theme[] = [
+        {
+            id: "system",
+            name: m.theme_system(),
+            description: m.theme_system_description(),
+            icon: MonitorIcon,
+        },
+        {
+            id: "light",
+            name: m.theme_light(),
+            description: m.theme_light_description(),
+            icon: SunIcon,
+        },
+        {
+            id: "dark",
+            name: m.theme_dark(),
+            description: m.theme_dark_description(),
+            icon: MoonIcon,
+        },
+    ];
 </script>
 
 <section>

@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - **Bun 1.4+** — the only required runtime (`preinstall` blocks npm/yarn/pnpm)
-- **Docker** — only for the Postgres-backed and end-to-end test stacks
+- **Docker** — only for the end-to-end test stacks
 
 ## Setup
 
@@ -14,10 +14,10 @@ bun install
 bun run dev
 ```
 
-`bun run dev` starts the Vite dev server on <http://localhost:5173>. With no
-`DATABASE_URL` set it runs on SQLite, so no database server is needed; point
-`DATABASE_URL` at a Postgres instance (`docker compose up db`) to develop
-against Postgres instead.
+`bun run dev` starts the Vite dev server on <http://localhost:5173>. It runs on
+SQLite by default (`./data/penombre.sqlite`), so no database server is needed;
+point `DATABASE_URL` at a Postgres instance to develop against Postgres instead
+— it stays supported, it's just no longer the default.
 
 ## Commands
 
@@ -46,8 +46,8 @@ bun test                # Unit tests (fully mocked, no services needed)
 bun test path/to.test.ts        # A single file
 bun test -t "some test name"    # Filter by test name
 bun run test:docker     # Unit tests in Docker (mirrors CI, adds real Redis)
-bun run test:e2e:local  # E2E, local filesystem backend (no S3 required)
-bun run test:e2e:s3     # E2E, S3/Garage backend
+bun run test:e2e        # E2E on SQLite (the default stack)
+bun run test:e2e:pg     # E2E on PostgreSQL
 bun run test:e2e:ui     # Playwright UI mode
 
 # Codegen
@@ -58,7 +58,7 @@ bun run db:diagram   # Regenerate resources/db.svg
 
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
 `$app/*`/`$env/*`/`$lib/server/*` and the Drizzle `db` object — they need no
-Postgres or Redis. `bunfig.toml` also sets `rerunEach = 3` to catch flaky tests,
+database or Redis. `bunfig.toml` also sets `rerunEach = 3` to catch flaky tests,
 and enforces coverage thresholds.
 
 ## Adding an API endpoint

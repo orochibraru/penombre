@@ -99,8 +99,8 @@ jobs:
           retry_on: any
           command: bun test --bail
 
-  e2e-local:
-    name: Tests (E2E, local backend)
+  e2e:
+    name: Tests (E2E, SQLite)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -119,7 +119,7 @@ jobs:
       - name: Install Playwright's Chromium
         run: bunx playwright install --with-deps chromium
 
-      # test:e2e:local builds the compose stack itself, so there is no separate
+      # test:e2e builds the compose stack itself, so there is no separate
       # image build step here.
       - name: Tests (E2E)
         uses: nick-fields/retry@v3
@@ -127,19 +127,19 @@ jobs:
           max_attempts: 3
           timeout_minutes: 30
           retry_on: any
-          command: bun run test:e2e:local
+          command: bun run test:e2e
 
       - name: Upload Playwright report
         if: failure()
         uses: orochibraru/upload-artifact@v8
         with:
-          name: playwright-report-local
-          path: playwright-report-local/
+          name: playwright-report-sqlite
+          path: playwright-report/
           if-no-files-found: warn
           retention-days: 7
 
-  e2e-s3:
-    name: Tests (E2E, S3 backend)
+  e2e-pg:
+    name: Tests (E2E, PostgreSQL)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -158,19 +158,19 @@ jobs:
       - name: Install Playwright's Chromium
         run: bunx playwright install --with-deps chromium
 
-      - name: Tests (E2E, S3)
+      - name: Tests (E2E, PostgreSQL)
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
           timeout_minutes: 30
           retry_on: any
-          command: bun run test:e2e:s3
+          command: bun run test:e2e:pg
 
       - name: Upload Playwright report
         if: failure()
         uses: orochibraru/upload-artifact@v8
         with:
-          name: playwright-report-s3
-          path: playwright-report/
+          name: playwright-report-pg
+          path: playwright-report-pg/
           if-no-files-found: warn
           retention-days: 7

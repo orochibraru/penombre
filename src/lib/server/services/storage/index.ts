@@ -4,12 +4,6 @@ export {
 	DEFAULT_STORAGE_PATH,
 	logger,
 } from "./constants";
-export {
-	createStorageDriver,
-	type LocalDriverConfig,
-	type S3DriverConfig,
-	type StorageDriver,
-	type StorageDriverOptions,
-} from "./driver";
+export type { StorageDriver } from "./driver";
 export { migrateStorageMeta } from "./migrate-meta";
 export { type FileProxyRequest, StorageService } from "./service";

@@ -31,8 +31,8 @@ Penombre instance in minutes. For configuration options, see the
 - **Simple Mode**: Run it as a bare shared file browser — mount a volume, share
   the login, browse together. See
   [the docs](https://penombre.space/docs/simple-mode)
-- **Postgres or SQLite**: Point `DATABASE_URL` at a `file:` path to run with no
-  database server at all
+- **No database server**: Runs on SQLite out of the box — one container, one
+  volume. PostgreSQL stays supported if you want it
 
 ## Deployment
 
@@ -52,10 +52,9 @@ variable reference.
 - **Frontend**: SvelteKit with Svelte 5, TailwindCSS 4, and shadcn-svelte
 - **Backend API**: SvelteKit `+server.ts` routes with Zod-validated contracts
   that also generate the OpenAPI spec
-- **Database**: PostgreSQL or SQLite with Drizzle ORM — picked from the
-  `DATABASE_URL` scheme
-- **Storage**: Local filesystem (`STORAGE_PATH`, default `/data`) or any
-  S3-compatible backend, selected by `STORAGE_BACKEND`
+- **Database**: SQLite with Drizzle ORM by default, PostgreSQL optional — picked
+  from the `DATABASE_URL` scheme
+- **Storage**: Local filesystem, at `STORAGE_PATH` (default `/data/storage`)
 - **Auth**: Better Auth (session cookies, OAuth providers, API keys)
 
 ### Database
@@ -81,5 +80,5 @@ Built with these open-source technologies:
 - [Bun](https://bun.sh/) - JavaScript runtime and toolkit
 - [Drizzle ORM](https://orm.drizzle.team/) - TypeScript ORM
 - [Better Auth](https://www.better-auth.com/) - Authentication library
-- [PostgreSQL](https://postgresql.org/) - Database
+- [SQLite](https://sqlite.org/) - Database
 - [Biome](https://biomejs.dev/) - Linter and formatter

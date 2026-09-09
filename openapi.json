@@ -1504,8 +1504,6 @@
 														"type": "string"
 													},
 													"id": {
-														"format": "uuid",
-														"pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
 														"type": "string"
 													},
 													"level": {
@@ -1517,13 +1515,9 @@
 														"type": "string"
 													},
 													"link": {
-														"anyOf": [
-															{
-																"type": "string"
-															},
-															{
-																"type": "null"
-															}
+														"type": [
+															"string",
+															"null"
 														]
 													},
 													"message": {
@@ -1596,6 +1590,26 @@
 								"schema": {
 									"additionalProperties": false,
 									"properties": {
+										"account": {
+											"additionalProperties": false,
+											"properties": {
+												"accountId": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												},
+												"providerId": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"providerId",
+												"accountId"
+											],
+											"type": "object"
+										},
 										"data": {
 											"additionalProperties": true,
 											"properties": {},
@@ -1604,13 +1618,11 @@
 										"user": {
 											"properties": {
 												"email": {
+													"nullable": true,
 													"type": "string"
 												},
 												"emailVerified": {
 													"type": "boolean"
-												},
-												"id": {
-													"type": "string"
 												},
 												"image": {
 													"type": "string"
@@ -1620,7 +1632,6 @@
 												}
 											},
 											"required": [
-												"id",
 												"emailVerified"
 											],
 											"type": "object"
@@ -1628,7 +1639,8 @@
 									},
 									"required": [
 										"user",
-										"data"
+										"data",
+										"account"
 									],
 									"type": "object"
 								}
@@ -5576,6 +5588,9 @@
 									"error_description": {
 										"type": "string"
 									},
+									"iss": {
+										"type": "string"
+									},
 									"state": {
 										"type": "string"
 									},
@@ -6514,132 +6529,6 @@
 				]
 			}
 		},
-		"/api/v1/auth/expo-authorization-proxy": {
-			"get": {
-				"parameters": [
-					{
-						"in": "query",
-						"name": "authorizationURL",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "oauthState",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"400": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
-					},
-					"401": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Unauthorized. Due to missing or invalid authentication."
-					},
-					"403": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
-					},
-					"404": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Not Found. The requested resource was not found."
-					},
-					"429": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
-					}
-				},
-				"security": [
-					{
-						"bearerAuth": []
-					}
-				],
-				"tags": [
-					"Expo"
-				]
-			}
-		},
 		"/api/v1/auth/get-access-token": {
 			"post": {
 				"description": "Get a valid access token, doing a refresh if needed",
@@ -6648,24 +6537,42 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"accountId": {
-										"description": "The account ID associated with the refresh token",
-										"type": "string"
+								"anyOf": [
+									{
+										"properties": {
+											"accountId": {
+												"description": "The Better Auth account ID",
+												"type": "string"
+											},
+											"userId": {
+												"description": "The user ID associated with the account",
+												"type": "string"
+											}
+										},
+										"required": [
+											"accountId"
+										],
+										"type": "object"
 									},
-									"providerId": {
-										"description": "The provider ID for the OAuth provider",
-										"type": "string"
-									},
-									"userId": {
-										"description": "The user ID associated with the account",
-										"type": "string"
+									{
+										"properties": {
+											"useAccountCookie": {
+												"description": "Select the current OAuth account from its signed cookie",
+												"enum": [
+													true
+												]
+											},
+											"userId": {
+												"description": "The user ID associated with the account",
+												"type": "string"
+											}
+										},
+										"required": [
+											"useAccountCookie"
+										],
+										"type": "object"
 									}
-								},
-								"required": [
-									"providerId"
-								],
-								"type": "object"
+								]
 							}
 						}
 					},
@@ -7090,6 +6997,16 @@
 										},
 										"type": "object"
 									},
+									"additionalParams": {
+										"additionalProperties": {
+											"type": "string"
+										},
+										"description": "Extra query parameters to append to the provider authorization URL (e.g. Cognito identity_provider, Google hd).",
+										"propertyNames": {
+											"type": "string"
+										},
+										"type": "object"
+									},
 									"callbackURL": {
 										"description": "The URL to redirect to after the user has signed in",
 										"type": "string"
@@ -7113,12 +7030,6 @@
 											"refreshToken": {
 												"type": "string"
 											},
-											"scopes": {
-												"items": {
-													"type": "string"
-												},
-												"type": "array"
-											},
 											"token": {
 												"type": "string"
 											}
@@ -7128,12 +7039,17 @@
 										],
 										"type": "object"
 									},
+									"loginHint": {
+										"description": "The login hint to use for the authorization code request",
+										"type": "string"
+									},
 									"provider": {
 										"anyOf": [
 											{
 												"enum": [
 													"apple",
 													"atlassian",
+													"cloudflare",
 													"cognito",
 													"discord",
 													"facebook",
@@ -7615,355 +7531,6 @@
 				],
 				"tags": [
 					"Auth"
-				]
-			}
-		},
-		"/api/v1/auth/oauth2/callback/{providerId}": {
-			"get": {
-				"description": "OAuth2 callback",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "code",
-						"schema": {
-							"description": "The OAuth2 code",
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "error",
-						"schema": {
-							"description": "The error message, if any",
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "error_description",
-						"schema": {
-							"description": "The error description, if any",
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "state",
-						"schema": {
-							"description": "The state parameter from the OAuth2 request",
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "iss",
-						"schema": {
-							"description": "The issuer identifier",
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "providerId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"url": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "OAuth2 callback"
-					},
-					"400": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
-					},
-					"401": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Unauthorized. Due to missing or invalid authentication."
-					},
-					"403": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
-					},
-					"404": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Not Found. The requested resource was not found."
-					},
-					"429": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
-					}
-				},
-				"security": [
-					{
-						"bearerAuth": []
-					}
-				],
-				"tags": [
-					"Generic-oauth"
-				]
-			}
-		},
-		"/api/v1/auth/oauth2/link": {
-			"post": {
-				"description": "Link an OAuth2 account to the current user session",
-				"parameters": [],
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"callbackURL": {
-										"type": "string"
-									},
-									"errorCallbackURL": {
-										"description": "The URL to redirect to if there is an error during the link process",
-										"type": "string"
-									},
-									"providerId": {
-										"type": "string"
-									},
-									"scopes": {
-										"description": "Additional scopes to request when linking the account",
-										"items": {
-											"type": "string"
-										},
-										"type": "array"
-									}
-								},
-								"required": [
-									"providerId",
-									"callbackURL"
-								],
-								"type": "object"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"redirect": {
-											"description": "Indicates that the client should redirect to the provided URL",
-											"enum": [
-												true
-											],
-											"type": "boolean"
-										},
-										"url": {
-											"description": "The authorization URL to redirect the user to for linking the OAuth2 account",
-											"format": "uri",
-											"type": "string"
-										}
-									},
-									"required": [
-										"url",
-										"redirect"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Authorization URL generated successfully for linking an OAuth2 account"
-					},
-					"400": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
-					},
-					"401": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Unauthorized. Due to missing or invalid authentication."
-					},
-					"403": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
-					},
-					"404": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Not Found. The requested resource was not found."
-					},
-					"429": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
-					}
-				},
-				"security": [
-					{
-						"bearerAuth": []
-					}
-				],
-				"tags": [
-					"Generic-oauth"
 				]
 			}
 		},
@@ -8455,6 +8022,10 @@
 						"name": "authenticatorAttachment",
 						"required": false,
 						"schema": {
+							"enum": [
+								"platform",
+								"cross-platform"
+							],
 							"type": "string"
 						}
 					},
@@ -9131,6 +8702,10 @@
 						"application/json": {
 							"schema": {
 								"properties": {
+									"createSession": {
+										"description": "Create a session after registering the passkey",
+										"type": "boolean"
+									},
 									"name": {
 										"description": "Name of the passkey",
 										"type": "string"
@@ -9151,7 +8726,23 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/Passkey"
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/Passkey"
+										},
+										{
+											"properties": {
+												"session": {
+													"$ref": "#/components/schemas/Session"
+												},
+												"user": {
+													"$ref": "#/components/schemas/User"
+												}
+											},
+											"type": "object"
+										}
+									],
+									"type": "object"
 								}
 							}
 						},
@@ -9331,24 +8922,42 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"accountId": {
-										"description": "The account ID associated with the refresh token",
-										"type": "string"
+								"anyOf": [
+									{
+										"properties": {
+											"accountId": {
+												"description": "The Better Auth account ID",
+												"type": "string"
+											},
+											"userId": {
+												"description": "The user ID associated with the account",
+												"type": "string"
+											}
+										},
+										"required": [
+											"accountId"
+										],
+										"type": "object"
 									},
-									"providerId": {
-										"description": "The provider ID for the OAuth provider",
-										"type": "string"
-									},
-									"userId": {
-										"description": "The user ID associated with the account",
-										"type": "string"
+									{
+										"properties": {
+											"useAccountCookie": {
+												"description": "Select the current OAuth account from its signed cookie",
+												"enum": [
+													true
+												]
+											},
+											"userId": {
+												"description": "The user ID associated with the account",
+												"type": "string"
+											}
+										},
+										"required": [
+											"useAccountCookie"
+										],
+										"type": "object"
 									}
-								},
-								"required": [
-									"providerId"
-								],
-								"type": "object"
+								]
 							}
 						}
 					},
@@ -10697,9 +10306,10 @@
 				]
 			}
 		},
-		"/api/v1/auth/sign-in/oauth2": {
+		"/api/v1/auth/sign-in/social": {
 			"post": {
-				"description": "Sign in with OAuth2",
+				"description": "Sign in with a social provider",
+				"operationId": "socialSignIn",
 				"parameters": [],
 				"requestBody": {
 					"content": {
@@ -10713,185 +10323,11 @@
 										},
 										"type": "object"
 									},
-									"callbackURL": {
-										"description": "The URL to redirect to after sign in",
-										"type": "string"
-									},
-									"disableRedirect": {
-										"description": "Disable redirect",
-										"type": "boolean"
-									},
-									"errorCallbackURL": {
-										"description": "The URL to redirect to if an error occurs",
-										"type": "string"
-									},
-									"newUserCallbackURL": {
-										"description": "The URL to redirect to after login if the user is new. Eg: \"/welcome\"",
-										"type": "string"
-									},
-									"providerId": {
-										"description": "The provider ID for the OAuth provider",
-										"type": "string"
-									},
-									"requestSignUp": {
-										"description": "Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider. Eg: false",
-										"type": "boolean"
-									},
-									"scopes": {
-										"description": "Scopes to be passed to the provider authorization request.",
-										"items": {
+									"additionalParams": {
+										"additionalProperties": {
 											"type": "string"
 										},
-										"type": "array"
-									}
-								},
-								"required": [
-									"providerId"
-								],
-								"type": "object"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"redirect": {
-											"type": "boolean"
-										},
-										"url": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Sign in with OAuth2"
-					},
-					"400": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
-					},
-					"401": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
-								}
-							}
-						},
-						"description": "Unauthorized. Due to missing or invalid authentication."
-					},
-					"403": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
-					},
-					"404": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Not Found. The requested resource was not found."
-					},
-					"429": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"type": "object"
-								}
-							}
-						},
-						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
-					}
-				},
-				"security": [
-					{
-						"bearerAuth": []
-					}
-				],
-				"tags": [
-					"Generic-oauth"
-				]
-			}
-		},
-		"/api/v1/auth/sign-in/social": {
-			"post": {
-				"description": "Sign in with a social provider",
-				"operationId": "socialSignIn",
-				"parameters": [],
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"additionalData": {
-										"additionalProperties": {},
+										"description": "Extra query parameters to append to the provider authorization URL (e.g. Cognito identity_provider, Google hd).",
 										"propertyNames": {
 											"type": "string"
 										},
@@ -10970,6 +10406,7 @@
 												"enum": [
 													"apple",
 													"atlassian",
+													"cloudflare",
 													"cognito",
 													"discord",
 													"facebook",
@@ -11178,11 +10615,25 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {},
+								"properties": {
+									"callbackURL": {
+										"description": "The URL to redirect to after provider logout",
+										"type": "string"
+									},
+									"disableRedirect": {
+										"description": "Return the provider logout URL without redirecting",
+										"type": "boolean"
+									},
+									"state": {
+										"description": "State to pass to the provider logout endpoint",
+										"type": "string"
+									}
+								},
 								"type": "object"
 							}
 						}
-					}
+					},
+					"required": false
 				},
 				"responses": {
 					"200": {
@@ -11190,8 +10641,16 @@
 							"application/json": {
 								"schema": {
 									"properties": {
+										"redirect": {
+											"description": "Whether the client should redirect to the provider logout URL",
+											"type": "boolean"
+										},
 										"success": {
 											"type": "boolean"
+										},
+										"url": {
+											"description": "Provider logout URL when RP-initiated logout is available",
+											"type": "string"
 										}
 									},
 									"type": "object"
@@ -11551,14 +11010,12 @@
 							"schema": {
 								"properties": {
 									"accountId": {
-										"type": "string"
-									},
-									"providerId": {
+										"description": "The Better Auth account ID to unlink",
 										"type": "string"
 									}
 								},
 								"required": [
-									"providerId"
+									"accountId"
 								],
 								"type": "object"
 							}
@@ -17539,23 +16996,15 @@
 													"type": "string"
 												},
 												"latestVersion": {
-													"anyOf": [
-														{
-															"type": "string"
-														},
-														{
-															"type": "null"
-														}
+													"type": [
+														"string",
+														"null"
 													]
 												},
 												"releaseUrl": {
-													"anyOf": [
-														{
-															"type": "string"
-														},
-														{
-															"type": "null"
-														}
+													"type": [
+														"string",
+														"null"
 													]
 												},
 												"updateAvailable": {

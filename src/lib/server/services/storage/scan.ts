@@ -14,7 +14,6 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
 import { Logger } from "$lib/logger";
-import { isS3Backend } from "$lib/server/config";
 import { files, folders } from "$lib/server/db/schema";
 import type { StorageContext } from "./context";
 import { determineCategory, determineContentType } from "./mappers";
@@ -200,17 +199,10 @@ export class ScanOperations {
 	 * Folders are pruned by checking the directory itself, not by whether any
 	 * file key still sits under it — otherwise an empty folder someone created
 	 * in the UI would be deleted by the next scan.
-	 *
-	 * ponytail: local backend only. S3 has no real directories, so there's
-	 * nothing to stat; folder rows there are only removed via the app.
 	 */
 	private async removeVanishedFolders(
 		existingFolders: Array<{ id: string; path: string }>,
 	): Promise<number> {
-		if (isS3Backend()) {
-			return 0;
-		}
-
 		const vanished = existingFolders
 			.filter(({ path }) => !existsSync(join(this.ctx.storagePath, path)))
 			.map(({ id }) => id);

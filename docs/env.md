@@ -15,37 +15,40 @@ mode, and logging behavior.
 used to generate absolute URLs in OAuth callbacks and email links. In
 development this is typically `http://localhost:3000`.
 
-| Variable      | Description                                  | Default                 |
-| ------------- | -------------------------------------------- | ----------------------- |
-| `APP_NAME`    | Application name (used in UI and emails)     | `Penombre`              |
-| `APP_VERSION` | Application version (used in metadata)       | /                       |
-| `APP_ENV`     | Environment (`dev`/`production`)             | `production`            |
-| `ORIGIN`      | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
-| `LOG_LEVEL`   | `debug`, `info`, `warn`, `error`, `trace`    | `info`                  |
-| `LOG_FORMAT`  | `console` or `json`                          | `console`               |
+| Variable     | Description                                  | Default                 |
+| ------------ | -------------------------------------------- | ----------------------- |
+| `APP_NAME`   | Application name (used in UI and emails)     | `Penombre`              |
+| `APP_ENV`    | Environment (`dev`/`production`)             | `production`            |
+| `ORIGIN`     | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
+| `LOG_LEVEL`  | `debug`, `info`, `warn`, `error`, `trace`    | `info`                  |
+| `LOG_FORMAT` | `console` or `json`                          | `console`               |
 
 ## Database
 
-Penombre runs on **PostgreSQL** or **SQLite**. The backend is picked from the
-`DATABASE_URL` scheme — a `file:`/`sqlite:` URL runs SQLite (the rest of the
-value is the path to the database file, created on first boot), anything else is
-treated as a PostgreSQL connection string.
+Penombre runs on **SQLite** by default — no database server to install, back up
+or keep patched. The Docker image ships pointing at a file inside its data
+volume, so a fresh install needs no database configuration at all.
+
+The dialect is picked from the `DATABASE_URL` scheme: a `file:`/`sqlite:` URL
+runs SQLite (the rest of the value is the path to the database file, created on
+first boot), anything else is treated as a PostgreSQL connection string.
 
 ```ini
-# PostgreSQL
-DATABASE_URL=postgresql://penombre:penombre@localhost:5432/penombre
-
-# SQLite — no database server needed
+# SQLite (default) — no database server needed
 DATABASE_URL=file:/data/db/penombre.sqlite
+
+# PostgreSQL (optional)
+DATABASE_URL=postgresql://penombre:penombre@localhost:5432/penombre
 ```
 
-SQLite pairs well with [Simple mode](simple-mode.md) for a single-container
-deployment. PostgreSQL is the better fit for multiple app instances, since they
-can share one database.
+**PostgreSQL is optional.** It is still fully supported and worth the extra
+container if you run **multiple app instances** against one database. For a
+single container — which is what most self-hosted installs are — SQLite is the
+simpler and faster choice.
 
-| Variable       | Description                                   | Default  |
-| -------------- | --------------------------------------------- | -------- |
-| `DATABASE_URL` | PostgreSQL connection string, or a file: path | Required |
+| Variable       | Description                                          | Default                         |
+| -------------- | ---------------------------------------------------- | ------------------------------- |
+| `DATABASE_URL` | SQLite `file:` path, or a Postgres connection string | `file:/data/db/penombre.sqlite` |
 
 ## Initial Setup
 
@@ -121,20 +124,12 @@ SMTP is disabled, email-dependent features will be unavailable.
 
 ## Storage
 
-Controls where uploaded files are stored. The default local backend stores files
-on the host filesystem. Set `STORAGE_BACKEND=s3` to use any S3-compatible
-service instead. See [Storage](storage.md) for a full setup guide.
+Where uploaded files are stored on the host filesystem. See
+[Storage](storage.md) for the full guide.
 
-| Variable               | Description                                | Default         |
-| ---------------------- | ------------------------------------------ | --------------- |
-| `STORAGE_BACKEND`      | `local` or `s3`                            | `local`         |
-| `STORAGE_PATH`         | Local filesystem path (local backend only) | `/data/storage` |
-| `S3_BUCKET`            | Bucket name (S3 backend only)              | Required        |
-| `S3_ACCESS_KEY_ID`     | Access key ID (S3 backend only)            | Required        |
-| `S3_SECRET_ACCESS_KEY` | Secret access key (S3 backend only)        | Required        |
-| `S3_ENDPOINT`          | Custom endpoint URL (non-AWS providers)    | /               |
-| `S3_REGION`            | Bucket region                              | `us-east-1`     |
-| `S3_PATH_STYLE`        | Use path-style URLs (`true`/`false`)       | `false`         |
+| Variable       | Description                   | Default         |
+| -------------- | ----------------------------- | --------------- |
+| `STORAGE_PATH` | Absolute path to storage root | `/data/storage` |
 
 ## Simple Mode (Optional)
 

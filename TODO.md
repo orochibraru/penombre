@@ -34,6 +34,5 @@
 - [ ] [Feature] Sharing: shareable links with expiry & password,
       public/authenticated access, new `shares` DB table
 - [ ] [Feature] Admin settings: manage users, storage quotas, permissions
-- [ ] [Feature] Backups: S3-compatible target, schedule, ignore patterns
 - [ ] [Feature] OnlyOffice integration (in-browser docs/sheets/presentations
       editing, WOPI) — save for once core features are solid

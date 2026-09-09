@@ -7,7 +7,7 @@ The guides in this folder, in reading order:
 2. [Environment variables](env.md) — every setting, its default, and whether
    it's required.
 3. [Deployment](deployment.md) — running it in production.
-4. [Storage](storage.md) — local filesystem or S3-compatible object storage.
+4. [Storage](storage.md) — where your files live on disk.
 5. [Simple mode](simple-mode.md) — run it as a bare shared file browser instead
    of a multi-user drive.
 6. [Reverse proxy](reverse-proxy.md) — HTTPS with Caddy, Nginx, or Traefik.

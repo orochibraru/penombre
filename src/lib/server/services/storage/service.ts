@@ -404,12 +404,6 @@ export class StorageService {
 	// LOCAL/TEMP PATH HELPER
 	// =========================================================================
 
-	/**
-	 * For tools that need a local filesystem path (ffmpeg, pdftoppm, sharp),
-	 * return the actual path for local backends or write a temp file for S3.
-	 * Caller is responsible for deleting the temp file when isTemp=true.
-	 */
-
 	// =========================================================================
 	// FOLDER OPERATIONS
 	// =========================================================================

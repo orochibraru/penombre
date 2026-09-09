@@ -18,7 +18,7 @@ penombre/
 │   └── docs/      # SvelteKit — documentation
 ├── scripts/       # Shared tooling (API codegen, DB diagram, circular checks)
 ├── Dockerfile     # Multi-stage production build
-└── compose.yaml   # Docker Compose (app + PostgreSQL)
+└── compose.yaml   # Docker Compose (single app container)
 ```
 
 ## Web package
@@ -33,7 +33,7 @@ both the frontend UI and the backend REST API.
 | Framework | SvelteKit + Svelte 5                                    |
 | Runtime   | Bun (via `svelte-adapter-bun`)                          |
 | Styling   | TailwindCSS 4, shadcn-svelte (bits-ui)                  |
-| ORM       | Drizzle ORM on PostgreSQL                               |
+| ORM       | Drizzle ORM on SQLite (PostgreSQL optional)             |
 | Auth      | Better Auth (email/password, OAuth, passkeys, API keys) |
 | i18n      | Paraglide-JS (English + French)                         |
 | Forms     | sveltekit-superforms + Valibot                          |
@@ -179,8 +179,10 @@ with no index file and no search dependency.
 
 ## Database
 
-Penombre uses **PostgreSQL** with **Drizzle ORM**. Migrations are auto-generated
-via `drizzle-kit generate` and applied on startup.
+Penombre uses **Drizzle ORM** on **SQLite** by default, with **PostgreSQL** as
+an optional alternative for multi-instance deployments. The dialect is picked
+from the `DATABASE_URL` scheme; migrations for both live under `drizzle/` and
+are auto-generated via `drizzle-kit generate` and applied on startup.
 
 ![Database diagram](/db.svg)
 
@@ -194,24 +196,24 @@ via `drizzle-kit generate` and applied on startup.
 The production Docker image uses a multi-stage build:
 
 1. **base** — Alpine + Bun runtime
-2. **builder** — Install dependencies with frozen lockfile
-3. **frontend-builder** — Build the SvelteKit app with Vite
-4. **final** — Minimal runtime with `ffmpeg` and `poppler-utils` for media
-   thumbnails
+2. **deps** — Install dependencies with a frozen lockfile
+3. **builder** — Shared source layer both build targets start from
+4. **app-builder** / **docs-builder** — Build the app, and the docs site
+5. **app** / **docs** — The two runtime images: the app on Bun with `ffmpeg` and
+   `poppler-utils` for media thumbnails, the docs site on nginx
 
-The final image runs as a non-root `bun` user with a health check on
-`/api/health`.
+The app image runs as a non-root `bun` user, with a health check built by the
+SvelteKit adapter.
 
 ### Docker Compose
 
-The default `compose.yaml` defines two services:
+The default `compose.yaml` defines a single service:
 
 - **app** — the Penombre web server on port `3000`, with a persistent `/data`
-  volume for file storage
-- **db** — PostgreSQL 17 Alpine with a health check and persistent data volume
+  volume holding both the SQLite database and file storage
 
-An optional **redis** service can be added for distributed caching (see
-[Deployment](deployment.md)).
+Optional **db** (PostgreSQL) and **redis** services can be added — see
+[Deployment](deployment.md).
 
 ### Shared scripts
 
@@ -220,5 +222,3 @@ An optional **redis** service can be added for distributed caching (see
 | `gen-api.ts`    | Generate OpenAPI types for web and mobile from the API spec |
 | `db-diagram.ts` | Generate the database diagram (DBML → SVG)                  |
 | `circular.ts`   | Detect circular dependencies via madge                      |
-| `backup.sh`     | Back up the PostgreSQL database                             |
-| `restore.sh`    | Restore a PostgreSQL database backup                        |

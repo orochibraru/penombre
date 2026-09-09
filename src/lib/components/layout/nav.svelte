@@ -1,35 +1,35 @@
 <script lang="ts" module>
-	export interface NavItem {
-		title: string;
-		url: Pathname;
-		icon: typeof IconType;
-		accentColor?:
-			| "indigo"
-			| "orange"
-			| "pink"
-			| "green"
-			| "purple"
-			| "blue"
-			| "red"
-			| "yellow"
-			| "teal"
-			| "cyan"
-			| "rose"
-			| "violet"
-			| "amber";
-		hideOnMobile?: boolean;
-		isRoot?: boolean;
-		/** Optional count to display as badge (desktop only) */
-		count?: number;
-	}
+    export interface NavItem {
+        title: string;
+        url: Pathname;
+        icon: LucideIcon;
+        accentColor?:
+            | "indigo"
+            | "orange"
+            | "pink"
+            | "green"
+            | "purple"
+            | "blue"
+            | "red"
+            | "yellow"
+            | "teal"
+            | "cyan"
+            | "rose"
+            | "violet"
+            | "amber";
+        hideOnMobile?: boolean;
+        isRoot?: boolean;
+        /** Optional count to display as badge (desktop only) */
+        count?: number;
+    }
 
-	export interface NavMenus {
-		[key: string]: NavItem[];
-	}
+    export interface NavMenus {
+        [key: string]: NavItem[];
+    }
 </script>
 
 <script lang="ts">
-    import { type Icon as IconType } from "@lucide/svelte";
+    import { type LucideIcon } from "@lucide/svelte";
     import type { ComponentProps } from "svelte";
     import { page } from "$app/state";
     import * as Sidebar from "$lib/components/ui/sidebar/index";

@@ -32,9 +32,6 @@ services:
       - /your/host/path:/data/storage
 ```
 
-See [Storage](storage.md) for S3-compatible backends — simple mode works the
-same way there, with the whole bucket/prefix shared instead of per-user.
-
 ## Files already on the volume
 
 Penombre indexes what it finds. Simple mode scans the storage root **on start
@@ -47,10 +44,10 @@ Hidden entries (`.DS_Store`, `.git/…`) and thumbnail caches are skipped. The
 scan never rewrites your files: it only reads names and sizes to build the
 index, so your folder layout on disk stays exactly as it is.
 
-## Running without PostgreSQL
+## The whole stack
 
-Point `DATABASE_URL` at a `file:` path and Penombre runs on SQLite instead — no
-database server, no second container, one file next to your data:
+SQLite is the default, so simple mode needs exactly one container — no database
+server, one file next to your data:
 
 ```yaml
 services:
@@ -61,7 +58,6 @@ services:
     restart: unless-stopped
     environment:
       - SIMPLE_MODE=true
-      - DATABASE_URL=file:/data/db/penombre.sqlite
       - ORIGIN=http://localhost:3000
       - AUTH_SECRET=change_me
       - ADMIN_EMAIL=admin@example.com
@@ -74,13 +70,13 @@ volumes:
   penombre_db:
 ```
 
-That's the whole stack. The database file is created and migrated on first boot.
-See [Environment variables](env.md#database) for how the backend is chosen, and
-back it up by copying the `.sqlite` file alongside your storage directory.
+The database file is created and migrated on first boot at
+`/data/db/penombre.sqlite`. Back it up by copying that file alongside your
+storage directory.
 
-> PostgreSQL is still the better choice if you run **multiple app instances**
-> against one dataset — they can share a database, a SQLite file can't be shared
-> safely across containers.
+> PostgreSQL is optional and still supported — worth it only if you run
+> **multiple app instances** against one dataset, since a SQLite file can't be
+> shared safely across containers. See [Environment variables](env.md#database).
 
 ## What changes
 

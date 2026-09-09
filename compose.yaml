@@ -5,14 +5,13 @@ services:
       dockerfile: ./Dockerfile
       target: app
     ports:
-      - 8080:8080
+      - 8080:3000
     restart: unless-stopped
     volumes:
-      - /Users/nicolasboyer/Documents/IR:/data/storage
+      - storage:/data/storage
       - db:/data/db
     env_file: .env
     environment:
-      - DATABASE_URL=file:/data/db/penombre.sqlite
       - LOG_LEVEL=debug
       - STORAGE_PATH=/data/storage
       - SIMPLE_MODE=true
@@ -20,3 +19,4 @@ services:
 
 volumes:
   db: {}
+  storage: {}

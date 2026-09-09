@@ -1,0 +1,67 @@
+# Dedicated E2E test stack. Isolated from the dev stack:
+#   - Its own named volumes, no ports shared with the dev stack.
+#   - No env_file dependency — all values are self-contained.
+#
+# Profiles:
+#   (none) — SQLite, the default a homelab install runs
+#   pg     — adds a PostgreSQL service; the app uses it via E2E_DATABASE_URL
+#
+# Usage:
+#   SQLite:   E2E_PORT=3001 docker compose -f tools/compose.e2e.yaml -p penombre-e2e up --build
+#   Postgres: E2E_PORT=3002 E2E_DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre_e2e \
+#               docker compose -f tools/compose.e2e.yaml --profile pg -p penombre-e2e-pg up --build
+#
+# Playwright invokes the appropriate variant via the webServer command in
+# playwright.config.ts and playwright.pg.config.ts respectively.
+
+services:
+  app:
+    build: .
+    image: penombre-e2e
+    restart: unless-stopped
+    ports:
+      - "${E2E_PORT:-3001}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+        # The `pg` profile is off by default; without this the SQLite run
+        # fails to start on a dependency that was never enabled.
+        required: false
+    volumes:
+      - e2e_storage:/data
+    environment:
+      DATABASE_URL: "${E2E_DATABASE_URL:-file:/data/db/penombre.sqlite}"
+      ORIGIN: "http://localhost:${E2E_PORT:-3001}"
+      LOG_LEVEL: "debug"
+      REDIS_URL: "redis://redis:6379"
+      STORAGE_PATH: "/data/storage"
+
+  db:
+    profiles: [pg]
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: penombre_e2e
+    volumes:
+      - e2e_db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d penombre_e2e'"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+      start_period: 3s
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 1s
+      timeout: 2s
+      retries: 10
+
+volumes:
+  e2e_db:
+  e2e_storage:

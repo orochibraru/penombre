@@ -11,18 +11,26 @@ up.
 
 **Common causes:**
 
-- PostgreSQL isn't running or hasn't finished starting.
-- `DATABASE_URL` is incorrect (wrong host, port, credentials, or database name).
-- A firewall or network issue is blocking the connection.
+- On SQLite (the default): the directory holding the database file isn't
+  writable by the container's `bun` user, or the `/data` volume isn't mounted.
+- On PostgreSQL: the server isn't running or hasn't finished starting.
+- `DATABASE_URL` is incorrect (wrong path, or wrong host/port/credentials).
+- A firewall or network issue is blocking the connection (PostgreSQL only).
 
-**Verify connectivity:**
+**Verify, on SQLite:**
+
+```bash
+docker compose exec app ls -l /data/db
+```
+
+**Verify, on PostgreSQL:**
 
 ```bash
 docker compose exec db pg_isready
 ```
 
-If you're using the default Compose file, the app waits for the `db` service
-health check — make sure the `depends_on` condition is set to `service_healthy`.
+If you added a `db` service, the app should wait for its health check — make
+sure the `depends_on` condition is set to `service_healthy`.
 
 ### Could not migrate the database. Exiting
 
@@ -66,6 +74,10 @@ account was already created with the original values. Reset the password through
 the forgot-password flow (requires SMTP), or connect to the database directly:
 
 ```bash
+# SQLite (default)
+docker compose exec app bun -e "console.log([...new (require('bun:sqlite').Database)('/data/db/penombre.sqlite').query('select email from user').all()])"
+
+# PostgreSQL
 docker compose exec db psql -U postgres -d penombre
 ```
 
@@ -255,7 +267,7 @@ docker compose logs -f app
 > filter with tools like `jq`. Use `console` for human-readable output during
 > development.
 
-Check the database directly:
+Check the database directly (PostgreSQL):
 
 ```bash
 docker compose exec db psql -U postgres -d penombre -c "\dt"

@@ -2,15 +2,13 @@ import process from "node:process";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright config for the S3 storage backend.
- *
- * Starts a self-contained E2E stack with Garage via `compose.e2e.yaml --profile s3`,
- * with its own isolated database (penombre_e2e) on port 3002.
- * S3-dependent tests (tagged @s3) are included in this suite.
+ * Default E2E config: SQLite, local filesystem storage — the stack a homelab
+ * install actually runs. Starts everything itself via `tools/compose.e2e.yaml`.
  *
  * Usage:
- *   bun run test:e2e:s3
- *   bun run test:e2e         (alias)
+ *   bun run test:e2e
+ *
+ * `playwright.pg.config.ts` runs the same suite against PostgreSQL.
  */
 export default defineConfig({
 	testDir: "./e2e",
@@ -21,7 +19,7 @@ export default defineConfig({
 	reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
 	globalSetup: "./e2e/global-setup.ts",
 	use: {
-		baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3002",
+		baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3001",
 		trace: "on",
 		screenshot: "on",
 		contextOptions: {
@@ -40,20 +38,18 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		// Self-contained S3 E2E stack on port 3002 — isolated from the dev stack.
+		// Self-contained E2E stack on port 3001 — isolated from the dev stack.
 		// Playwright waits for the URL to respond before running any tests.
-		// The globalSetup further confirms the DB is healthy before tests begin.
 		command:
-			"docker compose -f compose.e2e.yaml --profile s3 -p penombre-e2e-s3 up --wait",
+			"docker compose -f tools/compose.e2e.yaml -p penombre-e2e up --wait",
 		cwd: "./",
-		url: "http://localhost:3002",
+		url: "http://localhost:3001",
 		reuseExistingServer: !process.env.CI,
 		timeout: 30_000,
 		stdout: "pipe",
 		stderr: "pipe",
 		env: {
-			E2E_PORT: "3002",
-			STORAGE_BACKEND: "s3",
+			E2E_PORT: "3001",
 		},
 	},
 });

@@ -35,7 +35,6 @@ export interface paths {
 								/** @enum {string} */
 								action: "create" | "update" | "delete" | "share" | "rename";
 								createdAt: string;
-								/** Format: uuid */
 								id: string;
 								/** @enum {string} */
 								level: "info" | "warning" | "error";
@@ -98,13 +97,17 @@ export interface paths {
 					};
 					content: {
 						"application/json": {
+							account: {
+								accountId: string;
+								id: string;
+								providerId: string;
+							};
 							data: {
 								[key: string]: unknown;
 							};
 							user: {
-								email?: string;
+								email?: string | null;
 								emailVerified: boolean;
-								id: string;
 								image?: string;
 								name?: string;
 							};
@@ -1559,6 +1562,7 @@ export interface paths {
 						device_id?: string;
 						error?: string;
 						error_description?: string;
+						iss?: string;
 						state?: string;
 						user?: string;
 					};
@@ -1904,101 +1908,6 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/api/v1/auth/expo-authorization-proxy": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get: {
-			parameters: {
-				query?: {
-					authorizationURL?: string;
-					oauthState?: string;
-				};
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message: string;
-						};
-					};
-				};
-				/** @description Unauthorized. Due to missing or invalid authentication. */
-				401: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message: string;
-						};
-					};
-				};
-				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-				403: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Not Found. The requested resource was not found. */
-				404: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-				429: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-			};
-		};
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
 	"/api/v1/auth/get-access-token": {
 		parameters: {
 			query?: never;
@@ -2018,14 +1927,22 @@ export interface paths {
 			};
 			requestBody: {
 				content: {
-					"application/json": {
-						/** @description The account ID associated with the refresh token */
-						accountId?: string;
-						/** @description The provider ID for the OAuth provider */
-						providerId: string;
-						/** @description The user ID associated with the account */
-						userId?: string;
-					};
+					"application/json":
+						| {
+								/** @description The Better Auth account ID */
+								accountId: string;
+								/** @description The user ID associated with the account */
+								userId?: string;
+						  }
+						| {
+								/**
+								 * @description Select the current OAuth account from its signed cookie
+								 * @enum {unknown}
+								 */
+								useAccountCookie: true;
+								/** @description The user ID associated with the account */
+								userId?: string;
+						  };
 				};
 			};
 			responses: {
@@ -2177,242 +2094,6 @@ export interface paths {
 		get: operations["listUserSessions"];
 		put?: never;
 		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/auth/oauth2/callback/{providerId}": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		/** @description OAuth2 callback */
-		get: {
-			parameters: {
-				query?: {
-					code?: string;
-					error?: string;
-					error_description?: string;
-					state?: string;
-					iss?: string;
-				};
-				header?: never;
-				path: {
-					providerId: string;
-				};
-				cookie?: never;
-			};
-			requestBody?: never;
-			responses: {
-				/** @description OAuth2 callback */
-				200: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							url?: string;
-						};
-					};
-				};
-				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message: string;
-						};
-					};
-				};
-				/** @description Unauthorized. Due to missing or invalid authentication. */
-				401: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message: string;
-						};
-					};
-				};
-				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-				403: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Not Found. The requested resource was not found. */
-				404: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-				429: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-			};
-		};
-		put?: never;
-		post?: never;
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
-	"/api/v1/auth/oauth2/link": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Link an OAuth2 account to the current user session */
-		post: {
-			parameters: {
-				query?: never;
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody: {
-				content: {
-					"application/json": {
-						callbackURL: string;
-						/** @description The URL to redirect to if there is an error during the link process */
-						errorCallbackURL?: string;
-						providerId: string;
-						/** @description Additional scopes to request when linking the account */
-						scopes?: string[];
-					};
-				};
-			};
-			responses: {
-				/** @description Authorization URL generated successfully for linking an OAuth2 account */
-				200: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							/**
-							 * @description Indicates that the client should redirect to the provided URL
-							 * @enum {boolean}
-							 */
-							redirect: true;
-							/**
-							 * Format: uri
-							 * @description The authorization URL to redirect the user to for linking the OAuth2 account
-							 */
-							url: string;
-						};
-					};
-				};
-				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message: string;
-						};
-					};
-				};
-				/** @description Unauthorized. Due to missing or invalid authentication. */
-				401: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message: string;
-						};
-					};
-				};
-				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-				403: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Not Found. The requested resource was not found. */
-				404: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-				429: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-			};
-		};
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -3003,14 +2684,22 @@ export interface paths {
 			};
 			requestBody: {
 				content: {
-					"application/json": {
-						/** @description The account ID associated with the refresh token */
-						accountId?: string;
-						/** @description The provider ID for the OAuth provider */
-						providerId: string;
-						/** @description The user ID associated with the account */
-						userId?: string;
-					};
+					"application/json":
+						| {
+								/** @description The Better Auth account ID */
+								accountId: string;
+								/** @description The user ID associated with the account */
+								userId?: string;
+						  }
+						| {
+								/**
+								 * @description Select the current OAuth account from its signed cookie
+								 * @enum {unknown}
+								 */
+								useAccountCookie: true;
+								/** @description The user ID associated with the account */
+								userId?: string;
+						  };
 				};
 			};
 			responses: {
@@ -3517,133 +3206,6 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	"/api/v1/auth/sign-in/oauth2": {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/** @description Sign in with OAuth2 */
-		post: {
-			parameters: {
-				query?: never;
-				header?: never;
-				path?: never;
-				cookie?: never;
-			};
-			requestBody: {
-				content: {
-					"application/json": {
-						additionalData?: {
-							[key: string]: unknown;
-						};
-						/** @description The URL to redirect to after sign in */
-						callbackURL?: string;
-						/** @description Disable redirect */
-						disableRedirect?: boolean;
-						/** @description The URL to redirect to if an error occurs */
-						errorCallbackURL?: string;
-						/** @description The URL to redirect to after login if the user is new. Eg: "/welcome" */
-						newUserCallbackURL?: string;
-						/** @description The provider ID for the OAuth provider */
-						providerId: string;
-						/** @description Explicitly request sign-up. Useful when disableImplicitSignUp is true for this provider. Eg: false */
-						requestSignUp?: boolean;
-						/** @description Scopes to be passed to the provider authorization request. */
-						scopes?: string[];
-					};
-				};
-			};
-			responses: {
-				/** @description Sign in with OAuth2 */
-				200: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							redirect?: boolean;
-							url?: string;
-						};
-					};
-				};
-				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
-				400: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message: string;
-						};
-					};
-				};
-				/** @description Unauthorized. Due to missing or invalid authentication. */
-				401: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message: string;
-						};
-					};
-				};
-				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
-				403: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Not Found. The requested resource was not found. */
-				404: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
-				429: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
-				500: {
-					headers: {
-						[name: string]: unknown;
-					};
-					content: {
-						"application/json": {
-							message?: string;
-						};
-					};
-				};
-			};
-		};
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
 	"/api/v1/auth/sign-in/social": {
 		parameters: {
 			query?: never;
@@ -3715,8 +3277,8 @@ export interface paths {
 			requestBody: {
 				content: {
 					"application/json": {
-						accountId?: string;
-						providerId: string;
+						/** @description The Better Auth account ID to unlink */
+						accountId: string;
 					};
 				};
 			};
@@ -10498,6 +10060,10 @@ export interface operations {
 					additionalData?: {
 						[key: string]: unknown;
 					};
+					/** @description Extra query parameters to append to the provider authorization URL (e.g. Cognito identity_provider, Google hd). */
+					additionalParams?: {
+						[key: string]: string;
+					};
 					/** @description The URL to redirect to after the user has signed in */
 					callbackURL?: string;
 					/** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
@@ -10508,13 +10074,15 @@ export interface operations {
 						accessToken?: string;
 						nonce?: string;
 						refreshToken?: string;
-						scopes?: string[];
 						token: string;
 					};
+					/** @description The login hint to use for the authorization code request */
+					loginHint?: string;
 					provider:
 						| (
 								| "apple"
 								| "atlassian"
+								| "cloudflare"
 								| "cognito"
 								| "discord"
 								| "facebook"
@@ -10940,7 +10508,7 @@ export interface operations {
 				 *                               "platform" for device-specific authenticators,
 				 *                               "cross-platform" for authenticators that can be used across devices.
 				 */
-				authenticatorAttachment?: string;
+				authenticatorAttachment?: "platform" | "cross-platform";
 				/**
 				 * @description Optional custom name for the passkey.
 				 *                               This can help identify the passkey when managing multiple credentials.
@@ -11167,6 +10735,8 @@ export interface operations {
 		requestBody: {
 			content: {
 				"application/json": {
+					/** @description Create a session after registering the passkey */
+					createSession?: boolean;
 					/** @description Name of the passkey */
 					name?: string;
 					response: unknown;
@@ -11180,7 +10750,10 @@ export interface operations {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["Passkey"];
+					"application/json": components["schemas"]["Passkey"] & {
+						session?: components["schemas"]["Session"];
+						user?: components["schemas"]["User"];
+					};
 				};
 			};
 			/** @description Bad request */
@@ -11766,6 +11339,10 @@ export interface operations {
 					additionalData?: {
 						[key: string]: unknown;
 					};
+					/** @description Extra query parameters to append to the provider authorization URL (e.g. Cognito identity_provider, Google hd). */
+					additionalParams?: {
+						[key: string]: string;
+					};
 					/** @description Callback URL to redirect to after the user has signed in */
 					callbackURL?: string;
 					/** @description Disable automatic redirection to the provider. Useful for handling the redirection yourself */
@@ -11799,6 +11376,7 @@ export interface operations {
 						| (
 								| "apple"
 								| "atlassian"
+								| "cloudflare"
 								| "cognito"
 								| "discord"
 								| "facebook"
@@ -11933,7 +11511,14 @@ export interface operations {
 		};
 		requestBody?: {
 			content: {
-				"application/json": Record<string, never>;
+				"application/json": {
+					/** @description The URL to redirect to after provider logout */
+					callbackURL?: string;
+					/** @description Return the provider logout URL without redirecting */
+					disableRedirect?: boolean;
+					/** @description State to pass to the provider logout endpoint */
+					state?: string;
+				};
 			};
 		};
 		responses: {
@@ -11944,7 +11529,11 @@ export interface operations {
 				};
 				content: {
 					"application/json": {
+						/** @description Whether the client should redirect to the provider logout URL */
+						redirect?: boolean;
 						success?: boolean;
+						/** @description Provider logout URL when RP-initiated logout is available */
+						url?: string;
 					};
 				};
 			};

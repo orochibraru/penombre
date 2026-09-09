@@ -29,6 +29,7 @@ vite.config.ts.timestamp-*
 
 # Playwright
 /playwright-report/
+/playwright-report*
 /playwright-report-local/
 /blob-report/
 /e2e/.auth/

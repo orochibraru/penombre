@@ -95,12 +95,12 @@ repos:
         pass_filenames: false
         files: ^(src/lib/server/db/schema\.ts|scripts/db-diagram\.ts)$
 
-        # tailwint discards explicit file arguments (verified: any path/glob form
-      # reports "0 files scanned"), so it always scans the whole repo. Only the
-      # decision to run it at all is staged-scoped.
+        # tailwint takes globs, not individual file paths, so it always scans the
+      # whole (scoped) source tree. Only the decision to run it at all is
+      # staged-scoped. Globs are explicit to keep it out of playwright-report/.
       - id: tailwint
         name: tailwint --fix
-        entry: bunx tailwint --fix
+        entry: bunx tailwint --fix "src/**/*.{svelte,css,html,ts}" "packages/docs/src/**/*.{svelte,css,html,ts}"
         language: system
         pass_filenames: false
         files: \.(tsx|jsx|html|vue|svelte|astro|mdx|css)$
@@ -153,7 +153,7 @@ repos:
 
       - id: check-docs
         name: tsc (packages/docs)
-        entry: bun run check:docs
+        entry: bun run docs:check
         language: system
         pass_filenames: false
         files: ^packages/docs/
