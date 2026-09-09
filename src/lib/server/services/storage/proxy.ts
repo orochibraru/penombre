@@ -18,6 +18,15 @@ import type { ThumbnailService } from "./thumbnails";
 
 const proxyLogger = new Logger("FileProxyService");
 
+/**
+ * File bytes are private and mutable — a re-upload or an outside write reuses
+ * the same URL. Without this the responses carry an ETag but no freshness
+ * rule, so browsers cache them heuristically and keep replaying a stale body
+ * (a partially-written file plays truncated forever). `no-cache` still allows
+ * caching; it just forces the ETag revalidation that makes staleness resolve.
+ */
+const CACHE_CONTROL = "private, no-cache";
+
 export interface FileProxyRequest {
 	itemName: string;
 	raw?: boolean;
@@ -89,8 +98,17 @@ export class ProxyService {
 			throw new FileOrFolderNotFoundError(`File not found: ${itemName}`);
 		}
 
+		// Frame the response from the bytes, never from the row. The row's size is
+		// client-declared on create and only corrected once the body lands, so a
+		// half-finished upload (or a sync client caught mid-write) leaves the two
+		// disagreeing — and a Content-Length that overshoots the stream is served
+		// as a silently truncated file: an 80MB track that plays for 19 seconds.
+		const size = await this.ctx.driver
+			.getObjectSize(itemName)
+			.catch(() => file.size);
+
 		const etag = generateETag({
-			size: file.size,
+			size,
 			mtime: file.updatedAt.getTime(),
 		});
 
@@ -98,16 +116,17 @@ export class ProxyService {
 			proxyLogger.debug("ETag match, returning 304 Not Modified");
 			return new Response(null, {
 				status: 304,
-				headers: { ETag: etag, "Cache-Control": "public, max-age=3600" },
+				headers: { ETag: etag, "Cache-Control": CACHE_CONTROL },
 			});
 		}
 
 		if (rangeHeader) {
 			proxyLogger.debug("Generating range headers for partial content");
-			const size = file.size;
 			const parts = rangeHeader.replace(/bytes=/, "").split("-");
 			const start = Number(parts[0]);
-			const end = parts[1] ? Number(parts[1]) : size - 1;
+			// Players routinely ask for an open or over-long tail; clamp so the
+			// advertised length can never exceed what the stream will deliver.
+			const end = Math.min(parts[1] ? Number(parts[1]) : size - 1, size - 1);
 
 			if (Number.isNaN(start)) {
 				throw new Error("Invalid range");
@@ -126,6 +145,7 @@ export class ProxyService {
 					"Content-Range": `bytes ${start}-${end}/${size}`,
 					"Content-Length": String(end - start + 1),
 					"Accept-Ranges": "bytes",
+					"Cache-Control": CACHE_CONTROL,
 					ETag: etag,
 				},
 			});
@@ -140,8 +160,9 @@ export class ProxyService {
 			headers: {
 				"Content-Type": file.contentType,
 				"Accept-Ranges": "bytes",
-				"Content-Length": String(file.size),
+				"Content-Length": String(size),
 				"Content-Disposition": `inline; filename*=UTF-8''${encodedName}`,
+				"Cache-Control": CACHE_CONTROL,
 				ETag: etag,
 			},
 		});
