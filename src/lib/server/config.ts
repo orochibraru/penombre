@@ -89,21 +89,11 @@ const configSchema = z
 				secure: z.boolean(),
 			})
 			.optional(),
-		storage: z
-			.object({
-				backend: z.enum(["local", "s3"]).default("local"),
-			})
-			.default({ backend: "local" }),
-		s3: z
-			.object({
-				endpoint: z.string().optional(),
-				region: z.string().default("us-east-1"),
-				bucket: z.string().min(1),
-				accessKeyId: z.string().min(1),
-				secretAccessKey: z.string().min(1),
-				pathStyle: z.boolean().default(false),
-			})
-			.optional(),
+		simpleMode: z.boolean().default(defaultConfigValues.simpleMode),
+		bypassAuth: z.boolean().default(defaultConfigValues.bypassAuth),
+		autoRedirectProvider: z
+			.string()
+			.default(defaultConfigValues.autoRedirectProvider),
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
@@ -136,14 +126,6 @@ const configSchema = z
 						"At least one OAuth provider must be enabled when OAuth sign-in is enabled",
 				});
 			}
-		}
-
-		if (config.storage?.backend === "s3" && !config.s3) {
-			ctx.addIssue({
-				code: "custom",
-				message:
-					"S3 configuration (S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY) is required when STORAGE_BACKEND=s3",
-			});
 		}
 	});
 
@@ -242,25 +224,6 @@ function resolveAuthConfig() {
 	};
 }
 
-function resolveS3Config() {
-	const bucket = env.S3_BUCKET;
-	const accessKeyId = env.S3_ACCESS_KEY_ID;
-	const secretAccessKey = env.S3_SECRET_ACCESS_KEY;
-
-	if (!(bucket || accessKeyId || secretAccessKey)) {
-		return;
-	}
-
-	return {
-		endpoint: env.S3_ENDPOINT || undefined,
-		region: env.S3_REGION || "us-east-1",
-		bucket,
-		accessKeyId,
-		secretAccessKey,
-		pathStyle: env.S3_PATH_STYLE === "true",
-	};
-}
-
 function resolveSmtpConfig() {
 	if (env.SMTP_ENABLED !== "true") {
 		return defaultConfigValues.smtp;
@@ -299,7 +262,7 @@ export function getConfig(): AppConfig {
 
 	return validateConfig({
 		appName: env.APP_NAME || defaultConfigValues.appName,
-		appVersion: env.APP_VERSION || defaultConfigValues.appVersion,
+		appVersion: defaultConfigValues.appVersion,
 		environment: env.APP_ENV || defaultConfigValues.environment,
 		origin: env.ORIGIN || defaultConfigValues.origin,
 		logLevel: resolveLogLevel(),
@@ -307,9 +270,10 @@ export function getConfig(): AppConfig {
 		db: env.DATABASE_URL ? { url: env.DATABASE_URL } : defaultConfigValues.db,
 		auth: resolveAuthConfig(),
 		redis: redisUrl ? { url: redisUrl } : defaultConfigValues.redis,
-		storage: { backend: env.STORAGE_BACKEND === "s3" ? "s3" : "local" },
-		s3: resolveS3Config(),
 		smtp: resolveSmtpConfig(),
+		simpleMode: env.SIMPLE_MODE === "true",
+		bypassAuth: env.BYPASS_AUTH === "true",
+		autoRedirectProvider: env.AUTH_AUTO_REDIRECT_PROVIDER || "",
 	});
 }
 
@@ -318,7 +282,17 @@ export function isSmtpEnabled(): boolean {
 	return config.smtp !== undefined;
 }
 
-export function isS3Backend(): boolean {
+/** Simple mode: one shared storage volume/drive for every account, no per-user drives. */
+export function isSimpleMode(): boolean {
 	const config = getConfig();
-	return config.storage.backend === "s3";
+	return config.simpleMode;
+}
+
+/**
+ * Auth bypass: no sign-in at all, every request runs as the shared owner.
+ * Simple-mode only — without one shared drive there'd be no account to be.
+ */
+export function isAuthBypassed(): boolean {
+	const config = getConfig();
+	return config.simpleMode && config.bypassAuth;
 }

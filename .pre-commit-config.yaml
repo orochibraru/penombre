@@ -17,8 +17,7 @@ repos:
         exclude: &generated |-
           (?x)^(
             src/lib/api/v1\.(json|d\.ts)|
-            packages/mobile/assets/api\.v1\.json|
-            packages/docs/static/api\.v1\.json|
+            openapi.json|
             \.example\.env|
             resources/|
             drizzle/|
@@ -96,20 +95,21 @@ repos:
         pass_filenames: false
         files: ^(src/lib/server/db/schema\.ts|scripts/db-diagram\.ts)$
 
-        # tailwint discards explicit file arguments (verified: any path/glob form
-      # reports "0 files scanned"), so it always scans the whole repo. Only the
-      # decision to run it at all is staged-scoped.
+        # tailwint takes globs, not individual file paths, so it always scans the
+      # whole (scoped) source tree. Only the decision to run it at all is
+      # staged-scoped. Globs are explicit to keep it out of playwright-report/.
       - id: tailwint
         name: tailwint --fix
-        entry: bunx tailwint --fix
+        entry: bunx tailwint --fix "src/**/*.{svelte,css,html,ts}" "packages/docs/src/**/*.{svelte,css,html,ts}"
         language: system
         pass_filenames: false
         files: \.(tsx|jsx|html|vue|svelte|astro|mdx|css)$
 
       - id: biome
         name: biome check --write --unsafe
-        entry: bunx biome check --write --unsafe --no-errors-on-unmatched
+        entry: bunx biome check --write --unsafe
         language: system
+        pass_filenames: false
         files: \.(ts|tsx|js|jsx|mjs|cjs|json|jsonc|css|svelte|html)$
 
       - id: prettier-md
@@ -150,18 +150,14 @@ repos:
         entry: bun run check:scripts
         language: system
         pass_filenames: false
-        files: ^(scripts/|concurrently\.config\.ts$|tsconfig\.scripts\.json$)
+        files: ^(scripts/|tsconfig\.scripts\.json$)
 
       - id: check-docs
         name: tsc (packages/docs)
-        entry: bun run check:docs
+        entry: bun run docs:check
         language: system
         pass_filenames: false
         files: ^packages/docs/
-
-      # packages/mobile is excluded for now: a duplicate better-auth install
-      # under Bun's isolated linker (bunfig.toml) makes tsc fail there with
-      # unrelated type errors. Re-add a check-mobile hook once that's sorted.
 
   # The conventions no linter knows about. Ported from homerun.
   - repo: local

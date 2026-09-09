@@ -58,12 +58,11 @@
 	const tooltipCtx = getTooltipContext();
 
 	const formattedLabel = $derived.by(() => {
-		if (hideLabel || !tooltipCtx.payload?.length) {
+		if (hideLabel || !tooltipCtx.payload.length) {
 			return null;
 		}
 
 		const [item] = tooltipCtx.payload;
-		// biome-ignore lint/suspicious/noUnnecessaryConditions: noUncheckedIndexedAccess makes this possibly undefined
 		if (!item) {
 			return null;
 		}

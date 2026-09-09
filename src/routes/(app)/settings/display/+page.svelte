@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {
-		type Icon as IconType,
+		type LucideIcon,
 		MonitorIcon,
 		MoonIcon,
 		SunIcon,
@@ -17,7 +17,7 @@
 		id: "dark" | "light" | "system";
 		name: string;
 		description: string;
-		icon: typeof IconType;
+		icon: LucideIcon;
 	}
 
 	const themes: Theme[] = [

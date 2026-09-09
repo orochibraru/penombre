@@ -1,41 +1,31 @@
 variable "TAG" {
   default = "latest"
-  validation {
-    condition = TAG != ""
-    error_message = "The variable 'TAG' must not be empty."
-  }
-}
-
-// Special target: https://github.com/docker/metadata-action#bake-definition
-target "docker-metadata-action" {
-  tags = ["orochibraru/penombre:latest","orochibraru/penombre:${TAG}"]
 }
 
 group "default" {
-  targets = ["image-local"]
+  targets = ["app", "docs"]
 }
 
-target "image" {
-  inherits = ["docker-metadata-action"]
+# Platforms are deliberately unset: `docker buildx bake` locally builds for the
+# host and loads, while CI (.github/workflows/docker.yaml) overrides
+# `*.platform` per matrix job and merges the per-arch digests itself.
+target "base" {
   context    = "."
   dockerfile = "./Dockerfile"
-  args = {
-    APP_VERSION = "${TAG}"
-  }
 }
 
-target "image-local" {
-  inherits = ["image"]
-  output = ["type=docker"]
+target "app" {
+  inherits   = ["base"]
+  target     = "app"
+  tags       = ["docker.io/orochibraru/penombre:latest", "docker.io/orochibraru/penombre:${TAG}"]
+  cache-from = ["type=gha,scope=app"]
+  cache-to   = ["type=gha,mode=max,scope=app"]
 }
 
-
-target "image-all" {
-  inherits = ["image"]
-  cache-from = ["type=gha"]
-  cache-to = ["type=gha,mode=max"]
-  platforms = [
-    "linux/amd64",
-    "linux/arm64"
-  ]
+target "docs" {
+  inherits   = ["base"]
+  target     = "docs"
+  tags       = ["docker.io/orochibraru/penombre-docs:latest", "docker.io/orochibraru/penombre-docs:${TAG}"]
+  cache-from = ["type=gha,scope=docs"]
+  cache-to   = ["type=gha,mode=max,scope=docs"]
 }

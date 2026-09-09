@@ -2,11 +2,11 @@ import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { cwd } from "node:process";
 import type { Readable } from "node:stream";
 import type archiver from "archiver";
 import type { User } from "better-auth";
 import type { CacheBackend } from "$lib/server/cache";
+import { isSimpleMode } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
 import type {
@@ -36,6 +36,7 @@ import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
 import { ListingOperations } from "./listings";
 import { type FileProxyRequest, ProxyService } from "./proxy";
+import { ScanOperations, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
 import { ZipService } from "./zip";
 
@@ -75,9 +76,12 @@ export class StorageService {
 	private readonly fileOperations: FileOperations;
 	private readonly folderOperations: FolderOperations;
 	private readonly listingOperations: ListingOperations;
+	private readonly scanOperations: ScanOperations;
 
 	constructor(user: User) {
-		this.userFolder = `user-${user.id}`;
+		// Simple mode: one shared volume for everyone, mounted directly at
+		// STORAGE_PATH instead of a per-user subfolder.
+		this.userFolder = isSimpleMode() ? "" : `user-${user.id}`;
 		this.storagePath = join(DEFAULT_STORAGE_PATH, this.userFolder);
 		this.user = user;
 		this.cache = cacheManager.getUserCache(user.id);
@@ -99,6 +103,7 @@ export class StorageService {
 		this.fileOperations = new FileOperations(this.ctx, this.thumbnails);
 		this.folderOperations = new FolderOperations(this.ctx);
 		this.listingOperations = new ListingOperations(this.ctx);
+		this.scanOperations = new ScanOperations(this.ctx);
 		this.proxy = new ProxyService(this.ctx, this.thumbnails, (path) =>
 			this.getFile(path),
 		);
@@ -284,6 +289,11 @@ export class StorageService {
 		return this.listingOperations.searchFiles(query, limit);
 	}
 
+	/** Reconcile the DB with the files actually present in the storage backend. */
+	scanStorage(): Promise<ScanResult> {
+		return this.scanOperations.scan();
+	}
+
 	countTrashedItems(): Promise<number> {
 		return this.listingOperations.countTrashedItems();
 	}
@@ -394,12 +404,6 @@ export class StorageService {
 	// LOCAL/TEMP PATH HELPER
 	// =========================================================================
 
-	/**
-	 * For tools that need a local filesystem path (ffmpeg, pdftoppm, sharp),
-	 * return the actual path for local backends or write a temp file for S3.
-	 * Caller is responsible for deleting the temp file when isTemp=true.
-	 */
-
 	// =========================================================================
 	// FOLDER OPERATIONS
 	// =========================================================================
@@ -456,9 +460,7 @@ export class StorageService {
 			return;
 		}
 
-		const storageBasePath = resolve(
-			Bun.env.STORAGE_PATH || join(cwd(), "/data/storage"),
-		);
+		const storageBasePath = DEFAULT_STORAGE_PATH;
 		if (!existsSync(storageBasePath)) {
 			logger.info(
 				"Storage base path does not exist. Skipping storage cleanup.",

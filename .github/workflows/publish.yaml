@@ -74,7 +74,7 @@ jobs:
       image_name: orochibraru/penombre
       registry_name: docker.io
       registry_username: orochibraru
-      bake_target: image
+      bake_target: app
     secrets:
       registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
 

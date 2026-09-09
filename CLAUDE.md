@@ -9,8 +9,7 @@ Runtime is **Bun** (1.3+); use `bun`/`bunx`, not `npm`/`node` (`preinstall`
 enforces this).
 
 ```bash
-bun run dev              # Docker Compose (Postgres) + Vite dev server
-bun run dev:app          # Vite dev server alone (DB must already be running)
+bun run dev              # Vite dev server (SQLite by default, no services needed)
 bun run build            # svelte-kit sync && vite build
 bun run check            # svelte-check (app) + type-check for scripts/docs/mobile, in parallel
 
@@ -22,8 +21,8 @@ bun test                                    # unit tests (fully mocked, no servi
 bun test src/lib/server/services/user.test.ts   # single file
 bun test -t "some test name"                # filter by test name
 bun run test:docker      # unit tests in Docker (mirrors CI, adds real Redis)
-bun run test:e2e:local   # Playwright e2e, local filesystem storage backend
-bun run test:e2e:s3      # Playwright e2e, S3/Garage storage backend
+bun run test:e2e         # Playwright e2e on SQLite (the default stack)
+bun run test:e2e:pg      # Playwright e2e on PostgreSQL
 bun run test:e2e:ui      # Playwright UI mode
 
 bun run db:generate      # generate a Drizzle migration from schema.ts changes
@@ -34,8 +33,8 @@ bun run db:diagram       # regenerate resources/db.svg from the schema
 
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
 `$app/*`/`$env/*`/`$lib/server/*` modules and the Drizzle `db` object — tests
-don't need Postgres/Redis running. `bunfig.toml` also sets `rerunEach = 3` (each
-test runs 3x to catch flakiness) and coverage thresholds.
+don't need a database or Redis running. `bunfig.toml` also sets `rerunEach = 3`
+(each test runs 3x to catch flakiness) and coverage thresholds.
 
 Git hooks run via [prek](https://github.com/j178/prek)
 (`.pre-commit-config.yaml`, wired by `bun install`'s `prepare` script). The same
@@ -82,8 +81,9 @@ Every `/api/v1/...` endpoint is defined in two places:
    whether auth is required. This call also registers the route with the OpenAPI
    registry as an import-time side effect — that's why
    `src/lib/server/openapi/routes.ts` exists purely to import every contract
-   module before the spec is generated (`gen:openapi`/`gen:api`, and at build
-   time in `hooks.server.ts`'s `init()`).
+   module before the spec is generated. `$lib/server/generate-openapi.ts` pulls
+   that module in itself, so both the live spec route and
+   `gen:openapi`/`gen:api` always see every contract.
 2. **Handler** (`src/routes/api/v1/.../+server.ts`): imports the contract object
    and calls
    `.handler(async ({ params, query, body, user, service, event }) => ...)`. The
@@ -99,13 +99,13 @@ won't validate, won't show up in the OpenAPI spec, and mobile/docs clients
 ### Storage: DB metadata vs. object bytes
 
 File/folder **metadata** (name, path, size, mimetype, trash state, owner) lives
-in Postgres (`files`/`folders` tables in `db/schema.ts`). The actual **bytes**
-live behind a `StorageDriver` interface
-(`$lib/server/services/storage/driver.ts`) with two implementations —
-`LocalStorageDriver` (filesystem under `STORAGE_PATH`) and `S3StorageDriver`
-(S3-compatible, incl. MinIO/Garage/R2/B2) — selected by `STORAGE_BACKEND` at
-runtime via `createStorageDriver()`. All driver methods take keys relative to a
-user's storage root. `StorageService`
+in the database (`files`/`folders` tables in `db/schema.ts`) — SQLite by
+default, Postgres optional, picked from the `DATABASE_URL` scheme by
+`db/dialect.ts`. The actual **bytes** live behind the `StorageDriver` interface
+(`$lib/server/services/storage/driver.ts`), implemented only by
+`LocalStorageDriver` (filesystem under `STORAGE_PATH`); the interface stays
+because every consumer and test double types against it. All driver methods take
+keys relative to a user's storage root. `StorageService`
 (`$lib/server/services/storage/service.ts`) is the facade on top of the driver +
 DB that route handlers use; it's lazily instantiated per-request onto
 `event.locals.storageService` in `hooks.server.ts`.
@@ -118,9 +118,7 @@ session two ways: a better-auth cookie session, or an API key fallback
 — either path sets `event.locals.user`/`.storageService`. Non-auth paths are
 then handed to `svelteKitHandler` (better-auth's SvelteKit adapter). `init()`
 (SvelteKit's app-init hook) waits for the DB, runs Drizzle migrations, seeds the
-default admin user, and migrates legacy storage metadata on every boot — and at
-build time also writes the OpenAPI spec to `src/lib/api/v1.json` plus copies
-into `packages/mobile` and `packages/docs`.
+default admin user, and migrates legacy storage metadata on every boot.
 
 ### Config
 
@@ -143,6 +141,27 @@ service module wrap it for listing/metadata caching.
 Messages live in `messages/*.json`, compiled by paraglide-js into
 `src/paraglide/messages` (also mirrored under `src/lib/paraglide`). Don't
 hand-edit generated paraglide output.
+
+## Documentation (required)
+
+**Every user-facing feature or env var ships with its docs in the same change.**
+The guides live in `docs/*.md` at the repo root — `packages/docs` renders those
+exact files (`import.meta.glob` over `docs/*.md`), so there is nowhere else to
+write them.
+
+- New/changed env var → add it to the relevant table in `docs/env.md` **and**
+  the guide that explains the feature (`authentication.md`, `storage.md`,
+  `simple-mode.md`, …).
+- New behaviour with no env var → the guide it belongs to, or a new
+  `docs/<slug>.md` (then add the slug to `order` in
+  `packages/docs/src/lib/config.ts` so it lands in the nav).
+- Also regenerate `.example.env` (`bun run gen:env`) when you touch
+  `config.defaults.ts`.
+- `bun run lint:md` must pass: 80-column prose, aligned table pipes. Relative
+  links between guides (`simple-mode.md#anchor`) are rewritten by the docs site
+  — use them instead of absolute URLs.
+
+A feature that isn't in `docs/` isn't finished.
 
 ## Linting gotchas (Biome)
 

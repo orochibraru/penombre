@@ -33,22 +33,17 @@ export class ActivityService {
 			this.logger.debug(
 				`Registering activity for user: ${params.userId}, action: ${params.action}`,
 			);
-			await this.db.transaction(async (tx) => {
-				const prepared = tx
-					.insert(activity)
-					.values({
-						userId: params.userId,
-						action: params.action,
-						message: params.message,
-						link: params.link,
-						level: params.level,
-					})
-					.prepare("insert-activity-transaction");
-
-				const result = await prepared.execute();
-				this.logger.debug("Activity registered");
-				return result;
+			// A single insert is already atomic — no transaction or prepared
+			// statement needed, and the plain form works on both dialects
+			// (SQLite's driver has no `.execute()` and takes sync callbacks).
+			await this.db.insert(activity).values({
+				userId: params.userId,
+				action: params.action,
+				message: params.message,
+				link: params.link,
+				level: params.level,
 			});
+			this.logger.debug("Activity registered");
 		} catch (error) {
 			this.logger.error("Failed to save activity:", error);
 			throw error;

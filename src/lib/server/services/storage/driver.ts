@@ -1,8 +1,7 @@
-import { LocalStorageDriver } from "$lib/server/services/storage/drivers/local";
-import { S3StorageDriver } from "$lib/server/services/storage/drivers/s3";
-
 /**
- * Unified interface for all storage backends (local filesystem, S3-compatible).
+ * The storage backend's contract. Only `LocalStorageDriver` implements it;
+ * it stays an interface because every consumer (and every test double) types
+ * against it rather than the class.
  * All `key` arguments are relative to the user's storage root.
  */
 export interface StorageDriver {
@@ -49,53 +48,9 @@ export interface StorageDriver {
 	 */
 	listObjectKeys: (prefix?: string) => Promise<string[]>;
 
-	/**
-	 * Ensure the storage root exists (create directories for local, no-op for S3).
-	 */
+	/** Ensure the storage root directory exists. */
 	ensureRootExists: () => Promise<void>;
 
-	/**
-	 * Return available disk space in bytes for the underlying storage volume.
-	 * Returns `undefined` for backends where this is not applicable (e.g. S3).
-	 */
-	getAvailableDiskSpace?: () => number;
-}
-
-// =========================================================================
-// Driver configuration types
-// =========================================================================
-
-export interface S3DriverConfig {
-	/** Optional endpoint URL for S3-compatible services (MinIO, R2, Backblaze B2, etc.) */
-	endpoint?: string;
-	region: string;
-	bucket: string;
-	accessKeyId: string;
-	secretAccessKey: string;
-	/** Use path-style addressing; required for MinIO and some other providers. */
-	pathStyle?: boolean;
-	/** Prefix prepended to all keys, e.g. "user-{userId}". */
-	userPrefix: string;
-}
-
-export interface LocalDriverConfig {
-	/** Absolute path to the user's storage folder on disk. */
-	storagePath: string;
-}
-
-export type StorageDriverOptions =
-	| { backend: "local"; local: LocalDriverConfig }
-	| { backend: "s3"; s3: S3DriverConfig };
-
-// =========================================================================
-// Factory
-// =========================================================================
-
-export function createStorageDriver(
-	options: StorageDriverOptions,
-): StorageDriver {
-	if (options.backend === "s3") {
-		return new S3StorageDriver(options.s3);
-	}
-	return new LocalStorageDriver(options.local.storagePath);
+	/** Available disk space in bytes on the underlying storage volume. */
+	getAvailableDiskSpace: () => number;
 }

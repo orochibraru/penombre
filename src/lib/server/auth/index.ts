@@ -1,6 +1,5 @@
 import process from "node:process";
 import { apiKey } from "@better-auth/api-key";
-import { expo } from "@better-auth/expo";
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -12,6 +11,7 @@ import { getRequestEvent } from "$app/server";
 import { Logger } from "$lib/logger";
 import { getConfig, isSmtpEnabled } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
+import { isSqliteDialect } from "$lib/server/db/dialect";
 import * as schema from "$lib/server/db/schema";
 import { Email } from "$lib/server/email";
 import { StorageService } from "$lib/server/services/storage";
@@ -60,7 +60,7 @@ export const auth = betterAuth({
 		},
 	},
 	database: drizzleAdapter(getDb(), {
-		provider: "pg",
+		provider: isSqliteDialect() ? "sqlite" : "pg",
 		schema,
 	}),
 	hooks: {
@@ -113,7 +113,6 @@ export const auth = betterAuth({
 		}),
 		passkey(),
 		admin(),
-		expo(),
 		bearer(),
 		apiKey({
 			enableSessionForAPIKeys: true,

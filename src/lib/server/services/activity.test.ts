@@ -3,8 +3,8 @@ import { getDb } from "$lib/server/db";
 
 const mockDb = getDb();
 const mockSelect = mockDb.select as Mock<typeof mockDb.select>;
-const mockTransaction = mockDb.transaction as unknown as Mock<
-	(fn: (tx: unknown) => Promise<unknown>) => Promise<unknown>
+const mockInsert = mockDb.insert as unknown as Mock<
+	(table: unknown) => { values: (data: unknown) => Promise<unknown> }
 >;
 
 const { ActivityService } = await import("./activity");
@@ -44,15 +44,9 @@ describe("ActivityService", () => {
 	});
 
 	describe("register", () => {
-		test("inserts activity in a transaction", async () => {
-			const mockExecute = mock(() => Promise.resolve({}));
-			const mockPrepare = mock(() => ({ execute: mockExecute }));
-			const mockValues = mock(() => ({ prepare: mockPrepare }));
-			const mockTxInsert = mock(() => ({ values: mockValues }));
-
-			mockTransaction.mockImplementationOnce(async (fn) =>
-				fn({ insert: mockTxInsert }),
-			);
+		test("inserts the activity", async () => {
+			const mockValues = mock(() => Promise.resolve({}));
+			mockInsert.mockReturnValueOnce({ values: mockValues });
 
 			const service = new ActivityService();
 			await service.register({
@@ -63,7 +57,7 @@ describe("ActivityService", () => {
 				level: "info",
 			});
 
-			expect(mockTxInsert).toHaveBeenCalled();
+			expect(mockInsert).toHaveBeenCalled();
 			expect(mockValues).toHaveBeenCalledWith(
 				expect.objectContaining({
 					userId: "user-1",
@@ -75,9 +69,9 @@ describe("ActivityService", () => {
 			);
 		});
 
-		test("throws when transaction fails", async () => {
-			mockTransaction.mockImplementationOnce(async () => {
-				throw new Error("TX error");
+		test("throws when the insert fails", async () => {
+			mockInsert.mockReturnValueOnce({
+				values: mock(() => Promise.reject(new Error("TX error"))),
 			});
 
 			const service = new ActivityService();

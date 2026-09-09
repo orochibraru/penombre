@@ -13,11 +13,7 @@ test.use({ storageState: AUTH_STORAGE_STATE });
 
 const FIXTURE_DIR = path.resolve("e2e/fixtures");
 
-test.describe("File Upload @s3", () => {
-	// Tests in this group require S3/Garage storage to be operational.
-	// They run with playwright.config.ts (S3 backend) and are excluded
-	// from playwright.local.config.ts via grepInvert: /@s3/.
-
+test.describe("File Upload", () => {
 	test.beforeEach(async ({ page }) => {
 		await goToBrowse(page);
 	});

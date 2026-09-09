@@ -2,7 +2,7 @@
 	export interface NavItem {
 		title: string;
 		url: Pathname;
-		icon: typeof IconType;
+		icon: LucideIcon;
 		accentColor?:
 			| "indigo"
 			| "orange"
@@ -29,7 +29,7 @@
 </script>
 
 <script lang="ts">
-    import { type Icon as IconType } from "@lucide/svelte";
+    import { type LucideIcon } from "@lucide/svelte";
     import type { ComponentProps } from "svelte";
     import { page } from "$app/state";
     import * as Sidebar from "$lib/components/ui/sidebar/index";

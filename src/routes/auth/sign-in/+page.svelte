@@ -103,8 +103,8 @@
 
 	async function oauthSignInPromise(provider: string) {
 		try {
-			const res = await authClient.signIn.oauth2({
-				providerId: provider,
+			const res = await authClient.signIn.social({
+				provider,
 			});
 			if (res.error) {
 				error = true;

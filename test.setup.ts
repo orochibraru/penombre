@@ -33,6 +33,7 @@ mock.module("$lib/server/auth", () => ({
 	auth: {
 		api: {
 			getSession: mock(() => Promise.resolve(null)),
+			signInSocial: mock(() => Promise.resolve({ url: undefined })),
 			updateUser: mock(() => Promise.resolve({ status: true })),
 			adminUpdateUser: mock(() => Promise.resolve({})),
 			listApiKeys: mock(() => Promise.resolve([])),
@@ -49,6 +50,8 @@ mock.module("$lib/server/config", () => ({
 	getConfig: mock(() => ({
 		smtp: undefined,
 	})),
+	isSimpleMode: mock(() => false),
+	isAuthBypassed: mock(() => false),
 }));
 
 mock.module("$lib/logger", () => ({

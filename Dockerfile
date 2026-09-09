@@ -1,77 +1,72 @@
 FROM oven/bun:1-alpine AS base
 
+ENV BUN_FEATURE_FLAG_EXPERIMENTAL_HTTP2_CLIENT=1
+
 WORKDIR /app
 
-ARG MOBILE_DIR=/app/packages/mobile
-ARG DOCS_DIR=/app/packages/docs
+FROM base AS deps
 
-FROM base AS builder
-
-RUN mkdir -p ${MOBILE_DIR} ${DOCS_DIR}
-
-COPY package.json bun.lock /app/
-COPY packages/mobile/package.json ${MOBILE_DIR}/
-COPY packages/docs/package.json ${DOCS_DIR}/
+COPY package.json bun.lock ./
 
 RUN bun i --frozen-lockfile --ignore-scripts
 
-FROM builder AS test-runner
+# Shared source layer: both builders start from the same sources + node_modules.
+FROM deps AS builder
 
-COPY . /app
+COPY . .
 
-RUN bun x svelte-kit sync
+FROM builder AS app-builder
 
-CMD ["bun", "test", ".test.", "--only-failures"]
+# `bun i --production` over the existing tree adds rather than prunes, so the
+# runtime deps are resolved fresh in /prod from the same lockfile.
+# hadolint ignore=DL3003
+RUN bun run build \
+    && mkdir /prod && cp package.json bun.lock /prod/ \
+    && cd /prod && bun i --production --frozen-lockfile --ignore-scripts
 
-FROM builder AS frontend-builder
+FROM builder AS docs-builder
 
-COPY . /app
+RUN bun run docs:build
 
-RUN bun i --frozen-lockfile --ignore-scripts && rm -rf /app/build /app/.svelte-kit
 
-# ORIGIN is required at build time for better-auth import validation
-RUN bun x svelte-kit sync && ORIGIN=http://localhost bunx --bun vite build
+FROM nginx:alpine AS docs
 
-# Create a standalone production install outside workspace context
-# This avoids Bun's symlink hell from workspace hoisting
-RUN mkdir -p /prod && cp /app/package.json /prod/
+COPY --from=docs-builder /app/packages/docs/build /usr/share/nginx/html
 
-WORKDIR /prod
+COPY packages/docs/nginx.conf /etc/nginx/conf.d/default.conf
 
-RUN bun i --production --frozen-lockfile --ignore-scripts
+EXPOSE 80
 
-# Final stage - minimal runtime
-FROM base AS final
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1/ || exit 1
+
+
+FROM base AS app
 
 # ffmpeg is required for video thumbnail generation
 # poppler-utils provides pdftoppm for PDF thumbnail generation
 RUN apk add --no-cache ffmpeg poppler-utils
 
-WORKDIR /app
-
-# Create data dir before copying files
-RUN mkdir -p /app/data
-
 # Copy with --chown to avoid a separate chown layer that duplicates all files
-COPY --from=frontend-builder --chown=bun:bun /prod/node_modules /app/node_modules
-COPY --from=frontend-builder --chown=bun:bun /app/build/ /app/build
-COPY --from=frontend-builder --chown=bun:bun /app/drizzle/ /app/drizzle
-COPY --from=frontend-builder --chown=bun:bun /app/drizzle.config.ts /app/drizzle.config.ts
+COPY --from=app-builder --chown=bun:bun /prod/node_modules ./node_modules
+COPY --from=app-builder --chown=bun:bun /app/build ./build
+# hooks.server.ts resolves migrations from `process.cwd()/drizzle/<dialect>`.
+COPY --from=app-builder --chown=bun:bun /app/drizzle ./drizzle
 
-RUN chown bun:bun /app /app/data
+RUN mkdir -p /data/storage /data/db && chown -R bun:bun /data
 
-ENV STORAGE_PATH=/data
+ENV DATABASE_URL=file:/data/db/penombre.sqlite
+ENV STORAGE_PATH=/data/storage
 ENV APP_ENV=production
 ENV BODY_SIZE_LIMIT=Infinity
 ENV PORT=3000
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD wget --no-verbose --tries=1 --spider http://0.0.0.0:3000/api/health || exit 1
+# Compiled by the svelte-smol adapter; probes GET /_health over 127.0.0.1.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD ["/app/build/healthcheck"]
 
 USER bun
-
-ARG APP_VERSION
-ENV APP_VERSION=${APP_VERSION:-unknown}
 
 CMD ["bun", "run", "/app/build/index.js"]

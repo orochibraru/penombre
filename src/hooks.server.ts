@@ -3,13 +3,18 @@ import process from "node:process";
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
-import { migrate } from "drizzle-orm/bun-sql/migrator";
+import { asc, sql } from "drizzle-orm";
+import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
+import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
 import { building } from "$app/environment";
 import { Logger } from "$lib/logger";
+import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
+import { isAuthBypassed, isSimpleMode } from "$lib/server/config";
 import { getDb, resetDb } from "$lib/server/db";
-import { genOpenApiSpec } from "$lib/server/generate-openapi";
+import { isSqliteDialect } from "$lib/server/db/dialect";
+import { user as userTable } from "$lib/server/db/schema";
 import {
 	migrateStorageMeta,
 	StorageService,
@@ -17,7 +22,14 @@ import {
 
 const logger = new Logger("Hooks");
 
-const migrationsFolder = join(process.cwd(), "drizzle");
+/** The session user, with the admin plugin's extra fields. */
+type User = NonNullable<AuthType["user"]>;
+
+const migrationsFolder = join(
+	process.cwd(),
+	"drizzle",
+	isSqliteDialect() ? "sqlite" : "pg",
+);
 
 export function handleError({ event, error, status }) {
 	if (status !== 404) {
@@ -38,6 +50,15 @@ function sleep(ms: number) {
 }
 
 async function waitForDatabase() {
+	// SQLite is a local file opened synchronously — there's no server coming
+	// up to wait for, and its driver has no `.execute()`. Opening it (which
+	// creates the file and sets PRAGMAs) either works or throws right here.
+	if (isSqliteDialect()) {
+		getDb();
+		logger.info("Database connection established.");
+		return;
+	}
+
 	const maxRetries = 10;
 	const retryDelay = 2000;
 
@@ -49,7 +70,7 @@ async function waitForDatabase() {
 			}
 			const db = getDb();
 			// Try a simple query to check if DB is ready
-			await db.execute("SELECT 1");
+			await db.execute(sql`SELECT 1`);
 			logger.info("Database connection established.");
 			return;
 		} catch (error) {
@@ -74,9 +95,12 @@ async function runMigrations() {
 		try {
 			logger.info(`Running migrations (retries left: ${retries})`);
 			const db = getDb();
-			await migrate(db, {
-				migrationsFolder,
-			});
+			if (isSqliteDialect()) {
+				// biome-ignore lint/suspicious/noExplicitAny: db is typed as the pg dialect; the runtime instance is a real SQLite one in this branch
+				migrateSqlite(db as any, { migrationsFolder });
+			} else {
+				await migratePg(db, { migrationsFolder });
+			}
 			logger.info("Database migrated successfully.");
 			return;
 		} catch (error) {
@@ -98,31 +122,145 @@ async function runMigrations() {
 	}
 }
 
-export const init = async () => {
-	if (building) {
-		const spec = genOpenApiSpec();
-		const outputPath = new URL("./lib/api/v1.json", import.meta.url).pathname;
-		const mobileCopyPath = new URL(
-			"../../mobile/assets/api.v1.json",
-			import.meta.url,
-		).pathname;
-		const docsCopyPath = new URL(
-			"../../docs/static/api.v1.json",
-			import.meta.url,
-		).pathname;
+/** How often simple mode re-scans the mounted volume for outside changes. */
+const SCAN_INTERVAL_MS = 60_000;
 
-		await Bun.write(outputPath, JSON.stringify(spec, null, "\t"));
-		await Bun.write(mobileCopyPath, JSON.stringify(spec, null, "\t"));
-		await Bun.write(docsCopyPath, JSON.stringify(spec, null, "\t"));
+/** Survives Vite HMR, so a hot reload doesn't stack up duplicate timers. */
+const globalForScan = globalThis as unknown as {
+	__scan_timer?: ReturnType<typeof setInterval>;
+	__scan_running?: boolean;
+};
+
+/**
+ * Simple mode browses a volume that's written to from outside the app, so the
+ * DB only matches reality if we look. Skipped entirely in drive mode, where
+ * every file arrives through an upload that already wrote its row.
+ */
+async function scanLibrary(): Promise<void> {
+	// A scan of a big library can outlast the interval — let it finish.
+	if (globalForScan.__scan_running) {
+		return;
 	}
+	globalForScan.__scan_running = true;
+	try {
+		const owner = await loadSharedOwner();
+		if (!owner) {
+			return;
+		}
+		await new StorageService(owner).scanStorage();
+	} catch (error) {
+		logger.error("Library scan failed", error);
+	} finally {
+		globalForScan.__scan_running = false;
+	}
+}
+
+function startLibraryScanner(): void {
+	if (!isSimpleMode() || globalForScan.__scan_timer) {
+		return;
+	}
+	void scanLibrary();
+	globalForScan.__scan_timer = setInterval(() => {
+		void scanLibrary();
+	}, SCAN_INTERVAL_MS);
+}
+
+export const init = async () => {
 	await waitForDatabase();
 	await runMigrations();
 	await seedAuth();
 	await migrateStorageMeta();
+	startLibraryScanner();
 };
 
 /** Paths under the auth basePath that are handled by SvelteKit, not better-auth */
 const customAuthPaths = new Set(["/api/v1/auth/providers"]);
+
+let sharedOwnerPromise: Promise<User | undefined> | undefined;
+
+/**
+ * Simple mode: every account's storage routes through one shared owner (the
+ * first account ever created), so everyone reads/writes the same file tree
+ * instead of each login getting its own siloed drive.
+ *
+ * ponytail: cached forever for process lifetime and untested (hooks.server.ts
+ * has no unit-test seam yet, would need mocking svelte-kit/drizzle-migrator
+ * imports). Covered indirectly by e2e for now — add a focused test here if
+ * this logic grows past "cache the first user".
+ */
+function loadSharedOwner(): Promise<User | undefined> {
+	sharedOwnerPromise ??= getDb()
+		.select()
+		.from(userTable)
+		.orderBy(asc(userTable.createdAt))
+		.limit(1)
+		.then((rows) => rows[0] as User | undefined);
+	return sharedOwnerPromise;
+}
+
+/**
+ * Auth bypass never signs anyone in, so there's no row in the session table —
+ * but the app (layout guards, account pages) expects a session on `locals`.
+ * Hand it a synthetic one that lives only for this request.
+ */
+function bypassSession(owner: User): NonNullable<App.Locals["session"]> {
+	const now = new Date();
+	return {
+		id: `bypass-${owner.id}`,
+		token: `bypass-${owner.id}`,
+		userId: owner.id,
+		createdAt: now,
+		updatedAt: now,
+		expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+	};
+}
+
+async function resolveStorageOwner(sessionUser: User): Promise<User> {
+	if (!isSimpleMode()) {
+		return sessionUser;
+	}
+	return (await loadSharedOwner()) ?? sessionUser;
+}
+
+/**
+ * Fallback auth for programmatic clients: `x-api-key: <key>` or
+ * `Authorization: Bearer <key>`. Returns a 401 response when a key is present
+ * but invalid, otherwise undefined (no key = anonymous, not an error).
+ */
+async function apiKeyAuth(
+	event: Parameters<Handle>[0]["event"],
+): Promise<Response | undefined> {
+	const authHeader = event.request.headers.get("authorization");
+	const rawKey =
+		event.request.headers.get("x-api-key") ??
+		(authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
+
+	if (!rawKey) {
+		return;
+	}
+
+	const result = await auth.api
+		.verifyApiKey({ body: { key: rawKey } })
+		.catch(() => null);
+
+	if (!result?.valid) {
+		logger.warn("Invalid API key authentication attempt", { key: rawKey });
+		return new Response(JSON.stringify({ error: "Unauthorized" }), {
+			status: 401,
+		});
+	}
+
+	const session = await auth.api.getSession({
+		headers: new Headers({ "x-api-key": rawKey }),
+	});
+
+	if (session?.session && session.user) {
+		event.locals.user = session.user;
+		event.locals.storageService = new StorageService(
+			await resolveStorageOwner(session.user),
+		);
+	}
+}
 
 const authHandler: Handle = async ({ event, resolve }) => {
 	const session = await auth.api.getSession({
@@ -135,50 +273,30 @@ const authHandler: Handle = async ({ event, resolve }) => {
 		event.locals.user = session.user;
 
 		// Lazy-init StorageService — created on first access only
+		const storageOwner = await resolveStorageOwner(session.user);
 		let _storageService: StorageService | undefined;
 		Object.defineProperty(event.locals, "storageService", {
 			get() {
 				if (!_storageService) {
-					_storageService = new StorageService(session.user);
+					_storageService = new StorageService(storageOwner);
 				}
 				return _storageService;
 			},
 			configurable: true,
 			enumerable: true,
 		});
+	} else if (isAuthBypassed()) {
+		// No auth at all: everyone is the shared owner.
+		const owner = await loadSharedOwner();
+		if (owner) {
+			event.locals.user = owner;
+			event.locals.session = bypassSession(owner);
+			event.locals.storageService = new StorageService(owner);
+		}
 	} else {
-		// Fallback: try API key authentication
-		// Accepts either `x-api-key: <key>` or `Authorization: Bearer <key>`
-		const authHeader = event.request.headers.get("authorization");
-		const rawKey =
-			event.request.headers.get("x-api-key") ??
-			(authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
-
-		if (rawKey) {
-			const result = await auth.api
-				.verifyApiKey({ body: { key: rawKey } })
-				.catch(() => null);
-
-			if (!result?.valid) {
-				logger.warn("Invalid API key authentication attempt", {
-					key: rawKey,
-				});
-
-				return new Response(JSON.stringify({ error: "Unauthorized" }), {
-					status: 401,
-				});
-			}
-
-			const session = await auth.api.getSession({
-				headers: new Headers({
-					"x-api-key": rawKey,
-				}),
-			});
-
-			if (session?.session && session.user) {
-				event.locals.user = session.user;
-				event.locals.storageService = new StorageService(session.user);
-			}
+		const unauthorized = await apiKeyAuth(event);
+		if (unauthorized) {
+			return unauthorized;
 		}
 	}
 

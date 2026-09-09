@@ -1,3 +1,5 @@
+import packageJson from "../../../package.json" with { type: "json" };
+
 /**
  * Default configuration values for Penombre.
  * Extracted to a separate file so it can be used by both:
@@ -7,13 +9,13 @@
 
 export const defaultConfigValues = {
 	appName: "Penombre",
-	appVersion: "development",
+	appVersion: packageJson.version,
 	environment: "production" as "dev" | "production",
 	origin: "http://localhost:3000",
 	logLevel: "info" as "debug" | "info" | "warn" | "error",
 	logFormat: "console" as "console" | "json",
 	db: {
-		url: "postgresql://penombre:penombre@localhost:5432/penombre",
+		url: "file:./data/penombre.sqlite",
 	},
 	auth: {
 		enableEmailSignIn: true,
@@ -36,9 +38,9 @@ export const defaultConfigValues = {
 		from: "noreply@example.com",
 		secure: false,
 	},
-	storage: {
-		backend: "local" as "local" | "s3",
-	},
+	simpleMode: false,
+	bypassAuth: false,
+	autoRedirectProvider: "",
 };
 
 export function generateExampleDotenvFile(): string {
@@ -47,7 +49,6 @@ export function generateExampleDotenvFile(): string {
 # ===========================================
 
 APP_NAME=${defaultConfigValues.appName}
-APP_VERSION=${defaultConfigValues.appVersion}
 
 # Environment: "dev" or "production"
 APP_ENV=${defaultConfigValues.environment}
@@ -64,6 +65,9 @@ ORIGIN=${defaultConfigValues.origin}
 # ===========================================
 # Database
 # ===========================================
+# SQLite by default — a "file:"/"sqlite:" path, no database server needed.
+# For PostgreSQL, use a connection string instead:
+# DATABASE_URL=postgresql://penombre:penombre@localhost:5432/penombre
 DATABASE_URL=${defaultConfigValues.db.url}
 
 # ===========================================
@@ -111,36 +115,29 @@ OAUTH_DEFAULT_SCOPES=openid,profile,email
 # REDIS_URL=redis://localhost:6379
 
 # ===========================================
-# Storage Backend
+# Simple mode
 # ===========================================
-# Backend to use for file storage: "local" (default) or "s3"
-STORAGE_BACKEND=local
+# Turns the app into a bare shared file browser: one storage volume shared by
+# every account, no per-user drives. Mount your files at STORAGE_PATH directly.
+SIMPLE_MODE=${defaultConfigValues.simpleMode}
 
-# Local storage path (used for both backends: files on local, thumbnails on s3)
+# Drop authentication entirely: no sign-in screen, every visitor is the shared
+# owner. Only honoured when SIMPLE_MODE=true. Anyone who can reach the app gets
+# full read/write access to the volume — keep it behind your own auth proxy or
+# on a trusted network.
+BYPASS_AUTH=${defaultConfigValues.bypassAuth}
+
+# Skip the sign-in screen and send users straight to this OIDC provider (the
+# <NAME> of an OAUTH_<NAME>_* block above, lowercased, e.g. "default").
+# /auth/sign-in?form still shows the form, so you can't lock yourself out.
+# AUTH_AUTO_REDIRECT_PROVIDER=default
+
+# ===========================================
+# Storage
+# ===========================================
+# Where uploaded files live on disk.
 # STORAGE_PATH=/data/storage
 
-# ===========================================
-# S3-compatible Storage (required when STORAGE_BACKEND=s3)
-# ===========================================
-# Works with AWS S3, MinIO, Cloudflare R2, Backblaze B2, and any S3-compatible API.
-# S3_BUCKET=my-bucket
-# S3_ACCESS_KEY_ID=your-access-key-id
-# S3_SECRET_ACCESS_KEY=your-secret-access-key
-# S3_REGION=us-east-1
-# Custom endpoint for S3-compatible providers (omit for AWS S3):
-# S3_ENDPOINT=https://s3.example.com
-# Use path-style URLs (required for MinIO and some providers):
-# S3_PATH_STYLE=false
-
-# ===========================================
-# Garage (self-hosted S3 — required when using the bundled Garage service)
-# ===========================================
-# RPC secret shared between all Garage nodes. Must be a 32-byte hex string.
-# Generate with: openssl rand -hex 32
-# GARAGE_RPC_SECRET=
-
-# The S3_* variables below are also passed to the Garage container to provision
-# the bucket and key pair on first start. Override them in .env for production.
 # ===========================================
 # SMTP (Optional - for email features)
 # ===========================================

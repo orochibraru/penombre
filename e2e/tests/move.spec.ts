@@ -11,9 +11,8 @@ import {
 
 test.use({ storageState: AUTH_STORAGE_STATE });
 
-// NOTE: File creation via the API requires S3 storage access, which is currently
-// unavailable in the test environment. All move tests use folders instead,
-// which are stored entirely in the database with no S3 dependency.
+// These tests use folders rather than files: folder state lives entirely in
+// the database, so they exercise the operation without depending on uploads.
 
 async function selectMoveDestination(
 	page: import("@playwright/test").Page,
