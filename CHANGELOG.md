@@ -1,3 +1,20 @@
+## [1.8.24](https://github.com/orochibraru/penombre/compare/v1.8.23...v1.8.24) (2026-09-09)
+
+
+### Bug Fixes
+
+* sql dialect ([3730da8](https://github.com/orochibraru/penombre/commit/3730da86f1eb6e0d92966732da21ec20e826dfe4))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.24
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.23](https://github.com/orochibraru/penombre/compare/v1.8.22...v1.8.23) (2026-09-09)
 
 
