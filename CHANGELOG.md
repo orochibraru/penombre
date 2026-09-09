@@ -1,3 +1,25 @@
+## [1.8.21](https://github.com/orochibraru/penombre/compare/v1.8.20...v1.8.21) (2026-09-09)
+
+
+### Bug Fixes
+
+* don't display user & settings when auth is bypassed ([bacb9d7](https://github.com/orochibraru/penombre/commit/bacb9d7ca35264f28b48f4f8a8e77f10d3d0fc2e))
+
+
+### Features
+
+* simple mode ([#85](https://github.com/orochibraru/penombre/issues/85)) ([51dd88c](https://github.com/orochibraru/penombre/commit/51dd88c08aee59e58eb30638a69266621ce98f37))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.21
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.20](https://github.com/orochibraru/penombre/compare/v1.8.19...v1.8.20) (2026-09-08)
 
 
