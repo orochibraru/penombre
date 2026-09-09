@@ -1,3 +1,20 @@
+## [1.8.23](https://github.com/orochibraru/penombre/compare/v1.8.22...v1.8.23) (2026-09-09)
+
+
+### Bug Fixes
+
+* release mechanism ([1147a7d](https://github.com/orochibraru/penombre/commit/1147a7d9f11b7ddaa99326b87414824b0ae0e308))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.23
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.22](https://github.com/orochibraru/penombre/compare/v1.8.21...v1.8.22) (2026-09-09)
 
 
