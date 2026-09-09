@@ -106,7 +106,6 @@ export const auth = betterAuth({
 		},
 	},
 	plugins: [
-		sveltekitCookies(getRequestEvent),
 		openAPI({
 			path: "/openapi",
 			disableDefaultReference: true,
@@ -133,6 +132,9 @@ export const auth = betterAuth({
 				enabled: provider.enabled,
 			})),
 		}),
+		// Must stay last: it forwards `Set-Cookie` to SvelteKit's cookie store,
+		// so any plugin whose `hooks.after` runs later would lose its cookies.
+		sveltekitCookies(getRequestEvent),
 	],
 });
 

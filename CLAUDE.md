@@ -28,7 +28,6 @@ bun run test:e2e:ui      # Playwright UI mode
 bun run db:generate      # generate a Drizzle migration from schema.ts changes
 bun run db:studio        # Drizzle Studio
 bun run gen:api          # regenerate OpenAPI spec + typed API clients (web + mobile)
-bun run db:diagram       # regenerate resources/db.svg from the schema
 ```
 
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks

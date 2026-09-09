@@ -15,8 +15,9 @@ export function resolveDbDialect(url: string): DbDialect {
 	return /^(file:|sqlite:)/i.test(url) ? "sqlite" : "pg";
 }
 
+/** `||` on purpose: an empty `DATABASE_URL` (unset var rendered by a deploy UI/compose) must fall back to SQLite, not be read as a Postgres URL. */
 export function getDbUrl(): string {
-	return Bun.env.DATABASE_URL ?? DEFAULT_URL;
+	return Bun.env.DATABASE_URL || DEFAULT_URL;
 }
 
 /**

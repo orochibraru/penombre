@@ -23,9 +23,8 @@ bun test         # the markdown/search logic
 
 ## Generated assets
 
-`openapi.json` and `static/db.svg` are written by root scripts
-(`bun run gen:openapi`, `bun run db:diagram`) — regenerate them there rather
-than editing them here.
+`openapi.json` is written by a root script (`bun run gen:openapi`) — regenerate
+it there rather than editing it here.
 
 ## Deploying it
 

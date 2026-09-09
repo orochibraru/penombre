@@ -16,7 +16,7 @@ penombre/
 │   ├── web/       # SvelteKit — frontend + REST API + database
 │   ├── mobile/    # Expo — React Native client
 │   └── docs/      # SvelteKit — documentation
-├── scripts/       # Shared tooling (API codegen, DB diagram, circular checks)
+├── scripts/       # Shared tooling (API codegen, circular checks)
 ├── Dockerfile     # Multi-stage production build
 └── compose.yaml   # Docker Compose (single app container)
 ```
@@ -184,11 +184,6 @@ an optional alternative for multi-instance deployments. The dialect is picked
 from the `DATABASE_URL` scheme; migrations for both live under `drizzle/` and
 are auto-generated via `drizzle-kit generate` and applied on startup.
 
-![Database diagram](/db.svg)
-
-> **Note** — run `bun run db:diagram` from the project root to regenerate this
-> diagram.
-
 ## Infrastructure
 
 ### Docker
@@ -217,8 +212,7 @@ Optional **db** (PostgreSQL) and **redis** services can be added — see
 
 ### Shared scripts
 
-| Script          | Purpose                                                     |
-| --------------- | ----------------------------------------------------------- |
-| `gen-api.ts`    | Generate OpenAPI types for web and mobile from the API spec |
-| `db-diagram.ts` | Generate the database diagram (DBML → SVG)                  |
-| `circular.ts`   | Detect circular dependencies via madge                      |
+| Script        | Purpose                                                     |
+| ------------- | ----------------------------------------------------------- |
+| `gen-api.ts`  | Generate OpenAPI types for web and mobile from the API spec |
+| `circular.ts` | Detect circular dependencies via madge                      |

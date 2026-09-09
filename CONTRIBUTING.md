@@ -53,7 +53,6 @@ bun run test:e2e:ui     # Playwright UI mode
 # Codegen
 bun run gen:api      # OpenAPI spec + typed API client
 bun run gen:env      # Regenerate .example.env
-bun run db:diagram   # Regenerate resources/db.svg
 ```
 
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
@@ -80,7 +79,7 @@ generated client. Run `bun run gen:api` after changing either half.
 
 Edit `src/lib/server/db/schema.ts`, then run `bun run db:generate` — it emits
 migrations for both dialects (`drizzle/pg/` and `drizzle/sqlite/`). Migrations
-run automatically on boot. Regenerate the diagram with `bun run db:diagram`.
+run automatically on boot.
 
 ## Git hooks
 

@@ -57,10 +57,6 @@ variable reference.
 - **Storage**: Local filesystem, at `STORAGE_PATH` (default `/data/storage`)
 - **Auth**: Better Auth (session cookies, OAuth providers, API keys)
 
-### Database
-
-![DB Diagram](./resources/db.svg)
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, commands, and the test

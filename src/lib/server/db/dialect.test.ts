@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getSqliteFilePath, resolveDbDialect } from "./dialect";
+import { getDbUrl, getSqliteFilePath, resolveDbDialect } from "./dialect";
 
 describe("resolveDbDialect", () => {
 	test("file: URLs resolve to sqlite", () => {
@@ -39,5 +39,21 @@ describe("getSqliteFilePath", () => {
 
 	test("keeps relative paths relative", () => {
 		expect(getSqliteFilePath("file:./penombre.db")).toBe("./penombre.db");
+	});
+});
+
+describe("getDbUrl", () => {
+	test("an empty DATABASE_URL falls back to the sqlite default", () => {
+		const previous = Bun.env.DATABASE_URL;
+		Bun.env.DATABASE_URL = "";
+		try {
+			expect(resolveDbDialect(getDbUrl())).toBe("sqlite");
+		} finally {
+			if (previous === undefined) {
+				Bun.env.DATABASE_URL = undefined;
+			} else {
+				Bun.env.DATABASE_URL = previous;
+			}
+		}
 	});
 });

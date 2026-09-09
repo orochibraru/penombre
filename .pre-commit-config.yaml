@@ -19,7 +19,6 @@ repos:
             src/lib/api/v1\.(json|d\.ts)|
             openapi.json|
             \.example\.env|
-            resources/|
             drizzle/|
             CHANGELOG\.md|
             bun\.lock
@@ -71,9 +70,8 @@ repos:
 
   - repo: local
     hooks:
-      # These run first: .example.env, the OpenAPI spec + its typed client, and
-      # the DB diagram are all derived from source that may itself be part of
-      # this commit.
+      # These run first: .example.env and the OpenAPI spec + its typed client
+      # are derived from source that may itself be part of this commit.
       - id: gen-env
         name: regenerate .example.env
         entry: bun run gen:env
@@ -87,13 +85,6 @@ repos:
         language: system
         pass_filenames: false
         files: ^(src/lib/server/|src/lib/schemas/|scripts/generate-openapi\.ts)
-
-      - id: db-diagram
-        name: regenerate DB diagram
-        entry: bun run db:diagram
-        language: system
-        pass_filenames: false
-        files: ^(src/lib/server/db/schema\.ts|scripts/db-diagram\.ts)$
 
         # tailwint takes globs, not individual file paths, so it always scans the
       # whole (scoped) source tree. Only the decision to run it at all is
