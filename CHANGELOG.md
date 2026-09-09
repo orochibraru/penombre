@@ -1,3 +1,20 @@
+## [1.8.22](https://github.com/orochibraru/penombre/compare/v1.8.21...v1.8.22) (2026-09-09)
+
+
+### Bug Fixes
+
+* disable pages in simple mode ([3b00dec](https://github.com/orochibraru/penombre/commit/3b00dec80464572b39a578ad1acb22bad1370fbb))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.22
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.21](https://github.com/orochibraru/penombre/compare/v1.8.20...v1.8.21) (2026-09-09)
 
 
