@@ -94,7 +94,7 @@ export const config: DocsConfig = {
 		headline: "Your data. Your server. Your drive.",
 		accent: "Your server.",
 		subheadline:
-			"Penombre is a modern, self-hosted cloud storage solution with web and mobile clients. All the convenience of a cloud drive — none of the third-party surveillance.",
+			"Penombre is a modern, self-hosted cloud storage solution. All the convenience of a cloud drive — none of the third-party surveillance.",
 		snippet: {
 			caption: "your server",
 			command: "docker compose up -d",
@@ -107,10 +107,6 @@ export const config: DocsConfig = {
 			{
 				title: "Smart categories",
 				body: "Files are automatically categorized by type — images, documents, music, video, and more.",
-			},
-			{
-				title: "Mobile app",
-				body: "Native iOS and Android experience built with Expo and React Native, sharing the same typed API.",
 			},
 			{
 				title: "Flexible authentication",
@@ -158,7 +154,6 @@ export const config: DocsConfig = {
 				"PostgreSQL + Drizzle ORM",
 				"Better Auth",
 				"TailwindCSS 4",
-				"Expo + React Native",
 				"Docker Compose",
 			],
 		},

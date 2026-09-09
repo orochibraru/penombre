@@ -96,7 +96,7 @@ storage directory.
   share one set of credentials if you want everyone using the same login. To
   drop sign-in entirely, see [No sign-in at all](#no-sign-in-at-all) below.
 - **Everything else works as normal**: upload, download, rename, delete, search,
-  thumbnails, the mobile app, the API.
+  thumbnails, the API.
 
 ## No sign-in at all
 
@@ -123,8 +123,7 @@ everyone's storage through.
 
 The sign-in screen redirects home while bypass is on, and the API accepts
 requests without a key. The UI drops the account menu too: no avatar in the
-header, no profile, admin or sign-out entries, and no account tab in the mobile
-bottom bar — there is no account to manage when nobody signs in. `/account` and
-`/admin` return 404 while bypass is on. Turn `BYPASS_AUTH` off again and the
-normal login is back, unchanged — the flag adds no users and changes nothing in
-the database.
+header, no profile, admin or sign-out entries — there is no account to manage
+when nobody signs in. `/account` and `/admin` return 404 while bypass is on.
+Turn `BYPASS_AUTH` off again and the normal login is back, unchanged — the flag
+adds no users and changes nothing in the database.

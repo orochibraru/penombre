@@ -1,5 +1,3 @@
-fail_fast: true
-
 repos:
   # Cheap, generic hygiene the language tooling below does not cover: biome
   # owns the code files and prettier the markdown, but nothing was looking at

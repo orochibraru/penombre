@@ -1,6 +1,6 @@
 import madge from "madge";
 
-const packages = ["./src", "./packages/mobile"];
+const packages = ["./src"];
 
 madge(packages, {
 	fileExtensions: ["ts"],

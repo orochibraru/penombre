@@ -3,8 +3,8 @@
 /**
  * Writes the OpenAPI spec to disk from the same genOpenApiSpec() the live
  * /api/v1/openapi.json route serves, so the served and committed specs can't
- * drift. Consumed by openapi-typescript (see `gen:openapi`), the mobile
- * package and the docs site.
+ * drift. Consumed by openapi-typescript (see `gen:openapi`) and the docs
+ * site.
  */
 
 import process from "node:process";
@@ -48,7 +48,7 @@ if (!doc.paths || Object.keys(doc.paths).length === 0) {
 const spec = `${JSON.stringify(doc, null, "\t")}\n`;
 
 // Every consumer of the spec. `gen:openapi` runs openapi-typescript against
-// the first of these, and the mobile package against the second.
+// this file.
 const outputs = ["openapi.json"];
 
 for (const output of outputs) {

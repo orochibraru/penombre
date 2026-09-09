@@ -4,17 +4,15 @@ Overview of the Penombre project architecture.
 
 ## Overview
 
-Penombre is structured as a **Bun monorepo** with three packages:
+Penombre is structured as a **Bun monorepo** with two packages:
 
 - **Web** — SvelteKit full-stack app (frontend + REST API).
-- **Mobile** — Expo + React Native cross-platform app.
 - **Docs** — SvelteKit static documentation site.
 
 ```text
 penombre/
 ├── packages/
 │   ├── web/       # SvelteKit — frontend + REST API + database
-│   ├── mobile/    # Expo — React Native client
 │   └── docs/      # SvelteKit — documentation
 ├── scripts/       # Shared tooling (API codegen, circular checks)
 ├── Dockerfile     # Multi-stage production build
@@ -97,7 +95,6 @@ Better Auth handles authentication with the following plugins:
 - **OAuth** — any OIDC-compliant provider (Google, GitHub, Pocket ID, etc.)
 - **Passkeys** — WebAuthn/FIDO2 passwordless authentication
 - **API keys** — rate-limited keys for programmatic access
-- **Expo** — mobile app deep-link authentication
 
 On startup, the server hook (`hooks.server.ts`) waits for the database, runs
 Drizzle migrations, and seeds the initial admin account if no users exist.
@@ -147,25 +144,6 @@ The frontend uses **Svelte 5 runes** (`$state`, `$derived`, `$effect`) for
 reactivity and **shadcn-svelte** for the component library. All user-facing
 strings go through Paraglide-JS for internationalization.
 
-## Mobile package
-
-An Expo + React Native app that connects to a Penombre instance.
-
-### Mobile tech stack
-
-| Layer         | Technology                            |
-| ------------- | ------------------------------------- |
-| Runtime       | Expo 55, React Native 0.81            |
-| Routing       | Expo Router (file-based)              |
-| Styling       | NativeWind (TailwindCSS for RN)       |
-| Data fetching | SWR                                   |
-| API client    | openapi-fetch (shared types with web) |
-| Auth          | Better Auth Expo plugin + SecureStore |
-
-The mobile app authenticates via deep links (`penombre://` scheme) and stores
-credentials in encrypted device storage using Expo SecureStore. API types are
-shared with the web package through the OpenAPI code generation pipeline.
-
 ## Docs package
 
 A static documentation site built with **SvelteKit** and
@@ -212,7 +190,7 @@ Optional **db** (PostgreSQL) and **redis** services can be added — see
 
 ### Shared scripts
 
-| Script        | Purpose                                                     |
-| ------------- | ----------------------------------------------------------- |
-| `gen-api.ts`  | Generate OpenAPI types for web and mobile from the API spec |
-| `circular.ts` | Detect circular dependencies via madge                      |
+| Script        | Purpose                                                  |
+| ------------- | -------------------------------------------------------- |
+| `gen-api.ts`  | Generate OpenAPI types for the web app from the API spec |
+| `circular.ts` | Detect circular dependencies via madge                   |

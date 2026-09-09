@@ -33,13 +33,7 @@ export const auth = betterAuth({
 					throw new Error("ORIGIN environment variable is not set");
 				})(),
 	trustedOrigins: dev
-		? [
-				"penombre://*/**",
-				"http://localhost:*/**",
-				"http://192.168.*.*:*/**",
-				"exp://localhost:*/**",
-				"exp://192.168.*.*:*/**",
-			]
+		? ["http://localhost:*/**", "http://192.168.*.*:*/**"]
 		: [config.origin],
 	secret: config.auth.secret,
 	basePath: "/api/v1/auth",

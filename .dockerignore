@@ -42,10 +42,8 @@ LICENSE
 **/.turbo/
 **/.parcel-cache/
 **/.vercel/
-**/.expo/
 **/.svelte-kit/
 **/.gitignore
-**/.expo-shared/
 
 **/playwright-report/
 **/e2e/
