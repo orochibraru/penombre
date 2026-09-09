@@ -23,7 +23,7 @@ services:
   app:
     image: orochibraru/penombre:latest
     ports:
-      - 8080:8080
+      - 3000:3000
     restart: unless-stopped
     volumes:
       - storage_data:/data

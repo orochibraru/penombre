@@ -54,7 +54,7 @@ services:
   app:
     image: orochibraru/penombre:latest
     ports:
-      - 8080:8080
+      - 3000:3000
     restart: unless-stopped
     environment:
       - SIMPLE_MODE=true
@@ -85,7 +85,8 @@ storage directory.
   same place instead of separate per-user drives.
 - **Trimmed navigation.** Recent, Starred, Shared, Categories, and Sync are
   hidden — just Browse, Trash, and Settings. Trash stays, so an accidental
-  delete is still recoverable.
+  delete is still recoverable. The hidden pages return 404 if you type their URL
+  directly.
 
 ## What doesn't change
 
@@ -123,6 +124,7 @@ everyone's storage through.
 The sign-in screen redirects home while bypass is on, and the API accepts
 requests without a key. The UI drops the account menu too: no avatar in the
 header, no profile, admin or sign-out entries, and no account tab in the mobile
-bottom bar — there is no account to manage when nobody signs in. Turn
-`BYPASS_AUTH` off again and the normal login is back, unchanged — the flag adds
-no users and changes nothing in the database.
+bottom bar — there is no account to manage when nobody signs in. `/account` and
+`/admin` return 404 while bypass is on. Turn `BYPASS_AUTH` off again and the
+normal login is back, unchanged — the flag adds no users and changes nothing in
+the database.
