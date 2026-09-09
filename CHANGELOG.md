@@ -1,3 +1,20 @@
+## [1.8.25](https://github.com/orochibraru/penombre/compare/v1.8.24...v1.8.25) (2026-09-09)
+
+
+### Bug Fixes
+
+* scan & links ([2d741ce](https://github.com/orochibraru/penombre/commit/2d741cea1115cf2de46c7448e98385492132ebf0))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.25
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.24](https://github.com/orochibraru/penombre/compare/v1.8.23...v1.8.24) (2026-09-09)
 
 
