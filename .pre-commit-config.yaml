@@ -107,8 +107,9 @@ repos:
 
       - id: biome
         name: biome check --write --unsafe
-        entry: bunx biome check --write --unsafe --no-errors-on-unmatched
+        entry: bunx biome check --write --unsafe
         language: system
+        pass_filenames: false
         files: \.(ts|tsx|js|jsx|mjs|cjs|json|jsonc|css|svelte|html)$
 
       - id: prettier-md

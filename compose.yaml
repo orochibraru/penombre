@@ -5,7 +5,7 @@ services:
       dockerfile: ./Dockerfile
       target: app
     ports:
-      - 8080:3000
+      - 8080:8080
     restart: unless-stopped
     volumes:
       - storage:/data/storage

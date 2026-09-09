@@ -45,7 +45,7 @@ if (!doc.paths || Object.keys(doc.paths).length === 0) {
 	throw new Error("Refusing to write an OpenAPI spec with no paths");
 }
 
-const spec = JSON.stringify(doc, null, "\t");
+const spec = `${JSON.stringify(doc, null, "\t")}\n`;
 
 // Every consumer of the spec. `gen:openapi` runs openapi-typescript against
 // the first of these, and the mobile package against the second.

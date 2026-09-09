@@ -20,7 +20,7 @@
 			"!**/*.svg",
 			"!drizzle/meta",
 			"!project.inlang",
-			"!openapi.json",
+			"!**/openapi.json",
 			"!src/lib/paraglide",
 			"!static",
 			"!packages/docs/.svelte-kit",
