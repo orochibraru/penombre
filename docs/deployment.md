@@ -38,7 +38,7 @@ services:
   app:
     image: orochibraru/penombre:latest
     ports:
-      - 3000:3000
+      - 8080:8080
     restart: unless-stopped
     volumes:
       - storage_data:/data
@@ -116,7 +116,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - 3000:3000
+      - 8080:8080
     restart: unless-stopped
     volumes:
       - storage_data:/data

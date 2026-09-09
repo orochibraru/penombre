@@ -98,9 +98,11 @@
         </Breadcrumb.Root>
         <div class="ml-auto flex items-center gap-2">
             <div class="flex items-center gap-2">
-                <div class="hidden md:block">
-                    <UserMenu {user} />
-                </div>
+                {#if !page.data.authBypassed}
+                    <div class="hidden md:block">
+                        <UserMenu {user} />
+                    </div>
+                {/if}
             </div>
         </div>
     </div>

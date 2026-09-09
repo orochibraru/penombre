@@ -54,7 +54,7 @@ services:
   app:
     image: orochibraru/penombre:latest
     ports:
-      - 3000:3000
+      - 8080:8080
     restart: unless-stopped
     environment:
       - SIMPLE_MODE=true
@@ -121,5 +121,8 @@ from `ADMIN_EMAIL`/`ADMIN_PASSWORD`, the same one simple mode already routes
 everyone's storage through.
 
 The sign-in screen redirects home while bypass is on, and the API accepts
-requests without a key. Turn `BYPASS_AUTH` off again and the normal login is
-back, unchanged — the flag adds no users and changes nothing in the database.
+requests without a key. The UI drops the account menu too: no avatar in the
+header, no profile, admin or sign-out entries, and no account tab in the mobile
+bottom bar — there is no account to manage when nobody signs in. Turn
+`BYPASS_AUTH` off again and the normal login is back, unchanged — the flag adds
+no users and changes nothing in the database.

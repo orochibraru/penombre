@@ -96,7 +96,7 @@ services:
       - "traefik.http.services.penombre.loadbalancer.server.port=3000"
     # Remove the ports mapping — Traefik handles routing
     # ports:
-    #   - 3000:3000
+    #   - 8080:8080
 ```
 
 Make sure Traefik is configured with an ACME certificate resolver named

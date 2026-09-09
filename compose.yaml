@@ -15,6 +15,7 @@ services:
       - LOG_LEVEL=debug
       - STORAGE_PATH=/data/storage
       - SIMPLE_MODE=true
+      - BYPASS_AUTH=true
       - ORIGIN=http://localhost:8080
 
 volumes:

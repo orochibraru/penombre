@@ -58,6 +58,9 @@
 	// (recent/starred/shared/categories/sync) but keep trash for undo safety.
 	const simpleMode = $derived(data.config?.simpleMode ?? false);
 
+	// Auth bypass: nobody signs in, so there's no profile/admin to show.
+	const authBypassed = $derived(data.authBypassed ?? false);
+
 	// Close all dialogs when navigation starts
 	$effect(() => {
 		if (navigating) {
@@ -350,16 +353,18 @@
                     </button>
                 {/if}
 
-                <a
-                    href={resolve("/account")}
-                    class={cn(
-                        bottomNavItemClass,
-                        isActive("/account") ? "text-primary" : "",
-                    )}
-                >
-                    <UserIcon class={bottomNavItemIconClass} />
-                    {m.account()}
-                </a>
+                {#if !authBypassed}
+                    <a
+                        href={resolve("/account")}
+                        class={cn(
+                            bottomNavItemClass,
+                            isActive("/account") ? "text-primary" : "",
+                        )}
+                    >
+                        <UserIcon class={bottomNavItemIconClass} />
+                        {m.account()}
+                    </a>
+                {/if}
 
                 <a
                     href={resolve("/settings")}
