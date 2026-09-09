@@ -50,8 +50,8 @@ LICENSE
 **/playwright-report/
 **/e2e/
 
-tools/compose.e2e.yaml
-tools/compose.test.yaml
+compose.e2e.yaml
+compose.test.yaml
 
 **/playwright.config.ts
 **/playwright.test.config.ts

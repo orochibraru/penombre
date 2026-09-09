@@ -114,10 +114,10 @@
 		"prepare": "svelte-kit sync || true; prek install -t pre-commit -t commit-msg --allow-missing-config || true",
 		"preview": "vite preview",
 		"release": "semantic-release",
-		"test:docker": "docker compose -f tools/compose.test.yaml up --build --exit-code-from test --abort-on-container-exit",
-		"test:e2e": "docker compose -f tools/compose.e2e.yaml -p penombre-e2e build && playwright test",
+		"test:docker": "docker compose -f compose.test.yaml up --build --exit-code-from test --abort-on-container-exit",
+		"test:e2e": "docker compose -f compose.e2e.yaml -p penombre-e2e build && playwright test",
 		"test:e2e:headed": "playwright test --headed",
-		"test:e2e:pg": "docker compose -f tools/compose.e2e.yaml --profile pg -p penombre-e2e-pg build && playwright test --config=playwright.pg.config.ts",
+		"test:e2e:pg": "docker compose -f compose.e2e.yaml --profile pg -p penombre-e2e-pg build && playwright test --config=playwright.pg.config.ts",
 		"test:e2e:ui": "playwright test --ui"
 	},
 	"type": "module",

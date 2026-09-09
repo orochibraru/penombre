@@ -19,7 +19,7 @@ export default defineConfig({
 	},
 	webServer: {
 		command:
-			"docker compose -f tools/compose.e2e.yaml --profile pg -p penombre-e2e-pg up --wait",
+			"docker compose -f compose.e2e.yaml --profile pg -p penombre-e2e-pg up --wait",
 		cwd: "./",
 		url: "http://localhost:3002",
 		reuseExistingServer: !process.env.CI,
