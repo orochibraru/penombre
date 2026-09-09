@@ -63,7 +63,6 @@
 		}
 
 		const [item] = tooltipCtx.payload;
-		// biome-ignore lint/suspicious/noUnnecessaryConditions: noUncheckedIndexedAccess makes this possibly undefined
 		if (!item) {
 			return null;
 		}

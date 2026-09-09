@@ -43,9 +43,9 @@ SQLite pairs well with [Simple mode](simple-mode.md) for a single-container
 deployment. PostgreSQL is the better fit for multiple app instances, since they
 can share one database.
 
-| Variable       | Description                                      | Default  |
-| -------------- | ------------------------------------------------ | -------- |
-| `DATABASE_URL` | PostgreSQL connection string, or a file: path    | Required |
+| Variable       | Description                                   | Default  |
+| -------------- | --------------------------------------------- | -------- |
+| `DATABASE_URL` | PostgreSQL connection string, or a file: path | Required |
 
 ## Initial Setup
 

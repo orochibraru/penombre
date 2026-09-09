@@ -83,8 +83,8 @@ Every `/api/v1/...` endpoint is defined in two places:
    registry as an import-time side effect — that's why
    `src/lib/server/openapi/routes.ts` exists purely to import every contract
    module before the spec is generated. `$lib/server/generate-openapi.ts` pulls
-   that module in itself, so both the live spec route and `gen:openapi`/`gen:api`
-   always see every contract.
+   that module in itself, so both the live spec route and
+   `gen:openapi`/`gen:api` always see every contract.
 2. **Handler** (`src/routes/api/v1/.../+server.ts`): imports the contract object
    and calls
    `.handler(async ({ params, query, body, user, service, event }) => ...)`. The
