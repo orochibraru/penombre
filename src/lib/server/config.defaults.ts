@@ -39,6 +39,8 @@ export const defaultConfigValues = {
 		secure: false,
 	},
 	simpleMode: false,
+	bypassAuth: false,
+	autoRedirectProvider: "",
 };
 
 export function generateExampleDotenvFile(): string {
@@ -118,6 +120,17 @@ OAUTH_DEFAULT_SCOPES=openid,profile,email
 # Turns the app into a bare shared file browser: one storage volume shared by
 # every account, no per-user drives. Mount your files at STORAGE_PATH directly.
 SIMPLE_MODE=${defaultConfigValues.simpleMode}
+
+# Drop authentication entirely: no sign-in screen, every visitor is the shared
+# owner. Only honoured when SIMPLE_MODE=true. Anyone who can reach the app gets
+# full read/write access to the volume — keep it behind your own auth proxy or
+# on a trusted network.
+BYPASS_AUTH=${defaultConfigValues.bypassAuth}
+
+# Skip the sign-in screen and send users straight to this OIDC provider (the
+# <NAME> of an OAUTH_<NAME>_* block above, lowercased, e.g. "default").
+# /auth/sign-in?form still shows the form, so you can't lock yourself out.
+# AUTH_AUTO_REDIRECT_PROVIDER=default
 
 # ===========================================
 # Storage

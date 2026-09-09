@@ -2,16 +2,16 @@ import { join } from "node:path";
 import process from "node:process";
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
-import type { User } from "better-auth";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { asc, sql } from "drizzle-orm";
 import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
 import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
 import { building } from "$app/environment";
 import { Logger } from "$lib/logger";
+import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
-import { isSimpleMode } from "$lib/server/config";
+import { isAuthBypassed, isSimpleMode } from "$lib/server/config";
 import { getDb, resetDb } from "$lib/server/db";
 import { isSqliteDialect } from "$lib/server/db/dialect";
 import { user as userTable } from "$lib/server/db/schema";
@@ -21,6 +21,9 @@ import {
 } from "$lib/server/services/storage";
 
 const logger = new Logger("Hooks");
+
+/** The session user, with the admin plugin's extra fields. */
+type User = NonNullable<AuthType["user"]>;
 
 const migrationsFolder = join(
 	process.cwd(),
@@ -195,11 +198,68 @@ function loadSharedOwner(): Promise<User | undefined> {
 	return sharedOwnerPromise;
 }
 
+/**
+ * Auth bypass never signs anyone in, so there's no row in the session table —
+ * but the app (layout guards, account pages) expects a session on `locals`.
+ * Hand it a synthetic one that lives only for this request.
+ */
+function bypassSession(owner: User): NonNullable<App.Locals["session"]> {
+	const now = new Date();
+	return {
+		id: `bypass-${owner.id}`,
+		token: `bypass-${owner.id}`,
+		userId: owner.id,
+		createdAt: now,
+		updatedAt: now,
+		expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+	};
+}
+
 async function resolveStorageOwner(sessionUser: User): Promise<User> {
 	if (!isSimpleMode()) {
 		return sessionUser;
 	}
 	return (await loadSharedOwner()) ?? sessionUser;
+}
+
+/**
+ * Fallback auth for programmatic clients: `x-api-key: <key>` or
+ * `Authorization: Bearer <key>`. Returns a 401 response when a key is present
+ * but invalid, otherwise undefined (no key = anonymous, not an error).
+ */
+async function apiKeyAuth(
+	event: Parameters<Handle>[0]["event"],
+): Promise<Response | undefined> {
+	const authHeader = event.request.headers.get("authorization");
+	const rawKey =
+		event.request.headers.get("x-api-key") ??
+		(authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
+
+	if (!rawKey) {
+		return;
+	}
+
+	const result = await auth.api
+		.verifyApiKey({ body: { key: rawKey } })
+		.catch(() => null);
+
+	if (!result?.valid) {
+		logger.warn("Invalid API key authentication attempt", { key: rawKey });
+		return new Response(JSON.stringify({ error: "Unauthorized" }), {
+			status: 401,
+		});
+	}
+
+	const session = await auth.api.getSession({
+		headers: new Headers({ "x-api-key": rawKey }),
+	});
+
+	if (session?.session && session.user) {
+		event.locals.user = session.user;
+		event.locals.storageService = new StorageService(
+			await resolveStorageOwner(session.user),
+		);
+	}
 }
 
 const authHandler: Handle = async ({ event, resolve }) => {
@@ -225,41 +285,18 @@ const authHandler: Handle = async ({ event, resolve }) => {
 			configurable: true,
 			enumerable: true,
 		});
+	} else if (isAuthBypassed()) {
+		// No auth at all: everyone is the shared owner.
+		const owner = await loadSharedOwner();
+		if (owner) {
+			event.locals.user = owner;
+			event.locals.session = bypassSession(owner);
+			event.locals.storageService = new StorageService(owner);
+		}
 	} else {
-		// Fallback: try API key authentication
-		// Accepts either `x-api-key: <key>` or `Authorization: Bearer <key>`
-		const authHeader = event.request.headers.get("authorization");
-		const rawKey =
-			event.request.headers.get("x-api-key") ??
-			(authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
-
-		if (rawKey) {
-			const result = await auth.api
-				.verifyApiKey({ body: { key: rawKey } })
-				.catch(() => null);
-
-			if (!result?.valid) {
-				logger.warn("Invalid API key authentication attempt", {
-					key: rawKey,
-				});
-
-				return new Response(JSON.stringify({ error: "Unauthorized" }), {
-					status: 401,
-				});
-			}
-
-			const session = await auth.api.getSession({
-				headers: new Headers({
-					"x-api-key": rawKey,
-				}),
-			});
-
-			if (session?.session && session.user) {
-				event.locals.user = session.user;
-				event.locals.storageService = new StorageService(
-					await resolveStorageOwner(session.user),
-				);
-			}
+		const unauthorized = await apiKeyAuth(event);
+		if (unauthorized) {
+			return unauthorized;
 		}
 	}
 

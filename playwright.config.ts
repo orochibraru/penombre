@@ -40,8 +40,7 @@ export default defineConfig({
 	webServer: {
 		// Self-contained E2E stack on port 3001 — isolated from the dev stack.
 		// Playwright waits for the URL to respond before running any tests.
-		command:
-			"docker compose -f compose.e2e.yaml -p penombre-e2e up --wait",
+		command: "docker compose -f compose.e2e.yaml -p penombre-e2e up --wait",
 		cwd: "./",
 		url: "http://localhost:3001",
 		reuseExistingServer: !process.env.CI,

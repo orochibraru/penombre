@@ -90,6 +90,10 @@ const configSchema = z
 			})
 			.optional(),
 		simpleMode: z.boolean().default(defaultConfigValues.simpleMode),
+		bypassAuth: z.boolean().default(defaultConfigValues.bypassAuth),
+		autoRedirectProvider: z
+			.string()
+			.default(defaultConfigValues.autoRedirectProvider),
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
@@ -268,6 +272,8 @@ export function getConfig(): AppConfig {
 		redis: redisUrl ? { url: redisUrl } : defaultConfigValues.redis,
 		smtp: resolveSmtpConfig(),
 		simpleMode: env.SIMPLE_MODE === "true",
+		bypassAuth: env.BYPASS_AUTH === "true",
+		autoRedirectProvider: env.AUTH_AUTO_REDIRECT_PROVIDER || "",
 	});
 }
 
@@ -280,4 +286,13 @@ export function isSmtpEnabled(): boolean {
 export function isSimpleMode(): boolean {
 	const config = getConfig();
 	return config.simpleMode;
+}
+
+/**
+ * Auth bypass: no sign-in at all, every request runs as the shared owner.
+ * Simple-mode only — without one shared drive there'd be no account to be.
+ */
+export function isAuthBypassed(): boolean {
+	const config = getConfig();
+	return config.simpleMode && config.bypassAuth;
 }

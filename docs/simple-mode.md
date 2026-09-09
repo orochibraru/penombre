@@ -89,9 +89,37 @@ storage directory.
 
 ## What doesn't change
 
-- **Auth is still required.** Simple mode isn't anonymous access — it's the same
-  login system, just pointed at one shared drive instead of one per account. See
-  [Authentication](authentication.md) to configure sign-in, or share one set of
-  credentials if you want everyone using the same login.
+- **Auth is still required by default.** Simple mode isn't anonymous access —
+  it's the same login system, just pointed at one shared drive instead of one
+  per account. See [Authentication](authentication.md) to configure sign-in, or
+  share one set of credentials if you want everyone using the same login. To
+  drop sign-in entirely, see [No sign-in at all](#no-sign-in-at-all) below.
 - **Everything else works as normal**: upload, download, rename, delete, search,
   thumbnails, the mobile app, the API.
+
+## No sign-in at all
+
+Set `BYPASS_AUTH=true` alongside `SIMPLE_MODE=true` and Penombre stops asking
+for a login: every visitor is treated as the shared owner, with full read and
+write access to the volume.
+
+```ini
+SIMPLE_MODE=true
+BYPASS_AUTH=true
+```
+
+> **Danger** — this is unauthenticated access. Anyone who can reach the app can
+> read, upload and delete everything on the volume. Only run it on a trusted
+> network (a LAN, a Tailscale/WireGuard network) or behind your own
+> authenticating reverse proxy — see [Reverse proxy](reverse-proxy.md).
+
+`BYPASS_AUTH` is ignored unless `SIMPLE_MODE=true`: without one shared drive
+there is no single account for a visitor to be.
+
+The account is the first user in the database — the admin seeded on first boot
+from `ADMIN_EMAIL`/`ADMIN_PASSWORD`, the same one simple mode already routes
+everyone's storage through.
+
+The sign-in screen redirects home while bypass is on, and the API accepts
+requests without a key. Turn `BYPASS_AUTH` off again and the normal login is
+back, unchanged — the flag adds no users and changes nothing in the database.

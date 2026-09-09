@@ -142,6 +142,27 @@ Messages live in `messages/*.json`, compiled by paraglide-js into
 `src/paraglide/messages` (also mirrored under `src/lib/paraglide`). Don't
 hand-edit generated paraglide output.
 
+## Documentation (required)
+
+**Every user-facing feature or env var ships with its docs in the same change.**
+The guides live in `docs/*.md` at the repo root — `packages/docs` renders those
+exact files (`import.meta.glob` over `docs/*.md`), so there is nowhere else to
+write them.
+
+- New/changed env var → add it to the relevant table in `docs/env.md` **and**
+  the guide that explains the feature (`authentication.md`, `storage.md`,
+  `simple-mode.md`, …).
+- New behaviour with no env var → the guide it belongs to, or a new
+  `docs/<slug>.md` (then add the slug to `order` in
+  `packages/docs/src/lib/config.ts` so it lands in the nav).
+- Also regenerate `.example.env` (`bun run gen:env`) when you touch
+  `config.defaults.ts`.
+- `bun run lint:md` must pass: 80-column prose, aligned table pipes. Relative
+  links between guides (`simple-mode.md#anchor`) are rewritten by the docs site
+  — use them instead of absolute URLs.
+
+A feature that isn't in `docs/` isn't finished.
+
 ## Linting gotchas (Biome)
 
 - `noConsole` is an **error** in app code — use `Logger` from `$lib/logger`, not

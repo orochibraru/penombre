@@ -58,7 +58,7 @@
 	const tooltipCtx = getTooltipContext();
 
 	const formattedLabel = $derived.by(() => {
-		if (hideLabel || !tooltipCtx.payload?.length) {
+		if (hideLabel || !tooltipCtx.payload.length) {
 			return null;
 		}
 

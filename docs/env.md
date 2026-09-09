@@ -74,6 +74,14 @@ rotate it without invalidating all existing sessions.
 | `ENABLE_OAUTH_SIGNIN` | Enable OAuth sign-in               | `false`  |
 | `MIN_PASSWORD_LENGTH` | Minimum password length            | `8`      |
 
+`AUTH_AUTO_REDIRECT_PROVIDER` skips the sign-in screen and sends users straight
+to one OIDC provider. See
+[Skipping the sign-in screen](authentication.md#skipping-the-sign-in-screen).
+
+| Variable                      | Description                          | Default |
+| ----------------------------- | ------------------------------------ | ------- |
+| `AUTH_AUTO_REDIRECT_PROVIDER` | Provider name to redirect to on load | /       |
+
 ## OAuth Providers (Optional)
 
 Penombre supports any OIDC-compliant provider. Enable OAuth sign-in by setting
@@ -137,6 +145,11 @@ Turns Penombre into a bare shared file browser: one storage volume shared by
 every account instead of a drive per user. See [Simple mode](simple-mode.md) for
 the full guide.
 
-| Variable      | Description                         | Default |
-| ------------- | ----------------------------------- | ------- |
-| `SIMPLE_MODE` | Enable simple mode (`true`/`false`) | `false` |
+`BYPASS_AUTH` removes authentication entirely — see
+[No sign-in at all](simple-mode.md#no-sign-in-at-all) before enabling it. It is
+ignored unless `SIMPLE_MODE=true`.
+
+| Variable      | Description                            | Default |
+| ------------- | -------------------------------------- | ------- |
+| `SIMPLE_MODE` | Enable simple mode (`true`/`false`)    | `false` |
+| `BYPASS_AUTH` | Disable sign-in, everyone is the owner | `false` |

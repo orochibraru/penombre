@@ -190,7 +190,7 @@
 
 		const validFiles: File[] = [];
 
-		if (uploadFiles && uploadFiles.length > 0) {
+		if (uploadFiles.length > 0) {
 			for (let i = 0; i < uploadFiles.length; i++) {
 				const file = uploadFiles[i];
 

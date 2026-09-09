@@ -112,6 +112,38 @@ example, `OAUTH_POCKET_ID_*` becomes `pocket-id`, so the callback URL is:
 https://cloud.example.com/api/v1/auth/callback/pocket-id
 ```
 
+## Skipping the sign-in screen
+
+If OIDC is your only way in, the sign-in screen is one pointless click. Set
+`AUTH_AUTO_REDIRECT_PROVIDER` to a provider name and Penombre redirects to that
+provider as soon as someone lands on `/auth/sign-in` — the form is never
+rendered.
+
+```bash
+ENABLE_OAUTH_SIGNIN=true
+AUTH_AUTO_REDIRECT_PROVIDER=pocket-id
+
+OAUTH_POCKET_ID_CLIENT_ID=05a0dd79-...
+OAUTH_POCKET_ID_CLIENT_SECRET=U8QJvEK8...
+OAUTH_POCKET_ID_DISCOVERY_URL=https://auth.example.com/.well-known/openid-configuration
+```
+
+The value is the **provider name**, i.e. the lowercase, hyphenated version of
+`<PROVIDER>` — `OAUTH_POCKET_ID_*` becomes `pocket-id`, the same name used in
+the callback URL.
+
+| Variable                      | Description                     | Default |
+| ----------------------------- | ------------------------------- | ------- |
+| `AUTH_AUTO_REDIRECT_PROVIDER` | Provider to redirect to on load | /       |
+
+> **Escape hatch** — `/auth/sign-in?form` always renders the sign-in form, even
+> with auto-redirect on. Use it to sign in with email or a passkey when your
+> provider is down or misconfigured, so a broken IdP can't lock you out of your
+> own instance.
+
+Sign-out still works, but if your provider keeps its own session you may be
+signed straight back in. Log out of the provider too for a full sign-out.
+
 ## Passkeys
 
 Passkeys (WebAuthn/FIDO2) allow passwordless authentication using biometrics or
@@ -163,3 +195,10 @@ On first startup, if no users exist, Penombre creates an admin account using:
 In production, all authentication endpoints are rate-limited to **100 requests
 per 15 minutes per IP address**. This protects against brute-force attacks. Rate
 limiting is disabled in development mode.
+
+## No authentication at all
+
+[Simple mode](simple-mode.md) can run with authentication switched off entirely
+— `BYPASS_AUTH=true`, no sign-in screen, every visitor is the shared owner. Only
+do this behind your own auth proxy or on a trusted network. See
+[No sign-in at all](simple-mode.md#no-sign-in-at-all).
