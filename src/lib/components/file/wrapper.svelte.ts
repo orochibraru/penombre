@@ -261,6 +261,7 @@ export function createMainActions(handlers: {
 	onMove: (item: ObjectItem) => void;
 	onDuplicate: (item: ObjectItem) => void;
 	onStar: (item: ObjectItem) => void;
+	onShare: (item: ObjectItem) => void;
 	onMoveToTrash: (item: ObjectItem) => void;
 }): ItemActionGroup[] {
 	return [
@@ -281,8 +282,7 @@ export function createMainActions(handlers: {
 				{
 					title: "Share",
 					icon: ShareIcon,
-					action: () => [],
-					disabled: true,
+					action: handlers.onShare,
 				},
 			],
 		},

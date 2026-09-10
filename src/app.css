@@ -1,79 +1,144 @@
 @import "tailwindcss";
+/* Bundled, not fetched: a self-hosted instance should not call out to a font
+   CDN on every visitor's first paint. */
+@import "@fontsource-variable/jetbrains-mono";
 @import "tw-animate-css";
 
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	--radius: 0.625rem;
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.141 0.005 285.823);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.141 0.005 285.823);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.141 0.005 285.823);
-	--primary: oklch(53.706% 0.26452 294.163);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.967 0.001 286.375);
-	--secondary-foreground: oklch(0.21 0.006 285.885);
-	--muted: oklch(0.967 0.001 286.375);
-	--muted-foreground: oklch(0.552 0.016 285.938);
-	--accent: oklch(0.967 0.001 286.375);
-	--accent-foreground: oklch(0.21 0.006 285.885);
-	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.92 0.004 286.32);
-	--input: oklch(0.92 0.004 286.32);
-	--ring: oklch(0.705 0.015 286.067);
-	--chart-1: oklch(0.646 0.222 41.116);
-	--chart-2: oklch(0.6 0.118 184.704);
-	--chart-3: oklch(0.398 0.07 227.392);
-	--chart-4: oklch(0.828 0.189 84.429);
-	--chart-5: oklch(0.769 0.188 70.08);
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.141 0.005 285.823);
-	--sidebar-primary: oklch(0.21 0.006 285.885);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.967 0.001 286.375);
-	--sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-	--sidebar-border: oklch(0.92 0.004 286.32);
-	--sidebar-ring: oklch(0.705 0.015 286.067);
+	/* Boxy on purpose: square corners, visible borders, monospace type. */
+	--radius: 0.125rem;
+
+	/* The solid colour behind everything; the aurora is painted over it. */
+	--surface-base: oklch(0.985 0.004 285);
+
+	/* Brand ramp. `primary` stays the single source for solid accents;
+	   the other two only feed gradients and the aurora. */
+	--primary: oklch(0.54 0.25 293);
+	--primary-foreground: oklch(0.99 0 0);
+	--brand-2: oklch(0.66 0.2 330);
+	--brand-3: oklch(0.7 0.14 225);
+	--gradient-brand: linear-gradient(
+		135deg,
+		oklch(0.6 0.245 288),
+		oklch(0.55 0.25 300) 55%,
+		oklch(0.6 0.2 325)
+	);
+
+	/* Panels are translucent so the aurora washes through them. */
+	--background: oklch(1 0 0 / 0.55);
+	--foreground: oklch(0.19 0.02 285);
+	--card: oklch(1 0 0 / 0.55);
+	--card-foreground: oklch(0.19 0.02 285);
+	--popover: oklch(0.995 0.002 285 / 0.94);
+	--popover-foreground: oklch(0.19 0.02 285);
+	--secondary: oklch(0.62 0.05 290 / 0.1);
+	--secondary-foreground: oklch(0.28 0.03 285);
+	--muted: oklch(0.62 0.05 290 / 0.1);
+	--muted-foreground: oklch(0.5 0.03 286);
+	--accent: oklch(0.6 0.12 293 / 0.12);
+	--accent-foreground: oklch(0.35 0.12 293);
+	--destructive: oklch(0.6 0.235 22);
+	--border: oklch(0.45 0.05 290 / 0.28);
+	--input: oklch(0.45 0.05 290 / 0.32);
+	--ring: oklch(0.54 0.25 293 / 0.55);
+
+	/* Charts follow the brand ramp instead of the stock rainbow. */
+	--chart-1: oklch(0.6 0.245 288);
+	--chart-2: oklch(0.66 0.2 330);
+	--chart-3: oklch(0.7 0.14 225);
+	--chart-4: oklch(0.72 0.17 155);
+	--chart-5: oklch(0.76 0.16 65);
+
+	--sidebar: transparent;
+	--sidebar-foreground: oklch(0.19 0.02 285);
+	--sidebar-primary: oklch(0.54 0.25 293);
+	--sidebar-primary-foreground: oklch(0.99 0 0);
+	--sidebar-accent: oklch(1 0 0 / 0.78);
+	--sidebar-accent-foreground: oklch(0.33 0.14 293);
+	--sidebar-border: oklch(0.45 0.05 290 / 0.24);
+	--sidebar-ring: oklch(0.54 0.25 293 / 0.5);
+
+	/* Shadows carry a little brand colour rather than neutral grey. */
+	--shadow-color: 293 40%;
+	--glass-blur: 16px;
 }
 
 .dark {
-	--background: oklch(0.141 0.005 285.823);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.21 0.006 285.885);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.21 0.006 285.885);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(53.706% 0.26452 294.163);
-	--primary-foreground: oklch(100% 0.00011 271.152);
-	--secondary: oklch(0.274 0.006 286.033);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.274 0.006 286.033);
-	--muted-foreground: oklch(0.705 0.015 286.067);
-	--accent: oklch(0.274 0.006 286.033);
-	--accent-foreground: oklch(0.985 0 0);
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.552 0.016 285.938);
-	--chart-1: oklch(0.488 0.243 264.376);
-	--chart-2: oklch(0.696 0.17 162.48);
-	--chart-3: oklch(0.769 0.188 70.08);
-	--chart-4: oklch(0.627 0.265 303.9);
-	--chart-5: oklch(0.645 0.246 16.439);
-	--sidebar: oklch(0.21 0.006 285.885);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(60.488% 0.19949 267.279);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(60.488% 0.19949 267.279 / 0.038);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.552 0.016 285.938);
+	--surface-base: oklch(0.155 0.018 288);
+
+	--primary: oklch(0.74 0.19 295);
+	--primary-foreground: oklch(0.99 0 0);
+	--brand-2: oklch(0.7 0.19 330);
+	--brand-3: oklch(0.74 0.13 225);
+	--gradient-brand: linear-gradient(
+		135deg,
+		oklch(0.62 0.24 290),
+		oklch(0.58 0.25 302) 55%,
+		oklch(0.64 0.2 328)
+	);
+
+	--background: oklch(0.22 0.02 288 / 0.5);
+	--foreground: oklch(0.97 0.005 285);
+	--card: oklch(0.245 0.022 288 / 0.5);
+	--card-foreground: oklch(0.97 0.005 285);
+	--popover: oklch(0.22 0.02 288 / 0.95);
+	--popover-foreground: oklch(0.97 0.005 285);
+	--secondary: oklch(0.8 0.05 290 / 0.12);
+	--secondary-foreground: oklch(0.97 0.005 285);
+	--muted: oklch(0.8 0.05 290 / 0.1);
+	--muted-foreground: oklch(0.72 0.03 287);
+	--accent: oklch(0.7 0.15 295 / 0.18);
+	--accent-foreground: oklch(0.92 0.05 295);
+	--destructive: oklch(0.7 0.19 22);
+	--border: oklch(0.85 0.05 290 / 0.22);
+	--input: oklch(0.85 0.05 290 / 0.26);
+	--ring: oklch(0.65 0.235 295 / 0.6);
+
+	--chart-1: oklch(0.66 0.235 292);
+	--chart-2: oklch(0.72 0.19 330);
+	--chart-3: oklch(0.76 0.13 225);
+	--chart-4: oklch(0.76 0.16 155);
+	--chart-5: oklch(0.8 0.15 65);
+
+	--sidebar: transparent;
+	--sidebar-foreground: oklch(0.97 0.005 285);
+	--sidebar-primary: oklch(0.68 0.22 295);
+	--sidebar-primary-foreground: oklch(0.99 0 0);
+	--sidebar-accent: oklch(1 0 0 / 0.09);
+	--sidebar-accent-foreground: oklch(0.95 0.04 295);
+	--sidebar-border: oklch(0.85 0.05 290 / 0.2);
+	--sidebar-ring: oklch(0.65 0.235 295 / 0.55);
+
+	--shadow-color: 290 60%;
 }
 
 @theme inline {
+	/* One step down from stock. Monospace sets wider than a sans at the same
+	   px, so the default ramp reads oversized here. */
+	--text-xs: 0.6875rem;
+	--text-xs--line-height: 1.45;
+	--text-sm: 0.78125rem;
+	--text-sm--line-height: 1.5;
+	--text-base: 0.875rem;
+	--text-base--line-height: 1.55;
+	--text-lg: 0.9375rem;
+	--text-lg--line-height: 1.5;
+	--text-xl: 1.0625rem;
+	--text-xl--line-height: 1.45;
+	--text-2xl: 1.25rem;
+	--text-2xl--line-height: 1.35;
+	--text-3xl: 1.5rem;
+	--text-3xl--line-height: 1.3;
+
+	--font-sans:
+		"JetBrains Mono Variable", ui-monospace, "SFMono-Regular", "Menlo",
+		monospace;
+	--font-mono:
+		"JetBrains Mono Variable", ui-monospace, "SFMono-Regular", "Menlo",
+		monospace;
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
@@ -109,14 +174,68 @@
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
+	--color-brand-2: var(--brand-2);
+	--color-brand-3: var(--brand-3);
+	--color-surface-base: var(--surface-base);
 }
 
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
 	}
+
+	/*
+	 * The solid ground sits on <html> so the aurora can live on a fixed
+	 * pseudo-element behind <body>, and every panel above it can be
+	 * translucent without stacking washes on top of each other.
+	 */
+	html {
+		background-color: var(--surface-base);
+	}
+
 	body {
-		@apply bg-background text-foreground;
+		@apply text-foreground;
+		background-color: transparent;
+	}
+
+	/*
+	 * The aurora: a few oversized, heavily blurred colour fields. Fixed, so
+	 * it stays put while content scrolls, and `-z-10` keeps it under
+	 * everything without needing a stacking context on the app shell.
+	 */
+	body::before {
+		content: "";
+		position: fixed;
+		inset: -12vmax;
+		z-index: -10;
+		pointer-events: none;
+		background:
+			radial-gradient(
+				40vmax 34vmax at 8% 4%,
+				color-mix(in oklab, var(--primary) 85%, transparent),
+				transparent 70%
+			),
+			radial-gradient(
+				38vmax 32vmax at 92% 6%,
+				color-mix(in oklab, var(--brand-2) 80%, transparent),
+				transparent 70%
+			),
+			radial-gradient(
+				42vmax 36vmax at 84% 92%,
+				color-mix(in oklab, var(--brand-3) 78%, transparent),
+				transparent 70%
+			),
+			radial-gradient(
+				34vmax 30vmax at 14% 96%,
+				color-mix(in oklab, var(--brand-2) 62%, transparent),
+				transparent 70%
+			);
+		filter: blur(72px) saturate(140%);
+		opacity: 0.85;
+	}
+
+	.dark body::before {
+		opacity: 0.6;
 	}
 
 	button:not(:disabled) {
@@ -136,4 +255,162 @@
 			width: calc(100% - (var(--sidebar-width) + 2rem));
 		}
 	}
+}
+
+/*
+ * Theme surfaces, unlayered on purpose.
+ *
+ * Tailwind utilities live in `@layer utilities`, which outranks `@layer base`
+ * — `bg-sidebar` and `shadow-sm` on the components would win there. Unlayered
+ * rules beat every layer, so these are the ones that actually land.
+ */
+/*
+ * A whisper of film grain over everything. Breaks up the flat gradient
+ * banding the aurora would otherwise show, and gives the glass a little
+ * texture. Kept at 3% so type stays crisp.
+ */
+body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	pointer-events: none;
+	opacity: 0.035;
+	mix-blend-mode: soft-light;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.dark body::after {
+	opacity: 0.05;
+}
+
+/*
+ * The active row is carried by its fill and a border — no edge marker.
+ * The fill stays light: the label is brand-coloured (pink/teal/orange on the
+ * category rows), so a heavier wash drops those under 4.5:1 on their own pill.
+ */
+[data-slot="sidebar-menu-button"][data-active="true"] {
+	border: 1px solid var(--sidebar-border);
+}
+
+/*
+ * Frosted panels. Applied by `data-slot`, which every shadcn primitive
+ * already emits, so the glass lands everywhere without editing each
+ * component. Kept to the big surfaces — backdrop-filter is expensive.
+ *
+ * Deliberately NOT on the sidebar: with nothing but the aurora behind it, the
+ * `saturate()` only deepened those colours inside the sidebar's box, which
+ * read as a panel sitting on top of the gradient.
+ *
+ * Deliberately NOT on `sidebar-inset`: backdrop-filter makes an element a
+ * containing block for `position: fixed` descendants, and the nested
+ * admin/settings sidebars are fixed — blurring the inset tears them off
+ * the viewport. It is translucent anyway, and only the aurora sits behind
+ * it, so there is nothing there to blur.
+ */
+[data-slot="card"],
+[data-slot="popover-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="select-content"] {
+	backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+}
+
+/*
+ * The content area ships as a floating rounded card (margin + radius +
+ * shadow). That card's edge is what cut a visible rectangle out of the
+ * aurora, so it becomes a plain full-bleed region divided by a border.
+ */
+[data-slot="sidebar-inset"] {
+	margin: 0;
+	border-radius: 0;
+	border-left: 1px solid var(--border);
+	box-shadow: none;
+	background-color: transparent;
+	isolation: isolate;
+}
+
+/*
+ * The content panel's glass lives on a pseudo-element rather than the element
+ * itself: `backdrop-filter` makes an element a containing block for
+ * `position: fixed` descendants, and the nested admin/settings sidebars are
+ * fixed — filtering the inset directly tears them off the viewport. A pseudo
+ * has no element descendants, so it carries the frost harmlessly.
+ */
+[data-slot="sidebar-inset"]::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background-color: var(--background);
+	backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+}
+
+/*
+ * The admin/settings/account sections render their own sidebar stacked on top
+ * of the app one — it replaces it rather than veiling it. Blanking the one
+ * underneath lets the nested sidebar stay transparent, so the aurora runs
+ * edge to edge instead of a panel being cut out of it.
+ */
+[data-slot="sidebar-wrapper"]:has(
+		[data-slot="sidebar-inset"] [data-slot="sidebar-inner"]
+	)
+	> div:first-child
+	[data-slot="sidebar-inner"] {
+	visibility: hidden;
+}
+
+/* Soft, brand-tinted depth instead of flat neutral drop shadows. */
+[data-slot="card"] {
+	box-shadow:
+		0 1px 2px oklch(0.2 0.04 var(--shadow-color) / 0.04),
+		0 8px 24px -12px oklch(0.35 0.12 var(--shadow-color) / 0.18);
+}
+
+/*
+ * Dialogs sit above a dimmed overlay, so a translucent panel just samples the
+ * dimming and turns grey. They get a near-opaque surface instead, and the
+ * blur moves to the overlay — which is where softening the page behind
+ * actually reads as depth.
+ */
+[data-slot="dialog-content"],
+[data-slot="drawer-content"] {
+	background-color: color-mix(in oklab, var(--surface-base) 94%, transparent);
+	background-image: linear-gradient(
+		150deg,
+		color-mix(in oklab, var(--primary) 7%, transparent),
+		transparent 55%,
+		color-mix(in oklab, var(--brand-2) 6%, transparent)
+	);
+	backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+}
+
+[data-slot="dialog-overlay"],
+[data-slot="drawer-overlay"] {
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+}
+
+[data-slot="dialog-content"],
+[data-slot="drawer-content"] {
+	box-shadow:
+		0 2px 8px oklch(0.2 0.04 var(--shadow-color) / 0.08),
+		0 24px 60px -20px oklch(0.35 0.14 var(--shadow-color) / 0.35);
+}
+
+/*
+ * Solid accents become the brand gradient. `background-image` layers over
+ * the `bg-primary` colour, so anything that reads `--primary` for text or
+ * borders is untouched.
+ */
+[data-slot="button"].bg-primary,
+[data-slot="badge"].bg-primary {
+	background-image: var(--gradient-brand);
+}
+
+[data-slot="button"].bg-primary:hover:not(:disabled) {
+	box-shadow: 0 6px 20px -6px oklch(0.55 0.22 var(--shadow-color) / 0.5);
 }

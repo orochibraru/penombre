@@ -60,7 +60,7 @@
 		if (isImage || isVideo || isPdf || isAudio) {
 			thumbnailUrl = getObjectUrl({
 				thumbnail: true,
-				size: 300,
+				size: "large",
 				itemPath: item.key,
 				baseUrl: page.url,
 			});
@@ -69,7 +69,7 @@
 	});
 </script>
 
-<div class="flex w-full items-center justify-between">
+<div class="flex h-full w-full items-center justify-center [&>img]:h-full [&>img]:w-full">
     {#if isPdf}
         {#if thumbnailError}
             <!-- Fallback to embed if thumbnail fails -->
@@ -84,60 +84,58 @@
             <img
                 src={thumbnailUrl}
                 alt={item.metadata.name ?? item.key}
-                class="mx-auto max-h-50 min-w-50 rounded-xl w-full object-cover"
+                class="h-full w-full object-cover"
                 loading="lazy"
                 onerror={() => (thumbnailError = true)}
             />
         {/if}
     {:else if isArchive}
-        <FileArchiveIcon class="mx-auto h-20 w-20 text-muted-foreground" />
+        <FileArchiveIcon class="size-10 text-muted-foreground" />
     {:else if isDocument}
         <DocumentIcon
             type={getFileIconType(item.metadata.contentType)}
-            class="mx-auto h-20 w-20"
+            class="size-10 text-muted-foreground"
         />
     {:else if isCodeItem(item.metadata.name ?? item.key)}
-        <FileCodeIcon class="mx-auto h-20 w-20 text-muted-foreground" />
+        <FileCodeIcon class="size-10 text-muted-foreground" />
     {:else if isVideo}
         {#if thumbnailError}
             <FileVideoCameraIcon
-                class="mx-auto h-20 w-20 text-muted-foreground"
+                class="size-10 text-muted-foreground"
             />
         {:else}
             <img
                 src={thumbnailUrl}
                 alt={item.metadata.name ?? item.key}
-                class="mx-auto max-h-50 min-w-50 rounded-xl w-full object-cover"
+                class="h-full w-full object-cover"
                 loading="lazy"
                 onerror={() => (thumbnailError = true)}
             />
         {/if}
     {:else if isAudio}
         {#if thumbnailError}
-            <FileAudioIcon class="mx-auto h-20 w-20 text-muted-foreground" />
+            <FileAudioIcon class="size-10 text-muted-foreground" />
         {:else}
-            <div class="w-full px-2 py-4 flex items-center justify-center">
-                <img
-                    src={thumbnailUrl}
-                    alt="Waveform for {item.metadata.name ?? item.key}"
-                    class="w-full h-auto rounded-lg bg-muted"
-                    loading="lazy"
-                    onerror={() => (thumbnailError = true)}
-                />
-            </div>
+            <img
+                src={thumbnailUrl}
+                alt="Waveform for {item.metadata.name ?? item.key}"
+                class="h-full w-full object-contain px-2"
+                loading="lazy"
+                onerror={() => (thumbnailError = true)}
+            />
         {/if}
     {:else if isImage}
         <img
             src={thumbnailUrl}
             alt={item.metadata.name ?? item.key}
-            class="mx-auto max-h-50 min-w-50 rounded-xl w-full object-cover"
+            class="h-full w-full object-cover"
             loading="lazy"
         />
     {:else}
         <img
             src={objectUrl}
             alt={item.metadata.name ?? item.key}
-            class="mx-auto max-h-50 min-w-50 rounded-xl w-full object-cover"
+            class="h-full w-full object-cover"
         />
     {/if}
 </div>

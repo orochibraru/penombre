@@ -93,6 +93,7 @@ export const userRelations = relations(user, ({ one, many }) => ({
 	accounts: many(account),
 	activities: many(activity),
 	ownedSharings: many(sharings),
+	shares: many(shares),
 	sharedWithMe: many(sharedWith),
 	preferences: one(userPreferences),
 	passkeys: many(passkey),
@@ -210,6 +211,54 @@ export const sharedWithRelations = relations(sharedWith, ({ one }) => ({
 	}),
 	user: one(user, {
 		fields: [sharedWith.userId],
+		references: [user.id],
+	}),
+}));
+
+// =========================================================================
+// SHARE LINKS
+// =========================================================================
+
+/**
+ * A shareable link to one file or folder. Distinct from `sharings`, which
+ * grants named users access — a share link is anonymous, addressed only by
+ * its unguessable `token`.
+ */
+export const shares = pgTable(
+	"shares",
+	{
+		id: text("id").primaryKey(),
+		/** Unguessable public identifier — the whole URL secret. */
+		token: text("token").notNull().unique(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		resourceType: text("resource_type", {
+			enum: ["file", "folder"],
+		}).notNull(),
+		resourceId: text("resource_id").notNull(),
+		/** Display name captured at share time, so revoked/renamed items still list. */
+		resourceName: text("resource_name").notNull(),
+		/** Scrypt hash from better-auth's hasher; null means no password. */
+		passwordHash: text("password_hash"),
+		/** When true, only signed-in users may open the link. */
+		requiresAuth: boolean("requires_auth").default(false).notNull(),
+		/** Null means the link never expires. */
+		expiresAt: timestamp("expires_at"),
+		downloadCount: integer("download_count").default(0).notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("shares_ownerId_idx").on(table.ownerId),
+		index("shares_token_idx").on(table.token),
+	],
+);
+
+export const sharesRelations = relations(shares, ({ one }) => ({
+	owner: one(user, {
+		fields: [shares.ownerId],
 		references: [user.id],
 	}),
 }));
@@ -428,6 +477,7 @@ export type Account = typeof account.$inferSelect;
 export type Verification = typeof verification.$inferSelect;
 export type Activity = typeof activity.$inferSelect;
 export type Sharing = typeof sharings.$inferSelect;
+export type Share = typeof shares.$inferSelect;
 export type SharedWith = typeof sharedWith.$inferSelect;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type Apikey = typeof apikey.$inferSelect;

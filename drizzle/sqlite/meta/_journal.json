@@ -1,13 +1,20 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1788945997640,
-			"tag": "0000_mighty_retro_girl",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788945997640,
+      "tag": "0000_mighty_retro_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789045651073,
+      "tag": "0001_good_red_wolf",
+      "breakpoints": true
+    }
+  ]
 }

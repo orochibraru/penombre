@@ -1,5 +1,5 @@
 import type { Mock } from "bun:test";
-import { beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { auth } from "$lib/server/auth";
 import { getConfig, isAuthBypassed } from "$lib/server/config";
 
@@ -12,6 +12,26 @@ const mockSignInSocial = auth.api.signInSocial as Mock<
 const { load } = await import("./+page.server");
 
 const authConfig = { enableEmailSignIn: true, enableOAuthSignIn: false };
+
+/**
+ * The config mock is module-level and shared across test files, so a value
+ * set here with `mockReturnValue` would reconfigure every suite that runs
+ * after this one. Restore test.setup's default when the file is done.
+ */
+const defaultConfig = {
+	smtp: undefined,
+	appName: "Penombre",
+	origin: "http://localhost:5173",
+	auth: {
+		secret: "test-secret",
+		enableEmailSignIn: true,
+		minPasswordLength: 8,
+	},
+};
+
+afterAll(() => {
+	mockGetConfig.mockReturnValue(defaultConfig as never);
+});
 
 function event(search = "") {
 	const url = new URL(`http://localhost/auth/sign-in${search}`);

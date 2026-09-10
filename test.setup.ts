@@ -40,6 +40,12 @@ mock.module("$lib/server/auth", () => ({
 			listPasskeys: mock(() => Promise.resolve([])),
 			createApiKey: mock(() => Promise.resolve({ key: "mock-key" })),
 			changePassword: mock(() => Promise.resolve({})),
+			setPassword: mock(() => Promise.resolve({ status: true })),
+			listUserAccounts: mock(() => Promise.resolve([])),
+			setRole: mock(() => Promise.resolve({})),
+			banUser: mock(() => Promise.resolve({})),
+			unbanUser: mock(() => Promise.resolve({})),
+			removeUser: mock(() => Promise.resolve({})),
 			listSessions: mock(() => Promise.resolve([])),
 			listUsers: mock(() => Promise.resolve({ users: [] })),
 		},
@@ -49,6 +55,13 @@ mock.module("$lib/server/auth", () => ({
 mock.module("$lib/server/config", () => ({
 	getConfig: mock(() => ({
 		smtp: undefined,
+		appName: "Penombre",
+		origin: "http://localhost:5173",
+		auth: {
+			secret: "test-secret",
+			enableEmailSignIn: true,
+			minPasswordLength: 8,
+		},
 	})),
 	getStoragePath: mock(() => "/tmp/penombre-test-storage"),
 	isSimpleMode: mock(() => false),
@@ -67,6 +80,7 @@ mock.module("$lib/logger", () => ({
 mock.module("$lib/server/services/storage", () => ({
 	StorageService: {
 		getAvailableStorageSize: mock(() => 1_073_741_824),
+		getAdminStoragePath: mock(() => "/tmp/penombre-test-storage"),
 	},
 }));
 

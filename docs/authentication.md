@@ -144,6 +144,21 @@ the callback URL.
 Sign-out still works, but if your provider keeps its own session you may be
 signed straight back in. Log out of the provider too for a full sign-out.
 
+## Adding a password to an OAuth account
+
+An account created through an OAuth provider has no password of its own. When
+`ENABLE_EMAIL_SIGNIN` is also on, **Account → Security** offers **Set a
+password** for such accounts, so the same person can sign in either way — handy
+when the identity provider is down or unreachable.
+
+The form only appears while the account genuinely has no password; once one is
+set it becomes the ordinary **Change password** flow, which asks for the current
+password first. Setting a password never detaches the OAuth provider — both
+sign-in methods keep working.
+
+If `ENABLE_EMAIL_SIGNIN` is `false`, the whole section is hidden and the
+underlying action refuses: there would be no form to use the password on.
+
 ## Passkeys
 
 Passkeys (WebAuthn/FIDO2) allow passwordless authentication using biometrics or

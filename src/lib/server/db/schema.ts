@@ -40,6 +40,9 @@ export const sharings = (
 export const sharedWith = (
 	sqliteActive ? sqlite.sharedWith : pg.sharedWith
 ) as typeof pg.sharedWith;
+export const shares = (
+	sqliteActive ? sqlite.shares : pg.shares
+) as typeof pg.shares;
 export const userPreferences = (
 	sqliteActive ? sqlite.userPreferences : pg.userPreferences
 ) as typeof pg.userPreferences;
@@ -68,6 +71,7 @@ export type Verification = typeof pg.verification.$inferSelect;
 export type Activity = typeof pg.activity.$inferSelect;
 export type Sharing = typeof pg.sharings.$inferSelect;
 export type SharedWith = typeof pg.sharedWith.$inferSelect;
+export type Share = typeof pg.shares.$inferSelect;
 export type UserPreferences = typeof pg.userPreferences.$inferSelect;
 export type Apikey = typeof pg.apikey.$inferSelect;
 export type Passkey = typeof pg.passkey.$inferSelect;

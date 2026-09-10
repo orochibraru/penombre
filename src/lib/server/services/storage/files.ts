@@ -461,6 +461,13 @@ export class FileOperations {
 				.update(files)
 				.set(updates)
 				.where(and(eq(files.id, id), eq(files.ownerId, this.ctx.user.id)));
+
+			// Build the preview now rather than on first view. Not awaited:
+			// an ffmpeg pass over a large media file would otherwise hold the
+			// upload response open for seconds.
+			this.thumbnails.warm(key, file.contentType).catch(() => {
+				// `warm` already logs; nothing further to do here.
+			});
 		} catch (error) {
 			logger.error("Error uploading file body:", error);
 			await this.ctx.activityService.register({

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+		ActivityIcon,
 		ArrowLeftIcon,
 		CogIcon,
 		ComputerIcon,
@@ -29,6 +30,11 @@
 			title: m.admin_nav_storage(),
 			url: "/admin/storage",
 			icon: HardDriveIcon,
+		},
+		{
+			title: m.admin_nav_activity(),
+			url: "/admin/activity",
+			icon: ActivityIcon,
 		},
 	];
 

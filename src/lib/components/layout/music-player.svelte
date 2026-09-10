@@ -91,9 +91,34 @@
 			});
 		}
 	}
+
+	// Publish this panel's height so other bottom drawers can stack above it.
+	// Measured rather than hard-coded: the player grows when a long title
+	// wraps, and a guessed constant would either overlap or leave a gap.
+	let panel: HTMLElement | null = $state(null);
+
+	$effect(() => {
+		const root = document.documentElement;
+		if (!panel) {
+			root.style.removeProperty("--player-height");
+			return;
+		}
+		const observer = new ResizeObserver(([entry]) => {
+			root.style.setProperty(
+				"--player-height",
+				`${entry?.target.getBoundingClientRect().height ?? 0}px`,
+			);
+		});
+		observer.observe(panel);
+		return () => {
+			observer.disconnect();
+			root.style.removeProperty("--player-height");
+		};
+	});
 </script>
 
 <BottomAction
+    bind:ref={panel}
     open={$playableMusic !== null}
     title={$playableMusic?.title ?? ""}
     callback={() => clearCurrent()}

@@ -18,9 +18,11 @@
 	import FileGrid from "$lib/components/file/grid.svelte";
 	import FileList from "$lib/components/file/list.svelte";
 	import FileTable from "$lib/components/file/table.svelte";
+	import BottomAction from "$lib/components/layout/bottom-action.svelte";
 	import DeleteDialog from "$lib/components/layout/dialogs/delete-dialog.svelte";
 	import MoveDialog from "$lib/components/layout/dialogs/move-dialog.svelte";
 	import RestoreDialog from "$lib/components/layout/dialogs/restore-dialog.svelte";
+	import ShareDialog from "$lib/components/layout/dialogs/share-dialog.svelte";
 	import VideoPlayer from "$lib/components/layout/video-player.svelte";
 	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
 	import { Badge } from "$lib/components/ui/badge/index";
@@ -101,6 +103,8 @@
 	let confirmDeleteOpen: boolean = $state(false);
 	let confirmRestoreOpen: boolean = $state(false);
 	let moveDialogOpen: boolean = $state(false);
+	let shareDialogOpen: boolean = $state(false);
+	let shareItem: ObjectItem | null = $state(null);
 	let restoringItem: boolean = $state(false);
 	let deletingItem: boolean = $state(false);
 	let movingItem: boolean = $state(false);
@@ -391,6 +395,11 @@
 				toast.error(m.toast_star_error());
 			}
 		},
+		onShare: (item) => {
+			shareItem = item;
+			shareDialogOpen = true;
+			actionsContextOpen = false;
+		},
 		onMoveToTrash: (item) => {
 			prepareForSingleItemAction(item);
 			handleDeleteObject();
@@ -615,46 +624,16 @@
 
 <!-- Filters -->
 
-{#if multiObjectActionsOpen}
-    <Input
-        bind:value={searchValue}
-        type="search"
-        disabled
-        placeholder={m.search_placeholder()}
-        class="md:hidden mb-3"
-        onkeyup={() => {
-            debounce();
-        }}
-    />
-    <div class="ml-auto max-w-xl">
-        <div class="flex items-center gap-2 pb-5">
-            {#each multipleItemsActions as action}
-                {@const Icon = action.icon}
-                <div class="w-full">
-                    <Button
-                        type="button"
-                        variant={action.variant}
-                        onclick={() => action.action()}
-                        class="w-full text-xs"
-                    >
-                        <Icon class="h-5 w-4" />
-                        {action.title}
-                    </Button>
-                </div>
-            {/each}
-        </div>
-    </div>
-{:else}
-    <Input
-        bind:value={searchValue}
-        type="search"
-        placeholder={m.search_placeholder()}
-        class="md:hidden mb-3"
-        onkeyup={() => {
-            debounce();
-        }}
-    />
-    <div class="w-full pb-5 flex justify-between items-center gap-3">
+<Input
+    bind:value={searchValue}
+    type="search"
+    placeholder={m.search_placeholder()}
+    class="md:hidden mb-3"
+    onkeyup={() => {
+        debounce();
+    }}
+/>
+<div class="w-full pb-5 flex justify-between items-center gap-3">
         <Input
             bind:ref={searchInputRef}
             bind:value={searchValue}
@@ -806,7 +785,6 @@
             {/if}
         </ButtonGroup.Root>
     </div>
-{/if}
 
 <!-- Table -->
 {#if layout === "list"}
@@ -963,6 +941,37 @@
     {checkedItems}
     {handleRestoreObject}
 />
+
+<!--
+  Selection actions live in a floating drawer rather than replacing the search
+  and filter controls, so those stay usable while items are picked. When a
+  track is playing it stacks above the music player — `--player-height` is
+  published by that component, and defaults to 0 when nothing is open.
+-->
+<BottomAction
+    open={multiObjectActionsOpen}
+    title={m.selected_count({ count: String(Object.keys(checkedItems).length) })}
+    callback={() => (checkedItems = {})}
+    class="bottom-[calc(5rem+var(--player-height,0px))] lg:bottom-[calc(1.25rem+var(--player-height,0px))]"
+>
+    <div class="flex items-center gap-2">
+        {#each multipleItemsActions as action (action.title)}
+            {@const Icon = action.icon}
+            <Button
+                type="button"
+                size="sm"
+                variant={action.variant}
+                onclick={() => action.action()}
+                class="text-xs"
+            >
+                <Icon class="size-4" />
+                {action.title}
+            </Button>
+        {/each}
+    </div>
+</BottomAction>
+
+<ShareDialog bind:open={shareDialogOpen} bind:item={shareItem} />
 
 <MoveDialog
     bind:open={moveDialogOpen}

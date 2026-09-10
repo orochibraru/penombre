@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { invalidateAll } from "$app/navigation";
+	import { refreshAll } from "$app/navigation";
 	import { authClient } from "$lib/auth-client";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as m from "$lib/paraglide/messages.js";
@@ -22,7 +22,7 @@
 			throw new Error(error.message || "Failed to revoke session");
 		}
 
-		await invalidateAll();
+		await refreshAll();
 	}
 
 	function handleRevokeSession(sessionToken: string) {

@@ -10,8 +10,14 @@ import { Logger } from "$lib/logger";
 
 const logger = new Logger("DiskSpace");
 
-/** Available bytes via fs.statfsSync, or undefined when unsupported */
-function fromStatfs(path: string): number | undefined {
+/** Total and available bytes for the filesystem holding a path. */
+export interface DiskSpace {
+	total: number;
+	available: number;
+}
+
+/** Disk space via fs.statfsSync, or undefined when unsupported */
+function fromStatfs(path: string): DiskSpace | undefined {
 	try {
 		// biome-ignore lint/suspicious/noExplicitAny: statfsSync types are complex
 		const anyFs = fs as unknown as { statfsSync?: (p: string) => any };
@@ -21,8 +27,12 @@ function fromStatfs(path: string): number | undefined {
 		const sfs = anyFs.statfsSync(path);
 		const blockSize = Number(sfs?.bsize ?? sfs?.frsize ?? 4096);
 		const availBlocks = Number(sfs?.bavail ?? sfs?.bfree ?? 0);
+		const totalBlocks = Number(sfs?.blocks ?? 0);
 		if (Number.isFinite(blockSize) && Number.isFinite(availBlocks)) {
-			return blockSize * availBlocks;
+			return {
+				total: Number.isFinite(totalBlocks) ? blockSize * totalBlocks : 0,
+				available: blockSize * availBlocks,
+			};
 		}
 	} catch (err) {
 		logger.warn("statfsSync unavailable or failed:", err);
@@ -42,8 +52,8 @@ function findAvailableColumn(headers: string[], values: string[]): number {
 	return values.length >= 4 ? values.length - 2 : -1;
 }
 
-/** Available bytes by shelling out to `df -k`, or undefined when it fails */
-function fromDf(path: string): number | undefined {
+/** Disk space by shelling out to `df -k`, or undefined when it fails */
+function fromDf(path: string): DiskSpace | undefined {
 	try {
 		const proc = Bun.spawnSync(["df", "-k", path]);
 		const output = new TextDecoder().decode(proc.stdout || new Uint8Array());
@@ -56,14 +66,19 @@ function fromDf(path: string): number | undefined {
 		}
 
 		const values = valueLine.trim().split(/\s+/);
-		const availIdx = findAvailableColumn(
-			headerLine.trim().split(/\s+/),
-			values,
-		);
+		const headers = headerLine.trim().split(/\s+/);
+		const availIdx = findAvailableColumn(headers, values);
 		const availStr = values[availIdx];
 		const availKiB = availStr ? Number.parseInt(availStr, 10) : Number.NaN;
 		if (Number.isFinite(availKiB)) {
-			return availKiB * 1024;
+			// The size column sits two left of "Available" in every df layout
+			// we handle; a miss just means an unknown total, not a failure.
+			const totalStr = values[availIdx - 2];
+			const totalKiB = totalStr ? Number.parseInt(totalStr, 10) : Number.NaN;
+			return {
+				total: Number.isFinite(totalKiB) ? totalKiB * 1024 : 0,
+				available: availKiB * 1024,
+			};
 		}
 		logger.warn("Failed to parse df output:", output);
 	} catch (err) {
@@ -71,7 +86,12 @@ function fromDf(path: string): number | undefined {
 	}
 }
 
+/** Total and available bytes at `path`, each 0 when undeterminable */
+export function diskSpace(path: string): DiskSpace {
+	return fromStatfs(path) ?? fromDf(path) ?? { total: 0, available: 0 };
+}
+
 /** Available bytes at `path`, or 0 when it cannot be determined */
 export function availableDiskSpace(path: string): number {
-	return fromStatfs(path) ?? fromDf(path) ?? 0;
+	return diskSpace(path).available;
 }

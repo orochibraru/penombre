@@ -11957,6 +11957,723 @@
 				]
 			}
 		},
+		"/api/v1/shares": {
+			"get": {
+				"description": "Returns every share link owned by the current user",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"createdAt": {
+														"format": "date-time",
+														"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+														"type": "string"
+													},
+													"downloadCount": {
+														"type": "number"
+													},
+													"expiresAt": {
+														"anyOf": [
+															{
+																"format": "date-time",
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																"type": "string"
+															},
+															{
+																"type": "null"
+															}
+														]
+													},
+													"hasPassword": {
+														"type": "boolean"
+													},
+													"id": {
+														"type": "string"
+													},
+													"requiresAuth": {
+														"type": "boolean"
+													},
+													"resourceId": {
+														"type": "string"
+													},
+													"resourceName": {
+														"type": "string"
+													},
+													"resourceType": {
+														"enum": [
+															"file",
+															"folder"
+														],
+														"type": "string"
+													},
+													"token": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"token",
+													"resourceType",
+													"resourceId",
+													"resourceName",
+													"hasPassword",
+													"requiresAuth",
+													"expiresAt",
+													"downloadCount",
+													"createdAt"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List share links",
+				"tags": [
+					"Shares"
+				]
+			},
+			"post": {
+				"description": "Creates a token-addressed link to a file or folder the caller owns",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"expiresInDays": {
+										"maximum": 3650,
+										"minimum": 0,
+										"type": "integer"
+									},
+									"password": {
+										"minLength": 1,
+										"type": "string"
+									},
+									"requiresAuth": {
+										"type": "boolean"
+									},
+									"resourceId": {
+										"minLength": 1,
+										"type": "string"
+									},
+									"resourceType": {
+										"enum": [
+											"file",
+											"folder"
+										],
+										"type": "string"
+									}
+								},
+								"required": [
+									"resourceType",
+									"resourceId"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"createdAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"downloadCount": {
+													"type": "number"
+												},
+												"expiresAt": {
+													"anyOf": [
+														{
+															"format": "date-time",
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"hasPassword": {
+													"type": "boolean"
+												},
+												"id": {
+													"type": "string"
+												},
+												"requiresAuth": {
+													"type": "boolean"
+												},
+												"resourceId": {
+													"type": "string"
+												},
+												"resourceName": {
+													"type": "string"
+												},
+												"resourceType": {
+													"enum": [
+														"file",
+														"folder"
+													],
+													"type": "string"
+												},
+												"token": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"token",
+												"resourceType",
+												"resourceId",
+												"resourceName",
+												"hasPassword",
+												"requiresAuth",
+												"expiresAt",
+												"downloadCount",
+												"createdAt"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Create a share link",
+				"tags": [
+					"Shares"
+				]
+			}
+		},
+		"/api/v1/shares/{id}": {
+			"delete": {
+				"description": "Deletes a share link, immediately breaking the URL",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"revoked": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"revoked"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Revoke a share link",
+				"tags": [
+					"Shares"
+				]
+			}
+		},
+		"/api/v1/sharings": {
+			"get": {
+				"parameters": [
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": true,
+						"schema": {
+							"enum": [
+								"file",
+								"folder"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": true,
+						"schema": {
+							"minLength": 1,
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"expiration": {
+														"anyOf": [
+															{
+																"format": "date-time",
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																"type": "string"
+															},
+															{
+																"type": "null"
+															}
+														]
+													},
+													"permission": {
+														"enum": [
+															"read",
+															"write",
+															"admin"
+														],
+														"type": "string"
+													},
+													"sharedWithId": {
+														"type": "string"
+													},
+													"sharingId": {
+														"type": "string"
+													},
+													"user": {
+														"additionalProperties": false,
+														"properties": {
+															"email": {
+																"type": "string"
+															},
+															"id": {
+																"type": "string"
+															},
+															"image": {
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
+															"name": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"id",
+															"name",
+															"email",
+															"image"
+														],
+														"type": "object"
+													}
+												},
+												"required": [
+													"sharingId",
+													"sharedWithId",
+													"permission",
+													"expiration",
+													"user"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List who a resource is shared with",
+				"tags": [
+					"Sharings"
+				]
+			},
+			"post": {
+				"description": "Grants named accounts access to a file or folder you own",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"permission": {
+										"default": "read",
+										"enum": [
+											"read",
+											"write",
+											"admin"
+										],
+										"type": "string"
+									},
+									"resourceId": {
+										"minLength": 1,
+										"type": "string"
+									},
+									"resourceType": {
+										"enum": [
+											"file",
+											"folder"
+										],
+										"type": "string"
+									},
+									"userIds": {
+										"items": {
+											"minLength": 1,
+											"type": "string"
+										},
+										"minItems": 1,
+										"type": "array"
+									}
+								},
+								"required": [
+									"resourceType",
+									"resourceId",
+									"userIds",
+									"permission"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"shared": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"shared"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Share a resource with users",
+				"tags": [
+					"Sharings"
+				]
+			}
+		},
+		"/api/v1/sharings/{id}": {
+			"delete": {
+				"description": "Removes one person from a sharing",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"revoked": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"revoked"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Revoke a user's access",
+				"tags": [
+					"Sharings"
+				]
+			}
+		},
 		"/api/v1/storage/download": {
 			"post": {
 				"description": "Downloads multiple files/folders as a single ZIP archive",
@@ -16977,6 +17694,105 @@
 				"summary": "Bulk move files and folders",
 				"tags": [
 					"Storage - Bulk"
+				]
+			}
+		},
+		"/api/v1/users/search": {
+			"get": {
+				"description": "Matches a query against user names and emails. Requires a query — the full directory is not enumerable.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"minLength": 1,
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"email": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													},
+													"image": {
+														"type": [
+															"string",
+															"null"
+														]
+													},
+													"name": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"name",
+													"email",
+													"image"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Search users to share with",
+				"tags": [
+					"Sharings"
 				]
 			}
 		},

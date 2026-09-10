@@ -82,6 +82,8 @@ export const config: DocsConfig = {
 		"env",
 		"deployment",
 		"storage",
+		"sharing",
+		"admin",
 		"simple-mode",
 		"reverse-proxy",
 		"troubleshooting",
@@ -113,8 +115,8 @@ export const config: DocsConfig = {
 				body: "Email/password, OAuth 2.0 / OIDC providers, WebAuthn passkeys, and API key access — powered by Better Auth.",
 			},
 			{
-				title: "Sharing & permissions",
-				body: "Share files and folders with other users with configurable read, write, or admin permissions.",
+				title: "Share links",
+				body: "Share any file or folder by link, with an optional password, an expiry date, or a sign-in requirement.",
 			},
 			{
 				title: "Recent files",
@@ -126,7 +128,7 @@ export const config: DocsConfig = {
 			},
 			{
 				title: "Activity log",
-				body: "A full audit trail of every create, rename, move, delete, and share action across your drive.",
+				body: "An audit trail of every create, rename, move, delete and share — with no file names in the admin view.",
 			},
 			{
 				title: "API keys",
@@ -138,7 +140,7 @@ export const config: DocsConfig = {
 			},
 			{
 				title: "Admin panel",
-				body: "Manage users, assign roles, ban accounts, and impersonate users straight from the UI.",
+				body: "Instance stats, per-user storage usage, user management, and a GDPR-safe audit log.",
 			},
 			{
 				title: "Self-hosted",

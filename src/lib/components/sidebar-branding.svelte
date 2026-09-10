@@ -17,7 +17,9 @@
                         alt={`${config.appName} logo`}
                         class="w-10 h-10"
                     />
-                    <span class="text-base font-semibold">
+                    <span
+                        class="from-primary via-primary to-brand-2 bg-linear-to-r bg-clip-text text-base font-semibold text-transparent"
+                    >
                         {config.appName}
                     </span>
                 </a>

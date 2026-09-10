@@ -157,13 +157,13 @@
         </span>
     </button>
 {:else if layout === "grid"}
-    <div class="flex h-full w-full flex-col items-center gap-2">
+    <div class="flex h-full w-full flex-col">
         <button
             use:touchAction
             onclick={handleClick}
             ontap={handleClick}
             onlongpress={() => handleLongPress()}
-            class="flex h-full w-full flex-col items-center gap-2"
+            class="flex h-full w-full flex-col gap-2 text-left"
             disabled={getItemStatus() === ItemStatus.UPLOADING}
         >
             {#if !isDesktop.current && indeterminate}
@@ -183,19 +183,23 @@
                     {/if}
                 </div>
             {:else if item.metadata.category}
-                <div class="w-full flex justify-center h-full items-center">
+                <div
+                    class="bg-muted/40 flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-xs border"
+                >
                     <FilePreview {item} />
                 </div>
             {:else}
-                <div class="w-full flex justify-center h-full items-center">
+                <div
+                    class="bg-muted/40 flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-xs border"
+                >
                     <FileIcon class={iconSize} />
                 </div>
             {/if}
-            <div class="text-center w-full">
+            <div class="w-full">
                 <p
                     title={item.metadata.name ?? item.key}
                     class={cn(
-                        "mx-auto flex max-w-72 items-center justify-center gap-1 text-base lg:text-sm",
+                        "flex w-full items-center gap-1 text-xs",
                         $playableMusic &&
                             $playableMusic.title ===
                                 (item.metadata.name ?? item.key)
@@ -218,7 +222,7 @@
             </div>
         </button>
         {#if item.metadata.category || item.parent}
-            <div class="text-center">
+            <div class="w-full">
                 <p class="text-xs text-muted-foreground">
                     {#if item.metadata.category}
                         {item.metadata.category.charAt(0) +

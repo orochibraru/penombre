@@ -243,7 +243,7 @@
         <ContextMenu.Root>
             <ContextMenu.Trigger class="h-full w-full">
                 <div
-                    class="flex h-full flex-col items-center justify-center gap-2"
+                    class="flex h-full flex-col"
                     role="button"
                     tabindex={-1}
                     ontap={() => {
@@ -439,7 +439,9 @@
             <p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
         </div>
     {/if}
-    <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <ul
+        class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+    >
         {#if loading}
             {@render loadingRows()}
         {:else if searchValue}

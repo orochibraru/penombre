@@ -14,6 +14,12 @@ const mockCreateApiKey = auth.api.createApiKey as unknown as Mock<
 const mockChangePassword = auth.api.changePassword as unknown as Mock<
 	typeof auth.api.changePassword
 >;
+const mockListUserAccounts = auth.api.listUserAccounts as unknown as Mock<
+	typeof auth.api.listUserAccounts
+>;
+const mockSetPassword = auth.api.setPassword as unknown as Mock<
+	typeof auth.api.setPassword
+>;
 
 const { load, actions } = await import("./+page.server");
 
@@ -44,7 +50,34 @@ describe("load", () => {
 		expect(result).toEqual({
 			apiKeys: mockKeys,
 			passkeys: mockPasskeyList,
+			hasPassword: false,
+			emailSignInEnabled: true,
 		});
+	});
+
+	test("reports hasPassword when a credential account exists", async () => {
+		mockListUserAccounts.mockResolvedValueOnce([
+			{ providerId: "google" },
+			{ providerId: "credential" },
+		] as never);
+
+		const result = await load({
+			request: new Request("http://localhost"),
+		} as never);
+
+		expect(result).toMatchObject({ hasPassword: true });
+	});
+
+	test("reports no password for an OAuth-only account", async () => {
+		mockListUserAccounts.mockResolvedValueOnce([
+			{ providerId: "google" },
+		] as never);
+
+		const result = await load({
+			request: new Request("http://localhost"),
+		} as never);
+
+		expect(result).toMatchObject({ hasPassword: false });
 	});
 
 	test("passes request headers to listApiKeys and listPasskeys", async () => {
@@ -244,5 +277,49 @@ describe("changePassword", () => {
 			success: false,
 			error: "Failed to change password.",
 		});
+	});
+});
+
+describe("actions.setPassword", () => {
+	test("sets the password when both fields match", async () => {
+		const result = await actions.setPassword(
+			createRequest({
+				newPassword: "hunter2hunter2",
+				newPasswordConfirm: "hunter2hunter2",
+			}) as never,
+		);
+
+		expect(result).toEqual({ success: true, passwordSet: true });
+		expect(mockSetPassword).toHaveBeenLastCalledWith(
+			expect.objectContaining({ body: { newPassword: "hunter2hunter2" } }),
+		);
+	});
+
+	test("rejects mismatched confirmations without calling better-auth", async () => {
+		mockSetPassword.mockClear();
+
+		const result = await actions.setPassword(
+			createRequest({
+				newPassword: "hunter2hunter2",
+				newPasswordConfirm: "something-else",
+			}) as never,
+		);
+
+		expect(result).toMatchObject({ success: false });
+		expect(mockSetPassword).not.toHaveBeenCalled();
+	});
+
+	test("rejects a password shorter than the configured minimum", async () => {
+		mockSetPassword.mockClear();
+
+		const result = await actions.setPassword(
+			createRequest({
+				newPassword: "short",
+				newPasswordConfirm: "short",
+			}) as never,
+		);
+
+		expect(result).toMatchObject({ success: false });
+		expect(mockSetPassword).not.toHaveBeenCalled();
 	});
 });

@@ -190,6 +190,49 @@ export const sharedWith = sqliteTable(
 );
 
 // =========================================================================
+// SHARE LINKS
+// =========================================================================
+
+/**
+ * A shareable link to one file or folder. Distinct from `sharings`, which
+ * grants named users access — a share link is anonymous, addressed only by
+ * its unguessable `token`.
+ */
+export const shares = sqliteTable(
+	"shares",
+	{
+		id: text("id").primaryKey(),
+		/** Unguessable public identifier — the whole URL secret. */
+		token: text("token").notNull().unique(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		resourceType: text("resource_type", {
+			enum: ["file", "folder"],
+		}).notNull(),
+		resourceId: text("resource_id").notNull(),
+		/** Display name captured at share time, so revoked/renamed items still list. */
+		resourceName: text("resource_name").notNull(),
+		/** Scrypt hash from better-auth's hasher; null means no password. */
+		passwordHash: text("password_hash"),
+		/** When true, only signed-in users may open the link. */
+		requiresAuth: integer("requires_auth", { mode: "boolean" })
+			.default(false)
+			.notNull(),
+		/** Null means the link never expires. */
+		expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+		downloadCount: integer("download_count").default(0).notNull(),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("shares_ownerId_idx").on(table.ownerId),
+		index("shares_token_idx").on(table.token),
+	],
+);
+
+// =========================================================================
 // USER PREFERENCES
 // =========================================================================
 

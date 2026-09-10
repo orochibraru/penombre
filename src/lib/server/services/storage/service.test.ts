@@ -30,7 +30,16 @@ mock.module("./driver", () => ({
 }));
 
 mock.module("$lib/server/config", () => ({
-	getConfig: () => ({ smtp: undefined }),
+	getConfig: () => ({
+		smtp: undefined,
+		appName: "Penombre",
+		origin: "http://localhost:5173",
+		auth: {
+			secret: "test-secret",
+			enableEmailSignIn: true,
+			minPasswordLength: 8,
+		},
+	}),
 	getStoragePath: () => "/tmp/penombre-test-storage",
 	isSimpleMode: () => false,
 	isAuthBypassed: () => false,

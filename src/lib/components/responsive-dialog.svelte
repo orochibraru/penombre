@@ -22,6 +22,8 @@
 		submitDisabled?: boolean;
 		/** Callback fired when the submit button is clicked (non-form mode) */
 		onsubmit?: () => void;
+		/** Overrides the dismiss button's label (defaults to Cancel/Close). */
+		cancelLabel?: string;
 		/** Form props - if provided, children are wrapped in a form */
 		form?: {
 			action?: HTMLFormAttributes["action"];
@@ -43,6 +45,7 @@
     import type { Snippet } from "svelte";
     import { MediaQuery } from "svelte/reactivity";
     import { Button, buttonVariants } from "$lib/components/ui/button";
+    import { m } from "$lib/paraglide/messages.js";
     import * as Dialog from "$lib/components/ui/dialog/index";
     import * as Drawer from "$lib/components/ui/drawer/index";
     import { cn } from "$lib/utils";
@@ -60,6 +63,7 @@
         submitVariant = "default",
         submitDisabled = false,
         onsubmit,
+        cancelLabel,
         form,
         children,
         footer,
@@ -92,11 +96,7 @@
             type="button"
             class={buttonVariants({ variant: "outline" })}
         >
-            {#if form || onsubmit}
-                Cancel
-            {:else}
-                Close
-            {/if}
+            {cancelLabel ?? (form || onsubmit ? m.cancel() : m.close())}
         </Dialog.Close>
     {:else}
         <Drawer.Close
@@ -104,11 +104,7 @@
             type="button"
             class={buttonVariants({ variant: "outline" })}
         >
-            {#if form || onsubmit}
-                Cancel
-            {:else}
-                Close
-            {/if}
+            {cancelLabel ?? (form || onsubmit ? m.cancel() : m.close())}
         </Drawer.Close>
     {/if}
 {/snippet}
@@ -123,7 +119,9 @@
             use:enhance
         >
             <fieldset disabled={loading} class="flex flex-col gap-4">
-                <div class="overflow-y-auto max-h-[40vh] md:max-h-[50vh]">
+                <div
+                    class="-mx-1 max-h-[40vh] overflow-y-auto px-1 md:max-h-[50vh]"
+                >
                     {@render content()}
                 </div>
                 {@render footerButtons()}
@@ -146,7 +144,9 @@
                 }
             }}
         >
-            <div class="overflow-y-auto max-h-[40vh] md:max-h-[50vh]">
+            <div
+                    class="-mx-1 max-h-[40vh] overflow-y-auto px-1 md:max-h-[50vh]"
+                >
                 {@render content()}
             </div>
             {@render footerButtons()}
@@ -157,12 +157,14 @@
 {#if isDesktop.current}
     <Dialog.Root bind:open>
         <Dialog.Content
-            class={cn("max-h-[70%] pb-16", sizeClasses[size], contentClass)}
+            class={cn("max-h-[85%] overflow-y-auto", sizeClasses[size], contentClass)}
         >
-            <Dialog.Header>
-                <Dialog.Title>{title}</Dialog.Title>
+            <Dialog.Header class="min-w-0">
+                <Dialog.Title class="wrap-break-word">{title}</Dialog.Title>
                 {#if description}
-                    <Dialog.Description>{description}</Dialog.Description>
+                    <Dialog.Description class="wrap-break-word">
+                        {description}
+                    </Dialog.Description>
                 {/if}
             </Dialog.Header>
             {@render formWrapper(children)}
@@ -171,10 +173,12 @@
 {:else}
     <Drawer.Root bind:open>
         <Drawer.Content class="z-50">
-            <Drawer.Header>
-                <Drawer.Title class="text-lg">{title}</Drawer.Title>
+            <Drawer.Header class="min-w-0">
+                <Drawer.Title class="text-lg wrap-break-word">{title}</Drawer.Title>
                 {#if description}
-                    <Drawer.Description class="text-sm text-muted-foreground">
+                    <Drawer.Description
+                        class="text-muted-foreground text-sm wrap-break-word"
+                    >
                         {description}
                     </Drawer.Description>
                 {/if}

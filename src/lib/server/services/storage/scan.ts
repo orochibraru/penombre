@@ -180,6 +180,10 @@ export class ScanOperations {
 				category: determineCategory(key),
 				size: await this.ctx.driver.getObjectSize(key).catch(() => 0),
 			});
+
+			// Build the preview as part of the scan, so a mounted library is
+			// browsable without every tile triggering an ffmpeg run.
+			await this.thumbnails.warm(key, determineContentType(key));
 			added++;
 		}
 		return added;
@@ -227,8 +231,9 @@ export class ScanOperations {
 				);
 
 			// Cover art and waveforms are cached by key, so they describe the
-			// partial file until dropped.
+			// partial file until dropped, then rebuilt from the new bytes.
 			await this.thumbnails.deleteThumbnails(key);
+			await this.thumbnails.warm(key, determineContentType(key));
 			updated++;
 		}
 		return updated;

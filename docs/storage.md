@@ -36,6 +36,21 @@ File and folder **metadata** (names, paths, sizes, trash state, ownership) lives
 in the database. The **bytes** live under `STORAGE_PATH`. A backup needs both:
 see [Deployment](deployment.md) for the backup routine.
 
+## Seeing what you use
+
+**Settings → Storage** reports your own usage: total bytes across your live
+files, a breakdown by category, how much the trash is still holding, and your
+ten largest files. The bar shows your usage against the whole volume — the
+lighter segment is everything else on that filesystem, including other users'
+files, since Penombre shares one disk between accounts.
+
+Admins get the instance-wide view under **Admin → Storage**: the resolved
+storage path, total files and bytes, trashed bytes across all accounts, and a
+per-user usage table sorted biggest first.
+
+Both views read aggregates from the database plus one `statfs` call, so they
+stay cheap on a large library — nothing walks the object store.
+
 ## Using a network share
 
 Anything the container can see as a directory works — an NFS or SMB mount, a ZFS

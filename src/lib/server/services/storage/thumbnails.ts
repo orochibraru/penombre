@@ -112,6 +112,31 @@ export class ThumbnailService {
 		}
 	}
 
+	/**
+	 * The size the grid asks for. Warming it at write time means the first
+	 * view is a cache hit instead of an ffmpeg run per tile.
+	 */
+	static readonly WARM_SIZE = 300;
+
+	/**
+	 * Precompute this file's thumbnail (or waveform, for audio).
+	 *
+	 * Never throws: a missing ffmpeg or an unreadable file must not fail the
+	 * upload or abort a library scan. Unsupported types return early inside
+	 * `generateThumbnail`, so calling this for every file is cheap.
+	 */
+	async warm(key: string, contentType: string): Promise<void> {
+		try {
+			await this.generateThumbnail(
+				key,
+				contentType,
+				ThumbnailService.WARM_SIZE,
+			);
+		} catch (error) {
+			logger.warn(`[thumbnail] Warm failed for ${key}:`, error);
+		}
+	}
+
 	async getThumbnail(
 		key: string,
 		size = 300,
