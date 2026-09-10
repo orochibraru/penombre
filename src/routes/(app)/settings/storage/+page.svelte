@@ -31,16 +31,7 @@
 	);
 </script>
 
-<div class="flex max-w-2xl flex-col gap-6">
-    <div>
-        <h2 class="text-xl font-semibold tracking-tight">
-            {m.storage_usage()}
-        </h2>
-        <p class="text-muted-foreground text-sm">
-            {m.storage_usage_description()}
-        </p>
-    </div>
-
+<div class="grid items-start gap-4 xl:grid-cols-2 2xl:grid-cols-3">
     <Card.Root>
         <Card.Content>
             <StorageUsage

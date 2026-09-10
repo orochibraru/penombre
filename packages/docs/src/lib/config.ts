@@ -82,6 +82,7 @@ export const config: DocsConfig = {
 		"env",
 		"deployment",
 		"storage",
+		"volumes",
 		"sharing",
 		"admin",
 		"simple-mode",

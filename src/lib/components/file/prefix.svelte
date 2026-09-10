@@ -26,6 +26,7 @@
 	import { Badge } from "$lib/components/ui/badge/index";
 	import { touchAction } from "$lib/file-actions";
 	import { FileCategoryEnum } from "$lib/file-helpers";
+	import { m } from "$lib/paraglide/messages.js";
 	import { playableMusic } from "$lib/store/music";
 	import { uploadedItems, uploadingItems } from "$lib/store/upload";
 	import {
@@ -33,6 +34,7 @@
 		getDocumentType,
 		ItemStatus,
 		isFolderItem,
+		readableFileSize,
 		secondsToMinutes,
 		stripFolders,
 	} from "$lib/utils";
@@ -124,7 +126,7 @@
 	}
 </script>
 
-{#if isFolder}
+{#if isFolder && layout === "list"}
     <button
         use:touchAction
         onclick={handleClick}
@@ -157,105 +159,96 @@
         </span>
     </button>
 {:else if layout === "grid"}
-    <div class="flex h-full w-full flex-col">
-        <button
-            use:touchAction
-            onclick={handleClick}
-            ontap={handleClick}
-            onlongpress={() => handleLongPress()}
-            class="flex h-full w-full flex-col gap-2 text-left"
-            disabled={getItemStatus() === ItemStatus.UPLOADING}
+    {@const duration = item.metadata.music?.duration
+        ? secondsToMinutes(item.metadata.music.duration)
+        : item.metadata.video?.duration
+          ? secondsToMinutes(item.metadata.video.duration)
+          : null}
+    <!--
+      One tile = a square media well with a caption strip under it. Both are
+      fixed height so a grid of mixed folders, long names and durations sits on
+      a single baseline; the well is edge-to-edge because the border and
+      padding belong to the tile, not to each preview.
+    -->
+    <button
+        use:touchAction
+        onclick={handleClick}
+        ontap={handleClick}
+        onlongpress={() => handleLongPress()}
+        class="flex w-full flex-col text-left focus-visible:outline-none"
+        disabled={getItemStatus() === ItemStatus.UPLOADING}
+    >
+        <div
+            class="bg-muted/30 relative flex aspect-16/10 w-full items-center justify-center overflow-hidden"
         >
-            {#if !isDesktop.current && indeterminate}
-                {#if isSelected}
-                    <CircleCheckIcon class="text-primary" />
-                {:else}
-                    <CircleIcon class="text-muted-foreground" />
-                {/if}
-            {:else if getItemStatus() === ItemStatus.UPLOADING}
-                <div>
+            {#if getItemStatus() === ItemStatus.UPLOADING}
+                <span class="text-muted-foreground text-xs tabular-nums">
                     {#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
-                        <span class="text-xs">
-                            {Math.round($uploadingItems[item.key] ?? 0)}%
-                        </span>
+                        {Math.round($uploadingItems[item.key] ?? 0)}%
                     {:else}
-                        <XIcon class="h-4 w-4 text-red-600" />
+                        <XIcon class="size-4 text-red-600" />
                     {/if}
-                </div>
+                </span>
+            {:else if isFolderItem(item)}
+                <FolderIcon
+                    class="size-10 text-indigo-500"
+                    fill="currentColor"
+                />
             {:else if item.metadata.category}
-                <div
-                    class="bg-muted/40 flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-xs border"
-                >
-                    <FilePreview {item} />
-                </div>
+                <FilePreview {item} />
             {:else}
-                <div
-                    class="bg-muted/40 flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-xs border"
-                >
-                    <FileIcon class={iconSize} />
-                </div>
+                <FileIcon class="text-muted-foreground/60 size-9" />
             {/if}
-            <div class="w-full">
-                <p
-                    title={item.metadata.name ?? item.key}
-                    class={cn(
-                        "flex w-full items-center gap-1 text-xs",
-                        $playableMusic &&
-                            $playableMusic.title ===
-                                (item.metadata.name ?? item.key)
-                            ? "text-primary font-medium"
-                            : getItemStatus() === ItemStatus.UPLOADING
-                              ? "text-gray-500 dark:text-gray-300"
-                              : "",
-                    )}
-                >
-                    <span class="truncate">
-                        {item.metadata.name ?? stripFolders(item.key)}
-                    </span>
-                    {#if item.metadata.isStarred}
-                        <StarIcon
-                            class="h-4 w-4 text-yellow-500 shrink-0"
-                            fill="#eab308"
-                        />
+
+            {#if !isDesktop.current && indeterminate}
+                <span class="absolute top-1.5 left-1.5">
+                    {#if isSelected}
+                        <CircleCheckIcon class="text-primary size-5" />
+                    {:else}
+                        <CircleIcon class="text-muted-foreground size-5" />
                     {/if}
-                </p>
-            </div>
-        </button>
-        {#if item.metadata.category || item.parent}
-            <div class="w-full">
-                <p class="text-xs text-muted-foreground">
-                    {#if item.metadata.category}
-                        {item.metadata.category.charAt(0) +
-                            item.metadata.category.slice(1).toLowerCase()}
-                    {/if}
-                    {#if item.parent}
-                        {#if item.metadata.category}
-                            <span class="mx-1">•</span>
-                        {/if}
-                        <a
-                            href={resolve("/(app)/browse/[...path]", {
-                                path: item.parentKey || "",
-                            })}
-                            class="text-muted-foreground/70 hover:text-primary hover:underline"
-                            onclick={(e) => e.stopPropagation()}
-                        >
-                            {item.parent}
-                        </a>
-                    {/if}
-                </p>
-            </div>
-        {/if}
-        {#if item.metadata.category === "MUSIC"}
-            {#if item.metadata.music?.duration}
-                <Badge
-                    variant="outline"
-                    class="text-muted-foreground shrink-0 px-1.5 text-xs"
-                >
-                    {secondsToMinutes(item.metadata.music.duration)}
-                </Badge>
+                </span>
             {/if}
-        {/if}
-    </div>
+
+            {#if item.metadata.isStarred}
+                <StarIcon
+                    class="absolute top-1.5 left-1.5 size-3.5 text-yellow-500 drop-shadow"
+                    fill="#eab308"
+                />
+            {/if}
+
+            {#if duration}
+                <span
+                    class="bg-background/75 absolute bottom-1.5 left-1.5 rounded-[calc(var(--radius)-2px)] px-1.5 py-0.5 text-[10px] tabular-nums backdrop-blur-sm"
+                >
+                    {duration}
+                </span>
+            {/if}
+        </div>
+
+        <div class="flex min-h-11 flex-col justify-center gap-0.5 px-2.5 py-2">
+            <span
+                title={item.metadata.name ?? item.key.replace("/", "")}
+                class={cn(
+                    "truncate text-xs leading-tight",
+                    $playableMusic &&
+                        $playableMusic.title === (item.metadata.name ?? item.key)
+                        ? "text-primary font-medium"
+                        : "font-medium",
+                )}
+            >
+                {item.metadata.name ??
+                    (isFolderItem(item)
+                        ? item.key.replace("/", "")
+                        : stripFolders(item.key))}
+            </span>
+            <span class="text-muted-foreground truncate text-[10px] leading-tight">
+                {isFolderItem(item)
+                    ? m.folder()
+                    : readableFileSize(item.size ?? 0)}
+            </span>
+        </div>
+    </button>
 {:else}
     <button
         use:touchAction
@@ -336,7 +329,10 @@
                 )}
             >
                 <span class="truncate">
-                    {item.metadata.name ?? stripFolders(item.key)}
+                    {item.metadata.name ??
+                    (isFolderItem(item)
+                        ? item.key.replace("/", "")
+                        : stripFolders(item.key))}
                 </span>
                 {#if item.metadata.isStarred}
                     <StarIcon

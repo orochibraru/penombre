@@ -896,7 +896,7 @@
             </div>
         </div>
         <div
-            class="flex h-full w-full items-center justify-center overflow-y-auto flex-1"
+            class="flex h-full w-full min-w-0 flex-1 items-center justify-center overflow-y-auto"
         >
             {#if fileToView.type === "image"}
                 <img
@@ -912,7 +912,7 @@
             {:else if fileToView.type === "code" && fileToView.language && fileToView.content}
                 <Code.Root
                     lang={fileToView.language}
-                    class="w-full h-full"
+                    class="h-full w-full min-w-0"
                     code={fileToView.content}
                 >
                     <Code.CopyButton />
@@ -933,6 +933,7 @@
     bind:deletingItem
     {checkedItems}
     {handleDeleteObject}
+    items={data.list}
 />
 
 <RestoreDialog

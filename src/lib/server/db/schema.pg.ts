@@ -271,6 +271,12 @@ export interface UserPreferencesData {
 	layout?: "grid" | "list";
 	sortColumn?: "name" | "size" | "updatedAt" | null;
 	sortDirection?: "asc" | "desc";
+	/** Interface typeface: the monospace default, or the system sans stack. */
+	fontFamily?: "mono" | "sans";
+	/** Corner treatment across the whole UI. */
+	corners?: "boxy" | "rounded";
+	/** Named accent, mapped to an oklch hue in `app.css`. */
+	accent?: "purple" | "blue" | "teal" | "green" | "amber" | "rose";
 }
 
 export const userPreferences = pgTable("user_preferences", {
@@ -375,8 +381,14 @@ export const folders = pgTable(
 		ownerId: text("owner_id")
 			.references(() => user.id, { onDelete: "cascade" })
 			.notNull(),
-		/** Storage key relative to user root, e.g. "folder-uuid" or "parent-uuid/child-uuid" */
+		/** Storage key relative to the volume root, e.g. "folder-uuid" or "parent-uuid/child-uuid" */
 		path: text("path").notNull(),
+		/**
+		 * Which mounted volume this row lives on. Null is the user's own drive
+		 * (or, in simple mode, the shared one) — the pre-volume default, so
+		 * existing rows keep working untouched.
+		 */
+		volumeId: text("volume_id"),
 		parentId: text("parent_id"),
 		isTrashed: boolean("is_trashed").default(false).notNull(),
 		isStarred: boolean("is_starred").default(false).notNull(),
@@ -393,6 +405,7 @@ export const folders = pgTable(
 		index("folders_ownerId_idx").on(table.ownerId),
 		index("folders_parentId_idx").on(table.parentId),
 		index("folders_path_ownerId_idx").on(table.path, table.ownerId),
+		index("folders_volumeId_idx").on(table.volumeId),
 	],
 );
 
@@ -422,8 +435,10 @@ export const files = pgTable(
 		ownerId: text("owner_id")
 			.references(() => user.id, { onDelete: "cascade" })
 			.notNull(),
-		/** Storage key relative to user root, e.g. "uuid.txt" or "folder-uuid/uuid.txt" */
+		/** Storage key relative to the volume root, e.g. "uuid.txt" or "folder-uuid/uuid.txt" */
 		path: text("path").notNull(),
+		/** Mounted volume, or null for the user's own drive. See `folders`. */
+		volumeId: text("volume_id"),
 		folderId: text("folder_id").references(() => folders.id, {
 			onDelete: "set null",
 		}),
@@ -449,6 +464,7 @@ export const files = pgTable(
 		index("files_ownerId_idx").on(table.ownerId),
 		index("files_folderId_idx").on(table.folderId),
 		index("files_path_ownerId_idx").on(table.path, table.ownerId),
+		index("files_volumeId_idx").on(table.volumeId),
 	],
 );
 

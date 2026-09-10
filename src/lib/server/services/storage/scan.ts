@@ -19,6 +19,7 @@ import { Logger } from "$lib/logger";
 import { files, folders } from "$lib/server/db/schema";
 import type { StorageContext } from "./context";
 import { determineCategory, determineContentType } from "./mappers";
+import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
 const logger = new Logger("StorageScan");
@@ -84,11 +85,11 @@ export class ScanOperations {
 			this.ctx.db
 				.select({ id: folders.id, path: folders.path })
 				.from(folders)
-				.where(eq(folders.ownerId, this.ctx.user.id)),
+				.where(ownedFolders(this.ctx)),
 			this.ctx.db
 				.select({ id: files.id, path: files.path, size: files.size })
 				.from(files)
-				.where(eq(files.ownerId, this.ctx.user.id)),
+				.where(ownedFiles(this.ctx)),
 		]);
 
 		const folderIdByPath = new Map(
@@ -149,6 +150,7 @@ export class ScanOperations {
 				id,
 				name: basename(path),
 				ownerId: this.ctx.user.id,
+				volumeId: this.ctx.volumeId,
 				path,
 				parentId: parent ? (folderIdByPath.get(parent) ?? null) : null,
 			});
@@ -174,6 +176,7 @@ export class ScanOperations {
 				id: crypto.randomUUID(),
 				name: basename(key),
 				ownerId: this.ctx.user.id,
+				volumeId: this.ctx.volumeId,
 				path: key,
 				folderId: parent ? (folderIdByPath.get(parent) ?? null) : null,
 				contentType: determineContentType(key),
@@ -226,9 +229,7 @@ export class ScanOperations {
 					...(await this.readMediaDuration(key)),
 					updatedAt: new Date(),
 				})
-				.where(
-					and(eq(files.id, known.id), eq(files.ownerId, this.ctx.user.id)),
-				);
+				.where(and(eq(files.id, known.id), ownedFiles(this.ctx)));
 
 			// Cover art and waveforms are cached by key, so they describe the
 			// partial file until dropped, then rebuilt from the new bytes.
@@ -284,9 +285,7 @@ export class ScanOperations {
 
 		await this.ctx.db
 			.delete(files)
-			.where(
-				and(eq(files.ownerId, this.ctx.user.id), inArray(files.id, vanished)),
-			);
+			.where(and(ownedFiles(this.ctx), inArray(files.id, vanished)));
 		return vanished.length;
 	}
 
@@ -308,12 +307,7 @@ export class ScanOperations {
 
 		await this.ctx.db
 			.delete(folders)
-			.where(
-				and(
-					eq(folders.ownerId, this.ctx.user.id),
-					inArray(folders.id, vanished),
-				),
-			);
+			.where(and(ownedFolders(this.ctx), inArray(folders.id, vanished)));
 		return vanished.length;
 	}
 }

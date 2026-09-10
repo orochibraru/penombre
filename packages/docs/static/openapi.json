@@ -11753,6 +11753,31 @@
 										"data": {
 											"additionalProperties": false,
 											"properties": {
+												"accent": {
+													"enum": [
+														"purple",
+														"blue",
+														"teal",
+														"green",
+														"amber",
+														"rose"
+													],
+													"type": "string"
+												},
+												"corners": {
+													"enum": [
+														"boxy",
+														"rounded"
+													],
+													"type": "string"
+												},
+												"fontFamily": {
+													"enum": [
+														"mono",
+														"sans"
+													],
+													"type": "string"
+												},
 												"layout": {
 													"enum": [
 														"grid",
@@ -11831,6 +11856,31 @@
 							"schema": {
 								"additionalProperties": false,
 								"properties": {
+									"accent": {
+										"enum": [
+											"purple",
+											"blue",
+											"teal",
+											"green",
+											"amber",
+											"rose"
+										],
+										"type": "string"
+									},
+									"corners": {
+										"enum": [
+											"boxy",
+											"rounded"
+										],
+										"type": "string"
+									},
+									"fontFamily": {
+										"enum": [
+											"mono",
+											"sans"
+										],
+										"type": "string"
+									},
 									"layout": {
 										"enum": [
 											"grid",
@@ -11876,6 +11926,31 @@
 										"data": {
 											"additionalProperties": false,
 											"properties": {
+												"accent": {
+													"enum": [
+														"purple",
+														"blue",
+														"teal",
+														"green",
+														"amber",
+														"rose"
+													],
+													"type": "string"
+												},
+												"corners": {
+													"enum": [
+														"boxy",
+														"rounded"
+													],
+													"type": "string"
+												},
+												"fontFamily": {
+													"enum": [
+														"mono",
+														"sans"
+													],
+													"type": "string"
+												},
 												"layout": {
 													"enum": [
 														"grid",

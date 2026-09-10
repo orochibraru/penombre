@@ -53,14 +53,9 @@
 </script>
 
 <div class="flex flex-col gap-5">
-    <div>
-        <h2 class="text-xl font-semibold tracking-tight">
-            {m.user_management()}
-        </h2>
-        <p class="text-muted-foreground text-sm">
-            {usersCountLabel(data.users.total)}
-        </p>
-    </div>
+    <p class="text-muted-foreground text-sm">
+        {usersCountLabel(data.users.total)}
+    </p>
 
     <form
         method="POST"

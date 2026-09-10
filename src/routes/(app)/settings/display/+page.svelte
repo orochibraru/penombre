@@ -17,6 +17,8 @@
 	import * as Select from "$lib/components/ui/select/index.js";
 	import * as m from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
+	import { ACCENT_SWATCH, ACCENTS, type Accent, applyTheme } from "$lib/theme";
+	import { cn } from "$lib/utils";
 
 	$title = m.settings_display();
 
@@ -25,6 +27,42 @@
 	const layout = $derived(data.preferences?.layout ?? "list");
 	const sortColumn = $derived(data.preferences?.sortColumn ?? "name");
 	const sortDirection = $derived(data.preferences?.sortDirection ?? "asc");
+
+	const fonts = [
+		{
+			id: "mono" as const,
+			name: m.font_mono(),
+			description: m.font_mono_description(),
+			sample: "Aa 0O1l",
+			css: '"JetBrains Mono Variable", ui-monospace, monospace',
+		},
+		{
+			id: "sans" as const,
+			name: m.font_sans(),
+			description: m.font_sans_description(),
+			sample: "Aa 0O1l",
+			css: "ui-sans-serif, system-ui, sans-serif",
+		},
+	];
+
+	const cornerOptions = [
+		{
+			id: "boxy" as const,
+			name: m.corners_boxy(),
+			description: m.corners_boxy_description(),
+			radius: "2px",
+		},
+		{
+			id: "rounded" as const,
+			name: m.corners_rounded(),
+			description: m.corners_rounded_description(),
+			radius: "12px",
+		},
+	];
+
+	const fontFamily = $derived(data.preferences?.fontFamily ?? "mono");
+	const corners = $derived(data.preferences?.corners ?? "boxy");
+	const accent = $derived(data.preferences?.accent ?? "violet");
 
 	const layouts = [
 		{
@@ -65,10 +103,17 @@
 		layout?: "grid" | "list";
 		sortColumn?: "name" | "size" | "updatedAt";
 		sortDirection?: "asc" | "desc";
+		fontFamily?: "mono" | "sans";
+		corners?: "boxy" | "rounded";
+		accent?: Accent;
 	}) {
+		// Paint the change immediately; the reload below only persists it.
+		applyTheme({ ...data.preferences, ...body });
+
 		const { error } = await api.PUT("/api/v1/preferences", { body });
 		if (error) {
 			toast.error(m.toast_account_update_error());
+			applyTheme(data.preferences);
 			return;
 		}
 		await invalidate("app:preferences");
@@ -104,16 +149,7 @@
 	];
 </script>
 
-<div class="flex max-w-3xl flex-col gap-6">
-    <div>
-        <h2 class="text-xl font-semibold tracking-tight">
-            {m.settings_nav_display()}
-        </h2>
-        <p class="text-muted-foreground text-sm">
-            {m.settings_display_description()}
-        </p>
-    </div>
-
+<div class="grid items-start gap-4 xl:grid-cols-2 2xl:grid-cols-3">
     <Card.Root>
         <Card.Header>
             <Card.Title>{m.theme()}</Card.Title>
@@ -121,7 +157,7 @@
         </Card.Header>
         <Card.Content>
             <RadioGroup.Root
-                class="grid gap-3 sm:grid-cols-3"
+                class="grid gap-2"
                 value={userPrefersMode.current}
             >
                 {#each themes as theme (theme.id)}
@@ -154,13 +190,118 @@
 
     <Card.Root>
         <Card.Header>
+            <Card.Title>{m.accent_colour()}</Card.Title>
+            <Card.Description>{m.accent_colour_description()}</Card.Description>
+        </Card.Header>
+        <Card.Content class="grid gap-2 sm:grid-cols-2">
+            {#each ACCENTS as option (option)}
+                <button
+                    type="button"
+                    aria-label={option}
+                    aria-pressed={accent === option}
+                    onclick={() => save({ accent: option })}
+                    class={cn(
+                        "flex items-center gap-2 rounded-xs border px-3 py-2 text-xs capitalize transition-colors",
+                        accent === option
+                            ? "border-ring bg-input/20 font-medium"
+                            : "hover:bg-input/20",
+                    )}
+                >
+                    <span
+                        class="size-4 rounded-xs border"
+                        style="background: {ACCENT_SWATCH[option]}"
+                    ></span>
+                    {option}
+                </button>
+            {/each}
+        </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+        <Card.Header>
+            <Card.Title>{m.font_family()}</Card.Title>
+            <Card.Description>{m.font_family_description()}</Card.Description>
+        </Card.Header>
+        <Card.Content>
+            <RadioGroup.Root class="grid gap-2" value={fontFamily}>
+                {#each fonts as option (option.id)}
+                    <Label
+                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-xs border p-3 transition-colors"
+                    >
+                        <div class="flex items-center gap-2">
+                            <RadioGroup.Item
+                                value={option.id}
+                                id="font-{option.id}"
+                                onclick={() => save({ fontFamily: option.id })}
+                                class="data-[state=checked]:border-primary"
+                            />
+                            <div class="grid gap-1 font-normal">
+                                <div class="font-medium">{option.name}</div>
+                                <div
+                                    class="text-muted-foreground text-xs leading-snug text-balance"
+                                >
+                                    {option.description}
+                                </div>
+                            </div>
+                        </div>
+                        <span
+                            class="text-muted-foreground shrink-0 text-sm"
+                            style="font-family: {option.css}"
+                        >
+                            {option.sample}
+                        </span>
+                    </Label>
+                {/each}
+            </RadioGroup.Root>
+        </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+        <Card.Header>
+            <Card.Title>{m.corners()}</Card.Title>
+            <Card.Description>{m.corners_description()}</Card.Description>
+        </Card.Header>
+        <Card.Content>
+            <RadioGroup.Root class="grid gap-2" value={corners}>
+                {#each cornerOptions as option (option.id)}
+                    <Label
+                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-xs border p-3 transition-colors"
+                    >
+                        <div class="flex items-center gap-2">
+                            <RadioGroup.Item
+                                value={option.id}
+                                id="corners-{option.id}"
+                                onclick={() => save({ corners: option.id })}
+                                class="data-[state=checked]:border-primary"
+                            />
+                            <div class="grid gap-1 font-normal">
+                                <div class="font-medium">{option.name}</div>
+                                <div
+                                    class="text-muted-foreground text-xs leading-snug text-balance"
+                                >
+                                    {option.description}
+                                </div>
+                            </div>
+                        </div>
+                        <span
+                            class="border-primary size-6 shrink-0 border-2"
+                            style="border-radius: {option.radius}"
+                        ></span>
+                    </Label>
+                {/each}
+            </RadioGroup.Root>
+        </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+        <Card.Header>
             <Card.Title>{m.default_layout()}</Card.Title>
             <Card.Description>
                 {m.default_layout_description()}
             </Card.Description>
         </Card.Header>
         <Card.Content>
-            <RadioGroup.Root class="grid gap-3 sm:grid-cols-2" value={layout}>
+            <RadioGroup.Root class="grid gap-2" value={layout}>
                 {#each layouts as option (option.id)}
                     {@const Icon = option.icon}
                     <Label
@@ -194,7 +335,7 @@
             <Card.Title>{m.default_sort()}</Card.Title>
             <Card.Description>{m.default_sort_description()}</Card.Description>
         </Card.Header>
-        <Card.Content class="grid gap-3 sm:grid-cols-2">
+        <Card.Content class="grid gap-2">
             <Select.Root
                 type="single"
                 value={sortColumn}

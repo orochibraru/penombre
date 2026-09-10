@@ -3559,6 +3559,18 @@ export interface paths {
 						"application/json": {
 							data?: {
 								/** @enum {string} */
+								accent?:
+									| "purple"
+									| "blue"
+									| "teal"
+									| "green"
+									| "amber"
+									| "rose";
+								/** @enum {string} */
+								corners?: "boxy" | "rounded";
+								/** @enum {string} */
+								fontFamily?: "mono" | "sans";
+								/** @enum {string} */
 								layout?: "grid" | "list";
 								sortColumn?: ("name" | "size" | "updatedAt") | null;
 								/** @enum {string} */
@@ -3602,6 +3614,12 @@ export interface paths {
 				content: {
 					"application/json": {
 						/** @enum {string} */
+						accent?: "purple" | "blue" | "teal" | "green" | "amber" | "rose";
+						/** @enum {string} */
+						corners?: "boxy" | "rounded";
+						/** @enum {string} */
+						fontFamily?: "mono" | "sans";
+						/** @enum {string} */
 						layout?: "grid" | "list";
 						sortColumn?: ("name" | "size" | "updatedAt") | null;
 						/** @enum {string} */
@@ -3618,6 +3636,18 @@ export interface paths {
 					content: {
 						"application/json": {
 							data?: {
+								/** @enum {string} */
+								accent?:
+									| "purple"
+									| "blue"
+									| "teal"
+									| "green"
+									| "amber"
+									| "rose";
+								/** @enum {string} */
+								corners?: "boxy" | "rounded";
+								/** @enum {string} */
+								fontFamily?: "mono" | "sans";
 								/** @enum {string} */
 								layout?: "grid" | "list";
 								sortColumn?: ("name" | "size" | "updatedAt") | null;

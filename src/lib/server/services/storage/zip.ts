@@ -14,6 +14,7 @@ import type { Folder as DbFolder } from "$lib/server/db/schema";
 import { files, folders } from "$lib/server/db/schema";
 import type { StorageContext } from "./context";
 import { buildDisplayPathForFile } from "./mappers";
+import { ownedFiles, ownedFolders } from "./scope";
 
 const logger = new Logger("StorageService");
 
@@ -58,10 +59,7 @@ export class ZipService {
 			.select()
 			.from(folders)
 			.where(
-				and(
-					eq(folders.ownerId, this.ctx.user.id),
-					like(folders.path, `${folderPath}/%`),
-				),
+				and(ownedFolders(this.ctx), like(folders.path, `${folderPath}/%`)),
 			);
 		const folderDisplayMap = new Map<string, string>([
 			[folderPath, folderRecord.name],
@@ -71,12 +69,7 @@ export class ZipService {
 		const allFilesUnder = await this.ctx.db
 			.select()
 			.from(files)
-			.where(
-				and(
-					eq(files.ownerId, this.ctx.user.id),
-					like(files.path, `${folderPath}/%`),
-				),
-			);
+			.where(and(ownedFiles(this.ctx), like(files.path, `${folderPath}/%`)));
 
 		for (const f of allFilesUnder) {
 			const displayPath = buildDisplayPathForFile({
@@ -101,12 +94,7 @@ export class ZipService {
 		const [fileRecord] = await this.ctx.db
 			.select()
 			.from(files)
-			.where(
-				and(
-					eq(files.path, normalizedPath),
-					eq(files.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(files.path, normalizedPath), ownedFiles(this.ctx)));
 
 		if (fileRecord) {
 			await this.appendObject(archive, fileRecord.path, fileRecord.name);
@@ -116,12 +104,7 @@ export class ZipService {
 		const [folderRecord] = await this.ctx.db
 			.select()
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedPath),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedPath), ownedFolders(this.ctx)));
 
 		if (!folderRecord) {
 			logger.warn(`[bulk-download] Skipping unknown path: ${filePath}`);
@@ -162,12 +145,7 @@ export class ZipService {
 		const [folderRecord] = await this.ctx.db
 			.select()
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedPath),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedPath), ownedFolders(this.ctx)));
 		if (!folderRecord) {
 			throw new Error(`Folder not found: ${folderPath}`);
 		}
@@ -189,10 +167,7 @@ export class ZipService {
 			.select()
 			.from(folders)
 			.where(
-				and(
-					eq(folders.ownerId, this.ctx.user.id),
-					like(folders.path, `${normalizedPath}/%`),
-				),
+				and(ownedFolders(this.ctx), like(folders.path, `${normalizedPath}/%`)),
 			);
 		const folderDisplayMap = new Map<string, string>([
 			[normalizedPath, folderDisplayName],
@@ -203,10 +178,7 @@ export class ZipService {
 			.select()
 			.from(files)
 			.where(
-				and(
-					eq(files.ownerId, this.ctx.user.id),
-					like(files.path, `${normalizedPath}/%`),
-				),
+				and(ownedFiles(this.ctx), like(files.path, `${normalizedPath}/%`)),
 			);
 
 		for (const f of allFiles) {

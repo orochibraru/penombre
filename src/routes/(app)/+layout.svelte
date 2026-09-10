@@ -7,6 +7,8 @@
 		FileIcon,
 		FolderIcon,
 		FolderPlusIcon,
+		HardDriveDownloadIcon,
+		HardDriveIcon,
 		ImageIcon,
 		MenuIcon,
 		MusicIcon,
@@ -49,6 +51,7 @@
 		newFolderDialogOpen,
 		uploadDialogOpen,
 	} from "$lib/store/upload";
+	import { applyTheme } from "$lib/theme";
 	import { cn } from "$lib/utils";
 
 	const { children, data } = $props();
@@ -59,6 +62,12 @@
 
 	// Auth bypass: nobody signs in, so there's no profile/admin to show.
 	const authBypassed = $derived(data.authBypassed ?? false);
+
+	// Appearance preferences are per-user, so they can only be applied once the
+	// session's preferences have loaded.
+	$effect(() => {
+		applyTheme(data.preferences);
+	});
 
 	// Close all dialogs when navigation starts
 	$effect(() => {
@@ -153,6 +162,11 @@
 						accentColor: "rose",
 					},
 				] satisfies NavItem[]),
+		volumes: (data.volumes ?? []).map((volume) => ({
+			title: volume.label,
+			url: `/volumes/${volume.name}`,
+			icon: volume.readOnly ? HardDriveDownloadIcon : HardDriveIcon,
+		})) satisfies NavItem[],
 		help: [
 			{
 				title: m.nav_settings(),
@@ -257,6 +271,9 @@
         </Sidebar.Header>
         <Sidebar.Content>
             <Nav title={m.nav_general()} items={nav.general} />
+            {#if (nav.volumes ?? []).length > 0}
+                <Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
+            {/if}
             {#if !simpleMode}
                 <Nav title={m.nav_categories()} items={nav.categories} />
             {/if}

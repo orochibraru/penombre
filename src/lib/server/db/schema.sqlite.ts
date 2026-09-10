@@ -308,6 +308,8 @@ export const folders = sqliteTable(
 			.notNull(),
 		/** Storage key relative to user root, e.g. "folder-uuid" or "parent-uuid/child-uuid" */
 		path: text("path").notNull(),
+		/** Mounted volume, or null for the user's own drive. */
+		volumeId: text("volume_id"),
 		parentId: text("parent_id"),
 		isTrashed: integer("is_trashed", { mode: "boolean" })
 			.default(false)
@@ -331,6 +333,7 @@ export const folders = sqliteTable(
 		index("folders_ownerId_idx").on(table.ownerId),
 		index("folders_parentId_idx").on(table.parentId),
 		index("folders_path_ownerId_idx").on(table.path, table.ownerId),
+		index("folders_volumeId_idx").on(table.volumeId),
 	],
 );
 
@@ -348,6 +351,8 @@ export const files = sqliteTable(
 			.notNull(),
 		/** Storage key relative to user root, e.g. "uuid.txt" or "folder-uuid/uuid.txt" */
 		path: text("path").notNull(),
+		/** Mounted volume, or null for the user's own drive. */
+		volumeId: text("volume_id"),
 		folderId: text("folder_id").references(() => folders.id, {
 			onDelete: "set null",
 		}),
@@ -380,5 +385,6 @@ export const files = sqliteTable(
 		index("files_ownerId_idx").on(table.ownerId),
 		index("files_folderId_idx").on(table.folderId),
 		index("files_path_ownerId_idx").on(table.path, table.ownerId),
+		index("files_volumeId_idx").on(table.volumeId),
 	],
 );

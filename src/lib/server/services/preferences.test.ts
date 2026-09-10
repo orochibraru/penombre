@@ -18,8 +18,11 @@ describe("getUserPreferences", () => {
 		const result = await getUserPreferences("user-1");
 		expect(result).toEqual({
 			layout: "list",
-			sortColumn: "name",
-			sortDirection: "asc",
+			sortColumn: "updatedAt",
+			sortDirection: "desc",
+			fontFamily: "sans",
+			corners: "rounded",
+			accent: "purple",
 		});
 	});
 
@@ -37,8 +40,11 @@ describe("getUserPreferences", () => {
 		const result = await getUserPreferences("user-1");
 		expect(result).toEqual({
 			layout: "grid",
-			sortColumn: "name",
-			sortDirection: "asc",
+			sortColumn: "updatedAt",
+			sortDirection: "desc",
+			fontFamily: "sans",
+			corners: "rounded",
+			accent: "purple",
 		});
 	});
 
@@ -56,8 +62,11 @@ describe("getUserPreferences", () => {
 		const result = await getUserPreferences("user-1");
 		expect(result).toEqual({
 			layout: "list",
-			sortColumn: "name",
-			sortDirection: "asc",
+			sortColumn: "updatedAt",
+			sortDirection: "desc",
+			fontFamily: "sans",
+			corners: "rounded",
+			accent: "purple",
 		});
 	});
 });
@@ -81,16 +90,22 @@ describe("updateUserPreferences", () => {
 
 		expect(result).toEqual({
 			layout: "grid",
-			sortColumn: "name",
-			sortDirection: "asc",
+			sortColumn: "updatedAt",
+			sortDirection: "desc",
+			fontFamily: "sans",
+			corners: "rounded",
+			accent: "purple",
 		});
 		expect(mockValues).toHaveBeenCalledWith(
 			expect.objectContaining({
 				userId: "user-1",
 				preferences: {
 					layout: "grid",
-					sortColumn: "name",
-					sortDirection: "asc",
+					sortColumn: "updatedAt",
+					sortDirection: "desc",
+					fontFamily: "sans",
+					corners: "rounded",
+					accent: "purple",
 				},
 			}),
 		);
@@ -121,6 +136,9 @@ describe("updateUserPreferences", () => {
 			layout: "grid",
 			sortColumn: "size",
 			sortDirection: "desc",
+			fontFamily: "sans",
+			corners: "rounded",
+			accent: "purple",
 		});
 	});
 });

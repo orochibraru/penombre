@@ -3,6 +3,14 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with
 code in this repository.
 
+## Keeping this file current
+
+**When you learn something non-obvious about this repo, write it here in the
+same change.** Not a summary of what you did — the durable fact that would have
+saved you the detour: a gotcha, an invariant, the reason a thing is shaped the
+way it is. If you had to read three files or debug for ten minutes to find it,
+it belongs here. Prune anything that has become wrong.
+
 ## Commands
 
 Runtime is **Bun** (1.3+); use `bun`/`bunx`, not `npm`/`node` (`preinstall`
@@ -171,3 +179,105 @@ A feature that isn't in `docs/` isn't finished.
 - `.svelte` files relax `noUnusedImports`/`useConst`/`useImportType` (Svelte's
   compiler handles these differently); test/script/config files relax
   cognitive-complexity and `noExplicitAny`/`noConsole` rules.
+
+## Gotchas learned the hard way
+
+### `app.css` layering
+
+Surface overrides (`[data-slot="card"]`, `[data-slot="sidebar-inner"]`, …) live
+**unlayered** at the bottom of `app.css`, not in `@layer base`. Tailwind's own
+utilities sit in `@layer utilities`, which outranks `@layer base` — a rule there
+loses to the `bg-sidebar` / `shadow-sm` classes already on those components.
+Unlayered CSS beats every layer, so that is where those rules actually land.
+
+### `backdrop-filter` breaks `position: fixed`
+
+An element with `backdrop-filter` becomes a containing block for fixed-position
+descendants. Putting it on `[data-slot="sidebar-inset"]` tore any fixed child
+off the viewport. Glass on that panel is applied via a `::before` pseudo-element
+instead — a pseudo has no element descendants, so it carries the frost safely.
+
+### Theming
+
+Appearance is three `data-*` attributes on `<html>` (`data-font`,
+`data-corners`, `data-accent`), written by `applyTheme()` in `$lib/theme.ts`
+from the user's saved preferences and read by the theme block at the bottom of
+`app.css`. Everything downstream already reads `--radius`, `--app-font` and
+`--primary`, so switching an attribute re-themes the whole app — never
+hard-code a colour or radius in a component.
+
+### Shipped UI defaults
+
+System theme, purple accent, standard (sans) typeface, rounded corners, list
+layout, sorted by last modified descending. These live in **two** places that
+must agree: `defaultPreferences` (`services/preferences.ts`) and the `:root`
+block in `app.css` — the CSS base is what unauthenticated pages (sign-in) use,
+since `applyTheme()` only runs once a session's preferences have loaded.
+
+### Shiki output is not styled by its wrapper
+
+`Code.Root` renders highlighted HTML through `{@html}`, so Shiki's own `<pre>`
+does not inherit the wrapper's wrapping classes. A long line pushed it to tens
+of thousands of pixels wide and scrolled the content out of view. The `.shiki`
+rule at the bottom of `app.css` wraps it. Beware viewport-relative caps
+(`max-w-[60vw]`) on anything that can appear inside a dialog — it sizes against
+the window, not the dialog.
+
+### Adding a user preference
+
+Four places, all required: `UserPreferencesData` (`schema.pg.ts`),
+`defaultPreferences` (`services/preferences.ts`), the Zod schema in
+`openapi/v1/preferences.ts`, then `bun run gen:api`.
+
+The PUT handler passes the **already-validated** body straight to
+`updateUserPreferences`. It used to re-filter by a hand-written list of three
+keys, which silently dropped every new field — saving as `200 OK` and never
+persisting. Do not reintroduce that filter; the route's Zod schema is the
+validation.
+
+### Storage queries are scoped by volume, not just owner
+
+Never write `eq(files.ownerId, ctx.user.id)` directly. Use `ownedFiles(ctx)` /
+`ownedFolders(ctx)` from `services/storage/scope.ts`, which also match the
+context's `volumeId`. Paths are only unique *within* a volume, so an
+owner-only query can match a row on the wrong mount. New rows must stamp
+`volumeId: this.ctx.volumeId`. The main drive stores `null`. See
+`docs/volumes.md`.
+
+### Thumbnails
+
+The API takes **named** sizes (`small` | `medium` | `large`), not pixels — three
+discrete values keep the on-disk cache bounded. `getObjectUrl` once sent
+`size=300` and every thumbnail request 400'd.
+
+A thumbnail request must **never** fall back to serving the original file. It
+did, so a grid of audio tiles pulled ~100 MB per WAV. It now 404s and the client
+renders its own icon.
+
+Generation is warmed at write time (`ThumbnailService.warm`) from upload and
+scan, not lazily on first view. It shells out to `ffmpeg` (video frames, audio
+waveforms) and `pdftoppm`; both are installed in the Dockerfile.
+
+### i18n keys
+
+Every key must exist in **all four** locales (`messages/{en,fr,de,es}.json`) or
+`bun run check` fails. There is no working ICU plural support here — use two
+flat keys plus a helper in `utils.ts` (see `filesCountLabel`).
+
+### Test isolation
+
+`mock.module` in Bun is **global and permanent** — a module mock in one test
+file leaks into every file that runs after it. Two consequences:
+
+- Every local `$lib/server/config` mock must return the *same* shape, or a suite
+  that runs later reads a config missing the fields it needs.
+- A suite that calls `mockReturnValue` (not `...Once`) on a shared mock must
+  restore it in `afterAll`, or it reconfigures everything downstream.
+
+Prefer stubbing a method on the instance under test over mocking a module.
+
+### Screenshots for docs
+
+`bun run screenshots` drives the app with Playwright and writes to
+`docs/images/`. It asserts each page renders before capturing, so a broken
+screen cannot be published as marketing.

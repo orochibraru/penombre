@@ -56,15 +56,6 @@
 </script>
 
 <div class="flex flex-col gap-6">
-    <div>
-        <h2 class="text-xl font-semibold tracking-tight">
-            {m.admin_dashboard()}
-        </h2>
-        <p class="text-muted-foreground text-sm">
-            {m.admin_dashboard_description()}
-        </p>
-    </div>
-
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {#each tiles as tile (tile.label)}
             {@const Icon = tile.icon}
@@ -88,7 +79,7 @@
         {/each}
     </div>
 
-    <div class="grid gap-4 lg:grid-cols-2">
+    <div class="grid items-start gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         <Card.Root>
             <Card.Header>
                 <Card.Title>{m.storage_management()}</Card.Title>

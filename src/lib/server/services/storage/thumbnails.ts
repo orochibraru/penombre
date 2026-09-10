@@ -16,6 +16,7 @@ import sharp from "sharp";
 import { Logger } from "$lib/logger";
 import { files } from "$lib/server/db/schema";
 import type { StorageContext } from "./context";
+import { ownedFiles } from "./scope";
 
 const logger = new Logger("StorageService");
 
@@ -144,7 +145,7 @@ export class ThumbnailService {
 		const [file] = await this.ctx.db
 			.select({ contentType: files.contentType })
 			.from(files)
-			.where(and(eq(files.path, key), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.path, key), ownedFiles(this.ctx)));
 		if (!file) {
 			return null;
 		}

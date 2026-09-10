@@ -10,6 +10,11 @@ const userPreferencesSchema = z.object({
 	layout: z.enum(["grid", "list"]).optional(),
 	sortColumn: z.enum(["name", "size", "updatedAt"]).nullable().optional(),
 	sortDirection: z.enum(["asc", "desc"]).optional(),
+	fontFamily: z.enum(["mono", "sans"]).optional(),
+	corners: z.enum(["boxy", "rounded"]).optional(),
+	accent: z
+		.enum(["purple", "blue", "teal", "green", "amber", "rose"])
+		.optional(),
 });
 
 export const getPreferences = defineRoute({

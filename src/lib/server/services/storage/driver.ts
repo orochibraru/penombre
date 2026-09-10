@@ -66,3 +66,17 @@ export interface StorageDriver {
 export function createUserStorageDriver(userFolder: string): StorageDriver {
 	return new LocalStorageDriver(join(getStoragePath(), userFolder));
 }
+
+/**
+ * Create a driver rooted at a mounted volume.
+ *
+ * In full mode each user gets a subdirectory of the volume, mirroring how the
+ * main drive is laid out; in simple mode the volume is shared whole, so the
+ * root is the mount point itself.
+ */
+export function createVolumeStorageDriver(
+	volumePath: string,
+	userFolder: string,
+): StorageDriver {
+	return new LocalStorageDriver(join(volumePath, userFolder));
+}

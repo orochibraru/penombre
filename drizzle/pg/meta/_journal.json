@@ -71,6 +71,13 @@
       "when": 1789045642774,
       "tag": "0009_broken_mauler",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789056645929,
+      "tag": "0010_ambiguous_ikaris",
+      "breakpoints": true
     }
   ]
 }

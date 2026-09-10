@@ -27,6 +27,7 @@ const mockRegister = mock(async (_opts: unknown) => {});
 
 mock.module("./driver", () => ({
 	createUserStorageDriver: () => mockDriver,
+	createVolumeStorageDriver: () => mockDriver,
 }));
 
 mock.module("$lib/server/config", () => ({

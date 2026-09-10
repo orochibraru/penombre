@@ -26,6 +26,25 @@ const oauthProviderSchema = z.object({
 	enabled: z.boolean().default(true),
 });
 
+/**
+ * An extra directory mounted alongside the main drive.
+ *
+ * Declared with `VOLUME_<NAME>_PATH` (and an optional `_LABEL`), mirroring the
+ * dynamic `OAUTH_<NAME>_*` convention already used for providers.
+ */
+const volumeSchema = z.object({
+	/** Stable id used in storage keys and DB rows. Lowercased env name. */
+	name: z.string().min(1),
+	/** What the sidebar shows. */
+	label: z.string().min(1),
+	/** Absolute path on the host. */
+	path: z.string().min(1),
+	/** Refuse writes; the volume browses but cannot be modified. */
+	readOnly: z.boolean().default(false),
+});
+
+export type VolumeConfig = z.infer<typeof volumeSchema>;
+
 const REQUIRED_SMTP_FIELDS = [
 	"host",
 	"port",
@@ -102,6 +121,7 @@ const configSchema = z
 		dataDir: z.string().default(defaultConfigValues.dataDir),
 		storagePath: z.string().default(defaultConfigValues.storagePath),
 		dbLocation: z.string().default(defaultConfigValues.dbLocation),
+		volumes: z.array(volumeSchema).default([]),
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
@@ -145,6 +165,36 @@ export type OAuthProviderInput = z.input<typeof oauthProviderSchema>;
 
 export function validateConfig(config: unknown): AppConfig {
 	return configSchema.parse(config);
+}
+
+/**
+ * Extra volumes from `VOLUME_<NAME>_PATH` / `VOLUME_<NAME>_LABEL` /
+ * `VOLUME_<NAME>_READONLY`. A volume without a path is skipped.
+ */
+function parseVolumes(): VolumeConfig[] {
+	const names = new Set<string>();
+	for (const key of Object.keys(env)) {
+		const match = key.match(/^VOLUME_([A-Z0-9_]+)_(PATH|LABEL|READONLY)$/);
+		if (match?.[1]) {
+			names.add(match[1]);
+		}
+	}
+
+	const volumes: VolumeConfig[] = [];
+	for (const rawName of names) {
+		const path = env[`VOLUME_${rawName}_PATH`];
+		if (!path) {
+			continue;
+		}
+		const name = rawName.toLowerCase().replace(/_/g, "-");
+		volumes.push({
+			name,
+			label: env[`VOLUME_${rawName}_LABEL`] || name,
+			path: resolve(path),
+			readOnly: env[`VOLUME_${rawName}_READONLY`] === "true",
+		});
+	}
+	return volumes;
 }
 
 /** Provider names appearing in any OAUTH_<NAME>_<FIELD> env var */
@@ -297,6 +347,7 @@ export function getConfig(): AppConfig {
 		dataDir: resolve(dataDir),
 		storagePath: resolve(env.STORAGE_PATH || paths.storagePath),
 		dbLocation: resolve(paths.dbLocation),
+		volumes: parseVolumes(),
 	});
 }
 
@@ -308,6 +359,16 @@ export function isSmtpEnabled(): boolean {
 /** Absolute path to the storage root — where uploaded bytes live on disk. */
 export function getStoragePath(): string {
 	return getConfig().storagePath;
+}
+
+/** Every extra volume mounted alongside the main drive. */
+export function getVolumes(): VolumeConfig[] {
+	return getConfig().volumes;
+}
+
+/** One mounted volume by name, or undefined. */
+export function getVolume(name: string): VolumeConfig | undefined {
+	return getVolumes().find((volume) => volume.name === name);
 }
 
 /** Simple mode: one shared storage volume/drive for every account, no per-user drives. */

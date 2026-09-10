@@ -15,6 +15,13 @@
       "when": 1789045651073,
       "tag": "0001_good_red_wolf",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789056646193,
+      "tag": "0002_burly_adam_warlock",
+      "breakpoints": true
     }
   ]
 }

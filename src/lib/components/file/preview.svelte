@@ -8,6 +8,7 @@
 	import { page } from "$app/state";
 	import type { ObjectItem } from "$lib/api";
 	import DocumentIcon from "$lib/components/file/document-icon.svelte";
+	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
 	import { isCodeItem } from "$lib/file-utils";
 	import { getObjectUrl } from "$lib/url";
 	import { getFileIconType } from "$lib/utils";
@@ -69,9 +70,9 @@
 	});
 </script>
 
-<div class="flex h-full w-full items-center justify-center [&>img]:h-full [&>img]:w-full">
+<div class="flex size-full items-center justify-center">
     {#if isPdf}
-        {#if thumbnailError}
+        {#if thumbnailError || !thumbnailUrl}
             <!-- Fallback to embed if thumbnail fails -->
             <embed
                 src={objectUrl}
@@ -84,7 +85,7 @@
             <img
                 src={thumbnailUrl}
                 alt={item.metadata.name ?? item.key}
-                class="h-full w-full object-cover"
+                class="absolute inset-0 size-full object-cover"
                 loading="lazy"
                 onerror={() => (thumbnailError = true)}
             />
@@ -99,7 +100,7 @@
     {:else if isCodeItem(item.metadata.name ?? item.key)}
         <FileCodeIcon class="size-10 text-muted-foreground" />
     {:else if isVideo}
-        {#if thumbnailError}
+        {#if thumbnailError || !thumbnailUrl}
             <FileVideoCameraIcon
                 class="size-10 text-muted-foreground"
             />
@@ -107,35 +108,40 @@
             <img
                 src={thumbnailUrl}
                 alt={item.metadata.name ?? item.key}
-                class="h-full w-full object-cover"
+                class="absolute inset-0 size-full object-cover"
                 loading="lazy"
                 onerror={() => (thumbnailError = true)}
             />
         {/if}
     {:else if isAudio}
-        {#if thumbnailError}
+        {#if thumbnailError || !thumbnailUrl}
             <FileAudioIcon class="size-10 text-muted-foreground" />
         {:else}
             <img
                 src={thumbnailUrl}
                 alt="Waveform for {item.metadata.name ?? item.key}"
-                class="h-full w-full object-contain px-2"
+                class="absolute inset-0 size-full object-contain p-2"
                 loading="lazy"
                 onerror={() => (thumbnailError = true)}
             />
         {/if}
-    {:else if isImage}
+    {:else if isImage && thumbnailUrl && !thumbnailError}
         <img
             src={thumbnailUrl}
             alt={item.metadata.name ?? item.key}
-            class="h-full w-full object-cover"
+            class="absolute inset-0 size-full object-cover"
             loading="lazy"
+            onerror={() => (thumbnailError = true)}
         />
     {:else}
-        <img
-            src={objectUrl}
-            alt={item.metadata.name ?? item.key}
-            class="h-full w-full object-cover"
+        <!--
+          Anything with no preview to show. This used to render the raw file
+          in an `<img>`, so a text or unknown type produced a broken image and
+          the grid showed bare alt text — an icon is the honest fallback.
+        -->
+        <FileTypeIcon
+            category={item.metadata.category}
+            class="text-muted-foreground/60 size-9"
         />
     {/if}
 </div>

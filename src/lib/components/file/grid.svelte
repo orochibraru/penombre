@@ -223,9 +223,9 @@
     {@const isDragTarget = dropTargetKey === objectItem.key}
     <li
         class={cn(
-            "flex items-stretch justify-between rounded-xl border p-5 transition-colors",
-            checked ? "bg-primary/5" : "",
-            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+            "group/tile bg-card/40 hover:border-primary/50 hover:bg-card/70 relative flex flex-col overflow-hidden rounded-[calc(var(--radius)+2px)] border transition-colors",
+            checked && "border-primary bg-primary/5",
+            isDragTarget && "border-primary bg-primary/10",
         )}
         draggable={onDragStart !== undefined}
         ondragstart={(e) => handleItemDragStart(e, objectItem)}
@@ -308,13 +308,13 @@
         </ContextMenu.Root>
         <DropdownMenu.Root>
             <DropdownMenu.Trigger
-                class="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                class="bg-background/70 text-muted-foreground hover:text-foreground data-[state=open]:bg-background absolute top-1.5 right-1.5 z-10 flex size-7 items-center justify-center rounded-[calc(var(--radius)-2px)] opacity-0 backdrop-blur-sm transition-opacity group-hover/tile:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
             >
                 {#snippet child({ props })}
-                    <Button variant="ghost" size="icon" {...props}>
-                        <EllipsisVerticalIcon />
+                    <button type="button" {...props}>
+                        <EllipsisVerticalIcon class="size-4" />
                         <span class="sr-only">{m.open_menu()}</span>
-                    </Button>
+                    </button>
                 {/snippet}
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
@@ -440,7 +440,7 @@
         </div>
     {/if}
     <ul
-        class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+        class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
     >
         {#if loading}
             {@render loadingRows()}

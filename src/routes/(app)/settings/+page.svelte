@@ -10,16 +10,7 @@
 	});
 </script>
 
-<div class="flex max-w-2xl flex-col gap-6">
-    <div>
-        <h2 class="text-xl font-semibold tracking-tight">
-            {m.settings_nav_general()}
-        </h2>
-        <p class="text-muted-foreground text-sm">
-            {m.settings_general_description()}
-        </p>
-    </div>
-
+<div class="flex flex-col gap-4">
     <Card.Root>
         <Card.Content>
             <LanguageDropdown />
