@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CheckIcon } from "@lucide/svelte";
 	import { Label } from "$lib/components/ui/label";
+	import * as Select from "$lib/components/ui/select/index.js";
 	import * as m from "$lib/paraglide/messages.js";
 	import {
 		getLocale,
@@ -9,6 +10,17 @@
 		setLocale,
 	} from "$lib/paraglide/runtime";
 	import { cn } from "$lib/utils";
+
+	interface Props {
+		/**
+		 * `compact` renders a plain select. The card grid is right in Settings,
+		 * where it is the subject of the page, but on the auth screens it
+		 * dwarfs the sign-in form it sits under.
+		 */
+		compact?: boolean;
+	}
+
+	const { compact = false }: Props = $props();
 
 	let currentLanguage = $derived(getLocale());
 
@@ -37,6 +49,27 @@
 	}
 </script>
 
+{#if compact}
+    <Select.Root
+        type="single"
+        value={currentLanguage}
+        onValueChange={(value) => changeLocale(value as Locale)}
+    >
+        <Select.Trigger class="w-full" aria-label={m.select_language()}>
+            {endonym(currentLanguage)}
+        </Select.Trigger>
+        <Select.Content>
+            {#each locales as locale (locale)}
+                <Select.Item value={locale}>
+                    <span class="capitalize">{endonym(locale)}</span>
+                    <span class="text-muted-foreground ml-2 text-xs uppercase">
+                        {locale}
+                    </span>
+                </Select.Item>
+            {/each}
+        </Select.Content>
+    </Select.Root>
+{:else}
 <fieldset class="flex flex-col gap-3">
     <legend class="text-sm font-medium">{m.select_language()}</legend>
     <p class="text-muted-foreground text-sm">{m.language_description()}</p>
@@ -70,3 +103,4 @@
         {/each}
     </div>
 </fieldset>
+{/if}

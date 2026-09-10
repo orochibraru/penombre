@@ -34,7 +34,9 @@
             </div>
         </div>
         <div class="flex">
-            <LanguageDropdown />
+            <div class="w-44">
+                <LanguageDropdown compact />
+            </div>
         </div>
     </div>
 </div>

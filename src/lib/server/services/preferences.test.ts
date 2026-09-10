@@ -23,6 +23,7 @@ describe("getUserPreferences", () => {
 			fontFamily: "sans",
 			corners: "rounded",
 			accent: "purple",
+			onboarded: false,
 		});
 	});
 
@@ -45,6 +46,7 @@ describe("getUserPreferences", () => {
 			fontFamily: "sans",
 			corners: "rounded",
 			accent: "purple",
+			onboarded: false,
 		});
 	});
 
@@ -67,6 +69,7 @@ describe("getUserPreferences", () => {
 			fontFamily: "sans",
 			corners: "rounded",
 			accent: "purple",
+			onboarded: false,
 		});
 	});
 });
@@ -95,6 +98,7 @@ describe("updateUserPreferences", () => {
 			fontFamily: "sans",
 			corners: "rounded",
 			accent: "purple",
+			onboarded: false,
 		});
 		expect(mockValues).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -106,6 +110,7 @@ describe("updateUserPreferences", () => {
 					fontFamily: "sans",
 					corners: "rounded",
 					accent: "purple",
+					onboarded: false,
 				},
 			}),
 		);
@@ -139,6 +144,7 @@ describe("updateUserPreferences", () => {
 			fontFamily: "sans",
 			corners: "rounded",
 			accent: "purple",
+			onboarded: false,
 		});
 	});
 });

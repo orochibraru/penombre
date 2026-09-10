@@ -15,6 +15,7 @@ const userPreferencesSchema = z.object({
 	accent: z
 		.enum(["purple", "blue", "teal", "green", "amber", "rose"])
 		.optional(),
+	onboarded: z.boolean().optional(),
 });
 
 export const getPreferences = defineRoute({

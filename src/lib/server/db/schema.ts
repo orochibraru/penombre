@@ -43,6 +43,9 @@ export const sharedWith = (
 export const shares = (
 	sqliteActive ? sqlite.shares : pg.shares
 ) as typeof pg.shares;
+export const appSettings = (
+	sqliteActive ? sqlite.appSettings : pg.appSettings
+) as typeof pg.appSettings;
 export const userPreferences = (
 	sqliteActive ? sqlite.userPreferences : pg.userPreferences
 ) as typeof pg.userPreferences;
@@ -59,7 +62,7 @@ export const files = (
 	sqliteActive ? sqlite.files : pg.files
 ) as typeof pg.files;
 
-export type { UserPreferencesData } from "./schema.pg";
+export type { AppSettingsData, UserPreferencesData } from "./schema.pg";
 export type User = typeof pg.user.$inferSelect;
 export type Session = typeof pg.session.$inferSelect;
 export interface UserWithSession {
@@ -72,6 +75,7 @@ export type Activity = typeof pg.activity.$inferSelect;
 export type Sharing = typeof pg.sharings.$inferSelect;
 export type SharedWith = typeof pg.sharedWith.$inferSelect;
 export type Share = typeof pg.shares.$inferSelect;
+export type AppSettings = typeof pg.appSettings.$inferSelect;
 export type UserPreferences = typeof pg.userPreferences.$inferSelect;
 export type Apikey = typeof pg.apikey.$inferSelect;
 export type Passkey = typeof pg.passkey.$inferSelect;

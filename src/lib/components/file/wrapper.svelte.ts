@@ -240,12 +240,14 @@ export function createTrashActions(handlers: {
 				{
 					title: "Delete permanently",
 					icon: TrashIcon,
+					iconClass: "text-destructive",
 					action: handlers.onDeletePermanently,
 					disabled: false,
 				},
 				{
 					title: "Restore",
 					icon: ArchiveRestoreIcon,
+					iconClass: "text-emerald-600 dark:text-emerald-400",
 					action: handlers.onRestore,
 					disabled: false,
 				},
@@ -270,18 +272,21 @@ export function createMainActions(handlers: {
 				{
 					title: "Download",
 					icon: DownloadIcon,
+					iconClass: "text-sky-600 dark:text-sky-400",
 					action: handlers.onDownload,
 					// Works for both files and folders (folders download as zip)
 				},
 				{
 					title: "Open in new tab",
 					icon: ExternalLinkIcon,
+					iconClass: "text-slate-500 dark:text-slate-400",
 					action: handlers.onOpenInNewTab,
 					fileOnly: true,
 				},
 				{
 					title: "Share",
 					icon: ShareIcon,
+					iconClass: "text-violet-600 dark:text-violet-400",
 					action: handlers.onShare,
 				},
 			],
@@ -291,16 +296,19 @@ export function createMainActions(handlers: {
 				{
 					title: "Rename",
 					icon: PencilLineIcon,
+					iconClass: "text-amber-600 dark:text-amber-400",
 					action: handlers.onRename,
 				},
 				{
 					title: "Move",
 					icon: FolderInputIcon,
+					iconClass: "text-indigo-600 dark:text-indigo-400",
 					action: handlers.onMove,
 				},
 				{
 					title: "Duplicate",
 					icon: CopyIcon,
+					iconClass: "text-teal-600 dark:text-teal-400",
 					action: handlers.onDuplicate,
 					fileOnly: true,
 				},
@@ -309,6 +317,7 @@ export function createMainActions(handlers: {
 						item.metadata.isStarred ? "Unstar" : "Star",
 					icon: (item: ObjectItem) =>
 						item.metadata.isStarred ? StarOffIcon : StarIcon,
+					iconClass: "text-yellow-500",
 					action: handlers.onStar,
 					disabled: false,
 					dynamic: true,
@@ -320,6 +329,7 @@ export function createMainActions(handlers: {
 				{
 					title: "Move to trash",
 					icon: TrashIcon,
+					iconClass: "text-destructive",
 					action: handlers.onMoveToTrash,
 					variant: "destructive",
 					disabled: false,
@@ -338,30 +348,35 @@ export function createMainMultipleActions(handlers: {
 		{
 			title: "Download",
 			icon: DownloadIcon,
+			iconClass: "text-sky-600 dark:text-sky-400",
 			variant: "outline",
 			action: handlers.onDownload,
 		},
 		{
 			title: "Move",
 			icon: FolderInputIcon,
+			iconClass: "text-indigo-600 dark:text-indigo-400",
 			variant: "outline",
 			action: handlers.onMove,
 		},
 		{
 			title: "Star",
 			icon: StarIcon,
+			iconClass: "text-yellow-500",
 			variant: "outline",
 			action: () => [],
 		},
 		{
 			title: "Share",
 			icon: ShareIcon,
+			iconClass: "text-violet-600 dark:text-violet-400",
 			variant: "outline",
 			action: () => [],
 		},
 		{
 			title: "Move to Trash",
 			icon: TrashIcon,
+			iconClass: "text-destructive",
 			variant: "destructive",
 			action: handlers.onMoveToTrash,
 		},
@@ -376,12 +391,14 @@ export function createTrashMultipleActions(handlers: {
 		{
 			title: "Restore",
 			icon: ArchiveRestoreIcon,
+			iconClass: "text-emerald-600 dark:text-emerald-400",
 			variant: "outline",
 			action: handlers.onRestore,
 		},
 		{
 			title: "Delete permanently",
 			icon: TrashIcon,
+			iconClass: "text-destructive",
 			variant: "destructive",
 			action: handlers.onDeletePermanently,
 		},

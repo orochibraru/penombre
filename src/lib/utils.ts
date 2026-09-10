@@ -171,6 +171,8 @@ export function isFolderItem(item: ObjectItem) {
 
 export interface MultipleItemsAction {
 	title: string;
+	/** Tailwind colour classes for the icon — see `ItemAction.iconClass`. */
+	iconClass?: string;
 	// biome-ignore lint/suspicious/noExplicitAny: Lucide icon component type is complex
 	icon: any;
 	action: () => void;
@@ -183,6 +185,14 @@ export interface ItemAction {
 	icon: any;
 	action: (item: ObjectItem) => void;
 	variant?: "default" | "destructive";
+	/**
+	 * Tailwind colour classes for the icon.
+	 *
+	 * The menu is used by muscle memory far more than it is read, and a column
+	 * of identical grey glyphs gives nothing to aim at. Colour is decoration
+	 * only — the label still carries the meaning.
+	 */
+	iconClass?: string;
 	disabled?: boolean;
 	fileOnly?: boolean;
 	folderOnly?: boolean;

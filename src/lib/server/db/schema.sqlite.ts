@@ -15,7 +15,7 @@ import {
 	sqliteTable,
 	text,
 } from "drizzle-orm/sqlite-core";
-import type { UserPreferencesData } from "./schema.pg";
+import type { AppSettingsData, UserPreferencesData } from "./schema.pg";
 
 export const user = sqliteTable("user", {
 	id: text("id").primaryKey(),
@@ -231,6 +231,21 @@ export const shares = sqliteTable(
 		index("shares_token_idx").on(table.token),
 	],
 );
+
+// =========================================================================
+// INSTANCE SETTINGS
+// =========================================================================
+
+export const appSettings = sqliteTable("app_settings", {
+	id: text("id").primaryKey(),
+	settings: text("settings", { mode: "json" })
+		.$type<AppSettingsData>()
+		.default({}),
+	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+		.$defaultFn(() => new Date())
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
 
 // =========================================================================
 // USER PREFERENCES

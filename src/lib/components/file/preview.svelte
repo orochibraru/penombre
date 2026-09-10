@@ -9,6 +9,7 @@
 	import type { ObjectItem } from "$lib/api";
 	import DocumentIcon from "$lib/components/file/document-icon.svelte";
 	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
+	import { Skeleton } from "$lib/components/ui/skeleton/index.js";
 	import { isCodeItem } from "$lib/file-utils";
 	import { getObjectUrl } from "$lib/url";
 	import { getFileIconType } from "$lib/utils";
@@ -50,6 +51,8 @@
 
 	// Track thumbnail load errors
 	let thumbnailError = $state(false);
+	/** Cleared on load or error, so the skeleton only covers the fetch. */
+	let thumbnailLoading = $state(true);
 
 	$effect(() => {
 		objectUrl = getObjectUrl({
@@ -66,11 +69,16 @@
 				baseUrl: page.url,
 			});
 			thumbnailError = false;
+			thumbnailLoading = true;
 		}
 	});
 </script>
 
-<div class="flex size-full items-center justify-center">
+<div class="relative flex size-full items-center justify-center">
+    {#if thumbnailUrl && !thumbnailError && thumbnailLoading}
+        <!-- Covers the fetch so a tile never flashes broken-image alt text. -->
+        <Skeleton class="absolute inset-0 size-full rounded-none" />
+    {/if}
     {#if isPdf}
         {#if thumbnailError || !thumbnailUrl}
             <!-- Fallback to embed if thumbnail fails -->
@@ -87,7 +95,11 @@
                 alt={item.metadata.name ?? item.key}
                 class="absolute inset-0 size-full object-cover"
                 loading="lazy"
-                onerror={() => (thumbnailError = true)}
+                onload={() => (thumbnailLoading = false)}
+                onerror={() => {
+                    thumbnailError = true;
+                    thumbnailLoading = false;
+                }}
             />
         {/if}
     {:else if isArchive}
@@ -110,7 +122,11 @@
                 alt={item.metadata.name ?? item.key}
                 class="absolute inset-0 size-full object-cover"
                 loading="lazy"
-                onerror={() => (thumbnailError = true)}
+                onload={() => (thumbnailLoading = false)}
+                onerror={() => {
+                    thumbnailError = true;
+                    thumbnailLoading = false;
+                }}
             />
         {/if}
     {:else if isAudio}
@@ -122,7 +138,11 @@
                 alt="Waveform for {item.metadata.name ?? item.key}"
                 class="absolute inset-0 size-full object-contain p-2"
                 loading="lazy"
-                onerror={() => (thumbnailError = true)}
+                onload={() => (thumbnailLoading = false)}
+                onerror={() => {
+                    thumbnailError = true;
+                    thumbnailLoading = false;
+                }}
             />
         {/if}
     {:else if isImage && thumbnailUrl && !thumbnailError}
@@ -131,7 +151,11 @@
             alt={item.metadata.name ?? item.key}
             class="absolute inset-0 size-full object-cover"
             loading="lazy"
-            onerror={() => (thumbnailError = true)}
+            onload={() => (thumbnailLoading = false)}
+                onerror={() => {
+                    thumbnailError = true;
+                    thumbnailLoading = false;
+                }}
         />
     {:else}
         <!--

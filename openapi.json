@@ -11785,6 +11785,9 @@
 													],
 													"type": "string"
 												},
+												"onboarded": {
+													"type": "boolean"
+												},
 												"sortColumn": {
 													"anyOf": [
 														{
@@ -11888,6 +11891,9 @@
 										],
 										"type": "string"
 									},
+									"onboarded": {
+										"type": "boolean"
+									},
 									"sortColumn": {
 										"anyOf": [
 											{
@@ -11957,6 +11963,9 @@
 														"list"
 													],
 													"type": "string"
+												},
+												"onboarded": {
+													"type": "boolean"
 												},
 												"sortColumn": {
 													"anyOf": [

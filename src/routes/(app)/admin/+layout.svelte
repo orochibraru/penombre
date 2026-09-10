@@ -3,6 +3,7 @@
 		ActivityIcon,
 		CogIcon,
 		HardDriveIcon,
+		SlidersHorizontalIcon,
 		UsersIcon,
 	} from "@lucide/svelte";
 	import SectionTabs, {

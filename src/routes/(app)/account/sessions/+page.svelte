@@ -1,8 +1,8 @@
 <script lang="ts">
 	import {
 		GlobeIcon,
-		MonitorIcon,
 		type LucideIcon,
+		MonitorIcon,
 		SmartphoneIcon,
 		TabletIcon,
 	} from "@lucide/svelte";
@@ -29,6 +29,40 @@
 	 * sessions at a glance, not to fingerprint them. Anything unrecognised
 	 * falls back to a globe rather than dumping the raw string.
 	 */
+	/** First match wins, so order these most specific first. */
+	const PLATFORMS: Array<[string, string]> = [
+		["iphone", "iPhone"],
+		["ipad", "iPad"],
+		["android", "Android"],
+		["mac os", "macOS"],
+		["windows", "Windows"],
+		["linux", "Linux"],
+	];
+
+	const BROWSERS: Array<[string, string]> = [
+		["edg/", "Edge"],
+		["firefox", "Firefox"],
+		["chrome", "Chrome"],
+		["safari", "Safari"],
+	];
+
+	const match = (ua: string, table: Array<[string, string]>) =>
+		table.find(([needle]) => ua.includes(needle))?.[1];
+
+	function deviceIcon(ua: string): LucideIcon {
+		if (ua.includes("ipad") || ua.includes("tablet")) {
+			return TabletIcon;
+		}
+		if (
+			ua.includes("iphone") ||
+			ua.includes("android") ||
+			ua.includes("mobile")
+		) {
+			return SmartphoneIcon;
+		}
+		return MonitorIcon;
+	}
+
 	function describe(userAgent: string | null | undefined): {
 		icon: LucideIcon;
 		label: string;
@@ -38,39 +72,11 @@
 			return { icon: GlobeIcon, label: m.unknown() };
 		}
 
-		const isTablet = ua.includes("ipad") || ua.includes("tablet");
-		const isPhone =
-			!isTablet &&
-			(ua.includes("iphone") ||
-				ua.includes("android") ||
-				ua.includes("mobile"));
-
-		const platform = ua.includes("iphone")
-			? "iPhone"
-			: ua.includes("ipad")
-				? "iPad"
-				: ua.includes("android")
-					? "Android"
-					: ua.includes("mac os")
-						? "macOS"
-						: ua.includes("windows")
-							? "Windows"
-							: ua.includes("linux")
-								? "Linux"
-								: m.unknown();
-
-		const browser = ua.includes("edg/")
-			? "Edge"
-			: ua.includes("chrome") && !ua.includes("chromium")
-				? "Chrome"
-				: ua.includes("firefox")
-					? "Firefox"
-					: ua.includes("safari")
-						? "Safari"
-						: null;
+		const platform = match(ua, PLATFORMS) ?? m.unknown();
+		const browser = match(ua, BROWSERS);
 
 		return {
-			icon: isPhone ? SmartphoneIcon : isTablet ? TabletIcon : MonitorIcon,
+			icon: deviceIcon(ua),
 			label: browser ? `${platform} · ${browser}` : platform,
 		};
 	}

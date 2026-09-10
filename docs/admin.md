@@ -28,6 +28,20 @@ Deleting a user cascades: their files, folders, share links, API keys, passkeys
 and activity rows go with them. The bytes under `STORAGE_PATH` are cleaned up on
 the next boot.
 
+## Settings
+
+`/admin/settings` holds the instance policy that has no environment equivalent:
+
+- **Security** — require a passkey, require strong passwords, and a minimum
+  password length layered on top of the `MIN_PASSWORD_LENGTH` floor.
+- **Sign-ups** — whether anyone may create an account unprompted, and an
+  optional allow-list of email domains when they may.
+
+Sign-in methods (email/password, OAuth providers) are configured by environment
+variable and shown here **read-only**. `config.ts` stays the single source of
+truth for those, so the two can never disagree — change them in your `.env` and
+restart.
+
 ## Storage
 
 `/admin/storage` shows the resolved storage path, instance-wide file and byte

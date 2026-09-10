@@ -17,14 +17,14 @@
 - [x] Grid layout is consistent but ugly AF. Let's redesign it.
 - [x] Add E2E tasks to take screenshots of the app with sample media to then
       inject in the app's readme and documentation.
-- [ ] Loading preview thumbnails and waveforms is ugly as fuck (only showing alt
+- [x] Loading preview thumbnails and waveforms is ugly as fuck (only showing alt
       text). Let's use skeletons instead.
-- [ ] Admin panel needs to store important app settings: security requirements
+- [x] Admin panel needs to store important app settings: security requirements
       (require passkey, CRUD oauth providers (if one was added from env var
       display as read only with a message), password sign in enabled or not,
       password requirements if it is, allow signups, if allow signups enabled
       add email domain filter (allow signups ending in @tomain.tld))
-- [ ] Admin panel needs to be where an admin can invite users via email or
+- [x] Admin panel needs to be where an admin can invite users via email or
       simply register the user's email so they can complete an onboarding
       process upon signing in. For that to happen change the sign in flow, if
       signing in via email only show the email input. If user is registered and
@@ -33,7 +33,7 @@
       can set their password (if login flow enabled). Upon first sign in show
       the user a modal where they can customize the UI (with the UI settings
       from the settings page, with a stepper component and ability to skip)
-- [ ] Right click context menu: add color to icons so user can distinguish each
+- [x] Right click context menu: add color to icons so user can distinguish each
       action from muscle memory instead of looking every time.
 
 ## Done this pass
@@ -43,12 +43,12 @@ through every storage query). See `docs/volumes.md`.
 
 ## Follow-ups
 
-- `bun run screenshots` writes to `docs/images/`, but nothing references those
-  files yet — the README and docs pages still need the image embeds added.
-- Volume scanning runs on a timer as the shared owner, which in full mode only
-  covers that account's subdirectory. Every other user reconciles their own when
-  they open the volume; a per-user background sweep would need a worker that
-  knows the full user list.
-- The grid's audio tiles were rendering waveforms, then regressed to the icon
-  fallback after a CSS change. Generation and serving are verified working (200,
-  `image/webp`); the client-side `onerror` path needs a look.
+- Volume scanning now sweeps every user per interval (`loadAllOwners`). That is
+  a full user-table read per pass — fine for a homelab, but page it or move to a
+  queue if an instance ever grows enough accounts for it to show.
+- Email-first sign-in confirms whether an address has an account here. Standard
+  for the pattern and rate-limited, but if enumeration ever matters more than
+  the flow, return `has-password` unconditionally and let the password step
+  fail instead.
+- Invites create the account directly; there is no emailed invitation link yet,
+  so an admin still has to tell the person they can sign in.

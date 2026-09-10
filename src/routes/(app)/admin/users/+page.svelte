@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { EllipsisVerticalIcon, ShieldIcon } from "@lucide/svelte";
+	import {
+		EllipsisVerticalIcon,
+		ShieldIcon,
+		UserPlusIcon,
+	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { enhance } from "$app/forms";
@@ -7,6 +11,8 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Card from "$lib/components/ui/card/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+	import { Input } from "$lib/components/ui/input";
+	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
 	import { usersCountLabel } from "$lib/utils";
@@ -22,6 +28,8 @@
 	$effect(() => {
 		if (form?.error) {
 			toast.error(form.error);
+		} else if (form?.invited) {
+			toast.success(m.toast_user_invited({ email: form.invited }));
 		}
 	});
 
@@ -70,6 +78,47 @@
         <input type="hidden" name="role" />
         <input type="hidden" name="banned" />
     </form>
+
+    <Card.Root>
+        <Card.Header>
+            <Card.Title class="flex items-center gap-2">
+                <UserPlusIcon class="size-4" />
+                {m.admin_invite_user()}
+            </Card.Title>
+            <Card.Description>{m.admin_invite_hint()}</Card.Description>
+        </Card.Header>
+        <Card.Content>
+            <form
+                method="POST"
+                action="?/inviteUser"
+                class="flex flex-wrap items-end gap-3"
+                use:enhance={() =>
+                    async ({ update }) => {
+                        await update();
+                    }}
+            >
+                <div class="flex min-w-56 flex-1 flex-col gap-2">
+                    <Label for="invite-email">{m.email()}</Label>
+                    <Input
+                        id="invite-email"
+                        name="email"
+                        type="email"
+                        required
+                        placeholder="name@example.com"
+                    />
+                </div>
+                <div class="flex min-w-40 flex-1 flex-col gap-2">
+                    <Label for="invite-name">{m.admin_invite_name()}</Label>
+                    <Input
+                        id="invite-name"
+                        name="name"
+                        placeholder={m.admin_invite_name_placeholder()}
+                    />
+                </div>
+                <Button type="submit">{m.admin_invite_submit()}</Button>
+            </form>
+        </Card.Content>
+    </Card.Root>
 
     <div class="flex flex-col gap-2">
         {#each data.users.users as user (user.id)}

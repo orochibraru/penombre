@@ -12,6 +12,7 @@ const defaultPreferences: UserPreferencesData = {
 	fontFamily: "sans",
 	corners: "rounded",
 	accent: "purple",
+	onboarded: false,
 };
 
 /**

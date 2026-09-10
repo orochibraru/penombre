@@ -405,7 +405,7 @@
                                             : "",
                                     )}
                                 >
-                                    <Icon />
+                                    <Icon class={act.iconClass} />
                                     {title}
                                 </button>
                             {/if}

@@ -965,7 +965,7 @@
                 onclick={() => action.action()}
                 class="text-xs"
             >
-                <Icon class="size-4" />
+                <Icon class="size-4 {action.iconClass ?? ''}" />
                 {action.title}
             </Button>
         {/each}

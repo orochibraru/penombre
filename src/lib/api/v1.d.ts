@@ -3572,6 +3572,7 @@ export interface paths {
 								fontFamily?: "mono" | "sans";
 								/** @enum {string} */
 								layout?: "grid" | "list";
+								onboarded?: boolean;
 								sortColumn?: ("name" | "size" | "updatedAt") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";
@@ -3621,6 +3622,7 @@ export interface paths {
 						fontFamily?: "mono" | "sans";
 						/** @enum {string} */
 						layout?: "grid" | "list";
+						onboarded?: boolean;
 						sortColumn?: ("name" | "size" | "updatedAt") | null;
 						/** @enum {string} */
 						sortDirection?: "asc" | "desc";
@@ -3650,6 +3652,7 @@ export interface paths {
 								fontFamily?: "mono" | "sans";
 								/** @enum {string} */
 								layout?: "grid" | "list";
+								onboarded?: boolean;
 								sortColumn?: ("name" | "size" | "updatedAt") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";

@@ -45,7 +45,7 @@
 <div class="mb-5 flex flex-col gap-3">
     <h1 class="text-xl font-semibold tracking-tight">{title}</h1>
     <nav
-        class="border-border flex gap-1 overflow-x-auto border-b"
+        class="border-border flex flex-wrap gap-1 border-b"
         aria-label={title}
     >
         {#each tabs as tab (tab.url)}
@@ -55,7 +55,7 @@
                 href={tab.url}
                 aria-current={active ? "page" : undefined}
                 class={cn(
-                    "-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2 text-sm whitespace-nowrap transition-colors",
+                    "-mb-px flex items-center gap-2 border-b-2 px-3 py-2 text-sm whitespace-nowrap transition-colors",
                     active
                         ? "border-primary text-primary font-medium"
                         : "text-muted-foreground hover:text-foreground border-transparent",

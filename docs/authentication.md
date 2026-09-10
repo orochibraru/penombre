@@ -144,6 +144,33 @@ the callback URL.
 Sign-out still works, but if your provider keeps its own session you may be
 signed straight back in. Log out of the provider too for a full sign-out.
 
+## Adding people to an instance
+
+Sign-in is **email first**: the address is entered on its own, and Penombre then
+asks for whatever that account actually needs.
+
+- **A known account with a password** gets the password field.
+- **A known account without one** — an address an admin registered — goes to
+  `/auth/onboarding` to choose a password. No admin ever sees it, and no mail
+  server is involved.
+- **An unknown address** is told to ask an admin. Whether an address can sign
+  itself up is governed by **Admin → Settings → Sign-ups**, including an
+  optional allow-list of email domains.
+
+Admins add people under **Admin → Users**: enter an email (and optionally a
+name), and the account is created with no credential at all. That absent
+credential is what marks it as an invitation — the sign-in flow sees it and
+routes the person to onboarding.
+
+> Email-first sign-in does reveal whether an address has an account here, which
+> a combined email-and-password form does not. That is the accepted trade of
+> every email-first flow; better-auth's rate limiter caps how fast the lookup
+> can be walked.
+
+On their first sign-in, everyone gets a short walkthrough to pick an accent,
+typeface, corner style and default layout. It can be skipped, and everything in
+it lives in **Settings → Appearance** afterwards.
+
 ## Adding a password to an OAuth account
 
 An account created through an OAuth provider has no password of its own. When

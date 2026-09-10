@@ -264,6 +264,40 @@ export const sharesRelations = relations(shares, ({ one }) => ({
 }));
 
 // =========================================================================
+// INSTANCE SETTINGS
+// =========================================================================
+
+/**
+ * Runtime settings an admin can change without restarting.
+ *
+ * Single row, keyed by a constant id. Anything also settable by environment
+ * variable stays env-owned — `config.ts` remains the source of truth for those,
+ * and the admin UI shows them read-only. This table only holds what has no env
+ * equivalent, so the two can never disagree.
+ */
+export interface AppSettingsData {
+	/** Require every account to register a passkey. */
+	requirePasskey?: boolean;
+	/** Whether anyone may create an account unprompted. */
+	allowSignups?: boolean;
+	/** When signups are open, restrict them to these email domains. */
+	allowedEmailDomains?: string[];
+	/** Minimum password length enforced on top of the env floor. */
+	minPasswordLength?: number;
+	/** Require a mix of character classes in passwords. */
+	requireStrongPassword?: boolean;
+}
+
+export const appSettings = pgTable("app_settings", {
+	id: text("id").primaryKey(),
+	settings: jsonb("settings").$type<AppSettingsData>().default({}),
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+// =========================================================================
 // USER PREFERENCES
 // =========================================================================
 
@@ -277,6 +311,11 @@ export interface UserPreferencesData {
 	corners?: "boxy" | "rounded";
 	/** Named accent, mapped to an oklch hue in `app.css`. */
 	accent?: "purple" | "blue" | "teal" | "green" | "amber" | "rose";
+	/**
+	 * Set once the first-run walkthrough has been completed or skipped. Lives
+	 * here rather than on `user` so inviting an account needs no migration.
+	 */
+	onboarded?: boolean;
 }
 
 export const userPreferences = pgTable("user_preferences", {
@@ -494,6 +533,7 @@ export type Verification = typeof verification.$inferSelect;
 export type Activity = typeof activity.$inferSelect;
 export type Sharing = typeof sharings.$inferSelect;
 export type Share = typeof shares.$inferSelect;
+export type AppSettings = typeof appSettings.$inferSelect;
 export type SharedWith = typeof sharedWith.$inferSelect;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type Apikey = typeof apikey.$inferSelect;

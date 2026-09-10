@@ -233,6 +233,32 @@ rule at the bottom of `app.css` wraps it. Beware viewport-relative caps
 (`max-w-[60vw]`) on anything that can appear inside a dialog — it sizes against
 the window, not the dialog.
 
+### Invitations have no credential
+
+An invited account is one with **no `account` row of `providerId: "credential"`**
+— that absence is the marker, not a flag column. `createUser` requires a
+password, so the invite action creates one and deletes the credential row
+immediately after.
+
+Onboarding then writes the credential itself via
+`(await auth.$context).internalAdapter.createAccount()` with
+`ctx.password.hash()`. It cannot use `changePassword` (no current password) or
+`setUserPassword` (needs an admin session the invitee does not have).
+
+### A hidden `required` input blocks form submission
+
+The two-step sign-in hides the password field until the address is known. Its
+`required` must be bound to the same flag — a hidden required control fails
+HTML validation with "An invalid form control is not focusable" and the submit
+silently does nothing.
+
+### Instance settings vs. environment
+
+`app_settings` (one row, `services/app-settings.ts`) holds only what has **no**
+environment equivalent. Anything settable by env var stays env-owned so
+`config.ts` remains the single source of truth — the admin UI shows those
+read-only rather than offering a second place to set them.
+
 ### Adding a user preference
 
 Four places, all required: `UserPreferencesData` (`schema.pg.ts`),

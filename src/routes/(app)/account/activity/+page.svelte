@@ -1,44 +1,44 @@
 <script lang="ts">
-    import { ScrollTextIcon } from "@lucide/svelte";
-    import { onMount } from "svelte";
-    import * as Card from "$lib/components/ui/card/index.js";
-    import * as m from "$lib/paraglide/messages.js";
-    import { title } from "$lib/store/title";
-    import { cn } from "$lib/utils";
+	import { ScrollTextIcon } from "@lucide/svelte";
+	import { onMount } from "svelte";
+	import * as Card from "$lib/components/ui/card/index.js";
+	import * as m from "$lib/paraglide/messages.js";
+	import { title } from "$lib/store/title";
+	import { cn } from "$lib/utils";
 
-    onMount(() => {
-        title.set(m.title_account_activity());
-    });
+	onMount(() => {
+		title.set(m.title_account_activity());
+	});
 
-    const { data } = $props();
+	const { data } = $props();
 
-    /**
-     * Log lines, not cards: this is a chronological stream, so it reads better
-     * as dense fixed-width rows than as a stack of boxes. The action column is
-     * padded to a fixed width so the messages align down the page.
-     */
-    const actionColour: Record<string, string> = {
-        create: "text-emerald-600 dark:text-emerald-400",
-        update: "text-sky-600 dark:text-sky-400",
-        delete: "text-destructive",
-        rename: "text-amber-600 dark:text-amber-400",
-        share: "text-violet-600 dark:text-violet-400",
-    };
+	/**
+	 * Log lines, not cards: this is a chronological stream, so it reads better
+	 * as dense fixed-width rows than as a stack of boxes. The action column is
+	 * padded to a fixed width so the messages align down the page.
+	 */
+	const actionColour: Record<string, string> = {
+		create: "text-emerald-600 dark:text-emerald-400",
+		update: "text-sky-600 dark:text-sky-400",
+		delete: "text-destructive",
+		rename: "text-amber-600 dark:text-amber-400",
+		share: "text-violet-600 dark:text-violet-400",
+	};
 
-    const levelColour: Record<string, string> = {
-        warning: "text-amber-600 dark:text-amber-400",
-        error: "text-destructive",
-    };
+	const levelColour: Record<string, string> = {
+		warning: "text-amber-600 dark:text-amber-400",
+		error: "text-destructive",
+	};
 
-    const stamp = (iso: string) =>
-        new Date(iso).toLocaleString(undefined, {
-            year: "2-digit",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-        });
+	const stamp = (iso: string) =>
+		new Date(iso).toLocaleString(undefined, {
+			year: "2-digit",
+			month: "2-digit",
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+		});
 </script>
 
 <div class="flex flex-col gap-3">

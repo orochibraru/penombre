@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { deserialize } from "$app/forms";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { authClient } from "$lib/auth-client";
@@ -119,6 +120,50 @@
 		}
 	}
 
+	/** True once the address has been resolved to an existing account. */
+	let knownEmail = $state(false);
+
+	/**
+	 * Resolve what to ask for next.
+	 *
+	 * An account with no credential is one an admin registered, so it goes to
+	 * onboarding to choose a password rather than being asked for one.
+	 */
+	async function lookupEmail() {
+		if (!email) {
+			return;
+		}
+		loading = true;
+		error = false;
+		try {
+			const body = new FormData();
+			body.set("email", email);
+			const res = await fetch("?/lookup", { method: "POST", body });
+			const payload = deserialize(await res.text());
+
+			if (payload.type === "failure") {
+				error = true;
+				errorMessage =
+					(payload.data?.error as string | undefined) ?? m.sign_in_error();
+				return;
+			}
+			if (payload.type !== "success") {
+				return;
+			}
+
+			const step = payload.data?.step;
+			if (step === "onboarding") {
+				await goto(`/auth/onboarding?email=${encodeURIComponent(email)}`, {
+					replaceState: true,
+				});
+				return;
+			}
+			knownEmail = true;
+		} finally {
+			loading = false;
+		}
+	}
+
 	async function emailSignInPromise() {
 		if (!(email && password)) {
 			throw new Error(m.email_password_required());
@@ -144,7 +189,11 @@
     class={cn("flex flex-col gap-6")}
     onsubmit={(e) => {
         e.preventDefault();
-        handleEmailSignin();
+        if (knownEmail) {
+            handleEmailSignin();
+        } else {
+            void lookupEmail();
+        }
     }}
     method="POST"
 >
@@ -175,17 +224,44 @@
 
             {#if data.authConfig.enableEmailSignIn}
                 <Field.Field>
-                    <Field.Label for="email">{m.email()}</Field.Label>
+                    <!-- Once the address is settled it is locked, and the way
+                         back sits on the label row so the two fields stay
+                         adjacent instead of being pushed apart by a link. -->
+                    <div class="flex items-center">
+                        <Field.Label for="email">{m.email()}</Field.Label>
+                        {#if knownEmail}
+                            <button
+                                type="button"
+                                class="hover:text-primary ms-auto text-sm underline transition-colors"
+                                onclick={() => {
+                                    knownEmail = false;
+                                    password = "";
+                                }}
+                            >
+                                {m.sign_in_change_email()}
+                            </button>
+                        {/if}
+                    </div>
                     <Input
                         id="email"
                         autocomplete="email webauthn"
                         type="email"
                         bind:value={email}
                         placeholder="m@example.com"
-                        required
+                        disabled={knownEmail}
+                        required={!knownEmail}
                     />
                 </Field.Field>
-                <Field.Field>
+                {#if !knownEmail}
+                    <Field.Field>
+                        <Button class="w-full" type="submit" {loading}>
+                            {m.continue()}
+                        </Button>
+                    </Field.Field>
+                {/if}
+                <!-- Hidden until the address is known. `required` is bound to
+                     the same flag: a hidden required control blocks submit. -->
+                <Field.Field class={knownEmail ? "" : "hidden"}>
                     <div class="flex items-center">
                         <Field.Label for="password">{m.password()}</Field.Label>
                         <a
@@ -200,10 +276,10 @@
                         autocomplete="current-password webauthn"
                         bind:value={password}
                         type="password"
-                        required
+                        required={knownEmail}
                     />
                 </Field.Field>
-                <Field.Field>
+                <Field.Field class={knownEmail ? "" : "hidden"}>
                     <Button class="w-full" type="submit" {loading}>
                         {m.sign_in()}
                     </Button>

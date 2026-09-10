@@ -32,6 +32,7 @@
 		type NavItem,
 		type NavMenus,
 	} from "$lib/components/layout/nav.svelte";
+	import Onboarding from "$lib/components/layout/onboarding.svelte";
 	import UploadProgressIndicator from "$lib/components/layout/upload-progress-indicator.svelte";
 	import VersionCheck from "$lib/components/layout/version-check.svelte";
 	import SidebarBranding from "$lib/components/sidebar-branding.svelte";
@@ -62,6 +63,16 @@
 
 	// Auth bypass: nobody signs in, so there's no profile/admin to show.
 	const authBypassed = $derived(data.authBypassed ?? false);
+
+	// Shown once per account, on the first load after signing in. Skipping
+	// still records it as done, so it never reappears uninvited.
+	let onboardingOpen = $state(false);
+
+	$effect(() => {
+		if (data.preferences && data.preferences.onboarded === false) {
+			onboardingOpen = true;
+		}
+	});
 
 	// Appearance preferences are per-user, so they can only be applied once the
 	// session's preferences have loaded.
@@ -429,6 +440,8 @@
         </Drawer.Footer>
     </Drawer.Content>
 </Drawer.Root>
+
+<Onboarding bind:open={onboardingOpen} preferences={data.preferences} />
 
 <NewFolderDialog bind:open={$newFolderDialogOpen} />
 <UploadDialog bind:open={$uploadDialogOpen} bind:loading={uploadLoading} />
