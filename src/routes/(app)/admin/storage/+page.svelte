@@ -85,10 +85,10 @@
                         </span>
                     </div>
                     <div
-                        class="bg-muted h-1.5 w-full overflow-hidden rounded-xs"
+                        class="bg-muted h-1.5 w-full overflow-hidden rounded-lg"
                     >
                         <div
-                            class="bg-primary h-full rounded-xs transition-[width] duration-500 ease-out"
+                            class="bg-primary h-full rounded-lg transition-[width] duration-500 ease-out"
                             style="width: {(row.bytes / maxUserBytes) * 100}%"
                         ></div>
                     </div>

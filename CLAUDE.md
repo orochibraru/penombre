@@ -180,6 +180,16 @@ A feature that isn't in `docs/` isn't finished.
   compiler handles these differently); test/script/config files relax
   cognitive-complexity and `noExplicitAny`/`noConsole` rules.
 
+## Layout rules
+
+**Do not reach for `max-w-*` by default.** Most things should fill their
+container — the page shell and the tab strip already bound the content. A width
+cap is a deliberate choice for a specific reason (a single-column reading
+measure, a form that would look absurd at 2000px), not a reflex to add to every
+wrapper. Panes inside tabs are full width. When a wide screen leaves a layout
+looking sparse, add columns (`xl:grid-cols-2`, `2xl:grid-cols-3`) rather than
+capping the width.
+
 ## Gotchas learned the hard way
 
 ### `app.css` layering

@@ -134,7 +134,7 @@
                     class="text-muted-foreground flex flex-col items-center gap-3 py-12 text-center"
                 >
                     <div
-                        class="bg-muted flex size-12 items-center justify-center rounded-xs"
+                        class="bg-muted flex size-12 items-center justify-center rounded-lg"
                     >
                         <Link2Icon class="size-5" />
                     </div>
@@ -156,7 +156,7 @@
                         >
                             <div class="flex min-w-0 items-center gap-3">
                                 <div
-                                    class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xs"
+                                    class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-full"
                                 >
                                     {#if share.resourceType === "folder"}
                                         <FolderIcon class="size-4" />
@@ -253,7 +253,7 @@
                         class="text-muted-foreground flex flex-col items-center gap-3 py-12 text-center"
                     >
                         <div
-                            class="bg-muted flex size-12 items-center justify-center rounded-xs"
+                            class="bg-muted flex size-12 items-center justify-center rounded-lg"
                         >
                             <UsersIcon class="size-5" />
                         </div>
@@ -277,7 +277,7 @@
                         >
                             <div class="flex min-w-0 items-center gap-3">
                                 <div
-                                    class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xs"
+                                    class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-full"
                                 >
                                     {#if entry.resourceType === "folder"}
                                         <FolderIcon class="size-4" />
@@ -299,7 +299,7 @@
                                             class="flex items-center gap-1.5"
                                         >
                                             <span
-                                                class="bg-muted flex size-4 items-center justify-center rounded-xs text-[9px] font-medium"
+                                                class="bg-muted flex size-4 items-center justify-center rounded-lg text-[9px] font-medium"
                                                 aria-hidden="true"
                                             >
                                                 {initials(entry.owner.name)}

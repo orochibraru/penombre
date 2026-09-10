@@ -47,7 +47,7 @@
             <Card.Root class="shadow-lg">
                 <Card.Header class="items-center text-center">
                     <div
-                        class="bg-primary/10 text-primary mx-auto mb-2 flex size-12 items-center justify-center rounded-xs"
+                        class="bg-primary/10 text-primary mx-auto mb-2 flex size-12 items-center justify-center rounded-lg"
                     >
                         <LockIcon class="size-5" />
                     </div>
@@ -91,7 +91,7 @@
                 <Card.Header class="items-center text-center">
                     <div
                         class={cn(
-                            "mx-auto mb-2 flex size-12 items-center justify-center rounded-xs",
+                            "mx-auto mb-2 flex size-12 items-center justify-center rounded-lg",
                             expired
                                 ? "bg-destructive/10 text-destructive"
                                 : "bg-primary/10 text-primary",
@@ -132,7 +132,7 @@
                 >
                     <div class="flex min-w-0 items-center gap-3">
                         <div
-                            class="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-xs"
+                            class="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-lg"
                         >
                             {#if data.resourceType === "folder"}
                                 <FolderIcon class="size-5" />

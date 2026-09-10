@@ -201,14 +201,14 @@
                     aria-pressed={accent === option}
                     onclick={() => save({ accent: option })}
                     class={cn(
-                        "flex items-center gap-2 rounded-xs border px-3 py-2 text-xs capitalize transition-colors",
+                        "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs capitalize transition-colors",
                         accent === option
                             ? "border-ring bg-input/20 font-medium"
                             : "hover:bg-input/20",
                     )}
                 >
                     <span
-                        class="size-4 rounded-xs border"
+                        class="size-4 rounded-lg border"
                         style="background: {ACCENT_SWATCH[option]}"
                     ></span>
                     {option}
@@ -226,7 +226,7 @@
             <RadioGroup.Root class="grid gap-2" value={fontFamily}>
                 {#each fonts as option (option.id)}
                     <Label
-                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-xs border p-3 transition-colors"
+                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
                     >
                         <div class="flex items-center gap-2">
                             <RadioGroup.Item
@@ -265,7 +265,7 @@
             <RadioGroup.Root class="grid gap-2" value={corners}>
                 {#each cornerOptions as option (option.id)}
                     <Label
-                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-xs border p-3 transition-colors"
+                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
                     >
                         <div class="flex items-center gap-2">
                             <RadioGroup.Item

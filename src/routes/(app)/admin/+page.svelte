@@ -96,7 +96,7 @@
                 />
                 {#if stats.trashedBytes > 0}
                     <div
-                        class="bg-muted/50 text-muted-foreground flex items-center gap-2 rounded-xs px-3 py-2 text-xs"
+                        class="bg-muted/50 text-muted-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-xs"
                     >
                         <Trash2Icon class="size-3.5 shrink-0" />
                         {m.admin_trash_reclaimable({
@@ -128,10 +128,10 @@
                             </span>
                         </div>
                         <div
-                            class="bg-muted h-1.5 w-full overflow-hidden rounded-xs"
+                            class="bg-muted h-1.5 w-full overflow-hidden rounded-lg"
                         >
                             <div
-                                class="bg-primary h-full rounded-xs transition-[width] duration-500 ease-out"
+                                class="bg-primary h-full rounded-lg transition-[width] duration-500 ease-out"
                                 style="width: {(row.bytes / maxUserBytes) * 100}%"
                             ></div>
                         </div>

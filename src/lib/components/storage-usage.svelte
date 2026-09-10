@@ -71,7 +71,7 @@
     </div>
 
     <div
-        class="bg-muted flex h-2.5 w-full overflow-hidden rounded-xs"
+        class="bg-muted flex h-2.5 w-full overflow-hidden rounded-full"
         role="img"
         aria-label={m.storage_used_of({
             used: readableFileSize(used),
@@ -92,7 +92,7 @@
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
             {#each segments as segment (segment.key)}
                 <div class="flex items-center gap-1.5">
-                    <span class="{segment.dot} size-2 rounded-xs"></span>
+                    <span class="{segment.dot} size-2 rounded-full"></span>
                     <span class="text-muted-foreground text-xs">
                         {segment.label}
                     </span>

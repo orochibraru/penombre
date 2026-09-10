@@ -33,7 +33,7 @@
     <div
         bind:this={ref}
         class={cn(
-            "bottom-drawer lg:bottom-drawer-lg bg-card/80 fixed right-5 bottom-20 rounded-xs border p-3 backdrop-blur-md lg:bottom-5",
+            "bottom-drawer lg:bottom-drawer-lg bg-card/80 fixed right-5 bottom-20 rounded-lg border p-3 backdrop-blur-md lg:bottom-5",
             className,
         )}
         transition:slide

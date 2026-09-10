@@ -84,11 +84,11 @@
                             <img
                                 src={user.image}
                                 alt=""
-                                class="size-9 shrink-0 rounded-xs object-cover"
+                                class="size-9 shrink-0 rounded-lg object-cover"
                             />
                         {:else}
                             <span
-                                class="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-xs text-xs font-medium"
+                                class="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-medium"
                                 aria-hidden="true"
                             >
                                 {initials(user.name)}

@@ -45,7 +45,7 @@
             {@const active = locale === currentLanguage}
             <Label
                 class={cn(
-                    "hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-xs border p-3 transition-colors",
+                    "hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors",
                     active && "border-ring bg-input/20",
                 )}
             >

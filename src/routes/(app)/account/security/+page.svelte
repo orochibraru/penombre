@@ -13,6 +13,7 @@
 	import * as Alert from "$lib/components/ui/alert/index.js";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
+	import * as Card from "$lib/components/ui/card/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import { Input } from "$lib/components/ui/input";
 	import * as m from "$lib/paraglide/messages.js";
@@ -135,9 +136,11 @@
 	}
 </script>
 
+<div class="flex w-full flex-col gap-4">
 <!-- Password Management -->
 {#if data.emailSignInEnabled}
-    <section class="rounded-xs border p-4">
+    <Card.Root>
+        <Card.Content>
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="min-w-0">
                 <h2 class="flex items-center gap-2 text-lg font-medium">
@@ -169,11 +172,13 @@
                 </Button>
             {/if}
         </div>
-    </section>
+        </Card.Content>
+</Card.Root>
 {/if}
 
 <!-- Passkeys -->
-<section class="p-3 border rounded-xs">
+<Card.Root>
+    <Card.Content>
     <div class="flex justify-between items-center">
         <div>
             <h2 class="text-lg font-medium">{m.passkeys()}</h2>
@@ -190,7 +195,7 @@
         {#if data.passkeys.length > 0}
             {#each data.passkeys as passkey}
                 <div
-                    class="border rounded-xs w-full p-3 flex items-center justify-between"
+                    class="border rounded-lg w-full p-3 flex items-center justify-between"
                 >
                     <div>
                         <p class="text-sm">{passkey.name}</p>
@@ -215,10 +220,12 @@
             <p class="text-sm text-muted-foreground">{m.no_passkeys()}</p>
         {/if}
     </div>
-</section>
+    </Card.Content>
+</Card.Root>
 
 <!-- API Keys -->
-<section class="p-3 border rounded-xs">
+<Card.Root>
+    <Card.Content>
     {#if form?.success && form?.apiKey}
         <Alert.Root class="bg-primary/10 border-primary mb-3">
             <CircleCheckIcon class="text-primary" />
@@ -262,7 +269,7 @@
             <ul class="w-full flex flex-col gap-2">
                 {#each data.apiKeys.apiKeys as apiKey}
                     <li
-                        class="border rounded-xs w-full p-1 px-3 flex items-center justify-between"
+                        class="border rounded-lg w-full p-1 px-3 flex items-center justify-between"
                     >
                         <div>
                             <p class="text-sm">{apiKey.name}</p>
@@ -311,7 +318,10 @@
             <p class="text-sm text-muted-foreground">{m.no_api_keys()}</p>
         {/if}
     </div>
-</section>
+    </Card.Content>
+</Card.Root>
+
+</div>
 
 <!-- Delete Passkey Dialog -->
 <ResponsiveDialog

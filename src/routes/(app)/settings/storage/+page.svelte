@@ -71,10 +71,10 @@
                             </span>
                         </div>
                         <div
-                            class="bg-muted h-1.5 w-full overflow-hidden rounded-xs"
+                            class="bg-muted h-1.5 w-full overflow-hidden rounded-lg"
                         >
                             <div
-                                class="bg-primary h-full rounded-xs transition-[width] duration-500 ease-out"
+                                class="bg-primary h-full rounded-lg transition-[width] duration-500 ease-out"
                                 style="width: {(row.bytes / maxCategoryBytes) *
                                     100}%"
                             ></div>
@@ -101,7 +101,7 @@
         </Card.Header>
         <Card.Content class="flex flex-col gap-5">
             <div
-                class="bg-muted/50 flex flex-wrap items-center justify-between gap-3 rounded-xs px-3 py-2.5"
+                class="bg-muted/50 flex flex-wrap items-center justify-between gap-3 rounded-lg px-3 py-2.5"
             >
                 <span class="flex items-center gap-2 text-sm">
                     <Trash2Icon class="text-muted-foreground size-4 shrink-0" />
@@ -138,10 +138,10 @@
                                 </span>
                             </div>
                             <div
-                                class="bg-muted h-1 w-full overflow-hidden rounded-xs"
+                                class="bg-muted h-1 w-full overflow-hidden rounded-lg"
                             >
                                 <div
-                                    class="bg-primary/50 h-full rounded-xs"
+                                    class="bg-primary/50 h-full rounded-lg"
                                     style="width: {(file.size / maxFileBytes) *
                                         100}%"
                                 ></div>

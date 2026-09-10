@@ -1,9 +1,18 @@
 <script lang="ts">
+	import {
+		GlobeIcon,
+		MonitorIcon,
+		type LucideIcon,
+		SmartphoneIcon,
+		TabletIcon,
+	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { refreshAll } from "$app/navigation";
 	import { authClient } from "$lib/auth-client";
+	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
+	import * as Card from "$lib/components/ui/card/index.js";
 	import * as m from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
 
@@ -13,15 +22,64 @@
 
 	const { data } = $props();
 
-	async function revokeSession(sessionToken: string) {
-		const { error } = await authClient.revokeSession({
-			token: sessionToken,
-		});
+	/**
+	 * A readable device and platform from the user agent.
+	 *
+	 * Deliberately coarse: the point is to help someone recognise their own
+	 * sessions at a glance, not to fingerprint them. Anything unrecognised
+	 * falls back to a globe rather than dumping the raw string.
+	 */
+	function describe(userAgent: string | null | undefined): {
+		icon: LucideIcon;
+		label: string;
+	} {
+		const ua = (userAgent ?? "").toLowerCase();
+		if (!ua) {
+			return { icon: GlobeIcon, label: m.unknown() };
+		}
 
+		const isTablet = ua.includes("ipad") || ua.includes("tablet");
+		const isPhone =
+			!isTablet &&
+			(ua.includes("iphone") ||
+				ua.includes("android") ||
+				ua.includes("mobile"));
+
+		const platform = ua.includes("iphone")
+			? "iPhone"
+			: ua.includes("ipad")
+				? "iPad"
+				: ua.includes("android")
+					? "Android"
+					: ua.includes("mac os")
+						? "macOS"
+						: ua.includes("windows")
+							? "Windows"
+							: ua.includes("linux")
+								? "Linux"
+								: m.unknown();
+
+		const browser = ua.includes("edg/")
+			? "Edge"
+			: ua.includes("chrome") && !ua.includes("chromium")
+				? "Chrome"
+				: ua.includes("firefox")
+					? "Firefox"
+					: ua.includes("safari")
+						? "Safari"
+						: null;
+
+		return {
+			icon: isPhone ? SmartphoneIcon : isTablet ? TabletIcon : MonitorIcon,
+			label: browser ? `${platform} · ${browser}` : platform,
+		};
+	}
+
+	async function revokeSession(sessionToken: string) {
+		const { error } = await authClient.revokeSession({ token: sessionToken });
 		if (error) {
 			throw new Error(error.message || "Failed to revoke session");
 		}
-
 		await refreshAll();
 	}
 
@@ -29,52 +87,71 @@
 		return toast.promise(revokeSession(sessionToken), {
 			loading: m.toast_revoking_session(),
 			success: m.toast_session_revoked(),
-			error: (e) => {
-				if (e instanceof Error) {
-					return e.message;
-				}
-
-				return m.toast_revoke_session_error();
-			},
+			error: (e) =>
+				e instanceof Error ? e.message : m.toast_revoke_session_error(),
 		});
 	}
 </script>
 
-<h2 class="text-lg font-medium">{m.session_management()}</h2>
-<ul class="flex flex-col gap-2">
-    {#each data.sessions as session}
-        <li
-            class="p-2 border rounded-xl flex justify-between items-center gap-2"
-        >
-            <div>
-                {#if session.token === data.session.token}
-                    <span class="text-green-500">{m.current_session()}</span>
-                {/if}
-                <p>
-                    {session.ipAddress}
-                </p>
-                <p>
-                    {m.last_active({
-                        date: new Date(session.createdAt).toLocaleString(),
-                    })}
-                </p>
-                <p>
-                    {m.expires({
-                        date: new Date(session.expiresAt).toLocaleString(),
-                    })}
-                </p>
-                <p>
-                    {m.device({ userAgent: session.userAgent ?? m.unknown() })}
-                </p>
-            </div>
-            <Button
-                onclick={() => handleRevokeSession(session.token)}
-                variant="destructive"
-                size="sm"
-                disabled={session.token === data.session.token}
+<div class="flex w-full flex-col gap-4">
+    {#each data.sessions as session (session.token)}
+        {@const device = describe(session.userAgent)}
+        {@const isCurrent = session.token === data.session.token}
+        {@const Icon = device.icon}
+        <Card.Root>
+            <Card.Content
+                class="flex flex-wrap items-center justify-between gap-4"
             >
-                {m.revoke()}
-            </Button>
-        </li>
+                <div class="flex min-w-0 items-center gap-3">
+                    <div
+                        class="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg"
+                    >
+                        <Icon class="size-4" />
+                    </div>
+                    <div class="min-w-0">
+                        <p class="flex flex-wrap items-center gap-2 text-sm">
+                            <span class="font-medium">{device.label}</span>
+                            {#if isCurrent}
+                                <Badge variant="secondary">
+                                    {m.current_session()}
+                                </Badge>
+                            {/if}
+                        </p>
+                        <p
+                            class="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 text-xs"
+                        >
+                            <span class="tabular-nums">
+                                {session.ipAddress || m.unknown()}
+                            </span>
+                            <span aria-hidden="true">·</span>
+                            <span class="tabular-nums">
+                                {m.last_active({
+                                    date: new Date(
+                                        session.createdAt,
+                                    ).toLocaleString(),
+                                })}
+                            </span>
+                        </p>
+                        <p class="text-muted-foreground text-xs tabular-nums">
+                            {m.expires({
+                                date: new Date(
+                                    session.expiresAt,
+                                ).toLocaleString(),
+                            })}
+                        </p>
+                    </div>
+                </div>
+
+                <Button
+                    onclick={() => handleRevokeSession(session.token)}
+                    variant="outline"
+                    size="sm"
+                    class="shrink-0"
+                    disabled={isCurrent}
+                >
+                    {m.revoke()}
+                </Button>
+            </Card.Content>
+        </Card.Root>
     {/each}
-</ul>
+</div>

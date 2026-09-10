@@ -46,7 +46,7 @@
 
 <div class="flex flex-col gap-5">
     <div
-        class="text-muted-foreground bg-muted/50 flex items-start gap-2 rounded-xs px-3 py-2.5 text-xs"
+        class="text-muted-foreground bg-muted/50 flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs"
     >
         <ShieldCheckIcon class="mt-px size-3.5 shrink-0" />
         <span>{m.admin_activity_privacy_note()}</span>
@@ -75,7 +75,7 @@
                         <Table.Cell>
                             <div class="flex items-center gap-2">
                                 <span
-                                    class="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-xs text-[10px] font-medium"
+                                    class="bg-muted text-muted-foreground flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium"
                                     aria-hidden="true"
                                 >
                                     {initials(entry.userName)}

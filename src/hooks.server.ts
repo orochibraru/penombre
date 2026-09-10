@@ -8,6 +8,7 @@ import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
 import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
 import { building } from "$app/environment";
 import { Logger } from "$lib/logger";
+import { baseLocale, getLocale } from "$lib/paraglide/runtime";
 import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
@@ -16,7 +17,6 @@ import { getDb, resetDb } from "$lib/server/db";
 import { isSqliteDialect } from "$lib/server/db/dialect";
 import { user as userTable } from "$lib/server/db/schema";
 import { getUserPreferences } from "$lib/server/services/preferences";
-import { baseLocale, getLocale } from "$lib/paraglide/runtime";
 import {
 	migrateStorageMeta,
 	StorageService,

@@ -40,7 +40,7 @@
 	});
 </script>
 
-<div class="w-full max-w-2xl">
+<div class="w-full">
     <h2 class="mb-5 text-lg font-medium">{m.account_details()}</h2>
     <form
         class="mb-5"

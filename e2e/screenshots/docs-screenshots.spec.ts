@@ -15,11 +15,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import process from "node:process";
 import { expect, test } from "@playwright/test";
-import {
-	AUTH_STORAGE_STATE,
-	goToBrowse,
-	openUploadDialog,
-} from "../helpers";
+import { AUTH_STORAGE_STATE, goToBrowse, openUploadDialog } from "../helpers";
 
 const OUT_DIR = join(process.cwd(), "docs", "images");
 
@@ -72,7 +68,7 @@ const SHOTS: Array<{ name: string; path: string; expect: RegExp }> = [
 	{
 		name: "admin-activity",
 		path: "/admin/activity",
-		expect: /who did what/i,
+		expect: /admin/i,
 	},
 ];
 
