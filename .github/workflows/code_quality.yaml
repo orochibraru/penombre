@@ -75,6 +75,12 @@ jobs:
       - name: Sync SvelteKit
         run: bun run svelte-kit sync
 
+      # Paraglide output is gitignored and only written by the Vite plugin, so
+      # a fresh checkout has none — anything under test that imports messages
+      # would fail to resolve.
+      - name: Compile messages
+        run: bun run gen:paraglide
+
       - name: Tests (Unit)
         run: bun test --bail
 

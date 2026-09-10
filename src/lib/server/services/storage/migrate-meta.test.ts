@@ -28,6 +28,12 @@ mock.module("$lib/server/config", () => ({
 		},
 	}),
 	getStoragePath: () => "/does-not-exist",
+	envProvided: () => ({
+		emailSignIn: true,
+		oauthSignIn: true,
+		minPasswordLength: true,
+		smtp: true,
+	}),
 	isSimpleMode: () => false,
 	isAuthBypassed: () => false,
 }));

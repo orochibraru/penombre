@@ -8,6 +8,7 @@
  */
 
 import { eq } from "drizzle-orm";
+import { envProvided, getConfig } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import type { AppSettingsData } from "$lib/server/db/schema";
 import { appSettings } from "$lib/server/db/schema";
@@ -21,6 +22,9 @@ const defaults: AppSettingsData = {
 	allowedEmailDomains: [],
 	minPasswordLength: 8,
 	requireStrongPassword: false,
+	emailSignInEnabled: true,
+	smtp: { enabled: false },
+	oauthProviders: [],
 };
 
 export async function getAppSettings(): Promise<AppSettingsData> {
@@ -70,4 +74,87 @@ export function signupAllowed(
 	}
 	const domain = email.split("@")[1]?.toLowerCase();
 	return !!domain && domains.some((d) => d.toLowerCase() === domain);
+}
+
+/**
+ * Providers stored in the database, for better-auth to merge with the ones
+ * declared by environment variables.
+ *
+ * Read once at boot: better-auth builds its plugin list at module init, so a
+ * provider added here only takes effect after a restart. The admin UI says so
+ * rather than pretending otherwise.
+ */
+export async function getStoredOAuthProviders() {
+	try {
+		const settings = await getAppSettings();
+		return (settings.oauthProviders ?? []).filter(
+			(provider) => provider.clientId && provider.clientSecret,
+		);
+	} catch {
+		// The table may not exist yet on a first boot — migrations run after
+		// this module is imported.
+		return [];
+	}
+}
+
+/**
+ * Whether email + password sign-in is on, resolving env over database.
+ *
+ * `ENABLE_EMAIL_SIGNIN` wins whenever it is present. When it is absent the
+ * stored setting governs, so removing the var from `.env` hands control to the
+ * admin UI rather than pinning it to a default nothing can change.
+ */
+export async function isEmailSignInEnabled(): Promise<boolean> {
+	if (envProvided().emailSignIn) {
+		return getConfig().auth.enableEmailSignIn;
+	}
+	try {
+		return (await getAppSettings()).emailSignInEnabled ?? true;
+	} catch {
+		return getConfig().auth.enableEmailSignIn;
+	}
+}
+
+/** SMTP settings, resolving env over database in the same way. */
+export async function getSmtpSettings(): Promise<{
+	enabled: boolean;
+	host: string;
+	port: number;
+	user: string;
+	password: string;
+	from: string;
+	secure: boolean;
+} | null> {
+	if (envProvided().smtp) {
+		const smtp = getConfig().smtp;
+		return smtp?.enabled
+			? {
+					enabled: true,
+					host: smtp.host,
+					port: smtp.port,
+					user: smtp.user,
+					password: smtp.password,
+					from: smtp.from,
+					secure: smtp.secure,
+				}
+			: null;
+	}
+
+	try {
+		const stored = (await getAppSettings()).smtp;
+		if (!(stored?.enabled && stored.host && stored.from)) {
+			return null;
+		}
+		return {
+			enabled: true,
+			host: stored.host,
+			port: stored.port ?? 587,
+			user: stored.user ?? "",
+			password: stored.password ?? "",
+			from: stored.from,
+			secure: stored.secure ?? false,
+		};
+	} catch {
+		return null;
+	}
 }

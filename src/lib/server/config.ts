@@ -351,6 +351,28 @@ export function getConfig(): AppConfig {
 	});
 }
 
+/**
+ * Which settings the environment explicitly provides.
+ *
+ * The rule is: **env wins when it is set, otherwise the database governs.**
+ * Without this the defaults were indistinguishable from a deliberate env
+ * value, so removing a var from `.env` left a setting nothing could change —
+ * env said "true" by default and the UI refused to touch it.
+ */
+export function envProvided(): {
+	emailSignIn: boolean;
+	oauthSignIn: boolean;
+	minPasswordLength: boolean;
+	smtp: boolean;
+} {
+	return {
+		emailSignIn: env.ENABLE_EMAIL_SIGNIN !== undefined,
+		oauthSignIn: env.ENABLE_OAUTH_SIGNIN !== undefined,
+		minPasswordLength: env.MIN_PASSWORD_LENGTH !== undefined,
+		smtp: env.SMTP_ENABLED !== undefined,
+	};
+}
+
 export function isSmtpEnabled(): boolean {
 	const config = getConfig();
 	return config.smtp !== undefined;

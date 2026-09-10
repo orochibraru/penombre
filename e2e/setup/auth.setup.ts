@@ -18,8 +18,14 @@ setup("authenticate", async ({ page }) => {
 
 	await page.goto("/auth/sign-in");
 
+	// Sign-in is email-first: the password field stays hidden until the
+	// address has been resolved to an account with a credential.
 	await page.locator("#email").fill(email);
-	await page.locator("#password").fill(password);
+	await page.getByRole("button", { name: "Continue", exact: true }).click();
+
+	const passwordField = page.locator("#password");
+	await passwordField.waitFor({ state: "visible" });
+	await passwordField.fill(password);
 	// Use exact match to avoid also matching "Sign in with a passkey"
 	await page.getByRole("button", { name: "Sign in", exact: true }).click();
 

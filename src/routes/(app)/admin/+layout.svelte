@@ -29,6 +29,11 @@
 			url: "/admin/activity",
 			icon: ActivityIcon,
 		},
+		{
+			title: m.admin_nav_settings(),
+			url: "/admin/settings",
+			icon: SlidersHorizontalIcon,
+		},
 	];
 
 	const { children } = $props();

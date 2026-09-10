@@ -37,10 +37,19 @@ the next boot.
 - **Sign-ups** — whether anyone may create an account unprompted, and an
   optional allow-list of email domains when they may.
 
-Sign-in methods (email/password, OAuth providers) are configured by environment
-variable and shown here **read-only**. `config.ts` stays the single source of
-truth for those, so the two can never disagree — change them in your `.env` and
-restart.
+- **Email (SMTP)** — host, port, credentials and the from address, used for
+  verification emails and invitations.
+- **Sign-in methods** — email/password and the OAuth providers.
+
+Configuration follows one rule: **an environment variable wins when it is set,
+otherwise this page governs.** A setting the environment claims is shown
+read-only with a note; anything it does not claim is editable here. So removing
+`ENABLE_EMAIL_SIGNIN` from your `.env` hands that switch to the admin UI, and
+setting it again takes it back.
+
+Two things are read by the auth layer at boot — email sign-in and OAuth
+providers — so changing them here takes effect **after the next restart**. The
+page says so next to each.
 
 ## Storage
 

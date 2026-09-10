@@ -83,6 +83,7 @@ export class ActivityService {
 			.select({
 				id: activity.id,
 				action: activity.action,
+				message: activity.message,
 				level: activity.level,
 				createdAt: activity.createdAt,
 				userId: activity.userId,

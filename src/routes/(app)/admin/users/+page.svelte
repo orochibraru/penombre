@@ -15,7 +15,7 @@
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
-	import { usersCountLabel } from "$lib/utils";
+	import { cn, usersCountLabel } from "$lib/utils";
 
 	onMount(() => {
 		title.set(m.title_admin_users());
@@ -24,6 +24,7 @@
 	const { data, form } = $props();
 
 	let pendingForm: HTMLFormElement | null = $state(null);
+	let mode = $state<"invite" | "create">("invite");
 
 	$effect(() => {
 		if (form?.error) {
@@ -91,31 +92,103 @@
             <form
                 method="POST"
                 action="?/inviteUser"
-                class="flex flex-wrap items-end gap-3"
+                class="flex flex-col gap-4"
                 use:enhance={() =>
                     async ({ update }) => {
                         await update();
                     }}
             >
-                <div class="flex min-w-56 flex-1 flex-col gap-2">
-                    <Label for="invite-email">{m.email()}</Label>
-                    <Input
-                        id="invite-email"
-                        name="email"
-                        type="email"
-                        required
-                        placeholder="name@example.com"
-                    />
+                <!-- Two ways to add someone: let them pick their own password,
+                     or set one now and hand it over. -->
+                <div class="grid gap-2 sm:grid-cols-2">
+                    {#each [{ id: "invite" as const, label: m.admin_mode_invite(), hint: m.admin_mode_invite_hint() }, { id: "create" as const, label: m.admin_mode_create(), hint: m.admin_mode_create_hint() }] as option (option.id)}
+                        <label
+                            class={cn(
+                                "flex cursor-pointer flex-col gap-1 rounded-lg border p-3 transition-colors",
+                                mode === option.id
+                                    ? "border-ring bg-input/20"
+                                    : "hover:bg-input/20",
+                            )}
+                        >
+                            <span class="flex items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="mode"
+                                    value={option.id}
+                                    checked={mode === option.id}
+                                    onchange={() => (mode = option.id)}
+                                    class="accent-primary size-3.5"
+                                />
+                                <span class="text-sm font-medium">
+                                    {option.label}
+                                </span>
+                            </span>
+                            <span class="text-muted-foreground text-xs">
+                                {option.hint}
+                            </span>
+                        </label>
+                    {/each}
                 </div>
-                <div class="flex min-w-40 flex-1 flex-col gap-2">
-                    <Label for="invite-name">{m.admin_invite_name()}</Label>
-                    <Input
-                        id="invite-name"
-                        name="name"
-                        placeholder={m.admin_invite_name_placeholder()}
-                    />
+
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex min-w-56 flex-1 flex-col gap-2">
+                        <Label for="invite-email">{m.email()}</Label>
+                        <Input
+                            id="invite-email"
+                            name="email"
+                            type="email"
+                            required
+                            placeholder="name@example.com"
+                        />
+                    </div>
+                    <div class="flex min-w-40 flex-1 flex-col gap-2">
+                        <Label for="invite-name">{m.admin_invite_name()}</Label>
+                        <Input
+                            id="invite-name"
+                            name="name"
+                            placeholder={m.admin_invite_name_placeholder()}
+                        />
+                    </div>
+                    {#if mode === "create"}
+                        <div class="flex min-w-48 flex-1 flex-col gap-2">
+                            <Label for="invite-password">{m.password()}</Label>
+                            <Input
+                                id="invite-password"
+                                name="password"
+                                type="password"
+                                minlength={8}
+                                required
+                                autocomplete="new-password"
+                            />
+                        </div>
+                    {/if}
                 </div>
-                <Button type="submit">{m.admin_invite_submit()}</Button>
+
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    {#if mode === "invite"}
+                        <label
+                            class={cn(
+                                "flex items-center gap-2 text-sm",
+                                data.smtpEnabled
+                                    ? "cursor-pointer"
+                                    : "text-muted-foreground",
+                            )}
+                        >
+                            <input
+                                type="checkbox"
+                                name="sendEmail"
+                                disabled={!data.smtpEnabled}
+                                class="accent-primary size-3.5"
+                            />
+                            {data.smtpEnabled
+                                ? m.admin_send_invite_email()
+                                : m.admin_send_invite_email_disabled()}
+                        </label>
+                    {:else}
+                        <span></span>
+                    {/if}
+                    <Button type="submit">{m.admin_invite_submit()}</Button>
+                </div>
             </form>
         </Card.Content>
     </Card.Root>

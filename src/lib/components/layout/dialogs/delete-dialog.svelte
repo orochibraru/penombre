@@ -13,6 +13,8 @@
 		handleDeleteObject: () => void;
 		/** The rows on screen, used to price up what is about to be freed. */
 		items?: ObjectItem[];
+		/** Set only by "Empty Trash" — a targeted delete gets generic wording. */
+		emptyingTrash?: boolean;
 	}
 
 	let {
@@ -21,6 +23,7 @@
 		checkedItems = $bindable(),
 		handleDeleteObject,
 		items = [],
+		emptyingTrash = false,
 	}: Props = $props();
 
 	const selectedKeys = $derived(
@@ -54,7 +57,7 @@
     bind:open={confirmDeleteOpen}
     bind:loading={deletingItem}
     size="sm"
-    title={isTrash ? m.empty_trash_title() : m.confirm_delete_title()}
+    title={emptyingTrash ? m.empty_trash_title() : m.confirm_delete_title()}
     submitLabel={isTrash ? m.delete_permanently() : m.continue()}
     loadingLabel={m.deleting()}
     submitVariant="destructive"

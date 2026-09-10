@@ -140,58 +140,55 @@
 <!-- Password Management -->
 {#if data.emailSignInEnabled}
     <Card.Root>
-        <Card.Content>
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="min-w-0">
-                <h2 class="flex items-center gap-2 text-lg font-medium">
-                    {m.password_management()}
-                    {#if data.hasPassword}
-                        <Badge variant="secondary">
-                            <KeyRoundIcon class="size-3" />
-                            {m.password_set()}
-                        </Badge>
-                    {/if}
-                </h2>
-                <p class="text-muted-foreground mt-0.5 text-xs text-balance">
-                    {data.hasPassword
-                        ? m.change_password_description()
-                        : m.set_password_description()}
-                </p>
-            </div>
-
-            {#if data.hasPassword}
-                <Button
-                    onclick={() => (changePasswordDialogOpen = true)}
-                    variant="outline"
-                >
-                    {m.change_password()}
-                </Button>
-            {:else}
-                <Button onclick={() => (setPasswordDialogOpen = true)}>
-                    {m.set_password()}
-                </Button>
-            {/if}
-        </div>
-        </Card.Content>
-</Card.Root>
+        <Card.Header>
+            <Card.Title class="flex items-center gap-2">
+                {m.password_management()}
+                {#if data.hasPassword}
+                    <Badge variant="secondary">
+                        <KeyRoundIcon class="size-3" />
+                        {m.password_set()}
+                    </Badge>
+                {/if}
+            </Card.Title>
+            <Card.Description>
+                {data.hasPassword
+                    ? m.change_password_description()
+                    : m.set_password_description()}
+            </Card.Description>
+            <Card.Action>
+                {#if data.hasPassword}
+                    <Button
+                        onclick={() => (changePasswordDialogOpen = true)}
+                        variant="outline"
+                    >
+                        {m.change_password()}
+                    </Button>
+                {:else}
+                    <Button
+                        onclick={() => (setPasswordDialogOpen = true)}
+                        variant="outline"
+                    >
+                        {m.set_password()}
+                    </Button>
+                {/if}
+            </Card.Action>
+        </Card.Header>
+    </Card.Root>
 {/if}
 
 <!-- Passkeys -->
 <Card.Root>
+    <Card.Header>
+        <Card.Title>{m.passkeys()}</Card.Title>
+        <Card.Description>{m.passkeys_description()}</Card.Description>
+        <Card.Action>
+            <Button variant="outline" onclick={() => handleRegisterPasskey()}>
+                {m.register_passkey()}
+            </Button>
+        </Card.Action>
+    </Card.Header>
     <Card.Content>
-    <div class="flex justify-between items-center">
-        <div>
-            <h2 class="text-lg font-medium">{m.passkeys()}</h2>
-            <p class="text-xs text-muted-foreground">
-                {m.passkeys_description()}
-            </p>
-        </div>
-        <Button onclick={() => handleRegisterPasskey()}>
-            {m.register_passkey()}
-        </Button>
-    </div>
-
-    <div class="flex flex-col gap-2 mt-3">
+    <div class="flex flex-col gap-2">
         {#if data.passkeys.length > 0}
             {#each data.passkeys as passkey}
                 <div
@@ -225,6 +222,12 @@
 
 <!-- API Keys -->
 <Card.Root>
+    <Card.Header>
+        <Card.Title>
+            {m.api_keys_title({ count: String(data.apiKeys.total) })}
+        </Card.Title>
+        <Card.Description>{m.api_keys_description()}</Card.Description>
+    </Card.Header>
     <Card.Content>
     {#if form?.success && form?.apiKey}
         <Alert.Root class="bg-primary/10 border-primary mb-3">
@@ -240,16 +243,6 @@
             </Alert.Description>
         </Alert.Root>
     {/if}
-    <div class="mb-3">
-        <h2 class="text-lg font-medium">
-            {m.api_keys_title({ count: String(data.apiKeys.total) })}
-        </h2>
-
-        <p class="text-xs text-muted-foreground">
-            {m.api_keys_description()}
-        </p>
-    </div>
-
     <div class="mb-3">
         <form action="?/createApiKey" use:enhance method="POST">
             <fieldset>

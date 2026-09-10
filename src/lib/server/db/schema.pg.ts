@@ -286,6 +286,38 @@ export interface AppSettingsData {
 	minPasswordLength?: number;
 	/** Require a mix of character classes in passwords. */
 	requireStrongPassword?: boolean;
+	/**
+	 * OAuth providers added through the admin UI.
+	 *
+	 * Kept separate from the env-declared ones: `config.ts` owns those, and
+	 * merging them into one editable list would give two sources of truth for
+	 * the same provider name.
+	 */
+	/**
+	 * Email + password sign-in. Only consulted when `ENABLE_EMAIL_SIGNIN` is
+	 * absent from the environment — see `envProvided()`.
+	 */
+	emailSignInEnabled?: boolean;
+	/** SMTP, used when `SMTP_ENABLED` is absent from the environment. */
+	smtp?: {
+		enabled?: boolean;
+		host?: string;
+		port?: number;
+		user?: string;
+		password?: string;
+		from?: string;
+		secure?: boolean;
+	};
+	oauthProviders?: Array<{
+		name: string;
+		prettyName?: string;
+		clientId: string;
+		clientSecret: string;
+		discoveryUrl: string;
+		scopes?: string[];
+		pkce?: boolean;
+		enabled?: boolean;
+	}>;
 }
 
 export const appSettings = pgTable("app_settings", {

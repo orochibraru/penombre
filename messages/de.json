@@ -467,5 +467,22 @@
 	"onboarding_password_description": "Ihr Konto für {email} ist bereit — legen Sie ein Passwort fest.",
 	"onboarding_password_rules": "Mindestens {count} Zeichen.",
 	"onboarding_password_strong": "Mit Groß- und Kleinschreibung, einer Ziffer und einem Symbol.",
-	"onboarding_password_submit": "Passwort festlegen und fortfahren"
+	"onboarding_password_submit": "Passwort festlegen und fortfahren",
+	"admin_mode_invite": "Passwort selbst wählen lassen",
+	"admin_mode_invite_hint": "Registriert die Adresse. Das Passwort wird bei der ersten Anmeldung gewählt.",
+	"admin_mode_create": "Passwort jetzt festlegen",
+	"admin_mode_create_hint": "Sie wählen es und geben es selbst weiter.",
+	"admin_send_invite_email": "Anmeldelink per E-Mail senden",
+	"admin_send_invite_email_disabled": "E-Mail-Einladung (SMTP konfigurieren)",
+	"admin_smtp": "E-Mail (SMTP)",
+	"admin_smtp_description": "Für Bestätigungs-E-Mails und Einladungen.",
+	"admin_smtp_enable": "E-Mails von dieser Instanz senden",
+	"admin_smtp_host": "Host",
+	"admin_smtp_port": "Port",
+	"admin_smtp_user": "Benutzername",
+	"admin_smtp_password": "Passwort",
+	"admin_smtp_from": "Absenderadresse",
+	"admin_smtp_secure": "TLS verwenden",
+	"admin_smtp_secure_hint": "An für Port 465, aus für 587 mit STARTTLS.",
+	"admin_restart_required": "Wird nach dem nächsten Neustart wirksam."
 }

@@ -1,8 +1,11 @@
 import { error, fail } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
 import { auth } from "$lib/server/auth";
+import { getConfig } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { account } from "$lib/server/db/schema";
+import { Email } from "$lib/server/email";
+import { getSmtpSettings } from "$lib/server/services/app-settings";
 
 export const load = async ({ request }) => {
 	try {
@@ -10,11 +13,43 @@ export const load = async ({ request }) => {
 			query: {},
 			headers: request.headers,
 		});
-		return { users };
+		// Emailing an invitation is only offered when a mail server is
+		// configured; otherwise the admin passes the link on themselves.
+		return {
+			users,
+			smtpEnabled: (await getSmtpSettings()) !== null,
+			origin: getConfig().origin,
+		};
 	} catch {
 		return error(500, "Failed to load users");
 	}
 };
+
+/**
+ * Send the invitation, returning a message when it could not go out.
+ *
+ * Never throws: the account exists by this point, and a mail failure should be
+ * reported rather than undo it.
+ */
+async function sendInvite(
+	email: string,
+	signInUrl: string,
+): Promise<string | null> {
+	if (!(await getSmtpSettings())) {
+		return null;
+	}
+	try {
+		const mail = await Email.create({
+			to: email,
+			subject: `You have been added to ${getConfig().appName}`,
+			content: `An account has been created for you. Sign in at ${signInUrl} with this address and choose a password.`,
+		});
+		await mail.send();
+		return null;
+	} catch (error) {
+		return (error as Error).message;
+	}
+}
 
 /** Read a required string field, or null when it is missing/blank. */
 function field(form: FormData, name: string): string | null {
@@ -35,10 +70,23 @@ export const actions = {
 		const form = await request.formData();
 		const email = field(form, "email")?.trim().toLowerCase();
 		const name = field(form, "name")?.trim();
+		// "invite" registers the address and lets them choose their own
+		// password; "create" sets one now that the admin hands over.
+		const mode = field(form, "mode") === "create" ? "create" : "invite";
+		const password = field(form, "password");
+		const sendEmail = form.get("sendEmail") === "on";
 
 		if (!(email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))) {
 			return fail(400, { error: "A valid email address is required." });
 		}
+
+		if (mode === "create" && (!password || password.length < 8)) {
+			return fail(400, {
+				error: "A password of at least 8 characters is required.",
+			});
+		}
+
+		const signInUrl = `${getConfig().origin}/auth/sign-in`;
 
 		try {
 			const created = await auth.api.createUser({
@@ -46,27 +94,39 @@ export const actions = {
 				body: {
 					email,
 					name: name || email.split("@")[0] || email,
-					// better-auth requires a password to create an account.
-					// This one is random, never shared, and deleted immediately
-					// below — the account is left with no credential at all.
-					password: crypto.randomUUID(),
+					// For an invite this is random, never shared, and deleted
+					// immediately below, leaving the account with no credential
+					// at all. For a direct create it is the admin's choice.
+					password:
+						mode === "create" && password ? password : crypto.randomUUID(),
 					role: "user",
 				},
 			});
 
-			// Dropping the credential row is what makes this an invitation
-			// rather than an account with a password nobody knows: sign-in sees
-			// no credential and routes the person to onboarding to choose one.
-			await getDb()
-				.delete(account)
-				.where(
-					and(
-						eq(account.userId, created.user.id),
-						eq(account.providerId, "credential"),
-					),
-				);
+			if (mode === "invite") {
+				// Dropping the credential row is what makes this an invitation
+				// rather than an account with a password nobody knows: sign-in
+				// sees no credential and sends them to onboarding.
+				await getDb()
+					.delete(account)
+					.where(
+						and(
+							eq(account.userId, created.user.id),
+							eq(account.providerId, "credential"),
+						),
+					);
 
-			return { success: true, invited: email };
+				const mailFailed = sendEmail
+					? await sendInvite(email, signInUrl)
+					: null;
+				if (mailFailed) {
+					// The account is already usable; a failed mail is worth
+					// reporting but not worth rolling back for.
+					return { success: true, invited: email, mailFailed };
+				}
+			}
+
+			return { success: true, invited: email, mode };
 		} catch (err) {
 			return fail(500, { error: (err as Error).message });
 		}

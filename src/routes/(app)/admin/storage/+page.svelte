@@ -27,7 +27,7 @@
 	);
 </script>
 
-<div class="grid items-start gap-4 xl:grid-cols-2">
+<div class="grid gap-4 xl:grid-cols-2">
     <Card.Root>
         <Card.Content class="flex flex-col gap-5">
             <StorageUsage

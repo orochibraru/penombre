@@ -467,5 +467,22 @@
 	"onboarding_password_description": "Votre compte {email} est prêt — définissez un mot de passe pour terminer.",
 	"onboarding_password_rules": "Au moins {count} caractères.",
 	"onboarding_password_strong": "Avec majuscules, minuscules, un chiffre et un symbole.",
-	"onboarding_password_submit": "Définir le mot de passe et continuer"
+	"onboarding_password_submit": "Définir le mot de passe et continuer",
+	"admin_mode_invite": "Laisser choisir le mot de passe",
+	"admin_mode_invite_hint": "Enregistre l'adresse. Le mot de passe est choisi à la première connexion.",
+	"admin_mode_create": "Définir un mot de passe",
+	"admin_mode_create_hint": "Vous le choisissez et le transmettez vous-même.",
+	"admin_send_invite_email": "Envoyer un lien de connexion par e-mail",
+	"admin_send_invite_email_disabled": "Invitation par e-mail (configurez SMTP pour l'activer)",
+	"admin_smtp": "E-mail (SMTP)",
+	"admin_smtp_description": "Utilisé pour les e-mails de vérification et les invitations.",
+	"admin_smtp_enable": "Envoyer des e-mails depuis cette instance",
+	"admin_smtp_host": "Hôte",
+	"admin_smtp_port": "Port",
+	"admin_smtp_user": "Utilisateur",
+	"admin_smtp_password": "Mot de passe",
+	"admin_smtp_from": "Adresse d'expédition",
+	"admin_smtp_secure": "Utiliser TLS",
+	"admin_smtp_secure_hint": "Activé pour le port 465 ; désactivé pour 587 avec STARTTLS.",
+	"admin_restart_required": "S'applique après le prochain redémarrage."
 }

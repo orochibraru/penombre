@@ -467,5 +467,22 @@
 	"onboarding_password_description": "Tu cuenta de {email} está lista — establece una contraseña para terminar.",
 	"onboarding_password_rules": "Al menos {count} caracteres.",
 	"onboarding_password_strong": "Incluye mayúsculas, minúsculas, un dígito y un símbolo.",
-	"onboarding_password_submit": "Establecer contraseña y continuar"
+	"onboarding_password_submit": "Establecer contraseña y continuar",
+	"admin_mode_invite": "Que elija su contraseña",
+	"admin_mode_invite_hint": "Registra la dirección. La elige al iniciar sesión por primera vez.",
+	"admin_mode_create": "Establecer una contraseña ahora",
+	"admin_mode_create_hint": "Tú la eliges y se la das tú mismo.",
+	"admin_send_invite_email": "Enviar un enlace de acceso por correo",
+	"admin_send_invite_email_disabled": "Invitación por correo (configura SMTP para activarlo)",
+	"admin_smtp": "Correo (SMTP)",
+	"admin_smtp_description": "Se usa para correos de verificación e invitaciones.",
+	"admin_smtp_enable": "Enviar correo desde esta instancia",
+	"admin_smtp_host": "Servidor",
+	"admin_smtp_port": "Puerto",
+	"admin_smtp_user": "Usuario",
+	"admin_smtp_password": "Contraseña",
+	"admin_smtp_from": "Dirección de envío",
+	"admin_smtp_secure": "Usar TLS",
+	"admin_smtp_secure_hint": "Activado para el puerto 465; desactivado para 587 con STARTTLS.",
+	"admin_restart_required": "Se aplica tras el próximo reinicio."
 }

@@ -213,8 +213,8 @@ Appearance is three `data-*` attributes on `<html>` (`data-font`,
 `data-corners`, `data-accent`), written by `applyTheme()` in `$lib/theme.ts`
 from the user's saved preferences and read by the theme block at the bottom of
 `app.css`. Everything downstream already reads `--radius`, `--app-font` and
-`--primary`, so switching an attribute re-themes the whole app — never
-hard-code a colour or radius in a component.
+`--primary`, so switching an attribute re-themes the whole app — never hard-code
+a colour or radius in a component.
 
 ### Shipped UI defaults
 
@@ -235,10 +235,10 @@ the window, not the dialog.
 
 ### Invitations have no credential
 
-An invited account is one with **no `account` row of `providerId: "credential"`**
-— that absence is the marker, not a flag column. `createUser` requires a
-password, so the invite action creates one and deletes the credential row
-immediately after.
+An invited account is one with **no `account` row of
+`providerId: "credential"`** — that absence is the marker, not a flag column.
+`createUser` requires a password, so the invite action creates one and deletes
+the credential row immediately after.
 
 Onboarding then writes the credential itself via
 `(await auth.$context).internalAdapter.createAccount()` with
@@ -248,16 +248,26 @@ Onboarding then writes the credential itself via
 ### A hidden `required` input blocks form submission
 
 The two-step sign-in hides the password field until the address is known. Its
-`required` must be bound to the same flag — a hidden required control fails
-HTML validation with "An invalid form control is not focusable" and the submit
+`required` must be bound to the same flag — a hidden required control fails HTML
+validation with "An invalid form control is not focusable" and the submit
 silently does nothing.
 
 ### Instance settings vs. environment
 
-`app_settings` (one row, `services/app-settings.ts`) holds only what has **no**
-environment equivalent. Anything settable by env var stays env-owned so
-`config.ts` remains the single source of truth — the admin UI shows those
-read-only rather than offering a second place to set them.
+`app_settings` (one row, `services/app-settings.ts`) is the runtime half of the
+configuration. The rule is **env wins when it is set, otherwise the database
+governs** — see `envProvided()` in `config.ts`, which reports which vars are
+actually present rather than inferring from a resolved value.
+
+That distinction matters: a default is indistinguishable from a deliberate env
+value, so treating "env always wins" left `ENABLE_EMAIL_SIGNIN` pinned to its
+default with no way to change it once the var was removed from `.env`. The admin
+UI renders a setting read-only only when `envProvided()` says the environment
+claims it.
+
+Anything better-auth reads at init (email sign-in, OAuth providers) is resolved
+once via top-level `await` in `auth/index.ts`, so a change there needs a
+restart. The UI says so.
 
 ### Adding a user preference
 
@@ -275,8 +285,8 @@ validation.
 
 Never write `eq(files.ownerId, ctx.user.id)` directly. Use `ownedFiles(ctx)` /
 `ownedFolders(ctx)` from `services/storage/scope.ts`, which also match the
-context's `volumeId`. Paths are only unique *within* a volume, so an
-owner-only query can match a row on the wrong mount. New rows must stamp
+context's `volumeId`. Paths are only unique _within_ a volume, so an owner-only
+query can match a row on the wrong mount. New rows must stamp
 `volumeId: this.ctx.volumeId`. The main drive stores `null`. See
 `docs/volumes.md`.
 
@@ -305,12 +315,45 @@ flat keys plus a helper in `utils.ts` (see `filesCountLabel`).
 `mock.module` in Bun is **global and permanent** — a module mock in one test
 file leaks into every file that runs after it. Two consequences:
 
-- Every local `$lib/server/config` mock must return the *same* shape, or a suite
+- Every local `$lib/server/config` mock must return the _same_ shape, or a suite
   that runs later reads a config missing the fields it needs.
 - A suite that calls `mockReturnValue` (not `...Once`) on a shared mock must
   restore it in `afterAll`, or it reconfigures everything downstream.
 
 Prefer stubbing a method on the instance under test over mocking a module.
+
+### Card layout conventions
+
+Cards carry their heading through `Card.Header` + `Card.Title` +
+`Card.Description`, with any top-right button in `Card.Action` — never a
+hand-rolled `<h2>` inside `Card.Content`. The account pages drifted into the
+latter and the headings came out a different size from every other page.
+
+Page-level card grids must **not** carry `items-start`: it defeats the grid's
+default stretch, so cards in a row end at different heights and the column
+bottoms come out ragged. Let them stretch.
+
+### Activity is one component
+
+`$lib/components/activity-log.svelte` renders both the account and admin
+activity views — mono log lines, not cards or a table — differing only by
+`showUser`. `ActivityService.audit()` must keep selecting `message`, which the
+admin table used to omit entirely. File and folder names are never written into
+these rows, which is what makes the message safe to show an admin.
+
+### E2E runs against a container, not your working tree
+
+`test:e2e` starts the app in Docker, and Playwright's `reuseExistingServer` is
+on outside CI. If a container from an earlier run is still up, Playwright
+attaches to it and your edits are simply not in the app under test — the symptom
+is a failure whose page snapshot shows the _old_ UI. Both `test:e2e` scripts
+therefore run `up --build --wait` themselves so the stack is rebuilt and
+recreated before Playwright looks at the port. Never invoke
+`bunx playwright test` directly after changing app code.
+
+Paraglide output is gitignored and only written by the Vite plugin, so a fresh
+checkout has none. CI compiles it (`bun run gen:paraglide`) before `bun test` —
+anything under test that imports `$lib/paraglide/messages.js` needs that step.
 
 ### Screenshots for docs
 

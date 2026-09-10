@@ -48,7 +48,7 @@ through every storage query). See `docs/volumes.md`.
   queue if an instance ever grows enough accounts for it to show.
 - Email-first sign-in confirms whether an address has an account here. Standard
   for the pattern and rate-limited, but if enumeration ever matters more than
-  the flow, return `has-password` unconditionally and let the password step
-  fail instead.
+  the flow, return `has-password` unconditionally and let the password step fail
+  instead.
 - Invites create the account directly; there is no emailed invitation link yet,
   so an admin still has to tell the person they can sign in.

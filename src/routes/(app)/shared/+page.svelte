@@ -12,6 +12,7 @@
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { invalidate } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { api } from "$lib/api";
 	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
@@ -330,7 +331,9 @@
                                             size: "sm",
                                         }),
                                     )}
-                                    href="/api/v1/sharings/{entry.sharedWithId}/download"
+                                    href={resolve("/api/v1/sharings/[id]/download", {
+                                        id: entry.sharedWithId,
+                                    })}
                                     download
                                 >
                                     <DownloadIcon class="size-4" />

@@ -64,6 +64,12 @@ mock.module("$lib/server/config", () => ({
 		},
 	})),
 	getStoragePath: mock(() => "/tmp/penombre-test-storage"),
+	envProvided: mock(() => ({
+		emailSignIn: true,
+		oauthSignIn: true,
+		minPasswordLength: true,
+		smtp: true,
+	})),
 	isSimpleMode: mock(() => false),
 	isAuthBypassed: mock(() => false),
 }));

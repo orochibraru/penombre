@@ -49,7 +49,7 @@
 		},
 	]);
 
-	/** Share of the whole volume each user takes, for the inline bars. */
+	/** Bars are relative to the biggest user, so they compare accounts. */
 	const maxUserBytes = $derived(
 		Math.max(1, ...stats.perUser.map((row) => row.bytes)),
 	);
@@ -79,7 +79,7 @@
         {/each}
     </div>
 
-    <div class="grid items-start gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+    <div class="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         <Card.Root>
             <Card.Header>
                 <Card.Title>{m.storage_management()}</Card.Title>

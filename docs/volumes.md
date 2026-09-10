@@ -12,11 +12,11 @@ without copying it into Penombre's own storage root.
 Volumes are declared with environment variables, one block per volume, in the
 same style as OAuth providers:
 
-| Variable                  | Required | Description                              |
-| ------------------------- | -------- | ---------------------------------------- |
-| `VOLUME_<NAME>_PATH`      | yes      | Absolute path to the directory           |
-| `VOLUME_<NAME>_LABEL`     | no       | What the sidebar shows (default: `NAME`) |
-| `VOLUME_<NAME>_READONLY`  | no       | `true` refuses every write               |
+| Variable                 | Required | Description                              |
+| ------------------------ | -------- | ---------------------------------------- |
+| `VOLUME_<NAME>_PATH`     | yes      | Absolute path to the directory           |
+| `VOLUME_<NAME>_LABEL`    | no       | What the sidebar shows (default: `NAME`) |
+| `VOLUME_<NAME>_READONLY` | no       | `true` refuses every write               |
 
 ```env
 VOLUME_MEDIA_PATH=/mnt/media

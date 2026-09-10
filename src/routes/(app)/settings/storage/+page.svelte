@@ -31,7 +31,7 @@
 	);
 </script>
 
-<div class="grid items-start gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+<div class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
     <Card.Root>
         <Card.Content>
             <StorageUsage

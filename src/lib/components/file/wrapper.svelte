@@ -110,6 +110,8 @@
 	let movingItem: boolean = $state(false);
 	let checkedItems: Record<string, string> = $state({});
 	let isSingleItemAction: boolean = $state(false);
+	/** True only while the "Empty Trash" button drives the delete dialog. */
+	let emptyingTrash: boolean = $state(false);
 	let searchValue: string = $state("");
 	let searchResults: ObjectItem[] = $state([]);
 	let searchTimeout: ReturnType<typeof setTimeout> | undefined = $state();
@@ -237,6 +239,7 @@
 	// Single item action helpers
 	function prepareForSingleItemAction(item: ObjectItem) {
 		isSingleItemAction = true;
+		emptyingTrash = false;
 		checkedItems = {};
 		checkedItems[item.key] = item.metadata.name ?? item.key;
 	}
@@ -480,6 +483,7 @@
 		},
 		onDeletePermanently: () => {
 			isSingleItemAction = false;
+			emptyingTrash = false;
 			confirmDeleteOpen = true;
 			actionsContextOpen = false;
 		},
@@ -550,6 +554,7 @@
 		checkedItems = selectAllForEmptyTrash(data);
 		confirmDeleteOpen = true;
 		isSingleItemAction = false;
+		emptyingTrash = true;
 	}
 
 	// ================================
@@ -934,6 +939,7 @@
     {checkedItems}
     {handleDeleteObject}
     items={data.list}
+    {emptyingTrash}
 />
 
 <RestoreDialog

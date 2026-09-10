@@ -32,7 +32,12 @@ export async function rightClickItem(page: Page, name: string) {
 	const menu = page.locator('[role="menu"]');
 	for (let i = 0; i < 3; i++) {
 		await target.click({ button: "right" });
-		const appeared = await menu.isVisible({ timeout: 1000 }).catch(() => false);
+		// waitFor, not isVisible: the latter resolves immediately, so a menu
+		// still animating in reads as absent and the click is retried in vain.
+		const appeared = await menu
+			.waitFor({ state: "visible", timeout: 1000 })
+			.then(() => true)
+			.catch(() => false);
 		if (appeared) {
 			return;
 		}

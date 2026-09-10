@@ -113,9 +113,9 @@
 		"preview": "vite preview",
 		"release": "semantic-release",
 		"test:docker": "docker compose -f compose.test.yaml up --build --exit-code-from test --abort-on-container-exit",
-		"test:e2e": "docker compose -f compose.e2e.yaml -p penombre-e2e build && playwright test",
+		"test:e2e": "docker compose -f compose.e2e.yaml -p penombre-e2e up --build --wait && playwright test",
 		"test:e2e:headed": "playwright test --headed",
-		"test:e2e:pg": "docker compose -f compose.e2e.yaml --profile pg -p penombre-e2e-pg build && playwright test --config=playwright.pg.config.ts",
+		"test:e2e:pg": "E2E_PORT=3002 E2E_DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre_e2e docker compose -f compose.e2e.yaml --profile pg -p penombre-e2e-pg up --build --wait && playwright test --config=playwright.pg.config.ts",
 		"test:e2e:ui": "playwright test --ui",
 		"screenshots": "playwright test --config playwright.config.ts e2e/screenshots"
 	},

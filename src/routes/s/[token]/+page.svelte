@@ -7,6 +7,7 @@
 		LogInIcon,
 	} from "@lucide/svelte";
 	import { enhance } from "$app/forms";
+	import { resolve } from "$app/paths";
 	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
 	import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
 	import * as Card from "$lib/components/ui/card/index.js";
@@ -118,7 +119,9 @@
                     <Card.Content class="flex justify-center">
                         <a
                             class={buttonVariants({ variant: "default" })}
-                            href="/auth/sign-in?redirect=/s/{data.token}"
+                            href="{resolve('/auth/sign-in')}?redirect={encodeURIComponent(
+                            resolve('/s/[token]', { token: data.token }),
+                        )}"
                         >
                             {m.sign_in()}
                         </a>
@@ -165,7 +168,7 @@
                             buttonVariants({ variant: "default" }),
                             "shrink-0",
                         )}
-                        href="/s/{data.token}/download"
+                        href={resolve("/s/[token]/download", { token: data.token })}
                         download
                     >
                         <DownloadIcon />
@@ -210,8 +213,9 @@
                                                 // Always visible: a hover-only control is unreachable on touch.
                                                 "text-muted-foreground hover:text-foreground size-8 transition-colors",
                                             )}
-                                            href="/s/{data.token}/download?file={file
-                                                .metadata.id}"
+                                            href="{resolve('/s/[token]/download', {
+                                                token: data.token,
+                                            })}?file={file.metadata.id}"
                                             aria-label={m.download()}
                                             download
                                         >

@@ -55,19 +55,24 @@ async function forceDeleteFolder(
 }
 
 /**
- * If the app shows a "Are you absolutely sure?" confirmation dialog, click
- * "Continue" to proceed. Some destructive/restorative actions require this.
+ * Confirm the "Are you absolutely sure?" dialog that destructive actions show.
+ *
+ * Waits for it rather than probing: `locator.isVisible()` resolves immediately
+ * (its `timeout` is not a retry), so a dialog still animating in reads as
+ * absent and the confirmation is silently skipped.
  */
-async function confirmContinueIfVisible(page: import("@playwright/test").Page) {
+async function confirmDestructiveDialog(page: import("@playwright/test").Page) {
 	// Use .first() to avoid strict-mode issues if multiple dialogs match at once
 	const confirmDialog = page
 		.locator('[role="dialog"],[role="alertdialog"]')
 		.filter({ hasText: /absolutely sure/i })
 		.first();
-	if (await confirmDialog.isVisible({ timeout: 4000 }).catch(() => false)) {
-		await confirmDialog.getByRole("button", { name: "Continue" }).click();
-		await expect(confirmDialog).toBeHidden({ timeout: 5000 });
-	}
+	await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+	// Trash confirms with "Delete permanently"; elsewhere it is "Continue".
+	await confirmDialog
+		.getByRole("button", { name: /^(Continue|Delete permanently)$/ })
+		.click();
+	await expect(confirmDialog).toBeHidden({ timeout: 5000 });
 }
 
 test.describe("Trash", () => {
@@ -124,7 +129,7 @@ test.describe("Trash", () => {
 	test.describe("Restore from trash", () => {
 		test.beforeEach(async ({ page }) => {
 			// Dismiss any confirmation dialog left over from a previous test
-			await confirmContinueIfVisible(page).catch(() => {});
+			await confirmDestructiveDialog(page).catch(() => {});
 		});
 
 		test("restores a folder from trash via context menu", async ({ page }) => {
@@ -140,7 +145,7 @@ test.describe("Trash", () => {
 
 				await rightClickItem(page, folderName);
 				await page.getByRole("menuitem", { name: "Restore" }).click();
-				await confirmContinueIfVisible(page);
+				await confirmDestructiveDialog(page);
 
 				await expectItemAbsent(page, folderName);
 
@@ -166,7 +171,7 @@ test.describe("Trash", () => {
 
 				await openItemMenu(page, folderName);
 				await page.getByRole("menuitem", { name: "Restore" }).click();
-				await confirmContinueIfVisible(page);
+				await confirmDestructiveDialog(page);
 
 				await expectItemAbsent(page, folderName);
 
@@ -181,7 +186,7 @@ test.describe("Trash", () => {
 	test.describe("Permanent deletion", () => {
 		test.beforeEach(async ({ page }) => {
 			// Dismiss any confirmation dialog left over from a previous test
-			await confirmContinueIfVisible(page).catch(() => {});
+			await confirmDestructiveDialog(page).catch(() => {});
 		});
 
 		test("permanently deletes a trashed folder", async ({ page }) => {
@@ -199,7 +204,7 @@ test.describe("Trash", () => {
 			await page.getByRole("menuitem", { name: "Delete permanently" }).click();
 
 			// Confirm in the "Are you absolutely sure?" dialog
-			await confirmContinueIfVisible(page);
+			await confirmDestructiveDialog(page);
 
 			await expectItemAbsent(page, folderName);
 
