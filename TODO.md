@@ -15,3 +15,8 @@
       single click in multi select mode.
 - [ ] [Bug] Image preview shouldn't trigger a need to scroll. Fit the image to
       the modal viewbox.
+- [ ] [Devex] Reduce prek run time, it's too long. Drop svelte check and openapi
+      gen, instead of openapi gen on prek run a ci job that checks diff (after
+      formatting). If diff changed a new openapi gen is needed, most of the time
+      it's not. Drop otherr time-consuming non-critical jobs, find balance for
+      the best devex.
