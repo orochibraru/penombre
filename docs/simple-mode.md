@@ -83,10 +83,9 @@ storage directory.
 - **One shared file tree.** Every account routes to the same storage root and
   the same DB-owned files, so uploads/edits from different logins land in the
   same place instead of separate per-user drives.
-- **Trimmed navigation.** Recent, Starred, Shared, Categories, and Sync are
-  hidden — just Browse, Trash, and Settings. Trash stays, so an accidental
-  delete is still recoverable. The hidden pages return 404 if you type their URL
-  directly.
+- **Trimmed navigation.** Recent, Starred, Shared, and Categories are hidden —
+  just Browse, Trash, and Settings. Trash stays, so an accidental delete is
+  still recoverable. The hidden pages return 404 if you type their URL directly.
 
 ## What doesn't change
 

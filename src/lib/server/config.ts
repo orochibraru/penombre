@@ -1,7 +1,12 @@
+import { resolve } from "node:path";
 import z from "zod";
+import { dev } from "$app/environment";
 import { env } from "$env/dynamic/private";
 import {
+	DEV_DATA_DIR,
+	dataPaths,
 	defaultConfigValues,
+	defaultDbUrl,
 	generateExampleDotenvFile,
 } from "./config.defaults";
 
@@ -94,6 +99,9 @@ const configSchema = z
 		autoRedirectProvider: z
 			.string()
 			.default(defaultConfigValues.autoRedirectProvider),
+		dataDir: z.string().default(defaultConfigValues.dataDir),
+		storagePath: z.string().default(defaultConfigValues.storagePath),
+		dbLocation: z.string().default(defaultConfigValues.dbLocation),
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
@@ -259,27 +267,47 @@ function resolveLogFormat() {
 
 export function getConfig(): AppConfig {
 	const redisUrl = env.REDIS_URL;
+	// Nothing is mounted at `/data` on a dev box, so writes stay in the repo.
+	const dataDir =
+		env.DATA_DIR || (dev ? DEV_DATA_DIR : defaultConfigValues.dataDir);
+	const paths = dataPaths(dataDir);
 
 	return validateConfig({
 		appName: env.APP_NAME || defaultConfigValues.appName,
-		appVersion: env.APP_VERSION || defaultConfigValues.appVersion,
+		// Not overridable: the version is package.json's, inlined into the bundle
+		// at build time, so it always describes the artifact that's running.
+		appVersion: defaultConfigValues.appVersion,
 		environment: env.APP_ENV || defaultConfigValues.environment,
 		origin: env.ORIGIN || defaultConfigValues.origin,
 		logLevel: resolveLogLevel(),
 		logFormat: resolveLogFormat(),
-		db: env.DATABASE_URL ? { url: env.DATABASE_URL } : defaultConfigValues.db,
+		// Trimmed and `||`: an empty or whitespace `DATABASE_URL` (an unset var
+		// rendered by a deploy UI or compose) means "not set".
+		db: { url: env.DATABASE_URL?.trim() || defaultDbUrl(dataDir) },
 		auth: resolveAuthConfig(),
 		redis: redisUrl ? { url: redisUrl } : defaultConfigValues.redis,
 		smtp: resolveSmtpConfig(),
 		simpleMode: env.SIMPLE_MODE === "true",
 		bypassAuth: env.BYPASS_AUTH === "true",
 		autoRedirectProvider: env.AUTH_AUTO_REDIRECT_PROVIDER || "",
+		// `resolve` anchors a relative path to the cwd and leaves an absolute one
+		// alone — joining the cwd on top of it turned the documented
+		// `STORAGE_PATH=/data/storage` into `/app/data/storage` in the container,
+		// so a mounted volume was never actually read or written.
+		dataDir: resolve(dataDir),
+		storagePath: resolve(env.STORAGE_PATH || paths.storagePath),
+		dbLocation: resolve(paths.dbLocation),
 	});
 }
 
 export function isSmtpEnabled(): boolean {
 	const config = getConfig();
 	return config.smtp !== undefined;
+}
+
+/** Absolute path to the storage root — where uploaded bytes live on disk. */
+export function getStoragePath(): string {
+	return getConfig().storagePath;
 }
 
 /** Simple mode: one shared storage volume/drive for every account, no per-user drives. */

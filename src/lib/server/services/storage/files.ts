@@ -8,6 +8,7 @@
 import { unlink } from "node:fs/promises";
 import { and, eq } from "drizzle-orm";
 import { parseFile } from "music-metadata";
+import { Logger } from "$lib/logger";
 import { files } from "$lib/server/db/schema";
 import { FileOrFolderNotFoundError } from "$lib/server/errors";
 import type {
@@ -17,7 +18,6 @@ import type {
 	UpdateFile,
 	UploadResult,
 } from "$lib/server/schema";
-import { logger } from "./constants";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import {
@@ -29,6 +29,8 @@ import {
 	generateFileNameWithExtension,
 } from "./mappers";
 import type { ThumbnailService } from "./thumbnails";
+
+const logger = new Logger("StorageService");
 
 export class FileOperations {
 	constructor(

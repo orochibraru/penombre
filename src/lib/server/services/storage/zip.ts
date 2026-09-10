@@ -9,11 +9,13 @@ import type { Readable } from "node:stream";
 import { Readable as NodeReadable } from "node:stream";
 import archiver from "archiver";
 import { and, eq, like } from "drizzle-orm";
+import { Logger } from "$lib/logger";
 import type { Folder as DbFolder } from "$lib/server/db/schema";
 import { files, folders } from "$lib/server/db/schema";
-import { logger } from "./constants";
 import type { StorageContext } from "./context";
 import { buildDisplayPathForFile } from "./mappers";
+
+const logger = new Logger("StorageService");
 
 /** Surface archiver errors; a missing file is a warning, anything else rethrows */
 function attachArchiveLogging(archive: archiver.Archiver): void {

@@ -36,7 +36,6 @@
 		uploadDialogOpen,
 	} from "$lib/store/upload";
 	import {
-		capitalizeFirstLetter,
 		isFolderItem,
 		readableFileSize,
 		type SortColumn,
@@ -772,56 +771,25 @@
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Root>
-            <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
-                    {#snippet child({ props })}
-                        <Button variant="outline" {...props}>
-                            {#if layout === "grid"}
-                                <LayoutGridIcon class="h-4 w-4" />
-                            {:else}
-                                <LayoutListIcon class="h-4 w-4" />
-                            {/if}
-                            <span>
-                                {capitalizeFirstLetter(layout)}
-                            </span>
-                        </Button>
-                    {/snippet}
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content align="end">
-                    <DropdownMenu.Label>{m.layout()}</DropdownMenu.Label>
-                    <DropdownMenu.Separator />
-                    <DropdownMenu.Item
-                        onclick={async () => {
-                            await api.PUT("/api/v1/preferences", {
-                                body: { layout: "list" },
-                            });
-                            await invalidate("app:preferences");
-                        }}
-                    >
-                        {#if layout === "list"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.layout_list()}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                        onclick={async () => {
-                            await api.PUT("/api/v1/preferences", {
-                                body: { layout: "grid" },
-                            });
-                            await invalidate("app:preferences");
-                        }}
-                    >
-                        {#if layout === "grid"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.layout_grid()}
-                    </DropdownMenu.Item>
-                </DropdownMenu.Content>
-            </DropdownMenu.Root>
+            <Button
+                variant="outline"
+                title={m.layout()}
+                onclick={async () => {
+                    await api.PUT("/api/v1/preferences", {
+                        body: { layout: layout === "grid" ? "list" : "grid" },
+                    });
+                    await invalidate("app:preferences");
+                }}
+            >
+                {#if layout === "grid"}
+                    <LayoutGridIcon class="h-4 w-4" />
+                {:else}
+                    <LayoutListIcon class="h-4 w-4" />
+                {/if}
+                <span>
+                    {layout === "grid" ? m.layout_grid() : m.layout_list()}
+                </span>
+            </Button>
             {#if isTrash}
                 <Button
                     type="button"

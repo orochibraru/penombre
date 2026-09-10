@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		CloudUploadIcon,
+		CornerLeftUpIcon,
 		EllipsisVerticalIcon,
 		FolderPlusIcon,
 		UploadIcon,
@@ -18,6 +19,10 @@
 	import {
 		cn,
 		isFolderItem,
+		PARENT_KEY,
+		parentHref,
+		resolveDropDestination,
+		resolveParentPath,
 		type SharedFileDisplayProps,
 		shouldDisplayAction,
 	} from "$lib/utils";
@@ -48,6 +53,9 @@
 
 	const iconSize = "h-36 w-36";
 	const loadingAmount = 20;
+
+	/** `undefined` outside /browse and at the drive root: no `..` row there. */
+	const parentPath = $derived(resolveParentPath(page.params.path));
 	let isDragging: boolean = $state(false);
 
 	function handleDragOver(e: DragEvent) {
@@ -126,13 +134,7 @@
 			return;
 		}
 
-		// Build destination path
-		const currentPath = page.params.path;
-		const destination = currentPath
-			? `${currentPath}/${folderKey.replace(/\/$/, "")}`
-			: folderKey.replace(/\/$/, "");
-
-		onDropOnFolder(destination);
+		onDropOnFolder(resolveDropDestination(folderKey, page.params.path));
 		dropTargetKey = undefined;
 	}
 
@@ -352,6 +354,28 @@
     </li>
 {/snippet}
 
+{#snippet parentGridItem(parent: string)}
+    {@const isDragTarget = dropTargetKey === PARENT_KEY}
+    <li
+        class={cn(
+            "flex items-stretch justify-center rounded-xl border border-dashed p-5 transition-colors",
+            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+        )}
+        ondragover={(e) => handleFolderDragOver(e, PARENT_KEY)}
+        ondragleave={(e) => handleFolderDragLeave(e, PARENT_KEY)}
+        ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
+    >
+        <a
+            href={parentHref(parent)}
+            title={m.parent_folder()}
+            class="text-muted-foreground hover:text-foreground flex h-full flex-col items-center justify-center gap-2 transition-colors"
+        >
+            <CornerLeftUpIcon class="h-12 w-12" />
+            <span class="font-mono text-sm">..</span>
+        </a>
+    </li>
+{/snippet}
+
 {#snippet emptyListItem()}
     <li
         class="col-span-full flex flex-col items-center justify-center gap-4 py-12"
@@ -426,12 +450,17 @@
             {:else}
                 {@render emptyListItem()}
             {/if}
-        {:else if sortedFiles && sortedFiles.length > 0}
-            {#each sortedFiles as objectItem}
-                {@render listItem(objectItem)}
-            {/each}
         {:else}
-            {@render emptyListItem()}
+            {#if parentPath !== undefined}
+                {@render parentGridItem(parentPath)}
+            {/if}
+            {#if sortedFiles && sortedFiles.length > 0}
+                {#each sortedFiles as objectItem}
+                    {@render listItem(objectItem)}
+                {/each}
+            {:else}
+                {@render emptyListItem()}
+            {/if}
         {/if}
     </ul>
 </div>

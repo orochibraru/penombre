@@ -50,6 +50,7 @@ mock.module("$lib/server/config", () => ({
 	getConfig: mock(() => ({
 		smtp: undefined,
 	})),
+	getStoragePath: mock(() => "/tmp/penombre-test-storage"),
 	isSimpleMode: mock(() => false),
 	isAuthBypassed: mock(() => false),
 }));
@@ -105,4 +106,5 @@ const mockDb = {
 mock.module("$lib/server/db", () => ({
 	db: mockDb,
 	getDb: () => mockDb,
+	getDbUrl: () => "file:./data/db/penombre.sqlite",
 }));

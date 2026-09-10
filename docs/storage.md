@@ -3,8 +3,13 @@
 Where Penombre keeps your files.
 
 Files live on the host filesystem at the path configured by `STORAGE_PATH`. The
-default is `/data/storage`, which maps to a Docker volume in the bundled
-`compose.yaml`.
+default is `$DATA_DIR/storage` — `/data/storage`, which maps to a Docker volume
+in the bundled `compose.yaml`. Running `bun run dev` outside production instead
+writes to `./data/storage` inside the repo, so a dev box needs no `/data` mount.
+
+`DATA_DIR` is the base directory for everything the app writes: the storage root
+above and the SQLite database (`$DATA_DIR/db`). Point it somewhere else and both
+follow; `STORAGE_PATH` and `DATABASE_URL` still override their own path.
 
 There is nothing to configure beyond that path — Penombre is built for a single
 box with a disk attached, not for object storage.
@@ -12,9 +17,10 @@ box with a disk attached, not for object storage.
 > Running as a shared file browser instead of a multi-user drive? See
 > [Simple mode](simple-mode.md) — it changes what lives at `STORAGE_PATH`.
 
-| Variable       | Description                   | Default         |
-| -------------- | ----------------------------- | --------------- |
-| `STORAGE_PATH` | Absolute path to storage root | `/data/storage` |
+| Variable       | Description                       | Default                   |
+| -------------- | --------------------------------- | ------------------------- |
+| `DATA_DIR`     | Base directory for all app data   | `/data` (`./data` in dev) |
+| `STORAGE_PATH` | Absolute path to the storage root | `$DATA_DIR/storage`       |
 
 To change the storage location, update `STORAGE_PATH` in your `.env` file and
 make sure the path is mounted in your container:
@@ -42,3 +48,32 @@ volumes:
 
 Penombre needs read/write access and reports free space from that filesystem, so
 mount the share before the container starts.
+
+## Syncing with Syncthing
+
+Penombre has no sync client of its own, and isn't going to grow one — a
+directory of files is exactly what [Syncthing](https://syncthing.net) already
+does well. Point it at the same directory the container mounts:
+
+```yaml
+volumes:
+  - /srv/penombre/files:/data/storage
+```
+
+…then share `/srv/penombre/files` as a Syncthing folder with your laptop or
+phone. Files land on disk and Penombre picks them up.
+
+**Use [simple mode](simple-mode.md) for this.** Simple mode re-scans the storage
+root every 60 seconds, so anything Syncthing writes shows up in the UI on its
+own. In the default drive mode nothing rescans — every file is expected to
+arrive through an upload that also wrote its database row — so files dropped in
+from outside stay invisible.
+
+Two things to set on the Syncthing side:
+
+- **Ignore the thumbnail cache.** Add `.thumbnails` to the folder's ignore
+  patterns — Penombre regenerates it per instance, so syncing it to every device
+  is pure waste.
+- **Pick a conflict strategy.** Syncthing keeps both sides of a conflict as
+  `*.sync-conflict-*` files; Penombre lists them like any other file rather than
+  resolving them for you.

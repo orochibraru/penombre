@@ -1,9 +1,4 @@
 export { CacheKeys, CacheManager } from "./cache";
-export {
-	createUserStorageDriver,
-	DEFAULT_STORAGE_PATH,
-	logger,
-} from "./constants";
-export type { StorageDriver } from "./driver";
+export { createUserStorageDriver, type StorageDriver } from "./driver";
 export { migrateStorageMeta } from "./migrate-meta";
 export { type FileProxyRequest, StorageService } from "./service";

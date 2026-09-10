@@ -7,6 +7,28 @@ import packageJson from "../../../package.json" with { type: "json" };
  * - The .example.env generator script (scripts/generate-env-example.ts)
  */
 
+/** Everything the app writes lives under one directory. */
+const DEFAULT_DATA_DIR = "/data";
+
+/** Nothing is mounted at `/data` on a dev box — keep writes inside the repo. */
+export const DEV_DATA_DIR = "./data";
+
+/** The per-purpose subdirectories hanging off `dataDir`. */
+export function dataPaths(dataDir: string): {
+	storagePath: string;
+	dbLocation: string;
+} {
+	return {
+		storagePath: `${dataDir}/storage`,
+		dbLocation: `${dataDir}/db`,
+	};
+}
+
+/** SQLite is the default: no database server to run for a homelab install. */
+export function defaultDbUrl(dataDir: string): string {
+	return `file:${dataPaths(dataDir).dbLocation}/penombre.sqlite`;
+}
+
 export const defaultConfigValues = {
 	appName: "Penombre",
 	appVersion: packageJson.version,
@@ -15,7 +37,7 @@ export const defaultConfigValues = {
 	logLevel: "info" as "debug" | "info" | "warn" | "error",
 	logFormat: "console" as "console" | "json",
 	db: {
-		url: "file:./data/penombre.sqlite",
+		url: defaultDbUrl(DEFAULT_DATA_DIR),
 	},
 	auth: {
 		enableEmailSignIn: true,
@@ -41,6 +63,8 @@ export const defaultConfigValues = {
 	simpleMode: false,
 	bypassAuth: false,
 	autoRedirectProvider: "",
+	dataDir: DEFAULT_DATA_DIR,
+	...dataPaths(DEFAULT_DATA_DIR),
 };
 
 export function generateExampleDotenvFile(): string {
@@ -68,7 +92,7 @@ ORIGIN=${defaultConfigValues.origin}
 # SQLite by default — a "file:"/"sqlite:" path, no database server needed.
 # For PostgreSQL, use a connection string instead:
 # DATABASE_URL=postgresql://penombre:penombre@localhost:5432/penombre
-DATABASE_URL=${defaultConfigValues.db.url}
+# DATABASE_URL=${defaultConfigValues.db.url}
 
 # ===========================================
 # Authentication
@@ -135,8 +159,12 @@ BYPASS_AUTH=${defaultConfigValues.bypassAuth}
 # ===========================================
 # Storage
 # ===========================================
-# Where uploaded files live on disk.
-# STORAGE_PATH=/data/storage
+# Base directory for everything the app writes — uploads and the SQLite
+# database. Defaults to "${DEV_DATA_DIR}" outside production.
+# DATA_DIR=${defaultConfigValues.dataDir}
+
+# Where uploaded files live on disk. Defaults to DATA_DIR/storage.
+# STORAGE_PATH=${defaultConfigValues.storagePath}
 
 # ===========================================
 # SMTP (Optional - for email features)

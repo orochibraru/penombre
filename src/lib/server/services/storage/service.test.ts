@@ -25,10 +25,15 @@ const mockRegister = mock(async (_opts: unknown) => {});
 // wire mocks before any module import
 // ---------------------------------------------------------------------------
 
-mock.module("./constants", () => ({
+mock.module("./driver", () => ({
 	createUserStorageDriver: () => mockDriver,
-	DEFAULT_STORAGE_PATH: "/tmp/penombre-test-storage",
-	logger: { info: () => {}, debug: () => {}, warn: () => {}, error: () => {} },
+}));
+
+mock.module("$lib/server/config", () => ({
+	getConfig: () => ({ smtp: undefined }),
+	getStoragePath: () => "/tmp/penombre-test-storage",
+	isSimpleMode: () => false,
+	isAuthBypassed: () => false,
 }));
 
 mock.module("$lib/server/services/activity", () => ({
@@ -224,7 +229,7 @@ describe("StorageService", () => {
 	// Constructor / accessors
 	// =========================================================================
 	describe("constructor and accessors", () => {
-		test("getStoragePath() returns path under DEFAULT_STORAGE_PATH", () => {
+		test("getStoragePath() returns path under the configured storage path", () => {
 			const service = new StorageService(testUser);
 			expect(service.getStoragePath()).toBe(
 				"/tmp/penombre-test-storage/user-user-1",

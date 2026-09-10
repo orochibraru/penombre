@@ -1,12 +1,13 @@
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import type { Readable } from "node:stream";
 import type archiver from "archiver";
 import type { User } from "better-auth";
+import { Logger } from "$lib/logger";
 import type { CacheBackend } from "$lib/server/cache";
-import { isSimpleMode } from "$lib/server/config";
+import { getStoragePath, isSimpleMode } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
 import type {
@@ -23,14 +24,9 @@ import type {
 } from "$lib/server/schema";
 import { ActivityService } from "$lib/server/services/activity";
 import { CacheKeys, CacheManager } from "./cache";
-import {
-	createUserStorageDriver,
-	DEFAULT_STORAGE_PATH,
-	logger,
-} from "./constants";
 import type { StorageContext } from "./context";
 import { availableDiskSpace } from "./disk-space";
-import type { StorageDriver } from "./driver";
+import { createUserStorageDriver, type StorageDriver } from "./driver";
 import fileTypesData from "./file-types.json" with { type: "json" };
 import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
@@ -39,6 +35,8 @@ import { type FileProxyRequest, ProxyService } from "./proxy";
 import { ScanOperations, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
 import { ZipService } from "./zip";
+
+const logger = new Logger("StorageService");
 
 // =========================================================================
 // Module-level singletons
@@ -82,7 +80,7 @@ export class StorageService {
 		// Simple mode: one shared volume for everyone, mounted directly at
 		// STORAGE_PATH instead of a per-user subfolder.
 		this.userFolder = isSimpleMode() ? "" : `user-${user.id}`;
-		this.storagePath = join(DEFAULT_STORAGE_PATH, this.userFolder);
+		this.storagePath = join(getStoragePath(), this.userFolder);
 		this.user = user;
 		this.cache = cacheManager.getUserCache(user.id);
 		this.driver = createUserStorageDriver(this.userFolder);
@@ -445,7 +443,7 @@ export class StorageService {
 	// =========================================================================
 
 	public static getAdminStoragePath(): string {
-		return resolve(DEFAULT_STORAGE_PATH);
+		return getStoragePath();
 	}
 
 	public static getAvailableStorageSize(): number {
@@ -460,7 +458,7 @@ export class StorageService {
 			return;
 		}
 
-		const storageBasePath = DEFAULT_STORAGE_PATH;
+		const storageBasePath = getStoragePath();
 		if (!existsSync(storageBasePath)) {
 			logger.info(
 				"Storage base path does not exist. Skipping storage cleanup.",

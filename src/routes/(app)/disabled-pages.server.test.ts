@@ -9,7 +9,6 @@ const simpleModePages = {
 	recent: (await import("./recent/+page.server")).load,
 	starred: (await import("./starred/+page.server")).load,
 	shared: (await import("./shared/+page.server")).load,
-	sync: (await import("./sync/+page.server")).load,
 	categories: (await import("./categories/[category]/+page.server")).load,
 };
 

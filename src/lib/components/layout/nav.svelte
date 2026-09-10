@@ -32,6 +32,7 @@
     import { type LucideIcon } from "@lucide/svelte";
     import type { ComponentProps } from "svelte";
     import { page } from "$app/state";
+    import { Badge } from "$lib/components/ui/badge/index";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
     import { cn, type WithoutChildren } from "$lib/utils.js";
     import type { Pathname } from "$app/types";
@@ -172,7 +173,7 @@
                         </Sidebar.MenuButton>
                         {#if item.count !== undefined && item.count > 0}
                             <Sidebar.MenuBadge class="hidden md:flex">
-                                {item.count}
+                                <Badge variant="secondary">{item.count}</Badge>
                             </Sidebar.MenuBadge>
                         {/if}
                     </Sidebar.MenuItem>

@@ -1,3 +1,7 @@
+import { join } from "node:path";
+import { getStoragePath } from "$lib/server/config";
+import { LocalStorageDriver } from "./drivers/local";
+
 /**
  * The storage backend's contract. Only `LocalStorageDriver` implements it;
  * it stays an interface because every consumer (and every test double) types
@@ -53,4 +57,12 @@ export interface StorageDriver {
 
 	/** Available disk space in bytes on the underlying storage volume. */
 	getAvailableDiskSpace: () => number;
+}
+
+/**
+ * Create a `StorageDriver` for a specific user, rooted at the user's folder
+ * under `config.storagePath`. Call once per request / service construction.
+ */
+export function createUserStorageDriver(userFolder: string): StorageDriver {
+	return new LocalStorageDriver(join(getStoragePath(), userFolder));
 }

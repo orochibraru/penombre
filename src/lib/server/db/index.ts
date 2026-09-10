@@ -4,11 +4,15 @@ import { dirname } from "node:path";
 import { SQL } from "bun";
 import { type BunSQLDatabase, drizzle as drizzlePg } from "drizzle-orm/bun-sql";
 import { drizzle as drizzleSqlite } from "drizzle-orm/bun-sqlite";
-import { getDbUrl, getSqliteFilePath, isSqliteDialect } from "./dialect";
+import { getConfig } from "$lib/server/config";
+import { getSqliteFilePath, isSqliteDialect } from "./dialect";
 
 export type Database = BunSQLDatabase<Record<string, never>>;
 
-export { getDbUrl };
+/** The configured database URL — `DATABASE_URL`, or the SQLite file under `dbLocation`. */
+export function getDbUrl(): string {
+	return getConfig().db.url;
+}
 
 type Client = SQL | SqliteConnection;
 

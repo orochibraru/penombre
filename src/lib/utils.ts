@@ -1,6 +1,7 @@
 import clsx, { type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
+import { resolve } from "$app/paths";
 import type { Pathname } from "$app/types";
 import type { ObjectItem, ObjectList } from "$lib/api";
 import type { ButtonVariant } from "$lib/components/ui/button";
@@ -217,6 +218,50 @@ export interface SharedFileDisplayProps {
 	onDragStart?: (item: ObjectItem) => void;
 	onDragEnd?: () => void;
 	onDropOnFolder?: (targetFolder: string) => void;
+}
+
+/**
+ * Drop-target key for the `..` row. Folder keys always end in `/`
+ * (see `isFolderItem`), so this can't collide with a real row's key, and
+ * `resolveDropDestination` maps it to a path before anything reaches the API.
+ */
+export const PARENT_KEY = "..";
+
+/**
+ * Parent of the folder currently being browsed, or `undefined` when there is
+ * none to go up to: at the drive root, and on every listing that isn't
+ * `/browse/[...path]` (recent, starred, categories, trash), where `path` is
+ * unset. Callers use `undefined` to decide whether to render the `..` row.
+ */
+export function resolveParentPath(
+	currentPath: string | undefined,
+): string | undefined {
+	if (!currentPath) {
+		return undefined;
+	}
+	return currentPath.split("/").slice(0, -1).join("/");
+}
+
+/** Where `/browse` lives for a given parent path ("" is the drive root) */
+export function parentHref(parentPath: string) {
+	return parentPath
+		? resolve("/(app)/browse/[...path]", { path: parentPath })
+		: resolve("/(app)/browse");
+}
+
+/**
+ * Absolute destination for a drop on a row of the current listing: either the
+ * `..` row (the parent) or a folder row (a child of the current folder).
+ */
+export function resolveDropDestination(
+	folderKey: string,
+	currentPath: string | undefined,
+): string {
+	if (folderKey === PARENT_KEY) {
+		return resolveParentPath(currentPath) ?? "";
+	}
+	const key = folderKey.replace(/\/$/, "");
+	return currentPath ? `${currentPath}/${key}` : key;
 }
 
 export interface BreadCrumb {

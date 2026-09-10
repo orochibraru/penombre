@@ -13,9 +13,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { and, eq } from "drizzle-orm";
 import sharp from "sharp";
+import { Logger } from "$lib/logger";
 import { files } from "$lib/server/db/schema";
-import { logger } from "./constants";
 import type { StorageContext } from "./context";
+
+const logger = new Logger("StorageService");
 
 class ThumbnailSemaphore {
 	private running = 0;

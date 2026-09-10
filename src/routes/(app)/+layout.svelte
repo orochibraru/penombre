@@ -7,7 +7,6 @@
 		FileIcon,
 		FolderIcon,
 		FolderPlusIcon,
-		FolderSyncIcon,
 		ImageIcon,
 		MenuIcon,
 		MusicIcon,
@@ -55,7 +54,7 @@
 	const { children, data } = $props();
 
 	// Simple mode: bare shared file browser, drop drive-only concepts
-	// (recent/starred/shared/categories/sync) but keep trash for undo safety.
+	// (recent/starred/shared/categories) but keep trash for undo safety.
 	const simpleMode = $derived(data.config?.simpleMode ?? false);
 
 	// Auth bypass: nobody signs in, so there's no profile/admin to show.
@@ -161,18 +160,9 @@
 				icon: SettingsIcon,
 				hideOnMobile: true,
 			},
-			...(simpleMode
-				? []
-				: ([
-						{
-							title: m.nav_sync(),
-							url: "/sync",
-							icon: FolderSyncIcon,
-						},
-					] satisfies NavItem[])),
 			{
 				title: m.nav_api(),
-				url: "/api/v1/docs",
+				url: "/api-docs",
 				icon: PlugIcon,
 			},
 		],
@@ -194,7 +184,7 @@
 	}
 
 	// Pages where the upload/new button should be hidden
-	const noUploadPages = ["/settings", "/account", "/admin", "/sync"];
+	const noUploadPages = ["/settings", "/account", "/admin", "/api-docs"];
 	let showUploadButton = $derived(
 		!noUploadPages.some((p) => page.url.pathname.startsWith(p)),
 	);

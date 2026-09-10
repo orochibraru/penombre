@@ -34,6 +34,12 @@ plugin({
 	},
 });
 
+// $lib/server/auth pulls in the db singleton, which opens a connection (and
+// mkdirs the data directory) at import time. The spec is static — point it at
+// an in-memory database so generating docs can't touch real data or fail on a
+// data directory it can't create.
+process.env.DATABASE_URL = "sqlite::memory:";
+
 // Dynamic import so the plugin above is registered before module resolution.
 const { genOpenApiSpec } = await import("$lib/server/generate-openapi");
 

@@ -40,6 +40,7 @@
 			// Only update the source if it's different from the current one.
 			// This prevents unnecessary reloads if the effect is re-triggered.
 			if (player.src !== music.source) {
+				loading = true;
 				player.src = music.source;
 				// `load()` tells the audio element to fetch the new source.
 				player.load();
@@ -179,6 +180,12 @@
         class="sr-only w-full rounded-none"
         title={$playableMusic?.title}
         playsinline
+        onwaiting={() => {
+            loading = true;
+        }}
+        onplaying={() => {
+            loading = false;
+        }}
         oncanplay={() => {
             loading = false;
             if (!dev) {

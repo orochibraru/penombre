@@ -7,6 +7,7 @@
  */
 
 import { and, eq, isNull, like, or, sql } from "drizzle-orm";
+import { Logger } from "$lib/logger";
 import type { File as DbFile } from "$lib/server/db/schema";
 import { files, folders } from "$lib/server/db/schema";
 import { FileOrFolderNotFoundError } from "$lib/server/errors";
@@ -16,10 +17,11 @@ import type {
 	FolderItem,
 } from "$lib/server/schema";
 import { CacheKeys } from "./cache";
-import { logger } from "./constants";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import { folderDbToMetadata } from "./mappers";
+
+const logger = new Logger("StorageService");
 
 export class FolderOperations {
 	constructor(private readonly ctx: StorageContext) {}

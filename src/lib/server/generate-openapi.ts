@@ -30,7 +30,9 @@ export async function genOpenApiSpec(): Promise<Record<string, unknown>> {
 	const externalSpecs: ExternalSpec[] = [];
 
 	try {
-		const authSpec = await auth.api.generateOpenAPISchema();
+		const authSpec = (await auth.api.generateOpenAPISchema()) as unknown as
+			| ExternalOpenAPISpec
+			| undefined;
 		if (
 			authSpec &&
 			typeof authSpec === "object" &&
@@ -38,7 +40,7 @@ export async function genOpenApiSpec(): Promise<Record<string, unknown>> {
 			authSpec.paths
 		) {
 			externalSpecs.push({
-				spec: authSpec as unknown as ExternalOpenAPISpec,
+				spec: authSpec,
 				pathPrefix: "/api/v1/auth",
 				defaultTag: "Auth",
 				tagOverrides: { Default: "Auth" },

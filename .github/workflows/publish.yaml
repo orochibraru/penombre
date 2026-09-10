@@ -28,7 +28,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.compute.outputs.tag }}
-      version: ${{ steps.compute.outputs.version }}
     steps:
       # CI_TOKEN, not the default GITHUB_TOKEN: the dry run still verifies push
       # access with `git push --dry-run`, and the `main` ruleset denies
@@ -63,11 +62,9 @@ jobs:
             echo "This push will release v$version, tagging images accordingly."
             # Unprefixed: the release notes say `docker pull …:{{version}}`.
             echo "tag=$version" >> "$GITHUB_OUTPUT"
-            echo "version=$version" >> "$GITHUB_OUTPUT"
           else
             echo "No release-worthy commits, falling back to the commit SHA for image tags."
             echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            echo "version=" >> "$GITHUB_OUTPUT"
           fi
 
   build-app:
@@ -78,7 +75,6 @@ jobs:
       - version
     with:
       image_tag: ${{ needs.version.outputs.tag }}
-      app_version: ${{ needs.version.outputs.version }}
       image_name: orochibraru/penombre
       registry_name: docker.io
       registry_username: orochibraru
