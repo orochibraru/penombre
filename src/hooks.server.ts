@@ -12,7 +12,12 @@ import { baseLocale, getLocale } from "$lib/paraglide/runtime";
 import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
 import { seedAuth } from "$lib/server/auth/seed";
-import { getVolumes, isAuthBypassed, isSimpleMode } from "$lib/server/config";
+import {
+	getConfig,
+	getVolumes,
+	isAuthBypassed,
+	isSimpleMode,
+} from "$lib/server/config";
 import { getDb, resetDb } from "$lib/server/db";
 import { isSqliteDialect } from "$lib/server/db/dialect";
 import { user as userTable } from "$lib/server/db/schema";
@@ -194,6 +199,15 @@ function startLibraryScanner(): void {
 }
 
 export const init = async () => {
+	// First line in the log on every boot: which build this is and which of the
+	// two storage models it is running, so a bug report says so without asking.
+	const config = getConfig();
+	logger.info(
+		`Penombre ${config.appVersion} — ${isSimpleMode() ? "simple mode (one shared drive)" : "drive mode (per-user drives)"}${
+			isAuthBypassed() ? ", authentication bypassed" : ""
+		}`,
+	);
+
 	await waitForDatabase();
 	await runMigrations();
 	await seedAuth();

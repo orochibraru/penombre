@@ -10,6 +10,7 @@
 	import { refreshAll } from "$app/navigation";
 	import { authClient } from "$lib/auth-client";
 	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
+	import TwoFactorCard from "$lib/components/two-factor-card.svelte";
 	import * as Alert from "$lib/components/ui/alert/index.js";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -175,6 +176,12 @@
         </Card.Header>
     </Card.Root>
 {/if}
+
+<TwoFactorCard
+    enabled={data.twoFactorEnabled}
+    required={data.twoFactorRequired}
+    hasPassword={data.hasPassword}
+/>
 
 <!-- Passkeys -->
 <Card.Root>

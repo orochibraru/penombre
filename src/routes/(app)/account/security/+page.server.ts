@@ -1,7 +1,8 @@
 import { auth } from "$lib/server/auth";
 import { getConfig } from "$lib/server/config";
+import { isTwoFactorRequired } from "$lib/server/services/app-settings";
 
-export const load = async ({ request }) => {
+export const load = async ({ request, locals }) => {
 	const [apiKeys, passkeys, accounts] = await Promise.all([
 		auth.api.listApiKeys({ headers: request.headers }),
 		auth.api.listPasskeys({ headers: request.headers }),
@@ -17,6 +18,8 @@ export const load = async ({ request }) => {
 		passkeys,
 		hasPassword,
 		emailSignInEnabled: getConfig().auth.enableEmailSignIn,
+		twoFactorEnabled: !!locals.user?.twoFactorEnabled,
+		twoFactorRequired: await isTwoFactorRequired(),
 	};
 };
 

@@ -16,8 +16,9 @@ the storage bar for the whole volume and a per-user usage table, biggest first.
 
 ## Users
 
-`/admin/users` lists every account with its role and ban state. The row menu
-can:
+`/admin/users` adds people by email address and lists every account with its
+role and ban state. A new account is created with no password: its owner chooses
+one at first sign-in. An admin cannot set it for them. The row menu can:
 
 - **Make admin / Remove admin** — grant or revoke the `admin` role.
 - **Ban / Unban** — a banned user's sessions stop working immediately.
@@ -32,14 +33,19 @@ the next boot.
 
 `/admin/settings` holds the instance policy that has no environment equivalent:
 
-- **Security** — require a passkey, require strong passwords, and a minimum
-  password length layered on top of the `MIN_PASSWORD_LENGTH` floor.
+- **Security** — require a passkey, require two-factor authentication, require
+  strong passwords, and a minimum password length layered on top of the
+  `MIN_PASSWORD_LENGTH` floor.
 - **Sign-ups** — whether anyone may create an account unprompted, and an
   optional allow-list of email domains when they may.
-
 - **Email (SMTP)** — host, port, credentials and the from address, used for
-  verification emails and invitations.
-- **Sign-in methods** — email/password and the OAuth providers.
+  verification emails and invitations. **Send test email** mails the signed-in
+  admin using the values currently in the form, saved or not, so a configuration
+  can be proven before it is committed.
+- **Sign-in methods** — email/password, the emailed sign-in link, the emailed
+  one-time code, and the OAuth providers. See
+  [Authentication](authentication.md#which-methods-may-be-turned-off) for the
+  rules on which of these may be turned off.
 
 Configuration follows one rule: **an environment variable wins when it is set,
 otherwise this page governs.** A setting the environment claims is shown
@@ -47,9 +53,9 @@ read-only with a note; anything it does not claim is editable here. So removing
 `ENABLE_EMAIL_SIGNIN` from your `.env` hands that switch to the admin UI, and
 setting it again takes it back.
 
-Two things are read by the auth layer at boot — email sign-in and OAuth
-providers — so changing them here takes effect **after the next restart**. The
-page says so next to each.
+Several things are read by the auth layer at boot — email sign-in, the
+passwordless methods and the OAuth providers — so changing them here takes
+effect **after the next restart**. The page says so next to each.
 
 ## Storage
 

@@ -5,6 +5,7 @@ import { resolve } from "$app/paths";
 import { api } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
 import { getConfig, getVolumes } from "$lib/server/config";
+import { isTwoFactorRequired } from "$lib/server/services/app-settings";
 
 export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:preferences");
@@ -12,6 +13,18 @@ export const load = async ({ fetch, url, locals, depends }) => {
 
 	if (!(locals.user && locals.session)) {
 		return redirect(302, resolve("/auth/sign-in"));
+	}
+
+	// Enrolment gate. The security page is exempt or the redirect would loop —
+	// it is where the enrolment card lives, so that is where people are sent.
+	if (
+		!(
+			locals.user.twoFactorEnabled ||
+			url.pathname.startsWith("/account/security")
+		) &&
+		(await isTwoFactorRequired())
+	) {
+		return redirect(302, resolve("/account/security"));
 	}
 
 	const [activityResult, fileCount, preferences, versionCheck] =

@@ -55,7 +55,7 @@ describe("load", () => {
 	});
 
 	test("returns authConfig from config", async () => {
-		expect(await load(event())).toEqual({ authConfig } as never);
+		expect(await load(event())).toMatchObject({ authConfig } as never);
 	});
 
 	test("redirects home when auth is bypassed", async () => {
@@ -83,7 +83,7 @@ describe("load", () => {
 		mockIsAuthBypassed.mockReturnValue(true);
 		config({ autoRedirectProvider: "default" });
 
-		expect(await load(event("?form"))).toEqual({ authConfig } as never);
+		expect(await load(event("?form"))).toMatchObject({ authConfig } as never);
 		expect(mockSignInSocial).not.toHaveBeenCalled();
 	});
 });

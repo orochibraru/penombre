@@ -1052,6 +1052,42 @@
 				},
 				"type": "object"
 			},
+			"TwoFactor": {
+				"properties": {
+					"backupCodes": {
+						"type": "string"
+					},
+					"failedVerificationCount": {
+						"default": 0,
+						"readOnly": true,
+						"type": "number"
+					},
+					"id": {
+						"readOnly": true,
+						"type": "string"
+					},
+					"lockedUntil": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"secret": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					},
+					"verified": {
+						"default": true,
+						"readOnly": true,
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"id"
+				],
+				"type": "object"
+			},
 			"UpdateFile": {
 				"additionalProperties": false,
 				"properties": {
@@ -1398,6 +1434,11 @@
 					"role": {
 						"readOnly": true,
 						"type": "string"
+					},
+					"twoFactorEnabled": {
+						"default": false,
+						"readOnly": true,
+						"type": "boolean"
 					},
 					"updatedAt": {
 						"format": "date-time",
@@ -10997,6 +11038,1365 @@
 				],
 				"tags": [
 					"Auth"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/disable": {
+			"post": {
+				"description": "Use this endpoint to disable two factor authentication.",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"password": {
+										"description": "User password",
+										"type": "string"
+									}
+								},
+								"required": [
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"status": {
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/enable": {
+			"post": {
+				"description": "Enable two factor authentication. Pass method 'totp' (default) to set up an authenticator app (returns TOTP URI and backup codes), or 'otp' to enable email/SMS-based codes immediately.",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"issuer": {
+										"description": "Custom issuer for the TOTP URI",
+										"type": "string"
+									},
+									"method": {
+										"enum": [
+											"otp",
+											"totp"
+										],
+										"type": "string"
+									},
+									"password": {
+										"description": "User password",
+										"type": "string"
+									}
+								},
+								"required": [
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"backupCodes": {
+											"description": "Recovery backup codes. Only present when method is 'totp'.",
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"method": {
+											"description": "The 2FA method that was enabled.",
+											"enum": [
+												"otp",
+												"totp"
+											],
+											"type": "string"
+										},
+										"totpURI": {
+											"description": "TOTP URI for authenticator app setup. Only present when method is 'totp'.",
+											"type": "string"
+										}
+									},
+									"required": [
+										"method"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/generate-backup-codes": {
+			"post": {
+				"description": "Generate new backup codes for two-factor authentication",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"password": {
+										"description": "The users password.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"backupCodes": {
+											"description": "Array of generated backup codes in plain text",
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"status": {
+											"description": "Indicates if the backup codes were generated successfully",
+											"enum": [
+												true
+											],
+											"type": "boolean"
+										}
+									},
+									"required": [
+										"status",
+										"backupCodes"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Backup codes generated successfully"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/get-totp-uri": {
+			"post": {
+				"description": "Use this endpoint to get the TOTP URI",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"password": {
+										"description": "User password",
+										"type": "string"
+									}
+								},
+								"required": [
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"totpURI": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/send-otp": {
+			"post": {
+				"description": "Send two factor OTP to the user",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"trustDevice": {
+										"type": "boolean"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"status": {
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/verify-backup-code": {
+			"post": {
+				"description": "Verify a backup code for two-factor authentication",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"code": {
+										"description": "A backup code to verify. Eg: \"123456\"",
+										"type": "string"
+									},
+									"disableSession": {
+										"description": "If true, the session cookie will not be set.",
+										"type": "boolean"
+									},
+									"trustDevice": {
+										"description": "If true, the device will be trusted for 30 days. It'll be refreshed on every sign in request within this time. Eg: true",
+										"type": "boolean"
+									}
+								},
+								"required": [
+									"code"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"session": {
+											"description": "The current session object, included unless disableSession is true",
+											"properties": {
+												"createdAt": {
+													"description": "Timestamp when the session was created",
+													"format": "date-time",
+													"type": "string"
+												},
+												"expiresAt": {
+													"description": "Timestamp when the session expires",
+													"format": "date-time",
+													"type": "string"
+												},
+												"token": {
+													"description": "Session token",
+													"type": "string"
+												},
+												"userId": {
+													"description": "ID of the user associated with the session",
+													"type": "string"
+												}
+											},
+											"required": [
+												"token",
+												"userId",
+												"createdAt",
+												"expiresAt"
+											],
+											"type": "object"
+										},
+										"user": {
+											"description": "The authenticated user object with two-factor details",
+											"properties": {
+												"createdAt": {
+													"description": "Timestamp when the user was created",
+													"format": "date-time",
+													"type": "string"
+												},
+												"email": {
+													"description": "User's email address",
+													"format": "email",
+													"nullable": true,
+													"type": "string"
+												},
+												"emailVerified": {
+													"description": "Whether the email is verified",
+													"nullable": true,
+													"type": "boolean"
+												},
+												"id": {
+													"description": "Unique identifier of the user",
+													"type": "string"
+												},
+												"image": {
+													"description": "User's profile image URL",
+													"format": "uri",
+													"nullable": true,
+													"type": "string"
+												},
+												"name": {
+													"description": "User's name",
+													"nullable": true,
+													"type": "string"
+												},
+												"twoFactorEnabled": {
+													"description": "Whether two-factor authentication is enabled for the user",
+													"type": "boolean"
+												},
+												"updatedAt": {
+													"description": "Timestamp when the user was last updated",
+													"format": "date-time",
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"twoFactorEnabled",
+												"createdAt",
+												"updatedAt"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"user",
+										"session"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Backup code verified successfully"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/verify-otp": {
+			"post": {
+				"description": "Verify two factor OTP",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"code": {
+										"description": "The otp code to verify. Eg: \"012345\"",
+										"type": "string"
+									},
+									"trustDevice": {
+										"type": "boolean"
+									}
+								},
+								"required": [
+									"code"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"token": {
+											"description": "Session token for the authenticated session",
+											"type": "string"
+										},
+										"user": {
+											"description": "The authenticated user object",
+											"properties": {
+												"createdAt": {
+													"description": "Timestamp when the user was created",
+													"format": "date-time",
+													"type": "string"
+												},
+												"email": {
+													"description": "User's email address",
+													"format": "email",
+													"nullable": true,
+													"type": "string"
+												},
+												"emailVerified": {
+													"description": "Whether the email is verified",
+													"nullable": true,
+													"type": "boolean"
+												},
+												"id": {
+													"description": "Unique identifier of the user",
+													"type": "string"
+												},
+												"image": {
+													"description": "User's profile image URL",
+													"format": "uri",
+													"nullable": true,
+													"type": "string"
+												},
+												"name": {
+													"description": "User's name",
+													"nullable": true,
+													"type": "string"
+												},
+												"updatedAt": {
+													"description": "Timestamp when the user was last updated",
+													"format": "date-time",
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"createdAt",
+												"updatedAt"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"token",
+										"user"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Two-factor OTP verified successfully"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/verify-totp": {
+			"post": {
+				"description": "Verify two factor TOTP",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"code": {
+										"description": "The otp code to verify. Eg: \"012345\"",
+										"type": "string"
+									},
+									"trustDevice": {
+										"description": "If true, the device will be trusted for 30 days. It'll be refreshed on every sign in request within this time. Eg: true",
+										"type": "boolean"
+									}
+								},
+								"required": [
+									"code"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"status": {
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
 				]
 			}
 		},

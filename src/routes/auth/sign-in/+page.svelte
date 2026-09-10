@@ -123,6 +123,99 @@
 	/** True once the address has been resolved to an existing account. */
 	let knownEmail = $state(false);
 
+	/** Set once a code has been mailed, which swaps the password field out. */
+	let otpSent = $state(false);
+	let otp = $state("");
+
+	const passwordless = $derived(data.passwordless);
+
+	/**
+	 * Mail a one-time link. The callback lands on the app, and better-auth
+	 * inserts the two-factor challenge itself when the account requires one.
+	 */
+	async function magicLinkSignIn() {
+		const { error: err } = await authClient.signIn.magicLink({
+			email,
+			callbackURL: "/",
+		});
+		if (err) {
+			throw new Error(err.message || m.sign_in_error());
+		}
+	}
+
+	function handleMagicLink() {
+		if (!email) {
+			return;
+		}
+		loading = true;
+		return toast.promise(magicLinkSignIn(), {
+			loading: m.sign_in_sending_link(),
+			success: () => {
+				loading = false;
+				return m.sign_in_link_sent();
+			},
+			error: (e) => {
+				loading = false;
+				errorMessage = e instanceof Error ? e.message : defaultErrorMessage;
+				error = true;
+				return errorMessage;
+			},
+		});
+	}
+
+	async function sendOtp() {
+		const { error: err } = await authClient.emailOtp.sendVerificationOtp({
+			email,
+			type: "sign-in",
+		});
+		if (err) {
+			throw new Error(err.message || m.sign_in_error());
+		}
+		otpSent = true;
+	}
+
+	function handleSendOtp() {
+		if (!email) {
+			return;
+		}
+		loading = true;
+		return toast.promise(sendOtp(), {
+			loading: m.sign_in_sending_code(),
+			success: () => {
+				loading = false;
+				return m.sign_in_code_sent();
+			},
+			error: (e) => {
+				loading = false;
+				errorMessage = e instanceof Error ? e.message : defaultErrorMessage;
+				error = true;
+				return errorMessage;
+			},
+		});
+	}
+
+	async function otpSignInPromise() {
+		const { error: err } = await authClient.signIn.emailOtp({ email, otp });
+		if (err) {
+			error = true;
+			throw new Error(err.message || m.sign_in_error());
+		}
+		goto(resolve("/"), { replaceState: true, invalidateAll: true });
+	}
+
+	function handleOtpSignin() {
+		loading = true;
+		return toast.promise(otpSignInPromise(), {
+			loading: m.signing_in(),
+			success: m.signed_in_success(),
+			error: (e) => {
+				loading = false;
+				errorMessage = e instanceof Error ? e.message : defaultErrorMessage;
+				return errorMessage;
+			},
+		});
+	}
+
 	/**
 	 * Resolve what to ask for next.
 	 *
@@ -189,7 +282,9 @@
     class={cn("flex flex-col gap-6")}
     onsubmit={(e) => {
         e.preventDefault();
-        if (knownEmail) {
+        if (otpSent) {
+            handleOtpSignin();
+        } else if (knownEmail) {
             handleEmailSignin();
         } else {
             void lookupEmail();
@@ -236,6 +331,8 @@
                                 onclick={() => {
                                     knownEmail = false;
                                     password = "";
+                                    otpSent = false;
+                                    otp = "";
                                 }}
                             >
                                 {m.sign_in_change_email()}
@@ -261,7 +358,7 @@
                 {/if}
                 <!-- Hidden until the address is known. `required` is bound to
                      the same flag: a hidden required control blocks submit. -->
-                <Field.Field class={knownEmail ? "" : "hidden"}>
+                <Field.Field class={knownEmail && !otpSent ? "" : "hidden"}>
                     <div class="flex items-center">
                         <Field.Label for="password">{m.password()}</Field.Label>
                         <a
@@ -276,14 +373,66 @@
                         autocomplete="current-password webauthn"
                         bind:value={password}
                         type="password"
-                        required={knownEmail}
+                        required={knownEmail && !otpSent}
                     />
                 </Field.Field>
-                <Field.Field class={knownEmail ? "" : "hidden"}>
+                <Field.Field class={knownEmail && !otpSent ? "" : "hidden"}>
                     <Button class="w-full" type="submit" {loading}>
                         {m.sign_in()}
                     </Button>
                 </Field.Field>
+
+                <!-- The emailed code replaces the password step rather than
+                     sitting beside it: two submit paths in one form is how the
+                     wrong one ends up firing. -->
+                {#if otpSent}
+                    <Field.Field>
+                        <Field.Label for="otp">{m.sign_in_code()}</Field.Label>
+                        <Input
+                            id="otp"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            bind:value={otp}
+                            placeholder="123456"
+                            required
+                        />
+                        <Field.Description>
+                            {m.sign_in_code_hint({ email })}
+                        </Field.Description>
+                    </Field.Field>
+                    <Field.Field>
+                        <Button class="w-full" type="submit" {loading}>
+                            {m.sign_in()}
+                        </Button>
+                    </Field.Field>
+                {/if}
+
+                {#if knownEmail && (passwordless.magicLink || passwordless.emailOtp)}
+                    <div class="flex flex-col gap-2">
+                        {#if passwordless.magicLink}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="w-full"
+                                {loading}
+                                onclick={handleMagicLink}
+                            >
+                                {m.sign_in_email_link()}
+                            </Button>
+                        {/if}
+                        {#if passwordless.emailOtp && !otpSent}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="w-full"
+                                {loading}
+                                onclick={handleSendOtp}
+                            >
+                                {m.sign_in_email_code()}
+                            </Button>
+                        {/if}
+                    </div>
+                {/if}
                 {#if data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
                     <Field.Separator>{m.or_continue_with()}</Field.Separator>
                 {/if}

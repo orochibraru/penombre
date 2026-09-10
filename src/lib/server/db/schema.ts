@@ -55,6 +55,9 @@ export const apikey = (
 export const passkey = (
 	sqliteActive ? sqlite.passkey : pg.passkey
 ) as typeof pg.passkey;
+export const twoFactor = (
+	sqliteActive ? sqlite.twoFactor : pg.twoFactor
+) as typeof pg.twoFactor;
 export const folders = (
 	sqliteActive ? sqlite.folders : pg.folders
 ) as typeof pg.folders;
@@ -79,5 +82,6 @@ export type AppSettings = typeof pg.appSettings.$inferSelect;
 export type UserPreferences = typeof pg.userPreferences.$inferSelect;
 export type Apikey = typeof pg.apikey.$inferSelect;
 export type Passkey = typeof pg.passkey.$inferSelect;
+export type TwoFactor = typeof pg.twoFactor.$inferSelect;
 export type Folder = typeof pg.folders.$inferSelect;
 export type File = typeof pg.files.$inferSelect;

@@ -4,7 +4,15 @@ import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
-import { admin, bearer, genericOAuth, openAPI } from "better-auth/plugins";
+import {
+	admin,
+	bearer,
+	emailOTP,
+	genericOAuth,
+	magicLink,
+	openAPI,
+	twoFactor,
+} from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
 import { building, dev } from "$app/environment";
 import { getRequestEvent } from "$app/server";
@@ -15,6 +23,7 @@ import { isSqliteDialect } from "$lib/server/db/dialect";
 import * as schema from "$lib/server/db/schema";
 import { Email } from "$lib/server/email";
 import {
+	getPasswordlessSettings,
 	getStoredOAuthProviders,
 	isEmailSignInEnabled,
 } from "$lib/server/services/app-settings";
@@ -43,6 +52,13 @@ const storedProviders = await getStoredOAuthProviders().catch(() => []);
 const emailSignInEnabled = await isEmailSignInEnabled().catch(
 	() => config.auth.enableEmailSignIn,
 );
+
+// Passwordless methods, resolved at init for the same reason. Both are
+// already gated on SMTP being configured by `getPasswordlessSettings`.
+const passwordless = await getPasswordlessSettings().catch(() => ({
+	magicLink: false,
+	emailOtp: false,
+}));
 
 // Env wins on a name collision: `config.ts` is the source of truth for
 // anything declared there, and the UI shows those read-only.
@@ -147,6 +163,48 @@ export const auth = betterAuth({
 		}),
 		passkey(),
 		admin(),
+		// Always loaded, never gated: an account must be able to enrol and to
+		// answer a challenge even when the admin has not made 2FA mandatory.
+		// The `requireTwoFactor` setting only decides who is forced to enrol.
+		twoFactor({
+			issuer: "Penombre",
+		}),
+		...(passwordless.magicLink
+			? [
+					magicLink({
+						// Only ever sent to an address that already has an account:
+						// signup stays closed unless the admin opened it.
+						disableSignUp: true,
+						sendMagicLink: async ({ email, url }) => {
+							const message = await Email.create({
+								to: email,
+								subject: "Your sign-in link",
+								content: `Use this link to sign in: ${url}\n\nIt expires shortly and can only be used once. If you did not ask for it, ignore this email.`,
+							});
+							await message.send();
+						},
+					}),
+				]
+			: []),
+		...(passwordless.emailOtp
+			? [
+					emailOTP({
+						disableSignUp: true,
+						sendVerificationOTP: async ({ email, otp, type }) => {
+							const subject =
+								type === "sign-in"
+									? "Your sign-in code"
+									: "Your verification code";
+							const message = await Email.create({
+								to: email,
+								subject,
+								content: `Your code is ${otp}\n\nIt expires shortly. If you did not ask for it, ignore this email.`,
+							});
+							await message.send();
+						},
+					}),
+				]
+			: []),
 		bearer(),
 		apiKey({
 			enableSessionForAPIKeys: true,

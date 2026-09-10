@@ -201,9 +201,11 @@
 	}
 
 	/*
-	 * The aurora: a few oversized, heavily blurred colour fields. Fixed, so
-	 * it stays put while content scrolls, and `-z-10` keeps it under
-	 * everything without needing a stacking context on the app shell.
+	 * The aurora: two oversized, heavily blurred colour fields on opposite
+	 * corners. Fixed, so it stays put while content scrolls, and `-z-10`
+	 * keeps it under everything without needing a stacking context on the app
+	 * shell. Both colours are redefined per accent, so the glow follows the
+	 * accent even though `--primary` itself is no longer one of them.
 	 */
 	body::before {
 		content: "";
@@ -213,23 +215,13 @@
 		pointer-events: none;
 		background:
 			radial-gradient(
-				40vmax 34vmax at 8% 4%,
-				color-mix(in oklab, var(--primary) 85%, transparent),
-				transparent 70%
-			),
-			radial-gradient(
 				38vmax 32vmax at 92% 6%,
 				color-mix(in oklab, var(--brand-2) 80%, transparent),
 				transparent 70%
 			),
 			radial-gradient(
-				42vmax 36vmax at 84% 92%,
-				color-mix(in oklab, var(--brand-3) 78%, transparent),
-				transparent 70%
-			),
-			radial-gradient(
 				34vmax 30vmax at 14% 96%,
-				color-mix(in oklab, var(--brand-2) 62%, transparent),
+				color-mix(in oklab, var(--brand-3) 62%, transparent),
 				transparent 70%
 			);
 		filter: blur(72px) saturate(140%);

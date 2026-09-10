@@ -5,10 +5,12 @@
 		FolderIcon,
 		LockIcon,
 		LogInIcon,
+		PlayIcon,
 	} from "@lucide/svelte";
 	import { enhance } from "$app/forms";
 	import { resolve } from "$app/paths";
 	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
+	import ShareMedia from "$lib/components/share-media.svelte";
 	import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
 	import * as Card from "$lib/components/ui/card/index.js";
 	import { Input } from "$lib/components/ui/input";
@@ -25,6 +27,19 @@
 	});
 
 	const files = $derived(data.files ?? []);
+
+	/** Which row in a folder share is currently expanded, if any. */
+	let openPreview = $state<string | null>(null);
+
+	/** Mirrors ShareMedia's own test, so a button only appears if it will play. */
+	const previewable = (file: (typeof files)[number]) => {
+		const type = file.metadata.contentType ?? "";
+		return (
+			type.startsWith("image/") ||
+			type.startsWith("video/") ||
+			type.startsWith("audio/")
+		);
+	};
 	const totalSize = $derived(
 		files.reduce((sum, file) => sum + (file.size ?? 0), 0),
 	);
@@ -178,6 +193,17 @@
                     </a>
                 </Card.Header>
 
+                {#if data.resourceType === "file" && files[0]}
+                    <ShareMedia
+                        src="{resolve('/s/[token]/download', {
+                            token: data.token,
+                        })}?inline"
+                        category={files[0].metadata.category}
+                        contentType={files[0].metadata.contentType}
+                        name={files[0].metadata.name}
+                    />
+                {/if}
+
                 {#if data.resourceType === "folder"}
                     <Card.Content class="px-0">
                         <ul class="divide-border divide-y border-t">
@@ -204,6 +230,29 @@
                                         >
                                             {readableFileSize(file.size ?? 0)}
                                         </span>
+                                        {#if previewable(file)}
+                                            <button
+                                                type="button"
+                                                class={cn(
+                                                    buttonVariants({
+                                                        variant: "ghost",
+                                                        size: "icon",
+                                                    }),
+                                                    "text-muted-foreground hover:text-foreground size-8 transition-colors",
+                                                )}
+                                                aria-label={m.share_preview()}
+                                                aria-expanded={openPreview ===
+                                                    file.metadata.id}
+                                                onclick={() =>
+                                                    (openPreview =
+                                                        openPreview ===
+                                                        file.metadata.id
+                                                            ? null
+                                                            : file.metadata.id)}
+                                            >
+                                                <PlayIcon class="size-4" />
+                                            </button>
+                                        {/if}
                                         <a
                                             class={cn(
                                                 buttonVariants({
@@ -223,6 +272,20 @@
                                         </a>
                                     </div>
                                 </li>
+                                {#if openPreview === file.metadata.id}
+                                    <li class="bg-muted/20">
+                                        <ShareMedia
+                                            src="{resolve(
+                                                '/s/[token]/download',
+                                                { token: data.token },
+                                            )}?inline&file={file.metadata.id}"
+                                            category={file.metadata.category}
+                                            contentType={file.metadata
+                                                .contentType}
+                                            name={file.metadata.name}
+                                        />
+                                    </li>
+                                {/if}
                             {:else}
                                 <li
                                     class="text-muted-foreground px-6 py-8 text-center text-sm"

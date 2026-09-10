@@ -61,9 +61,12 @@ the same file gets a new token.
 
 A share URL looks like `https://your-instance/s/<token>`.
 
-- **A shared file** shows its name and size, with a download button.
+- **A shared file** shows its name and size, with a download button. An image,
+  video or audio file is also playable on the page itself — no download needed
+  to see or hear what was shared.
 - **A shared folder** lists its files, each downloadable on its own, plus a
-  "Download as ZIP" button for the whole folder.
+  "Download as ZIP" button for the whole folder. Playable files get a preview
+  button that expands in place.
 - **A password-protected link** asks for the password first. A correct answer
   sets a cookie scoped to that one link, valid for 12 hours, so the visitor is
   not asked again on every download.
@@ -82,6 +85,9 @@ The owner of a link never has to type its password.
 - The download endpoint re-checks access on every request rather than trusting
   the page that linked to it.
 - Expired links stop working immediately; the rows are cleaned up separately.
+- Previewing serves the bytes through the same access-checked endpoint as a
+  download, with `?inline`. Playing a preview does **not** count against the
+  link's download tally — a video that seeks would otherwise record dozens.
 
 ## API
 

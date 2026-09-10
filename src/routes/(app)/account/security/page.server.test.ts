@@ -45,9 +45,10 @@ describe("load", () => {
 
 		const result = await load({
 			request: new Request("http://localhost"),
+			locals: { user: { twoFactorEnabled: false } },
 		} as never);
 
-		expect(result).toEqual({
+		expect(result).toMatchObject({
 			apiKeys: mockKeys,
 			passkeys: mockPasskeyList,
 			hasPassword: false,
@@ -63,6 +64,7 @@ describe("load", () => {
 
 		const result = await load({
 			request: new Request("http://localhost"),
+			locals: { user: { twoFactorEnabled: false } },
 		} as never);
 
 		expect(result).toMatchObject({ hasPassword: true });
@@ -75,6 +77,7 @@ describe("load", () => {
 
 		const result = await load({
 			request: new Request("http://localhost"),
+			locals: { user: { twoFactorEnabled: false } },
 		} as never);
 
 		expect(result).toMatchObject({ hasPassword: false });
@@ -87,7 +90,10 @@ describe("load", () => {
 		const request = new Request("http://localhost", {
 			headers: { Authorization: "Bearer token-123" },
 		});
-		await load({ request } as never);
+		await load({
+			request,
+			locals: { user: { twoFactorEnabled: false } },
+		} as never);
 
 		expect(mockListApiKeys).toHaveBeenLastCalledWith({
 			headers: request.headers,

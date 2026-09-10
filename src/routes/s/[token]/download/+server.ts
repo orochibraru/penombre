@@ -20,25 +20,84 @@ async function folderZip(service: StorageService, share: Share) {
 	});
 }
 
-/** One file's bytes, or null when it has gone missing since the share. */
+/** Parse `Range: bytes=start-end` against a known length. */
+function parseRange(
+	header: string | null,
+	size: number,
+): { start: number; end: number } | null {
+	const match = /^bytes=(\d*)-(\d*)$/.exec(header?.trim() ?? "");
+	if (!match) {
+		return null;
+	}
+	const [, rawStart, rawEnd] = match;
+	// A suffix range ("-500") means the last N bytes.
+	const start = rawStart ? Number(rawStart) : size - Number(rawEnd || 0);
+	const end = rawStart ? (rawEnd ? Number(rawEnd) : size - 1) : size - 1;
+	if (!(Number.isFinite(start) && Number.isFinite(end))) {
+		return null;
+	}
+	if (start < 0 || end >= size || start > end) {
+		return null;
+	}
+	return { start, end };
+}
+
+/**
+ * One file's bytes, or null when it has gone missing since the share.
+ *
+ * `inline` serves the file for display in the page instead of saving it, and
+ * honours Range requests — without 206 support a browser cannot seek within a
+ * video or audio file, it can only replay from the start.
+ */
 async function fileBody(
 	service: StorageService,
 	share: Share,
 	fileId: string,
+	options: { inline: boolean; range: string | null },
 ): Promise<Response | null> {
 	const path = await service.findFileById(fileId);
 	const raw = path ? await service.getRawFileData(path) : null;
 	if (!raw) {
 		return null;
 	}
+
+	const contentType =
+		raw.meta.metadata.contentType ?? "application/octet-stream";
+	const filename = encodeURIComponent(
+		raw.meta.metadata.name ?? share.resourceName,
+	);
+	// The buffer is the truth: `raw.size` is the database's copy, and a stale
+	// row would send a Content-Length that truncates the body.
+	const size = raw.buffer.byteLength;
+
+	const disposition = options.inline
+		? `inline; filename="${filename}"`
+		: `attachment; filename="${filename}"`;
+
+	if (options.inline) {
+		const range = parseRange(options.range, size);
+		if (range) {
+			const slice = raw.buffer.slice(range.start, range.end + 1);
+			return new Response(slice, {
+				status: 206,
+				headers: {
+					"Content-Type": contentType,
+					"Content-Disposition": disposition,
+					"Content-Range": `bytes ${range.start}-${range.end}/${size}`,
+					"Content-Length": String(slice.byteLength),
+					"Accept-Ranges": "bytes",
+					"Cache-Control": "no-store",
+				},
+			});
+		}
+	}
+
 	return new Response(raw.buffer, {
 		headers: {
-			"Content-Type":
-				raw.meta.metadata.contentType ?? "application/octet-stream",
-			"Content-Disposition": `attachment; filename="${encodeURIComponent(raw.meta.metadata.name ?? share.resourceName)}"`,
-			// The buffer is the truth: `raw.size` is the database's copy, and a
-			// stale row would send a Content-Length that truncates the body.
-			"Content-Length": String(raw.buffer.byteLength),
+			"Content-Type": contentType,
+			"Content-Disposition": disposition,
+			"Content-Length": String(size),
+			...(options.inline ? { "Accept-Ranges": "bytes" } : {}),
 			"Cache-Control": "no-store",
 		},
 	});
@@ -64,7 +123,7 @@ function mayServe(share: Share, fileId: string): Promise<boolean> {
  * Access is re-checked here rather than trusted from the page that linked in:
  * this URL is guessable from the page URL, so it is the real gate.
  */
-export const GET = async ({ params, url, locals, cookies }) => {
+export const GET = async ({ params, url, locals, cookies, request }) => {
 	const { token } = params;
 	const result = await shares.access(token, {
 		viewer: locals.user ?? null,
@@ -78,6 +137,7 @@ export const GET = async ({ params, url, locals, cookies }) => {
 	const { share } = result;
 	const service = new StorageService({ id: share.ownerId } as User);
 	const requestedFile = url.searchParams.get("file");
+	const inline = url.searchParams.has("inline");
 
 	if (share.resourceType === "folder" && !requestedFile) {
 		await shares.recordDownload(share.id);
@@ -89,11 +149,18 @@ export const GET = async ({ params, url, locals, cookies }) => {
 		return error(403, "No access.");
 	}
 
-	const body = await fileBody(service, share, fileId);
+	const body = await fileBody(service, share, fileId, {
+		inline,
+		range: request.headers.get("range"),
+	});
 	if (!body) {
 		return error(404, "File not found.");
 	}
 
-	await shares.recordDownload(share.id);
+	// Playing a preview is not a download, and a video that seeks would
+	// otherwise count dozens of them against the share's tally.
+	if (!inline) {
+		await shares.recordDownload(share.id);
+	}
 	return body;
 };

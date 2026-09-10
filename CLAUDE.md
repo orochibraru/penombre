@@ -269,6 +269,43 @@ Anything better-auth reads at init (email sign-in, OAuth providers) is resolved
 once via top-level `await` in `auth/index.ts`, so a change there needs a
 restart. The UI says so.
 
+### Sign-in methods cannot be turned off blindly
+
+`services/auth-methods.ts` gates every save of the sign-in settings on two
+rules: at least one method must survive, and a method may not be removed while
+accounts depend on it (`accountsWithOnly` counts who would be stranded). Magic
+link and emailed codes are exempt from the second rule — they authenticate an
+address, not a stored credential, so no `account` row depends on them.
+
+`validateSignInMethods` takes the stranded-count lookup as its third argument so
+the rules can be tested without a database; the default is the real query.
+
+### Two-factor
+
+The `twoFactor` plugin is loaded unconditionally — enrolling and answering a
+challenge must work whether or not an admin has made it mandatory. Only
+`requireTwoFactor` (app settings) decides who is _forced_ to enrol, enforced by
+a redirect in `(app)/+layout.server.ts` that exempts `/account/security` or it
+would loop.
+
+Its schema is better-auth's, not ours: the `two_factor` table's column
+properties (`secret`, `backupCodes`, `verified`, `failedVerificationCount`,
+`lockedUntil`) and `user.twoFactorEnabled` are looked up by name through the
+Drizzle adapter, so renaming one breaks enrolment silently.
+
+`twoFactor.enable()` returns a union — pass `method: "totp"` and narrow on it,
+or `totpURI`/`backupCodes` are not on the type.
+
+Note `requirePasskey` in app settings is stored but **not enforced anywhere**.
+
+### Passwordless methods need a restart
+
+better-auth builds its plugin list once at module init, so `magicLink` and
+`emailOTP` are resolved by top-level await in `auth/index.ts`. Toggling them in
+the admin UI takes effect on the next boot; the UI says so. Both are gated on
+SMTP in `getPasswordlessSettings()` rather than only in the UI, so removing mail
+afterwards disables them rather than leaving a method that silently fails.
+
 ### Adding a user preference
 
 Four places, all required: `UserPreferencesData` (`schema.pg.ts`),

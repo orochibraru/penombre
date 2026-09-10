@@ -26,6 +26,7 @@ export const user = pgTable("user", {
 	banned: boolean("banned").default(false),
 	banReason: text("ban_reason"),
 	banExpires: timestamp("ban_expires"),
+	twoFactorEnabled: boolean("two_factor_enabled").default(false),
 });
 
 export const session = pgTable(
@@ -298,6 +299,15 @@ export interface AppSettingsData {
 	 * absent from the environment — see `envProvided()`.
 	 */
 	emailSignInEnabled?: boolean;
+	/**
+	 * Passwordless sign-in by emailed link. Needs working SMTP; there is no
+	 * environment variable for it, so the stored value always governs.
+	 */
+	magicLinkEnabled?: boolean;
+	/** Passwordless sign-in by emailed one-time code. Also needs SMTP. */
+	emailOtpEnabled?: boolean;
+	/** Force every account to enrol in TOTP two-factor before using the app. */
+	requireTwoFactor?: boolean;
 	/** SMTP, used when `SMTP_ENABLED` is absent from the environment. */
 	smtp?: {
 		enabled?: boolean;
@@ -432,6 +442,39 @@ export const passkey = pgTable("passkey", {
 	createdAt: timestamp("created_at", { precision: 6, withTimezone: true }),
 	aaguid: text("aaguid"),
 });
+
+/**
+ * TOTP secret and backup codes, one row per enrolled account.
+ *
+ * Column names match what better-auth's two-factor plugin asks the adapter
+ * for — `secret`, `backupCodes`, `verified`, `failedVerificationCount`,
+ * `lockedUntil` — so renaming a property here silently breaks enrolment.
+ */
+export const twoFactor = pgTable(
+	"two_factor",
+	{
+		id: text("id").primaryKey(),
+		secret: text("secret").notNull(),
+		backupCodes: text("backup_codes").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		verified: boolean("verified").default(true),
+		failedVerificationCount: integer("failed_verification_count").default(0),
+		lockedUntil: timestamp("locked_until"),
+	},
+	(table) => [
+		index("two_factor_userId_idx").on(table.userId),
+		index("two_factor_secret_idx").on(table.secret),
+	],
+);
+
+export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
+	user: one(user, {
+		fields: [twoFactor.userId],
+		references: [user.id],
+	}),
+}));
 
 export const passkeyRelations = relations(passkey, ({ one }) => ({
 	user: one(user, {

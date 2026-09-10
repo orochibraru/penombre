@@ -5,6 +5,7 @@ import { auth } from "$lib/server/auth";
 import { getConfig, isAuthBypassed } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { account as authAccount, user } from "$lib/server/db/schema";
+import { getPasswordlessSettings } from "$lib/server/services/app-settings";
 
 export const load = async ({ url, request }) => {
 	const config = getConfig();
@@ -34,6 +35,9 @@ export const load = async ({ url, request }) => {
 
 	return {
 		authConfig: config.auth,
+		// Both are already gated on SMTP being configured, so the form can
+		// offer whatever comes back without checking mail separately.
+		passwordless: await getPasswordlessSettings(),
 	};
 };
 

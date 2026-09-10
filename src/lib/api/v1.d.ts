@@ -3257,6 +3257,995 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/auth/two-factor/disable": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Use this endpoint to disable two factor authentication. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description User password */
+						password: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							status?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/two-factor/enable": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Enable two factor authentication. Pass method 'totp' (default) to set up an authenticator app (returns TOTP URI and backup codes), or 'otp' to enable email/SMS-based codes immediately. */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description Custom issuer for the TOTP URI */
+						issuer?: string;
+						/** @enum {string} */
+						method?: "otp" | "totp";
+						/** @description User password */
+						password: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Recovery backup codes. Only present when method is 'totp'. */
+							backupCodes?: string[];
+							/**
+							 * @description The 2FA method that was enabled.
+							 * @enum {string}
+							 */
+							method: "otp" | "totp";
+							/** @description TOTP URI for authenticator app setup. Only present when method is 'totp'. */
+							totpURI?: string;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/two-factor/generate-backup-codes": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Generate new backup codes for two-factor authentication */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The users password. */
+						password: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Backup codes generated successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Array of generated backup codes in plain text */
+							backupCodes: string[];
+							/**
+							 * @description Indicates if the backup codes were generated successfully
+							 * @enum {boolean}
+							 */
+							status: true;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/two-factor/get-totp-uri": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Use this endpoint to get the TOTP URI */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description User password */
+						password: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							totpURI?: string;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/two-factor/send-otp": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Send two factor OTP to the user */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": {
+						trustDevice?: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							status?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/two-factor/verify-backup-code": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Verify a backup code for two-factor authentication */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description A backup code to verify. Eg: "123456" */
+						code: string;
+						/** @description If true, the session cookie will not be set. */
+						disableSession?: boolean;
+						/** @description If true, the device will be trusted for 30 days. It'll be refreshed on every sign in request within this time. Eg: true */
+						trustDevice?: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Backup code verified successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description The current session object, included unless disableSession is true */
+							session: {
+								/**
+								 * Format: date-time
+								 * @description Timestamp when the session was created
+								 */
+								createdAt: string;
+								/**
+								 * Format: date-time
+								 * @description Timestamp when the session expires
+								 */
+								expiresAt: string;
+								/** @description Session token */
+								token: string;
+								/** @description ID of the user associated with the session */
+								userId: string;
+							};
+							/** @description The authenticated user object with two-factor details */
+							user: {
+								/**
+								 * Format: date-time
+								 * @description Timestamp when the user was created
+								 */
+								createdAt: string;
+								/**
+								 * Format: email
+								 * @description User's email address
+								 */
+								email?: string | null;
+								/** @description Whether the email is verified */
+								emailVerified?: boolean | null;
+								/** @description Unique identifier of the user */
+								id: string;
+								/**
+								 * Format: uri
+								 * @description User's profile image URL
+								 */
+								image?: string | null;
+								/** @description User's name */
+								name?: string | null;
+								/** @description Whether two-factor authentication is enabled for the user */
+								twoFactorEnabled: boolean;
+								/**
+								 * Format: date-time
+								 * @description Timestamp when the user was last updated
+								 */
+								updatedAt: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/two-factor/verify-otp": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Verify two factor OTP */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The otp code to verify. Eg: "012345" */
+						code: string;
+						trustDevice?: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Two-factor OTP verified successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Session token for the authenticated session */
+							token: string;
+							/** @description The authenticated user object */
+							user: {
+								/**
+								 * Format: date-time
+								 * @description Timestamp when the user was created
+								 */
+								createdAt: string;
+								/**
+								 * Format: email
+								 * @description User's email address
+								 */
+								email?: string | null;
+								/** @description Whether the email is verified */
+								emailVerified?: boolean | null;
+								/** @description Unique identifier of the user */
+								id: string;
+								/**
+								 * Format: uri
+								 * @description User's profile image URL
+								 */
+								image?: string | null;
+								/** @description User's name */
+								name?: string | null;
+								/**
+								 * Format: date-time
+								 * @description Timestamp when the user was last updated
+								 */
+								updatedAt: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/two-factor/verify-totp": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Verify two factor TOTP */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The otp code to verify. Eg: "012345" */
+						code: string;
+						/** @description If true, the device will be trusted for 30 days. It'll be refreshed on every sign in request within this time. Eg: true */
+						trustDevice?: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							status?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/auth/unlink-account": {
 		parameters: {
 			query?: never;
@@ -8566,6 +9555,18 @@ export interface components {
 			data?: unknown;
 			message?: string;
 		};
+		TwoFactor: {
+			backupCodes?: string;
+			/** @default 0 */
+			readonly failedVerificationCount: number;
+			readonly id: string;
+			/** Format: date-time */
+			readonly lockedUntil?: string;
+			secret?: string;
+			userId?: string;
+			/** @default true */
+			readonly verified: boolean;
+		};
 		UpdateFile: {
 			/** @enum {string} */
 			category?:
@@ -8803,6 +9804,8 @@ export interface components {
 			image?: string;
 			name: string;
 			readonly role?: string;
+			/** @default false */
+			readonly twoFactorEnabled: boolean;
 			/** Format: date-time */
 			updatedAt: string;
 		};

@@ -23,6 +23,9 @@ const defaults: AppSettingsData = {
 	minPasswordLength: 8,
 	requireStrongPassword: false,
 	emailSignInEnabled: true,
+	magicLinkEnabled: false,
+	emailOtpEnabled: false,
+	requireTwoFactor: false,
 	smtp: { enabled: false },
 	oauthProviders: [],
 };
@@ -112,6 +115,39 @@ export async function isEmailSignInEnabled(): Promise<boolean> {
 		return (await getAppSettings()).emailSignInEnabled ?? true;
 	} catch {
 		return getConfig().auth.enableEmailSignIn;
+	}
+}
+
+/**
+ * Passwordless sign-in toggles.
+ *
+ * No environment variable governs these, so the stored value always wins —
+ * but neither is usable without SMTP, and an admin can remove SMTP after
+ * enabling them, so both are gated on mail actually being configured.
+ */
+export async function getPasswordlessSettings(): Promise<{
+	magicLink: boolean;
+	emailOtp: boolean;
+}> {
+	try {
+		const settings = await getAppSettings();
+		const smtp = await getSmtpSettings();
+		const canSend = !!smtp;
+		return {
+			magicLink: canSend && (settings.magicLinkEnabled ?? false),
+			emailOtp: canSend && (settings.emailOtpEnabled ?? false),
+		};
+	} catch {
+		return { magicLink: false, emailOtp: false };
+	}
+}
+
+/** Whether every account must enrol in two-factor before using the app. */
+export async function isTwoFactorRequired(): Promise<boolean> {
+	try {
+		return (await getAppSettings()).requireTwoFactor ?? false;
+	} catch {
+		return false;
 	}
 }
 

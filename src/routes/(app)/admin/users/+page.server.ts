@@ -62,28 +62,20 @@ export const actions = {
 	 * Register an account by email so someone can sign in and finish setting
 	 * it up themselves.
 	 *
-	 * Created without a password on purpose: the sign-in flow sends an account
-	 * with no credential to onboarding, where they choose one. That avoids an
-	 * admin ever knowing a user's password, and needs no mail server.
+	 * Always created without a usable password: the sign-in flow sends an
+	 * account with no credential to onboarding, where they choose one. There
+	 * is deliberately no way for an admin to set someone's password — that
+	 * would mean a second person knowing a credential the owner believes is
+	 * theirs alone, and it survives in whatever channel it was passed through.
 	 */
 	inviteUser: async ({ request }) => {
 		const form = await request.formData();
 		const email = field(form, "email")?.trim().toLowerCase();
 		const name = field(form, "name")?.trim();
-		// "invite" registers the address and lets them choose their own
-		// password; "create" sets one now that the admin hands over.
-		const mode = field(form, "mode") === "create" ? "create" : "invite";
-		const password = field(form, "password");
 		const sendEmail = form.get("sendEmail") === "on";
 
 		if (!(email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))) {
 			return fail(400, { error: "A valid email address is required." });
-		}
-
-		if (mode === "create" && (!password || password.length < 8)) {
-			return fail(400, {
-				error: "A password of at least 8 characters is required.",
-			});
 		}
 
 		const signInUrl = `${getConfig().origin}/auth/sign-in`;
@@ -94,39 +86,33 @@ export const actions = {
 				body: {
 					email,
 					name: name || email.split("@")[0] || email,
-					// For an invite this is random, never shared, and deleted
-					// immediately below, leaving the account with no credential
-					// at all. For a direct create it is the admin's choice.
-					password:
-						mode === "create" && password ? password : crypto.randomUUID(),
+					// Random, never shared, and deleted immediately below —
+					// `createUser` demands one, so this satisfies it and goes.
+					password: crypto.randomUUID(),
 					role: "user",
 				},
 			});
 
-			if (mode === "invite") {
-				// Dropping the credential row is what makes this an invitation
-				// rather than an account with a password nobody knows: sign-in
-				// sees no credential and sends them to onboarding.
-				await getDb()
-					.delete(account)
-					.where(
-						and(
-							eq(account.userId, created.user.id),
-							eq(account.providerId, "credential"),
-						),
-					);
+			// Dropping the credential row is what makes this an invitation
+			// rather than an account with a password nobody knows: sign-in
+			// sees no credential and sends them to onboarding.
+			await getDb()
+				.delete(account)
+				.where(
+					and(
+						eq(account.userId, created.user.id),
+						eq(account.providerId, "credential"),
+					),
+				);
 
-				const mailFailed = sendEmail
-					? await sendInvite(email, signInUrl)
-					: null;
-				if (mailFailed) {
-					// The account is already usable; a failed mail is worth
-					// reporting but not worth rolling back for.
-					return { success: true, invited: email, mailFailed };
-				}
+			const mailFailed = sendEmail ? await sendInvite(email, signInUrl) : null;
+			if (mailFailed) {
+				// The account is already usable; a failed mail is worth
+				// reporting but not worth rolling back for.
+				return { success: true, invited: email, mailFailed };
 			}
 
-			return { success: true, invited: email, mode };
+			return { success: true, invited: email };
 		} catch (err) {
 			return fail(500, { error: (err as Error).message });
 		}

@@ -1,6 +1,12 @@
 <script lang="ts">
-	import { InfoIcon, LockIcon, MailIcon, UserPlusIcon } from "@lucide/svelte";
-	import { onMount } from "svelte";
+	import {
+		InfoIcon,
+		LockIcon,
+		MailIcon,
+		SendIcon,
+		UserPlusIcon,
+	} from "@lucide/svelte";
+	import { onMount, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { enhance } from "$app/forms";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
@@ -19,10 +25,30 @@
 	const { data, form } = $props();
 
 	let saving = $state(false);
+	let testing = $state(false);
+
+	/**
+	 * Passwordless methods are unusable without mail, so the checkboxes follow
+	 * the SMTP block live rather than waiting for a save to reject them.
+	 */
+	// untrack: this seeds the checkbox once from the server, after which the
+	// user owns it — re-reading `data` here would fight their edits.
+	let smtpOn = $state(
+		untrack(() =>
+			data.provided.smtp
+				? data.smtpAvailable
+				: (data.settings.smtp?.enabled ?? false),
+		),
+	);
+	const canSendMail = $derived(
+		data.provided.smtp ? data.smtpAvailable : smtpOn,
+	);
 
 	$effect(() => {
 		if (form?.error) {
 			toast.error(form.error);
+		} else if (form?.tested) {
+			toast.success(m.admin_smtp_test_sent({ email: form.tested }));
 		} else if (form?.success) {
 			toast.success(m.toast_settings_saved());
 		}
@@ -33,11 +59,17 @@
     method="POST"
     action="?/save"
     class="flex w-full flex-col gap-4"
-    use:enhance={() => {
-        saving = true;
+    use:enhance={({ action }) => {
+        const isTest = action.search === "?/testEmail";
+        if (isTest) {
+            testing = true;
+        } else {
+            saving = true;
+        }
         return async ({ update }) => {
             await update({ reset: false });
             saving = false;
+            testing = false;
         };
     }}
 >
@@ -65,6 +97,28 @@
                         <span class="font-medium">{m.admin_require_passkey()}</span>
                         <span class="text-muted-foreground text-xs">
                             {m.admin_require_passkey_hint()}
+                        </span>
+                    </span>
+                </Label>
+
+                <Label
+                    class="hover:bg-muted/40 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+                >
+                    <Checkbox
+                        name="requireTwoFactor"
+                        checked={data.settings.requireTwoFactor}
+                        class="mt-0.5"
+                    />
+                    <span class="grid gap-1 font-normal">
+                        <span class="font-medium">
+                            {m.admin_require_two_factor()}
+                        </span>
+                        <span class="text-muted-foreground text-xs">
+                            {data.twoFactorPending > 0
+                                ? m.admin_require_two_factor_pending({
+                                      count: String(data.twoFactorPending),
+                                  })
+                                : m.admin_require_two_factor_hint()}
                         </span>
                     </span>
                 </Label>
@@ -162,12 +216,16 @@
             </Card.Description>
         </Card.Header>
         <Card.Content class="flex flex-col gap-3">
-            <div
-                class="text-muted-foreground bg-muted/40 flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs"
-            >
-                <InfoIcon class="mt-px size-3.5 shrink-0" />
-                <span>{m.admin_env_read_only()}</span>
-            </div>
+            <!-- Only when something here really is env-owned: the passwordless
+                 toggles below are database-backed and editable. -->
+            {#if data.provided.emailSignIn || data.env.providers.length > 0}
+                <div
+                    class="text-muted-foreground bg-muted/40 flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs"
+                >
+                    <InfoIcon class="mt-px size-3.5 shrink-0" />
+                    <span>{m.admin_env_read_only_some()}</span>
+                </div>
+            {/if}
 
             <div class="flex flex-col gap-2">
                 {#if data.provided.emailSignIn}
@@ -196,11 +254,56 @@
                                 {m.admin_email_sign_in()}
                             </span>
                             <span class="text-muted-foreground text-xs">
-                                {m.admin_restart_required()}
+                                {m.admin_email_sign_in_usage({
+                                    count: String(data.usage.credentialAccounts),
+                                })}
+                                · {m.admin_restart_required()}
                             </span>
                         </span>
                     </Label>
                 {/if}
+
+                <Label
+                    class="hover:bg-muted/40 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-60"
+                    data-disabled={!canSendMail}
+                >
+                    <Checkbox
+                        name="magicLinkEnabled"
+                        checked={data.settings.magicLinkEnabled ?? false}
+                        disabled={!canSendMail}
+                    />
+                    <span class="grid gap-1 font-normal">
+                        <span class="text-sm font-medium">
+                            {m.admin_magic_link()}
+                        </span>
+                        <span class="text-muted-foreground text-xs">
+                            {canSendMail
+                                ? m.admin_magic_link_hint()
+                                : m.admin_needs_smtp()}
+                        </span>
+                    </span>
+                </Label>
+
+                <Label
+                    class="hover:bg-muted/40 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-60"
+                    data-disabled={!canSendMail}
+                >
+                    <Checkbox
+                        name="emailOtpEnabled"
+                        checked={data.settings.emailOtpEnabled ?? false}
+                        disabled={!canSendMail}
+                    />
+                    <span class="grid gap-1 font-normal">
+                        <span class="text-sm font-medium">
+                            {m.admin_email_otp()}
+                        </span>
+                        <span class="text-muted-foreground text-xs">
+                            {canSendMail
+                                ? m.admin_email_otp_hint()
+                                : m.admin_needs_smtp()}
+                        </span>
+                    </span>
+                </Label>
 
                 {#each data.env.providers as provider (provider.name)}
                     <div
@@ -247,7 +350,7 @@
                 >
                     <Checkbox
                         name="smtpEnabled"
-                        checked={data.settings.smtp?.enabled ?? false}
+                        bind:checked={smtpOn}
                     />
                     <span class="text-sm font-medium">
                         {m.admin_smtp_enable()}
@@ -324,6 +427,23 @@
                     </span>
                 </Label>
             {/if}
+
+            <!-- Posts the fields as they stand rather than what is saved, so a
+                 configuration can be proven before it is committed. -->
+            <div class="flex flex-wrap items-center gap-3">
+                <Button
+                    type="submit"
+                    formaction="?/testEmail"
+                    variant="outline"
+                    loading={testing}
+                >
+                    <SendIcon class="size-4" />
+                    {m.admin_smtp_test()}
+                </Button>
+                <span class="text-muted-foreground text-xs">
+                    {m.admin_smtp_test_hint()}
+                </span>
+            </div>
         </Card.Content>
     </Card.Root>
 
