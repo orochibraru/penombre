@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { CircleArrowUpIcon } from "@lucide/svelte";
-
 	import { m } from "$lib/paraglide/messages.js";
 	import type { AppConfig } from "$lib/server/config";
 
@@ -21,8 +20,7 @@
     {#if version}
         {#if version.updateAvailable && version.latestVersion}
             <a
-                href={version.releaseUrl ??
-                    "https://github.com/orochibraru/penombre/releases"}
+                href={version.releaseUrl ?? "https://github.com/orochibraru/penombre/releases"}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="mt-1.5 flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"

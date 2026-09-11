@@ -23,8 +23,6 @@ At minimum, set these values:
 ```bash
 ORIGIN=https://cloud.example.com
 AUTH_SECRET=$(openssl rand -hex 32)
-ADMIN_EMAIL=you@example.com
-ADMIN_PASSWORD=a-strong-password
 ```
 
 See [Environment variables](env.md) for the full reference.
@@ -72,20 +70,20 @@ The `storage_data` volume holds both the database (`/data/db`) and your files
 docker compose up -d
 ```
 
-Penombre is now running on port **3000**. Sign in with the admin credentials you
-set in the `.env` file.
+Penombre is now running on port **3000**. Open it and the setup screen will ask
+you to create the administrator account — there are no default credentials.
 
-> **Warning** — change the default admin password after your first login. The
-> `ADMIN_EMAIL` and `ADMIN_PASSWORD` variables are only used during the initial
-> database seed and can be removed afterwards.
+> Get to it before anyone else does. Until the first account exists, whoever
+> reaches `/auth/setup` becomes the administrator, so do not leave a fresh
+> instance exposed and unattended.
 
 ## What happens on first start
 
 1. The app waits for the database to become reachable (up to 10 retries, 2
    seconds apart). On SQLite the file is created if it doesn't exist.
 2. Drizzle ORM runs all pending database migrations automatically.
-3. If no users exist, an admin account is created from `ADMIN_EMAIL` and
-   `ADMIN_PASSWORD`.
+3. If no users exist, every request redirects to the setup screen until an
+   administrator has been created.
 4. The server starts listening on port 3000.
 
 Migrations run automatically on every startup, including after image upgrades —

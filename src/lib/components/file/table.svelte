@@ -15,6 +15,11 @@
 	import type { ObjectItem } from "$lib/api";
 	import FolderSize from "$lib/components/file/folder-size.svelte";
 	import FilePrefix from "$lib/components/file/prefix.svelte";
+	import {
+		applySelection,
+		selectedCount,
+		setShiftHeld,
+	} from "$lib/components/file/selection.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
@@ -279,6 +284,11 @@
 	function isChecked(item: ObjectItem): boolean {
 		return !!checkedItems[item.key];
 	}
+
+	/** Whatever is on screen right now, so a shift-range matches the eye. */
+	const displayed = $derived(
+		(searchResults ? sortedSearchResults : sortedFiles) ?? [],
+	);
 </script>
 
 {#snippet tableRow(objectItem: ObjectItem)}
@@ -299,21 +309,25 @@
             ? (e) => handleFolderDrop(e, objectItem.key)
             : undefined}
     >
-        <Table.Cell class="w-4">
+        <!-- The checkbox component reports a boolean, not the event, so the
+             modifier is captured on the way down. -->
+        <Table.Cell
+            class="w-4"
+            onclickcapture={(e: MouseEvent) => setShiftHeld(e.shiftKey)}
+            onkeydowncapture={(e: KeyboardEvent) => setShiftHeld(e.shiftKey)}
+        >
             <Checkbox
                 checked={isChecked(objectItem)}
                 onCheckedChange={(checked) => {
-                    checkedItems[objectItem.key] = checked
-                        ? objectItem.metadata.name || objectItem.key
-                        : false;
-                    const someChecked = files.list!.filter(
-                        (item) => !!checkedItems[item.key],
+                    applySelection(
+                        displayed,
+                        objectItem.key,
+                        checked,
+                        checkedItems,
                     );
-                    if (someChecked.length > 1) {
-                        isSingleItemAction = false;
-                    } else {
-                        isSingleItemAction = true;
-                    }
+                    isSingleItemAction =
+                        selectedCount(displayed, checkedItems) <= 1;
+                    setShiftHeld(false);
                 }}
             />
         </Table.Cell>

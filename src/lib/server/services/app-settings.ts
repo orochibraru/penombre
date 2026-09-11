@@ -38,7 +38,7 @@ export async function getAppSettings(): Promise<AppSettingsData> {
 		.where(eq(appSettings.id, ROW_ID))
 		.limit(1);
 
-	return { ...defaults, ...(row?.settings ?? {}) };
+	return { ...defaults, ...row?.settings };
 }
 
 export async function updateAppSettings(

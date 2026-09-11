@@ -77,14 +77,12 @@ repos:
         pass_filenames: false
         files: ^(src/lib/server/config\.defaults\.ts|scripts/generate-env-example\.ts)$
 
-      - id: gen-api
-        name: regenerate openapi spec + typed client
-        entry: bun run gen:api
-        language: system
-        pass_filenames: false
-        files: ^(src/lib/server/|src/lib/schemas/|scripts/generate-openapi\.ts)
+      # `gen:api` is NOT here: it costs ~5s on every commit to regenerate
+      # something that changes a few times a month. CI's "codegen is current"
+      # step regenerates and fails on a diff instead, so a stale spec is caught
+      # once per push rather than paid for on every commit.
 
-        # tailwint takes globs, not individual file paths, so it always scans the
+      # tailwint takes globs, not individual file paths, so it always scans the
       # whole (scoped) source tree. Only the decision to run it at all is
       # staged-scoped. Globs are explicit to keep it out of playwright-report/.
       - id: tailwint
@@ -94,11 +92,14 @@ repos:
         pass_filenames: false
         files: \.(tsx|jsx|html|vue|svelte|astro|mdx|css)$
 
+      # Filenames are passed on purpose: biome's lint and format rules are
+      # per-file, so checking the staged ones is equivalent to checking all
+      # 524 and costs ~1s instead of ~16s. CI still runs it over everything
+      # via `--all-files`.
       - id: biome
         name: biome check --write --unsafe
-        entry: bunx biome check --write --unsafe
+        entry: bunx biome check --write --unsafe --no-errors-on-unmatched
         language: system
-        pass_filenames: false
         files: \.(ts|tsx|js|jsx|mjs|cjs|json|jsonc|css|svelte|html)$
 
       - id: prettier-md
@@ -123,30 +124,10 @@ repos:
         pass_filenames: false
         files: ^(src/|test\.setup\.ts$|bunfig\.toml$)
 
-      # Type checks last, after the fixers have had their turn. Each one is
-      # whole-project by nature (a change in one file can break the types of a
-      # file it imports), so the staged paths only decide whether a project is
-      # worth checking at all, never what gets checked.
-      - id: check-app
-        name: svelte-check (app)
-        entry: bun run check:app
-        language: system
-        pass_filenames: false
-        files: ^(src/|vite\.config\.ts$|tsconfig\.json$)
-
-      - id: check-scripts
-        name: tsc (scripts)
-        entry: bun run check:scripts
-        language: system
-        pass_filenames: false
-        files: ^(scripts/|tsconfig\.scripts\.json$)
-
-      - id: check-docs
-        name: tsc (packages/docs)
-        entry: bun run docs:check
-        language: system
-        pass_filenames: false
-        files: ^packages/docs/
+      # Type checking is NOT here. svelte-check alone is ~14s and the three
+      # together are ~19s — more than half the hook run — to catch something
+      # `bun run check` in CI catches on the same push. Run it yourself while
+      # working (`bun run check`, or your editor); the CI job is the gate.
 
   # The conventions no linter knows about. Ported from homerun.
   - repo: local

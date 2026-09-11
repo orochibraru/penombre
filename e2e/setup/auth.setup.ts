@@ -18,6 +18,17 @@ setup("authenticate", async ({ page }) => {
 
 	await page.goto("/auth/sign-in");
 
+	// A fresh instance has no accounts at all — nothing is seeded — so the
+	// first run creates the administrator through the setup screen it is
+	// redirected to. Later runs against the same volume just sign in.
+	if (new URL(page.url()).pathname.startsWith("/auth/setup")) {
+		await page.locator("#setup-email").fill(email);
+		await page.locator("#setup-password").fill(password);
+		await page.locator("#setup-password-confirm").fill(password);
+		await page.getByRole("button", { name: "Create administrator" }).click();
+		await page.waitForURL("**/auth/sign-in**", { timeout: 15_000 });
+	}
+
 	// Sign-in is email-first: the password field stays hidden until the
 	// address has been resolved to an account with a credential.
 	await page.locator("#email").fill(email);

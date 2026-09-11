@@ -292,16 +292,22 @@ tracks its own request count and automatically refills.
 
 ## Initial admin account
 
-On first startup, if no users exist, Penombre creates an admin account using:
+A fresh instance has **no accounts and no default credentials**. On first start
+every URL redirects to `/auth/setup`, a one-off screen that creates the
+administrator: email, an optional name, and a password you choose.
 
-| Variable         | Description            | Default             |
-| ---------------- | ---------------------- | ------------------- |
-| `ADMIN_EMAIL`    | Admin account email    | `admin@example.com` |
-| `ADMIN_PASSWORD` | Admin account password | `Admin1234!`        |
+Once any account exists the setup screen redirects to sign-in and its action
+refuses, so it cannot be used later to add a second "first" administrator.
 
-> **Warning** — change the default admin credentials immediately after your
-> first login. These variables can be removed from your environment after the
-> initial setup.
+> Earlier versions seeded `admin@example.com` / `Admin1234!` from `ADMIN_EMAIL`
+> and `ADMIN_PASSWORD`. Those variables are **gone** — a published default
+> password on an internet-facing instance is a vulnerability, not a convenience.
+> Existing instances are unaffected: they already have accounts, so the setup
+> screen never appears. Remove the two variables from your `.env`.
+
+The one exception is [auth bypass](simple-mode.md): with no authentication at
+all there is nobody to sign in, so a single credential-less owner is created to
+own the files.
 
 ## Rate limiting
 

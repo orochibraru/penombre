@@ -5,6 +5,7 @@
 		CodeIcon,
 		FileArchiveIcon,
 		FileIcon,
+		FileTextIcon,
 		FolderIcon,
 		FolderPlusIcon,
 		HardDriveDownloadIcon,
@@ -13,15 +14,19 @@
 		MenuIcon,
 		MusicIcon,
 		PlugIcon,
+		PresentationIcon,
 		Rotate3dIcon,
 		SettingsIcon,
 		SquarePlusIcon,
 		StarIcon,
+		TableIcon,
 		TrashIcon,
 		UserIcon,
 		UsersIcon,
 		VideoIcon,
 	} from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
+	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { navigating, page } from "$app/state";
 	import NewFolderDialog from "$lib/components/layout/dialogs/new-folder-dialog.svelte";
@@ -41,6 +46,7 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index";
 	import Spinner from "$lib/components/ui/spinner.svelte";
+	import { createDocument, type DocumentKind } from "$lib/documents";
 	import { FileCategoryEnum } from "$lib/file-helpers";
 	import { m } from "$lib/paraglide/messages.js";
 	import { customMenu } from "$lib/store/custom-menu";
@@ -88,6 +94,54 @@
 	});
 
 	let mobileCreateDrawerOpen: boolean = $state(false);
+
+	/**
+	 * The document types the New menu can create. Each lands in the folder
+	 * currently on screen and opens straight in its editor — a new document
+	 * that leaves you back in the file list is a document nobody writes in.
+	 */
+	const newDocumentKinds = $derived([
+		{
+			kind: "document" as const,
+			label: m.new_document(),
+			icon: FileTextIcon,
+			title: m.new_document_title(),
+		},
+		{
+			kind: "sheet" as const,
+			label: m.new_sheet(),
+			icon: TableIcon,
+			title: m.new_sheet_title(),
+		},
+		{
+			kind: "presentation" as const,
+			label: m.new_presentation(),
+			icon: PresentationIcon,
+			title: m.new_presentation_title(),
+		},
+	]);
+
+	let creatingDocument = $state(false);
+	let newMenuOpen = $state(false);
+
+	async function newDocument(kind: DocumentKind) {
+		const entry = newDocumentKinds.find((item) => item.kind === kind);
+		// Closed explicitly: the item navigates rather than opening a dialog,
+		// and the menu would otherwise stay up over the editor it just opened.
+		newMenuOpen = false;
+		creatingDocument = true;
+		// `page.params.path` is the folder being browsed; at the drive root it
+		// is undefined and the file lands there.
+		const folder = page.params.path?.split("/").pop();
+		const id = await createDocument(kind, entry?.title ?? "Untitled", folder);
+		creatingDocument = false;
+
+		if (!id) {
+			toast.error(m.new_document_error());
+			return;
+		}
+		await goto(resolve("/(app)/edit/[fileId]", { fileId: id }));
+	}
 	let mobileMenuDrawerOpen: boolean = $state(false);
 	let uploadLoading: boolean = $state(false);
 
@@ -227,7 +281,7 @@
             <SidebarBranding />
             {#if showUploadButton}
                 <div class="hidden md:block">
-                    <DropdownMenu.Root>
+                    <DropdownMenu.Root bind:open={newMenuOpen}>
                         <DropdownMenu.Trigger>
                             {#snippet child({ props })}
                                 <Button
@@ -274,6 +328,20 @@
                                     <CloudUploadIcon />
                                     {m.file_upload()}
                                 </DropdownMenu.Item>
+                            </DropdownMenu.Group>
+                            <DropdownMenu.Separator />
+                            <DropdownMenu.Group>
+                                {#each newDocumentKinds as entry (entry.kind)}
+                                    {@const Icon = entry.icon}
+                                    <DropdownMenu.Item
+                                        class="font-medium"
+                                        disabled={creatingDocument}
+                                        onclick={() => newDocument(entry.kind)}
+                                    >
+                                        <Icon />
+                                        {entry.label}
+                                    </DropdownMenu.Item>
+                                {/each}
                             </DropdownMenu.Group>
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>
@@ -432,6 +500,22 @@
                 <CloudUploadIcon class="text-primary w-5! h-5!" />
                 {m.file_upload()}
             </Button>
+            {#each newDocumentKinds as entry (entry.kind)}
+                {@const Icon = entry.icon}
+                <Button
+                    class="w-full"
+                    variant="outline"
+                    size="lg"
+                    disabled={creatingDocument}
+                    onclick={() => {
+                        mobileCreateDrawerOpen = false;
+                        newDocument(entry.kind);
+                    }}
+                >
+                    <Icon class="text-primary w-5! h-5!" />
+                    {entry.label}
+                </Button>
+            {/each}
         </div>
         <Drawer.Footer>
             <Drawer.Close class={buttonVariants({ variant: "destructive" })}>

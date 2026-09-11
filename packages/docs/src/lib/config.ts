@@ -84,6 +84,7 @@ export const config: DocsConfig = {
 		"storage",
 		"volumes",
 		"sharing",
+		"documents",
 		"admin",
 		"simple-mode",
 		"reverse-proxy",

@@ -88,12 +88,6 @@ const configSchema = z
 				oauthProviders: z
 					.array(oauthProviderSchema)
 					.default(defaultConfigValues.auth.oauthProviders),
-				defaultAdminCredentials: z
-					.object({
-						email: z.email(),
-						password: z.string().min(8),
-					})
-					.default(defaultConfigValues.auth.defaultAdminCredentials),
 			})
 			.optional()
 			.default(defaultConfigValues.auth),
@@ -271,14 +265,6 @@ function resolveAuthConfig() {
 			oauthProviders.length > 0
 				? oauthProviders
 				: defaultConfigValues.auth.oauthProviders,
-		defaultAdminCredentials: {
-			email:
-				env.ADMIN_EMAIL ||
-				defaultConfigValues.auth.defaultAdminCredentials.email,
-			password:
-				env.ADMIN_PASSWORD ||
-				defaultConfigValues.auth.defaultAdminCredentials.password,
-		},
 	};
 }
 

@@ -27,8 +27,7 @@ jobs:
     uses: ./.github/workflows/docker.yaml
     with:
       image_tag: pr-${{ github.event.pull_request.number }}
-      push:
-        ${{ github.event.pull_request.head.repo.full_name == github.repository
+      push: ${{ github.event.pull_request.head.repo.full_name == github.repository
         }}
       image_name: orochibraru/penombre
       registry_name: docker.io

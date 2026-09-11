@@ -11,7 +11,13 @@
 	import { page } from "$app/state";
 	import type { ObjectItem } from "$lib/api";
 	import FilePrefix from "$lib/components/file/prefix.svelte";
+	import {
+		applySelection,
+		selectedCount,
+		setShiftHeld,
+	} from "$lib/components/file/selection.svelte";
 	import { Button } from "$lib/components/ui/button";
+	import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
 	import { Skeleton } from "$lib/components/ui/skeleton/index";
@@ -215,6 +221,24 @@
 		}
 		return [...searchResults].sort(compareItems);
 	});
+
+	/** Whatever is on screen right now, so a shift-range matches the eye. */
+	const displayed = $derived(
+		(searchResults ? sortedSearchResults : sortedFiles) ?? [],
+	);
+
+	/** Any selection at all pins every tile's checkbox open. */
+	const anySelected = $derived(selectedCount(displayed, checkedItems) > 0);
+
+	function toggleTile(item: ObjectItem, event: MouseEvent) {
+		// The tile itself is a button that opens the file, so a click on the
+		// checkbox must not reach it.
+		event.preventDefault();
+		event.stopPropagation();
+		setShiftHeld(event.shiftKey);
+		applySelection(displayed, item.key, !isChecked(item), checkedItems);
+		setShiftHeld(false);
+	}
 </script>
 
 {#snippet listItem(objectItem: ObjectItem)}
@@ -240,6 +264,25 @@
             ? (e) => handleFolderDrop(e, objectItem.key)
             : undefined}
     >
+        <!-- Multi-select in grid mode: the box is invisible until the tile is
+             hovered or focused, and pinned open as soon as anything at all is
+             selected so the current selection stays legible while picking. -->
+        <span
+            class={cn(
+                "absolute top-2 left-2 z-10 transition-opacity",
+                checked || anySelected
+                    ? "opacity-100"
+                    : "opacity-0 group-hover/tile:opacity-100 focus-within:opacity-100",
+            )}
+        >
+            <Checkbox
+                checked={checked}
+                aria-label={objectItem.metadata.name ?? objectItem.key}
+                class="bg-background/90 border-muted-foreground/40 shadow-sm backdrop-blur-sm"
+                onclick={(e: MouseEvent) => toggleTile(objectItem, e)}
+            />
+        </span>
+
         <ContextMenu.Root>
             <ContextMenu.Trigger class="h-full w-full">
                 <div

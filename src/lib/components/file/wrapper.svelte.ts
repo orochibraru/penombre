@@ -4,6 +4,7 @@ import {
 	DownloadIcon,
 	ExternalLinkIcon,
 	FolderInputIcon,
+	MessageSquareTextIcon,
 	PencilLineIcon,
 	ShareIcon,
 	StarIcon,
@@ -13,9 +14,12 @@ import {
 import type { MediaQuery } from "svelte/reactivity";
 import { toast } from "svelte-sonner";
 import { dev } from "$app/environment";
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
 import { page } from "$app/state";
 import { api, type ObjectItem, type ObjectList } from "$lib/api";
 import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
+import { kindForName } from "$lib/documents";
 import { determineCodeFileLanguage } from "$lib/file-utils";
 import * as m from "$lib/paraglide/messages.js";
 import { itemAction } from "$lib/store/actions";
@@ -35,7 +39,9 @@ import type {
 export type FileToView = {
 	item: ObjectItem;
 	src: string;
-	type: "image" | "code" | "pdf" | "video";
+	/** "notes" opens the dialog with only the thread — used for audio, which
+	 *  plays in the global player rather than inside the dialog. */
+	type: "image" | "code" | "pdf" | "video" | "notes";
 	content?: string;
 	language?: SupportedLanguage;
 } | null;
@@ -264,6 +270,7 @@ export function createMainActions(handlers: {
 	onDuplicate: (item: ObjectItem) => void;
 	onStar: (item: ObjectItem) => void;
 	onShare: (item: ObjectItem) => void;
+	onNotes: (item: ObjectItem) => void;
 	onMoveToTrash: (item: ObjectItem) => void;
 }): ItemActionGroup[] {
 	return [
@@ -281,6 +288,13 @@ export function createMainActions(handlers: {
 					icon: ExternalLinkIcon,
 					iconClass: "text-slate-500 dark:text-slate-400",
 					action: handlers.onOpenInNewTab,
+					fileOnly: true,
+				},
+				{
+					title: "Notes",
+					icon: MessageSquareTextIcon,
+					iconClass: "text-emerald-600 dark:text-emerald-400",
+					action: handlers.onNotes,
 					fileOnly: true,
 				},
 				{
@@ -450,6 +464,15 @@ export async function handleOpenItem(
 ): Promise<void> {
 	playableMusic.set(null);
 
+	// A document Penombre can edit opens in its editor rather than a preview:
+	// opening a spreadsheet to look at a read-only rendering of it is not what
+	// anybody means by "open".
+	const editable = kindForName(item.metadata.name ?? item.key);
+	if (editable && item.metadata.id) {
+		await goto(resolve("/(app)/edit/[fileId]", { fileId: item.metadata.id }));
+		return;
+	}
+
 	const finalUrl = getObjectUrl({
 		baseUrl: page.url,
 		itemPath: item.key,
@@ -491,6 +514,7 @@ export async function handleOpenItem(
 			title: item.metadata.name || item.key,
 			source: finalUrl,
 			isPlaying: !dev,
+			fileId: item.metadata.id,
 		});
 		return;
 	}

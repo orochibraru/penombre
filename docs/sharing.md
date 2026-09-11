@@ -75,6 +75,21 @@ A share URL looks like `https://your-instance/s/<token>`.
 
 The owner of a link never has to type its password.
 
+## Notes
+
+Any file can carry notes: open it and the panel sits beside the preview, or use
+**Notes** in a file's menu for anything that has no preview of its own.
+
+On **audio and video** a note can be pinned to a moment. While the file is
+playing, the note box offers the current position — tick it and the note is
+stamped with that time. Timestamps in the thread are buttons: clicking one moves
+the playhead there, which is what makes this useful for feedback on a mix or a
+cut rather than a comment box that happens to sit near a player.
+
+Notes are visible to everyone who can see the file, and each person can edit and
+delete their own. They are not shown to visitors holding a share link — a link
+is a way to hand somebody a file, not a way into a conversation about it.
+
 ## Security notes
 
 - The token is the whole secret: 128 bits from the CSPRNG, unguessable, but

@@ -35,7 +35,7 @@ export async function getUserPreferences(
 	const prefs = result[0]!;
 	return {
 		...defaultPreferences,
-		...(prefs.preferences ?? {}),
+		...prefs.preferences,
 	};
 }
 

@@ -13,28 +13,26 @@
 </script>
 
 <script lang="ts">
-	import { page } from "$app/state";
-	import { customMenu } from "$lib/store/custom-menu";
-	import { cn } from "$lib/utils";
+    import { page } from "$app/state";
+    import { customMenu } from "$lib/store/custom-menu";
+    import { cn } from "$lib/utils";
 
-	interface Props {
-		title: string;
-		tabs: SectionTab[];
-	}
+    interface Props {
+        title: string;
+        tabs: SectionTab[];
+    }
 
-	const { title, tabs }: Props = $props();
+    const { title, tabs }: Props = $props();
 
-	// The mobile bottom bar opens a drawer from this store, so the tabs stay
-	// reachable on a phone where the tab strip is a horizontal scroll.
-	$effect(() => {
-		customMenu.set({ title, items: tabs });
-		return () => customMenu.set(null);
-	});
+    // The mobile bottom bar opens a drawer from this store, so the tabs stay
+    // reachable on a phone where the tab strip is a horizontal scroll.
+    $effect(() => {
+        customMenu.set({ title, items: tabs });
+        return () => customMenu.set(null);
+    });
 
-	const isActive = (tab: SectionTab) =>
-		tab.isRoot
-			? page.url.pathname === tab.url
-			: page.url.pathname.startsWith(tab.url);
+    const isActive = (tab: SectionTab) =>
+        tab.isRoot ? page.url.pathname === tab.url : page.url.pathname.startsWith(tab.url);
 </script>
 
 <!--
@@ -44,10 +42,7 @@
 -->
 <div class="mb-5 flex flex-col gap-3">
     <h1 class="text-xl font-semibold tracking-tight">{title}</h1>
-    <nav
-        class="border-border flex flex-wrap gap-1 border-b"
-        aria-label={title}
-    >
+    <nav class="border-border flex flex-wrap gap-1 border-b" aria-label={title}>
         {#each tabs as tab (tab.url)}
             {@const active = isActive(tab)}
             {@const Icon = tab.icon}

@@ -378,6 +378,67 @@ activity views — mono log lines, not cards or a table — differing only by
 admin table used to omit entirely. File and folder names are never written into
 these rows, which is what makes the message safe to show an admin.
 
+### Documents are ordinary files
+
+`$lib/documents.ts` owns the three editable kinds and their formats: HTML for a
+document, CSV for a sheet, Markdown (`---` separated) for a deck. **No private
+format** — creating and saving go through the existing `createFile` +
+`uploadFile` endpoints, so a document is a file like any other and inherits
+trash, sharing, search and thumbnails for free. Adding a kind means adding it to
+`DOCUMENT_KINDS`, `kindForName` and the editor route's branch.
+
+`handleOpenItem` routes an editable file to `/edit/[fileId]` before anything
+else, so extensions handled there never reach the preview dialog.
+
+### Prek no longer type-checks
+
+`prek run --all-files` is ~45s, not ~80s: `gen:api` and all three type checks
+moved to CI (`code_quality.yaml` runs `bun run check` and a "Codegen is current"
+step that regenerates and fails on a diff), and biome is passed the staged
+filenames instead of scanning all 524 files. **A green commit no longer implies
+a green CI lint job** — run `bun run check` yourself while working.
+
+### No seeded admin
+
+There are no `ADMIN_EMAIL`/`ADMIN_PASSWORD` variables. An empty database means
+`needsSetup()` is true and `generalHandler` funnels every path to `/auth/setup`,
+which creates the first administrator and then refuses forever after. Auth
+bypass is the exception: nobody signs in, so `seedAuth` creates one
+credential-less owner to attribute files to. The e2e auth setup runs the
+onboarding flow when it lands on that screen.
+
+### Every E2E spec must declare its own auth
+
+The `chromium` project in `playwright.config.ts` sets **no** `storageState` —
+each spec file opts in with `test.use({ storageState: AUTH_STORAGE_STATE })`. A
+file that forgets it runs signed out, and every test in it fails by landing on
+the sign-in page, which reads like a broken session rather than a missing line.
+The `setup` project still runs (its job is writing that file), so the failure
+looks unrelated to authentication.
+
+### ProseKit: core only, and browser only
+
+`document-editor.svelte` uses `prosekit/core` + `prosekit/basic` and nothing
+from `prosekit/svelte`. That is deliberate, and reverting it reintroduces two
+separate failures:
+
+- The `<ProseKit>` component sets the editor context **inside itself**, so any
+  `use*` hook called in the parent scope throws `EditorNotFoundError` at runtime
+  — after mounting, so the editor looks fine until the first edit.
+  `defineDocChangeHandler` as an extension needs no context.
+- `@prosekit/svelte` ships uncompiled `.svelte` sources, which Vite externalises
+  for SSR and hands to Node as JavaScript; the parse error names the library's
+  own file. Avoiding the package avoids needing `ssr.noExternal`.
+
+The `{#if browser}` guard in the edit route stays regardless: `createEditor`
+parses its initial HTML with `DOMParser` at construction, so it throws "Unable
+to find browser Document" during SSR.
+
+None of this appears in the Docker E2E run, which serves a production build —
+check `bun run dev` explicitly when adding a DOM-dependent library, and assert
+on `pageerror` in the E2E (see `documents.spec.ts`), because a mounted,
+`contenteditable`, correctly-rendered editor can still throw on every keystroke.
+
 ### E2E runs against a container, not your working tree
 
 `test:e2e` starts the app in Docker, and Playwright's `reuseExistingServer` is

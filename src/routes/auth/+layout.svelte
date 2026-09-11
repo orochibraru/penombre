@@ -21,9 +21,7 @@
                     alt={`${data.config.appName} logo`}
                     class="text-primary size-8"
                 />
-                <span
-                    class="from-primary to-brand-2 bg-linear-to-r bg-clip-text text-transparent"
-                >
+                <span class="from-primary to-brand-2 bg-linear-to-r bg-clip-text text-transparent">
                     {data.config.appName}
                 </span>
             </a>

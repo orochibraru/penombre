@@ -45,10 +45,6 @@ export const defaultConfigValues = {
 		minPasswordLength: 8,
 		secret: "change_this_secret_to_a_random_secure_value",
 		oauthProviders: [],
-		defaultAdminCredentials: {
-			email: "admin@example.com",
-			password: "Admin1234!",
-		},
 	},
 	redis: undefined as { url: string } | undefined,
 	smtp: {
@@ -98,9 +94,9 @@ ORIGIN=${defaultConfigValues.origin}
 # Authentication
 # ===========================================
 
-# Default admin user credentials (used only during initial seeding)
-ADMIN_EMAIL=${defaultConfigValues.auth.defaultAdminCredentials.email}
-ADMIN_PASSWORD=${defaultConfigValues.auth.defaultAdminCredentials.password}
+# There are deliberately no ADMIN_EMAIL/ADMIN_PASSWORD variables. The first
+# admin is created through the setup screen on first boot, so no instance ever
+# ships with a password that is published in this file.
 
 # ===========================================
 # Auth Settings

@@ -469,6 +469,43 @@ export const twoFactor = pgTable(
 	],
 );
 
+/**
+ * Notes attached to a file.
+ *
+ * `timestampSeconds` is what makes a note a comment on a moment rather than on
+ * the file as a whole: null means "the file", a number means that point in an
+ * audio or video track. Nothing enforces that the file is playable — a stray
+ * timestamp on a PDF is harmless and the UI simply never sets one.
+ */
+export const fileNotes = pgTable(
+	"file_notes",
+	{
+		id: text("id").primaryKey(),
+		fileId: text("file_id").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		body: text("body").notNull(),
+		timestampSeconds: real("timestamp_seconds"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("file_notes_fileId_idx").on(table.fileId),
+		index("file_notes_userId_idx").on(table.userId),
+	],
+);
+
+export const fileNotesRelations = relations(fileNotes, ({ one }) => ({
+	user: one(user, {
+		fields: [fileNotes.userId],
+		references: [user.id],
+	}),
+}));
+
 export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
 	user: one(user, {
 		fields: [twoFactor.userId],

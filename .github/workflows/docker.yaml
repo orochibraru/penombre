@@ -10,13 +10,11 @@ on:
         type: string
       image_tag:
         required: true
-        description:
-          "Tag to apply to the built image, e.g. pr-123 or a commit SHA"
+        description: "Tag to apply to the built image, e.g. pr-123 or a commit SHA"
         type: string
       registry_name:
         required: true
-        description:
-          "Docker registry target to authenticate against and push to"
+        description: "Docker registry target to authenticate against and push to"
         type: string
       registry_username:
         required: true
@@ -29,8 +27,7 @@ on:
       push:
         required: false
         default: true
-        description:
-          "Whether to push the built image. False builds and discards it, still
+        description: "Whether to push the built image. False builds and discards it, still
           populating the layer cache. Callers pass false for pull requests from
           a fork: GitHub withholds secrets from those, so a registry login there
           can only fail."
@@ -88,8 +85,7 @@ jobs:
   # ===========================================
   build:
     name: Build Images
-    runs-on:
-      ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' ||
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' ||
       'ubuntu-latest' }}
     needs: prepare
     strategy:

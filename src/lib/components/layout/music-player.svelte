@@ -16,7 +16,7 @@
 	import { Slider } from "$lib/components/ui/slider/index";
 	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
-	import { playableMusic } from "$lib/store/music";
+	import { playableMusic, playbackPosition } from "$lib/store/music";
 
 	function clearCurrent() {
 		$playableMusic = null;
@@ -27,6 +27,12 @@
 
 	let paused = $state(!!dev);
 	let currentTime = $state(0);
+
+	// Mirrored into a store so the notes panel can stamp a note with wherever
+	// the track currently is, without reaching into this component.
+	$effect(() => {
+		playbackPosition.set(currentTime);
+	});
 	let duration = $state(0);
 	let volume = $state(1);
 	let loading: boolean = $state(true);

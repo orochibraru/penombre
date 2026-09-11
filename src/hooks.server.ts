@@ -11,7 +11,7 @@ import { Logger } from "$lib/logger";
 import { baseLocale, getLocale } from "$lib/paraglide/runtime";
 import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
-import { seedAuth } from "$lib/server/auth/seed";
+import { needsSetup, seedAuth } from "$lib/server/auth/seed";
 import {
 	getConfig,
 	getVolumes,
@@ -90,7 +90,7 @@ async function waitForDatabase() {
 			if (isFirstAttempt || i % 10 === 0) {
 				logger.info(`Waiting for database... (attempt ${i + 1}/${maxRetries})`);
 			}
-			await await sleep(retryDelay);
+			await sleep(retryDelay);
 		}
 	}
 }
@@ -124,7 +124,7 @@ async function runMigrations() {
 			// Reset the database connection before retrying
 			await resetDb();
 			retries -= 1;
-			await await sleep(3000);
+			await sleep(3000);
 		}
 	}
 }
@@ -418,6 +418,20 @@ const themeHandler: Handle = async ({ event, resolve }) => {
 	});
 };
 
+/**
+ * Paths that must keep working while the instance has no administrator: the
+ * setup screen itself, and the auth endpoints it posts through.
+ */
+function allowedDuringSetup(pathname: string): boolean {
+	return (
+		pathname.startsWith("/auth/setup") ||
+		pathname.startsWith("/api/v1/auth") ||
+		pathname.startsWith("/_app/") ||
+		pathname.startsWith("/.well-known/") ||
+		pathname === "/favicon.ico"
+	);
+}
+
 const generalHandler: Handle = async ({ event, resolve }) => {
 	const isUpload =
 		event.request.method === "POST" &&
@@ -425,6 +439,15 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 
 	if (event.url.pathname.startsWith("/.well-known/")) {
 		return await resolve(event);
+	}
+
+	// An empty instance has nothing to show and nobody who could sign in, so
+	// everything funnels to setup until the first administrator exists.
+	if (!allowedDuringSetup(event.url.pathname) && (await needsSetup())) {
+		return new Response(null, {
+			status: 302,
+			headers: { location: "/auth/setup" },
+		});
 	}
 	// Ignore errors for favicon.ico
 	if (event.url.pathname === "/favicon.ico") {

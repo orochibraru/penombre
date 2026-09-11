@@ -26,11 +26,7 @@
         <span>{m.admin_activity_privacy_note()}</span>
     </div>
 
-    <ActivityLog
-        entries={data.entries}
-        showUser
-        empty={m.admin_activity_empty()}
-    />
+    <ActivityLog entries={data.entries} showUser empty={m.admin_activity_empty()} />
 
     {#if data.pageCount > 1}
         <div class="flex items-center justify-between gap-3">
@@ -54,8 +50,7 @@
             <a
                 class={cn(
                     buttonVariants({ variant: "outline", size: "sm" }),
-                    data.page >= data.pageCount &&
-                        "pointer-events-none opacity-50",
+                    data.page >= data.pageCount && "pointer-events-none opacity-50",
                 )}
                 href="?page={data.page + 1}"
                 aria-disabled={data.page >= data.pageCount}

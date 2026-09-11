@@ -17,6 +17,7 @@
 	import { api, type ObjectItem, type ObjectList } from "$lib/api";
 	import FileGrid from "$lib/components/file/grid.svelte";
 	import FileList from "$lib/components/file/list.svelte";
+	import NotesPanel from "$lib/components/file/notes-panel.svelte";
 	import FileTable from "$lib/components/file/table.svelte";
 	import BottomAction from "$lib/components/layout/bottom-action.svelte";
 	import DeleteDialog from "$lib/components/layout/dialogs/delete-dialog.svelte";
@@ -32,12 +33,14 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
 	import { Input } from "$lib/components/ui/input";
 	import * as m from "$lib/paraglide/messages.js";
+	import { playableMusic, playbackPosition } from "$lib/store/music";
 	import {
 		newFolderDialogOpen,
 		pendingUploadFiles,
 		uploadDialogOpen,
 	} from "$lib/store/upload";
 	import {
+		cn,
 		isFolderItem,
 		readableFileSize,
 		type SortColumn,
@@ -118,6 +121,8 @@
 	let actionsContextOpen: boolean = $state(false);
 	let actionableItem: ObjectItem | undefined = $state();
 	let viewFileOpen: boolean = $state(false);
+	/** Playhead of the in-dialog video, shared with the notes panel. */
+	let viewerTime: number = $state(0);
 	// Initialize from server-provided preferences to avoid hydration flash
 	let sortColumn: SortColumn = $derived(initialSortColumn);
 	let sortDirection: SortDirection = $derived(initialSortDirection);
@@ -401,6 +406,13 @@
 		onShare: (item) => {
 			shareItem = item;
 			shareDialogOpen = true;
+			actionsContextOpen = false;
+		},
+		onNotes: (item) => {
+			// Notes-only: audio plays in the global player, so there is no
+			// preview to put beside the thread.
+			fileToView = { item, src: "", type: "notes" };
+			viewFileOpen = true;
 			actionsContextOpen = false;
 		},
 		onMoveToTrash: (item) => {
@@ -900,19 +912,30 @@
                 </Button>
             </div>
         </div>
+        <!-- Preview and notes sit side by side on a wide screen and stack
+             below it, so the thread never squeezes the file it is about. -->
+        <div class="flex min-h-0 w-full flex-col gap-4 lg:flex-row">
+        <!-- A bounded box, not a scroller: the image is sized to fit what is
+             left of the viewport once the dialog's own chrome is accounted
+             for, so a tall photo shrinks instead of pushing the dialog into a
+             scroll. Code keeps its own scrolling, hence overflow-auto here. -->
         <div
-            class="flex h-full w-full min-w-0 flex-1 items-center justify-center overflow-y-auto"
+            class={cn(
+                "flex max-h-[70vh] w-full min-w-0 flex-1 items-center justify-center overflow-auto",
+                fileToView.type === "notes" && "hidden",
+            )}
         >
             {#if fileToView.type === "image"}
                 <img
                     src={fileToView.src}
                     alt={fileToView.item.metadata.name ?? fileToView.item.key}
-                    class="max-w-full rounded-md object-contain h-[50vh]"
+                    class="max-h-[70vh] max-w-full rounded-md object-contain"
                 />
             {:else if fileToView.type === "video"}
                 <VideoPlayer
                     src={fileToView.src}
                     title={fileToView.item.metadata.name ?? fileToView.item.key}
+                    bind:currentTime={viewerTime}
                 />
             {:else if fileToView.type === "code" && fileToView.language && fileToView.content}
                 <Code.Root
@@ -926,9 +949,36 @@
                 <embed
                     src={fileToView.src}
                     title={fileToView.item.metadata.name ?? fileToView.item.key}
-                    class="w-full h-[50vh]"
+                    class="h-[70vh] w-full"
                 />
             {/if}
+        </div>
+
+        {#if fileToView.item.metadata.id}
+            {@const playingThis =
+                $playableMusic?.fileId === fileToView.item.metadata.id}
+            <aside
+                class={cn(
+                    "flex max-h-[70vh] min-h-80 w-full min-w-0 flex-col",
+                    fileToView.type === "notes"
+                        ? "flex-1"
+                        : "lg:w-80 lg:shrink-0 lg:border-s lg:ps-4",
+                )}
+            >
+                <NotesPanel
+                    fileId={fileToView.item.metadata.id}
+                    position={fileToView.type === "video"
+                        ? viewerTime
+                        : playingThis
+                          ? $playbackPosition
+                          : undefined}
+                    onSeek={fileToView.type === "video"
+                        ? (seconds) => (viewerTime = seconds)
+                        : undefined}
+                    currentUserId={page.data.user?.id}
+                />
+            </aside>
+        {/if}
         </div>
     {/if}
 </ResponsiveDialog>

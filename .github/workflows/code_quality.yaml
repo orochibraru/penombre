@@ -35,6 +35,24 @@ jobs:
         with:
           extra-args: --all-files --no-fail-fast
 
+      # Type checking lives here rather than in prek: it is ~19s, it cannot be
+      # broken by a formatting fixup, and paying it once per push beats paying
+      # it on every commit.
+      - name: Type check
+        run: bun run check
+
+      # The generated spec and env example are not regenerated on every commit
+      # any more, so this is what notices when they drift. Formatters have
+      # already run above, so a diff here is a real content change.
+      - name: Codegen is current
+        run: |
+          bun run gen:env
+          bun run gen:api
+          if ! git diff --exit-code -- .example.env openapi.json src/lib/api; then
+            echo "::error::Generated files are stale — run 'bun run gen:env && bun run gen:api' and commit the result."
+            exit 1
+          fi
+
   docs-check:
     name: Docs (Checks)
     runs-on: ubuntu-latest

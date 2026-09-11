@@ -57,10 +57,9 @@ These variables are only used during the **first-time database seed** to create
 the initial admin account. They have no effect after the database has been
 initialized and can be removed from your environment afterwards.
 
-| Variable         | Description                    | Default  |
-| ---------------- | ------------------------------ | -------- |
-| `ADMIN_EMAIL`    | Initial admin account email    | Required |
-| `ADMIN_PASSWORD` | Initial admin account password | Required |
+There are **no admin credential variables**. The first administrator is created
+through the setup screen on first boot — see
+[Authentication](authentication.md#initial-admin-account).
 
 ## Authentication
 

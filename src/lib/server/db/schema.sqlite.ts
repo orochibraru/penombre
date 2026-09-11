@@ -331,6 +331,30 @@ export const twoFactor = sqliteTable(
 	],
 );
 
+export const fileNotes = sqliteTable(
+	"file_notes",
+	{
+		id: text("id").primaryKey(),
+		fileId: text("file_id").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		body: text("body").notNull(),
+		timestampSeconds: real("timestamp_seconds"),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("file_notes_fileId_idx").on(table.fileId),
+		index("file_notes_userId_idx").on(table.userId),
+	],
+);
+
 // =========================================================================
 // FOLDERS
 // =========================================================================
