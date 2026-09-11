@@ -15,6 +15,7 @@ permissions:
   contents: read
   packages: write
 
+# code quality → build (by digest) → e2e → tag `pr-<number>`.
 jobs:
   code_quality:
     name: Code Quality
@@ -27,8 +28,37 @@ jobs:
     uses: ./.github/workflows/docker.yaml
     with:
       image_tag: pr-${{ github.event.pull_request.number }}
+      # Forks get no secrets; the build still warms the cache.
       push: ${{ github.event.pull_request.head.repo.full_name == github.repository
         }}
+      image_name: orochibraru/penombre
+      registry_name: docker.io
+      registry_username: orochibraru
+      bake_target: app
+    secrets:
+      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+  e2e:
+    name: E2E
+    needs: [build-app]
+    uses: ./.github/workflows/e2e.yaml
+    with:
+      image: ${{ needs.build-app.outputs.image }}
+      registry_name: docker.io
+      registry_username: orochibraru
+      bake_target: app
+      pulled: ${{ github.event.pull_request.head.repo.full_name == github.repository
+        }}
+    secrets:
+      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+  publish:
+    name: Publish pr-${{ github.event.pull_request.number }}
+    needs: [e2e]
+    # A fork pushed no digests.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    uses: ./.github/workflows/docker-manifest.yaml
+    with:
       image_name: orochibraru/penombre
       registry_name: docker.io
       registry_username: orochibraru
@@ -39,12 +69,17 @@ jobs:
   gate:
     name: CI Gate
     if: always()
-    needs: [code_quality, build-app]
+    needs: [code_quality, build-app, e2e, publish]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
         run: |
-          results=("${{ needs.code_quality.result }}" "${{ needs.build-app.result }}")
+          results=(
+            "${{ needs.code_quality.result }}"
+            "${{ needs.build-app.result }}"
+            "${{ needs.e2e.result }}"
+            "${{ needs.publish.result }}"
+          )
           for result in "${results[@]}"; do
             if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
               echo "::error::One or more jobs failed or were cancelled"

@@ -82,6 +82,30 @@ jobs:
     secrets:
       registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+  e2e:
+    name: E2E
+    needs: [build-app]
+    uses: ./.github/workflows/e2e.yaml
+    with:
+      image: ${{ needs.build-app.outputs.image }}
+      registry_name: docker.io
+      registry_username: orochibraru
+      bake_target: app
+    secrets:
+      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+  publish:
+    name: Publish ${{ needs.version.outputs.tag }}
+    needs: [version, e2e]
+    uses: ./.github/workflows/docker-manifest.yaml
+    with:
+      image_name: orochibraru/penombre
+      registry_name: docker.io
+      registry_username: orochibraru
+      bake_target: app
+    secrets:
+      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -89,6 +113,8 @@ jobs:
       - code_quality
       - version
       - build-app
+      - e2e
+      - publish
     permissions:
       contents: write
       issues: write

@@ -1,4 +1,5 @@
 name: Code Quality
+# Static checks and unit tests. E2E lives in `e2e.yaml`.
 on:
   workflow_call:
 
@@ -96,63 +97,3 @@ jobs:
 
       - name: Tests (Unit)
         run: bun test --bail
-
-  e2e:
-    name: Tests (E2E, SQLite)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
-
-      - name: Sync SvelteKit
-        run: bun run svelte-kit sync
-
-      - name: Install Playwright's Chromium
-        run: bunx playwright install --with-deps chromium
-
-      - name: Tests (E2E)
-        run: bun run test:e2e
-
-      - name: Upload Playwright report
-        if: failure()
-        uses: orochibraru/upload-artifact@v8
-        with:
-          name: playwright-report-sqlite
-          path: playwright-report/
-          if-no-files-found: warn
-          retention-days: 7
-
-  e2e-pg:
-    name: Tests (E2E, PostgreSQL)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile --ignore-scripts
-
-      - name: Sync SvelteKit
-        run: bun run svelte-kit sync
-
-      - name: Install Playwright's Chromium
-        run: bunx playwright install --with-deps chromium
-
-      - name: Tests (E2E, PostgreSQL)
-        run: bun run test:e2e:pg
-
-      - name: Upload Playwright report
-        if: failure()
-        uses: orochibraru/upload-artifact@v8
-        with:
-          name: playwright-report-pg
-          path: playwright-report-pg/
-          if-no-files-found: warn
-          retention-days: 7

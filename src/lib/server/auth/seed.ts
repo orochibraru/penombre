@@ -17,13 +17,7 @@ async function userCount(): Promise<number> {
 	return Number(row?.total ?? 0);
 }
 
-/**
- * Whether the instance still needs its first administrator.
- *
- * There are no seeded credentials: an empty database means the setup screen,
- * not an account whose password is printed in the documentation. Auth bypass
- * is exempt — nobody signs in there, so there is nothing to set up.
- */
+/** True when no account exists yet. Auth bypass never needs setup. */
 export async function needsSetup(): Promise<boolean> {
 	if (isAuthBypassed()) {
 		return false;
@@ -31,19 +25,12 @@ export async function needsSetup(): Promise<boolean> {
 	try {
 		return (await userCount()) === 0;
 	} catch {
-		// Before migrations have run there is no table to count; the caller
-		// treats that as "not yet", and boot re-checks after migrating.
+		// No table yet before migrations run.
 		return false;
 	}
 }
 
-/**
- * Create the first administrator.
- *
- * Refuses once any account exists, which is what stops the setup screen from
- * being a permanent back door: it is reachable exactly once, on an empty
- * instance.
- */
+/** Refuses once any account exists, so setup cannot become a back door. */
 export async function createFirstAdmin(input: {
 	email: string;
 	password: string;
@@ -93,13 +80,7 @@ async function bumpSingleUserToAdmin(): Promise<void> {
 	await db.update(user).set({ role: "admin" }).where(eq(user.id, existing.id));
 }
 
-/**
- * Boot-time account housekeeping.
- *
- * No longer creates an administrator — that is the setup screen's job. It only
- * ensures auth-bypass instances have an owner to attribute files to, and that
- * a single-account instance has admin rights.
- */
+/** Ensures bypass mode has an owner and a lone account is an admin. */
 export async function seedAuth(): Promise<void> {
 	if (isAuthBypassed()) {
 		if ((await userCount()) > 0) {

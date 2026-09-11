@@ -180,6 +180,14 @@ A feature that isn't in `docs/` isn't finished.
   compiler handles these differently); test/script/config files relax
   cognitive-complexity and `noExplicitAny`/`noConsole` rules.
 
+## Comments
+
+**Only when absolutely necessary, and few words.** Code that reads clearly needs
+no narration. A comment earns its place when it records something the code
+cannot say: a non-obvious constraint, a why-not, a bug it exists to prevent.
+Never restate what the next line does, never explain a design in paragraphs,
+never leave a changelog in a comment.
+
 ## Layout rules
 
 **Do not reach for `max-w-*` by default.** Most things should fill their
