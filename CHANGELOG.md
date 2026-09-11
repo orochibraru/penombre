@@ -1,3 +1,20 @@
+## [1.8.31](https://github.com/orochibraru/penombre/compare/v1.8.30...v1.8.31) (2026-09-11)
+
+
+### Bug Fixes
+
+* mini and maxi player ([#89](https://github.com/orochibraru/penombre/issues/89)) ([71e4a85](https://github.com/orochibraru/penombre/commit/71e4a85b78e1efc14dcc5dca76896ddce4636452))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.31
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.30](https://github.com/orochibraru/penombre/compare/v1.8.29...v1.8.30) (2026-09-11)
 
 
