@@ -20,6 +20,9 @@
 		"src/lib/paraglide",
 		"src/paraglide",
 		"test-results",
-		"playwright-report"
+		"playwright-report",
+		// The PostgreSQL run writes its report beside the SQLite one, and its
+		// generated markdown is not ours to lint.
+		"playwright-report-pg"
 	]
 }

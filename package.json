@@ -23,6 +23,7 @@
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"format:md": "prettier --log-level warn --write \"**/*.md\"",
+		"gen": "bun run --parallel gen:api gen:env && bun run format",
 		"gen:api": "bun run ./scripts/gen-api.ts",
 		"gen:env": "bun run ./scripts/generate-env-example.ts",
 		"gen:openapi": "bun run ./scripts/generate-openapi.ts && openapi-typescript ./openapi.json -o ./src/lib/api/v1.d.ts && bunx biome check --write ./src/lib/api/v1.d.ts",

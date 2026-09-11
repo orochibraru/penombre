@@ -43,7 +43,12 @@ export default defineConfig({
 		command: "docker compose -f compose.e2e.yaml -p penombre-e2e up --wait",
 		cwd: "./",
 		url: "http://localhost:3001",
-		reuseExistingServer: !process.env.CI,
+		// Always reuse: `test:e2e` (and `:pg`) bring the stack up themselves
+		// with `up --build --wait`, so whatever is on this port is by
+		// construction the current build. Refusing to reuse — which is what
+		// `!process.env.CI` did — made CI fail with "port is already used"
+		// against the very server the script had just started.
+		reuseExistingServer: true,
 		timeout: 30_000,
 		stdout: "pipe",
 		stderr: "pipe",

@@ -183,13 +183,18 @@
 									"type": "number"
 								}
 							},
-							"required": ["name", "size"],
+							"required": [
+								"name",
+								"size"
+							],
 							"type": "object"
 						},
 						"type": "array"
 					}
 				},
-				"required": ["files"],
+				"required": [
+					"files"
+				],
 				"type": "object"
 			},
 			"DirectoryList": {
@@ -485,7 +490,11 @@
 						"type": "string"
 					}
 				},
-				"required": ["id", "name", "path"],
+				"required": [
+					"id",
+					"name",
+					"path"
+				],
 				"type": "object"
 			},
 			"FolderList": {
@@ -502,7 +511,11 @@
 							"type": "string"
 						}
 					},
-					"required": ["id", "name", "path"],
+					"required": [
+						"id",
+						"name",
+						"path"
+					],
 					"type": "object"
 				},
 				"type": "array"
@@ -517,7 +530,10 @@
 						"type": "number"
 					}
 				},
-				"required": ["name", "size"],
+				"required": [
+					"name",
+					"size"
+				],
 				"type": "object"
 			},
 			"ObjectItem": {
@@ -698,14 +714,21 @@
 						"type": "number"
 					},
 					"type": {
-						"enum": ["file", "folder"],
+						"enum": [
+							"file",
+							"folder"
+						],
 						"type": "string"
 					},
 					"updatedAt": {
 						"type": "string"
 					}
 				},
-				"required": ["key", "metadata", "type"],
+				"required": [
+					"key",
+					"metadata",
+					"type"
+				],
 				"type": "object"
 			},
 			"ObjectList": {
@@ -894,14 +917,21 @@
 									"type": "number"
 								},
 								"type": {
-									"enum": ["file", "folder"],
+									"enum": [
+										"file",
+										"folder"
+									],
 									"type": "string"
 								},
 								"updatedAt": {
 									"type": "string"
 								}
 							},
-							"required": ["key", "metadata", "type"],
+							"required": [
+								"key",
+								"metadata",
+								"type"
+							],
 							"type": "object"
 						},
 						"type": "array"
@@ -911,7 +941,11 @@
 						"type": "number"
 					}
 				},
-				"required": ["list", "count", "total"],
+				"required": [
+					"list",
+					"count",
+					"total"
+				],
 				"type": "object"
 			},
 			"Passkey": {
@@ -1049,7 +1083,9 @@
 						"type": "boolean"
 					}
 				},
-				"required": ["id"],
+				"required": [
+					"id"
+				],
 				"type": "object"
 			},
 			"UpdateFile": {
@@ -1351,7 +1387,10 @@
 						"type": "object"
 					}
 				},
-				"required": ["finalName", "metadata"],
+				"required": [
+					"finalName",
+					"metadata"
+				],
 				"type": "object"
 			},
 			"User": {
@@ -1509,11 +1548,18 @@
 														"type": "string"
 													},
 													"level": {
-														"enum": ["info", "warning", "error"],
+														"enum": [
+															"info",
+															"warning",
+															"error"
+														],
 														"type": "string"
 													},
 													"link": {
-														"type": ["string", "null"]
+														"type": [
+															"string",
+															"null"
+														]
 													},
 													"message": {
 														"type": "string"
@@ -1569,7 +1615,9 @@
 					}
 				],
 				"summary": "List activities",
-				"tags": ["Activity"]
+				"tags": [
+					"Activity"
+				]
 			}
 		},
 		"/api/v1/auth/account-info": {
@@ -1596,7 +1644,11 @@
 													"type": "string"
 												}
 											},
-											"required": ["id", "providerId", "accountId"],
+											"required": [
+												"id",
+												"providerId",
+												"accountId"
+											],
 											"type": "object"
 										},
 										"data": {
@@ -1620,11 +1672,17 @@
 													"type": "string"
 												}
 											},
-											"required": ["emailVerified"],
+											"required": [
+												"emailVerified"
+											],
 											"type": "object"
 										}
 									},
-									"required": ["user", "data", "account"],
+									"required": [
+										"user",
+										"data",
+										"account"
+									],
 									"type": "object"
 								}
 							}
@@ -1640,7 +1698,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -1656,7 +1716,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -1729,7 +1791,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/admin/ban-user": {
@@ -1755,7 +1819,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["userId"],
+								"required": [
+									"userId"
+								],
 								"type": "object"
 							}
 						}
@@ -1787,7 +1853,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -1803,7 +1871,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -1876,7 +1946,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/create-user": {
@@ -1923,7 +1995,10 @@
 										]
 									}
 								},
-								"required": ["email", "name"],
+								"required": [
+									"email",
+									"name"
+								],
 								"type": "object"
 							}
 						}
@@ -1955,7 +2030,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -1971,7 +2048,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2044,7 +2123,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/get-user": {
@@ -2086,7 +2167,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2102,7 +2185,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2175,7 +2260,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/has-permission": {
@@ -2192,7 +2279,9 @@
 										"type": "object"
 									}
 								},
-								"required": ["permissions"],
+								"required": [
+									"permissions"
+								],
 								"type": "object"
 							}
 						}
@@ -2211,7 +2300,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["success"],
+									"required": [
+										"success"
+									],
 									"type": "object"
 								}
 							}
@@ -2227,7 +2318,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2243,7 +2336,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2316,7 +2411,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/impersonate-user": {
@@ -2334,7 +2431,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["userId"],
+								"required": [
+									"userId"
+								],
 								"type": "object"
 							}
 						}
@@ -2369,7 +2468,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2385,7 +2486,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2458,7 +2561,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/list-user-sessions": {
@@ -2476,7 +2581,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["userId"],
+								"required": [
+									"userId"
+								],
 								"type": "object"
 							}
 						}
@@ -2511,7 +2618,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2527,7 +2636,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2600,7 +2711,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/list-users": {
@@ -2620,7 +2733,10 @@
 						"name": "searchField",
 						"schema": {
 							"description": "The field to search in, defaults to email. Can be `email` or `name`. Eg: \"name\"",
-							"enum": ["email", "name"],
+							"enum": [
+								"email",
+								"name"
+							],
 							"type": "string"
 						}
 					},
@@ -2629,7 +2745,11 @@
 						"name": "searchOperator",
 						"schema": {
 							"description": "The operator to use for the search. Can be `contains`, `starts_with` or `ends_with`. Eg: \"contains\"",
-							"enum": ["contains", "starts_with", "ends_with"],
+							"enum": [
+								"contains",
+								"starts_with",
+								"ends_with"
+							],
 							"type": "string"
 						}
 					},
@@ -2676,7 +2796,10 @@
 						"name": "sortDirection",
 						"schema": {
 							"description": "The direction to sort by",
-							"enum": ["asc", "desc"],
+							"enum": [
+								"asc",
+								"desc"
+							],
 							"type": "string"
 						}
 					},
@@ -2774,7 +2897,10 @@
 											"type": "array"
 										}
 									},
-									"required": ["users", "total"],
+									"required": [
+										"users",
+										"total"
+									],
 									"type": "object"
 								}
 							}
@@ -2790,7 +2916,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2806,7 +2934,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2879,7 +3009,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/remove-user": {
@@ -2897,7 +3029,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["userId"],
+								"required": [
+									"userId"
+								],
 								"type": "object"
 							}
 						}
@@ -2929,7 +3063,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -2945,7 +3081,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3018,7 +3156,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/revoke-user-session": {
@@ -3036,7 +3176,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["sessionToken"],
+								"required": [
+									"sessionToken"
+								],
 								"type": "object"
 							}
 						}
@@ -3068,7 +3210,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3084,7 +3228,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3157,7 +3303,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/revoke-user-sessions": {
@@ -3175,7 +3323,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["userId"],
+								"required": [
+									"userId"
+								],
 								"type": "object"
 							}
 						}
@@ -3207,7 +3357,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3223,7 +3375,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3296,7 +3450,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/set-role": {
@@ -3330,7 +3486,10 @@
 										"type": "string"
 									}
 								},
-								"required": ["userId", "role"],
+								"required": [
+									"userId",
+									"role"
+								],
 								"type": "object"
 							}
 						}
@@ -3362,7 +3521,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3378,7 +3539,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3451,7 +3614,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/set-user-password": {
@@ -3475,7 +3640,10 @@
 										"type": "string"
 									}
 								},
-								"required": ["newPassword", "userId"],
+								"required": [
+									"newPassword",
+									"userId"
+								],
 								"type": "object"
 							}
 						}
@@ -3507,7 +3675,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3523,7 +3693,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3596,7 +3768,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/stop-impersonating": {
@@ -3612,7 +3786,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3628,7 +3804,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3701,7 +3879,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/unban-user": {
@@ -3719,7 +3899,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["userId"],
+								"required": [
+									"userId"
+								],
 								"type": "object"
 							}
 						}
@@ -3751,7 +3933,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3767,7 +3951,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3840,7 +4026,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/admin/update-user": {
@@ -3864,7 +4052,10 @@
 										"type": "string"
 									}
 								},
-								"required": ["userId", "data"],
+								"required": [
+									"userId",
+									"data"
+								],
 								"type": "object"
 							}
 						}
@@ -3896,7 +4087,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3912,7 +4105,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -3985,7 +4180,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Admin"]
+				"tags": [
+					"Admin"
+				]
 			}
 		},
 		"/api/v1/auth/api-key/create": {
@@ -4003,7 +4200,10 @@
 									},
 									"expiresIn": {
 										"description": "Expiration time of the Api Key in seconds",
-										"type": ["number", "null"]
+										"type": [
+											"number",
+											"null"
+										]
 									},
 									"metadata": {},
 									"name": {
@@ -4053,7 +4253,10 @@
 									},
 									"remaining": {
 										"description": "Remaining number of requests. Server side only",
-										"type": ["number", "null"]
+										"type": [
+											"number",
+											"null"
+										]
 									},
 									"userId": {
 										"description": "User Id of the user that the Api Key belongs to. server-only. Eg: \"user-id\"",
@@ -4207,7 +4410,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -4223,7 +4428,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -4296,7 +4503,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Api-key"]
+				"tags": [
+					"Api-key"
+				]
 			}
 		},
 		"/api/v1/auth/api-key/delete": {
@@ -4313,7 +4522,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["keyId"],
+								"required": [
+									"keyId"
+								],
 								"type": "object"
 							}
 						}
@@ -4330,7 +4541,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["success"],
+									"required": [
+										"success"
+									],
 									"type": "object"
 								}
 							}
@@ -4346,7 +4559,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -4362,7 +4577,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -4435,7 +4652,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Api-key"]
+				"tags": [
+					"Api-key"
+				]
 			}
 		},
 		"/api/v1/auth/api-key/get": {
@@ -4590,7 +4809,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -4606,7 +4827,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -4679,7 +4902,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Api-key"]
+				"tags": [
+					"Api-key"
+				]
 			}
 		},
 		"/api/v1/auth/api-key/list": {
@@ -4824,7 +5049,10 @@
 											"type": "number"
 										}
 									},
-									"required": ["apiKeys", "total"],
+									"required": [
+										"apiKeys",
+										"total"
+									],
 									"type": "object"
 								}
 							}
@@ -4840,7 +5068,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -4856,7 +5086,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -4929,7 +5161,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Api-key"]
+				"tags": [
+					"Api-key"
+				]
 			}
 		},
 		"/api/v1/auth/api-key/update": {
@@ -4951,7 +5185,10 @@
 									},
 									"expiresIn": {
 										"description": "Expiration time of the Api Key in seconds",
-										"type": ["number", "null"]
+										"type": [
+											"number",
+											"null"
+										]
 									},
 									"keyId": {
 										"description": "The id of the Api Key",
@@ -4973,7 +5210,10 @@
 										"propertyNames": {
 											"type": "string"
 										},
-										"type": ["object", "null"]
+										"type": [
+											"object",
+											"null"
+										]
 									},
 									"rateLimitEnabled": {
 										"description": "Whether the key has rate limiting enabled.",
@@ -5004,7 +5244,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["keyId"],
+								"required": [
+									"keyId"
+								],
 								"type": "object"
 							}
 						}
@@ -5142,7 +5384,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5158,7 +5402,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5231,7 +5477,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Api-key"]
+				"tags": [
+					"Api-key"
+				]
 			}
 		},
 		"/api/v1/auth/callback/{id}": {
@@ -5256,7 +5504,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5272,7 +5522,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5345,7 +5597,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			},
 			"post": {
 				"parameters": [
@@ -5401,7 +5655,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5417,7 +5673,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5490,7 +5748,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/change-email": {
@@ -5511,7 +5771,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["newEmail"],
+								"required": [
+									"newEmail"
+								],
 								"type": "object"
 							}
 						}
@@ -5526,7 +5788,10 @@
 									"properties": {
 										"message": {
 											"description": "Status message of the email change process",
-											"enum": ["Email updated", "Verification email sent"],
+											"enum": [
+												"Email updated",
+												"Verification email sent"
+											],
 											"nullable": true,
 											"type": "string"
 										},
@@ -5539,7 +5804,9 @@
 											"type": "object"
 										}
 									},
-									"required": ["status"],
+									"required": [
+										"status"
+									],
 									"type": "object"
 								}
 							}
@@ -5555,7 +5822,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5571,7 +5840,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5644,7 +5915,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/change-password": {
@@ -5670,7 +5943,10 @@
 										"type": "boolean"
 									}
 								},
-								"required": ["newPassword", "currentPassword"],
+								"required": [
+									"newPassword",
+									"currentPassword"
+								],
 								"type": "object"
 							}
 						}
@@ -5735,7 +6011,9 @@
 											"type": "object"
 										}
 									},
-									"required": ["user"],
+									"required": [
+										"user"
+									],
 									"type": "object"
 								}
 							}
@@ -5751,7 +6029,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5767,7 +6047,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5840,7 +6122,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/delete-user": {
@@ -5879,7 +6163,10 @@
 									"properties": {
 										"message": {
 											"description": "Status message of the deletion process",
-											"enum": ["User deleted", "Verification email sent"],
+											"enum": [
+												"User deleted",
+												"Verification email sent"
+											],
 											"type": "string"
 										},
 										"success": {
@@ -5887,7 +6174,10 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["success", "message"],
+									"required": [
+										"success",
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5903,7 +6193,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5919,7 +6211,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -5992,7 +6286,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/delete-user/callback": {
@@ -6024,7 +6320,9 @@
 									"properties": {
 										"message": {
 											"description": "Confirmation message",
-											"enum": ["User deleted"],
+											"enum": [
+												"User deleted"
+											],
 											"type": "string"
 										},
 										"success": {
@@ -6032,7 +6330,10 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["success", "message"],
+									"required": [
+										"success",
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6048,7 +6349,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6064,7 +6367,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6137,7 +6442,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/error": {
@@ -6165,7 +6472,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6181,7 +6490,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6254,7 +6565,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/get-access-token": {
@@ -6277,21 +6590,27 @@
 												"type": "string"
 											}
 										},
-										"required": ["accountId"],
+										"required": [
+											"accountId"
+										],
 										"type": "object"
 									},
 									{
 										"properties": {
 											"useAccountCookie": {
 												"description": "Select the current OAuth account from its signed cookie",
-												"enum": [true]
+												"enum": [
+													true
+												]
 											},
 											"userId": {
 												"description": "The user ID associated with the account",
 												"type": "string"
 											}
 										},
-										"required": ["useAccountCookie"],
+										"required": [
+											"useAccountCookie"
+										],
 										"type": "object"
 									}
 								]
@@ -6338,7 +6657,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6411,7 +6732,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/get-session": {
@@ -6432,8 +6755,14 @@
 											"$ref": "#/components/schemas/User"
 										}
 									},
-									"required": ["session", "user"],
-									"type": ["object", "null"]
+									"required": [
+										"session",
+										"user"
+									],
+									"type": [
+										"object",
+										"null"
+									]
 								}
 							}
 						},
@@ -6448,7 +6777,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6464,7 +6795,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6537,7 +6870,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			},
 			"post": {
 				"description": "Get the current session",
@@ -6566,8 +6901,14 @@
 											"$ref": "#/components/schemas/User"
 										}
 									},
-									"required": ["session", "user"],
-									"type": ["object", "null"]
+									"required": [
+										"session",
+										"user"
+									],
+									"type": [
+										"object",
+										"null"
+									]
 								}
 							}
 						},
@@ -6582,7 +6923,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6598,7 +6941,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6671,7 +7016,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/link-social": {
@@ -6728,7 +7075,9 @@
 												"type": "string"
 											}
 										},
-										"required": ["token"],
+										"required": [
+											"token"
+										],
 										"type": "object"
 									},
 									"loginHint": {
@@ -6794,7 +7143,9 @@
 										"type": "array"
 									}
 								},
-								"required": ["provider"],
+								"required": [
+									"provider"
+								],
 								"type": "object"
 							}
 						}
@@ -6819,7 +7170,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["redirect"],
+									"required": [
+										"redirect"
+									],
 									"type": "object"
 								}
 							}
@@ -6835,7 +7188,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6851,7 +7206,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -6924,7 +7281,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/list-accounts": {
@@ -6992,7 +7351,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7008,7 +7369,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7081,7 +7444,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/list-sessions": {
@@ -7112,7 +7477,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7128,7 +7495,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7201,7 +7570,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/ok": {
@@ -7219,7 +7590,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["ok"],
+									"required": [
+										"ok"
+									],
 									"type": "object"
 								}
 							}
@@ -7235,7 +7608,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7251,7 +7626,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7324,7 +7701,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/passkey/delete-passkey": {
@@ -7341,7 +7720,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["id"],
+								"required": [
+									"id"
+								],
 								"type": "object"
 							}
 						}
@@ -7359,7 +7740,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["status"],
+									"required": [
+										"status"
+									],
 									"type": "object"
 								}
 							}
@@ -7375,7 +7758,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7391,7 +7776,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7464,7 +7851,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Passkey"]
+				"tags": [
+					"Passkey"
+				]
 			}
 		},
 		"/api/v1/auth/passkey/generate-authenticate-options": {
@@ -7565,7 +7954,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7581,7 +7972,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7654,7 +8047,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Passkey"]
+				"tags": [
+					"Passkey"
+				]
 			}
 		},
 		"/api/v1/auth/passkey/generate-register-options": {
@@ -7668,7 +8063,10 @@
 						"name": "authenticatorAttachment",
 						"required": false,
 						"schema": {
-							"enum": ["platform", "cross-platform"],
+							"enum": [
+								"platform",
+								"cross-platform"
+							],
 							"type": "string"
 						}
 					},
@@ -7798,7 +8196,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7814,7 +8214,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7887,7 +8289,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Passkey"]
+				"tags": [
+					"Passkey"
+				]
 			}
 		},
 		"/api/v1/auth/passkey/list-user-passkeys": {
@@ -7925,7 +8329,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -7941,7 +8347,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8014,7 +8422,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Passkey"]
+				"tags": [
+					"Passkey"
+				]
 			}
 		},
 		"/api/v1/auth/passkey/update-passkey": {
@@ -8036,7 +8446,10 @@
 										"type": "string"
 									}
 								},
-								"required": ["id", "name"],
+								"required": [
+									"id",
+									"name"
+								],
 								"type": "object"
 							}
 						}
@@ -8053,7 +8466,9 @@
 											"$ref": "#/components/schemas/Passkey"
 										}
 									},
-									"required": ["passkey"],
+									"required": [
+										"passkey"
+									],
 									"type": "object"
 								}
 							}
@@ -8069,7 +8484,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8085,7 +8502,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8158,7 +8577,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Passkey"]
+				"tags": [
+					"Passkey"
+				]
 			}
 		},
 		"/api/v1/auth/passkey/verify-authentication": {
@@ -8177,7 +8598,9 @@
 										"type": "object"
 									}
 								},
-								"required": ["response"],
+								"required": [
+									"response"
+								],
 								"type": "object"
 							}
 						}
@@ -8212,7 +8635,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8228,7 +8653,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8301,7 +8728,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Passkey"]
+				"tags": [
+					"Passkey"
+				]
 			}
 		},
 		"/api/v1/auth/passkey/verify-registration": {
@@ -8324,7 +8753,9 @@
 									},
 									"response": {}
 								},
-								"required": ["response"],
+								"required": [
+									"response"
+								],
 								"type": "object"
 							}
 						}
@@ -8370,7 +8801,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8443,7 +8876,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Passkey"]
+				"tags": [
+					"Passkey"
+				]
 			}
 		},
 		"/api/v1/auth/providers": {
@@ -8469,11 +8904,19 @@
 														"type": "string"
 													},
 													"type": {
-														"enum": ["oauth", "email"],
+														"enum": [
+															"oauth",
+															"email"
+														],
 														"type": "string"
 													}
 												},
-												"required": ["name", "prettyName", "type", "enabled"],
+												"required": [
+													"name",
+													"prettyName",
+													"type",
+													"enabled"
+												],
 												"type": "object"
 											},
 											"type": "array"
@@ -8507,7 +8950,9 @@
 					}
 				},
 				"summary": "List authentication providers",
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/refresh-token": {
@@ -8530,21 +8975,27 @@
 												"type": "string"
 											}
 										},
-										"required": ["accountId"],
+										"required": [
+											"accountId"
+										],
 										"type": "object"
 									},
 									{
 										"properties": {
 											"useAccountCookie": {
 												"description": "Select the current OAuth account from its signed cookie",
-												"enum": [true]
+												"enum": [
+													true
+												]
 											},
 											"userId": {
 												"description": "The user ID associated with the account",
 												"type": "string"
 											}
 										},
-										"required": ["useAccountCookie"],
+										"required": [
+											"useAccountCookie"
+										],
 										"type": "object"
 									}
 								]
@@ -8598,7 +9049,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8671,7 +9124,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/request-password-reset": {
@@ -8693,7 +9148,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["email"],
+								"required": [
+									"email"
+								],
 								"type": "object"
 							}
 						}
@@ -8728,7 +9185,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8744,7 +9203,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8817,7 +9278,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/reset-password": {
@@ -8839,7 +9302,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["newPassword"],
+								"required": [
+									"newPassword"
+								],
 								"type": "object"
 							}
 						}
@@ -8871,7 +9336,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8887,7 +9354,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -8960,7 +9429,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/reset-password/{token}": {
@@ -9012,7 +9483,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9028,7 +9501,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9101,7 +9576,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/revoke-other-sessions": {
@@ -9129,7 +9606,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["status"],
+									"required": [
+										"status"
+									],
 									"type": "object"
 								}
 							}
@@ -9145,7 +9624,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9161,7 +9642,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9234,7 +9717,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/revoke-session": {
@@ -9251,7 +9736,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["token"],
+								"required": [
+									"token"
+								],
 								"type": "object"
 							}
 						}
@@ -9268,7 +9755,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["status"],
+									"required": [
+										"status"
+									],
 									"type": "object"
 								}
 							}
@@ -9284,7 +9773,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9300,7 +9791,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9373,7 +9866,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/revoke-sessions": {
@@ -9401,7 +9896,9 @@
 											"type": "boolean"
 										}
 									},
-									"required": ["status"],
+									"required": [
+										"status"
+									],
 									"type": "object"
 								}
 							}
@@ -9417,7 +9914,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9433,7 +9932,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9506,7 +10007,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/send-verification-email": {
@@ -9531,7 +10034,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["email"],
+								"required": [
+									"email"
+								],
 								"type": "object"
 							}
 						}
@@ -9581,7 +10086,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9654,7 +10161,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/sign-in/email": {
@@ -9684,7 +10193,10 @@
 										"type": "boolean"
 									}
 								},
-								"required": ["email", "password"],
+								"required": [
+									"email",
+									"password"
+								],
 								"type": "object"
 							}
 						}
@@ -9699,7 +10211,9 @@
 									"description": "Session response when idToken is provided",
 									"properties": {
 										"redirect": {
-											"enum": [false],
+											"enum": [
+												false
+											],
 											"type": "boolean"
 										},
 										"token": {
@@ -9715,7 +10229,11 @@
 											"type": "object"
 										}
 									},
-									"required": ["redirect", "token", "user"],
+									"required": [
+										"redirect",
+										"token",
+										"user"
+									],
 									"type": "object"
 								}
 							}
@@ -9731,7 +10249,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9747,7 +10267,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -9820,7 +10342,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/sign-in/social": {
@@ -9905,7 +10429,9 @@
 												"type": "object"
 											}
 										},
-										"required": ["token"],
+										"required": [
+											"token"
+										],
 										"type": "object"
 									},
 									"loginHint": {
@@ -9975,7 +10501,9 @@
 										"type": "array"
 									}
 								},
-								"required": ["provider"],
+								"required": [
+									"provider"
+								],
 								"type": "object"
 							}
 						}
@@ -10003,7 +10531,9 @@
 											"type": "object"
 										}
 									},
-									"required": ["redirect"],
+									"required": [
+										"redirect"
+									],
 									"type": "object"
 								}
 							}
@@ -10019,7 +10549,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10035,7 +10567,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10108,7 +10642,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/sign-out": {
@@ -10173,7 +10709,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10189,7 +10727,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10262,7 +10802,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/sign-up/email": {
@@ -10300,7 +10842,11 @@
 										"type": "boolean"
 									}
 								},
-								"required": ["name", "email", "password"],
+								"required": [
+									"name",
+									"email",
+									"password"
+								],
 								"type": "object"
 							}
 						}
@@ -10364,7 +10910,9 @@
 											"type": "object"
 										}
 									},
-									"required": ["user"],
+									"required": [
+										"user"
+									],
 									"type": "object"
 								}
 							}
@@ -10380,7 +10928,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10396,7 +10946,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10484,7 +11036,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/two-factor/disable": {
@@ -10501,7 +11055,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["password"],
+								"required": [
+									"password"
+								],
 								"type": "object"
 							}
 						}
@@ -10533,7 +11089,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10549,7 +11107,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10622,7 +11182,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Two-factor"]
+				"tags": [
+					"Two-factor"
+				]
 			}
 		},
 		"/api/v1/auth/two-factor/enable": {
@@ -10639,7 +11201,10 @@
 										"type": "string"
 									},
 									"method": {
-										"enum": ["otp", "totp"],
+										"enum": [
+											"otp",
+											"totp"
+										],
 										"type": "string"
 									},
 									"password": {
@@ -10647,7 +11212,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["password"],
+								"required": [
+									"password"
+								],
 								"type": "object"
 							}
 						}
@@ -10669,7 +11236,10 @@
 										},
 										"method": {
 											"description": "The 2FA method that was enabled.",
-											"enum": ["otp", "totp"],
+											"enum": [
+												"otp",
+												"totp"
+											],
 											"type": "string"
 										},
 										"totpURI": {
@@ -10677,7 +11247,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["method"],
+									"required": [
+										"method"
+									],
 									"type": "object"
 								}
 							}
@@ -10693,7 +11265,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10709,7 +11283,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10782,7 +11358,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Two-factor"]
+				"tags": [
+					"Two-factor"
+				]
 			}
 		},
 		"/api/v1/auth/two-factor/generate-backup-codes": {
@@ -10799,7 +11377,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["password"],
+								"required": [
+									"password"
+								],
 								"type": "object"
 							}
 						}
@@ -10821,11 +11401,16 @@
 										},
 										"status": {
 											"description": "Indicates if the backup codes were generated successfully",
-											"enum": [true],
+											"enum": [
+												true
+											],
 											"type": "boolean"
 										}
 									},
-									"required": ["status", "backupCodes"],
+									"required": [
+										"status",
+										"backupCodes"
+									],
 									"type": "object"
 								}
 							}
@@ -10841,7 +11426,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10857,7 +11444,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10930,7 +11519,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Two-factor"]
+				"tags": [
+					"Two-factor"
+				]
 			}
 		},
 		"/api/v1/auth/two-factor/get-totp-uri": {
@@ -10947,7 +11538,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["password"],
+								"required": [
+									"password"
+								],
 								"type": "object"
 							}
 						}
@@ -10979,7 +11572,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -10995,7 +11590,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11068,7 +11665,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Two-factor"]
+				"tags": [
+					"Two-factor"
+				]
 			}
 		},
 		"/api/v1/auth/two-factor/send-otp": {
@@ -11115,7 +11714,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11131,7 +11732,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11204,7 +11807,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Two-factor"]
+				"tags": [
+					"Two-factor"
+				]
 			}
 		},
 		"/api/v1/auth/two-factor/verify-backup-code": {
@@ -11229,7 +11834,9 @@
 										"type": "boolean"
 									}
 								},
-								"required": ["code"],
+								"required": [
+									"code"
+								],
 								"type": "object"
 							}
 						}
@@ -11264,7 +11871,12 @@
 													"type": "string"
 												}
 											},
-											"required": ["token", "userId", "createdAt", "expiresAt"],
+											"required": [
+												"token",
+												"userId",
+												"createdAt",
+												"expiresAt"
+											],
 											"type": "object"
 										},
 										"user": {
@@ -11320,7 +11932,10 @@
 											"type": "object"
 										}
 									},
-									"required": ["user", "session"],
+									"required": [
+										"user",
+										"session"
+									],
 									"type": "object"
 								}
 							}
@@ -11336,7 +11951,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11352,7 +11969,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11425,7 +12044,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Two-factor"]
+				"tags": [
+					"Two-factor"
+				]
 			}
 		},
 		"/api/v1/auth/two-factor/verify-otp": {
@@ -11445,7 +12066,9 @@
 										"type": "boolean"
 									}
 								},
-								"required": ["code"],
+								"required": [
+									"code"
+								],
 								"type": "object"
 							}
 						}
@@ -11502,11 +12125,18 @@
 													"type": "string"
 												}
 											},
-											"required": ["id", "createdAt", "updatedAt"],
+											"required": [
+												"id",
+												"createdAt",
+												"updatedAt"
+											],
 											"type": "object"
 										}
 									},
-									"required": ["token", "user"],
+									"required": [
+										"token",
+										"user"
+									],
 									"type": "object"
 								}
 							}
@@ -11522,7 +12152,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11538,7 +12170,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11611,7 +12245,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Two-factor"]
+				"tags": [
+					"Two-factor"
+				]
 			}
 		},
 		"/api/v1/auth/two-factor/verify-totp": {
@@ -11632,7 +12268,9 @@
 										"type": "boolean"
 									}
 								},
-								"required": ["code"],
+								"required": [
+									"code"
+								],
 								"type": "object"
 							}
 						}
@@ -11664,7 +12302,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11680,7 +12320,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11753,7 +12395,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Two-factor"]
+				"tags": [
+					"Two-factor"
+				]
 			}
 		},
 		"/api/v1/auth/unlink-account": {
@@ -11770,7 +12414,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["accountId"],
+								"required": [
+									"accountId"
+								],
 								"type": "object"
 							}
 						}
@@ -11802,7 +12448,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11818,7 +12466,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11891,7 +12541,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/update-session": {
@@ -11940,7 +12592,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -11956,7 +12610,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -12029,7 +12685,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/update-user": {
@@ -12083,7 +12741,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -12099,7 +12759,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -12172,7 +12834,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/verify-email": {
@@ -12213,7 +12877,10 @@
 											"type": "object"
 										}
 									},
-									"required": ["user", "status"],
+									"required": [
+										"user",
+										"status"
+									],
 									"type": "object"
 								}
 							}
@@ -12229,7 +12896,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -12245,7 +12914,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -12318,7 +12989,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/auth/verify-password": {
@@ -12336,7 +13009,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["password"],
+								"required": [
+									"password"
+								],
 								"type": "object"
 							}
 						}
@@ -12368,7 +13043,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -12384,7 +13061,9 @@
 											"type": "string"
 										}
 									},
-									"required": ["message"],
+									"required": [
+										"message"
+									],
 									"type": "object"
 								}
 							}
@@ -12457,7 +13136,9 @@
 						"bearerAuth": []
 					}
 				],
-				"tags": ["Auth"]
+				"tags": [
+					"Auth"
+				]
 			}
 		},
 		"/api/v1/files/{fileId}/notes": {
@@ -12483,7 +13164,10 @@
 												"additionalProperties": false,
 												"properties": {
 													"authorName": {
-														"type": ["string", "null"]
+														"type": [
+															"string",
+															"null"
+														]
 													},
 													"body": {
 														"type": "string"
@@ -12500,7 +13184,10 @@
 														"type": "string"
 													},
 													"timestampSeconds": {
-														"type": ["number", "null"]
+														"type": [
+															"number",
+															"null"
+														]
 													},
 													"updatedAt": {
 														"format": "date-time",
@@ -12569,7 +13256,9 @@
 					}
 				],
 				"summary": "List notes on a file",
-				"tags": ["Notes"]
+				"tags": [
+					"Notes"
+				]
 			},
 			"post": {
 				"description": "A timestamp marks the note as a comment on a moment in an audio or video file.",
@@ -12606,7 +13295,9 @@
 										]
 									}
 								},
-								"required": ["body"],
+								"required": [
+									"body"
+								],
 								"type": "object"
 							}
 						}
@@ -12623,7 +13314,10 @@
 											"additionalProperties": false,
 											"properties": {
 												"authorName": {
-													"type": ["string", "null"]
+													"type": [
+														"string",
+														"null"
+													]
 												},
 												"body": {
 													"type": "string"
@@ -12640,7 +13334,10 @@
 													"type": "string"
 												},
 												"timestampSeconds": {
-													"type": ["number", "null"]
+													"type": [
+														"number",
+														"null"
+													]
 												},
 												"updatedAt": {
 													"format": "date-time",
@@ -12717,7 +13414,9 @@
 					}
 				],
 				"summary": "Attach a note to a file",
-				"tags": ["Notes"]
+				"tags": [
+					"Notes"
+				]
 			}
 		},
 		"/api/v1/files/{fileId}/notes/{noteId}": {
@@ -12753,7 +13452,9 @@
 													"type": "boolean"
 												}
 											},
-											"required": ["deleted"],
+											"required": [
+												"deleted"
+											],
 											"type": "object"
 										}
 									},
@@ -12810,7 +13511,9 @@
 					}
 				],
 				"summary": "Delete your own note",
-				"tags": ["Notes"]
+				"tags": [
+					"Notes"
+				]
 			},
 			"patch": {
 				"parameters": [
@@ -12843,7 +13546,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["body"],
+								"required": [
+									"body"
+								],
 								"type": "object"
 							}
 						}
@@ -12860,7 +13565,10 @@
 											"additionalProperties": false,
 											"properties": {
 												"authorName": {
-													"type": ["string", "null"]
+													"type": [
+														"string",
+														"null"
+													]
 												},
 												"body": {
 													"type": "string"
@@ -12877,7 +13585,10 @@
 													"type": "string"
 												},
 												"timestampSeconds": {
-													"type": ["number", "null"]
+													"type": [
+														"number",
+														"null"
+													]
 												},
 												"updatedAt": {
 													"format": "date-time",
@@ -12964,7 +13675,9 @@
 					}
 				],
 				"summary": "Edit your own note",
-				"tags": ["Notes"]
+				"tags": [
+					"Notes"
+				]
 			}
 		},
 		"/api/v1/preferences": {
@@ -12991,15 +13704,24 @@
 													"type": "string"
 												},
 												"corners": {
-													"enum": ["boxy", "rounded"],
+													"enum": [
+														"boxy",
+														"rounded"
+													],
 													"type": "string"
 												},
 												"fontFamily": {
-													"enum": ["mono", "sans"],
+													"enum": [
+														"mono",
+														"sans"
+													],
 													"type": "string"
 												},
 												"layout": {
-													"enum": ["grid", "list"],
+													"enum": [
+														"grid",
+														"list"
+													],
 													"type": "string"
 												},
 												"onboarded": {
@@ -13008,7 +13730,11 @@
 												"sortColumn": {
 													"anyOf": [
 														{
-															"enum": ["name", "size", "updatedAt"],
+															"enum": [
+																"name",
+																"size",
+																"updatedAt"
+															],
 															"type": "string"
 														},
 														{
@@ -13017,7 +13743,10 @@
 													]
 												},
 												"sortDirection": {
-													"enum": ["asc", "desc"],
+													"enum": [
+														"asc",
+														"desc"
+													],
 													"type": "string"
 												}
 											},
@@ -13057,7 +13786,9 @@
 					}
 				],
 				"summary": "Get user preferences",
-				"tags": ["Preferences"]
+				"tags": [
+					"Preferences"
+				]
 			},
 			"put": {
 				"description": "Updates the current user's layout and sort preferences",
@@ -13079,15 +13810,24 @@
 										"type": "string"
 									},
 									"corners": {
-										"enum": ["boxy", "rounded"],
+										"enum": [
+											"boxy",
+											"rounded"
+										],
 										"type": "string"
 									},
 									"fontFamily": {
-										"enum": ["mono", "sans"],
+										"enum": [
+											"mono",
+											"sans"
+										],
 										"type": "string"
 									},
 									"layout": {
-										"enum": ["grid", "list"],
+										"enum": [
+											"grid",
+											"list"
+										],
 										"type": "string"
 									},
 									"onboarded": {
@@ -13096,7 +13836,11 @@
 									"sortColumn": {
 										"anyOf": [
 											{
-												"enum": ["name", "size", "updatedAt"],
+												"enum": [
+													"name",
+													"size",
+													"updatedAt"
+												],
 												"type": "string"
 											},
 											{
@@ -13105,7 +13849,10 @@
 										]
 									},
 									"sortDirection": {
-										"enum": ["asc", "desc"],
+										"enum": [
+											"asc",
+											"desc"
+										],
 										"type": "string"
 									}
 								},
@@ -13136,15 +13883,24 @@
 													"type": "string"
 												},
 												"corners": {
-													"enum": ["boxy", "rounded"],
+													"enum": [
+														"boxy",
+														"rounded"
+													],
 													"type": "string"
 												},
 												"fontFamily": {
-													"enum": ["mono", "sans"],
+													"enum": [
+														"mono",
+														"sans"
+													],
 													"type": "string"
 												},
 												"layout": {
-													"enum": ["grid", "list"],
+													"enum": [
+														"grid",
+														"list"
+													],
 													"type": "string"
 												},
 												"onboarded": {
@@ -13153,7 +13909,11 @@
 												"sortColumn": {
 													"anyOf": [
 														{
-															"enum": ["name", "size", "updatedAt"],
+															"enum": [
+																"name",
+																"size",
+																"updatedAt"
+															],
 															"type": "string"
 														},
 														{
@@ -13162,7 +13922,10 @@
 													]
 												},
 												"sortDirection": {
-													"enum": ["asc", "desc"],
+													"enum": [
+														"asc",
+														"desc"
+													],
 													"type": "string"
 												}
 											},
@@ -13212,7 +13975,9 @@
 					}
 				],
 				"summary": "Update user preferences",
-				"tags": ["Preferences"]
+				"tags": [
+					"Preferences"
+				]
 			}
 		},
 		"/api/v1/shares": {
@@ -13264,7 +14029,10 @@
 														"type": "string"
 													},
 													"resourceType": {
-														"enum": ["file", "folder"],
+														"enum": [
+															"file",
+															"folder"
+														],
 														"type": "string"
 													},
 													"token": {
@@ -13321,7 +14089,9 @@
 					}
 				],
 				"summary": "List share links",
-				"tags": ["Shares"]
+				"tags": [
+					"Shares"
+				]
 			},
 			"post": {
 				"description": "Creates a token-addressed link to a file or folder the caller owns",
@@ -13348,11 +14118,17 @@
 										"type": "string"
 									},
 									"resourceType": {
-										"enum": ["file", "folder"],
+										"enum": [
+											"file",
+											"folder"
+										],
 										"type": "string"
 									}
 								},
-								"required": ["resourceType", "resourceId"],
+								"required": [
+									"resourceType",
+									"resourceId"
+								],
 								"type": "object"
 							}
 						}
@@ -13404,7 +14180,10 @@
 													"type": "string"
 												},
 												"resourceType": {
-													"enum": ["file", "folder"],
+													"enum": [
+														"file",
+														"folder"
+													],
 													"type": "string"
 												},
 												"token": {
@@ -13479,7 +14258,9 @@
 					}
 				],
 				"summary": "Create a share link",
-				"tags": ["Shares"]
+				"tags": [
+					"Shares"
+				]
 			}
 		},
 		"/api/v1/shares/{id}": {
@@ -13508,7 +14289,9 @@
 													"type": "boolean"
 												}
 											},
-											"required": ["revoked"],
+											"required": [
+												"revoked"
+											],
 											"type": "object"
 										}
 									},
@@ -13555,7 +14338,9 @@
 					}
 				],
 				"summary": "Revoke a share link",
-				"tags": ["Shares"]
+				"tags": [
+					"Shares"
+				]
 			}
 		},
 		"/api/v1/sharings": {
@@ -13566,7 +14351,10 @@
 						"name": "resourceType",
 						"required": true,
 						"schema": {
-							"enum": ["file", "folder"],
+							"enum": [
+								"file",
+								"folder"
+							],
 							"type": "string"
 						}
 					},
@@ -13603,7 +14391,11 @@
 														]
 													},
 													"permission": {
-														"enum": ["read", "write", "admin"],
+														"enum": [
+															"read",
+															"write",
+															"admin"
+														],
 														"type": "string"
 													},
 													"sharedWithId": {
@@ -13622,13 +14414,21 @@
 																"type": "string"
 															},
 															"image": {
-																"type": ["string", "null"]
+																"type": [
+																	"string",
+																	"null"
+																]
 															},
 															"name": {
 																"type": "string"
 															}
 														},
-														"required": ["id", "name", "email", "image"],
+														"required": [
+															"id",
+															"name",
+															"email",
+															"image"
+														],
 														"type": "object"
 													}
 												},
@@ -13687,7 +14487,9 @@
 					}
 				],
 				"summary": "List who a resource is shared with",
-				"tags": ["Sharings"]
+				"tags": [
+					"Sharings"
+				]
 			},
 			"post": {
 				"description": "Grants named accounts access to a file or folder you own",
@@ -13699,7 +14501,11 @@
 								"properties": {
 									"permission": {
 										"default": "read",
-										"enum": ["read", "write", "admin"],
+										"enum": [
+											"read",
+											"write",
+											"admin"
+										],
 										"type": "string"
 									},
 									"resourceId": {
@@ -13707,7 +14513,10 @@
 										"type": "string"
 									},
 									"resourceType": {
-										"enum": ["file", "folder"],
+										"enum": [
+											"file",
+											"folder"
+										],
 										"type": "string"
 									},
 									"userIds": {
@@ -13744,7 +14553,9 @@
 													"type": "boolean"
 												}
 											},
-											"required": ["shared"],
+											"required": [
+												"shared"
+											],
 											"type": "object"
 										}
 									},
@@ -13801,7 +14612,9 @@
 					}
 				],
 				"summary": "Share a resource with users",
-				"tags": ["Sharings"]
+				"tags": [
+					"Sharings"
+				]
 			}
 		},
 		"/api/v1/sharings/{id}": {
@@ -13830,7 +14643,9 @@
 													"type": "boolean"
 												}
 											},
-											"required": ["revoked"],
+											"required": [
+												"revoked"
+											],
 											"type": "object"
 										}
 									},
@@ -13877,7 +14692,9 @@
 					}
 				],
 				"summary": "Revoke a user's access",
-				"tags": ["Sharings"]
+				"tags": [
+					"Sharings"
+				]
 			}
 		},
 		"/api/v1/storage/download": {
@@ -13898,7 +14715,9 @@
 										"type": "array"
 									}
 								},
-								"required": ["paths"],
+								"required": [
+									"paths"
+								],
 								"type": "object"
 							}
 						}
@@ -13958,7 +14777,9 @@
 					}
 				],
 				"summary": "Bulk download as ZIP",
-				"tags": ["Storage - Downloads"]
+				"tags": [
+					"Storage - Downloads"
+				]
 			}
 		},
 		"/api/v1/storage/download/folder/{folder}": {
@@ -14035,7 +14856,9 @@
 					}
 				],
 				"summary": "Download folder as ZIP",
-				"tags": ["Storage - Downloads"]
+				"tags": [
+					"Storage - Downloads"
+				]
 			}
 		},
 		"/api/v1/storage/file": {
@@ -14064,7 +14887,10 @@
 										"type": "number"
 									}
 								},
-								"required": ["name", "size"],
+								"required": [
+									"name",
+									"size"
+								],
 								"type": "object"
 							}
 						}
@@ -14249,7 +15075,10 @@
 													"type": "object"
 												}
 											},
-											"required": ["finalName", "metadata"],
+											"required": [
+												"finalName",
+												"metadata"
+											],
 											"type": "object"
 										}
 									},
@@ -14296,7 +15125,9 @@
 					}
 				],
 				"summary": "Create a file",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/batch": {
@@ -14329,13 +15160,18 @@
 													"type": "number"
 												}
 											},
-											"required": ["name", "size"],
+											"required": [
+												"name",
+												"size"
+											],
 											"type": "object"
 										},
 										"type": "array"
 									}
 								},
-								"required": ["files"],
+								"required": [
+									"files"
+								],
 								"type": "object"
 							}
 						}
@@ -14521,7 +15357,10 @@
 														"type": "object"
 													}
 												},
-												"required": ["finalName", "metadata"],
+												"required": [
+													"finalName",
+													"metadata"
+												],
 												"type": "object"
 											},
 											"type": "array"
@@ -14570,7 +15409,9 @@
 					}
 				],
 				"summary": "Create files in batch",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/category/{category}": {
@@ -14778,14 +15619,21 @@
 																"type": "number"
 															},
 															"type": {
-																"enum": ["file", "folder"],
+																"enum": [
+																	"file",
+																	"folder"
+																],
 																"type": "string"
 															},
 															"updatedAt": {
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"type": "object"
 													},
 													"type": "array"
@@ -14795,7 +15643,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"type": "object"
 										}
 									},
@@ -14842,7 +15694,9 @@
 					}
 				],
 				"summary": "List files by category",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/counts": {
@@ -14864,7 +15718,10 @@
 													"type": "number"
 												}
 											},
-											"required": ["trash", "starred"],
+											"required": [
+												"trash",
+												"starred"
+											],
 											"type": "object"
 										}
 									},
@@ -14901,7 +15758,9 @@
 					}
 				],
 				"summary": "Get trash and starred counts",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/search": {
@@ -15117,14 +15976,21 @@
 																"type": "number"
 															},
 															"type": {
-																"enum": ["file", "folder"],
+																"enum": [
+																	"file",
+																	"folder"
+																],
 																"type": "string"
 															},
 															"updatedAt": {
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"type": "object"
 													},
 													"type": "array"
@@ -15134,7 +16000,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"type": "object"
 										}
 									},
@@ -15181,7 +16051,9 @@
 					}
 				],
 				"summary": "Search files",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/starred": {
@@ -15379,14 +16251,21 @@
 																"type": "number"
 															},
 															"type": {
-																"enum": ["file", "folder"],
+																"enum": [
+																	"file",
+																	"folder"
+																],
 																"type": "string"
 															},
 															"updatedAt": {
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"type": "object"
 													},
 													"type": "array"
@@ -15396,7 +16275,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"type": "object"
 										}
 									},
@@ -15433,7 +16316,9 @@
 					}
 				],
 				"summary": "List starred files",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/trash": {
@@ -15631,14 +16516,21 @@
 																"type": "number"
 															},
 															"type": {
-																"enum": ["file", "folder"],
+																"enum": [
+																	"file",
+																	"folder"
+																],
 																"type": "string"
 															},
 															"updatedAt": {
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"type": "object"
 													},
 													"type": "array"
@@ -15648,7 +16540,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"type": "object"
 										}
 									},
@@ -15685,7 +16581,9 @@
 					}
 				],
 				"summary": "List trashed files",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/{id}": {
@@ -15714,7 +16612,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -15761,7 +16661,9 @@
 					}
 				],
 				"summary": "Delete a file",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			},
 			"get": {
 				"description": "Returns file metadata as JSON. Pass raw=true or thumbnail=true for binary content.",
@@ -15795,7 +16697,11 @@
 						"name": "size",
 						"required": false,
 						"schema": {
-							"enum": ["small", "medium", "large"],
+							"enum": [
+								"small",
+								"medium",
+								"large"
+							],
 							"type": "string"
 						}
 					}
@@ -15984,14 +16890,21 @@
 													"type": "number"
 												},
 												"type": {
-													"enum": ["file", "folder"],
+													"enum": [
+														"file",
+														"folder"
+													],
 													"type": "string"
 												},
 												"updatedAt": {
 													"type": "string"
 												}
 											},
-											"required": ["key", "metadata", "type"],
+											"required": [
+												"key",
+												"metadata",
+												"type"
+											],
 											"type": "object"
 										}
 									},
@@ -16038,7 +16951,9 @@
 					}
 				],
 				"summary": "Get file metadata or raw content",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			},
 			"put": {
 				"description": "Updates metadata fields on an existing file",
@@ -16207,7 +17122,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -16254,7 +17171,9 @@
 					}
 				],
 				"summary": "Update file metadata",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/{id}/duplicate": {
@@ -16454,14 +17373,21 @@
 													"type": "number"
 												},
 												"type": {
-													"enum": ["file", "folder"],
+													"enum": [
+														"file",
+														"folder"
+													],
 													"type": "string"
 												},
 												"updatedAt": {
 													"type": "string"
 												}
 											},
-											"required": ["key", "metadata", "type"],
+											"required": [
+												"key",
+												"metadata",
+												"type"
+											],
 											"type": "object"
 										}
 									},
@@ -16508,7 +17434,9 @@
 					}
 				],
 				"summary": "Duplicate a file",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/{id}/move": {
@@ -16534,7 +17462,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["destination"],
+								"required": [
+									"destination"
+								],
 								"type": "object"
 							}
 						}
@@ -16554,7 +17484,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -16601,7 +17533,9 @@
 					}
 				],
 				"summary": "Move a file",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/file/{id}/upload": {
@@ -16627,7 +17561,9 @@
 										"description": "The file to upload"
 									}
 								},
-								"required": ["file"],
+								"required": [
+									"file"
+								],
 								"type": "object"
 							}
 						}
@@ -16647,7 +17583,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -16694,7 +17632,9 @@
 					}
 				],
 				"summary": "Upload file content",
-				"tags": ["Storage - Files"]
+				"tags": [
+					"Storage - Files"
+				]
 			}
 		},
 		"/api/v1/storage/folder": {
@@ -16720,7 +17660,11 @@
 														"type": "string"
 													}
 												},
-												"required": ["id", "name", "path"],
+												"required": [
+													"id",
+													"name",
+													"path"
+												],
 												"type": "object"
 											},
 											"type": "array"
@@ -16759,7 +17703,9 @@
 					}
 				],
 				"summary": "List folders",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			},
 			"post": {
 				"description": "Creates a new folder under an optional parent",
@@ -16776,7 +17722,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["name"],
+								"required": [
+									"name"
+								],
 								"type": "object"
 							}
 						}
@@ -16802,7 +17750,11 @@
 													"type": "string"
 												}
 											},
-											"required": ["message", "id", "name"],
+											"required": [
+												"message",
+												"id",
+												"name"
+											],
 											"type": "object"
 										}
 									},
@@ -16849,7 +17801,9 @@
 					}
 				],
 				"summary": "Create a folder",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/sizes/{prefix}": {
@@ -16914,7 +17868,9 @@
 					}
 				],
 				"summary": "Get folder sizes by prefix",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/trash": {
@@ -16940,7 +17896,11 @@
 														"type": "string"
 													}
 												},
-												"required": ["id", "name", "path"],
+												"required": [
+													"id",
+													"name",
+													"path"
+												],
 												"type": "object"
 											},
 											"type": "array"
@@ -16979,7 +17939,9 @@
 					}
 				],
 				"summary": "List trashed folders",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/tree": {
@@ -17005,7 +17967,11 @@
 														"type": "string"
 													}
 												},
-												"required": ["id", "name", "path"],
+												"required": [
+													"id",
+													"name",
+													"path"
+												],
 												"type": "object"
 											},
 											"type": "array"
@@ -17044,7 +18010,9 @@
 					}
 				],
 				"summary": "Get folder tree",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/{path}": {
@@ -17092,7 +18060,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -17139,7 +18109,9 @@
 					}
 				],
 				"summary": "Delete a folder",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			},
 			"get": {
 				"description": "Returns a folder by ID",
@@ -17172,7 +18144,11 @@
 													"type": "string"
 												}
 											},
-											"required": ["id", "name", "path"],
+											"required": [
+												"id",
+												"name",
+												"path"
+											],
 											"type": "object"
 										}
 									},
@@ -17219,7 +18195,9 @@
 					}
 				],
 				"summary": "Get a folder",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			},
 			"put": {
 				"description": "Updates metadata on a folder (trash, star, tags, name)",
@@ -17277,7 +18255,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -17324,7 +18304,9 @@
 					}
 				],
 				"summary": "Update folder metadata",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/{path}/meta": {
@@ -17399,7 +18381,9 @@
 					}
 				],
 				"summary": "Get folder metadata",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/{path}/move": {
@@ -17428,7 +18412,9 @@
 										"type": "string"
 									}
 								},
-								"required": ["destination"],
+								"required": [
+									"destination"
+								],
 								"type": "object"
 							}
 						}
@@ -17448,7 +18434,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -17495,7 +18483,9 @@
 					}
 				],
 				"summary": "Move a folder",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/{path}/restore": {
@@ -17540,7 +18530,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -17587,7 +18579,9 @@
 					}
 				],
 				"summary": "Restore a trashed folder",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/{path}/size": {
@@ -17664,7 +18658,9 @@
 					}
 				],
 				"summary": "Get folder size",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/folder/{path}/trash": {
@@ -17709,7 +18705,9 @@
 													"type": "string"
 												}
 											},
-											"required": ["message"],
+											"required": [
+												"message"
+											],
 											"type": "object"
 										}
 									},
@@ -17756,7 +18754,9 @@
 					}
 				],
 				"summary": "Trash a folder",
-				"tags": ["Storage - Folders"]
+				"tags": [
+					"Storage - Folders"
+				]
 			}
 		},
 		"/api/v1/storage/list": {
@@ -17954,14 +18954,21 @@
 																"type": "number"
 															},
 															"type": {
-																"enum": ["file", "folder"],
+																"enum": [
+																	"file",
+																	"folder"
+																],
 																"type": "string"
 															},
 															"updatedAt": {
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"type": "object"
 													},
 													"type": "array"
@@ -17971,7 +18978,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"type": "object"
 										}
 									},
@@ -18008,7 +19019,9 @@
 					}
 				],
 				"summary": "List all files",
-				"tags": ["Storage"]
+				"tags": [
+					"Storage"
+				]
 			}
 		},
 		"/api/v1/storage/list/recent": {
@@ -18206,14 +19219,21 @@
 																"type": "number"
 															},
 															"type": {
-																"enum": ["file", "folder"],
+																"enum": [
+																	"file",
+																	"folder"
+																],
 																"type": "string"
 															},
 															"updatedAt": {
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"type": "object"
 													},
 													"type": "array"
@@ -18223,7 +19243,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"type": "object"
 										}
 									},
@@ -18260,7 +19284,9 @@
 					}
 				],
 				"summary": "List recent files",
-				"tags": ["Storage"]
+				"tags": [
+					"Storage"
+				]
 			}
 		},
 		"/api/v1/storage/list/{path}": {
@@ -18468,14 +19494,21 @@
 																"type": "number"
 															},
 															"type": {
-																"enum": ["file", "folder"],
+																"enum": [
+																	"file",
+																	"folder"
+																],
 																"type": "string"
 															},
 															"updatedAt": {
 																"type": "string"
 															}
 														},
-														"required": ["key", "metadata", "type"],
+														"required": [
+															"key",
+															"metadata",
+															"type"
+														],
 														"type": "object"
 													},
 													"type": "array"
@@ -18485,7 +19518,11 @@
 													"type": "number"
 												}
 											},
-											"required": ["list", "count", "total"],
+											"required": [
+												"list",
+												"count",
+												"total"
+											],
 											"type": "object"
 										}
 									},
@@ -18532,7 +19569,9 @@
 					}
 				],
 				"summary": "List files in folder",
-				"tags": ["Storage"]
+				"tags": [
+					"Storage"
+				]
 			}
 		},
 		"/api/v1/storage/move": {
@@ -18555,11 +19594,17 @@
 													"type": "string"
 												},
 												"type": {
-													"enum": ["file", "folder"],
+													"enum": [
+														"file",
+														"folder"
+													],
 													"type": "string"
 												}
 											},
-											"required": ["path", "type"],
+											"required": [
+												"path",
+												"type"
+											],
 											"type": "object"
 										},
 										"maxItems": 100,
@@ -18567,7 +19612,10 @@
 										"type": "array"
 									}
 								},
-								"required": ["items", "destination"],
+								"required": [
+									"items",
+									"destination"
+								],
 								"type": "object"
 							}
 						}
@@ -18603,7 +19651,10 @@
 																"type": "boolean"
 															}
 														},
-														"required": ["path", "success"],
+														"required": [
+															"path",
+															"success"
+														],
 														"type": "object"
 													},
 													"type": "array"
@@ -18664,7 +19715,9 @@
 					}
 				],
 				"summary": "Bulk move files and folders",
-				"tags": ["Storage - Bulk"]
+				"tags": [
+					"Storage - Bulk"
+				]
 			}
 		},
 		"/api/v1/users/search": {
@@ -18698,13 +19751,21 @@
 														"type": "string"
 													},
 													"image": {
-														"type": ["string", "null"]
+														"type": [
+															"string",
+															"null"
+														]
 													},
 													"name": {
 														"type": "string"
 													}
 												},
-												"required": ["id", "name", "email", "image"],
+												"required": [
+													"id",
+													"name",
+													"email",
+													"image"
+												],
 												"type": "object"
 											},
 											"type": "array"
@@ -18753,7 +19814,9 @@
 					}
 				],
 				"summary": "Search users to share with",
-				"tags": ["Sharings"]
+				"tags": [
+					"Sharings"
+				]
 			}
 		},
 		"/api/v1/version/check": {
@@ -18772,10 +19835,16 @@
 													"type": "string"
 												},
 												"latestVersion": {
-													"type": ["string", "null"]
+													"type": [
+														"string",
+														"null"
+													]
 												},
 												"releaseUrl": {
-													"type": ["string", "null"]
+													"type": [
+														"string",
+														"null"
+													]
 												},
 												"updateAvailable": {
 													"type": "boolean"
@@ -18823,7 +19892,9 @@
 					}
 				],
 				"summary": "Check for updates",
-				"tags": ["Version"]
+				"tags": [
+					"Version"
+				]
 			}
 		}
 	},

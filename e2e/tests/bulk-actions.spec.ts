@@ -31,6 +31,31 @@ async function seed(page: import("@playwright/test").Page, names: string[]) {
 	});
 }
 
+/**
+ * Tick the rows holding these exact names.
+ *
+ * By name, not index: the drive accumulates items across the suite and
+ * folders sort above files, so "the first two rows" is not stable — a test
+ * that asserts on specific items must pick those items.
+ */
+async function selectNamed(
+	page: import("@playwright/test").Page,
+	names: string[],
+) {
+	for (const name of names) {
+		await page
+			.getByRole("row")
+			.filter({ hasText: name })
+			.locator('[data-slot="checkbox"]')
+			.first()
+			.click();
+	}
+	await expect(page.getByText(`${names.length} selected`)).toBeVisible({
+		timeout: 10_000,
+	});
+	await page.waitForTimeout(600);
+}
+
 /** Tick `count` rows and wait for the bar to finish sliding in. */
 async function selectRows(
 	page: import("@playwright/test").Page,
@@ -96,7 +121,7 @@ test.describe("Bulk actions", () => {
 			});
 		}
 
-		await selectRows(page, 2);
+		await selectNamed(page, names);
 		await page.getByRole("button", { name: "Star", exact: true }).click();
 
 		// The starred view is the proof the change reached the server.
