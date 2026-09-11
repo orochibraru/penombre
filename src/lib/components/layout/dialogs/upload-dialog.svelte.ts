@@ -15,20 +15,28 @@ export type FileWithPath = File & { relativePath?: string };
 
 /**
  * Every nested folder path implied by the uploaded files.
- * Paths are relative to the dropped root folder, which is skipped: for
- * "MyFolder/a/b/file.txt" this yields "a" and "a/b".
+ *
+ * `keepRoot` decides what happens to the folder the user actually picked. With
+ * it, "MyFolder/a/b/file.txt" yields "MyFolder", "MyFolder/a" and
+ * "MyFolder/a/b"; without it the enclosing folder is dropped and its contents
+ * land in the folder being browsed, yielding "a" and "a/b".
  */
-function collectFolderPaths(folderFiles: FileWithPath[]): Set<string> {
+function collectFolderPaths(
+	folderFiles: FileWithPath[],
+	keepRoot: boolean,
+): Set<string> {
 	const folderPaths = new Set<string>();
+	const first = keepRoot ? 1 : 2;
+	const from = keepRoot ? 0 : 1;
 
 	for (const file of folderFiles) {
 		if (!file.relativePath) {
 			continue;
 		}
 		const parts = file.relativePath.split("/");
-		// Start at 2 to skip the root folder itself, and stop before the filename
-		for (let i = 2; i < parts.length; i++) {
-			folderPaths.add(parts.slice(1, i).join("/"));
+		// Stop before the filename.
+		for (let i = first; i < parts.length; i++) {
+			folderPaths.add(parts.slice(from, i).join("/"));
 		}
 	}
 
@@ -139,10 +147,11 @@ async function ensureFolder(
  */
 export async function createFoldersForUpload(
 	folderFilesSnapshot: FileWithPath[],
+	keepRoot: boolean,
 ): Promise<Map<string, string>> {
 	const folderPathToUuid = new Map<string, string>();
 	const pathsByDepth = groupPathsByDepth(
-		collectFolderPaths(folderFilesSnapshot),
+		collectFolderPaths(folderFilesSnapshot, keepRoot),
 	);
 	const existingFolders = await fetchExistingFolders();
 
@@ -200,6 +209,7 @@ export function groupFilesByFolder(
 	regularFiles: File[],
 	folderFiles: FileWithPath[],
 	folderPathToUuid: Map<string, string>,
+	keepRoot: boolean,
 ): Record<string, QueuedFile[]> {
 	const filesByFolder: Record<string, QueuedFile[]> = {};
 
@@ -220,9 +230,12 @@ export function groupFilesByFolder(
 	for (const file of folderFiles) {
 		const pathParts = (file.relativePath || file.name).split("/");
 		const fileName = pathParts[pathParts.length - 1] ?? file.name;
-		// Skip the root folder (index 0) and the filename (last item)
-		const displayFolderPath =
-			pathParts.length > 2 ? pathParts.slice(1, -1).join("/") : "";
+		// Always drop the filename; the root folder stays only when asked for.
+		const displayFolderPath = keepRoot
+			? pathParts.slice(0, -1).join("/")
+			: pathParts.length > 2
+				? pathParts.slice(1, -1).join("/")
+				: "";
 
 		push(resolveFolderUuidPath(displayFolderPath, folderPathToUuid), {
 			file,

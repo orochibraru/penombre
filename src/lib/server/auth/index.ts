@@ -161,7 +161,17 @@ export const auth = betterAuth({
 			path: "/openapi",
 			disableDefaultReference: true,
 		}),
-		passkey(),
+		passkey({
+			rpName: config.appName,
+			// `requireSession: false` does NOT mean anonymous registration:
+			// without a session the plugin still refuses (no `resolveUser` is
+			// configured), and the challenge is bound to the user who asked
+			// for it. What it drops is better-auth's *freshness* middleware,
+			// which 403s a session older than 24h — on a homelab drive people
+			// stay signed in for weeks, so enrolling a passkey was rejected
+			// for everyone but someone who had just signed in.
+			registration: { requireSession: false },
+		}),
 		admin(),
 		// Always loaded, never gated: an account must be able to enrol and to
 		// answer a challenge even when the admin has not made 2FA mandatory.

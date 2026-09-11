@@ -20,10 +20,27 @@ import { ownedFiles } from "./scope";
 
 const logger = new Logger("StorageService");
 
-/** Loudest sample in each of `buckets` slices, normalised to 0..1. */
-function bucketPeaks(samples: Int16Array, buckets: number): number[] {
+/**
+ * Anything quieter than this counts as silence and is left unscaled, so a
+ * near-empty file's noise floor is not amplified into a full-height block.
+ * -40 dBFS.
+ */
+const SILENCE_FLOOR = 0.01;
+
+/**
+ * Loudest sample in each of `buckets` slices, scaled so the loudest bucket in
+ * the file reaches 1.
+ *
+ * Scaled to the file rather than to full scale on purpose: the waveform is the
+ * player's progress bar, and a quietly-mastered track drew a two-pixel line
+ * you could neither read a position from nor click accurately. A relative
+ * shape is what a scrubber needs; absolute loudness is not information this
+ * control exists to carry.
+ */
+export function bucketPeaks(samples: Int16Array, buckets: number): number[] {
 	const perBucket = Math.max(1, Math.floor(samples.length / buckets));
 	const peaks: number[] = [];
+	let loudest = 0;
 
 	for (let b = 0; b < buckets; b++) {
 		const start = b * perBucket;
@@ -38,11 +55,16 @@ function bucketPeaks(samples: Int16Array, buckets: number): number[] {
 				peak = value;
 			}
 		}
-		// Three decimals is well below one pixel of a rendered bar.
-		peaks.push(Math.round((peak / 32_768) * 1000) / 1000);
+		const scaled = peak / 32_768;
+		if (scaled > loudest) {
+			loudest = scaled;
+		}
+		peaks.push(scaled);
 	}
 
-	return peaks;
+	const gain = loudest > SILENCE_FLOOR ? 1 / loudest : 1;
+	// Three decimals is well below one pixel of a rendered bar.
+	return peaks.map((peak) => Math.round(peak * gain * 1000) / 1000);
 }
 
 class ThumbnailSemaphore {
@@ -321,7 +343,7 @@ export class ThumbnailService {
 	}
 
 	/**
-	 * Amplitude peaks for an audio file, normalised to 0..1.
+	 * Amplitude peaks for an audio file, scaled to its own loudest moment.
 	 *
 	 * Peaks rather than a rendered image on purpose: `showwavespic` bakes a
 	 * colour into a bitmap, so a waveform generated under one accent stayed

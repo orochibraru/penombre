@@ -36,6 +36,20 @@ export const uploadStats: Writable<UploadStats> = writable({
 	eta: 0,
 });
 
+/**
+ * Uploads that were cut off or exhausted their retries, kept until the user
+ * retries or dismisses them. Populated from the persisted queue on load, so a
+ * transfer interrupted by closing the tab is still reported next time.
+ */
+export interface FailedUpload {
+	id: string;
+	displayName: string;
+	size: number;
+	error: string;
+}
+
+export const failedUploads: Writable<FailedUpload[]> = writable([]);
+
 // Pending files dropped from drag/drop zones - to be picked up by upload dialog
 export const pendingUploadFiles: Writable<File[]> = writable([]);
 
@@ -65,19 +79,13 @@ export const globalUploadProgress = derived(uploadingItems, ($items) => {
 
 /**
  * Closes all dialog stores. Call this on navigation to clean up.
+ *
+ * Deliberately leaves `preparingUpload` and `uploadStats` alone: a transfer
+ * runs in a worker and outlives any navigation, so zeroing its totals here
+ * only blanked the progress panel of an upload that was still going.
  */
 export function closeAllDialogs() {
 	uploadDialogOpen.set(false);
 	newFolderDialogOpen.set(false);
-	preparingUpload.set({ active: false, status: "" });
-	uploadStats.set({
-		totalFiles: 0,
-		completedFiles: 0,
-		totalBytes: 0,
-		uploadedBytes: 0,
-		startTime: 0,
-		speed: 0,
-		eta: 0,
-	});
 	itemAction.set({ open: false, item: undefined });
 }

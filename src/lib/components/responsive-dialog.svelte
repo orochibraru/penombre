@@ -24,6 +24,11 @@
 		onsubmit?: () => void;
 		/** Overrides the dismiss button's label (defaults to Cancel/Close). */
 		cancelLabel?: string;
+		/**
+		 * Overrides the body's height cap. The default keeps a form short
+		 * enough to see its buttons; a reading or threaded pane wants more.
+		 */
+		bodyClass?: string;
 		/** Form props - if provided, children are wrapped in a form */
 		form?: {
 			action?: HTMLFormAttributes["action"];
@@ -64,6 +69,7 @@
         submitDisabled = false,
         onsubmit,
         cancelLabel,
+        bodyClass,
         form,
         children,
         footer,
@@ -137,7 +143,10 @@
         >
             <fieldset disabled={loading} class="flex flex-col gap-4">
                 <div
-                    class="-mx-1 max-h-[40vh] overflow-y-auto px-1 md:max-h-[50vh]"
+                    class={cn(
+                        "-mx-1 max-h-[40vh] overflow-y-auto px-1 md:max-h-[50vh]",
+                        bodyClass,
+                    )}
                 >
                     {@render content()}
                 </div>
@@ -162,8 +171,11 @@
             }}
         >
             <div
-                    class="-mx-1 max-h-[40vh] overflow-y-auto px-1 md:max-h-[50vh]"
-                >
+                class={cn(
+                    "-mx-1 max-h-[40vh] overflow-y-auto px-1 md:max-h-[50vh]",
+                    bodyClass,
+                )}
+            >
                 {@render content()}
             </div>
             {@render footerButtons()}

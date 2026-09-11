@@ -86,8 +86,20 @@
 
 	async function registerPasskey() {
 		loading = true;
+		// No `useAutoRegister`: that asks for *conditional* creation, which is
+		// the silent upgrade-a-password flow. It never shows the platform's
+		// passkey prompt, so the button did nothing at all. A registration the
+		// user clicked for wants the normal, modal ceremony.
 		const { error } = await authClient.passkey.addPasskey({
-			useAutoRegister: true,
+			name: navigator.userAgent.includes("Macintosh")
+				? "Mac"
+				: navigator.userAgent.includes("Windows")
+					? "Windows"
+					: navigator.userAgent.includes("Android")
+						? "Android"
+						: navigator.userAgent.includes("iPhone")
+							? "iPhone"
+							: "Passkey",
 		});
 
 		loading = false;

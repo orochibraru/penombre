@@ -40,6 +40,16 @@ Penombre — or that arrive later over SMB, rsync, a torrent client, whatever �
 show up on their own. Files removed from disk drop out of the listing the same
 way.
 
+On a brand-new instance there is no account yet when the app boots, and the scan
+runs as the shared owner — so the first pass happens the moment you finish the
+setup screen, not on the next tick. The log says which happened:
+
+```text
+[LibraryScan] No account yet — the first scan waits for setup.
+[LibraryScan] First account created — scanning the library.
+[StorageScan] Scan: +12 folder(s), +438 file(s), ...
+```
+
 Hidden entries (`.DS_Store`, `.git/…`) and thumbnail caches are skipped. The
 scan never rewrites your files: it only reads names and sizes to build the
 index, so your folder layout on disk stays exactly as it is.

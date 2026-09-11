@@ -96,7 +96,11 @@
 		"x3d": "model/x3d+xml",
 		"dae": "model/vnd.collada+xml",
 		"blend": "application/x-blender",
-		"tgif": "application/x-tgif"
+		"tgif": "application/x-tgif",
+		"ts": "text/plain",
+		"mts": "text/plain",
+		"cts": "text/plain",
+		"cjs": "application/javascript"
 	},
 	"categories": {
 		"mp3": "MUSIC",
@@ -160,8 +164,8 @@
 		"mpg": "VIDEO",
 		"3gp": "VIDEO",
 		"ogv": "VIDEO",
-		"ts": "VIDEO",
-		"mts": "VIDEO",
+		"ts": "CODE",
+		"mts": "CODE",
 		"m2ts": "VIDEO",
 		"vob": "VIDEO",
 		"js": "CODE",
@@ -268,6 +272,9 @@
 		"x3d": "3D",
 		"dae": "3D",
 		"blend": "3D",
-		"tgif": "3D"
+		"tgif": "3D",
+		"cts": "CODE",
+		"mjs": "CODE",
+		"cjs": "CODE"
 	}
 }

@@ -9,6 +9,7 @@
 	} from "@lucide/svelte";
 	import { dev } from "$app/environment";
 	import type { Pathname } from "$app/types";
+	import Waveform from "$lib/components/file/waveform.svelte";
 	import BottomAction from "$lib/components/layout/bottom-action.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Popover from "$lib/components/ui/popover/index";
@@ -16,7 +17,12 @@
 	import { Slider } from "$lib/components/ui/slider/index";
 	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
-	import { playableMusic, playbackPosition } from "$lib/store/music";
+	import {
+		playableMusic,
+		playbackCommand,
+		playbackDuration,
+		playbackPosition,
+	} from "$lib/store/music";
 
 	function clearCurrent() {
 		$playableMusic = null;
@@ -34,6 +40,9 @@
 		playbackPosition.set(currentTime);
 	});
 	let duration = $state(0);
+	$effect(() => {
+		playbackDuration.set(duration);
+	});
 	let volume = $state(1);
 	let loading: boolean = $state(true);
 	let seeking: boolean = $state(false);
@@ -62,6 +71,50 @@
 			paused = true;
 		}
 	});
+
+	/**
+	 * The waveform is the progress bar. It only exists once the peak data has
+	 * loaded, so a plain bar stands in until then (and forever, for a file the
+	 * server could not analyse).
+	 */
+	let peaksFailed = $state(false);
+
+	$effect(() => {
+		// Reset per track, or one file without peaks poisons the next.
+		void $playableMusic?.source;
+		peaksFailed = false;
+	});
+
+	const peaksUrl = $derived(peaksFailed ? "" : ($playableMusic?.peaks ?? ""));
+
+	// Seek, pause and play requested from elsewhere — the notes panel drives
+	// the playhead while the audio element lives here.
+	$effect(() => {
+		const command = $playbackCommand;
+		if (!(command && player)) {
+			return;
+		}
+		if (command.type === "seek" && command.seconds !== undefined) {
+			currentTime = command.seconds;
+			return;
+		}
+		if (command.type === "pause") {
+			player.pause();
+			if ($playableMusic) {
+				$playableMusic.isPlaying = false;
+			}
+			return;
+		}
+		void player.play().catch(() => {
+			paused = true;
+		});
+	});
+
+	function seekToFraction(fraction: number) {
+		if (!Number.isNaN(duration)) {
+			currentTime = fraction * duration;
+		}
+	}
 
 	const formatTime = (time: number) => {
 		if (Number.isNaN(time)) {
@@ -164,18 +217,34 @@
                 {formatTime(currentTime)} / {formatTime(duration)}
             </p>
         </div>
-        <Progress
-            value={currentTime}
-            max={duration}
-            class="w-full cursor-pointer {seeking
-                ? '**:data-[slot=progress-indicator]:transition-none!'
-                : ''}"
-            onclick={seek}
-        />
+        {#if peaksUrl}
+            <Waveform
+                src={peaksUrl}
+                class="h-10 min-w-0 flex-1"
+                progress={duration > 0 ? currentTime / duration : 0}
+                onseek={seekToFraction}
+                seekLabel={m.seek()}
+                onfail={() => (peaksFailed = true)}
+            />
+        {:else}
+            <Progress
+                value={currentTime}
+                max={duration}
+                class="w-full cursor-pointer {seeking
+                    ? '**:data-[slot=progress-indicator]:transition-none!'
+                    : ''}"
+                onclick={seek}
+            />
+        {/if}
+        <!-- The viewer, not the raw file: a bare browser audio element has no
+             notes and no title. Falls back to the file when the track came
+             from somewhere with no id (a share link). -->
         <Button
             variant="outline"
             title={m.open_in_new_tab()}
-            href={$playableMusic?.source as Pathname}
+            href={($playableMusic?.fileId
+                ? `/view/${$playableMusic.fileId}`
+                : $playableMusic?.source) as Pathname}
             target="_blank"
         >
             <ExternalLinkIcon />

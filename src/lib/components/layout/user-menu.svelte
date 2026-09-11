@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { CircleUserIcon, CogIcon, LogOutIcon } from "@lucide/svelte";
+	import { CircleUserIcon, LogOutIcon } from "@lucide/svelte";
 	import { resolve } from "$app/paths";
-	import { page } from "$app/state";
 	import { type User } from "$lib/api";
 	import { handleSignOut } from "$lib/auth-helpers";
 	import * as Avatar from "$lib/components/ui/avatar/index";
@@ -87,16 +86,6 @@
                             </a>
                         {/snippet}
                     </DropdownMenu.Item>
-                    {#if page.data.isAdmin}
-                        <DropdownMenu.Item>
-                            {#snippet child({ props })}
-                                <a href={resolve("/admin")} {...props}>
-                                    <CogIcon />
-                                    <span>{m.admin()}</span>
-                                </a>
-                            {/snippet}
-                        </DropdownMenu.Item>
-                    {/if}
                 </DropdownMenu.Group>
                 <DropdownMenu.Item onclick={() => handleSignOut()}>
                     <LogOutIcon />

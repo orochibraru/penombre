@@ -11,13 +11,12 @@ with a bill of exactly zero.
 [Docker Hub](https://hub.docker.com/r/orochibraru/penombre) ·
 [Project page](https://orochibraru.com/penombre)
 
-<!-- Regenerate with `bun run screenshots`; do not edit these by hand. -->
+<!-- Regenerate with `bun run screenshots`; do not edit by hand. -->
 
-| Browse                                             | Appearance                                                  |
-| -------------------------------------------------- | ----------------------------------------------------------- |
-| ![The drive, in grid view](docs/images/browse.png) | ![Appearance settings](docs/images/settings-appearance.png) |
-| Admin dashboard                                    | Share links                                                 |
-| ![Instance statistics](docs/images/admin.png)      | ![Share links you own](docs/images/shared.png)              |
+[![Penombre, browsing a drive](docs/images/hero.png)](https://penombre.orochibraru.com/docs/showcase)
+
+**[See the full showcase →](https://penombre.orochibraru.com/docs/showcase)** —
+every screen, light and dark, generated from a real instance.
 
 ## What it is
 

@@ -1,0 +1,42 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 467 >>
+stream
+q 0.541 0.278 0.918 rg 0 542 595 300 re f Q
+q 0.384 0.659 0.949 rg 0 502 595 40 re f Q
+BT 1 1 1 rg /F1 46 Tf 56 700 Td (Quarterly report) Tj ET
+BT 1 1 1 rg /F2 18 Tf 56 660 Td (Storage, bandwidth and uptime) Tj ET
+q 0.8 0.8 0.85 RG 2 w 56 470 m 539 470 l S Q
+BT 0.15 0.15 0.2 rg /F2 14 Tf 56 440 Td (Files stored) Tj 0 -26 Td (Bytes served) Tj 0 -26 Td (Uptime) Tj ET
+BT 0.15 0.15 0.2 rg /F1 14 Tf 420 440 Td (128 402) Tj 0 -26 Td (3.1 TB) Tj 0 -26 Td (99.98 %) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000000769 00000 n 
+0000000844 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+914
+%%EOF

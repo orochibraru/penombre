@@ -26,14 +26,18 @@
 	});
 
 	async function passkeySignIn() {
-		if (!PublicKeyCredential.isConditionalMediationAvailable?.()) {
+		// `window.PublicKeyCredential` is the real support check. The old one
+		// awaited nothing — `isConditionalMediationAvailable()` returns a
+		// promise, which is always truthy, so it never caught anything.
+		if (typeof PublicKeyCredential === "undefined") {
 			toast.error(m.toast_passkey_not_supported());
 			return;
 		}
 		loading = true;
-		const { error } = await authClient.signIn.passkey({
-			autoFill: true,
-		});
+		// No `autoFill`: that is conditional mediation, which only surfaces
+		// through an `autocomplete="webauthn"` field and shows nothing when a
+		// button is clicked. This is the deliberate, modal ceremony.
+		const { error } = await authClient.signIn.passkey();
 
 		if (error) {
 			loading = false;
@@ -476,7 +480,7 @@
                 {loading}
                 onclick={handlePasskeySignIn}
             >
-                Sign in with a passkey
+                {m.sign_in_with_passkey()}
             </Button>
         </Field.Group>
     </Field.FieldSet>

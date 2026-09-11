@@ -20,6 +20,7 @@
 		onUpload,
 		onFileRejected,
 		onFolderUpload,
+		folderOnly = false,
 		accept,
 		class: className,
 		...rest
@@ -231,7 +232,7 @@
 <label
     ondragover={(e) => e.preventDefault()}
     ondrop={drop}
-    for={id}
+    for={folderOnly ? folderId : id}
     aria-disabled={!canUploadFiles}
     class={cn(
         "border-border hover:bg-accent/25 flex h-48 w-full place-items-center justify-center rounded-lg border-2 border-dashed md:p-6 transition-all hover:cursor-pointer aria-disabled:opacity-50 aria-disabled:hover:cursor-not-allowed",
@@ -245,11 +246,21 @@
             <div
                 class="border-border text-muted-foreground flex size-14 place-items-center justify-center rounded-full border border-dashed"
             >
-                <UploadIcon class="size-7" />
+                {#if folderOnly}
+                    <FolderUpIcon class="size-7" />
+                {:else}
+                    <UploadIcon class="size-7" />
+                {/if}
             </div>
             <div class="flex flex-col gap-0.5 text-center">
                 <span class="text-muted-foreground font-medium">
-                    {#if isDesktop.current}
+                    {#if folderOnly}
+                        {#if isDesktop.current}
+                            Drag 'n' drop a folder here, or click to select one
+                        {:else}
+                            Tap to select a folder
+                        {/if}
+                    {:else if isDesktop.current}
                         Drag 'n' drop files here, or click to select files
                     {:else}
                         Tap to select files
@@ -268,7 +279,7 @@
                         {/if}
                     </span>
                 {/if}
-                {#if onFolderUpload && isDesktop.current}
+                {#if onFolderUpload && !folderOnly && isDesktop.current}
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->

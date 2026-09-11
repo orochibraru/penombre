@@ -3,11 +3,16 @@
 Penombre can create and edit three kinds of document in the browser, from the
 **New** button in the sidebar.
 
-| Kind             | Saved as | Editor                                    |
-| ---------------- | -------- | ----------------------------------------- |
-| **Document**     | `.html`  | Rich text — headings, lists, bold, italic |
-| **Sheet**        | `.csv`   | A grid of cells                           |
-| **Presentation** | `.md`    | Slides, with a full-screen present mode   |
+| Kind             | Saved as | Colour | Editor                                    |
+| ---------------- | -------- | ------ | ----------------------------------------- |
+| **Document**     | `.html`  | Blue   | Rich text — headings, lists, bold, italic |
+| **Sheet**        | `.csv`   | Green  | A grid of cells                           |
+| **Presentation** | `.md`    | Orange | Slides, with a full-screen present mode   |
+
+The colour is the same everywhere the kind appears — the New menu, the file
+list, the grid tiles — so a folder of mixed documents can be read without
+squinting at extensions. It is the one place a fixed colour is used rather than
+your accent, because it identifies the kind, not the object.
 
 ## Why those formats
 
@@ -47,4 +52,6 @@ on the left of the editor jumps to any slide.
 
 ## Notes
 
-Any file can carry notes — see [Sharing and collaboration](sharing.md#notes).
+Any file can carry notes — see [Sharing and collaboration](sharing.md#notes)
+and, for notes pinned to a moment in a track or video,
+[Media and notes](media.md#notes-pinned-to-a-moment).

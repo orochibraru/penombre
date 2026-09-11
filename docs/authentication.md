@@ -260,17 +260,33 @@ delete them), then save again.
 ## Passkeys
 
 Passkeys (WebAuthn/FIDO2) allow passwordless authentication using biometrics or
-hardware security keys. They are always available — users can register passkeys
-from the settings page.
+hardware security keys. They are always available — register one from **Account
+→ Security**, and sign in with it from the **Sign in with a passkey** button.
 
 Passkeys work with:
 
 - Platform authenticators (Touch ID, Face ID, Windows Hello)
 - Roaming authenticators (YubiKey, security keys)
 
-> **Warning** — passkeys are bound to the origin domain. If you change your
-> `ORIGIN`, existing passkeys will stop working and users will need to register
-> new ones.
+> **Warning** — a passkey is bound to the hostname of your `ORIGIN`, which is
+> what WebAuthn calls the relying-party ID. Three consequences:
+>
+> - Changing `ORIGIN` to a different hostname invalidates every existing
+>   passkey; users have to register again.
+> - `ORIGIN` must be the hostname people actually browse. Registering at
+>   `http://localhost:5173` and then signing in at `http://192.168.1.10:3000`
+>   fails, because the browser will not offer a credential issued for another
+>   host.
+> - Except on `localhost`, WebAuthn requires HTTPS. Behind a reverse proxy,
+>   `ORIGIN` must be the public `https://` URL — see
+>   [Reverse proxy](reverse-proxy.md).
+
+Registration is not gated on how recently you signed in. Better Auth's default
+is to refuse a passkey enrolment on a session older than a day; on a drive
+people stay signed into for weeks that rejected essentially everyone, so
+Penombre turns that freshness check off for this one endpoint. The challenge is
+still bound to the session that asked for it, so nobody can enrol a passkey for
+somebody else's account.
 
 ## API keys
 

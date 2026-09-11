@@ -19,10 +19,18 @@ FROM builder AS app-builder
 
 # The running app reports `package.json`'s version, and a release image is
 # built before semantic-release bumps it — without this the image tagged
-# 1.8.28 reports 1.8.27.
+# 1.8.28 reports 1.8.27. The version is computed by the `version` job in
+# publish.yaml and passed in as a build arg before any build step runs.
+#
+# The read-back is not ceremony: the app inlines this value at build time, so a
+# patch that silently failed would ship an image that lies about itself, and
+# nothing downstream would notice until someone read the About screen.
 ARG APP_VERSION=""
 RUN if [ -n "$APP_VERSION" ]; then \
       bun -e 'const fs = require("fs"); const p = JSON.parse(fs.readFileSync("package.json", "utf8")); p.version = process.env.APP_VERSION; fs.writeFileSync("package.json", JSON.stringify(p, null, "\t") + "\n");' \
+      && baked="$(bun -e 'console.log(require("./package.json").version)')" \
+      && [ "$baked" = "$APP_VERSION" ] \
+      || { echo "APP_VERSION=$APP_VERSION was not applied to package.json (got $baked)" >&2; exit 1; } \
       && echo "Building version $APP_VERSION"; \
     fi
 

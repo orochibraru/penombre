@@ -14,11 +14,19 @@
 		class: className,
 		onfail,
 		onload,
+		progress,
+		onseek,
+		seekLabel,
 	}: {
 		src: string;
 		class?: string;
 		onfail?: () => void;
 		onload?: () => void;
+		/** Played fraction, 0–1. Fills the bars up to that point when given. */
+		progress?: number;
+		/** Turns the waveform into a scrubber; receives a 0–1 fraction. */
+		onseek?: (fraction: number) => void;
+		seekLabel?: string;
 	} = $props();
 
 	let peaks = $state<number[]>([]);
@@ -72,17 +80,30 @@
 	});
 
 	const viewWidth = $derived(Math.max(1, peaks.length * (1 + GAP)));
+
+	const clipWidth = $derived(
+		Math.max(0, Math.min(1, progress ?? 0)) * viewWidth,
+	);
+
+	/**
+	 * Unique per instance: two waveforms on one page sharing a clipPath id
+	 * means the second one's playhead drives the first.
+	 */
+	const clipId = `wave-${crypto.randomUUID()}`;
+
+	function fractionFrom(event: MouseEvent): number {
+		const { left, width } = (
+			event.currentTarget as HTMLElement
+		).getBoundingClientRect();
+		if (width <= 0) {
+			return 0;
+		}
+		return Math.max(0, Math.min(1, (event.clientX - left) / width));
+	}
 </script>
 
-{#if bars.length > 0}
-    <svg
-        data-slot="waveform"
-        class={cn("h-full w-full", className)}
-        viewBox="0 0 {viewWidth} {HEIGHT}"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        fill="currentColor"
-    >
+{#snippet waves(fill: string, clip?: string)}
+    <g fill={fill} clip-path={clip}>
         {#each bars as bar, index (index)}
             <rect
                 x={bar.x}
@@ -92,5 +113,45 @@
                 rx="0.4"
             />
         {/each}
+    </g>
+{/snippet}
+
+{#snippet svg()}
+    <svg
+        data-slot="waveform"
+        class={cn("h-full w-full", onseek ? undefined : className)}
+        viewBox="0 0 {viewWidth} {HEIGHT}"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        fill="currentColor"
+    >
+        {#if progress === undefined}
+            {@render waves("currentColor")}
+        {:else}
+            <defs>
+                <clipPath id={clipId}>
+                    <rect x="0" y="0" width={clipWidth} height={HEIGHT} />
+                </clipPath>
+            </defs>
+            <!-- Unplayed behind, played on top and clipped to the playhead:
+                 one pass of bars would need every rect duplicated per frame. -->
+            {@render waves("var(--muted-foreground)")}
+            {@render waves("var(--primary)", `url(#${clipId})`)}
+        {/if}
     </svg>
+{/snippet}
+
+{#if bars.length > 0}
+    {#if onseek}
+        <button
+            type="button"
+            class={cn("block w-full cursor-pointer", className)}
+            aria-label={seekLabel}
+            onclick={(event) => onseek(fractionFrom(event))}
+        >
+            {@render svg()}
+        </button>
+    {:else}
+        {@render svg()}
+    {/if}
 {/if}

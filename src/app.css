@@ -288,6 +288,18 @@ body::after {
 }
 
 /*
+ * The mobile sidebar is a Sheet floating over the page, not a panel sitting on
+ * the aurora — and `--sidebar` is `transparent`, so it rendered as a pane of
+ * glass with the file list legible straight through it. Give that one instance
+ * the same near-opaque treatment every other floating surface gets.
+ */
+[data-slot="sidebar"][data-mobile="true"] {
+	background-color: color-mix(in oklab, var(--surface-base) 96%, transparent);
+	backdrop-filter: blur(20px) saturate(160%);
+	-webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+/*
  * Frosted panels.
  *
  * Two tiers, because one blur value cannot serve both jobs:
@@ -304,6 +316,18 @@ body::after {
 [data-slot="card"] {
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
+}
+
+/*
+ * The sign-in card is the one card with nothing behind it but the aurora, and
+ * it holds the fields people have to read most carefully. The ambient 55%
+ * surface put a colour gradient straight through the inputs, so this one gets
+ * a near-opaque base.
+ */
+[data-slot="card"][data-auth-card] {
+	background-color: color-mix(in oklab, var(--surface-base) 97%, transparent);
+	backdrop-filter: blur(24px) saturate(150%);
+	-webkit-backdrop-filter: blur(24px) saturate(150%);
 }
 
 [data-slot="popover-content"],

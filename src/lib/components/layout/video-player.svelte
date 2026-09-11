@@ -19,11 +19,13 @@
 	interface Props {
 		src: string;
 		title: string;
+		/** Where the external-link button goes; defaults to the raw file. */
+		newTabHref?: string;
 		/** Exposed so a notes panel can stamp and seek to a moment. */
 		currentTime?: number;
 	}
 
-	let { src, title, currentTime = $bindable(0) }: Props = $props();
+	let { src, title, newTabHref, currentTime = $bindable(0) }: Props = $props();
 
 	// biome-ignore lint/suspicious/noUnassignedVariables: assigned by bind:this in the markup
 	let player: HTMLAudioElement;
@@ -149,7 +151,7 @@
         <Button
             variant="outline"
             title={m.open_in_new_tab()}
-            href={src as Pathname}
+            href={(newTabHref ?? src) as Pathname}
             target="_blank"
         >
             <ExternalLinkIcon />

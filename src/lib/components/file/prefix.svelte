@@ -21,9 +21,11 @@
 	import { page } from "$app/state";
 	import type { ObjectItem } from "$lib/api";
 	import DocumentIcon from "$lib/components/file/document-icon.svelte";
+	import DocumentKindIcon from "$lib/components/file/document-kind-icon.svelte";
 	import FilePreview from "$lib/components/file/preview.svelte";
 	import NowPlaying from "$lib/components/now-playing.svelte";
 	import { Badge } from "$lib/components/ui/badge/index";
+	import { kindForName } from "$lib/documents";
 	import { touchAction } from "$lib/file-actions";
 	import { FileCategoryEnum } from "$lib/file-helpers";
 	import { m } from "$lib/paraglide/messages.js";
@@ -275,8 +277,11 @@
                 {/if}
             </div>
         {:else if item.metadata.category}
+            {@const editable = kindForName(item.metadata.name ?? item.key)}
             <div class="flex h-full items-center justify-start">
-                {#if item.metadata.category === FileCategoryEnum.DOCUMENTS}
+                {#if editable}
+                    <DocumentKindIcon kind={editable} class={iconSize} />
+                {:else if item.metadata.category === FileCategoryEnum.DOCUMENTS}
                     {@const docType = getDocumentType(
                         item.metadata.contentType,
                     )}

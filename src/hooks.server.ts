@@ -3,7 +3,7 @@ import process from "node:process";
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
-import { asc, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
 import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
 import { building } from "$app/environment";
@@ -12,15 +12,13 @@ import { baseLocale, getLocale } from "$lib/paraglide/runtime";
 import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
 import { needsSetup, seedAuth } from "$lib/server/auth/seed";
-import {
-	getConfig,
-	getVolumes,
-	isAuthBypassed,
-	isSimpleMode,
-} from "$lib/server/config";
+import { getConfig, isAuthBypassed, isSimpleMode } from "$lib/server/config";
 import { getDb, resetDb } from "$lib/server/db";
 import { isSqliteDialect } from "$lib/server/db/dialect";
-import { user as userTable } from "$lib/server/db/schema";
+import {
+	loadSharedOwner,
+	startLibraryScanner,
+} from "$lib/server/services/library-scan";
 import { getUserPreferences } from "$lib/server/services/preferences";
 import {
 	migrateStorageMeta,
@@ -129,75 +127,6 @@ async function runMigrations() {
 	}
 }
 
-/** How often simple mode re-scans the mounted volume for outside changes. */
-const SCAN_INTERVAL_MS = 60_000;
-
-/** Survives Vite HMR, so a hot reload doesn't stack up duplicate timers. */
-const globalForScan = globalThis as unknown as {
-	__scan_timer?: ReturnType<typeof setInterval>;
-	__scan_running?: boolean;
-};
-
-/**
- * Simple mode browses a volume that's written to from outside the app, so the
- * DB only matches reality if we look. Skipped entirely in drive mode, where
- * every file arrives through an upload that already wrote its row.
- */
-async function scanLibrary(): Promise<void> {
-	// A scan of a big library can outlast the interval — let it finish.
-	if (globalForScan.__scan_running) {
-		return;
-	}
-	globalForScan.__scan_running = true;
-	try {
-		const owner = await loadSharedOwner();
-		if (!owner) {
-			return;
-		}
-		// Simple mode's shared drive.
-		if (isSimpleMode()) {
-			await new StorageService(owner).scanStorage();
-		}
-
-		const volumes = getVolumes();
-		if (volumes.length === 0) {
-			return;
-		}
-
-		// Mounted volumes are written from outside the app in both modes, so
-		// they need the same reconciliation the shared drive gets.
-		//
-		// Simple mode shares each volume whole, so the shared owner covers it.
-		// Full mode splits a volume per user, so every account has its own
-		// subdirectory to reconcile — sweeping only the shared owner left
-		// everyone else's stale until they happened to open the volume.
-		const owners = isSimpleMode() ? [owner] : await loadAllOwners();
-		for (const volume of volumes) {
-			for (const volumeOwner of owners) {
-				await new StorageService(volumeOwner, volume).scanStorage();
-			}
-		}
-	} catch (error) {
-		logger.error("Library scan failed", error);
-	} finally {
-		globalForScan.__scan_running = false;
-	}
-}
-
-function startLibraryScanner(): void {
-	// Either the shared drive or any mounted volume needs watching.
-	if (
-		(!isSimpleMode() && getVolumes().length === 0) ||
-		globalForScan.__scan_timer
-	) {
-		return;
-	}
-	void scanLibrary();
-	globalForScan.__scan_timer = setInterval(() => {
-		void scanLibrary();
-	}, SCAN_INTERVAL_MS);
-}
-
 export const init = async () => {
 	// First line in the log on every boot: which build this is and which of the
 	// two storage models it is running, so a bug report says so without asking.
@@ -217,54 +146,6 @@ export const init = async () => {
 
 /** Paths under the auth basePath that are handled by SvelteKit, not better-auth */
 const customAuthPaths = new Set(["/api/v1/auth/providers"]);
-
-let sharedOwnerPromise: Promise<User | undefined> | undefined;
-
-/**
- * Simple mode: every account's storage routes through one shared owner (the
- * first account ever created), so everyone reads/writes the same file tree
- * instead of each login getting its own siloed drive.
- *
- * ponytail: cached for process lifetime once found, and untested
- * (hooks.server.ts has no unit-test seam yet, would need mocking
- * svelte-kit/drizzle-migrator imports). Covered indirectly by e2e for now.
- */
-function loadSharedOwner(): Promise<User | undefined> {
-	sharedOwnerPromise ??= getDb()
-		.select()
-		.from(userTable)
-		.orderBy(asc(userTable.createdAt))
-		.limit(1)
-		.then((rows) => {
-			const owner = rows[0] as User | undefined;
-			// A miss must not be cached: a fresh instance has no account until
-			// setup runs, and the boot scan would otherwise pin `undefined`
-			// for the process's life and never scan again.
-			if (!owner) {
-				sharedOwnerPromise = undefined;
-			}
-			return owner;
-		});
-	return sharedOwnerPromise;
-}
-
-/**
- * Every account, for the per-user volume sweep.
- *
- * Re-read each pass rather than cached: a user created since boot has a
- * subdirectory on every volume that nothing else would reconcile.
- *
- * ponytail: a full table read per scan interval. Fine for a homelab; if an
- * instance ever grows enough accounts for this to show up, page it or move
- * the sweep to a queue keyed by volume.
- */
-function loadAllOwners(): Promise<User[]> {
-	return getDb()
-		.select()
-		.from(userTable)
-		.orderBy(asc(userTable.createdAt))
-		.then((rows) => rows as User[]);
-}
 
 /**
  * Auth bypass never signs anyone in, so there's no row in the session table —
