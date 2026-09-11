@@ -1,3 +1,20 @@
+## [1.8.30](https://github.com/orochibraru/penombre/compare/v1.8.29...v1.8.30) (2026-09-11)
+
+
+### Features
+
+* UI improvements ([#88](https://github.com/orochibraru/penombre/issues/88)) ([f96131b](https://github.com/orochibraru/penombre/commit/f96131b73ba40d458b2d75051b79625c9093890a))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.30
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.29](https://github.com/orochibraru/penombre/compare/v1.8.28...v1.8.29) (2026-09-11)
 
 ---
