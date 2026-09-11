@@ -7,7 +7,7 @@
 		Volume2Icon,
 		VolumeXIcon,
 	} from "@lucide/svelte";
-	import { dev } from "$app/environment";
+	import { untrack } from "svelte";
 	import type { Pathname } from "$app/types";
 	import Waveform from "$lib/components/file/waveform.svelte";
 	import BottomAction from "$lib/components/layout/bottom-action.svelte";
@@ -18,6 +18,7 @@
 	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
 	import {
+		type PlaybackCommand,
 		playableMusic,
 		playbackCommand,
 		playbackDuration,
@@ -31,7 +32,9 @@
 	// biome-ignore lint/suspicious/noUnassignedVariables: assigned by bind:this in the markup
 	let player: HTMLAudioElement;
 
-	let paused = $state(!!dev);
+	// Nothing is loaded yet; the binding takes over as soon as there is an
+	// element. Whether a new track starts is `autoplayPending` below, not this.
+	let paused = $state(true);
 	let currentTime = $state(0);
 
 	// Mirrored into a store so the notes panel can stamp a note with wherever
@@ -47,6 +50,17 @@
 	let loading: boolean = $state(true);
 	let seeking: boolean = $state(false);
 
+	/**
+	 * Whether the *next* `canplay` should start playback.
+	 *
+	 * Not reactive, and deliberately one-shot: seeking fires `canplay` again,
+	 * so an unconditional `play()` there resumed the track a moment after the
+	 * user paused it — which is what scrubbing from the notes panel does.
+	 * `isPlaying` on the track is the requested intent: opening a file asks
+	 * for playback, opening its notes does not.
+	 */
+	let autoplayPending = false;
+
 	$effect(() => {
 		const music = $playableMusic;
 
@@ -56,6 +70,7 @@
 			// This prevents unnecessary reloads if the effect is re-triggered.
 			if (player.src !== music.source) {
 				loading = true;
+				autoplayPending = music.isPlaying;
 				player.src = music.source;
 				// `load()` tells the audio element to fetch the new source.
 				player.load();
@@ -87,27 +102,48 @@
 
 	const peaksUrl = $derived(peaksFailed ? "" : ($playableMusic?.peaks ?? ""));
 
-	// Seek, pause and play requested from elsewhere — the notes panel drives
-	// the playhead while the audio element lives here.
+	/** Record playback state without reading the store back. */
+	function setPlaying(isPlaying: boolean) {
+		playableMusic.update((music) => (music ? { ...music, isPlaying } : music));
+	}
+
+	function apply(command: PlaybackCommand) {
+		if (!player) {
+			return;
+		}
+		if (command.seek !== undefined && Number.isFinite(command.seek)) {
+			currentTime = command.seek;
+		}
+		if (command.pause) {
+			player.pause();
+			setPlaying(false);
+		}
+		if (command.play) {
+			player
+				.play()
+				.then(() => setPlaying(true))
+				.catch(() => {
+					paused = true;
+				});
+		}
+	}
+
+	/**
+	 * Seek, pause and play requested from elsewhere — the notes panel drives
+	 * the playhead while the audio element lives here.
+	 *
+	 * Only the command is tracked, and the store is written through `update`
+	 * rather than `$playableMusic.x = y`. Both matter: the first version read
+	 * `$playableMusic` and then wrote it, so the effect retriggered itself —
+	 * `effect_update_depth_exceeded`, and a hung tab the moment anyone paused
+	 * from the notes panel.
+	 */
 	$effect(() => {
 		const command = $playbackCommand;
-		if (!(command && player)) {
+		if (!command) {
 			return;
 		}
-		if (command.type === "seek" && command.seconds !== undefined) {
-			currentTime = command.seconds;
-			return;
-		}
-		if (command.type === "pause") {
-			player.pause();
-			if ($playableMusic) {
-				$playableMusic.isPlaying = false;
-			}
-			return;
-		}
-		void player.play().catch(() => {
-			paused = true;
-		});
+		untrack(() => apply(command));
 	});
 
 	function seekToFraction(fraction: number) {
@@ -192,9 +228,7 @@
                 <Button
                     onclick={() => {
                         player?.play();
-                        if ($playableMusic) {
-                            $playableMusic.isPlaying = true;
-                        }
+                        setPlaying(true);
                     }}
                     title={m.play()}
                 >
@@ -204,9 +238,7 @@
                 <Button
                     onclick={() => {
                         player?.pause();
-                        if ($playableMusic) {
-                            $playableMusic.isPlaying = false;
-                        }
+                        setPlaying(false);
                     }}
                     title={m.pause()}
                 >
@@ -288,23 +320,18 @@
         }}
         oncanplay={() => {
             loading = false;
-            if (!dev) {
-                player
-                    .play()
-                    .then(() => {
-                        if ($playableMusic) {
-                            $playableMusic.isPlaying = true;
-                        }
-                    })
-                    .catch((error) => {
-                        console.error("Autoplay was prevented:", error);
-                        // If autoplay fails, update the UI to show the paused state.
-                        paused = true;
-                        if ($playableMusic) {
-                            $playableMusic.isPlaying = false;
-                        }
-                    });
+            if (!autoplayPending) {
+                return;
             }
+            autoplayPending = false;
+            player
+                .play()
+                .then(() => setPlaying(true))
+                .catch(() => {
+                    // Autoplay refused: show the paused state instead.
+                    paused = true;
+                    setPlaying(false);
+                });
         }}
         bind:this={player}
         bind:paused

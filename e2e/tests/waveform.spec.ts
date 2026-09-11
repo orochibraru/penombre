@@ -64,4 +64,73 @@ test.describe("Waveforms", () => {
 		await expect(waveform).toHaveAttribute("fill", "currentColor");
 		await expect(waveform.locator("rect").first()).toBeVisible();
 	});
+
+	/**
+	 * The scrubber in the notes panel drives the global player through a
+	 * store, and the player used to answer by reading that store and writing
+	 * it back inside the same effect — `effect_update_depth_exceeded`, and a
+	 * tab that hung the moment anyone clicked the waveform. Asserting on
+	 * `pageerror` is the point: everything below it still "worked" visually
+	 * while the page was busy-looping itself to death.
+	 */
+	test("scrubbing the notes waveform seeks, pauses and does not loop", async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+
+		await goToBrowse(page);
+		await openUploadDialog(page);
+		const upload = page.getByRole("dialog");
+		await upload
+			.locator("input[type=file]")
+			.first()
+			.setInputFiles(join(process.cwd(), "e2e", "fixtures", "test-audio.wav"));
+		await upload.getByRole("button", { name: /upload/i }).click();
+		const row = page.getByText("test-audio.wav").first();
+		await expect(row).toBeVisible({ timeout: 20_000 });
+
+		// Loads it into the global player, which is where the playhead lives.
+		await row.click();
+		await expect(page.locator('[data-slot="waveform"]').first()).toBeVisible({
+			timeout: 20_000,
+		});
+
+		await row.click({ button: "right" });
+		await page.getByRole("menuitem", { name: /notes/i }).click();
+
+		const notes = page.getByRole("dialog");
+		const scrubber = notes.locator('button[aria-label="Seek"]').first();
+		await expect(scrubber).toBeVisible({ timeout: 15_000 });
+
+		const box = await scrubber.boundingBox();
+		expect(box).not.toBeNull();
+		await page.mouse.click(
+			(box?.x ?? 0) + (box?.width ?? 0) * 0.6,
+			(box?.y ?? 0) + (box?.height ?? 0) / 2,
+		);
+
+		// Clicking a moment means "I want to say something about here": the
+		// playhead moves, playback stops, and the caret lands in the box.
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						() =>
+							(document.getElementById("music-player") as HTMLAudioElement)
+								?.currentTime ?? 0,
+					),
+				{ timeout: 10_000 },
+			)
+			.toBeGreaterThan(0);
+		expect(
+			await page.evaluate(
+				() =>
+					(document.getElementById("music-player") as HTMLAudioElement)?.paused,
+			),
+		).toBe(true);
+		await expect(notes.getByRole("textbox")).toBeFocused();
+
+		expect(errors).toEqual([]);
+	});
 });

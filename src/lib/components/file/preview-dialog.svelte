@@ -155,11 +155,13 @@
                                     : 0}
                                 seekLabel={m.seek()}
                                 onseek={(fraction) => {
-                                    commandPlayback(
-                                        "seek",
-                                        fraction * $playbackDuration,
-                                    );
-                                    commandPlayback("pause");
+                                    // One command, not two: a second call in
+                                    // the same tick replaces the first before
+                                    // the player ever sees it.
+                                    commandPlayback({
+                                        seek: fraction * $playbackDuration,
+                                        pause: true,
+                                    });
                                     focusNotes?.();
                                 }}
                             />
@@ -175,7 +177,7 @@
                         onSeek={fileToView.type === "video"
                             ? (seconds) => (viewerTime = seconds)
                             : playingThis
-                              ? (seconds) => commandPlayback("seek", seconds)
+                              ? (seconds) => commandPlayback({ seek: seconds })
                               : undefined}
                         {currentUserId}
                         bind:focus={focusNotes}

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
 	PARENT_KEY,
+	randomId,
 	resolveDropDestination,
 	resolveParentPath,
 } from "$lib/utils";
@@ -33,5 +34,44 @@ describe("resolveDropDestination", () => {
 			"photos/2024/summer",
 		);
 		expect(resolveDropDestination("photos/", undefined)).toBe("photos");
+	});
+});
+
+describe("randomId", () => {
+	test("is unique across calls", () => {
+		const ids = new Set(Array.from({ length: 200 }, () => randomId()));
+		expect(ids.size).toBe(200);
+	});
+
+	test("works without crypto.randomUUID (an insecure context)", () => {
+		// Plain HTTP at a LAN address: the property is simply absent, and
+		// reaching for it used to throw and take the waveform down with it.
+		// Defined on the instance rather than deleted — it lives on
+		// `Crypto.prototype`, so deleting the own property changes nothing.
+		Object.defineProperty(globalThis.crypto, "randomUUID", {
+			value: undefined,
+			configurable: true,
+		});
+		try {
+			expect(randomId()).toMatch(/^[0-9a-f]{32}$/);
+		} finally {
+			// biome-ignore lint/performance/noDelete: uncovers the prototype's own implementation again
+			delete (globalThis.crypto as { randomUUID?: unknown }).randomUUID;
+		}
+	});
+
+	test("still works with no crypto at all", () => {
+		const original = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+		Object.defineProperty(globalThis, "crypto", {
+			value: undefined,
+			configurable: true,
+		});
+		try {
+			expect(randomId().length).toBeGreaterThan(8);
+		} finally {
+			if (original) {
+				Object.defineProperty(globalThis, "crypto", original);
+			}
+		}
 	});
 });

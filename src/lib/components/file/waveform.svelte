@@ -88,8 +88,14 @@
 	/**
 	 * Unique per instance: two waveforms on one page sharing a clipPath id
 	 * means the second one's playhead drives the first.
+	 *
+	 * `$props.id()`, not `crypto.randomUUID()`: that one is secure-context
+	 * only, so on a self-hosted instance reached over plain HTTP at a LAN
+	 * address it is `undefined` and this component threw on init — no
+	 * waveform anywhere in the app.
 	 */
-	const clipId = `wave-${crypto.randomUUID()}`;
+	const uid = $props.id();
+	const clipId = `wave-${uid}`;
 
 	function fractionFrom(event: MouseEvent): number {
 		const { left, width } = (

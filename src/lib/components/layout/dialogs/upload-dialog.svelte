@@ -25,7 +25,7 @@
 	} from "$lib/store/upload";
 	import { enqueueUploads } from "$lib/upload/manager";
 	import type { UploadJob } from "$lib/upload/queue";
-	import { cn } from "$lib/utils";
+	import { cn, randomId } from "$lib/utils";
 	import {
 		createFoldersForUpload,
 		createUploadMetadata,
@@ -235,7 +235,7 @@
 			);
 
 			jobs = metadata.map(({ result, displayName }) => ({
-				id: crypto.randomUUID(),
+				id: randomId(),
 				fileId: result.data.metadata.id,
 				finalName: result.data.finalName,
 				rowKey: rowKeyFor(result.data.finalName),

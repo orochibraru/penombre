@@ -403,6 +403,32 @@ needs to seek or pause it (the notes panel) goes through `commandPlayback()` in
 `$lib/store/music`. Commands carry an incrementing `id` so two identical seeks
 in a row both fire.
 
+### Never write a store you read inside an effect
+
+`music-player.svelte`'s command effect read `$playableMusic` and then set
+`$playableMusic.isPlaying = false`. A `writable` holding an object notifies on
+every `set` (`safe_not_equal` never considers two objects equal), so the effect
+retriggered itself: `effect_update_depth_exceeded`, and the tab hung the moment
+anyone scrubbed from the notes panel. The shape that is safe is the one there
+now — track only the command, `untrack()` the rest, and write through
+`store.update()` rather than `$store.field = x`.
+
+The same file's _event handlers_ mutate freely; that is fine, they are not
+effects. `setPlaying()` exists so the unsafe spelling is nowhere in the file to
+be copied back into one.
+
+Commands are also one object, not one action per call: two `commandPlayback()`
+calls in a tick collapse to the last write before the effect runs, so "seek then
+pause" as two commands silently dropped the seek.
+
+### `crypto.randomUUID` needs a secure context
+
+It is `undefined` over plain HTTP at anything but `localhost` — which is how a
+self-hosted instance is reached before TLS. Calling it threw at component init
+and no waveform rendered anywhere. Use `$props.id()` for a DOM id (and note it
+must be the direct initializer of a `const`, not interpolated inline), and
+`randomId()` from `$lib/utils` for anything else.
+
 ### The media viewer is outside `(app)`
 
 `/view/[fileId]` is what "open in new tab" opens for an image, video or track —
