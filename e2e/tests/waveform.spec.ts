@@ -133,4 +133,60 @@ test.describe("Waveforms", () => {
 
 		expect(errors).toEqual([]);
 	});
+
+	/**
+	 * The other half of that rule: with no thread on screen a click on the
+	 * waveform is only a seek. It used to pause the track and throw the notes
+	 * panel over the player, so skipping forward was impossible.
+	 */
+	test("in the viewer, seeking with notes closed does not pause or open them", async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+
+		await goToBrowse(page);
+		await openUploadDialog(page);
+		const upload = page.getByRole("dialog");
+		await upload
+			.locator("input[type=file]")
+			.first()
+			.setInputFiles(join(process.cwd(), "e2e", "fixtures", "test-audio.wav"));
+		await upload.getByRole("button", { name: /upload/i }).click();
+		const row = page.getByText("test-audio.wav").first();
+		await expect(row).toBeVisible({ timeout: 20_000 });
+
+		// Same tab: the action is a `goto`, not a `window.open`.
+		await row.click({ button: "right" });
+		await page.getByRole("menuitem", { name: /full screen/i }).click();
+		await expect(page).toHaveURL(/\/view\//, { timeout: 15_000 });
+
+		await page.getByRole("button", { name: /^play$/i }).click();
+		const playing = () =>
+			page.evaluate(() => !document.querySelector("audio")?.paused);
+		await expect.poll(playing, { timeout: 15_000 }).toBe(true);
+
+		const scrubber = page.locator('button[aria-label="Seek"]').first();
+		await expect(scrubber).toBeVisible({ timeout: 15_000 });
+		const box = await scrubber.boundingBox();
+		expect(box).not.toBeNull();
+		await page.mouse.click(
+			(box?.x ?? 0) + (box?.width ?? 0) * 0.6,
+			(box?.y ?? 0) + (box?.height ?? 0) / 2,
+		);
+
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						() => document.querySelector("audio")?.currentTime ?? 0,
+					),
+				{ timeout: 10_000 },
+			)
+			.toBeGreaterThan(0);
+		expect(await playing()).toBe(true);
+		await expect(page.getByRole("textbox")).toHaveCount(0);
+
+		expect(errors).toEqual([]);
+	});
 });

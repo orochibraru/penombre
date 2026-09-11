@@ -2,8 +2,8 @@ import {
 	ArchiveRestoreIcon,
 	CopyIcon,
 	DownloadIcon,
-	ExternalLinkIcon,
 	FolderInputIcon,
+	MaximizeIcon,
 	MessageSquareTextIcon,
 	PencilLineIcon,
 	ShareIcon,
@@ -33,7 +33,11 @@ import type {
 } from "$lib/utils";
 import { peaksUrl } from "./file-links";
 
-export { handleOpenItemInNewTab, newTabUrl, peaksUrl } from "./file-links";
+export {
+	fullscreenUrl,
+	handleOpenItemFullscreen,
+	peaksUrl,
+} from "./file-links";
 
 // ================================
 // Types
@@ -47,6 +51,8 @@ export type FileToView = {
 	type: "image" | "code" | "pdf" | "video" | "notes";
 	content?: string;
 	language?: SupportedLanguage;
+	/** Seconds to open at, when the viewer handed playback back. */
+	startAt?: number;
 } | null;
 
 export interface WrapperState {
@@ -266,7 +272,7 @@ export function createTrashActions(handlers: {
 
 export function createMainActions(handlers: {
 	onDownload: (item: ObjectItem) => void;
-	onOpenInNewTab: (item: ObjectItem) => void;
+	onOpenFullscreen: (item: ObjectItem) => void;
 	onRename: (item: ObjectItem) => void;
 	onMove: (item: ObjectItem) => void;
 	onDuplicate: (item: ObjectItem) => void;
@@ -285,9 +291,9 @@ export function createMainActions(handlers: {
 					// Works for both files and folders (folders download as zip)
 				},
 				{
-					title: "Open in new tab",
-					icon: ExternalLinkIcon,
-					action: handlers.onOpenInNewTab,
+					title: "Open full screen",
+					icon: MaximizeIcon,
+					action: handlers.onOpenFullscreen,
 					fileOnly: true,
 				},
 				{

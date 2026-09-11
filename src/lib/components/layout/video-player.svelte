@@ -1,6 +1,8 @@
 <script lang="ts">
 	import {
-		ExternalLinkIcon,
+		ExpandIcon,
+		MaximizeIcon,
+		MinimizeIcon,
 		PauseIcon,
 		PlayIcon,
 		Volume1Icon,
@@ -9,31 +11,60 @@
 	} from "@lucide/svelte";
 	import { dev } from "$app/environment";
 	import type { Pathname } from "$app/types";
+	import { withResume } from "$lib/components/file/file-links";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Popover from "$lib/components/ui/popover/index";
 	import { Progress } from "$lib/components/ui/progress/index";
 	import { Slider } from "$lib/components/ui/slider/index";
 	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
+	import { toggleFullscreen } from "$lib/utils";
 
 	interface Props {
 		src: string;
 		title: string;
-		/** Where the external-link button goes; defaults to the raw file. */
-		newTabHref?: string;
+		/** Where the full-screen button goes; defaults to the raw file. */
+		fullscreenHref?: string;
 		/** Exposed so a notes panel can stamp and seek to a moment. */
 		currentTime?: number;
+		/** Where to open, when playback is coming back from the viewer. */
+		startAt?: number;
 	}
 
-	let { src, title, newTabHref, currentTime = $bindable(0) }: Props = $props();
+	let {
+		src,
+		title,
+		fullscreenHref,
+		startAt,
+		currentTime = $bindable(0),
+	}: Props = $props();
+
+	/** `loadedmetadata` is the first point a seek sticks, and only once. */
+	let resumed = false;
+	function resume() {
+		if (resumed || !startAt) {
+			return;
+		}
+		resumed = true;
+		currentTime = startAt;
+	}
 
 	// biome-ignore lint/suspicious/noUnassignedVariables: assigned by bind:this in the markup
-	let player: HTMLAudioElement;
+	let player: HTMLVideoElement;
+	let shell = $state<HTMLDivElement | null>(null);
+	let isFullscreen = $state(false);
 
 	let paused = $state(!!dev);
 	let duration = $state(0);
 	let volume = $state(1);
 	let loading: boolean = $state(true);
+
+	/** Only the viewer understands a playhead; the raw file is just bytes. */
+	const viewerHref = $derived(
+		fullscreenHref
+			? withResume(fullscreenHref, { at: currentTime, playing: !paused })
+			: src,
+	);
 
 	$effect(() => {
 		// Make sure the player element has been created before we try to use it.
@@ -88,12 +119,17 @@
 	}
 </script>
 
-<div class="flex flex-col w-full h-full">
+<svelte:document
+    onfullscreenchange={() => (isFullscreen = !!document.fullscreenElement)}
+/>
+
+<div bind:this={shell} class="flex flex-col w-full h-full bg-background">
     <video
         id="music-player"
         class="w-full rounded-xl mb-2"
         {title}
         playsinline
+        onloadedmetadata={resume}
         oncanplay={() => {
             loading = false;
             if (!dev) {
@@ -150,11 +186,21 @@
         />
         <Button
             variant="outline"
-            title={m.open_in_new_tab()}
-            href={(newTabHref ?? src) as Pathname}
-            target="_blank"
+            title={isFullscreen ? m.exit_fullscreen() : m.fullscreen()}
+            onclick={() => toggleFullscreen(shell, player)}
         >
-            <ExternalLinkIcon />
+            {#if isFullscreen}
+                <MinimizeIcon />
+            {:else}
+                <ExpandIcon />
+            {/if}
+        </Button>
+        <Button
+            variant="outline"
+            title={m.open_fullscreen()}
+            href={viewerHref as Pathname}
+        >
+            <MaximizeIcon />
         </Button>
         <Popover.Root>
             <Popover.Trigger title={m.change_volume()}>

@@ -403,6 +403,12 @@ needs to seek or pause it (the notes panel) goes through `commandPlayback()` in
 `$lib/store/music`. Commands carry an incrementing `id` so two identical seeks
 in a row both fire.
 
+A click on it is a **seek and nothing else** unless the notes thread is already
+open. Pausing and taking the caret is the note-taking gesture; firing it unasked
+meant a click meant to skip forward stopped the track and threw a panel over it.
+The preview dialog follows the same rule — the thread is opt-in there, and only
+right-click → **Notes** opens the dialog with it showing.
+
 ### Never write a store you read inside an effect
 
 `music-player.svelte`'s command effect read `$playableMusic` and then set
@@ -431,11 +437,43 @@ must be the direct initializer of a `const`, not interpolated inline), and
 
 ### The media viewer is outside `(app)`
 
-`/view/[fileId]` is what "open in new tab" opens for an image, video or track —
-`newTabUrl()` in `components/file/file-links.ts` decides. It is a top-level
-route on purpose: the sidebar, header and bottom bar are exactly what a
-full-screen viewer must not have. Everything else still opens the raw file,
+`/view/[fileId]` is where "Open full screen" lands for an image, video or track
+— `fullscreenUrl()` in `components/file/file-links.ts` decides. It is a
+top-level route on purpose: the sidebar, header and bottom bar are exactly what
+a full-screen viewer must not have. Everything else still opens the raw file,
 which the browser handles better than we would.
+
+Nothing opens in a new tab any more: `handleOpenItemFullscreen()` is a `goto()`,
+so the back button returns to the folder.
+
+The playhead crosses with it, in both directions and by two different means.
+Going in, `withResume()` puts `?t=&playing=1` on the link and the viewer applies
+them on `loadedmetadata` — the URL rather than a store, so a reload or a pasted
+link resumes too. Coming back, `beforeNavigate` in the viewer writes `startAt`
+onto `playableMusic`, which the player applies on its next `canplay` and clears.
+Both are needed: the two players are different elements in different layouts,
+and each starts a fresh load at zero.
+
+The viewer's **Minimize** is the reverse trip, and it goes somewhere different
+per kind. A track is written whole — source, peaks, `startAt`, play state — into
+`playableMusic`, because the file may never have been in the bottom player at
+all (the viewer opens straight from the context menu). A video has no small
+player of its own: the preview dialog is it, and only `wrapper.svelte` owns one,
+so the viewer leaves a `pendingPreview` request (`preview-handover.ts`) and the
+browse page picks it up on its next render.
+
+**`playableMusic.source` must be absolute.** The player compares it against
+`player.src`, which the DOM always resolves, so a relative source never matches
+— and since every write to the store re-runs that effect, the track reloaded on
+each one: audible stutter, playback dropping, a flickering play button. The
+player resolves the source now, and writers use `rawUrl()`/`getObjectUrl()`,
+which already do.
+
+Browser full screen is separate and additional — `toggleFullscreen()` in
+`$lib/utils`, given the element wrapping the video _and its controls_, or the
+custom controls vanish with it. iOS Safari implements none of the API outside
+`<video>` and only under `webkitEnterFullscreen`, which is why the helper takes
+the video as a second argument.
 
 ### Mobile has no sidebar
 
@@ -446,6 +484,22 @@ uses, with the create/upload actions on top. Adding a nav entry therefore
 reaches both automatically — _except_ that `hideOnMobile` is a desktop-sidebar
 hint only (those rows are duplicated in the bottom bar); the drawer shows
 everything.
+
+The bar is Home, Recent (full mode only), Account, Menu — Menu last, not a
+raised circle in the middle, and Settings reached through the drawer rather than
+duplicated in the bar. Simple mode drops so many entries that a floating centre
+button sat between only two links. Upload progress shows on the Menu item, the
+one thing in the bar that is not a link.
+
+It is opaque, not frosted: the bar sits over a grid of thumbnails, and blurring
+whatever happened to be beneath it read as a smear rather than a surface. It
+also hides on scroll down and returns on scroll up, from `<svelte:window>` —
+nothing between the header and the bar scrolls, so `window.scrollY` is the
+page's position. The 8px threshold is not cosmetic: momentum scrolling reverses
+by a pixel constantly and the bar flickered on every reversal.
+
+The header carries the logo below `md`. The sidebar is what brands the app, and
+it is not rendered on a phone.
 
 Admin lives in the `help` nav group, not the profile dropdown, because that
 dropdown is desktop-only and the admin panel was otherwise unreachable from a

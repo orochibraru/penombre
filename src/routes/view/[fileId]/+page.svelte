@@ -2,7 +2,10 @@
 	import {
 		ArrowLeftIcon,
 		DownloadIcon,
+		ExpandIcon,
 		MessageSquareTextIcon,
+		Minimize2Icon,
+		MinimizeIcon,
 		PauseIcon,
 		PlayIcon,
 		Volume1Icon,
@@ -10,16 +13,20 @@
 		VolumeXIcon,
 		XIcon,
 	} from "@lucide/svelte";
+	import { beforeNavigate, goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 	import type { Pathname } from "$app/types";
 	import NotesPanel from "$lib/components/file/notes-panel.svelte";
+	import { pendingPreview } from "$lib/components/file/preview-handover";
 	import Waveform from "$lib/components/file/waveform.svelte";
 	import { Button } from "$lib/components/ui/button/index";
 	import { Progress } from "$lib/components/ui/progress/index";
 	import { Slider } from "$lib/components/ui/slider/index";
 	import { m } from "$lib/paraglide/messages.js";
+	import { playableMusic } from "$lib/store/music";
 	import { title } from "$lib/store/title";
-	import { cn, readableFileSize } from "$lib/utils";
+	import { cn, readableFileSize, toggleFullscreen } from "$lib/utils";
 
 	let { data } = $props();
 
@@ -40,8 +47,8 @@
 	});
 
 	/**
-	 * Opened in a new tab there is nothing to go back to, so the control
-	 * becomes a link to the drive instead of a dead button.
+	 * Reached directly (a pasted link, a new tab) there is nothing to go back
+	 * to, so the control becomes a link to the drive rather than a dead button.
 	 */
 	let canGoBack = $state(false);
 	$effect(() => {
@@ -49,6 +56,33 @@
 	});
 
 	let player = $state<HTMLMediaElement | null>(null);
+	let stage = $state<HTMLElement | null>(null);
+	let isFullscreen = $state(false);
+
+	/**
+	 * Where the track was when the link was followed. The viewer is its own
+	 * route, so its media element is a new one that would otherwise restart
+	 * the file from zero.
+	 */
+	const startAt = Number(page.url.searchParams.get("t") ?? "");
+	const startPlaying = page.url.searchParams.get("playing") === "1";
+	let resumed = false;
+
+	/** Once per load: `loadedmetadata` is the first point a seek sticks. */
+	function resume() {
+		if (resumed) {
+			return;
+		}
+		resumed = true;
+		if (Number.isFinite(startAt) && startAt > 0) {
+			currentTime = startAt;
+		}
+		if (startPlaying) {
+			// Autoplay can still be refused — the page has no user activation
+			// of its own. The playhead is preserved either way.
+			void player?.play().catch(() => undefined);
+		}
+	}
 	let paused = $state(true);
 	let currentTime = $state(0);
 	let duration = $state(0);
@@ -57,6 +91,46 @@
 	let notesOpen = $state(false);
 	/** Set by the notes panel so clicking the waveform can hand it the caret. */
 	let focusNotes = $state<(() => void) | undefined>();
+
+	/**
+	 * Back to the small player without stopping: the viewer owns the only
+	 * media element on this route, so leaving has to hand the file, the
+	 * playhead and the play state over rather than simply navigating.
+	 *
+	 * A track goes to the bottom player; a video goes back to the preview
+	 * dialog, which belongs to the file browser and is picked up there.
+	 */
+	async function minimize() {
+		if (isVideo) {
+			pendingPreview.set({ fileId: data.fileId, at: currentTime });
+		} else {
+			playableMusic.set({
+				title: data.name,
+				// Absolute, like every other writer of this store: the player
+				// compares it against `player.src`, which always is.
+				source: new URL(src, location.href).href,
+				peaks: peaksFailed ? undefined : peaks,
+				isPlaying: !paused,
+				fileId: data.fileId,
+				startAt: currentTime,
+			});
+		}
+		if (canGoBack) {
+			history.back();
+			return;
+		}
+		await goto(resolve("/browse") as Pathname);
+	}
+
+	// The global player is a different element in a different layout, so it
+	// restarts the track unless it is told where this one got to.
+	beforeNavigate(() => {
+		playableMusic.update((music) =>
+			music && music.fileId === data.fileId
+				? { ...music, startAt: currentTime, isPlaying: !paused }
+				: music,
+		);
+	});
 
 	function formatTime(time: number): string {
 		if (!Number.isFinite(time)) {
@@ -83,17 +157,18 @@
 	}
 
 	/**
-	 * Scrubbing the waveform also stops the track and puts the caret in the
-	 * note box: the reason to click a moment is almost always to say something
-	 * about it.
+	 * A click on the waveform is a seek and nothing more. Only once the notes
+	 * panel is already open does it also stop the track and take the caret —
+	 * there the reason to click a moment is to say something about it.
 	 */
 	function scrub(fraction: number) {
 		if (Number.isFinite(duration)) {
 			currentTime = fraction * duration;
 		}
-		player?.pause();
-		notesOpen = true;
-		focusNotes?.();
+		if (notesOpen) {
+			player?.pause();
+			focusNotes?.();
+		}
 	}
 
 	function seekFromBar(event: MouseEvent) {
@@ -105,6 +180,10 @@
 		}
 	}
 </script>
+
+<svelte:document
+    onfullscreenchange={() => (isFullscreen = !!document.fullscreenElement)}
+/>
 
 <div class="bg-background flex h-svh w-full flex-col overflow-hidden">
     <header class="flex shrink-0 items-center gap-2 border-b px-3 py-2">
@@ -136,6 +215,16 @@
         <Button variant="outline" size="icon" title={m.download()} href={src as Pathname} download={data.name}>
             <DownloadIcon />
         </Button>
+        {#if isAudio || isVideo}
+            <Button
+                variant="outline"
+                size="icon"
+                title={m.minimize()}
+                onclick={minimize}
+            >
+                <Minimize2Icon />
+            </Button>
+        {/if}
         <Button
             variant={notesOpen ? "default" : "outline"}
             size="icon"
@@ -148,8 +237,9 @@
 
     <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
         <main
+            bind:this={stage}
             class={cn(
-                "flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-4 p-4",
+                "bg-background flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-4 p-4",
                 // The notes panel takes the screen on a phone rather than
                 // squeezing the media into a strip.
                 notesOpen && "hidden lg:flex",
@@ -171,6 +261,7 @@
                     bind:volume
                     {src}
                     playsinline
+                    onloadedmetadata={resume}
                     class="max-h-[calc(100%-4rem)] w-full rounded-lg bg-black object-contain"
                 ></video>
             {:else if isAudio}
@@ -182,6 +273,7 @@
                         bind:duration
                         bind:volume
                         {src}
+                        onloadedmetadata={resume}
                         class="sr-only"
                     ></audio>
                     {#if !peaksFailed}
@@ -223,6 +315,24 @@
                         </div>
                     {:else}
                         <div class="flex-1"></div>
+                    {/if}
+                    {#if isVideo}
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            title={isFullscreen ? m.exit_fullscreen() : m.fullscreen()}
+                            onclick={() =>
+                                toggleFullscreen(
+                                    stage,
+                                    player as HTMLVideoElement | null,
+                                )}
+                        >
+                            {#if isFullscreen}
+                                <MinimizeIcon />
+                            {:else}
+                                <ExpandIcon />
+                            {/if}
+                        </Button>
                     {/if}
                     <div class="flex w-32 items-center gap-2">
                         {#if volume === 0}

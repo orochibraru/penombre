@@ -8,6 +8,13 @@ export type PlayableMusic = {
 	isPlaying: boolean;
 	/** The item this track came from, so a note can be attached to it. */
 	fileId?: string;
+	/**
+	 * Seconds the next load should start at. Set when playback moves between
+	 * the global player and the full-screen viewer, which are separate
+	 * elements in separate layouts — without it the return trip restarts the
+	 * track. Cleared by the player once applied.
+	 */
+	startAt?: number;
 } | null;
 
 export const playableMusic: Writable<PlayableMusic> = writable(null);

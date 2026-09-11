@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ExternalLinkIcon } from "@lucide/svelte";
+	import { MaximizeIcon, MessageSquareTextIcon } from "@lucide/svelte";
+	import { untrack } from "svelte";
 	import type { Pathname } from "$app/types";
 	import NotesPanel from "$lib/components/file/notes-panel.svelte";
 	import Waveform from "$lib/components/file/waveform.svelte";
@@ -16,7 +17,7 @@
 		playbackPosition,
 	} from "$lib/store/music";
 	import { cn, readableFileSize } from "$lib/utils";
-	import { newTabUrl } from "./file-links";
+	import { fullscreenUrl } from "./file-links";
 	import type { FileToView } from "./wrapper.svelte.js";
 
 	/**
@@ -33,6 +34,25 @@
 		fileToView: FileToView;
 		currentUserId?: string;
 	} = $props();
+
+	/**
+	 * The thread is opt-in: it only starts open when the dialog was opened
+	 * from the "Notes" action, which is the `notes` type.
+	 */
+	let notesOpen = $state(false);
+	let shownKey = $state("");
+	const notesOnly = $derived(fileToView?.type === "notes");
+	const viewKey = $derived(
+		fileToView ? `${fileToView.item.key}:${fileToView.type}` : "",
+	);
+	$effect(() => {
+		// Only on a change of file, or reopening the thread would be undone by
+		// the effect the moment anything else here re-ran.
+		if (viewKey !== untrack(() => shownKey)) {
+			shownKey = viewKey;
+			notesOpen = untrack(() => notesOnly);
+		}
+	});
 
 	/** Playhead of the in-dialog video, shared with the notes panel. */
 	let viewerTime: number = $state(0);
@@ -65,17 +85,27 @@
                     {fileToView.language}
                 </Badge>
             {/if}
-            <div class="pr-5">
+            <div class="flex items-center gap-2 pr-5">
+                {#if fileToView.item.metadata.id && !notesOnly}
+                    <Button
+                        type="button"
+                        variant={notesOpen ? "default" : "outline"}
+                        size="sm"
+                        title={m.notes_title()}
+                        onclick={() => (notesOpen = !notesOpen)}
+                    >
+                        <MessageSquareTextIcon />
+                        {m.notes_title()}
+                    </Button>
+                {/if}
                 <Button
                     type="button"
-                    class="w-full lg:w-auto"
                     variant="outline"
                     size="sm"
-                    href={newTabUrl(fileToView.item) as Pathname}
-                    target="_blank"
+                    href={fullscreenUrl(fileToView.item) as Pathname}
                 >
-                    {m.open_in_new_tab()}
-                    <ExternalLinkIcon />
+                    {m.open_fullscreen()}
+                    <MaximizeIcon />
                 </Button>
             </div>
         </div>
@@ -101,7 +131,8 @@
                 {:else if fileToView.type === "video"}
                     <VideoPlayer
                         src={fileToView.src}
-                        newTabHref={newTabUrl(fileToView.item)}
+                        fullscreenHref={fullscreenUrl(fileToView.item)}
+                        startAt={fileToView.startAt}
                         title={fileToView.item.metadata.name ??
                             fileToView.item.key}
                         bind:currentTime={viewerTime}
@@ -123,13 +154,13 @@
                 {/if}
             </div>
 
-            {#if fileToView.item.metadata.id}
+            {#if fileToView.item.metadata.id && (notesOnly || notesOpen)}
                 {@const playingThis =
                     $playableMusic?.fileId === fileToView.item.metadata.id}
                 <aside
                     class={cn(
                         "flex max-h-[62vh] min-h-80 w-full min-w-0 flex-col gap-3",
-                        fileToView.type === "notes"
+                        notesOnly
                             ? "flex-1"
                             : "lg:w-80 lg:shrink-0 lg:border-s lg:ps-4",
                     )}

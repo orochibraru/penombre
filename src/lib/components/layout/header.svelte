@@ -3,6 +3,7 @@
 	import type { User } from "better-auth";
 	import { MediaQuery } from "svelte/reactivity";
 	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import UserMenu from "$lib/components/layout/user-menu.svelte";
 	import * as Breadcrumb from "$lib/components/ui/breadcrumb/index";
@@ -26,8 +27,16 @@
 >
     <div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <!-- Desktop only: on a phone the whole navigation lives in the
-             bottom-bar drawer, and the sidebar's Sheet is not rendered. -->
+             bottom-bar drawer, and the sidebar's Sheet is not rendered. Which
+             also leaves nothing branding the app there, hence the logo. -->
         <Sidebar.Trigger class="-ml-1 hidden md:flex" />
+        <a href={resolve("/")} class="-ml-1 me-1 flex items-center md:hidden">
+            <img
+                src="/logo.svg"
+                alt={`${page.data.config.appName} logo`}
+                class="text-primary size-6"
+            />
+        </a>
         <Separator
             orientation="vertical"
             class="mx-2 hidden data-[orientation=vertical]:h-4 md:block"

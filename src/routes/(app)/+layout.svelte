@@ -288,6 +288,23 @@
 		].filter((group) => group.items.length > 0),
 	);
 
+	/**
+	 * The bottom bar gets out of the way going down and comes back going up.
+	 * A threshold rather than any movement: momentum scrolling reverses by a
+	 * pixel or two constantly, and the bar flickered on every one of them.
+	 */
+	let bottomBarHidden = $state(false);
+	let lastScrollY = 0;
+
+	function onWindowScroll() {
+		const y = window.scrollY;
+		if (Math.abs(y - lastScrollY) < 8) {
+			return;
+		}
+		bottomBarHidden = y > lastScrollY && y > 80;
+		lastScrollY = y;
+	}
+
 	const bottomNavItemClass = "flex flex-col gap-1 items-center text-xs";
 	const bottomNavItemIconClass = "w-5.5 h-5.5";
 
@@ -309,6 +326,8 @@
 		!noUploadPages.some((p) => page.url.pathname.startsWith(p)),
 	);
 </script>
+
+<svelte:window onscroll={onWindowScroll} />
 
 <svelte:head>
     <title>{data.config.appName} - {$title ?? m.home()}</title>
@@ -418,7 +437,10 @@
         </div>
         <MusicPlayer />
         <div
-            class="bg-background/20 fixed bottom-0 left-0 w-full rounded-t-4xl border-t px-8 py-2 backdrop-blur-xl md:hidden"
+            class={cn(
+                "bg-background fixed bottom-0 left-0 w-full rounded-t-4xl border-t px-8 py-2 transition-transform duration-300 md:hidden",
+                bottomBarHidden && "translate-y-full",
+            )}
         >
             <div class="flex items-center justify-between gap-5">
                 <a
@@ -444,33 +466,6 @@
                     </a>
                 {/if}
 
-                <!-- One drawer for everything: the sidebar has no mobile
-                     counterpart any more, so this is the only way to reach the
-                     nav, and splitting it from "New" left half the app
-                     unreachable from a phone. -->
-                <button
-                    onclick={() => (mobileMenuDrawerOpen = true)}
-                    title={m.menu()}
-                    class={cn(
-                        bottomNavItemClass,
-                        "bg-primary text-white p-3 rounded-full -mt-8 shadow-lg border-transparent border-2 w-12 h-12 flex items-center justify-center relative overflow-hidden",
-                    )}
-                >
-                    {#if $globalUploadProgress.isUploading}
-                        <div
-                            class="absolute inset-0 bg-white/20 transition-all"
-                            style="height: {$globalUploadProgress.progress}%; bottom: 0; top: auto;"
-                        ></div>
-                        <span class="relative z-10 text-xs font-bold">
-                            {$globalUploadProgress.progress}%
-                        </span>
-                    {:else if uploadLoading}
-                        <Spinner class="text-white" />
-                    {:else}
-                        <MenuIcon class="w-6! h-6!" />
-                    {/if}
-                </button>
-
                 {#if !authBypassed}
                     <a
                         href={resolve("/account")}
@@ -484,16 +479,28 @@
                     </a>
                 {/if}
 
-                <a
-                    href={resolve("/settings")}
-                    class={cn(
-                        bottomNavItemClass,
-                        isActive("/settings") ? "text-primary" : "",
-                    )}
+                <!-- One drawer for everything, and the last item rather than a
+                     floating button: simple mode leaves so few entries that a
+                     raised circle between two of them read as an accident.
+                     Settings lives in it, not in this bar. -->
+                <button
+                    onclick={() => (mobileMenuDrawerOpen = true)}
+                    title={m.menu()}
+                    class={bottomNavItemClass}
                 >
-                    <SettingsIcon class={bottomNavItemIconClass} />
-                    {m.nav_settings()}
-                </a>
+                    {#if $globalUploadProgress.isUploading}
+                        <span
+                            class="text-primary {bottomNavItemIconClass} flex items-center justify-center text-[0.65rem] font-bold"
+                        >
+                            {$globalUploadProgress.progress}%
+                        </span>
+                    {:else if uploadLoading}
+                        <Spinner class={bottomNavItemIconClass} />
+                    {:else}
+                        <MenuIcon class={bottomNavItemIconClass} />
+                    {/if}
+                    {m.menu()}
+                </button>
             </div>
         </div>
     </Sidebar.Inset>
@@ -621,10 +628,5 @@
                 </div>
             {/each}
         </div>
-        <Drawer.Footer>
-            <Drawer.Close class={buttonVariants({ variant: "outline" })}>
-                {m.close()}
-            </Drawer.Close>
-        </Drawer.Footer>
     </Drawer.Content>
 </Drawer.Root>
