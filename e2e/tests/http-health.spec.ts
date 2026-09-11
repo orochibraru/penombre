@@ -10,13 +10,7 @@ import {
 
 test.use({ storageState: AUTH_STORAGE_STATE });
 
-/**
- * No request the app makes of itself should be answered 405.
- *
- * A dialog that posts to a page with no form actions gets "Method Not
- * Allowed" and silently does nothing — the symptom is a button that appears
- * dead, which no assertion about the UI would catch. Watching the wire does.
- */
+/** A dialog posting to a page with no form actions 405s and looks dead. */
 interface BadResponse {
 	status: number;
 	method: string;

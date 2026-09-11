@@ -3,6 +3,7 @@ preload = ["./test.setup.ts"]
 coverage = true
 coveragePathIgnorePatterns = [
     "**/test.setup.ts",
+    "**/paraglide/**",
     "**/test.setup.ts",
     "**/*.spec.ts",
     "**/test-utils.ts",

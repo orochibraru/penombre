@@ -5,14 +5,7 @@ import { AUTH_STORAGE_STATE, goToBrowse, openUploadDialog } from "../helpers";
 
 test.use({ storageState: AUTH_STORAGE_STATE });
 
-/**
- * The bulk action bar.
- *
- * Every one of these was broken at some point while nothing failed: two
- * actions were `() => []` stubs, and the bar itself sat under the upload
- * progress panel where its buttons could not be clicked. Assertions are on
- * the *effect* of each action, never on the button existing.
- */
+/** Asserts on each action's effect, never on the button existing. */
 
 /** Upload fixtures and return the names that landed. */
 async function seed(page: import("@playwright/test").Page, names: string[]) {

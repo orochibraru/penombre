@@ -5,14 +5,7 @@ import { AUTH_STORAGE_STATE, goToBrowse, openUploadDialog } from "../helpers";
 
 test.use({ storageState: AUTH_STORAGE_STATE });
 
-/**
- * Waveforms are peak data, not a picture.
- *
- * The old implementation baked an orange bitmap at generation time, so a
- * waveform never followed a later accent change. This watches the request the
- * tile actually makes, rather than guessing at an endpoint, and then checks
- * the tile draws themeable SVG from it.
- */
+/** Peaks, not a bitmap — a baked-in colour never follows the accent. */
 test.describe("Waveforms", () => {
 	test("a waveform tile fetches peaks and draws them as SVG", async ({
 		page,

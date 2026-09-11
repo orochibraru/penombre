@@ -157,7 +157,7 @@
                     >
                         {index + 1}
                     </span>
-                    <span class="line-clamp-3 text-xs break-words">
+                    <span class="line-clamp-3 text-xs wrap-break-word">
                         {slide.replace(/[#*`]/g, "").trim() || m.deck_empty()}
                     </span>
                 </button>

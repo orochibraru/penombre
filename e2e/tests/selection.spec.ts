@@ -7,13 +7,7 @@ test.use({ storageState: AUTH_STORAGE_STATE });
 const bulkBar = (page: import("@playwright/test").Page) =>
 	page.getByText(/\d+ selected/);
 
-/**
- * Fail on any uncaught exception.
- *
- * A selection handler can update the list and *then* throw, which leaves the
- * UI looking correct while half the handler never ran — exactly what an
- * assertion on the bulk bar alone would miss.
- */
+/** A handler can update the UI and then throw; catch that. */
 function watchForErrors(page: import("@playwright/test").Page): string[] {
 	const errors: string[] = [];
 	page.on("pageerror", (error) => errors.push(error.message));

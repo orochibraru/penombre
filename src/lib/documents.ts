@@ -1,13 +1,6 @@
 import { api } from "$lib/api";
 
-/**
- * The document types Penombre can create and edit in the browser.
- *
- * Every one stores a **portable format** rather than a private one: an HTML
- * document, a CSV sheet, a Markdown deck. Somebody who stops using Penombre
- * keeps files that other software already opens, and the drive stays a folder
- * of ordinary files rather than a database with an export button.
- */
+/** Editable document types. Each stores a portable format, not a private one. */
 export type DocumentKind = "document" | "sheet" | "presentation";
 
 interface KindSpec {
@@ -17,7 +10,7 @@ interface KindSpec {
 	initial: (title: string) => string;
 }
 
-/** Slides are separated the way every Markdown deck tool separates them. */
+/** The separator every Markdown deck tool uses. */
 export const SLIDE_SEPARATOR = "\n\n---\n\n";
 
 export const DOCUMENT_KINDS: Record<DocumentKind, KindSpec> = {
@@ -63,13 +56,7 @@ export function kindForName(name: string): DocumentKind | null {
 	}
 }
 
-/**
- * Create an empty document and return its file id.
- *
- * Two calls on purpose: the API models a file as metadata first and bytes
- * second, and reusing that path means a document behaves like any uploaded
- * file everywhere else — trash, sharing, search, thumbnails.
- */
+/** Create an empty document, returning its file id. */
 export async function createDocument(
 	kind: DocumentKind,
 	title: string,
@@ -120,12 +107,7 @@ export async function saveDocument(
 // CSV
 // =========================================================================
 
-/**
- * Read one field starting at `start`.
- *
- * Returns the value and the index just past it, so the caller only has to
- * decide what the delimiter it stopped on means.
- */
+/** Read one field; returns its value and the index just past it. */
 function readField(text: string, start: number): [string, number] {
 	if (text[start] !== '"') {
 		let end = start;
@@ -135,7 +117,6 @@ function readField(text: string, start: number): [string, number] {
 		return [text.slice(start, end), end];
 	}
 
-	// Quoted: commas and newlines are literal, and "" is an escaped quote.
 	let value = "";
 	let i = start + 1;
 	while (i < text.length) {
@@ -153,12 +134,7 @@ function readField(text: string, start: number): [string, number] {
 	return [value, i];
 }
 
-/**
- * Parse CSV into a grid.
- *
- * Deliberately small but correct on the things that actually break naive
- * splitting: quoted fields containing commas, newlines and escaped quotes.
- */
+/** Parse CSV, handling quoted commas, newlines and escaped quotes. */
 export function parseCsv(text: string): string[][] {
 	const rows: string[][] = [];
 	let row: string[] = [];
@@ -182,7 +158,6 @@ export function parseCsv(text: string): string[][] {
 		break;
 	}
 
-	// A trailing newline leaves nothing worth keeping; anything else is a row.
 	if (row.length > 0) {
 		rows.push(row);
 	}

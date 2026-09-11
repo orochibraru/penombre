@@ -6,26 +6,14 @@ import { AUTH_STORAGE_STATE, goToBrowse } from "../helpers";
 // the sign-in page.
 test.use({ storageState: AUTH_STORAGE_STATE });
 
-/**
- * Fail on any uncaught exception.
- *
- * Learned the hard way: an editor can mount, be `contenteditable`, and render
- * its content while still throwing on every document change. Asserting on the
- * DOM alone passed a page that was broken in the console.
- */
+/** An editor can mount, render, and still throw on every change. */
 function watchForErrors(page: import("@playwright/test").Page): string[] {
 	const errors: string[] = [];
 	page.on("pageerror", (error) => errors.push(error.message));
 	return errors;
 }
 
-/**
- * Creating and editing the three built-in document types.
- *
- * Covers the whole path — New menu, two-step create, redirect to the editor,
- * the editor actually mounting — because each editor fails differently when it
- * breaks, and a mounted-but-empty editor looks fine in a screenshot.
- */
+/** Covers New menu → create → redirect → the editor actually mounting. */
 const KINDS = [
 	{ label: "Document", extension: ".html" },
 	{ label: "Sheet", extension: ".csv" },

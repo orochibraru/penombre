@@ -4,12 +4,8 @@ import { AUTH_STORAGE_STATE, goToBrowse, openItemMenu } from "../helpers";
 test.use({ storageState: AUTH_STORAGE_STATE });
 
 /**
- * Share links, from creating one to a stranger opening it.
- *
- * The visitor half must be genuinely anonymous. `browser.newContext()`
- * inherits `storageState` from `test.use()`, so without an explicit
- * `storageState: undefined` the "visitor" is the owner — who is allowed past
- * their own password gate, quietly turning these into tests of nothing.
+ * `browser.newContext()` inherits `storageState`, so the visitor needs an
+ * explicit `storageState: undefined` or it is the owner, who skips passwords.
  */
 async function makeFolder(page: import("@playwright/test").Page) {
 	const name = `e2e-share-${Date.now()}`;

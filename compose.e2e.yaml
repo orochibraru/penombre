@@ -17,7 +17,8 @@
 services:
   app:
     build: .
-    image: penombre-e2e
+    # Set by CI to a prebuilt digest; unset locally, so the stack builds.
+    image: ${E2E_IMAGE:-penombre-e2e}
     restart: unless-stopped
     ports:
       - "${E2E_PORT:-3001}:3000"

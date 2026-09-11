@@ -1,0 +1,107 @@
+name: E2E
+# Runs Playwright against the already-built image rather than rebuilding it.
+# Forks get no pushed digest, so `pulled: false` makes the suite build.
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        required: true
+        description: "Registry path of the image under test, without a tag"
+        type: string
+      registry_name:
+        required: true
+        type: string
+      registry_username:
+        required: true
+        type: string
+      bake_target:
+        required: true
+        description: "Target whose amd64 digest artefact should be pulled"
+        type: string
+      pulled:
+        required: false
+        default: true
+        description: "False when no image was pushed (forks), forcing a local build"
+        type: boolean
+    secrets:
+      registry_password:
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  TZ: Europe/Paris
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CI: true
+  NO_COLOR: "1"
+
+jobs:
+  e2e:
+    name: Tests (E2E, ${{ matrix.dialect }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dialect: SQLite
+            script: test:e2e
+            report: playwright-report
+          - dialect: PostgreSQL
+            script: test:e2e:pg
+            report: playwright-report-pg
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Sync SvelteKit
+        run: bun run svelte-kit sync
+
+      - name: Login to Container registry
+        if: inputs.pulled
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ inputs.registry_name }}
+          username: ${{ inputs.registry_username }}
+          password: ${{ secrets.registry_password }}
+
+      # The digest file is named after the digest.
+      - name: Download amd64 digest
+        if: inputs.pulled
+        uses: orochibraru/download-artifact@v8
+        with:
+          name: digests-${{ inputs.bake_target }}-linux-amd64
+          path: ${{ runner.temp }}/digest
+
+      - name: Resolve and pull the image under test
+        if: inputs.pulled
+        run: |
+          digest="$(find "${{ runner.temp }}/digest" -type f -printf '%f\n' | head -n1)"
+          if [ -z "$digest" ]; then
+            echo "::error::No digest artefact found for ${{ inputs.bake_target }} (linux/amd64)"
+            exit 1
+          fi
+          ref="${{ inputs.image }}@sha256:${digest}"
+          echo "Testing $ref"
+          docker pull "$ref"
+          echo "E2E_IMAGE=$ref" >> "$GITHUB_ENV"
+
+      - name: Install Playwright's Chromium
+        run: bunx playwright install --with-deps chromium
+
+      - name: Tests (E2E, ${{ matrix.dialect }})
+        run: bun run ${{ matrix.script }}
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: orochibraru/upload-artifact@v8
+        with:
+          name: playwright-report-${{ matrix.dialect }}
+          path: ${{ matrix.report }}
+          retention-days: 7

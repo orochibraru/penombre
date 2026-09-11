@@ -144,7 +144,7 @@
                         </button>
                     {/if}
                 </div>
-                <p class="text-sm break-words whitespace-pre-wrap">
+                <p class="text-sm wrap-break-word whitespace-pre-wrap">
                     {note.body}
                 </p>
             </li>

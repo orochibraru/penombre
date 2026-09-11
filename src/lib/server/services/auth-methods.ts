@@ -1,17 +1,7 @@
 /**
- * Which sign-in methods exist, which are in use, and whether a proposed
- * change would lock anyone out.
- *
- * Two rules, both enforced before settings are written:
- *
- *  1. At least one method must remain enabled, or nobody can sign in.
- *  2. A method may not be turned off while accounts still depend on it —
- *     disabling email + password on an instance whose users never linked an
- *     OAuth provider strands every one of them.
- *
- * Passwordless methods (magic link, emailed code) are deliberately exempt
- * from rule 2: they authenticate an address rather than a stored credential,
- * so no account row depends on them and turning one off orphans nobody.
+ * Guards against locking everyone out: one method must survive, and a method
+ * in use cannot be removed. Magic link and emailed codes are exempt from the
+ * second rule — they authenticate an address, not a stored credential.
  */
 
 import { count, eq, inArray, sql } from "drizzle-orm";
@@ -106,7 +96,7 @@ export interface CurrentMethods {
 	oauthProviders: string[];
 }
 
-/** Subject/verb agreement, kept out of the rules so they stay readable. */
+/** Subject/verb agreement. */
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 /** How many usable ways in the proposal leaves. */
@@ -129,13 +119,7 @@ function providerMessage(n: number, name: string): string {
 	return `${n} ${subject} in only with ${name}. Give ${it} another method before disabling it.`;
 }
 
-/**
- * Validate a proposed set of sign-in methods.
- *
- * Returns a human-readable reason to refuse, or `null` when the change is
- * safe. The messages name the count so an admin can see what is in the way
- * rather than being told "no".
- */
+/** Returns why the change must be refused, or null when it is safe. */
 export async function validateSignInMethods(
 	next: ProposedMethods,
 	current: CurrentMethods,
