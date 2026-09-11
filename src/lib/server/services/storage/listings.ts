@@ -19,6 +19,7 @@ import {
 	folderDbToObjectItem,
 	paginateItems,
 } from "./mappers";
+import { ownedFiles, ownedFolders } from "./scope";
 
 /**
  * SQLite has no ILIKE — its LIKE is already case-insensitive for ASCII.
@@ -43,7 +44,7 @@ export class ListingOperations {
 				.from(files)
 				.where(
 					and(
-						eq(files.ownerId, this.ctx.user.id),
+						ownedFiles(this.ctx),
 						folderId ? eq(files.folderId, folderId) : isNull(files.folderId),
 						hideTrashed,
 						options.category ? eq(files.category, options.category) : undefined,
@@ -54,7 +55,7 @@ export class ListingOperations {
 				.from(folders)
 				.where(
 					and(
-						eq(folders.ownerId, this.ctx.user.id),
+						ownedFolders(this.ctx),
 						folderId
 							? eq(folders.parentId, folderId)
 							: isNull(folders.parentId),
@@ -128,7 +129,7 @@ export class ListingOperations {
 		const allUserFolders = await this.ctx.db
 			.select()
 			.from(folders)
-			.where(eq(folders.ownerId, this.ctx.user.id));
+			.where(ownedFolders(this.ctx));
 		const folderById = new Map(allUserFolders.map((f) => [f.id, f]));
 
 		const allFiles = await this.ctx.db
@@ -136,7 +137,7 @@ export class ListingOperations {
 			.from(files)
 			.where(
 				and(
-					eq(files.ownerId, this.ctx.user.id),
+					ownedFiles(this.ctx),
 					normalizedPrefix
 						? like(files.path, `${normalizedPrefix}/%`)
 						: undefined,
@@ -171,18 +172,11 @@ export class ListingOperations {
 			this.ctx.db
 				.select()
 				.from(files)
-				.where(
-					and(eq(files.ownerId, this.ctx.user.id), eq(files.isTrashed, true)),
-				),
+				.where(and(ownedFiles(this.ctx), eq(files.isTrashed, true))),
 			this.ctx.db
 				.select()
 				.from(folders)
-				.where(
-					and(
-						eq(folders.ownerId, this.ctx.user.id),
-						eq(folders.isTrashed, true),
-					),
-				),
+				.where(and(ownedFolders(this.ctx), eq(folders.isTrashed, true))),
 		]);
 
 		const list = [
@@ -206,7 +200,7 @@ export class ListingOperations {
 			.from(files)
 			.where(
 				and(
-					eq(files.ownerId, this.ctx.user.id),
+					ownedFiles(this.ctx),
 					eq(files.category, category),
 					eq(files.isTrashed, false),
 				),
@@ -236,9 +230,7 @@ export class ListingOperations {
 		const recentFiles = await this.ctx.db
 			.select()
 			.from(files)
-			.where(
-				and(eq(files.ownerId, this.ctx.user.id), eq(files.isTrashed, false)),
-			)
+			.where(and(ownedFiles(this.ctx), eq(files.isTrashed, false)))
 			.orderBy(desc(files.updatedAt))
 			.limit(25);
 
@@ -260,12 +252,7 @@ export class ListingOperations {
 							path: folders.path,
 						})
 						.from(folders)
-						.where(
-							and(
-								eq(folders.ownerId, this.ctx.user.id),
-								inArray(folders.id, folderIds),
-							),
-						)
+						.where(and(ownedFolders(this.ctx), inArray(folders.id, folderIds)))
 				: [];
 		const folderMap = new Map(parentFolders.map((f) => [f.id, f]));
 
@@ -299,7 +286,7 @@ export class ListingOperations {
 				.from(files)
 				.where(
 					and(
-						eq(files.ownerId, this.ctx.user.id),
+						ownedFiles(this.ctx),
 						eq(files.isStarred, true),
 						eq(files.isTrashed, false),
 					),
@@ -309,7 +296,7 @@ export class ListingOperations {
 				.from(folders)
 				.where(
 					and(
-						eq(folders.ownerId, this.ctx.user.id),
+						ownedFolders(this.ctx),
 						eq(folders.isStarred, true),
 						eq(folders.isTrashed, false),
 					),
@@ -350,17 +337,14 @@ export class ListingOperations {
 				.select()
 				.from(files)
 				.where(
-					and(
-						eq(files.ownerId, this.ctx.user.id),
-						nameLike(files.name, `%${searchTerm}%`),
-					),
+					and(ownedFiles(this.ctx), nameLike(files.name, `%${searchTerm}%`)),
 				),
 			this.ctx.db
 				.select()
 				.from(folders)
 				.where(
 					and(
-						eq(folders.ownerId, this.ctx.user.id),
+						ownedFolders(this.ctx),
 						nameLike(folders.name, `%${searchTerm}%`),
 					),
 				),
@@ -387,9 +371,7 @@ export class ListingOperations {
 		const [result] = await this.ctx.db
 			.select({ count: sql<number>`COUNT(*)` })
 			.from(files)
-			.where(
-				and(eq(files.ownerId, this.ctx.user.id), eq(files.isTrashed, true)),
-			);
+			.where(and(ownedFiles(this.ctx), eq(files.isTrashed, true)));
 		const count = Number(result?.count ?? 0);
 		await this.ctx.cache.set(cacheKey, count);
 		return count;
@@ -405,9 +387,7 @@ export class ListingOperations {
 		const [result] = await this.ctx.db
 			.select({ count: sql<number>`COUNT(*)` })
 			.from(files)
-			.where(
-				and(eq(files.ownerId, this.ctx.user.id), eq(files.isStarred, true)),
-			);
+			.where(and(ownedFiles(this.ctx), eq(files.isStarred, true)));
 		const count = Number(result?.count ?? 0);
 		await this.ctx.cache.set(cacheKey, count);
 		return count;

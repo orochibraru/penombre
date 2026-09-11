@@ -8,6 +8,41 @@
 			"when": 1788945997640,
 			"tag": "0000_mighty_retro_girl",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "6",
+			"when": 1789045651073,
+			"tag": "0001_good_red_wolf",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1789056646193,
+			"tag": "0002_burly_adam_warlock",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "6",
+			"when": 1789059962287,
+			"tag": "0003_parched_scarlet_witch",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "6",
+			"when": 1789073349008,
+			"tag": "0004_daffy_brood",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "6",
+			"when": 1789076986821,
+			"tag": "0005_swift_the_leader",
+			"breakpoints": true
 		}
 	]
 }

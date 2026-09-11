@@ -13,13 +13,29 @@ import { join } from "node:path";
 import { getDb } from "$lib/server/db";
 
 // ---------------------------------------------------------------------------
-// Mock constants (static values are fine — storage path is injected via parameter)
+// Mock config (static value is fine — storage path is injected via parameter)
 // ---------------------------------------------------------------------------
 
-mock.module("./constants", () => ({
-	DEFAULT_STORAGE_PATH: "/does-not-exist",
-	createUserStorageDriver: () => ({}),
-	logger: { info: () => {}, debug: () => {}, warn: () => {}, error: () => {} },
+mock.module("$lib/server/config", () => ({
+	getConfig: () => ({
+		smtp: undefined,
+		appName: "Penombre",
+		origin: "http://localhost:5173",
+		auth: {
+			secret: "test-secret",
+			enableEmailSignIn: true,
+			minPasswordLength: 8,
+		},
+	}),
+	getStoragePath: () => "/does-not-exist",
+	envProvided: () => ({
+		emailSignIn: true,
+		oauthSignIn: true,
+		minPasswordLength: true,
+		smtp: true,
+	}),
+	isSimpleMode: () => false,
+	isAuthBypassed: () => false,
 }));
 
 // ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@
 import { unlink } from "node:fs/promises";
 import { and, eq } from "drizzle-orm";
 import { parseFile } from "music-metadata";
+import { Logger } from "$lib/logger";
 import { files } from "$lib/server/db/schema";
 import { FileOrFolderNotFoundError } from "$lib/server/errors";
 import type {
@@ -17,7 +18,6 @@ import type {
 	UpdateFile,
 	UploadResult,
 } from "$lib/server/schema";
-import { logger } from "./constants";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import {
@@ -28,7 +28,10 @@ import {
 	fileDbToObjectItem,
 	generateFileNameWithExtension,
 } from "./mappers";
+import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+
+const logger = new Logger("StorageService");
 
 export class FileOperations {
 	constructor(
@@ -40,7 +43,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select()
 			.from(files)
-			.where(and(eq(files.path, path), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.path, path), ownedFiles(this.ctx)));
 		if (!file) {
 			throw new FileOrFolderNotFoundError(`File not found: ${path}`);
 		}
@@ -73,7 +76,7 @@ export class FileOperations {
 					videoDuration: metadata.video?.duration ?? null,
 					updatedAt: new Date(),
 				})
-				.where(and(eq(files.path, path), eq(files.ownerId, this.ctx.user.id)));
+				.where(and(eq(files.path, path), ownedFiles(this.ctx)));
 		}
 
 		await this.ctx.invalidateListingCaches();
@@ -83,7 +86,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select()
 			.from(files)
-			.where(and(eq(files.path, name), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.path, name), ownedFiles(this.ctx)));
 		if (!file) {
 			throw new FileOrFolderNotFoundError(`File not found: ${name}`);
 		}
@@ -116,7 +119,7 @@ export class FileOperations {
 		await this.ctx.db
 			.update(files)
 			.set(updates)
-			.where(and(eq(files.path, name), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.path, name), ownedFiles(this.ctx)));
 
 		await this.ctx.activityService.register({
 			userId: this.ctx.user.id,
@@ -132,7 +135,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select()
 			.from(files)
-			.where(and(eq(files.path, fileKey), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.path, fileKey), ownedFiles(this.ctx)));
 		if (!file) {
 			throw new FileOrFolderNotFoundError(`File not found: ${fileKey}`);
 		}
@@ -173,7 +176,7 @@ export class FileOperations {
 				folderId: newFolderId,
 				updatedAt: new Date(),
 			})
-			.where(and(eq(files.id, file.id), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.id, file.id), ownedFiles(this.ctx)));
 
 		await this.ctx.activityService.register({
 			userId: this.ctx.user.id,
@@ -189,7 +192,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select()
 			.from(files)
-			.where(and(eq(files.path, fileKey), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.path, fileKey), ownedFiles(this.ctx)));
 		if (!file) {
 			throw new FileOrFolderNotFoundError(`File not found: ${fileKey}`);
 		}
@@ -219,6 +222,7 @@ export class FileOperations {
 				id: newId,
 				name: uniqueName,
 				ownerId: this.ctx.user.id,
+				volumeId: this.ctx.volumeId,
 				path: newPath,
 				folderId: file.folderId,
 				contentType: file.contentType,
@@ -279,6 +283,7 @@ export class FileOperations {
 				id,
 				name: uniqueName,
 				ownerId: this.ctx.user.id,
+				volumeId: this.ctx.volumeId,
 				path: filePath,
 				folderId,
 				contentType: determineContentType(uniqueName),
@@ -348,6 +353,7 @@ export class FileOperations {
 					id,
 					name: uniqueName,
 					ownerId: this.ctx.user.id,
+					volumeId: this.ctx.volumeId,
 					path: filePath,
 					folderId,
 					contentType: determineContentType(uniqueName),
@@ -388,7 +394,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select({ path: files.path })
 			.from(files)
-			.where(and(eq(files.id, id), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.id, id), ownedFiles(this.ctx)));
 		return file?.path ?? null;
 	}
 
@@ -399,7 +405,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select()
 			.from(files)
-			.where(and(eq(files.id, id), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.id, id), ownedFiles(this.ctx)));
 		if (!file) {
 			throw new Error(`Failed to find file with id: ${id}`);
 		}
@@ -458,7 +464,14 @@ export class FileOperations {
 			await this.ctx.db
 				.update(files)
 				.set(updates)
-				.where(and(eq(files.id, id), eq(files.ownerId, this.ctx.user.id)));
+				.where(and(eq(files.id, id), ownedFiles(this.ctx)));
+
+			// Build the preview now rather than on first view. Not awaited:
+			// an ffmpeg pass over a large media file would otherwise hold the
+			// upload response open for seconds.
+			this.thumbnails.warm(key, file.contentType).catch(() => {
+				// `warm` already logs; nothing further to do here.
+			});
 		} catch (error) {
 			logger.error("Error uploading file body:", error);
 			await this.ctx.activityService.register({
@@ -476,14 +489,12 @@ export class FileOperations {
 			const [file] = await this.ctx.db
 				.select()
 				.from(files)
-				.where(and(eq(files.path, key), eq(files.ownerId, this.ctx.user.id)));
+				.where(and(eq(files.path, key), ownedFiles(this.ctx)));
 
 			if (file) {
 				await this.ctx.db
 					.delete(files)
-					.where(
-						and(eq(files.id, file.id), eq(files.ownerId, this.ctx.user.id)),
-					);
+					.where(and(eq(files.id, file.id), ownedFiles(this.ctx)));
 				await this.ctx.activityService.register({
 					userId: this.ctx.user.id,
 					action: "delete",
@@ -505,7 +516,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select({ id: files.id })
 			.from(files)
-			.where(and(eq(files.path, key), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.path, key), ownedFiles(this.ctx)));
 		return !!file;
 	}
 
@@ -513,7 +524,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select({ id: files.id })
 			.from(files)
-			.where(and(eq(files.id, id), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.id, id), ownedFiles(this.ctx)));
 		return !!file;
 	}
 
@@ -526,7 +537,7 @@ export class FileOperations {
 		const [file] = await this.ctx.db
 			.select()
 			.from(files)
-			.where(and(eq(files.path, key), eq(files.ownerId, this.ctx.user.id)));
+			.where(and(eq(files.path, key), ownedFiles(this.ctx)));
 		if (!file) {
 			return null;
 		}

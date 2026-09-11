@@ -3,6 +3,14 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with
 code in this repository.
 
+## Keeping this file current
+
+**When you learn something non-obvious about this repo, write it here in the
+same change.** Not a summary of what you did — the durable fact that would have
+saved you the detour: a gotcha, an invariant, the reason a thing is shaped the
+way it is. If you had to read three files or debug for ten minutes to find it,
+it belongs here. Prune anything that has become wrong.
+
 ## Commands
 
 Runtime is **Bun** (1.3+); use `bun`/`bunx`, not `npm`/`node` (`preinstall`
@@ -171,3 +179,298 @@ A feature that isn't in `docs/` isn't finished.
 - `.svelte` files relax `noUnusedImports`/`useConst`/`useImportType` (Svelte's
   compiler handles these differently); test/script/config files relax
   cognitive-complexity and `noExplicitAny`/`noConsole` rules.
+
+## Layout rules
+
+**Do not reach for `max-w-*` by default.** Most things should fill their
+container — the page shell and the tab strip already bound the content. A width
+cap is a deliberate choice for a specific reason (a single-column reading
+measure, a form that would look absurd at 2000px), not a reflex to add to every
+wrapper. Panes inside tabs are full width. When a wide screen leaves a layout
+looking sparse, add columns (`xl:grid-cols-2`, `2xl:grid-cols-3`) rather than
+capping the width.
+
+## Gotchas learned the hard way
+
+### `app.css` layering
+
+Surface overrides (`[data-slot="card"]`, `[data-slot="sidebar-inner"]`, …) live
+**unlayered** at the bottom of `app.css`, not in `@layer base`. Tailwind's own
+utilities sit in `@layer utilities`, which outranks `@layer base` — a rule there
+loses to the `bg-sidebar` / `shadow-sm` classes already on those components.
+Unlayered CSS beats every layer, so that is where those rules actually land.
+
+### `backdrop-filter` breaks `position: fixed`
+
+An element with `backdrop-filter` becomes a containing block for fixed-position
+descendants. Putting it on `[data-slot="sidebar-inset"]` tore any fixed child
+off the viewport. Glass on that panel is applied via a `::before` pseudo-element
+instead — a pseudo has no element descendants, so it carries the frost safely.
+
+### Theming
+
+Appearance is three `data-*` attributes on `<html>` (`data-font`,
+`data-corners`, `data-accent`), written by `applyTheme()` in `$lib/theme.ts`
+from the user's saved preferences and read by the theme block at the bottom of
+`app.css`. Everything downstream already reads `--radius`, `--app-font` and
+`--primary`, so switching an attribute re-themes the whole app — never hard-code
+a colour or radius in a component.
+
+### Shipped UI defaults
+
+System theme, purple accent, standard (sans) typeface, rounded corners, list
+layout, sorted by last modified descending. These live in **two** places that
+must agree: `defaultPreferences` (`services/preferences.ts`) and the `:root`
+block in `app.css` — the CSS base is what unauthenticated pages (sign-in) use,
+since `applyTheme()` only runs once a session's preferences have loaded.
+
+### Shiki output is not styled by its wrapper
+
+`Code.Root` renders highlighted HTML through `{@html}`, so Shiki's own `<pre>`
+does not inherit the wrapper's wrapping classes. A long line pushed it to tens
+of thousands of pixels wide and scrolled the content out of view. The `.shiki`
+rule at the bottom of `app.css` wraps it. Beware viewport-relative caps
+(`max-w-[60vw]`) on anything that can appear inside a dialog — it sizes against
+the window, not the dialog.
+
+### Invitations have no credential
+
+An invited account is one with **no `account` row of
+`providerId: "credential"`** — that absence is the marker, not a flag column.
+`createUser` requires a password, so the invite action creates one and deletes
+the credential row immediately after.
+
+Onboarding then writes the credential itself via
+`(await auth.$context).internalAdapter.createAccount()` with
+`ctx.password.hash()`. It cannot use `changePassword` (no current password) or
+`setUserPassword` (needs an admin session the invitee does not have).
+
+### A hidden `required` input blocks form submission
+
+The two-step sign-in hides the password field until the address is known. Its
+`required` must be bound to the same flag — a hidden required control fails HTML
+validation with "An invalid form control is not focusable" and the submit
+silently does nothing.
+
+### Instance settings vs. environment
+
+`app_settings` (one row, `services/app-settings.ts`) is the runtime half of the
+configuration. The rule is **env wins when it is set, otherwise the database
+governs** — see `envProvided()` in `config.ts`, which reports which vars are
+actually present rather than inferring from a resolved value.
+
+That distinction matters: a default is indistinguishable from a deliberate env
+value, so treating "env always wins" left `ENABLE_EMAIL_SIGNIN` pinned to its
+default with no way to change it once the var was removed from `.env`. The admin
+UI renders a setting read-only only when `envProvided()` says the environment
+claims it.
+
+Anything better-auth reads at init (email sign-in, OAuth providers) is resolved
+once via top-level `await` in `auth/index.ts`, so a change there needs a
+restart. The UI says so.
+
+### Sign-in methods cannot be turned off blindly
+
+`services/auth-methods.ts` gates every save of the sign-in settings on two
+rules: at least one method must survive, and a method may not be removed while
+accounts depend on it (`accountsWithOnly` counts who would be stranded). Magic
+link and emailed codes are exempt from the second rule — they authenticate an
+address, not a stored credential, so no `account` row depends on them.
+
+`validateSignInMethods` takes the stranded-count lookup as its third argument so
+the rules can be tested without a database; the default is the real query.
+
+### Two-factor
+
+The `twoFactor` plugin is loaded unconditionally — enrolling and answering a
+challenge must work whether or not an admin has made it mandatory. Only
+`requireTwoFactor` (app settings) decides who is _forced_ to enrol, enforced by
+a redirect in `(app)/+layout.server.ts` that exempts `/account/security` or it
+would loop.
+
+Its schema is better-auth's, not ours: the `two_factor` table's column
+properties (`secret`, `backupCodes`, `verified`, `failedVerificationCount`,
+`lockedUntil`) and `user.twoFactorEnabled` are looked up by name through the
+Drizzle adapter, so renaming one breaks enrolment silently.
+
+`twoFactor.enable()` returns a union — pass `method: "totp"` and narrow on it,
+or `totpURI`/`backupCodes` are not on the type.
+
+Note `requirePasskey` in app settings is stored but **not enforced anywhere**.
+
+### Passwordless methods need a restart
+
+better-auth builds its plugin list once at module init, so `magicLink` and
+`emailOTP` are resolved by top-level await in `auth/index.ts`. Toggling them in
+the admin UI takes effect on the next boot; the UI says so. Both are gated on
+SMTP in `getPasswordlessSettings()` rather than only in the UI, so removing mail
+afterwards disables them rather than leaving a method that silently fails.
+
+### Adding a user preference
+
+Four places, all required: `UserPreferencesData` (`schema.pg.ts`),
+`defaultPreferences` (`services/preferences.ts`), the Zod schema in
+`openapi/v1/preferences.ts`, then `bun run gen:api`.
+
+The PUT handler passes the **already-validated** body straight to
+`updateUserPreferences`. It used to re-filter by a hand-written list of three
+keys, which silently dropped every new field — saving as `200 OK` and never
+persisting. Do not reintroduce that filter; the route's Zod schema is the
+validation.
+
+### Storage queries are scoped by volume, not just owner
+
+Never write `eq(files.ownerId, ctx.user.id)` directly. Use `ownedFiles(ctx)` /
+`ownedFolders(ctx)` from `services/storage/scope.ts`, which also match the
+context's `volumeId`. Paths are only unique _within_ a volume, so an owner-only
+query can match a row on the wrong mount. New rows must stamp
+`volumeId: this.ctx.volumeId`. The main drive stores `null`. See
+`docs/volumes.md`.
+
+### Waveforms are data, not pictures
+
+Audio "thumbnails" return **JSON peak data**, not an image: the endpoint answers
+`application/json` for audio and caches `<key>_peaks.json`. `waveform.svelte`
+draws inline `<svg fill="currentColor">` from it.
+
+The reason is themeability. `showwavespic` bakes a colour into a bitmap, so a
+waveform generated under one accent kept that colour forever, and an `<img>` is
+isolated from page CSS so it could never inherit one either. Only inline SVG
+re-colours when the accent changes.
+
+For the same reason, anything representing a Penombre object — folder icons
+above all — uses `text-primary`, never a fixed palette colour. Fixed colours are
+fine for the _context-menu_ action icons, which are a deliberate multi-colour
+set rather than object identity.
+
+### Thumbnails
+
+The API takes **named** sizes (`small` | `medium` | `large`), not pixels — three
+discrete values keep the on-disk cache bounded. `getObjectUrl` once sent
+`size=300` and every thumbnail request 400'd.
+
+A thumbnail request must **never** fall back to serving the original file. It
+did, so a grid of audio tiles pulled ~100 MB per WAV. It now 404s and the client
+renders its own icon.
+
+Generation is warmed at write time (`ThumbnailService.warm`) from upload and
+scan, not lazily on first view. It shells out to `ffmpeg` (video frames, audio
+waveforms) and `pdftoppm`; both are installed in the Dockerfile.
+
+### i18n keys
+
+Every key must exist in **all four** locales (`messages/{en,fr,de,es}.json`) or
+`bun run check` fails. There is no working ICU plural support here — use two
+flat keys plus a helper in `utils.ts` (see `filesCountLabel`).
+
+### Test isolation
+
+`mock.module` in Bun is **global and permanent** — a module mock in one test
+file leaks into every file that runs after it. Two consequences:
+
+- Every local `$lib/server/config` mock must return the _same_ shape, or a suite
+  that runs later reads a config missing the fields it needs.
+- A suite that calls `mockReturnValue` (not `...Once`) on a shared mock must
+  restore it in `afterAll`, or it reconfigures everything downstream.
+
+Prefer stubbing a method on the instance under test over mocking a module.
+
+### Card layout conventions
+
+Cards carry their heading through `Card.Header` + `Card.Title` +
+`Card.Description`, with any top-right button in `Card.Action` — never a
+hand-rolled `<h2>` inside `Card.Content`. The account pages drifted into the
+latter and the headings came out a different size from every other page.
+
+Page-level card grids must **not** carry `items-start`: it defeats the grid's
+default stretch, so cards in a row end at different heights and the column
+bottoms come out ragged. Let them stretch.
+
+### Activity is one component
+
+`$lib/components/activity-log.svelte` renders both the account and admin
+activity views — mono log lines, not cards or a table — differing only by
+`showUser`. `ActivityService.audit()` must keep selecting `message`, which the
+admin table used to omit entirely. File and folder names are never written into
+these rows, which is what makes the message safe to show an admin.
+
+### Documents are ordinary files
+
+`$lib/documents.ts` owns the three editable kinds and their formats: HTML for a
+document, CSV for a sheet, Markdown (`---` separated) for a deck. **No private
+format** — creating and saving go through the existing `createFile` +
+`uploadFile` endpoints, so a document is a file like any other and inherits
+trash, sharing, search and thumbnails for free. Adding a kind means adding it to
+`DOCUMENT_KINDS`, `kindForName` and the editor route's branch.
+
+`handleOpenItem` routes an editable file to `/edit/[fileId]` before anything
+else, so extensions handled there never reach the preview dialog.
+
+### Prek no longer type-checks
+
+`prek run --all-files` is ~45s, not ~80s: `gen:api` and all three type checks
+moved to CI (`code_quality.yaml` runs `bun run check` and a "Codegen is current"
+step that regenerates and fails on a diff), and biome is passed the staged
+filenames instead of scanning all 524 files. **A green commit no longer implies
+a green CI lint job** — run `bun run check` yourself while working.
+
+### No seeded admin
+
+There are no `ADMIN_EMAIL`/`ADMIN_PASSWORD` variables. An empty database means
+`needsSetup()` is true and `generalHandler` funnels every path to `/auth/setup`,
+which creates the first administrator and then refuses forever after. Auth
+bypass is the exception: nobody signs in, so `seedAuth` creates one
+credential-less owner to attribute files to. The e2e auth setup runs the
+onboarding flow when it lands on that screen.
+
+### Every E2E spec must declare its own auth
+
+The `chromium` project in `playwright.config.ts` sets **no** `storageState` —
+each spec file opts in with `test.use({ storageState: AUTH_STORAGE_STATE })`. A
+file that forgets it runs signed out, and every test in it fails by landing on
+the sign-in page, which reads like a broken session rather than a missing line.
+The `setup` project still runs (its job is writing that file), so the failure
+looks unrelated to authentication.
+
+### ProseKit: core only, and browser only
+
+`document-editor.svelte` uses `prosekit/core` + `prosekit/basic` and nothing
+from `prosekit/svelte`. That is deliberate, and reverting it reintroduces two
+separate failures:
+
+- The `<ProseKit>` component sets the editor context **inside itself**, so any
+  `use*` hook called in the parent scope throws `EditorNotFoundError` at runtime
+  — after mounting, so the editor looks fine until the first edit.
+  `defineDocChangeHandler` as an extension needs no context.
+- `@prosekit/svelte` ships uncompiled `.svelte` sources, which Vite externalises
+  for SSR and hands to Node as JavaScript; the parse error names the library's
+  own file. Avoiding the package avoids needing `ssr.noExternal`.
+
+The `{#if browser}` guard in the edit route stays regardless: `createEditor`
+parses its initial HTML with `DOMParser` at construction, so it throws "Unable
+to find browser Document" during SSR.
+
+None of this appears in the Docker E2E run, which serves a production build —
+check `bun run dev` explicitly when adding a DOM-dependent library, and assert
+on `pageerror` in the E2E (see `documents.spec.ts`), because a mounted,
+`contenteditable`, correctly-rendered editor can still throw on every keystroke.
+
+### E2E runs against a container, not your working tree
+
+`test:e2e` starts the app in Docker, and Playwright's `reuseExistingServer` is
+on outside CI. If a container from an earlier run is still up, Playwright
+attaches to it and your edits are simply not in the app under test — the symptom
+is a failure whose page snapshot shows the _old_ UI. Both `test:e2e` scripts
+therefore run `up --build --wait` themselves so the stack is rebuilt and
+recreated before Playwright looks at the port. Never invoke
+`bunx playwright test` directly after changing app code.
+
+Paraglide output is gitignored and only written by the Vite plugin, so a fresh
+checkout has none. CI compiles it (`bun run gen:paraglide`) before `bun test` —
+anything under test that imports `$lib/paraglide/messages.js` needs that step.
+
+### Screenshots for docs
+
+`bun run screenshots` drives the app with Playwright and writes to
+`docs/images/`. It asserts each page renders before capturing, so a broken
+screen cannot be published as marketing.

@@ -9,7 +9,6 @@ const simpleModePages = {
 	recent: (await import("./recent/+page.server")).load,
 	starred: (await import("./starred/+page.server")).load,
 	shared: (await import("./shared/+page.server")).load,
-	sync: (await import("./sync/+page.server")).load,
 	categories: (await import("./categories/[category]/+page.server")).load,
 };
 
@@ -19,6 +18,18 @@ const bypassSections = {
 };
 
 const adminEvent = { locals: { user: { role: "admin" } } } as never;
+
+// `shared` reads the caller's own links, so unlike the other simple-mode pages
+// it needs a real event and returns data rather than undefined.
+const sharedEvent = {
+	locals: { user: { id: "user-1" } },
+	depends: () => {},
+} as never;
+
+const simpleModeEvents: Record<string, never> = { shared: sharedEvent };
+const simpleModeResults: Record<string, unknown> = {
+	shared: { shares: [], sharedWithMe: [] },
+};
 
 // The config mocks are module-level and shared across test files — leaving one
 // flipped on would reconfigure every suite that runs after this one.
@@ -33,14 +44,16 @@ describe("pages disabled by simple mode", () => {
 	});
 
 	for (const [name, load] of Object.entries(simpleModePages)) {
-		test(`${name} loads normally when simple mode is off`, () => {
-			expect(load({} as never)).toBeUndefined();
+		const event = simpleModeEvents[name] ?? ({} as never);
+
+		test(`${name} loads normally when simple mode is off`, async () => {
+			expect(await load(event)).toEqual(simpleModeResults[name] as never);
 		});
 
 		test(`${name} 404s in simple mode`, () => {
 			mockIsSimpleMode.mockReturnValue(true);
 
-			expect(() => load({} as never)).toThrow(
+			expect(() => load(event)).toThrow(
 				expect.objectContaining({ status: 404 }),
 			);
 		});

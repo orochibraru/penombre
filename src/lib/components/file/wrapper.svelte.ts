@@ -4,6 +4,7 @@ import {
 	DownloadIcon,
 	ExternalLinkIcon,
 	FolderInputIcon,
+	MessageSquareTextIcon,
 	PencilLineIcon,
 	ShareIcon,
 	StarIcon,
@@ -13,9 +14,12 @@ import {
 import type { MediaQuery } from "svelte/reactivity";
 import { toast } from "svelte-sonner";
 import { dev } from "$app/environment";
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
 import { page } from "$app/state";
 import { api, type ObjectItem, type ObjectList } from "$lib/api";
 import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
+import { kindForName } from "$lib/documents";
 import { determineCodeFileLanguage } from "$lib/file-utils";
 import * as m from "$lib/paraglide/messages.js";
 import { itemAction } from "$lib/store/actions";
@@ -35,7 +39,9 @@ import type {
 export type FileToView = {
 	item: ObjectItem;
 	src: string;
-	type: "image" | "code" | "pdf" | "video";
+	/** "notes" opens the dialog with only the thread — used for audio, which
+	 *  plays in the global player rather than inside the dialog. */
+	type: "image" | "code" | "pdf" | "video" | "notes";
 	content?: string;
 	language?: SupportedLanguage;
 } | null;
@@ -240,6 +246,7 @@ export function createTrashActions(handlers: {
 				{
 					title: "Delete permanently",
 					icon: TrashIcon,
+					iconClass: "text-destructive",
 					action: handlers.onDeletePermanently,
 					disabled: false,
 				},
@@ -261,6 +268,8 @@ export function createMainActions(handlers: {
 	onMove: (item: ObjectItem) => void;
 	onDuplicate: (item: ObjectItem) => void;
 	onStar: (item: ObjectItem) => void;
+	onShare: (item: ObjectItem) => void;
+	onNotes: (item: ObjectItem) => void;
 	onMoveToTrash: (item: ObjectItem) => void;
 }): ItemActionGroup[] {
 	return [
@@ -279,10 +288,15 @@ export function createMainActions(handlers: {
 					fileOnly: true,
 				},
 				{
+					title: "Notes",
+					icon: MessageSquareTextIcon,
+					action: handlers.onNotes,
+					fileOnly: true,
+				},
+				{
 					title: "Share",
 					icon: ShareIcon,
-					action: () => [],
-					disabled: true,
+					action: handlers.onShare,
 				},
 			],
 		},
@@ -320,6 +334,7 @@ export function createMainActions(handlers: {
 				{
 					title: "Move to trash",
 					icon: TrashIcon,
+					iconClass: "text-destructive",
 					action: handlers.onMoveToTrash,
 					variant: "destructive",
 					disabled: false,
@@ -329,11 +344,16 @@ export function createMainActions(handlers: {
 	];
 }
 
-export function createMainMultipleActions(handlers: {
-	onDownload: () => void;
-	onMove: () => void;
-	onMoveToTrash: () => void;
-}): MultipleItemsAction[] {
+export function createMainMultipleActions(
+	handlers: {
+		onDownload: () => void;
+		onMove: () => void;
+		onStar: () => void;
+		onShare: () => void;
+		onMoveToTrash: () => void;
+	},
+	selectedCount: number,
+): MultipleItemsAction[] {
 	return [
 		{
 			title: "Download",
@@ -351,17 +371,25 @@ export function createMainMultipleActions(handlers: {
 			title: "Star",
 			icon: StarIcon,
 			variant: "outline",
-			action: () => [],
+			action: handlers.onStar,
 		},
-		{
-			title: "Share",
-			icon: ShareIcon,
-			variant: "outline",
-			action: () => [],
-		},
+		// A share link addresses exactly one resource, so sharing a set of
+		// files has no single meaning. Offered only for one, rather than left
+		// as a button that does nothing.
+		...(selectedCount === 1
+			? [
+					{
+						title: "Share",
+						icon: ShareIcon,
+						variant: "outline" as const,
+						action: handlers.onShare,
+					},
+				]
+			: []),
 		{
 			title: "Move to Trash",
 			icon: TrashIcon,
+			iconClass: "text-destructive",
 			variant: "destructive",
 			action: handlers.onMoveToTrash,
 		},
@@ -382,6 +410,7 @@ export function createTrashMultipleActions(handlers: {
 		{
 			title: "Delete permanently",
 			icon: TrashIcon,
+			iconClass: "text-destructive",
 			variant: "destructive",
 			action: handlers.onDeletePermanently,
 		},
@@ -433,6 +462,15 @@ export async function handleOpenItem(
 ): Promise<void> {
 	playableMusic.set(null);
 
+	// A document Penombre can edit opens in its editor rather than a preview:
+	// opening a spreadsheet to look at a read-only rendering of it is not what
+	// anybody means by "open".
+	const editable = kindForName(item.metadata.name ?? item.key);
+	if (editable && item.metadata.id) {
+		await goto(resolve("/(app)/edit/[fileId]", { fileId: item.metadata.id }));
+		return;
+	}
+
 	const finalUrl = getObjectUrl({
 		baseUrl: page.url,
 		itemPath: item.key,
@@ -474,6 +512,7 @@ export async function handleOpenItem(
 			title: item.metadata.name || item.key,
 			source: finalUrl,
 			isPlaying: !dev,
+			fileId: item.metadata.id,
 		});
 		return;
 	}

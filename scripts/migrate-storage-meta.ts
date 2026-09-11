@@ -14,8 +14,8 @@
 
 import { existsSync } from "node:fs";
 import { readdir, stat, unlink } from "node:fs/promises";
-import { join, relative, resolve } from "node:path";
-import process, { cwd } from "node:process";
+import { join, relative } from "node:path";
+import process from "node:process";
 import { plugin } from "bun";
 
 // Register SvelteKit virtual module stubs so $lib imports resolve correctly.
@@ -42,6 +42,7 @@ plugin({
 });
 
 // Dynamic imports must follow plugin registration.
+const { getStoragePath } = await import("$lib/server/config");
 const { getDb } = await import("$lib/server/db");
 const { files, folders } = await import("$lib/server/db/schema");
 
@@ -57,9 +58,7 @@ if (dryRun) {
 
 // ─── Storage path ──────────────────────────────────────────────────────────
 
-const storagePath = resolve(
-	process.env.STORAGE_PATH ?? join(cwd(), "data/storage"),
-);
+const storagePath = getStoragePath();
 
 if (!existsSync(storagePath)) {
 	console.error(`Storage path not found: ${storagePath}`);

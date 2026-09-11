@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { getDbUrl, getSqliteFilePath, resolveDbDialect } from "./dialect";
+import {
+	getSqliteFilePath,
+	isSqliteDialect,
+	resolveDbDialect,
+} from "./dialect";
 
 describe("resolveDbDialect", () => {
 	test("file: URLs resolve to sqlite", () => {
@@ -47,15 +51,16 @@ describe("getSqliteFilePath", () => {
 	});
 });
 
-describe("getDbUrl", () => {
-	test("an empty or whitespace DATABASE_URL falls back to the sqlite default", () => {
+describe("isSqliteDialect", () => {
+	test("an empty or whitespace DATABASE_URL falls back to sqlite", () => {
 		const previous = Bun.env.DATABASE_URL;
 		try {
 			for (const value of ["", "   "]) {
 				Bun.env.DATABASE_URL = value;
-				expect(getDbUrl()).toBe("file:./data/penombre.sqlite");
-				expect(resolveDbDialect(getDbUrl())).toBe("sqlite");
+				expect(isSqliteDialect()).toBe(true);
 			}
+			Bun.env.DATABASE_URL = "postgres://localhost:5432/penombre";
+			expect(isSqliteDialect()).toBe(false);
 		} finally {
 			if (previous === undefined) {
 				Bun.env.DATABASE_URL = undefined;

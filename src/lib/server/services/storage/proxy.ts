@@ -14,6 +14,7 @@ import {
 import type { ObjectItem } from "$lib/server/schema";
 import type { StorageContext } from "./context";
 import { generateETag } from "./mappers";
+import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
 const proxyLogger = new Logger("FileProxyService");
@@ -90,9 +91,7 @@ export class ProxyService {
 		const [file] = await this.ctx.db
 			.select()
 			.from(files)
-			.where(
-				and(eq(files.path, itemName), eq(files.ownerId, this.ctx.user.id)),
-			);
+			.where(and(eq(files.path, itemName), ownedFiles(this.ctx)));
 
 		if (!file) {
 			throw new FileOrFolderNotFoundError(`File not found: ${itemName}`);
@@ -194,9 +193,15 @@ export class ProxyService {
 			if (thumbResponse) {
 				return thumbResponse;
 			}
+			// A thumbnail request must never fall through to the original: a
+			// grid of audio tiles would pull the full media file each time
+			// (~100 MB per WAV). The client renders its own icon on 404.
+			throw new FileOrFolderNotFoundError(
+				`No thumbnail available for: ${itemName}`,
+			);
 		}
 
-		if (raw || thumbnail) {
+		if (raw) {
 			return this.handleRawFile(itemName, ifNoneMatch, rangeHeader);
 		}
 

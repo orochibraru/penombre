@@ -15,6 +15,18 @@
 	}
 
 	let { user }: Props = $props();
+
+	/**
+	 * Up to two letters from the display name, falling back to the email —
+	 * the avatar used to render a hard-coded "NB" for every account.
+	 */
+	const initials = $derived(
+		(user.name?.trim() || user.email || "?")
+			.split(/\s+/)
+			.slice(0, 2)
+			.map((part) => part[0]?.toUpperCase() ?? "")
+			.join("") || "?",
+	);
 </script>
 
 <Sidebar.Menu>
@@ -34,8 +46,8 @@
                                 alt={user.name}
                                 loading="lazy"
                             />
-                            <Avatar.Fallback class="rounded-lg">
-                                NB
+                            <Avatar.Fallback class="rounded-full text-xs">
+                                {initials}
                             </Avatar.Fallback>
                         </Avatar.Root>
                     </Button>

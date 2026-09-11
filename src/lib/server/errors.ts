@@ -11,3 +11,11 @@ export class UnauthorizedError extends Error {
 		this.name = "UnauthorizedError";
 	}
 }
+
+/** Thrown when a write is attempted against a volume mounted read-only. */
+export class ReadOnlyVolumeError extends Error {
+	constructor(message = "This volume is read-only") {
+		super(message);
+		this.name = "ReadOnlyVolumeError";
+	}
+}

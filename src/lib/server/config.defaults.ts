@@ -7,6 +7,28 @@ import packageJson from "../../../package.json" with { type: "json" };
  * - The .example.env generator script (scripts/generate-env-example.ts)
  */
 
+/** Everything the app writes lives under one directory. */
+const DEFAULT_DATA_DIR = "/data";
+
+/** Nothing is mounted at `/data` on a dev box — keep writes inside the repo. */
+export const DEV_DATA_DIR = "./data";
+
+/** The per-purpose subdirectories hanging off `dataDir`. */
+export function dataPaths(dataDir: string): {
+	storagePath: string;
+	dbLocation: string;
+} {
+	return {
+		storagePath: `${dataDir}/storage`,
+		dbLocation: `${dataDir}/db`,
+	};
+}
+
+/** SQLite is the default: no database server to run for a homelab install. */
+export function defaultDbUrl(dataDir: string): string {
+	return `file:${dataPaths(dataDir).dbLocation}/penombre.sqlite`;
+}
+
 export const defaultConfigValues = {
 	appName: "Penombre",
 	appVersion: packageJson.version,
@@ -15,7 +37,7 @@ export const defaultConfigValues = {
 	logLevel: "info" as "debug" | "info" | "warn" | "error",
 	logFormat: "console" as "console" | "json",
 	db: {
-		url: "file:./data/penombre.sqlite",
+		url: defaultDbUrl(DEFAULT_DATA_DIR),
 	},
 	auth: {
 		enableEmailSignIn: true,
@@ -23,10 +45,6 @@ export const defaultConfigValues = {
 		minPasswordLength: 8,
 		secret: "change_this_secret_to_a_random_secure_value",
 		oauthProviders: [],
-		defaultAdminCredentials: {
-			email: "admin@example.com",
-			password: "Admin1234!",
-		},
 	},
 	redis: undefined as { url: string } | undefined,
 	smtp: {
@@ -41,6 +59,8 @@ export const defaultConfigValues = {
 	simpleMode: false,
 	bypassAuth: false,
 	autoRedirectProvider: "",
+	dataDir: DEFAULT_DATA_DIR,
+	...dataPaths(DEFAULT_DATA_DIR),
 };
 
 export function generateExampleDotenvFile(): string {
@@ -68,15 +88,15 @@ ORIGIN=${defaultConfigValues.origin}
 # SQLite by default — a "file:"/"sqlite:" path, no database server needed.
 # For PostgreSQL, use a connection string instead:
 # DATABASE_URL=postgresql://penombre:penombre@localhost:5432/penombre
-DATABASE_URL=${defaultConfigValues.db.url}
+# DATABASE_URL=${defaultConfigValues.db.url}
 
 # ===========================================
 # Authentication
 # ===========================================
 
-# Default admin user credentials (used only during initial seeding)
-ADMIN_EMAIL=${defaultConfigValues.auth.defaultAdminCredentials.email}
-ADMIN_PASSWORD=${defaultConfigValues.auth.defaultAdminCredentials.password}
+# There are deliberately no ADMIN_EMAIL/ADMIN_PASSWORD variables. The first
+# admin is created through the setup screen on first boot, so no instance ever
+# ships with a password that is published in this file.
 
 # ===========================================
 # Auth Settings
@@ -135,8 +155,26 @@ BYPASS_AUTH=${defaultConfigValues.bypassAuth}
 # ===========================================
 # Storage
 # ===========================================
-# Where uploaded files live on disk.
-# STORAGE_PATH=/data/storage
+# Base directory for everything the app writes — uploads and the SQLite
+# database. Defaults to "${DEV_DATA_DIR}" outside production.
+# DATA_DIR=${defaultConfigValues.dataDir}
+
+# Where uploaded files live on disk. Defaults to DATA_DIR/storage.
+# STORAGE_PATH=${defaultConfigValues.storagePath}
+
+# ===========================================
+# Mounted volumes (Optional)
+# ===========================================
+# Extra directories mounted alongside the main drive. They show up in the
+# sidebar and are scanned like the main storage root.
+#
+# Format: VOLUME_<NAME>_PATH, plus optional _LABEL and _READONLY.
+# In simple mode a volume is shared whole by every account; in full mode each
+# user gets their own subdirectory of it, exactly like the main drive.
+#
+# VOLUME_MEDIA_PATH=/mnt/media
+# VOLUME_MEDIA_LABEL=Media library
+# VOLUME_MEDIA_READONLY=false
 
 # ===========================================
 # SMTP (Optional - for email features)

@@ -11,6 +11,14 @@ with a bill of exactly zero.
 [Docker Hub](https://hub.docker.com/r/orochibraru/penombre) ·
 [Project page](https://orochibraru.com/penombre)
 
+<!-- Regenerate with `bun run screenshots`; do not edit these by hand. -->
+
+| Browse                                             | Appearance                                                  |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| ![The drive, in grid view](docs/images/browse.png) | ![Appearance settings](docs/images/settings-appearance.png) |
+| Admin dashboard                                    | Share links                                                 |
+| ![Instance statistics](docs/images/admin.png)      | ![Share links you own](docs/images/shared.png)              |
+
 ## What it is
 
 Penombre is a file storage and synchronisation platform for people who want

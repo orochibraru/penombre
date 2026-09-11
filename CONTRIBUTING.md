@@ -4,6 +4,8 @@
 
 - **Bun 1.4+** — the only required runtime (`preinstall` blocks npm/yarn/pnpm)
 - **Docker** — only for the end-to-end test stacks
+- **Prek** — Pre-commit tool
+- **ffmpeg** — For thumbnail generation
 
 ## Setup
 

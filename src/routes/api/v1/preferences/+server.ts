@@ -1,4 +1,3 @@
-import type { UserPreferencesData } from "$lib/server/db/schema";
 import { Http } from "$lib/server/http";
 import {
 	getPreferences,
@@ -19,27 +18,12 @@ export const GET = getPreferences.handler(async ({ user }) => {
 });
 
 export const PUT = updatePreferences.handler(async ({ body, user }) => {
-	const validLayouts = ["grid", "list"];
-	const validSortColumns = ["name", "size", "updatedAt", null];
-	const validSortDirections = ["asc", "desc"];
-
-	const updates: Partial<UserPreferencesData> = {};
-
-	if (body.layout && validLayouts.includes(body.layout)) {
-		updates.layout = body.layout;
-	}
-	if (
-		body.sortColumn !== undefined &&
-		(body.sortColumn === null || validSortColumns.includes(body.sortColumn))
-	) {
-		updates.sortColumn = body.sortColumn;
-	}
-	if (body.sortDirection && validSortDirections.includes(body.sortDirection)) {
-		updates.sortDirection = body.sortDirection;
-	}
-
 	try {
-		const preferences = await updateUserPreferences(user.id, updates);
+		// The body is already validated against the route's Zod schema, which
+		// constrains every field to its enum. Re-filtering by hand here used to
+		// silently drop anything not in a hard-coded list of three keys, so new
+		// preferences saved as 200 OK and never persisted.
+		const preferences = await updateUserPreferences(user.id, body);
 		return Http.Ok(preferences);
 	} catch (error) {
 		return Http.ServerError("Failed to update preferences", error);

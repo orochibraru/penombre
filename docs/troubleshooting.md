@@ -61,17 +61,16 @@ or an invalid `AUTH_SECRET`.
 
 ## Authentication
 
-### Can't sign in with the default admin account
+### The setup screen keeps appearing, or never appears
 
-The admin account is only created on the **first startup** when no users exist
-in the database. The default credentials are:
+Every URL redirects to `/auth/setup` while the database holds **no accounts**;
+as soon as one exists the screen redirects to sign-in instead. So a setup screen
+that will not go away means the account was not created — check the app logs for
+the failure — and a missing one means an account already exists.
 
-- Email: value of `ADMIN_EMAIL` (default `admin@example.com`)
-- Password: value of `ADMIN_PASSWORD` (default `Admin1234!`)
-
-If you changed these variables after the initial seed, they have no effect — the
-account was already created with the original values. Reset the password through
-the forgot-password flow (requires SMTP), or connect to the database directly:
+There are no default credentials to fall back on. If you have lost access to the
+only account, reset its password through the forgot-password flow (requires
+SMTP), or connect to the database directly:
 
 ```bash
 # SQLite (default)

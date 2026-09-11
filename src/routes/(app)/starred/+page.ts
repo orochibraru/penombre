@@ -6,7 +6,10 @@ export const load = async ({ fetch, url, depends }) => {
 
 	const { data, error: fetchError } = await api.GET(
 		"/api/v1/storage/file/starred",
-		{ fetch, baseUrl: url.origin },
+		{
+			fetch,
+			baseUrl: url.origin,
+		},
 	);
 
 	if (fetchError) {

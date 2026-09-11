@@ -1,7 +1,7 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { Logger } from "$lib/logger";
 import { getDb } from "$lib/server/db";
-import { activity } from "$lib/server/db/schema";
+import { activity, user } from "$lib/server/db/schema";
 import type { NewActivity } from "$lib/server/schema";
 
 export class ActivityService {
@@ -68,5 +68,38 @@ export class ActivityService {
 			this.logger.error("Failed to fetch user activities:", error);
 			throw error;
 		}
+	}
+
+	/**
+	 * Instance-wide audit log for admins.
+	 *
+	 * Deliberately omits `message` and `link`: those carry file and folder
+	 * names, and an admin auditing who did what has no business reading the
+	 * contents of someone else's drive. Action, actor and timestamp are
+	 * enough to answer "who deleted things last Tuesday".
+	 */
+	async audit(limit = 100, offset = 0) {
+		const rows = await this.db
+			.select({
+				id: activity.id,
+				action: activity.action,
+				message: activity.message,
+				level: activity.level,
+				createdAt: activity.createdAt,
+				userId: activity.userId,
+				userName: user.name,
+				userEmail: user.email,
+			})
+			.from(activity)
+			.leftJoin(user, eq(activity.userId, user.id))
+			.orderBy(desc(activity.createdAt))
+			.limit(limit)
+			.offset(offset);
+
+		const [total] = await this.db
+			.select({ count: sql<number>`count(*)` })
+			.from(activity);
+
+		return { rows, total: Number(total?.count ?? 0) };
 	}
 }

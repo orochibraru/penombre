@@ -35,6 +35,22 @@ jobs:
         with:
           extra-args: --all-files --no-fail-fast
 
+      - name: Lint
+        run: bun run lint
+
+      - name: Type check
+        run: bun run check
+
+      - name: Codegen is current (API & example env)
+        run: |
+          bun run gen
+          bun run format:md
+          bun run biome check --write --unsafe --no-errors-on-unmatched openapi.json .example.env
+          if ! git diff --exit-code -- .example.env openapi.json src/lib/api; then
+            echo "::error::Generated files are stale — run 'bun run gen:env && bun run gen:api' and commit the result."
+            exit 1
+          fi
+
   docs-check:
     name: Docs (Checks)
     runs-on: ubuntu-latest
@@ -74,6 +90,9 @@ jobs:
 
       - name: Sync SvelteKit
         run: bun run svelte-kit sync
+
+      - name: Compile messages
+        run: bun run gen:paraglide
 
       - name: Tests (Unit)
         run: bun test --bail

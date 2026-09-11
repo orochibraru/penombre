@@ -351,9 +351,9 @@
                 class="flex items-center gap-2 flex-1 min-w-0"
             >
                 {#if isExpanded}
-                    <FolderOpenIcon class="h-5 w-5 text-indigo-500 shrink-0" />
+                    <FolderOpenIcon class="text-primary h-5 w-5 shrink-0" />
                 {:else}
-                    <FolderIcon class="h-5 w-5 text-indigo-500 shrink-0" />
+                    <FolderIcon class="text-primary h-5 w-5 shrink-0" />
                 {/if}
                 <span class="truncate text-sm">{node.name}</span>
             </button>

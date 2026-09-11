@@ -19,9 +19,11 @@
                 <img
                     src="/logo.svg"
                     alt={`${data.config.appName} logo`}
-                    class="w-12 h-12"
+                    class="text-primary size-8"
                 />
-                {data.config.appName}
+                <span class="from-primary to-brand-2 bg-linear-to-r bg-clip-text text-transparent">
+                    {data.config.appName}
+                </span>
             </a>
         </div>
         <div class="flex flex-1 items-center justify-center">
@@ -30,7 +32,9 @@
             </div>
         </div>
         <div class="flex">
-            <LanguageDropdown />
+            <div class="w-44">
+                <LanguageDropdown compact />
+            </div>
         </div>
     </div>
 </div>

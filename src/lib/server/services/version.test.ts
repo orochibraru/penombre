@@ -1,4 +1,12 @@
-import { beforeEach, describe, expect, type Mock, mock, test } from "bun:test";
+import {
+	afterAll,
+	beforeEach,
+	describe,
+	expect,
+	type Mock,
+	mock,
+	test,
+} from "bun:test";
 import { getConfig } from "$lib/server/config";
 import { isNewerVersion, normalizeVersion } from "./version";
 
@@ -26,6 +34,26 @@ async function importFresh() {
 	delete require.cache[modulePath];
 	return await import("./version");
 }
+
+/**
+ * The config mock is module-level and shared across test files, so a value
+ * set here with `mockReturnValue` would reconfigure every suite that runs
+ * after this one. Restore test.setup's default when the file is done.
+ */
+const defaultConfig = {
+	smtp: undefined,
+	appName: "Penombre",
+	origin: "http://localhost:5173",
+	auth: {
+		secret: "test-secret",
+		enableEmailSignIn: true,
+		minPasswordLength: 8,
+	},
+};
+
+afterAll(() => {
+	mockGetConfig.mockReturnValue(defaultConfig as never);
+});
 
 describe("checkForUpdate", () => {
 	beforeEach(() => {

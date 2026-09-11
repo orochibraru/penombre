@@ -8,6 +8,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { files, folders } from "$lib/server/db/schema";
 import type { StorageContext } from "./context";
+import { ownedFiles, ownedFolders } from "./scope";
 
 export async function getFolderIdByPath(
 	ctx: StorageContext,
@@ -20,7 +21,7 @@ export async function getFolderIdByPath(
 	const [folder] = await ctx.db
 		.select({ id: folders.id })
 		.from(folders)
-		.where(and(eq(folders.path, normalized), eq(folders.ownerId, ctx.user.id)));
+		.where(and(eq(folders.path, normalized), ownedFolders(ctx)));
 	return folder?.id ?? null;
 }
 
@@ -39,7 +40,7 @@ export async function getUniqueDisplayName(
 			.from(folders)
 			.where(
 				and(
-					eq(folders.ownerId, ctx.user.id),
+					ownedFolders(ctx),
 					eq(folders.isTrashed, false),
 					folderId ? eq(folders.parentId, folderId) : isNull(folders.parentId),
 				),
@@ -51,7 +52,7 @@ export async function getUniqueDisplayName(
 			.from(files)
 			.where(
 				and(
-					eq(files.ownerId, ctx.user.id),
+					ownedFiles(ctx),
 					eq(files.isTrashed, false),
 					folderId ? eq(files.folderId, folderId) : isNull(files.folderId),
 				),

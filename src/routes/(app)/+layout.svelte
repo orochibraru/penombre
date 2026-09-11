@@ -5,22 +5,28 @@
 		CodeIcon,
 		FileArchiveIcon,
 		FileIcon,
+		FileTextIcon,
 		FolderIcon,
 		FolderPlusIcon,
-		FolderSyncIcon,
+		HardDriveDownloadIcon,
+		HardDriveIcon,
 		ImageIcon,
 		MenuIcon,
 		MusicIcon,
 		PlugIcon,
+		PresentationIcon,
 		Rotate3dIcon,
 		SettingsIcon,
 		SquarePlusIcon,
 		StarIcon,
+		TableIcon,
 		TrashIcon,
 		UserIcon,
 		UsersIcon,
 		VideoIcon,
 	} from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
+	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { navigating, page } from "$app/state";
 	import NewFolderDialog from "$lib/components/layout/dialogs/new-folder-dialog.svelte";
@@ -31,6 +37,7 @@
 		type NavItem,
 		type NavMenus,
 	} from "$lib/components/layout/nav.svelte";
+	import Onboarding from "$lib/components/layout/onboarding.svelte";
 	import UploadProgressIndicator from "$lib/components/layout/upload-progress-indicator.svelte";
 	import VersionCheck from "$lib/components/layout/version-check.svelte";
 	import SidebarBranding from "$lib/components/sidebar-branding.svelte";
@@ -39,6 +46,7 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import * as Sidebar from "$lib/components/ui/sidebar/index";
 	import Spinner from "$lib/components/ui/spinner.svelte";
+	import { createDocument, type DocumentKind } from "$lib/documents";
 	import { FileCategoryEnum } from "$lib/file-helpers";
 	import { m } from "$lib/paraglide/messages.js";
 	import { customMenu } from "$lib/store/custom-menu";
@@ -50,16 +58,33 @@
 		newFolderDialogOpen,
 		uploadDialogOpen,
 	} from "$lib/store/upload";
+	import { applyTheme } from "$lib/theme";
 	import { cn } from "$lib/utils";
 
 	const { children, data } = $props();
 
 	// Simple mode: bare shared file browser, drop drive-only concepts
-	// (recent/starred/shared/categories/sync) but keep trash for undo safety.
+	// (recent/starred/shared/categories) but keep trash for undo safety.
 	const simpleMode = $derived(data.config?.simpleMode ?? false);
 
 	// Auth bypass: nobody signs in, so there's no profile/admin to show.
 	const authBypassed = $derived(data.authBypassed ?? false);
+
+	// Shown once per account, on the first load after signing in. Skipping
+	// still records it as done, so it never reappears uninvited.
+	let onboardingOpen = $state(false);
+
+	$effect(() => {
+		if (data.preferences && data.preferences.onboarded === false) {
+			onboardingOpen = true;
+		}
+	});
+
+	// Appearance preferences are per-user, so they can only be applied once the
+	// session's preferences have loaded.
+	$effect(() => {
+		applyTheme(data.preferences);
+	});
 
 	// Close all dialogs when navigation starts
 	$effect(() => {
@@ -69,6 +94,54 @@
 	});
 
 	let mobileCreateDrawerOpen: boolean = $state(false);
+
+	/**
+	 * The document types the New menu can create. Each lands in the folder
+	 * currently on screen and opens straight in its editor — a new document
+	 * that leaves you back in the file list is a document nobody writes in.
+	 */
+	const newDocumentKinds = $derived([
+		{
+			kind: "document" as const,
+			label: m.new_document(),
+			icon: FileTextIcon,
+			title: m.new_document_title(),
+		},
+		{
+			kind: "sheet" as const,
+			label: m.new_sheet(),
+			icon: TableIcon,
+			title: m.new_sheet_title(),
+		},
+		{
+			kind: "presentation" as const,
+			label: m.new_presentation(),
+			icon: PresentationIcon,
+			title: m.new_presentation_title(),
+		},
+	]);
+
+	let creatingDocument = $state(false);
+	let newMenuOpen = $state(false);
+
+	async function newDocument(kind: DocumentKind) {
+		const entry = newDocumentKinds.find((item) => item.kind === kind);
+		// Closed explicitly: the item navigates rather than opening a dialog,
+		// and the menu would otherwise stay up over the editor it just opened.
+		newMenuOpen = false;
+		creatingDocument = true;
+		// `page.params.path` is the folder being browsed; at the drive root it
+		// is undefined and the file lands there.
+		const folder = page.params.path?.split("/").pop();
+		const id = await createDocument(kind, entry?.title ?? "Untitled", folder);
+		creatingDocument = false;
+
+		if (!id) {
+			toast.error(m.new_document_error());
+			return;
+		}
+		await goto(resolve("/(app)/edit/[fileId]", { fileId: id }));
+	}
 	let mobileMenuDrawerOpen: boolean = $state(false);
 	let uploadLoading: boolean = $state(false);
 
@@ -154,6 +227,11 @@
 						accentColor: "rose",
 					},
 				] satisfies NavItem[]),
+		volumes: (data.volumes ?? []).map((volume) => ({
+			title: volume.label,
+			url: `/volumes/${volume.name}`,
+			icon: volume.readOnly ? HardDriveDownloadIcon : HardDriveIcon,
+		})) satisfies NavItem[],
 		help: [
 			{
 				title: m.nav_settings(),
@@ -161,18 +239,9 @@
 				icon: SettingsIcon,
 				hideOnMobile: true,
 			},
-			...(simpleMode
-				? []
-				: ([
-						{
-							title: m.nav_sync(),
-							url: "/sync",
-							icon: FolderSyncIcon,
-						},
-					] satisfies NavItem[])),
 			{
 				title: m.nav_api(),
-				url: "/api/v1/docs",
+				url: "/api-docs",
 				icon: PlugIcon,
 			},
 		],
@@ -194,7 +263,7 @@
 	}
 
 	// Pages where the upload/new button should be hidden
-	const noUploadPages = ["/settings", "/account", "/admin", "/sync"];
+	const noUploadPages = ["/settings", "/account", "/admin", "/api-docs"];
 	let showUploadButton = $derived(
 		!noUploadPages.some((p) => page.url.pathname.startsWith(p)),
 	);
@@ -212,7 +281,7 @@
             <SidebarBranding />
             {#if showUploadButton}
                 <div class="hidden md:block">
-                    <DropdownMenu.Root>
+                    <DropdownMenu.Root bind:open={newMenuOpen}>
                         <DropdownMenu.Trigger>
                             {#snippet child({ props })}
                                 <Button
@@ -260,6 +329,20 @@
                                     {m.file_upload()}
                                 </DropdownMenu.Item>
                             </DropdownMenu.Group>
+                            <DropdownMenu.Separator />
+                            <DropdownMenu.Group>
+                                {#each newDocumentKinds as entry (entry.kind)}
+                                    {@const Icon = entry.icon}
+                                    <DropdownMenu.Item
+                                        class="font-medium"
+                                        disabled={creatingDocument}
+                                        onclick={() => newDocument(entry.kind)}
+                                    >
+                                        <Icon />
+                                        {entry.label}
+                                    </DropdownMenu.Item>
+                                {/each}
+                            </DropdownMenu.Group>
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>
                 </div>
@@ -267,6 +350,9 @@
         </Sidebar.Header>
         <Sidebar.Content>
             <Nav title={m.nav_general()} items={nav.general} />
+            {#if (nav.volumes ?? []).length > 0}
+                <Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
+            {/if}
             {#if !simpleMode}
                 <Nav title={m.nav_categories()} items={nav.categories} />
             {/if}
@@ -414,6 +500,22 @@
                 <CloudUploadIcon class="text-primary w-5! h-5!" />
                 {m.file_upload()}
             </Button>
+            {#each newDocumentKinds as entry (entry.kind)}
+                {@const Icon = entry.icon}
+                <Button
+                    class="w-full"
+                    variant="outline"
+                    size="lg"
+                    disabled={creatingDocument}
+                    onclick={() => {
+                        mobileCreateDrawerOpen = false;
+                        newDocument(entry.kind);
+                    }}
+                >
+                    <Icon class="text-primary w-5! h-5!" />
+                    {entry.label}
+                </Button>
+            {/each}
         </div>
         <Drawer.Footer>
             <Drawer.Close class={buttonVariants({ variant: "destructive" })}>
@@ -422,6 +524,8 @@
         </Drawer.Footer>
     </Drawer.Content>
 </Drawer.Root>
+
+<Onboarding bind:open={onboardingOpen} preferences={data.preferences} />
 
 <NewFolderDialog bind:open={$newFolderDialogOpen} />
 <UploadDialog bind:open={$uploadDialogOpen} bind:loading={uploadLoading} />

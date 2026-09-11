@@ -26,6 +26,7 @@ export const user = pgTable("user", {
 	banned: boolean("banned").default(false),
 	banReason: text("ban_reason"),
 	banExpires: timestamp("ban_expires"),
+	twoFactorEnabled: boolean("two_factor_enabled").default(false),
 });
 
 export const session = pgTable(
@@ -93,6 +94,7 @@ export const userRelations = relations(user, ({ one, many }) => ({
 	accounts: many(account),
 	activities: many(activity),
 	ownedSharings: many(sharings),
+	shares: many(shares),
 	sharedWithMe: many(sharedWith),
 	preferences: one(userPreferences),
 	passkeys: many(passkey),
@@ -215,6 +217,129 @@ export const sharedWithRelations = relations(sharedWith, ({ one }) => ({
 }));
 
 // =========================================================================
+// SHARE LINKS
+// =========================================================================
+
+/**
+ * A shareable link to one file or folder. Distinct from `sharings`, which
+ * grants named users access — a share link is anonymous, addressed only by
+ * its unguessable `token`.
+ */
+export const shares = pgTable(
+	"shares",
+	{
+		id: text("id").primaryKey(),
+		/** Unguessable public identifier — the whole URL secret. */
+		token: text("token").notNull().unique(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		resourceType: text("resource_type", {
+			enum: ["file", "folder"],
+		}).notNull(),
+		resourceId: text("resource_id").notNull(),
+		/** Display name captured at share time, so revoked/renamed items still list. */
+		resourceName: text("resource_name").notNull(),
+		/** Scrypt hash from better-auth's hasher; null means no password. */
+		passwordHash: text("password_hash"),
+		/** When true, only signed-in users may open the link. */
+		requiresAuth: boolean("requires_auth").default(false).notNull(),
+		/** Null means the link never expires. */
+		expiresAt: timestamp("expires_at"),
+		downloadCount: integer("download_count").default(0).notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("shares_ownerId_idx").on(table.ownerId),
+		index("shares_token_idx").on(table.token),
+	],
+);
+
+export const sharesRelations = relations(shares, ({ one }) => ({
+	owner: one(user, {
+		fields: [shares.ownerId],
+		references: [user.id],
+	}),
+}));
+
+// =========================================================================
+// INSTANCE SETTINGS
+// =========================================================================
+
+/**
+ * Runtime settings an admin can change without restarting.
+ *
+ * Single row, keyed by a constant id. Anything also settable by environment
+ * variable stays env-owned — `config.ts` remains the source of truth for those,
+ * and the admin UI shows them read-only. This table only holds what has no env
+ * equivalent, so the two can never disagree.
+ */
+export interface AppSettingsData {
+	/** Require every account to register a passkey. */
+	requirePasskey?: boolean;
+	/** Whether anyone may create an account unprompted. */
+	allowSignups?: boolean;
+	/** When signups are open, restrict them to these email domains. */
+	allowedEmailDomains?: string[];
+	/** Minimum password length enforced on top of the env floor. */
+	minPasswordLength?: number;
+	/** Require a mix of character classes in passwords. */
+	requireStrongPassword?: boolean;
+	/**
+	 * OAuth providers added through the admin UI.
+	 *
+	 * Kept separate from the env-declared ones: `config.ts` owns those, and
+	 * merging them into one editable list would give two sources of truth for
+	 * the same provider name.
+	 */
+	/**
+	 * Email + password sign-in. Only consulted when `ENABLE_EMAIL_SIGNIN` is
+	 * absent from the environment — see `envProvided()`.
+	 */
+	emailSignInEnabled?: boolean;
+	/**
+	 * Passwordless sign-in by emailed link. Needs working SMTP; there is no
+	 * environment variable for it, so the stored value always governs.
+	 */
+	magicLinkEnabled?: boolean;
+	/** Passwordless sign-in by emailed one-time code. Also needs SMTP. */
+	emailOtpEnabled?: boolean;
+	/** Force every account to enrol in TOTP two-factor before using the app. */
+	requireTwoFactor?: boolean;
+	/** SMTP, used when `SMTP_ENABLED` is absent from the environment. */
+	smtp?: {
+		enabled?: boolean;
+		host?: string;
+		port?: number;
+		user?: string;
+		password?: string;
+		from?: string;
+		secure?: boolean;
+	};
+	oauthProviders?: Array<{
+		name: string;
+		prettyName?: string;
+		clientId: string;
+		clientSecret: string;
+		discoveryUrl: string;
+		scopes?: string[];
+		pkce?: boolean;
+		enabled?: boolean;
+	}>;
+}
+
+export const appSettings = pgTable("app_settings", {
+	id: text("id").primaryKey(),
+	settings: jsonb("settings").$type<AppSettingsData>().default({}),
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+// =========================================================================
 // USER PREFERENCES
 // =========================================================================
 
@@ -222,6 +347,17 @@ export interface UserPreferencesData {
 	layout?: "grid" | "list";
 	sortColumn?: "name" | "size" | "updatedAt" | null;
 	sortDirection?: "asc" | "desc";
+	/** Interface typeface: the monospace default, or the system sans stack. */
+	fontFamily?: "mono" | "sans";
+	/** Corner treatment across the whole UI. */
+	corners?: "boxy" | "rounded";
+	/** Named accent, mapped to an oklch hue in `app.css`. */
+	accent?: "purple" | "blue" | "teal" | "green" | "amber" | "rose";
+	/**
+	 * Set once the first-run walkthrough has been completed or skipped. Lives
+	 * here rather than on `user` so inviting an account needs no migration.
+	 */
+	onboarded?: boolean;
 }
 
 export const userPreferences = pgTable("user_preferences", {
@@ -307,6 +443,76 @@ export const passkey = pgTable("passkey", {
 	aaguid: text("aaguid"),
 });
 
+/**
+ * TOTP secret and backup codes, one row per enrolled account.
+ *
+ * Column names match what better-auth's two-factor plugin asks the adapter
+ * for — `secret`, `backupCodes`, `verified`, `failedVerificationCount`,
+ * `lockedUntil` — so renaming a property here silently breaks enrolment.
+ */
+export const twoFactor = pgTable(
+	"two_factor",
+	{
+		id: text("id").primaryKey(),
+		secret: text("secret").notNull(),
+		backupCodes: text("backup_codes").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		verified: boolean("verified").default(true),
+		failedVerificationCount: integer("failed_verification_count").default(0),
+		lockedUntil: timestamp("locked_until"),
+	},
+	(table) => [
+		index("two_factor_userId_idx").on(table.userId),
+		index("two_factor_secret_idx").on(table.secret),
+	],
+);
+
+/**
+ * Notes attached to a file.
+ *
+ * `timestampSeconds` is what makes a note a comment on a moment rather than on
+ * the file as a whole: null means "the file", a number means that point in an
+ * audio or video track. Nothing enforces that the file is playable — a stray
+ * timestamp on a PDF is harmless and the UI simply never sets one.
+ */
+export const fileNotes = pgTable(
+	"file_notes",
+	{
+		id: text("id").primaryKey(),
+		fileId: text("file_id").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		body: text("body").notNull(),
+		timestampSeconds: real("timestamp_seconds"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("file_notes_fileId_idx").on(table.fileId),
+		index("file_notes_userId_idx").on(table.userId),
+	],
+);
+
+export const fileNotesRelations = relations(fileNotes, ({ one }) => ({
+	user: one(user, {
+		fields: [fileNotes.userId],
+		references: [user.id],
+	}),
+}));
+
+export const twoFactorRelations = relations(twoFactor, ({ one }) => ({
+	user: one(user, {
+		fields: [twoFactor.userId],
+		references: [user.id],
+	}),
+}));
+
 export const passkeyRelations = relations(passkey, ({ one }) => ({
 	user: one(user, {
 		fields: [passkey.userId],
@@ -326,8 +532,14 @@ export const folders = pgTable(
 		ownerId: text("owner_id")
 			.references(() => user.id, { onDelete: "cascade" })
 			.notNull(),
-		/** Storage key relative to user root, e.g. "folder-uuid" or "parent-uuid/child-uuid" */
+		/** Storage key relative to the volume root, e.g. "folder-uuid" or "parent-uuid/child-uuid" */
 		path: text("path").notNull(),
+		/**
+		 * Which mounted volume this row lives on. Null is the user's own drive
+		 * (or, in simple mode, the shared one) — the pre-volume default, so
+		 * existing rows keep working untouched.
+		 */
+		volumeId: text("volume_id"),
 		parentId: text("parent_id"),
 		isTrashed: boolean("is_trashed").default(false).notNull(),
 		isStarred: boolean("is_starred").default(false).notNull(),
@@ -344,6 +556,7 @@ export const folders = pgTable(
 		index("folders_ownerId_idx").on(table.ownerId),
 		index("folders_parentId_idx").on(table.parentId),
 		index("folders_path_ownerId_idx").on(table.path, table.ownerId),
+		index("folders_volumeId_idx").on(table.volumeId),
 	],
 );
 
@@ -373,8 +586,10 @@ export const files = pgTable(
 		ownerId: text("owner_id")
 			.references(() => user.id, { onDelete: "cascade" })
 			.notNull(),
-		/** Storage key relative to user root, e.g. "uuid.txt" or "folder-uuid/uuid.txt" */
+		/** Storage key relative to the volume root, e.g. "uuid.txt" or "folder-uuid/uuid.txt" */
 		path: text("path").notNull(),
+		/** Mounted volume, or null for the user's own drive. See `folders`. */
+		volumeId: text("volume_id"),
 		folderId: text("folder_id").references(() => folders.id, {
 			onDelete: "set null",
 		}),
@@ -400,6 +615,7 @@ export const files = pgTable(
 		index("files_ownerId_idx").on(table.ownerId),
 		index("files_folderId_idx").on(table.folderId),
 		index("files_path_ownerId_idx").on(table.path, table.ownerId),
+		index("files_volumeId_idx").on(table.volumeId),
 	],
 );
 
@@ -428,6 +644,8 @@ export type Account = typeof account.$inferSelect;
 export type Verification = typeof verification.$inferSelect;
 export type Activity = typeof activity.$inferSelect;
 export type Sharing = typeof sharings.$inferSelect;
+export type Share = typeof shares.$inferSelect;
+export type AppSettings = typeof appSettings.$inferSelect;
 export type SharedWith = typeof sharedWith.$inferSelect;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type Apikey = typeof apikey.$inferSelect;

@@ -16,7 +16,7 @@
 	import { Slider } from "$lib/components/ui/slider/index";
 	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
-	import { playableMusic } from "$lib/store/music";
+	import { playableMusic, playbackPosition } from "$lib/store/music";
 
 	function clearCurrent() {
 		$playableMusic = null;
@@ -27,6 +27,12 @@
 
 	let paused = $state(!!dev);
 	let currentTime = $state(0);
+
+	// Mirrored into a store so the notes panel can stamp a note with wherever
+	// the track currently is, without reaching into this component.
+	$effect(() => {
+		playbackPosition.set(currentTime);
+	});
 	let duration = $state(0);
 	let volume = $state(1);
 	let loading: boolean = $state(true);
@@ -40,6 +46,7 @@
 			// Only update the source if it's different from the current one.
 			// This prevents unnecessary reloads if the effect is re-triggered.
 			if (player.src !== music.source) {
+				loading = true;
 				player.src = music.source;
 				// `load()` tells the audio element to fetch the new source.
 				player.load();
@@ -90,9 +97,34 @@
 			});
 		}
 	}
+
+	// Publish this panel's height so other bottom drawers can stack above it.
+	// Measured rather than hard-coded: the player grows when a long title
+	// wraps, and a guessed constant would either overlap or leave a gap.
+	let panel: HTMLElement | null = $state(null);
+
+	$effect(() => {
+		const root = document.documentElement;
+		if (!panel) {
+			root.style.removeProperty("--player-height");
+			return;
+		}
+		const observer = new ResizeObserver(([entry]) => {
+			root.style.setProperty(
+				"--player-height",
+				`${entry?.target.getBoundingClientRect().height ?? 0}px`,
+			);
+		});
+		observer.observe(panel);
+		return () => {
+			observer.disconnect();
+			root.style.removeProperty("--player-height");
+		};
+	});
 </script>
 
 <BottomAction
+    bind:ref={panel}
     open={$playableMusic !== null}
     title={$playableMusic?.title ?? ""}
     callback={() => clearCurrent()}
@@ -179,6 +211,12 @@
         class="sr-only w-full rounded-none"
         title={$playableMusic?.title}
         playsinline
+        onwaiting={() => {
+            loading = true;
+        }}
+        onplaying={() => {
+            loading = false;
+        }}
         oncanplay={() => {
             loading = false;
             if (!dev) {

@@ -16,6 +16,14 @@ export interface StorageContext {
 	readonly user: User;
 	/** `user-<id>`, the per-user root inside the storage backend */
 	readonly userFolder: string;
+	/**
+	 * The mounted volume this context reads and writes, or null for the user's
+	 * own drive. Every `files`/`folders` query filters on it, so a service
+	 * bound to a volume can never see or touch another one's rows.
+	 */
+	readonly volumeId: string | null;
+	/** Refuse writes — set for volumes declared read-only. */
+	readonly readOnly: boolean;
 	/** Local filesystem base, used for thumbnail caching (always local) */
 	readonly storagePath: string;
 	readonly db: ReturnType<typeof getDb>;

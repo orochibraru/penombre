@@ -1,7 +1,12 @@
+import { resolve } from "node:path";
 import z from "zod";
+import { dev } from "$app/environment";
 import { env } from "$env/dynamic/private";
 import {
+	DEV_DATA_DIR,
+	dataPaths,
 	defaultConfigValues,
+	defaultDbUrl,
 	generateExampleDotenvFile,
 } from "./config.defaults";
 
@@ -20,6 +25,25 @@ const oauthProviderSchema = z.object({
 		.default(["openid", "profile", "email"]),
 	enabled: z.boolean().default(true),
 });
+
+/**
+ * An extra directory mounted alongside the main drive.
+ *
+ * Declared with `VOLUME_<NAME>_PATH` (and an optional `_LABEL`), mirroring the
+ * dynamic `OAUTH_<NAME>_*` convention already used for providers.
+ */
+const volumeSchema = z.object({
+	/** Stable id used in storage keys and DB rows. Lowercased env name. */
+	name: z.string().min(1),
+	/** What the sidebar shows. */
+	label: z.string().min(1),
+	/** Absolute path on the host. */
+	path: z.string().min(1),
+	/** Refuse writes; the volume browses but cannot be modified. */
+	readOnly: z.boolean().default(false),
+});
+
+export type VolumeConfig = z.infer<typeof volumeSchema>;
 
 const REQUIRED_SMTP_FIELDS = [
 	"host",
@@ -64,12 +88,6 @@ const configSchema = z
 				oauthProviders: z
 					.array(oauthProviderSchema)
 					.default(defaultConfigValues.auth.oauthProviders),
-				defaultAdminCredentials: z
-					.object({
-						email: z.email(),
-						password: z.string().min(8),
-					})
-					.default(defaultConfigValues.auth.defaultAdminCredentials),
 			})
 			.optional()
 			.default(defaultConfigValues.auth),
@@ -94,6 +112,10 @@ const configSchema = z
 		autoRedirectProvider: z
 			.string()
 			.default(defaultConfigValues.autoRedirectProvider),
+		dataDir: z.string().default(defaultConfigValues.dataDir),
+		storagePath: z.string().default(defaultConfigValues.storagePath),
+		dbLocation: z.string().default(defaultConfigValues.dbLocation),
+		volumes: z.array(volumeSchema).default([]),
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
@@ -137,6 +159,36 @@ export type OAuthProviderInput = z.input<typeof oauthProviderSchema>;
 
 export function validateConfig(config: unknown): AppConfig {
 	return configSchema.parse(config);
+}
+
+/**
+ * Extra volumes from `VOLUME_<NAME>_PATH` / `VOLUME_<NAME>_LABEL` /
+ * `VOLUME_<NAME>_READONLY`. A volume without a path is skipped.
+ */
+function parseVolumes(): VolumeConfig[] {
+	const names = new Set<string>();
+	for (const key of Object.keys(env)) {
+		const match = key.match(/^VOLUME_([A-Z0-9_]+)_(PATH|LABEL|READONLY)$/);
+		if (match?.[1]) {
+			names.add(match[1]);
+		}
+	}
+
+	const volumes: VolumeConfig[] = [];
+	for (const rawName of names) {
+		const path = env[`VOLUME_${rawName}_PATH`];
+		if (!path) {
+			continue;
+		}
+		const name = rawName.toLowerCase().replace(/_/g, "-");
+		volumes.push({
+			name,
+			label: env[`VOLUME_${rawName}_LABEL`] || name,
+			path: resolve(path),
+			readOnly: env[`VOLUME_${rawName}_READONLY`] === "true",
+		});
+	}
+	return volumes;
 }
 
 /** Provider names appearing in any OAUTH_<NAME>_<FIELD> env var */
@@ -213,14 +265,6 @@ function resolveAuthConfig() {
 			oauthProviders.length > 0
 				? oauthProviders
 				: defaultConfigValues.auth.oauthProviders,
-		defaultAdminCredentials: {
-			email:
-				env.ADMIN_EMAIL ||
-				defaultConfigValues.auth.defaultAdminCredentials.email,
-			password:
-				env.ADMIN_PASSWORD ||
-				defaultConfigValues.auth.defaultAdminCredentials.password,
-		},
 	};
 }
 
@@ -259,27 +303,80 @@ function resolveLogFormat() {
 
 export function getConfig(): AppConfig {
 	const redisUrl = env.REDIS_URL;
+	// Nothing is mounted at `/data` on a dev box, so writes stay in the repo.
+	const dataDir =
+		env.DATA_DIR || (dev ? DEV_DATA_DIR : defaultConfigValues.dataDir);
+	const paths = dataPaths(dataDir);
 
 	return validateConfig({
 		appName: env.APP_NAME || defaultConfigValues.appName,
-		appVersion: env.APP_VERSION || defaultConfigValues.appVersion,
+		// Not overridable: the version is package.json's, inlined into the bundle
+		// at build time, so it always describes the artifact that's running.
+		appVersion: defaultConfigValues.appVersion,
 		environment: env.APP_ENV || defaultConfigValues.environment,
 		origin: env.ORIGIN || defaultConfigValues.origin,
 		logLevel: resolveLogLevel(),
 		logFormat: resolveLogFormat(),
-		db: env.DATABASE_URL ? { url: env.DATABASE_URL } : defaultConfigValues.db,
+		// Trimmed and `||`: an empty or whitespace `DATABASE_URL` (an unset var
+		// rendered by a deploy UI or compose) means "not set".
+		db: { url: env.DATABASE_URL?.trim() || defaultDbUrl(dataDir) },
 		auth: resolveAuthConfig(),
 		redis: redisUrl ? { url: redisUrl } : defaultConfigValues.redis,
 		smtp: resolveSmtpConfig(),
 		simpleMode: env.SIMPLE_MODE === "true",
 		bypassAuth: env.BYPASS_AUTH === "true",
 		autoRedirectProvider: env.AUTH_AUTO_REDIRECT_PROVIDER || "",
+		// `resolve` anchors a relative path to the cwd and leaves an absolute one
+		// alone — joining the cwd on top of it turned the documented
+		// `STORAGE_PATH=/data/storage` into `/app/data/storage` in the container,
+		// so a mounted volume was never actually read or written.
+		dataDir: resolve(dataDir),
+		storagePath: resolve(env.STORAGE_PATH || paths.storagePath),
+		dbLocation: resolve(paths.dbLocation),
+		volumes: parseVolumes(),
 	});
+}
+
+/**
+ * Which settings the environment explicitly provides.
+ *
+ * The rule is: **env wins when it is set, otherwise the database governs.**
+ * Without this the defaults were indistinguishable from a deliberate env
+ * value, so removing a var from `.env` left a setting nothing could change —
+ * env said "true" by default and the UI refused to touch it.
+ */
+export function envProvided(): {
+	emailSignIn: boolean;
+	oauthSignIn: boolean;
+	minPasswordLength: boolean;
+	smtp: boolean;
+} {
+	return {
+		emailSignIn: env.ENABLE_EMAIL_SIGNIN !== undefined,
+		oauthSignIn: env.ENABLE_OAUTH_SIGNIN !== undefined,
+		minPasswordLength: env.MIN_PASSWORD_LENGTH !== undefined,
+		smtp: env.SMTP_ENABLED !== undefined,
+	};
 }
 
 export function isSmtpEnabled(): boolean {
 	const config = getConfig();
 	return config.smtp !== undefined;
+}
+
+/** Absolute path to the storage root — where uploaded bytes live on disk. */
+export function getStoragePath(): string {
+	return getConfig().storagePath;
+}
+
+/** Every extra volume mounted alongside the main drive. */
+export function getVolumes(): VolumeConfig[] {
+	return getConfig().volumes;
+}
+
+/** One mounted volume by name, or undefined. */
+export function getVolume(name: string): VolumeConfig | undefined {
+	return getVolumes().find((volume) => volume.name === name);
 }
 
 /** Simple mode: one shared storage volume/drive for every account, no per-user drives. */

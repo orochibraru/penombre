@@ -15,7 +15,7 @@ import {
 	sqliteTable,
 	text,
 } from "drizzle-orm/sqlite-core";
-import type { UserPreferencesData } from "./schema.pg";
+import type { AppSettingsData, UserPreferencesData } from "./schema.pg";
 
 export const user = sqliteTable("user", {
 	id: text("id").primaryKey(),
@@ -36,6 +36,9 @@ export const user = sqliteTable("user", {
 	banned: integer("banned", { mode: "boolean" }).default(false),
 	banReason: text("ban_reason"),
 	banExpires: integer("ban_expires", { mode: "timestamp_ms" }),
+	twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" }).default(
+		false,
+	),
 });
 
 export const session = sqliteTable(
@@ -190,6 +193,64 @@ export const sharedWith = sqliteTable(
 );
 
 // =========================================================================
+// SHARE LINKS
+// =========================================================================
+
+/**
+ * A shareable link to one file or folder. Distinct from `sharings`, which
+ * grants named users access — a share link is anonymous, addressed only by
+ * its unguessable `token`.
+ */
+export const shares = sqliteTable(
+	"shares",
+	{
+		id: text("id").primaryKey(),
+		/** Unguessable public identifier — the whole URL secret. */
+		token: text("token").notNull().unique(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		resourceType: text("resource_type", {
+			enum: ["file", "folder"],
+		}).notNull(),
+		resourceId: text("resource_id").notNull(),
+		/** Display name captured at share time, so revoked/renamed items still list. */
+		resourceName: text("resource_name").notNull(),
+		/** Scrypt hash from better-auth's hasher; null means no password. */
+		passwordHash: text("password_hash"),
+		/** When true, only signed-in users may open the link. */
+		requiresAuth: integer("requires_auth", { mode: "boolean" })
+			.default(false)
+			.notNull(),
+		/** Null means the link never expires. */
+		expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+		downloadCount: integer("download_count").default(0).notNull(),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("shares_ownerId_idx").on(table.ownerId),
+		index("shares_token_idx").on(table.token),
+	],
+);
+
+// =========================================================================
+// INSTANCE SETTINGS
+// =========================================================================
+
+export const appSettings = sqliteTable("app_settings", {
+	id: text("id").primaryKey(),
+	settings: text("settings", { mode: "json" })
+		.$type<AppSettingsData>()
+		.default({}),
+	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+		.$defaultFn(() => new Date())
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+// =========================================================================
 // USER PREFERENCES
 // =========================================================================
 
@@ -251,6 +312,49 @@ export const passkey = sqliteTable("passkey", {
 	aaguid: text("aaguid"),
 });
 
+export const twoFactor = sqliteTable(
+	"two_factor",
+	{
+		id: text("id").primaryKey(),
+		secret: text("secret").notNull(),
+		backupCodes: text("backup_codes").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		verified: integer("verified", { mode: "boolean" }).default(true),
+		failedVerificationCount: integer("failed_verification_count").default(0),
+		lockedUntil: integer("locked_until", { mode: "timestamp_ms" }),
+	},
+	(table) => [
+		index("two_factor_userId_idx").on(table.userId),
+		index("two_factor_secret_idx").on(table.secret),
+	],
+);
+
+export const fileNotes = sqliteTable(
+	"file_notes",
+	{
+		id: text("id").primaryKey(),
+		fileId: text("file_id").notNull(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		body: text("body").notNull(),
+		timestampSeconds: real("timestamp_seconds"),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("file_notes_fileId_idx").on(table.fileId),
+		index("file_notes_userId_idx").on(table.userId),
+	],
+);
+
 // =========================================================================
 // FOLDERS
 // =========================================================================
@@ -265,6 +369,8 @@ export const folders = sqliteTable(
 			.notNull(),
 		/** Storage key relative to user root, e.g. "folder-uuid" or "parent-uuid/child-uuid" */
 		path: text("path").notNull(),
+		/** Mounted volume, or null for the user's own drive. */
+		volumeId: text("volume_id"),
 		parentId: text("parent_id"),
 		isTrashed: integer("is_trashed", { mode: "boolean" })
 			.default(false)
@@ -288,6 +394,7 @@ export const folders = sqliteTable(
 		index("folders_ownerId_idx").on(table.ownerId),
 		index("folders_parentId_idx").on(table.parentId),
 		index("folders_path_ownerId_idx").on(table.path, table.ownerId),
+		index("folders_volumeId_idx").on(table.volumeId),
 	],
 );
 
@@ -305,6 +412,8 @@ export const files = sqliteTable(
 			.notNull(),
 		/** Storage key relative to user root, e.g. "uuid.txt" or "folder-uuid/uuid.txt" */
 		path: text("path").notNull(),
+		/** Mounted volume, or null for the user's own drive. */
+		volumeId: text("volume_id"),
 		folderId: text("folder_id").references(() => folders.id, {
 			onDelete: "set null",
 		}),
@@ -337,5 +446,6 @@ export const files = sqliteTable(
 		index("files_ownerId_idx").on(table.ownerId),
 		index("files_folderId_idx").on(table.folderId),
 		index("files_path_ownerId_idx").on(table.path, table.ownerId),
+		index("files_volumeId_idx").on(table.volumeId),
 	],
 );

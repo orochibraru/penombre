@@ -7,8 +7,12 @@ import {
 
 const defaultPreferences: UserPreferencesData = {
 	layout: "list",
-	sortColumn: "name",
-	sortDirection: "asc",
+	sortColumn: "updatedAt",
+	sortDirection: "desc",
+	fontFamily: "sans",
+	corners: "rounded",
+	accent: "purple",
+	onboarded: false,
 };
 
 /**
@@ -31,7 +35,7 @@ export async function getUserPreferences(
 	const prefs = result[0]!;
 	return {
 		...defaultPreferences,
-		...(prefs.preferences ?? {}),
+		...prefs.preferences,
 	};
 }
 

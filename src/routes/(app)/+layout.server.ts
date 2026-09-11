@@ -4,7 +4,8 @@ import { zod4 } from "sveltekit-superforms/adapters";
 import { resolve } from "$app/paths";
 import { api } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
-import { getConfig } from "$lib/server/config";
+import { getConfig, getVolumes } from "$lib/server/config";
+import { isTwoFactorRequired } from "$lib/server/services/app-settings";
 
 export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:preferences");
@@ -12,6 +13,18 @@ export const load = async ({ fetch, url, locals, depends }) => {
 
 	if (!(locals.user && locals.session)) {
 		return redirect(302, resolve("/auth/sign-in"));
+	}
+
+	// Enrolment gate. The security page is exempt or the redirect would loop —
+	// it is where the enrolment card lives, so that is where people are sent.
+	if (
+		!(
+			locals.user.twoFactorEnabled ||
+			url.pathname.startsWith("/account/security")
+		) &&
+		(await isTwoFactorRequired())
+	) {
+		return redirect(302, resolve("/account/security"));
 	}
 
 	const [activityResult, fileCount, preferences, versionCheck] =
@@ -44,6 +57,13 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		uploadForm: await superValidate({}, zod4(uploadSchema)),
 		authCookie: "123",
 		isAdmin,
+		// Mounted volumes appear in the sidebar as extra drives. Simple mode
+		// shares each one whole; full mode gives every user a subdirectory.
+		volumes: getVolumes().map((volume) => ({
+			name: volume.name,
+			label: volume.label,
+			readOnly: volume.readOnly,
+		})),
 		versionCheck: versionCheck.data?.data,
 	};
 };

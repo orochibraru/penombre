@@ -66,6 +66,7 @@ describe("refreshChangedFiles", () => {
 				invalidateListingCaches: async () => {},
 			} as never,
 			{
+				warm: async () => {},
 				deleteThumbnails: async (key: string) => {
 					deleted.push(key);
 				},
@@ -96,7 +97,7 @@ describe("refreshChangedFiles", () => {
 				},
 				invalidateListingCaches: async () => {},
 			} as never,
-			{ deleteThumbnails: async () => {} } as never,
+			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
 		);
 
 		expect((await ops.scan()).updatedFiles).toBe(0);

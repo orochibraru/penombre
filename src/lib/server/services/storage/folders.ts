@@ -7,6 +7,7 @@
  */
 
 import { and, eq, isNull, like, or, sql } from "drizzle-orm";
+import { Logger } from "$lib/logger";
 import type { File as DbFile } from "$lib/server/db/schema";
 import { files, folders } from "$lib/server/db/schema";
 import { FileOrFolderNotFoundError } from "$lib/server/errors";
@@ -16,10 +17,12 @@ import type {
 	FolderItem,
 } from "$lib/server/schema";
 import { CacheKeys } from "./cache";
-import { logger } from "./constants";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import { folderDbToMetadata } from "./mappers";
+import { ownedFiles, ownedFolders } from "./scope";
+
+const logger = new Logger("StorageService");
 
 export class FolderOperations {
 	constructor(private readonly ctx: StorageContext) {}
@@ -31,12 +34,7 @@ export class FolderOperations {
 		const [folder] = await this.ctx.db
 			.select()
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedId),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedId), ownedFolders(this.ctx)));
 		if (!folder) {
 			throw new FileOrFolderNotFoundError(`Folder not found: ${folderId}`);
 		}
@@ -71,10 +69,7 @@ export class FolderOperations {
 			.select()
 			.from(folders)
 			.where(
-				and(
-					eq(folders.ownerId, this.ctx.user.id),
-					like(folders.path, `${fromPrefix}/%`),
-				),
+				and(ownedFolders(this.ctx), like(folders.path, `${fromPrefix}/%`)),
 			);
 		for (const sf of allSubFolders) {
 			await this.ctx.db
@@ -97,12 +92,7 @@ export class FolderOperations {
 		const [folder] = await this.ctx.db
 			.select()
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedKey),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedKey), ownedFolders(this.ctx)));
 		if (!folder) {
 			throw new FileOrFolderNotFoundError("Folder not found");
 		}
@@ -132,12 +122,7 @@ export class FolderOperations {
 		const allFilesUnder = await this.ctx.db
 			.select()
 			.from(files)
-			.where(
-				and(
-					eq(files.ownerId, this.ctx.user.id),
-					like(files.path, `${normalizedKey}/%`),
-				),
-			);
+			.where(and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)));
 
 		// Only touch the driver when there are actual files to move (avoids errors on empty folders)
 		if (allFilesUnder.length > 0) {
@@ -202,6 +187,7 @@ export class FolderOperations {
 				id: folderId,
 				name: uniqueName,
 				ownerId: this.ctx.user.id,
+				volumeId: this.ctx.volumeId,
 				path: folderPath,
 				parentId,
 				isTrashed: false,
@@ -234,16 +220,13 @@ export class FolderOperations {
 			await this.ctx.db
 				.delete(files)
 				.where(
-					and(
-						eq(files.ownerId, this.ctx.user.id),
-						like(files.path, `${normalizedKey}/%`),
-					),
+					and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)),
 				);
 			await this.ctx.db
 				.delete(folders)
 				.where(
 					and(
-						eq(folders.ownerId, this.ctx.user.id),
+						ownedFolders(this.ctx),
 						or(
 							eq(folders.path, normalizedKey),
 							like(folders.path, `${normalizedKey}/%`),
@@ -270,12 +253,7 @@ export class FolderOperations {
 		const [folder] = await this.ctx.db
 			.select({ id: folders.id })
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedKey),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedKey), ownedFolders(this.ctx)));
 		if (!folder) {
 			throw new Error("Folder not found");
 		}
@@ -283,18 +261,13 @@ export class FolderOperations {
 		await this.ctx.db
 			.update(files)
 			.set({ isTrashed: true, updatedAt: new Date() })
-			.where(
-				and(
-					eq(files.ownerId, this.ctx.user.id),
-					like(files.path, `${normalizedKey}/%`),
-				),
-			);
+			.where(and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)));
 		await this.ctx.db
 			.update(folders)
 			.set({ isTrashed: true, updatedAt: new Date() })
 			.where(
 				and(
-					eq(folders.ownerId, this.ctx.user.id),
+					ownedFolders(this.ctx),
 					or(
 						eq(folders.path, normalizedKey),
 						like(folders.path, `${normalizedKey}/%`),
@@ -316,12 +289,7 @@ export class FolderOperations {
 		const [folder] = await this.ctx.db
 			.select({ id: folders.id })
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedKey),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedKey), ownedFolders(this.ctx)));
 		if (!folder) {
 			throw new Error("Folder not found");
 		}
@@ -329,18 +297,13 @@ export class FolderOperations {
 		await this.ctx.db
 			.update(files)
 			.set({ isTrashed: false, updatedAt: new Date() })
-			.where(
-				and(
-					eq(files.ownerId, this.ctx.user.id),
-					like(files.path, `${normalizedKey}/%`),
-				),
-			);
+			.where(and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)));
 		await this.ctx.db
 			.update(folders)
 			.set({ isTrashed: false, updatedAt: new Date() })
 			.where(
 				and(
-					eq(folders.ownerId, this.ctx.user.id),
+					ownedFolders(this.ctx),
 					or(
 						eq(folders.path, normalizedKey),
 						like(folders.path, `${normalizedKey}/%`),
@@ -370,12 +333,7 @@ export class FolderOperations {
 		const [folder] = await this.ctx.db
 			.select()
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedId),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedId), ownedFolders(this.ctx)));
 		if (!folder) {
 			throw new Error("Folder not found");
 		}
@@ -417,12 +375,7 @@ export class FolderOperations {
 		const [folder] = await this.ctx.db
 			.select()
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedId),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedId), ownedFolders(this.ctx)));
 		if (!folder) {
 			logger.warn(`Folder not found: ${folderId}`);
 			return null;
@@ -444,12 +397,7 @@ export class FolderOperations {
 		const [folder] = await this.ctx.db
 			.select({ id: folders.id })
 			.from(folders)
-			.where(
-				and(
-					eq(folders.path, normalizedKey),
-					eq(folders.ownerId, this.ctx.user.id),
-				),
-			);
+			.where(and(eq(folders.path, normalizedKey), ownedFolders(this.ctx)));
 		return !!folder;
 	}
 
@@ -476,7 +424,7 @@ export class FolderOperations {
 			.from(folders)
 			.where(
 				and(
-					eq(folders.ownerId, this.ctx.user.id),
+					ownedFolders(this.ctx),
 					options?.onlyTrashed
 						? eq(folders.isTrashed, true)
 						: parentFolderId
@@ -505,7 +453,7 @@ export class FolderOperations {
 		const allFolders = await this.ctx.db
 			.select()
 			.from(folders)
-			.where(eq(folders.ownerId, this.ctx.user.id));
+			.where(ownedFolders(this.ctx));
 
 		return allFolders
 			.filter((f) => {
@@ -538,12 +486,7 @@ export class FolderOperations {
 		const [result] = await this.ctx.db
 			.select({ totalSize: sql<number>`COALESCE(SUM(${files.size}), 0)` })
 			.from(files)
-			.where(
-				and(
-					eq(files.ownerId, this.ctx.user.id),
-					like(files.path, `${normalizedKey}/%`),
-				),
-			);
+			.where(and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)));
 		const totalSize = Number(result?.totalSize ?? 0);
 		await this.ctx.cache.set(cacheKey, totalSize, 300);
 		logger.info(

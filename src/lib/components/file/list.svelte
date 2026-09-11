@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		CloudUploadIcon,
+		CornerLeftUpIcon,
 		EllipsisVerticalIcon,
 		FolderPlusIcon,
 		UploadIcon,
@@ -15,6 +16,10 @@
 	import {
 		cn,
 		isFolderItem,
+		PARENT_KEY,
+		parentHref,
+		resolveDropDestination,
+		resolveParentPath,
 		type SharedFileDisplayProps,
 		shouldDisplayAction,
 	} from "$lib/utils";
@@ -45,6 +50,9 @@
 
 	const iconSize = "h-6 w-6";
 	const loadingAmount = 20;
+
+	/** `undefined` outside /browse and at the drive root: no `..` row there. */
+	const parentPath = $derived(resolveParentPath(page.params.path));
 	let isDragging: boolean = $state(false);
 
 	function handleDragOver(e: DragEvent) {
@@ -125,12 +133,7 @@
 			return;
 		}
 
-		// Build destination path
-		const destination = page.params.path
-			? `${page.params.path}/${folderKey.replace(/\/$/, "")}`
-			: folderKey.replace(/\/$/, "");
-
-		onDropOnFolder(destination);
+		onDropOnFolder(resolveDropDestination(folderKey, page.params.path));
 		dropTargetKey = undefined;
 	}
 
@@ -254,6 +257,28 @@
     </li>
 {/snippet}
 
+{#snippet parentListItem(parent: string)}
+    {@const isDragTarget = dropTargetKey === PARENT_KEY}
+    <li
+        class={cn(
+            "flex min-w-0 items-center rounded-xl px-1 py-3 transition-colors",
+            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+        )}
+        ondragover={(e) => handleFolderDragOver(e, PARENT_KEY)}
+        ondragleave={(e) => handleFolderDragLeave(e, PARENT_KEY)}
+        ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
+    >
+        <a
+            href={parentHref(parent)}
+            title={m.parent_folder()}
+            class="text-muted-foreground hover:text-foreground flex items-center gap-3 transition-colors"
+        >
+            <CornerLeftUpIcon class={iconSize} />
+            <span class="font-mono text-sm">..</span>
+        </a>
+    </li>
+{/snippet}
+
 {#snippet emptyListItem()}
     <li class="flex flex-col items-center justify-center gap-4 py-12">
         <div class="text-muted-foreground text-center">
@@ -326,12 +351,17 @@
             {:else}
                 {@render emptyListItem()}
             {/if}
-        {:else if sortedFiles && sortedFiles.length > 0}
-            {#each sortedFiles as objectItem}
-                {@render listItem(objectItem)}
-            {/each}
         {:else}
-            {@render emptyListItem()}
+            {#if parentPath !== undefined}
+                {@render parentListItem(parentPath)}
+            {/if}
+            {#if sortedFiles && sortedFiles.length > 0}
+                {#each sortedFiles as objectItem}
+                    {@render listItem(objectItem)}
+                {/each}
+            {:else}
+                {@render emptyListItem()}
+            {/if}
         {/if}
     </ul>
 </div>
@@ -375,7 +405,7 @@
                                             : "",
                                     )}
                                 >
-                                    <Icon />
+                                    <Icon class={act.iconClass} />
                                     {title}
                                 </button>
                             {/if}

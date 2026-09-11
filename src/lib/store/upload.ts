@@ -10,7 +10,10 @@ export const uploadedItems: Writable<Record<string, ObjectItem>> = writable({});
 
 // Tracks the preparing phase (folder creation + metadata) before actual uploads start
 export const preparingUpload: Writable<{ active: boolean; status: string }> =
-	writable({ active: false, status: "" });
+	writable({
+		active: false,
+		status: "",
+	});
 
 // Upload statistics: file counts, speed, and ETA
 export interface UploadStats {

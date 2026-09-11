@@ -64,6 +64,41 @@
 			"when": 1774611552602,
 			"tag": "0008_superb_puma",
 			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "7",
+			"when": 1789045642774,
+			"tag": "0009_broken_mauler",
+			"breakpoints": true
+		},
+		{
+			"idx": 10,
+			"version": "7",
+			"when": 1789056645929,
+			"tag": "0010_ambiguous_ikaris",
+			"breakpoints": true
+		},
+		{
+			"idx": 11,
+			"version": "7",
+			"when": 1789059961985,
+			"tag": "0011_solid_bromley",
+			"breakpoints": true
+		},
+		{
+			"idx": 12,
+			"version": "7",
+			"when": 1789073348708,
+			"tag": "0012_conscious_edwin_jarvis",
+			"breakpoints": true
+		},
+		{
+			"idx": 13,
+			"version": "7",
+			"when": 1789076986678,
+			"tag": "0013_hot_colleen_wing",
+			"breakpoints": true
 		}
 	]
 }

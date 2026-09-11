@@ -1,14 +1,20 @@
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import type { Readable } from "node:stream";
 import type archiver from "archiver";
 import type { User } from "better-auth";
+import { Logger } from "$lib/logger";
 import type { CacheBackend } from "$lib/server/cache";
-import { isSimpleMode } from "$lib/server/config";
+import {
+	getStoragePath,
+	isSimpleMode,
+	type VolumeConfig,
+} from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
+import { ReadOnlyVolumeError } from "$lib/server/errors";
 import type {
 	DirectoryList,
 	FileCategory,
@@ -23,14 +29,13 @@ import type {
 } from "$lib/server/schema";
 import { ActivityService } from "$lib/server/services/activity";
 import { CacheKeys, CacheManager } from "./cache";
-import {
-	createUserStorageDriver,
-	DEFAULT_STORAGE_PATH,
-	logger,
-} from "./constants";
 import type { StorageContext } from "./context";
 import { availableDiskSpace } from "./disk-space";
-import type { StorageDriver } from "./driver";
+import {
+	createUserStorageDriver,
+	createVolumeStorageDriver,
+	type StorageDriver,
+} from "./driver";
 import fileTypesData from "./file-types.json" with { type: "json" };
 import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
@@ -39,6 +44,8 @@ import { type FileProxyRequest, ProxyService } from "./proxy";
 import { ScanOperations, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
 import { ZipService } from "./zip";
+
+const logger = new Logger("StorageService");
 
 // =========================================================================
 // Module-level singletons
@@ -64,6 +71,7 @@ export class StorageService {
 	/** Local filesystem base used for thumbnail caching (always local). */
 	private readonly storagePath: string;
 	private readonly userFolder: string;
+	private readonly volume: VolumeConfig | null;
 	private readonly user: User;
 	private readonly activityService: ActivityService = new ActivityService();
 	private readonly cache: CacheBackend;
@@ -78,19 +86,37 @@ export class StorageService {
 	private readonly listingOperations: ListingOperations;
 	private readonly scanOperations: ScanOperations;
 
-	constructor(user: User) {
-		// Simple mode: one shared volume for everyone, mounted directly at
-		// STORAGE_PATH instead of a per-user subfolder.
+	/**
+	 * @param user   Whose drive this service reads and writes.
+	 * @param volume A mounted volume to bind to, or omitted for the main drive.
+	 */
+	constructor(user: User, volume?: VolumeConfig) {
+		// Simple mode: one shared volume for everyone, mounted directly at the
+		// root instead of a per-user subfolder. That holds for extra volumes
+		// too — in simple mode a mount is shared, in full mode it is split per
+		// user exactly like the main drive.
 		this.userFolder = isSimpleMode() ? "" : `user-${user.id}`;
-		this.storagePath = join(DEFAULT_STORAGE_PATH, this.userFolder);
+		this.volume = volume ?? null;
+		this.storagePath = join(
+			volume ? volume.path : getStoragePath(),
+			this.userFolder,
+		);
 		this.user = user;
-		this.cache = cacheManager.getUserCache(user.id);
-		this.driver = createUserStorageDriver(this.userFolder);
+		// Cached listings are keyed per user *and* per volume, or switching
+		// volumes would serve the previous one's directory listing.
+		this.cache = cacheManager.getUserCache(
+			volume ? `${user.id}:${volume.name}` : user.id,
+		);
+		this.driver = volume
+			? createVolumeStorageDriver(volume.path, this.userFolder)
+			: createUserStorageDriver(this.userFolder);
 		this.db = getDb();
 
 		this.ctx = {
 			user: this.user,
 			userFolder: this.userFolder,
+			volumeId: this.volume?.name ?? null,
+			readOnly: this.volume?.readOnly ?? false,
 			storagePath: this.storagePath,
 			db: this.db,
 			cache: this.cache,
@@ -109,6 +135,21 @@ export class StorageService {
 		);
 	}
 
+	/**
+	 * Guard for every mutating call.
+	 *
+	 * A read-only volume is browsable and downloadable but must reject writes;
+	 * throwing here rather than at each route means a new endpoint cannot
+	 * forget the check.
+	 */
+	private assertWritable(): void {
+		if (this.ctx.readOnly) {
+			throw new ReadOnlyVolumeError(
+				`Volume "${this.volume?.name}" is mounted read-only`,
+			);
+		}
+	}
+
 	// =========================================================================
 	// FILES / FOLDERS / LISTINGS
 	// =========================================================================
@@ -123,22 +164,27 @@ export class StorageService {
 		metadata?: FileMetadata,
 		size?: number,
 	): Promise<void> {
+		this.assertWritable();
 		return this.fileOperations.writeFile(path, contents, metadata, size);
 	}
 
 	updateFile(name: string, data: UpdateFile): Promise<void> {
+		this.assertWritable();
 		return this.fileOperations.updateFile(name, data);
 	}
 
 	moveFile(fileKey: string, destinationFolder: string): Promise<void> {
+		this.assertWritable();
 		return this.fileOperations.moveFile(fileKey, destinationFolder);
 	}
 
 	duplicateFile(fileKey: string): Promise<ObjectItem> {
+		this.assertWritable();
 		return this.fileOperations.duplicateFile(fileKey);
 	}
 
 	createFile(file: NewFile, folder?: string): Promise<UploadResult> {
+		this.assertWritable();
 		return this.fileOperations.createFile(file, folder);
 	}
 
@@ -146,6 +192,7 @@ export class StorageService {
 		fileList: NewFile[],
 		folder?: string,
 	): Promise<UploadResult[]> {
+		this.assertWritable();
 		return this.fileOperations.createBatchFiles(fileList, folder);
 	}
 
@@ -154,10 +201,12 @@ export class StorageService {
 	}
 
 	uploadFileBody(id: string, body: Blob | Buffer | Uint8Array): Promise<void> {
+		this.assertWritable();
 		return this.fileOperations.uploadFileBody(id, body);
 	}
 
 	deleteFile(key: string): Promise<void> {
+		this.assertWritable();
 		return this.fileOperations.deleteFile(key);
 	}
 
@@ -183,6 +232,7 @@ export class StorageService {
 	}
 
 	moveFolder(folderKey: string, destinationFolder: string): Promise<void> {
+		this.assertWritable();
 		return this.folderOperations.moveFolder(folderKey, destinationFolder);
 	}
 
@@ -190,18 +240,22 @@ export class StorageService {
 		name: string,
 		parent?: string,
 	): Promise<{ id: string; name: string }> {
+		this.assertWritable();
 		return this.folderOperations.createFolder(name, parent);
 	}
 
 	deleteFolder(key: string): Promise<void> {
+		this.assertWritable();
 		return this.folderOperations.deleteFolder(key);
 	}
 
 	trashFolder(key: string): Promise<void> {
+		this.assertWritable();
 		return this.folderOperations.trashFolder(key);
 	}
 
 	restoreFolder(key: string): Promise<void> {
+		this.assertWritable();
 		return this.folderOperations.restoreFolder(key);
 	}
 
@@ -214,6 +268,7 @@ export class StorageService {
 			name?: string;
 		},
 	): Promise<void> {
+		this.assertWritable();
 		return this.folderOperations.updateFolderMeta(id, data);
 	}
 
@@ -392,6 +447,11 @@ export class StorageService {
 		return this.storagePath;
 	}
 
+	/** The mounted volume this service is bound to, or null for the main drive. */
+	public getVolume(): VolumeConfig | null {
+		return this.volume;
+	}
+
 	public getUserFolder(): string {
 		return this.userFolder;
 	}
@@ -445,7 +505,7 @@ export class StorageService {
 	// =========================================================================
 
 	public static getAdminStoragePath(): string {
-		return resolve(DEFAULT_STORAGE_PATH);
+		return getStoragePath();
 	}
 
 	public static getAvailableStorageSize(): number {
@@ -460,7 +520,7 @@ export class StorageService {
 			return;
 		}
 
-		const storageBasePath = DEFAULT_STORAGE_PATH;
+		const storageBasePath = getStoragePath();
 		if (!existsSync(storageBasePath)) {
 			logger.info(
 				"Storage base path does not exist. Skipping storage cleanup.",

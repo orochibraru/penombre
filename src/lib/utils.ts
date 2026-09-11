@@ -1,9 +1,11 @@
 import clsx, { type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
+import { resolve } from "$app/paths";
 import type { Pathname } from "$app/types";
 import type { ObjectItem, ObjectList } from "$lib/api";
 import type { ButtonVariant } from "$lib/components/ui/button";
+import { m } from "$lib/paraglide/messages.js";
 
 /**
  * A version of clsx that uses tailwind-merge to merge classes.
@@ -169,6 +171,8 @@ export function isFolderItem(item: ObjectItem) {
 
 export interface MultipleItemsAction {
 	title: string;
+	/** Tailwind colour classes for the icon — see `ItemAction.iconClass`. */
+	iconClass?: string;
 	// biome-ignore lint/suspicious/noExplicitAny: Lucide icon component type is complex
 	icon: any;
 	action: () => void;
@@ -181,6 +185,14 @@ export interface ItemAction {
 	icon: any;
 	action: (item: ObjectItem) => void;
 	variant?: "default" | "destructive";
+	/**
+	 * Tailwind colour classes for the icon.
+	 *
+	 * The menu is used by muscle memory far more than it is read, and a column
+	 * of identical grey glyphs gives nothing to aim at. Colour is decoration
+	 * only — the label still carries the meaning.
+	 */
+	iconClass?: string;
 	disabled?: boolean;
 	fileOnly?: boolean;
 	folderOnly?: boolean;
@@ -217,6 +229,50 @@ export interface SharedFileDisplayProps {
 	onDragStart?: (item: ObjectItem) => void;
 	onDragEnd?: () => void;
 	onDropOnFolder?: (targetFolder: string) => void;
+}
+
+/**
+ * Drop-target key for the `..` row. Folder keys always end in `/`
+ * (see `isFolderItem`), so this can't collide with a real row's key, and
+ * `resolveDropDestination` maps it to a path before anything reaches the API.
+ */
+export const PARENT_KEY = "..";
+
+/**
+ * Parent of the folder currently being browsed, or `undefined` when there is
+ * none to go up to: at the drive root, and on every listing that isn't
+ * `/browse/[...path]` (recent, starred, categories, trash), where `path` is
+ * unset. Callers use `undefined` to decide whether to render the `..` row.
+ */
+export function resolveParentPath(
+	currentPath: string | undefined,
+): string | undefined {
+	if (!currentPath) {
+		return undefined;
+	}
+	return currentPath.split("/").slice(0, -1).join("/");
+}
+
+/** Where `/browse` lives for a given parent path ("" is the drive root) */
+export function parentHref(parentPath: string) {
+	return parentPath
+		? resolve("/(app)/browse/[...path]", { path: parentPath })
+		: resolve("/(app)/browse");
+}
+
+/**
+ * Absolute destination for a drop on a row of the current listing: either the
+ * `..` row (the parent) or a folder row (a child of the current folder).
+ */
+export function resolveDropDestination(
+	folderKey: string,
+	currentPath: string | undefined,
+): string {
+	if (folderKey === PARENT_KEY) {
+		return resolveParentPath(currentPath) ?? "";
+	}
+	const key = folderKey.replace(/\/$/, "");
+	return currentPath ? `${currentPath}/${key}` : key;
 }
 
 export interface BreadCrumb {
@@ -441,4 +497,37 @@ export function getDocumentType(
 	}
 
 	return null;
+}
+
+/**
+ * "1 file · 12 KB" / "3 files · 1.2 MB".
+ *
+ * Paraglide's variant syntax is more ceremony than two keys and a ternary
+ * for the one case we have; every locale here pluralises on `count === 1`.
+ */
+export function filesCountLabel(count: number, size: string): string {
+	return count === 1
+		? m.storage_files_count_one({ count: String(count), size })
+		: m.storage_files_count({ count: String(count), size });
+}
+
+/** "1 user on this instance" / "4 users on this instance". */
+export function usersCountLabel(count: number): string {
+	return count === 1
+		? m.admin_users_count_one({ count: String(count) })
+		: m.admin_users_count({ count: String(count) });
+}
+
+/** "1 download" / "12 downloads". */
+export function downloadsCountLabel(count: number): string {
+	return count === 1
+		? m.share_download_count_one({ count: String(count) })
+		: m.share_download_count({ count: String(count) });
+}
+
+/** "Trash holds 1 file (2 KB)" / "Trash holds 4 files (8 MB)". */
+export function trashHoldsLabel(count: number, size: string): string {
+	return count === 1
+		? m.storage_trash_holds_one({ count: String(count), size })
+		: m.storage_trash_holds({ count: String(count), size });
 }

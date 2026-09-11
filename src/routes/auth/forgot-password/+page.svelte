@@ -30,9 +30,7 @@
                 />
             </Field.Field>
             <Field.Field>
-                <Button class="w-full" type="submit"
-                    >{m.reset_password()}</Button
-                >
+                <Button class="w-full" type="submit">{m.reset_password()}</Button>
             </Field.Field>
         </Field.Group>
     </Field.FieldSet>
@@ -40,10 +38,7 @@
         <div class="text-center text-sm">
             <p>
                 {m.remembered_password()}
-                <a
-                    href={"/auth/sign-in"}
-                    class="underline hover:text-primary transition-colors"
-                >
+                <a href={"/auth/sign-in"} class="underline hover:text-primary transition-colors">
                     {m.sign_in()}
                 </a>
             </p>

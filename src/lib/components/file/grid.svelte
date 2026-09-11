@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		CloudUploadIcon,
+		CornerLeftUpIcon,
 		EllipsisVerticalIcon,
 		FolderPlusIcon,
 		UploadIcon,
@@ -10,7 +11,13 @@
 	import { page } from "$app/state";
 	import type { ObjectItem } from "$lib/api";
 	import FilePrefix from "$lib/components/file/prefix.svelte";
+	import {
+		applySelection,
+		selectedCount,
+		setShiftHeld,
+	} from "$lib/components/file/selection.svelte";
 	import { Button } from "$lib/components/ui/button";
+	import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
 	import { Skeleton } from "$lib/components/ui/skeleton/index";
@@ -18,6 +25,10 @@
 	import {
 		cn,
 		isFolderItem,
+		PARENT_KEY,
+		parentHref,
+		resolveDropDestination,
+		resolveParentPath,
 		type SharedFileDisplayProps,
 		shouldDisplayAction,
 	} from "$lib/utils";
@@ -48,6 +59,9 @@
 
 	const iconSize = "h-36 w-36";
 	const loadingAmount = 20;
+
+	/** `undefined` outside /browse and at the drive root: no `..` row there. */
+	const parentPath = $derived(resolveParentPath(page.params.path));
 	let isDragging: boolean = $state(false);
 
 	function handleDragOver(e: DragEvent) {
@@ -126,13 +140,7 @@
 			return;
 		}
 
-		// Build destination path
-		const currentPath = page.params.path;
-		const destination = currentPath
-			? `${currentPath}/${folderKey.replace(/\/$/, "")}`
-			: folderKey.replace(/\/$/, "");
-
-		onDropOnFolder(destination);
+		onDropOnFolder(resolveDropDestination(folderKey, page.params.path));
 		dropTargetKey = undefined;
 	}
 
@@ -213,6 +221,33 @@
 		}
 		return [...searchResults].sort(compareItems);
 	});
+
+	/**
+	 * Whatever is on screen right now, so a shift-range matches the eye.
+	 *
+	 * Mirrors the render condition exactly. Testing `searchResults` for truth
+	 * is not the same thing: an empty array is truthy, so a drive with no
+	 * search active resolved to an empty list and every selection was written
+	 * against nothing.
+	 */
+	const displayed = $derived(
+		sortedSearchResults && sortedSearchResults.length > 0
+			? sortedSearchResults
+			: (sortedFiles ?? []),
+	);
+
+	/** Any selection at all pins every tile's checkbox open. */
+	const anySelected = $derived(selectedCount(displayed, checkedItems) > 0);
+
+	/**
+	 * `onCheckedChange`, not `onclick`: the checkbox reports its own state and
+	 * an `onclick` handler never toggled it. The shift key is captured on the
+	 * wrapper on the way down, since this callback only receives a boolean.
+	 */
+	function toggleTile(item: ObjectItem, next: boolean) {
+		applySelection(displayed, item.key, next, checkedItems);
+		setShiftHeld(false);
+	}
 </script>
 
 {#snippet listItem(objectItem: ObjectItem)}
@@ -221,9 +256,9 @@
     {@const isDragTarget = dropTargetKey === objectItem.key}
     <li
         class={cn(
-            "flex items-stretch justify-between rounded-xl border p-5 transition-colors",
-            checked ? "bg-primary/5" : "",
-            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+            "group/tile bg-card/40 hover:border-primary/50 hover:bg-card/70 relative flex flex-col overflow-hidden rounded-[calc(var(--radius)+2px)] border transition-colors",
+            checked && "border-primary bg-primary/5",
+            isDragTarget && "border-primary bg-primary/10",
         )}
         draggable={onDragStart !== undefined}
         ondragstart={(e) => handleItemDragStart(e, objectItem)}
@@ -238,10 +273,32 @@
             ? (e) => handleFolderDrop(e, objectItem.key)
             : undefined}
     >
+        <!-- Multi-select in grid mode: the box is invisible until the tile is
+             hovered or focused, and pinned open as soon as anything at all is
+             selected so the current selection stays legible while picking. -->
+        <span
+            class={cn(
+                "absolute top-2 left-2 z-10 transition-opacity",
+                checked || anySelected
+                    ? "opacity-100"
+                    : "opacity-0 group-hover/tile:opacity-100 focus-within:opacity-100",
+            )}
+            onclickcapture={(e: MouseEvent) => setShiftHeld(e.shiftKey)}
+            onkeydowncapture={(e: KeyboardEvent) => setShiftHeld(e.shiftKey)}
+        >
+            <Checkbox
+                {checked}
+                aria-label={objectItem.metadata.name ?? objectItem.key}
+                class="bg-background/90 border-muted-foreground/40 shadow-sm backdrop-blur-sm"
+                onCheckedChange={(next: boolean) =>
+                    toggleTile(objectItem, next)}
+            />
+        </span>
+
         <ContextMenu.Root>
             <ContextMenu.Trigger class="h-full w-full">
                 <div
-                    class="flex h-full flex-col items-center justify-center gap-2"
+                    class="flex h-full flex-col"
                     role="button"
                     tabindex={-1}
                     ontap={() => {
@@ -290,7 +347,7 @@
                                     disabled={act.disabled}
                                     variant={act.variant}
                                 >
-                                    <Icon />
+                                    <Icon class={act.iconClass} />
                                     {title}
                                 </ContextMenu.Item>
                             {/if}
@@ -306,13 +363,13 @@
         </ContextMenu.Root>
         <DropdownMenu.Root>
             <DropdownMenu.Trigger
-                class="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                class="bg-background/70 text-muted-foreground hover:text-foreground data-[state=open]:bg-background absolute top-1.5 right-1.5 z-10 flex size-7 items-center justify-center rounded-[calc(var(--radius)-2px)] opacity-0 backdrop-blur-sm transition-opacity group-hover/tile:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
             >
                 {#snippet child({ props })}
-                    <Button variant="ghost" size="icon" {...props}>
-                        <EllipsisVerticalIcon />
+                    <button type="button" {...props}>
+                        <EllipsisVerticalIcon class="size-4" />
                         <span class="sr-only">{m.open_menu()}</span>
-                    </Button>
+                    </button>
                 {/snippet}
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
@@ -335,7 +392,7 @@
                                     disabled={act.disabled}
                                     variant={act.variant}
                                 >
-                                    <Icon />
+                                    <Icon class={act.iconClass} />
                                     {title}
                                 </DropdownMenu.Item>
                             {/if}
@@ -349,6 +406,28 @@
                 {/each}
             </DropdownMenu.Content>
         </DropdownMenu.Root>
+    </li>
+{/snippet}
+
+{#snippet parentGridItem(parent: string)}
+    {@const isDragTarget = dropTargetKey === PARENT_KEY}
+    <li
+        class={cn(
+            "flex items-stretch justify-center rounded-xl border border-dashed p-5 transition-colors",
+            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+        )}
+        ondragover={(e) => handleFolderDragOver(e, PARENT_KEY)}
+        ondragleave={(e) => handleFolderDragLeave(e, PARENT_KEY)}
+        ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
+    >
+        <a
+            href={parentHref(parent)}
+            title={m.parent_folder()}
+            class="text-muted-foreground hover:text-foreground flex h-full flex-col items-center justify-center gap-2 transition-colors"
+        >
+            <CornerLeftUpIcon class="h-12 w-12" />
+            <span class="font-mono text-sm">..</span>
+        </a>
     </li>
 {/snippet}
 
@@ -415,7 +494,9 @@
             <p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
         </div>
     {/if}
-    <ul class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <ul
+        class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+    >
         {#if loading}
             {@render loadingRows()}
         {:else if searchValue}
@@ -426,12 +507,17 @@
             {:else}
                 {@render emptyListItem()}
             {/if}
-        {:else if sortedFiles && sortedFiles.length > 0}
-            {#each sortedFiles as objectItem}
-                {@render listItem(objectItem)}
-            {/each}
         {:else}
-            {@render emptyListItem()}
+            {#if parentPath !== undefined}
+                {@render parentGridItem(parentPath)}
+            {/if}
+            {#if sortedFiles && sortedFiles.length > 0}
+                {#each sortedFiles as objectItem}
+                    {@render listItem(objectItem)}
+                {/each}
+            {:else}
+                {@render emptyListItem()}
+            {/if}
         {/if}
     </ul>
 </div>

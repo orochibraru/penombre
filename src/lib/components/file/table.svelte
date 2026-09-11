@@ -4,6 +4,7 @@
 		ArrowUpDownIcon,
 		ArrowUpIcon,
 		CloudUploadIcon,
+		CornerLeftUpIcon,
 		EllipsisVerticalIcon,
 		FolderPlusIcon,
 		UploadIcon,
@@ -14,6 +15,11 @@
 	import type { ObjectItem } from "$lib/api";
 	import FolderSize from "$lib/components/file/folder-size.svelte";
 	import FilePrefix from "$lib/components/file/prefix.svelte";
+	import {
+		applySelection,
+		selectedCount,
+		setShiftHeld,
+	} from "$lib/components/file/selection.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
@@ -24,7 +30,11 @@
 	import {
 		cn,
 		isFolderItem,
+		PARENT_KEY,
+		parentHref,
 		readableFileSize,
+		resolveDropDestination,
+		resolveParentPath,
 		type SharedFileDisplayProps,
 		type SortColumn,
 		shouldDisplayAction,
@@ -56,6 +66,9 @@
 
 	const iconSize = "h-5 w-5";
 	const loadingAmount = 20;
+
+	/** `undefined` outside /browse and at the drive root: no `..` row there. */
+	const parentPath = $derived(resolveParentPath(page.params.path));
 
 	let isSingleItemAction: boolean = $state(false);
 	let isDragging: boolean = $state(false);
@@ -138,13 +151,7 @@
 			return;
 		}
 
-		// Build destination path
-		const currentPath = page.params.path;
-		const destination = currentPath
-			? `${currentPath}/${folderKey.replace(/\/$/, "")}`
-			: folderKey.replace(/\/$/, "");
-
-		onDropOnFolder(destination);
+		onDropOnFolder(resolveDropDestination(folderKey, page.params.path));
 		dropTargetKey = undefined;
 	}
 
@@ -277,6 +284,20 @@
 	function isChecked(item: ObjectItem): boolean {
 		return !!checkedItems[item.key];
 	}
+
+	/**
+	 * Whatever is on screen right now, so a shift-range matches the eye.
+	 *
+	 * Mirrors the render condition exactly. Testing `searchResults` for truth
+	 * is not the same thing: an empty array is truthy, so a drive with no
+	 * search active resolved to an empty list and every selection was written
+	 * against nothing.
+	 */
+	const displayed = $derived(
+		sortedSearchResults && sortedSearchResults.length > 0
+			? sortedSearchResults
+			: (sortedFiles ?? []),
+	);
 </script>
 
 {#snippet tableRow(objectItem: ObjectItem)}
@@ -297,21 +318,25 @@
             ? (e) => handleFolderDrop(e, objectItem.key)
             : undefined}
     >
-        <Table.Cell class="w-4">
+        <!-- The checkbox component reports a boolean, not the event, so the
+             modifier is captured on the way down. -->
+        <Table.Cell
+            class="w-4"
+            onclickcapture={(e: MouseEvent) => setShiftHeld(e.shiftKey)}
+            onkeydowncapture={(e: KeyboardEvent) => setShiftHeld(e.shiftKey)}
+        >
             <Checkbox
                 checked={isChecked(objectItem)}
                 onCheckedChange={(checked) => {
-                    checkedItems[objectItem.key] = checked
-                        ? objectItem.metadata.name || objectItem.key
-                        : false;
-                    const someChecked = files.list!.filter(
-                        (item) => !!checkedItems[item.key],
+                    applySelection(
+                        displayed,
+                        objectItem.key,
+                        checked,
+                        checkedItems,
                     );
-                    if (someChecked.length > 1) {
-                        isSingleItemAction = false;
-                    } else {
-                        isSingleItemAction = true;
-                    }
+                    isSingleItemAction =
+                        selectedCount(displayed, checkedItems) <= 1;
+                    setShiftHeld(false);
                 }}
             />
         </Table.Cell>
@@ -368,7 +393,7 @@
                                         disabled={act.disabled}
                                         variant={act.variant}
                                     >
-                                        <Icon />
+                                        <Icon class={act.iconClass} />
                                         {title}
                                     </ContextMenu.Item>
                                 {/if}
@@ -441,7 +466,7 @@
                                             disabled={act.disabled}
                                             variant={act.variant}
                                         >
-                                            <Icon />
+                                            <Icon class={act.iconClass} />
                                             {title}
                                         </DropdownMenu.Item>
                                     {/if}
@@ -456,6 +481,28 @@
                     </DropdownMenu.Content>
                 </DropdownMenu.Root>
             </div>
+        </Table.Cell>
+    </Table.Row>
+{/snippet}
+
+{#snippet parentRow(parent: string)}
+    {@const isDragTarget = dropTargetKey === PARENT_KEY}
+    <Table.Row
+        class={cn(isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "")}
+        ondragover={(e) => handleFolderDragOver(e, PARENT_KEY)}
+        ondragleave={(e) => handleFolderDragLeave(e, PARENT_KEY)}
+        ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
+    >
+        <Table.Cell class="w-4"></Table.Cell>
+        <Table.Cell colspan={11}>
+            <a
+                href={parentHref(parent)}
+                title={m.parent_folder()}
+                class="text-muted-foreground hover:text-foreground flex w-fit items-center gap-2 transition-colors"
+            >
+                <CornerLeftUpIcon class={iconSize} />
+                <span class="font-mono text-sm">..</span>
+            </a>
         </Table.Cell>
     </Table.Row>
 {/snippet}
@@ -589,12 +636,17 @@
                 {:else}
                     {@render emptyRow()}
                 {/if}
-            {:else if files.count! > 0 && sortedFiles}
-                {#each sortedFiles as item}
-                    {@render tableRow(item)}
-                {/each}
             {:else}
-                {@render emptyRow()}
+                {#if parentPath !== undefined}
+                    {@render parentRow(parentPath)}
+                {/if}
+                {#if files.count! > 0 && sortedFiles}
+                    {#each sortedFiles as item}
+                        {@render tableRow(item)}
+                    {/each}
+                {:else}
+                    {@render emptyRow()}
+                {/if}
             {/if}
         </Table.Body>
     </Table.Root>

@@ -1052,6 +1052,42 @@
 				},
 				"type": "object"
 			},
+			"TwoFactor": {
+				"properties": {
+					"backupCodes": {
+						"type": "string"
+					},
+					"failedVerificationCount": {
+						"default": 0,
+						"readOnly": true,
+						"type": "number"
+					},
+					"id": {
+						"readOnly": true,
+						"type": "string"
+					},
+					"lockedUntil": {
+						"format": "date-time",
+						"readOnly": true,
+						"type": "string"
+					},
+					"secret": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					},
+					"verified": {
+						"default": true,
+						"readOnly": true,
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"id"
+				],
+				"type": "object"
+			},
 			"UpdateFile": {
 				"additionalProperties": false,
 				"properties": {
@@ -1398,6 +1434,11 @@
 					"role": {
 						"readOnly": true,
 						"type": "string"
+					},
+					"twoFactorEnabled": {
+						"default": false,
+						"readOnly": true,
+						"type": "boolean"
 					},
 					"updatedAt": {
 						"format": "date-time",
@@ -11000,6 +11041,1365 @@
 				]
 			}
 		},
+		"/api/v1/auth/two-factor/disable": {
+			"post": {
+				"description": "Use this endpoint to disable two factor authentication.",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"password": {
+										"description": "User password",
+										"type": "string"
+									}
+								},
+								"required": [
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"status": {
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/enable": {
+			"post": {
+				"description": "Enable two factor authentication. Pass method 'totp' (default) to set up an authenticator app (returns TOTP URI and backup codes), or 'otp' to enable email/SMS-based codes immediately.",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"issuer": {
+										"description": "Custom issuer for the TOTP URI",
+										"type": "string"
+									},
+									"method": {
+										"enum": [
+											"otp",
+											"totp"
+										],
+										"type": "string"
+									},
+									"password": {
+										"description": "User password",
+										"type": "string"
+									}
+								},
+								"required": [
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"backupCodes": {
+											"description": "Recovery backup codes. Only present when method is 'totp'.",
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"method": {
+											"description": "The 2FA method that was enabled.",
+											"enum": [
+												"otp",
+												"totp"
+											],
+											"type": "string"
+										},
+										"totpURI": {
+											"description": "TOTP URI for authenticator app setup. Only present when method is 'totp'.",
+											"type": "string"
+										}
+									},
+									"required": [
+										"method"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/generate-backup-codes": {
+			"post": {
+				"description": "Generate new backup codes for two-factor authentication",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"password": {
+										"description": "The users password.",
+										"type": "string"
+									}
+								},
+								"required": [
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"backupCodes": {
+											"description": "Array of generated backup codes in plain text",
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"status": {
+											"description": "Indicates if the backup codes were generated successfully",
+											"enum": [
+												true
+											],
+											"type": "boolean"
+										}
+									},
+									"required": [
+										"status",
+										"backupCodes"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Backup codes generated successfully"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/get-totp-uri": {
+			"post": {
+				"description": "Use this endpoint to get the TOTP URI",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"password": {
+										"description": "User password",
+										"type": "string"
+									}
+								},
+								"required": [
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"totpURI": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/send-otp": {
+			"post": {
+				"description": "Send two factor OTP to the user",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"trustDevice": {
+										"type": "boolean"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": false
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"status": {
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/verify-backup-code": {
+			"post": {
+				"description": "Verify a backup code for two-factor authentication",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"code": {
+										"description": "A backup code to verify. Eg: \"123456\"",
+										"type": "string"
+									},
+									"disableSession": {
+										"description": "If true, the session cookie will not be set.",
+										"type": "boolean"
+									},
+									"trustDevice": {
+										"description": "If true, the device will be trusted for 30 days. It'll be refreshed on every sign in request within this time. Eg: true",
+										"type": "boolean"
+									}
+								},
+								"required": [
+									"code"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"session": {
+											"description": "The current session object, included unless disableSession is true",
+											"properties": {
+												"createdAt": {
+													"description": "Timestamp when the session was created",
+													"format": "date-time",
+													"type": "string"
+												},
+												"expiresAt": {
+													"description": "Timestamp when the session expires",
+													"format": "date-time",
+													"type": "string"
+												},
+												"token": {
+													"description": "Session token",
+													"type": "string"
+												},
+												"userId": {
+													"description": "ID of the user associated with the session",
+													"type": "string"
+												}
+											},
+											"required": [
+												"token",
+												"userId",
+												"createdAt",
+												"expiresAt"
+											],
+											"type": "object"
+										},
+										"user": {
+											"description": "The authenticated user object with two-factor details",
+											"properties": {
+												"createdAt": {
+													"description": "Timestamp when the user was created",
+													"format": "date-time",
+													"type": "string"
+												},
+												"email": {
+													"description": "User's email address",
+													"format": "email",
+													"nullable": true,
+													"type": "string"
+												},
+												"emailVerified": {
+													"description": "Whether the email is verified",
+													"nullable": true,
+													"type": "boolean"
+												},
+												"id": {
+													"description": "Unique identifier of the user",
+													"type": "string"
+												},
+												"image": {
+													"description": "User's profile image URL",
+													"format": "uri",
+													"nullable": true,
+													"type": "string"
+												},
+												"name": {
+													"description": "User's name",
+													"nullable": true,
+													"type": "string"
+												},
+												"twoFactorEnabled": {
+													"description": "Whether two-factor authentication is enabled for the user",
+													"type": "boolean"
+												},
+												"updatedAt": {
+													"description": "Timestamp when the user was last updated",
+													"format": "date-time",
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"twoFactorEnabled",
+												"createdAt",
+												"updatedAt"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"user",
+										"session"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Backup code verified successfully"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/verify-otp": {
+			"post": {
+				"description": "Verify two factor OTP",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"code": {
+										"description": "The otp code to verify. Eg: \"012345\"",
+										"type": "string"
+									},
+									"trustDevice": {
+										"type": "boolean"
+									}
+								},
+								"required": [
+									"code"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"token": {
+											"description": "Session token for the authenticated session",
+											"type": "string"
+										},
+										"user": {
+											"description": "The authenticated user object",
+											"properties": {
+												"createdAt": {
+													"description": "Timestamp when the user was created",
+													"format": "date-time",
+													"type": "string"
+												},
+												"email": {
+													"description": "User's email address",
+													"format": "email",
+													"nullable": true,
+													"type": "string"
+												},
+												"emailVerified": {
+													"description": "Whether the email is verified",
+													"nullable": true,
+													"type": "boolean"
+												},
+												"id": {
+													"description": "Unique identifier of the user",
+													"type": "string"
+												},
+												"image": {
+													"description": "User's profile image URL",
+													"format": "uri",
+													"nullable": true,
+													"type": "string"
+												},
+												"name": {
+													"description": "User's name",
+													"nullable": true,
+													"type": "string"
+												},
+												"updatedAt": {
+													"description": "Timestamp when the user was last updated",
+													"format": "date-time",
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"createdAt",
+												"updatedAt"
+											],
+											"type": "object"
+										}
+									},
+									"required": [
+										"token",
+										"user"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Two-factor OTP verified successfully"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
+		"/api/v1/auth/two-factor/verify-totp": {
+			"post": {
+				"description": "Verify two factor TOTP",
+				"parameters": [],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"code": {
+										"description": "The otp code to verify. Eg: \"012345\"",
+										"type": "string"
+									},
+									"trustDevice": {
+										"description": "If true, the device will be trusted for 30 days. It'll be refreshed on every sign in request within this time. Eg: true",
+										"type": "boolean"
+									}
+								},
+								"required": [
+									"code"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"status": {
+											"type": "boolean"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad Request. Usually due to missing parameters, or invalid parameters."
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized. Due to missing or invalid authentication."
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden. You do not have permission to access this resource or to perform this action."
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not Found. The requested resource was not found."
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Too Many Requests. You have exceeded the rate limit. Try again later."
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Internal Server Error. This is a problem with the server that you cannot fix."
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"tags": [
+					"Two-factor"
+				]
+			}
+		},
 		"/api/v1/auth/unlink-account": {
 			"post": {
 				"description": "Unlink an account",
@@ -11741,6 +13141,545 @@
 				]
 			}
 		},
+		"/api/v1/files/{fileId}/notes": {
+			"get": {
+				"parameters": [
+					{
+						"in": "path",
+						"name": "fileId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"authorName": {
+														"type": [
+															"string",
+															"null"
+														]
+													},
+													"body": {
+														"type": "string"
+													},
+													"createdAt": {
+														"format": "date-time",
+														"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+														"type": "string"
+													},
+													"fileId": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													},
+													"timestampSeconds": {
+														"type": [
+															"number",
+															"null"
+														]
+													},
+													"updatedAt": {
+														"format": "date-time",
+														"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+														"type": "string"
+													},
+													"userId": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"fileId",
+													"userId",
+													"authorName",
+													"body",
+													"timestampSeconds",
+													"createdAt",
+													"updatedAt"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List notes on a file",
+				"tags": [
+					"Notes"
+				]
+			},
+			"post": {
+				"description": "A timestamp marks the note as a comment on a moment in an audio or video file.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "fileId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"body": {
+										"maxLength": 4000,
+										"minLength": 1,
+										"type": "string"
+									},
+									"timestampSeconds": {
+										"anyOf": [
+											{
+												"minimum": 0,
+												"type": "number"
+											},
+											{
+												"type": "null"
+											}
+										]
+									}
+								},
+								"required": [
+									"body"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"authorName": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"body": {
+													"type": "string"
+												},
+												"createdAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"fileId": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												},
+												"timestampSeconds": {
+													"type": [
+														"number",
+														"null"
+													]
+												},
+												"updatedAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"userId": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"fileId",
+												"userId",
+												"authorName",
+												"body",
+												"timestampSeconds",
+												"createdAt",
+												"updatedAt"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Attach a note to a file",
+				"tags": [
+					"Notes"
+				]
+			}
+		},
+		"/api/v1/files/{fileId}/notes/{noteId}": {
+			"delete": {
+				"parameters": [
+					{
+						"in": "path",
+						"name": "fileId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "noteId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"deleted": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"deleted"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Delete your own note",
+				"tags": [
+					"Notes"
+				]
+			},
+			"patch": {
+				"parameters": [
+					{
+						"in": "path",
+						"name": "fileId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "noteId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"body": {
+										"maxLength": 4000,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"required": [
+									"body"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"authorName": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"body": {
+													"type": "string"
+												},
+												"createdAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"fileId": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												},
+												"timestampSeconds": {
+													"type": [
+														"number",
+														"null"
+													]
+												},
+												"updatedAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"userId": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"fileId",
+												"userId",
+												"authorName",
+												"body",
+												"timestampSeconds",
+												"createdAt",
+												"updatedAt"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Edit your own note",
+				"tags": [
+					"Notes"
+				]
+			}
+		},
 		"/api/v1/preferences": {
 			"get": {
 				"description": "Returns the current user's layout and sort preferences",
@@ -11753,12 +13692,40 @@
 										"data": {
 											"additionalProperties": false,
 											"properties": {
+												"accent": {
+													"enum": [
+														"purple",
+														"blue",
+														"teal",
+														"green",
+														"amber",
+														"rose"
+													],
+													"type": "string"
+												},
+												"corners": {
+													"enum": [
+														"boxy",
+														"rounded"
+													],
+													"type": "string"
+												},
+												"fontFamily": {
+													"enum": [
+														"mono",
+														"sans"
+													],
+													"type": "string"
+												},
 												"layout": {
 													"enum": [
 														"grid",
 														"list"
 													],
 													"type": "string"
+												},
+												"onboarded": {
+													"type": "boolean"
 												},
 												"sortColumn": {
 													"anyOf": [
@@ -11831,12 +13798,40 @@
 							"schema": {
 								"additionalProperties": false,
 								"properties": {
+									"accent": {
+										"enum": [
+											"purple",
+											"blue",
+											"teal",
+											"green",
+											"amber",
+											"rose"
+										],
+										"type": "string"
+									},
+									"corners": {
+										"enum": [
+											"boxy",
+											"rounded"
+										],
+										"type": "string"
+									},
+									"fontFamily": {
+										"enum": [
+											"mono",
+											"sans"
+										],
+										"type": "string"
+									},
 									"layout": {
 										"enum": [
 											"grid",
 											"list"
 										],
 										"type": "string"
+									},
+									"onboarded": {
+										"type": "boolean"
 									},
 									"sortColumn": {
 										"anyOf": [
@@ -11876,12 +13871,40 @@
 										"data": {
 											"additionalProperties": false,
 											"properties": {
+												"accent": {
+													"enum": [
+														"purple",
+														"blue",
+														"teal",
+														"green",
+														"amber",
+														"rose"
+													],
+													"type": "string"
+												},
+												"corners": {
+													"enum": [
+														"boxy",
+														"rounded"
+													],
+													"type": "string"
+												},
+												"fontFamily": {
+													"enum": [
+														"mono",
+														"sans"
+													],
+													"type": "string"
+												},
 												"layout": {
 													"enum": [
 														"grid",
 														"list"
 													],
 													"type": "string"
+												},
+												"onboarded": {
+													"type": "boolean"
 												},
 												"sortColumn": {
 													"anyOf": [
@@ -11954,6 +13977,723 @@
 				"summary": "Update user preferences",
 				"tags": [
 					"Preferences"
+				]
+			}
+		},
+		"/api/v1/shares": {
+			"get": {
+				"description": "Returns every share link owned by the current user",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"createdAt": {
+														"format": "date-time",
+														"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+														"type": "string"
+													},
+													"downloadCount": {
+														"type": "number"
+													},
+													"expiresAt": {
+														"anyOf": [
+															{
+																"format": "date-time",
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																"type": "string"
+															},
+															{
+																"type": "null"
+															}
+														]
+													},
+													"hasPassword": {
+														"type": "boolean"
+													},
+													"id": {
+														"type": "string"
+													},
+													"requiresAuth": {
+														"type": "boolean"
+													},
+													"resourceId": {
+														"type": "string"
+													},
+													"resourceName": {
+														"type": "string"
+													},
+													"resourceType": {
+														"enum": [
+															"file",
+															"folder"
+														],
+														"type": "string"
+													},
+													"token": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"token",
+													"resourceType",
+													"resourceId",
+													"resourceName",
+													"hasPassword",
+													"requiresAuth",
+													"expiresAt",
+													"downloadCount",
+													"createdAt"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List share links",
+				"tags": [
+					"Shares"
+				]
+			},
+			"post": {
+				"description": "Creates a token-addressed link to a file or folder the caller owns",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"expiresInDays": {
+										"maximum": 3650,
+										"minimum": 0,
+										"type": "integer"
+									},
+									"password": {
+										"minLength": 1,
+										"type": "string"
+									},
+									"requiresAuth": {
+										"type": "boolean"
+									},
+									"resourceId": {
+										"minLength": 1,
+										"type": "string"
+									},
+									"resourceType": {
+										"enum": [
+											"file",
+											"folder"
+										],
+										"type": "string"
+									}
+								},
+								"required": [
+									"resourceType",
+									"resourceId"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"createdAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"downloadCount": {
+													"type": "number"
+												},
+												"expiresAt": {
+													"anyOf": [
+														{
+															"format": "date-time",
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"hasPassword": {
+													"type": "boolean"
+												},
+												"id": {
+													"type": "string"
+												},
+												"requiresAuth": {
+													"type": "boolean"
+												},
+												"resourceId": {
+													"type": "string"
+												},
+												"resourceName": {
+													"type": "string"
+												},
+												"resourceType": {
+													"enum": [
+														"file",
+														"folder"
+													],
+													"type": "string"
+												},
+												"token": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"token",
+												"resourceType",
+												"resourceId",
+												"resourceName",
+												"hasPassword",
+												"requiresAuth",
+												"expiresAt",
+												"downloadCount",
+												"createdAt"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Create a share link",
+				"tags": [
+					"Shares"
+				]
+			}
+		},
+		"/api/v1/shares/{id}": {
+			"delete": {
+				"description": "Deletes a share link, immediately breaking the URL",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"revoked": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"revoked"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Revoke a share link",
+				"tags": [
+					"Shares"
+				]
+			}
+		},
+		"/api/v1/sharings": {
+			"get": {
+				"parameters": [
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": true,
+						"schema": {
+							"enum": [
+								"file",
+								"folder"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": true,
+						"schema": {
+							"minLength": 1,
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"expiration": {
+														"anyOf": [
+															{
+																"format": "date-time",
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																"type": "string"
+															},
+															{
+																"type": "null"
+															}
+														]
+													},
+													"permission": {
+														"enum": [
+															"read",
+															"write",
+															"admin"
+														],
+														"type": "string"
+													},
+													"sharedWithId": {
+														"type": "string"
+													},
+													"sharingId": {
+														"type": "string"
+													},
+													"user": {
+														"additionalProperties": false,
+														"properties": {
+															"email": {
+																"type": "string"
+															},
+															"id": {
+																"type": "string"
+															},
+															"image": {
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
+															"name": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"id",
+															"name",
+															"email",
+															"image"
+														],
+														"type": "object"
+													}
+												},
+												"required": [
+													"sharingId",
+													"sharedWithId",
+													"permission",
+													"expiration",
+													"user"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List who a resource is shared with",
+				"tags": [
+					"Sharings"
+				]
+			},
+			"post": {
+				"description": "Grants named accounts access to a file or folder you own",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"permission": {
+										"default": "read",
+										"enum": [
+											"read",
+											"write",
+											"admin"
+										],
+										"type": "string"
+									},
+									"resourceId": {
+										"minLength": 1,
+										"type": "string"
+									},
+									"resourceType": {
+										"enum": [
+											"file",
+											"folder"
+										],
+										"type": "string"
+									},
+									"userIds": {
+										"items": {
+											"minLength": 1,
+											"type": "string"
+										},
+										"minItems": 1,
+										"type": "array"
+									}
+								},
+								"required": [
+									"resourceType",
+									"resourceId",
+									"userIds",
+									"permission"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"shared": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"shared"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Share a resource with users",
+				"tags": [
+					"Sharings"
+				]
+			}
+		},
+		"/api/v1/sharings/{id}": {
+			"delete": {
+				"description": "Removes one person from a sharing",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"revoked": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"revoked"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Revoke a user's access",
+				"tags": [
+					"Sharings"
 				]
 			}
 		},
@@ -16977,6 +19717,105 @@
 				"summary": "Bulk move files and folders",
 				"tags": [
 					"Storage - Bulk"
+				]
+			}
+		},
+		"/api/v1/users/search": {
+			"get": {
+				"description": "Matches a query against user names and emails. Requires a query — the full directory is not enumerable.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"minLength": 1,
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"email": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													},
+													"image": {
+														"type": [
+															"string",
+															"null"
+														]
+													},
+													"name": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"name",
+													"email",
+													"image"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Search users to share with",
+				"tags": [
+					"Sharings"
 				]
 			}
 		},

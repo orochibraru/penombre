@@ -12,6 +12,9 @@ import "$lib/server/openapi/schemas";
 // Route definition modules (side-effect: register with the OpenAPI registry)
 import "$lib/server/openapi/v1/activity";
 import "$lib/server/openapi/v1/auth";
+import "$lib/server/openapi/v1/notes";
 import "$lib/server/openapi/v1/preferences";
+import "$lib/server/openapi/v1/shares";
+import "$lib/server/openapi/v1/sharings";
 import "$lib/server/openapi/v1/storage";
 import "$lib/server/openapi/v1/version";

@@ -10,13 +10,11 @@ on:
         type: string
       image_tag:
         required: true
-        description:
-          "Tag to apply to the built image, e.g. pr-123 or a commit SHA"
+        description: "Tag to apply to the built image, e.g. pr-123 or a commit SHA"
         type: string
       registry_name:
         required: true
-        description:
-          "Docker registry target to authenticate against and push to"
+        description: "Docker registry target to authenticate against and push to"
         type: string
       registry_username:
         required: true
@@ -26,18 +24,10 @@ on:
         required: true
         description: "Target to build from the root docker-bake.hcl, e.g. image"
         type: string
-      app_version:
-        required: false
-        default: ""
-        description:
-          "Version to bake into the image as APP_VERSION. Empty falls back to
-          the package.json version in the tree."
-        type: string
       push:
         required: false
         default: true
-        description:
-          "Whether to push the built image. False builds and discards it, still
+        description: "Whether to push the built image. False builds and discards it, still
           populating the layer cache. Callers pass false for pull requests from
           a fork: GitHub withholds secrets from those, so a registry login there
           can only fail."
@@ -95,8 +85,7 @@ jobs:
   # ===========================================
   build:
     name: Build Images
-    runs-on:
-      ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' ||
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' ||
       'ubuntu-latest' }}
     needs: prepare
     strategy:
@@ -139,7 +128,6 @@ jobs:
           set: |
             *.tags=${{ env.IMAGE }}
             *.platform=${{ matrix.platform }}
-            *.args.APP_VERSION=${{ inputs.app_version }}
             *.output=${{ inputs.push && 'type=image,push-by-digest=true,name-canonical=true,push=true' || 'type=cacheonly' }}
             ${{ inputs.bake_target }}.cache-from=type=gha,scope=${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}-${{ github.ref_name }}
             ${{ inputs.bake_target }}.cache-to=type=gha,mode=max,scope=${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}-${{ github.ref_name }}

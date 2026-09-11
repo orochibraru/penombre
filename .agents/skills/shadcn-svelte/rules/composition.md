@@ -90,9 +90,7 @@ This applies to all group-based components:
   <Empty.Header>
     <Empty.Media variant="icon"><FolderIcon /></Empty.Media>
     <Empty.Title>No projects yet</Empty.Title>
-    <Empty.Description
-      >Get started by creating a new project.</Empty.Description
-    >
+    <Empty.Description>Get started by creating a new project.</Empty.Description>
   </Empty.Header>
   <Empty.Content>
     <Button>Create Project</Button>

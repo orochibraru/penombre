@@ -21,10 +21,17 @@
 			"!drizzle/meta",
 			"!project.inlang",
 			"!**/openapi.json",
+			"!node_modules",
 			"!src/lib/paraglide",
 			"!static",
-			"!packages/docs/.svelte-kit",
-			"!packages/docs/build"
+			"!.svelte-kit",
+			"!build",
+			"!dist",
+			"!test-results",
+			"!playwright-report",
+			"!playwright-report*",
+			"!drizzle",
+			"!.github"
 		]
 	},
 	"formatter": {
@@ -218,6 +225,25 @@
 				"rules": {
 					"suspicious": {
 						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": [
+				"src/lib/server/auth/index.ts",
+				"src/lib/server/config.ts",
+				"src/lib/server/openapi/define-route.ts",
+				"src/lib/server/openapi/registry.ts"
+			],
+			"linter": {
+				"rules": {
+					"nursery": {
+						"noFloatingPromises": "off",
+						"noMisusedPromises": "off"
+					},
+					"suspicious": {
+						"noUnnecessaryConditions": "off"
 					}
 				}
 			}

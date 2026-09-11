@@ -60,8 +60,6 @@ services:
       - SIMPLE_MODE=true
       - ORIGIN=http://localhost:3000
       - AUTH_SECRET=change_me
-      - ADMIN_EMAIL=admin@example.com
-      - ADMIN_PASSWORD=Admin1234!
     volumes:
       - /your/host/path:/data/storage
       - penombre_db:/data/db
@@ -83,10 +81,9 @@ storage directory.
 - **One shared file tree.** Every account routes to the same storage root and
   the same DB-owned files, so uploads/edits from different logins land in the
   same place instead of separate per-user drives.
-- **Trimmed navigation.** Recent, Starred, Shared, Categories, and Sync are
-  hidden — just Browse, Trash, and Settings. Trash stays, so an accidental
-  delete is still recoverable. The hidden pages return 404 if you type their URL
-  directly.
+- **Trimmed navigation.** Recent, Starred, Shared, and Categories are hidden —
+  just Browse, Trash, and Settings. Trash stays, so an accidental delete is
+  still recoverable. The hidden pages return 404 if you type their URL directly.
 
 ## What doesn't change
 
@@ -117,9 +114,9 @@ BYPASS_AUTH=true
 `BYPASS_AUTH` is ignored unless `SIMPLE_MODE=true`: without one shared drive
 there is no single account for a visitor to be.
 
-The account is the first user in the database — the admin seeded on first boot
-from `ADMIN_EMAIL`/`ADMIN_PASSWORD`, the same one simple mode already routes
-everyone's storage through.
+The account is the first user in the database. With bypass on there is nobody to
+sign in and so no setup screen either: a single credential-less owner is created
+automatically, and simple mode routes everyone's storage through it.
 
 The sign-in screen redirects home while bypass is on, and the API accepts
 requests without a key. The UI drops the account menu too: no avatar in the

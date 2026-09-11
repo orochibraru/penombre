@@ -32,6 +32,7 @@
     import { type LucideIcon } from "@lucide/svelte";
     import type { ComponentProps } from "svelte";
     import { page } from "$app/state";
+    import { Badge } from "$lib/components/ui/badge/index";
     import * as Sidebar from "$lib/components/ui/sidebar/index";
     import { cn, type WithoutChildren } from "$lib/utils.js";
     import type { Pathname } from "$app/types";
@@ -67,11 +68,7 @@
             {#if items && items.length > 0}
                 {#each items as item (item.title)}
                     {@const Icon = item.icon}
-                    <Sidebar.MenuItem
-                        class={cn(
-                            item.hideOnMobile ? "hidden md:block" : "block",
-                        )}
-                    >
+                    <Sidebar.MenuItem class={cn(item.hideOnMobile ? "hidden md:block" : "block")}>
                         <Sidebar.MenuButton isActive={isActive(item)}>
                             {#snippet child({ props })}
                                 <a
@@ -125,45 +122,19 @@
                                     <Icon
                                         class={cn(
                                             "md:h-4.5 md:w-4.5",
-                                            item.accentColor === "indigo"
-                                                ? "text-indigo-500"
-                                                : "",
-                                            item.accentColor === "orange"
-                                                ? "text-orange-500"
-                                                : "",
-                                            item.accentColor === "pink"
-                                                ? "text-pink-500"
-                                                : "",
-                                            item.accentColor === "green"
-                                                ? "text-green-500"
-                                                : "",
-                                            item.accentColor === "purple"
-                                                ? "text-purple-500"
-                                                : "",
-                                            item.accentColor === "blue"
-                                                ? "text-blue-500"
-                                                : "",
-                                            item.accentColor === "red"
-                                                ? "text-red-500"
-                                                : "",
-                                            item.accentColor === "yellow"
-                                                ? "text-yellow-500"
-                                                : "",
-                                            item.accentColor === "teal"
-                                                ? "text-teal-500"
-                                                : "",
-                                            item.accentColor === "cyan"
-                                                ? "text-cyan-500"
-                                                : "",
-                                            item.accentColor === "rose"
-                                                ? "text-rose-500"
-                                                : "",
-                                            item.accentColor === "violet"
-                                                ? "text-violet-500"
-                                                : "",
-                                            item.accentColor === "amber"
-                                                ? "text-amber-500"
-                                                : "",
+                                            item.accentColor === "indigo" ? "text-indigo-500" : "",
+                                            item.accentColor === "orange" ? "text-orange-500" : "",
+                                            item.accentColor === "pink" ? "text-pink-500" : "",
+                                            item.accentColor === "green" ? "text-green-500" : "",
+                                            item.accentColor === "purple" ? "text-purple-500" : "",
+                                            item.accentColor === "blue" ? "text-blue-500" : "",
+                                            item.accentColor === "red" ? "text-red-500" : "",
+                                            item.accentColor === "yellow" ? "text-yellow-500" : "",
+                                            item.accentColor === "teal" ? "text-teal-500" : "",
+                                            item.accentColor === "cyan" ? "text-cyan-500" : "",
+                                            item.accentColor === "rose" ? "text-rose-500" : "",
+                                            item.accentColor === "violet" ? "text-violet-500" : "",
+                                            item.accentColor === "amber" ? "text-amber-500" : "",
                                         )}
                                     />
                                     <span>{item.title}</span>
@@ -172,7 +143,7 @@
                         </Sidebar.MenuButton>
                         {#if item.count !== undefined && item.count > 0}
                             <Sidebar.MenuBadge class="hidden md:flex">
-                                {item.count}
+                                <Badge variant="secondary">{item.count}</Badge>
                             </Sidebar.MenuBadge>
                         {/if}
                     </Sidebar.MenuItem>

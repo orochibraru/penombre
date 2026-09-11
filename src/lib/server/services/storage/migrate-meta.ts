@@ -11,9 +11,9 @@ import { readdir, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { inArray } from "drizzle-orm";
 import { Logger } from "$lib/logger";
+import { getStoragePath } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { files, folders, user } from "$lib/server/db/schema";
-import { DEFAULT_STORAGE_PATH } from "./constants";
 
 const logger = new Logger("StorageMetaMigration");
 
@@ -296,7 +296,7 @@ async function migrateUserFiles(
 }
 
 export async function migrateStorageMeta(
-	storagePath = DEFAULT_STORAGE_PATH,
+	storagePath = getStoragePath(),
 ): Promise<void> {
 	if (!existsSync(storagePath)) {
 		return;

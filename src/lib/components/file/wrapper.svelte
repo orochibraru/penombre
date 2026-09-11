@@ -17,10 +17,13 @@
 	import { api, type ObjectItem, type ObjectList } from "$lib/api";
 	import FileGrid from "$lib/components/file/grid.svelte";
 	import FileList from "$lib/components/file/list.svelte";
+	import NotesPanel from "$lib/components/file/notes-panel.svelte";
 	import FileTable from "$lib/components/file/table.svelte";
+	import BottomAction from "$lib/components/layout/bottom-action.svelte";
 	import DeleteDialog from "$lib/components/layout/dialogs/delete-dialog.svelte";
 	import MoveDialog from "$lib/components/layout/dialogs/move-dialog.svelte";
 	import RestoreDialog from "$lib/components/layout/dialogs/restore-dialog.svelte";
+	import ShareDialog from "$lib/components/layout/dialogs/share-dialog.svelte";
 	import VideoPlayer from "$lib/components/layout/video-player.svelte";
 	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
 	import { Badge } from "$lib/components/ui/badge/index";
@@ -30,13 +33,14 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
 	import { Input } from "$lib/components/ui/input";
 	import * as m from "$lib/paraglide/messages.js";
+	import { playableMusic, playbackPosition } from "$lib/store/music";
 	import {
 		newFolderDialogOpen,
 		pendingUploadFiles,
 		uploadDialogOpen,
 	} from "$lib/store/upload";
 	import {
-		capitalizeFirstLetter,
+		cn,
 		isFolderItem,
 		readableFileSize,
 		type SortColumn,
@@ -62,6 +66,8 @@
 	import {
 		executeDeleteOperation,
 		executeRestoreOperation,
+		selectedKeys,
+		starSelected,
 	} from "./wrapper-bulk.svelte.js";
 
 	interface UserPreferences {
@@ -102,17 +108,23 @@
 	let confirmDeleteOpen: boolean = $state(false);
 	let confirmRestoreOpen: boolean = $state(false);
 	let moveDialogOpen: boolean = $state(false);
+	let shareDialogOpen: boolean = $state(false);
+	let shareItem: ObjectItem | null = $state(null);
 	let restoringItem: boolean = $state(false);
 	let deletingItem: boolean = $state(false);
 	let movingItem: boolean = $state(false);
 	let checkedItems: Record<string, string> = $state({});
 	let isSingleItemAction: boolean = $state(false);
+	/** True only while the "Empty Trash" button drives the delete dialog. */
+	let emptyingTrash: boolean = $state(false);
 	let searchValue: string = $state("");
 	let searchResults: ObjectItem[] = $state([]);
 	let searchTimeout: ReturnType<typeof setTimeout> | undefined = $state();
 	let actionsContextOpen: boolean = $state(false);
 	let actionableItem: ObjectItem | undefined = $state();
 	let viewFileOpen: boolean = $state(false);
+	/** Playhead of the in-dialog video, shared with the notes panel. */
+	let viewerTime: number = $state(0);
 	// Initialize from server-provided preferences to avoid hydration flash
 	let sortColumn: SortColumn = $derived(initialSortColumn);
 	let sortDirection: SortDirection = $derived(initialSortDirection);
@@ -146,6 +158,10 @@
 	// ================================
 	// Derived State
 	// ================================
+	const selectedItemCount = $derived(
+		Object.values(checkedItems).filter(Boolean).length,
+	);
+
 	let multiObjectActionsOpen = $derived(
 		(indeterminate || allSelected) && !isSingleItemAction,
 	);
@@ -234,6 +250,7 @@
 	// Single item action helpers
 	function prepareForSingleItemAction(item: ObjectItem) {
 		isSingleItemAction = true;
+		emptyingTrash = false;
 		checkedItems = {};
 		checkedItems[item.key] = item.metadata.name ?? item.key;
 	}
@@ -392,6 +409,18 @@
 				toast.error(m.toast_star_error());
 			}
 		},
+		onShare: (item) => {
+			shareItem = item;
+			shareDialogOpen = true;
+			actionsContextOpen = false;
+		},
+		onNotes: (item) => {
+			// Notes-only: audio plays in the global player, so there is no
+			// preview to put beside the thread.
+			fileToView = { item, src: "", type: "notes" };
+			viewFileOpen = true;
+			actionsContextOpen = false;
+		},
 		onMoveToTrash: (item) => {
 			prepareForSingleItemAction(item);
 			handleDeleteObject();
@@ -401,68 +430,95 @@
 	let itemActions = $derived(isTrash ? trashActions : mainActions);
 
 	// Multiple item actions
-	const mainMultipleActions = createMainMultipleActions({
-		onDownload: () => {
-			const keys = Object.keys(checkedItems);
-			if (keys.length === 0) {
-				return;
-			}
+	const mainMultipleActions = $derived(
+		createMainMultipleActions(
+			{
+				onStar: () => {
+					actionsContextOpen = false;
+					const keys = selectedKeys(checkedItems);
+					void starSelected(
+						(data.list ?? []).filter((item) => keys.includes(item.key)),
+						currentFolder,
+						() => (checkedItems = {}),
+					);
+				},
+				onShare: () => {
+					// Only offered for a single selection, so this is it.
+					const key = selectedKeys(checkedItems)[0];
+					const item = (data.list ?? []).find(
+						(candidate) => candidate.key === key,
+					);
+					if (!item) {
+						return;
+					}
+					shareItem = item;
+					shareDialogOpen = true;
+					actionsContextOpen = false;
+				},
+				onDownload: () => {
+					const keys = selectedKeys(checkedItems);
+					if (keys.length === 0) {
+						return;
+					}
 
-			if (keys.length === 1 && keys[0]) {
-				// Single file: use regular download
-				handleDownloadItem(keys[0], () => (actionsContextOpen = false));
-			} else {
-				// Multiple files: use bulk download API
-				actionsContextOpen = false;
-				const paths = keys.map((key) =>
-					currentFolder ? `${currentFolder}/${key}` : key,
-				);
+					if (keys.length === 1 && keys[0]) {
+						// Single file: use regular download
+						handleDownloadItem(keys[0], () => (actionsContextOpen = false));
+					} else {
+						// Multiple files: use bulk download API
+						actionsContextOpen = false;
+						const paths = keys.map((key) =>
+							currentFolder ? `${currentFolder}/${key}` : key,
+						);
 
-				toast.promise(
-					(async () => {
-						const { response, error: dlError } = await api.POST(
-							"/api/v1/storage/download",
+						toast.promise(
+							(async () => {
+								const { response, error: dlError } = await api.POST(
+									"/api/v1/storage/download",
+									{
+										body: { paths },
+										parseAs: "blob",
+									},
+								);
+								if (dlError) {
+									throw new Error("Failed to create download");
+								}
+								// Trigger download from response
+								const blob = await response.blob();
+								const url = URL.createObjectURL(blob);
+								const a = document.createElement("a");
+								a.href = url;
+								a.download = `penombre-download-${paths.length}-files.zip`;
+								document.body.appendChild(a);
+								a.click();
+								URL.revokeObjectURL(url);
+								a.remove();
+							})(),
 							{
-								body: { paths },
-								parseAs: "blob",
+								loading: m.toast_creating_zip_files({
+									count: String(keys.length),
+								}),
+								success: m.toast_downloaded_files({
+									count: String(keys.length),
+								}),
+								error: m.toast_download_files_error(),
 							},
 						);
-						if (dlError) {
-							throw new Error("Failed to create download");
-						}
-						// Trigger download from response
-						const blob = await response.blob();
-						const url = URL.createObjectURL(blob);
-						const a = document.createElement("a");
-						a.href = url;
-						a.download = `penombre-download-${paths.length}-files.zip`;
-						document.body.appendChild(a);
-						a.click();
-						URL.revokeObjectURL(url);
-						a.remove();
-					})(),
-					{
-						loading: m.toast_creating_zip_files({
-							count: String(keys.length),
-						}),
-						success: m.toast_downloaded_files({
-							count: String(keys.length),
-						}),
-						error: m.toast_download_files_error(),
-					},
-				);
-			}
-			checkedItems = {};
-		},
-		onMove: () => {
-			// Copy checked items to moveItems for bulk move
-			moveItems = { ...checkedItems };
-			moveItem = undefined; // Clear single item mode
-			moveDialogOpen = true;
-			actionsContextOpen = false;
-		},
-		onMoveToTrash: handleDeleteObject,
-	});
+					}
+					checkedItems = {};
+				},
+				onMove: () => {
+					// Copy checked items to moveItems for bulk move
+					moveItems = { ...checkedItems };
+					moveItem = undefined; // Clear single item mode
+					moveDialogOpen = true;
+					actionsContextOpen = false;
+				},
+				onMoveToTrash: handleDeleteObject,
+			},
+			selectedItemCount,
+		),
+	);
 
 	const trashMultipleActions = createTrashMultipleActions({
 		onRestore: () => {
@@ -472,6 +528,7 @@
 		},
 		onDeletePermanently: () => {
 			isSingleItemAction = false;
+			emptyingTrash = false;
 			confirmDeleteOpen = true;
 			actionsContextOpen = false;
 		},
@@ -542,6 +599,7 @@
 		checkedItems = selectAllForEmptyTrash(data);
 		confirmDeleteOpen = true;
 		isSingleItemAction = false;
+		emptyingTrash = true;
 	}
 
 	// ================================
@@ -609,6 +667,13 @@
 		const state = computeSelectionState(data, checkedItems);
 		allSelected = state.allSelected;
 		indeterminate = state.indeterminate;
+
+		// Two or more checked is a bulk selection by definition. The flag is
+		// otherwise only cleared by the handlers that set it, so a single-item
+		// context action left it stuck and the bulk bar never reappeared.
+		if (Object.values(checkedItems).filter(Boolean).length > 1) {
+			isSingleItemAction = false;
+		}
 	});
 </script>
 
@@ -616,46 +681,16 @@
 
 <!-- Filters -->
 
-{#if multiObjectActionsOpen}
-    <Input
-        bind:value={searchValue}
-        type="search"
-        disabled
-        placeholder={m.search_placeholder()}
-        class="md:hidden mb-3"
-        onkeyup={() => {
-            debounce();
-        }}
-    />
-    <div class="ml-auto max-w-xl">
-        <div class="flex items-center gap-2 pb-5">
-            {#each multipleItemsActions as action}
-                {@const Icon = action.icon}
-                <div class="w-full">
-                    <Button
-                        type="button"
-                        variant={action.variant}
-                        onclick={() => action.action()}
-                        class="w-full text-xs"
-                    >
-                        <Icon class="h-5 w-4" />
-                        {action.title}
-                    </Button>
-                </div>
-            {/each}
-        </div>
-    </div>
-{:else}
-    <Input
-        bind:value={searchValue}
-        type="search"
-        placeholder={m.search_placeholder()}
-        class="md:hidden mb-3"
-        onkeyup={() => {
-            debounce();
-        }}
-    />
-    <div class="w-full pb-5 flex justify-between items-center gap-3">
+<Input
+    bind:value={searchValue}
+    type="search"
+    placeholder={m.search_placeholder()}
+    class="md:hidden mb-3"
+    onkeyup={() => {
+        debounce();
+    }}
+/>
+<div class="w-full pb-5 flex justify-between items-center gap-3">
         <Input
             bind:ref={searchInputRef}
             bind:value={searchValue}
@@ -772,56 +807,25 @@
                     </DropdownMenu.Item>
                 </DropdownMenu.Content>
             </DropdownMenu.Root>
-            <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
-                    {#snippet child({ props })}
-                        <Button variant="outline" {...props}>
-                            {#if layout === "grid"}
-                                <LayoutGridIcon class="h-4 w-4" />
-                            {:else}
-                                <LayoutListIcon class="h-4 w-4" />
-                            {/if}
-                            <span>
-                                {capitalizeFirstLetter(layout)}
-                            </span>
-                        </Button>
-                    {/snippet}
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content align="end">
-                    <DropdownMenu.Label>{m.layout()}</DropdownMenu.Label>
-                    <DropdownMenu.Separator />
-                    <DropdownMenu.Item
-                        onclick={async () => {
-                            await api.PUT("/api/v1/preferences", {
-                                body: { layout: "list" },
-                            });
-                            await invalidate("app:preferences");
-                        }}
-                    >
-                        {#if layout === "list"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.layout_list()}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                        onclick={async () => {
-                            await api.PUT("/api/v1/preferences", {
-                                body: { layout: "grid" },
-                            });
-                            await invalidate("app:preferences");
-                        }}
-                    >
-                        {#if layout === "grid"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.layout_grid()}
-                    </DropdownMenu.Item>
-                </DropdownMenu.Content>
-            </DropdownMenu.Root>
+            <Button
+                variant="outline"
+                title={m.layout()}
+                onclick={async () => {
+                    await api.PUT("/api/v1/preferences", {
+                        body: { layout: layout === "grid" ? "list" : "grid" },
+                    });
+                    await invalidate("app:preferences");
+                }}
+            >
+                {#if layout === "grid"}
+                    <LayoutGridIcon class="h-4 w-4" />
+                {:else}
+                    <LayoutListIcon class="h-4 w-4" />
+                {/if}
+                <span>
+                    {layout === "grid" ? m.layout_grid() : m.layout_list()}
+                </span>
+            </Button>
             {#if isTrash}
                 <Button
                     type="button"
@@ -838,7 +842,6 @@
             {/if}
         </ButtonGroup.Root>
     </div>
-{/if}
 
 <!-- Table -->
 {#if layout === "list"}
@@ -949,24 +952,35 @@
                 </Button>
             </div>
         </div>
+        <!-- Preview and notes sit side by side on a wide screen and stack
+             below it, so the thread never squeezes the file it is about. -->
+        <div class="flex min-h-0 w-full flex-col gap-4 lg:flex-row">
+        <!-- A bounded box, not a scroller: the image is sized to fit what is
+             left of the viewport once the dialog's own chrome is accounted
+             for, so a tall photo shrinks instead of pushing the dialog into a
+             scroll. Code keeps its own scrolling, hence overflow-auto here. -->
         <div
-            class="flex h-full w-full items-center justify-center overflow-y-auto flex-1"
+            class={cn(
+                "flex max-h-[70vh] w-full min-w-0 flex-1 items-center justify-center overflow-auto",
+                fileToView.type === "notes" && "hidden",
+            )}
         >
             {#if fileToView.type === "image"}
                 <img
                     src={fileToView.src}
                     alt={fileToView.item.metadata.name ?? fileToView.item.key}
-                    class="max-w-full rounded-md object-contain h-[50vh]"
+                    class="max-h-[70vh] max-w-full rounded-md object-contain"
                 />
             {:else if fileToView.type === "video"}
                 <VideoPlayer
                     src={fileToView.src}
                     title={fileToView.item.metadata.name ?? fileToView.item.key}
+                    bind:currentTime={viewerTime}
                 />
             {:else if fileToView.type === "code" && fileToView.language && fileToView.content}
                 <Code.Root
                     lang={fileToView.language}
-                    class="w-full h-full"
+                    class="h-full w-full min-w-0"
                     code={fileToView.content}
                 >
                     <Code.CopyButton />
@@ -975,9 +989,36 @@
                 <embed
                     src={fileToView.src}
                     title={fileToView.item.metadata.name ?? fileToView.item.key}
-                    class="w-full h-[50vh]"
+                    class="h-[70vh] w-full"
                 />
             {/if}
+        </div>
+
+        {#if fileToView.item.metadata.id}
+            {@const playingThis =
+                $playableMusic?.fileId === fileToView.item.metadata.id}
+            <aside
+                class={cn(
+                    "flex max-h-[70vh] min-h-80 w-full min-w-0 flex-col",
+                    fileToView.type === "notes"
+                        ? "flex-1"
+                        : "lg:w-80 lg:shrink-0 lg:border-s lg:ps-4",
+                )}
+            >
+                <NotesPanel
+                    fileId={fileToView.item.metadata.id}
+                    position={fileToView.type === "video"
+                        ? viewerTime
+                        : playingThis
+                          ? $playbackPosition
+                          : undefined}
+                    onSeek={fileToView.type === "video"
+                        ? (seconds) => (viewerTime = seconds)
+                        : undefined}
+                    currentUserId={page.data.user?.id}
+                />
+            </aside>
+        {/if}
         </div>
     {/if}
 </ResponsiveDialog>
@@ -987,6 +1028,8 @@
     bind:deletingItem
     {checkedItems}
     {handleDeleteObject}
+    items={data.list}
+    {emptyingTrash}
 />
 
 <RestoreDialog
@@ -995,6 +1038,37 @@
     {checkedItems}
     {handleRestoreObject}
 />
+
+<!--
+  Selection actions live in a floating drawer rather than replacing the search
+  and filter controls, so those stay usable while items are picked. When a
+  track is playing it stacks above the music player — `--player-height` is
+  published by that component, and defaults to 0 when nothing is open.
+-->
+<BottomAction
+    compact
+    open={multiObjectActionsOpen}
+    title={m.selected_count({ count: String(selectedItemCount) })}
+    closeLabel={m.clear_selection()}
+    callback={() => (checkedItems = {})}
+    class="bottom-[calc(5rem+var(--player-height,0px))] lg:bottom-[calc(1.25rem+var(--player-height,0px))]"
+>
+    {#each multipleItemsActions as action (action.title)}
+        {@const Icon = action.icon}
+        <Button
+            type="button"
+            size="sm"
+            variant={action.variant}
+            onclick={() => action.action()}
+            class="text-xs"
+        >
+            <Icon class="size-3.5" />
+            {action.title}
+        </Button>
+    {/each}
+</BottomAction>
+
+<ShareDialog bind:open={shareDialogOpen} bind:item={shareItem} />
 
 <MoveDialog
     bind:open={moveDialogOpen}

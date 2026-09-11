@@ -8,13 +8,20 @@ import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
 import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
 import { building } from "$app/environment";
 import { Logger } from "$lib/logger";
+import { baseLocale, getLocale } from "$lib/paraglide/runtime";
 import type { AuthType } from "$lib/server/auth";
 import { auth } from "$lib/server/auth";
-import { seedAuth } from "$lib/server/auth/seed";
-import { isAuthBypassed, isSimpleMode } from "$lib/server/config";
+import { needsSetup, seedAuth } from "$lib/server/auth/seed";
+import {
+	getConfig,
+	getVolumes,
+	isAuthBypassed,
+	isSimpleMode,
+} from "$lib/server/config";
 import { getDb, resetDb } from "$lib/server/db";
 import { isSqliteDialect } from "$lib/server/db/dialect";
 import { user as userTable } from "$lib/server/db/schema";
+import { getUserPreferences } from "$lib/server/services/preferences";
 import {
 	migrateStorageMeta,
 	StorageService,
@@ -83,7 +90,7 @@ async function waitForDatabase() {
 			if (isFirstAttempt || i % 10 === 0) {
 				logger.info(`Waiting for database... (attempt ${i + 1}/${maxRetries})`);
 			}
-			await await sleep(retryDelay);
+			await sleep(retryDelay);
 		}
 	}
 }
@@ -117,7 +124,7 @@ async function runMigrations() {
 			// Reset the database connection before retrying
 			await resetDb();
 			retries -= 1;
-			await await sleep(3000);
+			await sleep(3000);
 		}
 	}
 }
@@ -147,7 +154,29 @@ async function scanLibrary(): Promise<void> {
 		if (!owner) {
 			return;
 		}
-		await new StorageService(owner).scanStorage();
+		// Simple mode's shared drive.
+		if (isSimpleMode()) {
+			await new StorageService(owner).scanStorage();
+		}
+
+		const volumes = getVolumes();
+		if (volumes.length === 0) {
+			return;
+		}
+
+		// Mounted volumes are written from outside the app in both modes, so
+		// they need the same reconciliation the shared drive gets.
+		//
+		// Simple mode shares each volume whole, so the shared owner covers it.
+		// Full mode splits a volume per user, so every account has its own
+		// subdirectory to reconcile — sweeping only the shared owner left
+		// everyone else's stale until they happened to open the volume.
+		const owners = isSimpleMode() ? [owner] : await loadAllOwners();
+		for (const volume of volumes) {
+			for (const volumeOwner of owners) {
+				await new StorageService(volumeOwner, volume).scanStorage();
+			}
+		}
 	} catch (error) {
 		logger.error("Library scan failed", error);
 	} finally {
@@ -156,7 +185,11 @@ async function scanLibrary(): Promise<void> {
 }
 
 function startLibraryScanner(): void {
-	if (!isSimpleMode() || globalForScan.__scan_timer) {
+	// Either the shared drive or any mounted volume needs watching.
+	if (
+		(!isSimpleMode() && getVolumes().length === 0) ||
+		globalForScan.__scan_timer
+	) {
 		return;
 	}
 	void scanLibrary();
@@ -166,6 +199,15 @@ function startLibraryScanner(): void {
 }
 
 export const init = async () => {
+	// First line in the log on every boot: which build this is and which of the
+	// two storage models it is running, so a bug report says so without asking.
+	const config = getConfig();
+	logger.info(
+		`Penombre ${config.appVersion} — ${isSimpleMode() ? "simple mode (one shared drive)" : "drive mode (per-user drives)"}${
+			isAuthBypassed() ? ", authentication bypassed" : ""
+		}`,
+	);
+
 	await waitForDatabase();
 	await runMigrations();
 	await seedAuth();
@@ -196,6 +238,24 @@ function loadSharedOwner(): Promise<User | undefined> {
 		.limit(1)
 		.then((rows) => rows[0] as User | undefined);
 	return sharedOwnerPromise;
+}
+
+/**
+ * Every account, for the per-user volume sweep.
+ *
+ * Re-read each pass rather than cached: a user created since boot has a
+ * subdirectory on every volume that nothing else would reconcile.
+ *
+ * ponytail: a full table read per scan interval. Fine for a homelab; if an
+ * instance ever grows enough accounts for this to show up, page it or move
+ * the sweep to a queue keyed by volume.
+ */
+function loadAllOwners(): Promise<User[]> {
+	return getDb()
+		.select()
+		.from(userTable)
+		.orderBy(asc(userTable.createdAt))
+		.then((rows) => rows as User[]);
 }
 
 /**
@@ -308,6 +368,70 @@ const authHandler: Handle = async ({ event, resolve }) => {
 	return svelteKitHandler({ event, resolve, auth, building });
 };
 
+/**
+ * Server-renders the appearance preferences onto `<html>`.
+ *
+ * `applyTheme()` on the client can only run after hydration, so the first
+ * paint used the shipped defaults and then visibly swapped a second later.
+ * Stamping the attributes into the HTML means the correct theme is there in
+ * the very first byte; the client effect still runs, to pick up live changes.
+ *
+ * Also fills in `%lang%`, which nothing was substituting — pages were shipping
+ * a literal `lang="%lang%"`.
+ */
+const themeHandler: Handle = async ({ event, resolve }) => {
+	// Only page renders carry the placeholders; skip the DB read for API
+	// calls, assets and anything else.
+	const wantsHtml = event.request.headers.get("accept")?.includes("text/html");
+
+	let theme = { font: "sans", corners: "rounded", accent: "purple" };
+	if (wantsHtml && event.locals.user) {
+		try {
+			const prefs = await getUserPreferences(event.locals.user.id);
+			theme = {
+				font: prefs.fontFamily ?? theme.font,
+				corners: prefs.corners ?? theme.corners,
+				accent: prefs.accent ?? theme.accent,
+			};
+		} catch (error) {
+			// A themed page is not worth failing the request over.
+			logger.warn("Could not read appearance preferences", error);
+		}
+	}
+
+	const attributes =
+		` data-font="${theme.font}" data-corners="${theme.corners}"` +
+		` data-accent="${theme.accent}"`;
+
+	// Resolved once per request rather than per chunk.
+	let locale = baseLocale as string;
+	try {
+		locale = getLocale();
+	} catch {
+		// No request-scoped locale (prerender, error page) — the base one is
+		// still a valid tag, which is the point of filling this in at all.
+	}
+
+	return resolve(event, {
+		transformPageChunk: ({ html }) =>
+			html.replaceAll("%theme%", attributes).replaceAll("%lang%", locale),
+	});
+};
+
+/**
+ * Paths that must keep working while the instance has no administrator: the
+ * setup screen itself, and the auth endpoints it posts through.
+ */
+function allowedDuringSetup(pathname: string): boolean {
+	return (
+		pathname.startsWith("/auth/setup") ||
+		pathname.startsWith("/api/v1/auth") ||
+		pathname.startsWith("/_app/") ||
+		pathname.startsWith("/.well-known/") ||
+		pathname === "/favicon.ico"
+	);
+}
+
 const generalHandler: Handle = async ({ event, resolve }) => {
 	const isUpload =
 		event.request.method === "POST" &&
@@ -315,6 +439,15 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 
 	if (event.url.pathname.startsWith("/.well-known/")) {
 		return await resolve(event);
+	}
+
+	// An empty instance has nothing to show and nobody who could sign in, so
+	// everything funnels to setup until the first administrator exists.
+	if (!allowedDuringSetup(event.url.pathname) && (await needsSetup())) {
+		return new Response(null, {
+			status: 302,
+			headers: { location: "/auth/setup" },
+		});
 	}
 	// Ignore errors for favicon.ico
 	if (event.url.pathname === "/favicon.ico") {
@@ -354,4 +487,4 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 	return res;
 };
 
-export const handle = sequence(generalHandler, authHandler);
+export const handle = sequence(generalHandler, authHandler, themeHandler);

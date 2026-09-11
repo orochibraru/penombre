@@ -22,7 +22,8 @@ describe("load", () => {
 			request: new Request("http://localhost"),
 		} as never);
 
-		expect(result).toEqual({ users });
+		// The loader also reports whether invitations can be emailed.
+		expect(result).toMatchObject({ users });
 	});
 
 	test("passes empty query and request headers to listUsers", async () => {

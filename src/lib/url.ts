@@ -8,12 +8,19 @@ import { buildOriginUrl } from "$lib/utils";
  */
 const FILE_PATH_TEMPLATE: keyof paths = "/api/v1/storage/file/{id}";
 
+/**
+ * The API takes named thumbnail sizes, not pixels: three discrete values keep
+ * the on-disk thumbnail cache bounded, where an arbitrary pixel count would
+ * let any caller generate unlimited variants.
+ */
+export type ThumbnailSize = "small" | "medium" | "large";
+
 interface ObjectUrlProps {
 	baseUrl: URL;
 	itemPath: string;
 	raw?: boolean;
 	thumbnail?: boolean;
-	size?: number;
+	size?: ThumbnailSize;
 }
 
 export function getObjectUrl({
@@ -42,7 +49,7 @@ export function getObjectUrl({
 		params.set("thumbnail", "true");
 	}
 	if (size) {
-		params.set("size", size.toString());
+		params.set("size", size);
 	}
 
 	const queryString = params.toString();

@@ -144,6 +144,119 @@ the callback URL.
 Sign-out still works, but if your provider keeps its own session you may be
 signed straight back in. Log out of the provider too for a full sign-out.
 
+## Adding people to an instance
+
+Sign-in is **email first**: the address is entered on its own, and Penombre then
+asks for whatever that account actually needs.
+
+- **A known account with a password** gets the password field.
+- **A known account without one** — an address an admin registered — goes to
+  `/auth/onboarding` to choose a password. No admin ever sees it, and no mail
+  server is involved.
+- **An unknown address** is told to ask an admin. Whether an address can sign
+  itself up is governed by **Admin → Settings → Sign-ups**, including an
+  optional allow-list of email domains.
+
+Admins add people under **Admin → Users**: enter an email (and optionally a
+name), and the account is created with no credential at all. That absent
+credential is what marks it as an invitation — the sign-in flow sees it and
+routes the person to onboarding. Tick **Email invite** (available once SMTP is
+configured) to have Penombre mail them the sign-in link.
+
+There is deliberately **no way for an admin to set someone's password**. A
+password a second person has chosen and passed along is a password that lives in
+whatever channel carried it, and its owner believes it is theirs alone.
+
+> Email-first sign-in does reveal whether an address has an account here, which
+> a combined email-and-password form does not. That is the accepted trade of
+> every email-first flow; better-auth's rate limiter caps how fast the lookup
+> can be walked.
+
+On their first sign-in, everyone gets a short walkthrough to pick an accent,
+typeface, corner style and default layout. It can be skipped, and everything in
+it lives in **Settings → Appearance** afterwards.
+
+## Adding a password to an OAuth account
+
+An account created through an OAuth provider has no password of its own. When
+`ENABLE_EMAIL_SIGNIN` is also on, **Account → Security** offers **Set a
+password** for such accounts, so the same person can sign in either way — handy
+when the identity provider is down or unreachable.
+
+The form only appears while the account genuinely has no password; once one is
+set it becomes the ordinary **Change password** flow, which asks for the current
+password first. Setting a password never detaches the OAuth provider — both
+sign-in methods keep working.
+
+If `ENABLE_EMAIL_SIGNIN` is `false`, the whole section is hidden and the
+underlying action refuses: there would be no form to use the password on.
+
+## Passwordless sign-in
+
+Two optional methods let someone sign in without typing a password. Both are
+turned on under **Admin → Settings → Sign-in methods**, both require working
+SMTP (the toggles stay disabled until mail is configured), and both take effect
+**after the next restart** — better-auth builds its plugin list once at boot.
+
+| Method                    | What the person gets                           |
+| ------------------------- | ---------------------------------------------- |
+| **Emailed sign-in link**  | A one-time link that signs them in when opened |
+| **Emailed one-time code** | A short code to type into the sign-in form     |
+
+Both appear on the sign-in screen once the address has been entered, alongside
+the password field. Neither can create an account: they only sign in an address
+that already exists, so opening them does not open sign-ups.
+
+> A sign-in link is a bearer credential — anyone holding the URL is signed in.
+> Treat a forwarded link the way you would treat a forwarded password.
+
+## Two-factor authentication
+
+Penombre supports TOTP two-factor: the six-digit codes an authenticator app
+generates. It is always available — anyone can turn it on from **Account →
+Security** — and an admin can make it compulsory.
+
+Turning it on takes a password (to prove it is really you), then shows the
+secret to add to an authenticator app together with a set of **backup codes**.
+The codes are shown once and each works a single time; they are the way back in
+if the phone is lost. Enrolment is only complete once a generated code has been
+entered back, so a secret that never made it into an app cannot lock anyone out.
+
+Signing in afterwards asks for a code at `/auth/two-factor`, which also accepts
+a backup code. **Don't ask again on this device** remembers the browser so the
+prompt is not repeated on every sign-in.
+
+### Requiring it for everyone
+
+**Admin → Settings → Security → Require two-factor authentication** forces
+enrolment. Anyone who has not set it up is redirected to **Account → Security**
+on their next page load and cannot use the rest of the app until they have. The
+setting shows how many accounts are still outstanding before you turn it on.
+
+> Penombre bundles no QR encoder, so enrolment offers a tappable `otpauth://`
+> link (which opens the authenticator app directly on a phone) and the secret in
+> text for manual entry, rather than a QR image.
+
+## Which methods may be turned off
+
+Sign-in methods cannot be switched off in a way that locks people out. Saving
+**Admin → Settings** is refused when either is true:
+
+1. **Nothing would be left.** At least one method — email and password, an
+   emailed link, an emailed code, or an OAuth provider — has to remain.
+2. **Accounts still depend on the one being removed.** Turning off email and
+   password while some accounts have never linked an OAuth provider would strand
+   exactly those people, so the save is refused and the message names how many
+   they are. The same applies to removing an OAuth provider that is somebody's
+   only way in.
+
+The emailed link and code are exempt from the second rule: they authenticate an
+address rather than a stored credential, so no account depends on them and
+turning one off orphans nobody.
+
+To get past a refusal, give the affected accounts another method first (or
+delete them), then save again.
+
 ## Passkeys
 
 Passkeys (WebAuthn/FIDO2) allow passwordless authentication using biometrics or
@@ -179,16 +292,22 @@ tracks its own request count and automatically refills.
 
 ## Initial admin account
 
-On first startup, if no users exist, Penombre creates an admin account using:
+A fresh instance has **no accounts and no default credentials**. On first start
+every URL redirects to `/auth/setup`, a one-off screen that creates the
+administrator: email, an optional name, and a password you choose.
 
-| Variable         | Description            | Default             |
-| ---------------- | ---------------------- | ------------------- |
-| `ADMIN_EMAIL`    | Admin account email    | `admin@example.com` |
-| `ADMIN_PASSWORD` | Admin account password | `Admin1234!`        |
+Once any account exists the setup screen redirects to sign-in and its action
+refuses, so it cannot be used later to add a second "first" administrator.
 
-> **Warning** — change the default admin credentials immediately after your
-> first login. These variables can be removed from your environment after the
-> initial setup.
+> Earlier versions seeded `admin@example.com` / `Admin1234!` from `ADMIN_EMAIL`
+> and `ADMIN_PASSWORD`. Those variables are **gone** — a published default
+> password on an internet-facing instance is a vulnerability, not a convenience.
+> Existing instances are unaffected: they already have accounts, so the setup
+> screen never appears. Remove the two variables from your `.env`.
+
+The one exception is [auth bypass](simple-mode.md): with no authentication at
+all there is nobody to sign in, so a single credential-less owner is created to
+own the files.
 
 ## Rate limiting
 
