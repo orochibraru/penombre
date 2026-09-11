@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {
-		ExternalLinkIcon,
+		MaximizeIcon,
 		PauseIcon,
 		PlayIcon,
 		Volume1Icon,
@@ -9,6 +9,7 @@
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
 	import type { Pathname } from "$app/types";
+	import { withResume } from "$lib/components/file/file-links";
 	import Waveform from "$lib/components/file/waveform.svelte";
 	import BottomAction from "$lib/components/layout/bottom-action.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -50,6 +51,16 @@
 	let loading: boolean = $state(true);
 	let seeking: boolean = $state(false);
 
+	/** Carries the playhead across, so the viewer picks the track up here. */
+	const fullscreenHref = $derived(
+		$playableMusic?.fileId
+			? withResume(`/view/${$playableMusic.fileId}`, {
+					at: currentTime,
+					playing: !paused,
+				})
+			: ($playableMusic?.source ?? ""),
+	);
+
 	/**
 	 * Whether the *next* `canplay` should start playback.
 	 *
@@ -61,17 +72,26 @@
 	 */
 	let autoplayPending = false;
 
+	/** Seconds the next `canplay` should jump to; see `startAt` on the track. */
+	let resumeAt = 0;
+
 	$effect(() => {
 		const music = $playableMusic;
 
 		// Make sure the player element has been created before we try to use it.
 		if (player && music?.source) {
+			// Resolved first: `player.src` is always absolute, so comparing it
+			// to a relative source never matches and every write to the store
+			// reloaded the track mid-playback — audible as a stutter and a
+			// flickering play button.
+			const source = new URL(music.source, location.href).href;
 			// Only update the source if it's different from the current one.
 			// This prevents unnecessary reloads if the effect is re-triggered.
-			if (player.src !== music.source) {
+			if (player.src !== source) {
 				loading = true;
 				autoplayPending = music.isPlaying;
-				player.src = music.source;
+				resumeAt = music.startAt ?? 0;
+				player.src = source;
 				// `load()` tells the audio element to fetch the new source.
 				player.load();
 			}
@@ -273,13 +293,10 @@
              from somewhere with no id (a share link). -->
         <Button
             variant="outline"
-            title={m.open_in_new_tab()}
-            href={($playableMusic?.fileId
-                ? `/view/${$playableMusic.fileId}`
-                : $playableMusic?.source) as Pathname}
-            target="_blank"
+            title={m.open_fullscreen()}
+            href={fullscreenHref as Pathname}
         >
-            <ExternalLinkIcon />
+            <MaximizeIcon />
         </Button>
         <Popover.Root>
             <Popover.Trigger title={m.change_volume()}>
@@ -320,6 +337,10 @@
         }}
         oncanplay={() => {
             loading = false;
+            if (resumeAt > 0) {
+                currentTime = resumeAt;
+                resumeAt = 0;
+            }
             if (!autoplayPending) {
                 return;
             }

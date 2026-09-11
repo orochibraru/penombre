@@ -3,8 +3,8 @@ import { error, redirect } from "@sveltejs/kit";
 /**
  * Full-screen viewer for one media file.
  *
- * Lives outside `(app)` on purpose: it is what a new tab opens, and the
- * sidebar, header and bottom bar are exactly what is not wanted there.
+ * Lives outside `(app)` on purpose: the sidebar, header and bottom bar are
+ * exactly what a full-screen viewer must not have.
  */
 export const load = async ({ params, locals }) => {
 	if (!locals.user) {

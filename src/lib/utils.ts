@@ -554,3 +554,27 @@ export function randomId(): string {
 	}
 	return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
 }
+
+/**
+ * Toggle browser full screen for `element`.
+ *
+ * iOS Safari implements none of the Fullscreen API on anything but a
+ * `<video>`, and only under a webkit name, so the video is the fallback
+ * target when the standard call is unavailable.
+ */
+export function toggleFullscreen(
+	element: HTMLElement | null,
+	video?: HTMLVideoElement | null,
+): void {
+	if (document.fullscreenElement) {
+		void document.exitFullscreen();
+		return;
+	}
+	if (element?.requestFullscreen) {
+		void element.requestFullscreen();
+		return;
+	}
+	(
+		video as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null
+	)?.webkitEnterFullscreen?.();
+}

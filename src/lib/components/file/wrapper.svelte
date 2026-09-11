@@ -7,7 +7,7 @@
 		LayoutGridIcon,
 		LayoutListIcon,
 	} from "@lucide/svelte";
-	import { onMount } from "svelte";
+	import { onMount, untrack } from "svelte";
 	import { MediaQuery } from "svelte/reactivity";
 	import { toast } from "svelte-sonner";
 	import { browser } from "$app/environment";
@@ -30,13 +30,11 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
 	import { Input } from "$lib/components/ui/input";
 	import * as m from "$lib/paraglide/messages.js";
-	import { playableMusic } from "$lib/store/music";
 	import {
 		newFolderDialogOpen,
 		pendingUploadFiles,
 		uploadDialogOpen,
 	} from "$lib/store/upload";
-	import { getObjectUrl } from "$lib/url";
 	import {
 		cn,
 		isFolderItem,
@@ -44,6 +42,11 @@
 		type SortColumn,
 		type SortDirection,
 	} from "$lib/utils";
+	import {
+		notesView,
+		pendingPreview,
+		takePendingPreview,
+	} from "./preview-handover";
 	import {
 		computeSelectionState,
 		createMainActions,
@@ -53,11 +56,9 @@
 		type FileToView,
 		getDuplicateFilePromise,
 		handleDownloadItem,
-		handleOpenItemInNewTab,
+		handleOpenItemFullscreen,
 		movesIntoItself,
-		newTabUrl,
 		handleOpenItem as openItem,
-		peaksUrl,
 		requestMove,
 		resolveItemParent,
 		selectAllForEmptyTrash,
@@ -132,6 +133,16 @@
 	let moveItems: Record<string, string> = $state({});
 	let draggedItem: ObjectItem | undefined = $state();
 	let dropTargetKey: string | undefined = $state();
+
+	$effect(() => {
+		const pending = $pendingPreview;
+		const view =
+			pending && untrack(() => takePendingPreview(pending, data.list ?? []));
+		if (view) {
+			fileToView = view;
+			viewFileOpen = true;
+		}
+	});
 
 	// Close local dialogs on navigation
 	$effect(() => {
@@ -302,7 +313,7 @@
 				});
 			}
 		},
-		onOpenInNewTab: handleOpenItemInNewTab,
+		onOpenFullscreen: handleOpenItemFullscreen,
 		onRename: (item) =>
 			triggerRenameAction(item, () => (actionsContextOpen = false)),
 		onMove: (item) => {
@@ -396,26 +407,7 @@
 			actionsContextOpen = false;
 		},
 		onNotes: (item) => {
-			// Notes-only: audio plays in the global player, so there is no
-			// preview to put beside the thread — but the dialog still needs a
-			// real `src`, or its "open in new tab" button leads nowhere.
-			fileToView = { item, src: newTabUrl(item), type: "notes" };
-			// Timestamped notes need a playhead, so opening the thread for a
-			// track also loads it into the global player (paused — nobody
-			// asked for it to start).
-			if (item.metadata.category === "MUSIC") {
-				playableMusic.set({
-					title: item.metadata.name || item.key,
-					source: getObjectUrl({
-						baseUrl: page.url,
-						itemPath: item.key,
-						raw: true,
-					}),
-					peaks: peaksUrl(item),
-					isPlaying: false,
-					fileId: item.metadata.id,
-				});
-			}
+			fileToView = notesView(item);
 			viewFileOpen = true;
 			actionsContextOpen = false;
 		},
