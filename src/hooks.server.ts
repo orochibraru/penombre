@@ -225,10 +225,9 @@ let sharedOwnerPromise: Promise<User | undefined> | undefined;
  * first account ever created), so everyone reads/writes the same file tree
  * instead of each login getting its own siloed drive.
  *
- * ponytail: cached forever for process lifetime and untested (hooks.server.ts
- * has no unit-test seam yet, would need mocking svelte-kit/drizzle-migrator
- * imports). Covered indirectly by e2e for now — add a focused test here if
- * this logic grows past "cache the first user".
+ * ponytail: cached for process lifetime once found, and untested
+ * (hooks.server.ts has no unit-test seam yet, would need mocking
+ * svelte-kit/drizzle-migrator imports). Covered indirectly by e2e for now.
  */
 function loadSharedOwner(): Promise<User | undefined> {
 	sharedOwnerPromise ??= getDb()
@@ -236,7 +235,16 @@ function loadSharedOwner(): Promise<User | undefined> {
 		.from(userTable)
 		.orderBy(asc(userTable.createdAt))
 		.limit(1)
-		.then((rows) => rows[0] as User | undefined);
+		.then((rows) => {
+			const owner = rows[0] as User | undefined;
+			// A miss must not be cached: a fresh instance has no account until
+			// setup runs, and the boot scan would otherwise pin `undefined`
+			// for the process's life and never scan again.
+			if (!owner) {
+				sharedOwnerPromise = undefined;
+			}
+			return owner;
+		});
 	return sharedOwnerPromise;
 }
 

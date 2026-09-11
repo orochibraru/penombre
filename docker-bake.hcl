@@ -2,6 +2,11 @@ variable "TAG" {
   default = "latest"
 }
 
+# Empty keeps package.json's own version.
+variable "APP_VERSION" {
+  default = ""
+}
+
 group "default" {
   targets = ["app", "docs"]
 }
@@ -17,6 +22,7 @@ target "base" {
 target "app" {
   inherits   = ["base"]
   target     = "app"
+  args       = { APP_VERSION = "${APP_VERSION}" }
   tags       = ["docker.io/orochibraru/penombre:latest", "docker.io/orochibraru/penombre:${TAG}"]
   cache-from = ["type=gha,scope=app"]
   cache-to   = ["type=gha,mode=max,scope=app"]

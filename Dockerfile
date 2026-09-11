@@ -17,6 +17,15 @@ COPY . .
 
 FROM builder AS app-builder
 
+# The running app reports `package.json`'s version, and a release image is
+# built before semantic-release bumps it — without this the image tagged
+# 1.8.28 reports 1.8.27.
+ARG APP_VERSION=""
+RUN if [ -n "$APP_VERSION" ]; then \
+      bun -e 'const fs = require("fs"); const p = JSON.parse(fs.readFileSync("package.json", "utf8")); p.version = process.env.APP_VERSION; fs.writeFileSync("package.json", JSON.stringify(p, null, "\t") + "\n");' \
+      && echo "Building version $APP_VERSION"; \
+    fi
+
 # `bun i --production` over the existing tree adds rather than prunes, so the
 # runtime deps are resolved fresh in /prod from the same lockfile.
 # hadolint ignore=DL3003

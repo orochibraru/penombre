@@ -414,6 +414,17 @@ trash, sharing, search and thumbnails for free. Adding a kind means adding it to
 `handleOpenItem` routes an editable file to `/edit/[fileId]` before anything
 else, so extensions handled there never reach the preview dialog.
 
+### CI builds the image once
+
+`docker.yaml` pushes by digest only; `e2e.yaml` pulls that digest instead of
+rebuilding; `docker-manifest.yaml` creates the tag afterwards. So a tag only
+ever names an image that passed e2e, and a PR costs two builds (one per
+platform) rather than four. `pr-cleanup.yaml` deletes `pr-<n>` when the PR
+closes.
+
+Forks get no secrets, so nothing is pushed: `pulled: false` makes e2e build
+locally and the publish job is skipped.
+
 ### Prek no longer type-checks
 
 `prek run --all-files` is ~45s, not ~80s: `gen:api` and all three type checks
@@ -421,6 +432,14 @@ moved to CI (`code_quality.yaml` runs `bun run check` and a "Codegen is current"
 step that regenerates and fails on a diff), and biome is passed the staged
 filenames instead of scanning all 524 files. **A green commit no longer implies
 a green CI lint job** — run `bun run check` yourself while working.
+
+### Never cache a missing shared owner
+
+`loadSharedOwner()` memoises, but only a hit. A fresh instance has no account
+until setup runs, so the boot scan finds none — caching that `undefined` pinned
+it for the process's life and simple mode never scanned again, even after the
+admin was created. Restarting the container "fixed" it, which is what made it
+look like a scanner bug rather than a cache one.
 
 ### No seeded admin
 

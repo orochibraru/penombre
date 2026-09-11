@@ -36,8 +36,14 @@ jobs:
         with:
           extra-args: --all-files --no-fail-fast
 
-      - name: Lint
-        run: bun run lint
+      - name: Lint (MD)
+        run: bun run lint:md
+
+      - name: Lint (TS)
+        run: bun run lint:ts
+
+      - name: Lint (Tailwind)
+        run: bun run lint:tailwind
 
       - name: Type check
         run: bun run check
