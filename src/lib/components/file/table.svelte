@@ -285,9 +285,18 @@
 		return !!checkedItems[item.key];
 	}
 
-	/** Whatever is on screen right now, so a shift-range matches the eye. */
+	/**
+	 * Whatever is on screen right now, so a shift-range matches the eye.
+	 *
+	 * Mirrors the render condition exactly. Testing `searchResults` for truth
+	 * is not the same thing: an empty array is truthy, so a drive with no
+	 * search active resolved to an empty list and every selection was written
+	 * against nothing.
+	 */
 	const displayed = $derived(
-		(searchResults ? sortedSearchResults : sortedFiles) ?? [],
+		sortedSearchResults && sortedSearchResults.length > 0
+			? sortedSearchResults
+			: (sortedFiles ?? []),
 	);
 </script>
 

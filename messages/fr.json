@@ -565,5 +565,6 @@
 	"deck_delete_slide": "Supprimer la diapositive",
 	"deck_present": "Présenter",
 	"deck_presenting": "Présentation",
-	"deck_empty": "Diapositive vide"
+	"deck_empty": "Diapositive vide",
+	"clear_selection": "Effacer"
 }

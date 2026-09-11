@@ -48,6 +48,8 @@ jobs:
         run: |
           bun run gen:env
           bun run gen:api
+          bun run format:md
+          bun run biome check --write --unsafe --no-errors-on-unmatched openapi.json .example.env
           if ! git diff --exit-code -- .example.env openapi.json src/lib/api; then
             echo "::error::Generated files are stale — run 'bun run gen:env && bun run gen:api' and commit the result."
             exit 1

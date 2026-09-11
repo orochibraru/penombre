@@ -327,6 +327,22 @@ query can match a row on the wrong mount. New rows must stamp
 `volumeId: this.ctx.volumeId`. The main drive stores `null`. See
 `docs/volumes.md`.
 
+### Waveforms are data, not pictures
+
+Audio "thumbnails" return **JSON peak data**, not an image: the endpoint answers
+`application/json` for audio and caches `<key>_peaks.json`. `waveform.svelte`
+draws inline `<svg fill="currentColor">` from it.
+
+The reason is themeability. `showwavespic` bakes a colour into a bitmap, so a
+waveform generated under one accent kept that colour forever, and an `<img>` is
+isolated from page CSS so it could never inherit one either. Only inline SVG
+re-colours when the accent changes.
+
+For the same reason, anything representing a Penombre object — folder icons
+above all — uses `text-primary`, never a fixed palette colour. Fixed colours are
+fine for the _context-menu_ action icons, which are a deliberate multi-colour
+set rather than object identity.
+
 ### Thumbnails
 
 The API takes **named** sizes (`small` | `medium` | `large`), not pixels — three

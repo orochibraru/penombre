@@ -565,5 +565,6 @@
 	"deck_delete_slide": "Delete slide",
 	"deck_present": "Present",
 	"deck_presenting": "Presentation",
-	"deck_empty": "Empty slide"
+	"deck_empty": "Empty slide",
+	"clear_selection": "Clear"
 }

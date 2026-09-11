@@ -8,6 +8,7 @@
 	import { page } from "$app/state";
 	import type { ObjectItem } from "$lib/api";
 	import DocumentIcon from "$lib/components/file/document-icon.svelte";
+	import Waveform from "$lib/components/file/waveform.svelte";
 	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton/index.js";
 	import { isCodeItem } from "$lib/file-utils";
@@ -133,13 +134,12 @@
         {#if thumbnailError || !thumbnailUrl}
             <FileAudioIcon class="size-10 text-muted-foreground" />
         {:else}
-            <img
+            <!-- Drawn from peak data so it follows the accent colour. -->
+            <Waveform
                 src={thumbnailUrl}
-                alt="Waveform for {item.metadata.name ?? item.key}"
-                class="absolute inset-0 size-full object-contain p-2"
-                loading="lazy"
+                class="text-primary absolute inset-0 p-2"
                 onload={() => (thumbnailLoading = false)}
-                onerror={() => {
+                onfail={() => {
                     thumbnailError = true;
                     thumbnailLoading = false;
                 }}

@@ -66,6 +66,8 @@
 	import {
 		executeDeleteOperation,
 		executeRestoreOperation,
+		selectedKeys,
+		starSelected,
 	} from "./wrapper-bulk.svelte.js";
 
 	interface UserPreferences {
@@ -156,6 +158,10 @@
 	// ================================
 	// Derived State
 	// ================================
+	const selectedItemCount = $derived(
+		Object.values(checkedItems).filter(Boolean).length,
+	);
+
 	let multiObjectActionsOpen = $derived(
 		(indeterminate || allSelected) && !isSingleItemAction,
 	);
@@ -424,68 +430,95 @@
 	let itemActions = $derived(isTrash ? trashActions : mainActions);
 
 	// Multiple item actions
-	const mainMultipleActions = createMainMultipleActions({
-		onDownload: () => {
-			const keys = Object.keys(checkedItems);
-			if (keys.length === 0) {
-				return;
-			}
+	const mainMultipleActions = $derived(
+		createMainMultipleActions(
+			{
+				onStar: () => {
+					actionsContextOpen = false;
+					const keys = selectedKeys(checkedItems);
+					void starSelected(
+						(data.list ?? []).filter((item) => keys.includes(item.key)),
+						currentFolder,
+						() => (checkedItems = {}),
+					);
+				},
+				onShare: () => {
+					// Only offered for a single selection, so this is it.
+					const key = selectedKeys(checkedItems)[0];
+					const item = (data.list ?? []).find(
+						(candidate) => candidate.key === key,
+					);
+					if (!item) {
+						return;
+					}
+					shareItem = item;
+					shareDialogOpen = true;
+					actionsContextOpen = false;
+				},
+				onDownload: () => {
+					const keys = selectedKeys(checkedItems);
+					if (keys.length === 0) {
+						return;
+					}
 
-			if (keys.length === 1 && keys[0]) {
-				// Single file: use regular download
-				handleDownloadItem(keys[0], () => (actionsContextOpen = false));
-			} else {
-				// Multiple files: use bulk download API
-				actionsContextOpen = false;
-				const paths = keys.map((key) =>
-					currentFolder ? `${currentFolder}/${key}` : key,
-				);
+					if (keys.length === 1 && keys[0]) {
+						// Single file: use regular download
+						handleDownloadItem(keys[0], () => (actionsContextOpen = false));
+					} else {
+						// Multiple files: use bulk download API
+						actionsContextOpen = false;
+						const paths = keys.map((key) =>
+							currentFolder ? `${currentFolder}/${key}` : key,
+						);
 
-				toast.promise(
-					(async () => {
-						const { response, error: dlError } = await api.POST(
-							"/api/v1/storage/download",
+						toast.promise(
+							(async () => {
+								const { response, error: dlError } = await api.POST(
+									"/api/v1/storage/download",
+									{
+										body: { paths },
+										parseAs: "blob",
+									},
+								);
+								if (dlError) {
+									throw new Error("Failed to create download");
+								}
+								// Trigger download from response
+								const blob = await response.blob();
+								const url = URL.createObjectURL(blob);
+								const a = document.createElement("a");
+								a.href = url;
+								a.download = `penombre-download-${paths.length}-files.zip`;
+								document.body.appendChild(a);
+								a.click();
+								URL.revokeObjectURL(url);
+								a.remove();
+							})(),
 							{
-								body: { paths },
-								parseAs: "blob",
+								loading: m.toast_creating_zip_files({
+									count: String(keys.length),
+								}),
+								success: m.toast_downloaded_files({
+									count: String(keys.length),
+								}),
+								error: m.toast_download_files_error(),
 							},
 						);
-						if (dlError) {
-							throw new Error("Failed to create download");
-						}
-						// Trigger download from response
-						const blob = await response.blob();
-						const url = URL.createObjectURL(blob);
-						const a = document.createElement("a");
-						a.href = url;
-						a.download = `penombre-download-${paths.length}-files.zip`;
-						document.body.appendChild(a);
-						a.click();
-						URL.revokeObjectURL(url);
-						a.remove();
-					})(),
-					{
-						loading: m.toast_creating_zip_files({
-							count: String(keys.length),
-						}),
-						success: m.toast_downloaded_files({
-							count: String(keys.length),
-						}),
-						error: m.toast_download_files_error(),
-					},
-				);
-			}
-			checkedItems = {};
-		},
-		onMove: () => {
-			// Copy checked items to moveItems for bulk move
-			moveItems = { ...checkedItems };
-			moveItem = undefined; // Clear single item mode
-			moveDialogOpen = true;
-			actionsContextOpen = false;
-		},
-		onMoveToTrash: handleDeleteObject,
-	});
+					}
+					checkedItems = {};
+				},
+				onMove: () => {
+					// Copy checked items to moveItems for bulk move
+					moveItems = { ...checkedItems };
+					moveItem = undefined; // Clear single item mode
+					moveDialogOpen = true;
+					actionsContextOpen = false;
+				},
+				onMoveToTrash: handleDeleteObject,
+			},
+			selectedItemCount,
+		),
+	);
 
 	const trashMultipleActions = createTrashMultipleActions({
 		onRestore: () => {
@@ -634,6 +667,13 @@
 		const state = computeSelectionState(data, checkedItems);
 		allSelected = state.allSelected;
 		indeterminate = state.indeterminate;
+
+		// Two or more checked is a bulk selection by definition. The flag is
+		// otherwise only cleared by the handlers that set it, so a single-item
+		// context action left it stuck and the bulk bar never reappeared.
+		if (Object.values(checkedItems).filter(Boolean).length > 1) {
+			isSingleItemAction = false;
+		}
 	});
 </script>
 
@@ -1006,26 +1046,26 @@
   published by that component, and defaults to 0 when nothing is open.
 -->
 <BottomAction
+    compact
     open={multiObjectActionsOpen}
-    title={m.selected_count({ count: String(Object.keys(checkedItems).length) })}
+    title={m.selected_count({ count: String(selectedItemCount) })}
+    closeLabel={m.clear_selection()}
     callback={() => (checkedItems = {})}
     class="bottom-[calc(5rem+var(--player-height,0px))] lg:bottom-[calc(1.25rem+var(--player-height,0px))]"
 >
-    <div class="flex items-center gap-2">
-        {#each multipleItemsActions as action (action.title)}
-            {@const Icon = action.icon}
-            <Button
-                type="button"
-                size="sm"
-                variant={action.variant}
-                onclick={() => action.action()}
-                class="text-xs"
-            >
-                <Icon class="size-4 {action.iconClass ?? ''}" />
-                {action.title}
-            </Button>
-        {/each}
-    </div>
+    {#each multipleItemsActions as action (action.title)}
+        {@const Icon = action.icon}
+        <Button
+            type="button"
+            size="sm"
+            variant={action.variant}
+            onclick={() => action.action()}
+            class="text-xs"
+        >
+            <Icon class="size-3.5" />
+            {action.title}
+        </Button>
+    {/each}
 </BottomAction>
 
 <ShareDialog bind:open={shareDialogOpen} bind:item={shareItem} />

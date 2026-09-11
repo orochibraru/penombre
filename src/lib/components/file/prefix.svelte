@@ -142,7 +142,7 @@
             {/if}
         {:else}
             <FolderIcon
-                class={cn(iconSize, "text-indigo-600")}
+                class={cn(iconSize, "text-primary")}
                 fill="#1447e6"
             />
         {/if}
@@ -191,7 +191,7 @@
                 </span>
             {:else if isFolderItem(item)}
                 <FolderIcon
-                    class="size-10 text-indigo-500"
+                    class="text-primary size-10"
                     fill="currentColor"
                 />
             {:else if item.metadata.category}

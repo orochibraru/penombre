@@ -565,5 +565,6 @@
 	"deck_delete_slide": "Folie löschen",
 	"deck_present": "Präsentieren",
 	"deck_presenting": "Präsentation",
-	"deck_empty": "Leere Folie"
+	"deck_empty": "Leere Folie",
+	"clear_selection": "Leeren"
 }

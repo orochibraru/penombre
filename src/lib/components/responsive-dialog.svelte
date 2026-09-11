@@ -74,6 +74,23 @@
     } = $props();
 
     const isDesktop = new MediaQuery("(min-width: 768px)");
+	/**
+	 * Most of these dialogs do their work in the browser and pass no `action`.
+	 * Submitting such a form posts to the current page, which has no form
+	 * actions — SvelteKit answers 405 and the click appears to do nothing.
+	 * So: enhance only a real server action, and stop the native submit
+	 * otherwise.
+	 */
+	function enhanceWhenAction(node: HTMLFormElement) {
+		return form?.action ? enhance(node) : undefined;
+	}
+
+	function handleSubmit(event: SubmitEvent) {
+		if (!form?.action) {
+			event.preventDefault();
+		}
+		form?.onsubmit?.(event);
+	}
 </script>
 
 {#snippet footerButtons()}
@@ -115,8 +132,8 @@
             action={form.action}
             method={form.method ?? "POST"}
             enctype={form.enctype}
-            onsubmit={form.onsubmit}
-            use:enhance
+            onsubmit={handleSubmit}
+            use:enhanceWhenAction
         >
             <fieldset disabled={loading} class="flex flex-col gap-4">
                 <div

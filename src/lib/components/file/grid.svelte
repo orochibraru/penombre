@@ -222,21 +222,30 @@
 		return [...searchResults].sort(compareItems);
 	});
 
-	/** Whatever is on screen right now, so a shift-range matches the eye. */
+	/**
+	 * Whatever is on screen right now, so a shift-range matches the eye.
+	 *
+	 * Mirrors the render condition exactly. Testing `searchResults` for truth
+	 * is not the same thing: an empty array is truthy, so a drive with no
+	 * search active resolved to an empty list and every selection was written
+	 * against nothing.
+	 */
 	const displayed = $derived(
-		(searchResults ? sortedSearchResults : sortedFiles) ?? [],
+		sortedSearchResults && sortedSearchResults.length > 0
+			? sortedSearchResults
+			: (sortedFiles ?? []),
 	);
 
 	/** Any selection at all pins every tile's checkbox open. */
 	const anySelected = $derived(selectedCount(displayed, checkedItems) > 0);
 
-	function toggleTile(item: ObjectItem, event: MouseEvent) {
-		// The tile itself is a button that opens the file, so a click on the
-		// checkbox must not reach it.
-		event.preventDefault();
-		event.stopPropagation();
-		setShiftHeld(event.shiftKey);
-		applySelection(displayed, item.key, !isChecked(item), checkedItems);
+	/**
+	 * `onCheckedChange`, not `onclick`: the checkbox reports its own state and
+	 * an `onclick` handler never toggled it. The shift key is captured on the
+	 * wrapper on the way down, since this callback only receives a boolean.
+	 */
+	function toggleTile(item: ObjectItem, next: boolean) {
+		applySelection(displayed, item.key, next, checkedItems);
 		setShiftHeld(false);
 	}
 </script>
@@ -274,12 +283,15 @@
                     ? "opacity-100"
                     : "opacity-0 group-hover/tile:opacity-100 focus-within:opacity-100",
             )}
+            onclickcapture={(e: MouseEvent) => setShiftHeld(e.shiftKey)}
+            onkeydowncapture={(e: KeyboardEvent) => setShiftHeld(e.shiftKey)}
         >
             <Checkbox
-                checked={checked}
+                {checked}
                 aria-label={objectItem.metadata.name ?? objectItem.key}
                 class="bg-background/90 border-muted-foreground/40 shadow-sm backdrop-blur-sm"
-                onclick={(e: MouseEvent) => toggleTile(objectItem, e)}
+                onCheckedChange={(next: boolean) =>
+                    toggleTile(objectItem, next)}
             />
         </span>
 

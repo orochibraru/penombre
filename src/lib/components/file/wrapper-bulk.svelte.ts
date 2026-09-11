@@ -8,8 +8,9 @@
 import { toast } from "svelte-sonner";
 import { invalidate } from "$app/navigation";
 import { page } from "$app/state";
-import type { ObjectItem } from "$lib/api";
+import { api, type ObjectItem } from "$lib/api";
 import * as m from "$lib/paraglide/messages.js";
+import { isFolderItem } from "$lib/utils";
 import {
 	getDeleteFolderPromise,
 	getDeleteForeverPromise,
@@ -194,4 +195,59 @@ export function executeDeleteOperation(
 				: m.toast_move_to_trash_error({ count: String(failures) }),
 		},
 	);
+}
+
+/**
+ * Keys that are actually selected.
+ *
+ * Deselecting writes `false` rather than deleting the key, so `Object.keys`
+ * keeps returning the high-water mark of everything ever ticked — bulk
+ * actions would then act on items no longer chosen.
+ */
+export function selectedKeys(
+	checkedItems: Record<string, string | false>,
+): string[] {
+	return Object.entries(checkedItems)
+		.filter(([, name]) => !!name)
+		.map(([key]) => key);
+}
+
+/** Star every selected item, files and folders alike. */
+export async function starSelected(
+	items: ObjectItem[],
+	currentFolder: string,
+	onDone: () => void,
+): Promise<void> {
+	if (items.length === 0) {
+		return;
+	}
+
+	try {
+		await Promise.all(
+			items.map((item) => {
+				if (isFolderItem(item)) {
+					const folderId = item.key.replace(/\/$/, "");
+					return api.PUT("/api/v1/storage/folder/{path}", {
+						params: { path: { path: encodeURIComponent(folderId) } },
+						body: {
+							isStarred: true,
+							parentFolderId: currentFolder || undefined,
+						},
+					});
+				}
+				return api.PUT("/api/v1/storage/file/{id}", {
+					params: {
+						path: { id: encodeURIComponent(item.key) },
+						query: { folder: currentFolder },
+					},
+					body: { isStarred: true },
+				});
+			}),
+		);
+		toast.success(m.toast_added_to_starred({ name: String(items.length) }));
+		onDone();
+		await invalidate("app:files");
+	} catch {
+		toast.error(m.toast_star_error());
+	}
 }

@@ -20,6 +20,31 @@ import { ownedFiles } from "./scope";
 
 const logger = new Logger("StorageService");
 
+/** Loudest sample in each of `buckets` slices, normalised to 0..1. */
+function bucketPeaks(samples: Int16Array, buckets: number): number[] {
+	const perBucket = Math.max(1, Math.floor(samples.length / buckets));
+	const peaks: number[] = [];
+
+	for (let b = 0; b < buckets; b++) {
+		const start = b * perBucket;
+		if (start >= samples.length) {
+			break;
+		}
+		const end = Math.min(start + perBucket, samples.length);
+		let peak = 0;
+		for (let i = start; i < end; i++) {
+			const value = Math.abs(samples[i] ?? 0);
+			if (value > peak) {
+				peak = value;
+			}
+		}
+		// Three decimals is well below one pixel of a rendered bar.
+		peaks.push(Math.round((peak / 32_768) * 1000) / 1000);
+	}
+
+	return peaks;
+}
+
 class ThumbnailSemaphore {
 	private running = 0;
 	private readonly queue: Array<() => void> = [];
@@ -118,6 +143,9 @@ export class ThumbnailService {
 	 * view is a cache hit instead of an ffmpeg run per tile.
 	 */
 	static readonly WARM_SIZE = 300;
+
+	/** Bars in a waveform. Enough detail for a wide tile, still a small file. */
+	static readonly PEAK_BUCKETS = 400;
 
 	/**
 	 * Precompute this file's thumbnail (or waveform, for audio).
@@ -292,56 +320,82 @@ export class ThumbnailService {
 		}
 	}
 
-	async generateAudioWaveform(
+	/**
+	 * Amplitude peaks for an audio file, normalised to 0..1.
+	 *
+	 * Peaks rather than a rendered image on purpose: `showwavespic` bakes a
+	 * colour into a bitmap, so a waveform generated under one accent stayed
+	 * that colour forever after. Numbers let the client draw an SVG in
+	 * whatever colour the theme currently is.
+	 */
+	async generateAudioPeaks(
 		audioPath: string,
-		outputPath: string,
-		width: number,
-		height = 100,
-	): Promise<Buffer> {
-		const tempPng = `${outputPath}.tmp.png`;
+		buckets = ThumbnailService.PEAK_BUCKETS,
+	): Promise<number[]> {
 		const startTime = performance.now();
-		logger.debug(
-			`[thumbnail:audio] Starting waveform generation for ${audioPath}`,
-		);
+		logger.debug(`[thumbnail:audio] Extracting peaks for ${audioPath}`);
 
-		try {
-			const result = await Bun.spawn([
+		// Mono, 8 kHz, signed 16-bit: far more resolution than a few hundred
+		// buckets need, and it keeps the decode cheap on a long file.
+		const proc = Bun.spawn(
+			[
 				"ffmpeg",
-				"-y",
+				"-v",
+				"error",
 				"-i",
 				audioPath,
-				"-filter_complex",
-				`showwavespic=s=${width}x${height}:colors=#f97316`,
-				"-frames:v",
+				"-ac",
 				"1",
-				tempPng,
-			]).exited;
+				"-ar",
+				"8000",
+				"-f",
+				"s16le",
+				"-",
+			],
+			{ stdout: "pipe", stderr: "ignore" },
+		);
 
-			if (result !== 0) {
-				throw new Error("ffmpeg failed to generate audio waveform");
-			}
-
-			const waveform = await sharp(tempPng).webp({ quality: 90 }).toBuffer();
-			const elapsed = (performance.now() - startTime).toFixed(0);
-			logger.debug(
-				`[thumbnail:audio] Generated waveform ${waveform.length} bytes in ${elapsed}ms`,
-			);
-			try {
-				await unlink(tempPng);
-			} catch {
-				// best-effort cleanup of the temp file
-			}
-			return waveform;
-		} catch (error) {
-			const elapsed = (performance.now() - startTime).toFixed(0);
-			logger.debug(`[thumbnail:audio] Failed after ${elapsed}ms: ${error}`);
-			try {
-				await unlink(tempPng);
-			} catch {
-				// best-effort cleanup of the temp file
-			}
-			throw error;
+		const raw = Buffer.from(await new Response(proc.stdout).arrayBuffer());
+		if ((await proc.exited) !== 0 || raw.length < 2) {
+			throw new Error("ffmpeg failed to decode audio for peaks");
 		}
+
+		const samples = new Int16Array(
+			raw.buffer,
+			raw.byteOffset,
+			Math.floor(raw.length / 2),
+		);
+		const peaks = bucketPeaks(samples, buckets);
+
+		const elapsed = (performance.now() - startTime).toFixed(0);
+		logger.debug(
+			`[thumbnail:audio] Extracted ${peaks.length} peaks in ${elapsed}ms`,
+		);
+		return peaks;
+	}
+
+	/** Produce the bytes for one thumbnail, chosen by the file's kind. */
+	private render(
+		kind: { isImage: boolean; isVideo: boolean; isAudio: boolean },
+		paths: { localPath: string; thumbPath: string; size: number },
+	): Promise<Buffer> {
+		const { localPath, thumbPath, size } = paths;
+
+		if (kind.isImage) {
+			return sharp(localPath)
+				.resize(size, size, { fit: "inside", withoutEnlargement: true })
+				.webp({ quality: 80 })
+				.toBuffer();
+		}
+		if (kind.isVideo) {
+			return this.generateVideoThumbnail(localPath, thumbPath, size);
+		}
+		if (kind.isAudio) {
+			return this.generateAudioPeaks(localPath).then((peaks) =>
+				Buffer.from(JSON.stringify(peaks)),
+			);
+		}
+		return this.generatePdfThumbnail(localPath, thumbPath, size);
 	}
 
 	async generateThumbnail(
@@ -368,12 +422,18 @@ export class ThumbnailService {
 
 		const thumbDir = join(this.ctx.storagePath, ".thumbnails");
 		const safeKey = key.replace(/\//g, "_");
-		const thumbPath = join(thumbDir, `${safeKey}_${size}.webp`);
+		// Audio is peak data, not a picture, so it is cached and served as
+		// JSON — the client draws the SVG in the current accent colour.
+		const outputType = isAudio ? "application/json" : "image/webp";
+		const thumbPath = join(
+			thumbDir,
+			isAudio ? `${safeKey}_peaks.json` : `${safeKey}_${size}.webp`,
+		);
 
 		if (existsSync(thumbPath)) {
 			logger.debug(`[thumbnail] Cache hit for ${key}`);
 			const cached = await Bun.file(thumbPath).arrayBuffer();
-			return { buffer: Buffer.from(cached), contentType: "image/webp" };
+			return { buffer: Buffer.from(cached), contentType: outputType };
 		}
 
 		const stats = thumbnailSemaphore.stats;
@@ -387,7 +447,7 @@ export class ThumbnailService {
 			if (existsSync(thumbPath)) {
 				logger.debug(`[thumbnail] Cache hit after wait for ${key}`);
 				const cached = await Bun.file(thumbPath).arrayBuffer();
-				return { buffer: Buffer.from(cached), contentType: "image/webp" };
+				return { buffer: Buffer.from(cached), contentType: outputType };
 			}
 
 			await mkdir(thumbDir, { recursive: true });
@@ -396,31 +456,10 @@ export class ThumbnailService {
 			let thumbnail: Buffer;
 
 			try {
-				if (isImage) {
-					thumbnail = await sharp(localPath)
-						.resize(size, size, { fit: "inside", withoutEnlargement: true })
-						.webp({ quality: 80 })
-						.toBuffer();
-				} else if (isVideo) {
-					thumbnail = await this.generateVideoThumbnail(
-						localPath,
-						thumbPath,
-						size,
-					);
-				} else if (isAudio) {
-					thumbnail = await this.generateAudioWaveform(
-						localPath,
-						thumbPath,
-						size,
-						100,
-					);
-				} else {
-					thumbnail = await this.generatePdfThumbnail(
-						localPath,
-						thumbPath,
-						size,
-					);
-				}
+				thumbnail = await this.render(
+					{ isImage, isVideo, isAudio },
+					{ localPath, thumbPath, size },
+				);
 			} finally {
 				if (isTemp) {
 					try {
@@ -435,7 +474,7 @@ export class ThumbnailService {
 			logger.debug(
 				`[thumbnail] Cached ${thumbnail.length} bytes to ${thumbPath}`,
 			);
-			return { buffer: thumbnail, contentType: "image/webp" };
+			return { buffer: thumbnail, contentType: outputType };
 		} catch (error) {
 			logger.error(`[thumbnail] Error generating thumbnail for ${key}:`, error);
 			return null;
