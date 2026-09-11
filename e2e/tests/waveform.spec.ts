@@ -63,6 +63,13 @@ test.describe("Waveforms", () => {
 		await expect(waveform).toBeVisible({ timeout: 15_000 });
 		await expect(waveform).toHaveAttribute("fill", "currentColor");
 		await expect(waveform.locator("rect").first()).toBeVisible();
+
+		// Put the layout back: preferences outlive the test, and every later
+		// spec then renders a drive full of media tiles, each fetching its own
+		// peaks. That is slow enough to time out whatever runs next.
+		await page.request.put("/api/v1/preferences", {
+			data: { layout: "list" },
+		});
 	});
 
 	/**
