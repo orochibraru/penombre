@@ -6,6 +6,12 @@ export type DocumentKind = "document" | "sheet" | "presentation";
 interface KindSpec {
 	extension: string;
 	contentType: string;
+	/**
+	 * Identity colour, as a Tailwind text utility. The three editable kinds are
+	 * told apart by colour everywhere they appear — icon, menu, editor — so the
+	 * mapping lives here rather than being re-picked per component.
+	 */
+	color: string;
 	/** What a brand-new file of this kind contains. */
 	initial: (title: string) => string;
 }
@@ -17,17 +23,20 @@ export const DOCUMENT_KINDS: Record<DocumentKind, KindSpec> = {
 	document: {
 		extension: "html",
 		contentType: "text/html",
+		color: "text-blue-500",
 		initial: (title) => `<h1>${escapeHtml(title)}</h1>\n<p></p>\n`,
 	},
 	sheet: {
 		extension: "csv",
 		contentType: "text/csv",
+		color: "text-green-500",
 		// Three empty columns so the grid opens with something to click.
 		initial: () => ",,\n,,\n,,\n",
 	},
 	presentation: {
 		extension: "md",
 		contentType: "text/markdown",
+		color: "text-orange-500",
 		initial: (title) => `# ${title}${SLIDE_SEPARATOR}## Next slide\n`,
 	},
 };
@@ -54,6 +63,12 @@ export function kindForName(name: string): DocumentKind | null {
 		default:
 			return null;
 	}
+}
+
+/** Identity colour of the document a file is, or null when it is not one. */
+export function documentColor(name: string): string | null {
+	const kind = kindForName(name);
+	return kind ? DOCUMENT_KINDS[kind].color : null;
 }
 
 /** Create an empty document, returning its file id. */

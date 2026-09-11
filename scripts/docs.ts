@@ -1,4 +1,10 @@
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import {
+	copyFileSync,
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 
@@ -23,6 +29,27 @@ if (existsSync(rootOpenapi)) {
 } else {
 	console.warn(
 		"scripts/docs.ts: no openapi.json at the repo root yet (run `bun run gen` first) : the docs site's API reference page will 404 fetching its spec until it exists.",
+	);
+}
+
+/**
+ * The showcase is built from the screenshots in `docs/images`, so the site has
+ * to serve them. Copied rather than globbed: markdown carries plain `<img>`
+ * srcs, and a static asset is the one thing both GitHub (reading `docs/*.md`
+ * directly) and this site can resolve — see `renderer.image` in markdown.ts.
+ */
+const imagesSource = join(repoRoot, "docs/images");
+const imagesTarget = join(docsDir, "static/docs-images");
+if (existsSync(imagesSource)) {
+	mkdirSync(imagesTarget, { recursive: true });
+	for (const file of readdirSync(imagesSource)) {
+		if (/\.(png|jpe?g|webp|gif|svg)$/i.test(file)) {
+			copyFileSync(join(imagesSource, file), join(imagesTarget, file));
+		}
+	}
+} else {
+	console.warn(
+		"scripts/docs.ts: no docs/images yet (run `bun run screenshots`) : the showcase page will render broken images.",
 	);
 }
 

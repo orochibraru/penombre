@@ -19,12 +19,26 @@
 		position,
 		onSeek,
 		currentUserId,
+		focus = $bindable(),
 	}: {
 		fileId: string;
 		position?: number;
 		onSeek?: (seconds: number) => void;
 		currentUserId?: string;
+		/**
+		 * Handed back to the parent so clicking a moment on the waveform can
+		 * put the caret straight in the box — the reason to click one is
+		 * almost always to write about it.
+		 */
+		focus?: () => void;
 	} = $props();
+
+	let box = $state<HTMLTextAreaElement | null>(null);
+
+	focus = () => {
+		// After the parent's own state settles, or the box may not be shown yet.
+		requestAnimationFrame(() => box?.focus());
+	};
 
 	interface Note {
 		id: string;
@@ -157,8 +171,9 @@
 
     <div class="flex flex-col gap-2">
         <Textarea
+            bind:ref={box}
             bind:value={draft}
-            rows={2}
+            rows={3}
             placeholder={m.notes_placeholder()}
             onkeydown={(e: KeyboardEvent) => {
                 // Enter sends, shift+enter breaks the line — the convention

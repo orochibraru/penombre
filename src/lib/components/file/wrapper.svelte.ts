@@ -31,6 +31,9 @@ import type {
 	SortColumn,
 	SortDirection,
 } from "$lib/utils";
+import { peaksUrl } from "./file-links";
+
+export { handleOpenItemInNewTab, newTabUrl, peaksUrl } from "./file-links";
 
 // ================================
 // Types
@@ -421,15 +424,6 @@ export function createTrashMultipleActions(handlers: {
 // File Operations
 // ================================
 
-export function handleOpenItemInNewTab(item: ObjectItem): void {
-	const finalUrl = getObjectUrl({
-		baseUrl: page.url,
-		itemPath: item.key,
-		raw: true,
-	});
-	window.open(finalUrl);
-}
-
 export function handleDownloadItem(
 	itemPath: string,
 	onComplete?: () => void,
@@ -511,6 +505,7 @@ export async function handleOpenItem(
 		playableMusic.set({
 			title: item.metadata.name || item.key,
 			source: finalUrl,
+			peaks: peaksUrl(item),
 			isPlaying: !dev,
 			fileId: item.metadata.id,
 		});

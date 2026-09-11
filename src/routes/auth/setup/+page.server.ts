@@ -2,6 +2,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { resolve } from "$app/paths";
 import { createFirstAdmin, needsSetup } from "$lib/server/auth/seed";
 import { getConfig } from "$lib/server/config";
+import { requestLibraryScan } from "$lib/server/services/library-scan";
 
 export const load = async () => {
 	// Reachable exactly once. Afterwards it is just the sign-in page, so a
@@ -44,6 +45,11 @@ export const actions = {
 		if (!result.ok) {
 			return fail(400, { error: result.error });
 		}
+
+		// The boot scan had no owner to scan as — a fresh simple-mode instance
+		// has no account until right now. Without this the drive looks empty
+		// until the next interval tick, which reads as a broken scanner.
+		requestLibraryScan();
 
 		redirect(303, resolve("/auth/sign-in"));
 	},

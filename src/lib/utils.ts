@@ -531,3 +531,26 @@ export function trashHoldsLabel(count: number, size: string): string {
 		? m.storage_trash_holds_one({ count: String(count), size })
 		: m.storage_trash_holds({ count: String(count), size });
 }
+
+/**
+ * A random identifier that works outside a secure context.
+ *
+ * `crypto.randomUUID()` is secure-context only: on a self-hosted instance
+ * reached over plain HTTP at a LAN address it is simply `undefined`, and
+ * calling it takes down whatever component asked for an id. `getRandomValues`
+ * has no such restriction; `Math.random` is the last resort, which is fine
+ * because nothing here is a security boundary — these are keys in a local
+ * queue, not tokens.
+ */
+export function randomId(): string {
+	if (typeof crypto !== "undefined") {
+		if (typeof crypto.randomUUID === "function") {
+			return crypto.randomUUID();
+		}
+		if (typeof crypto.getRandomValues === "function") {
+			const bytes = crypto.getRandomValues(new Uint8Array(16));
+			return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+		}
+	}
+	return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+}

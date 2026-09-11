@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { FolderIcon, XIcon } from "@lucide/svelte";
+	import { FilesIcon, FolderIcon, XIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { filesProxy, superForm } from "sveltekit-superforms";
 	import { zod4Client } from "sveltekit-superforms/adapters";
-	import { invalidate } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
-	import { api, type ObjectItem, type UploadResult } from "$lib/api";
 	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import {
@@ -15,6 +12,8 @@
 		FileDropZone,
 		type FileDropZoneProps,
 	} from "$lib/components/ui/file-drop-zone";
+	import { Label } from "$lib/components/ui/label/index.js";
+	import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
 	import * as m from "$lib/paraglide/messages.js";
 	import { uploadSchema } from "$lib/schemas/upload";
 	import {
@@ -23,14 +22,14 @@
 		uploadedItems,
 		uploadingItems,
 		uploadingItemsNames,
-		uploadStats,
 	} from "$lib/store/upload";
-	import { cn } from "$lib/utils";
+	import { enqueueUploads } from "$lib/upload/manager";
+	import type { UploadJob } from "$lib/upload/queue";
+	import { cn, randomId } from "$lib/utils";
 	import {
 		createFoldersForUpload,
 		createUploadMetadata,
 		type FileWithPath,
-		type FullResult,
 		groupFilesByFolder,
 	} from "./upload-dialog.svelte.js";
 
@@ -98,34 +97,6 @@
 	}
 
 	const BATCH_SIZE = 25;
-	const MAX_RETRIES = 3;
-	const RETRY_BASE_DELAY_MS = 1000;
-
-	// Per-file byte tracking for speed/ETA calculation
-	const fileBytesUploaded = new Map<string, number>();
-
-	function updateUploadSpeed() {
-		const stats = $uploadStats;
-		const elapsed = (Date.now() - stats.startTime) / 1000;
-		if (elapsed <= 0) {
-			return;
-		}
-
-		const totalUploaded = Array.from(fileBytesUploaded.values()).reduce(
-			(sum, b) => sum + b,
-			0,
-		);
-		const speed = totalUploaded / elapsed;
-		const remainingBytes = stats.totalBytes - totalUploaded;
-		const eta = speed > 0 ? remainingBytes / speed : 0;
-
-		$uploadStats = {
-			...stats,
-			uploadedBytes: totalUploaded,
-			speed,
-			eta: Math.max(0, Math.round(eta)),
-		};
-	}
 
 	onMount(() => {
 		// Reset the upload stores when the component is mounted
@@ -156,6 +127,18 @@
 	// Track files from folder uploads with their relative paths
 	let folderFiles = $state<FileWithPath[]>([]);
 
+	/**
+	 * Where a dropped folder's contents end up. "keep" recreates the folder
+	 * itself here; "flatten" empties it into the folder being browsed — which
+	 * is what this always did, silently.
+	 */
+	let folderPlacement = $state<"keep" | "flatten">("keep");
+
+	/** The name of the folder that was picked, for the placement labels. */
+	const droppedFolderName = $derived(
+		folderFiles[0]?.relativePath?.split("/")[0] ?? "",
+	);
+
 	const onUpload: FileDropZoneProps["onUpload"] = (uploadedFiles) => {
 		// we use set instead of an assignment since it accepts a File[]
 		files.set([...Array.from($files), ...uploadedFiles]);
@@ -167,13 +150,7 @@
 		// Files from folder selection have webkitRelativePath set
 		// Filter out OS-specific system files
 		const filesWithPaths: FileWithPath[] = uploadedFiles
-			.filter((file) => {
-				const fileName = file.name;
-				if (shouldSkipFile(fileName)) {
-					return false;
-				}
-				return true;
-			})
+			.filter((file) => !shouldSkipFile(file.name))
 			.map((file) => {
 				const f = file as FileWithPath;
 				f.relativePath = file.webkitRelativePath || file.name;
@@ -203,11 +180,6 @@
 		];
 	}
 
-	function removeFileByRef(fileToRemove: File) {
-		files.set(Array.from($files).filter((f) => f !== fileToRemove));
-		folderFiles = folderFiles.filter((f) => f !== fileToRemove);
-	}
-
 	const onFileRejected: FileDropZoneProps["onFileRejected"] = ({
 		reason,
 		file,
@@ -217,214 +189,24 @@
 		});
 	};
 
-	type ErrorResult = FullResult & { error: string };
-	let uploadErrors: ErrorResult[] = $state([]);
-
-	function fileNameWithoutFolder(name: string) {
-		return name.replace(`${page.params.path}/`, "");
-	}
-
-	async function cleanup(fileName: string) {
-		// Delete the file
-		const { error: deleteError } = await api.DELETE(
-			"/api/v1/storage/file/{id}",
-			{
-				params: {
-					path: {
-						id: encodeURIComponent(fileNameWithoutFolder(fileName)),
-					},
-				},
-			},
-		);
-
-		const tmp = $uploadingItems;
-
-		// The below doesn't work since Svelte doesn't track changes to nested objects in stores
-		delete tmp[fileNameWithoutFolder(fileName)];
-
-		// So we do this instead
-		$uploadingItems = { ...tmp };
-
-		const tmp2 = $uploadedItems;
-		delete tmp2[fileNameWithoutFolder(fileName)];
-		$uploadedItems = { ...tmp2 };
-
-		await invalidate("app:files");
-
-		const failedUpload = uploadErrors.find(
-			(e) => e.data.finalName === fileName,
-		);
-		if (failedUpload) {
-			removeFileByRef(failedUpload.file);
-		}
-	}
-
-	/**
-	 * Uploads a single file via XHR with retry logic.
-	 * Returns true on success, throws on permanent failure.
-	 */
-	function uploadSingleFile(
-		result: FullResult,
-		_attempt = 1,
-	): Promise<boolean> {
-		return new Promise<boolean>((finish, fail) => {
-			const xhr = new XMLHttpRequest();
-			const finalUrl = resolve("/api/v1/storage/file/[id]/upload", {
-				id: result.data.metadata.id,
-			});
-			xhr.open("POST", finalUrl);
-			xhr.withCredentials = true;
-
-			xhr.upload.onprogress = (event) => {
-				if (event.lengthComputable) {
-					if (
-						uploadErrors.some((e) => e.data.finalName === result.data.finalName)
-					) {
-						delete $uploadingItems[
-							fileNameWithoutFolder(result.data.finalName)
-						];
-						return;
-					}
-					const percentLoaded = (event.loaded / event.total) * 100;
-					$uploadingItems[fileNameWithoutFolder(result.data.finalName)] =
-						percentLoaded;
-
-					// Track bytes for speed/ETA
-					fileBytesUploaded.set(result.data.finalName, event.loaded);
-					updateUploadSpeed();
-				}
-			};
-
-			xhr.onload = () => {
-				if (xhr.status >= 200 && xhr.status < 300) {
-					return finish(true);
-				}
-				return fail({
-					status: xhr.status,
-					response: xhr.responseText || "Upload failed.",
-				});
-			};
-
-			xhr.onerror = () =>
-				fail({
-					status: 0,
-					response: xhr.responseText || "Network error",
-				});
-
-			xhr.onabort = () =>
-				fail({
-					status: 0,
-					response: xhr.responseText || "Request aborted",
-				});
-
-			const formData = new FormData();
-			formData.append("file", result.file);
-			xhr.send(formData);
-
-			if (xhr.readyState === XMLHttpRequest.DONE) {
-				finish(true);
-			}
-		});
-	}
-
-	/**
-	 * Uploads a single file with retries, then fetches its metadata on success.
-	 */
-	async function uploadWithRetry(result: FullResult): Promise<void> {
-		let lastError: { status: number; response: string } | undefined;
-
-		for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-			try {
-				// Reset progress on retry
-				if (attempt > 1) {
-					$uploadingItems[fileNameWithoutFolder(result.data.finalName)] = 0;
-				}
-
-				const success = await uploadSingleFile(result, attempt);
-
-				if (success) {
-					// Mark file bytes as fully uploaded
-					fileBytesUploaded.set(result.data.finalName, result.file.size);
-
-					// Update completed file count
-					$uploadStats = {
-						...$uploadStats,
-						completedFiles: $uploadStats.completedFiles + 1,
-					};
-					updateUploadSpeed();
-
-					// Fetch file metadata after successful upload
-					const { data: fileData } = await api.GET(
-						"/api/v1/storage/file/{id}",
-						{
-							params: {
-								path: {
-									id: encodeURIComponent(result.data.finalName),
-								},
-							},
-						},
-					);
-
-					if (fileData?.data) {
-						const file = fileData.data as unknown as ObjectItem;
-						file.key = fileNameWithoutFolder(file.key);
-						$uploadedItems[fileNameWithoutFolder(result.data.finalName)] = file;
-
-						const tmp = $uploadingItems;
-						delete tmp[fileNameWithoutFolder(result.data.finalName)];
-						$uploadingItems = { ...tmp };
-
-						removeFileByRef(result.file);
-					}
-					return;
-				}
-			} catch (e) {
-				lastError = e as { status: number; response: string };
-
-				if (attempt < MAX_RETRIES) {
-					const delay = RETRY_BASE_DELAY_MS * 2 ** (attempt - 1);
-					await new Promise((r) => setTimeout(r, delay));
-				}
-			}
-		}
-
-		// All retries exhausted
-		uploadErrors.push({
-			error: lastError?.response || "Upload failed after retries.",
-			...result,
-		});
-		await cleanup(result.data.finalName);
-	}
-
-	/**
-	 * Processes upload results in batches to avoid overwhelming the browser.
-	 */
-	async function resultCallback(results: FullResult[]) {
-		for (let i = 0; i < results.length; i += BATCH_SIZE) {
-			const batch = results.slice(i, i + BATCH_SIZE);
-			await Promise.all(
-				batch.map((result) =>
-					uploadWithRetry(result).catch(() => {
-						// Already handled inside uploadWithRetry
-					}),
-				),
-			);
-		}
+	/** The key the file list and the progress panel use for a row. */
+	function rowKeyFor(finalName: string): string {
+		return page.params.path
+			? finalName.replace(`${page.params.path}/`, "")
+			: finalName;
 	}
 
 	async function handleUpload() {
-		// Close dialog immediately - all work happens in background
+		// Close dialog immediately - all work happens in the worker.
 		open = false;
 		loading = false;
 
-		// Store files locally before clearing the form
 		const regularFiles = Array.from($files);
 		const folderFilesSnapshot = [...folderFiles];
+		const keepRoot = folderPlacement === "keep";
 
-		// Clear the form immediately
 		files.set([]);
 		folderFiles = [];
-		uploadErrors = [];
 
 		$preparingUpload = {
 			active: true,
@@ -432,59 +214,48 @@
 				folderFilesSnapshot.length > 0 ? "Creating folders" : "Initializing",
 		};
 
-		// First, create all necessary folders and get UUID mapping
-		const folderPathToUuid = await createFoldersForUpload(folderFilesSnapshot);
+		// Folders first: a file's metadata row needs the folder it belongs to.
+		const folderPathToUuid = await createFoldersForUpload(
+			folderFilesSnapshot,
+			keepRoot,
+		);
 
 		$preparingUpload = { active: true, status: "Metadata" };
 
-		const results: FullResult[] = [];
+		let jobs: UploadJob[];
 		try {
 			const metadata = await createUploadMetadata(
-				groupFilesByFolder(regularFiles, folderFilesSnapshot, folderPathToUuid),
+				groupFilesByFolder(
+					regularFiles,
+					folderFilesSnapshot,
+					folderPathToUuid,
+					keepRoot,
+				),
 				BATCH_SIZE,
 			);
 
-			for (const { result, displayName } of metadata) {
-				results.push(result);
-				const fileKey = fileNameWithoutFolder(result.data.finalName);
-				$uploadingItems[fileKey] = 1;
-				// Store the original filename for display
-				$uploadingItemsNames[fileKey] = displayName;
-			}
+			jobs = metadata.map(({ result, displayName }) => ({
+				id: randomId(),
+				fileId: result.data.metadata.id,
+				finalName: result.data.finalName,
+				rowKey: rowKeyFor(result.data.finalName),
+				displayName,
+				size: result.file.size,
+				file: result.file,
+				status: "pending" as const,
+				createdAt: Date.now(),
+			}));
 		} catch (e) {
 			$preparingUpload = { active: false, status: "" };
 			toast.error(m.toast_prepare_upload_error());
 			throw e;
 		}
 
-		// Clear preparing state and start actual uploads
 		$preparingUpload = { active: false, status: "" };
 
-		// Initialize upload stats
-		fileBytesUploaded.clear();
-		$uploadStats = {
-			totalFiles: results.length,
-			completedFiles: 0,
-			totalBytes: results.reduce((sum, r) => sum + r.file.size, 0),
-			uploadedBytes: 0,
-			startTime: Date.now(),
-			speed: 0,
-			eta: 0,
-		};
-
-		// Continue uploads in background
-		await resultCallback(results)
-			.finally(() => {
-				// Final stats update
-				$uploadStats = {
-					...$uploadStats,
-					completedFiles: $uploadStats.totalFiles,
-					uploadedBytes: $uploadStats.totalBytes,
-					speed: 0,
-					eta: 0,
-				};
-			})
-			.then(() => invalidate("app:files"));
+		// From here on the worker owns it: the dialog is already closed, and a
+		// reload picks the queue back up from IndexedDB.
+		await enqueueUploads(jobs);
 	}
 </script>
 
@@ -495,13 +266,29 @@
         disabled={totalFileCount === 0}
         onclick={() => handleUpload()}
     >
-        Upload
-        {#if totalFileCount === 1}
-            1 file
-        {:else if totalFileCount > 1}
-            {totalFileCount} files
-        {/if}
+        {m.upload_action({ count: String(totalFileCount) })}
     </Button>
+{/snippet}
+
+{#snippet entry(name: string, size: number, remove: () => void, folder: boolean)}
+    <div
+        class="flex place-items-center justify-between gap-3 rounded-xl border p-3"
+    >
+        <div class="flex min-w-0 flex-col">
+            <div class="flex min-w-0 items-center gap-2">
+                {#if folder}
+                    <FolderIcon class="text-muted-foreground size-4 shrink-0" />
+                {/if}
+                <span class="truncate text-sm">{name}</span>
+            </div>
+            <span class="text-muted-foreground text-xs">
+                {displaySize(size)}
+            </span>
+        </div>
+        <Button variant="outline" size="icon" onclick={remove}>
+            <XIcon />
+        </Button>
+    </div>
 {/snippet}
 
 <ResponsiveDialog
@@ -514,73 +301,89 @@
     footer={uploadButton}
 >
     <input type="hidden" name="rootFolder" value={page.params.path} />
-    <FileDropZone
-        {onUpload}
-        {onFileRejected}
-        {onFolderUpload}
-        fileCount={totalFileCount}
-        class="mb-5"
-    />
-    <input name="attachments" type="file" bind:files={$files} class="hidden" />
-    <div class="mb-5 flex flex-col gap-3">
-        {#each Array.from($files) as file, i (file.name)}
-            <div>
-                <div
-                    class={cn(
-                        "flex place-items-center justify-between gap-3 rounded-xl border p-3",
-                    )}
-                >
-                    <div class="flex flex-col">
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm">{file.name}</span>
-                        </div>
-                        <span class="text-muted-foreground text-xs"
-                            >{displaySize(file.size)}</span
-                        >
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onclick={() => {
-                                removeFile(i);
-                            }}
-                        >
-                            <XIcon />
-                        </Button>
-                    </div>
+
+    <!-- Two zones, not one with a link tucked into it: picking files and
+         picking a folder do different things to the resulting tree, so they
+         are offered as two different choices. -->
+    <div class="mb-5 grid gap-4 md:grid-cols-2">
+        <section class="flex flex-col gap-2">
+            <h3 class="flex items-center gap-2 text-sm font-medium">
+                <FilesIcon class="text-primary size-4" />
+                {m.upload_files_heading()}
+            </h3>
+            <FileDropZone
+                {onUpload}
+                {onFileRejected}
+                fileCount={totalFileCount}
+                class="h-40"
+            />
+            <p class="text-muted-foreground text-xs">
+                {m.upload_files_hint()}
+            </p>
+        </section>
+
+        <section class="flex flex-col gap-2">
+            <h3 class="flex items-center gap-2 text-sm font-medium">
+                <FolderIcon class="text-primary size-4" />
+                {m.upload_folder_heading()}
+            </h3>
+            <FileDropZone
+                onUpload={onFolderUpload}
+                {onFolderUpload}
+                {onFileRejected}
+                folderOnly
+                fileCount={totalFileCount}
+                class="h-40"
+            />
+            <p class="text-muted-foreground text-xs">
+                {m.upload_folder_hint()}
+            </p>
+        </section>
+    </div>
+
+    {#if folderFiles.length > 0}
+        <div class="mb-5 rounded-xl border p-3">
+            <p class="mb-2 text-sm font-medium">
+                {m.upload_folder_placement_title()}
+            </p>
+            <RadioGroup.Root bind:value={folderPlacement} class="gap-2">
+                <div class="flex items-center gap-2">
+                    <RadioGroup.Item value="keep" id="folder-placement-keep" />
+                    <Label for="folder-placement-keep" class="text-sm font-normal">
+                        {m.upload_folder_placement_keep({
+                            name: droppedFolderName,
+                        })}
+                    </Label>
                 </div>
-            </div>
+                <div class="flex items-center gap-2">
+                    <RadioGroup.Item
+                        value="flatten"
+                        id="folder-placement-flatten"
+                    />
+                    <Label
+                        for="folder-placement-flatten"
+                        class="text-sm font-normal"
+                    >
+                        {m.upload_folder_placement_flatten()}
+                    </Label>
+                </div>
+            </RadioGroup.Root>
+        </div>
+    {/if}
+
+    <input name="attachments" type="file" bind:files={$files} class="hidden" />
+
+    <div class={cn("flex flex-col gap-3", totalFileCount > 0 && "mb-5")}>
+        {#each Array.from($files) as file, i (file.name)}
+            {@render entry(file.name, file.size, () => removeFile(i), false)}
         {/each}
         {#each folderFiles as file, i (`folder-${file.relativePath}`)}
-            <div>
-                <div
-                    class={cn(
-                        "flex place-items-center justify-between gap-3 rounded-xl border p-3",
-                    )}
-                >
-                    <div class="flex flex-col">
-                        <div class="flex items-center gap-2">
-                            <FolderIcon class="text-muted-foreground size-4" />
-                            <span class="text-sm">{file.relativePath}</span>
-                        </div>
-                        <span class="text-muted-foreground text-xs"
-                            >{displaySize(file.size)}</span
-                        >
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onclick={() => {
-                                removeFolderFile(i);
-                            }}
-                        >
-                            <XIcon />
-                        </Button>
-                    </div>
-                </div>
-            </div>
+            {@render entry(
+                file.relativePath ?? file.name,
+                file.size,
+                () => removeFolderFile(i),
+                true,
+            )}
         {/each}
     </div>
 </ResponsiveDialog>

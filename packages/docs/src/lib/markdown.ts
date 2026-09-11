@@ -122,6 +122,19 @@ export function makeRenderer(rewrite: (href: string) => string | undefined) {
 		return `<h${depth} id="${id}">${text}</h${depth}>`;
 	};
 
+	/**
+	 * `docs/images/x.png` is a real path when the markdown is read on GitHub,
+	 * and `/docs-images/x.png` is where `scripts/docs.ts` copies it for this
+	 * site. Rewriting here is what lets one source file serve both.
+	 */
+	renderer.image = ({ href, title, text }) => {
+		const src = /^(https?:|\/)/.test(href)
+			? href
+			: `/docs-images/${href.split("/").pop()}`;
+		const titleAttr = title ? ` title="${title}"` : "";
+		return `<img src="${src}" alt="${text}"${titleAttr} loading="lazy" decoding="async" />`;
+	};
+
 	renderer.link = ({ href, title, tokens }) => {
 		const text = renderer.parser.parseInline(tokens);
 		const rewritten = rewrite(href);

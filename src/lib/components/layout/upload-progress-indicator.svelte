@@ -1,18 +1,19 @@
 <script lang="ts">
 	import {
+		AlertTriangleIcon,
 		CheckIcon,
 		ChevronDownIcon,
 		ChevronUpIcon,
-		MinimizeIcon,
+		RotateCwIcon,
 		XIcon,
 	} from "@lucide/svelte";
 	import { fly, slide } from "svelte/transition";
-	import { beforeNavigate } from "$app/navigation";
 	import { Button } from "$lib/components/ui/button";
 	import { Progress } from "$lib/components/ui/progress";
 	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
 	import {
+		failedUploads,
 		globalUploadProgress,
 		preparingUpload,
 		uploadedItems,
@@ -20,6 +21,7 @@
 		uploadingItemsNames,
 		uploadStats,
 	} from "$lib/store/upload";
+	import { dismissFailed, retryUpload } from "$lib/upload/manager";
 	import { cn } from "$lib/utils";
 
 	let expanded = $state(true);
@@ -31,7 +33,10 @@
 			Object.keys($uploadedItems).length > 0,
 	);
 
-	// Warn user before leaving/reloading when uploads are in progress
+	/**
+	 * Still warns, but it is now a courtesy rather than a data-loss guard:
+	 * the queue lives in IndexedDB and resumes on the next load.
+	 */
 	function handleBeforeUnload(e: BeforeUnloadEvent) {
 		if (isUploading) {
 			e.preventDefault();
@@ -50,16 +55,8 @@
 		};
 	});
 
-	// Block SvelteKit client-side navigation while uploading
-	beforeNavigate(({ cancel }) => {
-		if (isUploading) {
-			// biome-ignore lint/suspicious/noAlert: navigation guard must block synchronously
-			const confirmed = window.confirm(m.upload_cancel_warning());
-			if (!confirmed) {
-				cancel();
-			}
-		}
-	});
+	// No guard on client-side navigation any more: the transfer lives in a
+	// worker owned by the layout, so moving between pages does not touch it.
 
 	function formatSpeed(bytesPerSec: number): string {
 		if (bytesPerSec >= 1024 * 1024) {
@@ -86,6 +83,7 @@
 	}
 
 	function dismiss() {
+		failedUploads.set([]);
 		uploadedItems.set({});
 		uploadingItems.set({});
 		uploadingItemsNames.set({});
@@ -106,7 +104,7 @@
 	}
 </script>
 
-{#if $preparingUpload.active || $globalUploadProgress.isUploading || isCompleted}
+{#if $preparingUpload.active || $globalUploadProgress.isUploading || isCompleted || $failedUploads.length > 0}
     <div
         data-testid="upload-progress-indicator"
         transition:fly={{ y: 100, duration: 300 }}
@@ -123,7 +121,19 @@
                 onclick={toggleExpanded}
                 class="flex flex-1 items-center gap-2 text-left transition-colors hover:text-primary"
             >
-                {#if isCompleted}
+                {#if $failedUploads.length > 0 && !$globalUploadProgress.isUploading && !$preparingUpload.active}
+                    <div class="flex items-center gap-2">
+                        <AlertTriangleIcon class="text-destructive size-5" />
+                        <div>
+                            <p class="font-medium">{m.upload_failed_title()}</p>
+                            <p class="text-sm">
+                                {m.items_count({
+                                    count: String($failedUploads.length),
+                                })}
+                            </p>
+                        </div>
+                    </div>
+                {:else if isCompleted}
                     <div class="flex items-center gap-2">
                         <CheckIcon class="size-5 text-green-600" />
                         <div>
@@ -180,6 +190,51 @@
                 transition:slide={{ duration: 200 }}
                 class="max-h-80 overflow-y-auto p-4"
             >
+                {#if $failedUploads.length > 0}
+                    <!-- Kept until acted on: a transfer cut off by closing the
+                         tab is recorded as failed, so it is still here next
+                         time rather than having quietly vanished. -->
+                    <div class="mb-3 space-y-2">
+                        {#each $failedUploads as failure (failure.id)}
+                            <div
+                                class="border-destructive/40 bg-destructive/5 flex items-center gap-2 rounded-md border p-2 text-sm"
+                            >
+                                <AlertTriangleIcon
+                                    class="text-destructive size-4 shrink-0"
+                                />
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate">
+                                        {failure.displayName}
+                                    </p>
+                                    <p
+                                        class="text-muted-foreground truncate text-xs"
+                                    >
+                                        {failure.error === "interrupted"
+                                            ? m.upload_failed_interrupted()
+                                            : failure.error}
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    class="h-7 px-2"
+                                    title={m.upload_retry()}
+                                    onclick={() => void retryUpload(failure.id)}
+                                >
+                                    <RotateCwIcon class="size-3.5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    class="h-7 px-2"
+                                    onclick={() => void dismissFailed(failure.id)}
+                                >
+                                    <XIcon class="size-3.5" />
+                                </Button>
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
                 {#if isCompleted}
                     <div class="space-y-2">
                         {#each Object.entries($uploadedItems) as [key, item]}

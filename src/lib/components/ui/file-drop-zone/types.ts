@@ -26,6 +26,13 @@ export type FileDropZonePropsWithoutHTML = WithChildren<{
 	onFileRejected?: (opts: { reason: FileRejectedReason; file: File }) => void;
 	/** Called when folders are selected for upload */
 	onFolderUpload?: (files: File[]) => Promise<void> | void;
+	/**
+	 * Makes the zone about folders only: clicking it opens the directory
+	 * picker rather than the file picker, and the copy says so. Used when
+	 * "upload files" and "upload a folder" are presented as separate choices
+	 * instead of one zone with a link buried in it.
+	 */
+	folderOnly?: boolean;
 
 	// just for extra documentation
 	/** Takes a comma separated list of one or more file types.

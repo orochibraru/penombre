@@ -335,6 +335,29 @@ query can match a row on the wrong mount. New rows must stamp
 `volumeId: this.ctx.volumeId`. The main drive stores `null`. See
 `docs/volumes.md`.
 
+### Uploads run in a worker, off a persisted queue
+
+`$lib/upload/` is three pieces: `queue.ts` (IndexedDB, holds the `File`
+handles), `worker.ts` (a module Worker doing the XHRs, four at a time, three
+attempts each) and `manager.ts` (main-thread wiring between the two and the
+`$lib/store/upload` stores).
+
+The metadata row is created **before** the bytes are sent, so a job persisted in
+IndexedDB already knows its destination and can resume without the dialog.
+`resumeUploads()` runs from `(app)/+layout.svelte` on mount and treats anything
+still marked `pending`/`uploading` as interrupted: recorded as failed first,
+then retried. That ordering is the guarantee — the `pagehide` handler that also
+marks them is best-effort, since a killed tab may never flush the write.
+
+Two constraints on anything added here:
+
+- `$lib/logger` imports `$lib/server/config`, so it **cannot** be used from this
+  module or anything else the client bundles — the SvelteKit guard fails the
+  build. Use a toast.
+- Rows are keyed by `rowKey` (the path relative to the folder that was on
+  screen), stored on the job rather than recomputed, so a resumed upload does
+  not depend on where the user has navigated since.
+
 ### Waveforms are data, not pictures
 
 Audio "thumbnails" return **JSON peak data**, not an image: the endpoint answers
@@ -349,7 +372,9 @@ re-colours when the accent changes.
 For the same reason, anything representing a Penombre object — folder icons
 above all — uses `text-primary`, never a fixed palette colour. Fixed colours are
 fine for the _context-menu_ action icons, which are a deliberate multi-colour
-set rather than object identity.
+set rather than object identity, and for the three editable document kinds (blue
+/ green / orange, from `DOCUMENT_KINDS[kind].color`), which identify a kind
+rather than an object.
 
 ### Thumbnails
 
@@ -364,6 +389,99 @@ renders its own icon.
 Generation is warmed at write time (`ThumbnailService.warm`) from upload and
 scan, not lazily on first view. It shells out to `ffmpeg` (video frames, audio
 waveforms) and `pdftoppm`; both are installed in the Dockerfile.
+
+### The waveform is also the scrubber
+
+`waveform.svelte` takes an optional `progress` (0–1) and `onseek`. With
+`progress` it draws the bars twice — muted underneath, `--primary` on top,
+clipped to the playhead — because one pass would mean rebuilding every rect per
+frame. The clipPath id is per-instance (`crypto.randomUUID()`): two waveforms
+sharing one id means the second one's playhead drives the first.
+
+The `<audio>` element lives in `music-player.svelte`, so anything else that
+needs to seek or pause it (the notes panel) goes through `commandPlayback()` in
+`$lib/store/music`. Commands carry an incrementing `id` so two identical seeks
+in a row both fire.
+
+### Never write a store you read inside an effect
+
+`music-player.svelte`'s command effect read `$playableMusic` and then set
+`$playableMusic.isPlaying = false`. A `writable` holding an object notifies on
+every `set` (`safe_not_equal` never considers two objects equal), so the effect
+retriggered itself: `effect_update_depth_exceeded`, and the tab hung the moment
+anyone scrubbed from the notes panel. The shape that is safe is the one there
+now — track only the command, `untrack()` the rest, and write through
+`store.update()` rather than `$store.field = x`.
+
+The same file's _event handlers_ mutate freely; that is fine, they are not
+effects. `setPlaying()` exists so the unsafe spelling is nowhere in the file to
+be copied back into one.
+
+Commands are also one object, not one action per call: two `commandPlayback()`
+calls in a tick collapse to the last write before the effect runs, so "seek then
+pause" as two commands silently dropped the seek.
+
+### `crypto.randomUUID` needs a secure context
+
+It is `undefined` over plain HTTP at anything but `localhost` — which is how a
+self-hosted instance is reached before TLS. Calling it threw at component init
+and no waveform rendered anywhere. Use `$props.id()` for a DOM id (and note it
+must be the direct initializer of a `const`, not interpolated inline), and
+`randomId()` from `$lib/utils` for anything else.
+
+### The media viewer is outside `(app)`
+
+`/view/[fileId]` is what "open in new tab" opens for an image, video or track —
+`newTabUrl()` in `components/file/file-links.ts` decides. It is a top-level
+route on purpose: the sidebar, header and bottom bar are exactly what a
+full-screen viewer must not have. Everything else still opens the raw file,
+which the browser handles better than we would.
+
+### Mobile has no sidebar
+
+`Sidebar.Trigger` is `hidden md:flex`, so the sidebar's mobile Sheet is
+unreachable. The whole navigation lives in the bottom bar's drawer in
+`(app)/+layout.svelte`, built from the same `nav` groups the desktop sidebar
+uses, with the create/upload actions on top. Adding a nav entry therefore
+reaches both automatically — _except_ that `hideOnMobile` is a desktop-sidebar
+hint only (those rows are duplicated in the bottom bar); the drawer shows
+everything.
+
+Admin lives in the `help` nav group, not the profile dropdown, because that
+dropdown is desktop-only and the admin panel was otherwise unreachable from a
+phone.
+
+### Passkeys: no conditional mediation
+
+`useAutoRegister: true` / `autoFill: true` ask the browser for _conditional_
+WebAuthn, which is the silent password-upgrade and autofill flow. Neither shows
+a prompt when a button is clicked, so both the register and the sign-in buttons
+did nothing at all. Both are now the plain modal ceremony.
+
+`passkey({ registration: { requireSession: false } })` is not a loosening of who
+may register: without a session the plugin still refuses (no `resolveUser` is
+configured) and the challenge is bound to the user who requested it. What it
+drops is better-auth's `freshSessionMiddleware`, which 403s a session older than
+24h — on a drive people stay signed into for weeks that rejected everyone.
+
+### The library scan needs an owner
+
+`services/library-scan.ts` (not `hooks.server.ts` any more, so the setup action
+can reach it) scans as the shared owner — the first account ever created. A
+fresh instance has none until setup runs, so the boot scan finds nothing. The
+setup action calls `requestLibraryScan()`, and a short poller (`awaitOwner`) is
+the fallback for any other path that creates the first account. Without those, a
+new simple-mode install showed an empty drive for up to a minute with every file
+already on the volume.
+
+### `.ts` is TypeScript, not a transport stream
+
+`file-types.json` filed `ts` under `VIDEO` (MPEG-TS), so a source file opened in
+the video player while the client's own `determineCodeFileLanguage` already
+called it TypeScript. It is `CODE` now, along with `mts`/`cts`/`mjs`/`cjs`.
+Anything added to that map has to agree with `$lib/file-utils`, because
+`handleOpenItem` branches on the server's category and the preview then picks a
+language from the extension.
 
 ### i18n keys
 
@@ -501,3 +619,14 @@ anything under test that imports `$lib/paraglide/messages.js` needs that step.
 `bun run screenshots` drives the app with Playwright and writes to
 `docs/images/`. It asserts each page renders before capturing, so a broken
 screen cannot be published as marketing.
+
+It first seeds one dummy of every supported kind from `e2e/fixtures/showcase-*`
+(image, video, track, PDF, sheet, deck, code, 3D model, archive), so the shots
+exercise every preview path rather than showing an empty drive.
+
+`docs/showcase.md` publishes those files and the README links to it with a
+single hero image — there is no demo instance. The docs site cannot serve
+`docs/images` directly, so `scripts/docs.ts` copies it to
+`packages/docs/static/docs-images` and `renderer.image` in `markdown.ts`
+rewrites relative image srcs to `/docs-images/…`. That is what lets one markdown
+file render correctly both on GitHub and on the site.

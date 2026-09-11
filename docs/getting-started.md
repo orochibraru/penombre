@@ -49,3 +49,14 @@ docker compose up -d
 
 After a few moments, you should be able to access the application at
 `http://localhost:3000`.
+
+## 5. Getting around
+
+On a desktop the left sidebar holds everything: your drive, categories, any
+mounted volumes, settings, the API reference and — if you are an administrator —
+the admin panel.
+
+On a phone that sidebar is replaced by the button in the middle of the bottom
+bar. It opens a drawer with the same navigation plus the create and upload
+actions, so nothing is desktop-only. The admin panel is in there too; it used to
+hide behind the profile menu, which a phone never showed.

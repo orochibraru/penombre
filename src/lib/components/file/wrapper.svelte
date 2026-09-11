@@ -17,28 +17,26 @@
 	import { api, type ObjectItem, type ObjectList } from "$lib/api";
 	import FileGrid from "$lib/components/file/grid.svelte";
 	import FileList from "$lib/components/file/list.svelte";
-	import NotesPanel from "$lib/components/file/notes-panel.svelte";
+	import PreviewDialog from "$lib/components/file/preview-dialog.svelte";
+	import SelectionBar from "$lib/components/file/selection-bar.svelte";
 	import FileTable from "$lib/components/file/table.svelte";
-	import BottomAction from "$lib/components/layout/bottom-action.svelte";
 	import DeleteDialog from "$lib/components/layout/dialogs/delete-dialog.svelte";
 	import MoveDialog from "$lib/components/layout/dialogs/move-dialog.svelte";
 	import RestoreDialog from "$lib/components/layout/dialogs/restore-dialog.svelte";
 	import ShareDialog from "$lib/components/layout/dialogs/share-dialog.svelte";
-	import VideoPlayer from "$lib/components/layout/video-player.svelte";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
 	import { Badge } from "$lib/components/ui/badge/index";
 	import { Button } from "$lib/components/ui/button/index";
 	import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
-	import * as Code from "$lib/components/ui/code/index";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
 	import { Input } from "$lib/components/ui/input";
 	import * as m from "$lib/paraglide/messages.js";
-	import { playableMusic, playbackPosition } from "$lib/store/music";
+	import { playableMusic } from "$lib/store/music";
 	import {
 		newFolderDialogOpen,
 		pendingUploadFiles,
 		uploadDialogOpen,
 	} from "$lib/store/upload";
+	import { getObjectUrl } from "$lib/url";
 	import {
 		cn,
 		isFolderItem,
@@ -57,7 +55,9 @@
 		handleDownloadItem,
 		handleOpenItemInNewTab,
 		movesIntoItself,
+		newTabUrl,
 		handleOpenItem as openItem,
+		peaksUrl,
 		requestMove,
 		resolveItemParent,
 		selectAllForEmptyTrash,
@@ -69,6 +69,7 @@
 		selectedKeys,
 		starSelected,
 	} from "./wrapper-bulk.svelte.js";
+	import { isSearchShortcut, searchFiles } from "./wrapper-search";
 
 	interface UserPreferences {
 		layout?: "grid" | "list";
@@ -123,8 +124,6 @@
 	let actionsContextOpen: boolean = $state(false);
 	let actionableItem: ObjectItem | undefined = $state();
 	let viewFileOpen: boolean = $state(false);
-	/** Playhead of the in-dialog video, shared with the notes panel. */
-	let viewerTime: number = $state(0);
 	// Initialize from server-provided preferences to avoid hydration flash
 	let sortColumn: SortColumn = $derived(initialSortColumn);
 	let sortDirection: SortDirection = $derived(initialSortDirection);
@@ -196,24 +195,7 @@
 	let searchInputRef: HTMLInputElement | null = $state(null);
 
 	async function performSearch() {
-		if (!searchValue || searchValue.trim() === "") {
-			searchResults = [];
-			loading = false;
-			return;
-		}
-
-		try {
-			const { data } = await api.GET("/api/v1/storage/file/search", {
-				params: { query: { q: searchValue.trim() } },
-			});
-			if (data?.data) {
-				searchResults = data.data.list as unknown as ObjectItem[];
-			} else {
-				searchResults = [];
-			}
-		} catch {
-			searchResults = [];
-		}
+		searchResults = await searchFiles(searchValue);
 		loading = false;
 	}
 
@@ -228,9 +210,8 @@
 		searchTimeout = setTimeout(() => performSearch(), 300);
 	};
 
-	// Keyboard shortcut: Ctrl+K or Cmd+K to focus search
 	function handleKeydown(e: KeyboardEvent) {
-		if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+		if (isSearchShortcut(e)) {
 			e.preventDefault();
 			searchInputRef?.focus();
 		}
@@ -416,8 +397,25 @@
 		},
 		onNotes: (item) => {
 			// Notes-only: audio plays in the global player, so there is no
-			// preview to put beside the thread.
-			fileToView = { item, src: "", type: "notes" };
+			// preview to put beside the thread — but the dialog still needs a
+			// real `src`, or its "open in new tab" button leads nowhere.
+			fileToView = { item, src: newTabUrl(item), type: "notes" };
+			// Timestamped notes need a playhead, so opening the thread for a
+			// track also loads it into the global player (paused — nobody
+			// asked for it to start).
+			if (item.metadata.category === "MUSIC") {
+				playableMusic.set({
+					title: item.metadata.name || item.key,
+					source: getObjectUrl({
+						baseUrl: page.url,
+						itemPath: item.key,
+						raw: true,
+					}),
+					peaks: peaksUrl(item),
+					isPlaying: false,
+					fileId: item.metadata.id,
+				});
+			}
 			viewFileOpen = true;
 			actionsContextOpen = false;
 		},
@@ -921,107 +919,11 @@
     />
 {/if}
 
-<ResponsiveDialog
+<PreviewDialog
     bind:open={viewFileOpen}
-    title={fileToView
-        ? (fileToView.item.metadata.name ?? fileToView.item.key)
-        : m.file_preview()}
-    size="lg"
->
-    {#if fileToView}
-        <div class="flex flex-col justify-between gap-5 lg:flex-row mb-5">
-            <span>
-                {readableFileSize(fileToView.item.size as number) ?? "-"}
-            </span>
-            {#if fileToView.language}
-                <Badge variant="outline" class="text-xs">
-                    {fileToView.language}
-                </Badge>
-            {/if}
-            <div class="pr-5">
-                <Button
-                    type="button"
-                    class="w-full lg:w-auto"
-                    variant="outline"
-                    size="sm"
-                    href={fileToView.src as Pathname}
-                    target="_blank"
-                >
-                    {m.open_in_new_tab()}
-                    <ExternalLinkIcon />
-                </Button>
-            </div>
-        </div>
-        <!-- Preview and notes sit side by side on a wide screen and stack
-             below it, so the thread never squeezes the file it is about. -->
-        <div class="flex min-h-0 w-full flex-col gap-4 lg:flex-row">
-        <!-- A bounded box, not a scroller: the image is sized to fit what is
-             left of the viewport once the dialog's own chrome is accounted
-             for, so a tall photo shrinks instead of pushing the dialog into a
-             scroll. Code keeps its own scrolling, hence overflow-auto here. -->
-        <div
-            class={cn(
-                "flex max-h-[70vh] w-full min-w-0 flex-1 items-center justify-center overflow-auto",
-                fileToView.type === "notes" && "hidden",
-            )}
-        >
-            {#if fileToView.type === "image"}
-                <img
-                    src={fileToView.src}
-                    alt={fileToView.item.metadata.name ?? fileToView.item.key}
-                    class="max-h-[70vh] max-w-full rounded-md object-contain"
-                />
-            {:else if fileToView.type === "video"}
-                <VideoPlayer
-                    src={fileToView.src}
-                    title={fileToView.item.metadata.name ?? fileToView.item.key}
-                    bind:currentTime={viewerTime}
-                />
-            {:else if fileToView.type === "code" && fileToView.language && fileToView.content}
-                <Code.Root
-                    lang={fileToView.language}
-                    class="h-full w-full min-w-0"
-                    code={fileToView.content}
-                >
-                    <Code.CopyButton />
-                </Code.Root>
-            {:else if fileToView.type === "pdf"}
-                <embed
-                    src={fileToView.src}
-                    title={fileToView.item.metadata.name ?? fileToView.item.key}
-                    class="h-[70vh] w-full"
-                />
-            {/if}
-        </div>
-
-        {#if fileToView.item.metadata.id}
-            {@const playingThis =
-                $playableMusic?.fileId === fileToView.item.metadata.id}
-            <aside
-                class={cn(
-                    "flex max-h-[70vh] min-h-80 w-full min-w-0 flex-col",
-                    fileToView.type === "notes"
-                        ? "flex-1"
-                        : "lg:w-80 lg:shrink-0 lg:border-s lg:ps-4",
-                )}
-            >
-                <NotesPanel
-                    fileId={fileToView.item.metadata.id}
-                    position={fileToView.type === "video"
-                        ? viewerTime
-                        : playingThis
-                          ? $playbackPosition
-                          : undefined}
-                    onSeek={fileToView.type === "video"
-                        ? (seconds) => (viewerTime = seconds)
-                        : undefined}
-                    currentUserId={page.data.user?.id}
-                />
-            </aside>
-        {/if}
-        </div>
-    {/if}
-</ResponsiveDialog>
+    {fileToView}
+    currentUserId={page.data.user?.id}
+/>
 
 <DeleteDialog
     bind:confirmDeleteOpen
@@ -1039,34 +941,12 @@
     {handleRestoreObject}
 />
 
-<!--
-  Selection actions live in a floating drawer rather than replacing the search
-  and filter controls, so those stay usable while items are picked. When a
-  track is playing it stacks above the music player — `--player-height` is
-  published by that component, and defaults to 0 when nothing is open.
--->
-<BottomAction
-    compact
+<SelectionBar
     open={multiObjectActionsOpen}
-    title={m.selected_count({ count: String(selectedItemCount) })}
-    closeLabel={m.clear_selection()}
-    callback={() => (checkedItems = {})}
-    class="bottom-[calc(5rem+var(--player-height,0px))] lg:bottom-[calc(1.25rem+var(--player-height,0px))]"
->
-    {#each multipleItemsActions as action (action.title)}
-        {@const Icon = action.icon}
-        <Button
-            type="button"
-            size="sm"
-            variant={action.variant}
-            onclick={() => action.action()}
-            class="text-xs"
-        >
-            <Icon class="size-3.5" />
-            {action.title}
-        </Button>
-    {/each}
-</BottomAction>
+    count={selectedItemCount}
+    actions={multipleItemsActions}
+    onclear={() => (checkedItems = {})}
+/>
 
 <ShareDialog bind:open={shareDialogOpen} bind:item={shareItem} />
 
