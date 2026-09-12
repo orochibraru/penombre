@@ -1,3 +1,20 @@
+## [1.8.32](https://github.com/orochibraru/penombre/compare/v1.8.31...v1.8.32) (2026-09-12)
+
+
+### Bug Fixes
+
+* simple mode file sharing ([4d08ffd](https://github.com/orochibraru/penombre/commit/4d08ffddaa4d013d8922b148cdf746d7e5558b38))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.32
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.31](https://github.com/orochibraru/penombre/compare/v1.8.30...v1.8.31) (2026-09-11)
 
 
