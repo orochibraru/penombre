@@ -164,11 +164,20 @@ function bypassSession(owner: User): NonNullable<App.Locals["session"]> {
 	};
 }
 
+/**
+ * Whose drive this request reads and writes.
+ *
+ * Full mode: the signed-in user. Simple mode: the shared owner, so every
+ * account lands on the one drive. Published on `locals.storageOwner` because
+ * every storage route builds its own `StorageService` — handing them the
+ * session user is what left the shared drive unshared.
+ */
 async function resolveStorageOwner(sessionUser: User): Promise<User> {
 	if (!isSimpleMode()) {
 		return sessionUser;
 	}
-	return (await loadSharedOwner()) ?? sessionUser;
+	const sharedOwner = await loadSharedOwner();
+	return sharedOwner ?? sessionUser;
 }
 
 /**
@@ -205,9 +214,8 @@ async function apiKeyAuth(
 
 	if (session?.session && session.user) {
 		event.locals.user = session.user;
-		event.locals.storageService = new StorageService(
-			await resolveStorageOwner(session.user),
-		);
+		event.locals.storageOwner = await resolveStorageOwner(session.user);
+		event.locals.storageService = new StorageService(event.locals.storageOwner);
 	}
 }
 
@@ -223,6 +231,7 @@ const authHandler: Handle = async ({ event, resolve }) => {
 
 		// Lazy-init StorageService — created on first access only
 		const storageOwner = await resolveStorageOwner(session.user);
+		event.locals.storageOwner = storageOwner;
 		let _storageService: StorageService | undefined;
 		Object.defineProperty(event.locals, "storageService", {
 			get() {
@@ -239,6 +248,7 @@ const authHandler: Handle = async ({ event, resolve }) => {
 		const owner = await loadSharedOwner();
 		if (owner) {
 			event.locals.user = owner;
+			event.locals.storageOwner = owner;
 			event.locals.session = bypassSession(owner);
 			event.locals.storageService = new StorageService(owner);
 		}

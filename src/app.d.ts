@@ -19,6 +19,8 @@ declare global {
 			message: unknown;
 			userAgent: string;
 			user: AuthType["user"];
+			/** Whose drive this request acts on — the shared owner in simple mode. */
+			storageOwner: AuthType["user"];
 			session: AuthType["session"];
 			logger: Logger;
 			isAdmin: boolean;

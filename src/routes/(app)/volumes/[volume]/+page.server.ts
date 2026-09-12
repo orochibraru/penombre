@@ -10,11 +10,13 @@ export const load = async ({ params, locals, depends }) => {
 	if (!volume) {
 		return error(404, "No such volume");
 	}
-	if (!locals.user) {
+	if (!locals.storageOwner) {
 		return error(401);
 	}
 
-	const service = new StorageService(locals.user as User, volume);
+	// The storage owner, not the session user: simple mode shares a mounted
+	// volume whole, so everyone reads the one owner's rows.
+	const service = new StorageService(locals.storageOwner as User, volume);
 	await service.ensureUserDirectory();
 
 	// A mounted directory is written from outside the app, so the rows only

@@ -134,6 +134,7 @@ interface RouteConfig<
 	errors?: number[];
 	isFormData?: boolean;
 	requireAuth?: boolean; // Default: true
+	/** Built from `locals.storageOwner` — the shared owner in simple mode. */
 	service?: (user: NonNullable<App.Locals["user"]>) => TService;
 }
 
@@ -237,6 +238,12 @@ export function defineRoute<
 					return validated.response;
 				}
 
+				// The storage owner, never the session user: simple mode routes
+				// every account through one shared owner, and building the
+				// service from `locals.user` gave each of them a drive of their
+				// own instead of the shared one.
+				const owner = event.locals.storageOwner ?? event.locals.user;
+
 				return callback({
 					params: validated.params,
 					query: validated.query,
@@ -245,8 +252,8 @@ export function defineRoute<
 					// biome-ignore lint/style/noNonNullAssertion: User is guaranteed to exist at this point if requireAuth !== false
 					user: event.locals.user!,
 					service:
-						config.service && event.locals.user
-							? config.service(event.locals.user)
+						config.service && owner
+							? config.service(owner)
 							: (undefined as TService),
 				});
 			};

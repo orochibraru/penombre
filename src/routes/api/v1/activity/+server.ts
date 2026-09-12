@@ -6,7 +6,13 @@ import { ActivityService } from "$lib/server/services/activity";
 const logger = new Logger("Activity API");
 
 export const GET = listActivities.handler(async ({ event }) => {
-	const user = event.locals.user as NonNullable<typeof event.locals.user>;
+	// The drive's activity, not the viewer's: every storage row is written
+	// against the drive's owner, so in simple mode the shared owner holds
+	// everyone's — reading the session user's gave every other account an
+	// empty feed, including their own uploads.
+	const user = (event.locals.storageOwner ?? event.locals.user) as NonNullable<
+		typeof event.locals.user
+	>;
 
 	try {
 		logger.debug(`Fetching activities for user ${user.id}`);

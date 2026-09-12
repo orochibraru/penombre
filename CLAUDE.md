@@ -121,10 +121,11 @@ DB that route handlers use; it's lazily instantiated per-request onto
 `handle = sequence(generalHandler, authHandler)`. `authHandler` resolves the
 session two ways: a better-auth cookie session, or an API key fallback
 (`x-api-key` header or `Authorization: Bearer`) for programmatic clients —
-either path sets `event.locals.user`/`.storageService`. Non-auth paths are then
-handed to `svelteKitHandler` (better-auth's SvelteKit adapter). `init()`
-(SvelteKit's app-init hook) waits for the DB, runs Drizzle migrations, seeds the
-default admin user, and migrates legacy storage metadata on every boot.
+either path sets `event.locals.user`, `.storageOwner` and `.storageService`.
+Non-auth paths are then handed to `svelteKitHandler` (better-auth's SvelteKit
+adapter). `init()` (SvelteKit's app-init hook) waits for the DB, runs Drizzle
+migrations, seeds the default admin user, and migrates legacy storage metadata
+on every boot.
 
 ### Config
 
@@ -334,6 +335,23 @@ context's `volumeId`. Paths are only unique _within_ a volume, so an owner-only
 query can match a row on the wrong mount. New rows must stamp
 `volumeId: this.ctx.volumeId`. The main drive stores `null`. See
 `docs/volumes.md`.
+
+### A storage service is built from the owner, never the session user
+
+`locals.storageOwner` is whose drive a request acts on: the signed-in user in
+full mode, the shared owner (the first account ever created) in simple mode.
+`hooks.server.ts` resolves it once per request; everything that constructs a
+`StorageService` or queries storage by user id reads it, never `locals.user`.
+
+That distinction is the whole of simple mode. Every `/api/v1/storage/**`
+contract carries its own `service: (user) => new StorageService(user)`, and
+`define-route.ts` used to call it with `locals.user` — so the shared drive was
+shared with nobody but the first account, while the three routes that happened
+to use `locals.storageService` worked. Same trap in the volume page and the
+storage-usage page.
+
+`locals.user` stays the session user, and that is what authorship (activity
+rows, note authors, share owners) must keep using.
 
 ### Uploads run in a worker, off a persisted queue
 
