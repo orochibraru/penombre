@@ -250,15 +250,31 @@ export class FileOperations {
 		return fileDbToObjectItem(newFile);
 	}
 
+	/**
+	 * Resolve where a create lands. A folder path that matches nothing would
+	 * otherwise write a row whose prefix says one folder and whose folderId
+	 * says the root: invisible where it claims to be, unreachable by its key.
+	 */
+	private async resolveDestination(
+		folder?: string,
+	): Promise<{ path?: string; id: string | null }> {
+		const path = folder?.replace(/\/$/, "") || undefined;
+		if (!path) {
+			return { id: null };
+		}
+		const id = await getFolderIdByPath(this.ctx, path);
+		if (!id) {
+			throw new FileOrFolderNotFoundError(`Folder not found: ${path}`);
+		}
+		return { path, id };
+	}
+
 	async createFile(file: NewFile, folder?: string): Promise<UploadResult> {
 		const name = file.name.includes("/")
 			? (file.name.split("/").pop() ?? file.name)
 			: file.name;
-		const normalizedFolder = folder
-			? folder.endsWith("/")
-				? folder.slice(0, -1)
-				: folder
-			: undefined;
+		const { path: normalizedFolder, id: folderId } =
+			await this.resolveDestination(folder);
 
 		const uniqueName = await getUniqueDisplayName(
 			this.ctx,
@@ -271,10 +287,6 @@ export class FileOperations {
 		const filePath = normalizedFolder
 			? `${normalizedFolder}/${fileNameWithExt}`
 			: fileNameWithExt;
-
-		const folderId = normalizedFolder
-			? await getFolderIdByPath(this.ctx, normalizedFolder)
-			: null;
 
 		const id = crypto.randomUUID();
 		const [newFile] = await this.ctx.db
@@ -321,15 +333,8 @@ export class FileOperations {
 		folder?: string,
 	): Promise<UploadResult[]> {
 		const results: UploadResult[] = [];
-		const normalizedFolder = folder
-			? folder.endsWith("/")
-				? folder.slice(0, -1)
-				: folder
-			: undefined;
-
-		const folderId = normalizedFolder
-			? await getFolderIdByPath(this.ctx, normalizedFolder)
-			: null;
+		const { path: normalizedFolder, id: folderId } =
+			await this.resolveDestination(folder);
 
 		for (const file of fileList) {
 			const name = file.name.includes("/")

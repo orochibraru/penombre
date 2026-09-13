@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { parseCsv, parseSlides, toCsv, toDeck } from "./documents";
+import {
+	baseName,
+	parseCsv,
+	parseSlides,
+	titleFromContent,
+	toCsv,
+	toDeck,
+} from "./documents";
 
 describe("parseCsv", () => {
 	test("splits plain rows and columns", () => {
@@ -65,5 +72,75 @@ describe("slides", () => {
 	test("round-trips", () => {
 		const slides = ["# One", "## Two\n\nbody"];
 		expect(parseSlides(toDeck(slides))).toEqual(slides);
+	});
+});
+
+describe("titleFromContent", () => {
+	test("takes a document's first h1", () => {
+		expect(titleFromContent("document", "<h1>Quarter plan</h1><p>x</p>")).toBe(
+			"Quarter plan",
+		);
+	});
+
+	test("unwraps marks and entities inside the heading", () => {
+		expect(
+			titleFromContent("document", "<h1><strong>Q1 &amp; Q2</strong></h1>"),
+		).toBe("Q1 & Q2");
+	});
+
+	test("a document with no heading has no title", () => {
+		expect(titleFromContent("document", "<p>body only</p>")).toBeNull();
+	});
+
+	test("takes a deck's first slide heading, not a later one", () => {
+		expect(titleFromContent("presentation", "# Intro\n\n---\n\n# Later")).toBe(
+			"Intro",
+		);
+	});
+
+	test("a grid has no title", () => {
+		expect(titleFromContent("sheet", "name,value\n")).toBeNull();
+	});
+
+	test("strips what a file name may not contain", () => {
+		expect(titleFromContent("document", "<h1>Q1/Q2: plan?</h1>")).toBe(
+			"Q1 Q2 plan",
+		);
+	});
+
+	test("a nested angle bracket cannot reopen a tag", () => {
+		// A single tag-shaped pass would leave `<script>` behind here.
+		expect(titleFromContent("document", "<h1><<a>script>alert</h1>")).toBe(
+			"script alert",
+		);
+	});
+
+	test("escaped angle brackets never decode back into one", () => {
+		expect(titleFromContent("document", "<h1>a &lt;script&gt; b</h1>")).toBe(
+			"a script b",
+		);
+	});
+
+	test("a heading of only separators yields no title", () => {
+		expect(titleFromContent("document", "<h1>///</h1>")).toBeNull();
+	});
+
+	test("caps a runaway heading", () => {
+		const title = titleFromContent("document", `<h1>${"a".repeat(400)}</h1>`);
+		expect(title).toHaveLength(120);
+	});
+});
+
+describe("baseName", () => {
+	test("drops the extension", () => {
+		expect(baseName("Quarter plan.html")).toBe("Quarter plan");
+	});
+
+	test("keeps a name that has none", () => {
+		expect(baseName("README")).toBe("README");
+	});
+
+	test("keeps a leading dot", () => {
+		expect(baseName(".env")).toBe(".env");
 	});
 });

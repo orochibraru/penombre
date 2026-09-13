@@ -391,6 +391,42 @@ describe("StorageService", () => {
 			expect(result.metadata.name).toBe("document (1).txt");
 		});
 
+		test("files the row under the folder it was given", async () => {
+			mockNextSelect([{ id: "folder-1" }]); // destination lookup
+			mockNextSelect([{ id: "folder-1" }]); // unique-name lookup
+			const inFolder = {
+				...baseFile,
+				path: "folder-uuid-1/abc-uuid.txt",
+				folderId: "folder-1",
+			};
+			const inserted: Record<string, unknown>[] = [];
+			const returning = mock(() => Promise.resolve([inFolder]));
+			const values = mock((row: Record<string, unknown>) => {
+				inserted.push(row);
+				return { returning };
+			});
+			mockInsert.mockReturnValueOnce({ values } as never);
+
+			const service = new StorageService(testUser);
+			const result = await service.createFile(
+				{ name: "document.txt", size: 10 },
+				"folder-uuid-1",
+			);
+
+			expect(inserted[0]?.folderId).toBe("folder-1");
+			expect(result.finalName).toStartWith("folder-uuid-1/");
+		});
+
+		test("refuses a folder path that resolves to nothing", async () => {
+			mockNextSelect([]);
+
+			const service = new StorageService(testUser);
+			await expect(
+				service.createFile({ name: "document.txt", size: 10 }, "not-a-folder"),
+			).rejects.toBeInstanceOf(FileOrFolderNotFoundError);
+			expect(mockDriver.writeObject).not.toHaveBeenCalled();
+		});
+
 		test("throws when DB insert returns empty result", async () => {
 			// insert returning [] → newFile is undefined
 			const returning = mock(() => Promise.resolve([]));
