@@ -53,14 +53,13 @@
 			});
 		}
 
+		// By id, not by key: a key is only resolvable next to the folder the
+		// file sits in, and this dialog is opened from starred, recent and
+		// search too.
 		const promise = api_
 			.PUT("/api/v1/storage/file/{id}", {
-				params: { path: { id: $itemAction.item.key } },
-				body: {
-					contentType:
-						$itemAction.item.metadata.contentType || "application/octet-stream",
-					key: newName,
-				},
+				params: { path: { id: $itemAction.item.metadata.id } },
+				body: { key: newName },
 			})
 			.then(({ error: fetchError }) => {
 				if (fetchError) {

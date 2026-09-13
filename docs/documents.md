@@ -44,6 +44,20 @@ Because these are ordinary files, everything else in Penombre applies to them
 unchanged: they can be shared, starred, moved, trashed and searched like
 anything else.
 
+A new document is created in the folder you are browsing, not at the root.
+
+## The name follows the title
+
+A document's file name tracks its own heading: retitle the `<h1>` of a document
+or the heading of a deck's first slide and the file is renamed to match, keeping
+its extension, the next time it saves. A sheet has no heading and is never
+renamed this way.
+
+This stops the moment you rename the file yourself. Once the name and the
+heading disagree, the name is yours and editing the heading no longer touches
+it. Characters a file name cannot hold (`/`, `:`, `?`, `*`, `"`, `<`, `>`, `|`)
+become spaces, and a very long heading is cut to 120 characters.
+
 ## Presenting
 
 A presentation has a **Present** button. It fills the window; arrow keys and the

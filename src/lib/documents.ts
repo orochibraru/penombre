@@ -102,6 +102,75 @@ export async function createDocument(
 	return id;
 }
 
+/**
+ * The title a document carries inside it: the `<h1>` of a document, the
+ * heading of a deck's first slide. A sheet has none: a grid's first cell is
+ * a value, not a name.
+ */
+export function titleFromContent(
+	kind: DocumentKind | null,
+	content: string,
+): string | null {
+	let raw: string | undefined;
+	if (kind === "document") {
+		raw = stripHtml(/<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(content)?.[1] ?? "");
+	} else if (kind === "presentation") {
+		raw = /^\s{0,3}#{1,6}\s+(.+)$/m.exec(parseSlides(content)[0] ?? "")?.[1];
+	}
+	return raw ? sanitizeName(raw) || null : null;
+}
+
+/** Longer than this and the name stops being readable in a file list. */
+const NAME_MAX = 120;
+
+/** Strip whatever a title may contain that a file name may not. */
+function sanitizeName(title: string): string {
+	return title
+		.replace(/[\p{Cc}\\/:*?"<>|]/gu, " ")
+		.replace(/\s+/g, " ")
+		.trim()
+		.slice(0, NAME_MAX)
+		.replace(/[\s.]+$/, "");
+}
+
+function stripHtml(html: string): string {
+	return html
+		.replace(/<[^>]*>/g, "")
+		.replace(/&nbsp;/g, " ")
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.replace(/&amp;/g, "&");
+}
+
+/** The part of a file name before its extension. */
+export function baseName(filename: string): string {
+	const dot = filename.lastIndexOf(".");
+	return dot > 0 ? filename.slice(0, dot) : filename;
+}
+
+/**
+ * Rename a document's file to `title`, keeping its extension. Returns the new
+ * name, or null when the rename failed.
+ */
+export async function renameDocument(
+	fileId: string,
+	currentName: string,
+	title: string,
+): Promise<string | null> {
+	const dot = currentName.lastIndexOf(".");
+	const name = dot > 0 ? `${title}${currentName.slice(dot)}` : title;
+	if (name === currentName) {
+		return currentName;
+	}
+	const { error } = await api.PUT("/api/v1/storage/file/{id}", {
+		params: { path: { id: fileId } },
+		body: { key: name },
+	});
+	return error ? null : name;
+}
+
 /** Replace a document's contents with `content`. */
 export async function saveDocument(
 	fileId: string,

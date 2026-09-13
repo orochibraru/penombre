@@ -42,13 +42,18 @@ export const PUT = updateFile.handler(
 		const fullPath = `${query.folder ? `${query.folder}/` : ""}${params.id}`;
 		const decodedItemName = decodeURIComponent(fullPath);
 
-		const exists = await service.fileExists(decodedItemName);
-		if (!exists) {
+		// `id` is a storage path, which only a caller that knows the file's
+		// folder can build. Views that list across folders (starred, recent,
+		// search, the editor) know the file id instead, so fall back to it.
+		const target = (await service.fileExists(decodedItemName))
+			? decodedItemName
+			: await service.findFileById(decodeURIComponent(params.id));
+		if (!target) {
 			return Http.NotFound("File not found");
 		}
 
 		try {
-			await service.updateFile(decodedItemName, body);
+			await service.updateFile(target, body);
 			return Http.Ok({ message: "File metadata updated successfully." });
 		} catch (error) {
 			return Http.ServerError("Failed to update file metadata", error);

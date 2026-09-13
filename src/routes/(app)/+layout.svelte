@@ -145,9 +145,10 @@
 		// and the menu would otherwise stay up over the editor it just opened.
 		newMenuOpen = false;
 		creatingDocument = true;
-		// `page.params.path` is the folder being browsed; at the drive root it
-		// is undefined and the file lands there.
-		const folder = page.params.path?.split("/").pop();
+		// `page.params.path` is the whole folder path, not one segment: folder
+		// paths are uuid chains, so a truncated one matches nothing and the
+		// file silently lands at the drive root. Undefined at the root itself.
+		const folder = page.params.path || undefined;
 		const id = await createDocument(kind, entry?.title ?? "Untitled", folder);
 		creatingDocument = false;
 

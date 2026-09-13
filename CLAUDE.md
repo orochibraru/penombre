@@ -592,6 +592,24 @@ activity views — mono log lines, not cards or a table — differing only by
 admin table used to omit entirely. File and folder names are never written into
 these rows, which is what makes the message safe to show an admin.
 
+### A folder path is a chain of UUIDs, and a file key is not an id
+
+`folders.path` is the folder's own id appended to its parent's path, so a nested
+folder's path is `uuid/uuid/uuid`, and the browse URL is that same chain
+(`page.params.path`). Taking `.split("/").pop()` of it gives a segment that
+matches no row: `getFolderIdByPath` returns null while the caller still prefixes
+the file's path with it, producing a row filed in the root that claims to live
+in a folder and is unreachable by its own key. `resolveDestination()` in
+`services/storage/files.ts` now refuses an unresolvable folder outright (400),
+so a create either lands where it says or fails.
+
+`fileDbToObjectItem` sets `key` to the **last path segment** only, so an item
+from a listing cannot address its own file unless the caller re-attaches the
+folder (`query.folder`), which is why every mutation in `wrapper.svelte.ts`
+carries `currentFolder`. Views that list across folders (starred, recent,
+search, the editor) have no such folder, so `PUT /api/v1/storage/file/{id}`
+falls back to `findFileById` when the path misses. Prefer passing `metadata.id`.
+
 ### Documents are ordinary files
 
 `$lib/documents.ts` owns the three editable kinds and their formats: HTML for a

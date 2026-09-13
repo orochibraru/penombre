@@ -7,17 +7,45 @@
 	import DeckEditor from "$lib/components/editor/deck-editor.svelte";
 	import DocumentEditor from "$lib/components/editor/document-editor.svelte";
 	import SheetEditor from "$lib/components/editor/sheet-editor.svelte";
-	import { kindForName, saveDocument } from "$lib/documents";
+	import {
+		baseName,
+		kindForName,
+		renameDocument,
+		saveDocument,
+		titleFromContent,
+	} from "$lib/documents";
 	import { m } from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
 
 	const { data } = $props();
 
+	/**
+	 * A rename this page made itself, keyed by file id so that opening another
+	 * document does not inherit the previous one's name.
+	 */
+	let renamed = $state<{
+		fileId: string;
+		name: string;
+		title: string;
+	} | null>(null);
+
+	const ours = $derived(renamed?.fileId === data.fileId ? renamed : null);
+	const name = $derived(ours?.name ?? data.name);
+
+	/**
+	 * The heading the file name mirrors: the document's own when it loaded, or
+	 * whatever we last renamed it to. Null, or anything else, means the two
+	 * have diverged. A file renamed by hand belongs to whoever renamed it.
+	 */
+	const trackedTitle = $derived(
+		ours?.title ?? titleFromContent(kindForName(data.name), data.content),
+	);
+
 	onMount(() => {
-		title.set(data.name);
+		title.set(name);
 	});
 
-	const kind = $derived(kindForName(data.name));
+	const kind = $derived(kindForName(name));
 
 	let pending = $state<string | null>(null);
 	let saving = $state(false);
@@ -44,20 +72,33 @@
 		const content = pending;
 		pending = null;
 		saving = true;
-		const ok = await saveDocument(
-			data.fileId,
-			data.name,
-			data.contentType,
-			content,
-		);
+		const ok = await saveDocument(data.fileId, name, data.contentType, content);
 		saving = false;
 		if (ok) {
 			savedAt = new Date();
+			await syncName(content);
 		} else {
 			// Put it back so the next tick retries rather than losing the edit.
 			pending = content;
 			toast.error(m.editor_save_error());
 		}
+	}
+
+	/** Follow the document's heading with the file name. */
+	async function syncName(content: string) {
+		const heading = titleFromContent(kind, content);
+		if (!heading || heading === trackedTitle) {
+			return;
+		}
+		if (baseName(name).replace(/ \(\d+\)$/, "") !== trackedTitle) {
+			return;
+		}
+		const newName = await renameDocument(data.fileId, name, heading);
+		if (!newName) {
+			return;
+		}
+		renamed = { fileId: data.fileId, name: newName, title: heading };
+		title.set(newName);
 	}
 
 	beforeNavigate(() => {
@@ -77,7 +118,7 @@
 
 <div class="flex h-[calc(100vh-8rem)] w-full flex-col gap-3">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="truncate text-lg font-medium">{data.name}</h1>
+        <h1 class="truncate text-lg font-medium">{name}</h1>
         <span
             class="text-muted-foreground flex items-center gap-1.5 text-xs tabular-nums"
         >
