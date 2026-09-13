@@ -307,6 +307,56 @@ or `totpURI`/`backupCodes` are not on the type.
 
 Note `requirePasskey` in app settings is stored but **not enforced anywhere**.
 
+### A passwordless send failure is reported two different wrong ways
+
+The two plugins call their sender differently, and neither reports a throw
+usefully on its own:
+
+- `magicLink` does `await options.sendMagicLink(...)` **inline**, so a
+  nodemailer rejection became a 500 with an **empty body**. The sign-in page
+  fell back to its generic "there was an error" and the admin had nothing to act
+  on.
+- `emailOTP` runs its send through `runInBackgroundOrAwait`, which swallows the
+  failure and still answers `{ success: true }` — a code that was never sent.
+
+`sendSignInEmail()` in `auth/index.ts` wraps both: it logs the real reason and
+rethrows as an `APIError`, whose message reaches the client wherever the plugin
+awaits. Do not go back to calling `Email.create(...).send()` directly there.
+
+### `Email` must not pass an empty `auth` block
+
+nodemailer sees an `auth` key and tries to log in, so a relay that merely
+_advertises_ AUTH rejected the message with `Missing credentials for "PLAIN"` —
+which is exactly how an unauthenticated internal relay is reached. The block is
+spread in only when a user or password is actually set.
+
+### The sign-in page offers what the process loaded, not what the DB says
+
+`getPasswordlessSettings()` is true the moment an admin saves, but the plugin
+list was built at module init — so the button appeared for an endpoint that did
+not exist and posting to it 404'd with no message. The page reads
+`passwordlessMethods` (exported from `auth/index.ts`, the resolved value)
+instead. `test.setup.ts` mocks that export too.
+
+### Notifications are structured rows, not sentences
+
+`services/notifications.ts` stores `type` + `actorName` + `resourceName` and the
+client renders through paraglide. Storing a finished sentence would freeze it in
+the _writer's_ locale, which is the wrong person.
+
+Note the inversion of the activity rule: a notification **may** carry a real
+file or folder name, because it is addressed to someone who already has access
+to that item — an activity row may not, because admins read those.
+
+`notify()` never throws; it is a side effect of an action that already
+succeeded, and a broken mail server must not turn a saved note into a 500.
+`SharingService.share()` takes an `onShared` callback rather than a richer
+return value, so the boolean contract its five tests rely on stays put, and so
+only _newly_ granted recipients are told.
+
+Its `db` is a `private get`, so tests shadow it with `Object.defineProperty`
+rather than assigning.
+
 ### Passwordless methods need a restart
 
 better-auth builds its plugin list once at module init, so `magicLink` and

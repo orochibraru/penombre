@@ -200,6 +200,10 @@ export class StorageService {
 		return this.fileOperations.findFileById(id);
 	}
 
+	findFileOwner(id: string): Promise<{ ownerId: string; name: string } | null> {
+		return this.fileOperations.findFileOwner(id);
+	}
+
 	uploadFileBody(id: string, body: Blob | Buffer | Uint8Array): Promise<void> {
 		this.assertWritable();
 		return this.fileOperations.uploadFileBody(id, body);

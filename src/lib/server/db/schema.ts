@@ -67,6 +67,9 @@ export const folders = (
 export const files = (
 	sqliteActive ? sqlite.files : pg.files
 ) as typeof pg.files;
+export const notifications = (
+	sqliteActive ? sqlite.notifications : pg.notifications
+) as typeof pg.notifications;
 
 export type { AppSettingsData, UserPreferencesData } from "./schema.pg";
 export type User = typeof pg.user.$inferSelect;
@@ -89,3 +92,5 @@ export type TwoFactor = typeof pg.twoFactor.$inferSelect;
 export type FileNote = typeof pg.fileNotes.$inferSelect;
 export type Folder = typeof pg.folders.$inferSelect;
 export type File = typeof pg.files.$inferSelect;
+export type Notification = typeof pg.notifications.$inferSelect;
+export type NewNotification = typeof pg.notifications.$inferInsert;

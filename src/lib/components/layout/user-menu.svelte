@@ -33,19 +33,24 @@
         <DropdownMenu.Root>
             <DropdownMenu.Trigger>
                 {#snippet child({ props })}
+                    <!-- Same outline icon button as the bell beside it, and
+                         `rounded-[inherit]` keeps the avatar on the account's
+                         corner preference rather than a fixed circle. -->
                     <Button
                         {...props}
-                        size="lg"
-                        variant="ghost"
-                        class="p-0 hover:bg-transparent"
+                        size="icon"
+                        variant="outline"
+                        class="overflow-hidden p-0"
                     >
-                        <Avatar.Root class="size-8 rounded-full">
+                        <Avatar.Root class="size-full rounded-[inherit]">
                             <Avatar.Image
                                 src={user.image}
                                 alt={user.name}
                                 loading="lazy"
                             />
-                            <Avatar.Fallback class="rounded-full text-xs">
+                            <Avatar.Fallback
+                                class="rounded-[inherit] bg-transparent text-xs"
+                            >
                                 {initials}
                             </Avatar.Fallback>
                         </Avatar.Root>

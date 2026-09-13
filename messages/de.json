@@ -584,5 +584,17 @@
 	"upload_retry": "Erneut versuchen",
 	"upload_resumed": "{count} unterbrochene(r) Upload(s) werden fortgesetzt",
 	"sign_in_with_passkey": "Mit einem Passkey anmelden",
-	"upload_worker_error": "Uploads konnten in diesem Browser nicht gestartet werden."
+	"upload_worker_error": "Uploads konnten in diesem Browser nicht gestartet werden.",
+	"notifications_title": "Benachrichtigungen",
+	"notifications_empty": "Nichts Neues.",
+	"notifications_mark_all_read": "Alle als gelesen markieren",
+	"notifications_unread_one": "1 ungelesen",
+	"notifications_unread_other": "{count} ungelesen",
+	"notification_note": "{actor} hat eine Notiz zu {item} hinterlassen",
+	"notification_share": "{actor} hat {item} mit dir geteilt",
+	"notification_note_generic": "Zu {item} wurde eine neue Notiz hinterlassen",
+	"notification_share_generic": "{item} wurde mit dir geteilt",
+	"settings_email_notifications": "E-Mail-Benachrichtigungen",
+	"settings_email_notifications_hint": "Jede Benachrichtigung zusätzlich an deine E-Mail-Adresse senden.",
+	"settings_email_notifications_no_smtp": "Erfordert, dass ein Administrator den E-Mail-Versand einrichtet."
 }

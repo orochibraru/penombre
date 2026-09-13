@@ -584,5 +584,17 @@
 	"upload_retry": "Reintentar",
 	"upload_resumed": "Reanudando {count} subida(s) interrumpida(s)",
 	"sign_in_with_passkey": "Iniciar sesión con una clave de acceso",
-	"upload_worker_error": "No se han podido iniciar las subidas en este navegador."
+	"upload_worker_error": "No se han podido iniciar las subidas en este navegador.",
+	"notifications_title": "Notificaciones",
+	"notifications_empty": "Nada nuevo.",
+	"notifications_mark_all_read": "Marcar todo como leído",
+	"notifications_unread_one": "1 sin leer",
+	"notifications_unread_other": "{count} sin leer",
+	"notification_note": "{actor} dejó una nota en {item}",
+	"notification_share": "{actor} compartió {item} contigo",
+	"notification_note_generic": "Se dejó una nota nueva en {item}",
+	"notification_share_generic": "{item} se compartió contigo",
+	"settings_email_notifications": "Notificaciones por correo",
+	"settings_email_notifications_hint": "Enviar también cada notificación a tu dirección de correo.",
+	"settings_email_notifications_no_smtp": "Requiere que un administrador configure el envío de correo."
 }

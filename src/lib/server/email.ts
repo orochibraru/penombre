@@ -66,10 +66,13 @@ export class Email {
 			host: smtpConfig.host,
 			port: smtpConfig.port,
 			secure: smtpConfig.secure, // true for port 465, false for other ports
-			auth: {
-				user: smtpConfig.user,
-				pass: smtpConfig.password,
-			},
+			// Omitted entirely when there are no credentials: nodemailer sees
+			// an `auth` block and tries to log in, so an unauthenticated relay
+			// that merely *advertises* AUTH failed with "Missing credentials
+			// for PLAIN" instead of accepting the message.
+			...(smtpConfig.user || smtpConfig.password
+				? { auth: { user: smtpConfig.user, pass: smtpConfig.password } }
+				: {}),
 		});
 
 		logger.debug("SMTP transporter created successfully");

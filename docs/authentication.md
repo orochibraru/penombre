@@ -210,6 +210,26 @@ that already exists, so opening them does not open sign-ups.
 > A sign-in link is a bearer credential — anyone holding the URL is signed in.
 > Treat a forwarded link the way you would treat a forwarded password.
 
+### When the email cannot be sent
+
+If SMTP rejects the message, the sign-in screen now shows the reason the mail
+server gave — `Could not send the sign-in email: <reason>` — rather than a
+generic failure. The same reason is written to the server log. A wrong password,
+an unreachable host and a refused sender address all look different, so start
+there rather than assuming the method is broken.
+
+Two things worth checking first:
+
+- **The admin test button proves the values in the form, not the saved ones.**
+  It builds a one-off sender from whatever is typed in, so a passing test and a
+  failing sign-in mean the settings were never saved. Save, then test again.
+- **A method enabled since the last restart has no endpoint yet.** Its button
+  stays off the sign-in screen until the restart, rather than appearing and
+  failing.
+
+A relay that needs no credentials is supported: leave the SMTP username and
+password empty and no login is attempted.
+
 ## Two-factor authentication
 
 Penombre supports TOTP two-factor: the six-digit codes an authenticator app

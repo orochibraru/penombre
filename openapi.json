@@ -13680,6 +13680,216 @@
 				]
 			}
 		},
+		"/api/v1/notifications": {
+			"get": {
+				"description": "Most recent first, with the unread count so a client can render the badge from one call.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"maximum": 100,
+							"minimum": 1,
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"notifications": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"actorName": {
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
+															"createdAt": {
+																"format": "date-time",
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																"type": "string"
+															},
+															"id": {
+																"type": "string"
+															},
+															"link": {
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
+															"read": {
+																"type": "boolean"
+															},
+															"resourceName": {
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
+															"type": {
+																"enum": [
+																	"note",
+																	"share"
+																],
+																"type": "string"
+															}
+														},
+														"required": [
+															"id",
+															"type",
+															"actorName",
+															"resourceName",
+															"link",
+															"read",
+															"createdAt"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"unread": {
+													"type": "number"
+												}
+											},
+											"required": [
+												"notifications",
+												"unread"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List your notifications",
+				"tags": [
+					"Notifications"
+				]
+			}
+		},
+		"/api/v1/notifications/read": {
+			"post": {
+				"description": "Omit `ids` to mark every unread notification as read.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"ids": {
+										"items": {
+											"type": "string"
+										},
+										"type": "array"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"read": {
+													"type": "number"
+												},
+												"unread": {
+													"type": "number"
+												}
+											},
+											"required": [
+												"read",
+												"unread"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Mark notifications read",
+				"tags": [
+					"Notifications"
+				]
+			}
+		},
 		"/api/v1/preferences": {
 			"get": {
 				"description": "Returns the current user's layout and sort preferences",
@@ -13709,6 +13919,9 @@
 														"rounded"
 													],
 													"type": "string"
+												},
+												"emailNotifications": {
+													"type": "boolean"
 												},
 												"fontFamily": {
 													"enum": [
@@ -13816,6 +14029,9 @@
 										],
 										"type": "string"
 									},
+									"emailNotifications": {
+										"type": "boolean"
+									},
 									"fontFamily": {
 										"enum": [
 											"mono",
@@ -13888,6 +14104,9 @@
 														"rounded"
 													],
 													"type": "string"
+												},
+												"emailNotifications": {
+													"type": "boolean"
 												},
 												"fontFamily": {
 													"enum": [

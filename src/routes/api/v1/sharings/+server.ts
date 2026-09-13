@@ -3,9 +3,11 @@ import {
 	createSharing,
 	listResourceSharings,
 } from "$lib/server/openapi/v1/sharings";
+import { NotificationService } from "$lib/server/services/notifications";
 import { SharingService } from "$lib/server/services/sharings";
 
 const sharings = new SharingService();
+const notifications = new NotificationService();
 
 export const GET = listResourceSharings.handler(async ({ query, user }) => {
 	try {
@@ -21,9 +23,25 @@ export const GET = listResourceSharings.handler(async ({ query, user }) => {
 	}
 });
 
-export const POST = createSharing.handler(async ({ body, user }) => {
+export const POST = createSharing.handler(async ({ body, user, event }) => {
 	try {
-		const shared = await sharings.share({ ownerId: user.id, ...body });
+		const shared = await sharings.share({
+			ownerId: user.id,
+			...body,
+			// Only the people newly granted access are told, so re-sending a
+			// share to someone who already had it is silent.
+			onShared: ({ userIds, resourceName }) =>
+				notifications.notifyMany(
+					userIds,
+					{
+						type: "share",
+						actorName: user.name,
+						resourceName,
+						link: "/shared",
+					},
+					event.url.origin,
+				),
+		});
 		if (!shared) {
 			return Http.NotFound("Resource not found");
 		}

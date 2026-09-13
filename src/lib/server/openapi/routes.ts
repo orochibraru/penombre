@@ -13,6 +13,7 @@ import "$lib/server/openapi/schemas";
 import "$lib/server/openapi/v1/activity";
 import "$lib/server/openapi/v1/auth";
 import "$lib/server/openapi/v1/notes";
+import "$lib/server/openapi/v1/notifications";
 import "$lib/server/openapi/v1/preferences";
 import "$lib/server/openapi/v1/shares";
 import "$lib/server/openapi/v1/sharings";

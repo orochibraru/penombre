@@ -3,7 +3,7 @@ import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import {
 	admin,
 	bearer,
@@ -60,6 +60,17 @@ const passwordless = await getPasswordlessSettings().catch(() => ({
 	emailOtp: false,
 }));
 
+/**
+ * Which passwordless methods this process actually loaded.
+ *
+ * The sign-in page must offer these rather than re-reading the settings:
+ * a live read is true the moment an admin saves, but the plugin list was
+ * built at module init, so the button appeared for an endpoint that did not
+ * exist and posting to it 404'd with no message at all. Reading what was
+ * resolved here means the form can only offer what the server can answer.
+ */
+export const passwordlessMethods = passwordless;
+
 // Env wins on a name collision: `config.ts` is the source of truth for
 // anything declared there, and the UI shows those read-only.
 const envProviderNames = new Set(
@@ -80,6 +91,37 @@ const oauthProviders = [
 			enabled: provider.enabled ?? true,
 		})),
 ];
+
+/**
+ * Send a sign-in email, turning a transport failure into something the caller
+ * can read.
+ *
+ * Both passwordless plugins hand their send straight to us, and neither
+ * reports a throw usefully: `magicLink` awaits it inline, so a nodemailer
+ * rejection surfaced as a 500 with an empty body and the sign-in page fell
+ * back to "there was an error" — nothing an admin could act on. `emailOTP`
+ * runs it through `runInBackgroundOrAwait`, which swallows the failure and
+ * answers `{ success: true }` for a code that was never sent.
+ *
+ * So: log the real reason at error level whichever path is taken, and rethrow
+ * as an `APIError` whose message reaches the client when the plugin awaits.
+ */
+async function sendSignInEmail(
+	to: string,
+	subject: string,
+	content: string,
+): Promise<void> {
+	try {
+		const message = await Email.create({ to, subject, content });
+		await message.send();
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
+		logger.error(`Could not send "${subject}" to ${to}: ${reason}`);
+		throw new APIError("INTERNAL_SERVER_ERROR", {
+			message: `Could not send the sign-in email: ${reason}`,
+		});
+	}
+}
 
 export const auth = betterAuth({
 	baseURL: config.origin
@@ -186,12 +228,11 @@ export const auth = betterAuth({
 						// signup stays closed unless the admin opened it.
 						disableSignUp: true,
 						sendMagicLink: async ({ email, url }) => {
-							const message = await Email.create({
-								to: email,
-								subject: "Your sign-in link",
-								content: `Use this link to sign in: ${url}\n\nIt expires shortly and can only be used once. If you did not ask for it, ignore this email.`,
-							});
-							await message.send();
+							await sendSignInEmail(
+								email,
+								"Your sign-in link",
+								`Use this link to sign in: ${url}\n\nIt expires shortly and can only be used once. If you did not ask for it, ignore this email.`,
+							);
 						},
 					}),
 				]
@@ -205,12 +246,11 @@ export const auth = betterAuth({
 								type === "sign-in"
 									? "Your sign-in code"
 									: "Your verification code";
-							const message = await Email.create({
-								to: email,
+							await sendSignInEmail(
+								email,
 								subject,
-								content: `Your code is ${otp}\n\nIt expires shortly. If you did not ask for it, ignore this email.`,
-							});
-							await message.send();
+								`Your code is ${otp}\n\nIt expires shortly. If you did not ask for it, ignore this email.`,
+							);
 						},
 					}),
 				]

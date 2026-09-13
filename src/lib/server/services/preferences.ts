@@ -13,6 +13,7 @@ const defaultPreferences: UserPreferencesData = {
 	corners: "rounded",
 	accent: "purple",
 	onboarded: false,
+	emailNotifications: false,
 };
 
 /**
