@@ -1,3 +1,20 @@
+## [1.8.33](https://github.com/orochibraru/penombre/compare/v1.8.32...v1.8.33) (2026-09-13)
+
+
+### Bug Fixes
+
+* **documents:** create in the current folder, rename without a 500 ([#94](https://github.com/orochibraru/penombre/issues/94)) ([29afa8f](https://github.com/orochibraru/penombre/commit/29afa8f229e8c8ad1ec33be2d7d91858b9c32d41))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.33
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.32](https://github.com/orochibraru/penombre/compare/v1.8.31...v1.8.32) (2026-09-12)
 
 
