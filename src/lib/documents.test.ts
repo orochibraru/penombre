@@ -108,6 +108,19 @@ describe("titleFromContent", () => {
 		);
 	});
 
+	test("a nested angle bracket cannot reopen a tag", () => {
+		// A single tag-shaped pass would leave `<script>` behind here.
+		expect(titleFromContent("document", "<h1><<a>script>alert</h1>")).toBe(
+			"script alert",
+		);
+	});
+
+	test("escaped angle brackets never decode back into one", () => {
+		expect(titleFromContent("document", "<h1>a &lt;script&gt; b</h1>")).toBe(
+			"a script b",
+		);
+	});
+
 	test("a heading of only separators yields no title", () => {
 		expect(titleFromContent("document", "<h1>///</h1>")).toBeNull();
 	});

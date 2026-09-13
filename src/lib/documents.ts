@@ -113,7 +113,7 @@ export function titleFromContent(
 ): string | null {
 	let raw: string | undefined;
 	if (kind === "document") {
-		raw = stripHtml(/<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(content)?.[1] ?? "");
+		raw = headingText(/<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(content)?.[1] ?? "");
 	} else if (kind === "presentation") {
 		raw = /^\s{0,3}#{1,6}\s+(.+)$/m.exec(parseSlides(content)[0] ?? "")?.[1];
 	}
@@ -133,12 +133,19 @@ function sanitizeName(title: string): string {
 		.replace(/[\s.]+$/, "");
 }
 
-function stripHtml(html: string): string {
-	return html
-		.replace(/<[^>]*>/g, "")
-		.replace(/&nbsp;/g, " ")
-		.replace(/&lt;/g, "<")
-		.replace(/&gt;/g, ">")
+/**
+ * The text of an HTML heading. Tags are dropped by splitting on `<` rather
+ * than matching them, so a malformed one cannot leave a `<` behind, and the
+ * bracket entities decode to spaces rather than reintroducing one.
+ */
+function headingText(html: string): string {
+	const parts = html.split("<");
+	return parts
+		.map((part, index) =>
+			index === 0 ? part : part.slice(part.indexOf(">") + 1),
+		)
+		.join("")
+		.replace(/&(?:lt|gt|nbsp);/g, " ")
 		.replace(/&quot;/g, '"')
 		.replace(/&#39;/g, "'")
 		.replace(/&amp;/g, "&");
