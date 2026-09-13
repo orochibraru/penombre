@@ -16,6 +16,7 @@ const userPreferencesSchema = z.object({
 		.enum(["purple", "blue", "teal", "green", "amber", "rose"])
 		.optional(),
 	onboarded: z.boolean().optional(),
+	emailNotifications: z.boolean().optional(),
 });
 
 export const getPreferences = defineRoute({

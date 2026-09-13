@@ -358,6 +358,11 @@ export interface UserPreferencesData {
 	 * here rather than on `user` so inviting an account needs no migration.
 	 */
 	onboarded?: boolean;
+	/**
+	 * Email a copy of each notification. Off by default — the bell is the
+	 * primary channel, and an instance with no SMTP never sends regardless.
+	 */
+	emailNotifications?: boolean;
 }
 
 export const userPreferences = pgTable("user_preferences", {
@@ -652,3 +657,51 @@ export type Apikey = typeof apikey.$inferSelect;
 export type Passkey = typeof passkey.$inferSelect;
 export type Folder = typeof folders.$inferSelect;
 export type File = typeof files.$inferSelect;
+
+// =========================================================================
+// NOTIFICATIONS
+// =========================================================================
+
+/**
+ * Something that happened to one person's stuff, addressed to that person.
+ *
+ * Unlike `activity` — which is a log of what *you* did, and is also read by
+ * admins — a notification is addressed to a recipient who already has access
+ * to the thing it names. That is why `resourceName` may hold a real file or
+ * folder name here and must not in an activity row: nobody but the recipient
+ * ever reads it.
+ *
+ * Rendered client-side from `type`/`actorName`/`resourceName` rather than a
+ * stored sentence, so a row written while the reader used English still reads
+ * correctly after they switch to French.
+ */
+export const notifications = pgTable(
+	"notifications",
+	{
+		id: text("id").primaryKey(),
+		/** Who is being told. */
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		type: text("type", { enum: ["note", "share"] }).notNull(),
+		/** Who did it, snapshotted: the row survives the actor being deleted. */
+		actorName: text("actor_name"),
+		/** The file or folder it happened to. */
+		resourceName: text("resource_name"),
+		link: text("link"),
+		readAt: timestamp("read_at"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("notifications_userId_idx").on(table.userId),
+		index("notifications_readAt_idx").on(table.readAt),
+		index("notifications_createdAt_idx").on(table.createdAt),
+	],
+);
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+	user: one(user, {
+		fields: [notifications.userId],
+		references: [user.id],
+	}),
+}));

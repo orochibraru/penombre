@@ -403,6 +403,17 @@ export class FileOperations {
 		return file?.path ?? null;
 	}
 
+	/** Owner and display name, for addressing a notification about this file. */
+	async findFileOwner(
+		id: string,
+	): Promise<{ ownerId: string; name: string } | null> {
+		const [file] = await this.ctx.db
+			.select({ ownerId: files.ownerId, name: files.name })
+			.from(files)
+			.where(and(eq(files.id, id), ownedFiles(this.ctx)));
+		return file ?? null;
+	}
+
 	async uploadFileBody(
 		id: string,
 		body: Blob | Buffer | Uint8Array,

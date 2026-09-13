@@ -584,5 +584,17 @@
 	"upload_retry": "Retry",
 	"upload_resumed": "Resuming {count} interrupted upload(s)",
 	"sign_in_with_passkey": "Sign in with a passkey",
-	"upload_worker_error": "Uploads could not be started in this browser."
+	"upload_worker_error": "Uploads could not be started in this browser.",
+	"notifications_title": "Notifications",
+	"notifications_empty": "Nothing new.",
+	"notifications_mark_all_read": "Mark all as read",
+	"notifications_unread_one": "1 unread",
+	"notifications_unread_other": "{count} unread",
+	"notification_note": "{actor} left a note on {item}",
+	"notification_share": "{actor} shared {item} with you",
+	"notification_note_generic": "A new note was left on {item}",
+	"notification_share_generic": "{item} was shared with you",
+	"settings_email_notifications": "Email notifications",
+	"settings_email_notifications_hint": "Also send each notification to your email address.",
+	"settings_email_notifications_no_smtp": "Requires an administrator to configure outgoing mail."
 }

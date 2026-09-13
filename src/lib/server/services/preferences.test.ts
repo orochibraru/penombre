@@ -24,6 +24,7 @@ describe("getUserPreferences", () => {
 			corners: "rounded",
 			accent: "purple",
 			onboarded: false,
+			emailNotifications: false,
 		});
 	});
 
@@ -47,6 +48,7 @@ describe("getUserPreferences", () => {
 			corners: "rounded",
 			accent: "purple",
 			onboarded: false,
+			emailNotifications: false,
 		});
 	});
 
@@ -70,6 +72,7 @@ describe("getUserPreferences", () => {
 			corners: "rounded",
 			accent: "purple",
 			onboarded: false,
+			emailNotifications: false,
 		});
 	});
 });
@@ -99,6 +102,7 @@ describe("updateUserPreferences", () => {
 			corners: "rounded",
 			accent: "purple",
 			onboarded: false,
+			emailNotifications: false,
 		});
 		expect(mockValues).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -111,6 +115,7 @@ describe("updateUserPreferences", () => {
 					corners: "rounded",
 					accent: "purple",
 					onboarded: false,
+					emailNotifications: false,
 				},
 			}),
 		);
@@ -145,6 +150,7 @@ describe("updateUserPreferences", () => {
 			corners: "rounded",
 			accent: "purple",
 			onboarded: false,
+			emailNotifications: false,
 		});
 	});
 });

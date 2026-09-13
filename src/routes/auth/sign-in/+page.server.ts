@@ -1,11 +1,10 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
 import { resolve } from "$app/paths";
-import { auth } from "$lib/server/auth";
+import { auth, passwordlessMethods } from "$lib/server/auth";
 import { getConfig, isAuthBypassed } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { account as authAccount, user } from "$lib/server/db/schema";
-import { getPasswordlessSettings } from "$lib/server/services/app-settings";
 
 export const load = async ({ url, request }) => {
 	const config = getConfig();
@@ -35,9 +34,10 @@ export const load = async ({ url, request }) => {
 
 	return {
 		authConfig: config.auth,
-		// Both are already gated on SMTP being configured, so the form can
-		// offer whatever comes back without checking mail separately.
-		passwordless: await getPasswordlessSettings(),
+		// What the running process loaded, not what the settings currently
+		// say: the plugins are built once at init, so a method enabled since
+		// boot has no endpoint yet and its button would only 404.
+		passwordless: passwordlessMethods,
 	};
 };
 

@@ -584,5 +584,17 @@
 	"upload_retry": "Réessayer",
 	"upload_resumed": "Reprise de {count} téléversement(s) interrompu(s)",
 	"sign_in_with_passkey": "Se connecter avec une clé d'accès",
-	"upload_worker_error": "Impossible de démarrer les téléversements dans ce navigateur."
+	"upload_worker_error": "Impossible de démarrer les téléversements dans ce navigateur.",
+	"notifications_title": "Notifications",
+	"notifications_empty": "Rien de nouveau.",
+	"notifications_mark_all_read": "Tout marquer comme lu",
+	"notifications_unread_one": "1 non lue",
+	"notifications_unread_other": "{count} non lues",
+	"notification_note": "{actor} a laissé une note sur {item}",
+	"notification_share": "{actor} a partagé {item} avec vous",
+	"notification_note_generic": "Une nouvelle note a été laissée sur {item}",
+	"notification_share_generic": "{item} a été partagé avec vous",
+	"settings_email_notifications": "Notifications par e-mail",
+	"settings_email_notifications_hint": "Envoyer également chaque notification à votre adresse e-mail.",
+	"settings_email_notifications_no_smtp": "Nécessite qu’un administrateur configure l’envoi d’e-mails."
 }

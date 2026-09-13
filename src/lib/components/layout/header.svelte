@@ -5,6 +5,7 @@
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
+	import Notifications from "$lib/components/layout/notifications.svelte";
 	import UserMenu from "$lib/components/layout/user-menu.svelte";
 	import * as Breadcrumb from "$lib/components/ui/breadcrumb/index";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
@@ -110,6 +111,10 @@
         <div class="ml-auto flex items-center gap-2">
             <div class="flex items-center gap-2">
                 {#if !page.data.authBypassed}
+                    <!-- Shown at every width: the bottom bar has no room for
+                         it, so the header is the only place a phone can see
+                         that something happened. -->
+                    <Notifications />
                     <div class="hidden md:block">
                         <UserMenu {user} />
                     </div>

@@ -4844,6 +4844,148 @@ export interface paths {
 		};
 		trace?: never;
 	};
+	"/api/v1/notifications": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List your notifications
+		 * @description Most recent first, with the unread count so a client can render the badge from one call.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					limit?: number;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								notifications: {
+									actorName: string | null;
+									/** Format: date-time */
+									createdAt: string;
+									id: string;
+									link: string | null;
+									read: boolean;
+									resourceName: string | null;
+									/** @enum {string} */
+									type: "note" | "share";
+								}[];
+								unread: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/notifications/read": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Mark notifications read
+		 * @description Omit `ids` to mark every unread notification as read.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						ids?: string[];
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								read: number;
+								unread: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/preferences": {
 		parameters: {
 			query?: never;
@@ -4882,6 +5024,7 @@ export interface paths {
 									| "rose";
 								/** @enum {string} */
 								corners?: "boxy" | "rounded";
+								emailNotifications?: boolean;
 								/** @enum {string} */
 								fontFamily?: "mono" | "sans";
 								/** @enum {string} */
@@ -4932,6 +5075,7 @@ export interface paths {
 						accent?: "purple" | "blue" | "teal" | "green" | "amber" | "rose";
 						/** @enum {string} */
 						corners?: "boxy" | "rounded";
+						emailNotifications?: boolean;
 						/** @enum {string} */
 						fontFamily?: "mono" | "sans";
 						/** @enum {string} */
@@ -4962,6 +5106,7 @@ export interface paths {
 									| "rose";
 								/** @enum {string} */
 								corners?: "boxy" | "rounded";
+								emailNotifications?: boolean;
 								/** @enum {string} */
 								fontFamily?: "mono" | "sans";
 								/** @enum {string} */

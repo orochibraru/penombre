@@ -449,3 +449,30 @@ export const files = sqliteTable(
 		index("files_volumeId_idx").on(table.volumeId),
 	],
 );
+
+// =========================================================================
+// NOTIFICATIONS
+// =========================================================================
+
+export const notifications = sqliteTable(
+	"notifications",
+	{
+		id: text("id").primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		type: text("type", { enum: ["note", "share"] }).notNull(),
+		actorName: text("actor_name"),
+		resourceName: text("resource_name"),
+		link: text("link"),
+		readAt: integer("read_at", { mode: "timestamp_ms" }),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("notifications_userId_idx").on(table.userId),
+		index("notifications_readAt_idx").on(table.readAt),
+		index("notifications_createdAt_idx").on(table.createdAt),
+	],
+);

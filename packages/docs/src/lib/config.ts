@@ -88,6 +88,7 @@ export const config: DocsConfig = {
 		"sharing",
 		"documents",
 		"media",
+		"notifications",
 		"admin",
 		"simple-mode",
 		"reverse-proxy",

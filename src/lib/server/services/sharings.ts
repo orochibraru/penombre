@@ -100,13 +100,29 @@ export class SharingService {
 		resourceId: string;
 		userIds: string[];
 		permission: SharePermission;
+		/**
+		 * Called with the people who were actually newly granted access, and
+		 * the resource's name. A callback rather than a richer return value so
+		 * the boolean contract every caller and test already relies on stays
+		 * put — and so nobody is told twice when a share is re-sent to someone
+		 * who already had it.
+		 */
+		onShared?: (granted: {
+			userIds: string[];
+			resourceName: string;
+		}) => Promise<void>;
 	}): Promise<boolean> {
 		const { ownerId, resourceType, resourceId, userIds } = input;
 		if (userIds.length === 0) {
 			return true;
 		}
 
-		if ((await this.ownedName(ownerId, resourceType, resourceId)) === null) {
+		const resourceName = await this.ownedName(
+			ownerId,
+			resourceType,
+			resourceId,
+		);
+		if (resourceName === null) {
 			logger.warn(
 				`Refusing sharing: ${resourceType} ${resourceId} not owned by ${ownerId}`,
 			);
@@ -136,6 +152,16 @@ export class SharingService {
 			await this.db
 				.insert(sharedWith)
 				.values(toAdd.map((r) => ({ sharingId, userId: r.id })));
+
+			// Never allowed to fail the share it is reporting on.
+			await input
+				.onShared?.({
+					userIds: toAdd.map((r) => r.id),
+					resourceName,
+				})
+				.catch((error) => {
+					logger.warn("Could not announce a new share", error);
+				});
 		}
 
 		// The same person at a different permission would otherwise keep both.
