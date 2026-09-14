@@ -7,9 +7,9 @@
  *
  *     bun run screenshots
  *
- * Output lands in `docs/images/`, which both the README and `packages/docs`
- * reference directly. The showcase page in the docs is built from these files,
- * which is the point: there is no demo instance to keep alive.
+ * Output lands in `docs/images/`, which the README and the docs site both
+ * reference directly. The showcase page is built from these files, which is the
+ * point: there is no demo instance to keep alive.
  */
 
 import { mkdir, writeFile } from "node:fs/promises";

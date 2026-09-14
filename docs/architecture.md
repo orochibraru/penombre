@@ -144,16 +144,12 @@ The frontend uses **Svelte 5 runes** (`$state`, `$derived`, `$effect`) for
 reactivity and **shadcn-svelte** for the component library. All user-facing
 strings go through Paraglide-JS for internationalization.
 
-## Docs package
+## Docs
 
-A static documentation site built with **SvelteKit** and
-[@orochibraru/docs](https://github.com/orochibraru/docs), prerendered to plain
-HTML for deployment anywhere.
-
-Content lives in plain markdown files under `docs/`, one file per guide.
-Everything else — site name, sidebar order, landing page copy — is
-`src/lib/config.ts`. Full-text search runs client-side over the bundled content,
-with no index file and no search dependency.
+Content lives in plain markdown files under `docs/`, one file per guide. The
+site that renders them is built separately from
+[@orochibraru/docs](https://github.com/orochibraru/orochibraru) and is not part
+of this repository.
 
 ## Database
 

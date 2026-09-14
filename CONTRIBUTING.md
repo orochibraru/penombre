@@ -31,15 +31,11 @@ bun run preview      # Preview the production build
 bun run db:generate  # Generate Drizzle migrations (Postgres + SQLite)
 bun run db:studio    # Open Drizzle Studio
 
-# Docs site
-bun run docs:dev     # Run the documentation site
-bun run docs:build   # Build it
-
 # Quality
 bun run lint         # biome + markdownlint + tailwint
 bun run lint:fix     # ...and fix what is fixable
 bun run format       # biome format --write
-bun run check        # Type-check app, scripts and docs
+bun run check        # Type-check app and scripts
 bun run check:app    # svelte-check on the app alone
 bun run circular     # Report circular imports
 

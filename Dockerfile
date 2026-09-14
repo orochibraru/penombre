@@ -10,12 +10,9 @@ COPY package.json bun.lock ./
 
 RUN bun i --frozen-lockfile --ignore-scripts
 
-# Shared source layer: both builders start from the same sources + node_modules.
-FROM deps AS builder
+FROM deps AS app-builder
 
 COPY . .
-
-FROM builder AS app-builder
 
 # The running app reports `package.json`'s version, and a release image is
 # built before semantic-release bumps it — without this the image tagged
@@ -40,23 +37,6 @@ RUN if [ -n "$APP_VERSION" ]; then \
 RUN bun run build \
     && mkdir /prod && cp package.json bun.lock /prod/ \
     && cd /prod && bun i --production --frozen-lockfile --ignore-scripts
-
-FROM builder AS docs-builder
-
-RUN bun run docs:build
-
-
-FROM nginx:alpine AS docs
-
-COPY --from=docs-builder /app/packages/docs/build /usr/share/nginx/html
-
-COPY packages/docs/nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://127.0.0.1/ || exit 1
-
 
 FROM base AS app
 

@@ -19,7 +19,7 @@ enforces this).
 ```bash
 bun run dev              # Vite dev server (SQLite by default, no services needed)
 bun run build            # svelte-kit sync && vite build
-bun run check            # svelte-check (app) + type-check for scripts/docs, in parallel
+bun run check            # svelte-check (app) + type-check for scripts, in parallel
 
 bun run lint             # biome + markdownlint + tailwint, in parallel
 bun run lint:fix         # fix everything fixable
@@ -55,8 +55,7 @@ SKIP=test-unit git commit ...   # skip one hook for a commit
 
 ## Architecture
 
-This is a Bun workspace monorepo. The **SvelteKit app lives at the repo root**
-(frontend + backend API); secondary clients live under `packages/`:
+The **SvelteKit app lives at the repo root** (frontend + backend API):
 
 ```text
 .                  # SvelteKit app (frontend + backend API)
@@ -69,9 +68,7 @@ This is a Bun workspace monorepo. The **SvelteKit app lives at the repo root**
 │       │   └── db/          # Drizzle schema + client
 │       └── components/      # Svelte 5 UI (shadcn-svelte in components/ui)
 ├── drizzle/       # SQL migrations generated from src/lib/server/db/schema.ts
-├── e2e/           # Playwright tests
-└── packages/
-    └── docs/      # Documentation site (SvelteKit, @orochibraru/docs)
+└── e2e/           # Playwright tests
 ```
 
 Despite what the README says, there is **no Hono** in this codebase — API routes
@@ -152,16 +149,16 @@ hand-edit generated paraglide output.
 ## Documentation (required)
 
 **Every user-facing feature or env var ships with its docs in the same change.**
-The guides live in `docs/*.md` at the repo root — `packages/docs` renders those
-exact files (`import.meta.glob` over `docs/*.md`), so there is nowhere else to
-write them.
+The guides live in `docs/*.md` at the repo root. The docs site is built from
+those exact files by a separate repository
+([@orochibraru/docs](https://github.com/orochibraru/docs)), so there is nowhere
+else to write them and nothing in this repo renders them.
 
 - New/changed env var → add it to the relevant table in `docs/env.md` **and**
   the guide that explains the feature (`authentication.md`, `storage.md`,
   `simple-mode.md`, …).
 - New behaviour with no env var → the guide it belongs to, or a new
-  `docs/<slug>.md` (then add the slug to `order` in
-  `packages/docs/src/lib/config.ts` so it lands in the nav).
+  `docs/<slug>.md` (the docs repo decides the nav order).
 - Also regenerate `.example.env` (`bun run gen:env`) when you touch
   `config.defaults.ts`.
 - `bun run lint:md` must pass: 80-column prose, aligned table pipes. Relative
@@ -173,8 +170,7 @@ A feature that isn't in `docs/` isn't finished.
 ## Linting gotchas (Biome)
 
 - `noConsole` is an **error** in app code — use `Logger` from `$lib/logger`, not
-  `console.*`. Console is only allowed in `logger.ts` itself, tests, scripts,
-  and `packages/docs`.
+  `console.*`. Console is only allowed in `logger.ts` itself, tests and scripts.
 - `noFloatingPromises`/`noMisusedPromises` are errors — always `await` or
   explicitly handle promises.
 - `.svelte` files relax `noUnusedImports`/`useConst`/`useImportType` (Svelte's
@@ -743,11 +739,11 @@ argument (the options type); it takes only `SentMessageInfo` now.
 
 ### Prek no longer type-checks
 
-`prek run --all-files` is ~45s, not ~80s: `gen:api` and all three type checks
-moved to CI (`code_quality.yaml` runs `bun run check` and a "Codegen is current"
-step that regenerates and fails on a diff), and biome is passed the staged
-filenames instead of scanning all 524 files. **A green commit no longer implies
-a green CI lint job** — run `bun run check` yourself while working.
+`prek run --all-files` is ~45s, not ~80s: `gen:api` and both type checks moved
+to CI (`code_quality.yaml` runs `bun run check` and a "Codegen is current" step
+that regenerates and fails on a diff), and biome is passed the staged filenames
+instead of scanning all 524 files. **A green commit no longer implies a green CI
+lint job** — run `bun run check` yourself while working.
 
 ### Never cache a missing shared owner
 
@@ -823,8 +819,6 @@ It first seeds one dummy of every supported kind from `e2e/fixtures/showcase-*`
 exercise every preview path rather than showing an empty drive.
 
 `docs/showcase.md` publishes those files and the README links to it with a
-single hero image — there is no demo instance. The docs site cannot serve
-`docs/images` directly, so `scripts/docs.ts` copies it to
-`packages/docs/static/docs-images` and `renderer.image` in `markdown.ts`
-rewrites relative image srcs to `/docs-images/…`. That is what lets one markdown
-file render correctly both on GitHub and on the site.
+single hero image — there is no demo instance. Markdown carries plain relative
+`docs/images/…` srcs so GitHub renders them directly; the docs repo rewrites
+them for the site.
