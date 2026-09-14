@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { expect, test } from "@playwright/test";
@@ -193,6 +194,100 @@ test.describe("Waveforms", () => {
 			.toBeGreaterThan(0);
 		expect(await playing()).toBe(true);
 		await expect(page.getByRole("textbox")).toHaveCount(0);
+
+		expect(errors).toEqual([]);
+	});
+
+	/**
+	 * Notes are on the track, not only in the thread — the Soundcloud rule.
+	 * The marker is drawn by the player itself, so it has to be there with the
+	 * thread closed, and clicking it has to move the playhead.
+	 */
+	test("a timestamped note marks the player's waveform once the thread is closed", async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+
+		await goToBrowse(page);
+		await openUploadDialog(page);
+		const upload = page.getByRole("dialog");
+		// A name of its own: uploading the fixture twice leaves the original
+		// carrying the previous run's note, and two markers at the same second
+		// sit on top of each other.
+		const name = `notes-${Date.now()}.wav`;
+		await upload
+			.locator("input[type=file]")
+			.first()
+			.setInputFiles({
+				name,
+				mimeType: "audio/wav",
+				buffer: readFileSync(
+					join(process.cwd(), "e2e", "fixtures", "test-audio.wav"),
+				),
+			});
+		await upload.getByRole("button", { name: /upload/i }).click();
+		const row = page.getByText(name).first();
+		await expect(row).toBeVisible({ timeout: 20_000 });
+
+		// Into the global player, then into the thread to write the note.
+		await row.click();
+		await expect(page.locator('[data-slot="waveform"]').first()).toBeVisible({
+			timeout: 20_000,
+		});
+		await row.click({ button: "right" });
+		await page.getByRole("menuitem", { name: /notes/i }).click();
+
+		const notes = page.getByRole("dialog");
+		const scrubber = notes.locator('button[aria-label="Seek"]').first();
+		await expect(scrubber).toBeVisible({ timeout: 15_000 });
+		const box = await scrubber.boundingBox();
+		await page.mouse.click(
+			(box?.x ?? 0) + (box?.width ?? 0) * 0.6,
+			(box?.y ?? 0) + (box?.height ?? 0) / 2,
+		);
+
+		const noted = await page.evaluate(
+			() =>
+				(document.getElementById("music-player") as HTMLAudioElement)
+					?.currentTime ?? 0,
+		);
+		expect(noted).toBeGreaterThan(0);
+
+		await notes.getByRole("textbox").fill("the good bit");
+		await notes.getByRole("button", { name: "Add", exact: true }).click();
+		await expect(notes.getByText("the good bit")).toBeVisible({
+			timeout: 10_000,
+		});
+
+		await page.keyboard.press("Escape");
+		await expect(notes).toBeHidden({ timeout: 10_000 });
+
+		// The marker belongs to the bottom player, which is all that is left.
+		const marker = page.locator('[data-slot="waveform-marker"]').first();
+		await expect(marker).toBeVisible({ timeout: 10_000 });
+
+		// Somewhere else first, so the seek it performs is a real move.
+		await page.evaluate(() => {
+			const player = document.getElementById(
+				"music-player",
+			) as HTMLAudioElement | null;
+			if (player) {
+				player.currentTime = 0;
+			}
+		});
+		await marker.click();
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						() =>
+							(document.getElementById("music-player") as HTMLAudioElement)
+								?.currentTime ?? 0,
+					),
+				{ timeout: 10_000 },
+			)
+			.toBeGreaterThan(noted - 1.5);
 
 		expect(errors).toEqual([]);
 	});

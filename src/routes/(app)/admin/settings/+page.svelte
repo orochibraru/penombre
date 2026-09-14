@@ -1,9 +1,13 @@
 <script lang="ts">
 	import {
 		InfoIcon,
+		KeyRoundIcon,
 		LockIcon,
 		MailIcon,
+		PencilIcon,
+		PlusIcon,
 		SendIcon,
+		Trash2Icon,
 		UserPlusIcon,
 	} from "@lucide/svelte";
 	import { onMount, untrack } from "svelte";
@@ -13,6 +17,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Card from "$lib/components/ui/card/index.js";
 	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+	import { CopyButton } from "$lib/components/ui/copy-button/index.js";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages.js";
@@ -24,8 +29,14 @@
 
 	const { data, form } = $props();
 
+	type ProviderRow = (typeof data.providers)[number];
+
 	let saving = $state(false);
 	let testing = $state(false);
+
+	/** Which stored provider is open for editing, and whether a new one is. */
+	let editing = $state<string | null>(null);
+	let adding = $state(false);
 
 	/**
 	 * Passwordless methods are unusable without mail, so the checkboxes follow
@@ -49,6 +60,10 @@
 			toast.error(form.error);
 		} else if (form?.tested) {
 			toast.success(m.admin_smtp_test_sent({ email: form.tested }));
+		} else if (form?.providerSaved) {
+			toast.success(m.admin_oauth_saved({ name: form.providerSaved }));
+		} else if (form?.providerRemoved) {
+			toast.success(m.admin_oauth_removed({ name: form.providerRemoved }));
 		} else if (form?.success) {
 			toast.success(m.toast_settings_saved());
 		}
@@ -218,7 +233,7 @@
         <Card.Content class="flex flex-col gap-3">
             <!-- Only when something here really is env-owned: the passwordless
                  toggles below are database-backed and editable. -->
-            {#if data.provided.emailSignIn || data.env.providers.length > 0}
+            {#if data.provided.emailSignIn}
                 <div
                     class="text-muted-foreground bg-muted/40 flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs"
                 >
@@ -305,25 +320,6 @@
                     </span>
                 </Label>
 
-                {#each data.env.providers as provider (provider.name)}
-                    <div
-                        class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
-                    >
-                        <span class="min-w-0 text-sm">
-                            {provider.prettyName}
-                            <span class="text-muted-foreground ml-2 font-mono text-xs">
-                                {provider.name}
-                            </span>
-                        </span>
-                        <Badge variant={provider.enabled ? "secondary" : "outline"}>
-                            {provider.enabled ? m.enabled() : m.disabled()}
-                        </Badge>
-                    </div>
-                {:else}
-                    <p class="text-muted-foreground px-1 text-sm">
-                        {m.admin_no_providers()}
-                    </p>
-                {/each}
             </div>
         </Card.Content>
     </Card.Root>
@@ -451,3 +447,276 @@
         <Button type="submit" loading={saving}>{m.save_changes()}</Button>
     </div>
 </form>
+
+<!-- Outside the settings form above: each provider is saved on its own, and a
+     form cannot nest inside another. -->
+<Card.Root class="mt-4">
+    <Card.Header>
+        <Card.Title class="flex items-center gap-2">
+            <KeyRoundIcon class="size-4" />
+            {m.admin_oauth()}
+        </Card.Title>
+        <Card.Description>
+            {m.admin_oauth_description()}
+            {m.admin_restart_required()}
+        </Card.Description>
+        <Card.Action>
+            <Button
+                variant="outline"
+                size="sm"
+                onclick={() => {
+                    adding = !adding;
+                    editing = null;
+                }}
+            >
+                <PlusIcon class="size-4" />
+                {m.admin_oauth_add()}
+            </Button>
+        </Card.Action>
+    </Card.Header>
+    <Card.Content class="flex flex-col gap-3">
+        {#each data.env.providers as provider (provider.name)}
+            <div
+                class="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2.5"
+            >
+                <span class="min-w-0 text-sm">
+                    {provider.prettyName}
+                    <span class="text-muted-foreground ml-2 font-mono text-xs">
+                        {provider.name}
+                    </span>
+                </span>
+                <div class="flex items-center gap-2">
+                    <Badge variant="outline">{m.admin_oauth_from_env()}</Badge>
+                    <Badge variant={provider.enabled ? "secondary" : "outline"}>
+                        {provider.enabled ? m.enabled() : m.disabled()}
+                    </Badge>
+                </div>
+            </div>
+        {/each}
+
+        {#each data.providers as provider (provider.name)}
+            <div class="rounded-lg border" data-provider={provider.name}>
+                <div
+                    class="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
+                >
+                    <span class="min-w-0 text-sm">
+                        {provider.prettyName || provider.name}
+                        <span class="text-muted-foreground ml-2 font-mono text-xs">
+                            {provider.name}
+                        </span>
+                    </span>
+                    <div class="flex items-center gap-2">
+                        {#if provider.pending}
+                            <Badge variant="outline">
+                                {m.admin_oauth_pending()}
+                            </Badge>
+                        {/if}
+                        <Badge variant={provider.enabled ? "secondary" : "outline"}>
+                            {provider.enabled ? m.enabled() : m.disabled()}
+                        </Badge>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onclick={() => {
+                                adding = false;
+                                editing =
+                                    editing === provider.name ? null : provider.name;
+                            }}
+                        >
+                            <PencilIcon class="size-3.5" />
+                            {m.admin_oauth_edit()}
+                        </Button>
+                        <form method="POST" action="?/deleteProvider" use:enhance>
+                            <input
+                                type="hidden"
+                                name="providerName"
+                                value={provider.name}
+                            />
+                            <Button
+                                type="submit"
+                                variant="ghost"
+                                size="sm"
+                                class="text-destructive"
+                            >
+                                <Trash2Icon class="size-3.5" />
+                                {m.admin_oauth_remove()}
+                            </Button>
+                        </form>
+                    </div>
+                </div>
+                {#if editing === provider.name}
+                    {@render providerForm(provider)}
+                {/if}
+            </div>
+        {/each}
+
+        {#if adding}
+            <div class="rounded-lg border">
+                {@render providerForm(undefined)}
+            </div>
+        {:else if data.providers.length === 0 && data.env.providers.length === 0}
+            <p class="text-muted-foreground px-1 text-sm">
+                {m.admin_no_providers()}
+            </p>
+        {/if}
+    </Card.Content>
+</Card.Root>
+
+{#snippet providerForm(provider?: ProviderRow)}
+    <form
+        method="POST"
+        action="?/saveProvider"
+        class="grid gap-4 border-t p-3 sm:grid-cols-2"
+        use:enhance={() => {
+            return async ({ result, update }) => {
+                await update({ reset: false });
+                // Only close on success, or a rejected save takes the typed
+                // values off the screen with it.
+                if (result.type === "success") {
+                    editing = null;
+                    adding = false;
+                }
+            };
+        }}
+    >
+        <div class="flex flex-col gap-2">
+            <Label for="{provider?.name ?? 'new'}-name">
+                {m.admin_oauth_id()}
+            </Label>
+            <Input
+                id="{provider?.name ?? 'new'}-name"
+                name="providerName"
+                value={provider?.name ?? ""}
+                readonly={!!provider}
+                placeholder="authentik"
+                required
+            />
+            <p class="text-muted-foreground text-xs">{m.admin_oauth_id_hint()}</p>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <Label for="{provider?.name ?? 'new'}-pretty">
+                {m.admin_oauth_pretty_name()}
+            </Label>
+            <Input
+                id="{provider?.name ?? 'new'}-pretty"
+                name="prettyName"
+                value={provider?.prettyName ?? ""}
+                placeholder="Authentik"
+            />
+            <p class="text-muted-foreground text-xs">
+                {m.admin_oauth_pretty_name_hint()}
+            </p>
+        </div>
+
+        <div class="flex flex-col gap-2 sm:col-span-2">
+            <Label for="{provider?.name ?? 'new'}-discovery">
+                {m.admin_oauth_discovery()}
+            </Label>
+            <Input
+                id="{provider?.name ?? 'new'}-discovery"
+                name="discoveryUrl"
+                type="url"
+                value={provider?.discoveryUrl ?? ""}
+                placeholder="https://id.example.com/.well-known/openid-configuration"
+                required
+            />
+            <p class="text-muted-foreground text-xs">
+                {m.admin_oauth_discovery_hint()}
+            </p>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <Label for="{provider?.name ?? 'new'}-client">
+                {m.admin_oauth_client_id()}
+            </Label>
+            <Input
+                id="{provider?.name ?? 'new'}-client"
+                name="clientId"
+                autocomplete="off"
+                value={provider?.clientId ?? ""}
+                required
+            />
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <Label for="{provider?.name ?? 'new'}-secret">
+                {m.admin_oauth_client_secret()}
+            </Label>
+            <Input
+                id="{provider?.name ?? 'new'}-secret"
+                name="clientSecret"
+                type="password"
+                autocomplete="new-password"
+                required={!provider}
+            />
+            {#if provider}
+                <p class="text-muted-foreground text-xs">
+                    {m.admin_oauth_client_secret_hint()}
+                </p>
+            {/if}
+        </div>
+
+        <div class="flex flex-col gap-2 sm:col-span-2">
+            <Label for="{provider?.name ?? 'new'}-scopes">
+                {m.admin_oauth_scopes()}
+            </Label>
+            <Input
+                id="{provider?.name ?? 'new'}-scopes"
+                name="scopes"
+                value={provider?.scopes ?? ""}
+                placeholder="openid, profile, email"
+            />
+            <p class="text-muted-foreground text-xs">
+                {m.admin_oauth_scopes_hint()}
+            </p>
+        </div>
+
+        <Label
+            class="hover:bg-muted/40 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors"
+        >
+            <Checkbox name="pkce" checked={provider?.pkce ?? true} />
+            <span class="text-sm font-medium">{m.admin_oauth_pkce()}</span>
+        </Label>
+
+        <Label
+            class="hover:bg-muted/40 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors"
+        >
+            <Checkbox name="enabled" checked={provider?.enabled ?? true} />
+            <span class="text-sm font-medium">{m.admin_oauth_enabled()}</span>
+        </Label>
+
+        <!-- The IdP needs this exact address, and it is derived from the id,
+             so it is shown rather than left to be guessed. -->
+        <div
+            class="text-muted-foreground bg-muted/40 flex items-center gap-2 rounded-lg px-3 py-2 text-xs sm:col-span-2"
+        >
+            <InfoIcon class="size-3.5 shrink-0" />
+            <span class="min-w-0 flex-1">
+                {m.admin_oauth_callback()}
+                <span class="text-foreground ml-1 font-mono break-all">
+                    {provider?.callbackUrl ??
+                        `${data.origin}/api/v1/auth/callback/<id>`}
+                </span>
+            </span>
+            {#if provider}
+                <CopyButton text={provider.callbackUrl} class="size-7 shrink-0" />
+            {/if}
+        </div>
+
+        <div class="flex items-center gap-2 sm:col-span-2">
+            <Button type="submit" size="sm">{m.save_changes()}</Button>
+            <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onclick={() => {
+                    editing = null;
+                    adding = false;
+                }}
+            >
+                {m.cancel()}
+            </Button>
+        </div>
+    </form>
+{/snippet}

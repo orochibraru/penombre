@@ -278,6 +278,31 @@ Anything better-auth reads at init (email sign-in, OAuth providers) is resolved
 once via top-level `await` in `auth/index.ts`, so a change there needs a
 restart. The UI says so.
 
+### OAuth providers come from two places
+
+Env-declared (`OAUTH_<NAME>_*`, owned by `config.ts`) and stored (`app_settings`
+`oauthProviders`, written by **Admin → Settings**). `auth/index.ts` merges them
+at init with env winning a name collision, and exports `loadedOAuthProviders` —
+which is what the sign-in page and `/api/v1/auth/providers` must read. The
+config list would offer a button for a provider this process never registered,
+which is the same trap as the passwordless methods above.
+
+Three more things that bite:
+
+- The callback is better-auth's core `callback/:id` under our basePath —
+  `/api/v1/auth/callback/<id>` — because `genericOAuth` registers providers as
+  ordinary social providers. Not `/oauth2/callback/...`, which older versions
+  used.
+- A provider id is stored on every `account` row, so the admin UI shows it
+  read-only once saved, and the client secret is never sent back to the page (a
+  blank secret field means "keep the stored one").
+- `resolveAuthConfig()` used to return the defaults unless one of three env vars
+  was set, which dropped every `OAUTH_<NAME>_*` block in a deployment that set
+  nothing else. Declaring a provider now counts as configuration, and with
+  `ENABLE_OAUTH_SIGNIN` absent, having an enabled provider is what turns OAuth
+  sign-in on (`isOAuthSignInEnabled()`). The config schema no longer demands an
+  env provider when OAuth is on — they can all live in the database.
+
 ### Sign-in methods cannot be turned off blindly
 
 `services/auth-methods.ts` gates every save of the sign-in settings on two
@@ -470,6 +495,27 @@ The `<audio>` element lives in `music-player.svelte`, so anything else that
 needs to seek or pause it (the notes panel) goes through `commandPlayback()` in
 `$lib/store/music`. Commands carry an incrementing `id` so two identical seeks
 in a row both fire.
+
+Timestamped notes are drawn on it as markers. The note list therefore lives in
+`$lib/store/notes.ts`, not in `notes-panel.svelte`: the players mark the
+waveform while that panel is unmounted, and the panel writes back to the same
+store so a note appears on the waveform the moment it is saved. The tooltip is
+the portalled `Tooltip` — the bottom player wraps its content in
+`overflow-x-auto`, which clips anything drawn in place.
+
+`music-player.svelte` also renders the thread itself, under the transport row,
+because a track playing while you browse is exactly when you have something to
+say about it and the file listing may be three pages away.
+
+### A tooltip is a popover surface, not a primary one
+
+`app.css` forces `--popover` onto `[data-slot="tooltip-content"]` along with
+every other floating surface, but shadcn's tooltip ships
+`bg-primary text-primary-foreground` — so every tooltip in the app was white
+text on a white surface, and hovering appeared to do nothing at all.
+`tooltip-content.svelte` uses the popover tokens now (arrow included). Anything
+added to that unlayered block in `app.css` has to have its foreground checked
+the same way.
 
 A click on it is a **seek and nothing else** unless the notes thread is already
 open. Pausing and taking the caret is the note-taking gesture; firing it unasked

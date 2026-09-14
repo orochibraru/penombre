@@ -1,5 +1,7 @@
 import { fail } from "@sveltejs/kit";
+import { loadedOAuthProviders } from "$lib/server/auth";
 import { envProvided, getConfig } from "$lib/server/config";
+import type { AppSettingsData } from "$lib/server/db/schema";
 import { Email } from "$lib/server/email";
 import {
 	getAppSettings,
@@ -11,6 +13,33 @@ import {
 	usersWithoutTwoFactor,
 	validateSignInMethods,
 } from "$lib/server/services/auth-methods";
+
+type StoredProvider = NonNullable<AppSettingsData["oauthProviders"]>[number];
+
+/** Provider ids the running process registered with better-auth. */
+const loadedNames = new Set(loadedOAuthProviders.map((p) => p.name));
+
+/**
+ * The redirect URI the IdP has to be told about.
+ *
+ * `genericOAuth` registers each provider as an ordinary social provider, so
+ * the callback is better-auth's core `callback/:id` under our `basePath`, not
+ * a plugin route of its own.
+ */
+function callbackUrl(origin: string, name: string): string {
+	return `${origin.replace(/\/$/, "")}/api/v1/auth/callback/${name}`;
+}
+
+/**
+ * A provider id: lowercase, no spaces. It is part of a URL and is stored on
+ * every `account` row, so it has to be stable and safe to put in a path.
+ */
+function slug(value: string): string {
+	return value
+		.toLowerCase()
+		.replace(/[^a-z0-9-]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+}
 
 /** OAuth provider ids currently able to authenticate, env and stored merged. */
 function enabledOAuthProviders(
@@ -57,6 +86,23 @@ export const load = async () => {
 				enabled: provider.enabled,
 			})),
 		},
+		// Never the client secret: an admin page is still a page, and the
+		// secret would be serialised into it. An empty secret field on save
+		// means "keep the stored one".
+		providers: (settings.oauthProviders ?? []).map((provider) => ({
+			name: provider.name,
+			prettyName: provider.prettyName ?? "",
+			clientId: provider.clientId,
+			discoveryUrl: provider.discoveryUrl,
+			scopes: (provider.scopes ?? []).join(", "),
+			pkce: provider.pkce ?? true,
+			enabled: provider.enabled !== false,
+			callbackUrl: callbackUrl(config.origin, provider.name),
+			// Saved but not yet registered: better-auth builds its provider
+			// list at boot, so this one cannot sign anyone in until a restart.
+			pending: !loadedNames.has(provider.name),
+		})),
+		origin: config.origin,
 	};
 };
 
@@ -102,6 +148,42 @@ function smtpFromForm(form: FormData, port: number) {
 		from: text(form, "smtpFrom"),
 		secure: bool(form, "smtpSecure"),
 	};
+}
+
+/**
+ * Refuse a change that would leave someone unable to sign in.
+ *
+ * Reuses the sign-in-method rules rather than inventing provider-specific
+ * ones: removing the only provider an account has is the same mistake as
+ * turning off the only method it has.
+ */
+async function providerChangeRefused(
+	next: StoredProvider[],
+): Promise<string | null> {
+	const config = getConfig();
+	const provided = envProvided();
+	const current = await getAppSettings();
+
+	const emailSignIn = provided.emailSignIn
+		? config.auth.enableEmailSignIn
+		: (current.emailSignInEnabled ?? true);
+
+	return validateSignInMethods(
+		{
+			emailSignIn,
+			magicLink: current.magicLinkEnabled ?? false,
+			emailOtp: current.emailOtpEnabled ?? false,
+			oauthProviders: enabledOAuthProviders(config, {
+				...current,
+				oauthProviders: next,
+			}),
+			smtpAvailable: !!(await getSmtpSettings()),
+		},
+		{
+			emailSignIn,
+			oauthProviders: enabledOAuthProviders(config, current),
+		},
+	);
 }
 
 export const actions = {
@@ -232,6 +314,103 @@ export const actions = {
 				...(provided.smtp ? {} : { smtp: smtpFromForm(form, smtpPort) }),
 			});
 			return { success: true };
+		} catch (error) {
+			return fail(500, { error: (error as Error).message });
+		}
+	},
+	/**
+	 * Add or update one OAuth provider.
+	 *
+	 * The id cannot change once saved: it is what every `account` row records,
+	 * so renaming it would orphan everyone who signed in through it. Editing
+	 * posts it back read-only and this treats a known id as an update.
+	 */
+	saveProvider: async ({ request }) => {
+		const form = await request.formData();
+		const name = slug(text(form, "providerName"));
+
+		if (!name) {
+			return fail(400, { error: "A provider id is required." });
+		}
+		if (getConfig().auth.oauthProviders.some((p) => p.name === name)) {
+			return fail(400, {
+				error: `"${name}" is declared in the environment — change it there.`,
+			});
+		}
+
+		const discoveryUrl = text(form, "discoveryUrl");
+		if (!URL.canParse(discoveryUrl)) {
+			return fail(400, { error: "The discovery URL must be a full URL." });
+		}
+
+		const current = await getAppSettings();
+		const providers = [...(current.oauthProviders ?? [])];
+		const index = providers.findIndex((provider) => provider.name === name);
+		const existing = providers[index];
+
+		const clientId = text(form, "clientId");
+		// Blank means unchanged: the stored secret is never sent to the page,
+		// so an edit that did not retype it must not wipe it.
+		const clientSecret =
+			String(form.get("clientSecret") ?? "").trim() ||
+			existing?.clientSecret ||
+			"";
+		if (!(clientId && clientSecret)) {
+			return fail(400, {
+				error: "A client id and client secret are required.",
+			});
+		}
+
+		const scopes = text(form, "scopes")
+			.split(/[\s,]+/)
+			.filter(Boolean);
+
+		const next: StoredProvider = {
+			name,
+			prettyName: text(form, "prettyName") || undefined,
+			clientId,
+			clientSecret,
+			discoveryUrl,
+			scopes: scopes.length > 0 ? scopes : undefined,
+			pkce: bool(form, "pkce"),
+			enabled: bool(form, "enabled"),
+		};
+
+		if (index >= 0) {
+			providers[index] = next;
+		} else {
+			providers.push(next);
+		}
+
+		const refused = await providerChangeRefused(providers);
+		if (refused) {
+			return fail(400, { error: refused });
+		}
+
+		try {
+			await updateAppSettings({ oauthProviders: providers });
+			return { providerSaved: name };
+		} catch (error) {
+			return fail(500, { error: (error as Error).message });
+		}
+	},
+
+	deleteProvider: async ({ request }) => {
+		const form = await request.formData();
+		const name = text(form, "providerName");
+		const current = await getAppSettings();
+		const providers = (current.oauthProviders ?? []).filter(
+			(provider) => provider.name !== name,
+		);
+
+		const refused = await providerChangeRefused(providers);
+		if (refused) {
+			return fail(400, { error: refused });
+		}
+
+		try {
+			await updateAppSettings({ oauthProviders: providers });
+			return { providerRemoved: name };
 		} catch (error) {
 			return fail(500, { error: (error as Error).message });
 		}

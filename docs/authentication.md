@@ -52,14 +52,42 @@ reset link. If SMTP is disabled, the forgot-password flow is not available.
 ## OAuth
 
 Penombre supports any **OIDC-compliant** provider (Google, GitHub, Authentik,
-Pocket ID, etc.). Enable it with `ENABLE_OAUTH_SIGNIN=true` and configure one or
-more providers using environment variables.
+Pocket ID, etc.). A provider can be declared two ways: in the environment, or in
+**Admin → Settings → OAuth providers**. Both end up in the same list on the
+sign-in page.
+
+### From the admin UI
+
+**Admin → Settings → OAuth providers** → **Add a provider**. You give it an id,
+a display name, the client id and secret, and the discovery URL; the card shows
+the redirect URI to register with the provider, and a copy button for it.
+
+Three things worth knowing:
+
+- **Restart to activate.** The provider list is built once when the process
+  starts, so a provider you have just saved shows a _saved, not yet loaded_
+  badge and cannot sign anyone in until the instance restarts.
+- **The id is permanent.** It is stored on every account that signs in through
+  the provider, so it is read-only once saved. To change it, add a new provider
+  and remove the old one — people will have to link their account again.
+- **The secret is never sent back to the page.** Editing a provider leaves the
+  secret field blank; leave it blank to keep the stored one.
+
+A provider declared in the environment appears here read-only, marked _from the
+environment_ — `config.ts` owns those, and the UI will refuse to save a stored
+provider under the same id. Removing or disabling a provider that is somebody's
+only way in is refused, exactly like the other
+[sign-in methods](#which-methods-may-be-turned-off).
+
+With no `ENABLE_OAUTH_SIGNIN` in the environment, having an enabled provider is
+what turns OAuth sign-in on; setting the variable takes that decision back.
 
 ### Provider configuration
 
 Each provider is configured with the naming pattern
 `OAUTH_<PROVIDER>_<SETTING>`, where `<PROVIDER>` is an uppercase identifier of
-your choice.
+your choice. Declaring one is enough to turn OAuth sign-in on —
+`ENABLE_OAUTH_SIGNIN` only has to be set to force it either way.
 
 | Variable                         | Description            | Default                |
 | -------------------------------- | ---------------------- | ---------------------- |

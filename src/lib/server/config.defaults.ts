@@ -105,7 +105,8 @@ ORIGIN=${defaultConfigValues.origin}
 # Enable email/password sign-in
 ENABLE_EMAIL_SIGNIN=${defaultConfigValues.auth.enableEmailSignIn}
 
-# Enable OAuth sign-in (requires at least one provider configured below)
+# Force OAuth sign-in on or off. Leave it out and declaring a provider
+# (below, or in Admin → Settings) is what turns it on.
 ENABLE_OAUTH_SIGNIN=${defaultConfigValues.auth.enableOAuthSignIn}
 
 # Minimum password length for email sign-in

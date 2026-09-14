@@ -31,16 +31,30 @@ note box. Save, and the note is stamped with that moment. Clicking a timestamp
 in the thread later jumps back to it. With the thread closed, a click on the
 waveform is only a seek.
 
+Timestamped notes are drawn on the waveform itself — a dot at each moment
+someone wrote about, in the bottom player, in the preview and in the full-screen
+viewer alike. Hover one to read the note without opening the thread; click it to
+jump to that moment. Notes with no timestamp are about the file as a whole and
+appear only in the thread.
+
+The player has its own **Notes** button, which opens the thread inside the
+player itself. That is the quickest way to write one while listening: you keep
+the page you are on, and the note is stamped with wherever the playhead is. With
+the thread open there, clicking the waveform behaves as it does everywhere else
+— it stops the track at that moment and puts the caret in the box.
+
 Notes are per-instance, not per-share: they are visible to accounts that can see
 the file, and they are never included in a share link.
 
 ## Opening media full screen
 
 **Open full screen** on an image, a video or a track navigates to Penombre's own
-viewer rather than the browser's bare built-in player. It is the same tab, so
-the back button returns you to the folder. You get the file's name, its size, a
-download button, real transport controls, and the notes thread beside it — the
-same timestamped notes as in the dialog.
+viewer rather than the browser's bare built-in player. A track has no picture to
+fill a screen with, so it gets a now-playing panel instead: its name, its
+length, and a waveform given the room the artwork would have had. It is the same
+tab, so the back button returns you to the folder. You get the file's name, its
+size, a download button, real transport controls, and the notes thread beside it
+— the same timestamped notes as in the dialog.
 
 A video additionally has a **Full screen** button that hands the player to the
 browser's own full-screen mode, controls included.

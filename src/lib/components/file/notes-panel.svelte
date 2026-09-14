@@ -5,6 +5,12 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Textarea } from "$lib/components/ui/textarea/index.js";
 	import { m } from "$lib/paraglide/messages.js";
+	import {
+		type FileNote,
+		fileNotes,
+		loadFileNotes,
+		setFileNotes,
+	} from "$lib/store/notes";
 	import { cn } from "$lib/utils";
 
 	/**
@@ -40,16 +46,9 @@
 		requestAnimationFrame(() => box?.focus());
 	};
 
-	interface Note {
-		id: string;
-		userId: string;
-		authorName: string | null;
-		body: string;
-		timestampSeconds: number | null;
-		createdAt: string;
-	}
-
-	let notes = $state<Note[]>([]);
+	// The thread does not own the notes: the players draw the timestamped ones
+	// on their waveform, so the list lives in a store both can read.
+	const notes = $derived($fileNotes[fileId] ?? []);
 	let draft = $state("");
 	let attachTime = $state(true);
 	let loading = $state(true);
@@ -66,15 +65,11 @@
 
 	async function load() {
 		loading = true;
-		const { data, error } = await api.GET("/api/v1/files/{fileId}/notes", {
-			params: { path: { fileId } },
-		});
+		const loaded = await loadFileNotes(fileId);
 		loading = false;
-		if (error) {
+		if (!loaded) {
 			toast.error(m.notes_load_error());
-			return;
 		}
-		notes = (data?.data ?? []) as Note[];
 	}
 
 	$effect(() => {
@@ -102,10 +97,13 @@
 			return;
 		}
 		if (data?.data) {
-			notes = [...notes, data.data as Note].sort(
-				(a, b) =>
-					(a.timestampSeconds ?? Number.POSITIVE_INFINITY) -
-					(b.timestampSeconds ?? Number.POSITIVE_INFINITY),
+			setFileNotes(
+				fileId,
+				[...notes, data.data as FileNote].sort(
+					(a, b) =>
+						(a.timestampSeconds ?? Number.POSITIVE_INFINITY) -
+						(b.timestampSeconds ?? Number.POSITIVE_INFINITY),
+				),
 			);
 		}
 		draft = "";
@@ -120,7 +118,10 @@
 			toast.error(m.notes_delete_error());
 			return;
 		}
-		notes = notes.filter((note) => note.id !== id);
+		setFileNotes(
+			fileId,
+			notes.filter((note) => note.id !== id),
+		);
 	}
 </script>
 

@@ -6,6 +6,7 @@
 		MessageSquareTextIcon,
 		Minimize2Icon,
 		MinimizeIcon,
+		MusicIcon,
 		PauseIcon,
 		PlayIcon,
 		Volume1Icon,
@@ -25,6 +26,7 @@
 	import { Slider } from "$lib/components/ui/slider/index";
 	import { m } from "$lib/paraglide/messages.js";
 	import { playableMusic } from "$lib/store/music";
+	import { fileNotes, loadFileNotes, noteMarkers } from "$lib/store/notes";
 	import { title } from "$lib/store/title";
 	import { cn, readableFileSize, toggleFullscreen } from "$lib/utils";
 
@@ -91,6 +93,13 @@
 	let notesOpen = $state(false);
 	/** Set by the notes panel so clicking the waveform can hand it the caret. */
 	let focusNotes = $state<(() => void) | undefined>();
+
+	// Loaded here, not in the thread: the markers are the point of not having
+	// to open it.
+	$effect(() => {
+		void loadFileNotes(data.fileId);
+	});
+	const markers = $derived(noteMarkers($fileNotes[data.fileId], duration));
 
 	/**
 	 * Back to the small player without stopping: the viewer owns the only
@@ -265,7 +274,12 @@
                     class="max-h-[calc(100%-4rem)] w-full rounded-lg bg-black object-contain"
                 ></video>
             {:else if isAudio}
-                <div class="flex w-full max-w-3xl flex-col items-center gap-6">
+                <!-- A now-playing screen, not a strip: a track has no picture
+                     to fill a viewport with, so the waveform is given the room
+                     an image would have had. -->
+                <div
+                    class="bg-card/40 flex w-full min-h-0 flex-1 flex-col justify-center gap-8 rounded-2xl border p-4 lg:p-10"
+                >
                     <audio
                         bind:this={player}
                         bind:paused
@@ -276,13 +290,30 @@
                         onloadedmetadata={resume}
                         class="sr-only"
                     ></audio>
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="bg-primary/10 text-primary flex size-16 shrink-0 items-center justify-center rounded-xl lg:size-20"
+                        >
+                            <MusicIcon class="size-8 lg:size-10" />
+                        </div>
+                        <div class="min-w-0">
+                            <p class="truncate text-xl font-semibold lg:text-2xl">
+                                {data.name}
+                            </p>
+                            <p class="text-muted-foreground text-sm">
+                                {formatTime(duration)} · {readableFileSize(data.size)}
+                            </p>
+                        </div>
+                    </div>
                     {#if !peaksFailed}
                         <Waveform
                             src={peaks}
-                            class="h-40 w-full"
+                            class="h-40 w-full lg:h-64"
                             progress={duration > 0 ? currentTime / duration : 0}
                             onseek={scrub}
                             seekLabel={m.seek()}
+                            {markers}
+                            onmarker={(marker) => seekTo(marker.seconds)}
                             onfail={() => (peaksFailed = true)}
                         />
                     {/if}
@@ -292,7 +323,12 @@
             {/if}
 
             {#if isVideo || isAudio}
-                <div class="flex w-full max-w-3xl shrink-0 items-center gap-3">
+                <div
+                    class={cn(
+                        "flex w-full shrink-0 items-center gap-3",
+                        isVideo && "max-w-3xl",
+                    )}
+                >
                     <Button size="icon" onclick={toggle} title={paused ? m.play() : m.pause()}>
                         {#if paused}
                             <PlayIcon />
