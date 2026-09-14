@@ -683,6 +683,18 @@ closes.
 Forks get no secrets, so nothing is pushed: `pulled: false` makes e2e build
 locally and the publish job is skipped.
 
+### TypeScript is held at 6 on purpose
+
+`svelte-check` refuses TypeScript 7 outright — it wants _both_ TS 6 and TS 7
+installed plus a `--tsgo` flag, and dies before checking a single file. A
+`renovate.json` rule caps `typescript` at `<7` so the bump stops being
+reproposed. Lift it when svelte-check ships tsgo support, not before.
+
+`archiver` 8 is pure ESM and dropped its factory: `archiver("zip", opts)` is
+`new ZipArchive(opts)`, and the `archiver.Archiver` namespace type is a plain
+`Archiver` named export. `nodemailer` 10 cut `Transporter`'s second type
+argument (the options type); it takes only `SentMessageInfo` now.
+
 ### Prek no longer type-checks
 
 `prek run --all-files` is ~45s, not ~80s: `gen:api` and all three type checks

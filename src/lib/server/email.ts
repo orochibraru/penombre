@@ -28,10 +28,7 @@ export class Email {
 	to: string;
 	subject: string;
 	content: string;
-	transporter: Transporter<
-		SMTPTransport.SentMessageInfo,
-		SMTPTransport.Options
-	>;
+	transporter: Transporter<SMTPTransport.SentMessageInfo>;
 
 	/**
 	 * Build a sender from whichever SMTP configuration applies.

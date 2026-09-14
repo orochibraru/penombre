@@ -7,7 +7,7 @@
 
 import type { Readable } from "node:stream";
 import { Readable as NodeReadable } from "node:stream";
-import archiver from "archiver";
+import { type Archiver, ZipArchive } from "archiver";
 import { and, eq, like } from "drizzle-orm";
 import { Logger } from "$lib/logger";
 import type { Folder as DbFolder } from "$lib/server/db/schema";
@@ -19,7 +19,7 @@ import { ownedFiles, ownedFolders } from "./scope";
 const logger = new Logger("StorageService");
 
 /** Surface archiver errors; a missing file is a warning, anything else rethrows */
-function attachArchiveLogging(archive: archiver.Archiver): void {
+function attachArchiveLogging(archive: Archiver): void {
 	archive.on("error", (err) => {
 		logger.error("[bulk-download] Archive error:", err);
 		throw err;
@@ -37,7 +37,7 @@ export class ZipService {
 	constructor(private readonly ctx: StorageContext) {}
 
 	async appendObject(
-		archive: archiver.Archiver,
+		archive: Archiver,
 		key: string,
 		name: string,
 	): Promise<void> {
@@ -51,7 +51,7 @@ export class ZipService {
 	}
 
 	async appendFolder(
-		archive: archiver.Archiver,
+		archive: Archiver,
 		folderPath: string,
 		folderRecord: DbFolder,
 	): Promise<void> {
@@ -83,10 +83,7 @@ export class ZipService {
 		}
 	}
 
-	async appendPath(
-		archive: archiver.Archiver,
-		filePath: string,
-	): Promise<void> {
+	async appendPath(archive: Archiver, filePath: string): Promise<void> {
 		const normalizedPath = filePath.endsWith("/")
 			? filePath.slice(0, -1)
 			: filePath;
@@ -116,8 +113,8 @@ export class ZipService {
 
 	async createZipFromPaths(
 		filePaths: string[],
-	): Promise<{ stream: Readable; archive: archiver.Archiver }> {
-		const archive = archiver("zip", { zlib: { level: 6 } });
+	): Promise<{ stream: Readable; archive: Archiver }> {
+		const archive = new ZipArchive({ zlib: { level: 6 } });
 		const startTime = performance.now();
 		logger.debug(`[bulk-download] Creating zip with ${filePaths.length} items`);
 
@@ -137,7 +134,7 @@ export class ZipService {
 
 	async createZipFromFolder(
 		folderPath: string,
-	): Promise<{ stream: Readable; archive: archiver.Archiver }> {
+	): Promise<{ stream: Readable; archive: Archiver }> {
 		const normalizedPath = folderPath.endsWith("/")
 			? folderPath.slice(0, -1)
 			: folderPath;
@@ -150,7 +147,7 @@ export class ZipService {
 			throw new Error(`Folder not found: ${folderPath}`);
 		}
 
-		const archive = archiver("zip", { zlib: { level: 6 } });
+		const archive = new ZipArchive({ zlib: { level: 6 } });
 		const startTime = performance.now();
 		const folderDisplayName = folderRecord.name;
 
@@ -198,7 +195,7 @@ export class ZipService {
 			);
 		}
 
-		archive.finalize().then(() => {
+		void archive.finalize().then(() => {
 			const elapsed = (performance.now() - startTime).toFixed(0);
 			logger.debug(`[bulk-download] Folder archive finalized in ${elapsed}ms`);
 		});

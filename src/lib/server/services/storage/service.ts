@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
-import type archiver from "archiver";
+import type { Archiver } from "archiver";
 import type { User } from "better-auth";
 import { Logger } from "$lib/logger";
 import type { CacheBackend } from "$lib/server/cache";
@@ -367,13 +367,13 @@ export class StorageService {
 
 	public createZipFromPaths(
 		filePaths: string[],
-	): Promise<{ stream: Readable; archive: archiver.Archiver }> {
+	): Promise<{ stream: Readable; archive: Archiver }> {
 		return this.zip.createZipFromPaths(filePaths);
 	}
 
 	public createZipFromFolder(
 		folderPath: string,
-	): Promise<{ stream: Readable; archive: archiver.Archiver }> {
+	): Promise<{ stream: Readable; archive: Archiver }> {
 		return this.zip.createZipFromFolder(folderPath);
 	}
 

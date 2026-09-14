@@ -4,6 +4,11 @@
 	"extends": ["config:recommended"],
 	"packageRules": [
 		{
+			"description": "svelte-check refuses TypeScript 7 until it ships tsgo support",
+			"matchPackageNames": ["typescript"],
+			"allowedVersions": "<7"
+		},
+		{
 			"matchUpdateTypes": ["pin", "digest"],
 			"automerge": true
 		},
