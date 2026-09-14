@@ -1,3 +1,20 @@
+## [1.8.37](https://github.com/orochibraru/penombre/compare/v1.8.36...v1.8.37) (2026-09-14)
+
+
+### Features
+
+* docs trigger flow ([8734d3f](https://github.com/orochibraru/penombre/commit/8734d3fc222373a4119fbbec28b157802f26c238))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.37
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.36](https://github.com/orochibraru/penombre/compare/v1.8.35...v1.8.36) (2026-09-14)
 
 
