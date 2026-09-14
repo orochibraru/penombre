@@ -93,6 +93,19 @@ const oauthProviders = [
 ];
 
 /**
+ * The providers this process actually registered, public fields only.
+ *
+ * Same reason as `passwordlessMethods`: one saved in the admin UI has no
+ * endpoint until the next boot, so a page offering it beforehand would post
+ * to a 404. Never the client id or secret — this is read by the sign-in page.
+ */
+export const loadedOAuthProviders = oauthProviders.map((provider) => ({
+	name: provider.name,
+	prettyName: provider.prettyName ?? provider.name,
+	enabled: provider.enabled,
+}));
+
+/**
  * Send a sign-in email, turning a transport failure into something the caller
  * can read.
  *

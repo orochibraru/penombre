@@ -42,10 +42,15 @@ the next boot.
   verification emails and invitations. **Send test email** mails the signed-in
   admin using the values currently in the form, saved or not, so a configuration
   can be proven before it is committed.
-- **Sign-in methods** — email/password, the emailed sign-in link, the emailed
-  one-time code, and the OAuth providers. See
+- **Sign-in methods** — email/password, the emailed sign-in link and the emailed
+  one-time code. See
   [Authentication](authentication.md#which-methods-may-be-turned-off) for the
   rules on which of these may be turned off.
+- **OAuth providers** — add, edit and remove OIDC providers, each with its
+  client id, secret, discovery URL and scopes, and the redirect URI to register
+  with the provider. Providers declared in the environment are listed read-only.
+  A new one is only usable after the instance restarts. See
+  [Authentication](authentication.md#from-the-admin-ui).
 
 Configuration follows one rule: **an environment variable wins when it is set,
 otherwise this page governs.** A setting the environment claims is shown

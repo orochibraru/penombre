@@ -1,4 +1,6 @@
 <script lang="ts">
+	import * as Tooltip from "$lib/components/ui/tooltip/index";
+	import type { NoteMarker } from "$lib/store/notes";
 	import { cn } from "$lib/utils";
 
 	/**
@@ -17,6 +19,8 @@
 		progress,
 		onseek,
 		seekLabel,
+		markers = [],
+		onmarker,
 	}: {
 		src: string;
 		class?: string;
@@ -27,6 +31,9 @@
 		/** Turns the waveform into a scrubber; receives a 0–1 fraction. */
 		onseek?: (fraction: number) => void;
 		seekLabel?: string;
+		/** Timestamped notes, shown as dots along the track. */
+		markers?: NoteMarker[];
+		onmarker?: (marker: NoteMarker) => void;
 	} = $props();
 
 	let peaks = $state<number[]>([]);
@@ -125,7 +132,7 @@
 {#snippet svg()}
     <svg
         data-slot="waveform"
-        class={cn("h-full w-full", onseek ? undefined : className)}
+        class="h-full w-full"
         viewBox="0 0 {viewWidth} {HEIGHT}"
         preserveAspectRatio="none"
         aria-hidden="true"
@@ -148,16 +155,53 @@
 {/snippet}
 
 {#if bars.length > 0}
-    {#if onseek}
-        <button
-            type="button"
-            class={cn("block w-full cursor-pointer", className)}
-            aria-label={seekLabel}
-            onclick={(event) => onseek(fractionFrom(event))}
-        >
+    <div class={cn("relative", className)}>
+        {#if onseek}
+            <button
+                type="button"
+                class="block h-full w-full cursor-pointer"
+                aria-label={seekLabel}
+                onclick={(event) => onseek(fractionFrom(event))}
+            >
+                {@render svg()}
+            </button>
+        {:else}
             {@render svg()}
-        </button>
-    {:else}
-        {@render svg()}
-    {/if}
+        {/if}
+
+        <!-- Notes live on the track itself, not only in the thread: a dot per
+             timestamped note, its text on hover, a seek on click. The tooltip
+             is portalled because the bottom player scrolls its own content and
+             would otherwise clip it. -->
+        {#if markers.length > 0}
+            <Tooltip.Provider delayDuration={120}>
+                {#each markers as marker (marker.id)}
+                    <Tooltip.Root>
+                        <Tooltip.Trigger
+                            data-slot="waveform-marker"
+                            class="absolute top-0 z-10 -translate-x-1/2 cursor-pointer p-0.5"
+                            style="left: {marker.at * 100}%"
+                            aria-label={marker.caption}
+                            onclick={() => onmarker?.(marker)}
+                        >
+                            <span
+                                class="bg-primary ring-background block size-2 rounded-full ring-2"
+                            ></span>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content
+                            sideOffset={6}
+                            class="max-w-56 border text-start"
+                        >
+                            <p class="font-mono text-[0.65rem] opacity-80">
+                                {marker.caption}
+                            </p>
+                            <p class="wrap-break-word whitespace-pre-wrap">
+                                {marker.body}
+                            </p>
+                        </Tooltip.Content>
+                    </Tooltip.Root>
+                {/each}
+            </Tooltip.Provider>
+        {/if}
+    </div>
 {/if}

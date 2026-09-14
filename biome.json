@@ -197,29 +197,6 @@
 			}
 		},
 		{
-			"includes": ["packages/docs/**"],
-			"linter": {
-				"rules": {
-					"suspicious": {
-						"noConsole": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["packages/docs/**"],
-			"linter": {
-				"rules": {
-					"complexity": {
-						"noExcessiveCognitiveComplexity": "off"
-					},
-					"suspicious": {
-						"noUnnecessaryConditions": "off"
-					}
-				}
-			}
-		},
-		{
 			"includes": ["src/lib/logger.ts"],
 			"linter": {
 				"rules": {

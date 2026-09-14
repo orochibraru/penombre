@@ -1,10 +1,15 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
 import { resolve } from "$app/paths";
-import { auth, passwordlessMethods } from "$lib/server/auth";
+import {
+	auth,
+	loadedOAuthProviders,
+	passwordlessMethods,
+} from "$lib/server/auth";
 import { getConfig, isAuthBypassed } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { account as authAccount, user } from "$lib/server/db/schema";
+import { isOAuthSignInEnabled } from "$lib/server/services/app-settings";
 
 export const load = async ({ url, request }) => {
 	const config = getConfig();
@@ -33,10 +38,18 @@ export const load = async ({ url, request }) => {
 	}
 
 	return {
-		authConfig: config.auth,
-		// What the running process loaded, not what the settings currently
-		// say: the plugins are built once at init, so a method enabled since
-		// boot has no endpoint yet and its button would only 404.
+		// Named fields, never `config.auth` whole: that object carries the auth
+		// secret and every provider's client secret, and this payload is
+		// serialised into the sign-in page.
+		authConfig: {
+			enableEmailSignIn: config.auth.enableEmailSignIn,
+			enableOAuthSignIn: await isOAuthSignInEnabled(),
+			// What the running process loaded, not what the settings currently
+			// say: the plugins are built once at init, so a provider added
+			// since boot has no endpoint yet and its button would only 404.
+			oauthProviders: loadedOAuthProviders,
+		},
+		// Same rule for the passwordless methods.
 		passwordless: passwordlessMethods,
 	};
 };

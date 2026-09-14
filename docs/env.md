@@ -71,7 +71,7 @@ rotate it without invalidating all existing sessions.
 | --------------------- | ---------------------------------- | -------- |
 | `AUTH_SECRET`         | Secret key for signing auth tokens | Required |
 | `ENABLE_EMAIL_SIGNIN` | Enable email/password sign-in      | `true`   |
-| `ENABLE_OAUTH_SIGNIN` | Enable OAuth sign-in               | `false`  |
+| `ENABLE_OAUTH_SIGNIN` | Enable OAuth sign-in               | Auto     |
 | `MIN_PASSWORD_LENGTH` | Minimum password length            | `8`      |
 
 `AUTH_AUTO_REDIRECT_PROVIDER` skips the sign-in screen and sends users straight
@@ -84,10 +84,12 @@ to one OIDC provider. See
 
 ## OAuth Providers (Optional)
 
-Penombre supports any OIDC-compliant provider. Enable OAuth sign-in by setting
-`ENABLE_OAUTH_SIGNIN=true` and configuring at least one provider using the
-naming pattern `OAUTH_<PROVIDER>_<SETTING>`, where `<PROVIDER>` is an uppercase
-identifier of your choice (e.g. `GOOGLE`, `GITHUB`, `POCKET_ID`).
+Penombre supports any OIDC-compliant provider. Configure one with the naming
+pattern `OAUTH_<PROVIDER>_<SETTING>`, where `<PROVIDER>` is an uppercase
+identifier of your choice (e.g. `GOOGLE`, `GITHUB`, `POCKET_ID`) — declaring a
+provider is enough to turn OAuth sign-in on. `ENABLE_OAUTH_SIGNIN` forces it
+either way, and taking it out of the environment hands the decision to the admin
+UI, which can manage providers of its own.
 
 | Variable                         | Description            | Default                |
 | -------------------------------- | ---------------------- | ---------------------- |

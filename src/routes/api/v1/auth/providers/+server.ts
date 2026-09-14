@@ -1,8 +1,10 @@
+import { loadedOAuthProviders } from "$lib/server/auth";
 import { getConfig } from "$lib/server/config";
 import { Http } from "$lib/server/http";
 import { listAuthProviders } from "$lib/server/openapi/v1/auth";
+import { isOAuthSignInEnabled } from "$lib/server/services/app-settings";
 
-export const GET = listAuthProviders.handler(() => {
+export const GET = listAuthProviders.handler(async () => {
 	try {
 		const config = getConfig();
 		const providers: {
@@ -21,11 +23,14 @@ export const GET = listAuthProviders.handler(() => {
 			});
 		}
 
-		if (config.auth.enableOAuthSignIn) {
-			for (const provider of config.auth.oauthProviders) {
+		// The loaded list, not the configured one: it includes providers added
+		// in the admin UI, and excludes any saved since this process booted —
+		// which have no endpoint to sign in through yet.
+		if (await isOAuthSignInEnabled()) {
+			for (const provider of loadedOAuthProviders) {
 				providers.push({
 					name: provider.name,
-					prettyName: provider.prettyName ?? provider.name,
+					prettyName: provider.prettyName,
 					type: "oauth" as const,
 					enabled: provider.enabled,
 				});

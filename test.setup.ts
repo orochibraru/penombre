@@ -50,9 +50,11 @@ mock.module("$lib/server/auth", () => ({
 			listUsers: mock(() => Promise.resolve({ users: [] })),
 		},
 	},
-	// What the real module resolves at init; the sign-in page reads it to
-	// decide which passwordless buttons it may offer.
+	// What the real module resolves at init; the sign-in page reads these to
+	// decide which buttons it may offer — a method or provider enabled since
+	// boot has no endpoint yet.
 	passwordlessMethods: { magicLink: false, emailOtp: false },
+	loadedOAuthProviders: [],
 }));
 
 mock.module("$lib/server/config", () => ({

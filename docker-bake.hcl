@@ -8,7 +8,7 @@ variable "APP_VERSION" {
 }
 
 group "default" {
-  targets = ["app", "docs"]
+  targets = ["app"]
 }
 
 # Platforms are deliberately unset: `docker buildx bake` locally builds for the
@@ -26,12 +26,4 @@ target "app" {
   tags       = ["docker.io/orochibraru/penombre:latest", "docker.io/orochibraru/penombre:${TAG}"]
   cache-from = ["type=gha,scope=app"]
   cache-to   = ["type=gha,mode=max,scope=app"]
-}
-
-target "docs" {
-  inherits   = ["base"]
-  target     = "docs"
-  tags       = ["docker.io/orochibraru/penombre-docs:latest", "docker.io/orochibraru/penombre-docs:${TAG}"]
-  cache-from = ["type=gha,scope=docs"]
-  cache-to   = ["type=gha,mode=max,scope=docs"]
 }

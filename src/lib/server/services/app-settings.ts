@@ -101,6 +101,25 @@ export async function getStoredOAuthProviders() {
 }
 
 /**
+ * Whether OAuth sign-in is on, resolving env over database.
+ *
+ * `ENABLE_OAUTH_SIGNIN` wins whenever it is present. Otherwise having a
+ * provider *is* the switch: an admin who adds one in the UI has said what they
+ * mean, and a second toggle only gives them a provider that silently does
+ * nothing.
+ */
+export async function isOAuthSignInEnabled(): Promise<boolean> {
+	if (envProvided().oauthSignIn) {
+		return getConfig().auth.enableOAuthSignIn;
+	}
+	const fromEnv = getConfig().auth.oauthProviders.some(
+		(provider) => provider.enabled,
+	);
+	const stored = await getStoredOAuthProviders();
+	return fromEnv || stored.some((provider) => provider.enabled !== false);
+}
+
+/**
  * Whether email + password sign-in is on, resolving env over database.
  *
  * `ENABLE_EMAIL_SIGNIN` wins whenever it is present. When it is absent the

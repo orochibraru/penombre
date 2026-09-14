@@ -16,6 +16,7 @@
 		playbackDuration,
 		playbackPosition,
 	} from "$lib/store/music";
+	import { fileNotes, noteMarkers } from "$lib/store/notes";
 	import { cn, readableFileSize } from "$lib/utils";
 	import { fullscreenUrl } from "./file-links";
 	import type { FileToView } from "./wrapper.svelte.js";
@@ -58,6 +59,16 @@
 	let viewerTime: number = $state(0);
 	/** Hands the caret to the note box when a moment is clicked. */
 	let focusNotes: (() => void) | undefined = $state();
+
+	/** The thread is open here, so it has already loaded these. */
+	const markers = $derived(
+		noteMarkers(
+			fileToView?.item.metadata.id
+				? $fileNotes[fileToView.item.metadata.id]
+				: undefined,
+			$playbackDuration,
+		),
+	);
 
 	function stampTime(seconds: number): string {
 		const total = Math.max(0, Math.floor(seconds || 0));
@@ -185,6 +196,9 @@
                                     ? $playbackPosition / $playbackDuration
                                     : 0}
                                 seekLabel={m.seek()}
+                                {markers}
+                                onmarker={(marker) =>
+                                    commandPlayback({ seek: marker.seconds })}
                                 onseek={(fraction) => {
                                     // One command, not two: a second call in
                                     // the same tick replaces the first before

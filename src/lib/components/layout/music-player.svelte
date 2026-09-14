@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		MaximizeIcon,
+		MessageSquareTextIcon,
 		PauseIcon,
 		PlayIcon,
 		Volume1Icon,
@@ -8,8 +9,10 @@
 		VolumeXIcon,
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
+	import { page } from "$app/state";
 	import type { Pathname } from "$app/types";
 	import { withResume } from "$lib/components/file/file-links";
+	import NotesPanel from "$lib/components/file/notes-panel.svelte";
 	import Waveform from "$lib/components/file/waveform.svelte";
 	import BottomAction from "$lib/components/layout/bottom-action.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -25,6 +28,7 @@
 		playbackDuration,
 		playbackPosition,
 	} from "$lib/store/music";
+	import { fileNotes, loadFileNotes, noteMarkers } from "$lib/store/notes";
 
 	function clearCurrent() {
 		$playableMusic = null;
@@ -122,6 +126,34 @@
 
 	const peaksUrl = $derived(peaksFailed ? "" : ($playableMusic?.peaks ?? ""));
 
+	/**
+	 * Timestamped notes, drawn on the waveform. Fetched here rather than read
+	 * from the thread panel, which is not mounted while the bar is all there
+	 * is — the point being to see the notes without opening it.
+	 */
+	const notedFile = $derived($playableMusic?.fileId ?? "");
+	$effect(() => {
+		if (notedFile) {
+			void loadFileNotes(notedFile);
+		}
+	});
+	const markers = $derived(noteMarkers($fileNotes[notedFile], duration));
+
+	/**
+	 * The thread, in the drawer itself. Writing a note is otherwise only
+	 * possible from a file listing, which is not where you are when a track is
+	 * playing and you have something to say about it.
+	 */
+	let notesOpen = $state(false);
+	let focusNotes = $state<(() => void) | undefined>();
+
+	$effect(() => {
+		// One file, one thread: a new track closes it rather than showing the
+		// previous file's notes.
+		void notedFile;
+		notesOpen = false;
+	});
+
 	/** Record playback state without reading the store back. */
 	function setPlaying(isPlaying: boolean) {
 		playableMusic.update((music) => (music ? { ...music, isPlaying } : music));
@@ -169,6 +201,14 @@
 	function seekToFraction(fraction: number) {
 		if (!Number.isNaN(duration)) {
 			currentTime = fraction * duration;
+		}
+		// Same rule as the viewer: with the thread open, clicking a moment is
+		// the note-taking gesture — stop there and take the caret. Closed, it
+		// is only a seek.
+		if (notesOpen) {
+			player?.pause();
+			setPlaying(false);
+			focusNotes?.();
 		}
 	}
 
@@ -276,6 +316,8 @@
                 progress={duration > 0 ? currentTime / duration : 0}
                 onseek={seekToFraction}
                 seekLabel={m.seek()}
+                {markers}
+                onmarker={(marker) => (currentTime = marker.seconds)}
                 onfail={() => (peaksFailed = true)}
             />
         {:else}
@@ -291,6 +333,21 @@
         <!-- The viewer, not the raw file: a bare browser audio element has no
              notes and no title. Falls back to the file when the track came
              from somewhere with no id (a share link). -->
+        {#if $playableMusic?.fileId}
+            <Button
+                data-slot="player-notes"
+                variant={notesOpen ? "default" : "outline"}
+                title={m.notes_title()}
+                onclick={() => {
+                    notesOpen = !notesOpen;
+                    if (notesOpen) {
+                        focusNotes?.();
+                    }
+                }}
+            >
+                <MessageSquareTextIcon />
+            </Button>
+        {/if}
         <Button
             variant="outline"
             title={m.open_fullscreen()}
@@ -323,6 +380,18 @@
             </Popover.Content>
         </Popover.Root>
     </div>
+
+    {#if notesOpen && $playableMusic?.fileId}
+        <div class="mt-3 h-[min(55svh,22rem)] border-t pt-3">
+            <NotesPanel
+                fileId={$playableMusic.fileId}
+                position={currentTime}
+                onSeek={(seconds) => (currentTime = seconds)}
+                currentUserId={page.data.user?.id}
+                bind:focus={focusNotes}
+            />
+        </div>
+    {/if}
 
     <audio
         id="music-player"

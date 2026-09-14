@@ -1,7 +1,14 @@
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { expect, test } from "@playwright/test";
-import { AUTH_STORAGE_STATE, goToBrowse, openUploadDialog } from "../helpers";
+import {
+	AUTH_STORAGE_STATE,
+	chooseMenuItem,
+	goToBrowse,
+	openUploadDialog,
+	rightClickItem,
+} from "../helpers";
 
 test.use({ storageState: AUTH_STORAGE_STATE });
 
@@ -96,6 +103,9 @@ test.describe("Waveforms", () => {
 		await upload.getByRole("button", { name: /upload/i }).click();
 		const row = page.getByText("test-audio.wav").first();
 		await expect(row).toBeVisible({ timeout: 20_000 });
+		// The listing refreshes once the upload settles; interacting through
+		// that refresh is what detaches rows and menus mid-click.
+		await page.waitForLoadState("networkidle");
 
 		// Loads it into the global player, which is where the playhead lives.
 		await row.click();
@@ -103,8 +113,8 @@ test.describe("Waveforms", () => {
 			timeout: 20_000,
 		});
 
-		await row.click({ button: "right" });
-		await page.getByRole("menuitem", { name: /notes/i }).click();
+		await rightClickItem(page, "test-audio.wav");
+		await chooseMenuItem(page, "test-audio.wav", /notes/i);
 
 		const notes = page.getByRole("dialog");
 		const scrubber = notes.locator('button[aria-label="Seek"]').first();
@@ -162,10 +172,13 @@ test.describe("Waveforms", () => {
 		await upload.getByRole("button", { name: /upload/i }).click();
 		const row = page.getByText("test-audio.wav").first();
 		await expect(row).toBeVisible({ timeout: 20_000 });
+		// The listing refreshes once the upload settles; interacting through
+		// that refresh is what detaches rows and menus mid-click.
+		await page.waitForLoadState("networkidle");
 
 		// Same tab: the action is a `goto`, not a `window.open`.
-		await row.click({ button: "right" });
-		await page.getByRole("menuitem", { name: /full screen/i }).click();
+		await rightClickItem(page, "test-audio.wav");
+		await chooseMenuItem(page, "test-audio.wav", /full screen/i);
 		await expect(page).toHaveURL(/\/view\//, { timeout: 15_000 });
 
 		await page.getByRole("button", { name: /^play$/i }).click();
@@ -193,6 +206,108 @@ test.describe("Waveforms", () => {
 			.toBeGreaterThan(0);
 		expect(await playing()).toBe(true);
 		await expect(page.getByRole("textbox")).toHaveCount(0);
+
+		expect(errors).toEqual([]);
+	});
+
+	/**
+	 * Notes are on the track, not only in the thread — the Soundcloud rule.
+	 * The marker is drawn by the player itself, so it has to be there with the
+	 * thread closed, and clicking it has to move the playhead.
+	 */
+	test("a timestamped note marks the player's waveform once the thread is closed", async ({
+		page,
+	}) => {
+		// Uploading, then waiting for peaks to be generated for a file the
+		// server has never seen, does not fit the default budget on a loaded
+		// CI runner.
+		test.setTimeout(60_000);
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+
+		await goToBrowse(page);
+		await openUploadDialog(page);
+		const upload = page.getByRole("dialog");
+		// A name of its own: uploading the fixture twice leaves the original
+		// carrying the previous run's note, and two markers at the same second
+		// sit on top of each other.
+		const name = `notes-${Date.now()}.wav`;
+		await upload
+			.locator("input[type=file]")
+			.first()
+			.setInputFiles({
+				name,
+				mimeType: "audio/wav",
+				buffer: readFileSync(
+					join(process.cwd(), "e2e", "fixtures", "test-audio.wav"),
+				),
+			});
+		await upload.getByRole("button", { name: /upload/i }).click();
+		const row = page.getByText(name).first();
+		await expect(row).toBeVisible({ timeout: 20_000 });
+		await page.waitForLoadState("networkidle");
+
+		// Everything here happens in the player: its own Notes button opens the
+		// thread, which is the point of having one. It also keeps the test off
+		// the context menu, which a listing still settling after an upload
+		// tears down mid-click.
+		await row.click();
+		const scrubber = page.locator('button[aria-label="Seek"]').first();
+		await expect(scrubber).toBeVisible({ timeout: 30_000 });
+
+		const notes = page.locator('[data-slot="player-notes"]');
+		await notes.click();
+
+		// With the thread open a click on the waveform is the note-taking
+		// gesture: it stops there and hands over the caret.
+		const box = await scrubber.boundingBox();
+		await page.mouse.click(
+			(box?.x ?? 0) + (box?.width ?? 0) * 0.6,
+			(box?.y ?? 0) + (box?.height ?? 0) / 2,
+		);
+
+		const noted = await page.evaluate(
+			() =>
+				(document.getElementById("music-player") as HTMLAudioElement)
+					?.currentTime ?? 0,
+		);
+		expect(noted).toBeGreaterThan(0);
+
+		const draft = page.getByPlaceholder(/add a note/i);
+		await expect(draft).toBeFocused();
+		await draft.fill("the good bit");
+		await page.getByRole("button", { name: "Add", exact: true }).click();
+		await expect(page.getByText("the good bit")).toBeVisible({
+			timeout: 10_000,
+		});
+
+		// Closed again: the marker has to stand on its own.
+		await notes.click();
+		await expect(draft).toBeHidden({ timeout: 10_000 });
+		const marker = page.locator('[data-slot="waveform-marker"]').first();
+		await expect(marker).toBeVisible({ timeout: 10_000 });
+
+		// Somewhere else first, so the seek it performs is a real move.
+		await page.evaluate(() => {
+			const player = document.getElementById(
+				"music-player",
+			) as HTMLAudioElement | null;
+			if (player) {
+				player.currentTime = 0;
+			}
+		});
+		await marker.click();
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						() =>
+							(document.getElementById("music-player") as HTMLAudioElement)
+								?.currentTime ?? 0,
+					),
+				{ timeout: 10_000 },
+			)
+			.toBeGreaterThan(noted - 1.5);
 
 		expect(errors).toEqual([]);
 	});

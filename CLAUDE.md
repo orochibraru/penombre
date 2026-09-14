@@ -19,7 +19,7 @@ enforces this).
 ```bash
 bun run dev              # Vite dev server (SQLite by default, no services needed)
 bun run build            # svelte-kit sync && vite build
-bun run check            # svelte-check (app) + type-check for scripts/docs, in parallel
+bun run check            # svelte-check (app) + type-check for scripts, in parallel
 
 bun run lint             # biome + markdownlint + tailwint, in parallel
 bun run lint:fix         # fix everything fixable
@@ -55,8 +55,7 @@ SKIP=test-unit git commit ...   # skip one hook for a commit
 
 ## Architecture
 
-This is a Bun workspace monorepo. The **SvelteKit app lives at the repo root**
-(frontend + backend API); secondary clients live under `packages/`:
+The **SvelteKit app lives at the repo root** (frontend + backend API):
 
 ```text
 .                  # SvelteKit app (frontend + backend API)
@@ -69,9 +68,7 @@ This is a Bun workspace monorepo. The **SvelteKit app lives at the repo root**
 │       │   └── db/          # Drizzle schema + client
 │       └── components/      # Svelte 5 UI (shadcn-svelte in components/ui)
 ├── drizzle/       # SQL migrations generated from src/lib/server/db/schema.ts
-├── e2e/           # Playwright tests
-└── packages/
-    └── docs/      # Documentation site (SvelteKit, @orochibraru/docs)
+└── e2e/           # Playwright tests
 ```
 
 Despite what the README says, there is **no Hono** in this codebase — API routes
@@ -152,16 +149,16 @@ hand-edit generated paraglide output.
 ## Documentation (required)
 
 **Every user-facing feature or env var ships with its docs in the same change.**
-The guides live in `docs/*.md` at the repo root — `packages/docs` renders those
-exact files (`import.meta.glob` over `docs/*.md`), so there is nowhere else to
-write them.
+The guides live in `docs/*.md` at the repo root. The docs site is built from
+those exact files by a separate repository
+([@orochibraru/docs](https://github.com/orochibraru/docs)), so there is nowhere
+else to write them and nothing in this repo renders them.
 
 - New/changed env var → add it to the relevant table in `docs/env.md` **and**
   the guide that explains the feature (`authentication.md`, `storage.md`,
   `simple-mode.md`, …).
 - New behaviour with no env var → the guide it belongs to, or a new
-  `docs/<slug>.md` (then add the slug to `order` in
-  `packages/docs/src/lib/config.ts` so it lands in the nav).
+  `docs/<slug>.md` (the docs repo decides the nav order).
 - Also regenerate `.example.env` (`bun run gen:env`) when you touch
   `config.defaults.ts`.
 - `bun run lint:md` must pass: 80-column prose, aligned table pipes. Relative
@@ -173,8 +170,7 @@ A feature that isn't in `docs/` isn't finished.
 ## Linting gotchas (Biome)
 
 - `noConsole` is an **error** in app code — use `Logger` from `$lib/logger`, not
-  `console.*`. Console is only allowed in `logger.ts` itself, tests, scripts,
-  and `packages/docs`.
+  `console.*`. Console is only allowed in `logger.ts` itself, tests and scripts.
 - `noFloatingPromises`/`noMisusedPromises` are errors — always `await` or
   explicitly handle promises.
 - `.svelte` files relax `noUnusedImports`/`useConst`/`useImportType` (Svelte's
@@ -277,6 +273,31 @@ claims it.
 Anything better-auth reads at init (email sign-in, OAuth providers) is resolved
 once via top-level `await` in `auth/index.ts`, so a change there needs a
 restart. The UI says so.
+
+### OAuth providers come from two places
+
+Env-declared (`OAUTH_<NAME>_*`, owned by `config.ts`) and stored (`app_settings`
+`oauthProviders`, written by **Admin → Settings**). `auth/index.ts` merges them
+at init with env winning a name collision, and exports `loadedOAuthProviders` —
+which is what the sign-in page and `/api/v1/auth/providers` must read. The
+config list would offer a button for a provider this process never registered,
+which is the same trap as the passwordless methods above.
+
+Three more things that bite:
+
+- The callback is better-auth's core `callback/:id` under our basePath —
+  `/api/v1/auth/callback/<id>` — because `genericOAuth` registers providers as
+  ordinary social providers. Not `/oauth2/callback/...`, which older versions
+  used.
+- A provider id is stored on every `account` row, so the admin UI shows it
+  read-only once saved, and the client secret is never sent back to the page (a
+  blank secret field means "keep the stored one").
+- `resolveAuthConfig()` used to return the defaults unless one of three env vars
+  was set, which dropped every `OAUTH_<NAME>_*` block in a deployment that set
+  nothing else. Declaring a provider now counts as configuration, and with
+  `ENABLE_OAUTH_SIGNIN` absent, having an enabled provider is what turns OAuth
+  sign-in on (`isOAuthSignInEnabled()`). The config schema no longer demands an
+  env provider when OAuth is on — they can all live in the database.
 
 ### Sign-in methods cannot be turned off blindly
 
@@ -470,6 +491,27 @@ The `<audio>` element lives in `music-player.svelte`, so anything else that
 needs to seek or pause it (the notes panel) goes through `commandPlayback()` in
 `$lib/store/music`. Commands carry an incrementing `id` so two identical seeks
 in a row both fire.
+
+Timestamped notes are drawn on it as markers. The note list therefore lives in
+`$lib/store/notes.ts`, not in `notes-panel.svelte`: the players mark the
+waveform while that panel is unmounted, and the panel writes back to the same
+store so a note appears on the waveform the moment it is saved. The tooltip is
+the portalled `Tooltip` — the bottom player wraps its content in
+`overflow-x-auto`, which clips anything drawn in place.
+
+`music-player.svelte` also renders the thread itself, under the transport row,
+because a track playing while you browse is exactly when you have something to
+say about it and the file listing may be three pages away.
+
+### A tooltip is a popover surface, not a primary one
+
+`app.css` forces `--popover` onto `[data-slot="tooltip-content"]` along with
+every other floating surface, but shadcn's tooltip ships
+`bg-primary text-primary-foreground` — so every tooltip in the app was white
+text on a white surface, and hovering appeared to do nothing at all.
+`tooltip-content.svelte` uses the popover tokens now (arrow included). Anything
+added to that unlayered block in `app.css` has to have its foreground checked
+the same way.
 
 A click on it is a **seek and nothing else** unless the notes thread is already
 open. Pausing and taking the caret is the note-taking gesture; firing it unasked
@@ -697,11 +739,11 @@ argument (the options type); it takes only `SentMessageInfo` now.
 
 ### Prek no longer type-checks
 
-`prek run --all-files` is ~45s, not ~80s: `gen:api` and all three type checks
-moved to CI (`code_quality.yaml` runs `bun run check` and a "Codegen is current"
-step that regenerates and fails on a diff), and biome is passed the staged
-filenames instead of scanning all 524 files. **A green commit no longer implies
-a green CI lint job** — run `bun run check` yourself while working.
+`prek run --all-files` is ~45s, not ~80s: `gen:api` and both type checks moved
+to CI (`code_quality.yaml` runs `bun run check` and a "Codegen is current" step
+that regenerates and fails on a diff), and biome is passed the staged filenames
+instead of scanning all 524 files. **A green commit no longer implies a green CI
+lint job** — run `bun run check` yourself while working.
 
 ### Never cache a missing shared owner
 
@@ -752,6 +794,33 @@ check `bun run dev` explicitly when adding a DOM-dependent library, and assert
 on `pageerror` in the E2E (see `documents.spec.ts`), because a mounted,
 `contenteditable`, correctly-rendered editor can still throw on every keystroke.
 
+### Nothing may be pinned to the bottom-right corner
+
+The music player spans that corner, so the upload progress panel sitting at
+`fixed bottom-4 right-4 z-50` covered the player's own notes, full-screen and
+volume buttons — every click on them went to the panel for as long as an upload
+was listed. It stacks above the player from `--player-height` now, the way
+`selection-bar.svelte` already did. Any new floating panel down there has to do
+the same.
+
+The symptom in E2E is a click that retries until the test times out, with
+`subtree intercepts pointer events` naming the panel — read that line, it says
+exactly which element is in the way.
+
+### A listing that is still settling eats context menus
+
+Right-clicking a row moments after an upload gives a menu that Playwright
+resolves and then loses: the listing refresh detaches it mid-click, and the
+click waits 30s for an element that no longer exists. On a loaded CI runner that
+is every run, not one in ten.
+
+`chooseMenuItem` in `e2e/helpers.ts` is the way in: it force-clicks the entry
+(the stability check is what stalls, and nothing sits over an open menu) and
+reopens the menu on failure. It deliberately does **not** treat a vanished menu
+as a successful click — a menu also closes on a stray pointer move, and that
+shortcut made a test assert against a navigation that never happened. After an
+upload, wait for `networkidle` before touching the row at all.
+
 ### E2E runs against a container, not your working tree
 
 `test:e2e` starts the app in Docker, and Playwright's `reuseExistingServer` is
@@ -777,8 +846,6 @@ It first seeds one dummy of every supported kind from `e2e/fixtures/showcase-*`
 exercise every preview path rather than showing an empty drive.
 
 `docs/showcase.md` publishes those files and the README links to it with a
-single hero image — there is no demo instance. The docs site cannot serve
-`docs/images` directly, so `scripts/docs.ts` copies it to
-`packages/docs/static/docs-images` and `renderer.image` in `markdown.ts`
-rewrites relative image srcs to `/docs-images/…`. That is what lets one markdown
-file render correctly both on GitHub and on the site.
+single hero image — there is no demo instance. Markdown carries plain relative
+`docs/images/…` srcs so GitHub renders them directly; the docs repo rewrites
+them for the site.

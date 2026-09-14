@@ -136,19 +136,6 @@ const configSchema = z
 				});
 			}
 		}
-
-		if (config.auth?.enableOAuthSignIn) {
-			const enabledProviders = config.auth.oauthProviders.filter(
-				(p) => p.enabled,
-			);
-			if (enabledProviders.length === 0) {
-				ctx.addIssue({
-					code: "custom",
-					message:
-						"At least one OAuth provider must be enabled when OAuth sign-in is enabled",
-				});
-			}
-		}
 	});
 
 export type AppConfig = z.infer<typeof configSchema>;
@@ -245,18 +232,25 @@ function parseOAuthProviders(): OAuthProviderInput[] {
 }
 
 function resolveAuthConfig() {
+	// Declaring a provider is itself configuration: reading only the three
+	// toggles meant a deployment with nothing but `OAUTH_<NAME>_*` fell back to
+	// the defaults and dropped every provider it had declared.
+	const oauthProviders = parseOAuthProviders();
 	const configured =
 		env.ENABLE_EMAIL_SIGNIN ||
 		env.ENABLE_OAUTH_SIGNIN ||
-		env.MIN_PASSWORD_LENGTH;
+		env.MIN_PASSWORD_LENGTH ||
+		oauthProviders.length > 0;
 	if (!configured) {
 		return defaultConfigValues.auth;
 	}
 
-	const oauthProviders = parseOAuthProviders();
 	return {
 		enableEmailSignIn: env.ENABLE_EMAIL_SIGNIN !== "false",
-		enableOAuthSignIn: env.ENABLE_OAUTH_SIGNIN !== "false",
+		// Absent, the providers decide: none declared means nothing to offer.
+		enableOAuthSignIn: env.ENABLE_OAUTH_SIGNIN
+			? env.ENABLE_OAUTH_SIGNIN !== "false"
+			: oauthProviders.length > 0,
 		minPasswordLength: env.MIN_PASSWORD_LENGTH
 			? Number.parseInt(env.MIN_PASSWORD_LENGTH, 10)
 			: defaultConfigValues.auth.minPasswordLength,

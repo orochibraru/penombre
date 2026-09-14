@@ -109,8 +109,14 @@
         data-testid="upload-progress-indicator"
         transition:fly={{ y: 100, duration: 300 }}
         class={cn(
-            "fixed bottom-4 right-4 z-50 w-80 rounded-lg border bg-background shadow-2xl",
-            "md:bottom-6 md:right-6",
+            "fixed right-4 z-50 w-80 rounded-lg border bg-background shadow-2xl",
+            "md:right-6",
+            // Stacked above the music player like the selection bar, from the
+            // `--player-height` it publishes: pinned to the corner this panel
+            // covers the player's own buttons, which are then unclickable for
+            // as long as an upload is listed.
+            "bottom-[calc(5rem+var(--player-height,0px))]",
+            "lg:bottom-[calc(1.25rem+var(--player-height,0px))]",
         )}
     >
         <!-- Header -->
