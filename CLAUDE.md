@@ -794,6 +794,33 @@ check `bun run dev` explicitly when adding a DOM-dependent library, and assert
 on `pageerror` in the E2E (see `documents.spec.ts`), because a mounted,
 `contenteditable`, correctly-rendered editor can still throw on every keystroke.
 
+### Nothing may be pinned to the bottom-right corner
+
+The music player spans that corner, so the upload progress panel sitting at
+`fixed bottom-4 right-4 z-50` covered the player's own notes, full-screen and
+volume buttons — every click on them went to the panel for as long as an upload
+was listed. It stacks above the player from `--player-height` now, the way
+`selection-bar.svelte` already did. Any new floating panel down there has to do
+the same.
+
+The symptom in E2E is a click that retries until the test times out, with
+`subtree intercepts pointer events` naming the panel — read that line, it says
+exactly which element is in the way.
+
+### A listing that is still settling eats context menus
+
+Right-clicking a row moments after an upload gives a menu that Playwright
+resolves and then loses: the listing refresh detaches it mid-click, and the
+click waits 30s for an element that no longer exists. On a loaded CI runner that
+is every run, not one in ten.
+
+`chooseMenuItem` in `e2e/helpers.ts` is the way in: it force-clicks the entry
+(the stability check is what stalls, and nothing sits over an open menu) and
+reopens the menu on failure. It deliberately does **not** treat a vanished menu
+as a successful click — a menu also closes on a stray pointer move, and that
+shortcut made a test assert against a navigation that never happened. After an
+upload, wait for `networkidle` before touching the row at all.
+
 ### E2E runs against a container, not your working tree
 
 `test:e2e` starts the app in Docker, and Playwright's `reuseExistingServer` is

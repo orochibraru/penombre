@@ -335,6 +335,7 @@
              from somewhere with no id (a share link). -->
         {#if $playableMusic?.fileId}
             <Button
+                data-slot="player-notes"
                 variant={notesOpen ? "default" : "outline"}
                 title={m.notes_title()}
                 onclick={() => {

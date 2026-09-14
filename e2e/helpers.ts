@@ -46,6 +46,41 @@ export async function rightClickItem(page: Page, name: string) {
 	await expect(menu).toBeVisible({ timeout: 3000 });
 }
 
+/**
+ * Pick an entry from the open context menu, re-opening it if it goes.
+ *
+ * A listing that refreshes — an upload settling, a thumbnail arriving — tears
+ * the menu down mid-click, and Playwright then waits for an element that no
+ * longer exists. Under load in CI that is a guaranteed 30s timeout rather than
+ * a rare one, so the menu is reopened on the item rather than trusted to stay.
+ */
+export async function chooseMenuItem(
+	page: Page,
+	itemName: string,
+	entry: RegExp | string,
+) {
+	const menuItem = page.getByRole("menuitem", { name: entry });
+	for (let attempt = 0; attempt < 3; attempt++) {
+		try {
+			await expect(menuItem.first()).toBeVisible({ timeout: 5000 });
+			// `force`: the stability check is what stalls here — a menu still
+			// settling never holds still long enough — and there is nothing
+			// over an open menu to miss-receive the click.
+			await menuItem.first().click({ force: true, timeout: 5000 });
+			return;
+		} catch (error) {
+			if (attempt === 2) {
+				throw error;
+			}
+			// Never assume a vanished menu means the entry fired: it also
+			// closes on a stray pointer move, and the caller would then assert
+			// against something that never happened.
+			await page.keyboard.press("Escape");
+			await rightClickItem(page, itemName);
+		}
+	}
+}
+
 /** Open the ellipsis dropdown menu on an item by its visible name. */
 export async function openItemMenu(page: Page, name: string) {
 	const row = page

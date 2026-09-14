@@ -2,7 +2,13 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { expect, test } from "@playwright/test";
-import { AUTH_STORAGE_STATE, goToBrowse, openUploadDialog } from "../helpers";
+import {
+	AUTH_STORAGE_STATE,
+	chooseMenuItem,
+	goToBrowse,
+	openUploadDialog,
+	rightClickItem,
+} from "../helpers";
 
 test.use({ storageState: AUTH_STORAGE_STATE });
 
@@ -97,6 +103,9 @@ test.describe("Waveforms", () => {
 		await upload.getByRole("button", { name: /upload/i }).click();
 		const row = page.getByText("test-audio.wav").first();
 		await expect(row).toBeVisible({ timeout: 20_000 });
+		// The listing refreshes once the upload settles; interacting through
+		// that refresh is what detaches rows and menus mid-click.
+		await page.waitForLoadState("networkidle");
 
 		// Loads it into the global player, which is where the playhead lives.
 		await row.click();
@@ -104,8 +113,8 @@ test.describe("Waveforms", () => {
 			timeout: 20_000,
 		});
 
-		await row.click({ button: "right" });
-		await page.getByRole("menuitem", { name: /notes/i }).click();
+		await rightClickItem(page, "test-audio.wav");
+		await chooseMenuItem(page, "test-audio.wav", /notes/i);
 
 		const notes = page.getByRole("dialog");
 		const scrubber = notes.locator('button[aria-label="Seek"]').first();
@@ -163,10 +172,13 @@ test.describe("Waveforms", () => {
 		await upload.getByRole("button", { name: /upload/i }).click();
 		const row = page.getByText("test-audio.wav").first();
 		await expect(row).toBeVisible({ timeout: 20_000 });
+		// The listing refreshes once the upload settles; interacting through
+		// that refresh is what detaches rows and menus mid-click.
+		await page.waitForLoadState("networkidle");
 
 		// Same tab: the action is a `goto`, not a `window.open`.
-		await row.click({ button: "right" });
-		await page.getByRole("menuitem", { name: /full screen/i }).click();
+		await rightClickItem(page, "test-audio.wav");
+		await chooseMenuItem(page, "test-audio.wav", /full screen/i);
 		await expect(page).toHaveURL(/\/view\//, { timeout: 15_000 });
 
 		await page.getByRole("button", { name: /^play$/i }).click();
@@ -206,6 +218,10 @@ test.describe("Waveforms", () => {
 	test("a timestamped note marks the player's waveform once the thread is closed", async ({
 		page,
 	}) => {
+		// Uploading, then waiting for peaks to be generated for a file the
+		// server has never seen, does not fit the default budget on a loaded
+		// CI runner.
+		test.setTimeout(60_000);
 		const errors: string[] = [];
 		page.on("pageerror", (error) => errors.push(error.message));
 
@@ -229,18 +245,21 @@ test.describe("Waveforms", () => {
 		await upload.getByRole("button", { name: /upload/i }).click();
 		const row = page.getByText(name).first();
 		await expect(row).toBeVisible({ timeout: 20_000 });
+		await page.waitForLoadState("networkidle");
 
-		// Into the global player, then into the thread to write the note.
+		// Everything here happens in the player: its own Notes button opens the
+		// thread, which is the point of having one. It also keeps the test off
+		// the context menu, which a listing still settling after an upload
+		// tears down mid-click.
 		await row.click();
-		await expect(page.locator('[data-slot="waveform"]').first()).toBeVisible({
-			timeout: 20_000,
-		});
-		await row.click({ button: "right" });
-		await page.getByRole("menuitem", { name: /notes/i }).click();
+		const scrubber = page.locator('button[aria-label="Seek"]').first();
+		await expect(scrubber).toBeVisible({ timeout: 30_000 });
 
-		const notes = page.getByRole("dialog");
-		const scrubber = notes.locator('button[aria-label="Seek"]').first();
-		await expect(scrubber).toBeVisible({ timeout: 15_000 });
+		const notes = page.locator('[data-slot="player-notes"]');
+		await notes.click();
+
+		// With the thread open a click on the waveform is the note-taking
+		// gesture: it stops there and hands over the caret.
 		const box = await scrubber.boundingBox();
 		await page.mouse.click(
 			(box?.x ?? 0) + (box?.width ?? 0) * 0.6,
@@ -254,16 +273,17 @@ test.describe("Waveforms", () => {
 		);
 		expect(noted).toBeGreaterThan(0);
 
-		await notes.getByRole("textbox").fill("the good bit");
-		await notes.getByRole("button", { name: "Add", exact: true }).click();
-		await expect(notes.getByText("the good bit")).toBeVisible({
+		const draft = page.getByPlaceholder(/add a note/i);
+		await expect(draft).toBeFocused();
+		await draft.fill("the good bit");
+		await page.getByRole("button", { name: "Add", exact: true }).click();
+		await expect(page.getByText("the good bit")).toBeVisible({
 			timeout: 10_000,
 		});
 
-		await page.keyboard.press("Escape");
-		await expect(notes).toBeHidden({ timeout: 10_000 });
-
-		// The marker belongs to the bottom player, which is all that is left.
+		// Closed again: the marker has to stand on its own.
+		await notes.click();
+		await expect(draft).toBeHidden({ timeout: 10_000 });
 		const marker = page.locator('[data-slot="waveform-marker"]').first();
 		await expect(marker).toBeVisible({ timeout: 10_000 });
 
