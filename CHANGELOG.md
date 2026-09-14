@@ -1,3 +1,20 @@
+## [1.8.36](https://github.com/orochibraru/penombre/compare/v1.8.35...v1.8.36) (2026-09-14)
+
+
+### Bug Fixes
+
+* notes display & oauth providers from ui ([#97](https://github.com/orochibraru/penombre/issues/97)) ([43580f4](https://github.com/orochibraru/penombre/commit/43580f4bfab8a07086675fd01dd984335f4e600e))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.36
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.35](https://github.com/orochibraru/penombre/compare/v1.8.34...v1.8.35) (2026-09-14)
 
 ---
