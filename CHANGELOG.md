@@ -1,3 +1,15 @@
+## [1.8.35](https://github.com/orochibraru/penombre/compare/v1.8.34...v1.8.35) (2026-09-14)
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.35
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.34](https://github.com/orochibraru/penombre/compare/v1.8.33...v1.8.34) (2026-09-13)
 
 
