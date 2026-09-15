@@ -14,8 +14,9 @@ and the sidebar group are hidden there.
 
 ## Creating one
 
-Any signed-in user can create a drive: **Shared drives** in the sidebar, then
-**New shared drive**. The creator owns it, and owning it means managing it.
+Any signed-in user can create a drive: **Shared drives → All drives** in the
+sidebar, then **New shared drive**. The creator owns it, and owning it means
+managing it.
 
 Each drive then appears in the sidebar under its own name, and browses exactly
 like My Drive: upload, folders, rename, move, preview, notes, documents.
@@ -63,8 +64,8 @@ Activity rows name the person who actually did the thing, not the drive's owner.
 
 ## Deleting a drive
 
-**Shared drives → ⋯ → Delete drive**, owner only. It deletes the drive's files
-for everybody and cannot be undone.
+**All drives → ⋯ → Delete drive**, owner only. It deletes the drive's files for
+everybody and cannot be undone.
 
 ## Through the API
 

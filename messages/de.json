@@ -657,5 +657,11 @@
 	"drive_role_owner": "Eigentümer",
 	"drive_manager_only": "Das kann nur ein Verwalter ändern.",
 	"error_storage_unreachable": "Die Dateien auf diesem Laufwerk sind nicht erreichbar",
-	"error_storage_unreachable_description": "Das Laufwerk ist eingebunden, aber Penombre darf es nicht lesen. Prüfen Sie Eigentümer und Rechte des Ordners auf dem Host sowie den Benutzer, unter dem der Container läuft."
+	"error_storage_unreachable_description": "Das Laufwerk ist eingebunden, aber Penombre darf es nicht lesen. Prüfen Sie Eigentümer und Rechte des Ordners auf dem Host sowie den Benutzer, unter dem der Container läuft.",
+	"nav_drives_all": "Alle Laufwerke",
+	"volume_scanning": "Ihre Dateien werden eingelesen",
+	"volume_scanning_description": "Penombre liest das eingebundene Laufwerk. Bei einer großen Bibliothek dauert das eine Weile — Dateien erscheinen hier, sobald sie gefunden werden, Sie können später zurückkommen.",
+	"volume_per_user_title": "Die bereits vorhandenen Dateien auf diesem Laufwerk werden nicht angezeigt",
+	"volume_per_user_description": "Im vollen Modus bekommt jedes Konto einen eigenen Unterordner dieses Volumes, sodass alles, was schon auf der Einbindung lag, niemandem gehört. Um das ganze Laufwerk allen bereitzustellen, setzen Sie",
+	"volume_per_user_restart": "in Ihrer Umgebung und starten Sie Penombre neu."
 }

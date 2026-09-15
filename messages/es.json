@@ -657,5 +657,11 @@
 	"drive_role_owner": "Propietario",
 	"drive_manager_only": "Solo un gestor puede cambiar esto.",
 	"error_storage_unreachable": "No se puede acceder a los archivos de esta unidad",
-	"error_storage_unreachable_description": "La unidad está montada, pero Penombre no tiene permiso para leerla. Revisa el propietario y los permisos de la carpeta en el host, y el usuario con el que se ejecuta el contenedor."
+	"error_storage_unreachable_description": "La unidad está montada, pero Penombre no tiene permiso para leerla. Revisa el propietario y los permisos de la carpeta en el host, y el usuario con el que se ejecuta el contenedor.",
+	"nav_drives_all": "Todas las unidades",
+	"volume_scanning": "Analizando tus archivos",
+	"volume_scanning_description": "Penombre está leyendo la unidad montada. En una biblioteca grande esto tarda un rato: los archivos aparecen aquí a medida que se encuentran y puedes volver más tarde.",
+	"volume_per_user_title": "Los archivos que ya están en esta unidad no se muestran",
+	"volume_per_user_description": "En modo completo este volumen da a cada cuenta su propia subcarpeta, así que lo que ya estaba en el montaje no pertenece a nadie. Para servir toda la unidad a todo el mundo, define",
+	"volume_per_user_restart": "en tu entorno y reinicia Penombre."
 }

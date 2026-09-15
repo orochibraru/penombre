@@ -64,6 +64,9 @@ VOLUME_MEDIA_SHARED=true
 VOLUME_MEDIA_READONLY=true   # browse a library without letting anyone change it
 ```
 
+The volume page tells you when this is happening: if the mount's root holds
+files that the split hides, it shows a notice naming the exact variable to set.
+
 It is off by default on purpose: turning it on in an instance that has been
 running with the split would show every account what the others had put on the
 mount. Pair it with `_READONLY` when the mount is a library rather than a shared
@@ -94,6 +97,14 @@ directory if Penombre looks. Two things trigger a scan:
 
 A scan adds files that appeared, drops rows for files that vanished, re-reads
 media whose bytes changed, and builds thumbnails and waveforms as it goes.
+
+It runs **in the background**, so opening a volume never waits for it: the page
+lists what is already known and says _Scanning your files_ while a pass is
+running, refreshing itself as files are found. Walking a large NAS mount takes
+minutes, and holding the page open for all of them looked like a hang.
+
+Opening a volume again within 30 seconds of the last pass does not start another
+one.
 
 ## What is stored where
 

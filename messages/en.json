@@ -657,5 +657,11 @@
 	"drive_role_owner": "Owner",
 	"drive_manager_only": "Only a manager can change this.",
 	"error_storage_unreachable": "The files on this drive can't be reached",
-	"error_storage_unreachable_description": "The drive is mounted, but Penombre has no permission to read it. Check the folder's ownership and permissions on the host, and the user the container runs as."
+	"error_storage_unreachable_description": "The drive is mounted, but Penombre has no permission to read it. Check the folder's ownership and permissions on the host, and the user the container runs as.",
+	"nav_drives_all": "All drives",
+	"volume_scanning": "Scanning your files",
+	"volume_scanning_description": "Penombre is reading the mounted drive. On a large library this takes a while — files appear here as they are found, and you can come back later.",
+	"volume_per_user_title": "The files already on this drive are not shown",
+	"volume_per_user_description": "In full mode this volume gives every account its own subfolder, so whatever was already on the mount belongs to nobody. To serve the whole drive to everyone, set",
+	"volume_per_user_restart": "in your environment and restart Penombre."
 }

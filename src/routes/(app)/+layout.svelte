@@ -250,7 +250,9 @@
 			? []
 			: ([
 					{
-						title: m.nav_drives(),
+						// Not "Shared drives": that is the group this row sits in,
+						// and the two read as a mistake stacked on each other.
+						title: m.nav_drives_all(),
 						url: "/drives",
 						icon: UsersIcon,
 					},

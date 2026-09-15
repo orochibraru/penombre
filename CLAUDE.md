@@ -1108,3 +1108,34 @@ rendered as the framework's bare "500 — Cannot stringify arbitrary non-POJOs"
 page instead of the app's, hiding the real failure. It returns
 `{ message, errorId }` now, and logs the same id beside the cause — the error
 page already had the "Error ID" line, with nothing feeding it.
+
+### During a navigation, `page` is the page you are leaving
+
+A universal load runs _while_ the navigation is in flight, so anything it reads
+from `$app/state`'s `page` describes the **previous** route. `$lib/api`'s drive
+middleware read `page.params.drive` and therefore sent the drive's header with
+`/browse`'s own listing request: leaving a shared drive by a sidebar link showed
+the drive's files in My Drive until a full reload, which is why it looked like a
+cache bug. It reads `navigating.to ?? page` — the route whose load is actually
+running. Anything else keyed off the current route from outside a component owes
+itself the same check.
+
+`drives.spec.ts` covers it by _clicking_ the link; a `page.goto` is a fresh
+document and passes either way.
+
+### Opening a volume must not wait for its scan
+
+`scanOnVisit` (`services/library-scan.ts`) starts the pass and returns whether
+one is running; the load reports it and the page shows _Scanning your files_ and
+re-invalidates every 3s until it clears. Awaiting `scanStorage()` in the load
+held the page open for as long as walking the mount took — minutes on a NAS, and
+indistinguishable from a hang.
+
+The 30s cooldown is load-bearing, not tuning: the poll re-runs the load, so
+without it each refresh would start a fresh pass the moment the last one ended
+and the banner would never go away.
+
+The same load detects the per-user trap directly — a mount whose root holds
+files that the split hides renders a notice naming the exact
+`VOLUME_<NAME>_SHARED` variable to set, because the page is where that question
+actually gets asked.

@@ -1,6 +1,6 @@
 import createClient from "openapi-fetch";
 import { browser } from "$app/environment";
-import { page } from "$app/state";
+import { navigating, page } from "$app/state";
 import { DRIVE_HEADER } from "$lib/drives";
 import type { components, paths } from "./v1";
 
@@ -41,6 +41,12 @@ export const api = createClient<paths>({
  * skipped — `page` is not theirs to read — so a load that needs a drive passes
  * `query: { drive }` itself, and an explicit one always wins.
  *
+ * **The navigation target wins over the current page.** A load runs *during*
+ * the navigation, while `page` still describes the page being left — so
+ * leaving a drive for `/browse` fetched My Drive's listing with the drive's
+ * header still on it, and the personal drive showed the shared drive's files
+ * until a full reload. `navigating.to` is the route whose load is running.
+ *
  * It travels as `DRIVE_HEADER` rather than as a query parameter — see that
  * constant for why. The server takes either, and `?drive=` stays the
  * documented spelling for media URLs and the upload worker, which have no
@@ -50,8 +56,9 @@ api.use({
 	onRequest({ request }) {
 		// The route parameter inside a drive; the query parameter on the pages
 		// reached from one (`/edit`, `/view`), which live outside `/drives`.
+		const target = navigating.to ?? page;
 		const drive = browser
-			? (page.params.drive ?? page.url.searchParams.get("drive"))
+			? (target.params?.drive ?? target.url.searchParams.get("drive"))
 			: undefined;
 		if (drive && !new URL(request.url).searchParams.has("drive")) {
 			request.headers.set(DRIVE_HEADER, drive);

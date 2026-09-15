@@ -1,9 +1,44 @@
+import { readdir } from "node:fs/promises";
 import { error } from "@sveltejs/kit";
 import type { User } from "better-auth";
-import { getVolume } from "$lib/server/config";
+import { getVolume, isSimpleMode } from "$lib/server/config";
 import { isStorageUnavailable } from "$lib/server/errors";
-import { loadSharedOwner } from "$lib/server/services/library-scan";
+import {
+	loadSharedOwner,
+	scanOnVisit,
+} from "$lib/server/services/library-scan";
 import { StorageService } from "$lib/server/services/storage";
+
+/**
+ * The env var that would share this volume whole, in the spelling the admin
+ * has to type: the volume's id is the lowercased, hyphenated name.
+ */
+function sharedVariable(name: string): string {
+	return `VOLUME_${name.toUpperCase().replace(/-/g, "_")}_SHARED`;
+}
+
+/**
+ * Files sitting at the root of the mount, which a per-user volume shows to
+ * nobody.
+ *
+ * This is the whole of "I mounted my library and the page is empty": in full
+ * mode the driver is rooted at `<volume>/user-<id>`, so an existing tree is
+ * invisible and the only thing that appears is a `user-<uuid>` folder nobody
+ * asked for. Detected rather than explained in the docs alone, because the
+ * page is where the question gets asked.
+ */
+async function hasFilesOutsideUserFolders(path: string): Promise<boolean> {
+	try {
+		const entries = await readdir(path, { withFileTypes: true });
+		return entries.some(
+			(entry) =>
+				!(entry.name.startsWith("user-") || entry.name.startsWith(".")),
+		);
+	} catch {
+		// Unreadable is a different problem, and `ensureUserDirectory` reports it.
+		return false;
+	}
+}
 
 export const load = async ({ params, locals, depends }) => {
 	depends("app:files");
@@ -32,21 +67,27 @@ export const load = async ({ params, locals, depends }) => {
 		locals.user as User | undefined,
 	);
 
+	const perUser = !(volume.shared || isSimpleMode());
+
 	try {
 		await service.ensureUserDirectory();
 
 		// A mounted directory is written from outside the app, so the rows only
-		// match reality if we look. The boot scanner runs as the shared owner,
-		// which in full mode only covers that one account's subdirectory — so
-		// each user reconciles their own the first time they open the volume.
-		await service.scanStorage();
+		// match reality if we look — but not while the request waits.
+		const scanning = scanOnVisit(`${volume.name}:${owner.id}`, () =>
+			service.scanStorage().then(() => undefined),
+		);
 
 		return {
 			volume: {
 				name: volume.name,
 				label: volume.label,
 				readOnly: volume.readOnly,
+				shared: volume.shared,
 			},
+			scanning,
+			hidden: perUser && (await hasFilesOutsideUserFolders(volume.path)),
+			sharedVariable: sharedVariable(volume.name),
 			files: await service.listFiles(),
 		};
 	} catch (cause) {

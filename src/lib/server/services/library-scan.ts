@@ -89,6 +89,51 @@ function loadAllOwners(): Promise<User[]> {
 		.then((rows) => rows as User[]);
 }
 
+/**
+ * Scans started by someone opening a volume, by `<volume>:<owner>`.
+ *
+ * Kept off the request: walking a NAS mount takes minutes, and awaiting it
+ * held the page open with nothing on screen for all of them. The listing
+ * renders from the rows that exist and the page says a pass is running.
+ */
+const inFlight = new Set<string>();
+const lastScanAt = new Map<string, number>();
+
+/**
+ * Long enough that the poll refreshing the page does not start a new pass the
+ * instant the last one ended — which would leave the banner up forever.
+ */
+const RESCAN_COOLDOWN_MS = 30_000;
+
+/** Is a pass running for this volume right now? */
+export function isScanning(key: string): boolean {
+	return inFlight.has(key);
+}
+
+/**
+ * Reconcile a volume in the background, unless one just finished. Returns
+ * whether a pass is in flight now, which is what the page reports.
+ */
+export function scanOnVisit(key: string, run: () => Promise<void>): boolean {
+	if (inFlight.has(key)) {
+		return true;
+	}
+	if (Date.now() - (lastScanAt.get(key) ?? 0) < RESCAN_COOLDOWN_MS) {
+		return false;
+	}
+
+	inFlight.add(key);
+	void run()
+		.catch((error: unknown) => {
+			logger.error(`Scan of ${key} failed`, error);
+		})
+		.finally(() => {
+			inFlight.delete(key);
+			lastScanAt.set(key, Date.now());
+		});
+	return true;
+}
+
 /** Does this instance have anything worth scanning at all? */
 export function scanningEnabled(): boolean {
 	return isSimpleMode() || getVolumes().length > 0;

@@ -657,5 +657,11 @@
 	"drive_role_owner": "Propriétaire",
 	"drive_manager_only": "Seul un gestionnaire peut modifier cela.",
 	"error_storage_unreachable": "Les fichiers de ce disque sont inaccessibles",
-	"error_storage_unreachable_description": "Le disque est monté, mais Penombre n'a pas la permission de le lire. Vérifiez le propriétaire et les permissions du dossier sur l'hôte, ainsi que l'utilisateur sous lequel tourne le conteneur."
+	"error_storage_unreachable_description": "Le disque est monté, mais Penombre n'a pas la permission de le lire. Vérifiez le propriétaire et les permissions du dossier sur l'hôte, ainsi que l'utilisateur sous lequel tourne le conteneur.",
+	"nav_drives_all": "Tous les disques",
+	"volume_scanning": "Analyse de vos fichiers",
+	"volume_scanning_description": "Penombre lit le disque monté. Sur une grande bibliothèque cela prend un moment — les fichiers apparaissent ici au fur et à mesure, vous pouvez revenir plus tard.",
+	"volume_per_user_title": "Les fichiers déjà présents sur ce disque ne sont pas affichés",
+	"volume_per_user_description": "En mode complet, ce volume donne à chaque compte son propre sous-dossier : ce qui était déjà sur le montage n'appartient donc à personne. Pour servir tout le disque à tout le monde, définissez",
+	"volume_per_user_restart": "dans votre environnement, puis redémarrez Penombre."
 }

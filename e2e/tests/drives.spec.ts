@@ -191,6 +191,25 @@ test.describe("shared drives", () => {
 	// suite puts there, so the assertion would read another test's file. The
 	// isolation check is the first test, with a name nothing else uses.
 
+	// A load runs *during* the navigation, so the API client must key the
+	// drive off where it is going, not off the page it is leaving — otherwise
+	// My Drive lists the shared drive's files until a full reload.
+	test("leaving a drive by link shows My Drive's own files", async ({
+		page,
+	}) => {
+		const drive = await createDrive(page, `${PREFIX} leaving ${Date.now()}`);
+		const fileName = `left-behind-${Date.now()}.txt`;
+		await createFileIn(page, drive, fileName);
+
+		await goToDrive(page, drive);
+		await expectItemVisible(page, fileName);
+
+		// A client-side navigation, not a fresh document: that is the bug.
+		await page.getByRole("link", { name: "My Drive" }).first().click();
+		await page.waitForURL("**/browse");
+		await expectItemAbsent(page, fileName);
+	});
+
 	// A guessed id must not tell anyone that the drive exists.
 	test("a drive the caller is not on is not found", async ({ page }) => {
 		const resp = await page.request.get(
