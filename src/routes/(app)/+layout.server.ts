@@ -4,14 +4,18 @@ import { zod4 } from "sveltekit-superforms/adapters";
 import { resolve } from "$app/paths";
 import { api } from "$lib/api";
 import { uploadSchema } from "$lib/schemas/upload";
-import { getConfig, getVolumes } from "$lib/server/config";
+import { getConfig, getVolumes, isSimpleMode } from "$lib/server/config";
 import { isTwoFactorRequired } from "$lib/server/services/app-settings";
+import { drivesService } from "$lib/server/services/drives";
 
 export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:preferences");
 	// The sidebar's trash and starred badges come from this load, so any
 	// change to the drive has to re-run it or they keep the boot's numbers.
 	depends("app:files");
+	// The sidebar lists the caller's shared drives, so creating or leaving one
+	// has to re-run this load.
+	depends("app:drives");
 	// Check auth first before making API calls
 
 	if (!(locals.user && locals.session)) {
@@ -48,6 +52,12 @@ export const load = async ({ fetch, url, locals, depends }) => {
 
 	const isAdmin = locals.user.role === "admin";
 
+	// Simple mode is one drive shared by everyone; a second sharing model on
+	// top of that would mean nothing, so the whole feature is hidden there.
+	const drives = isSimpleMode()
+		? []
+		: await drivesService.listForUser(locals.user.id);
+
 	const config = getConfig();
 
 	return {
@@ -60,6 +70,7 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		uploadForm: await superValidate({}, zod4(uploadSchema)),
 		authCookie: "123",
 		isAdmin,
+		drives,
 		// Mounted volumes appear in the sidebar as extra drives. Simple mode
 		// shares each one whole; full mode gives every user a subdirectory.
 		volumes: getVolumes().map((volume) => ({

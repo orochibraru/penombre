@@ -239,6 +239,7 @@
 				fileId: result.data.metadata.id,
 				finalName: result.data.finalName,
 				rowKey: rowKeyFor(result.data.finalName),
+				driveId: page.params.drive,
 				displayName,
 				size: result.file.size,
 				file: result.file,

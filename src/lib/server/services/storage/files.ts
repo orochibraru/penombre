@@ -122,7 +122,7 @@ export class FileOperations {
 			.where(and(eq(files.path, name), ownedFiles(this.ctx)));
 
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "update",
 			message: `Updated metadata for file: ${name}`,
 			level: "info",
@@ -179,7 +179,7 @@ export class FileOperations {
 			.where(and(eq(files.id, file.id), ownedFiles(this.ctx)));
 
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "update",
 			message: `Moved file "${uniqueName}" to ${normalizedDest || "root"}`,
 			level: "info",
@@ -237,7 +237,7 @@ export class FileOperations {
 			.returning();
 
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "create",
 			message: `Duplicated file "${file.name}" as "${uniqueName}"`,
 			level: "info",
@@ -313,7 +313,7 @@ export class FileOperations {
 			throw new Error("Failed to insert file into database");
 		}
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "create",
 			message: `Created file: ${name}`,
 			level: "info",
@@ -385,7 +385,7 @@ export class FileOperations {
 		const fileCount = fileList.length;
 		const folderDisplay = normalizedFolder || "root";
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "create",
 			message: `Created ${fileCount} file${fileCount === 1 ? "" : "s"} in ${folderDisplay}`,
 			level: "info",
@@ -491,7 +491,7 @@ export class FileOperations {
 		} catch (error) {
 			logger.error("Error uploading file body:", error);
 			await this.ctx.activityService.register({
-				userId: this.ctx.user.id,
+				userId: this.ctx.actor.id,
 				action: "update",
 				message: `Failed to upload file body for id: ${id}`,
 				level: "error",
@@ -512,7 +512,7 @@ export class FileOperations {
 					.delete(files)
 					.where(and(eq(files.id, file.id), ownedFiles(this.ctx)));
 				await this.ctx.activityService.register({
-					userId: this.ctx.user.id,
+					userId: this.ctx.actor.id,
 					action: "delete",
 					message: `Deleted file: ${key}`,
 					level: "info",

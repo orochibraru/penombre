@@ -28,6 +28,12 @@ export interface UploadJob {
 	 * so a resumed job does not depend on where the user has navigated since.
 	 */
 	rowKey: string;
+	/**
+	 * The shared drive this upload belongs to, if any. Stored for the same
+	 * reason as `rowKey`: a job resumed after a reload may finish while the
+	 * user is looking at a different drive entirely.
+	 */
+	driveId?: string;
 	size: number;
 	file: File;
 	status: UploadStatus;

@@ -1,6 +1,11 @@
 import type { RequestEvent } from "@sveltejs/kit";
 import type { z } from "zod";
 import type { Pathname } from "$app/types";
+import {
+	DriveAccessError,
+	ReadOnlyVolumeError,
+	StorageUnavailableError,
+} from "$lib/server/errors";
 import { Http } from "$lib/server/http";
 import { type HttpMethod, registry } from "./registry";
 
@@ -115,6 +120,50 @@ async function validateRequest<
 	return { params, query, body };
 }
 
+/**
+ * The service a handler acts through, if the route declares one.
+ *
+ * Built from the storage owner, never the session user: simple mode routes
+ * every account through one shared owner, and building it from `locals.user`
+ * gave each of them a drive of their own instead of the shared one.
+ */
+function buildService<TService>(
+	factory:
+		| ((
+				user: NonNullable<App.Locals["user"]>,
+				event: RequestEvent,
+		  ) => TService | Promise<TService>)
+		| undefined,
+	event: RequestEvent,
+): Promise<TService> {
+	const owner = event.locals.storageOwner ?? event.locals.user;
+	if (!(factory && owner)) {
+		return Promise.resolve(undefined as TService);
+	}
+	return Promise.resolve(factory(owner, event));
+}
+
+/**
+ * A failure that answers itself: a refusal raised before the handler ran — by
+ * the service factory resolving `?drive=`, or by a write against a read-only
+ * volume — or a mount the app cannot read. Answered here or each would
+ * surface as a 500 with nothing to act on.
+ */
+function refusalResponse(error: unknown): Response | undefined {
+	if (error instanceof DriveAccessError) {
+		return error.status === 404
+			? Http.NotFound(error.message)
+			: Http.Forbidden(error.message);
+	}
+	if (error instanceof ReadOnlyVolumeError) {
+		return Http.Forbidden(error.message);
+	}
+	if (error instanceof StorageUnavailableError) {
+		return Http.ServiceUnavailable(error.message);
+	}
+	return undefined;
+}
+
 interface RouteConfig<
 	TParams extends z.ZodType | undefined = undefined,
 	TQuery extends z.ZodType | undefined = undefined,
@@ -134,8 +183,17 @@ interface RouteConfig<
 	errors?: number[];
 	isFormData?: boolean;
 	requireAuth?: boolean; // Default: true
-	/** Built from `locals.storageOwner` — the shared owner in simple mode. */
-	service?: (user: NonNullable<App.Locals["user"]>) => TService;
+	/**
+	 * Built from `locals.storageOwner` — the shared owner in simple mode.
+	 *
+	 * Takes the event too, and may be async, because a storage route can be
+	 * pointed at a shared drive with `?drive=<id>`: resolving that means a
+	 * database lookup and a membership check (see `storageServiceFor`).
+	 */
+	service?: (
+		user: NonNullable<App.Locals["user"]>,
+		event: RequestEvent,
+	) => TService | Promise<TService>;
 }
 
 type InferOrUndefined<T> = T extends z.ZodType ? z.infer<T> : undefined;
@@ -238,24 +296,23 @@ export function defineRoute<
 					return validated.response;
 				}
 
-				// The storage owner, never the session user: simple mode routes
-				// every account through one shared owner, and building the
-				// service from `locals.user` gave each of them a drive of their
-				// own instead of the shared one.
-				const owner = event.locals.storageOwner ?? event.locals.user;
-
-				return callback({
-					params: validated.params,
-					query: validated.query,
-					body: validated.body,
-					event,
-					// biome-ignore lint/style/noNonNullAssertion: User is guaranteed to exist at this point if requireAuth !== false
-					user: event.locals.user!,
-					service:
-						config.service && owner
-							? config.service(owner)
-							: (undefined as TService),
-				});
+				try {
+					return await callback({
+						params: validated.params,
+						query: validated.query,
+						body: validated.body,
+						event,
+						// biome-ignore lint/style/noNonNullAssertion: User is guaranteed to exist at this point if requireAuth !== false
+						user: event.locals.user!,
+						service: await buildService(config.service, event),
+					});
+				} catch (error) {
+					const refused = refusalResponse(error);
+					if (!refused) {
+						throw error;
+					}
+					return refused;
+				}
 			};
 		},
 	};

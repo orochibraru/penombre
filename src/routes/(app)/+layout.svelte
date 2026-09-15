@@ -243,6 +243,26 @@
 						accentColor: "rose",
 					},
 				] satisfies NavItem[]),
+		// A shared drive is reached from its own group, so it reads as a place
+		// rather than as another view of your own files. The group's first row
+		// is the page that creates them.
+		drives: simpleMode
+			? []
+			: ([
+					{
+						title: m.nav_drives(),
+						url: "/drives",
+						icon: UsersIcon,
+					},
+					...(data.drives ?? []).map(
+						(drive): NavItem => ({
+							title: drive.name,
+							url: `/drives/${drive.id}`,
+							icon:
+								drive.role === "viewer" ? HardDriveDownloadIcon : HardDriveIcon,
+						}),
+					),
+				] satisfies NavItem[]),
 		volumes: (data.volumes ?? []).map((volume) => ({
 			title: volume.label,
 			url: `/volumes/${volume.name}`,
@@ -283,6 +303,7 @@
 	const mobileNavGroups = $derived(
 		[
 			{ title: m.nav_general(), items: nav.general ?? [] },
+			{ title: m.nav_drives(), items: nav.drives ?? [] },
 			{ title: m.nav_volumes(), items: nav.volumes ?? [] },
 			{ title: m.nav_categories(), items: nav.categories ?? [] },
 			{ title: m.nav_help(), items: nav.help ?? [] },
@@ -411,6 +432,9 @@
         </Sidebar.Header>
         <Sidebar.Content>
             <Nav title={m.nav_general()} items={nav.general} />
+            {#if (nav.drives ?? []).length > 0}
+                <Nav title={m.nav_drives()} items={nav.drives ?? []} />
+            {/if}
             {#if (nav.volumes ?? []).length > 0}
                 <Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
             {/if}

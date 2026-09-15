@@ -17,11 +17,13 @@ same style as OAuth providers:
 | `VOLUME_<NAME>_PATH`     | yes      | Absolute path to the directory           |
 | `VOLUME_<NAME>_LABEL`    | no       | What the sidebar shows (default: `NAME`) |
 | `VOLUME_<NAME>_READONLY` | no       | `true` refuses every write               |
+| `VOLUME_<NAME>_SHARED`   | no       | `true` serves one tree to every account  |
 
 ```env
 VOLUME_MEDIA_PATH=/mnt/media
 VOLUME_MEDIA_LABEL=Media library
 VOLUME_MEDIA_READONLY=false
+VOLUME_MEDIA_SHARED=true
 ```
 
 `<NAME>` is uppercase with underscores; it is lowercased and hyphenated to form
@@ -37,13 +39,42 @@ volumes:
 
 ## How a volume is shared
 
-This differs by mode, matching how the main drive already behaves:
+By default this matches how the main drive already behaves:
 
 - **[Simple mode](simple-mode.md):** the volume is shared whole. Every account
   browses the same tree, exactly like the main storage root.
-- **Full mode:** each user gets their own subdirectory of the volume, mirroring
-  the per-user layout of the main drive. One mount serves everybody without
-  anyone seeing anyone else's files.
+- **Full mode:** each user gets their own subdirectory of the volume
+  (`<volume>/user-<id>`), mirroring the per-user layout of the main drive. One
+  mount serves everybody without anyone seeing anyone else's files.
+
+### Sharing an existing library in full mode
+
+The per-user split is the wrong shape for a library that is already full of
+files: they sit at the root of the mount, and in full mode nobody is looking
+there, so the volume opens **empty** and Penombre creates a `user-<id>` folder
+inside your media directory.
+
+`VOLUME_<NAME>_SHARED=true` is the fix. The whole tree is then served to every
+account, in both modes, exactly as the main drive is in simple mode — no
+subdirectory is created and everyone sees the same files.
+
+```env
+VOLUME_MEDIA_PATH=/mnt/media
+VOLUME_MEDIA_SHARED=true
+VOLUME_MEDIA_READONLY=true   # browse a library without letting anyone change it
+```
+
+It is off by default on purpose: turning it on in an instance that has been
+running with the split would show every account what the others had put on the
+mount. Pair it with `_READONLY` when the mount is a library rather than a shared
+workspace.
+
+The rows for a shared volume belong to one account (the first one ever created),
+so the same file is one row no matter who is looking at it. Activity still
+records whoever actually did something.
+
+For a drive that a _group_ owns rather than a directory you mounted, see
+[shared drives](shared-drives.md).
 
 ## Read-only volumes
 
@@ -57,14 +88,22 @@ added later cannot forget it.
 Volumes are written to from outside the app, so the database only matches the
 directory if Penombre looks. Two things trigger a scan:
 
-- A background pass every 60 seconds, as the shared owner.
-- Opening a volume in the UI, which reconciles that user's own subdirectory —
-  needed in full mode, where the background pass only covers one account.
+- A background pass every 60 seconds — once for a shared volume, and once per
+  account for a per-user one.
+- Opening a volume in the UI, which reconciles what that page is about to show.
 
 A scan adds files that appeared, drops rows for files that vanished, re-reads
 media whose bytes changed, and builds thumbnails and waveforms as it goes.
 
 ## What is stored where
+
+## When the mount cannot be read
+
+A volume the container has no rights on answers **503** with "the files on this
+drive can't be reached", rather than a generic server error. It means exactly
+what it says: the directory is mounted but the process cannot read or write it.
+Check the folder's ownership and mode on the host against the user the container
+runs as — Penombre runs as uid 1000 in the published image.
 
 Rows in `files` and `folders` carry a `volume_id`. The main drive stores `null`,
 which is also what every row created before volumes existed has, so no migration

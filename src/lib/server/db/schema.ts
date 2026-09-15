@@ -70,6 +70,12 @@ export const files = (
 export const notifications = (
 	sqliteActive ? sqlite.notifications : pg.notifications
 ) as typeof pg.notifications;
+export const drives = (
+	sqliteActive ? sqlite.drives : pg.drives
+) as typeof pg.drives;
+export const driveMembers = (
+	sqliteActive ? sqlite.driveMembers : pg.driveMembers
+) as typeof pg.driveMembers;
 
 export type { AppSettingsData, UserPreferencesData } from "./schema.pg";
 export type User = typeof pg.user.$inferSelect;
@@ -94,3 +100,5 @@ export type Folder = typeof pg.folders.$inferSelect;
 export type File = typeof pg.files.$inferSelect;
 export type Notification = typeof pg.notifications.$inferSelect;
 export type NewNotification = typeof pg.notifications.$inferInsert;
+export type Drive = typeof pg.drives.$inferSelect;
+export type DriveMember = typeof pg.driveMembers.$inferSelect;

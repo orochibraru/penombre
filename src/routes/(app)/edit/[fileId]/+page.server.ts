@@ -2,11 +2,20 @@ import { error } from "@sveltejs/kit";
 import { officeKindForName } from "$lib/documents";
 import { Logger } from "$lib/logger";
 import { officeToText } from "$lib/server/office";
+import { storageServiceFor } from "$lib/server/services/drives";
 
 const logger = new Logger("Editor");
 
-export const load = async ({ params, locals }) => {
-	const service = locals.storageService;
+export const load = async ({ params, url, locals }) => {
+	if (!locals.user) {
+		return error(401);
+	}
+
+	// See the viewer: the drive travels as `?drive=`, not as a route param.
+	const service = await storageServiceFor(locals.storageOwner ?? locals.user, {
+		url,
+		locals,
+	});
 	const path = await service.findFileById(params.fileId);
 	if (!path) {
 		return error(404, "That document does not exist.");

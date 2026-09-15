@@ -41,6 +41,15 @@ const volumeSchema = z.object({
 	path: z.string().min(1),
 	/** Refuse writes; the volume browses but cannot be modified. */
 	readOnly: z.boolean().default(false),
+	/**
+	 * One tree for everyone rather than a subdirectory per user.
+	 *
+	 * Declared with `VOLUME_<NAME>_SHARED=true`, and always on for a shared
+	 * drive. Off by default so an existing full-mode install keeps the split
+	 * it has: flipping it would show every account what the others had put on
+	 * the mount.
+	 */
+	shared: z.boolean().default(false),
 });
 
 export type VolumeConfig = z.infer<typeof volumeSchema>;
@@ -150,12 +159,15 @@ export function validateConfig(config: unknown): AppConfig {
 
 /**
  * Extra volumes from `VOLUME_<NAME>_PATH` / `VOLUME_<NAME>_LABEL` /
- * `VOLUME_<NAME>_READONLY`. A volume without a path is skipped.
+ * `VOLUME_<NAME>_READONLY` / `VOLUME_<NAME>_SHARED`. A volume without a path
+ * is skipped.
  */
 function parseVolumes(): VolumeConfig[] {
 	const names = new Set<string>();
 	for (const key of Object.keys(env)) {
-		const match = key.match(/^VOLUME_([A-Z0-9_]+)_(PATH|LABEL|READONLY)$/);
+		const match = key.match(
+			/^VOLUME_([A-Z0-9_]+)_(PATH|LABEL|READONLY|SHARED)$/,
+		);
 		if (match?.[1]) {
 			names.add(match[1]);
 		}
@@ -173,6 +185,11 @@ function parseVolumes(): VolumeConfig[] {
 			label: env[`VOLUME_${rawName}_LABEL`] || name,
 			path: resolve(path),
 			readOnly: env[`VOLUME_${rawName}_READONLY`] === "true",
+			// Otherwise the volume follows the main drive: shared whole in
+			// simple mode, a subdirectory per user in full mode — which is
+			// why an existing library mounted in full mode looks empty until
+			// this is set.
+			shared: env[`VOLUME_${rawName}_SHARED`] === "true",
 		});
 	}
 	return volumes;

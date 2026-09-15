@@ -4519,6 +4519,535 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/drives": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List shared drives
+		 * @description Every drive the caller owns or is a member of
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id: string;
+								name: string;
+								owner: boolean;
+								/** @enum {string} */
+								role: "manager" | "editor" | "viewer";
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Create a shared drive
+		 * @description The creator owns the drive and manages it
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						name: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id: string;
+								name: string;
+								owner: boolean;
+								/** @enum {string} */
+								role: "manager" | "editor" | "viewer";
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/drives/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		/** Rename a shared drive */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						name: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		/**
+		 * Delete a shared drive
+		 * @description Owner only. Deletes the drive and everything in it.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/drives/{id}/members": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List a drive's members */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								email: string;
+								image: string | null;
+								name: string;
+								owner: boolean;
+								/** @enum {string} */
+								role: "manager" | "editor" | "viewer";
+								userId: string;
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Add members, or change their role
+		 * @description Managers only. Users already on the drive are moved to the new role.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/**
+						 * @default editor
+						 * @enum {string}
+						 */
+						role: "manager" | "editor" | "viewer";
+						userIds: string[];
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								added: string[];
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/drives/{id}/members/{userId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Remove a member
+		 * @description Managers only, except that anyone may remove themselves
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+					userId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/files/{fileId}/notes": {
 		parameters: {
 			query?: never;
@@ -4529,7 +5058,9 @@ export interface paths {
 		/** List notes on a file */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					fileId: string;
@@ -4596,7 +5127,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					fileId: string;
@@ -5628,7 +6161,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -5702,6 +6237,7 @@ export interface paths {
 		get: {
 			parameters: {
 				query?: {
+					drive?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -5777,6 +6313,7 @@ export interface paths {
 		post: {
 			parameters: {
 				query?: {
+					drive?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -5971,6 +6508,7 @@ export interface paths {
 		post: {
 			parameters: {
 				query?: {
+					drive?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -6164,7 +6702,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					category: string;
@@ -6362,7 +6902,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -6425,6 +6967,7 @@ export interface paths {
 		get: {
 			parameters: {
 				query: {
+					drive?: string;
 					q: string;
 					limit?: string;
 				};
@@ -6623,7 +7166,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -6810,7 +7355,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -6998,6 +7545,7 @@ export interface paths {
 		get: {
 			parameters: {
 				query?: {
+					drive?: string;
 					raw?: string;
 					thumbnail?: string;
 					size?: "small" | "medium" | "large";
@@ -7179,6 +7727,7 @@ export interface paths {
 		put: {
 			parameters: {
 				query?: {
+					drive?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -7345,7 +7894,9 @@ export interface paths {
 		 */
 		delete: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					id: string;
@@ -7416,7 +7967,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					id: string;
@@ -7608,7 +8161,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					id: string;
@@ -7686,7 +8241,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					id: string;
@@ -7783,7 +8340,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					id: string;
@@ -7860,7 +8419,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -7909,7 +8470,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -7986,7 +8549,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					prefix: string;
@@ -8049,7 +8614,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -8112,7 +8679,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -8175,7 +8744,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					path: string;
@@ -8234,7 +8805,9 @@ export interface paths {
 		 */
 		put: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					path: string;
@@ -8302,7 +8875,9 @@ export interface paths {
 		 */
 		delete: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					path: string;
@@ -8379,6 +8954,7 @@ export interface paths {
 		get: {
 			parameters: {
 				query?: {
+					drive?: string;
 					parent?: string;
 				};
 				header?: never;
@@ -8452,7 +9028,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					path: string;
@@ -8531,7 +9109,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					path: string;
@@ -8608,6 +9188,7 @@ export interface paths {
 		get: {
 			parameters: {
 				query?: {
+					drive?: string;
 					parent?: string;
 				};
 				header?: never;
@@ -8681,7 +9262,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					path: string;
@@ -8757,7 +9340,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -8944,7 +9529,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -9131,7 +9718,9 @@ export interface paths {
 		 */
 		get: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path: {
 					path: string;
@@ -9331,7 +9920,9 @@ export interface paths {
 		 */
 		post: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;
@@ -9420,7 +10011,9 @@ export interface paths {
 		 */
 		delete: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+				};
 				header?: never;
 				path?: never;
 				cookie?: never;

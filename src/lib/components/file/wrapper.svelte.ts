@@ -31,12 +31,13 @@ import type {
 	SortColumn,
 	SortDirection,
 } from "$lib/utils";
-import { peaksUrl } from "./file-links";
+import { peaksUrl, withDrive } from "./file-links";
 
 export {
 	fullscreenUrl,
 	handleOpenItemFullscreen,
 	peaksUrl,
+	withDrive,
 } from "./file-links";
 
 // ================================
@@ -467,7 +468,9 @@ export async function handleOpenItem(
 	// anybody means by "open".
 	const editable = editorKindForName(item.metadata.name ?? item.key);
 	if (editable && item.metadata.id) {
-		await goto(resolve("/(app)/edit/[fileId]", { fileId: item.metadata.id }));
+		await goto(
+			withDrive(resolve("/(app)/edit/[fileId]", { fileId: item.metadata.id })),
+		);
 		return;
 	}
 

@@ -42,6 +42,11 @@ export function getObjectUrl({
 		: finalBaseUrl;
 
 	const params = new URLSearchParams();
+	// A media element's `src` never passes through the API client, so the
+	// drive the page is in has to be spelled out here.
+	if (page.params.drive) {
+		params.set("drive", page.params.drive);
+	}
 	if (raw) {
 		params.set("raw", "true");
 	}

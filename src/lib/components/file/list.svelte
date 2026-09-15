@@ -15,6 +15,7 @@
 	import * as m from "$lib/paraglide/messages.js";
 	import {
 		cn,
+		isBrowsableListing,
 		isFolderItem,
 		PARENT_KEY,
 		parentHref,
@@ -269,7 +270,7 @@
         ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
     >
         <a
-            href={parentHref(parent)}
+            href={parentHref(parent, page.params.drive)}
             title={m.parent_folder()}
             class="text-muted-foreground hover:text-foreground flex items-center gap-3 transition-colors"
         >
@@ -282,7 +283,7 @@
 {#snippet emptyListItem()}
     <li class="flex flex-col items-center justify-center gap-4 py-12">
         <div class="text-muted-foreground text-center">
-            {#if page.url.pathname.startsWith("/browse")}
+            {#if isBrowsableListing(page.url.pathname)}
                 <p class="text-lg font-medium">{m.no_files_yet()}</p>
                 <p class="text-sm">
                     {m.no_files_get_started()}
@@ -291,7 +292,7 @@
                 <p class="text-lg font-medium">{m.no_results()}</p>
             {/if}
         </div>
-        {#if page.url.pathname.startsWith("/browse")}
+        {#if isBrowsableListing(page.url.pathname)}
             <div class="flex gap-2">
                 {#if onUpload}
                     <Button variant="default" onclick={onUpload}>

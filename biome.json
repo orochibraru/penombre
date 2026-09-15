@@ -226,7 +226,12 @@
 			}
 		},
 		{
-			"includes": ["src/lib/api/v1.d.ts", "src/lib/server/db/schema.ts"],
+			"includes": [
+				"src/lib/api/v1.d.ts",
+				"src/lib/server/db/schema.ts",
+				"src/lib/server/db/schema.pg.ts",
+				"src/lib/server/db/schema.sqlite.ts"
+			],
 			"linter": {
 				"rules": {
 					"style": {

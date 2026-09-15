@@ -11,6 +11,10 @@ for each:
 Both are available in full mode only. [Simple mode](simple-mode.md) serves one
 shared volume to everyone already, so per-item sharing has nothing to add.
 
+For files that belong to a group rather than to one person, a
+[shared drive](shared-drives.md) is the other half of this: the item lives in
+the drive instead of in someone's own.
+
 Right-click a file or folder (or use the row's ⋯ menu) and choose **Share**.
 
 ## Links

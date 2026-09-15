@@ -1,4 +1,5 @@
 import { error, redirect } from "@sveltejs/kit";
+import { storageServiceFor } from "$lib/server/services/drives";
 
 /**
  * Full-screen viewer for one media file.
@@ -6,12 +7,17 @@ import { error, redirect } from "@sveltejs/kit";
  * Lives outside `(app)` on purpose: the sidebar, header and bottom bar are
  * exactly what a full-screen viewer must not have.
  */
-export const load = async ({ params, locals }) => {
+export const load = async ({ params, url, locals }) => {
 	if (!locals.user) {
 		return redirect(302, "/auth/sign-in");
 	}
 
-	const service = locals.storageService;
+	// `?drive=` rather than a route parameter: this route is not under
+	// `/drives`, so a shared drive's file is only addressable by carrying it.
+	const service = await storageServiceFor(locals.storageOwner ?? locals.user, {
+		url,
+		locals,
+	});
 	const path = await service.findFileById(params.fileId);
 	if (!path) {
 		return error(404, "That file does not exist.");

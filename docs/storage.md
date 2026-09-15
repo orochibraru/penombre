@@ -36,6 +36,10 @@ File and folder **metadata** (names, paths, sizes, trash state, ownership) lives
 in the database. The **bytes** live under `STORAGE_PATH`. A backup needs both:
 see [Deployment](deployment.md) for the backup routine.
 
+Each account gets its own directory there, and each
+[shared drive](shared-drives.md) gets one under `drives/`. A
+[mounted volume](volumes.md) lives wherever you mounted it instead.
+
 ## The trash
 
 Deleting an item moves it to the trash, where it still occupies disk space until

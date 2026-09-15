@@ -144,6 +144,27 @@ one data directory, so a single mounted volume covers a whole install. Set
 | `DATA_DIR`     | Base directory for all app data   | `/data` (`./data` in dev) |
 | `STORAGE_PATH` | Absolute path to the storage root | `$DATA_DIR/storage`       |
 
+## Mounted Volumes (Optional)
+
+Extra directories mounted alongside the main drive, one block per volume. See
+[Mounted volumes](volumes.md) for the full guide.
+
+`<NAME>` is uppercase with underscores; it is lowercased and hyphenated to form
+the volume's id, so `VOLUME_MEDIA_PATH` gives `/volumes/media`. A block without
+a `_PATH` is ignored.
+
+| Variable                 | Description                               | Default |
+| ------------------------ | ----------------------------------------- | ------- |
+| `VOLUME_<NAME>_PATH`     | Absolute path to the directory (required) | —       |
+| `VOLUME_<NAME>_LABEL`    | What the sidebar shows                    | `NAME`  |
+| `VOLUME_<NAME>_READONLY` | Refuse every write to the volume          | `false` |
+| `VOLUME_<NAME>_SHARED`   | Serve one tree to every account           | `false` |
+
+Leave `_SHARED` off and full mode gives each user a subdirectory of the mount —
+which means an existing library opens empty, because its files are at the root.
+See
+[Sharing an existing library in full mode](volumes.md#sharing-an-existing-library-in-full-mode).
+
 ## Simple Mode (Optional)
 
 Turns Penombre into a bare shared file browser: one storage volume shared by

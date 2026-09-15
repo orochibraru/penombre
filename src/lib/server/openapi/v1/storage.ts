@@ -8,13 +8,20 @@ import {
 	updateFileSchema,
 	uploadResultSchema,
 } from "$lib/server/schema";
-import { StorageService } from "$lib/server/services/storage";
+import { storageServiceFor } from "$lib/server/services/drives";
 
 /**
  * Storage route definitions.
  * Importing this module registers all storage routes with the OpenAPI registry.
  * Route handlers in +server.ts files import these and call .handler().
  */
+
+/**
+ * Which drive a call acts on: absent is the caller's own, an id is a shared
+ * drive. Every storage route carries it, and `storageServiceFor` is where the
+ * membership check happens — so a route added later inherits both.
+ */
+const driveQuery = { drive: z.string().optional() };
 
 // ============================================================================
 // LIST / BROWSE
@@ -26,9 +33,10 @@ export const listFiles = defineRoute({
 	summary: "List all files",
 	description: "Returns a list of all files in the root directory",
 	tags: ["Storage"],
+	query: z.object(driveQuery),
 	response: objectListSchema,
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const listFilesInFolder = defineRoute({
@@ -38,9 +46,10 @@ export const listFilesInFolder = defineRoute({
 	description: "Returns a list of files within a specific folder path",
 	tags: ["Storage"],
 	params: z.object({ path: z.string() }),
+	query: z.object(driveQuery),
 	response: objectListSchema,
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const listRecentFiles = defineRoute({
@@ -49,9 +58,10 @@ export const listRecentFiles = defineRoute({
 	summary: "List recent files",
 	description: "Returns a list of recently accessed or modified files",
 	tags: ["Storage"],
+	query: z.object(driveQuery),
 	response: objectListSchema,
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 // ============================================================================
@@ -64,11 +74,14 @@ export const createFile = defineRoute({
 	summary: "Create a file",
 	description: "Creates a new file entry (metadata only, no body yet)",
 	tags: ["Storage - Files"],
-	query: z.object({ folder: z.string().optional() }),
+	query: z.object({
+		...driveQuery,
+		folder: z.string().optional(),
+	}),
 	body: newFileSchema,
 	response: uploadResultSchema,
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const createBatchFiles = defineRoute({
@@ -77,13 +90,16 @@ export const createBatchFiles = defineRoute({
 	summary: "Create files in batch",
 	description: "Creates multiple file entries at once (metadata only)",
 	tags: ["Storage - Files"],
-	query: z.object({ folder: z.string().optional() }),
+	query: z.object({
+		...driveQuery,
+		folder: z.string().optional(),
+	}),
 	body: z.object({
 		files: z.array(z.object({ name: z.string(), size: z.number() })),
 	}),
 	response: z.array(uploadResultSchema),
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const searchFiles = defineRoute({
@@ -93,12 +109,13 @@ export const searchFiles = defineRoute({
 	description: "Searches files by name",
 	tags: ["Storage - Files"],
 	query: z.object({
+		...driveQuery,
 		q: z.string(),
 		limit: z.string().optional(),
 	}),
 	response: objectListSchema,
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const listTrashFiles = defineRoute({
@@ -107,9 +124,10 @@ export const listTrashFiles = defineRoute({
 	summary: "List trashed files",
 	description: "Returns files currently in the trash",
 	tags: ["Storage - Files"],
+	query: z.object(driveQuery),
 	response: objectListSchema,
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const emptyTrash = defineRoute({
@@ -119,13 +137,14 @@ export const emptyTrash = defineRoute({
 	description:
 		"Permanently deletes every trashed file and folder, and reports what was freed",
 	tags: ["Storage"],
+	query: z.object(driveQuery),
 	response: z.object({
 		deleted: z.number(),
 		freed: z.number(),
 		failed: z.number(),
 	}),
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const listStarredFiles = defineRoute({
@@ -134,9 +153,10 @@ export const listStarredFiles = defineRoute({
 	summary: "List starred files",
 	description: "Returns files marked as starred",
 	tags: ["Storage - Files"],
+	query: z.object(driveQuery),
 	response: objectListSchema,
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const getFileCounts = defineRoute({
@@ -145,9 +165,10 @@ export const getFileCounts = defineRoute({
 	summary: "Get trash and starred counts",
 	description: "Returns the count of trashed and starred items",
 	tags: ["Storage - Files"],
+	query: z.object(driveQuery),
 	response: z.object({ trash: z.number(), starred: z.number() }),
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const listFilesByCategory = defineRoute({
@@ -157,9 +178,10 @@ export const listFilesByCategory = defineRoute({
 	description: "Returns files matching the specified category",
 	tags: ["Storage - Files"],
 	params: z.object({ category: z.string() }),
+	query: z.object(driveQuery),
 	response: objectListSchema,
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const getFile = defineRoute({
@@ -171,13 +193,14 @@ export const getFile = defineRoute({
 	tags: ["Storage - Files"],
 	params: z.object({ id: z.string() }),
 	query: z.object({
+		...driveQuery,
 		raw: z.string().optional(),
 		thumbnail: z.string().optional(),
 		size: z.enum(["small", "medium", "large"]).optional(),
 	}),
 	response: objectItemSchema,
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const uploadFile = defineRoute({
@@ -192,9 +215,10 @@ export const uploadFile = defineRoute({
 		file: z.any().describe("The file to upload"),
 	}),
 	isFormData: true,
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const saveOfficeDocument = defineRoute({
@@ -211,9 +235,10 @@ export const saveOfficeDocument = defineRoute({
 	body: z.object({
 		content: z.string().describe("The edited text, in the format for its kind"),
 	}),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [400, 404, 422, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const moveFile = defineRoute({
@@ -224,9 +249,10 @@ export const moveFile = defineRoute({
 	tags: ["Storage - Files"],
 	params: z.object({ id: z.string() }),
 	body: z.object({ destination: z.string() }),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const duplicateFile = defineRoute({
@@ -236,9 +262,10 @@ export const duplicateFile = defineRoute({
 	description: "Creates a copy of the file in the same folder",
 	tags: ["Storage - Files"],
 	params: z.object({ id: z.string() }),
+	query: z.object(driveQuery),
 	response: objectItemSchema,
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const updateFile = defineRoute({
@@ -248,11 +275,14 @@ export const updateFile = defineRoute({
 	description: "Updates metadata fields on an existing file",
 	tags: ["Storage - Files"],
 	params: z.object({ id: z.string() }),
-	query: z.object({ folder: z.string().optional() }),
+	query: z.object({
+		...driveQuery,
+		folder: z.string().optional(),
+	}),
 	body: updateFileSchema,
 	response: z.object({ message: z.string() }),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const deleteFile = defineRoute({
@@ -262,9 +292,10 @@ export const deleteFile = defineRoute({
 	description: "Permanently deletes a file",
 	tags: ["Storage - Files"],
 	params: z.object({ id: z.string() }),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 // ============================================================================
@@ -277,9 +308,10 @@ export const listFolders = defineRoute({
 	summary: "List folders",
 	description: "Returns a list of all folders for the current user",
 	tags: ["Storage - Folders"],
+	query: z.object(driveQuery),
 	response: z.array(folderItemSchema),
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const createFolder = defineRoute({
@@ -292,13 +324,14 @@ export const createFolder = defineRoute({
 		name: z.string(),
 		parent: z.string().optional(),
 	}),
+	query: z.object(driveQuery),
 	response: z.object({
 		message: z.string(),
 		id: z.string(),
 		name: z.string(),
 	}),
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const getFolderTree = defineRoute({
@@ -307,9 +340,10 @@ export const getFolderTree = defineRoute({
 	summary: "Get folder tree",
 	description: "Returns all folders with metadata for building a folder picker",
 	tags: ["Storage - Folders"],
+	query: z.object(driveQuery),
 	response: z.array(folderItemSchema),
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const listTrashedFolders = defineRoute({
@@ -318,9 +352,10 @@ export const listTrashedFolders = defineRoute({
 	summary: "List trashed folders",
 	description: "Returns folders currently in the trash",
 	tags: ["Storage - Folders"],
+	query: z.object(driveQuery),
 	response: z.array(folderItemSchema),
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const getFolderSizes = defineRoute({
@@ -330,9 +365,10 @@ export const getFolderSizes = defineRoute({
 	description: "Calculates sizes for all folders under a given prefix",
 	tags: ["Storage - Folders"],
 	params: z.object({ prefix: z.string() }),
+	query: z.object(driveQuery),
 	response: z.record(z.string(), z.number()),
 	errors: [500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const getFolder = defineRoute({
@@ -342,9 +378,10 @@ export const getFolder = defineRoute({
 	description: "Returns a folder by ID",
 	tags: ["Storage - Folders"],
 	params: z.object({ path: z.string() }),
+	query: z.object(driveQuery),
 	response: folderItemSchema,
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const updateFolder = defineRoute({
@@ -361,9 +398,10 @@ export const updateFolder = defineRoute({
 		name: z.string().optional(),
 		parentFolderId: z.string().optional(),
 	}),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const deleteFolder = defineRoute({
@@ -377,9 +415,10 @@ export const deleteFolder = defineRoute({
 		name: z.string().optional(),
 		parentFolderId: z.string().optional(),
 	}),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const getFolderMeta = defineRoute({
@@ -389,10 +428,13 @@ export const getFolderMeta = defineRoute({
 	description: "Returns metadata for a specific folder",
 	tags: ["Storage - Folders"],
 	params: z.object({ path: z.string() }),
-	query: z.object({ parent: z.string().optional() }),
+	query: z.object({
+		...driveQuery,
+		parent: z.string().optional(),
+	}),
 	response: z.any(),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const getFolderSize = defineRoute({
@@ -402,10 +444,13 @@ export const getFolderSize = defineRoute({
 	description: "Calculates and returns the total size of a folder in bytes",
 	tags: ["Storage - Folders"],
 	params: z.object({ path: z.string() }),
-	query: z.object({ parent: z.string().optional() }),
+	query: z.object({
+		...driveQuery,
+		parent: z.string().optional(),
+	}),
 	response: z.number(),
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const trashFolder = defineRoute({
@@ -418,9 +463,10 @@ export const trashFolder = defineRoute({
 	body: z.object({
 		parentFolderId: z.string().optional(),
 	}),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const restoreFolder = defineRoute({
@@ -433,9 +479,10 @@ export const restoreFolder = defineRoute({
 	body: z.object({
 		parentFolderId: z.string().optional(),
 	}),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const moveFolderRoute = defineRoute({
@@ -449,9 +496,10 @@ export const moveFolderRoute = defineRoute({
 		parentFolderId: z.string().optional(),
 		destination: z.string(),
 	}),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 // ============================================================================
@@ -467,9 +515,10 @@ export const bulkDownload = defineRoute({
 	body: z.object({
 		paths: z.array(z.string()).min(1).max(100),
 	}),
+	query: z.object(driveQuery),
 	response: z.any().describe("Binary ZIP stream"),
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const downloadFolder = defineRoute({
@@ -479,10 +528,13 @@ export const downloadFolder = defineRoute({
 	description: "Downloads an entire folder as a ZIP archive",
 	tags: ["Storage - Downloads"],
 	params: z.object({ folder: z.string() }),
-	query: z.object({ folder: z.string().optional() }),
+	query: z.object({
+		...driveQuery,
+		folder: z.string().optional(),
+	}),
 	response: z.any().describe("Binary ZIP stream"),
 	errors: [404, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
 
 export const bulkMove = defineRoute({
@@ -503,6 +555,7 @@ export const bulkMove = defineRoute({
 			.max(100),
 		destination: z.string(),
 	}),
+	query: z.object(driveQuery),
 	response: z.object({
 		message: z.string(),
 		results: z.array(
@@ -516,5 +569,5 @@ export const bulkMove = defineRoute({
 		failCount: z.number(),
 	}),
 	errors: [400, 500],
-	service: (user) => new StorageService(user),
+	service: storageServiceFor,
 });
