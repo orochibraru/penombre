@@ -18,9 +18,15 @@ import { parseFile } from "music-metadata";
 import { Logger } from "$lib/logger";
 import { files, folders } from "$lib/server/db/schema";
 import type { StorageContext } from "./context";
-import { determineCategory, determineContentType } from "./mappers";
+import {
+	ancestorFolders,
+	determineCategory,
+	determineContentType,
+} from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+
+export { ancestorFolders };
 
 const logger = new Logger("StorageScan");
 
@@ -49,18 +55,6 @@ export function isScannable(key: string): boolean {
 		return false;
 	}
 	return !key.split("/").some((segment) => segment.startsWith("."));
-}
-
-/** Every ancestor directory of a key: `a/b/c.mp3` → `a`, `a/b` */
-export function ancestorFolders(key: string): string[] {
-	const segments = key.split("/");
-	segments.pop();
-
-	const result: string[] = [];
-	for (let i = 1; i <= segments.length; i++) {
-		result.push(segments.slice(0, i).join("/"));
-	}
-	return result;
 }
 
 function basename(path: string): string {

@@ -19939,6 +19939,74 @@
 				]
 			}
 		},
+		"/api/v1/storage/trash": {
+			"delete": {
+				"description": "Permanently deletes every trashed file and folder, and reports what was freed",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"deleted": {
+													"type": "number"
+												},
+												"failed": {
+													"type": "number"
+												},
+												"freed": {
+													"type": "number"
+												}
+											},
+											"required": [
+												"deleted",
+												"freed",
+												"failed"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Empty the trash",
+				"tags": [
+					"Storage"
+				]
+			}
+		},
 		"/api/v1/users/search": {
 			"get": {
 				"description": "Matches a query against user names and emails. Requires a query — the full directory is not enumerable.",

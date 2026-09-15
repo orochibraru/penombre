@@ -9,6 +9,9 @@ import { isTwoFactorRequired } from "$lib/server/services/app-settings";
 
 export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:preferences");
+	// The sidebar's trash and starred badges come from this load, so any
+	// change to the drive has to re-run it or they keep the boot's numbers.
+	depends("app:files");
 	// Check auth first before making API calls
 
 	if (!(locals.user && locals.session)) {

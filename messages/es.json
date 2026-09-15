@@ -620,5 +620,9 @@
 	"admin_oauth_pending": "Guardado, aún no cargado",
 	"admin_oauth_from_env": "Desde el entorno",
 	"admin_oauth_saved": "{name} guardado. Reinicia para permitir el inicio de sesión.",
-	"admin_oauth_removed": "{name} eliminado."
+	"admin_oauth_removed": "{name} eliminado.",
+	"toast_trash_emptied": "Papelera vaciada, {size} liberados",
+	"toast_trash_emptied_partial": "{count} elementos no se pudieron eliminar y siguen en la papelera",
+	"toast_emptying_trash": "Vaciando la papelera",
+	"toast_empty_trash_error": "Error al vaciar la papelera"
 }

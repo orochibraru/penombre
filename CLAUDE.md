@@ -407,6 +407,58 @@ query can match a row on the wrong mount. New rows must stamp
 `volumeId: this.ctx.volumeId`. The main drive stores `null`. See
 `docs/volumes.md`.
 
+### The trash is a subtree, and its keys are full paths
+
+Three rules hold together here, and breaking any one of them loses files:
+
+- **Trash state cascades.** `updateFolderMeta` — the route the UI actually uses
+  — marks the folder _and_ everything under it, via `setTrashedRecursively`. It
+  used to flip the folder row alone, so a trashed folder's files stayed
+  untrashed: hidden from the drive (their parent had left the listing) and
+  absent from the trash, so nothing could restore or delete them and the trash
+  priced itself at the folder's 0 bytes.
+- **The trash lists top-level entries only** (`listTrashFiles` drops anything
+  under another trashed folder) and gives each folder the size of the trashed
+  files beneath it. Otherwise one subtree is listed, priced and deleted many
+  times over.
+- **Trash keys are full paths**, unlike a folder listing, whose keys are one
+  segment to be re-joined with the folder on screen. The trash is flat and has
+  no such context, so a nested row could address nothing: its delete 404'd, or
+  worse, `deleteFolder` matched no row and answered 200 having done nothing. It
+  now refuses an unknown folder (`FileOrFolderNotFoundError` → 404).
+
+### Never delete a row whose bytes are still there
+
+The library scan re-imports any object with no matching row, so a half-finished
+delete does not lose a file — it **resurrects** it, scattered at whatever path
+the bytes sit at. `emptyTrash` (`services/storage/trash.ts`) therefore deletes
+the bytes first and keeps the row of anything the driver refused, reporting it
+as `failed`. Bytes already gone are not a failure: `deleteObject` throws ENOENT,
+which is checked against `objectExists` rather than treated as one.
+
+Emptying is one request for the same reason the bulk actions are pooled
+(`MAX_PARALLEL_REQUESTS` in `wrapper-bulk.svelte.ts`): a request per row over a
+large selection is where the partial failures came from, and the client can only
+price what the page happens to be showing.
+
+### The sidebar counts come from the layout load
+
+`(app)/+layout.server.ts` fetches `/storage/file/counts`, so it must
+`depends("app:files")` — a mutation invalidates that key, and without the
+dependency the badges keep the numbers they were booted with. Server-side,
+`invalidateListingCaches` has to drop the `counts` **prefix**: the two counters
+are stored under `counts:trashed` / `counts:starred`, which an exact-key delete
+never touched.
+
+### A dialog is a grid, so its body needs `min-w-0`
+
+`Dialog.Content` is `display: grid`, and a grid item's automatic minimum size is
+its min-content width — one long unbroken filename in the body widened the whole
+dialog and left it scrolling sideways, `truncate` notwithstanding.
+`responsive-dialog.svelte` carries `min-w-0` on the form, fieldset and scroll
+body (the header always had it). Anything wide belongs in its own
+`overflow-x-auto` box.
+
 ### A storage service is built from the owner, never the session user
 
 `locals.storageOwner` is whose drive a request acts on: the signed-in user in

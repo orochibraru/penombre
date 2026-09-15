@@ -65,7 +65,9 @@
 		triggerRenameAction,
 	} from "./wrapper.svelte.js";
 	import {
+		downloadSelected,
 		executeDeleteOperation,
+		executeEmptyTrash,
 		executeRestoreOperation,
 		selectedKeys,
 		starSelected,
@@ -190,14 +192,25 @@
 	// ================================
 	// Callbacks for extracted functions
 	// ================================
-	const stateCallbacks = {
-		setRestoringItem: (v: boolean) => (restoringItem = v),
-		setConfirmRestoreOpen: (v: boolean) => (confirmRestoreOpen = v),
+	const sharedCallbacks = {
 		setActionsContextOpen: (v: boolean) => (actionsContextOpen = v),
 		clearCheckedItems: () => (checkedItems = {}),
 		setActionableItem: (v: ObjectItem | undefined) => (actionableItem = v),
-		setDeletingItem: (v: boolean) => (deletingItem = v),
-		setConfirmDeleteOpen: (v: boolean) => (confirmDeleteOpen = v),
+	};
+
+	const restoreCallbacks = {
+		...sharedCallbacks,
+		setBusy: (v: boolean) => (restoringItem = v),
+		closeDialog: () => (confirmRestoreOpen = false),
+	};
+
+	const deleteCallbacks = {
+		...sharedCallbacks,
+		setBusy: (v: boolean) => (deletingItem = v),
+		closeDialog: () => {
+			confirmDeleteOpen = false;
+			emptyingTrash = false;
+		},
 	};
 
 	// ================================
@@ -232,11 +245,15 @@
 	// Item Actions
 	// ================================
 	function handleRestoreObject() {
-		executeRestoreOperation(checkedItems, stateCallbacks);
+		executeRestoreOperation(checkedItems, restoreCallbacks);
 	}
 
 	function handleDeleteObject() {
-		executeDeleteOperation(checkedItems, isTrash, stateCallbacks);
+		if (emptyingTrash) {
+			executeEmptyTrash(deleteCallbacks);
+			return;
+		}
+		executeDeleteOperation(checkedItems, isTrash, deleteCallbacks);
 	}
 
 	// Single item action helpers
@@ -452,48 +469,10 @@
 					}
 
 					if (keys.length === 1 && keys[0]) {
-						// Single file: use regular download
 						handleDownloadItem(keys[0], () => (actionsContextOpen = false));
 					} else {
-						// Multiple files: use bulk download API
 						actionsContextOpen = false;
-						const paths = keys.map((key) =>
-							currentFolder ? `${currentFolder}/${key}` : key,
-						);
-
-						toast.promise(
-							(async () => {
-								const { response, error: dlError } = await api.POST(
-									"/api/v1/storage/download",
-									{
-										body: { paths },
-										parseAs: "blob",
-									},
-								);
-								if (dlError) {
-									throw new Error("Failed to create download");
-								}
-								// Trigger download from response
-								const blob = await response.blob();
-								const url = URL.createObjectURL(blob);
-								const a = document.createElement("a");
-								a.href = url;
-								a.download = `penombre-download-${paths.length}-files.zip`;
-								document.body.appendChild(a);
-								a.click();
-								URL.revokeObjectURL(url);
-								a.remove();
-							})(),
-							{
-								loading: m.toast_creating_zip_files({
-									count: String(keys.length),
-								}),
-								success: m.toast_downloaded_files({
-									count: String(keys.length),
-								}),
-								error: m.toast_download_files_error(),
-							},
-						);
+						downloadSelected(keys, currentFolder);
 					}
 					checkedItems = {};
 				},

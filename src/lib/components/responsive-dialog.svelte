@@ -132,19 +132,23 @@
     {/if}
 {/snippet}
 
+<!-- `min-w-0` throughout: the dialog is a grid, and a grid item's automatic
+     minimum size is its min-content width — one long unbroken filename in the
+     body widened the whole dialog and left it scrolling sideways. -->
 {#snippet formWrapper(content: Snippet)}
     {#if form}
         <form
+            class="min-w-0"
             action={form.action}
             method={form.method ?? "POST"}
             enctype={form.enctype}
             onsubmit={handleSubmit}
             use:enhanceWhenAction
         >
-            <fieldset disabled={loading} class="flex flex-col gap-4">
+            <fieldset disabled={loading} class="flex min-w-0 flex-col gap-4">
                 <div
                     class={cn(
-                        "-mx-1 max-h-[40vh] overflow-y-auto px-1 md:max-h-[50vh]",
+                        "-mx-1 max-h-[40vh] min-w-0 overflow-y-auto px-1 md:max-h-[50vh]",
                         bodyClass,
                     )}
                 >
@@ -156,7 +160,7 @@
     {:else}
         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
         <div
-            class="flex flex-col gap-4"
+            class="flex min-w-0 flex-col gap-4"
             role="group"
             onkeydown={(e) => {
                 if (
@@ -172,7 +176,7 @@
         >
             <div
                 class={cn(
-                    "-mx-1 max-h-[40vh] overflow-y-auto px-1 md:max-h-[50vh]",
+                    "-mx-1 max-h-[40vh] min-w-0 overflow-y-auto px-1 md:max-h-[50vh]",
                     bodyClass,
                 )}
             >

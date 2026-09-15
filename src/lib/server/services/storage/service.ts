@@ -43,6 +43,7 @@ import { ListingOperations } from "./listings";
 import { type FileProxyRequest, ProxyService } from "./proxy";
 import { ScanOperations, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
+import { type EmptyTrashResult, TrashOperations } from "./trash";
 import { ZipService } from "./zip";
 
 const logger = new Logger("StorageService");
@@ -85,6 +86,7 @@ export class StorageService {
 	private readonly folderOperations: FolderOperations;
 	private readonly listingOperations: ListingOperations;
 	private readonly scanOperations: ScanOperations;
+	private readonly trashOperations: TrashOperations;
 
 	/**
 	 * @param user   Whose drive this service reads and writes.
@@ -130,6 +132,7 @@ export class StorageService {
 		this.folderOperations = new FolderOperations(this.ctx);
 		this.listingOperations = new ListingOperations(this.ctx);
 		this.scanOperations = new ScanOperations(this.ctx, this.thumbnails);
+		this.trashOperations = new TrashOperations(this.ctx, this.thumbnails);
 		this.proxy = new ProxyService(this.ctx, this.thumbnails, (path) =>
 			this.getFile(path),
 		);
@@ -325,6 +328,11 @@ export class StorageService {
 		return this.listingOperations.listTrashFiles();
 	}
 
+	emptyTrash(): Promise<EmptyTrashResult> {
+		this.assertWritable();
+		return this.trashOperations.emptyTrash();
+	}
+
 	listFilesPerCategory(category: FileCategory): Promise<ObjectList> {
 		return this.listingOperations.listFilesPerCategory(category);
 	}
@@ -423,7 +431,7 @@ export class StorageService {
 			this.cache.delete(CacheKeys.starred()),
 			this.cache.delete(CacheKeys.trashed()),
 			this.cache.delete(CacheKeys.recent()),
-			this.cache.delete(CacheKeys.counts()),
+			this.cache.deleteByPrefix(CacheKeys.counts()),
 			this.cache.deleteByPrefix("category:"),
 			this.cache.delete(CacheKeys.fileIdIndex()),
 		]);
