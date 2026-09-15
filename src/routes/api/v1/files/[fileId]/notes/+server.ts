@@ -4,6 +4,7 @@ import { Http } from "$lib/server/http";
 import { createNote, listNotes } from "$lib/server/openapi/v1/notes";
 import { NoteService } from "$lib/server/services/notes";
 import { NotificationService } from "$lib/server/services/notifications";
+import type { StorageService } from "$lib/server/services/storage";
 
 const notes = new NoteService();
 const notifications = new NotificationService();
@@ -11,12 +12,15 @@ const logger = new Logger("Notes API");
 
 /**
  * Notes hang off a file id that arrives in the URL, so every handler proves
- * the caller can actually reach that file first. `findFileById` is scoped to
- * the requesting user's own volume, which is what stops a guessed id from
- * exposing somebody else's conversation.
+ * the caller can actually reach that file first. The service is scoped to the
+ * drive the request names — the caller's own by default — which is what stops
+ * a guessed id from exposing somebody else's conversation.
  */
-async function canReach(locals: App.Locals, fileId: string): Promise<boolean> {
-	return !!(await locals.storageService.findFileById(fileId));
+async function canReach(
+	service: StorageService,
+	fileId: string,
+): Promise<boolean> {
+	return !!(await service.findFileById(fileId));
 }
 
 /**
@@ -30,11 +34,12 @@ async function canReach(locals: App.Locals, fileId: string): Promise<boolean> {
  */
 async function announce(
 	event: RequestEvent,
+	service: StorageService,
 	fileId: string,
 	author: { id: string; name: string },
 ): Promise<void> {
 	try {
-		const file = await event.locals.storageService.findFileOwner(fileId);
+		const file = await service.findFileOwner(fileId);
 		if (!file) {
 			return;
 		}
@@ -60,9 +65,9 @@ async function announce(
 	}
 }
 
-export const GET = listNotes.handler(async ({ params, event }) => {
+export const GET = listNotes.handler(async ({ params, service }) => {
 	try {
-		if (!(await canReach(event.locals, params.fileId))) {
+		if (!(await canReach(service, params.fileId))) {
 			return Http.NotFound("File not found");
 		}
 		return Http.Ok(await notes.list(params.fileId));
@@ -72,9 +77,9 @@ export const GET = listNotes.handler(async ({ params, event }) => {
 });
 
 export const POST = createNote.handler(
-	async ({ params, body, user, event }) => {
+	async ({ params, body, user, event, service }) => {
 		try {
-			if (!(await canReach(event.locals, params.fileId))) {
+			if (!(await canReach(service, params.fileId))) {
 				return Http.NotFound("File not found");
 			}
 			const note = await notes.create({
@@ -87,7 +92,7 @@ export const POST = createNote.handler(
 				return Http.BadRequest("A note needs some text.");
 			}
 
-			await announce(event, params.fileId, user);
+			await announce(event, service, params.fileId, user);
 			return Http.Ok(note);
 		} catch (error) {
 			return Http.ServerError("Failed to create note", error);

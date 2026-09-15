@@ -1,4 +1,7 @@
 import createClient from "openapi-fetch";
+import { browser } from "$app/environment";
+import { page } from "$app/state";
+import { DRIVE_HEADER } from "$lib/drives";
 import type { components, paths } from "./v1";
 
 /**
@@ -27,6 +30,34 @@ import type { components, paths } from "./v1";
  */
 export const api = createClient<paths>({
 	credentials: "include",
+});
+
+/**
+ * Inside a shared drive, every call acts on that drive.
+ *
+ * The alternative was threading a `drive` argument through several dozen call
+ * sites and remembering it at each new one; the route's own parameter is the
+ * same answer and cannot fall out of step with the page. Server-side loads are
+ * skipped — `page` is not theirs to read — so a load that needs a drive passes
+ * `query: { drive }` itself, and an explicit one always wins.
+ *
+ * It travels as `DRIVE_HEADER` rather than as a query parameter — see that
+ * constant for why. The server takes either, and `?drive=` stays the
+ * documented spelling for media URLs and the upload worker, which have no
+ * client to carry a header for them.
+ */
+api.use({
+	onRequest({ request }) {
+		// The route parameter inside a drive; the query parameter on the pages
+		// reached from one (`/edit`, `/view`), which live outside `/drives`.
+		const drive = browser
+			? (page.params.drive ?? page.url.searchParams.get("drive"))
+			: undefined;
+		if (drive && !new URL(request.url).searchParams.has("drive")) {
+			request.headers.set(DRIVE_HEADER, drive);
+		}
+		return undefined;
+	},
 });
 
 // Re-export schema types from the generated OpenAPI spec

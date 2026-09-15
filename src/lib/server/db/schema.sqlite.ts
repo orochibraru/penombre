@@ -14,6 +14,7 @@ import {
 	real,
 	sqliteTable,
 	text,
+	uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 import type { AppSettingsData, UserPreferencesData } from "./schema.pg";
 
@@ -474,5 +475,52 @@ export const notifications = sqliteTable(
 		index("notifications_userId_idx").on(table.userId),
 		index("notifications_readAt_idx").on(table.readAt),
 		index("notifications_createdAt_idx").on(table.createdAt),
+	],
+);
+
+// =========================================================================
+// SHARED DRIVES
+// =========================================================================
+
+export const drives = sqliteTable(
+	"drives",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+		updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("drives_ownerId_idx").on(table.ownerId)],
+);
+
+export const driveMembers = sqliteTable(
+	"drive_members",
+	{
+		id: text("id").primaryKey(),
+		driveId: text("drive_id")
+			.references(() => drives.id, { onDelete: "cascade" })
+			.notNull(),
+		userId: text("user_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		role: text("role", {
+			enum: ["manager", "editor", "viewer"],
+		}).notNull(),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("driveMembers_driveId_idx").on(table.driveId),
+		index("driveMembers_userId_idx").on(table.userId),
+		uniqueIndex("driveMembers_drive_user_idx").on(table.driveId, table.userId),
 	],
 );

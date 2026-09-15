@@ -10,6 +10,7 @@ const simpleModePages = {
 	starred: (await import("./starred/+page.server")).load,
 	shared: (await import("./shared/+page.server")).load,
 	categories: (await import("./categories/[category]/+page.server")).load,
+	drives: (await import("./drives/+page.server")).load,
 };
 
 const bypassSections = {
@@ -19,16 +20,21 @@ const bypassSections = {
 
 const adminEvent = { locals: { user: { role: "admin" } } } as never;
 
-// `shared` reads the caller's own links, so unlike the other simple-mode pages
-// it needs a real event and returns data rather than undefined.
+// `shared` and `drives` read the caller's own rows, so unlike the other
+// simple-mode pages they need a real event and return data rather than
+// undefined.
 const sharedEvent = {
 	locals: { user: { id: "user-1" } },
 	depends: () => {},
 } as never;
 
-const simpleModeEvents: Record<string, never> = { shared: sharedEvent };
+const simpleModeEvents: Record<string, never> = {
+	shared: sharedEvent,
+	drives: sharedEvent,
+};
 const simpleModeResults: Record<string, unknown> = {
 	shared: { shares: [], sharedWithMe: [] },
+	drives: { drives: [] },
 };
 
 // The config mocks are module-level and shared across test files — leaving one

@@ -17,7 +17,6 @@
 	} from "@lucide/svelte";
 	import { MediaQuery } from "svelte/reactivity";
 	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import type { ObjectItem } from "$lib/api";
 	import DocumentIcon from "$lib/components/file/document-icon.svelte";
@@ -36,6 +35,7 @@
 		getDocumentType,
 		ItemStatus,
 		isFolderItem,
+		listingHref,
 		readableFileSize,
 		secondsToMinutes,
 		stripFolders,
@@ -110,11 +110,7 @@
 				? [page.params.path, folderId]
 				: [folderId];
 
-			await goto(
-				resolve("/(app)/browse/[...path]", {
-					path: basePath.join("/"),
-				}),
-			);
+			await goto(listingHref(basePath.join("/"), page.params.drive));
 			navigating = false;
 			return;
 		}
@@ -354,9 +350,10 @@
                             <span class="mx-1">•</span>
                         {/if}
                         <a
-                            href={resolve("/(app)/browse/[...path]", {
-                                path: item.parentKey || "",
-                            })}
+                            href={listingHref(
+                                item.parentKey || "",
+                                page.params.drive,
+                            )}
                             class="text-muted-foreground/70 hover:text-primary hover:underline"
                             onclick={(e) => e.stopPropagation()}
                         >

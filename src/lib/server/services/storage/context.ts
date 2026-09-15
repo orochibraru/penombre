@@ -13,7 +13,14 @@ import type { ActivityService } from "$lib/server/services/activity";
 import type { StorageDriver } from "./driver";
 
 export interface StorageContext {
+	/** Whose rows these are: the drive's owner, not necessarily who is asking. */
 	readonly user: User;
+	/**
+	 * Who is asking. The same as `user` on a personal drive; on a shared one
+	 * it is the member acting, which is what an activity row must record —
+	 * otherwise every edit in a shared drive is logged as its creator's.
+	 */
+	readonly actor: User;
 	/** `user-<id>`, the per-user root inside the storage backend */
 	readonly userFolder: string;
 	/**

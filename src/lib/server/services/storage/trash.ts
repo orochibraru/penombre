@@ -102,7 +102,7 @@ export class TrashOperations {
 		const deleted = removableFileIds.length + removableFolders.length;
 
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "delete",
 			message: `Emptied the trash: ${deleted} item${deleted === 1 ? "" : "s"}`,
 			level: "info",

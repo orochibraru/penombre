@@ -1027,3 +1027,48 @@ exercise every preview path rather than showing an empty drive.
 single hero image — there is no demo instance. Markdown carries plain relative
 `docs/images/…` srcs so GitHub renders them directly; the docs repo rewrites
 them for the site.
+
+It runs from `e2e/screenshots`, which `playwright test` with no path **also**
+runs — so a bare full-suite run rewrites `docs/images/` with whatever state the
+test instance happens to be in. Anything a spec leaves on that instance ends up
+in the sidebar of every shot; that is why `drives.spec.ts` names its drives
+`e2e-drive …` and deletes them in an `afterEach`.
+
+### A shared drive is a volume the app owns
+
+`services/drives.ts` builds a `VolumeConfig` at request time —
+`volume_id = drive:<id>`, rooted at `STORAGE_PATH/drives/<id>` — so every
+existing storage query, cache key, mutation and read-only check scopes to it
+with no changes under `services/storage`. Three things hold it together:
+
+- **`shared: true` on the volume.** Without it `StorageService` splits the mount
+  per user in full mode (`user-<id>`), which is exactly what a shared drive must
+  not do.
+- **Two identities.** The service is built from the drive's **owner** (whose id
+  every row carries) and handed the session user as `ctx.actor`, which is what
+  activity rows record. `ctx.user` is the owner, `ctx.actor` is who did it —
+  never conflate them, or every edit in a drive is logged as its creator's.
+- **One service factory.** Every `/api/v1/storage/**` contract declares
+  `service: storageServiceFor`, which resolves `?drive=` and checks membership
+  before the handler runs. `defineRoute`'s factory is therefore async and takes
+  the event, and its `catch` maps `DriveAccessError` (and `ReadOnlyVolumeError`)
+  to 404/403 — a handler never sees them, so a handler that catches one must
+  rethrow it (`rethrowRefusal`). A non-member gets 404, not 403: a guessed id
+  must not reveal that the drive exists.
+
+A drive has its own trash at `/drives/[drive]/trash`, because `/trash` lists the
+caller's own rows and a drive's belong to the drive. `isTrashListing` in
+`utils.ts` is what tells the wrapper to show the restore/delete/empty actions
+there.
+
+### The drive travels as a header, not a rewritten URL
+
+`$lib/api`'s middleware sets `x-drive` from `page.params.drive`. It must not
+rebuild the request to add `?drive=` instead: `new Request(url, request)` hands
+the body over as a stream, and Chrome refuses a streaming upload over HTTP/1.1 —
+every POST failed with `ERR_ALPN_NEGOTIATION_FAILED` on a plain-HTTP instance,
+which is how a self-hosted box is reached. The server takes either spelling
+(`storageServiceFor` reads the query first), and `?drive=` stays the documented
+one for the things that have no client to carry a header: media `src` URLs
+(`getObjectUrl`), the upload worker's XHR, and `/view` + `/edit`, which are
+outside `/drives` and so get it from `withDrive()` on the link.

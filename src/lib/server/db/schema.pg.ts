@@ -9,6 +9,7 @@ import {
 	real,
 	text,
 	timestamp,
+	uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -705,3 +706,66 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+// =========================================================================
+// SHARED DRIVES
+// =========================================================================
+
+/**
+ * A drive that belongs to a group rather than to a person.
+ *
+ * Its files and folders are ordinary rows owned by `ownerId` and stamped with
+ * `volume_id = drive:<id>`, so every existing storage query scopes to it for
+ * free. Membership, not ownership, is what decides who may open it.
+ */
+export const drives = pgTable(
+	"drives",
+	{
+		id: text("id").primaryKey(),
+		name: text("name").notNull(),
+		/**
+		 * Whose rows the drive's files are. The creator, and never changed:
+		 * every `files`/`folders` row carries it, so moving it would orphan
+		 * the whole tree.
+		 */
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+		updatedAt: timestamp("updated_at")
+			.$defaultFn(() => new Date())
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("drives_ownerId_idx").on(table.ownerId)],
+);
+
+/** Everyone but the owner, who is a manager implicitly. */
+export const driveMembers = pgTable(
+	"drive_members",
+	{
+		id: text("id").primaryKey(),
+		driveId: text("drive_id")
+			.references(() => drives.id, { onDelete: "cascade" })
+			.notNull(),
+		userId: text("user_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		role: text("role", {
+			enum: ["manager", "editor", "viewer"],
+		}).notNull(),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("driveMembers_driveId_idx").on(table.driveId),
+		index("driveMembers_userId_idx").on(table.userId),
+		uniqueIndex("driveMembers_drive_user_idx").on(table.driveId, table.userId),
+	],
+);
+
+export type Drive = typeof drives.$inferSelect;
+export type DriveMember = typeof driveMembers.$inferSelect;

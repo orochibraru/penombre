@@ -38,6 +38,7 @@
 	import {
 		cn,
 		isFolderItem,
+		isTrashListing,
 		readableFileSize,
 		type SortColumn,
 		type SortDirection,
@@ -178,16 +179,13 @@
 		(indeterminate || allSelected) && !isSingleItemAction,
 	);
 
-	let isTrash = $derived(page.url.pathname.startsWith("/trash"));
+	let isTrash = $derived(isTrashListing(page.url.pathname));
 
-	// Get current folder from URL path for API calls
-	let currentFolder = $derived.by(() => {
-		const path = page.url.pathname;
-		if (path.startsWith("/browse/")) {
-			return path.slice("/browse/".length);
-		}
-		return "";
-	});
+	// The folder being browsed, as the API addresses it. `page.params.path` is
+	// that chain of folder ids in both listings — `/browse/[...path]` and a
+	// shared drive's `/drives/[drive]/[...path]` — so neither pathname has to
+	// be parsed.
+	let currentFolder = $derived(page.params.path ?? "");
 
 	// ================================
 	// Callbacks for extracted functions

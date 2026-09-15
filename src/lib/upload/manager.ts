@@ -34,15 +34,16 @@ const known = new Map<string, UploadJob>();
 /** Bytes sent per job, for the speed and ETA readout. */
 const sent = new Map<string, number>();
 
-function uploadUrl(fileId: string): string {
-	return `/api/v1/storage/file/${encodeURIComponent(fileId)}/upload`;
+function uploadUrl(job: UploadJob): string {
+	const drive = job.driveId ? `?drive=${encodeURIComponent(job.driveId)}` : "";
+	return `/api/v1/storage/file/${encodeURIComponent(job.fileId)}/upload${drive}`;
 }
 
 function toWorkerJob(job: UploadJob): WorkerJob {
 	return {
 		id: job.id,
 		fileId: job.fileId,
-		url: uploadUrl(job.fileId),
+		url: uploadUrl(job),
 		file: job.file,
 	};
 }
@@ -79,7 +80,10 @@ async function onDone(job: UploadJob): Promise<void> {
 	refreshStats();
 
 	const { data } = await api.GET("/api/v1/storage/file/{id}", {
-		params: { path: { id: encodeURIComponent(job.finalName) } },
+		params: {
+			path: { id: encodeURIComponent(job.finalName) },
+			query: { drive: job.driveId },
+		},
 	});
 
 	if (data?.data) {
@@ -302,7 +306,10 @@ export async function dismissFailed(id: string): Promise<void> {
 	await deleteJob(id);
 	if (job) {
 		await api.DELETE("/api/v1/storage/file/{id}", {
-			params: { path: { id: encodeURIComponent(job.finalName) } },
+			params: {
+				path: { id: encodeURIComponent(job.finalName) },
+				query: { drive: job.driveId },
+			},
 		});
 		await invalidate("app:files");
 	}

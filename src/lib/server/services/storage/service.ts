@@ -91,13 +91,16 @@ export class StorageService {
 	/**
 	 * @param user   Whose drive this service reads and writes.
 	 * @param volume A mounted volume to bind to, or omitted for the main drive.
+	 * @param actor  Who is asking, when that is not the owner — a member of a
+	 *               shared drive. Only authorship (activity rows) reads it.
 	 */
-	constructor(user: User, volume?: VolumeConfig) {
+	constructor(user: User, volume?: VolumeConfig, actor?: User) {
 		// Simple mode: one shared volume for everyone, mounted directly at the
 		// root instead of a per-user subfolder. That holds for extra volumes
 		// too — in simple mode a mount is shared, in full mode it is split per
-		// user exactly like the main drive.
-		this.userFolder = isSimpleMode() ? "" : `user-${user.id}`;
+		// user exactly like the main drive. A shared drive is shared whole in
+		// both modes: splitting it per user is the one thing it must not do.
+		this.userFolder = volume?.shared || isSimpleMode() ? "" : `user-${user.id}`;
 		this.volume = volume ?? null;
 		this.storagePath = join(
 			volume ? volume.path : getStoragePath(),
@@ -116,6 +119,7 @@ export class StorageService {
 
 		this.ctx = {
 			user: this.user,
+			actor: actor ?? this.user,
 			userFolder: this.userFolder,
 			volumeId: this.volume?.name ?? null,
 			readOnly: this.volume?.readOnly ?? false,

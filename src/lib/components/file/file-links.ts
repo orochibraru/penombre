@@ -13,6 +13,21 @@ import type { ObjectItem } from "$lib/api";
 import { playableMusic, playbackPosition } from "$lib/store/music";
 import { getObjectUrl } from "$lib/url";
 
+/**
+ * Keep the current shared drive on a link that leaves it.
+ *
+ * `/view` and `/edit` are top-level routes, so the drive cannot come from
+ * their own parameters — the load reads it from here, and so does the API
+ * client while that page is open.
+ */
+export function withDrive(href: string): string {
+	const drive = page.params.drive;
+	if (!drive) {
+		return href;
+	}
+	return `${href}${href.includes("?") ? "&" : "?"}drive=${encodeURIComponent(drive)}`;
+}
+
 /** Raw bytes of a file, as served by the proxy route. */
 export function rawUrl(item: ObjectItem): string {
 	return getObjectUrl({
@@ -45,7 +60,7 @@ const VIEWABLE = new Set(["IMAGES", "VIDEO", "MUSIC"]);
 export function fullscreenUrl(item: ObjectItem, resume?: Resume): string {
 	if (item.metadata.id && VIEWABLE.has(item.metadata.category ?? "")) {
 		return withResume(
-			resolve("/view/[fileId]", { fileId: item.metadata.id }),
+			withDrive(resolve("/view/[fileId]", { fileId: item.metadata.id })),
 			resume,
 		);
 	}

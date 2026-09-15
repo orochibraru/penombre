@@ -1,10 +1,17 @@
 import { z } from "zod";
 import { defineRoute } from "$lib/server/openapi";
+import { storageServiceFor } from "$lib/server/services/drives";
 
 /**
  * File note route definitions.
  * Importing this module registers all note routes with the OpenAPI registry.
+ *
+ * Every one of them carries `drive`, and reaches the file through the service
+ * that parameter builds: a note is only readable by someone who can reach the
+ * file, and in a shared drive that is a member, not the file's owner.
  */
+
+const driveQuery = { drive: z.string().optional() };
 
 export const noteSchema = z.object({
 	id: z.string(),
@@ -24,8 +31,10 @@ export const listNotes = defineRoute({
 	summary: "List notes on a file",
 	tags: ["Notes"],
 	params: z.object({ fileId: z.string() }),
+	query: z.object(driveQuery),
 	response: z.array(noteSchema),
 	errors: [404, 500],
+	service: storageServiceFor,
 });
 
 export const createNote = defineRoute({
@@ -36,12 +45,14 @@ export const createNote = defineRoute({
 		"A timestamp marks the note as a comment on a moment in an audio or video file.",
 	tags: ["Notes"],
 	params: z.object({ fileId: z.string() }),
+	query: z.object(driveQuery),
 	body: z.object({
 		body: z.string().min(1).max(4000),
 		timestampSeconds: z.number().min(0).nullable().optional(),
 	}),
 	response: noteSchema,
 	errors: [400, 404, 500],
+	service: storageServiceFor,
 });
 
 export const updateNote = defineRoute({

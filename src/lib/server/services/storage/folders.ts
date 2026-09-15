@@ -146,7 +146,7 @@ export class FolderOperations {
 			.where(eq(folders.id, folder.id));
 
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "update",
 			message: `Moved folder "${uniqueName}" to ${normalizedDest || "root"}`,
 			level: "info",
@@ -195,7 +195,7 @@ export class FolderOperations {
 				tags: [],
 			});
 			await this.ctx.activityService.register({
-				userId: this.ctx.user.id,
+				userId: this.ctx.actor.id,
 				action: "create",
 				message: `Created folder: ${uniqueName}`,
 				level: "info",
@@ -238,7 +238,7 @@ export class FolderOperations {
 				);
 
 			await this.ctx.activityService.register({
-				userId: this.ctx.user.id,
+				userId: this.ctx.actor.id,
 				action: "delete",
 				message: `Deleted folder: ${normalizedKey}`,
 				level: "info",
@@ -297,7 +297,7 @@ export class FolderOperations {
 		await this.setTrashedRecursively(normalizedKey, true);
 
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "update",
 			message: `Moved folder to trash: ${normalizedKey}`,
 			level: "info",
@@ -311,7 +311,7 @@ export class FolderOperations {
 		await this.setTrashedRecursively(normalizedKey, false);
 
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "update",
 			message: `Restored folder from trash: ${normalizedKey}`,
 			level: "info",
@@ -365,7 +365,7 @@ export class FolderOperations {
 		}
 
 		await this.ctx.activityService.register({
-			userId: this.ctx.user.id,
+			userId: this.ctx.actor.id,
 			action: "update",
 			message: `Updated folder metadata: ${normalizedId}`,
 			level: "info",

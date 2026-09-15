@@ -50,6 +50,13 @@
       "when": 1789329620366,
       "tag": "0006_conscious_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1789503503676,
+      "tag": "0007_keen_monster_badoon",
+      "breakpoints": true
     }
   ]
 }

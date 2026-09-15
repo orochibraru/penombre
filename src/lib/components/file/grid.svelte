@@ -7,7 +7,6 @@
 		UploadIcon,
 	} from "@lucide/svelte";
 	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import type { ObjectItem } from "$lib/api";
 	import FilePrefix from "$lib/components/file/prefix.svelte";
@@ -24,7 +23,9 @@
 	import * as m from "$lib/paraglide/messages.js";
 	import {
 		cn,
+		isBrowsableListing,
 		isFolderItem,
+		listingHref,
 		PARENT_KEY,
 		parentHref,
 		resolveDropDestination,
@@ -305,11 +306,12 @@
                         if (isFolder) {
                             const folder = objectItem.key.replace("/", "");
                             goto(
-                                resolve("/(app)/browse/[...path]", {
-                                    path: page.params.path
+                                listingHref(
+                                    page.params.path
                                         ? `${page.params.path}/${folder}`
                                         : folder,
-                                }),
+                                    page.params.drive,
+                                ),
                             );
                             return;
                         }
@@ -421,7 +423,7 @@
         ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
     >
         <a
-            href={parentHref(parent)}
+            href={parentHref(parent, page.params.drive)}
             title={m.parent_folder()}
             class="text-muted-foreground hover:text-foreground flex h-full flex-col items-center justify-center gap-2 transition-colors"
         >
@@ -436,7 +438,7 @@
         class="col-span-full flex flex-col items-center justify-center gap-4 py-12"
     >
         <div class="text-muted-foreground text-center">
-            {#if page.url.pathname.startsWith("/browse")}
+            {#if isBrowsableListing(page.url.pathname)}
                 <p class="text-lg font-medium">{m.no_files_yet()}</p>
                 <p class="text-sm">
                     {m.no_files_get_started()}
@@ -445,7 +447,7 @@
                 <p class="text-lg font-medium">{m.no_results()}</p>
             {/if}
         </div>
-        {#if page.url.pathname.startsWith("/browse")}
+        {#if isBrowsableListing(page.url.pathname)}
             <div class="flex gap-2">
                 {#if onUpload}
                     <Button variant="default" onclick={onUpload}>

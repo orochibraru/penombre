@@ -253,11 +253,47 @@ export function resolveParentPath(
 	return currentPath.split("/").slice(0, -1).join("/");
 }
 
-/** Where `/browse` lives for a given parent path ("" is the drive root) */
-export function parentHref(parentPath: string) {
-	return parentPath
-		? resolve("/(app)/browse/[...path]", { path: parentPath })
+/**
+ * Where a folder path lives — in the personal drive, or in a shared one.
+ *
+ * `drive` is the route parameter, so a listing component passes
+ * `page.params.drive` and never has to know which of the two it is showing.
+ */
+export function listingHref(path: string, drive?: string) {
+	if (drive) {
+		return path
+			? resolve("/(app)/drives/[drive]/[...path]", { drive, path })
+			: resolve("/(app)/drives/[drive]", { drive });
+	}
+	return path
+		? resolve("/(app)/browse/[...path]", { path })
 		: resolve("/(app)/browse");
+}
+
+/** Where `/browse` lives for a given parent path ("" is the drive root) */
+export function parentHref(parentPath: string, drive?: string) {
+	return listingHref(parentPath, drive);
+}
+
+/** The trash: the personal one at `/trash`, or a shared drive's. */
+export function isTrashListing(pathname: string): boolean {
+	return (
+		pathname.startsWith("/trash") || /^\/drives\/[^/]+\/trash$/.test(pathname)
+	);
+}
+
+/**
+ * Is this listing a folder things can be put into?
+ *
+ * True for the personal drive and for a shared one, false for the views that
+ * gather files from everywhere (recent, starred, categories, trash), where
+ * "no files yet — upload one" would be the wrong thing to offer.
+ */
+export function isBrowsableListing(pathname: string): boolean {
+	return (
+		(pathname.startsWith("/browse") || pathname.startsWith("/drives/")) &&
+		!isTrashListing(pathname)
+	);
 }
 
 /**

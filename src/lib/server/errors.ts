@@ -19,3 +19,20 @@ export class ReadOnlyVolumeError extends Error {
 		this.name = "ReadOnlyVolumeError";
 	}
 }
+
+/**
+ * A shared drive that does not exist, or that the caller is not a member of.
+ *
+ * Carries its own status because the two cases must look alike to a
+ * non-member: telling them a drive exists but is closed to them is already
+ * more than they should learn from a guessed id.
+ */
+export class DriveAccessError extends Error {
+	constructor(
+		readonly status: 403 | 404,
+		message: string,
+	) {
+		super(message);
+		this.name = "DriveAccessError";
+	}
+}

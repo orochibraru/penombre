@@ -41,6 +41,11 @@ const volumeSchema = z.object({
 	path: z.string().min(1),
 	/** Refuse writes; the volume browses but cannot be modified. */
 	readOnly: z.boolean().default(false),
+	/**
+	 * One tree for everyone rather than a subdirectory per user. Env-declared
+	 * volumes are per-user in full mode; a shared drive never is.
+	 */
+	shared: z.boolean().default(false),
 });
 
 export type VolumeConfig = z.infer<typeof volumeSchema>;
@@ -173,6 +178,9 @@ function parseVolumes(): VolumeConfig[] {
 			label: env[`VOLUME_${rawName}_LABEL`] || name,
 			path: resolve(path),
 			readOnly: env[`VOLUME_${rawName}_READONLY`] === "true",
+			// Env volumes follow the main drive: shared whole in simple mode,
+			// a subdirectory per user in full mode. Only a shared drive opts out.
+			shared: false,
 		});
 	}
 	return volumes;
