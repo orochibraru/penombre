@@ -1,3 +1,20 @@
+## [1.8.40](https://github.com/orochibraru/penombre/compare/v1.8.39...v1.8.40) (2026-09-15)
+
+
+### Features
+
+* shared drives ([#100](https://github.com/orochibraru/penombre/issues/100)) ([4dafa46](https://github.com/orochibraru/penombre/commit/4dafa464b5a2348b91c76e4b580f04e912794a78))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.40
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.39](https://github.com/orochibraru/penombre/compare/v1.8.38...v1.8.39) (2026-09-15)
 
 
