@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
 	baseName,
+	editorKindForName,
+	kindForName,
+	officeKindForName,
 	parseCsv,
 	parseSlides,
 	titleFromContent,
@@ -142,5 +145,40 @@ describe("baseName", () => {
 
 	test("keeps a leading dot", () => {
 		expect(baseName(".env")).toBe(".env");
+	});
+});
+
+describe("kind for a file name", () => {
+	test("recognises the three native kinds", () => {
+		expect(kindForName("a.html")).toBe("document");
+		expect(kindForName("a.HTM")).toBe("document");
+		expect(kindForName("a.csv")).toBe("sheet");
+		expect(kindForName("a.md")).toBe("presentation");
+		expect(kindForName("a.markdown")).toBe("presentation");
+	});
+
+	test("does not call an Office file one of ours", () => {
+		// The listing icon hangs off this: a .docx keeps the Word icon.
+		expect(kindForName("a.docx")).toBeNull();
+		expect(kindForName("a.xlsx")).toBeNull();
+		expect(kindForName("a.pptx")).toBeNull();
+	});
+
+	test("maps each Office format to the editor that opens it", () => {
+		expect(officeKindForName("report.docx")).toBe("document");
+		expect(officeKindForName("BUDGET.XLSX")).toBe("sheet");
+		expect(officeKindForName("deck.pptx")).toBe("presentation");
+		expect(officeKindForName("notes.txt")).toBeNull();
+	});
+
+	test("opens native and Office files alike in an editor", () => {
+		expect(editorKindForName("a.csv")).toBe("sheet");
+		expect(editorKindForName("a.xlsx")).toBe("sheet");
+		expect(editorKindForName("a.pdf")).toBeNull();
+	});
+
+	test("ignores a dot that is not an extension", () => {
+		expect(kindForName(".csv")).toBeNull();
+		expect(kindForName("no-extension")).toBeNull();
 	});
 });
