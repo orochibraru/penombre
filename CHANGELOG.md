@@ -1,3 +1,20 @@
+## [1.8.38](https://github.com/orochibraru/penombre/compare/v1.8.37...v1.8.38) (2026-09-15)
+
+
+### Bug Fixes
+
+* emptying trash / Putting items in trash ([#98](https://github.com/orochibraru/penombre/issues/98)) ([81cc443](https://github.com/orochibraru/penombre/commit/81cc443efad0bf302afe7373a521e7541fdeebf2))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.38
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.37](https://github.com/orochibraru/penombre/compare/v1.8.36...v1.8.37) (2026-09-14)
 
 
