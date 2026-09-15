@@ -15,13 +15,26 @@ export default defineConfig({
 	fullyParallel: false,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
+	// A retry that passes still means the test is not deterministic. Left
+	// unflagged, a flake goes green on the pull request and then fails the
+	// push to `main`, where the only difference was luck — which is exactly
+	// how a release pipeline breaks on a change its own PR had approved.
+	// Retries stay, so a flake is still reported rather than merely red, but
+	// the run fails where the flake was introduced.
+	failOnFlakyTests: !!process.env.CI,
 	workers: 1,
 	reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
 	globalSetup: "./e2e/global-setup.ts",
 	use: {
 		baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3001",
-		trace: "on",
-		screenshot: "on",
+		// Not "on". Recording a trace for all ~85 tests is enough I/O that
+		// Playwright has finished a run and then failed to close its own zip
+		// — "End of central directory record signature not found" — which
+		// reads as a broken test and, with `failOnFlakyTests`, fails the run.
+		// A retry is exactly when a trace is worth having, and that is the
+		// case `failOnFlakyTests` now makes fatal, so nothing is lost.
+		trace: "on-first-retry",
+		screenshot: "only-on-failure",
 		contextOptions: {
 			reducedMotion: "reduce",
 		},

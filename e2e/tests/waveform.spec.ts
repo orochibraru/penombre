@@ -108,15 +108,22 @@ test.describe("Waveforms", () => {
 		await page.waitForLoadState("networkidle");
 
 		// Loads it into the global player, which is where the playhead lives.
-		await row.click();
-		await expect(page.locator('[data-slot="waveform"]').first()).toBeVisible({
-			timeout: 20_000,
-		});
-
-		await rightClickItem(page, "test-audio.wav");
-		await chooseMenuItem(page, "test-audio.wav", /notes/i);
+		// Retried as a pair: a click on a listing that is still settling can
+		// be dispatched onto a row that is being replaced, loading nothing.
+		const loaded = page.locator('[data-slot="waveform"]').first();
+		await expect(async () => {
+			await row.click();
+			await expect(loaded).toBeVisible({ timeout: 10_000 });
+		}).toPass({ timeout: 30_000 });
 
 		const notes = page.getByRole("dialog");
+		await rightClickItem(page, "test-audio.wav");
+		// The dialog is the confirmation: a forced click on a menu that is
+		// being torn down reports success without ever running its handler.
+		await chooseMenuItem(page, "test-audio.wav", /notes/i, () =>
+			expect(notes).toBeVisible({ timeout: 10_000 }),
+		);
+
 		const scrubber = notes.locator('button[aria-label="Seek"]').first();
 		await expect(scrubber).toBeVisible({ timeout: 15_000 });
 
@@ -178,8 +185,12 @@ test.describe("Waveforms", () => {
 
 		// Same tab: the action is a `goto`, not a `window.open`.
 		await rightClickItem(page, "test-audio.wav");
-		await chooseMenuItem(page, "test-audio.wav", /full screen/i);
-		await expect(page).toHaveURL(/\/view\//, { timeout: 15_000 });
+		// The navigation is the confirmation: a forced click on a menu that is
+		// being torn down reports success without ever running its handler,
+		// and the viewer then simply never opens.
+		await chooseMenuItem(page, "test-audio.wav", /full screen/i, () =>
+			expect(page).toHaveURL(/\/view\//, { timeout: 10_000 }),
+		);
 
 		await page.getByRole("button", { name: /^play$/i }).click();
 		const playing = () =>
@@ -251,9 +262,14 @@ test.describe("Waveforms", () => {
 		// thread, which is the point of having one. It also keeps the test off
 		// the context menu, which a listing still settling after an upload
 		// tears down mid-click.
-		await row.click();
+		// Retried as a pair: a click on a listing that is still settling can be
+		// dispatched onto a row that is being replaced, and then nothing is
+		// loaded into the player at all.
 		const scrubber = page.locator('button[aria-label="Seek"]').first();
-		await expect(scrubber).toBeVisible({ timeout: 30_000 });
+		await expect(async () => {
+			await row.click();
+			await expect(scrubber).toBeVisible({ timeout: 15_000 });
+		}).toPass({ timeout: 45_000 });
 
 		const notes = page.locator('[data-slot="player-notes"]');
 		await notes.click();

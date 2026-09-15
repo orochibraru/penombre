@@ -91,6 +91,28 @@ repos:
         pass_filenames: false
         files: ^(src/|test\.setup\.ts$|bunfig\.toml$)
 
+      # Switching branches changes bun.lock, and node_modules is not part of
+      # the checkout: without this, the first command after a branch switch
+      # runs against the previous branch's dependencies.
+      #
+      # `--ignore-scripts` plus an explicit sync, rather than a plain
+      # `bun install`: `prepare` runs `prek install`, which rewrites
+      # `.husky/_/*` — tracked files — from inside the hook prek is currently
+      # running. prek then sees a hook that modified the working tree, and
+      # every branch switch on a dirty tree ends in "Hook changes conflicted
+      # with the saved unstaged changes. Reverting the hook changes". The sync
+      # is the half of `prepare` that a checkout actually needs, since
+      # `.svelte-kit` is generated and branch-specific.
+      #
+      # `sh -c` because `entry` is exec'd, not run through a shell.
+      - id: bun-install
+        name: bun install
+        entry: sh -c 'bun install --ignore-scripts && bun run svelte-kit sync'
+        language: system
+        stages: [post-checkout]
+        always_run: true
+        pass_filenames: false
+
   - repo: local
     hooks:
       - id: no-manual-route-typing

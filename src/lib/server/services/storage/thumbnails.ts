@@ -8,9 +8,10 @@
 
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
-import { mkdir, unlink } from "node:fs/promises";
+import { mkdir, rename, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 import { and, eq } from "drizzle-orm";
 import sharp from "sharp";
 import { Logger } from "$lib/logger";
@@ -19,6 +20,39 @@ import type { StorageContext } from "./context";
 import { ownedFiles } from "./scope";
 
 const logger = new Logger("StorageService");
+
+/**
+ * Write a cache entry so a concurrent reader never sees a half-written one.
+ *
+ * `existsSync(thumbPath)` is the cache check, and it runs *before* the
+ * semaphore — so a plain write is a race with a name on it: the moment the
+ * file is created it is empty but present, and a second caller reads zero
+ * bytes and serves them as the thumbnail. For audio that is an empty peaks
+ * document, which the player treats as "this file has no waveform" and gives
+ * up on for good.
+ *
+ * Uploading warms the cache without awaiting it, so the racing reader is not
+ * hypothetical: it is the request the page makes the instant the upload
+ * returns. A temp file plus `rename` makes the entry appear whole or not at
+ * all, `rename` being atomic within a filesystem.
+ */
+export async function writeCacheAtomically(
+	path: string,
+	bytes: Buffer,
+): Promise<void> {
+	const staging = `${path}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
+	try {
+		await Bun.write(staging, bytes);
+		await rename(staging, path);
+	} catch (error) {
+		try {
+			await unlink(staging);
+		} catch {
+			// The staging file may never have been created.
+		}
+		throw error;
+	}
+}
 
 /**
  * Anything quieter than this counts as silence and is left unscaled, so a
@@ -492,7 +526,7 @@ export class ThumbnailService {
 				}
 			}
 
-			await Bun.write(thumbPath, thumbnail);
+			await writeCacheAtomically(thumbPath, thumbnail);
 			logger.debug(
 				`[thumbnail] Cached ${thumbnail.length} bytes to ${thumbPath}`,
 			);

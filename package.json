@@ -36,7 +36,7 @@
 		"machine-translate": "inlang machine translate --project project.inlang",
 		"migrate:storage": "bun run ./scripts/migrate-storage-meta.ts",
 		"preinstall": "bunx only-allow bun",
-		"prepare": "svelte-kit sync || true; prek install -t pre-commit -t commit-msg --allow-missing-config || true",
+		"prepare": "svelte-kit sync || true; prek install -t pre-commit -t commit-msg -t post-checkout --allow-missing-config || true",
 		"preview": "vite preview",
 		"release": "semantic-release",
 		"test:docker": "docker compose -f compose.test.yaml up --build --exit-code-from test --abort-on-container-exit",

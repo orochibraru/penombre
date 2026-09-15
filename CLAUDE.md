@@ -840,6 +840,58 @@ header that has to hide thousands of scrolling rows cannot be built from them.
 `--surface-base` is the opaque one, and it is what the auth card and the
 floating surfaces already composite against.
 
+### A cached thumbnail must appear whole or not at all
+
+`existsSync(thumbPath)` is the cache check in `generateThumbnail`, and it runs
+**before** the semaphore. A plain `Bun.write` to that path is therefore a race
+with a name on it: the instant the file is created it is present but empty, so a
+concurrent caller reads zero bytes and serves them as the cached entry. For
+audio that is an empty peaks document, and `waveform.svelte` fetches peaks
+exactly once — an empty array is `onfail`, `bars.length === 0`, and the waveform
+(with its Seek button) is gone until the component remounts.
+
+The racing reader is not hypothetical: `uploadFileBody` fires `warm()` without
+awaiting it, so the second caller is the request the page makes the moment the
+upload returns. Play a track straight after uploading it and you got a player
+with no waveform. `writeCacheAtomically` stages the bytes beside the destination
+and `rename`s them in.
+
+This was also the E2E flake that failed a release: `waveform.spec.ts` uploads a
+file and clicks it, which is that race every time.
+
+### A flaky test is a failed test in CI
+
+`failOnFlakyTests` is on whenever `CI` is set, in `playwright.config.ts` (the
+Postgres config spreads it). Retries stay — a flake should be _reported_ as one
+rather than just red — but the run fails.
+
+Without it, a test that passes on retry is green, and the PR merges; the same
+non-determinism then lands on `main`, where the release pipeline runs the very
+same suite and rolls the dice again. That is precisely how a release broke on a
+change its own PR had approved. There is no other asymmetry to look for: both
+pipelines call `e2e.yaml` with the same inputs, and the `main` ruleset already
+sets `strict_required_status_checks_policy`, so a PR cannot merge stale.
+
+So a flake is now a bug to fix where it appears, not noise to re-run.
+`chooseMenuItem` in `e2e/helpers.ts` takes a `confirm` callback for this reason:
+a forced click reports success as soon as it is dispatched, but a menu being
+torn down by a settling listing never runs its handler, so "the click worked"
+and "the thing happened" are different questions.
+
+### `bun install` on checkout
+
+`.pre-commit-config.yaml` has a `post-checkout` hook, installed by `prepare`
+(`prek install … -t post-checkout`). `node_modules` is not part of a checkout,
+so without it the first command after a branch switch runs against the previous
+branch's dependencies.
+
+It runs `bun install --ignore-scripts` plus an explicit `svelte-kit sync`, not a
+plain `bun install`: `prepare` runs `prek install`, which rewrites `.husky/_/*`
+— tracked files — from inside the hook prek is currently running. prek then sees
+a hook that modified the working tree and every branch switch on a dirty tree
+ends in "Hook changes conflicted with the saved unstaged changes." `entry` is
+exec'd rather than run through a shell, hence the `sh -c`.
+
 ### CI builds the image once
 
 `docker.yaml` pushes by digest only; `e2e.yaml` pulls that digest instead of

@@ -53,11 +53,18 @@ export async function rightClickItem(page: Page, name: string) {
  * the menu down mid-click, and Playwright then waits for an element that no
  * longer exists. Under load in CI that is a guaranteed 30s timeout rather than
  * a rare one, so the menu is reopened on the item rather than trusted to stay.
+ *
+ * `confirm` is what the entry was supposed to do — a navigation, a dialog.
+ * Pass it whenever there is one. A forced click reports success as soon as it
+ * is dispatched, but a menu being torn down at that instant never runs its
+ * handler, so "the click worked" and "the thing happened" are different
+ * questions, and only the second one is worth retrying on.
  */
 export async function chooseMenuItem(
 	page: Page,
 	itemName: string,
 	entry: RegExp | string,
+	confirm?: () => Promise<unknown>,
 ) {
 	const menuItem = page.getByRole("menuitem", { name: entry });
 	for (let attempt = 0; attempt < 3; attempt++) {
@@ -67,6 +74,7 @@ export async function chooseMenuItem(
 			// settling never holds still long enough — and there is nothing
 			// over an open menu to miss-receive the click.
 			await menuItem.first().click({ force: true, timeout: 5000 });
+			await confirm?.();
 			return;
 		} catch (error) {
 			if (attempt === 2) {
