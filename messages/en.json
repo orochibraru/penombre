@@ -620,5 +620,9 @@
 	"admin_oauth_pending": "Saved, not yet loaded",
 	"admin_oauth_from_env": "From the environment",
 	"admin_oauth_saved": "{name} saved. Restart to let people sign in with it.",
-	"admin_oauth_removed": "{name} removed."
+	"admin_oauth_removed": "{name} removed.",
+	"toast_trash_emptied": "Trash emptied, {size} freed",
+	"toast_trash_emptied_partial": "{count} items could not be deleted and are still in the trash",
+	"toast_emptying_trash": "Emptying the trash",
+	"toast_empty_trash_error": "Failed to empty the trash"
 }

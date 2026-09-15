@@ -1,3 +1,4 @@
+import { FileOrFolderNotFoundError } from "$lib/server/errors";
 import { Http } from "$lib/server/http";
 import {
 	deleteFolder,
@@ -23,6 +24,9 @@ export const PUT = updateFolder.handler(async ({ params, body, service }) => {
 		await service.updateFolderMeta(folderPath, body);
 		return Http.Ok({ message: "Folder metadata updated." });
 	} catch (error) {
+		if (error instanceof FileOrFolderNotFoundError) {
+			return Http.NotFound("Folder not found");
+		}
 		return Http.ServerError("Failed to update folder metadata", error);
 	}
 });
@@ -37,6 +41,9 @@ export const DELETE = deleteFolder.handler(
 			await service.deleteFolder(folderPath);
 			return Http.Ok({ message: "Folder permanently deleted." });
 		} catch (error) {
+			if (error instanceof FileOrFolderNotFoundError) {
+				return Http.NotFound("Folder not found");
+			}
 			return Http.ServerError("Failed to delete folder", error);
 		}
 	},

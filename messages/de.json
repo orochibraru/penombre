@@ -620,5 +620,9 @@
 	"admin_oauth_pending": "Gespeichert, noch nicht geladen",
 	"admin_oauth_from_env": "Aus der Umgebung",
 	"admin_oauth_saved": "{name} gespeichert. Nach einem Neustart kann damit angemeldet werden.",
-	"admin_oauth_removed": "{name} entfernt."
+	"admin_oauth_removed": "{name} entfernt.",
+	"toast_trash_emptied": "Papierkorb geleert, {size} freigegeben",
+	"toast_trash_emptied_partial": "{count} Elemente konnten nicht gelöscht werden und sind weiterhin im Papierkorb",
+	"toast_emptying_trash": "Papierkorb wird geleert",
+	"toast_empty_trash_error": "Papierkorb konnte nicht geleert werden"
 }

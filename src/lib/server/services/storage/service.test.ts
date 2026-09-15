@@ -528,6 +528,8 @@ describe("StorageService", () => {
 	// =========================================================================
 	describe("deleteFolder", () => {
 		test("deletes all files and folders from DB and removes from driver", async () => {
+			mockNextSelect([{ id: "folder-1" }]);
+
 			const service = new StorageService(testUser);
 			await service.deleteFolder("folder-uuid-1");
 
@@ -542,6 +544,8 @@ describe("StorageService", () => {
 		});
 
 		test("normalises trailing slash in key", async () => {
+			mockNextSelect([{ id: "folder-1" }]);
+
 			const service = new StorageService(testUser);
 			await service.deleteFolder("folder-uuid-1/");
 
@@ -550,7 +554,17 @@ describe("StorageService", () => {
 			);
 		});
 
+		test("refuses a folder that does not exist instead of reporting success", async () => {
+			const service = new StorageService(testUser);
+			await expect(service.deleteFolder("folder-uuid-1")).rejects.toThrow(
+				"Folder not found: folder-uuid-1",
+			);
+			expect(mockDriver.deleteObjectsByPrefix).not.toHaveBeenCalled();
+			expect(mockDelete).not.toHaveBeenCalled();
+		});
+
 		test("wraps driver errors in a descriptive Error", async () => {
+			mockNextSelect([{ id: "folder-1" }]);
 			mockDriver.deleteObjectsByPrefix.mockRejectedValueOnce(
 				new Error("storage error"),
 			);
@@ -682,6 +696,16 @@ describe("StorageService", () => {
 			await expect(
 				service.updateFolderMeta("missing-folder", { name: "New Name" }),
 			).rejects.toThrow("Folder not found");
+		});
+
+		test("trashing a folder takes its contents with it", async () => {
+			mockNextSelect([baseFolder]);
+
+			const service = new StorageService(testUser);
+			await service.updateFolderMeta("folder-uuid-1", { isTrashed: true });
+
+			// The folder row, then the descendant files and folders
+			expect(mockUpdate).toHaveBeenCalledTimes(3);
 		});
 	});
 
@@ -822,6 +846,82 @@ describe("StorageService", () => {
 			const result = await service.listTrashFiles();
 
 			expect(result).toEqual({ list: [], count: 0, total: 0 });
+		});
+
+		test("lists a trashed folder once, priced by what it contains", async () => {
+			const trashedFolder: DbFolder = { ...baseFolder, isTrashed: true };
+			const childFile: DbFile = {
+				...baseFile,
+				id: "file-2",
+				path: "folder-uuid-1/child-uuid.txt",
+				size: 4096,
+				isTrashed: true,
+			};
+
+			mockNextSelect([childFile]);
+			mockNextSelect([trashedFolder]);
+
+			const service = new StorageService(testUser);
+			const result = await service.listTrashFiles();
+
+			expect(result.count).toBe(1);
+			expect(result.list?.[0]?.key).toBe("folder-uuid-1/");
+			expect(result.list?.[0]?.size).toBe(4096);
+		});
+
+		test("keys are full paths, so the trash can address a nested file", async () => {
+			const nestedFile: DbFile = {
+				...baseFile,
+				path: "folder-uuid-1/abc-uuid.txt",
+				isTrashed: true,
+			};
+
+			mockNextSelect([nestedFile]);
+			mockNextSelect([]);
+
+			const service = new StorageService(testUser);
+			const result = await service.listTrashFiles();
+
+			expect(result.list?.[0]?.key).toBe("folder-uuid-1/abc-uuid.txt");
+		});
+	});
+
+	// =========================================================================
+	// emptyTrash
+	// =========================================================================
+	describe("emptyTrash", () => {
+		test("removes trashed rows and reports the bytes freed", async () => {
+			const trashedFile: DbFile = { ...baseFile, isTrashed: true };
+			const trashedFolder: DbFolder = { ...baseFolder, isTrashed: true };
+
+			mockNextSelect([trashedFile]);
+			mockNextSelect([trashedFolder]);
+
+			const service = new StorageService(testUser);
+			const result = await service.emptyTrash();
+
+			expect(result).toEqual({ deleted: 2, freed: 2048, failed: 0 });
+			expect(mockDriver.deleteObject).toHaveBeenCalledWith("abc-uuid.txt");
+			expect(mockDriver.deleteObjectsByPrefix).toHaveBeenCalledWith(
+				"folder-uuid-1/",
+			);
+			// One delete for the files, one for the folders
+			expect(mockDelete).toHaveBeenCalledTimes(2);
+		});
+
+		test("keeps the row of a file whose bytes could not be deleted", async () => {
+			const trashedFile: DbFile = { ...baseFile, isTrashed: true };
+
+			mockNextSelect([trashedFile]);
+			mockNextSelect([]);
+			mockDriver.deleteObject.mockRejectedValueOnce(new Error("read-only"));
+			mockDriver.objectExists.mockResolvedValueOnce(true);
+
+			const service = new StorageService(testUser);
+			const result = await service.emptyTrash();
+
+			expect(result).toEqual({ deleted: 0, freed: 0, failed: 1 });
+			expect(mockDelete).not.toHaveBeenCalled();
 		});
 	});
 

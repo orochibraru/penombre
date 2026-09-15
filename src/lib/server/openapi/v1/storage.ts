@@ -112,6 +112,22 @@ export const listTrashFiles = defineRoute({
 	service: (user) => new StorageService(user),
 });
 
+export const emptyTrash = defineRoute({
+	method: "delete",
+	path: "/api/v1/storage/trash",
+	summary: "Empty the trash",
+	description:
+		"Permanently deletes every trashed file and folder, and reports what was freed",
+	tags: ["Storage"],
+	response: z.object({
+		deleted: z.number(),
+		freed: z.number(),
+		failed: z.number(),
+	}),
+	errors: [500],
+	service: (user) => new StorageService(user),
+});
+
 export const listStarredFiles = defineRoute({
 	method: "get",
 	path: "/api/v1/storage/file/starred",

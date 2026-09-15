@@ -212,9 +212,12 @@ export class FolderOperations {
 	}
 
 	async deleteFolder(key: string): Promise<void> {
-		try {
-			const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
+		const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
+		// Deleting a path that matches no row used to answer 200 while doing
+		// nothing, so a failed empty-trash looked like a successful one.
+		await this.requireFolder(normalizedKey);
 
+		try {
 			await this.ctx.driver.deleteObjectsByPrefix(`${normalizedKey}/`);
 
 			await this.ctx.db
@@ -248,23 +251,25 @@ export class FolderOperations {
 		}
 	}
 
-	async trashFolder(key: string): Promise<void> {
-		const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
-		const [folder] = await this.ctx.db
-			.select({ id: folders.id })
-			.from(folders)
-			.where(and(eq(folders.path, normalizedKey), ownedFolders(this.ctx)));
-		if (!folder) {
-			throw new Error("Folder not found");
-		}
-
+	/**
+	 * Trash state is a property of the whole subtree.
+	 *
+	 * Leaving descendants untouched hid them from the drive (their parent is
+	 * gone from the listing) while keeping them out of the trash, so nothing
+	 * could restore or delete them and their bytes were never freed.
+	 */
+	private async setTrashedRecursively(
+		normalizedKey: string,
+		isTrashed: boolean,
+	): Promise<void> {
+		const updatedAt = new Date();
 		await this.ctx.db
 			.update(files)
-			.set({ isTrashed: true, updatedAt: new Date() })
+			.set({ isTrashed, updatedAt })
 			.where(and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)));
 		await this.ctx.db
 			.update(folders)
-			.set({ isTrashed: true, updatedAt: new Date() })
+			.set({ isTrashed, updatedAt })
 			.where(
 				and(
 					ownedFolders(this.ctx),
@@ -274,6 +279,22 @@ export class FolderOperations {
 					),
 				),
 			);
+	}
+
+	private async requireFolder(normalizedKey: string): Promise<void> {
+		const [folder] = await this.ctx.db
+			.select({ id: folders.id })
+			.from(folders)
+			.where(and(eq(folders.path, normalizedKey), ownedFolders(this.ctx)));
+		if (!folder) {
+			throw new FileOrFolderNotFoundError(`Folder not found: ${normalizedKey}`);
+		}
+	}
+
+	async trashFolder(key: string): Promise<void> {
+		const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
+		await this.requireFolder(normalizedKey);
+		await this.setTrashedRecursively(normalizedKey, true);
 
 		await this.ctx.activityService.register({
 			userId: this.ctx.user.id,
@@ -286,30 +307,8 @@ export class FolderOperations {
 
 	async restoreFolder(key: string): Promise<void> {
 		const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
-		const [folder] = await this.ctx.db
-			.select({ id: folders.id })
-			.from(folders)
-			.where(and(eq(folders.path, normalizedKey), ownedFolders(this.ctx)));
-		if (!folder) {
-			throw new Error("Folder not found");
-		}
-
-		await this.ctx.db
-			.update(files)
-			.set({ isTrashed: false, updatedAt: new Date() })
-			.where(and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)));
-		await this.ctx.db
-			.update(folders)
-			.set({ isTrashed: false, updatedAt: new Date() })
-			.where(
-				and(
-					ownedFolders(this.ctx),
-					or(
-						eq(folders.path, normalizedKey),
-						like(folders.path, `${normalizedKey}/%`),
-					),
-				),
-			);
+		await this.requireFolder(normalizedKey);
+		await this.setTrashedRecursively(normalizedKey, false);
 
 		await this.ctx.activityService.register({
 			userId: this.ctx.user.id,
@@ -335,7 +334,7 @@ export class FolderOperations {
 			.from(folders)
 			.where(and(eq(folders.path, normalizedId), ownedFolders(this.ctx)));
 		if (!folder) {
-			throw new Error("Folder not found");
+			throw new FileOrFolderNotFoundError(`Folder not found: ${normalizedId}`);
 		}
 
 		const updates: Partial<typeof folders.$inferInsert> = {
@@ -358,6 +357,12 @@ export class FolderOperations {
 			.update(folders)
 			.set(updates)
 			.where(eq(folders.id, folder.id));
+
+		// The UI trashes and restores a folder through this route, so the
+		// subtree has to follow — see setTrashedRecursively.
+		if (typeof data.isTrashed === "boolean") {
+			await this.setTrashedRecursively(normalizedId, data.isTrashed);
+		}
 
 		await this.ctx.activityService.register({
 			userId: this.ctx.user.id,

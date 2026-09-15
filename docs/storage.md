@@ -36,6 +36,20 @@ File and folder **metadata** (names, paths, sizes, trash state, ownership) lives
 in the database. The **bytes** live under `STORAGE_PATH`. A backup needs both:
 see [Deployment](deployment.md) for the backup routine.
 
+## The trash
+
+Deleting an item moves it to the trash, where it still occupies disk space until
+it is removed for good. A folder goes in whole: its files and subfolders travel
+with it, and restoring the folder brings them all back. The trash lists the
+folder itself rather than everything inside it, so what you see is what you
+selected.
+
+**Empty Trash** hands the whole job to the server in one request, which is what
+lets it report the exact amount of space it gave back. A file whose bytes cannot
+be removed — a read-only volume, a permissions problem — keeps its entry in the
+trash and is counted in the message, rather than disappearing from the list
+while its data stays on disk.
+
 ## Seeing what you use
 
 **Settings → Storage** reports your own usage: total bytes across your live

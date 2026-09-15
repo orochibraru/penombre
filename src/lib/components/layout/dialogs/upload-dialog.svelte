@@ -272,20 +272,20 @@
 
 {#snippet entry(name: string, size: number, remove: () => void, folder: boolean)}
     <div
-        class="flex place-items-center justify-between gap-3 rounded-xl border p-3"
+        class="flex min-w-0 place-items-center justify-between gap-3 rounded-xl border p-3"
     >
         <div class="flex min-w-0 flex-col">
             <div class="flex min-w-0 items-center gap-2">
                 {#if folder}
                     <FolderIcon class="text-muted-foreground size-4 shrink-0" />
                 {/if}
-                <span class="truncate text-sm">{name}</span>
+                <span class="truncate text-sm" title={name}>{name}</span>
             </div>
             <span class="text-muted-foreground text-xs">
                 {displaySize(size)}
             </span>
         </div>
-        <Button variant="outline" size="icon" onclick={remove}>
+        <Button variant="outline" size="icon" class="shrink-0" onclick={remove}>
             <XIcon />
         </Button>
     </div>

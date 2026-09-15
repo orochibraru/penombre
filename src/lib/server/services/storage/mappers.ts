@@ -39,6 +39,18 @@ export function determineCategory(key: string): FileCategory {
 	return fileTypes.categories[extension] || FileCategoryEnum.UNKNOWN;
 }
 
+/** Every ancestor directory of a key: `a/b/c.mp3` → `a`, `a/b` */
+export function ancestorFolders(key: string): string[] {
+	const segments = key.split("/");
+	segments.pop();
+
+	const result: string[] = [];
+	for (let i = 1; i <= segments.length; i++) {
+		result.push(segments.slice(0, i).join("/"));
+	}
+	return result;
+}
+
 export function fileDbToMetadata(file: DbFile): FileMetadata {
 	return {
 		id: file.id,

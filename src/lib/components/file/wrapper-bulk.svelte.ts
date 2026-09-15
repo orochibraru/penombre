@@ -1,8 +1,9 @@
 /**
  * Bulk restore/delete for the file wrapper's multi-select mode.
  *
- * Both operations fire one request per checked item, report progress through a
- * single toast, and revalidate the listing once everything settles.
+ * Restore and delete fire one request per checked item, a few at a time,
+ * report progress through a single toast and revalidate the listing once
+ * everything settles. Emptying the trash is one server-side request instead.
  */
 
 import { toast } from "svelte-sonner";
@@ -10,7 +11,7 @@ import { invalidate } from "$app/navigation";
 import { page } from "$app/state";
 import { api, type ObjectItem } from "$lib/api";
 import * as m from "$lib/paraglide/messages.js";
-import { isFolderItem } from "$lib/utils";
+import { isFolderItem, readableFileSize } from "$lib/utils";
 import {
 	getDeleteFolderPromise,
 	getDeleteForeverPromise,
@@ -20,179 +21,200 @@ import {
 	getTrashFolderPromise,
 } from "./wrapper.svelte.js";
 
-export function executeRestoreOperation(
-	checkedItems: Record<string, string | false>,
-	callbacks: {
-		setRestoringItem: (v: boolean) => void;
-		setConfirmRestoreOpen: (v: boolean) => void;
-		setActionsContextOpen: (v: boolean) => void;
-		clearCheckedItems: () => void;
-		setActionableItem: (v: ObjectItem | undefined) => void;
+/**
+ * How many item requests are in flight at once.
+ *
+ * Firing one per selected row put hundreds of writes on the server at the
+ * same time; enough of them failed that a "move to trash" over a large
+ * selection left part of the drive behind.
+ */
+const MAX_PARALLEL_REQUESTS = 6;
+
+interface OperationCallbacks {
+	setBusy: (v: boolean) => void;
+	closeDialog: () => void;
+	setActionsContextOpen: (v: boolean) => void;
+	clearCheckedItems: () => void;
+	setActionableItem: (v: ObjectItem | undefined) => void;
+}
+
+/** Run `tasks` a few at a time, counting the ones that actually failed. */
+async function runPooled(tasks: (() => Promise<void>)[]): Promise<number> {
+	let failures = 0;
+	let next = 0;
+
+	const worker = async () => {
+		while (next < tasks.length) {
+			const task = tasks[next];
+			next += 1;
+			try {
+				await task?.();
+			} catch {
+				failures += 1;
+			}
+		}
+	};
+
+	await Promise.all(
+		Array.from({ length: Math.min(MAX_PARALLEL_REQUESTS, tasks.length) }, () =>
+			worker(),
+		),
+	);
+	return failures;
+}
+
+/** Thrown once a batch settles, so the toast can report the real tally. */
+class PartialFailure extends Error {
+	constructor(readonly failures: number) {
+		super(`${failures} items failed`);
+	}
+}
+
+function runBatch(
+	tasks: (() => Promise<void>)[],
+	callbacks: OperationCallbacks,
+	messages: {
+		loading: string;
+		success: string;
+		error: (failures: number) => string;
 	},
 ): void {
-	const keys = Object.keys(checkedItems);
+	callbacks.setBusy(true);
+	callbacks.setActionsContextOpen(false);
+
+	toast.promise(
+		runPooled(tasks)
+			.then(async (failures) => {
+				await invalidate("app:files");
+				if (failures > 0) {
+					throw new PartialFailure(failures);
+				}
+			})
+			.finally(() => {
+				callbacks.setBusy(false);
+				callbacks.closeDialog();
+				callbacks.clearCheckedItems();
+				callbacks.setActionableItem(undefined);
+			}),
+		{
+			loading: messages.loading,
+			success: messages.success,
+			error: (error) =>
+				messages.error(error instanceof PartialFailure ? error.failures : 1),
+		},
+	);
+}
+
+const noop = () => {
+	// The batch, not the individual request, drives the dialog state.
+};
+
+export function executeRestoreOperation(
+	checkedItems: Record<string, string | false>,
+	callbacks: OperationCallbacks,
+): void {
+	const keys = selectedKeys(checkedItems);
 	if (keys.length === 0) {
 		return;
 	}
 
-	const promises: Promise<void>[] = [];
-	const count = keys.length;
-
-	callbacks.setActionsContextOpen(false);
-
-	for (const checkedItem of keys) {
-		callbacks.setRestoringItem(true);
+	const tasks = keys.map((checkedItem) => {
 		const itemPath = page.params.path
 			? `${page.params.path}/${checkedItem}`
 			: checkedItem;
+		const restore = itemPath.endsWith("/")
+			? getRestoreFolderPromise
+			: getRestoreFilePromise;
+		return () => restore(itemPath, { onSuccess: noop, onError: noop });
+	});
 
-		if (itemPath.endsWith("/")) {
-			promises.push(
-				getRestoreFolderPromise(itemPath, {
-					onSuccess: () => {
-						callbacks.setConfirmRestoreOpen(false);
-						callbacks.setRestoringItem(false);
-					},
-					onError: () => callbacks.setRestoringItem(false),
-				}),
-			);
-		} else {
-			promises.push(
-				getRestoreFilePromise(itemPath, {
-					onSuccess: () => {
-						callbacks.setConfirmRestoreOpen(false);
-						callbacks.setRestoringItem(false);
-					},
-					onError: () => callbacks.setRestoringItem(false),
-				}),
-			);
-		}
-	}
-
-	let failures = 0;
-
-	toast.promise(
-		Promise.all(promises)
-			.catch(() => {
-				failures += 1;
-			})
-			.finally(() => {
-				callbacks.clearCheckedItems();
-				callbacks.setActionsContextOpen(false);
-				callbacks.setActionableItem(undefined);
-			})
-			.then(() => invalidate("app:files")),
-		{
-			loading: m.toast_restoring_items({ count: String(count) }),
-			success: m.toast_items_restored({ count: String(count) }),
-			error: m.toast_restore_items_error({ count: String(failures) }),
-		},
-	);
+	runBatch(tasks, callbacks, {
+		loading: m.toast_restoring_items({ count: String(keys.length) }),
+		success: m.toast_items_restored({ count: String(keys.length) }),
+		error: (failures) =>
+			m.toast_restore_items_error({ count: String(failures) }),
+	});
 }
 
 export function executeDeleteOperation(
 	checkedItems: Record<string, string | false>,
 	isTrash: boolean,
-	callbacks: {
-		setDeletingItem: (v: boolean) => void;
-		setConfirmDeleteOpen: (v: boolean) => void;
-		setActionsContextOpen: (v: boolean) => void;
-		clearCheckedItems: () => void;
-		setActionableItem: (v: ObjectItem | undefined) => void;
-	},
+	callbacks: OperationCallbacks,
 ): void {
-	const keys = Object.keys(checkedItems);
+	const keys = selectedKeys(checkedItems);
 	if (keys.length === 0) {
 		return;
 	}
 
-	const promises: Promise<void>[] = [];
-	const amount = keys.length;
-
-	callbacks.setActionsContextOpen(false);
-
-	for (const checkedItem of keys) {
-		callbacks.setDeletingItem(true);
-		// On trash page, items already contain full paths; otherwise prepend current folder path
+	const tasks = keys.map((checkedItem) => {
+		// Trash rows carry their full path already; a folder listing gives a
+		// key relative to the folder being browsed.
 		const itemPath =
 			isTrash || !page.params.path
 				? checkedItem
 				: `${page.params.path}/${checkedItem}`;
 
 		const isFolder = itemPath.endsWith("/");
+		const operation = isFolder
+			? isTrash
+				? getDeleteFolderPromise
+				: getTrashFolderPromise
+			: isTrash
+				? getDeleteForeverPromise
+				: getTrashFilePromise;
 
-		if (isFolder) {
-			if (isTrash) {
-				promises.push(
-					getDeleteFolderPromise(itemPath, {
-						onSuccess: () => {
-							callbacks.setConfirmDeleteOpen(false);
-							callbacks.setDeletingItem(false);
-						},
-						onError: () => callbacks.setDeletingItem(false),
-					}),
-				);
-			} else {
-				promises.push(
-					getTrashFolderPromise(itemPath, {
-						onSuccess: () => {
-							callbacks.setConfirmDeleteOpen(false);
-							callbacks.setDeletingItem(false);
-						},
-						onError: () => callbacks.setDeletingItem(false),
-					}),
-				);
-			}
-			continue;
-		}
+		return () => operation(itemPath, { onSuccess: noop, onError: noop });
+	});
 
-		if (isTrash) {
-			promises.push(
-				getDeleteForeverPromise(itemPath, {
-					onSuccess: () => {
-						callbacks.setConfirmDeleteOpen(false);
-						callbacks.setDeletingItem(false);
-					},
-					onError: () => callbacks.setDeletingItem(false),
-				}),
-			);
-			continue;
-		}
-
-		promises.push(
-			getTrashFilePromise(itemPath, {
-				onSuccess: () => {
-					callbacks.setConfirmDeleteOpen(false);
-					callbacks.setDeletingItem(false);
-				},
-				onError: () => callbacks.setDeletingItem(false),
-			}),
-		);
-	}
-
-	let failures = 0;
-
-	toast.promise(
-		Promise.all(promises)
-			.catch(() => {
-				failures += 1;
-			})
-			.finally(() => {
-				callbacks.clearCheckedItems();
-				callbacks.setActionsContextOpen(false);
-				callbacks.setActionableItem(undefined);
-			})
-			.then(() => invalidate("app:files")),
-		{
-			loading: isTrash
-				? m.toast_deleting_permanently({ count: String(amount) })
-				: m.toast_moving_to_trash({ count: String(amount) }),
-			success: isTrash
-				? m.toast_items_deleted_permanently({ count: String(amount) })
-				: m.toast_items_moved_to_trash({ count: String(amount) }),
-			error: isTrash
+	const count = String(keys.length);
+	runBatch(tasks, callbacks, {
+		loading: isTrash
+			? m.toast_deleting_permanently({ count })
+			: m.toast_moving_to_trash({ count }),
+		success: isTrash
+			? m.toast_items_deleted_permanently({ count })
+			: m.toast_items_moved_to_trash({ count }),
+		error: (failures) =>
+			isTrash
 				? m.toast_delete_permanently_error({ count: String(failures) })
 				: m.toast_move_to_trash_error({ count: String(failures) }),
+	});
+}
+
+/**
+ * Empty the trash in one request.
+ *
+ * Deleting row by row priced the job from what the page happened to list and
+ * reported success for calls that had quietly done nothing; the server knows
+ * what is in there and what it actually freed.
+ */
+export function executeEmptyTrash(callbacks: OperationCallbacks): void {
+	callbacks.setBusy(true);
+	callbacks.setActionsContextOpen(false);
+
+	toast.promise(
+		api
+			.DELETE("/api/v1/storage/trash", {})
+			.then(async ({ data, error }) => {
+				if (error || !data?.data) {
+					throw new Error("Failed to empty the trash");
+				}
+				await invalidate("app:files");
+				return data.data;
+			})
+			.finally(() => {
+				callbacks.setBusy(false);
+				callbacks.closeDialog();
+				callbacks.clearCheckedItems();
+				callbacks.setActionableItem(undefined);
+			}),
+		{
+			loading: m.toast_emptying_trash(),
+			success: (result) =>
+				result.failed > 0
+					? m.toast_trash_emptied_partial({ count: String(result.failed) })
+					: m.toast_trash_emptied({ size: readableFileSize(result.freed) }),
+			error: m.toast_empty_trash_error(),
 		},
 	);
 }
@@ -210,6 +232,38 @@ export function selectedKeys(
 	return Object.entries(checkedItems)
 		.filter(([, name]) => !!name)
 		.map(([key]) => key);
+}
+
+/** Download a multi-item selection as one zip. */
+export function downloadSelected(keys: string[], currentFolder: string): void {
+	const paths = keys.map((key) =>
+		currentFolder ? `${currentFolder}/${key}` : key,
+	);
+
+	toast.promise(
+		(async () => {
+			const { response, error } = await api.POST("/api/v1/storage/download", {
+				body: { paths },
+				parseAs: "blob",
+			});
+			if (error) {
+				throw new Error("Failed to create download");
+			}
+			const url = URL.createObjectURL(await response.blob());
+			const anchor = document.createElement("a");
+			anchor.href = url;
+			anchor.download = `penombre-download-${paths.length}-files.zip`;
+			document.body.appendChild(anchor);
+			anchor.click();
+			URL.revokeObjectURL(url);
+			anchor.remove();
+		})(),
+		{
+			loading: m.toast_creating_zip_files({ count: String(keys.length) }),
+			success: m.toast_downloaded_files({ count: String(keys.length) }),
+			error: m.toast_download_files_error(),
+		},
+	);
 }
 
 /** Star every selected item, files and folders alike. */

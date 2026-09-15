@@ -620,5 +620,9 @@
 	"admin_oauth_pending": "Enregistré, pas encore chargé",
 	"admin_oauth_from_env": "Depuis l'environnement",
 	"admin_oauth_saved": "{name} enregistré. Redémarrez pour permettre la connexion.",
-	"admin_oauth_removed": "{name} supprimé."
+	"admin_oauth_removed": "{name} supprimé.",
+	"toast_trash_emptied": "Corbeille vidée, {size} libérés",
+	"toast_trash_emptied_partial": "{count} éléments n'ont pas pu être supprimés et sont toujours dans la corbeille",
+	"toast_emptying_trash": "Vidage de la corbeille",
+	"toast_empty_trash_error": "Échec du vidage de la corbeille"
 }

@@ -14,6 +14,7 @@ import { CacheKeys } from "./cache";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath } from "./lookups";
 import {
+	ancestorFolders,
 	compareSearchRelevance,
 	fileDbToObjectItem,
 	folderDbToObjectItem,
@@ -179,9 +180,37 @@ export class ListingOperations {
 				.where(and(ownedFolders(this.ctx), eq(folders.isTrashed, true))),
 		]);
 
+		const trashedFolderPaths = new Set(trashedFolders.map((f) => f.path));
+		const insideTrashedFolder = (path: string) =>
+			ancestorFolders(path).some((ancestor) =>
+				trashedFolderPaths.has(ancestor),
+			);
+
+		// A trashed folder carries its subtree, so listing the descendants
+		// again would price and delete the same bytes twice.
+		const sizeByFolder = new Map<string, number>();
+		for (const file of trashedFiles) {
+			for (const ancestor of ancestorFolders(file.path)) {
+				sizeByFolder.set(
+					ancestor,
+					(sizeByFolder.get(ancestor) ?? 0) + file.size,
+				);
+			}
+		}
+
+		// Keys are full paths here, unlike a folder listing: the trash is flat,
+		// so a row has no folder context to be re-attached to.
 		const list = [
-			...trashedFolders.map((f) => folderDbToObjectItem(f)),
-			...trashedFiles.map((f) => fileDbToObjectItem(f)),
+			...trashedFolders
+				.filter((f) => !insideTrashedFolder(f.path))
+				.map((f) => ({
+					...folderDbToObjectItem(f),
+					key: `${f.path}/`,
+					size: sizeByFolder.get(f.path) ?? 0,
+				})),
+			...trashedFiles
+				.filter((f) => !insideTrashedFolder(f.path))
+				.map((f) => ({ ...fileDbToObjectItem(f), key: f.path })),
 		];
 		const result: ObjectList = { list, count: list.length, total: list.length };
 		await this.ctx.cache.set(cacheKey, result);
@@ -361,19 +390,9 @@ export class ListingOperations {
 		return { list: limited, count: limited.length, total: allMatches.length };
 	}
 
+	/** What the trash page shows, so the badge cannot disagree with it. */
 	async countTrashedItems(): Promise<number> {
-		const cacheKey = `${CacheKeys.counts()}:trashed`;
-		const cached = await this.ctx.cache.get<number>(cacheKey);
-		if (cached !== undefined) {
-			return cached;
-		}
-
-		const [result] = await this.ctx.db
-			.select({ count: sql<number>`COUNT(*)` })
-			.from(files)
-			.where(and(ownedFiles(this.ctx), eq(files.isTrashed, true)));
-		const count = Number(result?.count ?? 0);
-		await this.ctx.cache.set(cacheKey, count);
+		const { count } = await this.listTrashFiles();
 		return count;
 	}
 

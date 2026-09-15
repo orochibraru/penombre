@@ -64,13 +64,17 @@ export const PUT = updateFile.handler(
 export const DELETE = deleteFile.handler(async ({ params, service }) => {
 	const decodedItemName = decodeURIComponent(params.id);
 
-	const exists = await service.fileExists(decodedItemName);
-	if (!exists) {
+	// Same fallback as PUT: a caller that knows the id but not the folder —
+	// the trash, starred and search views — must still be able to delete.
+	const target = (await service.fileExists(decodedItemName))
+		? decodedItemName
+		: await service.findFileById(decodedItemName);
+	if (!target) {
 		return Http.NotFound("File not found");
 	}
 
 	try {
-		await service.deleteFile(decodedItemName);
+		await service.deleteFile(target);
 		return Http.Ok({ message: "File deleted successfully." });
 	} catch (error) {
 		return Http.ServerError("Failed to delete file", error);

@@ -34,6 +34,20 @@ async function createFolder(
 	return json.data.id as string;
 }
 
+/** Create a file inside a folder via API and return its display name. */
+async function createFileIn(
+	page: import("@playwright/test").Page,
+	folderId: string,
+	name: string,
+) {
+	const resp = await page.request.post(
+		`/api/v1/storage/file?folder=${folderId}`,
+		{ data: { name, size: 64 } },
+	);
+	expect(resp.ok()).toBeTruthy();
+	return name;
+}
+
 /** Trash a folder via API. */
 async function trashFolder(page: import("@playwright/test").Page, id: string) {
 	const resp = await page.request.post(`/api/v1/storage/folder/${id}/trash`, {
@@ -244,6 +258,56 @@ test.describe("Trash", () => {
 			} finally {
 				await forceDeleteFolder(page, folderId);
 			}
+		});
+	});
+	test.describe("Empty trash", () => {
+		test.beforeEach(async ({ page }) => {
+			await confirmDestructiveDialog(page).catch(() => {});
+		});
+
+		test("takes a folder's contents with it and frees them for good", async ({
+			page,
+		}) => {
+			const folderName = `e2e-empty-trash-${Date.now()}`;
+			const fileName = `e2e-nested-${Date.now()}.txt`;
+			const folderId = await createFolder(page, folderName);
+			await createFileIn(page, folderId, fileName);
+
+			await goToBrowse(page);
+			await rightClickItem(page, folderName);
+			await page.getByRole("menuitem", { name: "Move to trash" }).click();
+			await expectItemAbsent(page, folderName);
+
+			await goToTrash(page);
+			// The folder stands for its contents: the file inside it is not a
+			// separate row that would be priced and deleted twice.
+			await expectItemVisible(page, folderName);
+			await expectItemAbsent(page, fileName);
+
+			await page.getByRole("button", { name: "Empty Trash" }).click();
+			const dialog = page
+				.locator('[role="dialog"],[role="alertdialog"]')
+				.filter({ hasText: /Empty the trash/i })
+				.first();
+			await expect(dialog).toBeVisible({ timeout: 5000 });
+			await dialog.getByRole("button", { name: "Delete permanently" }).click();
+			await expect(dialog).toBeHidden({ timeout: 10_000 });
+
+			await expectItemAbsent(page, folderName);
+
+			// Nothing may reappear in the drive: a row deleted without its
+			// bytes is re-imported by the library scan.
+			await goToBrowse(page);
+			await expectItemAbsent(page, folderName);
+			await expectItemAbsent(page, fileName);
+
+			const trash = await page.request.get("/api/v1/storage/file/trash");
+			const body = await trash.json();
+			expect(
+				(body.data.list as { metadata: { name: string } }[]).map(
+					(item) => item.metadata.name,
+				),
+			).not.toContain(folderName);
 		});
 	});
 });
