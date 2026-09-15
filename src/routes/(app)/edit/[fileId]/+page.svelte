@@ -9,6 +9,7 @@
 	import SheetEditor from "$lib/components/editor/sheet-editor.svelte";
 	import {
 		baseName,
+		editorKindForName,
 		kindForName,
 		renameDocument,
 		saveDocument,
@@ -41,11 +42,19 @@
 		ours?.title ?? titleFromContent(kindForName(data.name), data.content),
 	);
 
+	/**
+	 * The smart rename is for Penombre's own documents only. A `.docx` is
+	 * named by whoever wrote it, and having its heading quietly rename the
+	 * file is not what anyone expects of a Word file — so the rename reads
+	 * the native kind, not the editor's.
+	 */
+	const nativeKind = $derived(kindForName(name));
+
 	onMount(() => {
 		title.set(name);
 	});
 
-	const kind = $derived(kindForName(name));
+	const kind = $derived(editorKindForName(name));
 
 	let pending = $state<string | null>(null);
 	let saving = $state(false);
@@ -86,7 +95,7 @@
 
 	/** Follow the document's heading with the file name. */
 	async function syncName(content: string) {
-		const heading = titleFromContent(kind, content);
+		const heading = titleFromContent(nativeKind, content);
 		if (!heading || heading === trackedTitle) {
 			return;
 		}
@@ -118,7 +127,16 @@
 
 <div class="flex h-[calc(100vh-8rem)] w-full flex-col gap-3">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="truncate text-lg font-medium">{name}</h1>
+        <div class="flex min-w-0 flex-col">
+            <h1 class="truncate text-lg font-medium">{name}</h1>
+            {#if data.office}
+                <!-- The bargain of editing a Word file in something that is
+                     not Word, said once, where it is about to happen. -->
+                <p class="text-muted-foreground text-xs">
+                    {m.editor_office_note()}
+                </p>
+            {/if}
+        </div>
         <span
             class="text-muted-foreground flex items-center gap-1.5 text-xs tabular-nums"
         >

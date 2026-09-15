@@ -560,6 +560,7 @@
 	"editor_saved": "Saved at {time}",
 	"editor_save_error": "Could not save. Retrying…",
 	"editor_unsupported": "This file type has no editor.",
+	"editor_office_note": "Saved back into the original file. Formatting this editor cannot show is kept — except on text you change.",
 	"sheet_add_row": "Add row",
 	"sheet_add_column": "Add column",
 	"sheet_delete_row": "Delete row",

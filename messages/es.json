@@ -560,6 +560,7 @@
 	"editor_saved": "Guardado a las {time}",
 	"editor_save_error": "No se pudo guardar. Reintentando…",
 	"editor_unsupported": "No hay editor para este tipo de archivo.",
+	"editor_office_note": "Se guarda en el archivo original. El formato que este editor no puede mostrar se conserva, salvo en el texto que modifiques.",
 	"sheet_add_row": "Añadir fila",
 	"sheet_add_column": "Añadir columna",
 	"sheet_delete_row": "Eliminar fila",

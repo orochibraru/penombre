@@ -560,6 +560,7 @@
 	"editor_saved": "Enregistré à {time}",
 	"editor_save_error": "Impossible d'enregistrer. Nouvelle tentative…",
 	"editor_unsupported": "Aucun éditeur pour ce type de fichier.",
+	"editor_office_note": "Enregistré dans le fichier d’origine. La mise en forme que cet éditeur ne peut pas afficher est conservée, sauf sur le texte que vous modifiez.",
 	"sheet_add_row": "Ajouter une ligne",
 	"sheet_add_column": "Ajouter une colonne",
 	"sheet_delete_row": "Supprimer la ligne",

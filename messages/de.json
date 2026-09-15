@@ -560,6 +560,7 @@
 	"editor_saved": "Gespeichert um {time}",
 	"editor_save_error": "Speichern fehlgeschlagen. Neuer Versuch…",
 	"editor_unsupported": "Für diesen Dateityp gibt es keinen Editor.",
+	"editor_office_note": "Wird in die Originaldatei zurückgeschrieben. Formatierungen, die dieser Editor nicht anzeigen kann, bleiben erhalten – außer bei Text, den Sie ändern.",
 	"sheet_add_row": "Zeile hinzufügen",
 	"sheet_add_column": "Spalte hinzufügen",
 	"sheet_delete_row": "Zeile löschen",

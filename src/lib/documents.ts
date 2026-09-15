@@ -48,10 +48,19 @@ function escapeHtml(value: string): string {
 		.replace(/>/g, "&gt;");
 }
 
-/** Which editor a file opens in, or null when it is not an editable document. */
+/** The extension of a file name, lowercased, or "" when it has none. */
+function extensionOf(name: string): string {
+	const dot = name.lastIndexOf(".");
+	return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
+}
+
+/**
+ * Which editor a file opens in, or null when it is not one of the three
+ * kinds Penombre stores natively. This is the "is it one of ours" question —
+ * the icon and the colour follow from it — not "can it be edited".
+ */
 export function kindForName(name: string): DocumentKind | null {
-	const extension = name.split(".").pop()?.toLowerCase();
-	switch (extension) {
+	switch (extensionOf(name)) {
 		case "html":
 		case "htm":
 			return "document";
@@ -63,6 +72,27 @@ export function kindForName(name: string): DocumentKind | null {
 		default:
 			return null;
 	}
+}
+
+/**
+ * Office formats that open in the same three editors. They are converted on
+ * the way in and written back into the original file on the way out — see
+ * `$lib/server/office` — so they stay Word, Excel and PowerPoint files and
+ * keep their own icons in a listing.
+ */
+export const OFFICE_KINDS: Record<string, DocumentKind> = {
+	docx: "document",
+	xlsx: "sheet",
+	pptx: "presentation",
+};
+
+export function officeKindForName(name: string): DocumentKind | null {
+	return OFFICE_KINDS[extensionOf(name)] ?? null;
+}
+
+/** Whether a file opens in an editor at all, native or converted. */
+export function editorKindForName(name: string): DocumentKind | null {
+	return kindForName(name) ?? officeKindForName(name);
 }
 
 /** Identity colour of the document a file is, or null when it is not one. */
@@ -178,13 +208,28 @@ export async function renameDocument(
 	return error ? null : name;
 }
 
-/** Replace a document's contents with `content`. */
+/**
+ * Replace a document's contents with `content`.
+ *
+ * A native document is uploaded whole, because the text *is* the file. An
+ * Office file is not: the server has to splice the text into the archive it
+ * already has, so only the text is sent and the browser never assembles a
+ * `.docx` it could get wrong.
+ */
 export async function saveDocument(
 	fileId: string,
 	filename: string,
 	contentType: string,
 	content: string,
 ): Promise<boolean> {
+	if (officeKindForName(filename)) {
+		const { error } = await api.POST("/api/v1/storage/file/{id}/office", {
+			params: { path: { id: fileId } },
+			body: { content },
+		});
+		return !error;
+	}
+
 	const form = new FormData();
 	form.set("file", new File([content], filename, { type: contentType }));
 	const { error } = await api.POST("/api/v1/storage/file/{id}/upload", {

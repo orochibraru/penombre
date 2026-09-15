@@ -197,6 +197,25 @@ export const uploadFile = defineRoute({
 	service: (user) => new StorageService(user),
 });
 
+export const saveOfficeDocument = defineRoute({
+	method: "post",
+	path: "/api/v1/storage/file/{id}/office",
+	summary: "Save an Office document",
+	description:
+		"Applies edited text to a .docx, .xlsx or .pptx file, rewriting only " +
+		"the part of the archive that holds it so the rest of the document " +
+		"survives unchanged. The body is HTML for a document, CSV for a " +
+		"spreadsheet and Markdown for a presentation.",
+	tags: ["Storage - Files"],
+	params: z.object({ id: z.string() }),
+	body: z.object({
+		content: z.string().describe("The edited text, in the format for its kind"),
+	}),
+	response: z.object({ message: z.string() }),
+	errors: [400, 404, 422, 500],
+	service: (user) => new StorageService(user),
+});
+
 export const moveFile = defineRoute({
 	method: "post",
 	path: "/api/v1/storage/file/{id}/move",

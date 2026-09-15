@@ -766,6 +766,80 @@ trash, sharing, search and thumbnails for free. Adding a kind means adding it to
 `handleOpenItem` routes an editable file to `/edit/[fileId]` before anything
 else, so extensions handled there never reach the preview dialog.
 
+### Office files are edited in place, not imported
+
+`$lib/server/office` opens a `.docx`/`.xlsx`/`.pptx`, converts the one part that
+holds text into HTML/CSV/Markdown for the existing editors, and on save splices
+the edit back into the **original archive**. Nothing is converted on disk and
+there is no export step.
+
+The whole design rests on one property: both directions derive their maps
+(images, numbering, styles) from the package alone, so the map built when the
+file is opened and the one built when it is saved agree with **no state carried
+between the two requests**. Do not introduce a cache or a session value here —
+the moment the two sides disagree, images and list numbering are silently
+dropped.
+
+Consequences worth knowing before touching it:
+
+- `zip.ts` is a real ZIP reader/writer (`node:zlib` has `crc32`, so no
+  dependency). Entry **order is preserved** — a `.docx` whose first entry is not
+  `[Content_Types].xml` is refused by older Word.
+- `xml.ts` only re-serialises the parts we actually change, which is why the
+  prolog, comments and CDATA survive as `raw` nodes. `XmlElement.attrs` is
+  `Record<string, string | undefined>` deliberately: with
+  `Record<string, string>` biome flags every `?? ""` as unnecessary while the
+  value really is undefined at runtime.
+- Writing is **surgical**, not regenerative. A spreadsheet cell whose text did
+  not change keeps its original XML node, so its formula, style and
+  shared-string reference are untouched; only changed cells are rewritten, and
+  as `t="inlineStr"` so `sharedStrings.xml` and its counts are never edited.
+- Saving does **not** go through the upload endpoint.
+  `POST /api/v1/storage/file/{id}/office` takes the text and re-reads the
+  original bytes server-side, so the browser never assembles a `.docx`.
+
+Three traps that cost real time:
+
+- **A Word list is not always on the paragraph.** python-docx (and Word's own
+  `List Bullet`) put `w:numPr` on the _style_, not on the `w:p` — reading only
+  the paragraph turned every bullet into a plain paragraph. `styleNumbering()`
+  resolves both.
+- **ProseKit serialises an image as a sibling of the paragraphs**, not inside
+  one, and lists as `div.prosemirror-flat-list[data-list-kind]` rather than
+  `ul`/`li`. Treating a top-level `<img>` as an unknown block wrapped _its
+  children_ in a paragraph — an `<img>` has none, so every picture in a document
+  was dropped on the first save. `INLINE` in `docx-write.ts` exists for that.
+- **A pptx content placeholder usually has no `type`.** It is written
+  `<p:ph idx="1"/>`, so `placeholderType()` returns undefined for it; use
+  `isPlaceholder()`. Getting this wrong made every slide added by cloning lose
+  its body placeholder and grow a stray text box.
+
+`kindForName` stays "is this one of ours" — the listing icon and the kind colour
+hang off it, and an Office file must keep its Word/Excel/PowerPoint icon.
+`editorKindForName` is the "does this open in an editor" question.
+
+### A cell per row is a page that never loads
+
+`sheet-editor.svelte` renders only the rows in view. A 20k-row CSV — an ordinary
+export — is 200k `<input>` elements: SSR alone emitted **58 MB** of HTML and the
+tab died before first paint. Two things hold it together:
+
+- Row height is fixed (`ROW_HEIGHT`) so the real scrollbar can measure the whole
+  sheet, and the rows that are not rendered are stood in for by two spacer rows.
+  Each spacer **must carry a `td` with a `colspan`**: a `<tr>` with no cell in
+  it is laid out at zero height however tall it is told to be, so without one
+  the container simply does not scroll.
+- `columnCount` is a `reduce`, never `Math.max(1, ...rows.map(…))` — that many
+  spread arguments is a `RangeError` in V8 (it survives in Bun, so a unit test
+  will not catch it).
+
+Its sticky header is `bg-surface-base`, not `bg-muted`. **Every panel token in
+this theme carries alpha** so the aurora washes through — `--background`,
+`--card` and `--muted` are all translucent, and `--muted` is only 10% — so a
+header that has to hide thousands of scrolling rows cannot be built from them.
+`--surface-base` is the opaque one, and it is what the auth card and the
+floating surfaces already composite against.
+
 ### CI builds the image once
 
 `docker.yaml` pushes by digest only; `e2e.yaml` pulls that digest instead of

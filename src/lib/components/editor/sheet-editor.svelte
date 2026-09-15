@@ -19,8 +19,40 @@
 
 	let rows = $state<string[][]>(untrack(() => parseCsv(content)));
 
-	/** Columns is the widest row: a ragged CSV still renders as a rectangle. */
-	const columnCount = $derived(Math.max(1, ...rows.map((row) => row.length)));
+	/**
+	 * Columns is the widest row: a ragged CSV still renders as a rectangle.
+	 * Reduced rather than spread into `Math.max` — a real spreadsheet export
+	 * is tens of thousands of rows, and that many arguments is a RangeError.
+	 */
+	const columnCount = $derived(
+		rows.reduce((widest, row) => Math.max(widest, row.length), 1),
+	);
+
+	/**
+	 * Only the rows on screen are in the DOM. A 20k-row CSV is an ordinary
+	 * export, and one `<input>` per cell was ~200k elements: the page never
+	 * finished loading and the tab died. Height per row is fixed so the
+	 * scrollbar can be the real one rather than a simulated position.
+	 */
+	const ROW_HEIGHT = 33;
+	const OVERSCAN = 6;
+
+	let scrollTop = $state(0);
+	let viewportHeight = $state(0);
+
+	/** Before measurement — SSR, first paint — assume a tall-ish viewport. */
+	const windowHeight = $derived(viewportHeight || 720);
+	const firstRow = $derived(
+		Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN),
+	);
+	const lastRow = $derived(
+		Math.min(
+			rows.length,
+			Math.ceil((scrollTop + windowHeight) / ROW_HEIGHT) + OVERSCAN,
+		),
+	);
+	const padTop = $derived(firstRow * ROW_HEIGHT);
+	const padBottom = $derived((rows.length - lastRow) * ROW_HEIGHT);
 
 	/** Spreadsheet-style column names: A…Z, AA, AB… */
 	function columnName(index: number): string {
@@ -88,25 +120,56 @@
         </Button>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-auto rounded-lg border">
-        <table class="w-full border-collapse text-sm">
-            <thead class="bg-muted/50 sticky top-0 z-10">
+    <div
+        class="min-h-0 flex-1 overflow-auto rounded-lg border"
+        bind:clientHeight={viewportHeight}
+        onscroll={(e) => (scrollTop = e.currentTarget.scrollTop)}
+    >
+        <table
+            class="w-full table-fixed border-collapse text-sm"
+            style="min-width: {2.5 + columnCount * 7 + 2.5}rem"
+        >
+            <colgroup>
+                <col style="width: 2.5rem" />
+                {#each Array.from({ length: columnCount }) as _, col (col)}
+                    <col />
+                {/each}
+                <col style="width: 2.5rem" />
+            </colgroup>
+            <!-- `bg-surface-base` under the cells' tint. Every panel token in
+                 this theme carries alpha so the aurora washes through, and a
+                 header that is sticky over thousands of rows is the one place
+                 that cannot: `bg-muted` alone left them scrolling visibly
+                 through it. `--surface-base` is the opaque one. -->
+            <thead class="bg-surface-base sticky top-0 z-10">
                 <tr>
-                    <th class="text-muted-foreground w-10 border-b border-e p-1 text-xs font-normal"
+                    <th
+                        class="text-muted-foreground bg-muted border-b border-e p-1 text-xs font-normal"
                     ></th>
                     {#each Array.from({ length: columnCount }) as _, col (col)}
                         <th
-                            class="text-muted-foreground border-b border-e p-1 text-xs font-medium"
+                            class="text-muted-foreground bg-muted border-b border-e p-1 text-xs font-medium"
                         >
                             {columnName(col)}
                         </th>
                     {/each}
-                    <th class="w-10 border-b"></th>
+                    <th class="bg-muted border-b"></th>
                 </tr>
             </thead>
             <tbody>
-                {#each rows as row, rowIndex (rowIndex)}
-                    <tr>
+                <!-- Two spacers stand in for the rows that are not rendered,
+                     so the scrollbar measures the whole sheet. A row with no
+                     cell in it is laid out at zero height however tall it is
+                     told to be, so each one carries a spanning `td`. -->
+                {#if padTop > 0}
+                    <tr aria-hidden="true">
+                        <td colspan={columnCount + 2} style="height: {padTop}px"
+                        ></td>
+                    </tr>
+                {/if}
+                {#each rows.slice(firstRow, lastRow) as row, offset (firstRow + offset)}
+                    {@const rowIndex = firstRow + offset}
+                    <tr style="height: {ROW_HEIGHT}px">
                         <td
                             class="text-muted-foreground bg-muted/30 border-b border-e p-1 text-center text-xs tabular-nums"
                         >
@@ -115,7 +178,7 @@
                         {#each Array.from({ length: columnCount }) as _, col (col)}
                             <td class="border-b border-e p-0">
                                 <input
-                                    class="focus:bg-primary/5 focus:ring-primary w-full min-w-28 bg-transparent px-2 py-1 outline-none focus:ring-1 focus:ring-inset"
+                                    class="focus:bg-primary/5 focus:ring-primary w-full bg-transparent px-2 py-1 outline-none focus:ring-1 focus:ring-inset"
                                     value={row[col] ?? ""}
                                     oninput={(e) =>
                                         setCell(
@@ -138,6 +201,14 @@
                         </td>
                     </tr>
                 {/each}
+                {#if padBottom > 0}
+                    <tr aria-hidden="true">
+                        <td
+                            colspan={columnCount + 2}
+                            style="height: {padBottom}px"
+                        ></td>
+                    </tr>
+                {/if}
             </tbody>
         </table>
     </div>

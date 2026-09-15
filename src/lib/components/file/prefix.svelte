@@ -143,10 +143,7 @@
                 <CircleIcon class="text-muted-foreground" />
             {/if}
         {:else}
-            <FolderIcon
-                class={cn(iconSize, "text-primary")}
-                fill="#1447e6"
-            />
+            <FolderIcon class={cn(iconSize, "text-primary")} fill="currentColor" />
         {/if}
         <span class="flex min-w-0 items-center gap-1">
             <span class="truncate">

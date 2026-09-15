@@ -19,7 +19,7 @@ import { resolve } from "$app/paths";
 import { page } from "$app/state";
 import { api, type ObjectItem, type ObjectList } from "$lib/api";
 import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
-import { kindForName } from "$lib/documents";
+import { editorKindForName } from "$lib/documents";
 import { determineCodeFileLanguage } from "$lib/file-utils";
 import * as m from "$lib/paraglide/messages.js";
 import { itemAction } from "$lib/store/actions";
@@ -465,7 +465,7 @@ export async function handleOpenItem(
 	// A document Penombre can edit opens in its editor rather than a preview:
 	// opening a spreadsheet to look at a read-only rendering of it is not what
 	// anybody means by "open".
-	const editable = kindForName(item.metadata.name ?? item.key);
+	const editable = editorKindForName(item.metadata.name ?? item.key);
 	if (editable && item.metadata.id) {
 		await goto(resolve("/(app)/edit/[fileId]", { fileId: item.metadata.id }));
 		return;
