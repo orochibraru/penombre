@@ -1,3 +1,25 @@
+## [1.8.39](https://github.com/orochibraru/penombre/compare/v1.8.38...v1.8.39) (2026-09-15)
+
+
+### Bug Fixes
+
+* tests ([346fe8c](https://github.com/orochibraru/penombre/commit/346fe8ca91a5fb0513f4af125774fcee18c09657))
+
+
+### Features
+
+* support msft docs ([#99](https://github.com/orochibraru/penombre/issues/99)) ([e83d2e1](https://github.com/orochibraru/penombre/commit/e83d2e1eb1f09a32902acebe16fee7918f127fb4))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.39
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.38](https://github.com/orochibraru/penombre/compare/v1.8.37...v1.8.38) (2026-09-15)
 
 
