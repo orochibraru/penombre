@@ -56,7 +56,6 @@ api.use({
 		if (drive && !new URL(request.url).searchParams.has("drive")) {
 			request.headers.set(DRIVE_HEADER, drive);
 		}
-		return undefined;
 	},
 });
 

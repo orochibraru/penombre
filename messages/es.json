@@ -655,5 +655,7 @@
 	"drive_role_editor": "Editor",
 	"drive_role_viewer": "Lector",
 	"drive_role_owner": "Propietario",
-	"drive_manager_only": "Solo un gestor puede cambiar esto."
+	"drive_manager_only": "Solo un gestor puede cambiar esto.",
+	"error_storage_unreachable": "No se puede acceder a los archivos de esta unidad",
+	"error_storage_unreachable_description": "La unidad está montada, pero Penombre no tiene permiso para leerla. Revisa el propietario y los permisos de la carpeta en el host, y el usuario con el que se ejecuta el contenedor."
 }

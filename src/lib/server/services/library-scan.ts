@@ -12,7 +12,11 @@
 import { asc } from "drizzle-orm";
 import { Logger } from "$lib/logger";
 import type { AuthType } from "$lib/server/auth";
-import { getVolumes, isSimpleMode } from "$lib/server/config";
+import {
+	getVolumes,
+	isSimpleMode,
+	type VolumeConfig,
+} from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user as userTable } from "$lib/server/db/schema";
 import { StorageService } from "$lib/server/services/storage";
@@ -114,13 +118,16 @@ export async function scanLibrary(): Promise<void> {
 		// Mounted volumes are written from outside the app in both modes, so
 		// they need the same reconciliation the shared drive gets.
 		//
-		// Simple mode shares each volume whole, so the shared owner covers it.
-		// Full mode splits a volume per user, so every account has its own
-		// subdirectory to reconcile — sweeping only the shared owner left
-		// everyone else's stale until they happened to open the volume.
-		const owners = isSimpleMode() ? [owner] : await loadAllOwners();
+		// A volume shared whole — simple mode, or `VOLUME_<NAME>_SHARED` — is
+		// one tree reconciled once, as the owner every request will read it
+		// as. A per-user volume gives every account its own subdirectory, so
+		// each needs a pass: sweeping only the shared owner left everyone
+		// else's stale until they happened to open the volume.
+		const sharedWhole = (volume: VolumeConfig) =>
+			isSimpleMode() || volume.shared;
+		const owners = volumes.every(sharedWhole) ? [] : await loadAllOwners();
 		for (const volume of volumes) {
-			for (const volumeOwner of owners) {
+			for (const volumeOwner of sharedWhole(volume) ? [owner] : owners) {
 				await new StorageService(volumeOwner, volume).scanStorage();
 			}
 		}

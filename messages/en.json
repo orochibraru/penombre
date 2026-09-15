@@ -655,5 +655,7 @@
 	"drive_role_editor": "Editor",
 	"drive_role_viewer": "Viewer",
 	"drive_role_owner": "Owner",
-	"drive_manager_only": "Only a manager can change this."
+	"drive_manager_only": "Only a manager can change this.",
+	"error_storage_unreachable": "The files on this drive can't be reached",
+	"error_storage_unreachable_description": "The drive is mounted, but Penombre has no permission to read it. Check the folder's ownership and permissions on the host, and the user the container runs as."
 }

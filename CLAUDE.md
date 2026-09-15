@@ -1072,3 +1072,39 @@ which is how a self-hosted box is reached. The server takes either spelling
 one for the things that have no client to carry a header: media `src` URLs
 (`getObjectUrl`), the upload worker's XHR, and `/view` + `/edit`, which are
 outside `/drives` and so get it from `withDrive()` on the link.
+
+### A volume mounted in full mode is split per user
+
+`VOLUME_<NAME>_PATH` roots the driver at `<volume>/user-<id>` in full mode,
+mirroring the main drive. For a directory that already holds files that is the
+wrong shape and the symptom is confusing: the volume page opens **empty** and
+Penombre creates a `user-<uuid>` folder inside somebody's media library, while
+the same mount works perfectly in simple mode.
+
+`VOLUME_<NAME>_SHARED=true` serves the whole tree in both modes — the same
+`shared` flag a drive sets. Two things have to agree for it: `StorageService`
+drops the per-user folder, _and_ the rows must belong to one account (the shared
+owner), or every user scanning the same tree builds a second set of rows for the
+same files. That is why the volume page resolves `loadSharedOwner()` for a
+shared volume and passes the session user as the actor instead.
+
+The default stays per-user: flipping it would show every account what the others
+had already put on the mount.
+
+### A mount the app cannot read is a 503, not a 500
+
+`LocalStorageDriver` wraps `EACCES`/`EPERM`/`EROFS`/`ENOTDIR` as
+`StorageUnavailableError` (`rethrowUnreachable`), which the volume and drive
+loads answer as **503** and `define-route` answers as `ServiceUnavailable`.
+`error-page.svelte` has a 503 branch naming the actual problem, because "500,
+contact your administrator" is useless advice to the administrator reading it
+about a permission only their `docker run` can fix.
+
+### `handleError` must return a plain object
+
+It returned `new Error(error.message)`, and SvelteKit serialises that value into
+the SSR payload with devalue, which refuses non-POJOs: every unexpected error
+rendered as the framework's bare "500 — Cannot stringify arbitrary non-POJOs"
+page instead of the app's, hiding the real failure. It returns
+`{ message, errorId }` now, and logs the same id beside the cause — the error
+page already had the "Error ID" line, with nothing feeding it.

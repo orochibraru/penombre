@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, rm, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { Logger } from "$lib/logger";
+import { rethrowUnreachable } from "$lib/server/errors";
 import { availableDiskSpace } from "../disk-space";
 import type { StorageDriver } from "../driver";
 
@@ -111,7 +112,9 @@ export class LocalStorageDriver implements StorageDriver {
 
 	private async walkKeys(dirPath: string, root: string): Promise<string[]> {
 		const results: string[] = [];
-		const entries = await readdir(dirPath, { withFileTypes: true });
+		const entries = await readdir(dirPath, { withFileTypes: true }).catch(
+			(error: unknown) => rethrowUnreachable(error, dirPath),
+		);
 		for (const entry of entries) {
 			const fullPath = join(dirPath, entry.name);
 			if (entry.isDirectory()) {
@@ -126,11 +129,17 @@ export class LocalStorageDriver implements StorageDriver {
 	}
 
 	async ensureRootExists(): Promise<void> {
-		if (!existsSync(this.storagePath)) {
-			logger.info(
-				`Creating user storage folder at path: ${this.storagePath}...`,
-			);
+		if (existsSync(this.storagePath)) {
+			return;
+		}
+		logger.info(`Creating user storage folder at path: ${this.storagePath}...`);
+		try {
 			await mkdir(this.storagePath, { recursive: true });
+		} catch (error) {
+			// A mounted volume the container cannot write is the common one:
+			// every call on this driver would fail the same way, so it is
+			// named here rather than surfacing as a bare EACCES stack.
+			rethrowUnreachable(error, this.storagePath);
 		}
 	}
 

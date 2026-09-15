@@ -25,9 +25,16 @@ const mockRegister = mock(async (_opts: unknown) => {});
 // wire mocks before any module import
 // ---------------------------------------------------------------------------
 
+/** The `(volumePath, userFolder)` the last volume-bound service asked for. */
+const volumeDriverArgs: { path?: string; userFolder?: string } = {};
+
 mock.module("./driver", () => ({
 	createUserStorageDriver: () => mockDriver,
-	createVolumeStorageDriver: () => mockDriver,
+	createVolumeStorageDriver: (path: string, userFolder: string) => {
+		volumeDriverArgs.path = path;
+		volumeDriverArgs.userFolder = userFolder;
+		return mockDriver;
+	},
 }));
 
 mock.module("$lib/server/config", () => ({
@@ -1049,6 +1056,40 @@ describe("StorageService", () => {
 			const result = await service.createFile({ name: "doc.txt", size: 0 });
 
 			expect(result.metadata.name).toBe("doc (2).txt");
+		});
+	});
+
+	// =========================================================================
+	// Volumes
+	// =========================================================================
+	describe("volume roots", () => {
+		const volume = {
+			name: "media",
+			label: "Media",
+			path: "/mnt/media",
+			readOnly: false,
+			shared: false,
+		};
+
+		test("a per-user volume is rooted at the user's own subdirectory", () => {
+			const service = new StorageService(testUser, volume);
+			expect(service).toBeInstanceOf(StorageService);
+			expect(volumeDriverArgs).toEqual({
+				path: "/mnt/media",
+				userFolder: `user-${testUser.id}`,
+			});
+		});
+
+		// The whole point of `shared`: an existing library's files sit at the
+		// root of the mount, so a per-user subdirectory shows an empty volume
+		// and creates a `user-<id>` folder inside somebody's media directory.
+		test("a shared volume is rooted at the mount itself", () => {
+			const service = new StorageService(testUser, { ...volume, shared: true });
+			expect(service).toBeInstanceOf(StorageService);
+			expect(volumeDriverArgs).toEqual({
+				path: "/mnt/media",
+				userFolder: "",
+			});
 		});
 	});
 });

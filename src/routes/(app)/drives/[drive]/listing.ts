@@ -8,7 +8,7 @@
 
 import { error, type NumericRange } from "@sveltejs/kit";
 import { isSimpleMode } from "$lib/server/config";
-import { DriveAccessError } from "$lib/server/errors";
+import { DriveAccessError, isStorageUnavailable } from "$lib/server/errors";
 import type { ObjectList } from "$lib/server/schema";
 import {
 	type DriveRole,
@@ -47,7 +47,14 @@ export async function loadDriveListing(
 		});
 
 	const { drive, role } = access;
-	const service = await driveStorage(drive, role, locals.user);
+	const service = await driveStorage(drive, role, locals.user).catch(
+		(cause: unknown) => {
+			if (isStorageUnavailable(cause)) {
+				return error(503, "Cannot reach this drive's files on disk");
+			}
+			throw cause;
+		},
+	);
 
 	const segments = path ? path.split("/") : [];
 	const crumbs: BreadCrumb[] = [

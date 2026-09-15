@@ -38,6 +38,20 @@
                     {m.error_not_found_description()}
                 </p>
             {/if}
+        {:else if page.status === 503}
+            <!-- The mount is there and the app cannot read it: a problem only
+                 whoever runs the container can fix, so say which one it is. -->
+            <p class="text-2xl text-gray-800">
+                {m.error_storage_unreachable()}
+            </p>
+            <p class="max-w-3xl text-lg">
+                {m.error_storage_unreachable_description()}
+            </p>
+            {#if dev}
+                <p class="max-w-3xl overflow-x-auto text-lg">
+                    {page.error?.message}
+                </p>
+            {/if}
         {:else if page.status >= 401 && page.status <= 403}
             <p class="text-2xl text-gray-800">{m.error_no_access()}</p>
             <p class="text-lg">{m.error_unauthorized()}</p>

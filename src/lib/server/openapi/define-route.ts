@@ -1,7 +1,11 @@
 import type { RequestEvent } from "@sveltejs/kit";
 import type { z } from "zod";
 import type { Pathname } from "$app/types";
-import { DriveAccessError, ReadOnlyVolumeError } from "$lib/server/errors";
+import {
+	DriveAccessError,
+	ReadOnlyVolumeError,
+	StorageUnavailableError,
+} from "$lib/server/errors";
 import { Http } from "$lib/server/http";
 import { type HttpMethod, registry } from "./registry";
 
@@ -140,9 +144,10 @@ function buildService<TService>(
 }
 
 /**
- * A refusal raised before the handler ran — by the service factory resolving
- * `?drive=`, or by a write against a read-only volume. Answered here or it
- * would surface as a 500 with nothing to act on.
+ * A failure that answers itself: a refusal raised before the handler ran — by
+ * the service factory resolving `?drive=`, or by a write against a read-only
+ * volume — or a mount the app cannot read. Answered here or each would
+ * surface as a 500 with nothing to act on.
  */
 function refusalResponse(error: unknown): Response | undefined {
 	if (error instanceof DriveAccessError) {
@@ -152,6 +157,9 @@ function refusalResponse(error: unknown): Response | undefined {
 	}
 	if (error instanceof ReadOnlyVolumeError) {
 		return Http.Forbidden(error.message);
+	}
+	if (error instanceof StorageUnavailableError) {
+		return Http.ServiceUnavailable(error.message);
 	}
 	return undefined;
 }

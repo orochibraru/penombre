@@ -655,5 +655,7 @@
 	"drive_role_editor": "Éditeur",
 	"drive_role_viewer": "Lecteur",
 	"drive_role_owner": "Propriétaire",
-	"drive_manager_only": "Seul un gestionnaire peut modifier cela."
+	"drive_manager_only": "Seul un gestionnaire peut modifier cela.",
+	"error_storage_unreachable": "Les fichiers de ce disque sont inaccessibles",
+	"error_storage_unreachable_description": "Le disque est monté, mais Penombre n'a pas la permission de le lire. Vérifiez le propriétaire et les permissions du dossier sur l'hôte, ainsi que l'utilisateur sous lequel tourne le conteneur."
 }

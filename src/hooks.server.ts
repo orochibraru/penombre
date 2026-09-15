@@ -36,18 +36,34 @@ const migrationsFolder = join(
 	isSqliteDialect() ? "sqlite" : "pg",
 );
 
-export function handleError({ event, error, status }) {
-	if (status !== 404) {
-		logger.error(
-			`Error on ${event.request.method} ${event.url.pathname}`,
-			error,
-		);
-		if (error instanceof Error) {
-			return new Error(error.message);
-		}
-
-		return new Error("An unknown error occurred.");
+/**
+ * What an unexpected error becomes for the page that renders it.
+ *
+ * The return value **must be a plain object**: SvelteKit serialises it into
+ * the SSR payload with devalue, which refuses anything else — returning an
+ * `Error` instance threw "Cannot stringify arbitrary non-POJOs" while
+ * rendering the error page, so the visitor got the framework's bare fallback
+ * instead of the app's own, and the real failure was nowhere on screen.
+ *
+ * The id is logged beside the cause so "quote this to your admin" leads
+ * somewhere; the error page already shows it.
+ */
+export function handleError({ event, error, status }): App.Error | undefined {
+	if (status === 404) {
+		return undefined;
 	}
+
+	const errorId = crypto.randomUUID();
+	logger.error(
+		`Error on ${event.request.method} ${event.url.pathname} [${errorId}]`,
+		error,
+	);
+
+	return {
+		message:
+			error instanceof Error ? error.message : "An unknown error occurred.",
+		errorId,
+	};
 }
 
 function sleep(ms: number) {
