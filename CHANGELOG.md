@@ -1,3 +1,20 @@
+## [1.8.44](https://github.com/orochibraru/penombre/compare/v1.8.43...v1.8.44) (2026-09-16)
+
+
+### Bug Fixes
+
+* folder display on mobile & dead docs links ([66a4134](https://github.com/orochibraru/penombre/commit/66a41342d9d58a74efa0dde2f14a13e7f3a013e4))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.44
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.43](https://github.com/orochibraru/penombre/compare/v1.8.42...v1.8.43) (2026-09-16)
 
 
