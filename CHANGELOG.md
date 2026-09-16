@@ -1,3 +1,20 @@
+## [1.8.42](https://github.com/orochibraru/penombre/compare/v1.8.41...v1.8.42) (2026-09-16)
+
+
+### Bug Fixes
+
+* 404s on mounted drives ([ee40190](https://github.com/orochibraru/penombre/commit/ee40190f01b0a0ed2efebc70d536a6b56a2fa84c))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.42
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.41](https://github.com/orochibraru/penombre/compare/v1.8.40...v1.8.41) (2026-09-15)
 
 
