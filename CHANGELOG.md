@@ -1,3 +1,20 @@
+## [1.8.41](https://github.com/orochibraru/penombre/compare/v1.8.40...v1.8.41) (2026-09-15)
+
+
+### Bug Fixes
+
+* ux on shared drives & scanning ([2a410a7](https://github.com/orochibraru/penombre/commit/2a410a7b5917dfd16ba2d399d7611bed6c59122b))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.41
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.40](https://github.com/orochibraru/penombre/compare/v1.8.39...v1.8.40) (2026-09-15)
 
 
