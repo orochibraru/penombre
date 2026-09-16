@@ -146,7 +146,8 @@ const mockInsert = rawDb.insert as Mock<() => unknown>;
 // Dynamic import AFTER all mocks are wired
 // ---------------------------------------------------------------------------
 const { StorageService } = await import("./service");
-const { FileOrFolderNotFoundError } = await import("$lib/server/errors");
+const { DriveAccessError, FileOrFolderNotFoundError, ReadOnlyVolumeError } =
+	await import("$lib/server/errors");
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -1080,6 +1081,130 @@ describe("StorageService", () => {
 				path: "/mnt/media",
 				userFolder: "",
 			});
+		});
+	});
+
+	// =========================================================================
+	// Share scopes
+	// =========================================================================
+	describe("share scopes", () => {
+		const folderShare = {
+			scope: { kind: "folder" as const, path: "shared" },
+		};
+
+		// The scope hides rows, but a create names a path without reading a row
+		// there, so without the guard a recipient could write anywhere.
+		test("a shared folder refuses creates outside it", () => {
+			const service = new StorageService(
+				testUser,
+				undefined,
+				testUser,
+				folderShare,
+			);
+			expect(() => service.createFile({ name: "x.txt", size: 0 })).toThrow(
+				DriveAccessError,
+			);
+			expect(() => service.createFolder("x", "elsewhere")).toThrow(
+				DriveAccessError,
+			);
+			expect(() => service.createFolder("x", "shared-sibling")).toThrow(
+				DriveAccessError,
+			);
+		});
+
+		test("a recipient may not move or trash the shared folder itself", () => {
+			const service = new StorageService(
+				testUser,
+				undefined,
+				testUser,
+				folderShare,
+			);
+			expect(() => service.moveFolder("shared", "")).toThrow(DriveAccessError);
+			expect(() => service.trashFolder("shared")).toThrow(DriveAccessError);
+			expect(() => service.emptyTrash()).toThrow(DriveAccessError);
+		});
+
+		test("a shared file allows no creates at all", () => {
+			const service = new StorageService(testUser, undefined, testUser, {
+				scope: { kind: "file", fileId: "file-1", folderId: "folder-1" },
+			});
+			expect(() => service.createFolder("x", "folder-uuid-1")).toThrow(
+				DriveAccessError,
+			);
+			expect(() => service.duplicateFile("folder-uuid-1/a.txt")).toThrow(
+				DriveAccessError,
+			);
+		});
+
+		test("a read share refuses writes", () => {
+			const service = new StorageService(testUser, undefined, testUser, {
+				...folderShare,
+				readOnly: true,
+			});
+			expect(() =>
+				service.createFile({ name: "x.txt", size: 0 }, "shared"),
+			).toThrow(ReadOnlyVolumeError);
+		});
+
+		// `deleteFile` removes bytes by key even when no row matched.
+		test("deleting outside the scope never reaches the driver", async () => {
+			mockNextSelect([]);
+			const service = new StorageService(
+				testUser,
+				undefined,
+				testUser,
+				folderShare,
+			);
+			await expect(service.deleteFile("elsewhere.txt")).rejects.toThrow(
+				FileOrFolderNotFoundError,
+			);
+			expect(mockDriver.deleteObject).not.toHaveBeenCalled();
+		});
+	});
+
+	// =========================================================================
+	// Transfer
+	// =========================================================================
+	describe("transfer", () => {
+		test("a file is streamed into the target with a fresh row", async () => {
+			const source = new StorageService(testUser);
+			const target = new StorageService(testUser, {
+				name: "media",
+				label: "Media",
+				path: "/mnt/media",
+				readOnly: false,
+			});
+			mockNextSelect([{ id: baseFile.id }]); // source.openFile → fileExists
+			mockNextSelect([]); // no name collision in the target
+			const values = mock((_row: Record<string, unknown>) => Promise.resolve());
+			mockInsert.mockReturnValueOnce({ values } as never);
+
+			const result = await target.importTree(
+				{ type: "file", folders: [], files: [baseFile] },
+				"",
+				source,
+			);
+
+			expect(result).toEqual({ copied: 1, failed: 0 });
+			expect(mockDriver.getObjectStream).toHaveBeenCalledWith(baseFile.path);
+			expect(mockDriver.writeObject).toHaveBeenCalledTimes(1);
+			const row = values.mock.calls[0]?.[0];
+			expect(row?.name).toBe(baseFile.name);
+			expect(row?.volumeId).toBe("media");
+			expect(row?.id).not.toBe(baseFile.id);
+		});
+
+		test("a read-only target refuses the import", () => {
+			const target = new StorageService(testUser, undefined, undefined, {
+				readOnly: true,
+			});
+			expect(() =>
+				target.importTree(
+					{ type: "file", folders: [], files: [baseFile] },
+					"",
+					new StorageService(testUser),
+				),
+			).toThrow(ReadOnlyVolumeError);
 		});
 	});
 });

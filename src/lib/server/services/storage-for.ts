@@ -14,12 +14,22 @@
  * log records.
  */
 
+import type { User } from "better-auth";
+import { and, eq } from "drizzle-orm";
 import { getVolume, type VolumeConfig } from "$lib/server/config";
+import { getDb } from "$lib/server/db";
+import { drives, files, folders, user } from "$lib/server/db/schema";
 import { DriveAccessError } from "$lib/server/errors";
-import { DRIVE_HEADER, VOLUME_HEADER } from "$lib/storage-location";
-import { driveStorage, drivesService } from "./drives";
+import {
+	DRIVE_HEADER,
+	SHARE_HEADER,
+	VOLUME_HEADER,
+} from "$lib/storage-location";
+import { driveStorage, drivesService, driveVolume } from "./drives";
 import { loadSharedOwner } from "./library-scan";
+import { SharingService } from "./sharings";
 import { StorageService } from "./storage";
+import type { StorageScope } from "./storage/context";
 
 /** Just enough of a request to answer "where". A page load has this shape too. */
 interface LocatedEvent {
@@ -69,7 +79,122 @@ export async function storageServiceFor(
 		return volumeStorage(volume, sessionUser ?? owner);
 	}
 
+	const shareId = parameter(event, "share", SHARE_HEADER);
+	if (shareId) {
+		if (!sessionUser) {
+			throw new DriveAccessError(403, "Not signed in");
+		}
+		return sharedStorage(shareId, sessionUser);
+	}
+
 	return new StorageService(owner);
+}
+
+const sharings = new SharingService();
+
+export interface ResolvedShare {
+	service: StorageService;
+	resourceType: "file" | "folder";
+	name: string;
+	ownerName: string;
+	permission: "read" | "write" | "admin";
+	/**
+	 * The folder a listing of this share opens on: the shared folder itself,
+	 * or a shared file's parent ("" at the owner's root).
+	 */
+	root: string;
+}
+
+/**
+ * The owner's tree, narrowed to what was shared with `recipient`.
+ *
+ * Built as the owner — whose rows these are — on whichever volume the item
+ * lives, with the scope doing the narrowing inside every query. A "read"
+ * share is read-only; anything more may work inside the shared folder.
+ */
+export async function resolveShare(
+	sharedWithId: string,
+	recipient: User,
+): Promise<ResolvedShare> {
+	const notFound = new DriveAccessError(404, "No such share");
+	const access = await sharings.resolveAccess(recipient.id, sharedWithId);
+	if (!access) {
+		throw notFound;
+	}
+	const db = getDb();
+
+	let scope: StorageScope;
+	let item: { name: string; volumeId: string | null; root: string };
+	if (access.resourceType === "folder") {
+		const [row] = await db
+			.select()
+			.from(folders)
+			.where(
+				and(eq(folders.id, access.resourceId), eq(folders.isTrashed, false)),
+			);
+		if (!row) {
+			throw notFound;
+		}
+		scope = { kind: "folder", path: row.path };
+		item = { name: row.name, volumeId: row.volumeId, root: row.path };
+	} else {
+		const [row] = await db
+			.select()
+			.from(files)
+			.where(and(eq(files.id, access.resourceId), eq(files.isTrashed, false)));
+		if (!row) {
+			throw notFound;
+		}
+		scope = { kind: "file", fileId: row.id, folderId: row.folderId };
+		const root = row.path.includes("/")
+			? row.path.slice(0, row.path.lastIndexOf("/"))
+			: "";
+		item = { name: row.name, volumeId: row.volumeId, root };
+	}
+
+	const [owner] = await db
+		.select()
+		.from(user)
+		.where(eq(user.id, access.ownerId));
+	const volume = await volumeById(item.volumeId);
+	if (!owner || volume === null) {
+		throw notFound;
+	}
+	return {
+		service: new StorageService(owner as User, volume, recipient, {
+			scope,
+			readOnly: access.permission === "read",
+		}),
+		resourceType: access.resourceType,
+		name: item.name,
+		ownerName: owner.name,
+		permission: access.permission,
+		root: item.root,
+	};
+}
+
+export async function sharedStorage(
+	sharedWithId: string,
+	recipient: User,
+): Promise<StorageService> {
+	return (await resolveShare(sharedWithId, recipient)).service;
+}
+
+/** A row's `volume_id` back to its volume: undefined is the personal drive. */
+async function volumeById(
+	volumeId: string | null,
+): Promise<VolumeConfig | undefined | null> {
+	if (volumeId === null) {
+		return undefined;
+	}
+	if (volumeId.startsWith("drive:")) {
+		const [drive] = await getDb()
+			.select()
+			.from(drives)
+			.where(eq(drives.id, volumeId.slice("drive:".length)));
+		return drive ? driveVolume(drive, "editor") : null;
+	}
+	return getVolume(volumeId) ?? null;
 }
 
 /**

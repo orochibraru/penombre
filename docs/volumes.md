@@ -78,10 +78,19 @@ added later cannot forget it.
 ## Scanning
 
 Volumes are written to from outside the app, so the database only matches the
-directory if Penombre looks. Two things trigger a scan:
+directory if Penombre looks. Three things trigger a scan:
 
 - A background pass every 60 seconds.
 - Opening a volume in the UI, which reconciles what that page is about to show.
+- The **Rescan** button in the volume's header, which starts a pass straight
+  away. It is disabled while one is already running. Its arrow offers two kinds:
+  - **Quick scan** (what the button itself does, and what the automatic passes
+    do): adds new files, removes missing ones, and re-reads a file only when its
+    size changed.
+  - **Rescan everything**: re-reads every file from scratch — type, duration and
+    thumbnails — even when its size is the same. Use it after a thumbnail went
+    wrong or a file type was misdetected. Files keep their identity, so stars,
+    notes and shares survive it. Expect it to take a while on a large library.
 
 A scan adds files that appeared, drops rows for files that vanished, re-reads
 media whose bytes changed, and builds thumbnails and waveforms as it goes.
@@ -91,8 +100,21 @@ lists what is already known and says _Scanning your files_ while a pass is
 running, refreshing itself as files are found. Walking a large NAS mount takes
 minutes, and holding the page open for all of them looked like a hang.
 
+While a pass runs, the banner shows live what it is doing — looking for files,
+adding folders, then _N of M files_ with a progress bar, the path being read,
+and an estimate of the time left — pushed from the server as it happens rather
+than polled. The estimate appears after a few files and assumes the rest go at
+the average pace so far, so a batch of new videos (each needing a thumbnail)
+followed by files it only has to check reads long at first and then drops.
+
 Opening a volume again within 30 seconds of the last pass does not start another
-one.
+one; **Rescan** ignores that cooldown.
+
+The same is available through the API: `POST /api/v1/volumes/{name}/scan` starts
+a pass (`{"mode": "full"}` in the body for a full rescan; quick by default), and
+`GET /api/v1/volumes/{name}/scan/events` is a `text/event-stream` of its status.
+Behind a reverse proxy that buffers responses, the stream arrives in lumps;
+Penombre sends `X-Accel-Buffering: no` for nginx.
 
 ## What is stored where
 

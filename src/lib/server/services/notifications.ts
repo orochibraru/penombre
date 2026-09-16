@@ -6,9 +6,9 @@
  * freeze it in whatever locale the *writer* happened to be using, which is the
  * wrong person entirely.
  *
- * Emailing is opt-in per user (`emailNotifications`) and additionally requires
- * SMTP, so an instance with no mail configured simply never sends and nothing
- * has to be turned off.
+ * Emailing is opt-in per user (`emailNotifications`), except for a share,
+ * and always requires SMTP, so an instance with no mail configured simply
+ * never sends and nothing has to be turned off.
  */
 
 import { and, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
@@ -137,9 +137,13 @@ export class NotificationService {
 		input: NotificationInput,
 		origin?: string,
 	): Promise<void> {
-		const prefs = await getUserPreferences(input.userId);
-		if (!prefs.emailNotifications) {
-			return;
+		// A share is addressed to one person by another, so it is always mailed;
+		// the preference governs the rest.
+		if (input.type !== "share") {
+			const prefs = await getUserPreferences(input.userId);
+			if (!prefs.emailNotifications) {
+				return;
+			}
 		}
 		// Checked before reading the address so an instance without mail does
 		// no work at all per notification.

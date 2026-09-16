@@ -40,11 +40,16 @@ export class LocalStorageDriver implements StorageDriver {
 
 	async writeObject(
 		key: string,
-		data: ArrayBuffer | Uint8Array | Blob,
+		data: ArrayBuffer | Uint8Array | Blob | ReadableStream<Uint8Array>,
 	): Promise<void> {
 		const path = this.fullPath(key);
 		await mkdir(dirname(path), { recursive: true });
-		await Bun.write(path, data);
+		// A stream is written as it arrives, never held whole in memory.
+		if (data instanceof ReadableStream) {
+			await Bun.write(path, new Response(data));
+		} else {
+			await Bun.write(path, data);
+		}
 	}
 
 	async deleteObject(key: string): Promise<void> {

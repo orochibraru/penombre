@@ -40,6 +40,13 @@ Each account gets its own directory there, and each
 [shared drive](shared-drives.md) gets one under `drives/`. A
 [mounted volume](volumes.md) lives wherever you mounted it instead.
 
+## Copy, move and duplicate
+
+**Duplicate** in an item's menu, or **⌘D** / **Ctrl+D** with one item selected,
+makes a copy beside it — a folder with everything inside. **Copy to…** and
+**Move** can send items to another drive or volume as well as another folder;
+see [moving files in and out](shared-drives.md#moving-files-in-and-out).
+
 ## The trash
 
 Deleting an item moves it to the trash, where it still occupies disk space until

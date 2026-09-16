@@ -38,6 +38,38 @@ export interface ScanResult {
 	removedFiles: number;
 }
 
+/**
+ * Where a pass is. `files` is the long phase — a row, a stat and a thumbnail
+ * per file — so it is the only one with a count; the others are quick or
+ * cannot be counted ahead (walking the tree).
+ */
+export type ScanPhase = "listing" | "folders" | "files" | "cleanup";
+
+export interface ScanStep {
+	phase: ScanPhase;
+	/** The path being handled, when there is one. */
+	current?: string;
+	done: number;
+	total: number;
+}
+
+export type ScanReporter = (step: ScanStep) => void;
+
+/**
+ * Remaining time at the average rate so far. Needs a few files and a second
+ * of history, or the first thumbnail alone would set the estimate.
+ */
+export function estimateRemaining(
+	done: number,
+	total: number,
+	elapsedMs: number,
+): number | undefined {
+	if (done < 3 || elapsedMs < 1000 || done >= total) {
+		return undefined;
+	}
+	return Math.ceil(((elapsedMs / done) * (total - done)) / 1000);
+}
+
 const EMPTY_RESULT: ScanResult = {
 	addedFolders: 0,
 	addedFiles: 0,
@@ -72,7 +104,17 @@ export class ScanOperations {
 		private readonly thumbnails: ThumbnailService,
 	) {}
 
-	async scan(): Promise<ScanResult> {
+	/**
+	 * `full` re-reads every known file as if its bytes had changed: type,
+	 * duration and thumbnails rebuilt, sizes and all. Rows keep their ids, so
+	 * stars, notes and shares survive it. A quick pass only re-reads a file
+	 * whose size moved.
+	 */
+	async scan(
+		report: ScanReporter = () => undefined,
+		{ full = false }: { full?: boolean } = {},
+	): Promise<ScanResult> {
+		report({ phase: "listing", done: 0, total: 0 });
 		const keys = (await this.ctx.driver.listObjectKeys()).filter(isScannable);
 
 		const [existingFolders, existingFiles] = await Promise.all([
@@ -94,16 +136,33 @@ export class ScanOperations {
 		const onDiskFolders = new Set(keys.flatMap(ancestorFolders));
 
 		const result = { ...EMPTY_RESULT };
+		report({ phase: "folders", done: 0, total: 0 });
 		result.addedFolders = await this.insertMissingFolders(
 			onDiskFolders,
 			folderIdByPath,
 		);
+
+		// One count across both file passes: every key on disk is visited once,
+		// either inserted or re-stat'ed.
+		const progress = { done: 0, total: keys.length };
+		const tick = (key: string) => {
+			progress.done++;
+			report({ phase: "files", current: key, ...progress });
+		};
+		report({ phase: "files", ...progress });
 		result.addedFiles = await this.insertMissingFiles(
 			keys,
 			knownFilePaths,
 			folderIdByPath,
+			tick,
 		);
-		result.updatedFiles = await this.refreshChangedFiles(existingFiles, keys);
+		result.updatedFiles = await this.refreshChangedFiles(
+			existingFiles,
+			keys,
+			tick,
+			full,
+		);
+		report({ phase: "cleanup", ...progress });
 		result.removedFiles = await this.removeVanishedFiles(existingFiles, keys);
 		result.removedFolders = await this.removeVanishedFolders(existingFolders);
 
@@ -159,6 +218,7 @@ export class ScanOperations {
 		keys: string[],
 		knownFilePaths: Set<string>,
 		folderIdByPath: Map<string, string>,
+		tick: (key: string) => void = () => undefined,
 	): Promise<number> {
 		const missing = keys.filter((key) => !knownFilePaths.has(key));
 
@@ -182,6 +242,7 @@ export class ScanOperations {
 			// browsable without every tile triggering an ffmpeg run.
 			await this.thumbnails.warm(key, determineContentType(key));
 			added++;
+			tick(key);
 		}
 		return added;
 	}
@@ -201,6 +262,8 @@ export class ScanOperations {
 	private async refreshChangedFiles(
 		existingFiles: Array<{ id: string; path: string; size: number }>,
 		keys: string[],
+		tick: (key: string) => void = () => undefined,
+		full = false,
 	): Promise<number> {
 		const knownByPath = new Map(existingFiles.map((f) => [f.path, f] as const));
 
@@ -210,9 +273,10 @@ export class ScanOperations {
 			if (!known) {
 				continue;
 			}
+			tick(key);
 
 			const size = await this.ctx.driver.getObjectSize(key).catch(() => null);
-			if (size === null || size === known.size) {
+			if (size === null || (size === known.size && !full)) {
 				continue;
 			}
 
@@ -220,6 +284,10 @@ export class ScanOperations {
 				.update(files)
 				.set({
 					size,
+					...(full && {
+						contentType: determineContentType(key),
+						category: determineCategory(key),
+					}),
 					...(await this.readMediaDuration(key)),
 					updatedAt: new Date(),
 				})

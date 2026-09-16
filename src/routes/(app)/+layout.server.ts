@@ -7,6 +7,9 @@ import { uploadSchema } from "$lib/schemas/upload";
 import { getConfig, getVolumes, isSimpleMode } from "$lib/server/config";
 import { isTwoFactorRequired } from "$lib/server/services/app-settings";
 import { drivesService } from "$lib/server/services/drives";
+import { SharingService } from "$lib/server/services/sharings";
+
+const sharings = new SharingService();
 
 export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:preferences");
@@ -16,7 +19,8 @@ export const load = async ({ fetch, url, locals, depends }) => {
 	// The sidebar lists the caller's shared drives, so creating or leaving one
 	// has to re-run this load.
 	depends("app:drives");
-	// Check auth first before making API calls
+	// And the items shared with the caller.
+	depends("app:shares");
 
 	if (!(locals.user && locals.session)) {
 		return redirect(302, resolve("/auth/sign-in"));
@@ -54,9 +58,12 @@ export const load = async ({ fetch, url, locals, depends }) => {
 
 	// Simple mode is one drive shared by everyone; a second sharing model on
 	// top of that would mean nothing, so the whole feature is hidden there.
-	const drives = isSimpleMode()
-		? []
-		: await drivesService.listForUser(locals.user.id);
+	const [drives, sharedWithMe] = isSimpleMode()
+		? [[], []]
+		: await Promise.all([
+				drivesService.listForUser(locals.user.id),
+				sharings.listSharedWithMe(locals.user.id),
+			]);
 
 	const config = getConfig();
 
@@ -71,6 +78,7 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		authCookie: "123",
 		isAdmin,
 		drives,
+		sharedWithMe,
 		// Mounted volumes appear in the sidebar as extra drives. Simple mode
 		// shares each one whole; full mode gives every user a subdirectory.
 		volumes: getVolumes().map((volume) => ({

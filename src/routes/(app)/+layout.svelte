@@ -3,6 +3,7 @@
 		ClockFadingIcon,
 		CloudUploadIcon,
 		CodeIcon,
+		EllipsisIcon,
 		FileArchiveIcon,
 		FileIcon,
 		FileTextIcon,
@@ -11,6 +12,7 @@
 		HardDriveDownloadIcon,
 		HardDriveIcon,
 		ImageIcon,
+		Link2Icon,
 		MenuIcon,
 		MusicIcon,
 		PlugIcon,
@@ -22,7 +24,6 @@
 		StarIcon,
 		TableIcon,
 		TrashIcon,
-		UserIcon,
 		UsersIcon,
 		VideoIcon,
 	} from "@lucide/svelte";
@@ -36,6 +37,7 @@
 	import SiteHeader from "$lib/components/layout/header.svelte";
 	import MusicPlayer from "$lib/components/layout/music-player.svelte";
 	import Nav, {
+		accentIconClass,
 		type NavItem,
 		type NavMenus,
 	} from "$lib/components/layout/nav.svelte";
@@ -55,6 +57,7 @@
 	} from "$lib/documents";
 	import { FileCategoryEnum } from "$lib/file-helpers";
 	import { m } from "$lib/paraglide/messages.js";
+	import { sidebarItems } from "$lib/sidebar";
 	import { customMenu } from "$lib/store/custom-menu";
 	import { playableMusic } from "$lib/store/music";
 	import { title } from "$lib/store/title";
@@ -159,7 +162,41 @@
 		await goto(resolve("/(app)/edit/[fileId]", { fileId: id }));
 	}
 	let mobileMenuDrawerOpen: boolean = $state(false);
+	let mobileNewDrawerOpen: boolean = $state(false);
+
+	/** Close the new-item drawer and the menu under it, then act. */
+	function fromMobileNew(action: () => void) {
+		mobileNewDrawerOpen = false;
+		mobileMenuDrawerOpen = false;
+		action();
+	}
+
+	/**
+	 * A drawer row's icon: its accent, or the theme's. An active row sits on
+	 * `bg-primary`, where either would vanish, so it keeps the foreground.
+	 */
+	function mobileIconClass(item: NavItem): string {
+		if (isItemActive(item)) {
+			return "";
+		}
+		return item.accentColor
+			? accentIconClass[item.accentColor]
+			: "text-primary";
+	}
 	let uploadLoading: boolean = $state(false);
+
+	const sidebarDriveList = $derived(
+		sidebarItems(data.drives ?? [], page.params.drive),
+	);
+	const sidebarShareList = $derived(
+		sidebarItems(
+			(data.sharedWithMe ?? []).map((entry) => ({
+				...entry,
+				id: entry.sharedWithId,
+			})),
+			page.params.share,
+		),
+	);
 
 	const nav: NavMenus = $derived({
 		general: [
@@ -187,7 +224,9 @@
 						{
 							title: m.nav_shared(),
 							url: "/shared",
-							icon: UsersIcon,
+							icon: Link2Icon,
+							// Or it would light up on /shared-with-me too.
+							isRoot: true,
 						},
 					] satisfies NavItem[])),
 			{
@@ -253,10 +292,10 @@
 						// Not "Shared drives": that is the group this row sits in,
 						// and the two read as a mistake stacked on each other.
 						title: m.nav_drives_all(),
-						url: "/drives",
+						url: "/drives/shared",
 						icon: UsersIcon,
 					},
-					...(data.drives ?? []).map(
+					...sidebarDriveList.shown.map(
 						(drive): NavItem => ({
 							title: drive.name,
 							url: `/drives/${drive.id}`,
@@ -264,6 +303,47 @@
 								drive.role === "viewer" ? HardDriveDownloadIcon : HardDriveIcon,
 						}),
 					),
+					...(sidebarDriveList.hidden > 0
+						? ([
+								{
+									title: m.nav_drives_more({
+										count: sidebarDriveList.hidden,
+									}),
+									url: "/drives/shared",
+									icon: EllipsisIcon,
+									neverActive: true,
+								},
+							] satisfies NavItem[])
+						: []),
+				] satisfies NavItem[]),
+		sharedWithMe: simpleMode
+			? []
+			: ([
+					{
+						title: m.nav_shared_with_me_all(),
+						url: "/shared-with-me",
+						icon: UsersIcon,
+						isRoot: true,
+					},
+					...sidebarShareList.shown.map(
+						(entry): NavItem => ({
+							title: entry.name,
+							url: `/shared-with-me/${entry.id}`,
+							icon: entry.resourceType === "folder" ? FolderIcon : FileIcon,
+						}),
+					),
+					...(sidebarShareList.hidden > 0
+						? ([
+								{
+									title: m.nav_drives_more({
+										count: sidebarShareList.hidden,
+									}),
+									url: "/shared-with-me",
+									icon: EllipsisIcon,
+									neverActive: true,
+								},
+							] satisfies NavItem[])
+						: []),
 				] satisfies NavItem[]),
 		volumes: (data.volumes ?? []).map((volume) => ({
 			title: volume.label,
@@ -306,6 +386,7 @@
 		[
 			{ title: m.nav_general(), items: nav.general ?? [] },
 			{ title: m.nav_drives(), items: nav.drives ?? [] },
+			{ title: m.nav_shared_with_me(), items: nav.sharedWithMe ?? [] },
 			{ title: m.nav_volumes(), items: nav.volumes ?? [] },
 			{ title: m.nav_categories(), items: nav.categories ?? [] },
 			{ title: m.nav_help(), items: nav.help ?? [] },
@@ -344,6 +425,14 @@
 		return false;
 	}
 
+	/** The drawer's rows honour the same flags as the sidebar's. */
+	function isItemActive(item: NavItem) {
+		if (item.neverActive) {
+			return false;
+		}
+		return item.isRoot ? page.url.pathname === item.url : isActive(item.url);
+	}
+
 	// Pages where the upload/new button should be hidden
 	const noUploadPages = ["/settings", "/account", "/admin", "/api-docs"];
 	let showUploadButton = $derived(
@@ -371,14 +460,17 @@
                                 <Button
                                     {...props}
                                     loading={uploadLoading}
-                                    class="relative overflow-hidden w-full"
+                                    aria-label={m.new()}
+                                    class="relative w-full overflow-hidden group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
                                 >
                                     {#if $globalUploadProgress.isUploading}
                                         <div
                                             class="absolute inset-0 bg-primary/20 transition-all"
                                             style="width: {$globalUploadProgress.progress}%"
                                         ></div>
-                                        <span class="relative z-10">
+                                        <span
+                                            class="relative z-10 group-data-[collapsible=icon]:hidden"
+                                        >
                                             {m.uploading_progress({
                                                 progress: String(
                                                     $globalUploadProgress.progress,
@@ -389,7 +481,12 @@
                                             })}
                                         </span>
                                     {:else}
-                                        {m.new()}
+                                        <!-- Icon only in the collapsed rail: the label does not fit in 2rem. -->
+                                        <span
+                                            class="group-data-[collapsible=icon]:hidden"
+                                        >
+                                            {m.new()}
+                                        </span>
                                         <SquarePlusIcon />
                                     {/if}
                                 </Button>
@@ -436,6 +533,12 @@
             <Nav title={m.nav_general()} items={nav.general} />
             {#if (nav.drives ?? []).length > 0}
                 <Nav title={m.nav_drives()} items={nav.drives ?? []} />
+            {/if}
+            {#if (nav.sharedWithMe ?? []).length > 0}
+                <Nav
+                    title={m.nav_shared_with_me()}
+                    items={nav.sharedWithMe ?? []}
+                />
             {/if}
             {#if (nav.volumes ?? []).length > 0}
                 <Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
@@ -493,16 +596,17 @@
                     </a>
                 {/if}
 
-                {#if !authBypassed}
+                <!-- The account lives in the header's avatar menu, as on desktop. -->
+                {#if !simpleMode}
                     <a
-                        href={resolve("/account")}
+                        href={resolve("/starred")}
                         class={cn(
                             bottomNavItemClass,
-                            isActive("/account") ? "text-primary" : "",
+                            isActive("/starred") ? "text-primary" : "",
                         )}
                     >
-                        <UserIcon class={bottomNavItemIconClass} />
-                        {m.account()}
+                        <StarIcon class={bottomNavItemIconClass} />
+                        {m.nav_starred()}
                     </a>
                 {/if}
 
@@ -560,7 +664,7 @@
                             href={item.url}
                             class={cn(
                                 buttonVariants({
-                                    variant: isActive(item.url)
+                                    variant: isItemActive(item)
                                         ? "default"
                                         : "outline",
                                     size: "lg",
@@ -569,7 +673,7 @@
                             )}
                             onclick={() => (mobileMenuDrawerOpen = false)}
                         >
-                            <Icon class="w-5! h-5!" />
+                            <Icon class={cn(mobileIconClass(item), "w-5! h-5!")} />
                             {item.title}
                         </a>
                     {/each}
@@ -577,53 +681,59 @@
             {/if}
 
             {#if showUploadButton}
-                <div class="flex flex-col gap-2">
-                    <p
-                        class="text-muted-foreground px-1 text-xs font-medium uppercase"
+                <!-- One button, not six rows: the actions push the whole
+                     navigation below the fold on a phone. -->
+                <Drawer.NestedRoot bind:open={mobileNewDrawerOpen}>
+                    <Button
+                        class="w-full"
+                        size="lg"
+                        onclick={() => (mobileNewDrawerOpen = true)}
                     >
+                        <SquarePlusIcon class="w-5! h-5!" />
                         {m.new()}
-                    </p>
-                    <Button
-                        class="w-full justify-start"
-                        size="lg"
-                        variant="outline"
-                        onclick={() => {
-                            $newFolderDialogOpen = true;
-                            mobileMenuDrawerOpen = false;
-                        }}
-                    >
-                        <FolderPlusIcon class="text-primary w-5! h-5!" />
-                        {m.folder()}
                     </Button>
-                    <Button
-                        class="w-full justify-start"
-                        variant="outline"
-                        size="lg"
-                        onclick={() => {
-                            $uploadDialogOpen = true;
-                            mobileMenuDrawerOpen = false;
-                        }}
-                    >
-                        <CloudUploadIcon class="text-primary w-5! h-5!" />
-                        {m.file_upload()}
-                    </Button>
-                    {#each newDocumentKinds as entry (entry.kind)}
-                        {@const Icon = entry.icon}
-                        <Button
-                            class="w-full justify-start"
-                            variant="outline"
-                            size="lg"
-                            disabled={creatingDocument}
-                            onclick={() => {
-                                mobileMenuDrawerOpen = false;
-                                newDocument(entry.kind);
-                            }}
-                        >
-                            <Icon class={cn(entry.color, "w-5! h-5!")} />
-                            {entry.label}
-                        </Button>
-                    {/each}
-                </div>
+                    <Drawer.Content class="z-50 max-h-[85svh]">
+                        <Drawer.Header>
+                            <Drawer.Title class="text-lg">{m.new()}</Drawer.Title>
+                        </Drawer.Header>
+                        <div class="flex flex-col gap-2 overflow-y-auto p-4">
+                            <Button
+                                class="w-full justify-start"
+                                size="lg"
+                                variant="outline"
+                                onclick={() =>
+                                    fromMobileNew(() => ($newFolderDialogOpen = true))}
+                            >
+                                <FolderPlusIcon class="text-primary w-5! h-5!" />
+                                {m.folder()}
+                            </Button>
+                            <Button
+                                class="w-full justify-start"
+                                variant="outline"
+                                size="lg"
+                                onclick={() =>
+                                    fromMobileNew(() => ($uploadDialogOpen = true))}
+                            >
+                                <CloudUploadIcon class="text-primary w-5! h-5!" />
+                                {m.file_upload()}
+                            </Button>
+                            {#each newDocumentKinds as entry (entry.kind)}
+                                {@const Icon = entry.icon}
+                                <Button
+                                    class="w-full justify-start"
+                                    variant="outline"
+                                    size="lg"
+                                    disabled={creatingDocument}
+                                    onclick={() =>
+                                        fromMobileNew(() => newDocument(entry.kind))}
+                                >
+                                    <Icon class={cn(entry.color, "w-5! h-5!")} />
+                                    {entry.label}
+                                </Button>
+                            {/each}
+                        </div>
+                    </Drawer.Content>
+                </Drawer.NestedRoot>
             {/if}
 
             {#each mobileNavGroups as group (group.title)}
@@ -639,7 +749,7 @@
                             href={item.url}
                             class={cn(
                                 buttonVariants({
-                                    variant: isActive(item.url)
+                                    variant: isItemActive(item)
                                         ? "default"
                                         : "outline",
                                     size: "lg",
@@ -648,7 +758,7 @@
                             )}
                             onclick={() => (mobileMenuDrawerOpen = false)}
                         >
-                            <Icon class="w-5! h-5!" />
+                            <Icon class={cn(mobileIconClass(item), "w-5! h-5!")} />
                             {item.title}
                         </a>
                     {/each}

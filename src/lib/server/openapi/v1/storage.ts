@@ -25,6 +25,7 @@ import { storageServiceFor } from "$lib/server/services/storage-for";
 const driveQuery = {
 	drive: z.string().optional(),
 	volume: z.string().optional(),
+	share: z.string().optional(),
 };
 
 // ============================================================================
@@ -573,5 +574,44 @@ export const bulkMove = defineRoute({
 		failCount: z.number(),
 	}),
 	errors: [400, 500],
+	service: storageServiceFor,
+});
+
+export const transferItems = defineRoute({
+	method: "post",
+	path: "/api/v1/storage/transfer",
+	summary: "Copy or move items to another location",
+	description:
+		"Copies or moves files and folders from the location in the query to `destination`, which may be another drive, shared drive or volume. Within one location a move is an ordinary move and a copy duplicates.",
+	tags: ["Storage - Bulk"],
+	body: z.object({
+		items: z
+			.array(
+				z.object({
+					path: z.string(),
+					type: z.enum(["file", "folder"]),
+				}),
+			)
+			.min(1)
+			.max(100),
+		destination: z.object({
+			...driveQuery,
+			folder: z.string().default(""),
+		}),
+		mode: z.enum(["copy", "move"]),
+	}),
+	query: z.object(driveQuery),
+	response: z.object({
+		results: z.array(
+			z.object({
+				path: z.string(),
+				success: z.boolean(),
+				error: z.string().optional(),
+			}),
+		),
+		successCount: z.number(),
+		failCount: z.number(),
+	}),
+	errors: [400, 403, 404, 500],
 	service: storageServiceFor,
 });

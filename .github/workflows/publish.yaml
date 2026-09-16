@@ -17,9 +17,48 @@ permissions:
   contents: read
   packages: write
 
+# A merged PR already built and e2e-tested this exact tree as `pr-<number>`, so
+# `tested` finds that image and `promote` re-tags it with the release version.
+# Anything else (a direct push, a fork, a stale PR run) takes the full
+# build → e2e → publish path.
 jobs:
+  tested:
+    name: Find Tested PR Image
+    runs-on: ubuntu-latest
+    outputs:
+      pr: ${{ steps.find.outputs.pr }}
+      image: ${{ steps.find.outputs.image }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Match the merged PR's image by source tree
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: docker.io/orochibraru/penombre
+        run: |
+          pr="$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+            --jq '[.[] | select(.merged_at != null)][0].number // empty')"
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
+          [ -n "$pr" ] || { echo "Not a PR merge."; exit 0; }
+
+          ref="$IMAGE:pr-$pr"
+          if ! manifest="$(docker buildx imagetools inspect "$ref" --format '{{json .Manifest}}' 2>/dev/null)"; then
+            echo "No $ref published."; exit 0
+          fi
+          tree="$(docker buildx imagetools inspect "$ref" --format '{{json .Image}}' \
+            | jq -r '.["linux/amd64"].config.Labels["dev.penombre.tree"] // empty')"
+          if [ "$tree" != "$(git rev-parse 'HEAD^{tree}')" ]; then
+            echo "$ref was built from tree '${tree}', not this commit's."; exit 0
+          fi
+          digest="$(jq -r .digest <<<"$manifest")"
+          echo "Promoting $ref ($digest)"
+          echo "image=$IMAGE@$digest" >> "$GITHUB_OUTPUT"
+
   code_quality:
     name: Code Quality
+    needs: [tested]
+    if: needs.tested.outputs.image == ''
     uses: ./.github/workflows/code_quality.yaml
     secrets: inherit
 
@@ -111,15 +150,43 @@ jobs:
     secrets:
       registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+  promote:
+    name: Promote ${{ needs.version.outputs.tag }}
+    needs: [tested, version]
+    if: needs.tested.outputs.image != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Container registry
+        uses: docker/login-action@v4
+        with:
+          registry: docker.io
+          username: orochibraru
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # No RUN step, so both platforms build natively in seconds. The PR image
+      # reports package.json's pre-release version; the ENV corrects it.
+      - name: Tag the tested image
+        env:
+          SOURCE: ${{ needs.tested.outputs.image }}
+          VERSION: ${{ needs.version.outputs.version }}
+          TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          {
+            echo "FROM $SOURCE"
+            if [ -n "$VERSION" ]; then echo "ENV PENOMBRE_RELEASE_VERSION=$VERSION"; fi
+          } | docker buildx build --platform linux/amd64,linux/arm64 --push \
+            -t "docker.io/orochibraru/penombre:$TAG" \
+            -t docker.io/orochibraru/penombre:latest -
+
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs:
-      - code_quality
-      - version
-      - build-app
-      - e2e
-      - publish
+    needs: [version, publish, promote]
+    if: always() && needs.version.result == 'success' && (needs.publish.result ==
+      'success' || needs.promote.result == 'success')
     permissions:
       contents: write
       issues: write
@@ -151,3 +218,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CI_TOKEN }}
         run: bun run release
+
+  cleanup:
+    name: Delete PR Image
+    needs: [tested, release]
+    if: always() && needs.tested.outputs.pr != ''
+    uses: ./.github/workflows/pr-cleanup.yaml
+    with:
+      pr_number: ${{ needs.tested.outputs.pr }}
+    secrets:
+      DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}

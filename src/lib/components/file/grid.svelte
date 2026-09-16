@@ -63,7 +63,12 @@
 	const loadingAmount = 20;
 
 	/** `undefined` outside /browse and at the drive root: no `..` row there. */
-	const parentPath = $derived(resolveParentPath(page.params.path));
+	// A share has no parent to go up to: above its root is the owner's drive.
+	const parentPath = $derived(
+		page.data.share?.root === page.params.path
+			? undefined
+			: resolveParentPath(page.params.path),
+	);
 	let isDragging: boolean = $state(false);
 
 	function handleDragOver(e: DragEvent) {

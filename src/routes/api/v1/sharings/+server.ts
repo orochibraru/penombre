@@ -37,7 +37,7 @@ export const POST = createSharing.handler(async ({ body, user, event }) => {
 						type: "share",
 						actorName: user.name,
 						resourceName,
-						link: "/shared",
+						link: "/shared-with-me",
 					},
 					event.url.origin,
 				),

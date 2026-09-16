@@ -181,7 +181,7 @@ const SHOTS: Shot[] = [
 	},
 	{ name: "categories", path: "/categories/IMAGES", expect: /images/i },
 	{ name: "recent", path: "/recent", expect: /recent/i },
-	{ name: "shared", path: "/shared", expect: /shared/i },
+	{ name: "shared", path: "/shared", expect: /links/i },
 	{ name: "trash", path: "/trash", expect: /trash/i },
 	{ name: "settings-appearance", path: "/settings/display", expect: /theme/i },
 	{ name: "settings-storage", path: "/settings/storage", expect: /storage/i },

@@ -29,7 +29,7 @@ export async function loadDriveListing(
 	path: string | undefined,
 	locals: App.Locals,
 ): Promise<DriveListing> {
-	// Simple mode shares one drive with everyone already. See `/drives`.
+	// Simple mode shares one drive with everyone already. See `/drives/shared`.
 	if (isSimpleMode()) {
 		return error(404);
 	}

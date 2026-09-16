@@ -111,13 +111,11 @@
         <div class="ml-auto flex items-center gap-2">
             <div class="flex items-center gap-2">
                 {#if !page.data.authBypassed}
-                    <!-- Shown at every width: the bottom bar has no room for
-                         it, so the header is the only place a phone can see
-                         that something happened. -->
+                    <!-- Both at every width: the bottom bar has no room for
+                         either, so the header is the only place a phone can
+                         see that something happened or reach the account. -->
                     <Notifications />
-                    <div class="hidden md:block">
-                        <UserMenu {user} />
-                    </div>
+                    <UserMenu {user} />
                 {/if}
             </div>
         </div>

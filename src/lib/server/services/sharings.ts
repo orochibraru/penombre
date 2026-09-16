@@ -422,6 +422,7 @@ export class SharingService {
 				ownerId: sharings.ownerId,
 				resourceType: sharings.resourceType,
 				resourceId: sharings.resourceId,
+				permission: sharings.permission,
 			})
 			.from(sharedWith)
 			.innerJoin(sharings, eq(sharings.id, sharedWith.sharingId))

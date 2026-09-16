@@ -10,7 +10,8 @@ const simpleModePages = {
 	starred: (await import("./starred/+page.server")).load,
 	shared: (await import("./shared/+page.server")).load,
 	categories: (await import("./categories/[category]/+page.server")).load,
-	drives: (await import("./drives/+page.server")).load,
+	drives: (await import("./drives/shared/+page.server")).load,
+	"shared-with-me": (await import("./shared-with-me/+page.server")).load,
 };
 
 const bypassSections = {
@@ -31,10 +32,12 @@ const sharedEvent = {
 const simpleModeEvents: Record<string, never> = {
 	shared: sharedEvent,
 	drives: sharedEvent,
+	"shared-with-me": sharedEvent,
 };
 const simpleModeResults: Record<string, unknown> = {
-	shared: { shares: [], sharedWithMe: [] },
+	shared: { shares: [] },
 	drives: { drives: [] },
+	"shared-with-me": { sharedWithMe: [] },
 };
 
 // The config mocks are module-level and shared across test files — leaving one

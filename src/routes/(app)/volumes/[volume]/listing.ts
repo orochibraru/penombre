@@ -43,8 +43,8 @@ export async function loadVolumeListing(
 
 		// A mounted directory is written from outside the app, so the rows only
 		// match reality if we look — but not while the request waits.
-		const scanning = scanOnVisit(volumeScanKey(volume.name), () =>
-			service.scanStorage().then(() => undefined),
+		const scanning = scanOnVisit(volumeScanKey(volume.name), (report) =>
+			service.scanStorage(report),
 		);
 
 		const crumbs: BreadCrumb[] = [

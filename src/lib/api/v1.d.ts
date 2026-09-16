@@ -5061,6 +5061,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -5131,6 +5132,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -6166,6 +6168,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -6242,6 +6245,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -6319,6 +6323,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -6515,6 +6520,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -6711,6 +6717,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -6912,6 +6919,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -6977,6 +6985,7 @@ export interface paths {
 				query: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 					q: string;
 					limit?: string;
 				};
@@ -7178,6 +7187,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -7368,6 +7378,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -7558,6 +7569,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 					raw?: string;
 					thumbnail?: string;
 					size?: "small" | "medium" | "large";
@@ -7741,6 +7753,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -7910,6 +7923,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -7984,6 +7998,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -8179,6 +8194,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -8260,6 +8276,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -8360,6 +8377,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -8440,6 +8458,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -8492,6 +8511,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -8572,6 +8592,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -8638,6 +8659,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -8704,6 +8726,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -8770,6 +8793,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -8832,6 +8856,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -8903,6 +8928,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -8982,6 +9008,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 					parent?: string;
 				};
 				header?: never;
@@ -9058,6 +9085,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -9140,6 +9168,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -9219,6 +9248,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 					parent?: string;
 				};
 				header?: never;
@@ -9295,6 +9325,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -9374,6 +9405,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -9564,6 +9596,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -9754,6 +9787,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path: {
@@ -9957,6 +9991,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -10030,6 +10065,123 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/storage/transfer": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Copy or move items to another location
+		 * @description Copies or moves files and folders from the location in the query to `destination`, which may be another drive, shared drive or volume. Within one location a move is an ordinary move and a copy duplicates.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						destination: {
+							drive?: string;
+							/** @default  */
+							folder: string;
+							share?: string;
+							volume?: string;
+						};
+						items: {
+							path: string;
+							/** @enum {string} */
+							type: "file" | "folder";
+						}[];
+						/** @enum {string} */
+						mode: "copy" | "move";
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								failCount: number;
+								results: {
+									error?: string;
+									path: string;
+									success: boolean;
+								}[];
+								successCount: number;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/storage/trash": {
 		parameters: {
 			query?: never;
@@ -10049,6 +10201,7 @@ export interface paths {
 				query?: {
 					drive?: string;
 					volume?: string;
+					share?: string;
 				};
 				header?: never;
 				path?: never;
@@ -10209,6 +10362,168 @@ export interface paths {
 				};
 				/** @description Unauthorized */
 				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/volumes/{name}/scan": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Rescan a mounted volume
+		 * @description Starts a reconciliation pass now, skipping the cooldown. Does nothing when one is already running.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					name: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/**
+						 * @default quick
+						 * @enum {string}
+						 */
+						mode: "quick" | "full";
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								started: boolean;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/volumes/{name}/scan/events": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Follow a volume's scan
+		 * @description A `text/event-stream` of scan status: the current state at once, then every change until the client disconnects. Each event's data has the response's shape.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					name: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								etaSeconds?: number;
+								scanning: boolean;
+								step?: {
+									current?: string;
+									done: number;
+									/** @enum {string} */
+									phase: "listing" | "folders" | "files" | "cleanup";
+									total: number;
+								};
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
 					headers: {
 						[name: string]: unknown;
 					};

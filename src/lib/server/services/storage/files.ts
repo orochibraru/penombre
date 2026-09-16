@@ -9,7 +9,7 @@ import { unlink } from "node:fs/promises";
 import { and, eq } from "drizzle-orm";
 import { parseFile } from "music-metadata";
 import { Logger } from "$lib/logger";
-import { files } from "$lib/server/db/schema";
+import { type File as DbFile, files } from "$lib/server/db/schema";
 import { FileOrFolderNotFoundError } from "$lib/server/errors";
 import type {
 	FileMetadata,
@@ -248,6 +248,52 @@ export class FileOperations {
 		}
 		await this.ctx.invalidateListingCaches();
 		return fileDbToObjectItem(newFile);
+	}
+
+	/**
+	 * A copy of another tree's file: a fresh row and fresh bytes here, with
+	 * the source row's type and durations so nothing has to be re-probed.
+	 * Bytes first, so a failed write leaves no row pointing at nothing.
+	 */
+	async importFile(
+		source: DbFile,
+		folder: string | undefined,
+		body: ReadableStream<Uint8Array>,
+	): Promise<void> {
+		const { path: normalizedFolder, id: folderId } =
+			await this.resolveDestination(folder);
+		const uniqueName = await getUniqueDisplayName(
+			this.ctx,
+			source.name,
+			normalizedFolder,
+			"file",
+		);
+		const fileName = generateFileNameWithExtension(uniqueName);
+		const filePath = normalizedFolder
+			? `${normalizedFolder}/${fileName}`
+			: fileName;
+
+		await this.ctx.driver.writeObject(filePath, body);
+		await this.ctx.db.insert(files).values({
+			id: crypto.randomUUID(),
+			name: uniqueName,
+			ownerId: this.ctx.user.id,
+			volumeId: this.ctx.volumeId,
+			path: filePath,
+			folderId,
+			contentType: source.contentType,
+			category: source.category,
+			size: source.size,
+			isTrashed: false,
+			isStarred: false,
+			tags: source.tags ?? [],
+			musicDuration: source.musicDuration,
+			videoDuration: source.videoDuration,
+		});
+
+		this.thumbnails.warm(filePath, source.contentType).catch(() => {
+			// `warm` already logs.
+		});
 	}
 
 	/**

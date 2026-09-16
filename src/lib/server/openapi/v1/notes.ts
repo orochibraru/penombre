@@ -14,6 +14,7 @@ import { storageServiceFor } from "$lib/server/services/storage-for";
 const driveQuery = {
 	drive: z.string().optional(),
 	volume: z.string().optional(),
+	share: z.string().optional(),
 };
 
 export const noteSchema = z.object({

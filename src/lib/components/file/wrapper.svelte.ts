@@ -1,6 +1,7 @@
 import {
 	ArchiveRestoreIcon,
 	CopyIcon,
+	CopyPlusIcon,
 	DownloadIcon,
 	FolderInputIcon,
 	MaximizeIcon,
@@ -216,32 +217,6 @@ export function getRestoreFilePromise(
 		});
 }
 
-export function getDuplicateFilePromise(
-	itemPath: string,
-	callbacks: { onSuccess: () => void; onError: () => void },
-): Promise<void> {
-	const fileName = itemPath.includes("/")
-		? (itemPath.split("/").pop() ?? itemPath)
-		: itemPath;
-	const folder = itemPath.includes("/")
-		? itemPath.split("/").slice(0, -1).join("/")
-		: undefined;
-
-	const fullPath = folder ? `${folder}/${fileName}` : fileName;
-
-	return api
-		.POST("/api/v1/storage/file/{id}/duplicate", {
-			params: { path: { id: encodeURIComponent(fullPath) } },
-		})
-		.then(({ error }) => {
-			if (error) {
-				callbacks.onError();
-				throw new Error("Failed to duplicate file");
-			}
-			callbacks.onSuccess();
-		});
-}
-
 // ================================
 // Item Actions Factory
 // ================================
@@ -276,6 +251,7 @@ export function createMainActions(handlers: {
 	onOpenFullscreen: (item: ObjectItem) => void;
 	onRename: (item: ObjectItem) => void;
 	onMove: (item: ObjectItem) => void;
+	onCopyTo: (item: ObjectItem) => void;
 	onDuplicate: (item: ObjectItem) => void;
 	onStar: (item: ObjectItem) => void;
 	onShare: (item: ObjectItem) => void;
@@ -326,7 +302,11 @@ export function createMainActions(handlers: {
 					title: "Duplicate",
 					icon: CopyIcon,
 					action: handlers.onDuplicate,
-					fileOnly: true,
+				},
+				{
+					title: "Copy to…",
+					icon: CopyPlusIcon,
+					action: handlers.onCopyTo,
 				},
 				{
 					title: (item: ObjectItem) =>
@@ -358,6 +338,7 @@ export function createMainMultipleActions(
 	handlers: {
 		onDownload: () => void;
 		onMove: () => void;
+		onCopy: () => void;
 		onStar: () => void;
 		onShare: () => void;
 		onMoveToTrash: () => void;
@@ -376,6 +357,12 @@ export function createMainMultipleActions(
 			icon: FolderInputIcon,
 			variant: "outline",
 			action: handlers.onMove,
+		},
+		{
+			title: "Copy",
+			icon: CopyPlusIcon,
+			variant: "outline",
+			action: handlers.onCopy,
 		},
 		{
 			title: "Star",

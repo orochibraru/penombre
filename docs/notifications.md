@@ -24,7 +24,7 @@ Two rules apply to both:
 
 The bell shows a count of unread notifications. Opening it lists the most recent
 thirty, newest first; clicking one marks it read and goes to the item —
-`/view/<id>` for a note, the **Shared** page for a share. **Mark all as read**
+`/view/<id>` for a note, **Shared with me** for a share. **Mark all as read**
 clears the count without opening anything.
 
 The list is fetched when the page loads and refreshed once a minute. There is no
@@ -34,8 +34,10 @@ single-container install does not otherwise need.
 
 ## Emailed copies
 
-Each person can opt in under **Settings → General → Notifications** to also
-receive every notification by email. It is **off by default**.
+Something shared with you is always emailed as well, since it is addressed to
+you by name. For everything else, each person can opt in under **Settings →
+General → Notifications** to also receive it by email. That is **off by
+default**.
 
 The toggle is disabled, with a note saying so, unless an administrator has
 configured outgoing mail — see the SMTP section of [Environment](env.md). If

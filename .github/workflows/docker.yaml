@@ -116,6 +116,11 @@ jobs:
 
       - uses: actions/checkout@v6
 
+      # Lets a push to main promote this image instead of rebuilding the same
+      # tree (publish.yaml).
+      - name: Record source tree
+        run: echo "TREE=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_ENV"
+
       - name: Login to Container registry
         if: inputs.push
         uses: docker/login-action@v4
@@ -136,6 +141,7 @@ jobs:
             *.tags=${{ env.IMAGE }}
             *.platform=${{ matrix.platform }}
             *.args.APP_VERSION=${{ inputs.app_version }}
+            *.labels.dev.penombre.tree=${{ env.TREE }}
             *.output=${{ inputs.push && 'type=image,push-by-digest=true,name-canonical=true,push=true' || 'type=cacheonly' }}
             ${{ inputs.bake_target }}.cache-from=type=gha,scope=${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}-${{ github.ref_name }}
             ${{ inputs.bake_target }}.cache-to=type=gha,mode=max,scope=${{ inputs.bake_target }}-${{ env.PLATFORM_PAIR }}-${{ github.ref_name }}

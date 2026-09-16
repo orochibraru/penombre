@@ -10,7 +10,7 @@
  * before volumes existed has, so the default scope needs no migration.
  */
 
-import { and, eq, isNull, type SQL } from "drizzle-orm";
+import { and, eq, isNull, like, or, type SQL, sql } from "drizzle-orm";
 import { files, folders } from "$lib/server/db/schema";
 import type { StorageContext } from "./context";
 
@@ -27,6 +27,7 @@ export function ownedFiles(ctx: StorageContext): SQL | undefined {
 	return and(
 		eq(files.ownerId, ctx.user.id),
 		onVolume(files.volumeId, ctx.volumeId),
+		fileScope(ctx),
 	);
 }
 
@@ -35,6 +36,31 @@ export function ownedFolders(ctx: StorageContext): SQL | undefined {
 	return and(
 		eq(folders.ownerId, ctx.user.id),
 		onVolume(folders.volumeId, ctx.volumeId),
+		folderScope(ctx),
+	);
+}
+
+function fileScope(ctx: StorageContext): SQL | undefined {
+	const scope = ctx.scope;
+	if (!scope) {
+		return undefined;
+	}
+	return scope.kind === "file"
+		? eq(files.id, scope.fileId)
+		: like(files.path, `${scope.path}/%`);
+}
+
+function folderScope(ctx: StorageContext): SQL | undefined {
+	const scope = ctx.scope;
+	if (!scope) {
+		return undefined;
+	}
+	if (scope.kind === "file") {
+		return scope.folderId ? eq(folders.id, scope.folderId) : sql`1 = 0`;
+	}
+	return or(
+		eq(folders.path, scope.path),
+		like(folders.path, `${scope.path}/%`),
 	);
 }
 

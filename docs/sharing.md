@@ -49,14 +49,28 @@ Re-adding someone at a different permission **replaces** their old grant rather
 than stacking a second one, so a person always has exactly one level of access
 to a given item. The **×** next to a name revokes it immediately.
 
-Recipients find these items under **Shared → Shared with me**, with who shared
-each one and at what permission. Putting an item in the trash stops serving it
-to everyone it was shared with, without revoking the grants — restore it and
-they have access again.
+Each new recipient is told in the app and by email (when outgoing mail is
+configured — see [Notifications](notifications.md)).
+
+Recipients find these items in the sidebar under **Shared with me**, and on the
+page of the same name, with who shared each one and at what permission. They
+open in the ordinary file browser rather than as a download: a shared folder can
+be browsed into, previewed, played and downloaded like one of your own, and
+nothing outside it is reachable. The sidebar lists the first five; **N more**
+leads to the rest.
+
+What a recipient may do follows the permission. **Can view** is read-only. **Can
+edit** and **Full access** may upload, rename, move and trash _inside_ a shared
+folder, but not move, rename or delete the shared folder itself, and a shared
+file can be edited but nothing can be created beside it. Anything shared can be
+copied into the recipient's own drive with **Copy to…**.
+
+Putting an item in the trash stops serving it to everyone it was shared with,
+without revoking the grants — restore it and they have access again.
 
 ## Managing links
 
-**Shared** in the sidebar lists every link you own, with its expiry, download
+**My links** in the sidebar lists every link you own, with its expiry, download
 count, and whether it is password-protected or sign-in-only. **Revoke** deletes
 the link: the URL 404s from that moment on. There is no undo, and a new link for
 the same file gets a new token.
@@ -127,6 +141,10 @@ User-to-user sharing has its own endpoints:
 | `POST`   | `/api/v1/sharings`               | Grant accounts access              |
 | `DELETE` | `/api/v1/sharings/{id}`          | Revoke one person's access         |
 | `GET`    | `/api/v1/sharings/{id}/download` | Download something shared with you |
+
+Every storage endpoint also takes `?share=<id>` (or an `x-share` header), where
+`<id>` is the grant's id from **Shared with me**. The call then acts on the
+owner's files, narrowed to what was shared.
 
 Creating one takes `resourceType` (`file` or `folder`), `resourceId`, and
 optionally `password`, `expiresInDays` and `requiresAuth`. The response includes

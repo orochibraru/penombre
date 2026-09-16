@@ -642,16 +642,16 @@ the video as a second argument.
 `Sidebar.Trigger` is `hidden md:flex`, so the sidebar's mobile Sheet is
 unreachable. The whole navigation lives in the bottom bar's drawer in
 `(app)/+layout.svelte`, built from the same `nav` groups the desktop sidebar
-uses, with the create/upload actions on top. Adding a nav entry therefore
-reaches both automatically — _except_ that `hideOnMobile` is a desktop-sidebar
-hint only (those rows are duplicated in the bottom bar); the drawer shows
-everything.
+uses, with a **New** button on top that opens the create/upload actions in a
+nested drawer. Adding a nav entry therefore reaches both automatically —
+_except_ that `hideOnMobile` is a desktop-sidebar hint only (those rows are
+duplicated in the bottom bar); the drawer shows everything.
 
-The bar is Home, Recent (full mode only), Account, Menu — Menu last, not a
-raised circle in the middle, and Settings reached through the drawer rather than
-duplicated in the bar. Simple mode drops so many entries that a floating centre
-button sat between only two links. Upload progress shows on the Menu item, the
-one thing in the bar that is not a link.
+The bar is Home, Recent and Starred (both full mode only), Menu — Menu last, not
+a raised circle in the middle, and Settings reached through the drawer rather
+than duplicated in the bar. Simple mode drops so many entries that a floating
+centre button sat between only two links. Upload progress shows on the Menu
+item, the one thing in the bar that is not a link.
 
 It is opaque, not frosted: the bar sits over a grid of thumbnails, and blurring
 whatever happened to be beneath it read as a smear rather than a surface. It
@@ -663,9 +663,8 @@ by a pixel constantly and the bar flickered on every reversal.
 The header carries the logo below `md`. The sidebar is what brands the app, and
 it is not rendered on a phone.
 
-Admin lives in the `help` nav group, not the profile dropdown, because that
-dropdown is desktop-only and the admin panel was otherwise unreachable from a
-phone.
+The account is the header's avatar dropdown at every width, not a bar tab. Admin
+still lives in the `help` nav group rather than in that dropdown.
 
 ### Passkeys: no conditional mediation
 
@@ -902,6 +901,16 @@ closes.
 
 Forks get no secrets, so nothing is pushed: `pulled: false` makes e2e build
 locally and the publish job is skipped.
+
+A merge to `main` does not rebuild either. `docker.yaml` labels every image with
+its source tree (`dev.penombre.tree`); `publish.yaml`'s `tested` job finds the
+merged PR's `pr-<n>`, and when the tree matches `promote` re-tags it with a
+one-line `FROM` + `ENV PENOMBRE_RELEASE_VERSION` build — the image was built
+before semantic-release picked the version, and `config.ts` reads that override.
+A mismatch (direct push, stale PR run) takes the full path. The PR image of a
+merged PR is deleted by `publish.yaml`, not `pr-cleanup.yaml`, which would race
+the promotion. The release commit carries `[skip ci]`; without it the version
+bump rebuilt and re-tested the whole pipeline a second time.
 
 ### TypeScript is held at 6 on purpose
 
@@ -1150,3 +1159,65 @@ flickering between visits was that disagreement showing.
 The 30s cooldown is load-bearing, not tuning: the poll re-runs the load, so
 without it each refresh would start a fresh pass the moment the last one ended
 and the banner would never go away.
+
+### A share is a scope, not a copy
+
+"Shared with me" browses the **owner's** tree through an ordinary
+`StorageService` built by `resolveShare()` (`services/storage-for.ts`) with
+`options.scope` set — `?share=<shared_with id>` / `x-share` on any storage
+route. `ownedFiles`/`ownedFolders` apply the scope, so every query is narrowed
+for free; do not add a storage query that bypasses them.
+
+Three things the scope alone does not cover, all handled in `service.ts`:
+
+- **Writes that name a destination** (create, move, duplicate) do not read a row
+  there first, so `assertInScope` checks the path. `strict` refuses the shared
+  folder itself: a recipient works inside it, never renames, moves or trashes
+  it. A shared _file_ allows no creates at all.
+- **`writeFile`/`deleteFile` touch bytes by key even when no row matched**, so a
+  scoped call must find its row first (`assertFileInScope`).
+- **The listing cache is per owner.** A scoped service reads a
+  `NullCacheBackend` — or the owner would be served the recipient's narrowed
+  listing, and vice versa — but still clears the owner's cache on a mutation.
+
+A file share's scope includes its **parent folder** so that folder can be listed
+(showing just the file); that is why folder mutations under a file scope must
+stay refused. Share URLs keep the owner's full paths
+(`/shared-with-me/[share]/[...path]`), and the listing load redirects anything
+outside the share back to its root; `page.data.share.root` hides the `..` row.
+
+### Copying between places is export + import
+
+`POST /api/v1/storage/transfer` builds a second service for the destination with
+the same `storageServiceFor` (from a synthetic URL), exports rows from the
+source (`exportTree`) and re-creates them in the target (`importTree`),
+streaming bytes through `openFile` → `writeObject(ReadableStream)`. A move
+across places deletes the source only when **every** file landed; within one
+place it is the ordinary `moveFile`/`moveFolder` (`locationKey` decides). Folder
+**Duplicate** is the same endpoint with the current folder as destination.
+
+The move dialog lists destinations from `page.data.drives`/`volumes`, and its
+folder-tree request sends `drive=&volume=&share=` **empty** on purpose: a
+present query parameter is what stops `$lib/api`'s middleware attaching the
+current page's location header, which would otherwise make "My Drive" show the
+drive you are standing in.
+
+### Sidebar groups truncate at five
+
+`sidebarItems()` (`$lib/sidebar.ts`) caps shared drives and shared-with-me rows
+at five plus an **N more** link, always keeping the item on screen. The "more"
+row points at the same page as the group's first row, so it carries
+`neverActive` or both highlight. The first rows use `isRoot` for the same
+reason: `Nav` highlights by `startsWith`, which is why the drives page moved to
+`/drives/shared` (`/drives` lit up on every drive) and why **My links**
+(`/shared`) must not light up on `/shared-with-me`.
+
+### Scan progress lives in `library-scan.ts`, not the scanner
+
+`ScanOperations.scan(report)` only calls a reporter; the per-volume state, the
+subscriber sets behind the SSE route and the ETA (`estimateRemaining`, in
+`scan.ts` so a test can import it without the config module) sit beside the
+`inFlight` registry. Emits are throttled to four a second — a pass over files it
+already knows reports thousands of steps a second — except phase changes and
+start/end, which always go out. Every pass reaches the stream because every pass
+goes through `runScan`: the minute timer, a page visit and **Rescan**.

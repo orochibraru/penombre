@@ -19,9 +19,31 @@
 			| "amber";
 		hideOnMobile?: boolean;
 		isRoot?: boolean;
+		/** A shortcut to a page another row already stands for. */
+		neverActive?: boolean;
 		/** Optional count to display as badge (desktop only) */
 		count?: number;
 	}
+
+	/** Icon colour per accent, spelled out so Tailwind sees every class. */
+	export const accentIconClass: Record<
+		NonNullable<NavItem["accentColor"]>,
+		string
+	> = {
+		indigo: "text-indigo-500",
+		orange: "text-orange-500",
+		pink: "text-pink-500",
+		green: "text-green-500",
+		purple: "text-purple-500",
+		blue: "text-blue-500",
+		red: "text-red-500",
+		yellow: "text-yellow-500",
+		teal: "text-teal-500",
+		cyan: "text-cyan-500",
+		rose: "text-rose-500",
+		violet: "text-violet-500",
+		amber: "text-amber-500",
+	};
 
 	export interface NavMenus {
 		[key: string]: NavItem[];
@@ -45,6 +67,10 @@
     let { title, items, ...restProps }: Props = $props();
 
     function isActive(item: NavItem) {
+        if (item.neverActive) {
+            return false;
+        }
+
         if (page.url.pathname === "/" && item.url === "/") {
             return true;
         }

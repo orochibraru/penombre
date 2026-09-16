@@ -5,13 +5,16 @@
 		FolderOpenIcon,
 		HomeIcon,
 	} from "@lucide/svelte";
+	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { invalidate } from "$app/navigation";
 	import { page } from "$app/state";
 	import { api, type ObjectItem } from "$lib/api";
 	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
+	import * as Select from "$lib/components/ui/select/index.js";
 	import Spinner from "$lib/components/ui/spinner.svelte";
 	import * as m from "$lib/paraglide/messages.js";
+	import { locationOf, type StorageLocation } from "$lib/storage-location";
 	import { cn } from "$lib/utils";
 
 	interface Props {
@@ -20,6 +23,17 @@
 		item?: ObjectItem | undefined;
 		/** Bulk move mode: Record<key, displayName> */
 		items?: Record<string, string>;
+		/** Copy leaves the originals where they are. */
+		mode?: "move" | "copy";
+	}
+
+	/** A place items can be sent: a drive, shared drive, volume or share. */
+	interface Destination {
+		key: string;
+		label: string;
+		location: StorageLocation;
+		/** The folder that stands for "the top" of it. */
+		root: string;
 	}
 
 	interface FolderData {
@@ -39,7 +53,62 @@
 		open = $bindable(false),
 		item = $bindable(),
 		items = $bindable({}),
+		mode = $bindable("move"),
 	}: Props = $props();
+
+	const here = $derived(locationOf(page.params));
+	const keyOf = (location: StorageLocation) =>
+		location.drive
+			? `drive:${location.drive}`
+			: location.volume
+				? `volume:${location.volume}`
+				: location.share
+					? `share:${location.share}`
+					: "personal";
+
+	// Only places the caller may write to.
+	const destinations: Destination[] = $derived.by(() => {
+		const list: Destination[] = [
+			{ key: "personal", label: m.nav_my_drive(), location: {}, root: "" },
+		];
+		for (const drive of page.data.drives ?? []) {
+			if (drive.role !== "viewer") {
+				list.push({
+					key: `drive:${drive.id}`,
+					label: drive.name,
+					location: { drive: drive.id },
+					root: "",
+				});
+			}
+		}
+		for (const volume of page.data.volumes ?? []) {
+			if (!volume.readOnly) {
+				list.push({
+					key: `volume:${volume.name}`,
+					label: volume.label,
+					location: { volume: volume.name },
+					root: "",
+				});
+			}
+		}
+		// A share can only be sent into from inside it.
+		const share = page.data.share;
+		if (here.share && share && !share.readOnly) {
+			list.push({
+				key: `share:${here.share}`,
+				label: share.name,
+				location: { share: here.share },
+				root: share.root,
+			});
+		}
+		return list;
+	});
+
+	let destinationKey = $state("personal");
+	const destination = $derived(
+		destinations.find((d) => d.key === destinationKey) ?? destinations[0],
+	);
+	const sameLocation = $derived(destinationKey === keyOf(here));
 
 	let loading: boolean = $state(false);
 	let loadingFolders: boolean = $state(false);
@@ -52,19 +121,47 @@
 	let isBulkMode = $derived(Object.keys(items).length > 0 && !item);
 	let itemCount = $derived(isBulkMode ? Object.keys(items).length : 1);
 
-	// Load root folders when dialog opens
+	// Opening starts where the items are, when that is somewhere writable.
+	// Keyed on `open` and the chosen key only: layout data refreshing while
+	// the dialog is up must not reset what was picked.
 	$effect(() => {
 		if (open) {
-			void loadFolders();
-			// Default to root selection
-			selectedFolder = "";
+			untrack(() => {
+				const start = keyOf(here);
+				destinationKey = destinations.some((d) => d.key === start)
+					? start
+					: "personal";
+			});
 		}
 	});
 
-	async function loadFolders() {
+	$effect(() => {
+		if (open && destinationKey) {
+			untrack(() => {
+				if (destination) {
+					void loadFolders(destination.location);
+					selectedFolder = destination.root;
+					selectedFolderName = "";
+				}
+			});
+		}
+	});
+
+	async function loadFolders(location: StorageLocation) {
 		loadingFolders = true;
+		folders = [];
 		try {
-			const { data } = await api.GET("/api/v1/storage/folder/tree");
+			// Every key is sent, empty ones included: a present-but-empty
+			// parameter is what stops the client adding this page's location.
+			const { data } = await api.GET("/api/v1/storage/folder/tree", {
+				params: {
+					query: {
+						drive: location.drive ?? "",
+						volume: location.volume ?? "",
+						share: location.share ?? "",
+					},
+				},
+			});
 			if (data?.data) {
 				folders = data.data as FolderData[];
 			}
@@ -106,14 +203,7 @@
 		return tree;
 	}
 
-	// Get current folder from URL path
-	let currentFolder = $derived.by(() => {
-		const path = page.url.pathname;
-		if (path.startsWith("/browse/")) {
-			return decodeURIComponent(path.slice("/browse/".length));
-		}
-		return "";
-	});
+	let currentFolder = $derived(page.params.path ?? "");
 
 	// Get all folder paths being moved (for filtering)
 	let movingFolderPaths = $derived.by(() => {
@@ -139,10 +229,12 @@
 
 	// Filter out folders being moved and their children from the list
 	let filteredFolders = $derived.by(() => {
-		if (movingFolderPaths.length === 0) {
-			return folders;
+		// A share's own folder is the root row already.
+		const inTree = folders.filter((f) => f.path !== destination?.root);
+		if (movingFolderPaths.length === 0 || !sameLocation) {
+			return inTree;
 		}
-		return folders.filter((f) => {
+		return inTree.filter((f) => {
 			// Exclude any folder that is being moved or is a child of one
 			return !movingFolderPaths.some(
 				(movingPath) =>
@@ -168,19 +260,18 @@
 		selectedFolderName = name;
 	}
 
-	// Check if items would be moved to their current location
-	let isSameLocation = $derived.by(() => {
-		// All items in current view share the same parent (currentFolder)
-		return selectedFolder === currentFolder;
-	});
+	// A copy into the same folder is a duplicate, which is fine.
+	let isSameLocation = $derived(
+		mode === "move" && sameLocation && selectedFolder === currentFolder,
+	);
 
-	// Check if trying to move folder into itself (only for single folder)
-	let isMovingIntoSelf = $derived.by(() =>
-		movingFolderPaths.some(
-			(folderPath) =>
-				selectedFolder === folderPath ||
-				selectedFolder.startsWith(`${folderPath}/`),
-		),
+	let isMovingIntoSelf = $derived(
+		sameLocation &&
+			movingFolderPaths.some(
+				(folderPath) =>
+					selectedFolder === folderPath ||
+					selectedFolder.startsWith(`${folderPath}/`),
+			),
 	);
 
 	let canMove = $derived(
@@ -188,13 +279,71 @@
 			(item !== undefined || Object.keys(items).length > 0),
 	);
 
-	// Dialog title
 	let dialogTitle = $derived.by(() => {
+		const verb = mode === "copy" ? "Copy" : "Move";
 		if (isBulkMode) {
-			return `Move ${itemCount} items`;
+			return `${verb} ${itemCount} items`;
 		}
-		return `Move ${item?.metadata?.name ?? "item"}`;
+		return `${verb} ${item?.metadata?.name ?? "item"}`;
 	});
+
+	const destinationName = $derived(
+		selectedFolderName || destination?.label || m.nav_my_drive(),
+	);
+
+	/** Anything that is not a move within one place goes through a transfer. */
+	async function transfer() {
+		const selected = isBulkMode
+			? Object.keys(items).map((key) => ({
+					key: key.replace(/\/$/, ""),
+					type: key.endsWith("/") ? ("folder" as const) : ("file" as const),
+				}))
+			: item
+				? [{ key: item.key.replace(/\/$/, ""), type: item.type }]
+				: [];
+		const body = {
+			items: selected.map(({ key, type }) => ({
+				path: currentFolder ? `${currentFolder}/${key}` : key,
+				type: type === "folder" ? ("folder" as const) : ("file" as const),
+			})),
+			destination: { ...destination?.location, folder: selectedFolder },
+			mode,
+		};
+
+		const promise = api
+			.POST("/api/v1/storage/transfer", { body })
+			.then(async ({ data, error: transferError }) => {
+				if (transferError || !data?.data) {
+					throw new Error("Transfer failed");
+				}
+				open = false;
+				await invalidate("app:files");
+				if (data.data.failCount > 0) {
+					throw new Error("Some items failed");
+				}
+				return data.data;
+			});
+
+		const count = String(body.items.length);
+		toast.promise(promise, {
+			loading:
+				mode === "copy"
+					? m.toast_copying_items({ count })
+					: m.toast_moving_items({ count }),
+			success: (result) =>
+				(mode === "copy" ? m.toast_items_copied : m.toast_items_moved)({
+					successCount: String(result.successCount),
+					total: count,
+					destination: destinationName,
+				}),
+			error:
+				mode === "copy"
+					? m.toast_copy_items_error()
+					: m.toast_move_items_error(),
+		});
+
+		await promise;
+	}
 
 	/** Move every checked item in one request */
 	async function moveCheckedItems() {
@@ -227,7 +376,7 @@
 				m.toast_items_moved({
 					successCount: String(result.successCount),
 					total: String(itemCount),
-					destination: selectedFolderName || m.nav_my_drive(),
+					destination: destinationName,
 				}),
 			error: m.toast_move_items_error(),
 		});
@@ -281,7 +430,7 @@
 				name: target.metadata.name || target.key,
 			}),
 			success: m.toast_moved_to({
-				destination: selectedFolderName || m.nav_my_drive(),
+				destination: destinationName,
 			}),
 			error: m.toast_move_item_error(),
 		});
@@ -298,7 +447,9 @@
 		loading = true;
 
 		try {
-			if (isBulkMode) {
+			if (mode === "copy" || !sameLocation) {
+				await transfer();
+			} else if (isBulkMode) {
 				await moveCheckedItems();
 			} else if (item) {
 				await moveSingleItem(item);
@@ -374,26 +525,40 @@
     bind:loading
     title={dialogTitle}
     description={m.select_destination()}
-    submitLabel={m.move_here()}
-    loadingLabel={m.moving()}
+    submitLabel={mode === "copy" ? m.copy_here() : m.move_here()}
+    loadingLabel={mode === "copy" ? m.copying() : m.moving()}
     submitDisabled={!canMove}
     form={{ onsubmit: handleMove }}
 >
+    {#if destinations.length > 1}
+        <Select.Root type="single" bind:value={destinationKey}>
+            <Select.Trigger
+                class="w-full"
+                aria-label={m.transfer_destination()}
+            >
+                {destination?.label}
+            </Select.Trigger>
+            <Select.Content>
+                {#each destinations as option (option.key)}
+                    <Select.Item value={option.key}>{option.label}</Select.Item>
+                {/each}
+            </Select.Content>
+        </Select.Root>
+    {/if}
     <div class="flex flex-col gap-2 max-h-[50vh] overflow-y-auto">
-        <!-- Root folder option -->
         <button
             type="button"
-            onclick={() => selectFolder("", m.nav_my_drive())}
+            onclick={() => selectFolder(destination?.root ?? "", "")}
             class={cn(
                 "flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors",
-                selectedFolder === ""
+                selectedFolder === (destination?.root ?? "")
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted",
             )}
         >
             <span class="w-5"></span>
             <HomeIcon class="h-5 w-5" />
-            <span class="text-sm font-medium">{m.nav_my_drive()}</span>
+            <span class="text-sm font-medium">{destination?.label}</span>
         </button>
 
         {#if loadingFolders}

@@ -13904,6 +13904,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
@@ -14035,6 +14043,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -15704,6 +15720,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -15818,6 +15842,14 @@
 					},
 					{
 						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
 						"name": "folder",
 						"required": false,
 						"schema": {
@@ -15898,6 +15930,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -16183,6 +16223,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -16495,6 +16543,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
@@ -16788,6 +16844,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
@@ -16866,6 +16930,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -17179,6 +17251,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
@@ -17458,6 +17538,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -17753,6 +17841,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
@@ -17843,6 +17939,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -18156,6 +18260,14 @@
 					},
 					{
 						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
 						"name": "folder",
 						"required": false,
 						"schema": {
@@ -18387,6 +18499,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -18670,6 +18790,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -18781,6 +18909,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -18921,6 +19057,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -19028,6 +19172,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
@@ -19111,6 +19263,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -19241,6 +19401,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
@@ -19312,6 +19480,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -19401,6 +19577,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -19498,6 +19682,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -19615,6 +19807,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"responses": {
@@ -19713,6 +19913,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -19847,6 +20055,14 @@
 					},
 					{
 						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
 						"name": "parent",
 						"required": false,
 						"schema": {
@@ -19933,6 +20149,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -20055,6 +20279,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -20170,6 +20402,14 @@
 					},
 					{
 						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
 						"name": "parent",
 						"required": false,
 						"schema": {
@@ -20258,6 +20498,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -20362,6 +20610,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -20645,6 +20901,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -20936,6 +21200,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -21233,6 +21505,14 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -21378,6 +21658,221 @@
 				]
 			}
 		},
+		"/api/v1/storage/transfer": {
+			"post": {
+				"description": "Copies or moves files and folders from the location in the query to `destination`, which may be another drive, shared drive or volume. Within one location a move is an ordinary move and a copy duplicates.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"destination": {
+										"additionalProperties": false,
+										"properties": {
+											"drive": {
+												"type": "string"
+											},
+											"folder": {
+												"default": "",
+												"type": "string"
+											},
+											"share": {
+												"type": "string"
+											},
+											"volume": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"folder"
+										],
+										"type": "object"
+									},
+									"items": {
+										"items": {
+											"additionalProperties": false,
+											"properties": {
+												"path": {
+													"type": "string"
+												},
+												"type": {
+													"enum": [
+														"file",
+														"folder"
+													],
+													"type": "string"
+												}
+											},
+											"required": [
+												"path",
+												"type"
+											],
+											"type": "object"
+										},
+										"maxItems": 100,
+										"minItems": 1,
+										"type": "array"
+									},
+									"mode": {
+										"enum": [
+											"copy",
+											"move"
+										],
+										"type": "string"
+									}
+								},
+								"required": [
+									"items",
+									"destination",
+									"mode"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"failCount": {
+													"type": "number"
+												},
+												"results": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"error": {
+																"type": "string"
+															},
+															"path": {
+																"type": "string"
+															},
+															"success": {
+																"type": "boolean"
+															}
+														},
+														"required": [
+															"path",
+															"success"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"successCount": {
+													"type": "number"
+												}
+											},
+											"required": [
+												"results",
+												"successCount",
+												"failCount"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Copy or move items to another location",
+				"tags": [
+					"Storage - Bulk"
+				]
+			}
+		},
 		"/api/v1/storage/trash": {
 			"delete": {
 				"description": "Permanently deletes every trashed file and folder, and reports what was freed",
@@ -21393,6 +21888,14 @@
 					{
 						"in": "query",
 						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -21638,6 +22141,224 @@
 				"summary": "Check for updates",
 				"tags": [
 					"Version"
+				]
+			}
+		},
+		"/api/v1/volumes/{name}/scan": {
+			"post": {
+				"description": "Starts a reconciliation pass now, skipping the cooldown. Does nothing when one is already running.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "name",
+						"required": true,
+						"schema": {
+							"minLength": 1,
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"mode": {
+										"default": "quick",
+										"enum": [
+											"quick",
+											"full"
+										],
+										"type": "string"
+									}
+								},
+								"required": [
+									"mode"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"started": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"started"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Rescan a mounted volume",
+				"tags": [
+					"Volumes"
+				]
+			}
+		},
+		"/api/v1/volumes/{name}/scan/events": {
+			"get": {
+				"description": "A `text/event-stream` of scan status: the current state at once, then every change until the client disconnects. Each event's data has the response's shape.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "name",
+						"required": true,
+						"schema": {
+							"minLength": 1,
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"etaSeconds": {
+													"type": "number"
+												},
+												"scanning": {
+													"type": "boolean"
+												},
+												"step": {
+													"additionalProperties": false,
+													"properties": {
+														"current": {
+															"type": "string"
+														},
+														"done": {
+															"type": "number"
+														},
+														"phase": {
+															"enum": [
+																"listing",
+																"folders",
+																"files",
+																"cleanup"
+															],
+															"type": "string"
+														},
+														"total": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"phase",
+														"done",
+														"total"
+													],
+													"type": "object"
+												}
+											},
+											"required": [
+												"scanning"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Follow a volume's scan",
+				"tags": [
+					"Volumes"
 				]
 			}
 		}

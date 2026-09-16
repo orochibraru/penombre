@@ -55,7 +55,6 @@
 		createTrashActions,
 		createTrashMultipleActions,
 		type FileToView,
-		getDuplicateFilePromise,
 		handleDownloadItem,
 		handleOpenItemFullscreen,
 		movesIntoItself,
@@ -73,6 +72,7 @@
 		selectedKeys,
 		starSelected,
 	} from "./wrapper-bulk.svelte.js";
+	import { duplicateItem, isDuplicateShortcut } from "./wrapper-duplicate";
 	import { isSearchShortcut, searchFiles } from "./wrapper-search";
 
 	interface UserPreferences {
@@ -134,6 +134,7 @@
 	let fileToView: FileToView = $state(null);
 	let moveItem: ObjectItem | undefined = $state();
 	let moveItems: Record<string, string> = $state({});
+	let moveMode: "move" | "copy" = $state("move");
 	let draggedItem: ObjectItem | undefined = $state();
 	let dropTargetKey: string | undefined = $state();
 
@@ -236,6 +237,18 @@
 		if (isSearchShortcut(e)) {
 			e.preventDefault();
 			searchInputRef?.focus();
+			return;
+		}
+		if (isDuplicateShortcut(e) && !isTrash) {
+			const keys = selectedKeys(checkedItems);
+			const item =
+				keys.length === 1
+					? (data.list ?? []).find((candidate) => candidate.key === keys[0])
+					: undefined;
+			if (item) {
+				e.preventDefault();
+				duplicateItem(item, currentFolder);
+			}
 		}
 	}
 
@@ -334,31 +347,20 @@
 		onMove: (item) => {
 			moveItem = item;
 			moveItems = {}; // Clear bulk mode
+			moveMode = "move";
+			moveDialogOpen = true;
+			actionsContextOpen = false;
+		},
+		onCopyTo: (item) => {
+			moveItem = item;
+			moveItems = {};
+			moveMode = "copy";
 			moveDialogOpen = true;
 			actionsContextOpen = false;
 		},
 		onDuplicate: (item) => {
 			actionsContextOpen = false;
-			const itemName = item.metadata.name ?? item.key;
-			const fullPath = currentFolder
-				? `${currentFolder}/${item.key}`
-				: item.key;
-
-			toast.promise(
-				getDuplicateFilePromise(fullPath, {
-					onSuccess: async () => {
-						await invalidate("app:files");
-					},
-					onError: () => {
-						// the surrounding toast.promise already reports the failure
-					},
-				}),
-				{
-					loading: m.toast_duplicating({ name: itemName }),
-					success: m.toast_duplicated({ name: itemName }),
-					error: m.toast_duplicate_error({ name: itemName }),
-				},
-			);
+			duplicateItem(item, currentFolder);
 		},
 		onStar: async (item) => {
 			actionsContextOpen = false;
@@ -478,6 +480,14 @@
 					// Copy checked items to moveItems for bulk move
 					moveItems = { ...checkedItems };
 					moveItem = undefined; // Clear single item mode
+					moveMode = "move";
+					moveDialogOpen = true;
+					actionsContextOpen = false;
+				},
+				onCopy: () => {
+					moveItems = { ...checkedItems };
+					moveItem = undefined;
+					moveMode = "copy";
 					moveDialogOpen = true;
 					actionsContextOpen = false;
 				},
@@ -923,6 +933,7 @@
     bind:open={moveDialogOpen}
     bind:item={moveItem}
     bind:items={moveItems}
+    bind:mode={moveMode}
 />
 
 <style lang="postcss">

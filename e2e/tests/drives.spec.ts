@@ -93,12 +93,12 @@ test.describe("shared drives", () => {
 		const name = `${PREFIX} sidebar ${Date.now()}`;
 		const drive = await createDrive(page, name);
 
-		await page.goto("/drives");
+		await page.goto("/drives/shared");
 		await page.waitForLoadState("networkidle");
 		await expect(page.getByRole("link", { name }).first()).toBeVisible();
 
 		await deleteDrive(page, drive);
-		await page.goto("/drives");
+		await page.goto("/drives/shared");
 		await page.waitForLoadState("networkidle");
 		await expect(page.getByRole("link", { name })).toHaveCount(0);
 	});
@@ -155,7 +155,7 @@ test.describe("shared drives", () => {
 		page,
 	}) => {
 		const name = `${PREFIX} created ${Date.now()}`;
-		await page.goto("/drives");
+		await page.goto("/drives/shared");
 		await page.waitForLoadState("networkidle");
 
 		await page.getByRole("button", { name: /new shared drive/i }).click();
@@ -208,6 +208,42 @@ test.describe("shared drives", () => {
 		await page.getByRole("link", { name: "My Drive" }).first().click();
 		await page.waitForURL("**/browse");
 		await expectItemAbsent(page, fileName);
+	});
+
+	test("the sidebar lists five drives and links to the rest", async ({
+		page,
+	}) => {
+		const stamp = Date.now();
+		const ids: string[] = [];
+		for (let i = 0; i < 7; i++) {
+			ids.push(await createDrive(page, `${PREFIX} many ${stamp} ${i}`));
+		}
+
+		await goToDrive(page, ids[6] as string);
+		const sidebar = page.locator("[data-slot=sidebar]");
+		const group = sidebar
+			.locator("[data-slot=sidebar-group]")
+			.filter({ hasText: "Shared drives" });
+		const more = group.getByRole("link", { name: /\d+ more/ });
+		await expect(more).toBeVisible();
+
+		// Five, plus the one on screen, which is past the cut.
+		const driveLinks = group.locator(
+			'a[href^="/drives/"]:not([href="/drives/shared"])',
+		);
+		await expect(driveLinks).toHaveCount(6);
+		await expect(
+			group.getByRole("link", { name: `${PREFIX} many ${stamp} 6` }),
+		).toHaveAttribute("data-active", "true");
+		await expect(
+			group.getByRole("link", { name: "All drives" }),
+		).not.toHaveAttribute("data-active", "true");
+
+		await more.click();
+		await page.waitForURL("**/drives/shared");
+		await expect(
+			page.getByRole("link", { name: `${PREFIX} many ${stamp} 6` }).first(),
+		).toBeVisible();
 	});
 
 	// A guessed id must not tell anyone that the drive exists.

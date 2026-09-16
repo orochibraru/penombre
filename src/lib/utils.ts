@@ -6,6 +6,7 @@ import type { Pathname } from "$app/types";
 import type { ObjectItem, ObjectList } from "$lib/api";
 import type { ButtonVariant } from "$lib/components/ui/button";
 import { m } from "$lib/paraglide/messages.js";
+import { getLocale } from "$lib/paraglide/runtime";
 import type { StorageLocation } from "$lib/storage-location";
 
 /**
@@ -274,6 +275,12 @@ export function listingHref(path: string, location: StorageLocation = {}) {
 			? resolve("/(app)/volumes/[volume]/[...path]", { volume, path })
 			: resolve("/(app)/volumes/[volume]", { volume });
 	}
+	if (location.share) {
+		const share = location.share;
+		return path
+			? resolve("/(app)/shared-with-me/[share]/[...path]", { share, path })
+			: resolve("/(app)/shared-with-me/[share]", { share });
+	}
 	return path
 		? resolve("/(app)/browse/[...path]", { path })
 		: resolve("/(app)/browse");
@@ -303,7 +310,8 @@ export function isBrowsableListing(pathname: string): boolean {
 	return (
 		(pathname.startsWith("/browse") ||
 			pathname.startsWith("/drives/") ||
-			pathname.startsWith("/volumes/")) &&
+			pathname.startsWith("/volumes/") ||
+			pathname.startsWith("/shared-with-me/")) &&
 		!isTrashListing(pathname)
 	);
 }
@@ -625,4 +633,23 @@ export function toggleFullscreen(
 	(
 		video as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null
 	)?.webkitEnterFullscreen?.();
+}
+
+/**
+ * "About how long": seconds rounded to the unit a person would say, in the
+ * current locale's words.
+ */
+export function etaLabel(seconds: number): string {
+	const locale = getLocale();
+	const [value, unit] =
+		seconds < 60
+			? [Math.max(1, Math.round(seconds)), "second"]
+			: seconds < 3600
+				? [Math.round(seconds / 60), "minute"]
+				: [Math.round((seconds / 3600) * 10) / 10, "hour"];
+	return new Intl.NumberFormat(locale, {
+		style: "unit",
+		unit,
+		unitDisplay: "long",
+	}).format(value);
 }

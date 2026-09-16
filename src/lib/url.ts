@@ -45,11 +45,13 @@ export function getObjectUrl({
 	const params = new URLSearchParams();
 	// A media element's `src` never passes through the API client, so where
 	// the page is has to be spelled out here.
-	const { drive, volume } = locationOf(page.params);
+	const { drive, volume, share } = locationOf(page.params);
 	if (drive) {
 		params.set("drive", drive);
 	} else if (volume) {
 		params.set("volume", volume);
+	} else if (share) {
+		params.set("share", share);
 	}
 	if (raw) {
 		params.set("raw", "true");

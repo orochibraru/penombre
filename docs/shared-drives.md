@@ -19,7 +19,10 @@ sidebar, then **New shared drive**. The creator owns it, and owning it means
 managing it.
 
 Each drive then appears in the sidebar under its own name, and browses exactly
-like My Drive: upload, folders, rename, move, preview, notes, documents.
+like My Drive: upload, folders, rename, move, preview, notes, documents. The
+sidebar lists the first five alphabetically and a **N more** link to the rest;
+the drive you have open is always listed. The management page lives at
+`/drives/shared`.
 
 ## Roles
 
@@ -39,6 +42,19 @@ they no longer want to see.
 
 New members are notified the way a share is; a role change is not news, so it is
 silent.
+
+## Moving files in and out
+
+**Move** and **Copy to…** in a file's or folder's menu (and the selection bar)
+offer every place you can write to: My Drive, each shared drive where you are
+not a viewer, and every writable [mounted volume](volumes.md). A folder travels
+with everything under it; its trashed contents stay behind.
+
+A move between two places is a copy followed by deleting the original, and the
+original is only deleted once every file has arrived — a partial failure leaves
+both copies rather than losing anything. Moving out of a drive needs write
+access to it, and nothing can be moved out of a read-only volume (copying out is
+fine).
 
 ## The trash
 
@@ -80,6 +96,10 @@ Drives are managed under `/api/v1/drives`:
 | `GET`    | `/api/v1/drives/{id}/members`        | Who is on it                 |
 | `POST`   | `/api/v1/drives/{id}/members`        | Add people, or change a role |
 | `DELETE` | `/api/v1/drives/{id}/members/{user}` | Remove one person            |
+
+Copying or moving between places is `POST /api/v1/storage/transfer`: the query
+names where the items are, the body names the `destination` (`drive`, `volume`
+or neither, plus a `folder`) and a `mode` of `copy` or `move`.
 
 Their **contents** are not a separate API. Every `/api/v1/storage/**` endpoint
 takes an optional `drive` query parameter, and with it acts on that drive

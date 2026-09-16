@@ -69,7 +69,14 @@ test.describe("HTTP health", () => {
 		await page.waitForTimeout(2500);
 
 		// And the other main pages.
-		for (const path of ["/trash", "/starred", "/shared", "/recent"]) {
+		for (const path of [
+			"/trash",
+			"/starred",
+			"/shared",
+			"/shared-with-me",
+			"/recent",
+			"/drives/shared",
+		]) {
 			await page.goto(path);
 			await page.waitForLoadState("networkidle");
 		}

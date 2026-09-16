@@ -16,6 +16,11 @@ import { getVolumes, isSimpleMode } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user as userTable } from "$lib/server/db/schema";
 import { StorageService } from "$lib/server/services/storage";
+import {
+	estimateRemaining,
+	type ScanReporter,
+	type ScanStep,
+} from "$lib/server/services/storage/scan";
 
 const logger = new Logger("LibraryScan");
 
@@ -85,6 +90,76 @@ const lastScanAt = new Map<string, number>();
  */
 const RESCAN_COOLDOWN_MS = 30_000;
 
+/** What a page is told about a pass: a step, plus how long is left. */
+export interface ScanStatus {
+	scanning: boolean;
+	step?: ScanStep;
+	/** Seconds, once enough files are done to say. */
+	etaSeconds?: number;
+}
+
+type Listener = (status: ScanStatus) => void;
+
+const progress = new Map<string, { step: ScanStep; filesStartedAt?: number }>();
+const listeners = new Map<string, Set<Listener>>();
+
+/** Emitting per file would flood a stream on a fast pass; a few a second reads live. */
+const EMIT_INTERVAL_MS = 250;
+const lastEmit = new Map<string, number>();
+
+export function scanStatus(key: string): ScanStatus {
+	const entry = progress.get(key);
+	if (!(inFlight.has(key) && entry)) {
+		return { scanning: inFlight.has(key) };
+	}
+	const { step, filesStartedAt } = entry;
+	return {
+		scanning: true,
+		step,
+		etaSeconds:
+			step.phase === "files" && filesStartedAt
+				? estimateRemaining(step.done, step.total, Date.now() - filesStartedAt)
+				: undefined,
+	};
+}
+
+/** Be told about every step of this volume's passes. Returns the unsubscribe. */
+export function subscribeScan(key: string, listener: Listener): () => void {
+	const set = listeners.get(key) ?? new Set<Listener>();
+	set.add(listener);
+	listeners.set(key, set);
+	return () => {
+		set.delete(listener);
+	};
+}
+
+function emit(key: string, force = false): void {
+	const now = Date.now();
+	if (!force && now - (lastEmit.get(key) ?? 0) < EMIT_INTERVAL_MS) {
+		return;
+	}
+	lastEmit.set(key, now);
+	const status = scanStatus(key);
+	for (const listener of listeners.get(key) ?? []) {
+		listener(status);
+	}
+}
+
+function reporterFor(key: string): ScanReporter {
+	return (step) => {
+		const previous = progress.get(key);
+		const phaseChanged = previous?.step.phase !== step.phase;
+		progress.set(key, {
+			step,
+			filesStartedAt:
+				step.phase === "files"
+					? (previous?.filesStartedAt ?? Date.now())
+					: previous?.filesStartedAt,
+		});
+		emit(key, phaseChanged);
+	};
+}
+
 /** What a volume's passes are tracked under. */
 export function volumeScanKey(volumeName: string): string {
 	return `volume:${volumeName}`;
@@ -95,20 +170,37 @@ export function isScanning(key: string): boolean {
 	return inFlight.has(key);
 }
 
+type ScanRun = (report: ScanReporter) => Promise<unknown>;
+
 /** Run a pass unless one is already going, and await it. */
-async function runScan(key: string, run: () => Promise<void>): Promise<void> {
+async function runScan(key: string, run: ScanRun): Promise<void> {
 	if (inFlight.has(key)) {
 		return;
 	}
 	inFlight.add(key);
+	emit(key, true);
 	try {
-		await run();
+		await run(reporterFor(key));
 	} catch (error) {
 		logger.error(`Scan of ${key} failed`, error);
 	} finally {
 		inFlight.delete(key);
+		progress.delete(key);
 		lastScanAt.set(key, Date.now());
+		emit(key, true);
 	}
+}
+
+/**
+ * Start a pass now, ignoring the cooldown — the Rescan button. Returns false
+ * when one was already running, which the caller reports as-is.
+ */
+export function scanNow(key: string, run: ScanRun): boolean {
+	if (inFlight.has(key)) {
+		return false;
+	}
+	void runScan(key, run);
+	return true;
 }
 
 /**
@@ -119,7 +211,7 @@ async function runScan(key: string, run: () => Promise<void>): Promise<void> {
  * held the page open with nothing on screen for all of them. The listing
  * renders from the rows that exist and the page says a pass is running.
  */
-export function scanOnVisit(key: string, run: () => Promise<void>): boolean {
+export function scanOnVisit(key: string, run: ScanRun): boolean {
 	if (inFlight.has(key)) {
 		return true;
 	}
@@ -161,8 +253,8 @@ export async function scanLibrary(): Promise<void> {
 		// request reads it as, and through the same registry a page visit
 		// uses so the two never crawl it at the same time.
 		for (const volume of volumes) {
-			await runScan(volumeScanKey(volume.name), () =>
-				new StorageService(owner, volume).scanStorage().then(() => undefined),
+			await runScan(volumeScanKey(volume.name), (report) =>
+				new StorageService(owner, volume).scanStorage(report),
 			);
 		}
 	} catch (error) {

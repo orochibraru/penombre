@@ -146,4 +146,43 @@ test.describe("Mounted volumes", () => {
 		);
 		expect(resp.status()).toBe(404);
 	});
+
+	test("Rescan starts a pass the event stream reports", async ({ page }) => {
+		await goToVolume(page);
+		// Enabled means the pass this visit may have started is over, so the
+		// one the stream sees next is ours.
+		const rescan = page.getByRole("button", { name: "Rescan" });
+		await expect(rescan).toBeEnabled({ timeout: 15_000 });
+
+		// Read in the page: the stream never ends, so only its first events.
+		const events = page.evaluate(async (volume) => {
+			const response = await fetch(`/api/v1/volumes/${volume}/scan/events`);
+			const reader = response.body?.getReader();
+			const decoder = new TextDecoder();
+			let text = "";
+			const deadline = Date.now() + 10_000;
+			while (reader && Date.now() < deadline) {
+				const { value, done } = await reader.read();
+				if (done) {
+					break;
+				}
+				text += decoder.decode(value);
+				if (
+					text.includes('"scanning":true') &&
+					text.includes('"scanning":false')
+				) {
+					break;
+				}
+			}
+			await reader?.cancel();
+			return { type: response.headers.get("content-type"), text };
+		}, VOLUME);
+
+		await rescan.click();
+
+		const { type, text } = await events;
+		expect(type).toContain("text/event-stream");
+		expect(text).toContain("data: ");
+		expect(text).toContain('"scanning":true');
+	});
 });

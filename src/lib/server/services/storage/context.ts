@@ -29,6 +29,12 @@ export interface StorageContext {
 	 * bound to a volume can never see or touch another one's rows.
 	 */
 	readonly volumeId: string | null;
+	/**
+	 * The part of the tree a recipient of a user-to-user share may reach: one
+	 * folder and everything under it, or one file. Absent is the whole tree.
+	 * `ownedFiles`/`ownedFolders` apply it, so every query inherits it.
+	 */
+	readonly scope?: StorageScope;
 	/** Refuse writes — set for volumes declared read-only. */
 	readonly readOnly: boolean;
 	/** Local filesystem base, used for thumbnail caching (always local) */
@@ -40,3 +46,8 @@ export interface StorageContext {
 	/** Drop every cached listing after a mutation */
 	invalidateListingCaches: () => Promise<void>;
 }
+
+export type StorageScope =
+	| { kind: "folder"; path: string }
+	/** `folderId` is the file's parent, so that folder can be listed. */
+	| { kind: "file"; fileId: string; folderId: string | null };

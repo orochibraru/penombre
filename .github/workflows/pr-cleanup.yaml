@@ -1,12 +1,21 @@
 name: PR Cleanup
-# Deletes the `pr-<number>` image once the PR is closed or merged.
+# Deletes the `pr-<number>` image once the PR is closed. A merged PR's image is
+# deleted by publish.yaml instead, which may still be promoting it.
 
 on:
   pull_request:
     types: [closed]
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+    secrets:
+      DOCKER_HUB_TOKEN:
+        required: true
 
 concurrency:
-  group: pr-cleanup-${{ github.event.pull_request.number }}
+  group: pr-cleanup-${{ inputs.pr_number || github.event.pull_request.number }}
   cancel-in-progress: false
 
 permissions:
@@ -19,9 +28,10 @@ env:
 
 jobs:
   delete-image:
-    name: Delete pr-${{ github.event.pull_request.number }} image
+    name: Delete pr-${{ inputs.pr_number || github.event.pull_request.number }} image
     # A fork never published one.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: inputs.pr_number || (github.event.pull_request.head.repo.full_name ==
+      github.repository && !github.event.pull_request.merged)
     runs-on: ubuntu-latest
     steps:
       - name: Delete the tag from Docker Hub
@@ -29,7 +39,7 @@ jobs:
           DOCKER_HUB_USERNAME: orochibraru
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
           REPOSITORY: orochibraru/penombre
-          TAG: pr-${{ github.event.pull_request.number }}
+          TAG: pr-${{ inputs.pr_number || github.event.pull_request.number }}
         run: |
           set -euo pipefail
 

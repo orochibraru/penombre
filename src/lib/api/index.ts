@@ -4,6 +4,7 @@ import { navigating, page } from "$app/state";
 import {
 	DRIVE_HEADER,
 	locationFrom,
+	SHARE_HEADER,
 	VOLUME_HEADER,
 } from "$lib/storage-location";
 import type { components, paths } from "./v1";
@@ -58,16 +59,22 @@ api.use({
 			return;
 		}
 		const url = new URL(request.url);
-		if (url.searchParams.has("drive") || url.searchParams.has("volume")) {
+		if (
+			url.searchParams.has("drive") ||
+			url.searchParams.has("volume") ||
+			url.searchParams.has("share")
+		) {
 			return;
 		}
 
 		const target = navigating.to ?? page;
-		const { drive, volume } = locationFrom(target.params, target.url);
+		const { drive, volume, share } = locationFrom(target.params, target.url);
 		if (drive) {
 			request.headers.set(DRIVE_HEADER, drive);
 		} else if (volume) {
 			request.headers.set(VOLUME_HEADER, volume);
+		} else if (share) {
+			request.headers.set(SHARE_HEADER, share);
 		}
 	},
 });

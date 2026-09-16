@@ -1,55 +1,26 @@
 <script lang="ts">
 	import {
 		CopyIcon,
-		DownloadIcon,
 		FolderIcon,
 		Link2Icon,
 		Link2OffIcon,
 		LockIcon,
 		UserCheckIcon,
-		UsersIcon,
 	} from "@lucide/svelte";
-	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { invalidate } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import { api } from "$lib/api";
 	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
-	import { buttonVariants } from "$lib/components/ui/button/index.js";
 	import * as Card from "$lib/components/ui/card/index.js";
-	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
-	import { cn, downloadsCountLabel, readableFileSize } from "$lib/utils";
+	import { cn, downloadsCountLabel } from "$lib/utils";
 
 	const { data } = $props();
 
 	$title = m.nav_shared();
-
-	// Land on whichever tab actually has something in it — chosen once on
-	// load, so a revoke that empties the list doesn't yank the tab away.
-	let tab = $state(
-		untrack(() =>
-			data.shares.length === 0 && data.sharedWithMe.length > 0
-				? "with-me"
-				: "links",
-		),
-	);
-
-	const permissionLabels: Record<string, string> = {
-		read: m.permission_read(),
-		write: m.permission_write(),
-		admin: m.permission_admin(),
-	};
-
-	const initials = (name: string) =>
-		name
-			.split(" ")
-			.slice(0, 2)
-			.map((part) => part[0]?.toUpperCase() ?? "")
-			.join("");
 
 	let copiedId: string | null = $state(null);
 	let revokingId: string | null = $state(null);
@@ -106,29 +77,6 @@
         <p class="text-muted-foreground text-sm">{m.shared_description()}</p>
     </div>
 
-    <Tabs.Root bind:value={tab} class="gap-5">
-        <Tabs.List>
-            <Tabs.Trigger value="links" class="px-3">
-                <Link2Icon />
-                {m.shared_tab_links()}
-                {#if data.shares.length > 0}
-                    <span class="text-muted-foreground tabular-nums">
-                        {data.shares.length}
-                    </span>
-                {/if}
-            </Tabs.Trigger>
-            <Tabs.Trigger value="with-me" class="px-3">
-                <UsersIcon />
-                {m.shared_tab_with_me()}
-                {#if data.sharedWithMe.length > 0}
-                    <span class="text-muted-foreground tabular-nums">
-                        {data.sharedWithMe.length}
-                    </span>
-                {/if}
-            </Tabs.Trigger>
-        </Tabs.List>
-
-        <Tabs.Content value="links" class="flex flex-col gap-2">
         {#if data.shares.length === 0}
             <Card.Root class="border-dashed shadow-none">
                 <Card.Content
@@ -245,105 +193,4 @@
                 {/each}
             </div>
         {/if}
-        </Tabs.Content>
-
-        <Tabs.Content value="with-me" class="flex flex-col gap-2">
-            {#if data.sharedWithMe.length === 0}
-                <Card.Root class="border-dashed shadow-none">
-                    <Card.Content
-                        class="text-muted-foreground flex flex-col items-center gap-3 py-12 text-center"
-                    >
-                        <div
-                            class="bg-muted flex size-12 items-center justify-center rounded-lg"
-                        >
-                            <UsersIcon class="size-5" />
-                        </div>
-                        <div>
-                            <p class="text-foreground text-sm font-medium">
-                                {m.shared_with_me_empty()}
-                            </p>
-                            <p class="mt-1 text-xs">
-                                {m.shared_with_me_hint()}
-                            </p>
-                        </div>
-                    </Card.Content>
-                </Card.Root>
-            {:else}
-                {#each data.sharedWithMe as entry (entry.sharedWithId)}
-                    <Card.Root
-                        class="hover:border-primary/40 gap-0 py-3 transition-colors"
-                    >
-                        <Card.Content
-                            class="flex flex-wrap items-center justify-between gap-3 px-4"
-                        >
-                            <div class="flex min-w-0 items-center gap-3">
-                                <div
-                                    class="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-full"
-                                >
-                                    {#if entry.resourceType === "folder"}
-                                        <FolderIcon class="size-4" />
-                                    {:else}
-                                        <FileTypeIcon
-                                            category={entry.category}
-                                            class="size-4"
-                                        />
-                                    {/if}
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="truncate text-sm font-medium">
-                                        {entry.name}
-                                    </p>
-                                    <div
-                                        class="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 text-xs"
-                                    >
-                                        <span
-                                            class="flex items-center gap-1.5"
-                                        >
-                                            <span
-                                                class="bg-muted flex size-4 items-center justify-center rounded-lg text-[9px] font-medium"
-                                                aria-hidden="true"
-                                            >
-                                                {initials(entry.owner.name)}
-                                            </span>
-                                            {m.shared_by({
-                                                name: entry.owner.name,
-                                            })}
-                                        </span>
-                                        {#if entry.resourceType === "file"}
-                                            <span aria-hidden="true">·</span>
-                                            <span class="tabular-nums">
-                                                {readableFileSize(entry.size)}
-                                            </span>
-                                        {/if}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex shrink-0 items-center gap-2">
-                                <Badge variant="secondary">
-                                    {permissionLabels[entry.permission] ??
-                                        entry.permission}
-                                </Badge>
-                                <a
-                                    class={cn(
-                                        buttonVariants({
-                                            variant: "outline",
-                                            size: "sm",
-                                        }),
-                                    )}
-                                    href={resolve("/api/v1/sharings/[id]/download", {
-                                        id: entry.sharedWithId,
-                                    })}
-                                    download
-                                >
-                                    <DownloadIcon class="size-4" />
-                                    {m.download()}
-                                </a>
-                            </div>
-                        </Card.Content>
-                    </Card.Root>
-                {/each}
-            {/if}
-        </Tabs.Content>
-    </Tabs.Root>
 </div>

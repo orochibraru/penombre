@@ -20,3 +20,4 @@ import "$lib/server/openapi/v1/shares";
 import "$lib/server/openapi/v1/sharings";
 import "$lib/server/openapi/v1/storage";
 import "$lib/server/openapi/v1/version";
+import "$lib/server/openapi/v1/volumes";

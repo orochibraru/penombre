@@ -28,7 +28,7 @@ export interface StorageDriver {
 	/** Write data to an object, creating or replacing it. */
 	writeObject: (
 		key: string,
-		data: ArrayBuffer | Uint8Array | Blob,
+		data: ArrayBuffer | Uint8Array | Blob | ReadableStream<Uint8Array>,
 	) => Promise<void>;
 
 	/** Delete a single object. */

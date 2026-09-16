@@ -35,9 +35,13 @@ async function moveToRoot(page: import("@playwright/test").Page) {
 	const dialog = await waitForDialog(page, /move/i);
 	// Inside a subfolder the default selectedFolder is "" (root), so "Move here" is
 	// already enabled. But click "My Drive" explicitly to make the intent clear.
-	const myDriveSpan = dialog.getByText("My Drive", { exact: true });
-	await expect(myDriveSpan).toBeVisible({ timeout: 8000 });
-	await myDriveSpan.click();
+	// The button, not the text: the destination picker shows the name too.
+	const myDriveRow = dialog.getByRole("button", {
+		name: "My Drive",
+		exact: true,
+	});
+	await expect(myDriveRow).toBeVisible({ timeout: 8000 });
+	await myDriveRow.click();
 	const moveHereBtn = dialog.getByRole("button", { name: "Move here" });
 	await expect(moveHereBtn).toBeEnabled({ timeout: 5000 });
 	await moveHereBtn.click();

@@ -304,9 +304,9 @@ export function getConfig(): AppConfig {
 
 	return validateConfig({
 		appName: env.APP_NAME || defaultConfigValues.appName,
-		// Not overridable: the version is package.json's, inlined into the bundle
-		// at build time, so it always describes the artifact that's running.
-		appVersion: defaultConfigValues.appVersion,
+		// package.json's, inlined at build time. The release override is set only
+		// by publish.yaml when it promotes an already-tested PR image.
+		appVersion: env.PENOMBRE_RELEASE_VERSION || defaultConfigValues.appVersion,
 		environment: env.APP_ENV || defaultConfigValues.environment,
 		origin: env.ORIGIN || defaultConfigValues.origin,
 		logLevel: resolveLogLevel(),

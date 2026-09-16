@@ -6,7 +6,7 @@ import type { Readable } from "node:stream";
 import type { Archiver } from "archiver";
 import type { User } from "better-auth";
 import { Logger } from "$lib/logger";
-import type { CacheBackend } from "$lib/server/cache";
+import { type CacheBackend, NullCacheBackend } from "$lib/server/cache";
 import {
 	getStoragePath,
 	isSimpleMode,
@@ -14,7 +14,11 @@ import {
 } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user } from "$lib/server/db/schema";
-import { ReadOnlyVolumeError } from "$lib/server/errors";
+import {
+	DriveAccessError,
+	FileOrFolderNotFoundError,
+	ReadOnlyVolumeError,
+} from "$lib/server/errors";
 import type {
 	DirectoryList,
 	FileCategory,
@@ -29,7 +33,7 @@ import type {
 } from "$lib/server/schema";
 import { ActivityService } from "$lib/server/services/activity";
 import { CacheKeys, CacheManager } from "./cache";
-import type { StorageContext } from "./context";
+import type { StorageContext, StorageScope } from "./context";
 import { availableDiskSpace } from "./disk-space";
 import {
 	createUserStorageDriver,
@@ -41,8 +45,13 @@ import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
 import { ListingOperations } from "./listings";
 import { type FileProxyRequest, ProxyService } from "./proxy";
-import { ScanOperations, type ScanResult } from "./scan";
+import { ScanOperations, type ScanReporter, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
+import {
+	type ExportedTree,
+	TransferOperations,
+	type TransferResult,
+} from "./transfer";
 import { type EmptyTrashResult, TrashOperations } from "./trash";
 import { ZipService } from "./zip";
 
@@ -76,6 +85,8 @@ export class StorageService {
 	private readonly user: User;
 	private readonly activityService: ActivityService = new ActivityService();
 	private readonly cache: CacheBackend;
+	/** The owner's listing cache, which a scoped service clears but never reads. */
+	private readonly listingCache: CacheBackend;
 	private readonly driver: StorageDriver;
 	private readonly db: ReturnType<typeof getDb>;
 	private readonly ctx: StorageContext;
@@ -87,14 +98,22 @@ export class StorageService {
 	private readonly listingOperations: ListingOperations;
 	private readonly scanOperations: ScanOperations;
 	private readonly trashOperations: TrashOperations;
+	private readonly transferOperations: TransferOperations;
 
 	/**
 	 * @param user   Whose drive this service reads and writes.
 	 * @param volume A mounted volume to bind to, or omitted for the main drive.
 	 * @param actor  Who is asking, when that is not the owner — a member of a
 	 *               shared drive. Only authorship (activity rows) reads it.
+	 * @param options `scope` narrows the tree to what a share recipient may
+	 *               reach; `readOnly` refuses writes regardless of the volume.
 	 */
-	constructor(user: User, volume?: VolumeConfig, actor?: User) {
+	constructor(
+		user: User,
+		volume?: VolumeConfig,
+		actor?: User,
+		options: { scope?: StorageScope; readOnly?: boolean } = {},
+	) {
 		// A volume — a mounted directory or a shared drive — is one tree for
 		// everyone, rooted at the mount itself. Only the main drive is split
 		// per user, and only in full mode.
@@ -107,9 +126,11 @@ export class StorageService {
 		this.user = user;
 		// Cached listings are keyed per user *and* per volume, or switching
 		// volumes would serve the previous one's directory listing.
-		this.cache = cacheManager.getUserCache(
+		this.listingCache = cacheManager.getUserCache(
 			volume ? `${user.id}:${volume.name}` : user.id,
 		);
+		// A scoped listing must never be served to the owner, nor theirs to it.
+		this.cache = options.scope ? new NullCacheBackend() : this.listingCache;
 		this.driver = volume
 			? createVolumeStorageDriver(volume.path, this.userFolder)
 			: createUserStorageDriver(this.userFolder);
@@ -120,7 +141,8 @@ export class StorageService {
 			actor: actor ?? this.user,
 			userFolder: this.userFolder,
 			volumeId: this.volume?.name ?? null,
-			readOnly: this.volume?.readOnly ?? false,
+			scope: options.scope,
+			readOnly: (this.volume?.readOnly ?? false) || options.readOnly === true,
 			storagePath: this.storagePath,
 			db: this.db,
 			cache: this.cache,
@@ -135,6 +157,11 @@ export class StorageService {
 		this.listingOperations = new ListingOperations(this.ctx);
 		this.scanOperations = new ScanOperations(this.ctx, this.thumbnails);
 		this.trashOperations = new TrashOperations(this.ctx, this.thumbnails);
+		this.transferOperations = new TransferOperations(
+			this.ctx,
+			this.fileOperations,
+			this.folderOperations,
+		);
 		this.proxy = new ProxyService(this.ctx, this.thumbnails, (path) =>
 			this.getFile(path),
 		);
@@ -155,6 +182,78 @@ export class StorageService {
 		}
 	}
 
+	/** Whether writes are refused, so a caller can check before a two-sided move. */
+	get readOnly(): boolean {
+		return this.ctx.readOnly;
+	}
+
+	/**
+	 * Guard for a write that names a place in the tree. A scope's queries
+	 * already hide everything outside it, but a create or a move *into* a
+	 * path does not read a row there first. `strict` refuses the scope's own
+	 * root too: a recipient may work inside a shared folder, not move or
+	 * delete the folder itself.
+	 */
+	private assertInScope(path: string | undefined, strict = false): void {
+		const scope = this.ctx.scope;
+		if (!scope) {
+			return;
+		}
+		const normalized = (path ?? "").replace(/\/$/, "");
+		const inside =
+			scope.kind === "folder" &&
+			((!strict && normalized === scope.path) ||
+				normalized.startsWith(`${scope.path}/`));
+		if (!inside) {
+			throw new DriveAccessError(403, "Outside what was shared");
+		}
+	}
+
+	/** Bytes are written by key, so a scoped write must find its row first. */
+	private async assertFileInScope(key: string): Promise<void> {
+		if (this.ctx.scope && !(await this.fileExists(key))) {
+			throw new FileOrFolderNotFoundError(`File not found: ${key}`);
+		}
+	}
+
+	/** Two services acting on the same tree answer the same key. */
+	get locationKey(): string {
+		return `${this.user.id}:${this.ctx.volumeId ?? ""}`;
+	}
+
+	// =========================================================================
+	// TRANSFER
+	// =========================================================================
+
+	exportTree(key: string, type: "file" | "folder"): Promise<ExportedTree> {
+		return this.transferOperations.exportTree(key, type);
+	}
+
+	/** Copy an exported tree from `source` into `destination` here. */
+	importTree(
+		tree: ExportedTree,
+		destination: string,
+		source: StorageService,
+	): Promise<TransferResult> {
+		this.assertWritable();
+		this.assertInScope(destination);
+		return this.transferOperations.importTree(tree, destination, (path) =>
+			source.openFile(path),
+		);
+	}
+
+	/** A file's bytes, as a stream; only a row this service can see. */
+	async openFile(path: string): Promise<ReadableStream<Uint8Array>> {
+		if (!(await this.fileExists(path))) {
+			throw new FileOrFolderNotFoundError(`File not found: ${path}`);
+		}
+		return this.driver.getObjectStream(path);
+	}
+
+	private static parentOf(key: string): string {
+		return key.includes("/") ? key.slice(0, key.lastIndexOf("/")) : "";
+	}
+
 	// =========================================================================
 	// FILES / FOLDERS / LISTINGS
 	// =========================================================================
@@ -163,14 +262,15 @@ export class StorageService {
 		return this.fileOperations.getFile(path);
 	}
 
-	writeFile(
+	async writeFile(
 		path: string,
 		contents?: Blob | Buffer | Uint8Array,
 		metadata?: FileMetadata,
 		size?: number,
 	): Promise<void> {
 		this.assertWritable();
-		return this.fileOperations.writeFile(path, contents, metadata, size);
+		await this.assertFileInScope(path);
+		return await this.fileOperations.writeFile(path, contents, metadata, size);
 	}
 
 	updateFile(name: string, data: UpdateFile): Promise<void> {
@@ -180,16 +280,19 @@ export class StorageService {
 
 	moveFile(fileKey: string, destinationFolder: string): Promise<void> {
 		this.assertWritable();
+		this.assertInScope(destinationFolder);
 		return this.fileOperations.moveFile(fileKey, destinationFolder);
 	}
 
 	duplicateFile(fileKey: string): Promise<ObjectItem> {
 		this.assertWritable();
+		this.assertInScope(StorageService.parentOf(fileKey));
 		return this.fileOperations.duplicateFile(fileKey);
 	}
 
 	createFile(file: NewFile, folder?: string): Promise<UploadResult> {
 		this.assertWritable();
+		this.assertInScope(folder);
 		return this.fileOperations.createFile(file, folder);
 	}
 
@@ -198,6 +301,7 @@ export class StorageService {
 		folder?: string,
 	): Promise<UploadResult[]> {
 		this.assertWritable();
+		this.assertInScope(folder);
 		return this.fileOperations.createBatchFiles(fileList, folder);
 	}
 
@@ -214,9 +318,10 @@ export class StorageService {
 		return this.fileOperations.uploadFileBody(id, body);
 	}
 
-	deleteFile(key: string): Promise<void> {
+	async deleteFile(key: string): Promise<void> {
 		this.assertWritable();
-		return this.fileOperations.deleteFile(key);
+		await this.assertFileInScope(key);
+		return await this.fileOperations.deleteFile(key);
 	}
 
 	fileExists(key: string): Promise<boolean> {
@@ -242,6 +347,8 @@ export class StorageService {
 
 	moveFolder(folderKey: string, destinationFolder: string): Promise<void> {
 		this.assertWritable();
+		this.assertInScope(folderKey, true);
+		this.assertInScope(destinationFolder);
 		return this.folderOperations.moveFolder(folderKey, destinationFolder);
 	}
 
@@ -250,21 +357,25 @@ export class StorageService {
 		parent?: string,
 	): Promise<{ id: string; name: string }> {
 		this.assertWritable();
+		this.assertInScope(parent);
 		return this.folderOperations.createFolder(name, parent);
 	}
 
 	deleteFolder(key: string): Promise<void> {
 		this.assertWritable();
+		this.assertInScope(key, true);
 		return this.folderOperations.deleteFolder(key);
 	}
 
 	trashFolder(key: string): Promise<void> {
 		this.assertWritable();
+		this.assertInScope(key, true);
 		return this.folderOperations.trashFolder(key);
 	}
 
 	restoreFolder(key: string): Promise<void> {
 		this.assertWritable();
+		this.assertInScope(key, true);
 		return this.folderOperations.restoreFolder(key);
 	}
 
@@ -278,6 +389,7 @@ export class StorageService {
 		},
 	): Promise<void> {
 		this.assertWritable();
+		this.assertInScope(id, true);
 		return this.folderOperations.updateFolderMeta(id, data);
 	}
 
@@ -332,6 +444,7 @@ export class StorageService {
 
 	emptyTrash(): Promise<EmptyTrashResult> {
 		this.assertWritable();
+		this.assertInScope(undefined, true);
 		return this.trashOperations.emptyTrash();
 	}
 
@@ -359,8 +472,12 @@ export class StorageService {
 	}
 
 	/** Reconcile the DB with the files actually present in the storage backend. */
-	scanStorage(): Promise<ScanResult> {
-		return this.scanOperations.scan();
+	scanStorage(
+		report?: ScanReporter,
+		options?: { full?: boolean },
+	): Promise<ScanResult> {
+		this.assertInScope(undefined, true);
+		return this.scanOperations.scan(report, options);
 	}
 
 	countTrashedItems(): Promise<number> {
@@ -427,15 +544,15 @@ export class StorageService {
 
 	private async invalidateListingCaches(): Promise<void> {
 		await Promise.all([
-			this.cache.deleteByPrefix("list:"),
-			this.cache.deleteByPrefix("folders:"),
-			this.cache.deleteByPrefix("folder-size:"),
-			this.cache.delete(CacheKeys.starred()),
-			this.cache.delete(CacheKeys.trashed()),
-			this.cache.delete(CacheKeys.recent()),
-			this.cache.deleteByPrefix(CacheKeys.counts()),
-			this.cache.deleteByPrefix("category:"),
-			this.cache.delete(CacheKeys.fileIdIndex()),
+			this.listingCache.deleteByPrefix("list:"),
+			this.listingCache.deleteByPrefix("folders:"),
+			this.listingCache.deleteByPrefix("folder-size:"),
+			this.listingCache.delete(CacheKeys.starred()),
+			this.listingCache.delete(CacheKeys.trashed()),
+			this.listingCache.delete(CacheKeys.recent()),
+			this.listingCache.deleteByPrefix(CacheKeys.counts()),
+			this.listingCache.deleteByPrefix("category:"),
+			this.listingCache.delete(CacheKeys.fileIdIndex()),
 		]);
 	}
 

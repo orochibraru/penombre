@@ -17,11 +17,14 @@
 
 export const DRIVE_HEADER = "x-drive";
 export const VOLUME_HEADER = "x-volume";
+export const SHARE_HEADER = "x-share";
 
 /** A listing's address, as the API takes it. Empty means the personal drive. */
 export interface StorageLocation {
 	drive?: string;
 	volume?: string;
+	/** Something shared with the caller, by its `shared_with` id. */
+	share?: string;
 }
 
 /**
@@ -39,6 +42,9 @@ export function locationOf(
 	if (params?.volume) {
 		return { volume: params.volume };
 	}
+	if (params?.share) {
+		return { share: params.share };
+	}
 	return {};
 }
 
@@ -51,12 +57,13 @@ export function locationFrom(
 	url: URL,
 ): StorageLocation {
 	const fromParams = locationOf(params);
-	if (fromParams.drive || fromParams.volume) {
+	if (fromParams.drive || fromParams.volume || fromParams.share) {
 		return fromParams;
 	}
 	return {
 		drive: url.searchParams.get("drive") ?? undefined,
 		volume: url.searchParams.get("volume") ?? undefined,
+		share: url.searchParams.get("share") ?? undefined,
 	};
 }
 
@@ -67,6 +74,9 @@ export function locationQuery(location: StorageLocation): string {
 	}
 	if (location.volume) {
 		return `volume=${encodeURIComponent(location.volume)}`;
+	}
+	if (location.share) {
+		return `share=${encodeURIComponent(location.share)}`;
 	}
 	return "";
 }
