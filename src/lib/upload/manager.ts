@@ -11,6 +11,7 @@ import { browser } from "$app/environment";
 import { invalidate } from "$app/navigation";
 import { api, type ObjectItem } from "$lib/api";
 import * as m from "$lib/paraglide/messages.js";
+import { locationQuery } from "$lib/storage-location";
 import {
 	failedUploads,
 	uploadedItems,
@@ -35,8 +36,8 @@ const known = new Map<string, UploadJob>();
 const sent = new Map<string, number>();
 
 function uploadUrl(job: UploadJob): string {
-	const drive = job.driveId ? `?drive=${encodeURIComponent(job.driveId)}` : "";
-	return `/api/v1/storage/file/${encodeURIComponent(job.fileId)}/upload${drive}`;
+	const query = locationQuery(job.location ?? {});
+	return `/api/v1/storage/file/${encodeURIComponent(job.fileId)}/upload${query ? `?${query}` : ""}`;
 }
 
 function toWorkerJob(job: UploadJob): WorkerJob {
@@ -82,7 +83,7 @@ async function onDone(job: UploadJob): Promise<void> {
 	const { data } = await api.GET("/api/v1/storage/file/{id}", {
 		params: {
 			path: { id: encodeURIComponent(job.finalName) },
-			query: { drive: job.driveId },
+			query: job.location ?? {},
 		},
 	});
 
@@ -308,7 +309,7 @@ export async function dismissFailed(id: string): Promise<void> {
 		await api.DELETE("/api/v1/storage/file/{id}", {
 			params: {
 				path: { id: encodeURIComponent(job.finalName) },
-				query: { drive: job.driveId },
+				query: job.location ?? {},
 			},
 		});
 		await invalidate("app:files");

@@ -137,11 +137,10 @@ describe("remove", () => {
 });
 
 describe("driveVolume", () => {
-	test("is shared whole and read-only for a viewer", () => {
+	test("is read-only for a viewer", () => {
 		expect(driveVolume(drive as never, "viewer")).toMatchObject({
 			name: driveVolumeId("d1"),
 			label: "Team",
-			shared: true,
 			readOnly: true,
 		});
 		expect(driveVolume(drive as never, "editor").readOnly).toBe(false);

@@ -2,7 +2,7 @@ import { error } from "@sveltejs/kit";
 import { officeKindForName } from "$lib/documents";
 import { Logger } from "$lib/logger";
 import { officeToText } from "$lib/server/office";
-import { storageServiceFor } from "$lib/server/services/drives";
+import { storageServiceFor } from "$lib/server/services/storage-for";
 
 const logger = new Logger("Editor");
 
@@ -11,7 +11,8 @@ export const load = async ({ params, url, locals }) => {
 		return error(401);
 	}
 
-	// See the viewer: the drive travels as `?drive=`, not as a route param.
+	// See the viewer: where the file lives travels in the query, not as a
+	// route parameter.
 	const service = await storageServiceFor(locals.storageOwner ?? locals.user, {
 		url,
 		locals,

@@ -31,13 +31,13 @@ import type {
 	SortColumn,
 	SortDirection,
 } from "$lib/utils";
-import { peaksUrl, withDrive } from "./file-links";
+import { peaksUrl, withLocation } from "./file-links";
 
 export {
 	fullscreenUrl,
 	handleOpenItemFullscreen,
 	peaksUrl,
-	withDrive,
+	withLocation,
 } from "./file-links";
 
 // ================================
@@ -469,7 +469,9 @@ export async function handleOpenItem(
 	const editable = editorKindForName(item.metadata.name ?? item.key);
 	if (editable && item.metadata.id) {
 		await goto(
-			withDrive(resolve("/(app)/edit/[fileId]", { fileId: item.metadata.id })),
+			withLocation(
+				resolve("/(app)/edit/[fileId]", { fileId: item.metadata.id }),
+			),
 		);
 		return;
 	}

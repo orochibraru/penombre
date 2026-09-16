@@ -5060,6 +5060,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -5129,6 +5130,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -6163,6 +6165,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -6238,6 +6241,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -6314,6 +6318,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -6509,6 +6514,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -6704,6 +6710,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -6904,6 +6911,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -6968,6 +6976,7 @@ export interface paths {
 			parameters: {
 				query: {
 					drive?: string;
+					volume?: string;
 					q: string;
 					limit?: string;
 				};
@@ -7168,6 +7177,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -7357,6 +7367,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -7546,6 +7557,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 					raw?: string;
 					thumbnail?: string;
 					size?: "small" | "medium" | "large";
@@ -7728,6 +7740,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 					folder?: string;
 				};
 				header?: never;
@@ -7896,6 +7909,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -7969,6 +7983,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -8163,6 +8178,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -8243,6 +8259,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -8342,6 +8359,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -8421,6 +8439,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -8472,6 +8491,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -8551,6 +8571,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -8616,6 +8637,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -8681,6 +8703,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -8746,6 +8769,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -8807,6 +8831,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -8877,6 +8902,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -8955,6 +8981,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 					parent?: string;
 				};
 				header?: never;
@@ -9030,6 +9057,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -9111,6 +9139,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -9189,6 +9218,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 					parent?: string;
 				};
 				header?: never;
@@ -9264,6 +9294,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -9342,6 +9373,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -9531,6 +9563,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -9720,6 +9753,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path: {
@@ -9922,6 +9956,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;
@@ -10013,6 +10048,7 @@ export interface paths {
 			parameters: {
 				query?: {
 					drive?: string;
+					volume?: string;
 				};
 				header?: never;
 				path?: never;

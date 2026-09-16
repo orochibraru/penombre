@@ -1,5 +1,5 @@
 <script lang="ts">
-	import VolumePage from "./volume-page.svelte";
+	import VolumePage from "../volume-page.svelte";
 
 	const { data } = $props();
 </script>

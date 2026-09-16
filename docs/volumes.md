@@ -17,13 +17,11 @@ same style as OAuth providers:
 | `VOLUME_<NAME>_PATH`     | yes      | Absolute path to the directory           |
 | `VOLUME_<NAME>_LABEL`    | no       | What the sidebar shows (default: `NAME`) |
 | `VOLUME_<NAME>_READONLY` | no       | `true` refuses every write               |
-| `VOLUME_<NAME>_SHARED`   | no       | `true` serves one tree to every account  |
 
 ```env
 VOLUME_MEDIA_PATH=/mnt/media
 VOLUME_MEDIA_LABEL=Media library
 VOLUME_MEDIA_READONLY=false
-VOLUME_MEDIA_SHARED=true
 ```
 
 `<NAME>` is uppercase with underscores; it is lowercased and hyphenated to form
@@ -39,45 +37,36 @@ volumes:
 
 ## How a volume is shared
 
-By default this matches how the main drive already behaves:
+A volume is **one tree, shared by every account**, in both modes — mount a
+library and everybody browses the files that are already on it. Nothing is
+copied and no per-user subdirectory is created inside your directory.
 
-- **[Simple mode](simple-mode.md):** the volume is shared whole. Every account
-  browses the same tree, exactly like the main storage root.
-- **Full mode:** each user gets their own subdirectory of the volume
-  (`<volume>/user-<id>`), mirroring the per-user layout of the main drive. One
-  mount serves everybody without anyone seeing anyone else's files.
-
-### Sharing an existing library in full mode
-
-The per-user split is the wrong shape for a library that is already full of
-files: they sit at the root of the mount, and in full mode nobody is looking
-there, so the volume opens **empty** and Penombre creates a `user-<id>` folder
-inside your media directory.
-
-`VOLUME_<NAME>_SHARED=true` is the fix. The whole tree is then served to every
-account, in both modes, exactly as the main drive is in simple mode — no
-subdirectory is created and everyone sees the same files.
-
-```env
-VOLUME_MEDIA_PATH=/mnt/media
-VOLUME_MEDIA_SHARED=true
-VOLUME_MEDIA_READONLY=true   # browse a library without letting anyone change it
-```
-
-The volume page tells you when this is happening: if the mount's root holds
-files that the split hides, it shows a notice naming the exact variable to set.
-
-It is off by default on purpose: turning it on in an instance that has been
-running with the split would show every account what the others had put on the
-mount. Pair it with `_READONLY` when the mount is a library rather than a shared
-workspace.
-
-The rows for a shared volume belong to one account (the first one ever created),
-so the same file is one row no matter who is looking at it. Activity still
-records whoever actually did something.
+Its rows belong to one account (the first one ever created), so the same file is
+one row no matter who is looking at it; activity still records whoever actually
+did something. Pair the mount with `_READONLY` when it is a library rather than
+a shared workspace.
 
 For a drive that a _group_ owns rather than a directory you mounted, see
 [shared drives](shared-drives.md).
+
+## Browsing one
+
+A volume browses like My Drive: folders open, files preview and download,
+uploads land in the folder on screen, and search covers it. It has its own
+trash, reached from the **Trash** button on the volume header — trashing a file
+on a mount puts it there, not in your personal trash, so anyone with access can
+restore it.
+
+Through the API, every `/api/v1/storage/**` endpoint takes an optional `volume`
+query parameter naming the volume's id, exactly as `drive` names a shared drive:
+
+```http
+GET /api/v1/storage/list?volume=media
+GET /api/v1/storage/file/<id>?raw=true&volume=media
+```
+
+Without it a call acts on your personal drive — which is why a file on a mount
+needs it to be served at all.
 
 ## Read-only volumes
 
@@ -91,8 +80,7 @@ added later cannot forget it.
 Volumes are written to from outside the app, so the database only matches the
 directory if Penombre looks. Two things trigger a scan:
 
-- A background pass every 60 seconds — once for a shared volume, and once per
-  account for a per-user one.
+- A background pass every 60 seconds.
 - Opening a volume in the UI, which reconciles what that page is about to show.
 
 A scan adds files that appeared, drops rows for files that vanished, re-reads

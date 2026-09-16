@@ -1,5 +1,6 @@
 import { page } from "$app/state";
 import type { paths } from "$lib/api";
+import { locationOf } from "$lib/storage-location";
 import { buildOriginUrl } from "$lib/utils";
 
 /**
@@ -42,10 +43,13 @@ export function getObjectUrl({
 		: finalBaseUrl;
 
 	const params = new URLSearchParams();
-	// A media element's `src` never passes through the API client, so the
-	// drive the page is in has to be spelled out here.
-	if (page.params.drive) {
-		params.set("drive", page.params.drive);
+	// A media element's `src` never passes through the API client, so where
+	// the page is has to be spelled out here.
+	const { drive, volume } = locationOf(page.params);
+	if (drive) {
+		params.set("drive", drive);
+	} else if (volume) {
+		params.set("volume", volume);
 	}
 	if (raw) {
 		params.set("raw", "true");

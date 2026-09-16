@@ -36,6 +36,12 @@ services:
       LOG_LEVEL: "debug"
       REDIS_URL: "redis://redis:6379"
       STORAGE_PATH: "/data/storage"
+      # A mounted volume, so the suite can exercise one. It is a directory in
+      # the app's own data volume rather than a bind mount: Docker Desktop
+      # rewrites a bind mount's ownership, so a host directory cannot stand in
+      # for a NAS share anyway.
+      VOLUME_E2E_PATH: "/data/e2e-volume"
+      VOLUME_E2E_LABEL: "E2E volume"
 
   db:
     profiles: [pg]

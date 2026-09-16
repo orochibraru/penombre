@@ -1073,23 +1073,33 @@ one for the things that have no client to carry a header: media `src` URLs
 (`getObjectUrl`), the upload worker's XHR, and `/view` + `/edit`, which are
 outside `/drives` and so get it from `withDrive()` on the link.
 
-### A volume mounted in full mode is split per user
+### A volume is a volume, whether it is a mount or a drive
 
-`VOLUME_<NAME>_PATH` roots the driver at `<volume>/user-<id>` in full mode,
-mirroring the main drive. For a directory that already holds files that is the
-wrong shape and the symptom is confusing: the volume page opens **empty** and
-Penombre creates a `user-<uuid>` folder inside somebody's media library, while
-the same mount works perfectly in simple mode.
+`VOLUME_<NAME>_PATH` and a shared drive produce the same thing: a `VolumeConfig`
+the storage layer roots at the mount itself, owned by one account (the shared
+owner for a mount, the creator for a drive) with the session user as
+`ctx.actor`. Only the main drive is split per user, and only in full mode.
 
-`VOLUME_<NAME>_SHARED=true` serves the whole tree in both modes — the same
-`shared` flag a drive sets. Two things have to agree for it: `StorageService`
-drops the per-user folder, _and_ the rows must belong to one account (the shared
-owner), or every user scanning the same tree builds a second set of rows for the
-same files. That is why the volume page resolves `loadSharedOwner()` for a
-shared volume and passes the session user as the actor instead.
+It used to split a declared volume per user in full mode too, which meant an
+existing library opened **empty** while Penombre created a `user-<uuid>` folder
+inside it. There is no flag for that any more — `VOLUME_<NAME>_SHARED` existed
+for about a day and is gone, because the split was never what anyone mounting a
+directory wanted.
 
-The default stays per-user: flipping it would show every account what the others
-had already put on the mount.
+**Everything outside the personal drive needs a location on the request.**
+`storageServiceFor` (`services/storage-for.ts`) resolves `?drive=<id>` or
+`?volume=<name>` — headers `x-drive`/`x-volume` from the API client — and every
+`/api/v1/storage/**` and notes contract declares it as its service factory. A
+route that skips it silently acts on the caller's own drive: that is exactly how
+a mounted volume listed its files and then 404'd every one of them, because the
+proxy route had no idea which tree to read. The client side of the same rule is
+`locationOf(page.params)` — `listingHref`, `getObjectUrl`, `withLocation` and
+the upload job all carry it, so a folder row, an `<img src>` and a resumed
+upload stay where the page is.
+
+`/volumes/[volume]` mirrors `/drives/[drive]` exactly: a `[...path]` child for
+folders, a `trash` child (a mount's trash is not your personal one), and one
+`listing.ts` server load behind all three.
 
 ### A mount the app cannot read is a 503, not a 500
 
@@ -1131,11 +1141,12 @@ re-invalidates every 3s until it clears. Awaiting `scanStorage()` in the load
 held the page open for as long as walking the mount took — minutes on a NAS, and
 indistinguishable from a hang.
 
+Both schedules — the minute timer and a page visit — go through **one**
+in-flight registry keyed by volume. Two registries meant the timer's pass was
+invisible to the page (which then reported "not scanning" while the mount was
+still being crawled) and the two could crawl the same tree at once; the badge
+flickering between visits was that disagreement showing.
+
 The 30s cooldown is load-bearing, not tuning: the poll re-runs the load, so
 without it each refresh would start a fresh pass the moment the last one ended
 and the banner would never go away.
-
-The same load detects the per-user trap directly — a mount whose root holds
-files that the split hides renders a notice naming the exact
-`VOLUME_<NAME>_SHARED` variable to set, because the page is where that question
-actually gets asked.

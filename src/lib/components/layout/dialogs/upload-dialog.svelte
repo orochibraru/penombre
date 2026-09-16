@@ -16,6 +16,7 @@
 	import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
 	import * as m from "$lib/paraglide/messages.js";
 	import { uploadSchema } from "$lib/schemas/upload";
+	import { locationOf } from "$lib/storage-location";
 	import {
 		pendingUploadFiles,
 		preparingUpload,
@@ -239,7 +240,7 @@
 				fileId: result.data.metadata.id,
 				finalName: result.data.finalName,
 				rowKey: rowKeyFor(result.data.finalName),
-				driveId: page.params.drive,
+				location: locationOf(page.params),
 				displayName,
 				size: result.file.size,
 				file: result.file,

@@ -21,6 +21,7 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
 	import { Skeleton } from "$lib/components/ui/skeleton/index";
 	import * as m from "$lib/paraglide/messages.js";
+	import { locationOf } from "$lib/storage-location";
 	import {
 		cn,
 		isBrowsableListing,
@@ -310,7 +311,7 @@
                                     page.params.path
                                         ? `${page.params.path}/${folder}`
                                         : folder,
-                                    page.params.drive,
+                                    locationOf(page.params),
                                 ),
                             );
                             return;
@@ -423,7 +424,7 @@
         ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
     >
         <a
-            href={parentHref(parent, page.params.drive)}
+            href={parentHref(parent, locationOf(page.params))}
             title={m.parent_folder()}
             class="text-muted-foreground hover:text-foreground flex h-full flex-col items-center justify-center gap-2 transition-colors"
         >

@@ -1068,23 +1068,13 @@ describe("StorageService", () => {
 			label: "Media",
 			path: "/mnt/media",
 			readOnly: false,
-			shared: false,
 		};
 
-		test("a per-user volume is rooted at the user's own subdirectory", () => {
+		// A volume is one tree for everybody. Rooting it at a per-user
+		// subdirectory showed an empty mount and created a `user-<id>` folder
+		// inside somebody's media library.
+		test("a volume is rooted at the mount itself, never per user", () => {
 			const service = new StorageService(testUser, volume);
-			expect(service).toBeInstanceOf(StorageService);
-			expect(volumeDriverArgs).toEqual({
-				path: "/mnt/media",
-				userFolder: `user-${testUser.id}`,
-			});
-		});
-
-		// The whole point of `shared`: an existing library's files sit at the
-		// root of the mount, so a per-user subdirectory shows an empty volume
-		// and creates a `user-<id>` folder inside somebody's media directory.
-		test("a shared volume is rooted at the mount itself", () => {
-			const service = new StorageService(testUser, { ...volume, shared: true });
 			expect(service).toBeInstanceOf(StorageService);
 			expect(volumeDriverArgs).toEqual({
 				path: "/mnt/media",

@@ -95,12 +95,10 @@ export class StorageService {
 	 *               shared drive. Only authorship (activity rows) reads it.
 	 */
 	constructor(user: User, volume?: VolumeConfig, actor?: User) {
-		// Simple mode: one shared volume for everyone, mounted directly at the
-		// root instead of a per-user subfolder. That holds for extra volumes
-		// too — in simple mode a mount is shared, in full mode it is split per
-		// user exactly like the main drive. A shared drive is shared whole in
-		// both modes: splitting it per user is the one thing it must not do.
-		this.userFolder = volume?.shared || isSimpleMode() ? "" : `user-${user.id}`;
+		// A volume — a mounted directory or a shared drive — is one tree for
+		// everyone, rooted at the mount itself. Only the main drive is split
+		// per user, and only in full mode.
+		this.userFolder = volume || isSimpleMode() ? "" : `user-${user.id}`;
 		this.volume = volume ?? null;
 		this.storagePath = join(
 			volume ? volume.path : getStoragePath(),

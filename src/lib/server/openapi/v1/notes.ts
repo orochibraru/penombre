@@ -1,17 +1,20 @@
 import { z } from "zod";
 import { defineRoute } from "$lib/server/openapi";
-import { storageServiceFor } from "$lib/server/services/drives";
+import { storageServiceFor } from "$lib/server/services/storage-for";
 
 /**
  * File note route definitions.
  * Importing this module registers all note routes with the OpenAPI registry.
  *
- * Every one of them carries `drive`, and reaches the file through the service
- * that parameter builds: a note is only readable by someone who can reach the
+ * Every one of them carries `drive`/`volume`, and reaches the file through the
+ * service those build: a note is only readable by someone who can reach the
  * file, and in a shared drive that is a member, not the file's owner.
  */
 
-const driveQuery = { drive: z.string().optional() };
+const driveQuery = {
+	drive: z.string().optional(),
+	volume: z.string().optional(),
+};
 
 export const noteSchema = z.object({
 	id: z.string(),

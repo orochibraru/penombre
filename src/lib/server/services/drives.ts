@@ -15,7 +15,6 @@
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { and, eq, inArray, or } from "drizzle-orm";
-import { DRIVE_HEADER } from "$lib/drives";
 import { Logger } from "$lib/logger";
 import { getStoragePath, type VolumeConfig } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
@@ -76,17 +75,13 @@ export function drivePath(driveId: string): string {
 	return join(getStoragePath(), "drives", driveId);
 }
 
-/**
- * A drive as the storage layer sees it: one tree, shared whole, read-only for
- * a viewer. `shared` is what keeps it from being split per user in full mode.
- */
+/** A drive as the storage layer sees it: a volume, read-only for a viewer. */
 export function driveVolume(drive: Drive, role: DriveRole): VolumeConfig {
 	return {
 		name: driveVolumeId(drive.id),
 		label: drive.name,
 		path: drivePath(drive.id),
 		readOnly: role === "viewer",
-		shared: true,
 	};
 }
 
@@ -345,41 +340,6 @@ export class DrivesService {
 }
 
 const drivesService = new DrivesService();
-
-/**
- * The storage service a request acts through: the main drive, or a shared one
- * when `?drive=<id>` says so.
- *
- * Bound to the drive's owner so the rows match, and handed the session user as
- * the actor so the activity log names whoever actually did it. Every
- * `/api/v1/storage/**` contract uses this, which is what makes an endpoint
- * added later work inside a drive without being told about drives.
- */
-export async function storageServiceFor(
-	owner: NonNullable<App.Locals["user"]>,
-	event: { url: URL; locals: App.Locals; request?: Request },
-): Promise<StorageService> {
-	// `?drive=` is the documented spelling; the `x-drive` header is how the
-	// API client carries it, because rewriting a request's URL turns its body
-	// into a stream upload, which Chrome refuses over plain HTTP.
-	const driveId =
-		event.url.searchParams.get("drive") ??
-		event.request?.headers.get(DRIVE_HEADER);
-	if (!driveId) {
-		return new StorageService(owner);
-	}
-
-	const sessionUser = event.locals.user;
-	if (!sessionUser) {
-		throw new DriveAccessError(403, "Not signed in");
-	}
-
-	const { drive, role } = await drivesService.requireAccess(
-		driveId,
-		sessionUser.id,
-	);
-	return driveStorage(drive, role, sessionUser);
-}
 
 /**
  * A storage service bound to one drive: the owner's rows, the actor's name on

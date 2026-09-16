@@ -158,12 +158,10 @@ a `_PATH` is ignored.
 | `VOLUME_<NAME>_PATH`     | Absolute path to the directory (required) | —       |
 | `VOLUME_<NAME>_LABEL`    | What the sidebar shows                    | `NAME`  |
 | `VOLUME_<NAME>_READONLY` | Refuse every write to the volume          | `false` |
-| `VOLUME_<NAME>_SHARED`   | Serve one tree to every account           | `false` |
 
-Leave `_SHARED` off and full mode gives each user a subdirectory of the mount —
-which means an existing library opens empty, because its files are at the root.
-See
-[Sharing an existing library in full mode](volumes.md#sharing-an-existing-library-in-full-mode).
+A volume is one tree shared by every account, in both modes: mount a library and
+everybody browses the files already on it. Pair it with `_READONLY` when nobody
+should be able to change them.
 
 ## Simple Mode (Optional)
 

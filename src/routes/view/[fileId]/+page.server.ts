@@ -1,5 +1,5 @@
 import { error, redirect } from "@sveltejs/kit";
-import { storageServiceFor } from "$lib/server/services/drives";
+import { storageServiceFor } from "$lib/server/services/storage-for";
 
 /**
  * Full-screen viewer for one media file.
@@ -12,8 +12,9 @@ export const load = async ({ params, url, locals }) => {
 		return redirect(302, "/auth/sign-in");
 	}
 
-	// `?drive=` rather than a route parameter: this route is not under
-	// `/drives`, so a shared drive's file is only addressable by carrying it.
+	// `?drive=`/`?volume=` rather than a route parameter: this route is under
+	// neither, so a file outside the personal drive is only addressable by
+	// carrying where it lives.
 	const service = await storageServiceFor(locals.storageOwner ?? locals.user, {
 		url,
 		locals,

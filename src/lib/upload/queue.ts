@@ -11,6 +11,8 @@
  * forever.
  */
 
+import type { StorageLocation } from "$lib/storage-location";
+
 export type UploadStatus = "pending" | "uploading" | "done" | "failed";
 
 export interface UploadJob {
@@ -29,11 +31,11 @@ export interface UploadJob {
 	 */
 	rowKey: string;
 	/**
-	 * The shared drive this upload belongs to, if any. Stored for the same
-	 * reason as `rowKey`: a job resumed after a reload may finish while the
-	 * user is looking at a different drive entirely.
+	 * The drive or volume this upload belongs to, if not the personal drive.
+	 * Stored for the same reason as `rowKey`: a job resumed after a reload may
+	 * finish while the user is looking at somewhere else entirely.
 	 */
-	driveId?: string;
+	location?: StorageLocation;
 	size: number;
 	file: File;
 	status: UploadStatus;

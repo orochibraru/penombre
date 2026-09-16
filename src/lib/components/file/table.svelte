@@ -26,6 +26,7 @@
 	import { Skeleton } from "$lib/components/ui/skeleton/index";
 	import * as Table from "$lib/components/ui/table/index";
 	import * as m from "$lib/paraglide/messages.js";
+	import { locationOf } from "$lib/storage-location";
 	import {
 		cn,
 		isBrowsableListing,
@@ -356,7 +357,7 @@
                                         page.params.path
                                             ? `${page.params.path}/${folder}`
                                             : folder,
-                                        page.params.drive,
+                                        locationOf(page.params),
                                     ),
                                 );
                                 return;
@@ -498,7 +499,7 @@
         <Table.Cell class="w-4"></Table.Cell>
         <Table.Cell colspan={11}>
             <a
-                href={parentHref(parent, page.params.drive)}
+                href={parentHref(parent, locationOf(page.params))}
                 title={m.parent_folder()}
                 class="text-muted-foreground hover:text-foreground flex w-fit items-center gap-2 transition-colors"
             >

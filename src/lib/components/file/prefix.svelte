@@ -28,6 +28,7 @@
 	import { touchAction } from "$lib/file-actions";
 	import { FileCategoryEnum } from "$lib/file-helpers";
 	import { m } from "$lib/paraglide/messages.js";
+	import { locationOf } from "$lib/storage-location";
 	import { playableMusic } from "$lib/store/music";
 	import { uploadedItems, uploadingItems } from "$lib/store/upload";
 	import {
@@ -110,7 +111,7 @@
 				? [page.params.path, folderId]
 				: [folderId];
 
-			await goto(listingHref(basePath.join("/"), page.params.drive));
+			await goto(listingHref(basePath.join("/"), locationOf(page.params)));
 			navigating = false;
 			return;
 		}
@@ -352,7 +353,7 @@
                         <a
                             href={listingHref(
                                 item.parentKey || "",
-                                page.params.drive,
+                                locationOf(page.params),
                             )}
                             class="text-muted-foreground/70 hover:text-primary hover:underline"
                             onclick={(e) => e.stopPropagation()}

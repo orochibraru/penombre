@@ -6,6 +6,7 @@ import type { Pathname } from "$app/types";
 import type { ObjectItem, ObjectList } from "$lib/api";
 import type { ButtonVariant } from "$lib/components/ui/button";
 import { m } from "$lib/paraglide/messages.js";
+import type { StorageLocation } from "$lib/storage-location";
 
 /**
  * A version of clsx that uses tailwind-merge to merge classes.
@@ -254,31 +255,40 @@ export function resolveParentPath(
 }
 
 /**
- * Where a folder path lives — in the personal drive, or in a shared one.
+ * Where a folder path lives: the personal drive, a shared drive, or a mounted
+ * volume.
  *
- * `drive` is the route parameter, so a listing component passes
- * `page.params.drive` and never has to know which of the two it is showing.
+ * A listing component passes `page.params`, so it never has to know which of
+ * the three it is showing — the route it is on already said.
  */
-export function listingHref(path: string, drive?: string) {
-	if (drive) {
+export function listingHref(path: string, location: StorageLocation = {}) {
+	if (location.drive) {
+		const drive = location.drive;
 		return path
 			? resolve("/(app)/drives/[drive]/[...path]", { drive, path })
 			: resolve("/(app)/drives/[drive]", { drive });
+	}
+	if (location.volume) {
+		const volume = location.volume;
+		return path
+			? resolve("/(app)/volumes/[volume]/[...path]", { volume, path })
+			: resolve("/(app)/volumes/[volume]", { volume });
 	}
 	return path
 		? resolve("/(app)/browse/[...path]", { path })
 		: resolve("/(app)/browse");
 }
 
-/** Where `/browse` lives for a given parent path ("" is the drive root) */
-export function parentHref(parentPath: string, drive?: string) {
-	return listingHref(parentPath, drive);
+/** Where the listing lives for a given parent path ("" is the root) */
+export function parentHref(parentPath: string, location: StorageLocation = {}) {
+	return listingHref(parentPath, location);
 }
 
-/** The trash: the personal one at `/trash`, or a shared drive's. */
+/** The trash: the personal one at `/trash`, or a drive's or volume's own. */
 export function isTrashListing(pathname: string): boolean {
 	return (
-		pathname.startsWith("/trash") || /^\/drives\/[^/]+\/trash$/.test(pathname)
+		pathname.startsWith("/trash") ||
+		/^\/(drives|volumes)\/[^/]+\/trash$/.test(pathname)
 	);
 }
 
@@ -291,7 +301,9 @@ export function isTrashListing(pathname: string): boolean {
  */
 export function isBrowsableListing(pathname: string): boolean {
 	return (
-		(pathname.startsWith("/browse") || pathname.startsWith("/drives/")) &&
+		(pathname.startsWith("/browse") ||
+			pathname.startsWith("/drives/") ||
+			pathname.startsWith("/volumes/")) &&
 		!isTrashListing(pathname)
 	);
 }

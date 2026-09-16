@@ -13,6 +13,7 @@
 	import * as Drawer from "$lib/components/ui/drawer/index";
 	import { Skeleton } from "$lib/components/ui/skeleton/index";
 	import * as m from "$lib/paraglide/messages.js";
+	import { locationOf } from "$lib/storage-location";
 	import {
 		cn,
 		isBrowsableListing,
@@ -270,7 +271,7 @@
         ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
     >
         <a
-            href={parentHref(parent, page.params.drive)}
+            href={parentHref(parent, locationOf(page.params))}
             title={m.parent_folder()}
             class="text-muted-foreground hover:text-foreground flex items-center gap-3 transition-colors"
         >

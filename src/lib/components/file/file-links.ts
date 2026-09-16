@@ -10,22 +10,23 @@ import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { page } from "$app/state";
 import type { ObjectItem } from "$lib/api";
+import { locationOf, locationQuery } from "$lib/storage-location";
 import { playableMusic, playbackPosition } from "$lib/store/music";
 import { getObjectUrl } from "$lib/url";
 
 /**
- * Keep the current shared drive on a link that leaves it.
+ * Keep the drive or volume the page is in on a link that leaves it.
  *
- * `/view` and `/edit` are top-level routes, so the drive cannot come from
- * their own parameters — the load reads it from here, and so does the API
+ * `/view` and `/edit` sit under neither, so where the file lives cannot come
+ * from their own parameters — the load reads it from here, and so does the API
  * client while that page is open.
  */
-export function withDrive(href: string): string {
-	const drive = page.params.drive;
-	if (!drive) {
+export function withLocation(href: string): string {
+	const query = locationQuery(locationOf(page.params));
+	if (!query) {
 		return href;
 	}
-	return `${href}${href.includes("?") ? "&" : "?"}drive=${encodeURIComponent(drive)}`;
+	return `${href}${href.includes("?") ? "&" : "?"}${query}`;
 }
 
 /** Raw bytes of a file, as served by the proxy route. */
@@ -60,7 +61,7 @@ const VIEWABLE = new Set(["IMAGES", "VIDEO", "MUSIC"]);
 export function fullscreenUrl(item: ObjectItem, resume?: Resume): string {
 	if (item.metadata.id && VIEWABLE.has(item.metadata.category ?? "")) {
 		return withResume(
-			withDrive(resolve("/view/[fileId]", { fileId: item.metadata.id })),
+			withLocation(resolve("/view/[fileId]", { fileId: item.metadata.id })),
 			resume,
 		);
 	}

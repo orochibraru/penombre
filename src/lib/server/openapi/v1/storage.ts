@@ -8,7 +8,7 @@ import {
 	updateFileSchema,
 	uploadResultSchema,
 } from "$lib/server/schema";
-import { storageServiceFor } from "$lib/server/services/drives";
+import { storageServiceFor } from "$lib/server/services/storage-for";
 
 /**
  * Storage route definitions.
@@ -17,11 +17,15 @@ import { storageServiceFor } from "$lib/server/services/drives";
  */
 
 /**
- * Which drive a call acts on: absent is the caller's own, an id is a shared
- * drive. Every storage route carries it, and `storageServiceFor` is where the
- * membership check happens — so a route added later inherits both.
+ * Where a call acts: absent is the caller's own drive, `drive` a shared one,
+ * `volume` a mounted directory. Every storage route carries both, and
+ * `storageServiceFor` is the one place that resolves them — so a route added
+ * later inherits the membership check and the volume lookup for free.
  */
-const driveQuery = { drive: z.string().optional() };
+const driveQuery = {
+	drive: z.string().optional(),
+	volume: z.string().optional(),
+};
 
 // ============================================================================
 // LIST / BROWSE

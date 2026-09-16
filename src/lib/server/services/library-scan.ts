@@ -12,11 +12,7 @@
 import { asc } from "drizzle-orm";
 import { Logger } from "$lib/logger";
 import type { AuthType } from "$lib/server/auth";
-import {
-	getVolumes,
-	isSimpleMode,
-	type VolumeConfig,
-} from "$lib/server/config";
+import { getVolumes, isSimpleMode } from "$lib/server/config";
 import { getDb } from "$lib/server/db";
 import { user as userTable } from "$lib/server/db/schema";
 import { StorageService } from "$lib/server/services/storage";
@@ -72,29 +68,13 @@ export function loadSharedOwner(): Promise<User | undefined> {
 }
 
 /**
- * Every account, for the per-user volume sweep.
+ * Every pass in flight, by volume, whoever started it — the minute timer or
+ * someone opening the page.
  *
- * Re-read each pass rather than cached: a user created since boot has a
- * subdirectory on every volume that nothing else would reconcile.
- *
- * ponytail: a full table read per scan interval. Fine for a homelab; if an
- * instance ever grows enough accounts for this to show up, page it or move
- * the sweep to a queue keyed by volume.
- */
-function loadAllOwners(): Promise<User[]> {
-	return getDb()
-		.select()
-		.from(userTable)
-		.orderBy(asc(userTable.createdAt))
-		.then((rows) => rows as User[]);
-}
-
-/**
- * Scans started by someone opening a volume, by `<volume>:<owner>`.
- *
- * Kept off the request: walking a NAS mount takes minutes, and awaiting it
- * held the page open with nothing on screen for all of them. The listing
- * renders from the rows that exist and the page says a pass is running.
+ * One registry for both, because they walk the same tree: two overlapping
+ * passes are duplicated work, and a page that only knew about its own could
+ * say "not scanning" while the sweep was still crawling the mount. The
+ * flickering badge that reported was the honest symptom of two schedules.
  */
 const inFlight = new Set<string>();
 const lastScanAt = new Map<string, number>();
@@ -105,14 +85,39 @@ const lastScanAt = new Map<string, number>();
  */
 const RESCAN_COOLDOWN_MS = 30_000;
 
+/** What a volume's passes are tracked under. */
+export function volumeScanKey(volumeName: string): string {
+	return `volume:${volumeName}`;
+}
+
 /** Is a pass running for this volume right now? */
 export function isScanning(key: string): boolean {
 	return inFlight.has(key);
 }
 
+/** Run a pass unless one is already going, and await it. */
+async function runScan(key: string, run: () => Promise<void>): Promise<void> {
+	if (inFlight.has(key)) {
+		return;
+	}
+	inFlight.add(key);
+	try {
+		await run();
+	} catch (error) {
+		logger.error(`Scan of ${key} failed`, error);
+	} finally {
+		inFlight.delete(key);
+		lastScanAt.set(key, Date.now());
+	}
+}
+
 /**
  * Reconcile a volume in the background, unless one just finished. Returns
  * whether a pass is in flight now, which is what the page reports.
+ *
+ * Kept off the request: walking a NAS mount takes minutes, and awaiting it
+ * held the page open with nothing on screen for all of them. The listing
+ * renders from the rows that exist and the page says a pass is running.
  */
 export function scanOnVisit(key: string, run: () => Promise<void>): boolean {
 	if (inFlight.has(key)) {
@@ -121,16 +126,7 @@ export function scanOnVisit(key: string, run: () => Promise<void>): boolean {
 	if (Date.now() - (lastScanAt.get(key) ?? 0) < RESCAN_COOLDOWN_MS) {
 		return false;
 	}
-
-	inFlight.add(key);
-	void run()
-		.catch((error: unknown) => {
-			logger.error(`Scan of ${key} failed`, error);
-		})
-		.finally(() => {
-			inFlight.delete(key);
-			lastScanAt.set(key, Date.now());
-		});
+	void runScan(key, run);
 	return true;
 }
 
@@ -160,21 +156,14 @@ export async function scanLibrary(): Promise<void> {
 			return;
 		}
 
-		// Mounted volumes are written from outside the app in both modes, so
-		// they need the same reconciliation the shared drive gets.
-		//
-		// A volume shared whole — simple mode, or `VOLUME_<NAME>_SHARED` — is
-		// one tree reconciled once, as the owner every request will read it
-		// as. A per-user volume gives every account its own subdirectory, so
-		// each needs a pass: sweeping only the shared owner left everyone
-		// else's stale until they happened to open the volume.
-		const sharedWhole = (volume: VolumeConfig) =>
-			isSimpleMode() || volume.shared;
-		const owners = volumes.every(sharedWhole) ? [] : await loadAllOwners();
+		// A mount is written to from outside the app, so it needs the same
+		// reconciliation the shared drive gets — once, as the owner every
+		// request reads it as, and through the same registry a page visit
+		// uses so the two never crawl it at the same time.
 		for (const volume of volumes) {
-			for (const volumeOwner of sharedWhole(volume) ? [owner] : owners) {
-				await new StorageService(volumeOwner, volume).scanStorage();
-			}
+			await runScan(volumeScanKey(volume.name), () =>
+				new StorageService(owner, volume).scanStorage().then(() => undefined),
+			);
 		}
 	} catch (error) {
 		logger.error("Library scan failed", error);
