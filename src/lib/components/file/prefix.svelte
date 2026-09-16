@@ -142,7 +142,7 @@
         {:else}
             <FolderIcon class={cn(iconSize, "text-primary")} fill="currentColor" />
         {/if}
-        <span class="flex min-w-0 items-center gap-1">
+        <span class="flex min-w-0 items-center gap-1 text-base lg:text-sm">
             <span class="truncate">
                 {item.metadata.name ?? item.key.replace("/", "")}
             </span>

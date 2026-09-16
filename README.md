@@ -7,15 +7,15 @@ with a bill of exactly zero.
 ![Latest Release](https://img.shields.io/github/v/release/orochibraru/penombre)
 ![Docker Pulls](https://img.shields.io/docker/pulls/orochibraru/penombre)
 
-[Docs](https://penombre.orochibraru.com/docs) ·
+[Docs](https://orochibraru.com/penombre/docs) ·
 [Docker Hub](https://hub.docker.com/r/orochibraru/penombre) ·
 [Project page](https://orochibraru.com/penombre)
 
 <!-- Regenerate with `bun run screenshots`; do not edit by hand. -->
 
-[![Penombre, browsing a drive](docs/images/hero.png)](https://penombre.orochibraru.com/docs/showcase)
+[![Penombre, browsing a drive](docs/images/hero.png)](https://orochibraru.com/penombre/docs/showcase)
 
-**[See the full showcase →](https://penombre.orochibraru.com/docs/showcase)** —
+**[See the full showcase →](https://orochibraru.com/penombre/docs/showcase)** —
 every screen, light and dark, generated from a real instance.
 
 ## What it is
@@ -43,7 +43,7 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
   generated from Zod contracts.
 - **Simple mode** — run it as a bare shared file browser: mount a volume, share
   the login, browse together. See
-  [the docs](https://penombre.orochibraru.com/docs/simple-mode).
+  [the docs](https://orochibraru.com/penombre/docs/simple-mode).
 - **No database server** — SQLite with Drizzle by default. Point `DATABASE_URL`
   at Postgres if you'd rather.
 - **Docker-first** — one `docker run` off the published `orochibraru/penombre`
@@ -89,8 +89,8 @@ Either way it comes up on <http://localhost:3000>. One volume holds the lot: the
 SQLite database under `/data/db`, your files under `/data/storage`. Those four
 variables are the only ones required on a first run.
 
-The [getting started guide](https://penombre.orochibraru.com/docs) walks through
-it properly, and [the env reference](https://penombre.orochibraru.com/docs/env)
+The [getting started guide](https://orochibraru.com/penombre/docs) walks through
+it properly, and [the env reference](https://orochibraru.com/penombre/docs/env)
 covers everything else: OAuth providers, SMTP, Redis, Postgres, simple mode.
 
 ## How it's built
