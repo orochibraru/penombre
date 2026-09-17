@@ -16,6 +16,6 @@ The guides in this folder, in reading order:
 8. [Authentication](authentication.md) — passwords, OAuth, passkeys, API keys.
 9. [Project architecture](architecture.md) — how the monorepo fits together.
 
-This file is the index when someone reads the repo on GitHub; the docs site uses
-it for reading order only and gives it no page of its own. Keep
-`src/lib/config.ts`'s `order` array in sync with the list above.
+This file is the index when someone reads the repo on GitHub; the docs site
+ignores it. The site's categories, order, titles and icons come from
+[`config.json`](config.json).

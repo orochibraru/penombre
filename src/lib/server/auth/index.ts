@@ -150,7 +150,7 @@ export const auth = betterAuth({
 	secret: config.auth.secret,
 	basePath: "/api/v1/auth",
 	rateLimit: {
-		window: 15 * 60 * 1000, // 15 minutes
+		window: 15 * 60, // 15 minutes (better-auth takes seconds here)
 		max: 100, // limit each IP to 100 requests per window
 		enabled: !dev, // Disable rate limiting in development for easier testing
 	},

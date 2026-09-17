@@ -158,7 +158,9 @@ else to write them and nothing in this repo renders them.
   the guide that explains the feature (`authentication.md`, `storage.md`,
   `simple-mode.md`, …).
 - New behaviour with no env var → the guide it belongs to, or a new
-  `docs/<slug>.md` (the docs repo decides the nav order).
+  `docs/<slug>.md` **plus an entry in `docs/config.json`**, which sets the docs
+  site's categories, order, titles and icons (schema:
+  `https://orochibraru.com/docs-config.schema.json`).
 - Also regenerate `.example.env` (`bun run gen:env`) when you touch
   `config.defaults.ts`.
 - `bun run lint:md` must pass: 80-column prose, aligned table pipes. Relative
