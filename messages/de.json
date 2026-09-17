@@ -680,5 +680,6 @@
 	"volume_scan_quick": "Schnellscan",
 	"volume_scan_quick_description": "Neue Dateien hinzufügen, fehlende entfernen, Dateien mit geänderter Größe neu lesen.",
 	"volume_scan_full": "Alles neu scannen",
-	"volume_scan_full_description": "Jede Datei von Grund auf neu lesen: Typen, Dauer und Vorschaubilder. Langsam bei großen Bibliotheken."
+	"volume_scan_full_description": "Jede Datei von Grund auf neu lesen: Typen, Dauer und Vorschaubilder. Langsam bei großen Bibliotheken.",
+	"request_failed": "Der Server hat die Anfrage abgelehnt. Prüfen Sie die URL Ihrer Instanz und versuchen Sie es erneut."
 }

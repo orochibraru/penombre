@@ -1223,3 +1223,17 @@ subscriber sets behind the SSE route and the ETA (`estimateRemaining`, in
 already knows reports thousands of steps a second — except phase changes and
 start/end, which always go out. Every pass reaches the stream because every pass
 goes through `runScan`: the minute timer, a page visit and **Rescan**.
+
+### A non-ActionResult response disappears
+
+`use:enhance` runs `JSON.parse` on the response and hands the object to
+`applyAction`, which reads only `type`. SvelteKit's own cross-site 403 answers
+`{"message":"Cross-site POST form submissions are forbidden"}` — valid JSON, no
+`type` — so `applyAction` set `page.form` to `undefined` and the form appeared
+to do nothing at all. A wrong `ORIGIN` behind a reverse proxy is exactly that,
+and it looked like a dead button.
+
+Import `enhance`/`deserializeAction` from **`$lib/forms`**, never `$app/forms`:
+they toast the server's message when the body is not an ActionResult (or not
+JSON — a proxy's error page). Everything else about `enhance` is unchanged, so a
+form's own `form?.error` handling is untouched.

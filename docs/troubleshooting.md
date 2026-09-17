@@ -219,6 +219,10 @@ ORIGIN=https://cloud.example.com/
 ORIGIN=http://cloud.example.com
 ```
 
+A mismatch shows up as a form that appears to do nothing — sign-in, setup or a
+settings save — with a toast reading _Cross-site POST form submissions are
+forbidden_ and a `403` on the request in your browser's console.
+
 ### Large uploads fail behind a reverse proxy
 
 Penombre sets `BODY_SIZE_LIMIT=Infinity`, but your reverse proxy may enforce its

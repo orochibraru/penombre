@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { deserialize } from "$app/forms";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { authClient } from "$lib/auth-client";
@@ -9,6 +8,7 @@
 	import { Button } from "$lib/components/ui/button/index";
 	import * as Field from "$lib/components/ui/field/index.js";
 	import Input from "$lib/components/ui/input/input.svelte";
+	import { deserializeAction } from "$lib/forms";
 	import { m } from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
 	import { cn } from "$lib/utils.js";
@@ -235,8 +235,12 @@
 		try {
 			const body = new FormData();
 			body.set("email", email);
-			const res = await fetch("?/lookup", { method: "POST", body });
-			const payload = deserialize(await res.text());
+			const res = await fetch("?/lookup", {
+				method: "POST",
+				body,
+				headers: { accept: "application/json" },
+			});
+			const payload = deserializeAction(await res.text());
 
 			if (payload.type === "failure") {
 				error = true;
@@ -256,6 +260,9 @@
 				return;
 			}
 			knownEmail = true;
+		} catch (e) {
+			error = true;
+			errorMessage = e instanceof Error ? e.message : m.sign_in_error();
 		} finally {
 			loading = false;
 		}

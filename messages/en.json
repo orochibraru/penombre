@@ -680,5 +680,6 @@
 	"volume_scan_quick": "Quick scan",
 	"volume_scan_quick_description": "Add new files, remove missing ones, re-read files whose size changed.",
 	"volume_scan_full": "Rescan everything",
-	"volume_scan_full_description": "Re-read every file from scratch: types, durations and thumbnails. Slow on a large library."
+	"volume_scan_full_description": "Re-read every file from scratch: types, durations and thumbnails. Slow on a large library.",
+	"request_failed": "The server rejected the request. Check your instance URL and try again."
 }

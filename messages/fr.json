@@ -680,5 +680,6 @@
 	"volume_scan_quick": "Analyse rapide",
 	"volume_scan_quick_description": "Ajoute les nouveaux fichiers, retire ceux qui manquent, relit ceux dont la taille a changé.",
 	"volume_scan_full": "Tout réanalyser",
-	"volume_scan_full_description": "Relit chaque fichier depuis zéro : types, durées et miniatures. Lent sur une grande bibliothèque."
+	"volume_scan_full_description": "Relit chaque fichier depuis zéro : types, durées et miniatures. Lent sur une grande bibliothèque.",
+	"request_failed": "Le serveur a rejeté la requête. Vérifiez l'URL de votre instance et réessayez."
 }

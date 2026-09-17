@@ -12,7 +12,6 @@
 	} from "@lucide/svelte";
 	import { onMount, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { enhance } from "$app/forms";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Card from "$lib/components/ui/card/index.js";
@@ -20,6 +19,7 @@
 	import { CopyButton } from "$lib/components/ui/copy-button/index.js";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
+	import { enhance } from "$lib/forms";
 	import { m } from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
 

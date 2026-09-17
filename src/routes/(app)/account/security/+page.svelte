@@ -6,7 +6,6 @@
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { enhance } from "$app/forms";
 	import { refreshAll } from "$app/navigation";
 	import { authClient } from "$lib/auth-client";
 	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
@@ -17,6 +16,7 @@
 	import * as Card from "$lib/components/ui/card/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import { Input } from "$lib/components/ui/input";
+	import { enhance } from "$lib/forms";
 	import * as m from "$lib/paraglide/messages.js";
 	import { title } from "$lib/store/title";
 

@@ -680,5 +680,6 @@
 	"volume_scan_quick": "Escaneo rápido",
 	"volume_scan_quick_description": "Añade archivos nuevos, quita los que faltan y vuelve a leer los que cambiaron de tamaño.",
 	"volume_scan_full": "Volver a escanear todo",
-	"volume_scan_full_description": "Vuelve a leer cada archivo desde cero: tipos, duraciones y miniaturas. Lento en bibliotecas grandes."
+	"volume_scan_full_description": "Vuelve a leer cada archivo desde cero: tipos, duraciones y miniaturas. Lento en bibliotecas grandes.",
+	"request_failed": "El servidor rechazó la solicitud. Comprueba la URL de tu instancia e inténtalo de nuevo."
 }
