@@ -1,3 +1,20 @@
+## [1.8.46](https://github.com/orochibraru/penombre/compare/v1.8.45...v1.8.46) (2026-09-17)
+
+
+### Bug Fixes
+
+* handle form errors ([11f2bd9](https://github.com/orochibraru/penombre/commit/11f2bd9481a2e1e5006934471c2302d8deee0450))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.46
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.45](https://github.com/orochibraru/penombre/compare/v1.8.44...v1.8.45) (2026-09-17)
 
 
