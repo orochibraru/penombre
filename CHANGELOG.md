@@ -1,3 +1,20 @@
+## [1.8.45](https://github.com/orochibraru/penombre/compare/v1.8.44...v1.8.45) (2026-09-17)
+
+
+### Features
+
+* docs config ([ed931af](https://github.com/orochibraru/penombre/commit/ed931af2de3887d02c7820c09543c569b953db28))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.45
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.44](https://github.com/orochibraru/penombre/compare/v1.8.43...v1.8.44) (2026-09-16)
 
 
