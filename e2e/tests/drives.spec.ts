@@ -6,6 +6,7 @@ import {
 	expectItemVisible,
 	goToBrowse,
 	openUploadDialog,
+	sameOrigin,
 } from "../helpers";
 
 const FIXTURE_DIR = path.resolve("e2e/fixtures");
@@ -32,7 +33,9 @@ async function createDrive(page: Page, name: string): Promise<string> {
 }
 
 async function deleteDrive(page: Page, id: string) {
-	const resp = await page.request.delete(`/api/v1/drives/${id}`);
+	const resp = await page.request.delete(`/api/v1/drives/${id}`, {
+		headers: sameOrigin(),
+	});
 	expect(resp.ok()).toBeTruthy();
 }
 
@@ -67,7 +70,9 @@ test.describe("shared drives", () => {
 		}
 		const drives = (await resp.json()).data as { id: string; name: string }[];
 		for (const drive of drives.filter((d) => d.name.startsWith(PREFIX))) {
-			await request.delete(`/api/v1/drives/${drive.id}`);
+			await request.delete(`/api/v1/drives/${drive.id}`, {
+				headers: sameOrigin(),
+			});
 		}
 	});
 

@@ -1,8 +1,13 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 const AUTH_STORAGE_STATE = "e2e/.auth/user.json";
 
 export { AUTH_STORAGE_STATE };
+
+/** A browser sends it and `request` does not; a bodiless mutation needs it. */
+export function sameOrigin(): { origin: string } {
+	return { origin: test.info().project.use.baseURL ?? "" };
+}
 
 // ---------------------------------------------------------------------------
 // Navigation helpers

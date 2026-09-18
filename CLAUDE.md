@@ -878,6 +878,19 @@ a forced click reports success as soon as it is dispatched, but a menu being
 torn down by a settling listing never runs its handler, so "the click worked"
 and "the thing happened" are different questions.
 
+### E2E has a five-minute budget
+
+Each E2E job has `timeout-minutes: 5`, deliberately tight: the app is fast, so a
+slow suite is a bug. The suite is split `--shard=N/2` per dialect, each shard on
+its own fresh stack, which is why tests may stay serial (`workers: 1`) inside
+one. A spec that pushes a shard over budget gets faster or moves, the budget
+does not grow.
+
+A broken build is the other way to blow it: every test times out three times,
+and 103 × 3 × 30s kept a job red for 2.5h. CI stops at `maxFailures: 10`.
+Playwright already runs on Bun (`[run] bun = true` in `bunfig.toml`); there is
+nothing to switch on.
+
 ### `bun install` on checkout
 
 `.pre-commit-config.yaml` has a `post-checkout` hook, installed by `prepare`
@@ -1281,3 +1294,12 @@ form's own `form?.error` handling is untouched.
 - **Biome warns it hit its 200k type limit on `src/lib/api/v1.d.ts`** now that
   `#lib` resolves. It is a warning, not a failure. Do not `!!`-ignore the file:
   `gen:api` formats it with Biome and fails on an ignored path.
+- **Nothing may import `$app/stores`.** Kit 3 turns it into a module that throws
+  on import, so one dependency still using it (superforms 2.x did) 500s every
+  page that loads it — in the built app only; `bun run check` is green.
+- **CSRF is ours, not Kit's.** Kit 3 counts a request with no `Content-Type` as
+  a form post and refuses it before any hook runs, so every bodiless `DELETE`
+  from an API-key client was a 403. `vite.config.ts` turns Kit's check off
+  (`trustedOrigins: ["*"]`) and `#lib/server/csrf.ts` applies the same rule
+  minus requests carrying an API key. Playwright's `request` sends no `Origin`
+  either — pass `headers: sameOrigin()` (`e2e/helpers.ts`) on a bodiless call.

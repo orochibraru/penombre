@@ -26,6 +26,8 @@ export default defineConfig({
 			// binary, because sharp ships a native (.node) addon that
 			// `bun build --compile` can't embed.
 			adapter: adapter({ compile: false }),
+			// Checked by `csrfHandler` in hooks.server.ts instead.
+			csrf: { trustedOrigins: ["*"] },
 		}),
 		SvelteKitPWA(),
 	],

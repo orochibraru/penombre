@@ -2,8 +2,6 @@
 	import { FilesIcon, FolderIcon, XIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { filesProxy, superForm } from "sveltekit-superforms";
-	import { zod4Client } from "sveltekit-superforms/adapters";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Button } from "#lib/components/ui/button/index.js";
 	import {
@@ -14,7 +12,6 @@
 	import { Label } from "#lib/components/ui/label/index.js";
 	import * as RadioGroup from "#lib/components/ui/radio-group/index.js";
 	import * as m from "#lib/paraglide/messages.js";
-	import { uploadSchema } from "#lib/schemas/upload.js";
 	import { locationOf } from "#lib/storage-location.js";
 	import {
 		pendingUploadFiles,
@@ -104,9 +101,6 @@
 		uploadingItems.set({});
 		uploadingItemsNames.set({});
 		uploadedItems.set({});
-		if (!page.data.uploadForm) {
-			throw new Error("uploadForm data is required");
-		}
 	});
 
 	let { open = $bindable(false), loading = $bindable(false) }: Props = $props();
@@ -114,16 +108,12 @@
 	// Pick up pending files from drag/drop when dialog opens
 	$effect(() => {
 		if (open && $pendingUploadFiles.length > 0) {
-			files.set([...Array.from($files), ...$pendingUploadFiles]);
+			files = [...files, ...$pendingUploadFiles];
 			pendingUploadFiles.set([]);
 		}
 	});
 
-	const superform = superForm(page.data.uploadForm, {
-		validators: zod4Client(uploadSchema),
-	});
-
-	const files = filesProxy(superform, "attachments");
+	let files = $state<File[]>([]);
 
 	// Track files from folder uploads with their relative paths
 	let folderFiles = $state<FileWithPath[]>([]);
@@ -141,8 +131,7 @@
 	);
 
 	const onUpload: FileDropZoneProps["onUpload"] = (uploadedFiles) => {
-		// we use set instead of an assignment since it accepts a File[]
-		files.set([...Array.from($files), ...uploadedFiles]);
+		files = [...files, ...uploadedFiles];
 	};
 
 	const onFolderUpload: FileDropZoneProps["onFolderUpload"] = (
@@ -162,16 +151,10 @@
 	};
 
 	// Combined file count for display
-	const totalFileCount = $derived(
-		Array.from($files).length + folderFiles.length,
-	);
+	const totalFileCount = $derived(files.length + folderFiles.length);
 
 	function removeFile(index: number) {
-		// we use set instead of an assignment since it accepts a File[]
-		files.set([
-			...Array.from($files).slice(0, index),
-			...Array.from($files).slice(index + 1),
-		]);
+		files = [...files.slice(0, index), ...files.slice(index + 1)];
 	}
 
 	function removeFolderFile(index: number) {
@@ -202,11 +185,11 @@
 		open = false;
 		loading = false;
 
-		const regularFiles = Array.from($files);
+		const regularFiles = files;
 		const folderFilesSnapshot = [...folderFiles];
 		const keepRoot = folderPlacement === "keep";
 
-		files.set([]);
+		files = [];
 		folderFiles = [];
 
 		$preparingUpload = {
@@ -373,10 +356,8 @@
         </div>
     {/if}
 
-    <input name="attachments" type="file" bind:files={$files} class="hidden" />
-
     <div class={cn("flex flex-col gap-3", totalFileCount > 0 && "mb-5")}>
-        {#each Array.from($files) as file, i (file.name)}
+        {#each files as file, i (file.name)}
             {@render entry(file.name, file.size, () => removeFile(i), false)}
         {/each}
         {#each folderFiles as file, i (`folder-${file.relativePath}`)}

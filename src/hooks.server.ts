@@ -15,6 +15,7 @@ import type { AuthType } from "#lib/server/auth/index.js";
 import { auth } from "#lib/server/auth/index.js";
 import { needsSetup, seedAuth } from "#lib/server/auth/seed.js";
 import { getConfig, isAuthBypassed, isSimpleMode } from "#lib/server/config.js";
+import { csrfHandler } from "#lib/server/csrf.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb, resetDb } from "#lib/server/db/index.js";
 import {
@@ -408,4 +409,9 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 	return res;
 };
 
-export const handle = sequence(generalHandler, authHandler, themeHandler);
+export const handle = sequence(
+	csrfHandler,
+	generalHandler,
+	authHandler,
+	themeHandler,
+);

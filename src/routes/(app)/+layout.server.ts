@@ -1,8 +1,5 @@
 import { redirect } from "@sveltejs/kit";
-import { superValidate } from "sveltekit-superforms";
-import { zod4 } from "sveltekit-superforms/adapters";
 import { api } from "#lib/api/index.js";
-import { uploadSchema } from "#lib/schemas/upload.js";
 import { getConfig, getVolumes, isSimpleMode } from "#lib/server/config.js";
 import { isTwoFactorRequired } from "#lib/server/services/app-settings.js";
 import { drivesService } from "#lib/server/services/drives.js";
@@ -74,7 +71,6 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		activity: activityResult.data?.data,
 		counts,
 		preferences: preferences.data?.data,
-		uploadForm: await superValidate({}, zod4(uploadSchema)),
 		authCookie: "123",
 		isAdmin,
 		drives,
