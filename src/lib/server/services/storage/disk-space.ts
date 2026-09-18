@@ -6,7 +6,7 @@
  */
 
 import * as fs from "node:fs";
-import { Logger } from "$lib/logger";
+import { Logger } from "#lib/logger.js";
 
 const logger = new Logger("DiskSpace");
 

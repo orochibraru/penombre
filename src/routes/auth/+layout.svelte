@@ -1,7 +1,7 @@
 <script lang="ts">
+	import LanguageDropdown from "#lib/components/language-dropdown.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
 	import { resolve } from "$app/paths";
-	import LanguageDropdown from "$lib/components/language-dropdown.svelte";
-	import * as Card from "$lib/components/ui/card/index";
 
 	const { children, data } = $props();
 </script>
@@ -15,7 +15,7 @@
 <div
     class="flex min-h-svh flex-col items-center justify-center gap-6 px-4 py-10"
 >
-    <a href={resolve("/")} class="flex items-center gap-2 font-medium">
+    <a href={resolve("/(app)")} class="flex items-center gap-2 font-medium">
         <img
             src="/logo.svg"
             alt={`${data.config.appName} logo`}

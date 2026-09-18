@@ -1,7 +1,7 @@
-import { error, type NumericRange } from "@sveltejs/kit";
-import { isSimpleMode } from "$lib/server/config";
-import { DriveAccessError } from "$lib/server/errors";
-import { driveStorage, drivesService } from "$lib/server/services/drives";
+import { error } from "@sveltejs/kit";
+import { isSimpleMode } from "#lib/server/config.js";
+import { DriveAccessError } from "#lib/server/errors.js";
+import { driveStorage, drivesService } from "#lib/server/services/drives.js";
 
 /**
  * A drive's own trash.
@@ -25,7 +25,7 @@ export const load = async ({ params, locals, depends }) => {
 		.requireAccess(params.drive, locals.user.id)
 		.catch((cause: unknown) => {
 			if (cause instanceof DriveAccessError) {
-				return error(cause.status as NumericRange<400, 599>, cause.message);
+				return error(cause.status, cause.message);
 			}
 			throw cause;
 		});

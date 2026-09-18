@@ -22,6 +22,8 @@ export default defineConfig({
 	// Retries stay, so a flake is still reported rather than merely red, but
 	// the run fails where the flake was introduced.
 	failOnFlakyTests: !!process.env.CI,
+	// A broken build fails every test at 3 × 30s each: 2.5h of red.
+	maxFailures: process.env.CI ? 10 : 0,
 	workers: 1,
 	reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
 	globalSetup: "./e2e/global-setup.ts",

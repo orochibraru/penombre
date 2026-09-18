@@ -1,6 +1,6 @@
-import { Http } from "$lib/server/http";
-import { searchUsers } from "$lib/server/openapi/v1/sharings";
-import { SharingService } from "$lib/server/services/sharings";
+import { Http } from "#lib/server/http.js";
+import { searchUsers } from "#lib/server/openapi/v1/sharings.js";
+import { SharingService } from "#lib/server/services/sharings.js";
 
 const sharings = new SharingService();
 

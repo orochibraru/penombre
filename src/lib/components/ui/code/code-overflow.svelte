@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { box } from "svelte-toolbelt";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { cn } from "$lib/utils/utils";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { cn } from "#lib/utils/utils.js";
 	import { useCodeOverflow } from "./code.svelte.js";
 	import type { CodeOverflowProps } from "./types";
 

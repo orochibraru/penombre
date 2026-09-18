@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { uploadFile } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { uploadFile } from "#lib/server/openapi/v1/storage.js";
 
 export const POST = uploadFile.handler(async ({ params, event, service }) => {
 	let formData: FormData;

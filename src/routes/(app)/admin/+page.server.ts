@@ -1,4 +1,4 @@
-import { StatsService } from "$lib/server/services/stats";
+import { StatsService } from "#lib/server/services/stats.js";
 
 const stats = new StatsService();
 

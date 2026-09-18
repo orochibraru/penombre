@@ -10,10 +10,10 @@ import { existsSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { inArray } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import { getStoragePath } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { files, folders, user } from "$lib/server/db/schema";
+import { Logger } from "#lib/logger.js";
+import { getStoragePath } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { files, folders, user } from "#lib/server/db/schema.js";
 
 const logger = new Logger("StorageMetaMigration");
 

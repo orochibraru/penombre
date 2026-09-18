@@ -1,8 +1,8 @@
 import { createTransport, type Transporter } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
-import { Logger } from "$lib/logger";
-import { getConfig } from "$lib/server/config";
-import { getSmtpSettings } from "$lib/server/services/app-settings";
+import { Logger } from "#lib/logger.js";
+import { getConfig } from "#lib/server/config.js";
+import { getSmtpSettings } from "#lib/server/services/app-settings.js";
 
 const logger = new Logger("Email");
 

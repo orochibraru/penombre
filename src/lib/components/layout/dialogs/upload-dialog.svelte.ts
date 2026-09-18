@@ -8,8 +8,8 @@
  * step needs.
  */
 
+import { api, type UploadResult } from "#lib/api/index.js";
 import { page } from "$app/state";
-import { api, type UploadResult } from "$lib/api";
 
 export type FileWithPath = File & { relativePath?: string };
 

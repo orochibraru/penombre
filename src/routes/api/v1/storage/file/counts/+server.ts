@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { getFileCounts } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { getFileCounts } from "#lib/server/openapi/v1/storage.js";
 
 export const GET = getFileCounts.handler(async ({ service }) => {
 	try {

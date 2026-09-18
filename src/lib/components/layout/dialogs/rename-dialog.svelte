@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
+	import { api } from "#lib/api/index.js";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { itemAction } from "#lib/store/actions.js";
 	import { invalidate } from "$app/navigation";
 	import { page } from "$app/state";
-	import { api } from "$lib/api";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import { Input } from "$lib/components/ui/input";
-	import * as m from "$lib/paraglide/messages.js";
-	import { itemAction } from "$lib/store/actions";
 
 	let error: string = $state("");
 	let newName: string = $state("");

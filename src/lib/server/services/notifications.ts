@@ -12,12 +12,12 @@
  */
 
 import { and, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import { getDb } from "$lib/server/db";
-import { fileNotes, notifications, user } from "$lib/server/db/schema";
-import { Email } from "$lib/server/email";
-import { getSmtpSettings } from "$lib/server/services/app-settings";
-import { getUserPreferences } from "$lib/server/services/preferences";
+import { Logger } from "#lib/logger.js";
+import { getDb } from "#lib/server/db/index.js";
+import { fileNotes, notifications, user } from "#lib/server/db/schema.js";
+import { Email } from "#lib/server/email.js";
+import { getSmtpSettings } from "#lib/server/services/app-settings.js";
+import { getUserPreferences } from "#lib/server/services/preferences.js";
 
 const logger = new Logger("NotificationService");
 

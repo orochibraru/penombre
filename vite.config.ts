@@ -26,12 +26,8 @@ export default defineConfig({
 			// binary, because sharp ships a native (.node) addon that
 			// `bun build --compile` can't embed.
 			adapter: adapter({ compile: false }),
-			experimental: {
-				// Loads src/instrumentation.server.ts first, to force
-				// reflect-metadata to initialise before @peculiar/x509's tsyringe
-				// container. See that file.
-				instrumentation: { server: true },
-			},
+			// Checked by `csrfHandler` in hooks.server.ts instead.
+			csrf: { trustedOrigins: ["*"] },
 		}),
 		SvelteKitPWA(),
 	],

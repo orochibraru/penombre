@@ -1,6 +1,6 @@
-import { Http } from "$lib/server/http";
-import { deleteDrive, renameDrive } from "$lib/server/openapi/v1/drives";
-import { drivesService, rethrowRefusal } from "$lib/server/services/drives";
+import { Http } from "#lib/server/http.js";
+import { deleteDrive, renameDrive } from "#lib/server/openapi/v1/drives.js";
+import { drivesService, rethrowRefusal } from "#lib/server/services/drives.js";
 
 export const PUT = renameDrive.handler(async ({ params, body, user }) => {
 	try {

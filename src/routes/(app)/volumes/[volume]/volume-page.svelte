@@ -9,20 +9,20 @@
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { api, type ObjectList } from "#lib/api/index.js";
+	import FileLayout from "#lib/components/file/layout.svelte";
+	import * as Alert from "#lib/components/ui/alert/index.js";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as ButtonGroup from "#lib/components/ui/button-group/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import { Progress } from "#lib/components/ui/progress/index.js";
+	import Spinner from "#lib/components/ui/spinner.svelte";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { etaLabel } from "#lib/utils.js";
 	import { invalidate } from "$app/navigation";
 	import { page } from "$app/state";
-	import { api, type ObjectList } from "$lib/api";
-	import FileLayout from "$lib/components/file/layout.svelte";
-	import * as Alert from "$lib/components/ui/alert/index.js";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-	import { Progress } from "$lib/components/ui/progress";
-	import Spinner from "$lib/components/ui/spinner.svelte";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { etaLabel } from "$lib/utils";
 
 	interface Props {
 		data: {

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { BellIcon, MessageSquareIcon, Share2Icon } from "@lucide/svelte";
 	import { onMount } from "svelte";
+	import { api } from "#lib/api/index.js";
+	import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { cn } from "#lib/utils.js";
 	import { goto } from "$app/navigation";
-	import { api } from "$lib/api";
-	import { Button, buttonVariants } from "$lib/components/ui/button/index";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
-	import { m } from "$lib/paraglide/messages.js";
-	import { cn } from "$lib/utils.js";
 
 	/**
 	 * The bell.

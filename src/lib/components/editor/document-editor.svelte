@@ -18,7 +18,7 @@
 		union,
 	} from "prosekit/core";
 	import { untrack } from "svelte";
-	import { Toggle } from "$lib/components/ui/toggle/index.js";
+	import { Toggle } from "#lib/components/ui/toggle/index.js";
 
 	/**
 	 * Rich text on top of ProseKit.

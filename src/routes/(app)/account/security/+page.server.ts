@@ -1,6 +1,6 @@
-import { auth } from "$lib/server/auth";
-import { getConfig } from "$lib/server/config";
-import { isTwoFactorRequired } from "$lib/server/services/app-settings";
+import { auth } from "#lib/server/auth/index.js";
+import { getConfig } from "#lib/server/config.js";
+import { isTwoFactorRequired } from "#lib/server/services/app-settings.js";
 
 export const load = async ({ request, locals }) => {
 	const [apiKeys, passkeys, accounts] = await Promise.all([

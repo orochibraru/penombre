@@ -1,6 +1,6 @@
 import { error, redirect } from "@sveltejs/kit";
+import { isAuthBypassed } from "#lib/server/config.js";
 import { resolve } from "$app/paths";
-import { isAuthBypassed } from "$lib/server/config";
 
 export const load = ({ locals }) => {
 	// Nobody signs in under auth bypass — the shared owner is an admin by
@@ -10,12 +10,12 @@ export const load = ({ locals }) => {
 	}
 
 	if (!locals.user) {
-		throw redirect(307, resolve("/auth/sign-in"));
+		throw redirect(307, resolve("auth/sign-in"));
 	}
 
 	const isAdmin = locals.user.role === "admin";
 	if (!isAdmin) {
-		throw redirect(307, resolve("/"));
+		throw redirect(307, resolve("/(app)"));
 	}
 	return {
 		hasCustomMenu: true,

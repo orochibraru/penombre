@@ -5,8 +5,8 @@
 		HTMLButtonAttributes,
 	} from "svelte/elements";
 	import { tv, type VariantProps } from "tailwind-variants";
-	import type { Pathname } from "$app/types";
-	import { cn, type WithElementRef } from "$lib/utils.js";
+	import { cn, type WithElementRef } from "#lib/utils.js";
+	import type { ResolvedPathname } from "$app/types";
 
 	export const buttonVariants = tv({
 		base: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
@@ -45,7 +45,7 @@
 			variant?: ButtonVariant;
 			size?: ButtonSize;
 			loading?: boolean;
-			href?: Pathname;
+			href?: ResolvedPathname;
 		};
 </script>
 
@@ -78,21 +78,17 @@
         {@render children?.()}
     </a>
 {:else}
-    <button
-        bind:this={ref}
-        data-slot="button"
-        disabled={disabled || loading}
-        class={cn(
-            buttonVariants({ variant, size }),
-            loading && "cursor-not-allowed opacity-50",
-            className,
-        )}
-        {type}
-        {...restProps}
-    >
-        {#if loading}
-            <LoaderCircleIcon class="h-5 w-5 animate-spin" />
-        {/if}
-        {@render children?.()}
-    </button>
+	<button
+		bind:this={ref}
+		data-slot="button"
+		disabled={disabled || loading}
+		class={cn(buttonVariants({ variant, size }), loading && "cursor-not-allowed opacity-50", className)}
+		type={type}
+		{...restProps}
+	>
+		{#if loading}
+			<LoaderCircleIcon class="h-5 w-5 animate-spin" />
+		{/if}
+		{@render children?.()}
+	</button>
 {/if}

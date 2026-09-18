@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "$lib/server/openapi";
+import { defineRoute } from "#lib/server/openapi/index.js";
 import {
 	folderItemSchema,
 	newFileSchema,
@@ -7,8 +7,8 @@ import {
 	objectListSchema,
 	updateFileSchema,
 	uploadResultSchema,
-} from "$lib/server/schema";
-import { storageServiceFor } from "$lib/server/services/storage-for";
+} from "#lib/server/schema.js";
+import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
 /**
  * Storage route definitions.

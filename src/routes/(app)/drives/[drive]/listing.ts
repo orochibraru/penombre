@@ -6,16 +6,16 @@
  * are two database reads here, against one request per breadcrumb there.
  */
 
-import { error, type NumericRange } from "@sveltejs/kit";
-import { isSimpleMode } from "$lib/server/config";
-import { DriveAccessError, isStorageUnavailable } from "$lib/server/errors";
-import type { ObjectList } from "$lib/server/schema";
+import { error } from "@sveltejs/kit";
+import { isSimpleMode } from "#lib/server/config.js";
+import { DriveAccessError, isStorageUnavailable } from "#lib/server/errors.js";
+import type { ObjectList } from "#lib/server/schema.js";
 import {
 	type DriveRole,
 	driveStorage,
 	drivesService,
-} from "$lib/server/services/drives";
-import type { BreadCrumb } from "$lib/utils";
+} from "#lib/server/services/drives.js";
+import type { BreadCrumb } from "#lib/utils.js";
 
 export interface DriveListing {
 	drive: { id: string; name: string; role: DriveRole; readOnly: boolean };
@@ -41,7 +41,7 @@ export async function loadDriveListing(
 		.requireAccess(driveId, locals.user.id)
 		.catch((cause: unknown) => {
 			if (cause instanceof DriveAccessError) {
-				return error(cause.status as NumericRange<400, 599>, cause.message);
+				return error(cause.status, cause.message);
 			}
 			throw cause;
 		});

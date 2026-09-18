@@ -1,5 +1,5 @@
-import { Logger } from "$lib/logger";
-import { getConfig } from "$lib/server/config";
+import { Logger } from "#lib/logger.js";
+import { getConfig } from "#lib/server/config.js";
 
 const logger = new Logger("VERSION_CHECK");
 

@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import type { HTMLFormAttributes } from "svelte/elements";
-	import type { ButtonVariant } from "$lib/components/ui/button";
+	import type { ButtonVariant } from "#lib/components/ui/button/index.js";
 
 	export type DialogSize = "sm" | "md" | "lg" | "fullscreen";
 
@@ -49,12 +49,12 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import { MediaQuery } from "svelte/reactivity";
-    import { Button, buttonVariants } from "$lib/components/ui/button";
-    import { m } from "$lib/paraglide/messages.js";
-    import * as Dialog from "$lib/components/ui/dialog/index";
-    import * as Drawer from "$lib/components/ui/drawer/index";
-    import { cn } from "$lib/utils";
-    import { enhance } from "$lib/forms";
+    import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
+    import { m } from "#lib/paraglide/messages.js";
+    import * as Dialog from "#lib/components/ui/dialog/index.js";
+    import * as Drawer from "#lib/components/ui/drawer/index.js";
+    import { cn } from "#lib/utils.js";
+    import { enhance } from "#lib/forms.js";
 
     let {
         open = $bindable(false),

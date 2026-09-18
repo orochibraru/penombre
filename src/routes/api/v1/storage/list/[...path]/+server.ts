@@ -1,6 +1,6 @@
-import { Logger } from "$lib/logger";
-import { Http } from "$lib/server/http";
-import { listFilesInFolder } from "$lib/server/openapi/v1/storage";
+import { Logger } from "#lib/logger.js";
+import { Http } from "#lib/server/http.js";
+import { listFilesInFolder } from "#lib/server/openapi/v1/storage.js";
 
 const logger = new Logger("Storage List API");
 

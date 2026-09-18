@@ -1,4 +1,4 @@
-import { Logger } from "$lib/logger";
+import { Logger } from "#lib/logger.js";
 import { auth } from "./auth";
 // Side-effect: registers every v1 route definition and shared schema
 import "./openapi/routes";

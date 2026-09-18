@@ -1,8 +1,8 @@
 import { desc, eq, sql } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import { getDb } from "$lib/server/db";
-import { activity, user } from "$lib/server/db/schema";
-import type { NewActivity } from "$lib/server/schema";
+import { Logger } from "#lib/logger.js";
+import { getDb } from "#lib/server/db/index.js";
+import { activity, user } from "#lib/server/db/schema.js";
+import type { NewActivity } from "#lib/server/schema.js";
 
 export class ActivityService {
 	private readonly db: ReturnType<typeof getDb>;

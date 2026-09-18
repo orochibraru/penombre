@@ -1,12 +1,12 @@
-import { Http } from "$lib/server/http";
+import { Http } from "#lib/server/http.js";
 import {
 	getPreferences,
 	updatePreferences,
-} from "$lib/server/openapi/v1/preferences";
+} from "#lib/server/openapi/v1/preferences.js";
 import {
 	getUserPreferences,
 	updateUserPreferences,
-} from "$lib/server/services/preferences";
+} from "#lib/server/services/preferences.js";
 
 export const GET = getPreferences.handler(async ({ user }) => {
 	try {

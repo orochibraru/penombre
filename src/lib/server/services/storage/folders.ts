@@ -7,15 +7,15 @@
  */
 
 import { and, eq, isNull, like, or, sql } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import type { File as DbFile } from "$lib/server/db/schema";
-import { files, folders } from "$lib/server/db/schema";
-import { FileOrFolderNotFoundError } from "$lib/server/errors";
+import { Logger } from "#lib/logger.js";
+import type { File as DbFile } from "#lib/server/db/schema.js";
+import { files, folders } from "#lib/server/db/schema.js";
+import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
 import type {
 	DirectoryList,
 	FileMetadata,
 	FolderItem,
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { CacheKeys } from "./cache";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";

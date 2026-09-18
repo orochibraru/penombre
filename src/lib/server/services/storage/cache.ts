@@ -1,11 +1,11 @@
 import process from "node:process";
-import { Logger } from "$lib/logger";
-import type { CacheBackend } from "$lib/server/cache";
+import { Logger } from "#lib/logger.js";
+import type { CacheBackend } from "#lib/server/cache/index.js";
 import {
 	getRedisClient,
 	MemoryCacheBackend,
 	RedisCacheBackend,
-} from "$lib/server/cache";
+} from "#lib/server/cache/index.js";
 
 const logger = new Logger("StorageCache");
 

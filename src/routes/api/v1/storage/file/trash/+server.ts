@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { listTrashFiles } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { listTrashFiles } from "#lib/server/openapi/v1/storage.js";
 
 export const GET = listTrashFiles.handler(async ({ service }) => {
 	try {

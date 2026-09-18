@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { MaximizeIcon, MessageSquareTextIcon } from "@lucide/svelte";
 	import { untrack } from "svelte";
-	import type { Pathname } from "$app/types";
-	import NotesPanel from "$lib/components/file/notes-panel.svelte";
-	import Waveform from "$lib/components/file/waveform.svelte";
-	import VideoPlayer from "$lib/components/layout/video-player.svelte";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import { Badge } from "$lib/components/ui/badge/index";
-	import { Button } from "$lib/components/ui/button/index";
-	import * as Code from "$lib/components/ui/code/index";
-	import * as m from "$lib/paraglide/messages.js";
+	import NotesPanel from "#lib/components/file/notes-panel.svelte";
+	import Waveform from "#lib/components/file/waveform.svelte";
+	import VideoPlayer from "#lib/components/layout/video-player.svelte";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.js";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import * as Code from "#lib/components/ui/code/index.js";
+	import * as m from "#lib/paraglide/messages.js";
 	import {
 		commandPlayback,
 		playableMusic,
 		playbackDuration,
 		playbackPosition,
-	} from "$lib/store/music";
-	import { fileNotes, noteMarkers } from "$lib/store/notes";
-	import { cn, readableFileSize } from "$lib/utils";
+	} from "#lib/store/music.js";
+	import { fileNotes, noteMarkers } from "#lib/store/notes.js";
+	import { cn, readableFileSize } from "#lib/utils.js";
+	import type { ResolvedPathname } from "$app/types";
 	import { fullscreenUrl } from "./file-links";
 	import type { FileToView } from "./wrapper.svelte.js";
 
@@ -81,7 +81,7 @@
 <ResponsiveDialog
     bind:open
     title={fileToView
-        ? (fileToView.item.metadata.name ?? fileToView.item.key)
+        ? fileToView.item.metadata.name ?? fileToView.item.key
         : m.file_preview()}
     size="lg"
     bodyClass="max-h-[68svh] md:max-h-[72vh]"
@@ -103,21 +103,15 @@
                         variant={notesOpen ? "default" : "outline"}
                         size="sm"
                         title={m.notes_title()}
-                        onclick={() => (notesOpen = !notesOpen)}
-                    >
-                        <MessageSquareTextIcon />
-                        {m.notes_title()}
-                    </Button>
+                        onclick={() => notesOpen = !notesOpen}
+                    ><MessageSquareTextIcon />{m.notes_title()}</Button>
                 {/if}
                 <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    href={fullscreenUrl(fileToView.item) as Pathname}
-                >
-                    {m.open_fullscreen()}
-                    <MaximizeIcon />
-                </Button>
+                    href={fullscreenUrl(fileToView.item) as ResolvedPathname}
+                >{m.open_fullscreen()} <MaximizeIcon /></Button>
             </div>
         </div>
         <!-- Preview and notes sit side by side on a wide screen and stack
@@ -196,9 +190,8 @@
                                     ? $playbackPosition / $playbackDuration
                                     : 0}
                                 seekLabel={m.seek()}
-                                {markers}
-                                onmarker={(marker) =>
-                                    commandPlayback({ seek: marker.seconds })}
+                                markers={markers}
+                                onmarker={(marker) => commandPlayback({ seek: marker.seconds })}
                                 onseek={(fraction) => {
                                     // One command, not two: a second call in
                                     // the same tick replaces the first before
@@ -220,11 +213,11 @@
                               ? $playbackPosition
                               : undefined}
                         onSeek={fileToView.type === "video"
-                            ? (seconds) => (viewerTime = seconds)
+                            ? (seconds) => viewerTime = seconds
                             : playingThis
-                              ? (seconds) => commandPlayback({ seek: seconds })
-                              : undefined}
-                        {currentUserId}
+                                ? (seconds) => commandPlayback({ seek: seconds })
+                                : undefined}
+                        currentUserId={currentUserId}
                         bind:focus={focusNotes}
                     />
                 </aside>

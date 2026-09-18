@@ -1,11 +1,11 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
+import { auth } from "#lib/server/auth/index.js";
+import { getConfig } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { account as authAccount, user } from "#lib/server/db/schema.js";
+import { getAppSettings } from "#lib/server/services/app-settings.js";
 import { resolve } from "$app/paths";
-import { auth } from "$lib/server/auth";
-import { getConfig } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { account as authAccount, user } from "$lib/server/db/schema";
-import { getAppSettings } from "$lib/server/services/app-settings";
 
 /** Accounts an admin registered have no credential row until they set one. */
 async function needsPassword(email: string): Promise<boolean> {
@@ -36,7 +36,7 @@ export const load = async ({ url }) => {
 	if (!(email && (await needsPassword(email)))) {
 		// Nothing to do here — either no such account, or it already has a
 		// password and belongs in the normal sign-in flow.
-		return redirect(307, resolve("/auth/sign-in"));
+		return redirect(307, resolve("auth/sign-in"));
 	}
 
 	const settings = await getAppSettings();
@@ -122,7 +122,7 @@ export const actions = {
 
 		return redirect(
 			303,
-			`${resolve("/auth/sign-in")}?email=${encodeURIComponent(email)}`,
+			`${resolve("auth/sign-in")}?email=${encodeURIComponent(email)}`,
 		);
 	},
 };

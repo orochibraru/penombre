@@ -1,12 +1,12 @@
 import { error, fail } from "@sveltejs/kit";
 import type { User } from "better-auth";
-import { getConfig } from "$lib/server/config";
+import { getConfig } from "#lib/server/config.js";
 import {
 	ShareService,
 	unlockCookieName,
 	unlockToken,
-} from "$lib/server/services/shares";
-import { StorageService } from "$lib/server/services/storage";
+} from "#lib/server/services/shares.js";
+import { StorageService } from "#lib/server/services/storage/index.js";
 
 const shares = new ShareService();
 

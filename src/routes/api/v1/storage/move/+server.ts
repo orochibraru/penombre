@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { bulkMove } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { bulkMove } from "#lib/server/openapi/v1/storage.js";
 
 export const POST = bulkMove.handler(async ({ body, service }) => {
 	const results: { path: string; success: boolean; error?: string }[] = [];

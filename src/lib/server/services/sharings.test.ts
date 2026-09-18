@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 const { SharingService } = await import("./sharings");
 
 /**
- * The db is stubbed per-call rather than by mocking `$lib/server/db` — a
+ * The db is stubbed per-call rather than by mocking `#lib/server/db/index.js` — a
  * module mock would leak into every suite that runs after this one. Each
  * entry in `answers` satisfies one query, in order.
  */

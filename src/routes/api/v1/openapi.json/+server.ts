@@ -1,19 +1,18 @@
-import { json } from "@sveltejs/kit";
-import { Logger } from "$lib/logger";
-import { genOpenApiSpec } from "$lib/server/generate-openapi";
+import { Logger } from "#lib/logger.js";
+import { genOpenApiSpec } from "#lib/server/generate-openapi.js";
 
 const logger = new Logger("openapi+server");
 
 export const GET = async () => {
 	try {
-		return json(await genOpenApiSpec(), {
+		return Response.json(await genOpenApiSpec(), {
 			headers: {
 				"Cache-Control": "public, max-age=60",
 			},
 		});
 	} catch (error) {
 		logger.error("Error generating OpenAPI spec:", error);
-		return json(
+		return Response.json(
 			{ message: "Failed to generate OpenAPI spec" },
 			{ status: 500 },
 		);

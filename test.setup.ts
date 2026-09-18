@@ -1,5 +1,4 @@
 import { mock } from "bun:test";
-import process from "node:process";
 
 // Mock SvelteKit and environment modules before any imports
 const mockAppEnvironment = {
@@ -9,27 +8,24 @@ const mockAppEnvironment = {
 };
 
 // Use Bun's mock.module to properly mock SvelteKit modules
-mock.module("$app/environment", () => mockAppEnvironment);
-
-mock.module("$env/dynamic/private", () => ({
-	env: process.env, // Use actual process.env so tests can manipulate it
-}));
+mock.module("$app/env", () => mockAppEnvironment);
 
 mock.module("$app/server", () => ({
 	getRequestEvent: () => null,
 }));
 
 mock.module("$app/paths", () => ({
-	resolve: mock((path: string) => path),
+	// Route ids resolve without their groups: `/(app)` is `/`.
+	resolve: mock((path: string) => path.replace(/\/\([^)]+\)/g, "") || "/"),
 }));
 
-mock.module("$lib/api", () => ({
+mock.module("#lib/api/index.js", () => ({
 	api: {
 		GET: mock(() => Promise.resolve({ data: null, error: undefined })),
 	},
 }));
 
-mock.module("$lib/server/auth", () => ({
+mock.module("#lib/server/auth/index.js", () => ({
 	auth: {
 		api: {
 			getSession: mock(() => Promise.resolve(null)),
@@ -57,7 +53,7 @@ mock.module("$lib/server/auth", () => ({
 	loadedOAuthProviders: [],
 }));
 
-mock.module("$lib/server/config", () => ({
+mock.module("#lib/server/config.js", () => ({
 	getConfig: mock(() => ({
 		smtp: undefined,
 		appName: "Penombre",
@@ -79,7 +75,7 @@ mock.module("$lib/server/config", () => ({
 	isAuthBypassed: mock(() => false),
 }));
 
-mock.module("$lib/logger", () => ({
+mock.module("#lib/logger.js", () => ({
 	Logger: class {
 		debug() {}
 		error() {}
@@ -88,7 +84,7 @@ mock.module("$lib/logger", () => ({
 	},
 }));
 
-mock.module("$lib/server/services/storage", () => ({
+mock.module("#lib/server/services/storage/index.js", () => ({
 	StorageService: {
 		getAvailableStorageSize: mock(() => 1_073_741_824),
 		getAdminStoragePath: mock(() => "/tmp/penombre-test-storage"),
@@ -128,7 +124,7 @@ const mockDb = {
 	transaction: mockDbTransaction,
 };
 
-mock.module("$lib/server/db", () => ({
+mock.module("#lib/server/db/index.js", () => ({
 	db: mockDb,
 	getDb: () => mockDb,
 	getDbUrl: () => "file:./data/db/penombre.sqlite",

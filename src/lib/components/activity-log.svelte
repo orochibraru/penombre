@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { m } from "$lib/paraglide/messages.js";
-	import { cn } from "$lib/utils";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { cn } from "#lib/utils.js";
 
 	/**
 	 * Activity rendered as log lines rather than cards.

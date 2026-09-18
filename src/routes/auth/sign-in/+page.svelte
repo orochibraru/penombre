@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { authClient } from "#lib/auth-client.js";
+	import * as Alert from "#lib/components/ui/alert/index.js";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import * as Field from "#lib/components/ui/field/index.js";
+	import Input from "#lib/components/ui/input/input.svelte";
+	import { deserializeAction } from "#lib/forms.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { cn } from "#lib/utils.js";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
-	import { authClient } from "$lib/auth-client";
-	import * as Alert from "$lib/components/ui/alert/index";
-	import { Button } from "$lib/components/ui/button/index";
-	import * as Field from "$lib/components/ui/field/index.js";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import { deserializeAction } from "$lib/forms";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { cn } from "$lib/utils.js";
 
 	let { data } = $props();
 
@@ -46,7 +46,7 @@
 			);
 		}
 
-		goto(resolve("/"), { replaceState: true, invalidateAll: true });
+		goto(resolve("/(app)"), { replace: true, refreshAll: true });
 	}
 
 	function handlePasskeySignIn() {
@@ -116,7 +116,7 @@
 				throw new Error(res.error.message || "Error signing in with OAuth2");
 			}
 			if (res.data.url) {
-				goto(res.data.url, { replaceState: true, invalidateAll: true });
+				window.location.href = res.data.url;
 			}
 		} catch (e) {
 			error = true;
@@ -204,7 +204,7 @@
 			error = true;
 			throw new Error(err.message || m.sign_in_error());
 		}
-		goto(resolve("/"), { replaceState: true, invalidateAll: true });
+		goto(resolve("/(app)"), { replace: true, refreshAll: true });
 	}
 
 	function handleOtpSignin() {
@@ -255,7 +255,7 @@
 			const step = payload.data?.step;
 			if (step === "onboarding") {
 				await goto(`/auth/onboarding?email=${encodeURIComponent(email)}`, {
-					replaceState: true,
+					replace: true,
 				});
 				return;
 			}
@@ -281,7 +281,7 @@
 				);
 			}
 
-			goto(resolve("/"), { replaceState: true, invalidateAll: true });
+			goto(resolve("/(app)"), { replace: true, refreshAll: true });
 		} catch (e) {
 			error = true;
 			throw e;

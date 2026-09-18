@@ -18,20 +18,12 @@ import { join, relative } from "node:path";
 import process from "node:process";
 import { plugin } from "bun";
 
-// Register SvelteKit virtual module stubs so $lib imports resolve correctly.
+// Register SvelteKit virtual module stubs so #lib imports resolve correctly.
 plugin({
 	name: "sveltekit-mocks",
 	setup(build) {
-		build.module("$app/environment", () => ({
+		build.module("$app/env", () => ({
 			exports: { dev: false, building: false, version: "0" },
-			loader: "object",
-		}));
-		build.module("$env/dynamic/private", () => ({
-			exports: { env: process.env },
-			loader: "object",
-		}));
-		build.module("$env/dynamic/public", () => ({
-			exports: { env: {} },
 			loader: "object",
 		}));
 		build.module("$app/server", () => ({
@@ -42,9 +34,9 @@ plugin({
 });
 
 // Dynamic imports must follow plugin registration.
-const { getStoragePath } = await import("$lib/server/config");
-const { getDb } = await import("$lib/server/db");
-const { files, folders } = await import("$lib/server/db/schema");
+const { getStoragePath } = await import("#lib/server/config.js");
+const { getDb } = await import("#lib/server/db/index.js");
+const { files, folders } = await import("#lib/server/db/schema.js");
 
 // ─── CLI flags ─────────────────────────────────────────────────────────────
 

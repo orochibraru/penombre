@@ -1,5 +1,5 @@
 import { type Writable, writable } from "svelte/store";
-import type { SortColumn, SortDirection } from "$lib/utils";
+import type { SortColumn, SortDirection } from "#lib/utils.js";
 
 export interface SortPreference {
 	column: SortColumn;

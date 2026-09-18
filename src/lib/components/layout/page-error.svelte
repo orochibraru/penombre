@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as Alert from "$lib/components/ui/alert/index";
-	import * as m from "$lib/paraglide/messages.js";
+	import * as Alert from "#lib/components/ui/alert/index.js";
+	import * as m from "#lib/paraglide/messages.js";
 </script>
 
 <Alert.Root variant="destructive">

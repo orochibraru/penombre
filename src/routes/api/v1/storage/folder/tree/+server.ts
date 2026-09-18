@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { getFolderTree } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { getFolderTree } from "#lib/server/openapi/v1/storage.js";
 
 export const GET = getFolderTree.handler(async ({ service }) => {
 	try {

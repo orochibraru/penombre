@@ -1,7 +1,7 @@
-import { page } from "$app/state";
-import type { paths } from "$lib/api";
-import { locationOf } from "$lib/storage-location";
-import { buildOriginUrl } from "$lib/utils";
+import type { paths } from "#lib/api/index.js";
+import { locationOf } from "#lib/storage-location.js";
+import { buildOriginUrl } from "#lib/utils.js";
+import { page, type ReadonlyURL } from "$app/state";
 
 /**
  * Typed API path template – changing this string will produce a compile error
@@ -17,7 +17,7 @@ const FILE_PATH_TEMPLATE: keyof paths = "/api/v1/storage/file/{id}";
 export type ThumbnailSize = "small" | "medium" | "large";
 
 interface ObjectUrlProps {
-	baseUrl: URL;
+	baseUrl: ReadonlyURL;
 	itemPath: string;
 	raw?: boolean;
 	thumbnail?: boolean;

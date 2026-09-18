@@ -8,8 +8,8 @@
  */
 
 import { and, asc, eq } from "drizzle-orm";
-import { getDb } from "$lib/server/db";
-import { fileNotes, user } from "$lib/server/db/schema";
+import { getDb } from "#lib/server/db/index.js";
+import { fileNotes, user } from "#lib/server/db/schema.js";
 
 export interface NoteInput {
 	fileId: string;

@@ -1,7 +1,7 @@
 import type { Mock } from "bun:test";
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { auth } from "$lib/server/auth";
-import { getConfig, isAuthBypassed } from "$lib/server/config";
+import { auth } from "#lib/server/auth/index.js";
+import { getConfig, isAuthBypassed } from "#lib/server/config.js";
 
 const mockGetConfig = getConfig as Mock<typeof getConfig>;
 const mockIsAuthBypassed = isAuthBypassed as Mock<typeof isAuthBypassed>;

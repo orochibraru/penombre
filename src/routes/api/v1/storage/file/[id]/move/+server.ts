@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { moveFile } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { moveFile } from "#lib/server/openapi/v1/storage.js";
 
 export const POST = moveFile.handler(async ({ params, body, service }) => {
 	const decodedItemName = decodeURIComponent(params.id);

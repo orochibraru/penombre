@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
-import { isSimpleMode } from "$lib/server/config";
-import { drivesService } from "$lib/server/services/drives";
+import { isSimpleMode } from "#lib/server/config.js";
+import { drivesService } from "#lib/server/services/drives.js";
 
 export const load = async ({ locals, depends }) => {
 	// Simple mode is one drive shared by everyone already; a second sharing

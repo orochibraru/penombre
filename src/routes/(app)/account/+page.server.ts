@@ -1,7 +1,7 @@
 import { fail } from "@sveltejs/kit";
-import { Logger } from "$lib/logger";
-import { auth } from "$lib/server/auth";
-import { getConfig } from "$lib/server/config";
+import { Logger } from "#lib/logger.js";
+import { auth } from "#lib/server/auth/index.js";
+import { getConfig } from "#lib/server/config.js";
 
 const logger = new Logger("account-page.server.ts");
 

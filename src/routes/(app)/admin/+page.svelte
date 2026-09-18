@@ -8,11 +8,11 @@
 		UsersIcon,
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
-	import StorageUsage from "$lib/components/storage-usage.svelte";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { readableFileSize } from "$lib/utils";
+	import StorageUsage from "#lib/components/storage-usage.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { readableFileSize } from "#lib/utils.js";
 
 	onMount(() => {
 		title.set(m.title_admin_dashboard());

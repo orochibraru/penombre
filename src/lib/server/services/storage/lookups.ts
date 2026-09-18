@@ -6,7 +6,7 @@
  */
 
 import { and, eq, isNull } from "drizzle-orm";
-import { files, folders } from "$lib/server/db/schema";
+import { files, folders } from "#lib/server/db/schema.js";
 import type { StorageContext } from "./context";
 import { ownedFiles, ownedFolders } from "./scope";
 

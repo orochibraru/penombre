@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { createFolder, listFolders } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { createFolder, listFolders } from "#lib/server/openapi/v1/storage.js";
 
 export const GET = listFolders.handler(async ({ service }) => {
 	try {

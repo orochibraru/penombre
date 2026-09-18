@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
-import { isSimpleMode } from "$lib/server/config";
-import { ShareService } from "$lib/server/services/shares";
-import { toShareDto } from "$lib/server/services/shares.dto";
+import { isSimpleMode } from "#lib/server/config.js";
+import { toShareDto } from "#lib/server/services/shares.dto.js";
+import { ShareService } from "#lib/server/services/shares.js";
 
 const shares = new ShareService();
 

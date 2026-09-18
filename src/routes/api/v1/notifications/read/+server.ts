@@ -1,6 +1,6 @@
-import { Http } from "$lib/server/http";
-import { markNotificationsRead } from "$lib/server/openapi/v1/notifications";
-import { NotificationService } from "$lib/server/services/notifications";
+import { Http } from "#lib/server/http.js";
+import { markNotificationsRead } from "#lib/server/openapi/v1/notifications.js";
+import { NotificationService } from "#lib/server/services/notifications.js";
 
 const notifications = new NotificationService();
 

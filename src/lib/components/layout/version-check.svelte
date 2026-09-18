@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { CircleArrowUpIcon } from "@lucide/svelte";
-	import { m } from "$lib/paraglide/messages.js";
-	import type { AppConfig } from "$lib/server/config";
+	import { m } from "#lib/paraglide/messages.js";
+	import type { AppConfig } from "#lib/server/config.js";
 
-	import type { VersionCheckResult } from "$lib/server/services/version";
+	import type { VersionCheckResult } from "#lib/server/services/version.js";
 
 	interface Props {
 		version: VersionCheckResult | undefined;

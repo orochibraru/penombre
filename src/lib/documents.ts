@@ -1,4 +1,4 @@
-import { api } from "$lib/api";
+import { api } from "#lib/api/index.js";
 
 /** Editable document types. Each stores a portable format, not a private one. */
 export type DocumentKind = "document" | "sheet" | "presentation";
@@ -77,7 +77,7 @@ export function kindForName(name: string): DocumentKind | null {
 /**
  * Office formats that open in the same three editors. They are converted on
  * the way in and written back into the original file on the way out — see
- * `$lib/server/office` — so they stay Word, Excel and PowerPoint files and
+ * `#lib/server/office/index.js` — so they stay Word, Excel and PowerPoint files and
  * keep their own icons in a listing.
  */
 export const OFFICE_KINDS: Record<string, DocumentKind> = {

@@ -1,4 +1,4 @@
-import { SLIDE_SEPARATOR } from "$lib/documents";
+import { SLIDE_SEPARATOR } from "#lib/documents.js";
 import {
 	isTitle,
 	NotAPresentationError,

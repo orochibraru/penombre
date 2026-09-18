@@ -4,14 +4,14 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import { dev } from "$app/environment";
-import { Logger } from "$lib/logger";
-import { files } from "$lib/server/db/schema";
+import { Logger } from "#lib/logger.js";
+import { files } from "#lib/server/db/schema.js";
 import {
 	FileOrFolderNotFoundError,
 	UnauthorizedError,
-} from "$lib/server/errors";
-import type { ObjectItem } from "$lib/server/schema";
+} from "#lib/server/errors.js";
+import type { ObjectItem } from "#lib/server/schema.js";
+import { dev } from "$app/env";
 import type { StorageContext } from "./context";
 import { generateETag } from "./mappers";
 import { ownedFiles } from "./scope";

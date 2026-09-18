@@ -7,15 +7,15 @@
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { api, type ObjectItem } from "#lib/api/index.js";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import * as Select from "#lib/components/ui/select/index.js";
+	import Spinner from "#lib/components/ui/spinner.svelte";
+	import * as m from "#lib/paraglide/messages.js";
+	import { locationOf, type StorageLocation } from "#lib/storage-location.js";
+	import { cn } from "#lib/utils.js";
 	import { invalidate } from "$app/navigation";
 	import { page } from "$app/state";
-	import { api, type ObjectItem } from "$lib/api";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import * as Select from "$lib/components/ui/select/index.js";
-	import Spinner from "$lib/components/ui/spinner.svelte";
-	import * as m from "$lib/paraglide/messages.js";
-	import { locationOf, type StorageLocation } from "$lib/storage-location";
-	import { cn } from "$lib/utils";
 
 	interface Props {
 		open: boolean;

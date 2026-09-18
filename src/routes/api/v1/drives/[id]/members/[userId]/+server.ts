@@ -1,6 +1,6 @@
-import { Http } from "$lib/server/http";
-import { removeDriveMember } from "$lib/server/openapi/v1/drives";
-import { drivesService, rethrowRefusal } from "$lib/server/services/drives";
+import { Http } from "#lib/server/http.js";
+import { removeDriveMember } from "#lib/server/openapi/v1/drives.js";
+import { drivesService, rethrowRefusal } from "#lib/server/services/drives.js";
 
 export const DELETE = removeDriveMember.handler(async ({ params, user }) => {
 	try {

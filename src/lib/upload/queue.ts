@@ -11,7 +11,7 @@
  * forever.
  */
 
-import type { StorageLocation } from "$lib/storage-location";
+import type { StorageLocation } from "#lib/storage-location.js";
 
 export type UploadStatus = "pending" | "uploading" | "done" | "failed";
 

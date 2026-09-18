@@ -8,8 +8,8 @@ import {
 	white,
 	yellow,
 } from "@kitql/helpers";
-import { building, dev } from "$app/environment";
-import { getConfig } from "$lib/server/config";
+import { getConfig } from "#lib/server/config.js";
+import { building, dev } from "$app/env";
 
 export type LogFormats = "console" | "json";
 

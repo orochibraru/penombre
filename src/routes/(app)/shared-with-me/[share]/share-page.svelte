@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { LockIcon, UsersIcon } from "@lucide/svelte";
-	import type { ObjectList } from "$lib/api";
-	import FileLayout from "$lib/components/file/layout.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
+	import type { ObjectList } from "#lib/api/index.js";
+	import FileLayout from "#lib/components/file/layout.svelte";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 
 	interface Props {
 		data: {

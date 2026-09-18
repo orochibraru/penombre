@@ -1,9 +1,9 @@
 import type { Mock } from "bun:test";
 import { describe, expect, test } from "bun:test";
 import { fail } from "@sveltejs/kit";
-import { auth } from "$lib/server/auth";
-import { getConfig } from "$lib/server/config";
-import type { UserWithSession } from "$lib/server/db/schema";
+import { auth } from "#lib/server/auth/index.js";
+import { getConfig } from "#lib/server/config.js";
+import type { UserWithSession } from "#lib/server/db/schema.js";
 
 const mockGetSession = auth.api.getSession as unknown as Mock<
 	typeof auth.api.getSession

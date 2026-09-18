@@ -6,19 +6,19 @@
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { authClient } from "#lib/auth-client.js";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import TwoFactorCard from "#lib/components/two-factor-card.svelte";
+	import * as Alert from "#lib/components/ui/alert/index.js";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import { enhance } from "#lib/forms.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 	import { refreshAll } from "$app/navigation";
-	import { authClient } from "$lib/auth-client";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import TwoFactorCard from "$lib/components/two-factor-card.svelte";
-	import * as Alert from "$lib/components/ui/alert/index.js";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-	import { Input } from "$lib/components/ui/input";
-	import { enhance } from "$lib/forms";
-	import * as m from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
 
 	onMount(() => {
 		title.set(m.title_account_security());

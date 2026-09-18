@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { getFolderMeta } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { getFolderMeta } from "#lib/server/openapi/v1/storage.js";
 
 export const GET = getFolderMeta.handler(async ({ params, query, service }) => {
 	const folderPath = service.getFullFolderPath(params.path, query.parent);

@@ -4,16 +4,20 @@
 	import { pwaInfo } from "virtual:pwa-info";
 	import { ModeWatcher } from "mode-watcher";
 	import { onMount } from "svelte";
-	import { browser } from "$app/environment";
+	import TopLoadingbar from "#lib/components/layout/top-loading-bar.svelte";
+	import { Toaster } from "#lib/components/ui/sonner/index.js";
+	import { title } from "#lib/store/title.js";
+	import { browser } from "$app/env";
 	import { onNavigate } from "$app/navigation";
-	import TopLoadingbar from "$lib/components/layout/top-loading-bar.svelte";
-	import { Toaster } from "$lib/components/ui/sonner/index";
-	import { title } from "$lib/store/title";
 
 	let { children, data } = $props();
 	let webManifestLink = $state<string>("");
 
 	onNavigate((navigation) => {
+		if (navigation.shallow) {
+			return;
+		}
+
 		if (!browser) {
 			return;
 		}

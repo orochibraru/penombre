@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { DownloadIcon, FolderIcon, UsersIcon } from "@lucide/svelte";
+	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import { buttonVariants } from "#lib/components/ui/button/index.js";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { cn, readableFileSize } from "#lib/utils.js";
 	import { resolve } from "$app/paths";
-	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import { buttonVariants } from "$lib/components/ui/button/index.js";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { cn, readableFileSize } from "$lib/utils";
 
 	const { data } = $props();
 

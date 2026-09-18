@@ -2,8 +2,8 @@
 	import { XIcon } from "@lucide/svelte";
 	import type { Snippet } from "svelte";
 	import { slide } from "svelte/transition";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { cn } from "$lib/utils";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { cn } from "#lib/utils.js";
 
 	interface Props {
 		title: string;

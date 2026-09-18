@@ -8,12 +8,15 @@
  */
 
 import { error } from "@sveltejs/kit";
-import { getVolume } from "$lib/server/config";
-import { isStorageUnavailable } from "$lib/server/errors";
-import type { ObjectList } from "$lib/server/schema";
-import { scanOnVisit, volumeScanKey } from "$lib/server/services/library-scan";
-import { volumeStorage } from "$lib/server/services/storage-for";
-import type { BreadCrumb } from "$lib/utils";
+import { getVolume } from "#lib/server/config.js";
+import { isStorageUnavailable } from "#lib/server/errors.js";
+import type { ObjectList } from "#lib/server/schema.js";
+import {
+	scanOnVisit,
+	volumeScanKey,
+} from "#lib/server/services/library-scan.js";
+import { volumeStorage } from "#lib/server/services/storage-for.js";
+import type { BreadCrumb } from "#lib/utils.js";
 
 export interface VolumeListing {
 	volume: { name: string; label: string; readOnly: boolean };

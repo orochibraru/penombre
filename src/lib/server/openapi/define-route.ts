@@ -1,12 +1,12 @@
 import type { RequestEvent } from "@sveltejs/kit";
 import type { z } from "zod";
-import type { Pathname } from "$app/types";
 import {
 	DriveAccessError,
 	ReadOnlyVolumeError,
 	StorageUnavailableError,
-} from "$lib/server/errors";
-import { Http } from "$lib/server/http";
+} from "#lib/server/errors.js";
+import { Http } from "#lib/server/http.js";
+import type { ResolvedPathname } from "$app/types";
 import { type HttpMethod, registry } from "./registry";
 
 function formatZodErrors(result: {
@@ -172,7 +172,7 @@ interface RouteConfig<
 	TService = undefined,
 > {
 	method: HttpMethod;
-	path: Pathname;
+	path: ResolvedPathname;
 	summary?: string;
 	description?: string;
 	tags?: string[];
@@ -226,7 +226,7 @@ type HandlerCallback<
  * a typed handler factory.
  *
  * Call this at module top-level in a route definition file (e.g.
- * `$lib/server/openapi/v1/storage.ts`). The returned object has a
+ * `#lib/server/openapi/v1/storage.ts`). The returned object has a
  * `handler()` method you import in your `+server.ts` route files.
  *
  * The handler wrapper automatically:
@@ -247,7 +247,7 @@ type HandlerCallback<
  * });
  *
  * // In routes/api/v1/storage/list/+server.ts
- * import { listFiles } from "$lib/server/openapi/v1/storage";
+ * import { listFiles } from "#lib/server/openapi/v1/storage.js";
  *
  * export const GET = listFiles.handler(async ({ service }) => {
  *   return Http.Ok(await service.listFiles());

@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { isAuthBypassed } from "$lib/server/config";
+import { isAuthBypassed } from "#lib/server/config.js";
 
 export const load = () => {
 	// Nobody signs in under auth bypass — there's no account to manage.

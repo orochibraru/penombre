@@ -14,21 +14,21 @@
 		VolumeXIcon,
 		XIcon,
 	} from "@lucide/svelte";
+	import NotesPanel from "#lib/components/file/notes-panel.svelte";
+	import { pendingPreview } from "#lib/components/file/preview-handover.js";
+	import Waveform from "#lib/components/file/waveform.svelte";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import { Progress } from "#lib/components/ui/progress/index.js";
+	import { Slider } from "#lib/components/ui/slider/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { playableMusic } from "#lib/store/music.js";
+	import { fileNotes, loadFileNotes, noteMarkers } from "#lib/store/notes.js";
+	import { title } from "#lib/store/title.js";
+	import { cn, readableFileSize, toggleFullscreen } from "#lib/utils.js";
 	import { beforeNavigate, goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
-	import type { Pathname } from "$app/types";
-	import NotesPanel from "$lib/components/file/notes-panel.svelte";
-	import { pendingPreview } from "$lib/components/file/preview-handover";
-	import Waveform from "$lib/components/file/waveform.svelte";
-	import { Button } from "$lib/components/ui/button/index";
-	import { Progress } from "$lib/components/ui/progress/index";
-	import { Slider } from "$lib/components/ui/slider/index";
-	import { m } from "$lib/paraglide/messages.js";
-	import { playableMusic } from "$lib/store/music";
-	import { fileNotes, loadFileNotes, noteMarkers } from "$lib/store/notes";
-	import { title } from "$lib/store/title";
-	import { cn, readableFileSize, toggleFullscreen } from "$lib/utils";
+	import type { ResolvedPathname } from "$app/types";
 
 	let { data } = $props();
 
@@ -128,12 +128,15 @@
 			history.back();
 			return;
 		}
-		await goto(resolve("/browse") as Pathname);
+		await goto(resolve("browse") as ResolvedPathname);
 	}
 
 	// The global player is a different element in a different layout, so it
 	// restarts the track unless it is told where this one got to.
-	beforeNavigate(() => {
+	beforeNavigate(({ shallow }) => {
+		if (shallow) {
+			return;
+		}
 		playableMusic.update((music) =>
 			music && music.fileId === data.fileId
 				? { ...music, startAt: currentTime, isPlaying: !paused }
@@ -191,8 +194,8 @@
 </script>
 
 <svelte:document
-    onfullscreenchange={() => (isFullscreen = !!document.fullscreenElement)}
-/>
+    onfullscreenchange={() => isFullscreen = !!document.fullscreenElement}
+></svelte:document>
 
 <div class="bg-background flex h-svh w-full flex-col overflow-hidden">
     <header class="flex shrink-0 items-center gap-2 border-b px-3 py-2">
@@ -210,10 +213,8 @@
                 variant="ghost"
                 size="icon"
                 title={m.nav_my_drive()}
-                href={resolve("/browse") as Pathname}
-            >
-                <ArrowLeftIcon />
-            </Button>
+                href={resolve('browse') as ResolvedPathname}
+            ><ArrowLeftIcon /></Button>
         {/if}
         <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-medium">{data.name}</p>
@@ -221,9 +222,15 @@
                 {readableFileSize(data.size)}
             </p>
         </div>
-        <Button variant="outline" size="icon" title={m.download()} href={src as Pathname} download={data.name}>
-            <DownloadIcon />
-        </Button>
+
+        <Button
+            variant="outline"
+            size="icon"
+            title={m.download()}
+            href={src as ResolvedPathname}
+            download={data.name}
+        ><DownloadIcon /></Button>
+
         {#if isAudio || isVideo}
             <Button
                 variant="outline"
@@ -238,10 +245,8 @@
             variant={notesOpen ? "default" : "outline"}
             size="icon"
             title={m.notes_title()}
-            onclick={() => (notesOpen = !notesOpen)}
-        >
-            <MessageSquareTextIcon />
-        </Button>
+            onclick={() => notesOpen = !notesOpen}
+        ><MessageSquareTextIcon /></Button>
     </header>
 
     <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -256,7 +261,7 @@
         >
             {#if isImage}
                 <img
-                    {src}
+                    src={src}
                     alt={data.name}
                     class="max-h-full max-w-full rounded-lg object-contain"
                 />
@@ -268,7 +273,7 @@
                     bind:currentTime
                     bind:duration
                     bind:volume
-                    {src}
+                    src={src}
                     playsinline
                     onloadedmetadata={resume}
                     class="max-h-[calc(100%-4rem)] w-full rounded-lg bg-black object-contain"
@@ -286,7 +291,7 @@
                         bind:currentTime
                         bind:duration
                         bind:volume
-                        {src}
+                        src={src}
                         onloadedmetadata={resume}
                         class="sr-only"
                     ></audio>
@@ -312,14 +317,14 @@
                             progress={duration > 0 ? currentTime / duration : 0}
                             onseek={scrub}
                             seekLabel={m.seek()}
-                            {markers}
+                            markers={markers}
                             onmarker={(marker) => seekTo(marker.seconds)}
-                            onfail={() => (peaksFailed = true)}
+                            onfail={() => peaksFailed = true}
                         />
                     {/if}
                 </div>
             {:else}
-                <embed {src} title={data.name} class="h-full w-full" />
+                <embed src={src} title={data.name} class="h-full w-full" />
             {/if}
 
             {#if isVideo || isAudio}
@@ -398,10 +403,8 @@
                         variant="ghost"
                         size="icon"
                         title={m.close()}
-                        onclick={() => (notesOpen = false)}
-                    >
-                        <XIcon />
-                    </Button>
+                        onclick={() => notesOpen = false}
+                    ><XIcon /></Button>
                 </div>
                 <NotesPanel
                     fileId={data.fileId}

@@ -1,6 +1,6 @@
 import type { Mock } from "bun:test";
 import { describe, expect, test } from "bun:test";
-import { getConfig } from "$lib/server/config";
+import { getConfig } from "#lib/server/config.js";
 
 const mockGetConfig = getConfig as Mock<typeof getConfig>;
 

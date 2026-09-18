@@ -1,8 +1,8 @@
-import type { ObjectItem } from "$lib/api";
+import type { ObjectItem } from "#lib/api/index.js";
 import {
 	type SupportedLanguage,
 	supportedLanguages,
-} from "$lib/components/ui/code/shiki";
+} from "#lib/components/ui/code/shiki.js";
 
 export const codeFileExtensions = [
 	// Web front-end

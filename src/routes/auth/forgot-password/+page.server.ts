@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { getConfig } from "$lib/server/config";
+import { getConfig } from "#lib/server/config.js";
 
 export const load = () => {
 	const config = getConfig();

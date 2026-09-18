@@ -8,15 +8,15 @@
 		UserCheckIcon,
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { api } from "#lib/api/index.js";
+	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { cn, downloadsCountLabel } from "#lib/utils.js";
 	import { invalidate } from "$app/navigation";
-	import { api } from "$lib/api";
-	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { cn, downloadsCountLabel } from "$lib/utils";
 
 	const { data } = $props();
 

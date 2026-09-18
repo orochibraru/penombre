@@ -1,11 +1,11 @@
 import { z } from "zod";
-import type { Pathname } from "$app/types";
+import type { ResolvedPathname } from "$app/types";
 
 type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
 
 interface RouteDefinition {
 	method: HttpMethod;
-	path: Pathname;
+	path: ResolvedPathname;
 	summary?: string;
 	description?: string;
 	tags?: string[];
@@ -82,6 +82,7 @@ function buildParameters(route: RouteDefinition): Record<string, unknown>[] {
 		const properties = paramSchema.properties as
 			| Record<string, unknown>
 			| undefined;
+
 		for (const [name, schema] of Object.entries(properties ?? {})) {
 			parameters.push({ name, in: "path", required: true, schema });
 		}
@@ -93,6 +94,7 @@ function buildParameters(route: RouteDefinition): Record<string, unknown>[] {
 			| Record<string, unknown>
 			| undefined;
 		const required = (querySchema.required as string[] | undefined) ?? [];
+
 		for (const [name, schema] of Object.entries(properties ?? {})) {
 			parameters.push({
 				name,
@@ -179,6 +181,7 @@ function remapTags(
 	if (Object.keys(tagOverrides).length === 0) {
 		return operationTags;
 	}
+
 	return operationTags
 		.map((t) => (t in tagOverrides ? tagOverrides[t] : t))
 		.filter((t): t is string => t !== null);
@@ -364,10 +367,7 @@ class OpenAPIRegistry {
 			},
 			servers: [{ url: "/", description: "Current server" }],
 			paths,
-			components: {
-				schemas: schemaComponents,
-				securitySchemes,
-			},
+			components: { schemas: schemaComponents, securitySchemes },
 			...(tags.length > 0 ? { tags } : {}),
 			security: [{ cookieAuth: [] }],
 		};

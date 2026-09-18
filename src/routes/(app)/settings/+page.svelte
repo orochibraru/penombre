@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { api } from "#lib/api/index.js";
+	import LanguageDropdown from "#lib/components/language-dropdown.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { Checkbox } from "#lib/components/ui/checkbox/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 	import { invalidate } from "$app/navigation";
-	import { api } from "$lib/api";
-	import LanguageDropdown from "$lib/components/language-dropdown.svelte";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
-	import { Label } from "$lib/components/ui/label";
-	import * as m from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
 
 	const { data } = $props();
 

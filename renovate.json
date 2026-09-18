@@ -9,6 +9,11 @@
 			"allowedVersions": "<7"
 		},
 		{
+			"description": "2.5.14 reports every null check on RegExp.exec as unnecessary",
+			"matchPackageNames": ["@biomejs/biome"],
+			"allowedVersions": "!/^2\\.5\\.14$/"
+		},
+		{
 			"matchUpdateTypes": ["pin", "digest"],
 			"automerge": true
 		},

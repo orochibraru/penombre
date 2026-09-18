@@ -8,10 +8,13 @@
  */
 
 import { and, asc, eq, like } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import type { File as DbFile, Folder as DbFolder } from "$lib/server/db/schema";
-import { files, folders } from "$lib/server/db/schema";
-import { FileOrFolderNotFoundError } from "$lib/server/errors";
+import { Logger } from "#lib/logger.js";
+import type {
+	File as DbFile,
+	Folder as DbFolder,
+} from "#lib/server/db/schema.js";
+import { files, folders } from "#lib/server/db/schema.js";
+import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
 import type { StorageContext } from "./context";
 import type { FileOperations } from "./files";
 import type { FolderOperations } from "./folders";

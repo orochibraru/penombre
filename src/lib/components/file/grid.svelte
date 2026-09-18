@@ -6,22 +6,20 @@
 		FolderPlusIcon,
 		UploadIcon,
 	} from "@lucide/svelte";
-	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
-	import type { ObjectItem } from "$lib/api";
-	import FilePrefix from "$lib/components/file/prefix.svelte";
+	import type { ObjectItem } from "#lib/api/index.js";
+	import FilePrefix from "#lib/components/file/prefix.svelte";
 	import {
 		applySelection,
 		selectedCount,
 		setShiftHeld,
-	} from "$lib/components/file/selection.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
-	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
-	import { Skeleton } from "$lib/components/ui/skeleton/index";
-	import * as m from "$lib/paraglide/messages.js";
-	import { locationOf } from "$lib/storage-location";
+	} from "#lib/components/file/selection.svelte.js";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import Checkbox from "#lib/components/ui/checkbox/checkbox.svelte";
+	import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { locationOf } from "#lib/storage-location.js";
 	import {
 		cn,
 		isBrowsableListing,
@@ -33,7 +31,9 @@
 		resolveParentPath,
 		type SharedFileDisplayProps,
 		shouldDisplayAction,
-	} from "$lib/utils";
+	} from "#lib/utils.js";
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
 
 	let {
 		handleOpenItem,

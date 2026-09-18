@@ -1,8 +1,8 @@
-import { loadedOAuthProviders } from "$lib/server/auth";
-import { getConfig } from "$lib/server/config";
-import { Http } from "$lib/server/http";
-import { listAuthProviders } from "$lib/server/openapi/v1/auth";
-import { isOAuthSignInEnabled } from "$lib/server/services/app-settings";
+import { loadedOAuthProviders } from "#lib/server/auth/index.js";
+import { getConfig } from "#lib/server/config.js";
+import { Http } from "#lib/server/http.js";
+import { listAuthProviders } from "#lib/server/openapi/v1/auth.js";
+import { isOAuthSignInEnabled } from "#lib/server/services/app-settings.js";
 
 export const GET = listAuthProviders.handler(async () => {
 	try {

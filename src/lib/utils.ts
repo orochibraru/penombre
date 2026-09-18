@@ -1,13 +1,14 @@
 import clsx, { type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
+import type { ObjectItem, ObjectList } from "#lib/api/index.js";
+import type { ButtonVariant } from "#lib/components/ui/button/index.js";
+import { m } from "#lib/paraglide/messages.js";
+import { getLocale } from "#lib/paraglide/runtime.js";
+import type { StorageLocation } from "#lib/storage-location.js";
 import { resolve } from "$app/paths";
-import type { Pathname } from "$app/types";
-import type { ObjectItem, ObjectList } from "$lib/api";
-import type { ButtonVariant } from "$lib/components/ui/button";
-import { m } from "$lib/paraglide/messages.js";
-import { getLocale } from "$lib/paraglide/runtime";
-import type { StorageLocation } from "$lib/storage-location";
+import type { ReadonlyURL } from "$app/state";
+import type { ResolvedPathname } from "$app/types";
 
 /**
  * A version of clsx that uses tailwind-merge to merge classes.
@@ -333,7 +334,7 @@ export function resolveDropDestination(
 
 export interface BreadCrumb {
 	title: string;
-	href: Pathname;
+	href: ResolvedPathname;
 }
 
 export function stripFolders(filePath: string): string {
@@ -378,7 +379,7 @@ export enum ItemStatus {
 	ERROR = "error",
 }
 
-export function buildOriginUrl(url: URL): URL {
+export function buildOriginUrl(url: ReadonlyURL): URL {
 	return new URL(`${url.protocol}//${url.host}`);
 }
 
@@ -647,6 +648,7 @@ export function etaLabel(seconds: number): string {
 			: seconds < 3600
 				? [Math.round(seconds / 60), "minute"]
 				: [Math.round((seconds / 3600) * 10) / 10, "hour"];
+
 	return new Intl.NumberFormat(locale, {
 		style: "unit",
 		unit,

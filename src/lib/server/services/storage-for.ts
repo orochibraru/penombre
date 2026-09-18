@@ -16,15 +16,15 @@
 
 import type { User } from "better-auth";
 import { and, eq } from "drizzle-orm";
-import { getVolume, type VolumeConfig } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { drives, files, folders, user } from "$lib/server/db/schema";
-import { DriveAccessError } from "$lib/server/errors";
+import { getVolume, type VolumeConfig } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { drives, files, folders, user } from "#lib/server/db/schema.js";
+import { DriveAccessError } from "#lib/server/errors.js";
 import {
 	DRIVE_HEADER,
 	SHARE_HEADER,
 	VOLUME_HEADER,
-} from "$lib/storage-location";
+} from "#lib/storage-location.js";
 import { driveStorage, drivesService, driveVolume } from "./drives";
 import { loadSharedOwner } from "./library-scan";
 import { SharingService } from "./sharings";

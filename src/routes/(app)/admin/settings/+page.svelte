@@ -12,16 +12,16 @@
 	} from "@lucide/svelte";
 	import { onMount, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
-	import { CopyButton } from "$lib/components/ui/copy-button/index.js";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import { enhance } from "$lib/forms";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { Checkbox } from "#lib/components/ui/checkbox/index.js";
+	import { CopyButton } from "#lib/components/ui/copy-button/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import { enhance } from "#lib/forms.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 
 	onMount(() => {
 		title.set(m.admin_nav_settings());

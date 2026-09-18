@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { trashFolder } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { trashFolder } from "#lib/server/openapi/v1/storage.js";
 
 export const POST = trashFolder.handler(async ({ params, body, service }) => {
 	const folderPath = service.getFullFolderPath(

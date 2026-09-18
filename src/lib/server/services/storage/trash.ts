@@ -7,8 +7,8 @@
  */
 
 import { and, eq, inArray } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import { files, folders } from "$lib/server/db/schema";
+import { Logger } from "#lib/logger.js";
+import { files, folders } from "#lib/server/db/schema.js";
 import type { StorageContext } from "./context";
 import { ancestorFolders } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";

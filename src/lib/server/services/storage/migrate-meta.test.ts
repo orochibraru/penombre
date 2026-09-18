@@ -10,13 +10,13 @@ import {
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getDb } from "$lib/server/db";
+import { getDb } from "#lib/server/db/index.js";
 
 // ---------------------------------------------------------------------------
 // Mock config (static value is fine — storage path is injected via parameter)
 // ---------------------------------------------------------------------------
 
-mock.module("$lib/server/config", () => ({
+mock.module("#lib/server/config.js", () => ({
 	getConfig: () => ({
 		smtp: undefined,
 		appName: "Penombre",

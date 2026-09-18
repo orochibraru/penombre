@@ -8,10 +8,10 @@
  */
 
 import { eq } from "drizzle-orm";
-import { envProvided, getConfig } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import type { AppSettingsData } from "$lib/server/db/schema";
-import { appSettings } from "$lib/server/db/schema";
+import { envProvided, getConfig } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import type { AppSettingsData } from "#lib/server/db/schema.js";
+import { appSettings } from "#lib/server/db/schema.js";
 
 /** Single-row table; the id is a constant. */
 const ROW_ID = "instance";

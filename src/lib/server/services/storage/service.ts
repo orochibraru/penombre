@@ -5,20 +5,23 @@ import { join } from "node:path";
 import type { Readable } from "node:stream";
 import type { Archiver } from "archiver";
 import type { User } from "better-auth";
-import { Logger } from "$lib/logger";
-import { type CacheBackend, NullCacheBackend } from "$lib/server/cache";
+import { Logger } from "#lib/logger.js";
+import {
+	type CacheBackend,
+	NullCacheBackend,
+} from "#lib/server/cache/index.js";
 import {
 	getStoragePath,
 	isSimpleMode,
 	type VolumeConfig,
-} from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { user } from "$lib/server/db/schema";
+} from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { user } from "#lib/server/db/schema.js";
 import {
 	DriveAccessError,
 	FileOrFolderNotFoundError,
 	ReadOnlyVolumeError,
-} from "$lib/server/errors";
+} from "#lib/server/errors.js";
 import type {
 	DirectoryList,
 	FileCategory,
@@ -30,8 +33,8 @@ import type {
 	ObjectList,
 	UpdateFile,
 	UploadResult,
-} from "$lib/server/schema";
-import { ActivityService } from "$lib/server/services/activity";
+} from "#lib/server/schema.js";
+import { ActivityService } from "#lib/server/services/activity.js";
 import { CacheKeys, CacheManager } from "./cache";
 import type { StorageContext, StorageScope } from "./context";
 import { availableDiskSpace } from "./disk-space";

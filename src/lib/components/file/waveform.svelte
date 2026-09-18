@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as Tooltip from "$lib/components/ui/tooltip/index";
-	import type { NoteMarker } from "$lib/store/notes";
-	import { cn } from "$lib/utils";
+	import * as Tooltip from "#lib/components/ui/tooltip/index.js";
+	import type { NoteMarker } from "#lib/store/notes.js";
+	import { cn } from "#lib/utils.js";
 
 	/**
 	 * An audio waveform drawn from peak data.

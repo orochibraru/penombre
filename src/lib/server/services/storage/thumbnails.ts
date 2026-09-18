@@ -14,8 +14,8 @@ import { join } from "node:path";
 import process from "node:process";
 import { and, eq } from "drizzle-orm";
 import sharp from "sharp";
-import { Logger } from "$lib/logger";
-import { files } from "$lib/server/db/schema";
+import { Logger } from "#lib/logger.js";
+import { files } from "#lib/server/db/schema.js";
 import type { StorageContext } from "./context";
 import { ownedFiles } from "./scope";
 

@@ -5,17 +5,17 @@
 		FileCodeIcon,
 		FileVideoCameraIcon,
 	} from "@lucide/svelte";
+	import type { ObjectItem } from "#lib/api/index.js";
+	import DocumentIcon from "#lib/components/file/document-icon.svelte";
+	import DocumentKindIcon from "#lib/components/file/document-kind-icon.svelte";
+	import Waveform from "#lib/components/file/waveform.svelte";
+	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.js";
+	import { kindForName } from "#lib/documents.js";
+	import { isCodeItem } from "#lib/file-utils.js";
+	import { getObjectUrl } from "#lib/url.js";
+	import { getFileIconType } from "#lib/utils.js";
 	import { page } from "$app/state";
-	import type { ObjectItem } from "$lib/api";
-	import DocumentIcon from "$lib/components/file/document-icon.svelte";
-	import DocumentKindIcon from "$lib/components/file/document-kind-icon.svelte";
-	import Waveform from "$lib/components/file/waveform.svelte";
-	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
-	import { Skeleton } from "$lib/components/ui/skeleton/index.js";
-	import { kindForName } from "$lib/documents";
-	import { isCodeItem } from "$lib/file-utils";
-	import { getObjectUrl } from "$lib/url";
-	import { getFileIconType } from "$lib/utils";
 
 	interface Props {
 		item: ObjectItem;

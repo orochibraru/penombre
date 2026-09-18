@@ -7,9 +7,9 @@
  */
 
 import type { User } from "better-auth";
-import type { CacheBackend } from "$lib/server/cache";
-import type { getDb } from "$lib/server/db";
-import type { ActivityService } from "$lib/server/services/activity";
+import type { CacheBackend } from "#lib/server/cache/index.js";
+import type { getDb } from "#lib/server/db/index.js";
+import type { ActivityService } from "#lib/server/services/activity.js";
 import type { StorageDriver } from "./driver";
 
 export interface StorageContext {

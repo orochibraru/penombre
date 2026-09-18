@@ -1,14 +1,14 @@
 import { fail, redirect } from "@sveltejs/kit";
+import { createFirstAdmin, needsSetup } from "#lib/server/auth/seed.js";
+import { getConfig } from "#lib/server/config.js";
+import { requestLibraryScan } from "#lib/server/services/library-scan.js";
 import { resolve } from "$app/paths";
-import { createFirstAdmin, needsSetup } from "$lib/server/auth/seed";
-import { getConfig } from "$lib/server/config";
-import { requestLibraryScan } from "$lib/server/services/library-scan";
 
 export const load = async () => {
 	// Reachable exactly once. Afterwards it is just the sign-in page, so a
 	// stale bookmark cannot be used to add a second "first" administrator.
 	if (!(await needsSetup())) {
-		redirect(302, resolve("/auth/sign-in"));
+		redirect(302, resolve("auth/sign-in"));
 	}
 	return { minPasswordLength: getConfig().auth.minPasswordLength };
 };
@@ -51,6 +51,6 @@ export const actions = {
 		// until the next interval tick, which reads as a broken scanner.
 		requestLibraryScan();
 
-		redirect(303, resolve("/auth/sign-in"));
+		redirect(303, resolve("auth/sign-in"));
 	},
 };

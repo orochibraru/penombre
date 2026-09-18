@@ -1,8 +1,8 @@
 <script lang="ts">
+	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
+	import type { AppConfig } from "#lib/server/config.js";
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
-	import * as Sidebar from "$lib/components/ui/sidebar/index";
-	import type { AppConfig } from "$lib/server/config";
 
 	const config: AppConfig = $derived(page.data.config);
 </script>
@@ -11,7 +11,7 @@
     <Sidebar.MenuItem>
         <Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:p-1.5!">
             {#snippet child({ props })}
-                <a href={resolve("/")} {...props}>
+                <a href={resolve("/(app)")} {...props}>
                     <img
                         src="/logo.svg"
                         alt={`${config.appName} logo`}

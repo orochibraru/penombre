@@ -1,5 +1,5 @@
 import { describe, expect, type Mock, mock, test } from "bun:test";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db/index.js";
 
 const mockSelect = db.select as Mock<typeof db.select>;
 

@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, type Mock, mock, test } from "bun:test";
-import type { File as DbFile, Folder as DbFolder } from "$lib/server/db/schema";
+import type {
+	File as DbFile,
+	Folder as DbFolder,
+} from "#lib/server/db/schema.js";
 import type { StorageDriver } from "./driver";
 
 // ---------------------------------------------------------------------------
@@ -37,7 +40,7 @@ mock.module("./driver", () => ({
 	},
 }));
 
-mock.module("$lib/server/config", () => ({
+mock.module("#lib/server/config.js", () => ({
 	getConfig: () => ({
 		smtp: undefined,
 		appName: "Penombre",
@@ -59,7 +62,7 @@ mock.module("$lib/server/config", () => ({
 	isAuthBypassed: () => false,
 }));
 
-mock.module("$lib/server/services/activity", () => ({
+mock.module("#lib/server/services/activity.js", () => ({
 	ActivityService: class {
 		register = mockRegister;
 	},
@@ -113,7 +116,7 @@ mock.module("./cache", () => {
 // ---------------------------------------------------------------------------
 // Extend the shared mockDb with update + delete chains
 // ---------------------------------------------------------------------------
-import { getDb } from "$lib/server/db";
+import { getDb } from "#lib/server/db/index.js";
 
 const rawDb = getDb() as unknown as Record<string, unknown>;
 
@@ -147,7 +150,7 @@ const mockInsert = rawDb.insert as Mock<() => unknown>;
 // ---------------------------------------------------------------------------
 const { StorageService } = await import("./service");
 const { DriveAccessError, FileOrFolderNotFoundError, ReadOnlyVolumeError } =
-	await import("$lib/server/errors");
+	await import("#lib/server/errors.js");
 
 // ---------------------------------------------------------------------------
 // Fixtures

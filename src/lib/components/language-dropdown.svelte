@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { CheckIcon } from "@lucide/svelte";
-	import { Label } from "$lib/components/ui/label";
-	import * as Select from "$lib/components/ui/select/index.js";
-	import * as m from "$lib/paraglide/messages.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import * as Select from "#lib/components/ui/select/index.js";
+	import * as m from "#lib/paraglide/messages.js";
 	import {
 		getLocale,
 		type Locale,
 		locales,
 		setLocale,
-	} from "$lib/paraglide/runtime";
-	import { cn } from "$lib/utils";
+	} from "#lib/paraglide/runtime.js";
+	import { cn } from "#lib/utils.js";
 
 	interface Props {
 		/**

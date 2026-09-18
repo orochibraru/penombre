@@ -1,9 +1,9 @@
 import { Readable } from "node:stream";
 import { error } from "@sveltejs/kit";
 import type { User } from "better-auth";
-import type { Share } from "$lib/server/db/schema";
-import { ShareService, unlockCookieName } from "$lib/server/services/shares";
-import { StorageService } from "$lib/server/services/storage";
+import type { Share } from "#lib/server/db/schema.js";
+import { ShareService, unlockCookieName } from "#lib/server/services/shares.js";
+import { StorageService } from "#lib/server/services/storage/index.js";
 
 const shares = new ShareService();
 

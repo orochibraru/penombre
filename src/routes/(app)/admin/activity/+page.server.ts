@@ -1,4 +1,4 @@
-import { ActivityService } from "$lib/server/services/activity";
+import { ActivityService } from "#lib/server/services/activity.js";
 
 const PAGE_SIZE = 100;
 

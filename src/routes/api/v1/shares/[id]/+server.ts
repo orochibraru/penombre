@@ -1,6 +1,6 @@
-import { Http } from "$lib/server/http";
-import { revokeShare } from "$lib/server/openapi/v1/shares";
-import { ShareService } from "$lib/server/services/shares";
+import { Http } from "#lib/server/http.js";
+import { revokeShare } from "#lib/server/openapi/v1/shares.js";
+import { ShareService } from "#lib/server/services/shares.js";
 
 const shares = new ShareService();
 

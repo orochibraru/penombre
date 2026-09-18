@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { getFolderSize } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { getFolderSize } from "#lib/server/openapi/v1/storage.js";
 
 export const GET = getFolderSize.handler(async ({ params, query, service }) => {
 	let folderPath: string | null;

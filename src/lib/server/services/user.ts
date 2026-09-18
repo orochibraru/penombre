@@ -1,7 +1,7 @@
 import type { User } from "better-auth";
 import { eq } from "drizzle-orm";
-import { db } from "$lib/server/db";
-import { user } from "$lib/server/db/schema";
+import { db } from "#lib/server/db/index.js";
+import { user } from "#lib/server/db/schema.js";
 
 export async function getUserById(userId: string): Promise<User | null> {
 	const match = await db

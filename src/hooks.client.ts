@@ -1,5 +1,5 @@
-import type { HandleClientError } from "@sveltejs/kit";
-import { dev } from "$app/environment";
+import type { HandleClientError } from "@sveltejs/kit/hooks";
+import { dev } from "$app/env";
 
 function makeid(length: number) {
 	let result = "";
@@ -12,7 +12,11 @@ function makeid(length: number) {
 	return result;
 }
 
-export const handleError: HandleClientError = ({ error }) => {
+export const handleError: HandleClientError = ({ error, kind }) => {
+	if (kind !== "unknown") {
+		return;
+	}
+
 	const errorId = makeid(24);
 
 	if (dev) {

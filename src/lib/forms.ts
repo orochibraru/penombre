@@ -1,7 +1,11 @@
-import type { ActionResult, SubmitFunction } from "@sveltejs/kit";
 import { toast } from "svelte-sonner";
-import { deserialize, enhance as kitEnhance } from "$app/forms";
-import { m } from "$lib/paraglide/messages.js";
+import { m } from "#lib/paraglide/messages.js";
+import {
+	type ActionResult,
+	deserialize,
+	enhance as kitEnhance,
+	type SubmitFunction,
+} from "$app/forms";
 
 /**
  * A body that is not an ActionResult — SvelteKit's cross-site 403, a proxy's
@@ -39,7 +43,8 @@ export function deserializeAction(body: string): ActionResult {
 	try {
 		result = deserialize(body);
 	} catch {
-		result = { type: "failure", status: 400 };
+		// No action URL to report; callers read `type`, never hand this to `update`.
+		result = { type: "failure", status: 400, location: "" };
 		toast.error(m.error_title(), { description: m.request_failed() });
 		return result;
 	}

@@ -6,6 +6,7 @@ import {
 	expectItemVisible,
 	goToBrowse,
 	rightClickItem,
+	sameOrigin,
 	waitForDialog,
 } from "../helpers";
 
@@ -44,7 +45,9 @@ test.describe("copy and move between drives", () => {
 		}
 		const drives = (await resp.json()).data as { id: string; name: string }[];
 		for (const drive of drives.filter((d) => d.name.startsWith(PREFIX))) {
-			await request.delete(`/api/v1/drives/${drive.id}`);
+			await request.delete(`/api/v1/drives/${drive.id}`, {
+				headers: sameOrigin(),
+			});
 		}
 	});
 

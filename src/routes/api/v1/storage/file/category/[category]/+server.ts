@@ -1,6 +1,9 @@
-import { Http } from "$lib/server/http";
-import { listFilesByCategory } from "$lib/server/openapi/v1/storage";
-import { allowedFileCategories, type FileCategory } from "$lib/server/schema";
+import { Http } from "#lib/server/http.js";
+import { listFilesByCategory } from "#lib/server/openapi/v1/storage.js";
+import {
+	allowedFileCategories,
+	type FileCategory,
+} from "#lib/server/schema.js";
 
 export const GET = listFilesByCategory.handler(async ({ params, service }) => {
 	const cat = params.category?.toUpperCase();

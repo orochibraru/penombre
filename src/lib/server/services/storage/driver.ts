@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { getStoragePath } from "$lib/server/config";
+import { getStoragePath } from "#lib/server/config.js";
 import { LocalStorageDriver } from "./drivers/local";
 
 /**

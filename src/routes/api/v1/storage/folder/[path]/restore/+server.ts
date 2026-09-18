@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { restoreFolder } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { restoreFolder } from "#lib/server/openapi/v1/storage.js";
 
 export const POST = restoreFolder.handler(async ({ params, body, service }) => {
 	const folderPath = service.getFullFolderPath(
