@@ -14,24 +14,24 @@ import {
 } from "@lucide/svelte";
 import type { MediaQuery } from "svelte/reactivity";
 import { toast } from "svelte-sonner";
-import { dev } from "$app/environment";
-import { goto } from "$app/navigation";
-import { resolve } from "$app/paths";
-import { page } from "$app/state";
-import { api, type ObjectItem, type ObjectList } from "$lib/api";
-import type { SupportedLanguage } from "$lib/components/ui/code/shiki";
-import { editorKindForName } from "$lib/documents";
-import { determineCodeFileLanguage } from "$lib/file-utils";
-import * as m from "$lib/paraglide/messages.js";
-import { itemAction } from "$lib/store/actions";
-import { playableMusic } from "$lib/store/music";
-import { getObjectUrl } from "$lib/url";
+import { api, type ObjectItem, type ObjectList } from "#lib/api/index.js";
+import type { SupportedLanguage } from "#lib/components/ui/code/shiki.js";
+import { editorKindForName } from "#lib/documents.js";
+import { determineCodeFileLanguage } from "#lib/file-utils.js";
+import * as m from "#lib/paraglide/messages.js";
+import { itemAction } from "#lib/store/actions.js";
+import { playableMusic } from "#lib/store/music.js";
+import { getObjectUrl } from "#lib/url.js";
 import type {
 	ItemActionGroup,
 	MultipleItemsAction,
 	SortColumn,
 	SortDirection,
-} from "$lib/utils";
+} from "#lib/utils.js";
+import { dev } from "$app/env";
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
+import { page } from "$app/state";
 import { peaksUrl, withLocation } from "./file-links";
 
 export {
@@ -153,6 +153,7 @@ export function getTrashFilePromise(
 	const fileName = itemPath.includes("/")
 		? (itemPath.split("/").pop() ?? itemPath)
 		: itemPath;
+
 	const folder = itemPath.includes("/")
 		? itemPath.split("/").slice(0, -1).join("/")
 		: undefined;
@@ -199,6 +200,7 @@ export function getRestoreFilePromise(
 	const fileName = itemPath.includes("/")
 		? (itemPath.split("/").pop() ?? itemPath)
 		: itemPath;
+
 	const folder = itemPath.includes("/")
 		? itemPath.split("/").slice(0, -1).join("/")
 		: undefined;
@@ -560,6 +562,7 @@ export function movesIntoItself(
 	destinationFolder: string,
 ): boolean {
 	const folderPath = fullItemKey.replace(/\/$/, "");
+
 	return (
 		destinationFolder === folderPath ||
 		destinationFolder.startsWith(`${folderPath}/`)

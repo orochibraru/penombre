@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, type Mock, mock, test } from "bun:test";
-import { envProvided, getConfig } from "$lib/server/config";
-import { db } from "$lib/server/db";
+import { envProvided, getConfig } from "#lib/server/config.js";
+import { db } from "#lib/server/db/index.js";
 
 const mockSelect = db.select as Mock<typeof db.select>;
 const mockEnvProvided = envProvided as Mock<typeof envProvided>;

@@ -29,47 +29,47 @@
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import { navigating, page } from "$app/state";
-	import NewFolderDialog from "$lib/components/layout/dialogs/new-folder-dialog.svelte";
-	import UploadDialog from "$lib/components/layout/dialogs/upload-dialog.svelte";
-	import SiteHeader from "$lib/components/layout/header.svelte";
-	import MusicPlayer from "$lib/components/layout/music-player.svelte";
+	import NewFolderDialog from "#lib/components/layout/dialogs/new-folder-dialog.svelte";
+	import UploadDialog from "#lib/components/layout/dialogs/upload-dialog.svelte";
+	import SiteHeader from "#lib/components/layout/header.svelte";
+	import MusicPlayer from "#lib/components/layout/music-player.svelte";
 	import Nav, {
 		accentIconClass,
 		type NavItem,
 		type NavMenus,
-	} from "$lib/components/layout/nav.svelte";
-	import Onboarding from "$lib/components/layout/onboarding.svelte";
-	import UploadProgressIndicator from "$lib/components/layout/upload-progress-indicator.svelte";
-	import VersionCheck from "$lib/components/layout/version-check.svelte";
-	import SidebarBranding from "$lib/components/sidebar-branding.svelte";
-	import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
-	import * as Drawer from "$lib/components/ui/drawer/index";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-	import * as Sidebar from "$lib/components/ui/sidebar/index";
-	import Spinner from "$lib/components/ui/spinner.svelte";
+	} from "#lib/components/layout/nav.svelte";
+	import Onboarding from "#lib/components/layout/onboarding.svelte";
+	import UploadProgressIndicator from "#lib/components/layout/upload-progress-indicator.svelte";
+	import VersionCheck from "#lib/components/layout/version-check.svelte";
+	import SidebarBranding from "#lib/components/sidebar-branding.svelte";
+	import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
+	import * as Drawer from "#lib/components/ui/drawer/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
+	import Spinner from "#lib/components/ui/spinner.svelte";
 	import {
 		createDocument,
 		DOCUMENT_KINDS,
 		type DocumentKind,
-	} from "$lib/documents";
-	import { FileCategoryEnum } from "$lib/file-helpers";
-	import { m } from "$lib/paraglide/messages.js";
-	import { sidebarItems } from "$lib/sidebar";
-	import { customMenu } from "$lib/store/custom-menu";
-	import { playableMusic } from "$lib/store/music";
-	import { title } from "$lib/store/title";
+	} from "#lib/documents.js";
+	import { FileCategoryEnum } from "#lib/file-helpers.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { sidebarItems } from "#lib/sidebar.js";
+	import { customMenu } from "#lib/store/custom-menu.js";
+	import { playableMusic } from "#lib/store/music.js";
+	import { title } from "#lib/store/title.js";
 	import {
 		closeAllDialogs,
 		globalUploadProgress,
 		newFolderDialogOpen,
 		uploadDialogOpen,
-	} from "$lib/store/upload";
-	import { applyTheme } from "$lib/theme";
-	import { resumeUploads } from "$lib/upload/manager";
-	import { cn } from "$lib/utils";
+	} from "#lib/store/upload.js";
+	import { applyTheme } from "#lib/theme.js";
+	import { resumeUploads } from "#lib/upload/manager.js";
+	import { cn } from "#lib/utils.js";
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { navigating, page } from "$app/state";
 
 	const { children, data } = $props();
 
@@ -303,6 +303,7 @@
 								drive.role === "viewer" ? HardDriveDownloadIcon : HardDriveIcon,
 						}),
 					),
+
 					...(sidebarDriveList.hidden > 0
 						? ([
 								{
@@ -332,6 +333,7 @@
 							icon: entry.resourceType === "folder" ? FolderIcon : FileIcon,
 						}),
 					),
+
 					...(sidebarShareList.hidden > 0
 						? ([
 								{
@@ -369,11 +371,7 @@
 						},
 					] satisfies NavItem[])
 				: []),
-			{
-				title: m.nav_api(),
-				url: "/api-docs",
-				icon: PlugIcon,
-			},
+			{ title: m.nav_api(), url: "/api-docs", icon: PlugIcon },
 		],
 	});
 
@@ -384,13 +382,19 @@
 	 */
 	const mobileNavGroups = $derived(
 		[
-			{ title: m.nav_general(), items: nav.general ?? [] },
-			{ title: m.nav_drives(), items: nav.drives ?? [] },
-			{ title: m.nav_shared_with_me(), items: nav.sharedWithMe ?? [] },
-			{ title: m.nav_volumes(), items: nav.volumes ?? [] },
-			{ title: m.nav_categories(), items: nav.categories ?? [] },
-			{ title: m.nav_help(), items: nav.help ?? [] },
-		].filter((group) => group.items.length > 0),
+			{ title: m.nav_general(), items: nav.general },
+			{ title: m.nav_drives(), items: nav.drives },
+			{ title: m.nav_shared_with_me(), items: nav.sharedWithMe },
+			{ title: m.nav_volumes(), items: nav.volumes },
+			{ title: m.nav_categories(), items: nav.categories },
+			{ title: m.nav_help(), items: nav.help },
+		].filter((group) => {
+			if (!group.items) {
+				return false;
+			}
+
+			return group.items.length > 0;
+		}),
 	);
 
 	/**
@@ -440,201 +444,182 @@
 	);
 </script>
 
-<svelte:window onscroll={onWindowScroll} />
-
-<svelte:head>
-    <title>{data.config.appName} - {$title ?? m.home()}</title>
-</svelte:head>
+<svelte:window onscroll={onWindowScroll}></svelte:window>
+<svelte:head><title>{data.config.appName} - {$title ?? m.home()}</title></svelte:head>
 
 <Sidebar.Provider
     style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
 >
-    <Sidebar.Root collapsible="icon" variant="inset">
-        <Sidebar.Header>
-            <SidebarBranding />
-            {#if showUploadButton}
-                <div class="hidden md:block">
-                    <DropdownMenu.Root bind:open={newMenuOpen}>
-                        <DropdownMenu.Trigger>
-                            {#snippet child({ props })}
-                                <Button
-                                    {...props}
-                                    loading={uploadLoading}
-                                    aria-label={m.new()}
-                                    class="relative w-full overflow-hidden group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
-                                >
-                                    {#if $globalUploadProgress.isUploading}
-                                        <div
-                                            class="absolute inset-0 bg-primary/20 transition-all"
-                                            style="width: {$globalUploadProgress.progress}%"
-                                        ></div>
-                                        <span
-                                            class="relative z-10 group-data-[collapsible=icon]:hidden"
-                                        >
-                                            {m.uploading_progress({
+	<Sidebar.Root collapsible="icon" variant="inset">
+		<Sidebar.Header>
+			<SidebarBranding />
+			{#if showUploadButton}
+				<div class="hidden md:block">
+					<DropdownMenu.Root bind:open={newMenuOpen}>
+						<DropdownMenu.Trigger>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									loading={uploadLoading}
+									aria-label={m.new()}
+									class="relative w-full overflow-hidden group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
+								>
+									{#if $globalUploadProgress.isUploading}
+										<div
+											class="absolute inset-0 bg-primary/20 transition-all"
+											style="width: {$globalUploadProgress.progress}%"
+										></div>
+										<span
+											class="relative z-10 group-data-[collapsible=icon]:hidden"
+										>
+											{m.uploading_progress({
                                                 progress: String(
                                                     $globalUploadProgress.progress,
                                                 ),
                                                 count: String(
                                                     $globalUploadProgress.count,
                                                 ),
-                                            })}
-                                        </span>
-                                    {:else}
-                                        <!-- Icon only in the collapsed rail: the label does not fit in 2rem. -->
+											})}
+										</span>
+									{:else}
+										<!-- Icon only in the collapsed rail: the label does not fit in 2rem. -->
                                         <span
                                             class="group-data-[collapsible=icon]:hidden"
                                         >
                                             {m.new()}
                                         </span>
-                                        <SquarePlusIcon />
-                                    {/if}
-                                </Button>
-                            {/snippet}
-                        </DropdownMenu.Trigger>
-                        <DropdownMenu.Content class="w-56" align="start">
-                            <DropdownMenu.Group>
-                                <DropdownMenu.Item
-                                    class="font-medium"
-                                    onclick={() =>
-                                        ($newFolderDialogOpen = true)}
-                                >
-                                    <FolderPlusIcon />
-                                    {m.folder()}
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Item
-                                    class="font-medium"
-                                    onclick={() => ($uploadDialogOpen = true)}
-                                >
-                                    <CloudUploadIcon />
-                                    {m.file_upload()}
-                                </DropdownMenu.Item>
-                            </DropdownMenu.Group>
-                            <DropdownMenu.Separator />
-                            <DropdownMenu.Group>
-                                {#each newDocumentKinds as entry (entry.kind)}
-                                    {@const Icon = entry.icon}
-                                    <DropdownMenu.Item
-                                        class="font-medium"
-                                        disabled={creatingDocument}
-                                        onclick={() => newDocument(entry.kind)}
+										<SquarePlusIcon />
+									{/if}
+								</Button>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content class="w-56" align="start">
+							<DropdownMenu.Group>
+								<DropdownMenu.Item
+									class="font-medium"
+									onclick={() => $newFolderDialogOpen = true}
+								><FolderPlusIcon />{m.folder()}</DropdownMenu.Item>
+
+								<DropdownMenu.Item
+									class="font-medium"
+									onclick={() => $uploadDialogOpen = true}
+								><CloudUploadIcon />{m.file_upload()}</DropdownMenu.Item>
+							</DropdownMenu.Group>
+							<DropdownMenu.Separator />
+							<DropdownMenu.Group>
+								{#each newDocumentKinds as entry (entry.kind)}
+									{@const Icon = entry.icon}
+									<DropdownMenu.Item
+										class="font-medium"
+										disabled={creatingDocument}
+										onclick={() => newDocument(entry.kind)}
                                     >
                                         <Icon class={entry.color} />
                                         {entry.label}
                                     </DropdownMenu.Item>
-                                {/each}
-                            </DropdownMenu.Group>
-                        </DropdownMenu.Content>
-                    </DropdownMenu.Root>
-                </div>
-            {/if}
-        </Sidebar.Header>
-        <Sidebar.Content>
-            <Nav title={m.nav_general()} items={nav.general} />
-            {#if (nav.drives ?? []).length > 0}
-                <Nav title={m.nav_drives()} items={nav.drives ?? []} />
-            {/if}
-            {#if (nav.sharedWithMe ?? []).length > 0}
-                <Nav
-                    title={m.nav_shared_with_me()}
-                    items={nav.sharedWithMe ?? []}
-                />
-            {/if}
-            {#if (nav.volumes ?? []).length > 0}
-                <Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
-            {/if}
-            {#if !simpleMode}
-                <Nav title={m.nav_categories()} items={nav.categories} />
-            {/if}
+								{/each}
+							</DropdownMenu.Group>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+				</div>
+			{/if}
+		</Sidebar.Header>
+		<Sidebar.Content>
+			<Nav title={m.nav_general()} items={nav.general} />
+			{#if (nav.drives ?? []).length > 0}
+				<Nav title={m.nav_drives()} items={nav.drives ?? []} />
+			{/if}
+			{#if (nav.sharedWithMe ?? []).length > 0}
+				<Nav
+					title={m.nav_shared_with_me()}
+					items={nav.sharedWithMe ?? []}
+				/>
+			{/if}
+			{#if (nav.volumes ?? []).length > 0}
+				<Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
+			{/if}
+			{#if !simpleMode}
+				<Nav title={m.nav_categories()} items={nav.categories} />
+			{/if}
             <Nav title={m.nav_help()} items={nav.help} class="mt-auto" />
-            <VersionCheck config={data.config} version={data.versionCheck} />
-        </Sidebar.Content>
-    </Sidebar.Root>
+			<VersionCheck config={data.config} version={data.versionCheck} />
+		</Sidebar.Content>
+	</Sidebar.Root>
 
-    <Sidebar.Inset>
-        <SiteHeader user={data.user} />
-        <div
+	<Sidebar.Inset>
+		<SiteHeader user={data.user} />
+		<div
             class={cn(
                 "flex flex-1 flex-col pb-46 transition-all ",
                 $playableMusic !== null ? "lg:pb-26" : "lg:pb-5",
             )}
-        >
-            <div
-                class="main-container @container/main flex flex-1 flex-col gap-5 p-5"
-            >
-                {@render children()}
-            </div>
-        </div>
-        <MusicPlayer />
-        <div
+		>
+			<div
+				class="main-container @container/main flex flex-1 flex-col gap-5 p-5"
+			>{@render children()}</div>
+		</div>
+
+		<MusicPlayer />
+		<div
             class={cn(
                 "bg-background fixed bottom-0 left-0 w-full rounded-t-4xl border-t px-8 py-2 transition-transform duration-300 md:hidden",
                 bottomBarHidden && "translate-y-full",
             )}
-        >
-            <div class="flex items-center justify-between gap-5">
-                <a
-                    href={resolve("/browse")}
-                    class={cn(
-                        bottomNavItemClass,
-                        isActive("/browse") ? "text-primary" : "",
-                    )}
-                >
-                    <FolderIcon class={bottomNavItemIconClass} />
-                    {m.home()}
-                </a>
-                {#if !simpleMode}
-                    <a
-                        href={resolve("/recent")}
-                        class={cn(
-                            bottomNavItemClass,
-                            isActive("/recent") ? "text-primary" : "",
-                        )}
-                    >
-                        <ClockFadingIcon class={bottomNavItemIconClass} />
-                        {m.nav_recent()}
-                    </a>
-                {/if}
+		>
+			<div class="flex items-center justify-between gap-5">
+				<a
+					href={resolve('browse')}
+					class={cn(bottomNavItemClass, isActive("/browse") ? "text-primary" : "")}
+				>
+					<FolderIcon class={bottomNavItemIconClass} />
+					{m.home()}
+				</a>
+				{#if !simpleMode}
+					<a
+						href={resolve('recent')}
+						class={cn(bottomNavItemClass, isActive("/recent") ? "text-primary" : "")}
+					>
+						<ClockFadingIcon class={bottomNavItemIconClass} />
+						{m.nav_recent()}
+					</a>
+				{/if}
 
-                <!-- The account lives in the header's avatar menu, as on desktop. -->
-                {#if !simpleMode}
-                    <a
-                        href={resolve("/starred")}
-                        class={cn(
-                            bottomNavItemClass,
-                            isActive("/starred") ? "text-primary" : "",
-                        )}
-                    >
-                        <StarIcon class={bottomNavItemIconClass} />
-                        {m.nav_starred()}
-                    </a>
-                {/if}
+				<!-- The account lives in the header's avatar menu, as on desktop. -->
+				{#if !simpleMode}
+					<a
+						href={resolve('starred')}
+						class={cn(bottomNavItemClass, isActive("/starred") ? "text-primary" : "")}
+					>
+						<StarIcon class={bottomNavItemIconClass} />
+						{m.nav_starred()}
+					</a>
+				{/if}
 
-                <!-- One drawer for everything, and the last item rather than a
+				<!-- One drawer for everything, and the last item rather than a
                      floating button: simple mode leaves so few entries that a
                      raised circle between two of them read as an accident.
                      Settings lives in it, not in this bar. -->
-                <button
-                    onclick={() => (mobileMenuDrawerOpen = true)}
-                    title={m.menu()}
-                    class={bottomNavItemClass}
-                >
-                    {#if $globalUploadProgress.isUploading}
-                        <span
-                            class="text-primary {bottomNavItemIconClass} flex items-center justify-center text-[0.65rem] font-bold"
+				<button
+					onclick={() => mobileMenuDrawerOpen = true}
+					title={m.menu()}
+					class={bottomNavItemClass}
+				>
+					{#if $globalUploadProgress.isUploading}
+						<span
+							class="text-primary {bottomNavItemIconClass} flex items-center justify-center text-[0.65rem] font-bold"
                         >
                             {$globalUploadProgress.progress}%
                         </span>
-                    {:else if uploadLoading}
-                        <Spinner class={bottomNavItemIconClass} />
-                    {:else}
-                        <MenuIcon class={bottomNavItemIconClass} />
-                    {/if}
-                    {m.menu()}
-                </button>
-            </div>
-        </div>
-    </Sidebar.Inset>
+					{:else if uploadLoading}
+						<Spinner class={bottomNavItemIconClass} />
+					{:else}
+						<MenuIcon class={bottomNavItemIconClass} />
+					{/if}
+					{m.menu()}
+				</button>
+			</div>
+		</div>
+	</Sidebar.Inset>
 </Sidebar.Provider>
 
 <Onboarding bind:open={onboardingOpen} preferences={data.preferences} />
@@ -649,121 +634,117 @@
   with the create/upload actions on top and any page-provided menu above those.
 -->
 <Drawer.Root bind:open={mobileMenuDrawerOpen}>
-    <Drawer.Content class="z-50 max-h-[85svh]">
+	<Drawer.Content class="z-50 max-h-[85svh]">
         <Drawer.Header>
             <Drawer.Title class="text-lg">
                 {$customMenu?.title ?? m.menu()}
             </Drawer.Title>
         </Drawer.Header>
         <div class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
-            {#if $customMenu}
-                <div class="flex flex-col gap-2">
-                    {#each $customMenu.items as item (item.url)}
-                        {@const Icon = item.icon}
-                        <a
-                            href={item.url}
-                            class={cn(
-                                buttonVariants({
+			{#if $customMenu}
+				<div class="flex flex-col gap-2">
+					{#each $customMenu.items as item (item.url)}
+						{@const Icon = item.icon}
+						<a
+							href={item.url}
+							class={cn(
+								buttonVariants({
                                     variant: isItemActive(item)
                                         ? "default"
                                         : "outline",
                                     size: "lg",
-                                }),
+								}),
                                 "w-full justify-start",
-                            )}
-                            onclick={() => (mobileMenuDrawerOpen = false)}
-                        >
-                            <Icon class={cn(mobileIconClass(item), "w-5! h-5!")} />
-                            {item.title}
-                        </a>
-                    {/each}
-                </div>
-            {/if}
+							)}
+							onclick={() => mobileMenuDrawerOpen = false}
+						>
+							<Icon class={cn(mobileIconClass(item), "w-5! h-5!")} />
+							{item.title}
+						</a>
+					{/each}
+				</div>
+			{/if}
 
-            {#if showUploadButton}
-                <!-- One button, not six rows: the actions push the whole
+			{#if showUploadButton}
+				<!-- One button, not six rows: the actions push the whole
                      navigation below the fold on a phone. -->
-                <Drawer.NestedRoot bind:open={mobileNewDrawerOpen}>
-                    <Button
-                        class="w-full"
-                        size="lg"
-                        onclick={() => (mobileNewDrawerOpen = true)}
-                    >
-                        <SquarePlusIcon class="w-5! h-5!" />
-                        {m.new()}
-                    </Button>
-                    <Drawer.Content class="z-50 max-h-[85svh]">
+				<Drawer.NestedRoot bind:open={mobileNewDrawerOpen}>
+					<Button
+						class="w-full"
+						size="lg"
+						onclick={() => mobileNewDrawerOpen = true}
+					><SquarePlusIcon class="w-5! h-5!" />{m.new()}</Button>
+
+					<Drawer.Content class="z-50 max-h-[85svh]">
                         <Drawer.Header>
                             <Drawer.Title class="text-lg">{m.new()}</Drawer.Title>
                         </Drawer.Header>
-                        <div class="flex flex-col gap-2 overflow-y-auto p-4">
-                            <Button
-                                class="w-full justify-start"
-                                size="lg"
-                                variant="outline"
-                                onclick={() =>
-                                    fromMobileNew(() => ($newFolderDialogOpen = true))}
-                            >
-                                <FolderPlusIcon class="text-primary w-5! h-5!" />
-                                {m.folder()}
-                            </Button>
-                            <Button
-                                class="w-full justify-start"
-                                variant="outline"
-                                size="lg"
-                                onclick={() =>
-                                    fromMobileNew(() => ($uploadDialogOpen = true))}
-                            >
-                                <CloudUploadIcon class="text-primary w-5! h-5!" />
-                                {m.file_upload()}
-                            </Button>
-                            {#each newDocumentKinds as entry (entry.kind)}
-                                {@const Icon = entry.icon}
-                                <Button
-                                    class="w-full justify-start"
-                                    variant="outline"
-                                    size="lg"
-                                    disabled={creatingDocument}
+						<div class="flex flex-col gap-2 overflow-y-auto p-4">
+							<Button
+								class="w-full justify-start"
+								size="lg"
+								variant="outline"
+								onclick={() => fromMobileNew(() => $newFolderDialogOpen = true)}
+							>
+								<FolderPlusIcon class="text-primary w-5! h-5!" />
+								{m.folder()}
+							</Button>
+							<Button
+								class="w-full justify-start"
+								variant="outline"
+								size="lg"
+								onclick={() => fromMobileNew(() => $uploadDialogOpen = true)}
+							>
+								<CloudUploadIcon class="text-primary w-5! h-5!" />
+								{m.file_upload()}
+							</Button>
+							{#each newDocumentKinds as entry (entry.kind)}
+								{@const Icon = entry.icon}
+								<Button
+									class="w-full justify-start"
+									variant="outline"
+									size="lg"
+									disabled={creatingDocument}
                                     onclick={() =>
                                         fromMobileNew(() => newDocument(entry.kind))}
-                                >
-                                    <Icon class={cn(entry.color, "w-5! h-5!")} />
-                                    {entry.label}
-                                </Button>
-                            {/each}
-                        </div>
-                    </Drawer.Content>
-                </Drawer.NestedRoot>
-            {/if}
+								>
+									<Icon class={cn(entry.color, "w-5! h-5!")} />
+									{entry.label}
+								</Button>
+							{/each}
+						</div>
+					</Drawer.Content>
+				</Drawer.NestedRoot>
+			{/if}
 
-            {#each mobileNavGroups as group (group.title)}
-                <div class="flex flex-col gap-2">
-                    <p
-                        class="text-muted-foreground px-1 text-xs font-medium uppercase"
+			{#each mobileNavGroups as group (group.title)}
+				<div class="flex flex-col gap-2">
+					<p
+						class="text-muted-foreground px-1 text-xs font-medium uppercase"
                     >
                         {group.title}
                     </p>
-                    {#each group.items as item (item.url)}
-                        {@const Icon = item.icon}
-                        <a
-                            href={item.url}
-                            class={cn(
-                                buttonVariants({
+					{#each group.items as item (item.url)}
+						{@const Icon = item.icon}
+						<a
+							href={item.url}
+							class={cn(
+								buttonVariants({
                                     variant: isItemActive(item)
                                         ? "default"
                                         : "outline",
                                     size: "lg",
-                                }),
+								}),
                                 "w-full justify-start",
-                            )}
-                            onclick={() => (mobileMenuDrawerOpen = false)}
-                        >
-                            <Icon class={cn(mobileIconClass(item), "w-5! h-5!")} />
-                            {item.title}
-                        </a>
-                    {/each}
-                </div>
-            {/each}
-        </div>
-    </Drawer.Content>
+							)}
+							onclick={() => mobileMenuDrawerOpen = false}
+						>
+							<Icon class={cn(mobileIconClass(item), "w-5! h-5!")} />
+							{item.title}
+						</a>
+					{/each}
+				</div>
+			{/each}
+		</div>
+	</Drawer.Content>
 </Drawer.Root>

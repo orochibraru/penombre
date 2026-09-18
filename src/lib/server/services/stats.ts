@@ -8,9 +8,9 @@
  */
 
 import { and, desc, eq, sql } from "drizzle-orm";
-import { getStoragePath } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { activity, files, shares, user } from "$lib/server/db/schema";
+import { getStoragePath } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { activity, files, shares, user } from "#lib/server/db/schema.js";
 import { diskSpace } from "./storage/disk-space";
 
 /** How many "biggest file" rows a cleanup panel shows. */

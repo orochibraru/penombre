@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { PlusIcon, Trash2Icon } from "@lucide/svelte";
 	import { untrack } from "svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { parseCsv, toCsv } from "$lib/documents";
-	import { m } from "$lib/paraglide/messages.js";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { parseCsv, toCsv } from "#lib/documents.js";
+	import { m } from "#lib/paraglide/messages.js";
 
 	/**
 	 * A spreadsheet grid over a CSV file.

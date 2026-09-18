@@ -2,12 +2,12 @@
 	import { SaveIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import Label from "$lib/components/ui/label/label.svelte";
-	import { enhance } from "$lib/forms";
-	import * as m from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import Input from "#lib/components/ui/input/input.svelte";
+	import Label from "#lib/components/ui/label/label.svelte";
+	import { enhance } from "#lib/forms.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 
 	onMount(() => {
 		title.set(m.title_account_details());

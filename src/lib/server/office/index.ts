@@ -3,7 +3,7 @@ import {
 	officeKindForName,
 	parseCsv,
 	toCsv,
-} from "$lib/documents";
+} from "#lib/documents.js";
 import { docxToHtml } from "./docx-read";
 import { htmlToDocx } from "./docx-write";
 import { markdownToPptx, pptxToMarkdown } from "./pptx";

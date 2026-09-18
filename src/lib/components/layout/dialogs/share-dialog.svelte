@@ -7,16 +7,16 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
-	import { api, type ObjectItem } from "$lib/api";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import * as Select from "$lib/components/ui/select/index.js";
-	import * as Tabs from "$lib/components/ui/tabs/index.js";
-	import { m } from "$lib/paraglide/messages.js";
-	import { isFolderItem } from "$lib/utils";
+	import { api, type ObjectItem } from "#lib/api/index.js";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { Checkbox } from "#lib/components/ui/checkbox/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import * as Select from "#lib/components/ui/select/index.js";
+	import * as Tabs from "#lib/components/ui/tabs/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { isFolderItem } from "#lib/utils.js";
 
 	interface Props {
 		open: boolean;

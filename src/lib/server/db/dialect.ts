@@ -1,7 +1,7 @@
 /**
  * DB dialect resolution — kept free of `$env`/SvelteKit imports on purpose.
  * `drizzle.config.ts`/`drizzle.sqlite.config.ts` (drizzle-kit CLI) import
- * this outside the SvelteKit runtime, where `$lib/server/config` can't
+ * this outside the SvelteKit runtime, where `#lib/server/config` can't
  * resolve. The *path* a SQLite install defaults to is a config concern
  * (`config.dbLocation`); which dialect is active only depends on whether
  * `DATABASE_URL` names Postgres, so that stays here.

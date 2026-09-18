@@ -1,8 +1,8 @@
 import { error } from "@sveltejs/kit";
-import { officeKindForName } from "$lib/documents";
-import { Logger } from "$lib/logger";
-import { officeToText } from "$lib/server/office";
-import { storageServiceFor } from "$lib/server/services/storage-for";
+import { officeKindForName } from "#lib/documents.js";
+import { Logger } from "#lib/logger.js";
+import { officeToText } from "#lib/server/office/index.js";
+import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
 const logger = new Logger("Editor");
 

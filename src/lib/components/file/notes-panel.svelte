@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { ClockIcon, SendIcon, Trash2Icon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
-	import { api } from "$lib/api";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Textarea } from "$lib/components/ui/textarea/index.js";
-	import { m } from "$lib/paraglide/messages.js";
+	import { api } from "#lib/api/index.js";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { Textarea } from "#lib/components/ui/textarea/index.js";
+	import { m } from "#lib/paraglide/messages.js";
 	import {
 		type FileNote,
 		fileNotes,
 		loadFileNotes,
 		setFileNotes,
-	} from "$lib/store/notes";
-	import { cn } from "$lib/utils";
+	} from "#lib/store/notes.js";
+	import { cn } from "#lib/utils.js";
 
 	/**
 	 * Notes attached to one file.

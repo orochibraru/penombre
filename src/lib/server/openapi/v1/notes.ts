@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { defineRoute } from "$lib/server/openapi";
-import { storageServiceFor } from "$lib/server/services/storage-for";
+import { defineRoute } from "#lib/server/openapi/index.js";
+import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
 /**
  * File note route definitions.

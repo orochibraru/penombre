@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "$lib/server/openapi";
+import { defineRoute } from "#lib/server/openapi/index.js";
 
 /**
  * User-to-user sharing route definitions.

@@ -4,29 +4,29 @@
 	import { toast } from "svelte-sonner";
 	import { filesProxy, superForm } from "sveltekit-superforms";
 	import { zod4Client } from "sveltekit-superforms/adapters";
-	import { page } from "$app/state";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import { Button } from "#lib/components/ui/button/index.js";
 	import {
 		displaySize,
 		FileDropZone,
 		type FileDropZoneProps,
-	} from "$lib/components/ui/file-drop-zone";
-	import { Label } from "$lib/components/ui/label/index.js";
-	import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
-	import * as m from "$lib/paraglide/messages.js";
-	import { uploadSchema } from "$lib/schemas/upload";
-	import { locationOf } from "$lib/storage-location";
+	} from "#lib/components/ui/file-drop-zone/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import * as RadioGroup from "#lib/components/ui/radio-group/index.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { uploadSchema } from "#lib/schemas/upload.js";
+	import { locationOf } from "#lib/storage-location.js";
 	import {
 		pendingUploadFiles,
 		preparingUpload,
 		uploadedItems,
 		uploadingItems,
 		uploadingItemsNames,
-	} from "$lib/store/upload";
-	import { enqueueUploads } from "$lib/upload/manager";
-	import type { UploadJob } from "$lib/upload/queue";
-	import { cn, randomId } from "$lib/utils";
+	} from "#lib/store/upload.js";
+	import { enqueueUploads } from "#lib/upload/manager.js";
+	import type { UploadJob } from "#lib/upload/queue.js";
+	import { cn, randomId } from "#lib/utils.js";
+	import { page } from "$app/state";
 	import {
 		createFoldersForUpload,
 		createUploadMetadata,

@@ -1,10 +1,10 @@
 import type { RequestEvent } from "@sveltejs/kit";
-import { Logger } from "$lib/logger";
-import { Http } from "$lib/server/http";
-import { createNote, listNotes } from "$lib/server/openapi/v1/notes";
-import { NoteService } from "$lib/server/services/notes";
-import { NotificationService } from "$lib/server/services/notifications";
-import type { StorageService } from "$lib/server/services/storage";
+import { Logger } from "#lib/logger.js";
+import { Http } from "#lib/server/http.js";
+import { createNote, listNotes } from "#lib/server/openapi/v1/notes.js";
+import { NoteService } from "#lib/server/services/notes.js";
+import { NotificationService } from "#lib/server/services/notifications.js";
+import type { StorageService } from "#lib/server/services/storage/index.js";
 
 const notes = new NoteService();
 const notifications = new NotificationService();

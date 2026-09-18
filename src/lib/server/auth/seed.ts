@@ -1,10 +1,10 @@
 import { count, eq } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import type { AuthType } from "$lib/server/auth";
-import { auth } from "$lib/server/auth";
-import { isAuthBypassed } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { user } from "$lib/server/db/schema";
+import { Logger } from "#lib/logger.js";
+import type { AuthType } from "#lib/server/auth/index.js";
+import { auth } from "#lib/server/auth/index.js";
+import { isAuthBypassed } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { user } from "#lib/server/db/schema.js";
 
 const logger = new Logger("auth:seed");
 

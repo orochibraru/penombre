@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { FolderPlusIcon, UploadIcon } from "@lucide/svelte";
-	import type { ObjectList } from "$lib/api";
-	import FileWrapper from "$lib/components/file/wrapper.svelte";
-	import RenameDialog from "$lib/components/layout/dialogs/rename-dialog.svelte";
-	import PageError from "$lib/components/layout/page-error.svelte";
-	import * as ContextMenu from "$lib/components/ui/context-menu/index";
-	import * as m from "$lib/paraglide/messages.js";
-	import { newFolderDialogOpen, uploadDialogOpen } from "$lib/store/upload";
+	import type { ObjectList } from "#lib/api/index.js";
+	import FileWrapper from "#lib/components/file/wrapper.svelte";
+	import RenameDialog from "#lib/components/layout/dialogs/rename-dialog.svelte";
+	import PageError from "#lib/components/layout/page-error.svelte";
+	import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { newFolderDialogOpen, uploadDialogOpen } from "#lib/store/upload.js";
 
 	interface UserPreferences {
 		layout?: "grid" | "list";

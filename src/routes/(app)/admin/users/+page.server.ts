@@ -1,11 +1,11 @@
 import { error, fail } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
-import { auth } from "$lib/server/auth";
-import { getConfig } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { account } from "$lib/server/db/schema";
-import { Email } from "$lib/server/email";
-import { getSmtpSettings } from "$lib/server/services/app-settings";
+import { auth } from "#lib/server/auth/index.js";
+import { getConfig } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { account } from "#lib/server/db/schema.js";
+import { Email } from "#lib/server/email.js";
+import { getSmtpSettings } from "#lib/server/services/app-settings.js";
 
 export const load = async ({ request }) => {
 	try {

@@ -7,7 +7,7 @@ import {
 	mock,
 	test,
 } from "bun:test";
-import { getConfig } from "$lib/server/config";
+import { getConfig } from "#lib/server/config.js";
 import { isNewerVersion, normalizeVersion } from "./version";
 
 const mockGetConfig = getConfig as Mock<typeof getConfig>;
@@ -29,7 +29,7 @@ function mockFetchFailure(error: Error) {
 // Re-import for each describe to get a fresh module-level cache
 async function importFresh() {
 	// Clear the module from cache so we get a fresh `cache = null`
-	const modulePath = import.meta.resolveSync("$lib/server/services/version");
+	const modulePath = import.meta.resolveSync("#lib/server/services/version.js");
 
 	delete require.cache[modulePath];
 	return await import("./version");

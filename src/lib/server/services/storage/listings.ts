@@ -6,10 +6,17 @@
  */
 
 import { and, desc, eq, ilike, inArray, isNull, like, sql } from "drizzle-orm";
-import { isSqliteDialect } from "$lib/server/db/dialect";
-import type { File as DbFile, Folder as DbFolder } from "$lib/server/db/schema";
-import { files, folders } from "$lib/server/db/schema";
-import type { FileCategory, ObjectItem, ObjectList } from "$lib/server/schema";
+import { isSqliteDialect } from "#lib/server/db/dialect.js";
+import type {
+	File as DbFile,
+	Folder as DbFolder,
+} from "#lib/server/db/schema.js";
+import { files, folders } from "#lib/server/db/schema.js";
+import type {
+	FileCategory,
+	ObjectItem,
+	ObjectList,
+} from "#lib/server/schema.js";
 import { CacheKeys } from "./cache";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath } from "./lookups";

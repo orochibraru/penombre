@@ -10,21 +10,13 @@
 import process from "node:process";
 import { plugin } from "bun";
 
-// $lib/server/auth pulls in SvelteKit virtual modules that only exist inside
+// #lib/server/auth pulls in SvelteKit virtual modules that only exist inside
 // the dev server; stub them so the spec can be built from a plain bun run.
 plugin({
 	name: "sveltekit-mocks",
 	setup(build) {
-		build.module("$app/environment", () => ({
+		build.module("$app/env", () => ({
 			exports: { dev: false, building: true, version: "0" },
-			loader: "object",
-		}));
-		build.module("$env/dynamic/private", () => ({
-			exports: { env: process.env },
-			loader: "object",
-		}));
-		build.module("$env/dynamic/public", () => ({
-			exports: { env: {} },
 			loader: "object",
 		}));
 		build.module("$app/server", () => ({
@@ -34,14 +26,14 @@ plugin({
 	},
 });
 
-// $lib/server/auth pulls in the db singleton, which opens a connection (and
+// #lib/server/auth pulls in the db singleton, which opens a connection (and
 // mkdirs the data directory) at import time. The spec is static — point it at
 // an in-memory database so generating docs can't touch real data or fail on a
 // data directory it can't create.
 process.env.DATABASE_URL = "sqlite::memory:";
 
 // Dynamic import so the plugin above is registered before module resolution.
-const { genOpenApiSpec } = await import("$lib/server/generate-openapi");
+const { genOpenApiSpec } = await import("#lib/server/generate-openapi.js");
 
 const doc = await genOpenApiSpec();
 

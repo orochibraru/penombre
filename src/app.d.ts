@@ -1,8 +1,8 @@
 import type { HTMLAnchorAttributes } from "svelte/elements";
-import type { Pathname } from "$app/types";
-import type { Logger } from "$lib/logger";
-import type { AuthType } from "$lib/server/auth";
-import type { StorageService } from "$lib/server/services/storage";
+import type { Logger } from "#lib/logger.js";
+import type { AuthType } from "#lib/server/auth/index.js";
+import type { StorageService } from "#lib/server/services/storage/index.js";
+import type { ResolvedPathname } from "$app/types";
 
 /// <reference types="vite-plugin-pwa/client" />
 /// <reference types="vite-plugin-pwa/info" />
@@ -46,7 +46,7 @@ declare global {
 			a: Omit<HTMLAnchorAttributes, "href"> & {
 				// The (string & {}) trick prevents 'string' from collapsing the union,
 				// preserving Intellisense for your Pathnames.
-				href?: Pathname | (string & {}) | null;
+				href?: ResolvedPathname | (string & {}) | null;
 			};
 		}
 	}

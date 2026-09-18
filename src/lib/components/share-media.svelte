@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { FileCategoryEnum } from "$lib/file-helpers";
-	import { m } from "$lib/paraglide/messages.js";
+	import { FileCategoryEnum } from "#lib/file-helpers.js";
+	import { m } from "#lib/paraglide/messages.js";
 
 	/**
 	 * Inline preview for a shared file.

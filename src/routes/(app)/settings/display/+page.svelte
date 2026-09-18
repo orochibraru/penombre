@@ -9,16 +9,21 @@
 	} from "@lucide/svelte";
 	import { setMode, userPrefersMode } from "mode-watcher";
 	import { toast } from "svelte-sonner";
+	import { api } from "#lib/api/index.js";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import * as RadioGroup from "#lib/components/ui/radio-group/index.js";
+	import * as Select from "#lib/components/ui/select/index.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import {
+		ACCENT_SWATCH,
+		ACCENTS,
+		type Accent,
+		applyTheme,
+	} from "#lib/theme.js";
+	import { cn } from "#lib/utils.js";
 	import { invalidate } from "$app/navigation";
-	import { api } from "$lib/api";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { Label } from "$lib/components/ui/label";
-	import * as RadioGroup from "$lib/components/ui/radio-group";
-	import * as Select from "$lib/components/ui/select/index.js";
-	import * as m from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { ACCENT_SWATCH, ACCENTS, type Accent, applyTheme } from "$lib/theme";
-	import { cn } from "$lib/utils";
 
 	$title = m.settings_display();
 

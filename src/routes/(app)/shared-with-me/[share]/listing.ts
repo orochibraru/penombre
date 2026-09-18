@@ -6,12 +6,12 @@
  * outside what was shared is sent back to the share's root.
  */
 
-import { error, type NumericRange, redirect } from "@sveltejs/kit";
-import { isSimpleMode } from "$lib/server/config";
-import { DriveAccessError } from "$lib/server/errors";
-import type { ObjectList } from "$lib/server/schema";
-import { resolveShare } from "$lib/server/services/storage-for";
-import { type BreadCrumb, listingHref } from "$lib/utils";
+import { error, redirect } from "@sveltejs/kit";
+import { isSimpleMode } from "#lib/server/config.js";
+import { DriveAccessError } from "#lib/server/errors.js";
+import type { ObjectList } from "#lib/server/schema.js";
+import { resolveShare } from "#lib/server/services/storage-for.js";
+import { type BreadCrumb, listingHref } from "#lib/utils.js";
 
 export interface ShareListing {
 	share: {
@@ -42,7 +42,7 @@ export async function loadShareListing(
 	const share = await resolveShare(shareId, locals.user).catch(
 		(cause: unknown) => {
 			if (cause instanceof DriveAccessError) {
-				return error(cause.status as NumericRange<400, 599>, cause.message);
+				return error(cause.status, cause.message);
 			}
 			throw cause;
 		},

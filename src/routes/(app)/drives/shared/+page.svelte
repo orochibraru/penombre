@@ -6,19 +6,19 @@
 		UsersIcon,
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { api } from "#lib/api/index.js";
+	import DriveMembersDialog from "#lib/components/layout/dialogs/drive-members-dialog.svelte";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import type { DriveRole, DriveSummary } from "#lib/drives.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 	import { invalidate } from "$app/navigation";
 	import { resolve } from "$app/paths";
-	import { api } from "$lib/api";
-	import DriveMembersDialog from "$lib/components/layout/dialogs/drive-members-dialog.svelte";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
-	import { Input } from "$lib/components/ui/input";
-	import type { DriveRole, DriveSummary } from "$lib/drives";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
 
 	const { data } = $props();
 

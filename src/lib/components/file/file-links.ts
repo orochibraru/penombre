@@ -6,13 +6,13 @@
  */
 
 import { get } from "svelte/store";
+import type { ObjectItem } from "#lib/api/index.js";
+import { locationOf, locationQuery } from "#lib/storage-location.js";
+import { playableMusic, playbackPosition } from "#lib/store/music.js";
+import { getObjectUrl } from "#lib/url.js";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { page } from "$app/state";
-import type { ObjectItem } from "$lib/api";
-import { locationOf, locationQuery } from "$lib/storage-location";
-import { playableMusic, playbackPosition } from "$lib/store/music";
-import { getObjectUrl } from "$lib/url";
 
 /**
  * Keep the drive or volume the page is in on a link that leaves it.
@@ -58,8 +58,14 @@ const VIEWABLE = new Set(["IMAGES", "VIDEO", "MUSIC"]);
  * `<video>` on a black page with no notes and no title. Everything else is
  * still the raw file, which is what a PDF or a text file wants.
  */
+function hasViewer(item: ObjectItem): boolean {
+	return Boolean(
+		item.metadata.id && VIEWABLE.has(item.metadata.category ?? ""),
+	);
+}
+
 export function fullscreenUrl(item: ObjectItem, resume?: Resume): string {
-	if (item.metadata.id && VIEWABLE.has(item.metadata.category ?? "")) {
+	if (hasViewer(item) && item.metadata.id) {
 		return withResume(
 			withLocation(resolve("/view/[fileId]", { fileId: item.metadata.id })),
 			resume,
@@ -102,5 +108,11 @@ export function handleOpenItemFullscreen(item: ObjectItem): void {
 		music?.fileId && music.fileId === item.metadata.id
 			? { at: get(playbackPosition), playing: music.isPlaying }
 			: undefined;
-	void goto(fullscreenUrl(item, resume));
+	const url = fullscreenUrl(item, resume);
+	// `goto` rejects a URL with no page route, which the raw file is.
+	if (hasViewer(item)) {
+		void goto(url);
+	} else {
+		window.location.assign(url);
+	}
 }

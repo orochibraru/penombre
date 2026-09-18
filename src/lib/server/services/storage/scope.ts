@@ -11,7 +11,7 @@
  */
 
 import { and, eq, isNull, like, or, type SQL, sql } from "drizzle-orm";
-import { files, folders } from "$lib/server/db/schema";
+import { files, folders } from "#lib/server/db/schema.js";
 import type { StorageContext } from "./context";
 
 /** `volume_id = <name>`, or `volume_id IS NULL` for the main drive. */

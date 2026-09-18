@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { defineRoute } from "$lib/server/openapi";
-import { activitySchema } from "$lib/server/schema";
+import { defineRoute } from "#lib/server/openapi/index.js";
+import { activitySchema } from "#lib/server/schema.js";
 
 /**
  * Activity route definitions.

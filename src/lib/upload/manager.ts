@@ -7,18 +7,18 @@
  */
 
 import { toast } from "svelte-sonner";
-import { browser } from "$app/environment";
-import { invalidate } from "$app/navigation";
-import { api, type ObjectItem } from "$lib/api";
-import * as m from "$lib/paraglide/messages.js";
-import { locationQuery } from "$lib/storage-location";
+import { api, type ObjectItem } from "#lib/api/index.js";
+import * as m from "#lib/paraglide/messages.js";
+import { locationQuery } from "#lib/storage-location.js";
 import {
 	failedUploads,
 	uploadedItems,
 	uploadingItems,
 	uploadingItemsNames,
 	uploadStats,
-} from "$lib/store/upload";
+} from "#lib/store/upload.js";
+import { browser } from "$app/env";
+import { invalidate } from "$app/navigation";
 import {
 	allJobs,
 	deleteJob,

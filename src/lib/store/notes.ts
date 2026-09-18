@@ -1,7 +1,7 @@
 import { type Readable, writable } from "svelte/store";
-import { api } from "$lib/api";
-import { m } from "$lib/paraglide/messages.js";
-import { secondsToMinutes } from "$lib/utils";
+import { api } from "#lib/api/index.js";
+import { m } from "#lib/paraglide/messages.js";
+import { secondsToMinutes } from "#lib/utils.js";
 
 export interface FileNote {
 	id: string;

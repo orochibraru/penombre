@@ -2,11 +2,9 @@
 	import { CheckIcon, LoaderIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { browser } from "$app/environment";
-	import { beforeNavigate } from "$app/navigation";
-	import DeckEditor from "$lib/components/editor/deck-editor.svelte";
-	import DocumentEditor from "$lib/components/editor/document-editor.svelte";
-	import SheetEditor from "$lib/components/editor/sheet-editor.svelte";
+	import DeckEditor from "#lib/components/editor/deck-editor.svelte";
+	import DocumentEditor from "#lib/components/editor/document-editor.svelte";
+	import SheetEditor from "#lib/components/editor/sheet-editor.svelte";
 	import {
 		baseName,
 		editorKindForName,
@@ -14,9 +12,11 @@
 		renameDocument,
 		saveDocument,
 		titleFromContent,
-	} from "$lib/documents";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
+	} from "#lib/documents.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { browser } from "$app/env";
+	import { beforeNavigate } from "$app/navigation";
 
 	const { data } = $props();
 
@@ -110,20 +110,24 @@
 		title.set(newName);
 	}
 
-	beforeNavigate(() => {
+	beforeNavigate(({ shallow }) => {
+		if (shallow) {
+			return;
+		}
+
 		clearTimeout(timer);
 		void flush();
 	});
 </script>
 
 <svelte:window
-    onbeforeunload={(event) => {
-        if (pending !== null) {
-            // Unsaved text is about to be dropped; let the browser ask.
-            event.preventDefault();
-        }
-    }}
-/>
+	onbeforeunload={(event) => {
+		if (pending !== null) {
+			// Unsaved text is about to be dropped; let the browser ask.
+			event.preventDefault();
+		}
+	}}
+></svelte:window>
 
 <div class="flex h-[calc(100vh-8rem)] w-full flex-col gap-3">
     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -135,23 +139,23 @@
                 <p class="text-muted-foreground text-xs">
                     {m.editor_office_note()}
                 </p>
-            {/if}
-        </div>
-        <span
-            class="text-muted-foreground flex items-center gap-1.5 text-xs tabular-nums"
-        >
-            {#if saving}
-                <LoaderIcon class="size-3.5 animate-spin" />
-                {m.editor_saving()}
-            {:else if savedAt}
-                <CheckIcon class="size-3.5" />
-                {m.editor_saved({ time: savedAt.toLocaleTimeString() })}
-            {/if}
-        </span>
-    </div>
+			{/if}
+		</div>
+		<span
+			class="text-muted-foreground flex items-center gap-1.5 text-xs tabular-nums"
+		>
+			{#if saving}
+				<LoaderIcon class="size-3.5 animate-spin" />
+				{m.editor_saving()}
+			{:else if savedAt}
+				<CheckIcon class="size-3.5" />
+				{m.editor_saved({ time: savedAt.toLocaleTimeString() })}
+			{/if}
+		</span>
+	</div>
 
-    {#if kind === "document"}
-        <!-- Browser only: ProseKit parses the initial HTML with DOMParser when
+	{#if kind === "document"}
+		<!-- Browser only: ProseKit parses the initial HTML with DOMParser when
              the editor is constructed, and there is no DOM on the server. The
              other two editors are plain Svelte and render fine either way. -->
         {#if browser}

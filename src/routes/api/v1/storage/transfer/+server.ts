@@ -1,9 +1,9 @@
-import { DriveAccessError, ReadOnlyVolumeError } from "$lib/server/errors";
-import { Http } from "$lib/server/http";
-import { transferItems } from "$lib/server/openapi/v1/storage";
-import type { StorageService } from "$lib/server/services/storage";
-import { storageServiceFor } from "$lib/server/services/storage-for";
-import { locationQuery } from "$lib/storage-location";
+import { DriveAccessError, ReadOnlyVolumeError } from "#lib/server/errors.js";
+import { Http } from "#lib/server/http.js";
+import { transferItems } from "#lib/server/openapi/v1/storage.js";
+import type { StorageService } from "#lib/server/services/storage/index.js";
+import { storageServiceFor } from "#lib/server/services/storage-for.js";
+import { locationQuery } from "#lib/storage-location.js";
 
 interface Item {
 	path: string;

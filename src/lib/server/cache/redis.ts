@@ -1,6 +1,6 @@
 import process from "node:process";
 import Redis from "ioredis";
-import { Logger } from "$lib/logger";
+import { Logger } from "#lib/logger.js";
 import type { CacheBackend } from "./types";
 
 const logger = new Logger("RedisCache");

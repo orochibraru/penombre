@@ -9,26 +9,26 @@
 		VolumeXIcon,
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
-	import { page } from "$app/state";
-	import type { Pathname } from "$app/types";
-	import { withResume } from "$lib/components/file/file-links";
-	import NotesPanel from "$lib/components/file/notes-panel.svelte";
-	import Waveform from "$lib/components/file/waveform.svelte";
-	import BottomAction from "$lib/components/layout/bottom-action.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Popover from "$lib/components/ui/popover/index";
-	import { Progress } from "$lib/components/ui/progress/index";
-	import { Slider } from "$lib/components/ui/slider/index";
-	import Spinner from "$lib/components/ui/spinner.svelte";
-	import * as m from "$lib/paraglide/messages.js";
+	import { withResume } from "#lib/components/file/file-links.js";
+	import NotesPanel from "#lib/components/file/notes-panel.svelte";
+	import Waveform from "#lib/components/file/waveform.svelte";
+	import BottomAction from "#lib/components/layout/bottom-action.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Popover from "#lib/components/ui/popover/index.js";
+	import { Progress } from "#lib/components/ui/progress/index.js";
+	import { Slider } from "#lib/components/ui/slider/index.js";
+	import Spinner from "#lib/components/ui/spinner.svelte";
+	import * as m from "#lib/paraglide/messages.js";
 	import {
 		type PlaybackCommand,
 		playableMusic,
 		playbackCommand,
 		playbackDuration,
 		playbackPosition,
-	} from "$lib/store/music";
-	import { fileNotes, loadFileNotes, noteMarkers } from "$lib/store/notes";
+	} from "#lib/store/music.js";
+	import { fileNotes, loadFileNotes, noteMarkers } from "#lib/store/notes.js";
+	import { page } from "$app/state";
+	import type { ResolvedPathname } from "$app/types";
 
 	function clearCurrent() {
 		$playableMusic = null;
@@ -278,155 +278,154 @@
     title={$playableMusic?.title ?? ""}
     callback={() => clearCurrent()}
 >
-    <div class="flex w-full items-center gap-2">
-        <div class="flex items-center justify-between gap-2">
-            {#if loading}
+	<div class="flex w-full items-center gap-2">
+		<div class="flex items-center justify-between gap-2">
+			{#if loading}
                 <Button disabled>
                     <Spinner />
                 </Button>
-            {:else if paused}
-                <Button
-                    onclick={() => {
-                        player?.play();
-                        setPlaying(true);
-                    }}
-                    title={m.play()}
+			{:else if paused}
+				<Button
+					onclick={() => {
+						player?.play();
+						setPlaying(true);
+					}}
+					title={m.play()}
                 >
                     <PlayIcon />
                 </Button>
-            {:else}
-                <Button
-                    onclick={() => {
-                        player?.pause();
-                        setPlaying(false);
-                    }}
-                    title={m.pause()}
+			{:else}
+				<Button
+					onclick={() => {
+						player?.pause();
+						setPlaying(false);
+					}}
+					title={m.pause()}
                 >
                     <PauseIcon />
                 </Button>
-            {/if}
+			{/if}
             <p class="text-xs text-nowrap">
                 {formatTime(currentTime)} / {formatTime(duration)}
             </p>
-        </div>
-        {#if peaksUrl}
-            <Waveform
-                src={peaksUrl}
-                class="h-10 min-w-0 flex-1"
-                progress={duration > 0 ? currentTime / duration : 0}
-                onseek={seekToFraction}
-                seekLabel={m.seek()}
-                {markers}
-                onmarker={(marker) => (currentTime = marker.seconds)}
-                onfail={() => (peaksFailed = true)}
-            />
-        {:else}
-            <Progress
-                value={currentTime}
-                max={duration}
-                class="w-full cursor-pointer {seeking
-                    ? '**:data-[slot=progress-indicator]:transition-none!'
-                    : ''}"
-                onclick={seek}
-            />
-        {/if}
-        <!-- The viewer, not the raw file: a bare browser audio element has no
+		</div>
+		{#if peaksUrl}
+			<Waveform
+				src={peaksUrl}
+				class="h-10 min-w-0 flex-1"
+				progress={duration > 0 ? currentTime / duration : 0}
+				onseek={seekToFraction}
+				seekLabel={m.seek()}
+				markers={markers}
+				onmarker={(marker) => currentTime = marker.seconds}
+				onfail={() => peaksFailed = true}
+			/>
+		{:else}
+			<Progress
+				value={currentTime}
+				max={duration}
+				class="w-full cursor-pointer {seeking
+					? '**:data-[slot=progress-indicator]:transition-none!'
+					: ''}"
+				onclick={seek}
+			/>
+		{/if}
+		<!-- The viewer, not the raw file: a bare browser audio element has no
              notes and no title. Falls back to the file when the track came
              from somewhere with no id (a share link). -->
-        {#if $playableMusic?.fileId}
-            <Button
-                data-slot="player-notes"
-                variant={notesOpen ? "default" : "outline"}
-                title={m.notes_title()}
-                onclick={() => {
-                    notesOpen = !notesOpen;
-                    if (notesOpen) {
-                        focusNotes?.();
-                    }
-                }}
+		{#if $playableMusic?.fileId}
+			<Button
+				data-slot="player-notes"
+				variant={notesOpen ? "default" : "outline"}
+				title={m.notes_title()}
+				onclick={() => {
+					notesOpen = !notesOpen;
+					if (notesOpen) {
+						focusNotes?.();
+					}
+				}}
             >
                 <MessageSquareTextIcon />
             </Button>
-        {/if}
-        <Button
-            variant="outline"
-            title={m.open_fullscreen()}
-            href={fullscreenHref as Pathname}
-        >
-            <MaximizeIcon />
-        </Button>
-        <Popover.Root>
-            <Popover.Trigger title={m.change_volume()}>
-                <Button variant="outline">
-                    {#if volume === 1}
-                        <Volume2Icon />
-                    {:else if volume > 0 && volume < 1}
-                        <Volume1Icon />
-                    {:else if volume === 0}
-                        <VolumeXIcon />
-                    {:else}
-                        <VolumeXIcon />
-                    {/if}
-                </Button>
-            </Popover.Trigger>
-            <Popover.Content class="w-10">
-                <Slider
-                    type="single"
-                    orientation="vertical"
-                    bind:value={volume}
-                    max={1}
-                    step={0.01}
-                />
-            </Popover.Content>
-        </Popover.Root>
-    </div>
+		{/if}
+		<Button
+			variant="outline"
+			title={m.open_fullscreen()}
+			href={fullscreenHref as ResolvedPathname}
+		><MaximizeIcon /></Button>
 
-    {#if notesOpen && $playableMusic?.fileId}
-        <div class="mt-3 h-[min(55svh,22rem)] border-t pt-3">
-            <NotesPanel
-                fileId={$playableMusic.fileId}
-                position={currentTime}
-                onSeek={(seconds) => (currentTime = seconds)}
-                currentUserId={page.data.user?.id}
-                bind:focus={focusNotes}
-            />
-        </div>
-    {/if}
+		<Popover.Root>
+			<Popover.Trigger title={m.change_volume()}>
+				<Button variant="outline">
+					{#if volume === 1}
+						<Volume2Icon />
+					{:else if volume > 0 && volume < 1}
+						<Volume1Icon />
+					{:else if volume === 0}
+						<VolumeXIcon />
+					{:else}
+						<VolumeXIcon />
+					{/if}
+				</Button>
+			</Popover.Trigger>
+			<Popover.Content class="w-10">
+				<Slider
+					type="single"
+					orientation="vertical"
+					bind:value={volume}
+					max={1}
+					step={0.01}
+				/>
+			</Popover.Content>
+		</Popover.Root>
+	</div>
 
-    <audio
-        id="music-player"
-        class="sr-only w-full rounded-none"
-        title={$playableMusic?.title}
-        playsinline
-        onwaiting={() => {
-            loading = true;
-        }}
-        onplaying={() => {
-            loading = false;
-        }}
-        oncanplay={() => {
-            loading = false;
-            if (resumeAt > 0) {
-                currentTime = resumeAt;
-                resumeAt = 0;
-            }
-            if (!autoplayPending) {
-                return;
-            }
-            autoplayPending = false;
+	{#if notesOpen && $playableMusic?.fileId}
+		<div class="mt-3 h-[min(55svh,22rem)] border-t pt-3">
+			<NotesPanel
+				fileId={$playableMusic.fileId}
+				position={currentTime}
+				onSeek={(seconds) => currentTime = seconds}
+				currentUserId={page.data.user?.id}
+				bind:focus={focusNotes}
+			/>
+		</div>
+	{/if}
+
+	<audio
+		id="music-player"
+		class="sr-only w-full rounded-none"
+		title={$playableMusic?.title}
+		playsinline
+		onwaiting={() => {
+			loading = true;
+		}}
+		onplaying={() => {
+			loading = false;
+		}}
+		oncanplay={() => {
+			loading = false;
+			if (resumeAt > 0) {
+				currentTime = resumeAt;
+				resumeAt = 0;
+			}
+			if (!autoplayPending) {
+				return;
+			}
+			autoplayPending = false;
             player
                 .play()
                 .then(() => setPlaying(true))
                 .catch(() => {
-                    // Autoplay refused: show the paused state instead.
-                    paused = true;
-                    setPlaying(false);
-                });
-        }}
-        bind:this={player}
-        bind:paused
-        bind:currentTime
-        bind:duration
-        bind:volume
-    ></audio>
+				// Autoplay refused: show the paused state instead.
+				paused = true;
+				setPlaying(false);
+			});
+		}}
+		bind:this={player}
+		bind:paused
+		bind:currentTime
+		bind:duration
+		bind:volume
+	></audio>
 </BottomAction>

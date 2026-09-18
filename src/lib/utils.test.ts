@@ -4,7 +4,7 @@ import {
 	randomId,
 	resolveDropDestination,
 	resolveParentPath,
-} from "$lib/utils";
+} from "#lib/utils.js";
 
 describe("resolveParentPath", () => {
 	test("is undefined where there is nothing to go up to", () => {

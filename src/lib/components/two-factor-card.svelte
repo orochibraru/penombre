@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { ShieldCheckIcon, ShieldIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { authClient } from "#lib/auth-client.js";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import { m } from "#lib/paraglide/messages.js";
 	import { refreshAll } from "$app/navigation";
-	import { authClient } from "$lib/auth-client";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import { m } from "$lib/paraglide/messages.js";
 
 	let {
 		enabled,

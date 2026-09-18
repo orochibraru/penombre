@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { moveFolderRoute } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { moveFolderRoute } from "#lib/server/openapi/v1/storage.js";
 
 export const POST = moveFolderRoute.handler(
 	async ({ params, body, service }) => {

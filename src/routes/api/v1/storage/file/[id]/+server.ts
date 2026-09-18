@@ -1,10 +1,10 @@
-import { FileOrFolderNotFoundError } from "$lib/server/errors";
-import { Http } from "$lib/server/http";
+import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
+import { Http } from "#lib/server/http.js";
 import {
 	deleteFile,
 	getFile,
 	updateFile,
-} from "$lib/server/openapi/v1/storage";
+} from "#lib/server/openapi/v1/storage.js";
 
 export const GET = getFile.handler(
 	async ({ params, query, event, service }) => {

@@ -12,14 +12,19 @@
 	import { setMode } from "mode-watcher";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { api } from "#lib/api/index.js";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import {
+		ACCENT_SWATCH,
+		ACCENTS,
+		type Accent,
+		applyTheme,
+	} from "#lib/theme.js";
+	import { cn } from "#lib/utils.js";
 	import { invalidate } from "$app/navigation";
-	import { api } from "$lib/api";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Label } from "$lib/components/ui/label";
-	import { m } from "$lib/paraglide/messages.js";
-	import { ACCENT_SWATCH, ACCENTS, type Accent, applyTheme } from "$lib/theme";
-	import { cn } from "$lib/utils";
 
 	interface Props {
 		open: boolean;

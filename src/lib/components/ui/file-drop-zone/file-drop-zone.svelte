@@ -6,7 +6,7 @@
 	import { FolderUpIcon, UploadIcon } from "@lucide/svelte";
 	import { useId } from "bits-ui";
 	import { MediaQuery } from "svelte/reactivity";
-	import { cn } from "$lib/utils";
+	import { cn } from "#lib/utils.js";
 	import { displaySize } from ".";
 	import type { FileDropZoneProps, FileRejectedReason } from "./types";
 

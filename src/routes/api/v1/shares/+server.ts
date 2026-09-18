@@ -1,7 +1,7 @@
-import { Http } from "$lib/server/http";
-import { createShare, listShares } from "$lib/server/openapi/v1/shares";
-import { ShareService } from "$lib/server/services/shares";
-import { toShareDto } from "$lib/server/services/shares.dto";
+import { Http } from "#lib/server/http.js";
+import { createShare, listShares } from "#lib/server/openapi/v1/shares.js";
+import { toShareDto } from "#lib/server/services/shares.dto.js";
+import { ShareService } from "#lib/server/services/shares.js";
 
 const shares = new ShareService();
 

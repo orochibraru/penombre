@@ -1,29 +1,32 @@
 import { join } from "node:path";
 import process from "node:process";
-import type { Handle } from "@sveltejs/kit";
-import { sequence } from "@sveltejs/kit/hooks";
+import {
+	type Handle,
+	type HandleServerError,
+	sequence,
+} from "@sveltejs/kit/hooks";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { sql } from "drizzle-orm";
 import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
 import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
-import { building } from "$app/environment";
-import { Logger } from "$lib/logger";
-import { baseLocale, getLocale } from "$lib/paraglide/runtime";
-import type { AuthType } from "$lib/server/auth";
-import { auth } from "$lib/server/auth";
-import { needsSetup, seedAuth } from "$lib/server/auth/seed";
-import { getConfig, isAuthBypassed, isSimpleMode } from "$lib/server/config";
-import { getDb, resetDb } from "$lib/server/db";
-import { isSqliteDialect } from "$lib/server/db/dialect";
+import { Logger } from "#lib/logger.js";
+import { baseLocale, getLocale } from "#lib/paraglide/runtime.js";
+import type { AuthType } from "#lib/server/auth/index.js";
+import { auth } from "#lib/server/auth/index.js";
+import { needsSetup, seedAuth } from "#lib/server/auth/seed.js";
+import { getConfig, isAuthBypassed, isSimpleMode } from "#lib/server/config.js";
+import { isSqliteDialect } from "#lib/server/db/dialect.js";
+import { getDb, resetDb } from "#lib/server/db/index.js";
 import {
 	loadSharedOwner,
 	startLibraryScanner,
-} from "$lib/server/services/library-scan";
-import { getUserPreferences } from "$lib/server/services/preferences";
+} from "#lib/server/services/library-scan.js";
+import { getUserPreferences } from "#lib/server/services/preferences.js";
 import {
 	migrateStorageMeta,
 	StorageService,
-} from "$lib/server/services/storage";
+} from "#lib/server/services/storage/index.js";
+import { building } from "$app/env";
 
 const logger = new Logger("Hooks");
 
@@ -47,10 +50,13 @@ const migrationsFolder = join(
  *
  * The id is logged beside the cause so "quote this to your admin" leads
  * somewhere; the error page already shows it.
+ *
+ * Kit 3 sends `error()` calls and 404s through here too; only `unknown` is a
+ * real failure, the rest keep their own status and message.
  */
-export function handleError({ event, error, status }): App.Error | undefined {
-	if (status === 404) {
-		return undefined;
+export const handleError: HandleServerError = ({ event, error, kind }) => {
+	if (kind !== "unknown") {
+		return;
 	}
 
 	const errorId = crypto.randomUUID();
@@ -64,7 +70,7 @@ export function handleError({ event, error, status }): App.Error | undefined {
 			error instanceof Error ? error.message : "An unknown error occurred.",
 		errorId,
 	};
-}
+};
 
 function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));

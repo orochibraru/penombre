@@ -9,16 +9,16 @@
 		Volume2Icon,
 		VolumeXIcon,
 	} from "@lucide/svelte";
-	import { dev } from "$app/environment";
-	import type { Pathname } from "$app/types";
-	import { withResume } from "$lib/components/file/file-links";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Popover from "$lib/components/ui/popover/index";
-	import { Progress } from "$lib/components/ui/progress/index";
-	import { Slider } from "$lib/components/ui/slider/index";
-	import Spinner from "$lib/components/ui/spinner.svelte";
-	import * as m from "$lib/paraglide/messages.js";
-	import { toggleFullscreen } from "$lib/utils";
+	import { withResume } from "#lib/components/file/file-links.js";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Popover from "#lib/components/ui/popover/index.js";
+	import { Progress } from "#lib/components/ui/progress/index.js";
+	import { Slider } from "#lib/components/ui/slider/index.js";
+	import Spinner from "#lib/components/ui/spinner.svelte";
+	import * as m from "#lib/paraglide/messages.js";
+	import { toggleFullscreen } from "#lib/utils.js";
+	import { dev } from "$app/env";
+	import type { ResolvedPathname } from "$app/types";
 
 	interface Props {
 		src: string;
@@ -120,111 +120,110 @@
 </script>
 
 <svelte:document
-    onfullscreenchange={() => (isFullscreen = !!document.fullscreenElement)}
-/>
+	onfullscreenchange={() => isFullscreen = !!document.fullscreenElement}
+></svelte:document>
 
 <div bind:this={shell} class="flex flex-col w-full h-full bg-background">
-    <video
-        id="music-player"
-        class="w-full rounded-xl mb-2"
-        {title}
-        playsinline
-        onloadedmetadata={resume}
-        oncanplay={() => {
-            loading = false;
-            if (!dev) {
-                player.play().catch((error) => {
-                    console.error("Autoplay was prevented:", error);
-                    // If autoplay fails, update the UI to show the paused state.
-                    paused = true;
-                });
-            }
-        }}
-        bind:this={player}
-        bind:paused
-        bind:currentTime
-        bind:duration
-        bind:volume
+	<video
+		id="music-player"
+		class="w-full rounded-xl mb-2"
+		title={title}
+		playsinline
+		onloadedmetadata={resume}
+		oncanplay={() => {
+			loading = false;
+			if (!dev) {
+				player.play().catch((error) => {
+					console.error("Autoplay was prevented:", error);
+					// If autoplay fails, update the UI to show the paused state.
+					paused = true;
+				});
+			}
+		}}
+		bind:this={player}
+		bind:paused
+		bind:currentTime
+		bind:duration
+		bind:volume
     >
         <track kind="captions" />
     </video>
 
-    <div class="flex w-full items-center gap-2">
-        <div class="flex items-center justify-between gap-2">
-            {#if loading}
+	<div class="flex w-full items-center gap-2">
+		<div class="flex items-center justify-between gap-2">
+			{#if loading}
                 <Button disabled>
                     <Spinner />
                 </Button>
-            {:else if paused}
+			{:else if paused}
                 <Button
                     onclick={() => {
-                        player?.play();
+					player?.play();
                     }}
                     title={m.play()}
                 >
                     <PlayIcon />
                 </Button>
-            {:else}
-                <Button
-                    onclick={() => {
-                        player?.pause();
-                    }}
-                    title={m.pause()}
+			{:else}
+				<Button
+					onclick={() => {
+						player?.pause();
+					}}
+					title={m.pause()}
                 >
                     <PauseIcon />
                 </Button>
-            {/if}
+			{/if}
             <p class="text-xs text-nowrap">
                 {formatTime(currentTime)} / {formatTime(duration)}
             </p>
-        </div>
-        <Progress
-            value={currentTime}
-            max={duration}
-            class="w-full cursor-pointer"
-            onclick={seek}
-        />
-        <Button
-            variant="outline"
-            title={isFullscreen ? m.exit_fullscreen() : m.fullscreen()}
-            onclick={() => toggleFullscreen(shell, player)}
-        >
-            {#if isFullscreen}
-                <MinimizeIcon />
-            {:else}
-                <ExpandIcon />
-            {/if}
-        </Button>
-        <Button
-            variant="outline"
-            title={m.open_fullscreen()}
-            href={viewerHref as Pathname}
-        >
-            <MaximizeIcon />
-        </Button>
-        <Popover.Root>
-            <Popover.Trigger title={m.change_volume()}>
-                <Button variant="outline">
-                    {#if volume === 1}
-                        <Volume2Icon />
-                    {:else if volume > 0 && volume < 1}
-                        <Volume1Icon />
-                    {:else if volume === 0}
-                        <VolumeXIcon />
-                    {:else}
-                        <VolumeXIcon />
-                    {/if}
-                </Button>
-            </Popover.Trigger>
-            <Popover.Content class="w-10">
-                <Slider
-                    type="single"
-                    orientation="vertical"
-                    bind:value={volume}
-                    max={1}
-                    step={0.01}
-                />
-            </Popover.Content>
-        </Popover.Root>
-    </div>
+		</div>
+		<Progress
+			value={currentTime}
+			max={duration}
+			class="w-full cursor-pointer"
+			onclick={seek}
+		/>
+		<Button
+			variant="outline"
+			title={isFullscreen ? m.exit_fullscreen() : m.fullscreen()}
+			onclick={() => toggleFullscreen(shell, player)}
+		>
+			{#if isFullscreen}
+				<MinimizeIcon />
+			{:else}
+				<ExpandIcon />
+			{/if}
+		</Button>
+		<Button
+			variant="outline"
+			title={m.open_fullscreen()}
+			href={viewerHref as ResolvedPathname}
+		><MaximizeIcon /></Button>
+
+		<Popover.Root>
+			<Popover.Trigger title={m.change_volume()}>
+				<Button variant="outline">
+					{#if volume === 1}
+						<Volume2Icon />
+					{:else if volume > 0 && volume < 1}
+						<Volume1Icon />
+					{:else if volume === 0}
+						<VolumeXIcon />
+					{:else}
+						<VolumeXIcon />
+					{/if}
+				</Button>
+			</Popover.Trigger>
+			<Popover.Content class="w-10">
+				<Slider
+					type="single"
+					orientation="vertical"
+					bind:value={volume}
+					max={1}
+					step={0.01}
+				/>
+			</Popover.Content>
+		</Popover.Root>
+	</div>
 </div>

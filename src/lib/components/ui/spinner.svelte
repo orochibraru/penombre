@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { LoaderCircleIcon } from "@lucide/svelte";
-	import { cn } from "$lib/utils";
+	import { cn } from "#lib/utils.js";
 
 	interface Props {
 		size?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;

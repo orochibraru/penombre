@@ -10,17 +10,17 @@
  */
 
 import { asc } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import type { AuthType } from "$lib/server/auth";
-import { getVolumes, isSimpleMode } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { user as userTable } from "$lib/server/db/schema";
-import { StorageService } from "$lib/server/services/storage";
+import { Logger } from "#lib/logger.js";
+import type { AuthType } from "#lib/server/auth/index.js";
+import { getVolumes, isSimpleMode } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { user as userTable } from "#lib/server/db/schema.js";
+import { StorageService } from "#lib/server/services/storage/index.js";
 import {
 	estimateRemaining,
 	type ScanReporter,
 	type ScanStep,
-} from "$lib/server/services/storage/scan";
+} from "#lib/server/services/storage/scan.js";
 
 const logger = new Logger("LibraryScan");
 

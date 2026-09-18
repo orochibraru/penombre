@@ -1,6 +1,6 @@
 import type { Mock } from "bun:test";
 import { describe, expect, mock, test } from "bun:test";
-import { StorageService } from "$lib/server/services/storage";
+import { StorageService } from "#lib/server/services/storage/index.js";
 
 const instanceStats = {
 	userCount: 2,
@@ -15,7 +15,7 @@ const instanceStats = {
 
 const mockForInstance = mock(async () => instanceStats);
 
-mock.module("$lib/server/services/stats", () => ({
+mock.module("#lib/server/services/stats.js", () => ({
 	StatsService: class {
 		forInstance = mockForInstance;
 	},

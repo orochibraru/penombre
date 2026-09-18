@@ -4,7 +4,7 @@ import { dirname } from "node:path";
 import { SQL } from "bun";
 import { type BunSQLDatabase, drizzle as drizzlePg } from "drizzle-orm/bun-sql";
 import { drizzle as drizzleSqlite } from "drizzle-orm/bun-sqlite";
-import { getConfig } from "$lib/server/config";
+import { getConfig } from "#lib/server/config.js";
 import { getSqliteFilePath, isSqliteDialect } from "./dialect";
 
 export type Database = BunSQLDatabase<Record<string, never>>;

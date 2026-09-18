@@ -1,5 +1,5 @@
 import { error, redirect } from "@sveltejs/kit";
-import { storageServiceFor } from "$lib/server/services/storage-for";
+import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
 /**
  * Full-screen viewer for one media file.

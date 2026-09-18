@@ -15,9 +15,9 @@
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { and, eq, inArray, or } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import { getStoragePath, type VolumeConfig } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
+import { Logger } from "#lib/logger.js";
+import { getStoragePath, type VolumeConfig } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
 import {
 	type Drive,
 	driveMembers,
@@ -25,9 +25,9 @@ import {
 	files,
 	folders,
 	user,
-} from "$lib/server/db/schema";
-import { DriveAccessError } from "$lib/server/errors";
-import { StorageService } from "$lib/server/services/storage";
+} from "#lib/server/db/schema.js";
+import { DriveAccessError } from "#lib/server/errors.js";
+import { StorageService } from "#lib/server/services/storage/index.js";
 
 const logger = new Logger("DrivesService");
 

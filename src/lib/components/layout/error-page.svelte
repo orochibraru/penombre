@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { dev } from "$app/environment";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { cn } from "#lib/utils.js";
+	import { dev } from "$app/env";
 	import { page } from "$app/state";
-	import { Button } from "$lib/components/ui/button";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { cn } from "$lib/utils";
 
 	interface Props {
 		normalHeight: boolean;

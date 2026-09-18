@@ -1,11 +1,11 @@
 <script lang="ts" module>
 	import type { Component } from "svelte";
-	import type { Pathname } from "$app/types";
+	import type { ResolvedPathname } from "$app/types";
 
 	export interface SectionTab {
 		title: string;
 		/** Typed against the router so a renamed route fails the build. */
-		url: Pathname;
+		url: ResolvedPathname;
 		icon: Component;
 		/** Only active on an exact match — for the section's index route. */
 		isRoot?: boolean;
@@ -14,8 +14,8 @@
 
 <script lang="ts">
     import { page } from "$app/state";
-    import { customMenu } from "$lib/store/custom-menu";
-    import { cn } from "$lib/utils";
+    import { customMenu } from "#lib/store/custom-menu.js";
+    import { cn } from "#lib/utils.js";
 
     interface Props {
         title: string;
@@ -24,12 +24,12 @@
 
     const { title, tabs }: Props = $props();
 
-    // The mobile bottom bar opens a drawer from this store, so the tabs stay
-    // reachable on a phone where the tab strip is a horizontal scroll.
-    $effect(() => {
-        customMenu.set({ title, items: tabs });
-        return () => customMenu.set(null);
-    });
+  // The mobile bottom bar opens a drawer from this store, so the tabs stay
+  // reachable on a phone where the tab strip is a horizontal scroll.
+  $effect(() => {
+    customMenu.set({ title, items: tabs });
+    return () => customMenu.set(null);
+  });
 
     const isActive = (tab: SectionTab) =>
         tab.isRoot ? page.url.pathname === tab.url : page.url.pathname.startsWith(tab.url);

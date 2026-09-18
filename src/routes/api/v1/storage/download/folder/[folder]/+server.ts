@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
-import { Http } from "$lib/server/http";
-import { downloadFolder } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { downloadFolder } from "#lib/server/openapi/v1/storage.js";
 
 export const GET = downloadFolder.handler(
 	async ({ params, query, service }) => {

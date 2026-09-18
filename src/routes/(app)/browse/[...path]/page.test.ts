@@ -1,6 +1,6 @@
 import type { Mock } from "bun:test";
 import { describe, expect, test } from "bun:test";
-import { api } from "$lib/api";
+import { api } from "#lib/api/index.js";
 
 const mockGET = api.GET as unknown as Mock<typeof api.GET>;
 

@@ -1,4 +1,4 @@
-import type { ObjectItem } from "$lib/api";
+import type { ObjectItem } from "#lib/api/index.js";
 
 /**
  * Range selection shared by the list and grid views.

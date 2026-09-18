@@ -9,10 +9,10 @@
 
 import type { User } from "better-auth";
 import { and, desc, eq, isNotNull, lte, sql } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import { getConfig } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { files, folders, type Share, shares } from "$lib/server/db/schema";
+import { Logger } from "#lib/logger.js";
+import { getConfig } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { files, folders, type Share, shares } from "#lib/server/db/schema.js";
 
 const logger = new Logger("ShareService");
 

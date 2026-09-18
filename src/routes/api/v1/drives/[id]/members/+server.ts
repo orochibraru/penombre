@@ -1,10 +1,10 @@
-import { Http } from "$lib/server/http";
+import { Http } from "#lib/server/http.js";
 import {
 	addDriveMembers,
 	listDriveMembers,
-} from "$lib/server/openapi/v1/drives";
-import { drivesService, rethrowRefusal } from "$lib/server/services/drives";
-import { NotificationService } from "$lib/server/services/notifications";
+} from "#lib/server/openapi/v1/drives.js";
+import { drivesService, rethrowRefusal } from "#lib/server/services/drives.js";
+import { NotificationService } from "#lib/server/services/notifications.js";
 
 const notifications = new NotificationService();
 

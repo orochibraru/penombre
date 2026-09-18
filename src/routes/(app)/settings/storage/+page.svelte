@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { SparklesIcon, Trash2Icon } from "@lucide/svelte";
 	import { onMount } from "svelte";
-	import { resolve } from "$app/paths";
-	import FileTypeIcon from "$lib/components/file-type-icon.svelte";
-	import StorageUsage from "$lib/components/storage-usage.svelte";
-	import { buttonVariants } from "$lib/components/ui/button/index.js";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
+	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
+	import StorageUsage from "#lib/components/storage-usage.svelte";
+	import { buttonVariants } from "#lib/components/ui/button/index.js";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 	import {
 		filesCountLabel,
 		readableFileSize,
 		trashHoldsLabel,
-	} from "$lib/utils";
+	} from "#lib/utils.js";
+	import { resolve } from "$app/paths";
 
 	onMount(() => {
 		title.set(m.title_settings_storage());
@@ -75,8 +75,7 @@
                         >
                             <div
                                 class="bg-primary h-full rounded-lg transition-[width] duration-500 ease-out"
-                                style="width: {(row.bytes / maxCategoryBytes) *
-                                    100}%"
+                                style="width: {row.bytes / maxCategoryBytes * 100}%"
                             ></div>
                         </div>
                     </div>
@@ -112,10 +111,8 @@
                 </span>
                 <a
                     class={buttonVariants({ variant: "outline", size: "sm" })}
-                    href={resolve("/trash")}
-                >
-                    {m.storage_review_trash()}
-                </a>
+                    href={resolve('trash')}
+                >{m.storage_review_trash()}</a>
             </div>
 
             {#if stats.largestFiles.length > 0}
@@ -142,8 +139,7 @@
                             >
                                 <div
                                     class="bg-primary/50 h-full rounded-lg"
-                                    style="width: {(file.size / maxFileBytes) *
-                                        100}%"
+                                    style="width: {file.size / maxFileBytes * 100}%"
                                 ></div>
                             </div>
                         </div>

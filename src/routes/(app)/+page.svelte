@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Spinner from "$lib/components/ui/spinner.svelte";
-	import * as m from "$lib/paraglide/messages.js";
+	import Spinner from "#lib/components/ui/spinner.svelte";
+	import * as m from "#lib/paraglide/messages.js";
 </script>
 
 <div class="flex h-full w-full flex-col items-center justify-center gap-3">

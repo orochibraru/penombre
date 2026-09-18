@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import * as m from "$lib/paraglide/messages.js";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import * as m from "#lib/paraglide/messages.js";
 
 	interface Props {
 		confirmRestoreOpen: boolean;

@@ -8,11 +8,11 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Textarea } from "$lib/components/ui/textarea/index.js";
-	import { parseSlides, toDeck } from "$lib/documents";
-	import { m } from "$lib/paraglide/messages.js";
-	import { cn } from "$lib/utils";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { Textarea } from "#lib/components/ui/textarea/index.js";
+	import { parseSlides, toDeck } from "#lib/documents.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { cn } from "#lib/utils.js";
 
 	/**
 	 * A slide deck over a Markdown file, slides separated by `---`.

@@ -10,15 +10,15 @@
  */
 
 import { and, eq, inArray, ne, or, sql } from "drizzle-orm";
-import { Logger } from "$lib/logger";
-import { getDb } from "$lib/server/db";
+import { Logger } from "#lib/logger.js";
+import { getDb } from "#lib/server/db/index.js";
 import {
 	files,
 	folders,
 	sharedWith,
 	sharings,
 	user,
-} from "$lib/server/db/schema";
+} from "#lib/server/db/schema.js";
 
 const logger = new Logger("SharingService");
 

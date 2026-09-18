@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { Pagination as PaginationPrimitive } from "bits-ui";
-	import { buttonVariants, type Props } from "$lib/components/ui/button/index";
-	import { cn } from "$lib/utils.js";
+	import {
+		buttonVariants,
+		type Props,
+	} from "#lib/components/ui/button/index.js";
+	import { cn } from "#lib/utils.js";
 
 	let {
 		ref = $bindable(null),

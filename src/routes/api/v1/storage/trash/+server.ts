@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { emptyTrash } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { emptyTrash } from "#lib/server/openapi/v1/storage.js";
 
 export const DELETE = emptyTrash.handler(async ({ service }) => {
 	try {

@@ -3,8 +3,8 @@ import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { mkdir, readdir, rm, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { Logger } from "$lib/logger";
-import { rethrowUnreachable } from "$lib/server/errors";
+import { Logger } from "#lib/logger.js";
+import { rethrowUnreachable } from "#lib/server/errors.js";
 import { availableDiskSpace } from "../disk-space";
 import type { StorageDriver } from "../driver";
 

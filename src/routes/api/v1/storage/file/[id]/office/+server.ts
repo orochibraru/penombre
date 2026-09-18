@@ -1,6 +1,6 @@
-import { Http } from "$lib/server/http";
-import { isOfficeFile, textToOffice } from "$lib/server/office";
-import { saveOfficeDocument } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { isOfficeFile, textToOffice } from "#lib/server/office/index.js";
+import { saveOfficeDocument } from "#lib/server/openapi/v1/storage.js";
 
 /**
  * Saving an Office document is not an upload: the new bytes are the old file

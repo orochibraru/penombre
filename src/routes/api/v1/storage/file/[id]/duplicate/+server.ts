@@ -1,5 +1,5 @@
-import { Http } from "$lib/server/http";
-import { duplicateFile } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { duplicateFile } from "#lib/server/openapi/v1/storage.js";
 
 export const POST = duplicateFile.handler(async ({ params, service }) => {
 	const decodedItemName = decodeURIComponent(params.id);

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { cn } from "tailwind-variants";
-	import { Button } from "$lib/components/ui/button/index";
-	import * as Field from "$lib/components/ui/field/index.js";
-	import Input from "$lib/components/ui/input/input.svelte";
-	import { enhance } from "$lib/forms";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import * as Field from "#lib/components/ui/field/index.js";
+	import Input from "#lib/components/ui/input/input.svelte";
+	import { enhance } from "#lib/forms.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 
 	$title = m.forgot_password_title();
 </script>

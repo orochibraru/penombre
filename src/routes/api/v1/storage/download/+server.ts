@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
-import { Http } from "$lib/server/http";
-import { bulkDownload } from "$lib/server/openapi/v1/storage";
+import { Http } from "#lib/server/http.js";
+import { bulkDownload } from "#lib/server/openapi/v1/storage.js";
 
 export const POST = bulkDownload.handler(async ({ body, service }) => {
 	try {

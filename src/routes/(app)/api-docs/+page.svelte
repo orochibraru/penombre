@@ -1,8 +1,8 @@
 <script lang="ts">
 	import "swagger-ui-dist/swagger-ui.css";
 	import { onMount } from "svelte";
-	import * as m from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
+	import * as m from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 
 	$title = m.nav_api();
 

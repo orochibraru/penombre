@@ -5,11 +5,11 @@
 		ShieldCheckIcon,
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
-	import ActivityLog from "$lib/components/activity-log.svelte";
-	import { buttonVariants } from "$lib/components/ui/button/index.js";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { cn } from "$lib/utils";
+	import ActivityLog from "#lib/components/activity-log.svelte";
+	import { buttonVariants } from "#lib/components/ui/button/index.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { cn } from "#lib/utils.js";
 
 	onMount(() => {
 		title.set(m.title_admin_activity());

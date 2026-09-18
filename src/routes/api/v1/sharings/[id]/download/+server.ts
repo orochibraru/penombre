@@ -1,8 +1,8 @@
 import { Readable } from "node:stream";
 import { error } from "@sveltejs/kit";
 import type { User } from "better-auth";
-import { SharingService } from "$lib/server/services/sharings";
-import { StorageService } from "$lib/server/services/storage";
+import { SharingService } from "#lib/server/services/sharings.js";
+import { StorageService } from "#lib/server/services/storage/index.js";
 
 const sharings = new SharingService();
 

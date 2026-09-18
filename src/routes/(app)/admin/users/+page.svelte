@@ -6,16 +6,16 @@
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Card from "$lib/components/ui/card/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import { enhance } from "$lib/forms";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
-	import { cn, usersCountLabel } from "$lib/utils";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Card from "#lib/components/ui/card/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import { enhance } from "#lib/forms.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
+	import { cn, usersCountLabel } from "#lib/utils.js";
 
 	onMount(() => {
 		title.set(m.title_admin_users());

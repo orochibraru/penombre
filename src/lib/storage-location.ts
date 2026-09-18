@@ -1,3 +1,5 @@
+import type { ReadonlyURL } from "$app/state";
+
 /**
  * Where a request acts: the caller's own drive, a shared drive, or a mounted
  * volume.
@@ -54,7 +56,7 @@ export function locationOf(
  */
 export function locationFrom(
 	params: Partial<Record<string, string>> | undefined | null,
-	url: URL,
+	url: ReadonlyURL,
 ): StorageLocation {
 	const fromParams = locationOf(params);
 	if (fromParams.drive || fromParams.volume || fromParams.share) {

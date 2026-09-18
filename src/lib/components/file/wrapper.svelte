@@ -10,31 +10,27 @@
 	import { onMount, untrack } from "svelte";
 	import { MediaQuery } from "svelte/reactivity";
 	import { toast } from "svelte-sonner";
-	import { browser } from "$app/environment";
-	import { invalidate } from "$app/navigation";
-	import { navigating, page } from "$app/state";
-	import type { Pathname } from "$app/types";
-	import { api, type ObjectItem, type ObjectList } from "$lib/api";
-	import FileGrid from "$lib/components/file/grid.svelte";
-	import FileList from "$lib/components/file/list.svelte";
-	import PreviewDialog from "$lib/components/file/preview-dialog.svelte";
-	import SelectionBar from "$lib/components/file/selection-bar.svelte";
-	import FileTable from "$lib/components/file/table.svelte";
-	import DeleteDialog from "$lib/components/layout/dialogs/delete-dialog.svelte";
-	import MoveDialog from "$lib/components/layout/dialogs/move-dialog.svelte";
-	import RestoreDialog from "$lib/components/layout/dialogs/restore-dialog.svelte";
-	import ShareDialog from "$lib/components/layout/dialogs/share-dialog.svelte";
-	import { Badge } from "$lib/components/ui/badge/index";
-	import { Button } from "$lib/components/ui/button/index";
-	import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
-	import { Input } from "$lib/components/ui/input";
-	import * as m from "$lib/paraglide/messages.js";
+	import { api, type ObjectItem, type ObjectList } from "#lib/api/index.js";
+	import FileGrid from "#lib/components/file/grid.svelte";
+	import FileList from "#lib/components/file/list.svelte";
+	import PreviewDialog from "#lib/components/file/preview-dialog.svelte";
+	import SelectionBar from "#lib/components/file/selection-bar.svelte";
+	import FileTable from "#lib/components/file/table.svelte";
+	import DeleteDialog from "#lib/components/layout/dialogs/delete-dialog.svelte";
+	import MoveDialog from "#lib/components/layout/dialogs/move-dialog.svelte";
+	import RestoreDialog from "#lib/components/layout/dialogs/restore-dialog.svelte";
+	import ShareDialog from "#lib/components/layout/dialogs/share-dialog.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.js";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import * as ButtonGroup from "#lib/components/ui/button-group/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import * as m from "#lib/paraglide/messages.js";
 	import {
 		newFolderDialogOpen,
 		pendingUploadFiles,
 		uploadDialogOpen,
-	} from "$lib/store/upload";
+	} from "#lib/store/upload.js";
 	import {
 		cn,
 		isFolderItem,
@@ -42,12 +38,18 @@
 		readableFileSize,
 		type SortColumn,
 		type SortDirection,
-	} from "$lib/utils";
+	} from "#lib/utils.js";
+	import { browser } from "$app/env";
+	import { invalidate } from "$app/navigation";
+	import { navigating, page } from "$app/state";
+	import type { ResolvedPathname } from "$app/types";
+
 	import {
 		notesView,
 		pendingPreview,
 		takePendingPreview,
 	} from "./preview-handover";
+
 	import {
 		computeSelectionState,
 		createMainActions,
@@ -305,16 +307,13 @@
 							"/api/v1/storage/download/folder/{folder}",
 							{
 								params: {
-									path: {
-										folder: encodeURIComponent(folderId),
-									},
-									query: {
-										folder: currentFolder || undefined,
-									},
+									path: { folder: encodeURIComponent(folderId) },
+									query: { folder: currentFolder || undefined },
 								},
 								parseAs: "blob",
 							},
 						);
+
 						if (dlError) {
 							throw new Error("Failed to download folder");
 						}
@@ -443,6 +442,7 @@
 				onStar: () => {
 					actionsContextOpen = false;
 					const keys = selectedKeys(checkedItems);
+
 					void starSelected(
 						(data.list ?? []).filter((item) => keys.includes(item.key)),
 						currentFolder,
@@ -654,7 +654,7 @@
 	});
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown}></svelte:window>
 
 <!-- Filters -->
 
@@ -668,147 +668,147 @@
     }}
 />
 <div class="w-full pb-5 flex justify-between items-center gap-3">
-        <Input
-            bind:ref={searchInputRef}
-            bind:value={searchValue}
-            type="search"
-            placeholder={m.search_placeholder()}
-            class="hidden md:block "
-            onkeyup={() => {
-                debounce();
-            }}
-        />
-        <ButtonGroup.Root>
-            <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
-                    {#snippet child({ props })}
-                        <Button variant="outline" {...props}>
-                            <ArrowUpDownIcon class="h-4 w-4" />
-                            <span class="inline">
-                                {#if sortColumn}
-                                    {sortColumn === "name"
-                                        ? m.sort_name()
+	<Input
+		bind:ref={searchInputRef}
+		bind:value={searchValue}
+		type="search"
+		placeholder={m.search_placeholder()}
+		class="hidden md:block "
+		onkeyup={() => {
+			debounce();
+		}}
+	/>
+	<ButtonGroup.Root>
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger>
+				{#snippet child({ props })}
+					<Button variant="outline" {...props}>
+						<ArrowUpDownIcon class="h-4 w-4" />
+						<span class="inline">
+							{#if sortColumn}
+								{sortColumn === "name"
+									? m.sort_name()
                                         : sortColumn === "size"
                                           ? m.sort_size()
                                           : m.sort_date()}
                                     {sortDirection === "asc" ? "↑" : "↓"}
-                                {:else}
-                                    {m.sort()}
-                                {/if}
-                            </span>
-                        </Button>
-                    {/snippet}
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content align="end">
-                    <DropdownMenu.Label>{m.sort_by()}</DropdownMenu.Label>
-                    <DropdownMenu.Separator />
-                    <DropdownMenu.Item
-                        onclick={() => {
-                            sortColumn = "name";
-                            sortDirection = "asc";
-                        }}
-                    >
-                        {#if sortColumn === "name" && sortDirection === "asc"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.sort_name_asc()}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                        onclick={() => {
-                            sortColumn = "name";
-                            sortDirection = "desc";
-                        }}
-                    >
-                        {#if sortColumn === "name" && sortDirection === "desc"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.sort_name_desc()}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Separator />
-                    <DropdownMenu.Item
-                        onclick={() => {
-                            sortColumn = "size";
-                            sortDirection = "desc";
-                        }}
-                    >
-                        {#if sortColumn === "size" && sortDirection === "desc"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.sort_size_largest()}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                        onclick={() => {
-                            sortColumn = "size";
-                            sortDirection = "asc";
-                        }}
-                    >
-                        {#if sortColumn === "size" && sortDirection === "asc"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.sort_size_smallest()}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Separator />
-                    <DropdownMenu.Item
-                        onclick={() => {
-                            sortColumn = "updatedAt";
-                            sortDirection = "desc";
-                        }}
-                    >
-                        {#if sortColumn === "updatedAt" && sortDirection === "desc"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.sort_date_newest()}
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                        onclick={() => {
-                            sortColumn = "updatedAt";
-                            sortDirection = "asc";
-                        }}
-                    >
-                        {#if sortColumn === "updatedAt" && sortDirection === "asc"}
-                            <CheckIcon class="h-4 w-4" />
-                        {:else}
-                            <span class="w-4"></span>
-                        {/if}
-                        {m.sort_date_oldest()}
-                    </DropdownMenu.Item>
-                </DropdownMenu.Content>
-            </DropdownMenu.Root>
-            <Button
-                variant="outline"
-                title={m.layout()}
-                onclick={async () => {
+							{:else}
+								{m.sort()}
+							{/if}
+						</span>
+					</Button>
+				{/snippet}
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="end">
+				<DropdownMenu.Label>{m.sort_by()}</DropdownMenu.Label>
+				<DropdownMenu.Separator />
+				<DropdownMenu.Item
+					onclick={() => {
+						sortColumn = "name";
+						sortDirection = "asc";
+					}}
+				>
+					{#if sortColumn === "name" && sortDirection === "asc"}
+						<CheckIcon class="h-4 w-4" />
+					{:else}
+						<span class="w-4"></span>
+					{/if}
+					{m.sort_name_asc()}
+				</DropdownMenu.Item>
+				<DropdownMenu.Item
+					onclick={() => {
+						sortColumn = "name";
+						sortDirection = "desc";
+					}}
+				>
+					{#if sortColumn === "name" && sortDirection === "desc"}
+						<CheckIcon class="h-4 w-4" />
+					{:else}
+						<span class="w-4"></span>
+					{/if}
+					{m.sort_name_desc()}
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				<DropdownMenu.Item
+					onclick={() => {
+						sortColumn = "size";
+						sortDirection = "desc";
+					}}
+				>
+					{#if sortColumn === "size" && sortDirection === "desc"}
+						<CheckIcon class="h-4 w-4" />
+					{:else}
+						<span class="w-4"></span>
+					{/if}
+					{m.sort_size_largest()}
+				</DropdownMenu.Item>
+				<DropdownMenu.Item
+					onclick={() => {
+						sortColumn = "size";
+						sortDirection = "asc";
+					}}
+				>
+					{#if sortColumn === "size" && sortDirection === "asc"}
+						<CheckIcon class="h-4 w-4" />
+					{:else}
+						<span class="w-4"></span>
+					{/if}
+					{m.sort_size_smallest()}
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				<DropdownMenu.Item
+					onclick={() => {
+						sortColumn = "updatedAt";
+						sortDirection = "desc";
+					}}
+				>
+					{#if sortColumn === "updatedAt" && sortDirection === "desc"}
+						<CheckIcon class="h-4 w-4" />
+					{:else}
+						<span class="w-4"></span>
+					{/if}
+					{m.sort_date_newest()}
+				</DropdownMenu.Item>
+				<DropdownMenu.Item
+					onclick={() => {
+						sortColumn = "updatedAt";
+						sortDirection = "asc";
+					}}
+				>
+					{#if sortColumn === "updatedAt" && sortDirection === "asc"}
+						<CheckIcon class="h-4 w-4" />
+					{:else}
+						<span class="w-4"></span>
+					{/if}
+					{m.sort_date_oldest()}
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+		<Button
+			variant="outline"
+			title={m.layout()}
+			onclick={async () => {
                     await api.PUT("/api/v1/preferences", {
                         body: { layout: layout === "grid" ? "list" : "grid" },
                     });
-                    await invalidate("app:preferences");
-                }}
-            >
-                {#if layout === "grid"}
-                    <LayoutGridIcon class="h-4 w-4" />
-                {:else}
-                    <LayoutListIcon class="h-4 w-4" />
-                {/if}
+				await invalidate("app:preferences");
+			}}
+		>
+			{#if layout === "grid"}
+				<LayoutGridIcon class="h-4 w-4" />
+			{:else}
+				<LayoutListIcon class="h-4 w-4" />
+			{/if}
                 <span>
                     {layout === "grid" ? m.layout_grid() : m.layout_list()}
                 </span>
-            </Button>
-            {#if isTrash}
-                <Button
-                    type="button"
-                    variant="destructive"
-                    onclick={emptyTrash}
-                    disabled={data.count === 0}
+		</Button>
+		{#if isTrash}
+			<Button
+				type="button"
+				variant="destructive"
+				onclick={emptyTrash}
+				disabled={data.count === 0}
                     title={data.count === 0
                         ? m.trash_is_empty()
                         : m.empty_trash()}
@@ -816,115 +816,115 @@
                     <BrushCleaningIcon />
                     {m.empty_trash()}
                 </Button>
-            {/if}
-        </ButtonGroup.Root>
-    </div>
+		{/if}
+	</ButtonGroup.Root>
+</div>
 
 <!-- Table -->
 {#if layout === "list"}
-    <div class="hidden md:block">
-        <FileTable
-            handleOpenItem={handleOpenItemWrapper}
-            files={data}
-            {itemActions}
-            {searchValue}
-            {searchResults}
-            {indeterminate}
-            bind:sortColumn
-            bind:sortDirection
-            onDrop={handleFileDrop}
-            onUpload={handleUpload}
-            onCreateFolder={handleCreateFolder}
-            bind:checkedItems
-            bind:loading
-            bind:allSelected
-            bind:actionableItem
-            bind:actionsContextOpen
-            {draggedItem}
-            bind:dropTargetKey
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDropOnFolder={handleDropOnFolder}
-        />
-    </div>
-    <div class="md:hidden">
-        <FileList
-            handleOpenItem={handleOpenItemWrapper}
-            files={data}
-            {itemActions}
-            {searchValue}
-            {searchResults}
-            {indeterminate}
-            {sortColumn}
-            {sortDirection}
-            onDrop={handleFileDrop}
-            onUpload={handleUpload}
-            onCreateFolder={handleCreateFolder}
-            bind:checkedItems
-            bind:loading
-            bind:allSelected
-            bind:actionableItem
-            bind:actionsContextOpen
-            {draggedItem}
-            bind:dropTargetKey
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDropOnFolder={handleDropOnFolder}
-        />
-    </div>
+	<div class="hidden md:block">
+		<FileTable
+			handleOpenItem={handleOpenItemWrapper}
+			files={data}
+			itemActions={itemActions}
+			searchValue={searchValue}
+			searchResults={searchResults}
+			indeterminate={indeterminate}
+			bind:sortColumn
+			bind:sortDirection
+			onDrop={handleFileDrop}
+			onUpload={handleUpload}
+			onCreateFolder={handleCreateFolder}
+			bind:checkedItems
+			bind:loading
+			bind:allSelected
+			bind:actionableItem
+			bind:actionsContextOpen
+			draggedItem={draggedItem}
+			bind:dropTargetKey
+			onDragStart={handleDragStart}
+			onDragEnd={handleDragEnd}
+			onDropOnFolder={handleDropOnFolder}
+		/>
+	</div>
+	<div class="md:hidden">
+		<FileList
+			handleOpenItem={handleOpenItemWrapper}
+			files={data}
+			itemActions={itemActions}
+			searchValue={searchValue}
+			searchResults={searchResults}
+			indeterminate={indeterminate}
+			sortColumn={sortColumn}
+			sortDirection={sortDirection}
+			onDrop={handleFileDrop}
+			onUpload={handleUpload}
+			onCreateFolder={handleCreateFolder}
+			bind:checkedItems
+			bind:loading
+			bind:allSelected
+			bind:actionableItem
+			bind:actionsContextOpen
+			draggedItem={draggedItem}
+			bind:dropTargetKey
+			onDragStart={handleDragStart}
+			onDragEnd={handleDragEnd}
+			onDropOnFolder={handleDropOnFolder}
+		/>
+	</div>
 {:else}
-    <FileGrid
-        handleOpenItem={handleOpenItemWrapper}
-        files={data}
-        {itemActions}
-        {searchValue}
-        {searchResults}
-        {indeterminate}
-        {sortColumn}
-        {sortDirection}
-        onDrop={handleFileDrop}
-        onUpload={handleUpload}
-        onCreateFolder={handleCreateFolder}
-        bind:checkedItems
-        bind:loading
-        bind:allSelected
-        bind:actionableItem
-        bind:actionsContextOpen
-        {draggedItem}
-        bind:dropTargetKey
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDropOnFolder={handleDropOnFolder}
-    />
+	<FileGrid
+		handleOpenItem={handleOpenItemWrapper}
+		files={data}
+		itemActions={itemActions}
+		searchValue={searchValue}
+		searchResults={searchResults}
+		indeterminate={indeterminate}
+		sortColumn={sortColumn}
+		sortDirection={sortDirection}
+		onDrop={handleFileDrop}
+		onUpload={handleUpload}
+		onCreateFolder={handleCreateFolder}
+		bind:checkedItems
+		bind:loading
+		bind:allSelected
+		bind:actionableItem
+		bind:actionsContextOpen
+		draggedItem={draggedItem}
+		bind:dropTargetKey
+		onDragStart={handleDragStart}
+		onDragEnd={handleDragEnd}
+		onDropOnFolder={handleDropOnFolder}
+	/>
 {/if}
 
 <PreviewDialog
-    bind:open={viewFileOpen}
-    {fileToView}
-    currentUserId={page.data.user?.id}
+	bind:open={viewFileOpen}
+	fileToView={fileToView}
+	currentUserId={page.data.user?.id}
 />
 
 <DeleteDialog
-    bind:confirmDeleteOpen
-    bind:deletingItem
-    {checkedItems}
-    {handleDeleteObject}
-    items={data.list}
-    {emptyingTrash}
+	bind:confirmDeleteOpen
+	bind:deletingItem
+	checkedItems={checkedItems}
+	handleDeleteObject={handleDeleteObject}
+	items={data.list}
+	emptyingTrash={emptyingTrash}
 />
 
 <RestoreDialog
-    bind:confirmRestoreOpen
-    bind:restoringItem
-    {checkedItems}
-    {handleRestoreObject}
+	bind:confirmRestoreOpen
+	bind:restoringItem
+	checkedItems={checkedItems}
+	handleRestoreObject={handleRestoreObject}
 />
 
 <SelectionBar
-    open={multiObjectActionsOpen}
-    count={selectedItemCount}
-    actions={multipleItemsActions}
-    onclear={() => (checkedItems = {})}
+	open={multiObjectActionsOpen}
+	count={selectedItemCount}
+	actions={multipleItemsActions}
+	onclear={() => checkedItems = {}}
 />
 
 <ShareDialog bind:open={shareDialogOpen} bind:item={shareItem} />

@@ -1,5 +1,4 @@
-import { json } from "@sveltejs/kit";
-import { Logger } from "$lib/logger";
+import { Logger } from "#lib/logger.js";
 
 const logger = new Logger("HTTP_ERROR");
 
@@ -15,7 +14,7 @@ export class Http {
 		res: StandardizedResponse<T>,
 		init?: ResponseInit,
 	) {
-		return json(res, init);
+		return Response.json(res, init);
 	}
 
 	public static Ok<T>(data: T) {

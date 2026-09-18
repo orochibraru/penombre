@@ -1,7 +1,7 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
-import { FileCategoryEnum } from "$lib/file-helpers";
-import { activity, sharedWith, sharings } from "$lib/server/db/schema";
+import { FileCategoryEnum } from "#lib/file-helpers.js";
+import { activity, sharedWith, sharings } from "#lib/server/db/schema.js";
 
 export const directoryListSchema: z.ZodType<string[]> = z.array(z.string());
 

@@ -1,6 +1,6 @@
-import { Http } from "$lib/server/http";
-import { deleteNote, updateNote } from "$lib/server/openapi/v1/notes";
-import { NoteService } from "$lib/server/services/notes";
+import { Http } from "#lib/server/http.js";
+import { deleteNote, updateNote } from "#lib/server/openapi/v1/notes.js";
+import { NoteService } from "#lib/server/services/notes.js";
 
 const notes = new NoteService();
 

@@ -1,18 +1,18 @@
 import { fail } from "@sveltejs/kit";
-import { loadedOAuthProviders } from "$lib/server/auth";
-import { envProvided, getConfig } from "$lib/server/config";
-import type { AppSettingsData } from "$lib/server/db/schema";
-import { Email } from "$lib/server/email";
+import { loadedOAuthProviders } from "#lib/server/auth/index.js";
+import { envProvided, getConfig } from "#lib/server/config.js";
+import type { AppSettingsData } from "#lib/server/db/schema.js";
+import { Email } from "#lib/server/email.js";
 import {
 	getAppSettings,
 	getSmtpSettings,
 	updateAppSettings,
-} from "$lib/server/services/app-settings";
+} from "#lib/server/services/app-settings.js";
 import {
 	getSignInMethodUsage,
 	usersWithoutTwoFactor,
 	validateSignInMethods,
-} from "$lib/server/services/auth-methods";
+} from "#lib/server/services/auth-methods.js";
 
 type StoredProvider = NonNullable<AppSettingsData["oauthProviders"]>[number];
 

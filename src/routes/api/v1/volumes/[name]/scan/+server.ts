@@ -1,8 +1,8 @@
-import { getVolume } from "$lib/server/config";
-import { Http } from "$lib/server/http";
-import { rescanVolume } from "$lib/server/openapi/v1/volumes";
-import { scanNow, volumeScanKey } from "$lib/server/services/library-scan";
-import { volumeStorage } from "$lib/server/services/storage-for";
+import { getVolume } from "#lib/server/config.js";
+import { Http } from "#lib/server/http.js";
+import { rescanVolume } from "#lib/server/openapi/v1/volumes.js";
+import { scanNow, volumeScanKey } from "#lib/server/services/library-scan.js";
+import { volumeStorage } from "#lib/server/services/storage-for.js";
 
 export const POST = rescanVolume.handler(async ({ params, body, user }) => {
 	const volume = getVolume(params.name);

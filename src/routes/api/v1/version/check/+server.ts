@@ -1,6 +1,6 @@
-import { Http } from "$lib/server/http";
-import { checkVersion } from "$lib/server/openapi/v1/version";
-import { checkForUpdate } from "$lib/server/services/version";
+import { Http } from "#lib/server/http.js";
+import { checkVersion } from "#lib/server/openapi/v1/version.js";
+import { checkForUpdate } from "#lib/server/services/version.js";
 
 export const GET = checkVersion.handler(async () => {
 	try {

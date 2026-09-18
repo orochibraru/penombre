@@ -6,14 +6,13 @@
 		FolderPlusIcon,
 		UploadIcon,
 	} from "@lucide/svelte";
-	import { page } from "$app/state";
-	import type { ObjectItem } from "$lib/api";
-	import FilePrefix from "$lib/components/file/prefix.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as Drawer from "$lib/components/ui/drawer/index";
-	import { Skeleton } from "$lib/components/ui/skeleton/index";
-	import * as m from "$lib/paraglide/messages.js";
-	import { locationOf } from "$lib/storage-location";
+	import type { ObjectItem } from "#lib/api/index.js";
+	import FilePrefix from "#lib/components/file/prefix.svelte";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import * as Drawer from "#lib/components/ui/drawer/index.js";
+	import { Skeleton } from "#lib/components/ui/skeleton/index.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import { locationOf } from "#lib/storage-location.js";
 	import {
 		cn,
 		isBrowsableListing,
@@ -24,7 +23,8 @@
 		resolveParentPath,
 		type SharedFileDisplayProps,
 		shouldDisplayAction,
-	} from "$lib/utils";
+	} from "#lib/utils.js";
+	import { page } from "$app/state";
 
 	let {
 		handleOpenItem,

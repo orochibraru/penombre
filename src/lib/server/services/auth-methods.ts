@@ -5,8 +5,8 @@
  */
 
 import { count, eq, inArray, sql } from "drizzle-orm";
-import { getDb } from "$lib/server/db";
-import { account, user } from "$lib/server/db/schema";
+import { getDb } from "#lib/server/db/index.js";
+import { account, user } from "#lib/server/db/schema.js";
 
 /** better-auth writes password credentials under this provider id. */
 const CREDENTIAL = "credential";

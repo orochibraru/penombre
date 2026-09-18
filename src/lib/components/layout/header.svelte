@@ -2,17 +2,17 @@
 	import { EllipsisIcon } from "@lucide/svelte";
 	import type { User } from "better-auth";
 	import { MediaQuery } from "svelte/reactivity";
+	import Notifications from "#lib/components/layout/notifications.svelte";
+	import UserMenu from "#lib/components/layout/user-menu.svelte";
+	import * as Breadcrumb from "#lib/components/ui/breadcrumb/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import { Separator } from "#lib/components/ui/separator/index.js";
+	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
+	import { title } from "#lib/store/title.js";
+	import type { BreadCrumb } from "#lib/utils.js";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
-	import Notifications from "$lib/components/layout/notifications.svelte";
-	import UserMenu from "$lib/components/layout/user-menu.svelte";
-	import * as Breadcrumb from "$lib/components/ui/breadcrumb/index";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
-	import { Separator } from "$lib/components/ui/separator/index";
-	import * as Sidebar from "$lib/components/ui/sidebar/index";
-	import { title } from "$lib/store/title";
-	import type { BreadCrumb } from "$lib/utils";
 
 	interface Props {
 		user: User;
@@ -31,7 +31,7 @@
              bottom-bar drawer, and the sidebar's Sheet is not rendered. Which
              also leaves nothing branding the app there, hence the logo. -->
         <Sidebar.Trigger class="-ml-1 hidden md:flex" />
-        <a href={resolve("/")} class="-ml-1 me-1 flex items-center md:hidden">
+        <a href={resolve("/(app)")} class="-ml-1 me-1 flex items-center md:hidden">
             <img
                 src="/logo.svg"
                 alt={`${page.data.config.appName} logo`}

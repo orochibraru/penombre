@@ -1,7 +1,7 @@
 <script lang="ts" module>
 	export interface NavItem {
 		title: string;
-		url: Pathname;
+		url: ResolvedPathname;
 		icon: LucideIcon;
 		accentColor?:
 			| "indigo"
@@ -54,10 +54,10 @@
     import { type LucideIcon } from "@lucide/svelte";
     import type { ComponentProps } from "svelte";
     import { page } from "$app/state";
-    import { Badge } from "$lib/components/ui/badge/index";
-    import * as Sidebar from "$lib/components/ui/sidebar/index";
-    import { cn, type WithoutChildren } from "$lib/utils.js";
-    import type { Pathname } from "$app/types";
+    import { Badge } from "#lib/components/ui/badge/index.js";
+    import * as Sidebar from "#lib/components/ui/sidebar/index.js";
+    import { cn, type WithoutChildren } from "#lib/utils.js";
+    import type { ResolvedPathname } from "$app/types";
 
     type Props = WithoutChildren<ComponentProps<typeof Sidebar.Group>> & {
         title: string;

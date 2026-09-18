@@ -1,6 +1,6 @@
 import type { Mock } from "bun:test";
 import { describe, expect, test } from "bun:test";
-import { auth } from "$lib/server/auth";
+import { auth } from "#lib/server/auth/index.js";
 
 const mockListUsers = auth.api.listUsers as unknown as Mock<
 	typeof auth.api.listUsers

@@ -6,16 +6,16 @@
 		Trash2Icon,
 		UsersIcon,
 	} from "@lucide/svelte";
+	import type { ObjectList } from "#lib/api/index.js";
+	import FileLayout from "#lib/components/file/layout.svelte";
+	import DriveMembersDialog from "#lib/components/layout/dialogs/drive-members-dialog.svelte";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import type { DriveRole } from "#lib/drives.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { title } from "#lib/store/title.js";
 	import { invalidate } from "$app/navigation";
 	import { page } from "$app/state";
-	import type { ObjectList } from "$lib/api";
-	import FileLayout from "$lib/components/file/layout.svelte";
-	import DriveMembersDialog from "$lib/components/layout/dialogs/drive-members-dialog.svelte";
-	import Badge from "$lib/components/ui/badge/badge.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import type { DriveRole } from "$lib/drives";
-	import { m } from "$lib/paraglide/messages.js";
-	import { title } from "$lib/store/title";
 
 	interface Props {
 		data: {

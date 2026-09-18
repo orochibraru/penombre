@@ -4,7 +4,7 @@
 
 <script lang="ts">
 	import { box } from "svelte-toolbelt";
-	import { cn } from "$lib/utils/utils";
+	import { cn } from "#lib/utils/utils.js";
 	import { codeVariants } from ".";
 	import { useCode } from "./code.svelte.js";
 	import type { CodeRootProps } from "./types";

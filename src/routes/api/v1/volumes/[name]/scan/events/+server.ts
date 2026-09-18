@@ -1,12 +1,12 @@
-import { getVolume } from "$lib/server/config";
-import { Http } from "$lib/server/http";
-import { volumeScanEvents } from "$lib/server/openapi/v1/volumes";
+import { getVolume } from "#lib/server/config.js";
+import { Http } from "#lib/server/http.js";
+import { volumeScanEvents } from "#lib/server/openapi/v1/volumes.js";
 import {
 	type ScanStatus,
 	scanStatus,
 	subscribeScan,
 	volumeScanKey,
-} from "$lib/server/services/library-scan";
+} from "#lib/server/services/library-scan.js";
 
 /** Proxies drop an idle stream; a comment line every so often keeps it open. */
 const KEEPALIVE_MS = 15_000;

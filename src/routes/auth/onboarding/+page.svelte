@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { KeyRoundIcon } from "@lucide/svelte";
-	import * as Alert from "$lib/components/ui/alert/index.js";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Field from "$lib/components/ui/field/index.js";
-	import { Input } from "$lib/components/ui/input";
-	import { enhance } from "$lib/forms";
-	import { m } from "$lib/paraglide/messages.js";
+	import * as Alert from "#lib/components/ui/alert/index.js";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Field from "#lib/components/ui/field/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import { enhance } from "#lib/forms.js";
+	import { m } from "#lib/paraglide/messages.js";
 
 	const { data, form } = $props();
 

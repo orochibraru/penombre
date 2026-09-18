@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
+import process from "node:process";
 import z from "zod";
-import { building, dev } from "$app/environment";
-import { env } from "$env/dynamic/private";
+import { building, dev } from "$app/env";
 import {
 	DEV_DATA_DIR,
 	dataPaths,
@@ -11,6 +11,10 @@ import {
 } from "./config.defaults";
 
 export { generateExampleDotenvFile };
+
+// Not `$app/env/private`: that needs every name declared up front, and
+// `OAUTH_<NAME>_*` / `VOLUME_<NAME>_*` are discovered by scanning keys.
+const env = process.env;
 
 const oauthProviderSchema = z.object({
 	name: z.string(),

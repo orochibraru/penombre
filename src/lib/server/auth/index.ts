@@ -14,20 +14,20 @@ import {
 	twoFactor,
 } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
-import { building, dev } from "$app/environment";
-import { getRequestEvent } from "$app/server";
-import { Logger } from "$lib/logger";
-import { getConfig, isSmtpEnabled } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { isSqliteDialect } from "$lib/server/db/dialect";
-import * as schema from "$lib/server/db/schema";
-import { Email } from "$lib/server/email";
+import { Logger } from "#lib/logger.js";
+import { getConfig, isSmtpEnabled } from "#lib/server/config.js";
+import { isSqliteDialect } from "#lib/server/db/dialect.js";
+import { getDb } from "#lib/server/db/index.js";
+import * as schema from "#lib/server/db/schema.js";
+import { Email } from "#lib/server/email.js";
 import {
 	getPasswordlessSettings,
 	getStoredOAuthProviders,
 	isEmailSignInEnabled,
-} from "$lib/server/services/app-settings";
-import { StorageService } from "$lib/server/services/storage";
+} from "#lib/server/services/app-settings.js";
+import { StorageService } from "#lib/server/services/storage/index.js";
+import { building, dev } from "$app/env";
+import { getRequestEvent } from "$app/server";
 
 const logger = new Logger("Auth");
 
@@ -231,9 +231,8 @@ export const auth = betterAuth({
 		// Always loaded, never gated: an account must be able to enrol and to
 		// answer a challenge even when the admin has not made 2FA mandatory.
 		// The `requireTwoFactor` setting only decides who is forced to enrol.
-		twoFactor({
-			issuer: "Penombre",
-		}),
+		twoFactor({ issuer: "Penombre" }),
+
 		...(passwordless.magicLink
 			? [
 					magicLink({

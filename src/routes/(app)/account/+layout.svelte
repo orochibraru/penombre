@@ -7,8 +7,8 @@
 	} from "@lucide/svelte";
 	import SectionTabs, {
 		type SectionTab,
-	} from "$lib/components/layout/section-tabs.svelte";
-	import * as m from "$lib/paraglide/messages.js";
+	} from "#lib/components/layout/section-tabs.svelte";
+	import * as m from "#lib/paraglide/messages.js";
 
 	const tabs: SectionTab[] = [
 		{

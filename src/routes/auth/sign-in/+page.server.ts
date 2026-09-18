@@ -1,15 +1,15 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
-import { resolve } from "$app/paths";
 import {
 	auth,
 	loadedOAuthProviders,
 	passwordlessMethods,
-} from "$lib/server/auth";
-import { getConfig, isAuthBypassed } from "$lib/server/config";
-import { getDb } from "$lib/server/db";
-import { account as authAccount, user } from "$lib/server/db/schema";
-import { isOAuthSignInEnabled } from "$lib/server/services/app-settings";
+} from "#lib/server/auth/index.js";
+import { getConfig, isAuthBypassed } from "#lib/server/config.js";
+import { getDb } from "#lib/server/db/index.js";
+import { account as authAccount, user } from "#lib/server/db/schema.js";
+import { isOAuthSignInEnabled } from "#lib/server/services/app-settings.js";
+import { resolve } from "$app/paths";
 
 export const load = async ({ url, request }) => {
 	const config = getConfig();
@@ -20,19 +20,19 @@ export const load = async ({ url, request }) => {
 
 	if (!skip) {
 		if (isAuthBypassed()) {
-			redirect(302, resolve("/"));
+			redirect(302, resolve("/(app)"));
 		}
 
 		if (config.autoRedirectProvider) {
 			const { url: providerUrl } = await auth.api.signInSocial({
 				body: {
 					provider: config.autoRedirectProvider,
-					callbackURL: resolve("/"),
+					callbackURL: resolve("/(app)"),
 				},
 				headers: request.headers,
 			});
 			if (providerUrl) {
-				redirect(302, providerUrl);
+				redirect(302, providerUrl, { external: true });
 			}
 		}
 	}

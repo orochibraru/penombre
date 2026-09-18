@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { auth } from "$lib/server/auth";
+import { auth } from "#lib/server/auth/index.js";
 
 export const load = async ({ request }) => {
 	try {

@@ -3,7 +3,7 @@
  * only the state and the markup.
  */
 
-import { api, type ObjectItem } from "$lib/api";
+import { api, type ObjectItem } from "#lib/api/index.js";
 
 /** Matching files for `query`, or an empty list for a blank or failed search. */
 export async function searchFiles(query: string): Promise<ObjectItem[]> {

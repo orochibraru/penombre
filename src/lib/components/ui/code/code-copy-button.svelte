@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { CodeCopyButtonProps } from "$lib/components/ui/code/types";
-	import { CopyButton } from "$lib/components/ui/copy-button";
-	import { cn } from "$lib/utils/utils";
+	import type { CodeCopyButtonProps } from "#lib/components/ui/code/types.js";
+	import { CopyButton } from "#lib/components/ui/copy-button/index.js";
+	import { cn } from "#lib/utils/utils.js";
 	import { useCodeCopyButton } from "./code.svelte.js";
 
 	let { class: className }: CodeCopyButtonProps = $props();

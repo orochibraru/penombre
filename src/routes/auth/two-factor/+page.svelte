@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { ShieldCheckIcon } from "@lucide/svelte";
+	import { authClient } from "#lib/auth-client.js";
+	import * as Alert from "#lib/components/ui/alert/index.js";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as Field from "#lib/components/ui/field/index.js";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import { m } from "#lib/paraglide/messages.js";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
-	import { authClient } from "$lib/auth-client";
-	import * as Alert from "$lib/components/ui/alert/index.js";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Field from "$lib/components/ui/field/index.js";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import { m } from "$lib/paraglide/messages.js";
 
 	/**
 	 * The second step of a sign-in that needs another factor.
@@ -36,7 +36,7 @@
 			errorMessage = error.message || m.two_factor_invalid();
 			return;
 		}
-		await goto(resolve("/"), { replaceState: true, invalidateAll: true });
+		await goto(resolve("/(app)"), { replace: true, refreshAll: true });
 	}
 </script>
 

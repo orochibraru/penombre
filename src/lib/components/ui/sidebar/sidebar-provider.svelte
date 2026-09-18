@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { HTMLAttributes } from "svelte/elements";
+	import * as Tooltip from "#lib/components/ui/tooltip/index.js";
+	import { cn, type WithElementRef } from "#lib/utils.js";
 	import { onNavigate } from "$app/navigation";
-	import * as Tooltip from "$lib/components/ui/tooltip/index";
-	import { cn, type WithElementRef } from "$lib/utils.js";
 	import {
 		SIDEBAR_COOKIE_MAX_AGE,
 		SIDEBAR_COOKIE_NAME,
@@ -38,12 +38,16 @@
 		},
 	});
 
-	onNavigate(() => {
+	onNavigate(({ shallow }) => {
+		if (shallow) {
+			return;
+		}
+
 		sidebar.setOpenMobile(false);
 	});
 </script>
 
-<svelte:window onkeydown={sidebar.handleShortcutKeydown} />
+<svelte:window onkeydown={sidebar.handleShortcutKeydown}></svelte:window>
 
 <Tooltip.Provider delayDuration={0}>
 	<div

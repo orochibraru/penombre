@@ -1,10 +1,10 @@
-import { Http } from "$lib/server/http";
+import { Http } from "#lib/server/http.js";
 import {
 	createSharing,
 	listResourceSharings,
-} from "$lib/server/openapi/v1/sharings";
-import { NotificationService } from "$lib/server/services/notifications";
-import { SharingService } from "$lib/server/services/sharings";
+} from "#lib/server/openapi/v1/sharings.js";
+import { NotificationService } from "#lib/server/services/notifications.js";
+import { SharingService } from "#lib/server/services/sharings.js";
 
 const sharings = new SharingService();
 const notifications = new NotificationService();

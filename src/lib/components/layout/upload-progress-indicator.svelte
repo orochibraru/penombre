@@ -8,10 +8,10 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { fly, slide } from "svelte/transition";
-	import { Button } from "$lib/components/ui/button";
-	import { Progress } from "$lib/components/ui/progress";
-	import Spinner from "$lib/components/ui/spinner.svelte";
-	import * as m from "$lib/paraglide/messages.js";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import { Progress } from "#lib/components/ui/progress/index.js";
+	import Spinner from "#lib/components/ui/spinner.svelte";
+	import * as m from "#lib/paraglide/messages.js";
 	import {
 		failedUploads,
 		globalUploadProgress,
@@ -20,9 +20,9 @@
 		uploadingItems,
 		uploadingItemsNames,
 		uploadStats,
-	} from "$lib/store/upload";
-	import { dismissFailed, retryUpload } from "$lib/upload/manager";
-	import { cn } from "$lib/utils";
+	} from "#lib/store/upload.js";
+	import { dismissFailed, retryUpload } from "#lib/upload/manager.js";
+	import { cn } from "#lib/utils.js";
 
 	let expanded = $state(true);
 	let isUploading = $derived(

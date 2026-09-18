@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { m } from "$lib/paraglide/messages.js";
-	import { readableFileSize } from "$lib/utils";
+	import { m } from "#lib/paraglide/messages.js";
+	import { readableFileSize } from "#lib/utils.js";
 
 	interface Props {
 		used: number;

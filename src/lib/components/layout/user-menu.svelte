@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { CircleUserIcon, LogOutIcon } from "@lucide/svelte";
+	import { type User } from "#lib/api/index.js";
+	import { handleSignOut } from "#lib/auth-helpers.js";
+	import * as Avatar from "#lib/components/ui/avatar/index.js";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
+	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
+	import * as m from "#lib/paraglide/messages.js";
 	import { resolve } from "$app/paths";
-	import { type User } from "$lib/api";
-	import { handleSignOut } from "$lib/auth-helpers";
-	import * as Avatar from "$lib/components/ui/avatar/index";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
-	import * as Sidebar from "$lib/components/ui/sidebar/index";
-	import * as m from "$lib/paraglide/messages.js";
 
 	interface Props {
 		user: User;
@@ -85,10 +85,7 @@
                 <DropdownMenu.Group>
                     <DropdownMenu.Item>
                         {#snippet child({ props })}
-                            <a href={resolve("/account")} {...props}>
-                                <CircleUserIcon />
-                                <span>{m.account()}</span>
-                            </a>
+                            <a href={resolve('account')} {...props}><CircleUserIcon /><span>{m.account()}</span></a>
                         {/snippet}
                     </DropdownMenu.Item>
                 </DropdownMenu.Group>

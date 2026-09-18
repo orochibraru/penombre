@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { SearchIcon, XIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
-	import { api } from "$lib/api";
-	import ResponsiveDialog from "$lib/components/responsive-dialog.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
-	import { Input } from "$lib/components/ui/input";
-	import { Label } from "$lib/components/ui/label";
-	import * as Select from "$lib/components/ui/select/index.js";
-	import type { DriveRole } from "$lib/drives";
-	import { m } from "$lib/paraglide/messages.js";
+	import { api } from "#lib/api/index.js";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
+	import Button from "#lib/components/ui/button/button.svelte";
+	import { Input } from "#lib/components/ui/input/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import * as Select from "#lib/components/ui/select/index.js";
+	import type { DriveRole } from "#lib/drives.js";
+	import { m } from "#lib/paraglide/messages.js";
 
 	interface Person {
 		id: string;

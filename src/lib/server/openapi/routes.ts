@@ -7,17 +7,17 @@
  */
 
 // Schema registrations
-import "$lib/server/openapi/schemas";
+import "#lib/server/openapi/schemas.js";
 
 // Route definition modules (side-effect: register with the OpenAPI registry)
-import "$lib/server/openapi/v1/activity";
-import "$lib/server/openapi/v1/auth";
-import "$lib/server/openapi/v1/drives";
-import "$lib/server/openapi/v1/notes";
-import "$lib/server/openapi/v1/notifications";
-import "$lib/server/openapi/v1/preferences";
-import "$lib/server/openapi/v1/shares";
-import "$lib/server/openapi/v1/sharings";
-import "$lib/server/openapi/v1/storage";
-import "$lib/server/openapi/v1/version";
-import "$lib/server/openapi/v1/volumes";
+import "#lib/server/openapi/v1/activity.js";
+import "#lib/server/openapi/v1/auth.js";
+import "#lib/server/openapi/v1/drives.js";
+import "#lib/server/openapi/v1/notes.js";
+import "#lib/server/openapi/v1/notifications.js";
+import "#lib/server/openapi/v1/preferences.js";
+import "#lib/server/openapi/v1/shares.js";
+import "#lib/server/openapi/v1/sharings.js";
+import "#lib/server/openapi/v1/storage.js";
+import "#lib/server/openapi/v1/version.js";
+import "#lib/server/openapi/v1/volumes.js";

@@ -1,13 +1,13 @@
 import { redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
 import { zod4 } from "sveltekit-superforms/adapters";
+import { api } from "#lib/api/index.js";
+import { uploadSchema } from "#lib/schemas/upload.js";
+import { getConfig, getVolumes, isSimpleMode } from "#lib/server/config.js";
+import { isTwoFactorRequired } from "#lib/server/services/app-settings.js";
+import { drivesService } from "#lib/server/services/drives.js";
+import { SharingService } from "#lib/server/services/sharings.js";
 import { resolve } from "$app/paths";
-import { api } from "$lib/api";
-import { uploadSchema } from "$lib/schemas/upload";
-import { getConfig, getVolumes, isSimpleMode } from "$lib/server/config";
-import { isTwoFactorRequired } from "$lib/server/services/app-settings";
-import { drivesService } from "$lib/server/services/drives";
-import { SharingService } from "$lib/server/services/sharings";
 
 const sharings = new SharingService();
 
@@ -23,7 +23,7 @@ export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:shares");
 
 	if (!(locals.user && locals.session)) {
-		return redirect(302, resolve("/auth/sign-in"));
+		return redirect(302, resolve("auth/sign-in"));
 	}
 
 	// Enrolment gate. The security page is exempt or the redirect would loop —
@@ -35,7 +35,7 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		) &&
 		(await isTwoFactorRequired())
 	) {
-		return redirect(302, resolve("/account/security"));
+		return redirect(302, resolve("account/security"));
 	}
 
 	const [activityResult, fileCount, preferences, versionCheck] =

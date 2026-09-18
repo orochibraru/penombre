@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 const { NotificationService } = await import("./notifications");
 
 /**
- * The db is stubbed on the instance rather than by mocking `$lib/server/db`:
+ * The db is stubbed on the instance rather than by mocking `#lib/server/db/index.js`:
  * `mock.module` is global and permanent in Bun, so a module mock here would
  * follow every suite that runs afterwards.
  *

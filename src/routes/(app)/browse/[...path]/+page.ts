@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
-import { api } from "$lib/api";
-import type { BreadCrumb } from "$lib/utils";
+import { api } from "#lib/api/index.js";
+import type { BreadCrumb } from "#lib/utils.js";
 
 export const load = async ({ params, fetch, url, depends }) => {
 	depends("app:files");

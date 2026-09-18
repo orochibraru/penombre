@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineRoute } from "$lib/server/openapi";
+import { defineRoute } from "#lib/server/openapi/index.js";
 
 /**
  * Shared drive route definitions: the drives themselves and who is on them.

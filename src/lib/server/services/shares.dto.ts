@@ -1,4 +1,4 @@
-import type { Share } from "$lib/server/db/schema";
+import type { Share } from "#lib/server/db/schema.js";
 
 /**
  * Public shape of a share link. Strips `passwordHash` — the API must never

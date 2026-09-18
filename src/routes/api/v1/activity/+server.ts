@@ -1,7 +1,7 @@
-import { Logger } from "$lib/logger";
-import { Http } from "$lib/server/http";
-import { listActivities } from "$lib/server/openapi/v1/activity";
-import { ActivityService } from "$lib/server/services/activity";
+import { Logger } from "#lib/logger.js";
+import { Http } from "#lib/server/http.js";
+import { listActivities } from "#lib/server/openapi/v1/activity.js";
+import { ActivityService } from "#lib/server/services/activity.js";
 
 const logger = new Logger("Activity API");
 

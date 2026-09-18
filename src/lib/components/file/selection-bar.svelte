@@ -1,8 +1,8 @@
 <script lang="ts">
-	import BottomAction from "$lib/components/layout/bottom-action.svelte";
-	import { Button } from "$lib/components/ui/button/index";
-	import * as m from "$lib/paraglide/messages.js";
-	import type { MultipleItemsAction } from "$lib/utils";
+	import BottomAction from "#lib/components/layout/bottom-action.svelte";
+	import { Button } from "#lib/components/ui/button/index.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import type { MultipleItemsAction } from "#lib/utils.js";
 
 	/**
 	 * Selection actions live in a floating drawer rather than replacing the

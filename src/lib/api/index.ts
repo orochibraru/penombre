@@ -1,12 +1,12 @@
 import createClient from "openapi-fetch";
-import { browser } from "$app/environment";
-import { navigating, page } from "$app/state";
 import {
 	DRIVE_HEADER,
 	locationFrom,
 	SHARE_HEADER,
 	VOLUME_HEADER,
-} from "$lib/storage-location";
+} from "#lib/storage-location.js";
+import { browser } from "$app/env";
+import { navigating, page } from "$app/state";
 import type { components, paths } from "./v1";
 
 /**
@@ -20,7 +20,7 @@ import type { components, paths } from "./v1";
  *
  * @example
  * ```ts
- * import { api } from "$lib/api";
+ * import { api } from "#lib/api/index.js";
  *
  * // GET /api/v1/storage/list
  * const { data, error } = await api.GET("/api/v1/storage/list", {

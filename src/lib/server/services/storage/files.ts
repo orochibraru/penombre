@@ -8,16 +8,16 @@
 import { unlink } from "node:fs/promises";
 import { and, eq } from "drizzle-orm";
 import { parseFile } from "music-metadata";
-import { Logger } from "$lib/logger";
-import { type File as DbFile, files } from "$lib/server/db/schema";
-import { FileOrFolderNotFoundError } from "$lib/server/errors";
+import { Logger } from "#lib/logger.js";
+import { type File as DbFile, files } from "#lib/server/db/schema.js";
+import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
 import type {
 	FileMetadata,
 	NewFile,
 	ObjectItem,
 	UpdateFile,
 	UploadResult,
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import {

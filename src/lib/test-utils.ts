@@ -1,4 +1,4 @@
-import type { AppConfig } from "$lib/server/config";
+import type { AppConfig } from "#lib/server/config.js";
 
 export function extractFirstOidcProvider(
 	providers: AppConfig["auth"]["oauthProviders"],

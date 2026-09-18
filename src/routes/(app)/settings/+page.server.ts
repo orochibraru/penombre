@@ -1,4 +1,4 @@
-import { getSmtpSettings } from "$lib/server/services/app-settings";
+import { getSmtpSettings } from "#lib/server/services/app-settings.js";
 
 export const load = async () => ({
 	// The email copy of a notification is only offered when the instance can

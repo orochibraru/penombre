@@ -1,12 +1,12 @@
 import { toast } from "svelte-sonner";
+import { authClient } from "#lib/auth-client.js";
+import * as m from "#lib/paraglide/messages.js";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
-import { authClient } from "$lib/auth-client";
-import * as m from "$lib/paraglide/messages.js";
 
 async function signOutCallback() {
 	await authClient.signOut();
-	await goto(resolve("/auth/sign-in"), { invalidateAll: true });
+	await goto(resolve("auth/sign-in"), { refreshAll: true });
 	return true;
 }
 

@@ -1,5 +1,5 @@
-import { StatsService } from "$lib/server/services/stats";
-import { StorageService } from "$lib/server/services/storage";
+import { StatsService } from "#lib/server/services/stats.js";
+import { StorageService } from "#lib/server/services/storage/index.js";
 
 const stats = new StatsService();
 

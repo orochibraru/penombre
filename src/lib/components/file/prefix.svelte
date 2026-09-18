@@ -16,21 +16,19 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { MediaQuery } from "svelte/reactivity";
-	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
-	import type { ObjectItem } from "$lib/api";
-	import DocumentIcon from "$lib/components/file/document-icon.svelte";
-	import DocumentKindIcon from "$lib/components/file/document-kind-icon.svelte";
-	import FilePreview from "$lib/components/file/preview.svelte";
-	import NowPlaying from "$lib/components/now-playing.svelte";
-	import { Badge } from "$lib/components/ui/badge/index";
-	import { kindForName } from "$lib/documents";
-	import { touchAction } from "$lib/file-actions";
-	import { FileCategoryEnum } from "$lib/file-helpers";
-	import { m } from "$lib/paraglide/messages.js";
-	import { locationOf } from "$lib/storage-location";
-	import { playableMusic } from "$lib/store/music";
-	import { uploadedItems, uploadingItems } from "$lib/store/upload";
+	import type { ObjectItem } from "#lib/api/index.js";
+	import DocumentIcon from "#lib/components/file/document-icon.svelte";
+	import DocumentKindIcon from "#lib/components/file/document-kind-icon.svelte";
+	import FilePreview from "#lib/components/file/preview.svelte";
+	import NowPlaying from "#lib/components/now-playing.svelte";
+	import { Badge } from "#lib/components/ui/badge/index.js";
+	import { kindForName } from "#lib/documents.js";
+	import { touchAction } from "#lib/file-actions.js";
+	import { FileCategoryEnum } from "#lib/file-helpers.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { locationOf } from "#lib/storage-location.js";
+	import { playableMusic } from "#lib/store/music.js";
+	import { uploadedItems, uploadingItems } from "#lib/store/upload.js";
 	import {
 		cn,
 		getDocumentType,
@@ -40,7 +38,9 @@
 		readableFileSize,
 		secondsToMinutes,
 		stripFolders,
-	} from "$lib/utils";
+	} from "#lib/utils.js";
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
 
 	interface Props {
 		item: ObjectItem;
