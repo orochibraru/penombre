@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import z from "zod";
-import { dev } from "$app/environment";
+import { building, dev } from "$app/environment";
 import { env } from "$env/dynamic/private";
 import {
 	DEV_DATA_DIR,
@@ -297,9 +297,10 @@ function resolveLogFormat() {
 
 export function getConfig(): AppConfig {
 	const redisUrl = env.REDIS_URL;
-	// Nothing is mounted at `/data` on a dev box, so writes stay in the repo.
+	// Nothing is mounted at `/data` on a dev box or at build time, so writes stay in the repo.
 	const dataDir =
-		env.DATA_DIR || (dev ? DEV_DATA_DIR : defaultConfigValues.dataDir);
+		env.DATA_DIR ||
+		(dev || building ? DEV_DATA_DIR : defaultConfigValues.dataDir);
 	const paths = dataPaths(dataDir);
 
 	return validateConfig({
