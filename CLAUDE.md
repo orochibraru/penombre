@@ -1270,6 +1270,10 @@ form's own `form?.error` handling is untouched.
   — `handleOpenItemFullscreen` uses `window.location` for those. External
   redirects need `redirect(…, { external: true })`, which the OAuth
   auto-redirect on sign-in does.
+- **Both tsconfigs extend `$app/tsconfig`** (`node_modules/$app/tsconfig.json`).
+  Kit 3 stops writing `.svelte-kit/tsconfig.json`, but an old checkout keeps a
+  stale copy, so a config still pointing there passes locally and fails in CI.
+  `rm -rf .svelte-kit` before trusting a local `bun run check`.
 - **Biome warns it hit its 200k type limit on `src/lib/api/v1.d.ts`** now that
   `#lib` resolves. It is a warning, not a failure. Do not `!!`-ignore the file:
   `gen:api` formats it with Biome and fails on an ignored path.

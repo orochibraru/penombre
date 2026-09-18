@@ -2,8 +2,8 @@
 	"compilerOptions": {
 		"noEmit": true,
 		"skipLibCheck": true,
-		"types": ["bun"]
+		"types": ["bun", "$app/types"]
 	},
-	"extends": "./.svelte-kit/tsconfig.json",
-	"include": [".svelte-kit/ambient.d.ts", "scripts/**/*.ts", "src/app.d.ts"]
+	"extends": "$app/tsconfig",
+	"include": ["scripts/**/*.ts", "src/app.d.ts"]
 }
