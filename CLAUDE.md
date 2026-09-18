@@ -1257,6 +1257,10 @@ form's own `form?.error` handling is untouched.
   has a sibling `.svelte.ts` is still imported as `x.svelte` — the migration
   codemod rewrote two of those to `x.svelte.js`, which is the module, and the
   build failed with a missing `default` export.
+- **`src/instrumentation.server.ts` is load-bearing**, not telemetry. Kit 3
+  includes it with no opt-in; deleting it along with the old
+  `experimental.instrumentation` flag made the server die at boot on tsyringe's
+  missing reflect polyfill, which e2e only reports as an "unhealthy" container.
 - **No `$env/*`.** `$app/env/private` wants every name declared up front, and
   `OAUTH_<NAME>_*` / `VOLUME_<NAME>_*` are discovered by scanning keys, so
   `config.ts` reads `process.env`.
