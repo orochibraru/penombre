@@ -1,3 +1,20 @@
+## [1.8.47](https://github.com/orochibraru/penombre/compare/v1.8.46...v1.8.47) (2026-09-18)
+
+
+### Features
+
+* sveltekit 3 ([#101](https://github.com/orochibraru/penombre/issues/101)) ([c330b11](https://github.com/orochibraru/penombre/commit/c330b1197eb48458991b420b1cac66e9139c3d2f))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.47
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.46](https://github.com/orochibraru/penombre/compare/v1.8.45...v1.8.46) (2026-09-17)
 
 
