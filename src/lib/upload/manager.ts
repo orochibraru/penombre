@@ -191,7 +191,7 @@ function send(request: WorkerRequest): void {
 function accountFor(jobs: UploadJob[]): void {
 	const fresh = known.size === jobs.length;
 	if (fresh) {
-		for (const id of [...sent.keys()]) {
+		for (const id of sent.keys()) {
 			if (!known.has(id)) {
 				sent.delete(id);
 			}

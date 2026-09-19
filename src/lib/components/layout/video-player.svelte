@@ -49,7 +49,6 @@
 		currentTime = startAt;
 	}
 
-	// biome-ignore lint/suspicious/noUnassignedVariables: assigned by bind:this in the markup
 	let player: HTMLVideoElement;
 	let shell = $state<HTMLDivElement | null>(null);
 	let isFullscreen = $state(false);

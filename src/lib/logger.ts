@@ -105,7 +105,7 @@ export class Logger {
 			scope: this.prefix,
 			level,
 			message,
-			...metadata,
+			...(metadata.length > 0 && { metadata }),
 		});
 	}
 
@@ -194,7 +194,7 @@ export class Logger {
 			scope: this.prefix,
 			level: LOG_LEVELS.INFO,
 			input,
-			...optionalParams,
+			...(optionalParams.length > 0 && { metadata: optionalParams }),
 		});
 	}
 
@@ -230,7 +230,7 @@ export class Logger {
 			scope: this.prefix,
 			level: LOG_LEVELS.WARN,
 			input,
-			...optionalParams,
+			...(optionalParams.length > 0 && { metadata: optionalParams }),
 		});
 	}
 
@@ -241,7 +241,6 @@ export class Logger {
 	 * If `this.logFormat` is set to 'console', logs an error to the console with a red prefix.
 	 * Otherwise, logs a JSON object with the level set to 'error' and the error as the message.
 	 */
-	// biome-ignore lint/suspicious/noExplicitAny: This is a logger
 	error(err: any, ...optionalParams: unknown[]) {
 		const acceptedLogLevels = [
 			LOG_LEVELS.ERROR,
@@ -267,7 +266,7 @@ export class Logger {
 			scope: this.prefix,
 			level: LOG_LEVELS.ERROR,
 			message: err,
-			...optionalParams,
+			...(optionalParams.length > 0 && { metadata: optionalParams }),
 		});
 	}
 
@@ -297,7 +296,7 @@ export class Logger {
 			scope: this.prefix,
 			level: LOG_LEVELS.DEBUG,
 			input,
-			...optionalParams,
+			...(optionalParams.length > 0 && { metadata: optionalParams }),
 		});
 	}
 
@@ -329,7 +328,7 @@ export class Logger {
 			scope: this.prefix,
 			level: LOG_LEVELS.TRACE,
 			input,
-			...optionalParams,
+			...(optionalParams.length > 0 && { metadata: optionalParams }),
 		});
 	}
 }

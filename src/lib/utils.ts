@@ -176,7 +176,6 @@ export interface MultipleItemsAction {
 	title: string;
 	/** Tailwind colour classes for the icon — see `ItemAction.iconClass`. */
 	iconClass?: string;
-	// biome-ignore lint/suspicious/noExplicitAny: Lucide icon component type is complex
 	icon: any;
 	action: () => void;
 	variant: ButtonVariant;
@@ -184,7 +183,6 @@ export interface MultipleItemsAction {
 
 export interface ItemAction {
 	title: string | ((item: ObjectItem) => string);
-	// biome-ignore lint/suspicious/noExplicitAny: Lucide icon component type is complex
 	icon: any;
 	action: (item: ObjectItem) => void;
 	variant?: "default" | "destructive";

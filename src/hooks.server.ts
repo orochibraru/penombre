@@ -124,7 +124,6 @@ async function runMigrations() {
 			logger.info(`Running migrations (retries left: ${retries})`);
 			const db = getDb();
 			if (isSqliteDialect()) {
-				// biome-ignore lint/suspicious/noExplicitAny: db is typed as the pg dialect; the runtime instance is a real SQLite one in this branch
 				migrateSqlite(db as any, { migrationsFolder });
 			} else {
 				await migratePg(db, { migrationsFolder });

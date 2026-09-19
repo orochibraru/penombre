@@ -1,30 +1,42 @@
+default_install_hook_types: [pre-commit, commit-msg, pre-push, post-checkout]
+default_stages: [pre-commit]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: check-merge-conflict
+        name: Look for Merge Conflicts
 
       - id: check-case-conflict
-
-      - id: detect-private-key
+        name: Look for case conflicts
 
       - id: check-yaml
+        name: Validate Yaml
+
+      - id: check-added-large-files
+        name: Look for large files
 
       - id: mixed-line-ending
+        name: Fix line endings
         args: [--fix=lf]
         exclude: &generated |-
           (?x)^(
             src/lib/api/v1\.(json|d\.ts)|
-            openapi.json|
+            openapi\.json|
             \.example\.env|
             drizzle/|
             CHANGELOG\.md|
-            bun\.lock
+            bun\.lock|
+            \.husky/_/
           )
+
       - id: end-of-file-fixer
+        name: Fix end of files
         exclude: *generated
 
       - id: trailing-whitespace
+        name: Fix trailing whitespaces
         args: [--markdown-linebreak-ext=md]
         exclude: *generated
 
@@ -32,81 +44,96 @@ repos:
     rev: v4.4.0
     hooks:
       - id: conventional-pre-commit
+        name: Ensure conventional commits
         stages: [commit-msg]
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
     hooks:
       - id: gitleaks
+        name: Look for hardcoded secrets
 
   - repo: https://github.com/crate-ci/typos
     rev: v1.50.1
     hooks:
       - id: typos
+        name: Look for typos
         args: [--force-exclude]
 
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
     hooks:
       - id: actionlint
+        name: Lint Github Actions
 
   - repo: https://github.com/hadolint/hadolint
     rev: v2.15.1
     hooks:
       - id: hadolint-docker
+        name: Lint Docker
 
   - repo: local
     hooks:
-      # These run first: .example.env and the OpenAPI spec + its typed client
-      # are derived from source that may itself be part of this commit.
-      - id: gen-env
-        name: regenerate .example.env
-        entry: bun run gen:env
+      - id: gen
+        name: Regenerate OpenAPI, typed client and .example.env
+        entry: sh -c 'bun run gen:env && bun run gen:api'
         language: system
         pass_filenames: false
-        files: ^(src/lib/server/config\.defaults\.ts|scripts/generate-env-example\.ts)$
+        files: ^(src/lib/server/openapi/|src/lib/server/config\.defaults\.ts$|scripts/gen)
+
+      - id: oxlint
+        name: Lint (oxlint)
+        entry: node_modules/.bin/oxlint --type-aware --deny-warnings
+        language: system
+        require_serial: true
+        files: \.(ts|tsx|js|jsx|mjs|cjs|svelte)$
 
       - id: biome
-        name: biome check --write --unsafe
-        entry: bun run biome format
+        name: Format and sort imports (Biome)
+        entry: node_modules/.bin/biome check --write --error-on-warnings --no-errors-on-unmatched --files-ignore-unknown=true
         language: system
+        require_serial: true
         files: \.(ts|tsx|js|jsx|mjs|cjs|json|jsonc|css|svelte|html)$
 
-      - id: prettier-md
-        name: prettier (markdown)
-        entry: bun run prettier --log-level warn --write
+      - id: format-md
+        name: Formatting (MD)
+        entry: node_modules/.bin/prettier --log-level warn --write
         language: system
         types: [markdown]
 
       - id: markdownlint
-        name: markdownlint-cli2 --fix
-        entry: bunx markdownlint-cli2 --fix
+        name: Markdown Lint
+        entry: node_modules/.bin/markdownlint-cli2 --fix
         language: system
         types: [markdown]
 
+      - id: lint-tailwind
+        name: Lint (Tailwind)
+        entry: node_modules/.bin/tailwint --fix
+        language: system
+        require_serial: true
+        files: ^src/.*\.(svelte|css|html|ts)$
+
+      - id: check
+        name: Type Check
+        entry: bun run check
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: ^(src/|scripts/|e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$)
+
       - id: test-unit
-        name: bun test
+        name: Unit Tests
         entry: bun test
         language: system
         pass_filenames: false
+        stages: [pre-push]
         files: ^(src/|test\.setup\.ts$|bunfig\.toml$)
 
-      # Switching branches changes bun.lock, and node_modules is not part of
-      # the checkout: without this, the first command after a branch switch
-      # runs against the previous branch's dependencies.
-      #
-      # `--ignore-scripts` plus an explicit sync, rather than a plain
-      # `bun install`: `prepare` runs `prek install`, which rewrites
-      # `.husky/_/*` — tracked files — from inside the hook prek is currently
-      # running. prek then sees a hook that modified the working tree, and
-      # every branch switch on a dirty tree ends in "Hook changes conflicted
-      # with the saved unstaged changes. Reverting the hook changes". The sync
-      # is the half of `prepare` that a checkout actually needs, since
-      # `.svelte-kit` is generated and branch-specific.
-      #
-      # `sh -c` because `entry` is exec'd, not run through a shell.
+      # --ignore-scripts: `prepare` reinstalls hooks, which rewrites tracked
+      # files mid-hook and makes prek abort the checkout.
       - id: bun-install
-        name: bun install
+        name: Sync dependencies after checkout
         entry: sh -c 'bun install --ignore-scripts && bun run svelte-kit sync'
         language: system
         stages: [post-checkout]
@@ -116,20 +143,20 @@ repos:
   - repo: local
     hooks:
       - id: no-manual-route-typing
-        name: "route files: no manual $props()/load/actions typing (./$types is inferred)"
+        name: "Look for injected inferred types in routes"
         language: pygrep
         entry: |-
           (: (PageData|PageProps|LayoutData|ActionData|LayoutProps|PageServerLoad|LayoutServerLoad|Actions|RequestHandler)\b|from "\./\$types")
         files: ^src/routes/.*\.(ts|svelte)$
 
       - id: no-raw-drizzle-in-routes
-        name: "route files: no raw Drizzle queries (go through a DTO)"
+        name: "Make sure DTOs are used in routes, not drizzle directly"
         language: pygrep
         entry: \bdb\.(select|insert|update|delete)\(
         files: ^src/routes/.*\.ts$
 
       - id: internal-links-resolve
-        name: "internal links go through resolve() from $app/paths"
+        name: "Make sure all paths are resolved"
         language: pygrep
         entry: href="/
         files: ^src/.*\.svelte$

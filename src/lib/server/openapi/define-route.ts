@@ -302,7 +302,6 @@ export function defineRoute<
 						query: validated.query,
 						body: validated.body,
 						event,
-						// biome-ignore lint/style/noNonNullAssertion: User is guaranteed to exist at this point if requireAuth !== false
 						user: event.locals.user!,
 						service: await buildService(config.service, event),
 					});

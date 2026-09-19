@@ -7,7 +7,7 @@ import { drizzle as drizzleSqlite } from "drizzle-orm/bun-sqlite";
 import { getConfig } from "#lib/server/config.js";
 import { getSqliteFilePath, isSqliteDialect } from "./dialect";
 
-export type Database = BunSQLDatabase<Record<string, never>>;
+export type Database = BunSQLDatabase;
 
 /** The configured database URL — `DATABASE_URL`, or the SQLite file under `dbLocation`. */
 export function getDbUrl(): string {

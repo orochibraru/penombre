@@ -32,7 +32,6 @@ export async function getUserPreferences(
 		return defaultPreferences;
 	}
 
-	// biome-ignore lint/style/noNonNullAssertion: result[0] is guaranteed to exist after length check
 	const prefs = result[0]!;
 	return {
 		...defaultPreferences,

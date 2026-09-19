@@ -1,3 +1,4 @@
+import { FileCategoryEnum } from "#lib/file-helpers.js";
 /**
  * Per-file operations: create, read, update, move, duplicate and delete.
  *
@@ -496,14 +497,16 @@ export class FileOperations {
 			};
 
 			const category = determineCategory(file.name);
-			const isMedia = category === "MUSIC" || category === "VIDEO";
+			const isMedia =
+				category === FileCategoryEnum.MUSIC ||
+				category === FileCategoryEnum.VIDEO;
 			if (isMedia) {
 				try {
 					const { path: localPath, isTemp } =
 						await this.thumbnails.getLocalOrTempPath(key);
 					const mediaMeta = await parseFile(localPath);
 					const duration = mediaMeta.format.duration ?? 0;
-					if (category === "MUSIC") {
+					if (category === FileCategoryEnum.MUSIC) {
 						updates.musicDuration = duration;
 					} else {
 						updates.videoDuration = duration;

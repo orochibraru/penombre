@@ -34,7 +34,6 @@
 		$playableMusic = null;
 	}
 
-	// biome-ignore lint/suspicious/noUnassignedVariables: assigned by bind:this in the markup
 	let player: HTMLAudioElement;
 
 	// Nothing is loaded yet; the binding takes over as soon as there is an

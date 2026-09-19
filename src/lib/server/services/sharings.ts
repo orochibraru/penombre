@@ -207,7 +207,6 @@ export class SharingService {
 			.insert(sharings)
 			.values({ ownerId, resourceType, resourceId, permission })
 			.returning({ id: sharings.id });
-		// biome-ignore lint/style/noNonNullAssertion: a returning insert always yields the row
 		return created!.id;
 	}
 
@@ -395,7 +394,6 @@ export class SharingService {
 		return rows
 			.filter((row) => names.has(row.resourceId))
 			.map((row) => {
-				// biome-ignore lint/style/noNonNullAssertion: filtered on presence above
 				const meta = names.get(row.resourceId)!;
 				return {
 					sharingId: row.sharingId,

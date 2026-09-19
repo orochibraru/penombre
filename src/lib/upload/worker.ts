@@ -39,6 +39,7 @@ const cancelled = new Set<string>();
 const inFlight = new Map<string, XMLHttpRequest>();
 let running = 0;
 
+// oxlint-disable-next-line unicorn/require-post-message-target-origin -- a worker's postMessage takes no origin
 const post = (event: WorkerEvent) => self.postMessage(event);
 
 function sendOnce(job: WorkerJob): Promise<void> {
