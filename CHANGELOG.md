@@ -1,3 +1,20 @@
+## [1.8.48](https://github.com/orochibraru/penombre/compare/v1.8.47...v1.8.48) (2026-09-19)
+
+
+### Bug Fixes
+
+* e2E ([11b357a](https://github.com/orochibraru/penombre/commit/11b357a448acfcea93d59329890694043b1923c5))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.48
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.47](https://github.com/orochibraru/penombre/compare/v1.8.46...v1.8.47) (2026-09-18)
 
 
