@@ -6,9 +6,7 @@ import { FileCategoryEnum } from "#lib/file-helpers.js";
  * every mutation touches both and then drops the cached listings.
  */
 
-import { unlink } from "node:fs/promises";
 import { and, eq } from "drizzle-orm";
-import { parseFile } from "music-metadata";
 import { Logger } from "#lib/logger.js";
 import { type File as DbFile, files } from "#lib/server/db/schema.js";
 import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
@@ -29,10 +27,17 @@ import {
 	fileDbToObjectItem,
 	generateFileNameWithExtension,
 } from "./mappers";
+import { recordDurations } from "./media";
 import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
 const logger = new Logger("StorageService");
+
+/** Where `importFile` decided a copy lands, and the row it would get. */
+export interface PlannedImport {
+	filePath: string;
+	values: typeof files.$inferInsert;
+}
 
 export class FileOperations {
 	constructor(
@@ -252,15 +257,16 @@ export class FileOperations {
 	}
 
 	/**
-	 * A copy of another tree's file: a fresh row and fresh bytes here, with
-	 * the source row's type and durations so nothing has to be re-probed.
-	 * Bytes first, so a failed write leaves no row pointing at nothing.
+	 * Where a copy of another tree's file would land: a unique name and path
+	 * here, and the row it would get, with the source row's type and
+	 * durations so nothing has to be re-probed. No bytes and no row yet —
+	 * `TransferOperations` copies bytes for a whole tree in one job and only
+	 * inserts rows for the pairs that landed.
 	 */
 	async importFile(
 		source: DbFile,
 		folder: string | undefined,
-		body: ReadableStream<Uint8Array>,
-	): Promise<void> {
+	): Promise<PlannedImport> {
 		const { path: normalizedFolder, id: folderId } =
 			await this.resolveDestination(folder);
 		const uniqueName = await getUniqueDisplayName(
@@ -274,27 +280,25 @@ export class FileOperations {
 			? `${normalizedFolder}/${fileName}`
 			: fileName;
 
-		await this.ctx.driver.writeObject(filePath, body);
-		await this.ctx.db.insert(files).values({
-			id: crypto.randomUUID(),
-			name: uniqueName,
-			ownerId: this.ctx.user.id,
-			volumeId: this.ctx.volumeId,
-			path: filePath,
-			folderId,
-			contentType: source.contentType,
-			category: source.category,
-			size: source.size,
-			isTrashed: false,
-			isStarred: false,
-			tags: source.tags ?? [],
-			musicDuration: source.musicDuration,
-			videoDuration: source.videoDuration,
-		});
-
-		this.thumbnails.warm(filePath, source.contentType).catch(() => {
-			// `warm` already logs.
-		});
+		return {
+			filePath,
+			values: {
+				id: crypto.randomUUID(),
+				name: uniqueName,
+				ownerId: this.ctx.user.id,
+				volumeId: this.ctx.volumeId,
+				path: filePath,
+				folderId,
+				contentType: source.contentType,
+				category: source.category,
+				size: source.size,
+				isTrashed: false,
+				isStarred: false,
+				tags: source.tags ?? [],
+				musicDuration: source.musicDuration,
+				videoDuration: source.videoDuration,
+			},
+		};
 	}
 
 	/**
@@ -491,39 +495,19 @@ export class FileOperations {
 
 			await this.ctx.driver.writeObject(key, data);
 
+			const updatedAt = new Date();
 			const updates: Partial<typeof files.$inferInsert> = {
 				size: actualSize,
-				updatedAt: new Date(),
+				updatedAt,
 			};
 
 			const category = determineCategory(file.name);
-			const isMedia =
-				category === FileCategoryEnum.MUSIC ||
-				category === FileCategoryEnum.VIDEO;
-			if (isMedia) {
-				try {
-					const { path: localPath, isTemp } =
-						await this.thumbnails.getLocalOrTempPath(key);
-					const mediaMeta = await parseFile(localPath);
-					const duration = mediaMeta.format.duration ?? 0;
-					if (category === FileCategoryEnum.MUSIC) {
-						updates.musicDuration = duration;
-					} else {
-						updates.videoDuration = duration;
-					}
-					if (isTemp) {
-						try {
-							await unlink(localPath);
-						} catch {
-							// best-effort cleanup of the temp file
-						}
-					}
-				} catch (metaError) {
-					logger.warn(
-						`Failed to extract media metadata for ${key}:`,
-						metaError,
-					);
-				}
+			// The old bytes' duration no longer applies; the new one lands
+			// when the probe does, off the request.
+			if (category === FileCategoryEnum.MUSIC) {
+				updates.musicDuration = null;
+			} else if (category === FileCategoryEnum.VIDEO) {
+				updates.videoDuration = null;
 			}
 
 			await this.ctx.db
@@ -537,6 +521,15 @@ export class FileOperations {
 			this.thumbnails.warm(key, file.contentType).catch(() => {
 				// `warm` already logs; nothing further to do here.
 			});
+			if (
+				category === FileCategoryEnum.MUSIC ||
+				category === FileCategoryEnum.VIDEO
+			) {
+				// Never throws; not awaited so the upload answers now.
+				void recordDurations(this.ctx, [
+					{ id, path: key, category, updatedAt },
+				]);
+			}
 		} catch (error) {
 			logger.error("Error uploading file body:", error);
 			await this.ctx.activityService.register({

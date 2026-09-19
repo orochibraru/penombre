@@ -2,8 +2,6 @@ import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import type { Readable } from "node:stream";
-import type { Archiver } from "archiver";
 import type { User } from "better-auth";
 import { Logger } from "#lib/logger.js";
 import {
@@ -47,6 +45,7 @@ import fileTypesData from "./file-types.json" with { type: "json" };
 import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
 import { ListingOperations } from "./listings";
+import { probeMissingDurations } from "./media";
 import { type FileProxyRequest, ProxyService } from "./proxy";
 import { ScanOperations, type ScanReporter, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
@@ -164,6 +163,7 @@ export class StorageService {
 			this.ctx,
 			this.fileOperations,
 			this.folderOperations,
+			this.thumbnails,
 		);
 		this.proxy = new ProxyService(this.ctx, this.thumbnails, (path) =>
 			this.getFile(path),
@@ -240,17 +240,11 @@ export class StorageService {
 	): Promise<TransferResult> {
 		this.assertWritable();
 		this.assertInScope(destination);
-		return this.transferOperations.importTree(tree, destination, (path) =>
-			source.openFile(path),
+		return this.transferOperations.importTree(
+			tree,
+			destination,
+			source.getStoragePath(),
 		);
-	}
-
-	/** A file's bytes, as a stream; only a row this service can see. */
-	async openFile(path: string): Promise<ReadableStream<Uint8Array>> {
-		if (!(await this.fileExists(path))) {
-			throw new FileOrFolderNotFoundError(`File not found: ${path}`);
-		}
-		return this.driver.getObjectStream(path);
 	}
 
 	private static parentOf(key: string): string {
@@ -483,6 +477,11 @@ export class StorageService {
 		return this.scanOperations.scan(report, options);
 	}
 
+	/** One batch of this root's media rows still missing a duration. */
+	probeMissingDurations(): Promise<void> {
+		return probeMissingDurations(this.ctx);
+	}
+
 	countTrashedItems(): Promise<number> {
 		return this.listingOperations.countTrashedItems();
 	}
@@ -497,13 +496,13 @@ export class StorageService {
 
 	public createZipFromPaths(
 		filePaths: string[],
-	): Promise<{ stream: Readable; archive: Archiver }> {
+	): Promise<ReadableStream<Uint8Array>> {
 		return this.zip.createZipFromPaths(filePaths);
 	}
 
 	public createZipFromFolder(
 		folderPath: string,
-	): Promise<{ stream: Readable; archive: Archiver }> {
+	): Promise<ReadableStream<Uint8Array>> {
 		return this.zip.createZipFromFolder(folderPath);
 	}
 

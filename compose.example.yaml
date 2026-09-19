@@ -14,6 +14,21 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
       - REDIS_URL=redis://redis:6379
 
+  # Optional: run the background worker in its own container.
+  # Set WORKER_MODE=external on the app service when you enable this.
+  # worker:
+  #   image: orochibraru/penombre:latest
+  #   command: ["/usr/local/bin/penombre-worker"]
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     disable: true
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:postgres@db:5432/penombre
+  #   volumes:
+  #     - storage_data:/data
+  #   depends_on:
+  #     - app
+
   db:
     image: postgres:18-alpine
     restart: unless-stopped

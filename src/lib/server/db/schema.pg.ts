@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
 	bigint,
 	boolean,
@@ -769,3 +769,46 @@ export const driveMembers = pgTable(
 
 export type Drive = typeof drives.$inferSelect;
 export type DriveMember = typeof driveMembers.$inferSelect;
+
+// =========================================================================
+// JOBS
+// =========================================================================
+
+export const jobs = pgTable(
+	"jobs",
+	{
+		id: text("id").primaryKey(),
+		type: text("type").notNull(),
+		status: text("status").default("queued").notNull(),
+		spec: text("spec").notNull(),
+		result: text("result"),
+		error: text("error"),
+		dedupeKey: text("dedupe_key"),
+		priority: integer("priority").default(0).notNull(),
+		attempts: integer("attempts").default(0).notNull(),
+		workerId: text("worker_id"),
+		heartbeatAt: bigint("heartbeat_at", { mode: "number" }),
+		createdAt: bigint("created_at", { mode: "number" })
+			.$defaultFn(() => Date.now())
+			.notNull(),
+		startedAt: bigint("started_at", { mode: "number" }),
+		finishedAt: bigint("finished_at", { mode: "number" }),
+	},
+	(table) => [
+		index("jobs_claim_idx").on(
+			table.status,
+			table.priority.desc().nullsFirst(),
+			table.createdAt,
+		),
+		// Two requests for the same render resolve to one job, atomically.
+		uniqueIndex("jobs_dedupe_pending_idx")
+			.on(table.dedupeKey)
+			.where(sql`status in ('queued', 'running')`),
+	],
+);
+
+/** Liveness: each worker process stamps its row every few seconds. */
+export const workers = pgTable("workers", {
+	id: text("id").primaryKey(),
+	seenAt: bigint("seen_at", { mode: "number" }).notNull(),
+});

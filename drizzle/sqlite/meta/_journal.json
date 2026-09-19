@@ -57,6 +57,20 @@
       "when": 1789503503676,
       "tag": "0007_keen_monster_badoon",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789815718377,
+      "tag": "0008_tearful_dragon_lord",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1789820052935,
+      "tag": "0009_fearless_wild_pack",
+      "breakpoints": true
     }
   ]
 }

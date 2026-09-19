@@ -8,6 +8,7 @@
  * metadata — `schema.pg.ts`'s copies aren't consumed either.
  */
 
+import { sql } from "drizzle-orm";
 import {
 	index,
 	integer,
@@ -524,3 +525,46 @@ export const driveMembers = sqliteTable(
 		uniqueIndex("driveMembers_drive_user_idx").on(table.driveId, table.userId),
 	],
 );
+
+// =========================================================================
+// JOBS
+// =========================================================================
+
+export const jobs = sqliteTable(
+	"jobs",
+	{
+		id: text("id").primaryKey(),
+		type: text("type").notNull(),
+		status: text("status").default("queued").notNull(),
+		spec: text("spec").notNull(),
+		result: text("result"),
+		error: text("error"),
+		dedupeKey: text("dedupe_key"),
+		priority: integer("priority").default(0).notNull(),
+		attempts: integer("attempts").default(0).notNull(),
+		workerId: text("worker_id"),
+		heartbeatAt: integer("heartbeat_at", { mode: "number" }),
+		createdAt: integer("created_at", { mode: "number" })
+			.$defaultFn(() => Date.now())
+			.notNull(),
+		startedAt: integer("started_at", { mode: "number" }),
+		finishedAt: integer("finished_at", { mode: "number" }),
+	},
+	(table) => [
+		index("jobs_claim_idx").on(
+			table.status,
+			sql`${table.priority} desc`,
+			table.createdAt,
+		),
+		// Two requests for the same render resolve to one job, atomically.
+		uniqueIndex("jobs_dedupe_pending_idx")
+			.on(table.dedupeKey)
+			.where(sql`status in ('queued', 'running')`),
+	],
+);
+
+/** Liveness: each worker process stamps its row every few seconds. */
+export const workers = sqliteTable("workers", {
+	id: text("id").primaryKey(),
+	seenAt: integer("seen_at", { mode: "number" }).notNull(),
+});

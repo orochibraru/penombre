@@ -20,6 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
 
@@ -72,6 +77,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
 
@@ -84,5 +94,14 @@ jobs:
       - name: Compile messages
         run: bun run gen:paraglide
 
+      - name: Install ffmpeg and poppler
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg poppler-utils
+
       - name: Tests (Unit)
         run: bun test --bail
+
+      - name: Tests (Go, unit)
+        run: bun run test:go:unit
+
+      - name: Tests (Go, integration)
+        run: bun run test:go:integration

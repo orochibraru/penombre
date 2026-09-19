@@ -1,0 +1,118 @@
+package copyfiles_test
+
+import (
+	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/orochibraru/penombre/internal/jobs"
+	"github.com/orochibraru/penombre/internal/jobs/copyfiles"
+)
+
+func mustJob(t *testing.T, spec any) jobs.Job {
+	t.Helper()
+	b, err := json.Marshal(spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return jobs.Job{ID: "j", Type: "copy", Spec: b}
+}
+
+func TestRunCopiesAndCreatesParents(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	if err := os.WriteFile(src, []byte("hello"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dest := filepath.Join(dir, "nested", "sub", "b.txt")
+
+	job := mustJob(t, copyfiles.Spec{Pairs: []copyfiles.Pair{{Source: src, Dest: dest}}})
+	got, err := copyfiles.Run(context.Background(), job)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, ok := got.(copyfiles.Result)
+	if !ok || len(res.Failed) != 0 {
+		t.Fatalf("expected no failures, got %#v", got)
+	}
+	content, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(content) != "hello" {
+		t.Fatalf("dest content = %q", content)
+	}
+	// The source must survive a copy.
+	if _, err := os.Stat(src); err != nil {
+		t.Fatalf("source was removed: %v", err)
+	}
+}
+
+func TestRunContinuesPastAFailure(t *testing.T) {
+	dir := t.TempDir()
+	ok := filepath.Join(dir, "ok.txt")
+	if err := os.WriteFile(ok, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	missing := filepath.Join(dir, "missing.txt")
+
+	job := mustJob(t, copyfiles.Spec{Pairs: []copyfiles.Pair{
+		{Source: missing, Dest: filepath.Join(dir, "out1.txt")},
+		{Source: ok, Dest: filepath.Join(dir, "out2.txt")},
+	}})
+	got, err := copyfiles.Run(context.Background(), job)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := got.(copyfiles.Result)
+	if len(res.Failed) != 1 || res.Failed[0].Index != 0 {
+		t.Fatalf("expected pair 0 to fail, got %#v", res.Failed)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "out2.txt")); err != nil {
+		t.Fatalf("the second pair should have copied: %v", err)
+	}
+}
+
+// An interrupted copy must still report: the caller inserts rows for what
+// landed, so erroring out would orphan every pair already copied.
+func TestRunStopsOnCancellationAndReportsTheRest(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	if err := os.WriteFile(src, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	job := mustJob(t, copyfiles.Spec{Pairs: []copyfiles.Pair{{Source: src, Dest: filepath.Join(dir, "out.txt")}}})
+	out, err := copyfiles.Run(ctx, job)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res := out.(copyfiles.Result); len(res.Failed) != 1 || res.Failed[0].Index != 0 {
+		t.Fatalf("the unreached pair must be reported failed, got %#v", res.Failed)
+	}
+	if _, statErr := os.Stat(filepath.Join(dir, "out.txt")); statErr == nil {
+		t.Fatal("no copy should have run after cancellation")
+	}
+}
+
+func TestRunLeavesNoStagedFileOnFailure(t *testing.T) {
+	dir := t.TempDir()
+	missing := filepath.Join(dir, "missing.txt")
+	dest := filepath.Join(dir, "out.txt")
+
+	job := mustJob(t, copyfiles.Spec{Pairs: []copyfiles.Pair{{Source: missing, Dest: dest}}})
+	if _, err := copyfiles.Run(context.Background(), job); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected no leftover files, got %v", entries)
+	}
+}

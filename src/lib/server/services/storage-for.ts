@@ -181,7 +181,7 @@ export async function sharedStorage(
 }
 
 /** A row's `volume_id` back to its volume: undefined is the personal drive. */
-async function volumeById(
+export async function volumeById(
 	volumeId: string | null,
 ): Promise<VolumeConfig | undefined | null> {
 	if (volumeId === null) {

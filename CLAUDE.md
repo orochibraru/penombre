@@ -36,7 +36,19 @@ bun run test:e2e:ui      # Playwright UI mode
 bun run db:generate      # generate a Drizzle migration from schema.ts changes
 bun run db:studio        # Drizzle Studio
 bun run gen:api          # regenerate OpenAPI spec + typed API client
+
+bun run check:go            # go vet, cmd/ + internal/ + tests/{unit,integration}/go (also part of `bun run check`)
+bun run test:go             # go test -race, unit + integration together
+bun run test:go:unit        # go test -race, tests/unit/go only (no DB, no external binary)
+bun run test:go:integration # go test -race, tests/integration/go only (SQLite/Postgres or ffmpeg/pdftoppm)
 ```
+
+The Go worker needs `ffmpeg` built **with the `libwebp` encoder** — the plain
+Homebrew `ffmpeg` formula ships decode-only webp
+(`ffmpeg -encoders | grep libwebp` is empty), which silently produces zero-byte
+thumbnails. On macOS: `brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-webp`
+(after `brew uninstall ffmpeg` if the core formula is already installed).
+Ubuntu/CI's `apt-get install ffmpeg` already includes it.
 
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
 `$app/*`/`#lib/server/*` modules and the Drizzle `db` object — tests don't need
@@ -71,7 +83,8 @@ The **SvelteKit app lives at the repo root** (frontend + backend API):
 │       │   └── db/          # Drizzle schema + client
 │       └── components/      # Svelte 5 UI (shadcn-svelte in components/ui)
 ├── drizzle/       # SQL migrations generated from src/lib/server/db/schema.ts
-└── e2e/           # Playwright tests
+├── e2e/           # Playwright tests
+└── tests/         # Go tests for cmd/ and internal/, split unit vs integration
 ```
 
 Despite what the README says, there is **no Hono** in this codebase — API routes
@@ -115,6 +128,93 @@ keys relative to a user's storage root. `StorageService`
 (`#lib/server/services/storage/service.ts`) is the facade on top of the driver +
 DB that route handlers use; it's lazily instantiated per-request onto
 `event.locals.storageService` in `hooks.server.ts`.
+
+### Heavy work runs in the Go worker
+
+Thumbnails, waveforms, library-scan directory walks, media-duration probing, zip
+archives, and the byte-copying/byte-deleting halves of transfer and trash all
+run in a separate Go process (`cmd/worker`, executors under
+`internal/jobs/<name>`), not inline in the request handler. TypeScript still
+decides everything about **rows** — which files exist, what belongs in a zip,
+which bytes survive a delete; it only hands the worker a job spec with absolute
+paths and reads back the result.
+
+The contract is the `jobs` table (`db/schema.ts`): the app
+`enqueueJob({type, spec, dedupeKey?, priority})`
+(`#lib/server/services/jobs.ts`) and `awaitJob(id)`s it; the worker claims a row
+(`for update skip locked` — Postgres only, SQLite serialises through a single
+writer), runs the matching executor from its `registry()`
+(`cmd/worker/main.go`), and writes `status`/`result`/`error` back. Timestamps
+are **epoch milliseconds** in a `bigint`/`integer` on both dialects — Go writes
+one representation for both. SQL in Go uses `$1`-style placeholders only, since
+SQLite's driver also accepts that form.
+
+`priority` is a name, not a number: `interactive` (someone is waiting on screen:
+a tile, a zip), `mutation` (copy, delete, scan-list, probe), `background`
+(warm-ups). Warm jobs used to share priority 0 with everything, so a 20k-photo
+scan's backlog starved the trash and the tiles alike. A dedupe hit **raises**
+the queued job it joins — a tile asking for a render that was only queued as a
+warm-up would otherwise wait behind every other warm-up.
+
+`awaitJob` cancels on the way out: a job still `queued` at the deadline is
+failed atomically, so a caller treating `undefined` as "nothing happened" is
+right — a copy that timed out used to run later and leave bytes no row pointed
+at. Thumbnails opt out (`cancelOnTimeout: false`): their job may be a warm-up or
+another tile's request, and one tile's deadline must not kill it for all. A job
+already `running` at the deadline is only waited for with `settle`, which
+transfer and trash pass because they write rows from the outcome; the deadline
+cancel is tried once, not on every poll. That wait is bounded by liveness and by
+the worker's per-type execution timeout (`timeouts` in `worker.go`), not by the
+app's clock: every worker upserts its `workers` row every 5s, and with none seen
+for 30s `awaitJob` fails the job (queued, or running with a lapsed lease) and
+logs that no worker is running. Until the first worker checks in after boot,
+that grace is 5 minutes — a cold `go build` of the dev worker takes that long.
+`consume` deletes a row once read, and every terminal write drops the spec —
+scan listings and big copy specs used to sit in the table for days.
+
+**One clock.** `seen_at`, `heartbeat_at`, `started_at` and `finished_at` are
+stamped and compared with the **database's** clock (`dbNow` in `jobs.ts`,
+`Store.now` in Go), never a process's. An external worker on a host whose clock
+lagged by 30s looked dead, and every job failed on the spot. Go store methods
+take no `now` for that reason; tests age a row with SQL instead.
+
+**Copy and delete must never run unobserved** (`CALLER_BOUND` in `jobs.ts`,
+`callerBound` in `worker.go`). Their caller writes rows from the outcome, so one
+that runs with nobody awaiting leaves bytes no row points at (copy) or trash
+rows whose bytes are gone (delete). Three rules hold that:
+
+- At boot, before the worker starts, `failOrphanedJobs()` fails every one that
+  is queued or holds a lapsed lease: its request died with the last process.
+- On worker shutdown they are **not** requeued. They skip the grace period, stop
+  at the next item and complete with what they did — both executors report
+  unreached items as failed instead of erroring, so the caller inserts rows for
+  exactly the pairs that landed and keeps exactly the rows whose bytes remain.
+- An embedded worker whose app died without signalling it (OOM, SIGKILL) exits
+  on its own: `WORKER_PARENT_PID` plus `WatchParent`. Otherwise it kept running
+  jobs beside the new app's worker.
+
+A worker that crashes while the app lives is fine: the stale lease is reclaimed
+by the restarted worker and re-run (both are idempotent), and the caller, still
+awaiting with `settle`, gets that outcome. The gap left is an **external**
+worker still running a job whose app restarted: it finishes, and nobody reads
+the result.
+
+Dedupe is a partial unique index (`dedupe_key` where queued/running) plus
+`on conflict do nothing`, not check-then-insert, so two tiles racing get one
+job. `jobs.test.ts` runs against the real SQLite migrations, as do the Go store
+tests — neither mocks the SQL.
+
+SQLite runs in **WAL mode with a busy_timeout** (`db/index.ts`) specifically so
+the app and the worker — two separate processes opening the same `.sqlite` file
+— don't collide; without it a claim from one process could lock the other out
+instantly instead of waiting briefly.
+
+`WORKER_MODE` (`embedded`, default, or `external`) controls whether the app
+spawns the worker itself (`#lib/server/services/worker-process.ts`, restarted
+with backoff on exit — a missing binary throws synchronously from `Bun.spawn`,
+which is retried the same way rather than failing `init()`) or expects a
+separate `penombre-worker` container pointed at the same `DATABASE_URL` and the
+same storage/volume mount paths — see `docs/worker.md`.
 
 ### Request lifecycle (`hooks.server.ts`)
 
@@ -440,10 +540,21 @@ Three rules hold together here, and breaking any one of them loses files:
 
 The library scan re-imports any object with no matching row, so a half-finished
 delete does not lose a file — it **resurrects** it, scattered at whatever path
-the bytes sit at. `emptyTrash` (`services/storage/trash.ts`) therefore deletes
-the bytes first and keeps the row of anything the driver refused, reporting it
-as `failed`. Bytes already gone are not a failure: `deleteObject` throws ENOENT,
-which is checked against `objectExists` rather than treated as one.
+the bytes sit at. `emptyTrash` (`services/storage/trash.ts`) sends every trashed
+file's and folder's **absolute** path in one `"delete"` job to the Go worker
+(`internal/jobs/deletefiles`), awaits it, and only then removes rows: a file in
+the job's `failedFiles` keeps its row (and its ancestor folders', via
+`ancestorFolders`), a folder's byte failure (`failedDirs`) is only logged. Bytes
+already gone are not a failure — Go treats `os.ErrNotExist` as success, the same
+ENOENT rule. The Go side has its own invariant worth knowing: `deletefiles.Run`
+removes files before `os.RemoveAll`ing directories, and skips (reports failed)
+any directory that still holds a file which failed to delete — reversing that
+order would let a directory sweep away bytes TS just decided to keep. On the
+main drive and shared drives a folder's row is safe to remove regardless of that
+job's outcome: `createFolder` never touches the filesystem, a directory only
+exists once some file under it is written. On a mounted volume a scanned folder
+**is** a real directory, so one in `failedDirs` can outlive its row — the next
+scan simply re-creates the row, with nothing under it lost.
 
 Emptying is one request for the same reason the bulk actions are pooled
 (`MAX_PARALLEL_REQUESTS` in `wrapper-bulk.svelte.ts`): a request per row over a
@@ -514,6 +625,11 @@ Audio "thumbnails" return **JSON peak data**, not an image: the endpoint answers
 `application/json` for audio and caches `<key>_peaks.json`. `waveform.svelte`
 draws inline `<svg fill="currentColor">` from it.
 
+The peaks themselves are computed by the Go worker (`internal/jobs/thumbnail`):
+ffmpeg decodes to raw PCM, and `BucketPeaks` (a 1:1 port of the old TS
+`bucketPeaks`) buckets it into ≤400 values in `0..1`. `ThumbnailService` only
+enqueues the job and serves the cache file the worker wrote.
+
 The reason is themeability. `showwavespic` bakes a colour into a bitmap, so a
 waveform generated under one accent kept that colour forever, and an `<img>` is
 isolated from page CSS so it could never inherit one either. Only inline SVG
@@ -537,8 +653,13 @@ did, so a grid of audio tiles pulled ~100 MB per WAV. It now 404s and the client
 renders its own icon.
 
 Generation is warmed at write time (`ThumbnailService.warm`) from upload and
-scan, not lazily on first view. It shells out to `ffmpeg` (video frames, audio
-waveforms) and `pdftoppm`; both are installed in the Dockerfile.
+scan, not lazily on first view — it enqueues a `"thumbnail"` job and does not
+await it; an interactive view (`getThumbnail`) awaits the same job type with a
+higher priority. The rendering itself — `ffmpeg` for video frames/audio
+waveforms, `pdftoppm` for PDFs — runs in the Go worker
+(`internal/jobs/thumbnail`), not in the app process; `sharp` is gone. Both
+binaries are installed in the Dockerfile's `app` stage, and the image build
+fails if ffmpeg's build lacks the `libwebp` encoder.
 
 ### The waveform is also the scrubber
 
@@ -725,6 +846,22 @@ file leaks into every file that runs after it. Two consequences:
 
 Prefer stubbing a method on the instance under test over mocking a module.
 
+### Go tests live under `tests/`, split unit vs integration
+
+Every `*_test.go` for `cmd/` and `internal/` lives under
+`tests/unit/go/<same path>` or `tests/integration/go/<same path>` — never beside
+the source. Unit needs neither a database nor an external binary (a temp dir is
+fine); integration is anything that opens SQLite/Postgres or execs
+`ffmpeg`/`ffprobe`/`pdftoppm` (a file mixing both gets split in two). Tests are
+external packages (`package worker_test`, importing
+`github.com/orochibraru/penombre/internal/worker`), so they can't reach
+unexported identifiers — `internal/worker`'s job types (`Spec`, `Result`, …) are
+exported for this reason, and `Config.ShutdownGrace` exists so a shutdown test
+can shorten the grace period without calling an unexported `runWithGrace`. A
+test needing the raw DB (seeding rows, reading internal state) opens a second
+`*sql.DB` on the same SQLite file rather than reaching into `Store`'s private
+field. No `export_test.go` shims in `internal/`.
+
 ### Card layout conventions
 
 Cards carry their heading through `Card.Header` + `Card.Title` +
@@ -850,22 +987,21 @@ floating surfaces already composite against.
 
 ### A cached thumbnail must appear whole or not at all
 
-`existsSync(thumbPath)` is the cache check in `generateThumbnail`, and it runs
-**before** the semaphore. A plain `Bun.write` to that path is therefore a race
-with a name on it: the instant the file is created it is present but empty, so a
-concurrent caller reads zero bytes and serves them as the cached entry. For
-audio that is an empty peaks document, and `waveform.svelte` fetches peaks
-exactly once — an empty array is `onfail`, `bars.length === 0`, and the waveform
-(with its Seek button) is gone until the component remounts.
+The staging-then-`os.Rename` that guarantees this now lives in Go
+(`internal/jobs/thumbnail`): the executor always writes to
+`<output>.<jobID>.tmp` beside the destination and renames it in on success, so
+`existsSync(thumbPath)` (the cache check in `ThumbnailService.plan`/
+`generateThumbnail`) never observes a partially-written file — a rename is
+atomic, so the path is either absent or complete.
 
-The racing reader is not hypothetical: `uploadFileBody` fires `warm()` without
-awaiting it, so the second caller is the request the page makes the moment the
-upload returns. Play a track straight after uploading it and you got a player
-with no waveform. `writeCacheAtomically` stages the bytes beside the destination
-and `rename`s them in.
+The concurrent-caller race this used to guard against — two requests for the
+same missing thumbnail both starting a render — is now closed by the job queue's
+`dedupeKey` (set to the output path): both callers' `enqueueJob` calls resolve
+to the **same** job id while one is `queued`/`running` — enforced by a partial
+unique index, not a check — so they converge on one render instead of two.
 
 This was also the E2E flake that failed a release: `waveform.spec.ts` uploads a
-file and clicks it, which is that race every time.
+file and clicks it, which used to race the old in-process write every time.
 
 ### A flaky test is a failed test in CI
 
@@ -941,10 +1077,8 @@ installed plus a `--tsgo` flag, and dies before checking a single file. A
 `renovate.json` rule caps `typescript` at `<7` so the bump stops being
 reproposed. Lift it when svelte-check ships tsgo support, not before.
 
-`archiver` 8 is pure ESM and dropped its factory: `archiver("zip", opts)` is
-`new ZipArchive(opts)`, and the `archiver.Archiver` namespace type is a plain
-`Archiver` named export. `nodemailer` 10 cut `Transporter`'s second type
-argument (the options type); it takes only `SentMessageInfo` now.
+`nodemailer` 10 cut `Transporter`'s second type argument (the options type); it
+takes only `SentMessageInfo` now.
 
 ### Type checks run on push, not commit
 
@@ -1216,17 +1350,42 @@ outside the share back to its root; `page.data.share.root` hides the `..` row.
 
 `POST /api/v1/storage/transfer` builds a second service for the destination with
 the same `storageServiceFor` (from a synthetic URL), exports rows from the
-source (`exportTree`) and re-creates them in the target (`importTree`),
-streaming bytes through `openFile` → `writeObject(ReadableStream)`. A move
-across places deletes the source only when **every** file landed; within one
-place it is the ordinary `moveFile`/`moveFolder` (`locationKey` decides). Folder
-**Duplicate** is the same endpoint with the current folder as destination.
+source (`exportTree`) and re-creates them in the target (`importTree`).
+TypeScript only plans: it resolves destinations/unique names for every file
+(`importFile` returns a `PlannedImport`, no bytes touched) and creates folder
+rows unconditionally; the actual byte copy is one `"copy"` job sent to the Go
+worker (`internal/jobs/copyfiles`, absolute `{source, dest}` pairs, staged into
+a temp file beside the destination and renamed in), awaited synchronously. Only
+pairs Go didn't report failed get a row inserted. A move across places deletes
+the source only when **every** file landed; within one place it is the ordinary
+`moveFile`/`moveFolder` (`locationKey` decides). Folder **Duplicate** is the
+same endpoint with the current folder as destination.
 
 The move dialog lists destinations from `page.data.drives`/`volumes`, and its
 folder-tree request sends `drive=&volume=&share=` **empty** on purpose: a
 present query parameter is what stops `#lib/api`'s middleware attaching the
 current page's location header, which would otherwise make "My Drive" show the
 drive you are standing in.
+
+### A zip download is a Go job, streamed back through Node
+
+`ZipService` (`services/storage/zip.ts`) resolves the DB-backed entries (same
+scoping/display-path logic as before) into `{source, name}` pairs, enqueues one
+`"zip"` job (Go writes to `<output>.<jobID>.tmp` under `.tmp/zips/`,
+`zip.Deflate`, then renames in — `internal/jobs/ziparchive`), awaits it (30 min
+timeout), and streams the finished file back with `streamAndCleanUp`, which
+deletes it on read-to-completion, cancel or error alike. `.tmp/zips` is a
+dot-directory on purpose so `scan.ts`'s `isScannable` already skips it.
+
+A source missing from disk (deleted outside Penombre on a volume, row not yet
+scanned away) is skipped and reported in `skipped`, not a failed archive — the
+old `archiver` code treated ENOENT as a warning too.
+
+A job that times out from the app's side while the worker is still writing
+leaves an orphaned file there — there is no cancellation API to stop a running
+job. `sweepStaleZips()` (called once at boot and hourly from `hooks.server.ts`)
+deletes anything older than an hour and never throws; it is the cleanup for
+exactly that case.
 
 ### Sidebar groups truncate at five
 
@@ -1247,6 +1406,27 @@ subscriber sets behind the SSE route and the ETA (`estimateRemaining`, in
 already knows reports thousands of steps a second — except phase changes and
 start/end, which always go out. Every pass reaches the stream because every pass
 goes through `runScan`: the minute timer, a page visit and **Rescan**.
+
+The directory walk and the media-duration probe are Go jobs
+(`internal/jobs/scanlist`, `internal/jobs/mediaprobe`); Go only returns
+keys/sizes and durations, TS still decides every row. The walk sizes a symlink
+by its **target** (`os.Stat`) — `WalkDir`'s info is `Lstat`, and a link's own 42
+bytes as the stored size truncated every stream from a symlinked library.
+
+Durations are **never awaited on a request**. An upload nulls the duration and
+fires `recordDurations` (`services/storage/media.ts`) without awaiting it; a
+scan nulls it for changed bytes. `null` means "not known yet": the duration
+sweep (`services/duration-sweep.ts`, every minute from `init()`) visits
+**every** root — personal drives in full mode and shared drives included, which
+the library scan never touches — and probes up to 500 of each root's `null` rows
+in one job (one dedupe key per root, random order so rows that keep failing
+cannot starve the rest). `0` is definitive: ffprobe read the file and it has
+none, or rejected it as not media. A transient failure (I/O error, a truncated
+upload) leaves the path out of the result so it stays `null`; a missing
+`ffprobe` fails the whole job. A duration is written only if `updated_at` still
+matches the bytes it was probed for — two quick re-uploads raced, and the older
+probe could land last — and the write keeps `updated_at`, since `$onUpdate`
+would otherwise reorder "last modified".
 
 ### A non-ActionResult response disappears
 

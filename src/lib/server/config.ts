@@ -120,6 +120,19 @@ const configSchema = z
 		storagePath: z.string().default(defaultConfigValues.storagePath),
 		dbLocation: z.string().default(defaultConfigValues.dbLocation),
 		volumes: z.array(volumeSchema).default([]),
+		worker: z
+			.object({
+				mode: z
+					.enum(["embedded", "external"])
+					.default(defaultConfigValues.worker.mode),
+				concurrency: z.coerce
+					.number()
+					.int()
+					.positive()
+					.default(defaultConfigValues.worker.concurrency),
+			})
+			.optional()
+			.default(defaultConfigValues.worker),
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
@@ -333,6 +346,12 @@ export function getConfig(): AppConfig {
 		storagePath: resolve(env.STORAGE_PATH || paths.storagePath),
 		dbLocation: resolve(paths.dbLocation),
 		volumes: parseVolumes(),
+		// Raw, so the schema names a typo (`External`, `-1`) instead of
+		// silently falling back to the default.
+		worker: {
+			mode: env.WORKER_MODE?.trim() || undefined,
+			concurrency: env.WORKER_CONCURRENCY?.trim() || undefined,
+		},
 	});
 }
 

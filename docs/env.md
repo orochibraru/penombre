@@ -116,6 +116,18 @@ entirely (development).
 | ----------- | ----------------------- | ------- |
 | `REDIS_URL` | Redis connection string | /       |
 
+## Worker
+
+Thumbnails, waveforms, scans, zip downloads and trash/copy byte work run in a
+separate Go worker process. By default it runs embedded inside this container;
+set `WORKER_MODE=external` to run it as its own container instead. See
+[Worker](worker.md) for the full guide.
+
+| Variable             | Description                                 | Default    |
+| -------------------- | ------------------------------------------- | ---------- |
+| `WORKER_MODE`        | `embedded` (this container) or `external`   | `embedded` |
+| `WORKER_CONCURRENCY` | Number of jobs the worker runs concurrently | `4`        |
+
 ## SMTP (Optional)
 
 Required for email features such as password reset and email verification. Set

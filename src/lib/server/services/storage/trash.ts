@@ -6,9 +6,15 @@
  * refresh, and left whatever failed behind with no way to tell.
  */
 
+import { join } from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
+import {
+	awaitJob,
+	enqueueJob,
+	type JobOutcome,
+} from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import { ancestorFolders } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";
@@ -18,6 +24,14 @@ const logger = new Logger("StorageTrash");
 
 /** SQLite caps bound parameters per statement; delete ids in slices. */
 const DELETE_CHUNK = 500;
+
+/** The route awaits this job synchronously; emptying a large trash takes a while. */
+const DELETE_TIMEOUT_MS = 30 * 60 * 1000;
+
+interface DeleteJobResult {
+	failedFiles: string[];
+	failedDirs: string[];
+}
 
 export interface EmptyTrashResult {
 	/** Files and folders whose rows were removed. */
@@ -54,36 +68,51 @@ export class TrashOperations {
 				.where(and(ownedFolders(this.ctx), eq(folders.isTrashed, true))),
 		]);
 
+		const jobId = await enqueueJob({
+			type: "delete",
+			spec: {
+				files: trashedFiles.map((file) =>
+					join(this.ctx.storagePath, file.path),
+				),
+				dirs: trashedFolders.map((folder) =>
+					join(this.ctx.storagePath, folder.path),
+				),
+			},
+			priority: "mutation",
+		});
+		const job = await awaitJob(jobId, {
+			timeoutMs: DELETE_TIMEOUT_MS,
+			settle: true,
+			consume: true,
+		});
+		const outcome = this.jobOutcome(job, trashedFiles, trashedFolders);
+
 		const removableFileIds: string[] = [];
 		const survivingPaths: string[] = [];
 		let freed = 0;
 
 		for (const file of trashedFiles) {
-			try {
-				await this.deleteBytes(file.path);
-				removableFileIds.push(file.id);
-				freed += file.size;
-			} catch (error) {
+			if (outcome.failedFiles.has(file.path)) {
 				// The row stays. A row without its bytes is re-imported by the
 				// library scan, which is how deleted files came back scattered
 				// across the drive.
 				survivingPaths.push(file.path);
-				logger.error(`Could not delete trashed file ${file.path}:`, error);
+				logger.error(`Could not delete trashed file ${file.path}`);
+				continue;
 			}
+			removableFileIds.push(file.id);
+			freed += file.size;
+			await this.thumbnails.deleteThumbnails(file.path);
+		}
+
+		for (const path of outcome.failedDirs) {
+			logger.error(`Could not remove folder ${path}`);
 		}
 
 		const keptFolders = new Set(survivingPaths.flatMap(ancestorFolders));
 		const removableFolders = trashedFolders.filter(
 			(folder) => !keptFolders.has(folder.path),
 		);
-
-		for (const folder of removableFolders) {
-			try {
-				await this.ctx.driver.deleteObjectsByPrefix(`${folder.path}/`);
-			} catch (error) {
-				logger.error(`Could not remove folder ${folder.path}:`, error);
-			}
-		}
 
 		for (const ids of chunk(removableFileIds, DELETE_CHUNK)) {
 			await this.ctx.db
@@ -112,15 +141,37 @@ export class TrashOperations {
 		return { deleted, freed, failed: survivingPaths.length };
 	}
 
-	/** Bytes already gone are not a failure — only a refused delete is. */
-	private async deleteBytes(path: string): Promise<void> {
-		try {
-			await this.ctx.driver.deleteObject(path);
-		} catch (error) {
-			if (await this.ctx.driver.objectExists(path)) {
-				throw error;
-			}
+	/**
+	 * A missing or unsuccessful job leaves nothing confirmed deleted, so every
+	 * file stays presumed present — the safe default, since an empty folder
+	 * with no bytes of its own has nothing to lose either way.
+	 */
+	private jobOutcome(
+		job: JobOutcome | undefined,
+		trashedFiles: { path: string }[],
+		trashedFolders: { path: string }[],
+	): { failedFiles: Set<string>; failedDirs: string[] } {
+		if (job?.status === "succeeded" && job.result) {
+			const result = JSON.parse(job.result) as DeleteJobResult;
+			const byAbs = new Map(
+				trashedFiles.map((file) => [
+					join(this.ctx.storagePath, file.path),
+					file.path,
+				]),
+			);
+			const failedFiles = new Set(
+				result.failedFiles.map((abs) => byAbs.get(abs) ?? abs),
+			);
+			return { failedFiles, failedDirs: result.failedDirs };
 		}
-		await this.thumbnails.deleteThumbnails(path);
+		logger.error(
+			`Delete job did not complete (status ${job?.status ?? "timed out"})`,
+		);
+		return {
+			failedFiles: new Set(trashedFiles.map((file) => file.path)),
+			failedDirs: trashedFolders.map((folder) =>
+				join(this.ctx.storagePath, folder.path),
+			),
+		};
 	}
 }

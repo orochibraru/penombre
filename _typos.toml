@@ -9,3 +9,7 @@ extend-exclude = [
     # Machine-translated UI strings in a dozen locales, none of them English.
     "messages/",
 ]
+
+[default.extend-words]
+# Go's compress/flate package.
+flate = "flate"

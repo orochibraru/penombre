@@ -98,6 +98,12 @@ examples.
 When using a reverse proxy, you can remove the `ports` mapping from the `app`
 service and let the proxy reach it over a shared Docker network instead.
 
+## Background worker
+
+Thumbnails, waveforms, scans and zip/trash/copy byte work run in a separate Go
+process, embedded in this same container by default. See [Worker](worker.md) for
+running it as its own container instead.
+
 ## Running on PostgreSQL (optional)
 
 SQLite is the default and is the right answer for a single container. Reach for

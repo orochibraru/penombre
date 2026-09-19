@@ -21,6 +21,7 @@
 				{ "slug": "reverse-proxy", "icon": "shield" },
 				{ "slug": "storage", "icon": "hard-drive" },
 				{ "slug": "volumes", "icon": "database" },
+				{ "slug": "worker", "icon": "cpu" },
 				{ "slug": "troubleshooting", "icon": "wrench" }
 			]
 		},

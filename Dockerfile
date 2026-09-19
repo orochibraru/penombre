@@ -1,3 +1,14 @@
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS go-builder
+ARG TARGETOS TARGETARCH APP_VERSION=""
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY cmd ./cmd
+COPY internal ./internal
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -trimpath -ldflags "-s -w -X main.version=${APP_VERSION:-dev}" \
+    -o /out/penombre-worker ./cmd/worker
+
 FROM oven/bun:1-alpine AS base
 
 ENV BUN_FEATURE_FLAG_EXPERIMENTAL_HTTP2_CLIENT=1
@@ -40,9 +51,15 @@ RUN bun run build \
 
 FROM base AS app
 
-# ffmpeg is required for video thumbnail generation
+# ffmpeg is required for video thumbnail generation and must carry the
+# libwebp encoder (Alpine's build has it; a plain `ffmpeg` on some distros/
+# Homebrew does not — see CLAUDE.md "Heavy work runs in the Go worker").
 # poppler-utils provides pdftoppm for PDF thumbnail generation
-RUN apk add --no-cache ffmpeg poppler-utils
+# hadolint ignore=DL4006
+RUN apk add --no-cache ffmpeg poppler-utils \
+    && ffmpeg -hide_banner -encoders | grep -q libwebp
+
+COPY --from=go-builder /out/penombre-worker /usr/local/bin/penombre-worker
 
 # Copy with --chown to avoid a separate chown layer that duplicates all files
 COPY --from=app-builder --chown=bun:bun /prod/node_modules ./node_modules

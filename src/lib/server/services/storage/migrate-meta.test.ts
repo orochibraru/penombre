@@ -26,6 +26,7 @@ mock.module("#lib/server/config.js", () => ({
 			enableEmailSignIn: true,
 			minPasswordLength: 8,
 		},
+		worker: { mode: "embedded", concurrency: 4 },
 	}),
 	getStoragePath: () => "/does-not-exist",
 	envProvided: () => ({

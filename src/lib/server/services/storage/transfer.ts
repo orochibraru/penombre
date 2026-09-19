@@ -7,6 +7,7 @@
  * each file, so the target never needs to know where the source is rooted.
  */
 
+import { join } from "node:path";
 import { and, asc, eq, like } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import type {
@@ -15,12 +16,21 @@ import type {
 } from "#lib/server/db/schema.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
+import {
+	awaitJob,
+	enqueueJob,
+	type JobOutcome,
+} from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
-import type { FileOperations } from "./files";
+import type { FileOperations, PlannedImport } from "./files";
 import type { FolderOperations } from "./folders";
 import { ownedFiles, ownedFolders } from "./scope";
+import type { ThumbnailService } from "./thumbnails";
 
 const logger = new Logger("StorageTransfer");
+
+/** The route awaits this job synchronously; a large tree can take a while. */
+const COPY_TIMEOUT_MS = 30 * 60 * 1000;
 
 export interface ExportedTree {
 	type: "file" | "folder";
@@ -36,7 +46,9 @@ export interface TransferResult {
 	failed: number;
 }
 
-export type OpenFile = (path: string) => Promise<ReadableStream<Uint8Array>>;
+interface CopyJobResult {
+	failed: { index: number; error: string }[];
+}
 
 function parentOf(path: string): string {
 	return path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
@@ -47,6 +59,7 @@ export class TransferOperations {
 		private readonly ctx: StorageContext,
 		private readonly fileOps: FileOperations,
 		private readonly folderOps: FolderOperations,
+		private readonly thumbnails: ThumbnailService,
 	) {}
 
 	/** Trashed descendants stay behind: the trash is not part of what moves. */
@@ -125,32 +138,89 @@ export class TransferOperations {
 		return newPathOf;
 	}
 
+	/**
+	 * Copy an exported tree into `destination`. Folder rows are created here,
+	 * as ever; every file's destination is planned up front (unique name,
+	 * row) and every byte copy runs as one `copy` job, so a row is only
+	 * inserted for a pair Go actually landed.
+	 */
 	async importTree(
 		tree: ExportedTree,
 		destination: string,
-		open: OpenFile,
+		sourceStoragePath: string,
 	): Promise<TransferResult> {
 		const dest = destination.replace(/\/$/, "");
 		const newPathOf = tree.root
 			? await this.recreateFolders(tree.root, tree.folders, dest)
 			: new Map<string, string>();
 
-		const result: TransferResult = { copied: 0, failed: 0 };
+		const plans: { file: DbFile; plan: PlannedImport }[] = [];
+		let failed = 0;
 		for (const file of tree.files) {
 			const folder = tree.root ? newPathOf.get(parentOf(file.path)) : dest;
 			if (folder === undefined) {
-				result.failed++;
+				failed++;
 				continue;
 			}
 			try {
-				await this.fileOps.importFile(file, folder, await open(file.path));
-				result.copied++;
+				plans.push({ file, plan: await this.fileOps.importFile(file, folder) });
 			} catch (error) {
-				logger.warn(`Could not copy ${file.path}`, error);
-				result.failed++;
+				logger.warn(`Could not plan a copy of ${file.path}`, error);
+				failed++;
 			}
 		}
+
+		if (plans.length === 0) {
+			await this.ctx.invalidateListingCaches();
+			return { copied: 0, failed };
+		}
+
+		const jobId = await enqueueJob({
+			type: "copy",
+			spec: {
+				pairs: plans.map(({ file, plan }) => ({
+					source: join(sourceStoragePath, file.path),
+					dest: join(this.ctx.storagePath, plan.filePath),
+				})),
+			},
+			priority: "mutation",
+		});
+		const job = await awaitJob(jobId, {
+			timeoutMs: COPY_TIMEOUT_MS,
+			settle: true,
+			consume: true,
+		});
+		const failedIndexes = this.failedCopyIndexes(job, plans.length);
+
+		let copied = 0;
+		for (const [index, { file, plan }] of plans.entries()) {
+			if (failedIndexes.has(index)) {
+				failed++;
+				continue;
+			}
+			await this.ctx.db.insert(files).values(plan.values);
+			this.thumbnails.warm(plan.filePath, file.contentType).catch(() => {
+				// `warm` already logs.
+			});
+			copied++;
+		}
+
 		await this.ctx.invalidateListingCaches();
-		return result;
+		return { copied, failed };
+	}
+
+	/** A missing or unsuccessful job leaves no pair confirmed copied. */
+	private failedCopyIndexes(
+		job: JobOutcome | undefined,
+		count: number,
+	): Set<number> {
+		if (job?.status === "succeeded" && job.result) {
+			const { failed } = JSON.parse(job.result) as CopyJobResult;
+			return new Set(failed.map((f) => f.index));
+		}
+		logger.warn(
+			`Copy job did not complete (status ${job?.status ?? "timed out"})`,
+		);
+		return new Set(Array.from({ length: count }, (_, i) => i));
 	}
 }

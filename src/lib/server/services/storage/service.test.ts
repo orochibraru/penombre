@@ -50,6 +50,7 @@ mock.module("#lib/server/config.js", () => ({
 			enableEmailSignIn: true,
 			minPasswordLength: 8,
 		},
+		worker: { mode: "embedded", concurrency: 4 },
 	}),
 	getStoragePath: () => "/tmp/penombre-test-storage",
 	envProvided: () => ({
@@ -141,6 +142,18 @@ const mockUpdate = mock(() => makeChain([]));
 const mockDelete = mock(() => makeChain([]));
 rawDb.update = mockUpdate;
 rawDb.delete = mockDelete;
+
+// The Go worker: transfer/trash byte work goes through a job. Default to an
+// immediate, failure-free success so unrelated tests never have to know.
+const mockEnqueueJob = mock(async () => "job-1");
+const mockAwaitJob = mock(async () => ({
+	status: "succeeded",
+	result: JSON.stringify({ failed: [], failedFiles: [], failedDirs: [] }),
+}));
+mock.module("#lib/server/services/jobs.js", () => ({
+	enqueueJob: mockEnqueueJob,
+	awaitJob: mockAwaitJob,
+}));
 
 const mockSelect = rawDb.select as Mock<() => unknown>;
 const mockInsert = rawDb.insert as Mock<() => unknown>;
@@ -246,6 +259,14 @@ beforeEach(() => {
 	mockDelete.mockClear();
 	mockUpdate.mockImplementation(() => makeChain([]));
 	mockDelete.mockImplementation(() => makeChain([]));
+
+	mockEnqueueJob.mockClear();
+	mockAwaitJob.mockClear();
+	mockEnqueueJob.mockImplementation(async () => "job-1");
+	mockAwaitJob.mockImplementation(async () => ({
+		status: "succeeded",
+		result: JSON.stringify({ failed: [], failedFiles: [], failedDirs: [] }),
+	}));
 });
 
 // ---------------------------------------------------------------------------
@@ -531,6 +552,37 @@ describe("StorageService", () => {
 			await expect(service.deleteFile("abc-uuid.txt")).rejects.toThrow(
 				"Error deleting file with key: abc-uuid.txt",
 			);
+		});
+	});
+
+	describe("uploadFileBody", () => {
+		// The probe used to be awaited here, holding every media upload open
+		// for as long as the worker's queue was.
+		test("answers without waiting for the duration probe", async () => {
+			mockNextSelect([{ ...baseFile, name: "song.mp3", path: "song.mp3" }]);
+			let finishProbe = (_: undefined) => {};
+			mockAwaitJob.mockImplementationOnce(
+				() =>
+					new Promise((resolve) => {
+						finishProbe = resolve;
+					}) as never,
+			);
+			const sets: unknown[] = [];
+			mockUpdate.mockImplementation(() => ({
+				set: (values: unknown) => {
+					sets.push(values);
+					return makeChain([]);
+				},
+			}));
+
+			const service = new StorageService(testUser);
+			await service.uploadFileBody("file-1", new Uint8Array([1, 2]));
+
+			expect(sets[0]).toMatchObject({ size: 2, musicDuration: null });
+			expect(mockEnqueueJob).toHaveBeenCalledWith(
+				expect.objectContaining({ type: "media-probe" }),
+			);
+			finishProbe(undefined);
 		});
 	});
 
@@ -912,21 +964,29 @@ describe("StorageService", () => {
 			const result = await service.emptyTrash();
 
 			expect(result).toEqual({ deleted: 2, freed: 2048, failed: 0 });
-			expect(mockDriver.deleteObject).toHaveBeenCalledWith("abc-uuid.txt");
-			expect(mockDriver.deleteObjectsByPrefix).toHaveBeenCalledWith(
-				"folder-uuid-1/",
-			);
+			expect(mockEnqueueJob.mock.calls[0]?.[0]).toMatchObject({
+				type: "delete",
+				spec: {
+					files: ["/tmp/penombre-test-storage/user-user-1/abc-uuid.txt"],
+					dirs: ["/tmp/penombre-test-storage/user-user-1/folder-uuid-1"],
+				},
+			});
 			// One delete for the files, one for the folders
 			expect(mockDelete).toHaveBeenCalledTimes(2);
 		});
 
-		test("keeps the row of a file whose bytes could not be deleted", async () => {
+		test("keeps the row of a file the job reports it could not delete", async () => {
 			const trashedFile: DbFile = { ...baseFile, isTrashed: true };
 
 			mockNextSelect([trashedFile]);
 			mockNextSelect([]);
-			mockDriver.deleteObject.mockRejectedValueOnce(new Error("read-only"));
-			mockDriver.objectExists.mockResolvedValueOnce(true);
+			mockAwaitJob.mockImplementationOnce(async () => ({
+				status: "succeeded",
+				result: JSON.stringify({
+					failedFiles: ["/tmp/penombre-test-storage/user-user-1/abc-uuid.txt"],
+					failedDirs: [],
+				}),
+			}));
 
 			const service = new StorageService(testUser);
 			const result = await service.emptyTrash();
@@ -1169,7 +1229,7 @@ describe("StorageService", () => {
 	// Transfer
 	// =========================================================================
 	describe("transfer", () => {
-		test("a file is streamed into the target with a fresh row", async () => {
+		test("a file is copied into the target with a fresh row", async () => {
 			const source = new StorageService(testUser);
 			const target = new StorageService(testUser, {
 				name: "media",
@@ -1177,7 +1237,6 @@ describe("StorageService", () => {
 				path: "/mnt/media",
 				readOnly: false,
 			});
-			mockNextSelect([{ id: baseFile.id }]); // source.openFile → fileExists
 			mockNextSelect([]); // no name collision in the target
 			const values = mock((_row: Record<string, unknown>) => Promise.resolve());
 			mockInsert.mockReturnValueOnce({ values } as never);
@@ -1189,8 +1248,11 @@ describe("StorageService", () => {
 			);
 
 			expect(result).toEqual({ copied: 1, failed: 0 });
-			expect(mockDriver.getObjectStream).toHaveBeenCalledWith(baseFile.path);
-			expect(mockDriver.writeObject).toHaveBeenCalledTimes(1);
+			const pair = mockEnqueueJob.mock.calls[0]?.[0]?.spec?.pairs?.[0];
+			expect(pair?.source).toBe(
+				"/tmp/penombre-test-storage/user-user-1/abc-uuid.txt",
+			);
+			expect(pair?.dest?.startsWith("/mnt/media/")).toBe(true);
 			const row = values.mock.calls[0]?.[0];
 			expect(row?.name).toBe(baseFile.name);
 			expect(row?.volumeId).toBe("media");
