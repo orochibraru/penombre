@@ -1,4 +1,4 @@
-// biome-ignore-all lint/suspicious/useAwait: methods implement the async CacheBackend contract; `async` keeps the Promise return type without wrapping every result.
+/* oxlint-disable require-await -- methods implement the async CacheBackend contract; `async` keeps the Promise return type without wrapping every result. */
 import type { CacheBackend } from "./types";
 
 /**

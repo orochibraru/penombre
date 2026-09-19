@@ -8,7 +8,7 @@ export interface StandardizedResponse<T = void> {
 	context?: unknown;
 }
 
-// biome-ignore lint/complexity/noStaticOnlyClass: Http helper
+// oxlint-disable-next-line typescript/no-extraneous-class -- Http helper
 export class Http {
 	public static StandardizedResponse<T = void>(
 		res: StandardizedResponse<T>,
@@ -58,7 +58,6 @@ export class Http {
 		);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
 	public static Unauthorized(details?: any) {
 		return Http.StandardizedResponse(
 			{ message: "Unauthorized", context: details },
@@ -66,7 +65,6 @@ export class Http {
 		);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
 	public static Forbidden(details?: any) {
 		return Http.StandardizedResponse(
 			{ message: "Forbidden", context: details },
@@ -74,7 +72,6 @@ export class Http {
 		);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
 	public static BadRequest(message: string, details?: any) {
 		return Http.StandardizedResponse(
 			{ message, context: details },
@@ -82,7 +79,6 @@ export class Http {
 		);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
 	public static NotFound(message = "Not found", details?: any) {
 		return Http.StandardizedResponse(
 			{ message, context: details },
@@ -90,7 +86,6 @@ export class Http {
 		);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
 	public static Conflict(message: string, details?: any) {
 		return Http.StandardizedResponse(
 			{ message, context: details },
@@ -98,7 +93,6 @@ export class Http {
 		);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
 	public static UnprocessableEntity(message: string, details?: any) {
 		return Http.StandardizedResponse(
 			{ message, context: details },
@@ -106,18 +100,13 @@ export class Http {
 		);
 	}
 
-	public static TooManyRequests(
-		message = "Too many requests",
-		// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
-		details?: any,
-	) {
+	public static TooManyRequests(message = "Too many requests", details?: any) {
 		return Http.StandardizedResponse(
 			{ message, context: details },
 			{ status: 429 },
 		);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
 	public static NotImplemented(details?: any) {
 		return Http.StandardizedResponse(
 			{ message: "Not implemented", context: details },
@@ -125,7 +114,6 @@ export class Http {
 		);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: Allow any for details
 	public static ServiceUnavailable(details?: any) {
 		return Http.StandardizedResponse(
 			{ message: "Service unavailable", context: details },

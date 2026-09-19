@@ -19,7 +19,6 @@ export interface DiskSpace {
 /** Disk space via fs.statfsSync, or undefined when unsupported */
 function fromStatfs(path: string): DiskSpace | undefined {
 	try {
-		// biome-ignore lint/suspicious/noExplicitAny: statfsSync types are complex
 		const anyFs = fs as unknown as { statfsSync?: (p: string) => any };
 		if (typeof anyFs.statfsSync !== "function") {
 			return;

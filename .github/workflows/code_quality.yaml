@@ -31,8 +31,6 @@ jobs:
 
       - name: Run prek
         uses: j178/prek-action@v3.0.0
-        env:
-          SKIP: test-unit
         with:
           extra-args: --all-files --no-fail-fast
 

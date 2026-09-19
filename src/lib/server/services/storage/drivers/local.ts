@@ -1,4 +1,4 @@
-// biome-ignore-all lint/suspicious/useAwait: methods implement the async StorageDriver contract; `async` keeps the Promise return type without wrapping every result.
+/* oxlint-disable require-await -- methods implement the async StorageDriver contract; `async` keeps the Promise return type without wrapping every result. */
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { mkdir, readdir, rm, unlink } from "node:fs/promises";

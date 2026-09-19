@@ -170,7 +170,6 @@ describe("createApiKey", () => {
 	});
 
 	test("returns fallback error when exception has no message", async () => {
-		// biome-ignore lint/suspicious/useErrorMessage: the empty message is what this test exercises
 		mockCreateApiKey.mockRejectedValueOnce(new Error(""));
 
 		const result = await actions.createApiKey(
@@ -269,7 +268,6 @@ describe("changePassword", () => {
 	});
 
 	test("returns fallback error when exception has no message", async () => {
-		// biome-ignore lint/suspicious/useErrorMessage: the empty message is what this test exercises
 		mockChangePassword.mockRejectedValueOnce(new Error(""));
 
 		const result = await actions.changePassword(

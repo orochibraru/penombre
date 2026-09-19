@@ -55,7 +55,6 @@ describe("randomId", () => {
 		try {
 			expect(randomId()).toMatch(/^[0-9a-f]{32}$/);
 		} finally {
-			// biome-ignore lint/performance/noDelete: uncovers the prototype's own implementation again
 			delete (globalThis.crypto as { randomUUID?: unknown }).randomUUID;
 		}
 	});

@@ -21,7 +21,7 @@ bun run dev              # Vite dev server (SQLite by default, no services neede
 bun run build            # svelte-kit sync && vite build
 bun run check            # svelte-check (app) + type-check for scripts, in parallel
 
-bun run lint             # biome + markdownlint + tailwint, in parallel
+bun run lint             # oxlint + biome + markdownlint + tailwint
 bun run lint:fix         # fix everything fixable
 bun run format           # biome format --write
 
@@ -44,13 +44,16 @@ a database or Redis running. `bunfig.toml` also sets `rerunEach = 3` (each test
 runs 3x to catch flakiness) and coverage thresholds.
 
 Git hooks run via [prek](https://github.com/j178/prek)
-(`.pre-commit-config.yaml`, wired by `bun install`'s `prepare` script). The same
-config runs in CI, so a green local commit implies a green CI lint job:
+(`.pre-commit-config.yaml`, wired by `bun install`'s `prepare` script; the
+installed hook types come from `default_install_hook_types`). Commits run the
+fast linters on staged files; **pushes** run `bun run check` and `bun test`. CI
+runs the pre-commit stage with `--all-files`:
 
 ```bash
-prek run --all-files      # every hook, whole repo
-prek run biome            # a single hook
-SKIP=test-unit git commit ...   # skip one hook for a commit
+prek run --all-files                        # every pre-commit hook, whole repo
+prek run --all-files --hook-stage pre-push  # type check + unit tests
+prek run oxlint                             # a single hook
+SKIP=test-unit git push ...                 # skip one hook
 ```
 
 ## Architecture
@@ -168,15 +171,20 @@ else to write them and nothing in this repo renders them.
 
 A feature that isn't in `docs/` isn't finished.
 
-## Linting gotchas (Biome)
+## Linting gotchas (oxlint)
 
-- `noConsole` is an **error** in app code — use `Logger` from `#lib/logger`, not
-  `console.*`. Console is only allowed in `logger.ts` itself, tests and scripts.
-- `noFloatingPromises`/`noMisusedPromises` are errors — always `await` or
-  explicitly handle promises.
-- `.svelte` files relax `noUnusedImports`/`useConst`/`useImportType` (Svelte's
-  compiler handles these differently); test/script/config files relax
-  cognitive-complexity and `noExplicitAny`/`noConsole` rules.
+Linting is **oxlint** (`--type-aware`, `.oxlintrc.json`); Biome's linter is off
+and it only formats and sorts imports. Suppress a rule with
+`// oxlint-disable-next-line <rule> -- <reason>`, never a `biome-ignore`.
+
+- `no-console` is an **error** in app code — use `Logger` from `#lib/logger`,
+  not `console.*`. Console is only allowed in `logger.ts` itself, tests and
+  scripts.
+- `typescript/no-floating-promises`/`no-misused-promises` are errors — always
+  `await` or explicitly handle promises.
+- Test/script/config files relax size, complexity, `no-explicit-any` and
+  `no-console`. `no-await-in-loop` is off everywhere: most loops here are
+  deliberately sequential.
 
 ## Comments
 
@@ -788,8 +796,8 @@ Consequences worth knowing before touching it:
 - `xml.ts` only re-serialises the parts we actually change, which is why the
   prolog, comments and CDATA survive as `raw` nodes. `XmlElement.attrs` is
   `Record<string, string | undefined>` deliberately: with
-  `Record<string, string>` biome flags every `?? ""` as unnecessary while the
-  value really is undefined at runtime.
+  `Record<string, string>` the linter flags every `?? ""` as unnecessary while
+  the value really is undefined at runtime.
 - Writing is **surgical**, not regenerative. A spreadsheet cell whose text did
   not change keeps its original XML node, so its formula, style and
   shared-string reference are untouched; only changed cells are rewritten, and
@@ -894,9 +902,9 @@ nothing to switch on.
 ### `bun install` on checkout
 
 `.pre-commit-config.yaml` has a `post-checkout` hook, installed by `prepare`
-(`prek install … -t post-checkout`). `node_modules` is not part of a checkout,
-so without it the first command after a branch switch runs against the previous
-branch's dependencies.
+(`post-checkout` is in `default_install_hook_types`). `node_modules` is not part
+of a checkout, so without it the first command after a branch switch runs
+against the previous branch's dependencies.
 
 It runs `bun install --ignore-scripts` plus an explicit `svelte-kit sync`, not a
 plain `bun install`: `prepare` runs `prek install`, which rewrites `.husky/_/*`
@@ -938,21 +946,11 @@ reproposed. Lift it when svelte-check ships tsgo support, not before.
 `Archiver` named export. `nodemailer` 10 cut `Transporter`'s second type
 argument (the options type); it takes only `SentMessageInfo` now.
 
-### Biome is pinned to 2.5.13
+### Type checks run on push, not commit
 
-2.5.14 infers `RegExp.exec` as never `null`, so `noUnnecessaryConditions` flags
-every no-match guard — 17 of them, each one load-bearing (drop the one in
-`xml.ts`'s attribute loop and it reads `null[1]`). Pinned exactly, since `^`
-would take 2.5.14 back, and `renovate.json` skips that one release. Lift it when
-a later release stops flagging `const m = /a/.exec(s); if (!m) …`.
-
-### Prek no longer type-checks
-
-`prek run --all-files` is ~45s, not ~80s: `gen:api` and both type checks moved
-to CI (`code_quality.yaml` runs `bun run check` and a "Codegen is current" step
-that regenerates and fails on a diff), and biome is passed the staged filenames
-instead of scanning all 524 files. **A green commit no longer implies a green CI
-lint job** — run `bun run check` yourself while working.
+`bun run check` and `bun test` are `pre-push` hooks, so a commit stays fast.
+CI's prek step runs only the pre-commit stage, which is why `code_quality.yaml`
+runs `bun run check` and the "Codegen is current" step itself.
 
 ### Never cache a missing shared owner
 
@@ -1293,9 +1291,8 @@ form's own `form?.error` handling is untouched.
   Kit 3 stops writing `.svelte-kit/tsconfig.json`, but an old checkout keeps a
   stale copy, so a config still pointing there passes locally and fails in CI.
   `rm -rf .svelte-kit` before trusting a local `bun run check`.
-- **Biome warns it hit its 200k type limit on `src/lib/api/v1.d.ts`** now that
-  `#lib` resolves. It is a warning, not a failure. Do not `!!`-ignore the file:
-  `gen:api` formats it with Biome and fails on an ignored path.
+- **Do not `!!`-ignore `src/lib/api/v1.d.ts` in Biome**: `gen:api` formats it
+  with Biome and fails on an ignored path.
 - **Nothing may import `$app/stores`.** Kit 3 turns it into a module that throws
   on import, so one dependency still using it (superforms 2.x did) 500s every
   page that loads it — in the built app only; `bun run check` is green.

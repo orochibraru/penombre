@@ -1,3 +1,4 @@
+import { FileCategoryEnum } from "#lib/file-helpers.js";
 /**
  * Library scan: reconcile the DB with what's actually in the storage backend.
  *
@@ -307,7 +308,10 @@ export class ScanOperations {
 		key: string,
 	): Promise<{ musicDuration?: number } | { videoDuration?: number } | object> {
 		const category = determineCategory(key);
-		if (category !== "MUSIC" && category !== "VIDEO") {
+		if (
+			category !== FileCategoryEnum.MUSIC &&
+			category !== FileCategoryEnum.VIDEO
+		) {
 			return {};
 		}
 
@@ -317,7 +321,7 @@ export class ScanOperations {
 			({ path: localPath, isTemp } =
 				await this.thumbnails.getLocalOrTempPath(key));
 			const duration = (await parseFile(localPath)).format.duration ?? 0;
-			return category === "MUSIC"
+			return category === FileCategoryEnum.MUSIC
 				? { musicDuration: duration }
 				: { videoDuration: duration };
 		} catch (error) {

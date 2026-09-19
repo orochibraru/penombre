@@ -40,9 +40,9 @@ const { files, folders } = await import("#lib/server/db/schema.js");
 
 // ─── CLI flags ─────────────────────────────────────────────────────────────
 
-const args = process.argv.slice(2);
-const dryRun = args.includes("--dry-run");
-const cleanup = args.includes("--cleanup") && !dryRun;
+const args = new Set(process.argv.slice(2));
+const dryRun = args.has("--dry-run");
+const cleanup = args.has("--cleanup") && !dryRun;
 
 if (dryRun) {
 	console.log("DRY RUN — no changes will be made.\n");
