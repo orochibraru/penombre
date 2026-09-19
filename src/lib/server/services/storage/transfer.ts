@@ -8,7 +8,7 @@
  */
 
 import { join } from "node:path";
-import { and, asc, eq, like } from "drizzle-orm";
+import { and, asc, eq, inArray, like } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import type {
 	File as DbFile,
@@ -18,14 +18,15 @@ import { files, folders } from "#lib/server/db/schema.js";
 import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
 import {
 	awaitJob,
-	deleteJob,
+	disownJob,
 	enqueueJob,
+	finishJob,
 	type JobOutcome,
 } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import type { FileOperations, PlannedImport } from "./files";
 import type { FolderOperations } from "./folders";
-import { reconcileCopy } from "./reconcile";
+import { bytesGone, chunks, reconcileCopy } from "./reconcile";
 import { jobContext, ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
@@ -33,6 +34,9 @@ const logger = new Logger("StorageTransfer");
 
 /** The route awaits this job synchronously; a large tree can take a while. */
 const COPY_TIMEOUT_MS = 30 * 60 * 1000;
+
+/** Rows per insert: well under SQLite's bound-parameter cap. */
+const INSERT_CHUNK = 100;
 
 export interface ExportedTree {
 	type: "file" | "folder";
@@ -44,7 +48,9 @@ export interface ExportedTree {
 }
 
 export interface TransferResult {
+	/** Rows created. */
 	copied: number;
+	/** Files not confirmed copied; a move keeps its source unless this is 0. */
 	failed: number;
 }
 
@@ -194,34 +200,84 @@ export class TransferOperations {
 			timeoutMs: COPY_TIMEOUT_MS,
 			settle: true,
 		});
-		const failedIndexes = this.failedCopyIndexes(job, plans.length);
-
-		let copied = 0;
-		for (const [index, { file, plan }] of plans.entries()) {
-			if (failedIndexes.has(index)) {
-				failed++;
-				continue;
-			}
-			await this.ctx.db.insert(files).values(plan.values);
+		let applied: {
+			kept: { file: DbFile; plan: PlannedImport }[];
+			owned: boolean;
+		};
+		try {
+			const failedIndexes = this.failedCopyIndexes(job, plans.length);
+			const landed = plans.filter((_, index) => !failedIndexes.has(index));
+			const notLanded = plans.filter((_, index) => failedIndexes.has(index));
+			applied = await this.applyCopy(jobId, landed, notLanded);
+		} catch (error) {
+			// Half-applied, or the outcome itself unparseable: the reconciler
+			// finishes from the job's record either way.
+			await disownJob(jobId);
+			throw error;
+		}
+		const { kept, owned } = applied;
+		for (const { file, plan } of kept) {
 			this.thumbnails.warm(plan.filePath, file.contentType).catch(() => {
 				// `warm` already logs.
 			});
-			copied++;
+		}
+
+		await this.ctx.invalidateListingCaches();
+		// Ownership lost mid-apply: the adopter may still be removing bytes
+		// our check just saw, so nothing counts as confirmed. The source
+		// survives; a re-run of the move loses nothing.
+		return {
+			copied: kept.length,
+			failed: failed + (owned ? plans.length - kept.length : plans.length),
+		};
+	}
+
+	/**
+	 * Rows for what landed; returns the pairs whose rows stand, and whether
+	 * this process still owned the job when it was done.
+	 */
+	private async applyCopy(
+		jobId: string,
+		landed: { file: DbFile; plan: PlannedImport }[],
+		notLanded: { plan: PlannedImport }[],
+	): Promise<{
+		kept: { file: DbFile; plan: PlannedImport }[];
+		owned: boolean;
+	}> {
+		for (const batch of chunks(landed, INSERT_CHUNK)) {
+			await this.ctx.db
+				.insert(files)
+				.values(batch.map(({ plan }) => plan.values));
 		}
 		// A failed pair can still have left bytes — an interrupted or
 		// crashed attempt — and no row will ever point at them.
 		await reconcileCopy(this.ctx, {
 			copied: [],
-			failed: plans
-				.filter((_, index) => failedIndexes.has(index))
-				.map(({ plan }) => ({
-					dest: join(this.ctx.storagePath, plan.filePath),
-				})),
+			failed: notLanded.map(({ plan }) => ({
+				dest: join(this.ctx.storagePath, plan.filePath),
+			})),
 		});
-		await deleteJob(jobId);
-
-		await this.ctx.invalidateListingCaches();
-		return { copied, failed };
+		if (await finishJob(jobId)) {
+			return { kept: landed, owned: true };
+		}
+		// Taken for dead mid-apply and adopted: that reconciler may have
+		// removed bytes before these rows existed. Drop the rows whose bytes
+		// are gone; keep the rest (ENOENT only — see `bytesGone`).
+		const lost: string[] = [];
+		const kept = [];
+		for (const pair of landed) {
+			if (!(await bytesGone(this.ctx, pair.plan.filePath))) {
+				kept.push(pair);
+			} else {
+				lost.push(pair.plan.values.id);
+			}
+		}
+		for (const ids of chunks(lost, INSERT_CHUNK)) {
+			await this.ctx.db
+				.delete(files)
+				.where(and(ownedFiles(this.ctx), inArray(files.id, ids)));
+		}
+		return { kept, owned: false };
 	}
 
 	/** A missing or unsuccessful job leaves no pair confirmed copied. */

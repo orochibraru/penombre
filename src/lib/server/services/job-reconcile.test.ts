@@ -3,6 +3,7 @@ import type { Database } from "#lib/server/db/index.js";
 import { appInstances, jobs } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 import { type Reconciler, reconcileOrphanedJobs } from "./job-reconcile";
+import { INSTANCE_ID } from "./jobs";
 
 let database: Database;
 const now = Date.now();
@@ -70,16 +71,35 @@ describe("reconcileOrphanedJobs", () => {
 		expect(await remaining()).toEqual(["live", "running", "thumb"]);
 	});
 
-	// It deletes the row only once its rows are written: one still here long
-	// after finishing means it died mid-apply, even if the process lives on.
-	test("a live requester's job left for ten minutes is applied too", async () => {
-		await job("stuck", {
-			requestedBy: "live-app",
-			finishedAt: now - 11 * 60_000,
+	// It could be awaiting the job or writing its rows right now; deleting
+	// "orphan" bytes then would lose the copy a move is about to rely on.
+	test("never touches this process's own jobs, however old", async () => {
+		await job("mine", { requestedBy: INSTANCE_ID, finishedAt: 0 });
+		const { applied, resolve } = recorder();
+		await reconcileOrphanedJobs(database, resolve);
+		expect(applied).toEqual([]);
+		expect(await remaining()).toEqual(["mine"]);
+	});
+
+	test("a disowned job and a legacy one with no requester are applied", async () => {
+		await job("disowned", { requestedBy: "disowned" });
+		await job("legacy", { requestedBy: null });
+		const { applied, resolve } = recorder();
+		await reconcileOrphanedJobs(database, resolve);
+		expect(applied).toEqual(["copy", "copy"]);
+		expect(await remaining()).toEqual([]);
+	});
+
+	// Enqueued before results carried a context: nothing maps it to rows.
+	test("a result with no context is dropped, not applied", async () => {
+		await job("old", {
+			requestedBy: null,
+			result: JSON.stringify({ copied: [] }),
 		});
 		const { applied, resolve } = recorder();
 		await reconcileOrphanedJobs(database, resolve);
-		expect(applied).toEqual(["copy"]);
+		expect(applied).toEqual([]);
+		expect(await remaining()).toEqual([]);
 	});
 
 	test("a root that moved is not applied, and the record is dropped", async () => {
@@ -90,7 +110,7 @@ describe("reconcileOrphanedJobs", () => {
 		expect(await remaining()).toEqual([]);
 	});
 
-	test("a job that fails to apply is kept for the next pass", async () => {
+	test("a job that fails to apply is disowned for the next pass", async () => {
 		await job("flaky", {});
 		await reconcileOrphanedJobs(database, async () => ({
 			getStoragePath: () => "/r",
@@ -99,5 +119,32 @@ describe("reconcileOrphanedJobs", () => {
 			},
 		}));
 		expect(await remaining()).toEqual(["flaky"]);
+		const [row] = await database.select().from(jobs);
+		expect(row?.requestedBy).toBe("disowned");
+	});
+
+	// Failed before it could report (no worker, a crash loop): its spec is
+	// the record, read as "anything may have happened", checked on disk.
+	test("a spec-shaped record is read as every path possibly touched", async () => {
+		await job("copy-spec", {
+			result: JSON.stringify({
+				pairs: [{ source: "/s", dest: "/r/a" }],
+				context,
+			}),
+		});
+		await job("delete-spec", {
+			type: "delete",
+			result: JSON.stringify({ files: ["/r/b"], dirs: ["/r/d"], context }),
+		});
+		const seen: unknown[] = [];
+		await reconcileOrphanedJobs(database, async () => ({
+			getStoragePath: () => "/r",
+			reconcileOrphanedJob: async (_type, outcome) => {
+				seen.push(outcome);
+				return 0;
+			},
+		}));
+		expect(seen).toContainEqual({ copied: [], failed: [{ dest: "/r/a" }] });
+		expect(seen).toContainEqual({ deleted: ["/r/b"], deletedDirs: ["/r/d"] });
 	});
 });

@@ -86,9 +86,9 @@ func (s *Store) RequesterAlive(ctx context.Context, jobID string, silence time.D
 // Claim takes a job whose lease went stale first, then the queue by priority.
 // Two statements rather than one `or`, so each can use jobs_claim_idx.
 func (s *Store) Claim(ctx context.Context, workerID string, leaseTimeout time.Duration) (*jobs.Job, error) {
-	// A copy/delete is always reclaimed: out of attempts, it is not re-run
-	// but recorded (see execute), which a failed row without a result is not.
-	stale := fmt.Sprintf(`status = 'running' and heartbeat_at < %s - $2 and (attempts < %d or type in ('copy', 'delete'))`, s.now, MaxAttempts)
+	// A copy/delete gets the same MaxAttempts real runs, then one more claim
+	// that only records what they left (see execute).
+	stale := fmt.Sprintf(`status = 'running' and heartbeat_at < %s - $2 and (attempts < %d or (type in ('copy', 'delete') and attempts <= %d))`, s.now, MaxAttempts, MaxAttempts)
 	job, err := s.claimWhere(ctx, stale, workerID, leaseTimeout.Milliseconds())
 	if job != nil || err != nil {
 		return job, err
@@ -165,9 +165,13 @@ func (s *Store) Release(ctx context.Context, id, workerID string) error {
 }
 
 func (s *Store) Prune(ctx context.Context, leaseTimeout time.Duration) error {
+	// A copy/delete whose recording run crashed too keeps its spec as the
+	// result: every path it may have touched, for the app to check on disk.
 	if _, err := s.db.ExecContext(ctx, fmt.Sprintf(
-		`update jobs set status = 'failed', error = 'worker lost the job too many times', finished_at = %[1]s, worker_id = null, spec = '{}'
-		where status = 'running' and heartbeat_at < %[1]s - $1 and attempts >= $2 and type not in ('copy', 'delete')`, s.now),
+		`update jobs set status = 'failed', error = 'worker lost the job too many times', finished_at = %[1]s, worker_id = null,
+			result = case when type in ('copy', 'delete') then spec end, spec = '{}'
+		where status = 'running' and heartbeat_at < %[1]s - $1
+			and (attempts > $2 or (attempts = $2 and type not in ('copy', 'delete')))`, s.now),
 		leaseTimeout.Milliseconds(), MaxAttempts); err != nil {
 		return err
 	}

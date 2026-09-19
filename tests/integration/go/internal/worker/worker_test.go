@@ -2,6 +2,7 @@ package worker_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -200,26 +201,52 @@ func TestACallerBoundJobWhoseRequesterDiedStops(t *testing.T) {
 	}
 }
 
-// A crash-looping copy is not re-run a third time, nor failed with no
-// result: it is recorded, so the app can account for what earlier runs did.
-func TestACallerBoundJobOutOfAttemptsIsRecordedNotRerun(t *testing.T) {
-	s, db := openTestStore(t)
-	insert(t, db, "copy", 0, 1)
-	_, _ = db.Exec(`update jobs set type = 'copy', status = 'running', attempts = 2, heartbeat_at = 0`)
-	if err := s.Prune(context.Background(), time.Minute); err != nil {
-		t.Fatal(err)
+// A caller-bound job gets the same MaxAttempts real runs as any other, then
+// one claim that only records; a crash there too finalizes it with its spec
+// as the result, so nothing is reclaimed forever and nothing goes unrecorded.
+func TestACallerBoundJobOutOfAttempts(t *testing.T) {
+	cause := func(ctx context.Context, _ jobs.Job) (any, error) {
+		return map[string]string{"cause": fmt.Sprint(context.Cause(ctx))}, nil
 	}
-	if got := status(t, db, "copy"); got != "running" {
-		t.Fatalf("Prune must leave it for a worker to record, got %s", got)
-	}
-	registry := worker.Registry{"copy": func(ctx context.Context, _ jobs.Job) (any, error) {
-		return map[string]string{"stopped": fmt.Sprint(context.Cause(ctx))}, nil
-	}}
 	cfg := worker.Config{ID: "w", Concurrency: 1, PollInterval: 5 * time.Millisecond, LeaseTimeout: time.Minute}
-	runUntil(t, cfg, s, registry, func() bool { return status(t, db, "copy") == "succeeded" })
-	var result string
-	_ = db.QueryRow(`select result from jobs where id = 'copy'`).Scan(&result)
-	if !strings.Contains(result, "too many times") {
-		t.Fatalf("got %s %q", status(t, db, "copy"), result)
+	result := func(db *sql.DB) string {
+		var r sql.NullString
+		_ = db.QueryRow(`select result from jobs where id = 'copy'`).Scan(&r)
+		return r.String
 	}
+
+	t.Run("the third run is real", func(t *testing.T) {
+		s, db := openTestStore(t)
+		insert(t, db, "copy", 0, 1)
+		_, _ = db.Exec(`update jobs set type = 'copy', status = 'running', attempts = 2, heartbeat_at = 0`)
+		runUntil(t, cfg, s, worker.Registry{"copy": cause}, func() bool { return status(t, db, "copy") == "succeeded" })
+		if result(db) != `{"cause":"\u003cnil\u003e"}` {
+			t.Fatalf("got %q", result(db))
+		}
+	})
+
+	t.Run("after that it only records", func(t *testing.T) {
+		s, db := openTestStore(t)
+		insert(t, db, "copy", 0, 1)
+		_, _ = db.Exec(`update jobs set type = 'copy', status = 'running', attempts = 3, heartbeat_at = 0`)
+		if err := s.Prune(context.Background(), time.Minute); err != nil || status(t, db, "copy") != "running" {
+			t.Fatalf("Prune must leave it for the recording run: %v", err)
+		}
+		runUntil(t, cfg, s, worker.Registry{"copy": cause}, func() bool { return status(t, db, "copy") == "succeeded" })
+		if !strings.Contains(result(db), "too many times") {
+			t.Fatalf("got %q", result(db))
+		}
+	})
+
+	t.Run("a crashed recording run is finalized with its spec", func(t *testing.T) {
+		s, db := openTestStore(t)
+		insert(t, db, "copy", 0, 1)
+		_, _ = db.Exec(`update jobs set type = 'copy', status = 'running', attempts = 4, heartbeat_at = 0, spec = '{"pairs":[{"dest":"/d"}]}'`)
+		if err := s.Prune(context.Background(), time.Minute); err != nil {
+			t.Fatal(err)
+		}
+		if status(t, db, "copy") != "failed" || result(db) != `{"pairs":[{"dest":"/d"}]}` {
+			t.Fatalf("got %s %q", status(t, db, "copy"), result(db))
+		}
+	})
 }

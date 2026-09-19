@@ -12,12 +12,14 @@ import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import {
 	awaitJob,
-	deleteJob,
+	disownJob,
 	enqueueJob,
+	finishJob,
 	type JobOutcome,
 } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import { ancestorFolders } from "./mappers";
+import { bytesGone, chunks } from "./reconcile";
 import { jobContext, ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
@@ -41,14 +43,6 @@ export interface EmptyTrashResult {
 	freed: number;
 	/** Files whose bytes could not be removed; their rows are kept. */
 	failed: number;
-}
-
-function chunk<T>(items: T[], size: number): T[][] {
-	const result: T[][] = [];
-	for (let i = 0; i < items.length; i += size) {
-		result.push(items.slice(i, i + size));
-	}
-	return result;
 }
 
 export class TrashOperations {
@@ -88,8 +82,28 @@ export class TrashOperations {
 			timeoutMs: DELETE_TIMEOUT_MS,
 			settle: true,
 		});
-		const outcome = this.jobOutcome(job, trashedFiles, trashedFolders);
+		try {
+			const outcome = await this.jobOutcome(job, trashedFiles, trashedFolders);
+			return await this.applyEmpty(
+				jobId,
+				outcome,
+				trashedFiles,
+				trashedFolders,
+			);
+		} catch (error) {
+			// Half-applied, or the outcome itself unparseable: the reconciler
+			// finishes from the job's record either way.
+			await disownJob(jobId);
+			throw error;
+		}
+	}
 
+	private async applyEmpty(
+		jobId: string,
+		outcome: { failedFiles: Set<string>; failedDirs: string[] },
+		trashedFiles: { id: string; path: string; size: number }[],
+		trashedFolders: { id: string; path: string }[],
+	): Promise<EmptyTrashResult> {
 		const removableFileIds: string[] = [];
 		const survivingPaths: string[] = [];
 		let freed = 0;
@@ -117,12 +131,12 @@ export class TrashOperations {
 			(folder) => !keptFolders.has(folder.path),
 		);
 
-		for (const ids of chunk(removableFileIds, DELETE_CHUNK)) {
+		for (const ids of chunks(removableFileIds, DELETE_CHUNK)) {
 			await this.ctx.db
 				.delete(files)
 				.where(and(ownedFiles(this.ctx), inArray(files.id, ids)));
 		}
-		for (const ids of chunk(
+		for (const ids of chunks(
 			removableFolders.map((folder) => folder.id),
 			DELETE_CHUNK,
 		)) {
@@ -131,7 +145,9 @@ export class TrashOperations {
 				.where(and(ownedFolders(this.ctx), inArray(folders.id, ids)));
 		}
 
-		await deleteJob(jobId);
+		// A false here means this process was taken for dead and the job
+		// adopted; the reconciler deletes the same rows, so nothing to redo.
+		await finishJob(jobId);
 		const deleted = removableFileIds.length + removableFolders.length;
 
 		await this.ctx.activityService.register({
@@ -146,15 +162,16 @@ export class TrashOperations {
 	}
 
 	/**
-	 * A missing or unsuccessful job leaves nothing confirmed deleted, so every
-	 * file stays presumed present — the safe default, since an empty folder
-	 * with no bytes of its own has nothing to lose either way.
+	 * With no outcome, the disk is the record: the job may have run part-way
+	 * before its worker vanished, so a file whose bytes are gone loses its
+	 * row, and every other row stays. Folders stay too — an empty folder has
+	 * nothing to lose either way.
 	 */
-	private jobOutcome(
+	private async jobOutcome(
 		job: JobOutcome | undefined,
 		trashedFiles: { path: string }[],
 		trashedFolders: { path: string }[],
-	): { failedFiles: Set<string>; failedDirs: string[] } {
+	): Promise<{ failedFiles: Set<string>; failedDirs: string[] }> {
 		if (job?.status === "succeeded" && job.result) {
 			const result = JSON.parse(job.result) as DeleteJobResult;
 			const byAbs = new Map(
@@ -171,8 +188,14 @@ export class TrashOperations {
 		logger.error(
 			`Delete job did not complete (status ${job?.status ?? "timed out"})`,
 		);
+		const present: string[] = [];
+		for (const file of trashedFiles) {
+			if (!(await bytesGone(this.ctx, file.path))) {
+				present.push(file.path);
+			}
+		}
 		return {
-			failedFiles: new Set(trashedFiles.map((file) => file.path)),
+			failedFiles: new Set(present),
 			failedDirs: trashedFolders.map((folder) =>
 				join(this.ctx.storagePath, folder.path),
 			),

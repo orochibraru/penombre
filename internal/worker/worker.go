@@ -136,7 +136,7 @@ func execute(execCtx, runCtx context.Context, cfg Config, store *Store, registry
 	// Nobody left to apply the outcome: run with a cancelled context, so the
 	// executor reaches nothing and records exactly that.
 	switch {
-	case bound && job.Attempts >= MaxAttempts:
+	case bound && job.Attempts > MaxAttempts:
 		// Record what earlier attempts left, without risking another crash.
 		cancel(errOutOfAttempts)
 	case bound && !requesterAlive(ctx, store, job.ID, log):

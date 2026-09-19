@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, mock, test } from "bun:test";
+import {
+	beforeEach,
+	describe,
+	expect,
+	mock,
+	setSystemTime,
+	test,
+} from "bun:test";
 import { eq } from "drizzle-orm";
 import type { Database } from "#lib/server/db/index.js";
 import { files, user } from "#lib/server/db/schema.js";
@@ -10,11 +17,13 @@ const awaitJob = mock(
 		undefined,
 );
 
-const deleteJob = mock(async (_id: string) => {});
+const finishJob = mock(async (_id: string) => true);
+const disownJob = mock(async (_id: string) => {});
 mock.module("#lib/server/services/jobs.js", () => ({
 	enqueueJob,
 	awaitJob,
-	deleteJob,
+	finishJob,
+	disownJob,
 }));
 
 const { probeMissingDurations, recordDurations } = await import("./media");
@@ -53,10 +62,13 @@ async function file(id: string) {
 	return row;
 }
 
-function probeReturns(durations: Record<string, number>) {
+function probeReturns(
+	durations: Record<string, number>,
+	probed: string[] = Object.keys(durations),
+) {
 	awaitJob.mockImplementationOnce(async () => ({
 		status: "succeeded",
-		result: JSON.stringify({ durations }),
+		result: JSON.stringify({ durations, probed }),
 	}));
 }
 
@@ -137,7 +149,7 @@ describe("recordDurations", () => {
 			recordDurations(ctx(), [
 				{ id: "m", path: "t.mp3", category: "MUSIC", updatedAt: T0 },
 			]),
-		).resolves.toBeUndefined();
+		).resolves.toEqual([]);
 	});
 });
 
@@ -187,5 +199,44 @@ describe("probeMissingDurations", () => {
 		await addFile("done", "c.mp3", "MUSIC", { musicDuration: 4 });
 		await probeMissingDurations(ctx());
 		expect(enqueueJob).not.toHaveBeenCalled();
+	});
+
+	// Unreadable forever (EACCES) used to mean an ffprobe per row per minute,
+	// indefinitely. A transient failure must still come back.
+	test("a row ffprobe could not read backs off, then is retried", async () => {
+		// Unique: the backoff is process-wide and tests rerun.
+		await addFile(`stuck-${crypto.randomUUID()}`, "s.mp3", "MUSIC");
+		probeReturns({}, ["/data/s.mp3"]);
+		await probeMissingDurations(ctx());
+		expect(enqueueJob).toHaveBeenCalledTimes(1);
+
+		await probeMissingDurations(ctx());
+		expect(enqueueJob).toHaveBeenCalledTimes(1);
+
+		setSystemTime(new Date(Date.now() + 2 * 60_000));
+		try {
+			await probeMissingDurations(ctx());
+		} finally {
+			setSystemTime();
+		}
+		expect(enqueueJob).toHaveBeenCalledTimes(2);
+	});
+
+	test("a probe that never ran does not back the row off", async () => {
+		await addFile("todo", "t.mp3", "MUSIC");
+		awaitJob.mockImplementationOnce(async () => undefined);
+		await probeMissingDurations(ctx());
+		await probeMissingDurations(ctx());
+		expect(enqueueJob).toHaveBeenCalledTimes(2);
+	});
+
+	// Two instances' sweeps can join one deduped job holding the other's
+	// batch: rows it never probed are not "unreadable".
+	test("a row the joined job never probed does not back off", async () => {
+		await addFile(`other-${crypto.randomUUID()}`, "o.mp3", "MUSIC");
+		probeReturns({}, ["/data/someone-elses.mp3"]);
+		await probeMissingDurations(ctx());
+		await probeMissingDurations(ctx());
+		expect(enqueueJob).toHaveBeenCalledTimes(2);
 	});
 });

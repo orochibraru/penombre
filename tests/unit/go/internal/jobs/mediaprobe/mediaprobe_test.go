@@ -76,3 +76,40 @@ func TestAMissingFFprobeFailsTheJob(t *testing.T) {
 		t.Fatal("without ffprobe nothing may be recorded")
 	}
 }
+
+// A caller joining this job with another batch must know what was tried.
+func TestResultListsWhatWasProbed(t *testing.T) {
+	fakeFFprobe(t, "a.mp3: Input/output error")
+	dir := t.TempDir()
+	here := filepath.Join(dir, "a.mp3")
+	if err := os.WriteFile(here, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gone := filepath.Join(dir, "gone.mp3")
+	spec, _ := json.Marshal(map[string][]string{"paths": {here, gone}})
+	out, err := mediaprobe.Run(context.Background(), jobs.Job{Spec: spec})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p := out.(mediaprobe.Result).Probed; len(p) != 2 || p[0] != here || p[1] != gone {
+		t.Fatalf("probed = %v", p)
+	}
+}
+
+// A path whose bytes are gone must still count as tried, so it backs off
+// like an unreadable file instead of being re-sampled every sweep.
+func TestAMissingPathIsProbed(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "gone.mp3")
+	spec, _ := json.Marshal(map[string][]string{"paths": {missing}})
+	out, err := mediaprobe.Run(context.Background(), jobs.Job{Spec: spec})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := out.(mediaprobe.Result)
+	if len(result.Durations) != 0 {
+		t.Fatalf("want no duration, got %v", result.Durations)
+	}
+	if p := result.Probed; len(p) != 1 || p[0] != missing {
+		t.Fatalf("probed = %v", p)
+	}
+}

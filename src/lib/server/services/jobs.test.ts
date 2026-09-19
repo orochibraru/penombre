@@ -4,11 +4,15 @@ import type { Database } from "#lib/server/db/index.js";
 import { appInstances, jobs, workers } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 import {
+	adoptJob,
 	awaitJob,
 	beatInstance,
+	disownJob,
 	enqueueJob,
 	failOrphanedJobs,
+	finishJob,
 	INSTANCE_ID,
+	orphanedOutcomes,
 } from "./jobs";
 
 let database: Database;
@@ -337,5 +341,98 @@ describe("requester tracking", () => {
 		);
 		expect(await failOrphanedJobs(database)).toBe(0);
 		expect((await row(id))?.status).toBe("queued");
+	});
+});
+
+describe("ownership", () => {
+	// A rolling deploy: the new instance must not fail the old one's work.
+	test("failOrphanedJobs leaves a live instance's queued job", async () => {
+		await database
+			.insert(appInstances)
+			.values({ id: "other", seenAt: Date.now() });
+		await database.insert(jobs).values({
+			id: "theirs",
+			type: "delete",
+			spec: "{}",
+			requestedBy: "other",
+		});
+		expect(await failOrphanedJobs(database)).toBe(0);
+		expect((await row("theirs"))?.status).toBe("queued");
+	});
+
+	test("adopting is a compare-and-swap on the requester", async () => {
+		await database.insert(jobs).values({
+			id: "j",
+			type: "copy",
+			spec: "{}",
+			requestedBy: "dead",
+		});
+		expect(await adoptJob("j", "someone-else", database)).toBe(false);
+		expect(await adoptJob("j", "dead", database)).toBe(true);
+		expect((await row("j"))?.requestedBy).toBe(INSTANCE_ID);
+	});
+
+	test("finishing only deletes a job this process still owns", async () => {
+		const mine = await enqueueJob(
+			{ type: "copy", spec: {}, priority: "mutation" },
+			database,
+		);
+		await database
+			.update(jobs)
+			.set({ requestedBy: "adopted-by-other" })
+			.where(eq(jobs.id, mine));
+		expect(await finishJob(mine, database)).toBe(false);
+		expect(await row(mine)).toBeDefined();
+	});
+
+	test("disowning hands the job to the reconciler", async () => {
+		const id = await enqueueJob(
+			{ type: "delete", spec: {}, priority: "mutation" },
+			database,
+		);
+		await disownJob(id, database);
+		expect((await row(id))?.requestedBy).toBe("disowned");
+	});
+
+	// A dev HMR reload re-evaluates the module; the heartbeat, guarded on
+	// globalThis, would keep beating the old id while jobs carry a new one.
+	test("the instance id survives the module being re-evaluated", () => {
+		expect(
+			(globalThis as { __penombre_instance?: string }).__penombre_instance,
+		).toBe(INSTANCE_ID);
+	});
+
+	test("a failed copy/delete keeps its spec as the record, others drop it", async () => {
+		await database.insert(jobs).values([
+			{ id: "c", type: "copy", spec: '{"pairs":[1]}' },
+			{ id: "t", type: "thumbnail", spec: '{"x":1}' },
+		]);
+		await awaitJob("c", { database, timeoutMs: 0, intervalMs: 1 });
+		await awaitJob("t", { database, timeoutMs: 0, intervalMs: 1 });
+		expect(await row("c")).toMatchObject({
+			result: '{"pairs":[1]}',
+			spec: "{}",
+		});
+		expect(await row("t")).toMatchObject({ result: null, spec: "{}" });
+	});
+
+	// Adopted away during a pause, then disowned back: ownership returns to
+	// this process's id while it is still applying. Its own reconciler must
+	// not take the job and delete bytes the apply is about to rely on.
+	test("a job this process is applying is never offered to its reconciler", async () => {
+		const id = await enqueueJob(
+			{ type: "copy", spec: {}, priority: "mutation" },
+			database,
+		);
+		await finish(id, {});
+		await awaitJob(id, { database });
+		await database
+			.update(jobs)
+			.set({ requestedBy: "disowned" })
+			.where(eq(jobs.id, id));
+		expect(await orphanedOutcomes(database)).toEqual([]);
+
+		await disownJob(id, database);
+		expect((await orphanedOutcomes(database)).map((o) => o.id)).toEqual([id]);
 	});
 });

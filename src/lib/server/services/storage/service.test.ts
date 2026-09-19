@@ -153,7 +153,8 @@ const mockAwaitJob = mock(async () => ({
 mock.module("#lib/server/services/jobs.js", () => ({
 	enqueueJob: mockEnqueueJob,
 	awaitJob: mockAwaitJob,
-	deleteJob: mock(async () => {}),
+	finishJob: mock(async () => true),
+	disownJob: mock(async () => {}),
 }));
 
 const mockSelect = rawDb.select as Mock<() => unknown>;
@@ -1254,7 +1255,10 @@ describe("StorageService", () => {
 				"/tmp/penombre-test-storage/user-user-1/abc-uuid.txt",
 			);
 			expect(pair?.dest?.startsWith("/mnt/media/")).toBe(true);
-			const row = values.mock.calls[0]?.[0];
+			const batch = values.mock.calls[0]?.[0] as unknown as
+				| Record<string, unknown>[]
+				| undefined;
+			const row = batch?.[0];
 			expect(row?.name).toBe(baseFile.name);
 			expect(row?.volumeId).toBe("media");
 			expect(row?.id).not.toBe(baseFile.id);

@@ -9,7 +9,7 @@
  */
 
 import { join } from "node:path";
-import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { and, eq, isNull, notInArray, or, sql } from "drizzle-orm";
 import { FileCategoryEnum } from "#lib/file-helpers.js";
 import { Logger } from "#lib/logger.js";
 import { files } from "#lib/server/db/schema.js";
@@ -54,7 +54,9 @@ export const missingDuration = () =>
 export async function probeDurations(
 	paths: string[],
 	dedupeKey?: string,
-): Promise<Map<string, number>> {
+): Promise<
+	{ durations: Map<string, number>; probed: Set<string> } | undefined
+> {
 	const id = await enqueueJob({
 		type: "media-probe",
 		spec: { paths },
@@ -66,28 +68,45 @@ export async function probeDurations(
 		consume: true,
 	});
 	if (job?.status !== "succeeded" || !job.result) {
-		return new Map();
+		return undefined;
 	}
-	const { durations } = JSON.parse(job.result) as {
+	const { durations, probed = [] } = JSON.parse(job.result) as {
 		durations: Record<string, number>;
+		probed?: string[];
 	};
-	return new Map(Object.entries(durations));
+	return {
+		durations: new Map(Object.entries(durations)),
+		probed: new Set(probed),
+	};
 }
 
-/** Probes `rows` and writes what came back. Never throws. */
+/**
+ * Probes `rows` and writes what came back. Never throws. Returns the ids the
+ * probe ran on and could not read — not ones it never reached (no worker).
+ */
 export async function recordDurations(
 	ctx: StorageContext,
 	rows: MediaRow[],
 	dedupeKey?: string,
-): Promise<void> {
+): Promise<string[]> {
+	const unread: string[] = [];
 	try {
-		const durations = await probeDurations(
+		const outcome = await probeDurations(
 			rows.map((row) => join(ctx.storagePath, row.path)),
 			dedupeKey,
 		);
+		if (!outcome) {
+			return [];
+		}
 		for (const row of rows) {
-			const duration = durations.get(join(ctx.storagePath, row.path));
+			const path = join(ctx.storagePath, row.path);
+			const duration = outcome.durations.get(path);
 			if (duration === undefined) {
+				// Only what ffprobe actually ran on: a joined job may have
+				// probed another batch.
+				if (outcome.probed.has(path)) {
+					unread.push(row.id);
+				}
 				continue;
 			}
 			await ctx.db
@@ -113,6 +132,31 @@ export async function recordDurations(
 			error,
 		);
 	}
+	return unread;
+}
+
+/**
+ * Rows ffprobe could not read, and when to try again: doubling from a
+ * minute to a day. In memory on purpose — a restart retrying them all once
+ * is the right amount of "transient failures are retried".
+ */
+const backoff = new Map<string, { at: number; delay: number }>();
+const MAX_BACKOFF_MS = 24 * 60 * 60_000;
+/** Backed-off ids excluded in SQL, so they cannot fill the batch. */
+const MAX_EXCLUDED = 5000;
+
+/** Ids waiting out a backoff; entries long overdue are forgotten. */
+function backedOff(now: number): string[] {
+	const waiting: string[] = [];
+	for (const [id, entry] of backoff) {
+		if (entry.at > now) {
+			waiting.push(id);
+		} else if (entry.at < now - MAX_BACKOFF_MS) {
+			// Due a day ago and never retried: deleted, or filled elsewhere.
+			backoff.delete(id);
+		}
+	}
+	return waiting.slice(0, MAX_EXCLUDED);
 }
 
 /**
@@ -123,6 +167,8 @@ export async function recordDurations(
 export async function probeMissingDurations(
 	ctx: StorageContext,
 ): Promise<void> {
+	const now = Date.now();
+	const waiting = backedOff(now);
 	const rows: MediaRow[] = await ctx.db
 		.select({
 			id: files.id,
@@ -131,10 +177,31 @@ export async function probeMissingDurations(
 			updatedAt: files.updatedAt,
 		})
 		.from(files)
-		.where(and(ownedFiles(ctx), missingDuration()))
+		.where(
+			and(
+				ownedFiles(ctx),
+				missingDuration(),
+				waiting.length > 0 ? notInArray(files.id, waiting) : undefined,
+			),
+		)
 		.orderBy(sql`random()`)
 		.limit(PROBE_BATCH);
-	if (rows.length > 0) {
-		await recordDurations(ctx, rows, `media-probe:${ctx.storagePath}`);
+	const due = rows.filter((row) => (backoff.get(row.id)?.at ?? 0) <= now);
+	if (due.length === 0) {
+		return;
+	}
+	const unread = new Set(
+		await recordDurations(ctx, due, `media-probe:${ctx.storagePath}`),
+	);
+	for (const row of due) {
+		if (unread.has(row.id)) {
+			const delay = Math.min(
+				(backoff.get(row.id)?.delay ?? 30_000) * 2,
+				MAX_BACKOFF_MS,
+			);
+			backoff.set(row.id, { at: now + delay, delay });
+		} else {
+			backoff.delete(row.id);
+		}
 	}
 }

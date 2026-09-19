@@ -7,7 +7,8 @@
  * rows survived would only ever restore as broken files, so the rows go.
  */
 
-import { isAbsolute, relative } from "node:path";
+import { lstat } from "node:fs/promises";
+import { isAbsolute, join, relative } from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
@@ -30,10 +31,27 @@ export interface DeleteResult {
 	deletedDirs: string[];
 }
 
-function chunks<T>(items: T[]): T[][] {
+/**
+ * Only ENOENT is gone. `objectExists` (`Bun.file().exists()`) also answers
+ * false on EACCES — and a row deleted for bytes the app merely cannot read
+ * is resurrected untrashed by the next scan.
+ */
+export async function bytesGone(
+	ctx: StorageContext,
+	key: string,
+): Promise<boolean> {
+	try {
+		await lstat(join(ctx.storagePath, key));
+		return false;
+	} catch (error) {
+		return (error as NodeJS.ErrnoException).code === "ENOENT";
+	}
+}
+
+export function chunks<T>(items: T[], size = CHUNK): T[][] {
 	const out: T[][] = [];
-	for (let i = 0; i < items.length; i += CHUNK) {
-		out.push(items.slice(i, i + CHUNK));
+	for (let i = 0; i < items.length; i += size) {
+		out.push(items.slice(i, i + size));
 	}
 	return out;
 }
@@ -77,14 +95,28 @@ export async function reconcileCopy(
 	return removed;
 }
 
-/** Deletes the trash rows whose bytes the job removed. */
+/**
+ * Deletes the trash rows whose bytes the job removed — and that are still
+ * gone: on a volume, a file trashed at the same path since has bytes again.
+ */
 export async function reconcileDelete(
 	ctx: StorageContext,
 	thumbnails: ThumbnailService,
 	result: DeleteResult,
 ): Promise<number> {
+	const stillGone = async (keys: string[]) => {
+		const out: string[] = [];
+		for (const key of keys) {
+			if (await bytesGone(ctx, key)) {
+				out.push(key);
+			}
+		}
+		return out;
+	};
+	const deleted = await stillGone(keysOf(ctx, result.deleted));
+	const deletedDirs = await stillGone(keysOf(ctx, result.deletedDirs));
 	let removed = 0;
-	for (const batch of chunks(keysOf(ctx, result.deleted))) {
+	for (const batch of chunks(deleted)) {
 		const gone = await ctx.db
 			.delete(files)
 			.where(
@@ -100,7 +132,7 @@ export async function reconcileDelete(
 		}
 		removed += gone.length;
 	}
-	for (const batch of chunks(keysOf(ctx, result.deletedDirs))) {
+	for (const batch of chunks(deletedDirs)) {
 		const gone = await ctx.db
 			.delete(folders)
 			.where(

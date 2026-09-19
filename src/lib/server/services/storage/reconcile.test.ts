@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { eq } from "drizzle-orm";
@@ -113,5 +113,35 @@ describe("reconcileDelete", () => {
 			await database.select().from(folders).where(eq(folders.id, "dir")),
 		).toEqual([]);
 		expect(thumbs).toEqual(["a.txt"]);
+	});
+
+	// On a volume a new file can be trashed at the same path inside the
+	// window; its bytes are there, so its row must stay.
+	test("keeps a trash row whose path has bytes again", async () => {
+		await row("new", "a.txt", { isTrashed: true });
+		await onDisk("a.txt");
+		const removed = await reconcileDelete(
+			ctx(),
+			{ deleteThumbnails: async () => {} } as never,
+			{ deleted: [join(root, "a.txt")], deletedDirs: [] },
+		);
+		expect(removed).toBe(0);
+		expect(await database.select().from(files)).toHaveLength(1);
+	});
+
+	test("keeps a trash row whose bytes it cannot read", async () => {
+		await row("locked", "locked/a.txt", { isTrashed: true });
+		await onDisk("locked/a.txt");
+		await chmod(join(root, "locked"), 0o000);
+		try {
+			const removed = await reconcileDelete(
+				ctx(),
+				{ deleteThumbnails: async () => {} } as never,
+				{ deleted: [join(root, "locked/a.txt")], deletedDirs: [] },
+			);
+			expect(removed).toBe(0);
+		} finally {
+			await chmod(join(root, "locked"), 0o755);
+		}
 	});
 });

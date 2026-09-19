@@ -1,0 +1,1 @@
+CREATE INDEX "files_category_idx" ON "files" USING btree ("category");

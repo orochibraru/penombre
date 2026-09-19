@@ -198,28 +198,58 @@ rows whose bytes are gone (delete). The rules that hold that:
   was not the requester can map paths back to rows. An interrupted delete
   `lstat`s what it did not reach: bytes an earlier, crashed attempt already
   removed are reported `deleted`, because they are.
-- **The requester deletes the row, not `awaitJob`**, and only after writing its
-  rows (`deleteJob`). A finished copy/delete row still present therefore means
-  its outcome was never fully applied. `reconcileOrphanedJobs`
-  (`job-reconcile.ts`, at boot and every minute) applies those whose requester
-  is gone, or that finished over 10 minutes ago: a copy's destinations with no
-  row are removed (never visible; the source still has them), a delete's removed
-  paths lose their **trash** rows. Only what the result names, never a sweep —
-  and never when the root in `context` is not the service's root. `Prune` never
-  deletes such a row; reconciliation does.
-- At boot, `failOrphanedJobs()` fails queued ones from other instances: they
-  never started, so nothing is lost. A running one is left for a worker to stop
-  and record — failing it would discard that record.
+- **Ownership is `requested_by`, moved by compare-and-swap.** The requester
+  deletes the row only after writing its rows, and only while it still owns it
+  (`finishJob`). A finished copy/delete row still present therefore means its
+  outcome was never fully applied. `reconcileOrphanedJobs` (`job-reconcile.ts`,
+  at boot and every minute) takes those whose requester is gone — silent 30s,
+  `'disowned'`, or `null` (legacy) — never this process's own id, and never a
+  job in its in-memory `applying` set (outcome read, not yet finished or
+  disowned). The id alone is not enough: adopted away during a pause and
+  disowned back, a job's owner returns to this id while it is still applying.
+  Deleting "orphan" copy bytes under a move that then deletes its source is
+  permanent loss. It adopts each job first (`adoptJob`, a CAS) so only one party
+  applies it. A requester whose apply throws disowns the job. One that finds its
+  job adopted meanwhile keeps only rows whose bytes exist **and reports every
+  pair failed**: the adopter may still be unlinking what its check just saw, so
+  losing ownership never confirms a move — the source stays, and re-running the
+  move loses nothing.
+- **Reconciling is checked against rows and disk.** A copy's destinations with
+  no row are removed (never visible; the source still has them); a delete's
+  paths lose their **trash** rows only if the bytes are still gone — on a volume
+  a new file can be trashed at the same path. "Gone" is `bytesGone()`
+  (`reconcile.ts`): `lstat`, ENOENT only, everywhere a row is deleted for
+  missing bytes — `objectExists` (`Bun.file().exists()`) answers false on
+  EACCES, and a row deleted for bytes the app merely could not read is
+  resurrected untrashed by the scan. Only what the record names, never a sweep,
+  and never when `context.root` is not the service's root. `Prune` never deletes
+  such a row; reconciliation does. A record with no `context` (pre-reconcile
+  rows) is dropped with a log.
+- **A copy/delete never ends without a record.** When it is failed without
+  reporting (no worker, a crash loop, the app's own stale-lease abandon), its
+  **spec becomes its result** (`failed()` in `jobs.ts`, `Prune` in Go), read as
+  "every path possibly touched". With no outcome, emptying the trash treats the
+  disk as the record (`objectExists` per file), and a transfer runs
+  `reconcileCopy` over every failed destination.
+- At boot, `failOrphanedJobs()` fails queued ones whose requester is gone (the
+  same predicate — a live instance's queued job is its own): they never started,
+  so nothing is lost. A running one is left for a worker to stop and record.
+- Attempts: the same `MaxAttempts` real runs as any job, then one claim that
+  only records (cancelled context, an `lstat` per unreached delete); if even
+  that crashes, `Prune` finalizes it with its spec as the record.
 - An embedded worker whose app died without signalling it (OOM, SIGKILL) exits
   on its own: `WORKER_PARENT_PID` plus `WatchParent`.
+- **The one window left is inherent:** a worker partitioned from the database
+  keeps moving bytes until it has failed to renew its lease for a whole lease
+  (60s), then cancels itself. Those bytes are covered by the same rules — the
+  app abandons the job with its spec as the record, the trash checks the disk
+  and a transfer removes every failed destination — except a copy landing
+  _after_ the requester's cleanup, which leaves at most the files that worker
+  wrote in that one lease as unreferenced bytes.
 
-- A caller-bound job that crashed its worker is reclaimed whatever its attempts,
-  and `Prune` never fails it: on the third claim it is not re-run but executed
-  with a cancelled context, which only records (an `lstat` per unreached
-  delete). A failed row with no result would be the one outcome nothing can
-  reconcile.
-- A failed copy pair can hold bytes from an interrupted or crashed attempt, so
-  the live requester runs `reconcileCopy` over its own failed destinations too.
+`INSTANCE_ID` lives on `globalThis`: a dev HMR reload of `jobs.ts` otherwise
+minted a new id while the old beat interval kept beating the old one, and every
+new job looked orphaned to the worker within 30s.
 
 Dedupe is a partial unique index (`dedupe_key` where queued/running) plus
 `on conflict do nothing`, not check-then-insert, so two tiles racing get one
@@ -1449,6 +1479,18 @@ upload) leaves the path out of the result so it stays `null`; a missing
 matches the bytes it was probed for — two quick re-uploads raced, and the older
 probe could land last — and the write keeps `updated_at`, since `$onUpdate`
 would otherwise reorder "last modified".
+
+ffprobe failures that are not a definitive "no duration" back off in memory
+(doubling from a minute to a day, `probeMissingDurations`), so an unreadable
+file is not re-probed every minute forever; a restart retries them all once.
+Backed-off ids are excluded in the SQL (up to 5000), not filtered after the
+`LIMIT`, or enough stuck rows would crowd new ones out of the batch. Only paths
+the job reports in `probed` back off — a sweep that joined another instance's
+deduped job did not have its own rows tried. Entries a day overdue are
+forgotten. The sweep's `select distinct` rides `files_category_idx`. The
+`updated_at` guard has a Postgres test, `media.pg.test.ts`, skipped unless
+`DATABASE_URL` names Postgres:
+`DATABASE_URL=postgres://… bun test media.pg.test.ts`.
 
 ### A non-ActionResult response disappears
 

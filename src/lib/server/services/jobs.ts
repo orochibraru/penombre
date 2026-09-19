@@ -49,7 +49,20 @@ let warnedAt = 0;
  * heartbeated in `app_instances`, so a worker can stop a copy or delete whose
  * requester died, and a later process can apply what it did.
  */
-export const INSTANCE_ID = randomUUID();
+/**
+ * Caller-bound jobs this process has read an outcome for and not yet
+ * finished or disowned. Ownership can come back to `INSTANCE_ID` while it is
+ * still applying one — adopted away during a pause, then disowned back — so
+ * the reconciler here skips these, not only its own id. On `globalThis` for
+ * the same reason as the id.
+ */
+const applying: Set<string> = ((
+	globalThis as { __penombre_applying?: Set<string> }
+).__penombre_applying ??= new Set());
+
+export const INSTANCE_ID: string = ((
+	globalThis as { __penombre_instance?: string }
+).__penombre_instance ??= randomUUID());
 
 export async function enqueueJob(
 	input: {
@@ -144,12 +157,17 @@ const staleLease = () =>
 		lt(jobs.heartbeatAt, sql`${dbNow} - ${LEASE_MS}`),
 	);
 
-/** Nobody will run it: its spec (possibly MBs) goes with it. */
+/**
+ * Nobody will run it: its spec (possibly MBs) goes with it — except a
+ * copy/delete's, which becomes its result. It may have run part-way, and
+ * those paths are what the requester or the reconciler checks on disk.
+ */
 const failed = (reason: string) => ({
 	status: "failed",
 	error: reason,
 	finishedAt: dbNow,
 	workerId: null,
+	result: sql`case when ${jobs.type} in ('copy', 'delete') then ${jobs.spec} end`,
 	spec: "{}",
 });
 
@@ -182,12 +200,26 @@ async function abandon(
 const CALLER_BOUND = ["copy", "delete"];
 
 /**
- * At boot, before a worker starts: a queued caller-bound job belonged to a
- * request that died with the last process, and never started, so failing it
- * loses nothing. One that was running is left alone: a worker stops it at
- * its next item and records what it did, which `reconcileOrphanedJobs`
- * applies — failing it here would throw that record away. Returns how many
- * were failed.
+ * Nobody alive will apply this job's outcome: no requester (legacy), a
+ * disowned one, or one silent for 30s. Never this process's own — it is
+ * either awaiting the job or applying it.
+ */
+const requesterGone = () =>
+	or(
+		isNull(jobs.requestedBy),
+		and(
+			ne(jobs.requestedBy, INSTANCE_ID),
+			sql`not exists (select 1 from ${appInstances} where ${appInstances.id} = ${jobs.requestedBy} and ${appInstances.seenAt} >= ${dbNow} - ${WORKER_SILENCE_MS})`,
+		),
+	);
+
+/**
+ * At boot, before a worker starts: a queued caller-bound job whose requester
+ * is gone never started, so failing it loses nothing. A live instance's
+ * queued job is its own business. One that was running is left alone: a
+ * worker stops it at its next item and records what it did, which
+ * `reconcileOrphanedJobs` applies — failing it here would throw that record
+ * away. Returns how many were failed.
  */
 export async function failOrphanedJobs(
 	database: Database = db,
@@ -199,7 +231,7 @@ export async function failOrphanedJobs(
 			and(
 				inArray(jobs.type, CALLER_BOUND),
 				eq(jobs.status, "queued"),
-				or(isNull(jobs.requestedBy), ne(jobs.requestedBy, INSTANCE_ID)),
+				requesterGone(),
 			),
 		)
 		.returning({ id: jobs.id });
@@ -259,14 +291,29 @@ export async function awaitJob(
 		}
 		if (row.status === "succeeded" || row.status === "failed") {
 			const [outcome] = await database
-				.select({ status: jobs.status, error: jobs.error, result: jobs.result })
+				.select({
+					type: jobs.type,
+					status: jobs.status,
+					error: jobs.error,
+					result: jobs.result,
+				})
 				.from(jobs)
 				.where(eq(jobs.id, id))
 				.limit(1);
 			if (consume) {
 				await database.delete(jobs).where(eq(jobs.id, id));
 			}
-			return outcome;
+			if (!outcome) {
+				return undefined;
+			}
+			if (CALLER_BOUND.includes(outcome.type)) {
+				applying.add(id);
+			}
+			return {
+				status: outcome.status,
+				error: outcome.error,
+				result: outcome.result,
+			};
 		}
 
 		const now = Date.now();
@@ -327,41 +374,84 @@ export async function startInstanceBeat(): Promise<void> {
 	globalForBeat.__instance_beat.unref?.();
 }
 
-/** A requester that applied nothing after this long was never going to. */
-const ABANDONED_AFTER_MS = 10 * 60_000;
-
-/**
- * Finished copy/delete jobs whose outcome nobody will apply: the requester
- * stopped heartbeating, or finished them long ago and died mid-apply (it
- * deletes the row only once the rows are written).
- */
+/** Finished copy/delete jobs whose outcome nobody alive will apply. */
 export async function orphanedOutcomes(
 	database: Database = db,
-): Promise<{ id: string; type: string; result: string }[]> {
+): Promise<
+	{ id: string; type: string; result: string; requestedBy: string | null }[]
+> {
 	const rows = await database
-		.select({ id: jobs.id, type: jobs.type, result: jobs.result })
+		.select({
+			id: jobs.id,
+			type: jobs.type,
+			result: jobs.result,
+			requestedBy: jobs.requestedBy,
+		})
 		.from(jobs)
 		.where(
 			and(
 				inArray(jobs.type, CALLER_BOUND),
 				inArray(jobs.status, ["succeeded", "failed"]),
 				isNotNull(jobs.result),
-				isNotNull(jobs.requestedBy),
-				or(
-					sql`not exists (select 1 from ${appInstances} where ${appInstances.id} = ${jobs.requestedBy} and ${appInstances.seenAt} >= ${dbNow} - ${WORKER_SILENCE_MS})`,
-					lt(jobs.finishedAt, sql`${dbNow} - ${ABANDONED_AFTER_MS}`),
-				),
+				requesterGone(),
 			),
 		);
 	return rows.flatMap((row) =>
-		row.result === null ? [] : [{ ...row, result: row.result }],
+		row.result === null || applying.has(row.id)
+			? []
+			: [{ ...row, result: row.result }],
 	);
 }
 
-/** The requester's receipt: its outcome is fully applied. */
-export async function deleteJob(
+/**
+ * Takes an orphan over, only if nobody else did since it was read: a
+ * requester back from a pause, or another instance's reconciler.
+ */
+export async function adoptJob(
+	id: string,
+	requestedBy: string | null,
+	database: Database = db,
+): Promise<boolean> {
+	const adopted = await database
+		.update(jobs)
+		.set({ requestedBy: INSTANCE_ID })
+		.where(
+			and(
+				eq(jobs.id, id),
+				requestedBy === null
+					? isNull(jobs.requestedBy)
+					: eq(jobs.requestedBy, requestedBy),
+			),
+		)
+		.returning({ id: jobs.id });
+	return adopted.length > 0;
+}
+
+/**
+ * The owner's receipt: its outcome is fully applied. False means someone
+ * adopted the job meanwhile — this process was taken for dead — and the
+ * caller must check what it applied still holds.
+ */
+export async function finishJob(
+	id: string,
+	database: Database = db,
+): Promise<boolean> {
+	const finished = await database
+		.delete(jobs)
+		.where(and(eq(jobs.id, id), eq(jobs.requestedBy, INSTANCE_ID)))
+		.returning({ id: jobs.id });
+	applying.delete(id);
+	return finished.length > 0;
+}
+
+/** Applying failed half-way: hand the job to the reconciler at once. */
+export async function disownJob(
 	id: string,
 	database: Database = db,
 ): Promise<void> {
-	await database.delete(jobs).where(eq(jobs.id, id));
+	await database
+		.update(jobs)
+		.set({ requestedBy: "disowned" })
+		.where(and(eq(jobs.id, id), eq(jobs.requestedBy, INSTANCE_ID)));
+	applying.delete(id);
 }

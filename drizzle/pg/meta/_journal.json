@@ -134,6 +134,13 @@
       "when": 1789823270026,
       "tag": "0018_brown_tiger_shark",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1789824628929,
+      "tag": "0019_polite_senator_kelly",
+      "breakpoints": true
     }
   ]
 }

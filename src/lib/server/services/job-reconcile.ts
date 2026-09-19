@@ -7,13 +7,40 @@
 
 import { Logger } from "#lib/logger.js";
 import { type Database, getDb } from "#lib/server/db/index.js";
-import { deleteJob, orphanedOutcomes } from "./jobs";
+import { adoptJob, disownJob, finishJob, orphanedOutcomes } from "./jobs";
 import type { CopyResult, DeleteResult } from "./storage/reconcile";
 import type { JobContext } from "./storage/scope";
 
 const logger = new Logger("JobReconcile");
 
 const RECONCILE_INTERVAL_MS = 60_000;
+
+/**
+ * A result, or — for a job failed before it could report — its spec. Every
+ * path of a spec may have been touched, so it reads as "all copies may have
+ * landed, all deletes may have happened"; the reconcilers check rows and
+ * disk before acting on either.
+ */
+type JobRecord = Partial<CopyResult & DeleteResult> & {
+	context?: JobContext;
+	pairs?: { dest: string }[];
+	files?: string[];
+	dirs?: string[];
+};
+
+function asOutcome(type: string, record: JobRecord): CopyResult | DeleteResult {
+	return type === "copy"
+		? {
+				copied: record.copied ?? [],
+				failed:
+					record.failed ??
+					(record.pairs ?? []).map((pair) => ({ dest: pair.dest })),
+			}
+		: {
+				deleted: record.deleted ?? record.files ?? [],
+				deletedDirs: record.deletedDirs ?? record.dirs ?? [],
+			};
+}
 
 export interface Reconciler {
 	getStoragePath(): string;
@@ -31,7 +58,13 @@ async function serviceFor(
 	return serviceForRoot(context);
 }
 
-/** Never throws; a job that cannot be applied is logged and kept. */
+/**
+ * Never throws. Each job is adopted first (a compare-and-swap on its
+ * requester), so a requester back from a pause and a second reconciler never
+ * apply it at the same time as this one. A job that cannot be applied is
+ * disowned again for the next pass. A legacy job with no context (enqueued
+ * before results carried one) cannot be mapped back to rows and is dropped.
+ */
 export async function reconcileOrphanedJobs(
 	database: Database = getDb(),
 	resolve: (
@@ -45,24 +78,29 @@ export async function reconcileOrphanedJobs(
 		logger.warn("Could not list orphaned jobs", error);
 		return;
 	}
-	for (const { id, type, result } of outcomes) {
+	for (const { id, type, result, requestedBy } of outcomes) {
+		if (!(await adoptJob(id, requestedBy, database))) {
+			continue;
+		}
 		try {
-			const parsed = JSON.parse(result) as (CopyResult | DeleteResult) & {
-				context?: JobContext;
-			};
+			const parsed = JSON.parse(result) as JobRecord;
 			const service = parsed.context && (await resolve(parsed.context));
 			// A root that moved would map these paths to the wrong rows.
 			if (service && service.getStoragePath() === parsed.context?.root) {
-				const removed = await service.reconcileOrphanedJob(type, parsed);
+				const removed = await service.reconcileOrphanedJob(
+					type,
+					asOutcome(type, parsed),
+				);
 				logger.info(`Applied orphaned ${type} job ${id}: ${removed} removed`);
 			} else {
 				logger.error(
 					`Orphaned ${type} job ${id} names a root that no longer exists; dropping it`,
 				);
 			}
-			await deleteJob(id, database);
+			await finishJob(id, database);
 		} catch (error) {
 			logger.error(`Could not apply orphaned ${type} job ${id}`, error);
+			await disownJob(id, database).catch(() => undefined);
 		}
 	}
 }

@@ -622,6 +622,8 @@ export const files = pgTable(
 		index("files_folderId_idx").on(table.folderId),
 		index("files_path_ownerId_idx").on(table.path, table.ownerId),
 		index("files_volumeId_idx").on(table.volumeId),
+		// The duration sweep filters on it every minute.
+		index("files_category_idx").on(table.category),
 	],
 );
 
