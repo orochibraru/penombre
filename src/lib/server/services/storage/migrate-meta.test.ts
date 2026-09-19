@@ -28,7 +28,7 @@ mock.module("#lib/server/config.js", () => ({
 		},
 		worker: { mode: "embedded", concurrency: 4 },
 	}),
-	getStoragePath: () => "/does-not-exist",
+	getStoragePath: () => "/tmp/penombre-test-storage",
 	envProvided: () => ({
 		emailSignIn: true,
 		oauthSignIn: true,
