@@ -1,3 +1,25 @@
+## [1.8.49](https://github.com/orochibraru/penombre/compare/v1.8.48...v1.8.49) (2026-09-19)
+
+
+### Bug Fixes
+
+* tooling [skip ci] ([617807b](https://github.com/orochibraru/penombre/commit/617807b4041317633b29deec38504759e07b7735))
+
+
+### Features
+
+* better tooling ([bea00ba](https://github.com/orochibraru/penombre/commit/bea00ba4aa6ad1bf4c7a1f0c5b158135bf8d490a))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.49
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.48](https://github.com/orochibraru/penombre/compare/v1.8.47...v1.8.48) (2026-09-19)
 
 
