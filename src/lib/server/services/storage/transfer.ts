@@ -210,7 +210,7 @@ export class TransferOperations {
 			const notLanded = plans.filter((_, index) => failedIndexes.has(index));
 			applied = await this.applyCopy(jobId, landed, notLanded);
 		} catch (error) {
-			// Half-applied, or the outcome itself unparseable: the reconciler
+			// Half-applied, or the outcome itself unparsable: the reconciler
 			// finishes from the job's record either way.
 			await disownJob(jobId);
 			throw error;
