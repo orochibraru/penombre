@@ -47,6 +47,12 @@ import { FolderOperations } from "./folders";
 import { ListingOperations } from "./listings";
 import { probeMissingDurations } from "./media";
 import { type FileProxyRequest, ProxyService } from "./proxy";
+import {
+	type CopyResult,
+	type DeleteResult,
+	reconcileCopy,
+	reconcileDelete,
+} from "./reconcile";
 import { ScanOperations, type ScanReporter, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
 import {
@@ -475,6 +481,28 @@ export class StorageService {
 	): Promise<ScanResult> {
 		this.assertInScope(undefined, true);
 		return this.scanOperations.scan(report, options);
+	}
+
+	/**
+	 * Applies a copy/delete outcome its requester died before applying. See
+	 * `reconcile.ts`; returns how many rows or objects it removed.
+	 */
+	async reconcileOrphanedJob(
+		type: string,
+		result: CopyResult | DeleteResult,
+	): Promise<number> {
+		const removed =
+			type === "copy"
+				? await reconcileCopy(this.ctx, result as CopyResult)
+				: await reconcileDelete(
+						this.ctx,
+						this.thumbnails,
+						result as DeleteResult,
+					);
+		if (removed > 0) {
+			await this.invalidateListingCaches();
+		}
+		return removed;
 	}
 
 	/** One batch of this root's media rows still missing a duration. */

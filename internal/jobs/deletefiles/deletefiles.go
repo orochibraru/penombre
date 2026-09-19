@@ -5,6 +5,7 @@ package deletefiles
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -16,11 +17,19 @@ import (
 type Spec struct {
 	Files []string `json:"files"`
 	Dirs  []string `json:"dirs"`
+	// Context is opaque here, echoed into the result so an app that was not
+	// the requester can still map these paths back to rows.
+	Context json.RawMessage `json:"context,omitempty"`
 }
 
+// Result names every path either way: the spec is dropped once the job ends,
+// and a reconciler must know whose bytes are gone.
 type Result struct {
-	FailedFiles []string `json:"failedFiles"`
-	FailedDirs  []string `json:"failedDirs"`
+	Deleted     []string        `json:"deleted"`
+	DeletedDirs []string        `json:"deletedDirs"`
+	FailedFiles []string        `json:"failedFiles"`
+	FailedDirs  []string        `json:"failedDirs"`
+	Context     json.RawMessage `json:"context,omitempty"`
 }
 
 // Run removes each file — a file already gone is success, mirroring the
@@ -39,28 +48,35 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 	if err := job.DecodeSpec(&s); err != nil {
 		return nil, err
 	}
-	res := Result{FailedFiles: []string{}, FailedDirs: []string{}}
+	res := Result{Deleted: []string{}, DeletedDirs: []string{}, FailedFiles: []string{}, FailedDirs: []string{}, Context: s.Context}
 	for _, f := range s.Files {
+		var err error
 		if ctx.Err() != nil {
+			// Not reached — but an earlier, crashed attempt may have been.
+			// Gone is gone either way; only bytes still there keep a row.
+			_, err = os.Lstat(f)
+			if err == nil {
+				err = ctx.Err()
+			}
+		} else {
+			err = os.Remove(f)
+		}
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			res.FailedFiles = append(res.FailedFiles, f)
 			continue
 		}
-		if err := os.Remove(f); err != nil && !errors.Is(err, os.ErrNotExist) {
-			res.FailedFiles = append(res.FailedFiles, f)
-		}
+		res.Deleted = append(res.Deleted, f)
 	}
 	for _, d := range s.Dirs {
-		if ctx.Err() != nil {
-			res.FailedDirs = append(res.FailedDirs, d)
-			continue
-		}
-		if holdsAFailedFile(d, res.FailedFiles) {
+		if ctx.Err() != nil || holdsAFailedFile(d, res.FailedFiles) {
 			res.FailedDirs = append(res.FailedDirs, d)
 			continue
 		}
 		if err := os.RemoveAll(d); err != nil {
 			res.FailedDirs = append(res.FailedDirs, d)
+			continue
 		}
+		res.DeletedDirs = append(res.DeletedDirs, d)
 	}
 	return res, nil
 }

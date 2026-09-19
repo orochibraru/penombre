@@ -14,7 +14,12 @@ const awaitJob = mock(
 		status: "succeeded",
 	}),
 );
-mock.module("#lib/server/services/jobs.js", () => ({ enqueueJob, awaitJob }));
+const deleteJob = mock(async (_id: string) => {});
+mock.module("#lib/server/services/jobs.js", () => ({
+	enqueueJob,
+	awaitJob,
+	deleteJob,
+}));
 
 const { ZipService, sweepStaleZips, streamAndCleanUp } = await import("./zip");
 

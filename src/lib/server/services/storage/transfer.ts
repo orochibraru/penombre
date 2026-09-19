@@ -18,13 +18,15 @@ import { files, folders } from "#lib/server/db/schema.js";
 import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
 import {
 	awaitJob,
+	deleteJob,
 	enqueueJob,
 	type JobOutcome,
 } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import type { FileOperations, PlannedImport } from "./files";
 import type { FolderOperations } from "./folders";
-import { ownedFiles, ownedFolders } from "./scope";
+import { reconcileCopy } from "./reconcile";
+import { jobContext, ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
 const logger = new Logger("StorageTransfer");
@@ -182,13 +184,15 @@ export class TransferOperations {
 					source: join(sourceStoragePath, file.path),
 					dest: join(this.ctx.storagePath, plan.filePath),
 				})),
+				context: jobContext(this.ctx),
 			},
 			priority: "mutation",
 		});
+		// Not consumed here: the row is the record `reconcile.ts` needs should
+		// this process die before every row below is written.
 		const job = await awaitJob(jobId, {
 			timeoutMs: COPY_TIMEOUT_MS,
 			settle: true,
-			consume: true,
 		});
 		const failedIndexes = this.failedCopyIndexes(job, plans.length);
 
@@ -204,6 +208,17 @@ export class TransferOperations {
 			});
 			copied++;
 		}
+		// A failed pair can still have left bytes — an interrupted or
+		// crashed attempt — and no row will ever point at them.
+		await reconcileCopy(this.ctx, {
+			copied: [],
+			failed: plans
+				.filter((_, index) => failedIndexes.has(index))
+				.map(({ plan }) => ({
+					dest: join(this.ctx.storagePath, plan.filePath),
+				})),
+		});
+		await deleteJob(jobId);
 
 		await this.ctx.invalidateListingCaches();
 		return { copied, failed };

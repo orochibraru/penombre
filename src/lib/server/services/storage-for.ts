@@ -198,6 +198,26 @@ export async function volumeById(
 }
 
 /**
+ * A service for the tree a row lives in, from the row's owner and volume —
+ * for background work that has no request. Undefined when the owner or the
+ * volume is gone (a volume removed from the environment, a deleted drive).
+ */
+export async function serviceForRoot(root: {
+	ownerId: string;
+	volumeId: string | null;
+}): Promise<StorageService | undefined> {
+	const [owner] = await getDb()
+		.select()
+		.from(user)
+		.where(eq(user.id, root.ownerId));
+	const volume = await volumeById(root.volumeId);
+	if (!owner || volume === null) {
+		return undefined;
+	}
+	return new StorageService(owner as User, volume);
+}
+
+/**
  * A service bound to a mounted volume.
  *
  * Its rows belong to the shared owner — the first account ever created —

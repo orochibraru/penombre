@@ -79,9 +79,12 @@ on every drive.
 Stopping or restarting the worker never loses track of a copy or an emptied
 trash: the worker stops at the next file and reports what it had done, so
 Penombre keeps exactly the files that are still there. If the app restarts in
-the middle of one, the unfinished job is cancelled rather than run later. Every
-job also has a generous time limit, so one stuck on an unreachable disk fails
-instead of hanging the page.
+the middle of one, the worker notices within half a minute, stops, and the app
+tidies up from the report once it is back: copies that never became visible are
+removed (the originals are untouched), and trashed files whose bytes are already
+gone leave the trash instead of restoring as broken files. Every job also has a
+generous time limit, so one stuck on an unreachable disk fails instead of
+hanging the page.
 
 The worker compares time using the database's clock, so it may run on another
 host without its clock being in sync.

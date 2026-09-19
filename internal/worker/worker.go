@@ -17,7 +17,14 @@ const (
 	defaultShutdownGrace = 60 * time.Second
 )
 
-var errLostLease = errors.New("lease lost")
+var (
+	errLostLease     = errors.New("lease lost")
+	errRequesterGone = errors.New("the app instance awaiting this job is gone")
+	errOutOfAttempts = errors.New("the job crashed its worker too many times")
+)
+
+// requesterSilence matches the app's 5s instance beat, with room to spare.
+const requesterSilence = 30 * time.Second
 
 // callerBound jobs have a caller that writes rows from the outcome. Requeued
 // on shutdown, one would run later with nobody awaiting it — bytes no row
@@ -109,8 +116,9 @@ func Run(ctx context.Context, cfg Config, store *Store, registry Registry, log *
 }
 
 func execute(execCtx, runCtx context.Context, cfg Config, store *Store, registry Registry, log *slog.Logger, job jobs.Job) {
+	bound := callerBound[job.Type]
 	parent := execCtx
-	if callerBound[job.Type] {
+	if bound {
 		// No shutdown grace: stop at the next item and report what was done.
 		parent = runCtx
 	}
@@ -125,7 +133,18 @@ func execute(execCtx, runCtx context.Context, cfg Config, store *Store, registry
 	defer cancelTimeout()
 	ctx, cancel := context.WithCancelCause(bounded)
 	defer cancel(nil)
-	go heartbeat(ctx, cancel, store, cfg.ID, job.ID, cfg.LeaseTimeout, log)
+	// Nobody left to apply the outcome: run with a cancelled context, so the
+	// executor reaches nothing and records exactly that.
+	switch {
+	case bound && job.Attempts >= MaxAttempts:
+		// Record what earlier attempts left, without risking another crash.
+		cancel(errOutOfAttempts)
+	case bound && !requesterAlive(ctx, store, job.ID, log):
+		cancel(errRequesterGone)
+	}
+	done := make(chan struct{})
+	defer close(done)
+	go heartbeat(ctx, cancel, done, store, cfg.ID, job, cfg.LeaseTimeout, log)
 
 	started := time.Now()
 	var result any
@@ -141,7 +160,7 @@ func execute(execCtx, runCtx context.Context, cfg Config, store *Store, registry
 	switch {
 	case errors.Is(context.Cause(ctx), errLostLease):
 		log.Warn("job dropped: lease lost", "id", job.ID)
-	case runCtx.Err() != nil && ctx.Err() != nil && !callerBound[job.Type]:
+	case runCtx.Err() != nil && ctx.Err() != nil && !bound:
 		if rerr := store.Release(bg, job.ID, cfg.ID); rerr != nil {
 			log.Error("release failed", "id", job.ID, "err", rerr)
 		}
@@ -158,29 +177,50 @@ func execute(execCtx, runCtx context.Context, cfg Config, store *Store, registry
 
 // heartbeat keeps the lease. Unable to renew it for a whole lease, the job is
 // given up: the app has failed it by then and must not see bytes move after.
-func heartbeat(ctx context.Context, cancel context.CancelCauseFunc, store *Store, workerID, jobID string, lease time.Duration, log *slog.Logger) {
+// requesterAlive errs on alive: a DB hiccup must not stop a copy halfway.
+func requesterAlive(ctx context.Context, store *Store, jobID string, log *slog.Logger) bool {
+	alive, err := store.RequesterAlive(ctx, jobID, requesterSilence)
+	if err != nil {
+		log.Warn("requester check failed", "id", jobID, "err", err)
+		return true
+	}
+	return alive
+}
+
+// heartbeat keeps the lease until the execution returns (done), including
+// while a stopped job finishes its current item. Unable to renew the lease
+// for a whole lease, it gives the job up: the app has failed it by then and
+// must not see bytes move after.
+func heartbeat(ctx context.Context, cancel context.CancelCauseFunc, done <-chan struct{}, store *Store, workerID string, job jobs.Job, lease time.Duration, log *slog.Logger) {
+	db := context.WithoutCancel(ctx)
 	// Six chances per lease (10s at the default 60s).
 	t := time.NewTicker(lease / 6)
 	defer t.Stop()
 	renewed := time.Now()
+	checkRequester := callerBound[job.Type]
 	for {
 		select {
-		case <-ctx.Done():
+		case <-done:
 			return
 		case <-t.C:
-			ok, err := store.Heartbeat(ctx, jobID, workerID)
+			ok, err := store.Heartbeat(db, job.ID, workerID)
 			if err != nil {
-				log.Warn("heartbeat failed", "id", jobID, "err", err)
+				log.Warn("heartbeat failed", "id", job.ID, "err", err)
 				if time.Since(renewed) > lease {
 					cancel(errLostLease)
 					return
 				}
 				continue
 			}
-			renewed = time.Now()
 			if !ok {
 				cancel(errLostLease)
 				return
+			}
+			renewed = time.Now()
+			if checkRequester && !requesterAlive(db, store, job.ID, log) {
+				// Stops at the next item and completes with what it did.
+				cancel(errRequesterGone)
+				checkRequester = false
 			}
 		}
 	}

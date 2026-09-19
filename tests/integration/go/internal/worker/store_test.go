@@ -249,3 +249,53 @@ func TestPruneForgetsSilentWorkers(t *testing.T) {
 		t.Fatalf("expected only the live worker to remain, have %d", n)
 	}
 }
+
+func TestRequesterAlive(t *testing.T) {
+	s, db := openTestStore(t)
+	ctx := context.Background()
+	insert(t, db, "legacy", 0, 1)
+	insert(t, db, "live", 0, 2)
+	insert(t, db, "orphan", 0, 3)
+	now := time.Now().UnixMilli()
+	_, _ = db.Exec(`insert into app_instances (id, seen_at) values ('app-live', $1), ('app-dead', $2)`, now, now-120_000)
+	_, _ = db.Exec(`update jobs set requested_by = 'app-live' where id = 'live'`)
+	_, _ = db.Exec(`update jobs set requested_by = 'app-dead' where id = 'orphan'`)
+	for id, want := range map[string]bool{"legacy": true, "live": true, "orphan": false} {
+		got, err := s.RequesterAlive(ctx, id, 30*time.Second)
+		if err != nil || got != want {
+			t.Fatalf("%s: got %v %v, want %v", id, got, err, want)
+		}
+	}
+}
+
+// The result is the only record of bytes a dead requester never accounted
+// for; the app deletes it once reconciled.
+func TestPruneKeepsUnreconciledCopyAndDeleteResults(t *testing.T) {
+	s, db := openTestStore(t)
+	old := time.Now().UnixMilli() - 8*24*int64(time.Hour/time.Millisecond)
+	_, _ = db.Exec(`insert into jobs (id, type, spec, status, result, created_at, finished_at) values
+		('copy', 'copy', '{}', 'succeeded', '{"copied":[]}', 0, $1),
+		('delete', 'delete', '{}', 'failed', '{"deleted":[]}', 0, $1),
+		('thumb', 'thumbnail', '{}', 'succeeded', '{}', 0, $1),
+		('no-result', 'copy', '{}', 'failed', null, 0, $1)`, old)
+	_, _ = db.Exec(`insert into app_instances (id, seen_at) values ('gone', 0)`)
+	if err := s.Prune(context.Background(), time.Minute); err != nil {
+		t.Fatal(err)
+	}
+	var ids []string
+	rows, _ := db.Query(`select id from jobs order by id`)
+	for rows.Next() {
+		var id string
+		_ = rows.Scan(&id)
+		ids = append(ids, id)
+	}
+	_ = rows.Close()
+	if strings.Join(ids, ",") != "copy,delete" {
+		t.Fatalf("kept %v", ids)
+	}
+	var n int
+	_ = db.QueryRow(`select count(*) from app_instances`).Scan(&n)
+	if n != 0 {
+		t.Fatal("a long-silent app instance must be forgotten")
+	}
+}

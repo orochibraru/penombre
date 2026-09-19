@@ -71,6 +71,13 @@
       "when": 1789820052935,
       "tag": "0009_fearless_wild_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1789823270171,
+      "tag": "0010_sweet_gorilla_man",
+      "breakpoints": true
     }
   ]
 }

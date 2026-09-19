@@ -152,3 +152,39 @@ func TestRunStopsOnCancellationAndReportsTheRest(t *testing.T) {
 		t.Fatal("no delete should have run after cancellation")
 	}
 }
+
+// Stopped before reaching a file an earlier, crashed attempt already
+// removed: its bytes are gone, so it is reported deleted and its row can go.
+func TestAnUnreachedFileAlreadyGoneCountsAsDeleted(t *testing.T) {
+	dir := t.TempDir()
+	gone := filepath.Join(dir, "gone.txt")
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	out, err := deletefiles.Run(ctx, mustJob(t, deletefiles.Spec{Files: []string{gone}, Context: []byte(`{"root":"/r"}`)}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := out.(deletefiles.Result)
+	if len(res.Deleted) != 1 || len(res.FailedFiles) != 0 || string(res.Context) != `{"root":"/r"}` {
+		t.Fatalf("got %#v", res)
+	}
+}
+
+func TestResultNamesWhatWasDeleted(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, "sub", "a.txt")
+	if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := deletefiles.Run(context.Background(), mustJob(t, deletefiles.Spec{Files: []string{file}, Dirs: []string{filepath.Dir(file)}}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := out.(deletefiles.Result)
+	if len(res.Deleted) != 1 || res.Deleted[0] != file || len(res.DeletedDirs) != 1 {
+		t.Fatalf("got %#v", res)
+	}
+}

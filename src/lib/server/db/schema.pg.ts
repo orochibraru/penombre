@@ -784,6 +784,8 @@ export const jobs = pgTable(
 		result: text("result"),
 		error: text("error"),
 		dedupeKey: text("dedupe_key"),
+		/** The app instance awaiting it (`app_instances.id`). */
+		requestedBy: text("requested_by"),
 		priority: integer("priority").default(0).notNull(),
 		attempts: integer("attempts").default(0).notNull(),
 		workerId: text("worker_id"),
@@ -809,6 +811,12 @@ export const jobs = pgTable(
 
 /** Liveness: each worker process stamps its row every few seconds. */
 export const workers = pgTable("workers", {
+	id: text("id").primaryKey(),
+	seenAt: bigint("seen_at", { mode: "number" }).notNull(),
+});
+
+/** App processes heartbeat here, so a worker can tell when a requester died. */
+export const appInstances = pgTable("app_instances", {
 	id: text("id").primaryKey(),
 	seenAt: bigint("seen_at", { mode: "number" }).notNull(),
 });

@@ -6,7 +6,12 @@ const awaitJob = mock(async () => ({
 	status: "succeeded",
 	result: JSON.stringify({ failed: [] }),
 }));
-mock.module("#lib/server/services/jobs.js", () => ({ enqueueJob, awaitJob }));
+const deleteJob = mock(async (_id: string) => {});
+mock.module("#lib/server/services/jobs.js", () => ({
+	enqueueJob,
+	awaitJob,
+	deleteJob,
+}));
 
 const { TransferOperations } = await import("./transfer");
 
@@ -36,7 +41,11 @@ function setup() {
 	const inserted: unknown[] = [];
 	const ctx = {
 		storagePath: "/target",
+		user: { id: "u1" },
+		volumeId: null,
+		driver: { deleteObject: mock(async (_key: string) => {}) },
 		db: {
+			select: () => ({ from: () => ({ where: async () => [] }) }),
 			insert: () => ({
 				values: (v: unknown) => {
 					inserted.push(v);
@@ -88,6 +97,13 @@ describe("TransferOperations.importTree", () => {
 		});
 		// Rows are inserted from this outcome: never act on a guess.
 		expect(awaitJob.mock.calls[0]?.[1]).toMatchObject({ settle: true });
+		// The job row is the record a later process reconciles from, so it
+		// goes only once every row above is written, with what maps it back.
+		expect(awaitJob.mock.calls[0]?.[1]).not.toHaveProperty("consume");
+		expect(deleteJob).toHaveBeenCalledWith("job-1");
+		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
+			spec: { context: { root: "/target" } },
+		});
 		expect(thumbnails.warm).toHaveBeenCalledWith("dest/a.txt", "text/plain");
 	});
 
@@ -110,7 +126,7 @@ describe("TransferOperations.importTree", () => {
 			status: "succeeded",
 			result: JSON.stringify({ failed: [{ index: 0, error: "boom" }] }),
 		}));
-		const { ops, inserted } = setup();
+		const { ops, inserted, ctx } = setup();
 		const file = dbFile();
 
 		const result = await ops.importTree(
@@ -121,11 +137,13 @@ describe("TransferOperations.importTree", () => {
 
 		expect(result).toEqual({ copied: 0, failed: 1 });
 		expect(inserted).toHaveLength(0);
+		// An interrupted attempt may have left bytes there; no row ever will.
+		expect(ctx.driver.deleteObject).toHaveBeenCalledWith("dest/a.txt");
 	});
 
 	test("a timed-out job fails every planned copy", async () => {
 		awaitJob.mockImplementationOnce(async () => undefined);
-		const { ops, inserted } = setup();
+		const { ops, inserted, ctx } = setup();
 		const file = dbFile();
 
 		const result = await ops.importTree(
@@ -136,5 +154,7 @@ describe("TransferOperations.importTree", () => {
 
 		expect(result).toEqual({ copied: 0, failed: 1 });
 		expect(inserted).toHaveLength(0);
+		// An interrupted attempt may have left bytes there; no row ever will.
+		expect(ctx.driver.deleteObject).toHaveBeenCalledWith("dest/a.txt");
 	});
 });

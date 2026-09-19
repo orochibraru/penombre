@@ -1,9 +1,24 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, inArray, lt, or, sql } from "drizzle-orm";
+import {
+	and,
+	eq,
+	inArray,
+	isNotNull,
+	isNull,
+	lt,
+	ne,
+	or,
+	sql,
+} from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { type Database, db } from "#lib/server/db/index.js";
-import { type Job, jobs, workers } from "#lib/server/db/schema.js";
+import {
+	appInstances,
+	type Job,
+	jobs,
+	workers,
+} from "#lib/server/db/schema.js";
 
 export type JobStatus = "queued" | "running" | "succeeded" | "failed";
 
@@ -29,6 +44,13 @@ const LIVENESS_CHECK_MS = 5000;
 const bootedAt = Date.now();
 let warnedAt = 0;
 
+/**
+ * This process, as a requester. Stamped on every job it enqueues and
+ * heartbeated in `app_instances`, so a worker can stop a copy or delete whose
+ * requester died, and a later process can apply what it did.
+ */
+export const INSTANCE_ID = randomUUID();
+
 export async function enqueueJob(
 	input: {
 		type: string;
@@ -50,6 +72,7 @@ export async function enqueueJob(
 				spec: JSON.stringify(input.spec),
 				dedupeKey: input.dedupeKey,
 				priority,
+				requestedBy: INSTANCE_ID,
 			})
 			.onConflictDoNothing()
 			.returning({ id: jobs.id });
@@ -159,9 +182,12 @@ async function abandon(
 const CALLER_BOUND = ["copy", "delete"];
 
 /**
- * At boot, before a worker starts: every caller-bound job not actively
- * running belonged to a request that died with the last process. Returns how
- * many were failed.
+ * At boot, before a worker starts: a queued caller-bound job belonged to a
+ * request that died with the last process, and never started, so failing it
+ * loses nothing. One that was running is left alone: a worker stops it at
+ * its next item and records what it did, which `reconcileOrphanedJobs`
+ * applies — failing it here would throw that record away. Returns how many
+ * were failed.
  */
 export async function failOrphanedJobs(
 	database: Database = db,
@@ -172,7 +198,8 @@ export async function failOrphanedJobs(
 		.where(
 			and(
 				inArray(jobs.type, CALLER_BOUND),
-				or(eq(jobs.status, "queued"), staleLease()),
+				eq(jobs.status, "queued"),
+				or(isNull(jobs.requestedBy), ne(jobs.requestedBy, INSTANCE_ID)),
 			),
 		)
 		.returning({ id: jobs.id });
@@ -272,4 +299,69 @@ export async function awaitJob(
 		}
 		await Bun.sleep(intervalMs);
 	}
+}
+
+/** Upserts this process's liveness row, on the database's clock. */
+export async function beatInstance(database: Database = db): Promise<void> {
+	await database
+		.insert(appInstances)
+		.values({ id: INSTANCE_ID, seenAt: dbNow })
+		.onConflictDoUpdate({ target: appInstances.id, set: { seenAt: dbNow } });
+}
+
+const globalForBeat = globalThis as unknown as {
+	__instance_beat?: ReturnType<typeof setInterval>;
+};
+
+/** First beat awaited, so no job is enqueued by an instance nobody sees. */
+export async function startInstanceBeat(): Promise<void> {
+	await beatInstance();
+	if (globalForBeat.__instance_beat) {
+		return;
+	}
+	globalForBeat.__instance_beat = setInterval(() => {
+		beatInstance().catch((error: unknown) => {
+			logger.warn("Instance heartbeat failed", error);
+		});
+	}, 5000);
+	globalForBeat.__instance_beat.unref?.();
+}
+
+/** A requester that applied nothing after this long was never going to. */
+const ABANDONED_AFTER_MS = 10 * 60_000;
+
+/**
+ * Finished copy/delete jobs whose outcome nobody will apply: the requester
+ * stopped heartbeating, or finished them long ago and died mid-apply (it
+ * deletes the row only once the rows are written).
+ */
+export async function orphanedOutcomes(
+	database: Database = db,
+): Promise<{ id: string; type: string; result: string }[]> {
+	const rows = await database
+		.select({ id: jobs.id, type: jobs.type, result: jobs.result })
+		.from(jobs)
+		.where(
+			and(
+				inArray(jobs.type, CALLER_BOUND),
+				inArray(jobs.status, ["succeeded", "failed"]),
+				isNotNull(jobs.result),
+				isNotNull(jobs.requestedBy),
+				or(
+					sql`not exists (select 1 from ${appInstances} where ${appInstances.id} = ${jobs.requestedBy} and ${appInstances.seenAt} >= ${dbNow} - ${WORKER_SILENCE_MS})`,
+					lt(jobs.finishedAt, sql`${dbNow} - ${ABANDONED_AFTER_MS}`),
+				),
+			),
+		);
+	return rows.flatMap((row) =>
+		row.result === null ? [] : [{ ...row, result: row.result }],
+	);
+}
+
+/** The requester's receipt: its outcome is fully applied. */
+export async function deleteJob(
+	id: string,
+	database: Database = db,
+): Promise<void> {
+	await database.delete(jobs).where(eq(jobs.id, id));
 }

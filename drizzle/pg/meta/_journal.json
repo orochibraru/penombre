@@ -127,6 +127,13 @@
       "when": 1789820052632,
       "tag": "0017_wooden_polaris",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789823270026,
+      "tag": "0018_brown_tiger_shark",
+      "breakpoints": true
     }
   ]
 }

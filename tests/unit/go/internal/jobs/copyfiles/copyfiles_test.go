@@ -116,3 +116,29 @@ func TestRunLeavesNoStagedFileOnFailure(t *testing.T) {
 		t.Fatalf("expected no leftover files, got %v", entries)
 	}
 }
+
+// The spec is dropped when the job ends; a process that was not the
+// requester reconciles from the result alone, so it names every destination
+// and hands the app's context back.
+func TestResultNamesEveryDestinationAndEchoesTheContext(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "a.txt")
+	if err := os.WriteFile(src, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ok, bad := filepath.Join(dir, "ok.txt"), filepath.Join(dir, "bad.txt")
+	out, err := copyfiles.Run(context.Background(), mustJob(t, map[string]any{
+		"pairs":   []copyfiles.Pair{{Source: src, Dest: ok}, {Source: filepath.Join(dir, "missing"), Dest: bad}},
+		"context": map[string]string{"root": "/r"},
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := out.(copyfiles.Result)
+	if len(res.Copied) != 1 || res.Copied[0] != ok || len(res.Failed) != 1 || res.Failed[0].Dest != bad {
+		t.Fatalf("got %#v", res)
+	}
+	if string(res.Context) != `{"root":"/r"}` {
+		t.Fatalf("context = %s", res.Context)
+	}
+}

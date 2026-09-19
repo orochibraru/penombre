@@ -12,12 +12,13 @@ import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import {
 	awaitJob,
+	deleteJob,
 	enqueueJob,
 	type JobOutcome,
 } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import { ancestorFolders } from "./mappers";
-import { ownedFiles, ownedFolders } from "./scope";
+import { jobContext, ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
 const logger = new Logger("StorageTrash");
@@ -77,13 +78,15 @@ export class TrashOperations {
 				dirs: trashedFolders.map((folder) =>
 					join(this.ctx.storagePath, folder.path),
 				),
+				context: jobContext(this.ctx),
 			},
 			priority: "mutation",
 		});
+		// Not consumed here: the row is the record `reconcile.ts` needs should
+		// this process die before the rows below are deleted.
 		const job = await awaitJob(jobId, {
 			timeoutMs: DELETE_TIMEOUT_MS,
 			settle: true,
-			consume: true,
 		});
 		const outcome = this.jobOutcome(job, trashedFiles, trashedFolders);
 
@@ -128,6 +131,7 @@ export class TrashOperations {
 				.where(and(ownedFolders(this.ctx), inArray(folders.id, ids)));
 		}
 
+		await deleteJob(jobId);
 		const deleted = removableFileIds.length + removableFolders.length;
 
 		await this.ctx.activityService.register({

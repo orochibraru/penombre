@@ -6,6 +6,7 @@ package copyfiles
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
@@ -20,15 +21,23 @@ type Pair struct {
 
 type Spec struct {
 	Pairs []Pair `json:"pairs"`
+	// Context is opaque here, echoed into the result so an app that was not
+	// the requester can still map these paths back to rows.
+	Context json.RawMessage `json:"context,omitempty"`
 }
 
 type Failure struct {
 	Index int    `json:"index"`
+	Dest  string `json:"dest"`
 	Error string `json:"error"`
 }
 
+// Result names every destination, landed or not: the spec is dropped once
+// the job ends, and a reconciler must know which bytes may exist.
 type Result struct {
-	Failed []Failure `json:"failed"`
+	Copied  []string        `json:"copied"`
+	Failed  []Failure       `json:"failed"`
+	Context json.RawMessage `json:"context,omitempty"`
 }
 
 // Run copies each pair's bytes: mkdir the destination's parents, stage into a
@@ -41,15 +50,17 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 	if err := job.DecodeSpec(&s); err != nil {
 		return nil, err
 	}
-	res := Result{Failed: []Failure{}}
+	res := Result{Copied: []string{}, Failed: []Failure{}, Context: s.Context}
 	for i, p := range s.Pairs {
-		if err := ctx.Err(); err != nil {
-			res.Failed = append(res.Failed, Failure{Index: i, Error: "interrupted: " + err.Error()})
+		if err := context.Cause(ctx); err != nil {
+			res.Failed = append(res.Failed, Failure{Index: i, Dest: p.Dest, Error: "interrupted: " + err.Error()})
 			continue
 		}
 		if err := copyOne(p.Source, p.Dest); err != nil {
-			res.Failed = append(res.Failed, Failure{Index: i, Error: err.Error()})
+			res.Failed = append(res.Failed, Failure{Index: i, Dest: p.Dest, Error: err.Error()})
+			continue
 		}
+		res.Copied = append(res.Copied, p.Dest)
 	}
 	return res, nil
 }

@@ -58,7 +58,7 @@ func (s *Store) Close() { _ = s.db.Close() }
 
 // Ready succeeds once the app's migrations have created the tables.
 func (s *Store) Ready(ctx context.Context) error {
-	_, err := s.db.ExecContext(ctx, `select 1 from jobs, workers limit 1`)
+	_, err := s.db.ExecContext(ctx, `select 1 from jobs, workers, app_instances limit 1`)
 	return err
 }
 
@@ -71,10 +71,24 @@ func (s *Store) Beat(ctx context.Context, workerID string) error {
 	return err
 }
 
+// RequesterAlive reports whether the app instance that enqueued a job still
+// heartbeats. A job with no recorded requester counts as alive.
+func (s *Store) RequesterAlive(ctx context.Context, jobID string, silence time.Duration) (bool, error) {
+	var alive bool
+	err := s.db.QueryRowContext(ctx, fmt.Sprintf(
+		`select j.requested_by is null or exists (
+			select 1 from app_instances a where a.id = j.requested_by and a.seen_at >= %s - $2
+		) from jobs j where j.id = $1`, s.now),
+		jobID, silence.Milliseconds()).Scan(&alive)
+	return alive, err
+}
+
 // Claim takes a job whose lease went stale first, then the queue by priority.
 // Two statements rather than one `or`, so each can use jobs_claim_idx.
 func (s *Store) Claim(ctx context.Context, workerID string, leaseTimeout time.Duration) (*jobs.Job, error) {
-	stale := fmt.Sprintf(`status = 'running' and heartbeat_at < %s - $2 and attempts < %d`, s.now, MaxAttempts)
+	// A copy/delete is always reclaimed: out of attempts, it is not re-run
+	// but recorded (see execute), which a failed row without a result is not.
+	stale := fmt.Sprintf(`status = 'running' and heartbeat_at < %s - $2 and (attempts < %d or type in ('copy', 'delete'))`, s.now, MaxAttempts)
 	job, err := s.claimWhere(ctx, stale, workerID, leaseTimeout.Milliseconds())
 	if job != nil || err != nil {
 		return job, err
@@ -153,15 +167,22 @@ func (s *Store) Release(ctx context.Context, id, workerID string) error {
 func (s *Store) Prune(ctx context.Context, leaseTimeout time.Duration) error {
 	if _, err := s.db.ExecContext(ctx, fmt.Sprintf(
 		`update jobs set status = 'failed', error = 'worker lost the job too many times', finished_at = %[1]s, worker_id = null, spec = '{}'
-		where status = 'running' and heartbeat_at < %[1]s - $1 and attempts >= $2`, s.now),
+		where status = 'running' and heartbeat_at < %[1]s - $1 and attempts >= $2 and type not in ('copy', 'delete')`, s.now),
 		leaseTimeout.Milliseconds(), MaxAttempts); err != nil {
 		return err
 	}
+	// A copy/delete result is the only record of bytes its dead requester
+	// never accounted for; the app deletes it once reconciled, never Prune.
 	if _, err := s.db.ExecContext(ctx, fmt.Sprintf(
-		`delete from jobs where (status = 'succeeded' and finished_at < %[1]s - $1) or (status = 'failed' and finished_at < %[1]s - $2)`, s.now),
+		`delete from jobs where ((status = 'succeeded' and finished_at < %[1]s - $1) or (status = 'failed' and finished_at < %[1]s - $2))
+		and not (type in ('copy', 'delete') and result is not null)`, s.now),
 		time.Hour.Milliseconds(), (7 * 24 * time.Hour).Milliseconds()); err != nil {
 		return err
 	}
-	_, err := s.db.ExecContext(ctx, fmt.Sprintf(`delete from workers where seen_at < %s - $1`, s.now), (24 * time.Hour).Milliseconds())
-	return err
+	for _, table := range []string{"workers", "app_instances"} {
+		if _, err := s.db.ExecContext(ctx, fmt.Sprintf(`delete from %s where seen_at < %s - $1`, table, s.now), (24 * time.Hour).Milliseconds()); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -19,7 +19,11 @@ import { csrfHandler } from "#lib/server/csrf.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb, resetDb } from "#lib/server/db/index.js";
 import { startDurationSweeper } from "#lib/server/services/duration-sweep.js";
-import { failOrphanedJobs } from "#lib/server/services/jobs.js";
+import { startJobReconciler } from "#lib/server/services/job-reconcile.js";
+import {
+	failOrphanedJobs,
+	startInstanceBeat,
+} from "#lib/server/services/jobs.js";
 import {
 	loadSharedOwner,
 	startLibraryScanner,
@@ -180,9 +184,12 @@ export const init = async () => {
 
 	await waitForDatabase();
 	await runMigrations();
+	// Before enqueueing anything: a worker tells a dead requester by it.
+	await startInstanceBeat();
 	// Before any worker can claim them: their callers died with the last run.
 	await failOrphanedJobs();
 	startEmbeddedWorker();
+	startJobReconciler();
 	await seedAuth();
 	await migrateStorageMeta();
 	startLibraryScanner();

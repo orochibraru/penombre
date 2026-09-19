@@ -540,6 +540,8 @@ export const jobs = sqliteTable(
 		result: text("result"),
 		error: text("error"),
 		dedupeKey: text("dedupe_key"),
+		/** The app instance awaiting it (`app_instances.id`). */
+		requestedBy: text("requested_by"),
 		priority: integer("priority").default(0).notNull(),
 		attempts: integer("attempts").default(0).notNull(),
 		workerId: text("worker_id"),
@@ -565,6 +567,12 @@ export const jobs = sqliteTable(
 
 /** Liveness: each worker process stamps its row every few seconds. */
 export const workers = sqliteTable("workers", {
+	id: text("id").primaryKey(),
+	seenAt: integer("seen_at", { mode: "number" }).notNull(),
+});
+
+/** App processes heartbeat here, so a worker can tell when a requester died. */
+export const appInstances = sqliteTable("app_instances", {
 	id: text("id").primaryKey(),
 	seenAt: integer("seen_at", { mode: "number" }).notNull(),
 });

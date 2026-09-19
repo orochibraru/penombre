@@ -1,9 +1,15 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
 import type { Database } from "#lib/server/db/index.js";
-import { jobs, workers } from "#lib/server/db/schema.js";
+import { appInstances, jobs, workers } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
-import { awaitJob, enqueueJob, failOrphanedJobs } from "./jobs";
+import {
+	awaitJob,
+	beatInstance,
+	enqueueJob,
+	failOrphanedJobs,
+	INSTANCE_ID,
+} from "./jobs";
 
 let database: Database;
 const LONG_AGO = 0;
@@ -273,7 +279,7 @@ describe("awaitJob, round 2", () => {
 });
 
 describe("failOrphanedJobs", () => {
-	test("fails caller-bound jobs nobody awaits any more, and only those", async () => {
+	test("fails queued caller-bound jobs from a previous run, and only those", async () => {
 		const add = (
 			id: string,
 			type: string,
@@ -293,13 +299,43 @@ describe("failOrphanedJobs", () => {
 		await add("live-copy", "copy", "running", Date.now());
 		await add("queued-thumb", "thumbnail", "queued");
 
-		expect(await failOrphanedJobs(database)).toBe(2);
+		expect(await failOrphanedJobs(database)).toBe(1);
 		expect(await row("queued-copy")).toMatchObject({
 			status: "failed",
 			spec: "{}",
 		});
-		expect((await row("stale-delete"))?.status).toBe("failed");
+		// Its worker died mid-run: failing it here would discard what it did.
+		// The next worker stops it at once and records that instead.
+		expect((await row("stale-delete"))?.status).toBe("running");
 		expect((await row("live-copy"))?.status).toBe("running");
 		expect((await row("queued-thumb"))?.status).toBe("queued");
+	});
+});
+
+describe("requester tracking", () => {
+	test("every job carries the instance that enqueued it", async () => {
+		const id = await enqueueJob(
+			{ type: "copy", spec: {}, priority: "mutation" },
+			database,
+		);
+		expect((await row(id))?.requestedBy).toBe(INSTANCE_ID);
+	});
+
+	test("the instance beat upserts one row", async () => {
+		await beatInstance(database);
+		await beatInstance(database);
+		const rows = await database.select().from(appInstances);
+		expect(rows).toHaveLength(1);
+		expect(rows[0]?.id).toBe(INSTANCE_ID);
+		expect(Math.abs((rows[0]?.seenAt ?? 0) - Date.now())).toBeLessThan(5000);
+	});
+
+	test("failOrphanedJobs leaves this instance's own queued jobs", async () => {
+		const id = await enqueueJob(
+			{ type: "copy", spec: {}, priority: "mutation" },
+			database,
+		);
+		expect(await failOrphanedJobs(database)).toBe(0);
+		expect((await row(id))?.status).toBe("queued");
 	});
 });

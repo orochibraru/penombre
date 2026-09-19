@@ -5,10 +5,9 @@
  * visits every root — personal drives, shared drives, volumes — that has one.
  */
 
-import { eq } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { type Database, getDb } from "#lib/server/db/index.js";
-import { files, user } from "#lib/server/db/schema.js";
+import { files } from "#lib/server/db/schema.js";
 import { missingDuration } from "./storage/media";
 
 const logger = new Logger("DurationSweep");
@@ -21,23 +20,12 @@ export interface Root {
 }
 
 async function serviceFor(
-	database: Database,
+	_database: Database,
 	root: Root,
 ): Promise<{ probeMissingDurations(): Promise<void> } | undefined> {
-	const [owner] = await database
-		.select()
-		.from(user)
-		.where(eq(user.id, root.ownerId));
-	// Lazy: these pull in the whole storage stack, which a test injecting
-	// its own resolver has no use for.
-	const { volumeById } = await import("./storage-for");
-	const { StorageService } = await import("./storage");
-	const volume = await volumeById(root.volumeId);
-	// A volume since removed from the environment, or a deleted drive.
-	if (!owner || volume === null) {
-		return undefined;
-	}
-	return new StorageService(owner, volume);
+	// Lazy: the storage stack is heavy, and a test injects its own resolver.
+	const { serviceForRoot } = await import("./storage-for");
+	return serviceForRoot(root);
 }
 
 /** One batch per root, roots one after another. Never throws. */

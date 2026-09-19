@@ -10,7 +10,12 @@ const awaitJob = mock(
 		undefined,
 );
 
-mock.module("#lib/server/services/jobs.js", () => ({ enqueueJob, awaitJob }));
+const deleteJob = mock(async (_id: string) => {});
+mock.module("#lib/server/services/jobs.js", () => ({
+	enqueueJob,
+	awaitJob,
+	deleteJob,
+}));
 
 const { probeMissingDurations, recordDurations } = await import("./media");
 

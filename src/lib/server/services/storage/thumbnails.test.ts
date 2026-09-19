@@ -5,7 +5,12 @@ import { join } from "node:path";
 
 const enqueueJob = mock(async () => "job-1");
 const awaitJob = mock(async () => ({ status: "succeeded" }));
-mock.module("#lib/server/services/jobs.js", () => ({ enqueueJob, awaitJob }));
+const deleteJob = mock(async (_id: string) => {});
+mock.module("#lib/server/services/jobs.js", () => ({
+	enqueueJob,
+	awaitJob,
+	deleteJob,
+}));
 
 const { ThumbnailService } = await import("./thumbnails");
 

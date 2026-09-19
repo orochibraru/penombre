@@ -6,7 +6,12 @@ const awaitJob = mock(async () => ({
 	status: "succeeded",
 	result: JSON.stringify({ failedFiles: [], failedDirs: [] }),
 }));
-mock.module("#lib/server/services/jobs.js", () => ({ enqueueJob, awaitJob }));
+const deleteJob = mock(async (_id: string) => {});
+mock.module("#lib/server/services/jobs.js", () => ({
+	enqueueJob,
+	awaitJob,
+	deleteJob,
+}));
 
 const { TrashOperations } = await import("./trash");
 
@@ -68,6 +73,13 @@ describe("TrashOperations.emptyTrash", () => {
 		});
 		// Rows are deleted from this outcome: never act on a guess.
 		expect(awaitJob.mock.calls[0]?.[1]).toMatchObject({ settle: true });
+		// The job row is the record a later process reconciles from, so it
+		// goes only once every row above is applied, with what maps it back.
+		expect(awaitJob.mock.calls[0]?.[1]).not.toHaveProperty("consume");
+		expect(deleteJob).toHaveBeenCalledWith("job-1");
+		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
+			spec: { context: { root: "/root" } },
+		});
 	});
 
 	test("keeps a file the job could not delete and its ancestor folder", async () => {

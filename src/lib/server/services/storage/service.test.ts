@@ -153,6 +153,7 @@ const mockAwaitJob = mock(async () => ({
 mock.module("#lib/server/services/jobs.js", () => ({
 	enqueueJob: mockEnqueueJob,
 	awaitJob: mockAwaitJob,
+	deleteJob: mock(async () => {}),
 }));
 
 const mockSelect = rawDb.select as Mock<() => unknown>;

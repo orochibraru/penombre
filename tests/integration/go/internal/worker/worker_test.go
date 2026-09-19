@@ -3,6 +3,7 @@ package worker_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"strings"
@@ -167,5 +168,58 @@ func TestAJobWhoseLeaseCannotBeRenewedIsStopped(t *testing.T) {
 	case <-stopped:
 	case <-time.After(3 * time.Second):
 		t.Fatal("the job kept running with no lease")
+	}
+}
+
+// An external worker must not finish a copy nobody will apply: it stops at
+// the next item and records what it did, for the app to reconcile.
+func TestACallerBoundJobWhoseRequesterDiedStops(t *testing.T) {
+	for name, seen := range map[string]string{
+		"dead before it starts": "0",
+		"dies while it runs":    "cast((julianday('now') - 2440587.5) * 86400000 as integer)",
+	} {
+		t.Run(name, func(t *testing.T) {
+			s, db := openTestStore(t)
+			insert(t, db, "copy", 0, 1)
+			_, _ = db.Exec(`update jobs set type = 'copy', requested_by = 'app'`)
+			_, _ = db.Exec(`insert into app_instances (id, seen_at) values ('app', ` + seen + `)`)
+			registry := worker.Registry{"copy": func(ctx context.Context, _ jobs.Job) (any, error) {
+				// The app stops beating mid-run.
+				_, _ = db.Exec(`update app_instances set seen_at = 0`)
+				<-ctx.Done()
+				return map[string]string{"stopped": context.Cause(ctx).Error()}, nil
+			}}
+			cfg := worker.Config{ID: "w", Concurrency: 1, PollInterval: 5 * time.Millisecond, LeaseTimeout: 60 * time.Millisecond}
+			runUntil(t, cfg, s, registry, func() bool { return status(t, db, "copy") == "succeeded" })
+			var result string
+			_ = db.QueryRow(`select result from jobs where id = 'copy'`).Scan(&result)
+			if !strings.Contains(result, "awaiting this job is gone") {
+				t.Fatalf("got %s %q", status(t, db, "copy"), result)
+			}
+		})
+	}
+}
+
+// A crash-looping copy is not re-run a third time, nor failed with no
+// result: it is recorded, so the app can account for what earlier runs did.
+func TestACallerBoundJobOutOfAttemptsIsRecordedNotRerun(t *testing.T) {
+	s, db := openTestStore(t)
+	insert(t, db, "copy", 0, 1)
+	_, _ = db.Exec(`update jobs set type = 'copy', status = 'running', attempts = 2, heartbeat_at = 0`)
+	if err := s.Prune(context.Background(), time.Minute); err != nil {
+		t.Fatal(err)
+	}
+	if got := status(t, db, "copy"); got != "running" {
+		t.Fatalf("Prune must leave it for a worker to record, got %s", got)
+	}
+	registry := worker.Registry{"copy": func(ctx context.Context, _ jobs.Job) (any, error) {
+		return map[string]string{"stopped": fmt.Sprint(context.Cause(ctx))}, nil
+	}}
+	cfg := worker.Config{ID: "w", Concurrency: 1, PollInterval: 5 * time.Millisecond, LeaseTimeout: time.Minute}
+	runUntil(t, cfg, s, registry, func() bool { return status(t, db, "copy") == "succeeded" })
+	var result string
+	_ = db.QueryRow(`select result from jobs where id = 'copy'`).Scan(&result)
+	if !strings.Contains(result, "too many times") {
+		t.Fatalf("got %s %q", status(t, db, "copy"), result)
 	}
 }

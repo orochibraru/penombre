@@ -181,23 +181,45 @@ take no `now` for that reason; tests age a row with SQL instead.
 **Copy and delete must never run unobserved** (`CALLER_BOUND` in `jobs.ts`,
 `callerBound` in `worker.go`). Their caller writes rows from the outcome, so one
 that runs with nobody awaiting leaves bytes no row points at (copy) or trash
-rows whose bytes are gone (delete). Three rules hold that:
+rows whose bytes are gone (delete). The rules that hold that:
 
-- At boot, before the worker starts, `failOrphanedJobs()` fails every one that
-  is queued or holds a lapsed lease: its request died with the last process.
-- On worker shutdown they are **not** requeued. They skip the grace period, stop
-  at the next item and complete with what they did — both executors report
-  unreached items as failed instead of erroring, so the caller inserts rows for
-  exactly the pairs that landed and keeps exactly the rows whose bytes remain.
+- **Requesters heartbeat.** Every app process has an `INSTANCE_ID`, stamped as
+  `jobs.requested_by` on what it enqueues and beaten into `app_instances` every
+  5s from `init()` (before anything can be enqueued). The worker checks it
+  before starting a caller-bound job and on every lease renewal; with the
+  requester silent for 30s it cancels the job, which stops at the next item and
+  completes with what it did — the same path as a shutdown. The heartbeat keeps
+  the lease until the executor actually returns, or a second worker would
+  reclaim a job still finishing its last file.
+- **Results name every path**, since the spec is dropped when a job ends: copy
+  reports `copied` and each failure's `dest`; delete reports `deleted` and
+  `deletedDirs`. The app puts a `context` (root, owner, volume — `jobContext()`
+  in `scope.ts`) in the spec and both executors echo it back, so a process that
+  was not the requester can map paths back to rows. An interrupted delete
+  `lstat`s what it did not reach: bytes an earlier, crashed attempt already
+  removed are reported `deleted`, because they are.
+- **The requester deletes the row, not `awaitJob`**, and only after writing its
+  rows (`deleteJob`). A finished copy/delete row still present therefore means
+  its outcome was never fully applied. `reconcileOrphanedJobs`
+  (`job-reconcile.ts`, at boot and every minute) applies those whose requester
+  is gone, or that finished over 10 minutes ago: a copy's destinations with no
+  row are removed (never visible; the source still has them), a delete's removed
+  paths lose their **trash** rows. Only what the result names, never a sweep —
+  and never when the root in `context` is not the service's root. `Prune` never
+  deletes such a row; reconciliation does.
+- At boot, `failOrphanedJobs()` fails queued ones from other instances: they
+  never started, so nothing is lost. A running one is left for a worker to stop
+  and record — failing it would discard that record.
 - An embedded worker whose app died without signalling it (OOM, SIGKILL) exits
-  on its own: `WORKER_PARENT_PID` plus `WatchParent`. Otherwise it kept running
-  jobs beside the new app's worker.
+  on its own: `WORKER_PARENT_PID` plus `WatchParent`.
 
-A worker that crashes while the app lives is fine: the stale lease is reclaimed
-by the restarted worker and re-run (both are idempotent), and the caller, still
-awaiting with `settle`, gets that outcome. The gap left is an **external**
-worker still running a job whose app restarted: it finishes, and nobody reads
-the result.
+- A caller-bound job that crashed its worker is reclaimed whatever its attempts,
+  and `Prune` never fails it: on the third claim it is not re-run but executed
+  with a cancelled context, which only records (an `lstat` per unreached
+  delete). A failed row with no result would be the one outcome nothing can
+  reconcile.
+- A failed copy pair can hold bytes from an interrupted or crashed attempt, so
+  the live requester runs `reconcileCopy` over its own failed destinations too.
 
 Dedupe is a partial unique index (`dedupe_key` where queued/running) plus
 `on conflict do nothing`, not check-then-insert, so two tiles racing get one

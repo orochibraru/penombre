@@ -80,6 +80,9 @@ export const jobs = (sqliteActive ? sqlite.jobs : pg.jobs) as typeof pg.jobs;
 export const workers = (
 	sqliteActive ? sqlite.workers : pg.workers
 ) as typeof pg.workers;
+export const appInstances = (
+	sqliteActive ? sqlite.appInstances : pg.appInstances
+) as typeof pg.appInstances;
 
 export type { AppSettingsData, UserPreferencesData } from "./schema.pg";
 export type User = typeof pg.user.$inferSelect;
