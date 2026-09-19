@@ -75,10 +75,10 @@ export async function chooseMenuItem(
 	for (let attempt = 0; attempt < 3; attempt++) {
 		try {
 			await expect(menuItem.first()).toBeVisible({ timeout: 5000 });
-			// `force`: the stability check is what stalls here — a menu still
-			// settling never holds still long enough — and there is nothing
-			// over an open menu to miss-receive the click.
-			await menuItem.first().click({ force: true, timeout: 5000 });
+			// Not a click: a menu still animating in never passes the stability
+			// check, and a forced click lands by coordinates on whichever entry
+			// has slid under them — Duplicate, in the run that caught it.
+			await menuItem.first().dispatchEvent("click", {}, { timeout: 5000 });
 			await confirm?.();
 			return;
 		} catch (error) {

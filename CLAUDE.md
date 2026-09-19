@@ -874,9 +874,9 @@ sets `strict_required_status_checks_policy`, so a PR cannot merge stale.
 
 So a flake is now a bug to fix where it appears, not noise to re-run.
 `chooseMenuItem` in `e2e/helpers.ts` takes a `confirm` callback for this reason:
-a forced click reports success as soon as it is dispatched, but a menu being
-torn down by a settling listing never runs its handler, so "the click worked"
-and "the thing happened" are different questions.
+a dispatched click reports success as soon as it is sent, but a menu being torn
+down by a settling listing never runs its handler, so "the click worked" and
+"the thing happened" are different questions.
 
 ### E2E has a five-minute budget
 
@@ -1023,12 +1023,14 @@ resolves and then loses: the listing refresh detaches it mid-click, and the
 click waits 30s for an element that no longer exists. On a loaded CI runner that
 is every run, not one in ten.
 
-`chooseMenuItem` in `e2e/helpers.ts` is the way in: it force-clicks the entry
-(the stability check is what stalls, and nothing sits over an open menu) and
-reopens the menu on failure. It deliberately does **not** treat a vanished menu
-as a successful click — a menu also closes on a stray pointer move, and that
-shortcut made a test assert against a navigation that never happened. After an
-upload, wait for `networkidle` before touching the row at all.
+`chooseMenuItem` in `e2e/helpers.ts` is the way in: it dispatches `click` on the
+entry itself and reopens the menu on failure. Never `click({ force: true })` a
+menu entry: force skips the stability check but still clicks by coordinates, and
+a menu animating in slides a neighbour under them — a CI run duplicated a file
+instead of opening it. It deliberately does **not** treat a vanished menu as a
+successful click — a menu also closes on a stray pointer move, and that shortcut
+made a test assert against a navigation that never happened. After an upload,
+wait for `networkidle` before touching the row at all.
 
 ### E2E runs against a container, not your working tree
 
