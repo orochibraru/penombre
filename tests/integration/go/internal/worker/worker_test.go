@@ -99,7 +99,7 @@ func runUntil(t *testing.T, cfg worker.Config, s *worker.Store, registry worker.
 
 // Requeued, a copy would run after its awaiting request is gone and leave
 // bytes no row points at; it reports what it did instead.
-func TestShutdownCompletesCallerBoundJobsInsteadOfRequeueing(t *testing.T) {
+func TestShutdownCompletesCallerBoundJobsInsteadOfRequeuing(t *testing.T) {
 	s, db := openTestStore(t)
 	insert(t, db, "copy", 0, 1)
 	_, _ = db.Exec(`update jobs set type = 'copy'`)
