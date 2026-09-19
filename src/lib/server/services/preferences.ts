@@ -14,6 +14,7 @@ const defaultPreferences: UserPreferencesData = {
 	accent: "purple",
 	onboarded: false,
 	emailNotifications: false,
+	preferredSignInMethod: null,
 };
 
 /**

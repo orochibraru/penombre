@@ -109,7 +109,7 @@
         data-testid="upload-progress-indicator"
         transition:fly={{ y: 100, duration: 300 }}
         class={cn(
-            "fixed right-4 z-50 w-80 rounded-lg border bg-background shadow-2xl",
+            "fixed right-4 z-50 w-80 rounded-lg border bg-surface-base shadow-2xl",
             "md:right-6",
             // Stacked above the music player like the selection bar, from the
             // `--player-height` it publishes: pinned to the corner this panel

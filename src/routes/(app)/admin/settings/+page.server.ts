@@ -6,6 +6,7 @@ import { Email } from "#lib/server/email.js";
 import {
 	getAppSettings,
 	getSmtpSettings,
+	isPasskeySignInEnabled,
 	updateAppSettings,
 } from "#lib/server/services/app-settings.js";
 import {
@@ -79,6 +80,7 @@ export const load = async () => {
 		env: {
 			emailSignIn: config.auth.enableEmailSignIn,
 			oauthSignIn: config.auth.enableOAuthSignIn,
+			passkeySignIn: config.auth.enablePasskeySignIn,
 			minPasswordLength: config.auth.minPasswordLength,
 			providers: config.auth.oauthProviders.map((provider) => ({
 				name: provider.name,
@@ -167,10 +169,12 @@ async function providerChangeRefused(
 	const emailSignIn = provided.emailSignIn
 		? config.auth.enableEmailSignIn
 		: (current.emailSignInEnabled ?? true);
+	const passkey = await isPasskeySignInEnabled();
 
 	return validateSignInMethods(
 		{
 			emailSignIn,
+			passkey,
 			magicLink: current.magicLinkEnabled ?? false,
 			emailOtp: current.emailOtpEnabled ?? false,
 			oauthProviders: enabledOAuthProviders(config, {
@@ -181,6 +185,7 @@ async function providerChangeRefused(
 		},
 		{
 			emailSignIn,
+			passkey,
 			oauthProviders: enabledOAuthProviders(config, current),
 		},
 	);
@@ -267,6 +272,10 @@ export const actions = {
 		const nextEmailSignIn = provided.emailSignIn
 			? config.auth.enableEmailSignIn
 			: bool(form, "emailSignInEnabled");
+		const currentPasskey = await isPasskeySignInEnabled();
+		const nextPasskey = provided.passkeySignIn
+			? currentPasskey
+			: bool(form, "passkeySignInEnabled");
 		const nextMagicLink = bool(form, "magicLinkEnabled");
 		const nextEmailOtp = bool(form, "emailOtpEnabled");
 
@@ -283,6 +292,7 @@ export const actions = {
 		const problem = await validateSignInMethods(
 			{
 				emailSignIn: nextEmailSignIn,
+				passkey: nextPasskey,
 				magicLink: nextMagicLink,
 				emailOtp: nextEmailOtp,
 				oauthProviders,
@@ -290,6 +300,7 @@ export const actions = {
 			},
 			{
 				emailSignIn: current.emailSignInEnabled ?? true,
+				passkey: currentPasskey,
 				oauthProviders,
 			},
 		);
@@ -311,6 +322,9 @@ export const actions = {
 				...(provided.emailSignIn
 					? {}
 					: { emailSignInEnabled: nextEmailSignIn }),
+				...(provided.passkeySignIn
+					? {}
+					: { passkeySignInEnabled: nextPasskey }),
 				...(provided.smtp ? {} : { smtp: smtpFromForm(form, smtpPort) }),
 			});
 			return { success: true };

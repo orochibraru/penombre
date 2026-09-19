@@ -15,6 +15,7 @@ const { isOAuthSignInEnabled } = await import("./app-settings");
 const defaultProvided = {
 	emailSignIn: true,
 	oauthSignIn: true,
+	passkeySignIn: false,
 	minPasswordLength: true,
 	smtp: true,
 };

@@ -681,5 +681,11 @@
 	"volume_scan_quick_description": "Añade archivos nuevos, quita los que faltan y vuelve a leer los que cambiaron de tamaño.",
 	"volume_scan_full": "Volver a escanear todo",
 	"volume_scan_full_description": "Vuelve a leer cada archivo desde cero: tipos, duraciones y miniaturas. Lento en bibliotecas grandes.",
-	"request_failed": "El servidor rechazó la solicitud. Comprueba la URL de tu instancia e inténtalo de nuevo."
+	"request_failed": "El servidor rechazó la solicitud. Comprueba la URL de tu instancia e inténtalo de nuevo.",
+	"admin_passkey_sign_in": "Clave de acceso",
+	"sign_in_more_ways": "Más formas de iniciar sesión",
+	"preferred_sign_in": "Método de inicio de sesión preferido",
+	"preferred_sign_in_description": "Lo que la página de inicio de sesión ofrece primero en un dispositivo que te recuerda. Los demás métodos siguen a un clic.",
+	"preferred_sign_in_none": "Sin preferencia",
+	"passkeys_disabled": "El inicio de sesión con clave de acceso está desactivado en esta instancia."
 }

@@ -84,7 +84,11 @@ export const appInstances = (
 	sqliteActive ? sqlite.appInstances : pg.appInstances
 ) as typeof pg.appInstances;
 
-export type { AppSettingsData, UserPreferencesData } from "./schema.pg";
+export type {
+	AppSettingsData,
+	SignInMethod,
+	UserPreferencesData,
+} from "./schema.pg";
 export type User = typeof pg.user.$inferSelect;
 export type Session = typeof pg.session.$inferSelect;
 export interface UserWithSession {

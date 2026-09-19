@@ -85,6 +85,9 @@ const configSchema = z
 				enableOAuthSignIn: z
 					.boolean()
 					.default(defaultConfigValues.auth.enableOAuthSignIn),
+				enablePasskeySignIn: z
+					.boolean()
+					.default(defaultConfigValues.auth.enablePasskeySignIn),
 				minPasswordLength: z
 					.number()
 					.default(defaultConfigValues.auth.minPasswordLength),
@@ -256,6 +259,7 @@ function resolveAuthConfig() {
 	const configured =
 		env.ENABLE_EMAIL_SIGNIN ||
 		env.ENABLE_OAUTH_SIGNIN ||
+		env.ENABLE_PASSKEY_SIGNIN ||
 		env.MIN_PASSWORD_LENGTH ||
 		oauthProviders.length > 0;
 	if (!configured) {
@@ -268,6 +272,7 @@ function resolveAuthConfig() {
 		enableOAuthSignIn: env.ENABLE_OAUTH_SIGNIN
 			? env.ENABLE_OAUTH_SIGNIN !== "false"
 			: oauthProviders.length > 0,
+		enablePasskeySignIn: env.ENABLE_PASSKEY_SIGNIN !== "false",
 		minPasswordLength: env.MIN_PASSWORD_LENGTH
 			? Number.parseInt(env.MIN_PASSWORD_LENGTH, 10)
 			: defaultConfigValues.auth.minPasswordLength,
@@ -366,12 +371,14 @@ export function getConfig(): AppConfig {
 export function envProvided(): {
 	emailSignIn: boolean;
 	oauthSignIn: boolean;
+	passkeySignIn: boolean;
 	minPasswordLength: boolean;
 	smtp: boolean;
 } {
 	return {
 		emailSignIn: env.ENABLE_EMAIL_SIGNIN !== undefined,
 		oauthSignIn: env.ENABLE_OAUTH_SIGNIN !== undefined,
+		passkeySignIn: env.ENABLE_PASSKEY_SIGNIN !== undefined,
 		minPasswordLength: env.MIN_PASSWORD_LENGTH !== undefined,
 		smtp: env.SMTP_ENABLED !== undefined,
 	};

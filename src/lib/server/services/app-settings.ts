@@ -25,6 +25,7 @@ const defaults: AppSettingsData = {
 	emailSignInEnabled: true,
 	magicLinkEnabled: false,
 	emailOtpEnabled: false,
+	passkeySignInEnabled: true,
 	requireTwoFactor: false,
 	smtp: { enabled: false },
 	oauthProviders: [],
@@ -134,6 +135,21 @@ export async function isEmailSignInEnabled(): Promise<boolean> {
 		return (await getAppSettings()).emailSignInEnabled ?? true;
 	} catch {
 		return getConfig().auth.enableEmailSignIn;
+	}
+}
+
+/**
+ * Whether passkey sign-in is on, resolving env over database. Read on every
+ * passkey request rather than at init, so it needs no restart.
+ */
+export async function isPasskeySignInEnabled(): Promise<boolean> {
+	if (envProvided().passkeySignIn) {
+		return getConfig().auth.enablePasskeySignIn;
+	}
+	try {
+		return (await getAppSettings()).passkeySignInEnabled ?? true;
+	} catch {
+		return true;
 	}
 }
 

@@ -464,12 +464,31 @@ Three more things that bite:
 
 `services/auth-methods.ts` gates every save of the sign-in settings on two
 rules: at least one method must survive, and a method may not be removed while
-accounts depend on it (`accountsWithOnly` counts who would be stranded). Magic
-link and emailed codes are exempt from the second rule — they authenticate an
-address, not a stored credential, so no `account` row depends on them.
+accounts depend on it (`strandedAccounts(method, surviving)` counts users of
+that method holding none of the methods left enabled). Magic link and emailed
+codes are exempt from the second rule — they authenticate an address, not a
+stored credential, so no `account` row depends on them.
+
+**Passkeys are not `account` rows**: better-auth's plugin keeps them in the
+`passkey` table. Counting `account.providerId = 'passkey'` returned 0 forever;
+count `passkey.userId`.
 
 `validateSignInMethods` takes the stranded-count lookup as its third argument so
 the rules can be tested without a database; the default is the real query.
+
+### Passkey sign-in is gated per request, not at init
+
+The passkey plugin is always loaded. `hooks.before` in `auth/index.ts` refuses
+the four sign-in/registration endpoints (403) while `isPasskeySignInEnabled()`
+is false, so toggling it needs no restart. List and delete stay open.
+
+### A preferred sign-in method is a hint, never a gate
+
+`preferredSignInMethod` (user preference) goes through `effectivePreferred()`
+everywhere it is read: a method the instance disabled or the account can no
+longer use (last passkey deleted) reads as `null`. The sign-in page's `lookup`
+returns `methods` + `preferred`; the last signed-in address lives in
+`localStorage` (`penombre:sign-in-email`), so the page can auto-run the lookup.
 
 ### Two-factor
 
@@ -517,8 +536,8 @@ spread in only when a user or password is actually set.
 `getPasswordlessSettings()` is true the moment an admin saves, but the plugin
 list was built at module init — so the button appeared for an endpoint that did
 not exist and posting to it 404'd with no message. The page reads
-`passwordlessMethods` (exported from `auth/index.ts`, the resolved value)
-instead. `test.setup.ts` mocks that export too.
+`instanceSignInMethods()` (`auth/index.ts`: password, magic link and OTP as
+resolved at init, passkey live) instead. `test.setup.ts` mocks that export too.
 
 ### Notifications are structured rows, not sentences
 

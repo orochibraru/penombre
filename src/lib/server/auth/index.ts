@@ -24,7 +24,9 @@ import {
 	getPasswordlessSettings,
 	getStoredOAuthProviders,
 	isEmailSignInEnabled,
+	isPasskeySignInEnabled,
 } from "#lib/server/services/app-settings.js";
+import type { InstanceMethods } from "#lib/server/services/auth-methods.js";
 import { StorageService } from "#lib/server/services/storage/index.js";
 import { building, dev } from "$app/env";
 import { getRequestEvent } from "$app/server";
@@ -61,15 +63,29 @@ const passwordless = await getPasswordlessSettings().catch(() => ({
 }));
 
 /**
- * Which passwordless methods this process actually loaded.
+ * Every sign-in method this process can answer right now.
  *
  * The sign-in page must offer these rather than re-reading the settings:
  * a live read is true the moment an admin saves, but the plugin list was
  * built at module init, so the button appeared for an endpoint that did not
- * exist and posting to it 404'd with no message at all. Reading what was
- * resolved here means the form can only offer what the server can answer.
+ * exist and posting to it 404'd with no message at all. Passkeys are the
+ * exception: they are gated per request (`hooks.before`), so read live.
  */
-export const passwordlessMethods = passwordless;
+export async function instanceSignInMethods(): Promise<InstanceMethods> {
+	return {
+		password: emailSignInEnabled,
+		passkey: await isPasskeySignInEnabled(),
+		...passwordless,
+	};
+}
+
+/** Sign-in and enrolment; listing and deleting stay open when it is off. */
+const PASSKEY_GATED = new Set([
+	"/passkey/generate-authenticate-options",
+	"/passkey/verify-authentication",
+	"/passkey/generate-register-options",
+	"/passkey/verify-registration",
+]);
 
 // Env wins on a name collision: `config.ts` is the source of truth for
 // anything declared there, and the UI shows those read-only.
@@ -95,7 +111,7 @@ const oauthProviders = [
 /**
  * The providers this process actually registered, public fields only.
  *
- * Same reason as `passwordlessMethods`: one saved in the admin UI has no
+ * Same reason as `instanceSignInMethods`: one saved in the admin UI has no
  * endpoint until the next boot, so a page offering it beforehand would post
  * to a 404. Never the client id or secret — this is read by the sign-in page.
  */
@@ -170,6 +186,13 @@ export const auth = betterAuth({
 		schema,
 	}),
 	hooks: {
+		before: createAuthMiddleware(async (ctx) => {
+			if (PASSKEY_GATED.has(ctx.path) && !(await isPasskeySignInEnabled())) {
+				throw new APIError("FORBIDDEN", {
+					message: "Passkey sign-in is disabled on this instance.",
+				});
+			}
+		}),
 		after: createAuthMiddleware(async (ctx) => {
 			const session = ctx.context.session;
 			const data = ctx.context.returned;

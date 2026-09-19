@@ -307,6 +307,8 @@ export interface AppSettingsData {
 	magicLinkEnabled?: boolean;
 	/** Passwordless sign-in by emailed one-time code. Also needs SMTP. */
 	emailOtpEnabled?: boolean;
+	/** Passkey sign-in and registration, unless `ENABLE_PASSKEY_SIGNIN` is set. */
+	passkeySignInEnabled?: boolean;
 	/** Force every account to enrol in TOTP two-factor before using the app. */
 	requireTwoFactor?: boolean;
 	/** SMTP, used when `SMTP_ENABLED` is absent from the environment. */
@@ -364,7 +366,14 @@ export interface UserPreferencesData {
 	 * primary channel, and an instance with no SMTP never sends regardless.
 	 */
 	emailNotifications?: boolean;
+	/**
+	 * What the sign-in page offers first. Treated as null wherever the method
+	 * is not currently available to the account (`effectivePreferred`).
+	 */
+	preferredSignInMethod?: SignInMethod | null;
 }
+
+export type SignInMethod = "password" | "passkey" | "magicLink" | "emailOtp";
 
 export const userPreferences = pgTable("user_preferences", {
 	userId: text("user_id")

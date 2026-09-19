@@ -1,15 +1,23 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, type Mock, test } from "bun:test";
+import { db } from "#lib/server/db/index.js";
 import {
 	type CurrentMethods,
+	effectivePreferred,
+	type InstanceMethods,
+	methodsFor,
 	type ProposedMethods,
+	strandedAccounts,
 	validateSignInMethods,
 } from "./auth-methods";
+
+const mockSelect = db.select as Mock<typeof db.select>;
 
 /** Nobody is stranded unless a case says otherwise. */
 const noneStranded = () => Promise.resolve(0);
 
 const proposed = (over: Partial<ProposedMethods> = {}): ProposedMethods => ({
 	emailSignIn: true,
+	passkey: false,
 	magicLink: false,
 	emailOtp: false,
 	oauthProviders: [],
@@ -19,6 +27,7 @@ const proposed = (over: Partial<ProposedMethods> = {}): ProposedMethods => ({
 
 const current = (over: Partial<CurrentMethods> = {}): CurrentMethods => ({
 	emailSignIn: true,
+	passkey: false,
 	oauthProviders: [],
 	...over,
 });
@@ -136,5 +145,124 @@ describe("validateSignInMethods", () => {
 				() => Promise.resolve(4),
 			),
 		).toBeNull();
+	});
+
+	test("a passkey alone keeps a method enabled", async () => {
+		expect(
+			await validateSignInMethods(
+				proposed({ emailSignIn: false, passkey: true }),
+				current({ passkey: true }),
+				noneStranded,
+			),
+		).toBeNull();
+	});
+
+	test("passkey-only is refused while someone has no passkey", async () => {
+		const surviving: (readonly string[])[] = [];
+		const result = await validateSignInMethods(
+			proposed({ emailSignIn: false, passkey: true }),
+			current({ passkey: true }),
+			(providerId, alive) => {
+				surviving.push(alive);
+				return Promise.resolve(providerId === "credential" ? 2 : 0);
+			},
+		);
+		expect(result).toMatch(/2 accounts have no sign-in method other than/i);
+		expect(surviving[0]).toEqual(["passkey"]);
+	});
+
+	test("refuses disabling passkeys while accounts sign in only with one", async () => {
+		const result = await validateSignInMethods(
+			proposed({ passkey: false }),
+			current({ passkey: true }),
+			(providerId) => Promise.resolve(providerId === "passkey" ? 1 : 0),
+		);
+		expect(result).toMatch(/1 account signs in only with a passkey/i);
+	});
+
+	test("turning passkeys off is fine when nobody depends on them", async () => {
+		expect(
+			await validateSignInMethods(
+				proposed({ passkey: false }),
+				current({ passkey: true }),
+				noneStranded,
+			),
+		).toBeNull();
+	});
+
+	test("turning the last two methods off together is refused", async () => {
+		const result = await validateSignInMethods(
+			proposed({ emailSignIn: false, passkey: false }),
+			current({ passkey: true }),
+			noneStranded,
+		);
+		expect(result).toMatch(/at least one sign-in method/i);
+	});
+});
+
+/** Queue one `select().from()` result on the shared db mock. */
+function rows(result: unknown[]) {
+	const from = () => Promise.resolve(result);
+	mockSelect.mockReturnValueOnce({ from } as never);
+}
+
+describe("strandedAccounts", () => {
+	test("a passkey is a way in, read from the passkey table", async () => {
+		rows([
+			{ userId: "a", providerId: "credential" },
+			{ userId: "b", providerId: "credential" },
+			{ userId: "c", providerId: "credential" },
+		]);
+		rows([{ userId: "a" }, { userId: "a" }, { userId: "b" }]);
+
+		expect(await strandedAccounts("credential", ["passkey"])).toBe(1);
+	});
+
+	test("counts passkey-only users when passkeys go", async () => {
+		rows([{ userId: "b", providerId: "credential" }]);
+		rows([{ userId: "a" }, { userId: "b" }]);
+
+		expect(await strandedAccounts("passkey", ["credential"])).toBe(1);
+	});
+});
+
+const everything: InstanceMethods = {
+	password: true,
+	passkey: true,
+	magicLink: true,
+	emailOtp: true,
+};
+
+describe("methodsFor", () => {
+	test("password and passkey need the account to hold one", () => {
+		expect(
+			methodsFor(everything, { hasPassword: false, hasPasskey: false }),
+		).toEqual(["magicLink", "emailOtp"]);
+		expect(
+			methodsFor(everything, { hasPassword: true, hasPasskey: true }),
+		).toEqual(["password", "passkey", "magicLink", "emailOtp"]);
+	});
+
+	test("an instance-disabled method is never offered", () => {
+		expect(
+			methodsFor(
+				{ ...everything, passkey: false, magicLink: false },
+				{ hasPassword: true, hasPasskey: true },
+			),
+		).toEqual(["password", "emailOtp"]);
+	});
+});
+
+describe("effectivePreferred", () => {
+	test("keeps an available preference", () => {
+		expect(effectivePreferred("passkey", ["password", "passkey"])).toBe(
+			"passkey",
+		);
+	});
+
+	test("an unavailable preference falls back to none", () => {
+		expect(effectivePreferred("passkey", ["password"])).toBeNull();
+		expect(effectivePreferred(null, ["password"])).toBeNull();
+		expect(effectivePreferred(undefined, [])).toBeNull();
 	});
 });

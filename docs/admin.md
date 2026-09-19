@@ -42,8 +42,8 @@ the next boot.
   verification emails and invitations. **Send test email** mails the signed-in
   admin using the values currently in the form, saved or not, so a configuration
   can be proven before it is committed.
-- **Sign-in methods** — email/password, the emailed sign-in link and the emailed
-  one-time code. See
+- **Sign-in methods** — email/password, passkeys, the emailed sign-in link and
+  the emailed one-time code. See
   [Authentication](authentication.md#which-methods-may-be-turned-off) for the
   rules on which of these may be turned off.
 - **OAuth providers** — add, edit and remove OIDC providers, each with its
@@ -60,7 +60,8 @@ setting it again takes it back.
 
 Several things are read by the auth layer at boot — email sign-in, the
 passwordless methods and the OAuth providers — so changing them here takes
-effect **after the next restart**. The page says so next to each.
+effect **after the next restart**. The page says so next to each. Passkeys are
+the exception: switching them on or off applies immediately.
 
 ## Storage
 

@@ -56,6 +56,7 @@ mock.module("#lib/server/config.js", () => ({
 	envProvided: () => ({
 		emailSignIn: true,
 		oauthSignIn: true,
+		passkeySignIn: false,
 		minPasswordLength: true,
 		smtp: true,
 	}),

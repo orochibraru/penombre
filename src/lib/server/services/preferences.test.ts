@@ -25,6 +25,7 @@ describe("getUserPreferences", () => {
 			accent: "purple",
 			onboarded: false,
 			emailNotifications: false,
+			preferredSignInMethod: null,
 		});
 	});
 
@@ -49,6 +50,7 @@ describe("getUserPreferences", () => {
 			accent: "purple",
 			onboarded: false,
 			emailNotifications: false,
+			preferredSignInMethod: null,
 		});
 	});
 
@@ -73,6 +75,7 @@ describe("getUserPreferences", () => {
 			accent: "purple",
 			onboarded: false,
 			emailNotifications: false,
+			preferredSignInMethod: null,
 		});
 	});
 });
@@ -103,6 +106,7 @@ describe("updateUserPreferences", () => {
 			accent: "purple",
 			onboarded: false,
 			emailNotifications: false,
+			preferredSignInMethod: null,
 		});
 		expect(mockValues).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -116,6 +120,7 @@ describe("updateUserPreferences", () => {
 					accent: "purple",
 					onboarded: false,
 					emailNotifications: false,
+					preferredSignInMethod: null,
 				},
 			}),
 		);
@@ -151,6 +156,7 @@ describe("updateUserPreferences", () => {
 			accent: "purple",
 			onboarded: false,
 			emailNotifications: false,
+			preferredSignInMethod: null,
 		});
 	});
 });

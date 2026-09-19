@@ -42,6 +42,7 @@ export const defaultConfigValues = {
 	auth: {
 		enableEmailSignIn: true,
 		enableOAuthSignIn: false,
+		enablePasskeySignIn: true,
 		minPasswordLength: 8,
 		secret: "change_this_secret_to_a_random_secure_value",
 		oauthProviders: [],
@@ -113,6 +114,10 @@ ENABLE_EMAIL_SIGNIN=${defaultConfigValues.auth.enableEmailSignIn}
 # Force OAuth sign-in on or off. Leave it out and declaring a provider
 # (below, or in Admin → Settings) is what turns it on.
 ENABLE_OAUTH_SIGNIN=${defaultConfigValues.auth.enableOAuthSignIn}
+
+# Force passkey sign-in on or off. Leave it out to manage it in
+# Admin → Settings.
+# ENABLE_PASSKEY_SIGNIN=${defaultConfigValues.auth.enablePasskeySignIn}
 
 # Minimum password length for email sign-in
 MIN_PASSWORD_LENGTH=${defaultConfigValues.auth.minPasswordLength}

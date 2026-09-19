@@ -1,6 +1,24 @@
 import type { Mock } from "bun:test";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import { auth } from "#lib/server/auth/index.js";
+import { db } from "#lib/server/db/index.js";
+
+const mockSelect = db.select as Mock<typeof db.select>;
+const mockInsert = db.insert as Mock<typeof db.insert>;
+
+/** Queue one drizzle query result on the shared db mock, whatever the chain. */
+function queue(result: unknown[]) {
+	const chain: unknown = new Proxy(
+		{},
+		{
+			get: (_target, prop) =>
+				prop === "then"
+					? (resolve: (v: unknown) => void) => resolve(result)
+					: () => chain,
+		},
+	);
+	mockSelect.mockReturnValueOnce(chain as never);
+}
 
 const mockListApiKeys = auth.api.listApiKeys as unknown as Mock<
 	typeof auth.api.listApiKeys
@@ -325,5 +343,102 @@ describe("actions.setPassword", () => {
 
 		expect(result).toMatchObject({ success: false });
 		expect(mockSetPassword).not.toHaveBeenCalled();
+	});
+});
+
+describe("preferred sign-in method", () => {
+	const locals = { user: { id: "u1", twoFactorEnabled: false } };
+
+	test("load offers only what this account can use", async () => {
+		mockListUserAccounts.mockResolvedValueOnce([
+			{ providerId: "credential" },
+		] as never);
+		mockListPasskeys.mockResolvedValueOnce([] as never);
+		queue([{ preferences: { preferredSignInMethod: "passkey" } }]);
+
+		const result = await load({
+			request: new Request("http://localhost"),
+			locals,
+		} as never);
+
+		// The preference names a passkey the account no longer has.
+		expect(result).toMatchObject({
+			signInMethods: ["password"],
+			preferredSignInMethod: null,
+			passkeySignInEnabled: true,
+		});
+	});
+
+	test("load keeps a usable preference", async () => {
+		mockListUserAccounts.mockResolvedValueOnce([
+			{ providerId: "credential" },
+		] as never);
+		mockListPasskeys.mockResolvedValueOnce([{ id: "pk" }] as never);
+		queue([{ preferences: { preferredSignInMethod: "passkey" } }]);
+
+		const result = await load({
+			request: new Request("http://localhost"),
+			locals,
+		} as never);
+
+		expect(result).toMatchObject({
+			signInMethods: ["password", "passkey"],
+			preferredSignInMethod: "passkey",
+		});
+	});
+
+	function post(method: string) {
+		return {
+			...createRequest({ method }),
+			locals,
+		} as never;
+	}
+
+	test("refuses a method the account cannot use", async () => {
+		queue([{ id: "acc" }]);
+		queue([]);
+
+		const result = await actions.setPreferredSignInMethod(post("passkey"));
+		expect(result).toMatchObject({ status: 400 });
+	});
+
+	test("saves an available method", async () => {
+		queue([{ id: "acc" }]);
+		queue([{ id: "pk" }]);
+		queue([]);
+		const values = mock(() => ({
+			onConflictDoUpdate: () => Promise.resolve(),
+		}));
+		mockInsert.mockReturnValueOnce({ values } as never);
+
+		expect(await actions.setPreferredSignInMethod(post("passkey"))).toEqual({
+			preferredSaved: true,
+		});
+		expect(values).toHaveBeenCalledWith(
+			expect.objectContaining({
+				preferences: expect.objectContaining({
+					preferredSignInMethod: "passkey",
+				}),
+			}),
+		);
+	});
+
+	test("an empty value clears the preference", async () => {
+		queue([]);
+		queue([]);
+		queue([]);
+		const values = mock(() => ({
+			onConflictDoUpdate: () => Promise.resolve(),
+		}));
+		mockInsert.mockReturnValueOnce({ values } as never);
+
+		expect(await actions.setPreferredSignInMethod(post(""))).toEqual({
+			preferredSaved: true,
+		});
+		expect(values).toHaveBeenCalledWith(
+			expect.objectContaining({
+				preferences: expect.objectContaining({ preferredSignInMethod: null }),
+			}),
+		);
 	});
 });
