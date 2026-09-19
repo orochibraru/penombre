@@ -67,8 +67,24 @@ the worker container is not running or cannot reach the database. Nothing is
 left half-done: a job that never started is cancelled rather than run later
 behind your back.
 
+Right after the app starts, it gives the worker a few minutes to check in
+before treating it as missing.
+
 Uploads never wait on the worker. A track or video's duration fills in once the
-worker has read it, and the next library scan picks up any it missed.
+worker has read it, and a background sweep every minute retries any it missed,
+on every drive.
+
+## Restarts
+
+Stopping or restarting the worker never loses track of a copy or an emptied
+trash: the worker stops at the next file and reports what it had done, so
+Penombre keeps exactly the files that are still there. If the app restarts in
+the middle of one, the unfinished job is cancelled rather than run later. Every
+job also has a generous time limit, so one stuck on an unreachable disk fails
+instead of hanging the page.
+
+The worker compares time using the database's clock, so it may run on another
+host without its clock being in sync.
 
 ## What runs first
 
