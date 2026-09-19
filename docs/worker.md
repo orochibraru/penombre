@@ -67,8 +67,8 @@ the worker container is not running or cannot reach the database. Nothing is
 left half-done: a job that never started is cancelled rather than run later
 behind your back.
 
-Right after the app starts, it gives the worker a few minutes to check in
-before treating it as missing.
+Right after the app starts, it gives the worker a few minutes to check in before
+treating it as missing.
 
 Uploads never wait on the worker. A track or video's duration fills in once the
 worker has read it, and a background sweep every minute retries any it missed,
