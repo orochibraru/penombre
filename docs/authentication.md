@@ -290,13 +290,18 @@ setting shows how many accounts are still outstanding before you turn it on.
 Sign-in methods cannot be switched off in a way that locks people out. Saving
 **Admin → Settings** is refused when either is true:
 
-1. **Nothing would be left.** At least one method — email and password, an
-   emailed link, an emailed code, or an OAuth provider — has to remain.
+1. **Nothing would be left.** At least one method — email and password, a
+   passkey, an emailed link, an emailed code, or an OAuth provider — has to
+   remain.
 2. **Accounts still depend on the one being removed.** Turning off email and
-   password while some accounts have never linked an OAuth provider would strand
-   exactly those people, so the save is refused and the message names how many
-   they are. The same applies to removing an OAuth provider that is somebody's
-   only way in.
+   password while some accounts have neither a passkey nor a linked OAuth
+   provider would strand exactly those people, so the save is refused and the
+   message names how many they are. The same applies to turning off passkeys
+   while some accounts sign in only with one, and to removing an OAuth provider
+   that is somebody's only way in.
+
+Passkeys can therefore be the only method, once every account has registered
+one.
 
 The emailed link and code are exempt from the second rule: they authenticate an
 address rather than a stored credential, so no account depends on them and
@@ -308,8 +313,22 @@ delete them), then save again.
 ## Passkeys
 
 Passkeys (WebAuthn/FIDO2) allow passwordless authentication using biometrics or
-hardware security keys. They are always available — register one from **Account
-→ Security**, and sign in with it from the **Sign in with a passkey** button.
+hardware security keys. Register one from **Account → Security**, and sign in
+with it from the **Sign in with a passkey** button.
+
+They are on by default. Turn them off with the **Passkey** row under **Admin →
+Settings → Sign-in methods**, which also shows how many accounts have one, or
+pin the setting from the environment:
+
+| Variable                | Description            | Default |
+| ----------------------- | ---------------------- | ------- |
+| `ENABLE_PASSKEY_SIGNIN` | Enable passkey sign-in | `true`  |
+
+When the variable is set it wins and the admin row is read-only; leave it out
+and the admin UI decides. The switch applies immediately, with no restart: while
+it is off the server refuses both signing in with a passkey and registering a
+new one, and the sign-in page stops offering the button. Existing passkeys are
+kept, and can still be listed and deleted.
 
 Passkeys work with:
 
@@ -335,6 +354,30 @@ people stay signed into for weeks that rejected essentially everyone, so
 Penombre turns that freshness check off for this one endpoint. The challenge is
 still bound to the session that asked for it, so nobody can enrol a passkey for
 somebody else's account.
+
+## Preferred sign-in method
+
+Each account can pick the method the sign-in page offers first, under **Account
+→ Security → Preferred sign-in method**. Only methods that are enabled on the
+instance and usable by that account are listed: a passkey once one is
+registered, a password once one is set, the emailed link or code when the admin
+has enabled them and mail works.
+
+After a successful sign-in, the browser remembers the account's email address.
+The next visit to the sign-in page fills it in and looks the account up on its
+own, then:
+
+- **Passkey preferred**: the passkey prompt opens straight away, and only the
+  passkey button is shown, to try again. A browser that refuses a prompt nobody
+  clicked for (Safari, iOS) or a cancelled prompt just leaves that button.
+- **Password, emailed link or code preferred**: that method is shown first. An
+  email is never sent on page load; it still takes a click.
+- In both cases **More ways to sign in** reveals the account's other methods.
+
+**Use a different address** forgets the remembered address. With no preference,
+or no remembered address, the page behaves as before. A preference that stops
+being usable (the admin turns the method off, the last passkey is deleted) is
+treated as no preference, so it can never lock anyone out.
 
 ## API keys
 

@@ -85,6 +85,9 @@ const configSchema = z
 				enableOAuthSignIn: z
 					.boolean()
 					.default(defaultConfigValues.auth.enableOAuthSignIn),
+				enablePasskeySignIn: z
+					.boolean()
+					.default(defaultConfigValues.auth.enablePasskeySignIn),
 				minPasswordLength: z
 					.number()
 					.default(defaultConfigValues.auth.minPasswordLength),
@@ -120,6 +123,19 @@ const configSchema = z
 		storagePath: z.string().default(defaultConfigValues.storagePath),
 		dbLocation: z.string().default(defaultConfigValues.dbLocation),
 		volumes: z.array(volumeSchema).default([]),
+		worker: z
+			.object({
+				mode: z
+					.enum(["embedded", "external"])
+					.default(defaultConfigValues.worker.mode),
+				concurrency: z.coerce
+					.number()
+					.int()
+					.positive()
+					.default(defaultConfigValues.worker.concurrency),
+			})
+			.optional()
+			.default(defaultConfigValues.worker),
 	})
 	.superRefine((config, ctx) => {
 		if (config.smtp?.enabled) {
@@ -243,6 +259,7 @@ function resolveAuthConfig() {
 	const configured =
 		env.ENABLE_EMAIL_SIGNIN ||
 		env.ENABLE_OAUTH_SIGNIN ||
+		env.ENABLE_PASSKEY_SIGNIN ||
 		env.MIN_PASSWORD_LENGTH ||
 		oauthProviders.length > 0;
 	if (!configured) {
@@ -255,6 +272,7 @@ function resolveAuthConfig() {
 		enableOAuthSignIn: env.ENABLE_OAUTH_SIGNIN
 			? env.ENABLE_OAUTH_SIGNIN !== "false"
 			: oauthProviders.length > 0,
+		enablePasskeySignIn: env.ENABLE_PASSKEY_SIGNIN !== "false",
 		minPasswordLength: env.MIN_PASSWORD_LENGTH
 			? Number.parseInt(env.MIN_PASSWORD_LENGTH, 10)
 			: defaultConfigValues.auth.minPasswordLength,
@@ -333,6 +351,12 @@ export function getConfig(): AppConfig {
 		storagePath: resolve(env.STORAGE_PATH || paths.storagePath),
 		dbLocation: resolve(paths.dbLocation),
 		volumes: parseVolumes(),
+		// Raw, so the schema names a typo (`External`, `-1`) instead of
+		// silently falling back to the default.
+		worker: {
+			mode: env.WORKER_MODE?.trim() || undefined,
+			concurrency: env.WORKER_CONCURRENCY?.trim() || undefined,
+		},
 	});
 }
 
@@ -347,12 +371,14 @@ export function getConfig(): AppConfig {
 export function envProvided(): {
 	emailSignIn: boolean;
 	oauthSignIn: boolean;
+	passkeySignIn: boolean;
 	minPasswordLength: boolean;
 	smtp: boolean;
 } {
 	return {
 		emailSignIn: env.ENABLE_EMAIL_SIGNIN !== undefined,
 		oauthSignIn: env.ENABLE_OAUTH_SIGNIN !== undefined,
+		passkeySignIn: env.ENABLE_PASSKEY_SIGNIN !== undefined,
 		minPasswordLength: env.MIN_PASSWORD_LENGTH !== undefined,
 		smtp: env.SMTP_ENABLED !== undefined,
 	};

@@ -681,5 +681,11 @@
 	"volume_scan_quick_description": "Add new files, remove missing ones, re-read files whose size changed.",
 	"volume_scan_full": "Rescan everything",
 	"volume_scan_full_description": "Re-read every file from scratch: types, durations and thumbnails. Slow on a large library.",
-	"request_failed": "The server rejected the request. Check your instance URL and try again."
+	"request_failed": "The server rejected the request. Check your instance URL and try again.",
+	"admin_passkey_sign_in": "Passkey",
+	"sign_in_more_ways": "More ways to sign in",
+	"preferred_sign_in": "Preferred sign-in method",
+	"preferred_sign_in_description": "What the sign-in page offers first on a device that remembers you. The other methods stay one click away.",
+	"preferred_sign_in_none": "No preference",
+	"passkeys_disabled": "Passkey sign-in is turned off on this instance."
 }

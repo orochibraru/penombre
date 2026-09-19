@@ -5567,6 +5567,9 @@ export interface paths {
 								/** @enum {string} */
 								layout?: "grid" | "list";
 								onboarded?: boolean;
+								preferredSignInMethod?:
+									| ("password" | "passkey" | "magicLink" | "emailOtp")
+									| null;
 								sortColumn?: ("name" | "size" | "updatedAt") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";
@@ -5618,6 +5621,9 @@ export interface paths {
 						/** @enum {string} */
 						layout?: "grid" | "list";
 						onboarded?: boolean;
+						preferredSignInMethod?:
+							| ("password" | "passkey" | "magicLink" | "emailOtp")
+							| null;
 						sortColumn?: ("name" | "size" | "updatedAt") | null;
 						/** @enum {string} */
 						sortDirection?: "asc" | "desc";
@@ -5649,6 +5655,9 @@ export interface paths {
 								/** @enum {string} */
 								layout?: "grid" | "list";
 								onboarded?: boolean;
+								preferredSignInMethod?:
+									| ("password" | "passkey" | "magicLink" | "emailOtp")
+									| null;
 								sortColumn?: ("name" | "size" | "updatedAt") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";

@@ -1,14 +1,20 @@
 import { fail, redirect } from "@sveltejs/kit";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
 	auth,
+	instanceSignInMethods,
 	loadedOAuthProviders,
-	passwordlessMethods,
 } from "#lib/server/auth/index.js";
 import { getConfig, isAuthBypassed } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
-import { account as authAccount, user } from "#lib/server/db/schema.js";
+import { user } from "#lib/server/db/schema.js";
 import { isOAuthSignInEnabled } from "#lib/server/services/app-settings.js";
+import {
+	accountCredentials,
+	effectivePreferred,
+	methodsFor,
+} from "#lib/server/services/auth-methods.js";
+import { getUserPreferences } from "#lib/server/services/preferences.js";
 import { resolve } from "$app/paths";
 
 export const load = async ({ url, request }) => {
@@ -37,20 +43,23 @@ export const load = async ({ url, request }) => {
 		}
 	}
 
+	const methods = await instanceSignInMethods();
+
 	return {
 		// Named fields, never `config.auth` whole: that object carries the auth
 		// secret and every provider's client secret, and this payload is
 		// serialised into the sign-in page.
 		authConfig: {
-			enableEmailSignIn: config.auth.enableEmailSignIn,
+			// The email step also leads to the passwordless methods.
+			enableEmailSignIn:
+				methods.password || methods.magicLink || methods.emailOtp,
+			enablePasskeySignIn: methods.passkey,
 			enableOAuthSignIn: await isOAuthSignInEnabled(),
 			// What the running process loaded, not what the settings currently
 			// say: the plugins are built once at init, so a provider added
 			// since boot has no endpoint yet and its button would only 404.
 			oauthProviders: loadedOAuthProviders,
 		},
-		// Same rule for the passwordless methods.
-		passwordless: passwordlessMethods,
 	};
 };
 
@@ -59,14 +68,16 @@ export const load = async ({ url, request }) => {
  *
  * An account registered by an admin has no password of its own yet, so it is
  * sent to onboarding to choose one instead of being asked for a password it
- * does not have.
+ * does not have. Otherwise it returns the methods this account can use and its
+ * preferred one, if still usable.
  *
  * ponytail: this does confirm whether an address has an account, which a
  * combined email+password form does not. That is the accepted trade of every
  * email-first flow (Google, Microsoft, GitHub all do it); better-auth's rate
  * limiter caps how fast the endpoint can be walked. If enumeration ever
  * matters more than the flow, return `has-password` unconditionally and let
- * the password step fail instead.
+ * the password step fail instead. The method list widens it slightly: it says
+ * whether the account holds a passkey.
  */
 export const actions = {
 	lookup: async ({ request }) => {
@@ -93,20 +104,19 @@ export const actions = {
 			});
 		}
 
-		const credentials = await db
-			.select({ id: authAccount.id })
-			.from(authAccount)
-			.where(
-				and(
-					eq(authAccount.userId, account.id),
-					eq(authAccount.providerId, "credential"),
-				),
-			)
-			.limit(1);
+		const credentials = await accountCredentials(account.id);
+		if (!(credentials.hasPassword || credentials.hasPasskey)) {
+			return { step: "onboarding", email };
+		}
+
+		const methods = methodsFor(await instanceSignInMethods(), credentials);
+		const { preferredSignInMethod } = await getUserPreferences(account.id);
 
 		return {
-			step: credentials.length > 0 ? "password" : "onboarding",
+			step: "password",
 			email,
+			methods,
+			preferred: effectivePreferred(preferredSignInMethod, methods),
 		};
 	},
 };

@@ -21,11 +21,40 @@
 	let error: boolean = $state(false);
 	let errorMessage: string = $state("");
 
+	/** The last account signed in on this device, to skip the email step. */
+	const REMEMBERED = "penombre:sign-in-email";
+
+	function remember(address: string | undefined) {
+		try {
+			if (address) {
+				localStorage.setItem(REMEMBERED, address);
+			} else {
+				localStorage.removeItem(REMEMBERED);
+			}
+		} catch {
+			// Storage blocked: the device simply does not remember.
+		}
+	}
+
 	onMount(() => {
 		title.set(m.sign_in());
+		let saved: string | null = null;
+		try {
+			saved = localStorage.getItem(REMEMBERED);
+		} catch {
+			saved = null;
+		}
+		if (saved && data.authConfig.enableEmailSignIn) {
+			email = saved;
+			void lookupEmail(true);
+		}
 	});
 
-	async function passkeySignIn() {
+	/** The WebAuthn prompt was dismissed or blocked, not a server failure. */
+	const isCancel = (code: string | undefined) =>
+		code === "AUTH_CANCELLED" || !!code?.startsWith("ERROR_");
+
+	async function handlePasskeySignIn() {
 		// `window.PublicKeyCredential` is the real support check. The old one
 		// awaited nothing — `isConditionalMediationAvailable()` returns a
 		// promise, which is always truthy, so it never caught anything.
@@ -37,34 +66,24 @@
 		// No `autoFill`: that is conditional mediation, which only surfaces
 		// through an `autocomplete="webauthn"` field and shows nothing when a
 		// button is clicked. This is the deliberate, modal ceremony.
-		const { error } = await authClient.signIn.passkey();
+		const { data: signedIn, error: err } = await authClient.signIn.passkey();
+		loading = false;
 
-		if (error) {
-			loading = false;
-			throw new Error(
-				error.message ? String(error.message) : "Error signing in with passkey",
-			);
+		if (err) {
+			// A cancel, or a browser refusing a prompt nobody clicked for: the
+			// passkey button is still there to try again.
+			if ("code" in err && isCancel(err.code)) {
+				return;
+			}
+			error = true;
+			errorMessage = err.message ? String(err.message) : defaultErrorMessage;
+			toast.error(errorMessage);
+			return;
 		}
 
+		remember(signedIn?.user?.email ?? (email || undefined));
+		toast.success(m.signed_in_success());
 		goto(resolve("/(app)"), { replace: true, refreshAll: true });
-	}
-
-	function handlePasskeySignIn() {
-		return toast.promise(passkeySignIn(), {
-			loading: m.signing_in_with_passkey(),
-			success: m.signed_in_success(),
-			error: (e) => {
-				loading = false;
-				errorMessage = defaultErrorMessage;
-
-				if (e instanceof Error) {
-					errorMessage = e.message;
-					return e.message;
-				}
-
-				return defaultErrorMessage;
-			},
-		});
 	}
 
 	const defaultErrorMessage = m.sign_in_error();
@@ -131,7 +150,33 @@
 	let otpSent = $state(false);
 	let otp = $state("");
 
-	const passwordless = $derived(data.passwordless);
+	type Method = "password" | "passkey" | "magicLink" | "emailOtp";
+	/** What this account can use, and the one it asked to see first. */
+	let methods = $state<Method[]>([]);
+	let preferred = $state<Method | null>(null);
+	let showAll = $state(false);
+
+	const focused = $derived(knownEmail && !!preferred && !showAll);
+	const offers = (method: Method) =>
+		knownEmail &&
+		methods.includes(method) &&
+		(!focused || preferred === method);
+	const showPassword = $derived(knownEmail && !otpSent && offers("password"));
+	const showPasskey = $derived(
+		data.authConfig.enablePasskeySignIn &&
+			(!focused || preferred === "passkey"),
+	);
+
+	function forgetAccount() {
+		knownEmail = false;
+		password = "";
+		otpSent = false;
+		otp = "";
+		methods = [];
+		preferred = null;
+		showAll = false;
+		remember(undefined);
+	}
 
 	/**
 	 * Mail a one-time link. The callback lands on the app, and better-auth
@@ -151,6 +196,8 @@
 		if (!email) {
 			return;
 		}
+		// The link signs in on whichever tab opens it, not here.
+		remember(email);
 		loading = true;
 		return toast.promise(magicLinkSignIn(), {
 			loading: m.sign_in_sending_link(),
@@ -204,6 +251,7 @@
 			error = true;
 			throw new Error(err.message || m.sign_in_error());
 		}
+		remember(email);
 		goto(resolve("/(app)"), { replace: true, refreshAll: true });
 	}
 
@@ -226,7 +274,7 @@
 	 * An account with no credential is one an admin registered, so it goes to
 	 * onboarding to choose a password rather than being asked for one.
 	 */
-	async function lookupEmail() {
+	async function lookupEmail(remembered = false) {
 		if (!email) {
 			return;
 		}
@@ -243,6 +291,12 @@
 			const payload = deserializeAction(await res.text());
 
 			if (payload.type === "failure") {
+				// A remembered account that is gone: start over quietly.
+				if (remembered) {
+					email = "";
+					remember(undefined);
+					return;
+				}
 				error = true;
 				errorMessage =
 					(payload.data?.error as string | undefined) ?? m.sign_in_error();
@@ -259,7 +313,14 @@
 				});
 				return;
 			}
+			methods = (payload.data?.methods as Method[] | undefined) ?? [];
+			preferred = (payload.data?.preferred as Method | null) ?? null;
+			showAll = false;
 			knownEmail = true;
+			if (preferred === "passkey") {
+				loading = false;
+				void handlePasskeySignIn();
+			}
 		} catch (e) {
 			error = true;
 			errorMessage = e instanceof Error ? e.message : m.sign_in_error();
@@ -281,6 +342,7 @@
 				);
 			}
 
+			remember(email);
 			goto(resolve("/(app)"), { replace: true, refreshAll: true });
 		} catch (e) {
 			error = true;
@@ -295,7 +357,7 @@
         e.preventDefault();
         if (otpSent) {
             handleOtpSignin();
-        } else if (knownEmail) {
+        } else if (showPassword) {
             handleEmailSignin();
         } else {
             void lookupEmail();
@@ -339,12 +401,7 @@
                             <button
                                 type="button"
                                 class="hover:text-primary ms-auto text-sm underline transition-colors"
-                                onclick={() => {
-                                    knownEmail = false;
-                                    password = "";
-                                    otpSent = false;
-                                    otp = "";
-                                }}
+                                onclick={forgetAccount}
                             >
                                 {m.sign_in_change_email()}
                             </button>
@@ -369,7 +426,7 @@
                 {/if}
                 <!-- Hidden until the address is known. `required` is bound to
                      the same flag: a hidden required control blocks submit. -->
-                <Field.Field class={knownEmail && !otpSent ? "" : "hidden"}>
+                <Field.Field class={showPassword ? "" : "hidden"}>
                     <div class="flex items-center">
                         <Field.Label for="password">{m.password()}</Field.Label>
                         <a
@@ -384,10 +441,10 @@
                         autocomplete="current-password webauthn"
                         bind:value={password}
                         type="password"
-                        required={knownEmail && !otpSent}
+                        required={showPassword}
                     />
                 </Field.Field>
-                <Field.Field class={knownEmail && !otpSent ? "" : "hidden"}>
+                <Field.Field class={showPassword ? "" : "hidden"}>
                     <Button class="w-full" type="submit" {loading}>
                         {m.sign_in()}
                     </Button>
@@ -418,9 +475,9 @@
                     </Field.Field>
                 {/if}
 
-                {#if knownEmail && (passwordless.magicLink || passwordless.emailOtp)}
+                {#if offers("magicLink") || offers("emailOtp")}
                     <div class="flex flex-col gap-2">
-                        {#if passwordless.magicLink}
+                        {#if offers("magicLink")}
                             <Button
                                 type="button"
                                 variant="outline"
@@ -431,7 +488,7 @@
                                 {m.sign_in_email_link()}
                             </Button>
                         {/if}
-                        {#if passwordless.emailOtp && !otpSent}
+                        {#if offers("emailOtp") && !otpSent}
                             <Button
                                 type="button"
                                 variant="outline"
@@ -444,7 +501,7 @@
                         {/if}
                     </div>
                 {/if}
-                {#if data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
+                {#if !focused && data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
                     <Field.Separator>{m.or_continue_with()}</Field.Separator>
                 {/if}
             {:else}
@@ -464,7 +521,7 @@
                     autocomplete="current-password webauthn"
                 />
             {/if}
-            {#if data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
+            {#if !focused && data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
                 {#each data.authConfig.oauthProviders as provider}
                     {#if provider.enabled}
                         <Button
@@ -481,14 +538,25 @@
                     {/if}
                 {/each}
             {/if}
-            <Button
-                variant="outline"
-                class="w-full"
-                {loading}
-                onclick={handlePasskeySignIn}
-            >
-                {m.sign_in_with_passkey()}
-            </Button>
+            {#if showPasskey}
+                <Button
+                    variant={focused ? "default" : "outline"}
+                    class="w-full"
+                    {loading}
+                    onclick={handlePasskeySignIn}
+                >
+                    {m.sign_in_with_passkey()}
+                </Button>
+            {/if}
+            {#if focused}
+                <button
+                    type="button"
+                    class="hover:text-primary text-sm underline transition-colors"
+                    onclick={() => (showAll = true)}
+                >
+                    {m.sign_in_more_ways()}
+                </button>
+            {/if}
         </Field.Group>
     </Field.FieldSet>
     <div class="grid gap-6">

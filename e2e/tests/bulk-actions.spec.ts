@@ -116,6 +116,8 @@ test.describe("Bulk actions", () => {
 
 		await selectNamed(page, names);
 		await page.getByRole("button", { name: "Star", exact: true }).click();
+		// Navigating before the toast aborts whichever PUT is still in flight.
+		await expect(page.getByText('Added "2" to starred')).toBeVisible();
 
 		// The starred view is the proof the change reached the server.
 		await page.goto("/starred");

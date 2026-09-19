@@ -1,4 +1,3 @@
-import { Readable } from "node:stream";
 import { Http } from "#lib/server/http.js";
 import { downloadFolder } from "#lib/server/openapi/v1/storage.js";
 
@@ -10,10 +9,10 @@ export const GET = downloadFolder.handler(
 			: decodedFolder;
 
 		try {
-			const { stream } = await service.createZipFromFolder(fullPath);
+			const stream = await service.createZipFromFolder(fullPath);
 			const filename = `${decodedFolder}.zip`;
 
-			return new Response(Readable.toWeb(stream) as unknown as ReadableStream, {
+			return new Response(stream, {
 				headers: {
 					"Content-Type": "application/zip",
 					"Content-Disposition": `attachment; filename="${filename}"`,

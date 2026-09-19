@@ -76,8 +76,19 @@ export const drives = (
 export const driveMembers = (
 	sqliteActive ? sqlite.driveMembers : pg.driveMembers
 ) as typeof pg.driveMembers;
+export const jobs = (sqliteActive ? sqlite.jobs : pg.jobs) as typeof pg.jobs;
+export const workers = (
+	sqliteActive ? sqlite.workers : pg.workers
+) as typeof pg.workers;
+export const appInstances = (
+	sqliteActive ? sqlite.appInstances : pg.appInstances
+) as typeof pg.appInstances;
 
-export type { AppSettingsData, UserPreferencesData } from "./schema.pg";
+export type {
+	AppSettingsData,
+	SignInMethod,
+	UserPreferencesData,
+} from "./schema.pg";
 export type User = typeof pg.user.$inferSelect;
 export type Session = typeof pg.session.$inferSelect;
 export interface UserWithSession {
@@ -102,3 +113,5 @@ export type Notification = typeof pg.notifications.$inferSelect;
 export type NewNotification = typeof pg.notifications.$inferInsert;
 export type Drive = typeof pg.drives.$inferSelect;
 export type DriveMember = typeof pg.driveMembers.$inferSelect;
+export type Job = typeof pg.jobs.$inferSelect;
+export type NewJob = typeof pg.jobs.$inferInsert;

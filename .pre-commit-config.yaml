@@ -88,6 +88,20 @@ repos:
         require_serial: true
         files: \.(ts|tsx|js|jsx|mjs|cjs|svelte)$
 
+      - id: format-go
+        name: Formatting (Go)
+        entry: gofmt -w
+        language: system
+        files: \.go$
+
+      - id: test-go
+        name: Tests (Go)
+        entry: go test -race ./cmd/... ./internal/... ./tests/unit/go/... ./tests/integration/go/...
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: (\.go$|^go\.(mod|sum)$)
+
       - id: biome
         name: Format and sort imports (Biome)
         entry: node_modules/.bin/biome check --write --error-on-warnings --no-errors-on-unmatched --files-ignore-unknown=true
@@ -120,7 +134,7 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^(src/|scripts/|e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$)
+        files: ^(src/|scripts/|e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$|.*\.go$|go\.(mod|sum)$)
 
       - id: test-unit
         name: Unit Tests

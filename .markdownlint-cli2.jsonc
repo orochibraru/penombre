@@ -23,6 +23,9 @@
 		"playwright-report",
 		// The PostgreSQL run writes its report beside the SQLite one, and its
 		// generated markdown is not ours to lint.
-		"playwright-report-pg"
+		"playwright-report-pg",
+		// Agent plans and scratch, not docs.
+		".claude/plans",
+		".superpowers"
 	]
 }

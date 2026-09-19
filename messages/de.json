@@ -681,5 +681,11 @@
 	"volume_scan_quick_description": "Neue Dateien hinzufügen, fehlende entfernen, Dateien mit geänderter Größe neu lesen.",
 	"volume_scan_full": "Alles neu scannen",
 	"volume_scan_full_description": "Jede Datei von Grund auf neu lesen: Typen, Dauer und Vorschaubilder. Langsam bei großen Bibliotheken.",
-	"request_failed": "Der Server hat die Anfrage abgelehnt. Prüfen Sie die URL Ihrer Instanz und versuchen Sie es erneut."
+	"request_failed": "Der Server hat die Anfrage abgelehnt. Prüfen Sie die URL Ihrer Instanz und versuchen Sie es erneut.",
+	"admin_passkey_sign_in": "Passkey",
+	"sign_in_more_ways": "Weitere Anmeldemöglichkeiten",
+	"preferred_sign_in": "Bevorzugte Anmeldemethode",
+	"preferred_sign_in_description": "Was die Anmeldeseite auf einem Gerät, das sich an Sie erinnert, zuerst anbietet. Die anderen Methoden bleiben einen Klick entfernt.",
+	"preferred_sign_in_none": "Keine Präferenz",
+	"passkeys_disabled": "Die Anmeldung mit Passkeys ist auf dieser Instanz deaktiviert."
 }

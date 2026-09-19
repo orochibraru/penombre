@@ -12,12 +12,11 @@ import { FileCategoryEnum } from "#lib/file-helpers.js";
  */
 
 import { existsSync } from "node:fs";
-import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
-import { parseFile } from "music-metadata";
 import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
+import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import {
 	ancestorFolders,
@@ -28,6 +27,39 @@ import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
 export { ancestorFolders };
+
+/** A file on disk, as the `scan-list` Go job reports it. */
+export interface ScanEntry {
+	key: string;
+	size: number;
+}
+
+/** The scannable keys on disk and their sizes, bundled to keep call sites at 4 params. */
+interface Listing {
+	keys: string[];
+	sizeByKey: Map<string, number>;
+}
+
+const LISTING_TIMEOUT_MS = 30 * 60_000;
+
+/** Walks `root` via the `scan-list` job. Exported so a test can stub scan()'s listing. */
+export async function listStorageRoot(root: string): Promise<ScanEntry[]> {
+	const id = await enqueueJob({
+		type: "scan-list",
+		spec: { root },
+		priority: "mutation",
+	});
+	const job = await awaitJob(id, {
+		timeoutMs: LISTING_TIMEOUT_MS,
+		consume: true,
+	});
+	if (!job || job.status !== "succeeded" || !job.result) {
+		throw new Error(
+			`scan-list job did not succeed: ${job?.error ?? "timed out"}`,
+		);
+	}
+	return (JSON.parse(job.result) as { entries: ScanEntry[] }).entries;
+}
 
 const logger = new Logger("StorageScan");
 
@@ -90,6 +122,20 @@ export function isScannable(key: string): boolean {
 	return !key.split("/").some((segment) => segment.startsWith("."));
 }
 
+/** Changed bytes invalidate a duration; the duration sweep refills it. */
+function unknownDuration(
+	key: string,
+): { musicDuration: null } | { videoDuration: null } | object {
+	switch (determineCategory(key)) {
+		case FileCategoryEnum.MUSIC:
+			return { musicDuration: null };
+		case FileCategoryEnum.VIDEO:
+			return { videoDuration: null };
+		default:
+			return {};
+	}
+}
+
 function basename(path: string): string {
 	return path.split("/").pop() ?? path;
 }
@@ -103,6 +149,9 @@ export class ScanOperations {
 	constructor(
 		private readonly ctx: StorageContext,
 		private readonly thumbnails: ThumbnailService,
+		private readonly deps: {
+			listStorageRoot: (root: string) => Promise<ScanEntry[]>;
+		} = { listStorageRoot },
 	) {}
 
 	/**
@@ -116,7 +165,14 @@ export class ScanOperations {
 		{ full = false }: { full?: boolean } = {},
 	): Promise<ScanResult> {
 		report({ phase: "listing", done: 0, total: 0 });
-		const keys = (await this.ctx.driver.listObjectKeys()).filter(isScannable);
+		const entries = (
+			await this.deps.listStorageRoot(this.ctx.storagePath)
+		).filter((entry) => isScannable(entry.key));
+		const keys = entries.map((entry) => entry.key);
+		const listing: Listing = {
+			keys,
+			sizeByKey: new Map(entries.map((entry) => [entry.key, entry.size])),
+		};
 
 		const [existingFolders, existingFiles] = await Promise.all([
 			this.ctx.db
@@ -152,14 +208,14 @@ export class ScanOperations {
 		};
 		report({ phase: "files", ...progress });
 		result.addedFiles = await this.insertMissingFiles(
-			keys,
+			listing,
 			knownFilePaths,
 			folderIdByPath,
 			tick,
 		);
 		result.updatedFiles = await this.refreshChangedFiles(
 			existingFiles,
-			keys,
+			listing,
 			tick,
 			full,
 		);
@@ -216,7 +272,7 @@ export class ScanOperations {
 	}
 
 	private async insertMissingFiles(
-		keys: string[],
+		{ keys, sizeByKey }: Listing,
 		knownFilePaths: Set<string>,
 		folderIdByPath: Map<string, string>,
 		tick: (key: string) => void = () => undefined,
@@ -236,7 +292,7 @@ export class ScanOperations {
 				folderId: parent ? (folderIdByPath.get(parent) ?? null) : null,
 				contentType: determineContentType(key),
 				category: determineCategory(key),
-				size: await this.ctx.driver.getObjectSize(key).catch(() => 0),
+				size: sizeByKey.get(key) ?? 0,
 			});
 
 			// Build the preview as part of the scan, so a mounted library is
@@ -256,13 +312,12 @@ export class ScanOperations {
 	 * `Content-Range` from the stored size, so a stale row serves a truncated
 	 * stream forever (an 80MB track playing as 19 seconds).
 	 *
-	 * ponytail: size-only comparison, one stat per known file per scan. Cheap
-	 * enough for a mounted library; switch to mtime (or a stat cache) if a scan
-	 * over a very large tree starts showing up.
+	 * Sizes come from the walk itself, so this costs no extra stat. A rewrite
+	 * that keeps the size is only caught by a full rescan.
 	 */
 	private async refreshChangedFiles(
 		existingFiles: Array<{ id: string; path: string; size: number }>,
-		keys: string[],
+		{ keys, sizeByKey }: Listing,
 		tick: (key: string) => void = () => undefined,
 		full = false,
 	): Promise<number> {
@@ -276,8 +331,8 @@ export class ScanOperations {
 			}
 			tick(key);
 
-			const size = await this.ctx.driver.getObjectSize(key).catch(() => null);
-			if (size === null || (size === known.size && !full)) {
+			const size = sizeByKey.get(key);
+			if (size === undefined || (size === known.size && !full)) {
 				continue;
 			}
 
@@ -289,7 +344,7 @@ export class ScanOperations {
 						contentType: determineContentType(key),
 						category: determineCategory(key),
 					}),
-					...(await this.readMediaDuration(key)),
+					...unknownDuration(key),
 					updatedAt: new Date(),
 				})
 				.where(and(eq(files.id, known.id), ownedFiles(this.ctx)));
@@ -301,39 +356,6 @@ export class ScanOperations {
 			updated++;
 		}
 		return updated;
-	}
-
-	/** Media duration for the changed bytes; `{}` for anything not playable. */
-	private async readMediaDuration(
-		key: string,
-	): Promise<{ musicDuration?: number } | { videoDuration?: number } | object> {
-		const category = determineCategory(key);
-		if (
-			category !== FileCategoryEnum.MUSIC &&
-			category !== FileCategoryEnum.VIDEO
-		) {
-			return {};
-		}
-
-		let localPath: string | undefined;
-		let isTemp = false;
-		try {
-			({ path: localPath, isTemp } =
-				await this.thumbnails.getLocalOrTempPath(key));
-			const duration = (await parseFile(localPath)).format.duration ?? 0;
-			return category === FileCategoryEnum.MUSIC
-				? { musicDuration: duration }
-				: { videoDuration: duration };
-		} catch (error) {
-			logger.warn(`Failed to re-read media metadata for ${key}`, error);
-			return {};
-		} finally {
-			if (isTemp && localPath) {
-				await unlink(localPath).catch(() => {
-					// best-effort cleanup of the temp file
-				});
-			}
-		}
 	}
 
 	private async removeVanishedFiles(

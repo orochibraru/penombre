@@ -56,6 +56,10 @@ describe("refreshChangedFiles", () => {
 		};
 	}
 
+	function fakeDeps(entries: Array<{ key: string; size: number }>) {
+		return { listStorageRoot: async () => entries };
+	}
+
 	test("rewrites the row when the bytes on disk grew", async () => {
 		const db = fakeDb([{ id: "f1", path: "track.mp3", size: 7_000_000 }]);
 		const deleted: string[] = [];
@@ -64,10 +68,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				driver: {
-					listObjectKeys: async () => ["track.mp3"],
-					getObjectSize: async () => 80_000_000,
-				},
 				invalidateListingCaches: async () => {},
 			} as never,
 			{
@@ -75,11 +75,8 @@ describe("refreshChangedFiles", () => {
 				deleteThumbnails: async (key: string) => {
 					deleted.push(key);
 				},
-				// Forces readMediaDuration down its failure path: no real file here.
-				getLocalOrTempPath: async () => {
-					throw new Error("no local copy");
-				},
 			} as never,
+			fakeDeps([{ key: "track.mp3", size: 80_000_000 }]),
 		);
 
 		const result = await ops.scan();
@@ -96,13 +93,10 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				driver: {
-					listObjectKeys: async () => ["track.mp3"],
-					getObjectSize: async () => 80_000_000,
-				},
 				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
+			fakeDeps([{ key: "track.mp3", size: 80_000_000 }]),
 		);
 
 		expect((await ops.scan()).updatedFiles).toBe(0);
@@ -119,10 +113,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				driver: {
-					listObjectKeys: async () => ["track.mp3"],
-					getObjectSize: async () => 80_000_000,
-				},
 				invalidateListingCaches: async () => {},
 			} as never,
 			{
@@ -130,10 +120,8 @@ describe("refreshChangedFiles", () => {
 				deleteThumbnails: async (key: string) => {
 					deleted.push(key);
 				},
-				getLocalOrTempPath: async () => {
-					throw new Error("no local copy");
-				},
 			} as never,
+			fakeDeps([{ key: "track.mp3", size: 80_000_000 }]),
 		);
 
 		const result = await ops.scan(undefined, { full: true });
@@ -143,6 +131,24 @@ describe("refreshChangedFiles", () => {
 		expect(deleted).toEqual(["track.mp3"]);
 	});
 
+	test("a changed media file drops its stale duration", async () => {
+		const db = fakeDb([{ id: "f1", path: "track.mp3", size: 1 }]);
+		const ops = new ScanOperations(
+			{
+				user: { id: "u1" },
+				storagePath: "/library",
+				db,
+				invalidateListingCaches: async () => {},
+			} as never,
+			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
+			fakeDeps([{ key: "track.mp3", size: 2 }]),
+		);
+
+		await ops.scan();
+
+		expect(db.updates[0]).toHaveProperty("musicDuration", null);
+	});
+
 	test("reports each phase and counts every file on disk", async () => {
 		const db = fakeDb([{ id: "f1", path: "a.mp3", size: 1 }]);
 		const ops = new ScanOperations(
@@ -150,13 +156,13 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				driver: {
-					listObjectKeys: async () => ["a.mp3", "b.mp3"],
-					getObjectSize: async () => 1,
-				},
 				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
+			fakeDeps([
+				{ key: "a.mp3", size: 1 },
+				{ key: "b.mp3", size: 1 },
+			]),
 		);
 
 		const steps: Array<{ phase: string; done: number; total: number }> = [];
@@ -169,6 +175,29 @@ describe("refreshChangedFiles", () => {
 			"cleanup",
 		]);
 		expect(steps.at(-1)).toMatchObject({ done: 2, total: 2 });
+	});
+
+	test("filters non-scannable entries out of the listing", async () => {
+		const db = fakeDb([]);
+		const ops = new ScanOperations(
+			{
+				user: { id: "u1" },
+				storagePath: "/tmp/does-not-exist",
+				db,
+				invalidateListingCaches: async () => {},
+			} as never,
+			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
+			fakeDeps([
+				{ key: "kept.txt", size: 1 },
+				{ key: ".DS_Store", size: 1 },
+				{ key: "kept.txt.meta.json", size: 1 },
+			]),
+		);
+
+		const steps: Array<{ phase: string; done: number; total: number }> = [];
+		await ops.scan((step) => steps.push(step));
+
+		expect(steps.at(-1)).toMatchObject({ done: 1, total: 1 });
 	});
 });
 

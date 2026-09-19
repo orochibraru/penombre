@@ -18,6 +18,12 @@ import { getConfig, isAuthBypassed, isSimpleMode } from "#lib/server/config.js";
 import { csrfHandler } from "#lib/server/csrf.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb, resetDb } from "#lib/server/db/index.js";
+import { startDurationSweeper } from "#lib/server/services/duration-sweep.js";
+import { startJobReconciler } from "#lib/server/services/job-reconcile.js";
+import {
+	failOrphanedJobs,
+	startInstanceBeat,
+} from "#lib/server/services/jobs.js";
 import {
 	loadSharedOwner,
 	startLibraryScanner,
@@ -27,9 +33,26 @@ import {
 	migrateStorageMeta,
 	StorageService,
 } from "#lib/server/services/storage/index.js";
+import { sweepStaleZips } from "#lib/server/services/storage/zip.js";
+import { startEmbeddedWorker } from "#lib/server/services/worker-process.js";
 import { building } from "$app/env";
 
 const logger = new Logger("Hooks");
+
+const ZIP_SWEEP_INTERVAL_MS = 60 * 60 * 1000;
+const globalForZipSweep = globalThis as unknown as {
+	__zip_sweep_timer?: ReturnType<typeof setInterval>;
+};
+
+function startZipSweeper(): void {
+	if (globalForZipSweep.__zip_sweep_timer) {
+		return;
+	}
+	void sweepStaleZips();
+	globalForZipSweep.__zip_sweep_timer = setInterval(() => {
+		void sweepStaleZips();
+	}, ZIP_SWEEP_INTERVAL_MS);
+}
 
 /** The session user, with the admin plugin's extra fields. */
 type User = NonNullable<AuthType["user"]>;
@@ -161,9 +184,17 @@ export const init = async () => {
 
 	await waitForDatabase();
 	await runMigrations();
+	// Before enqueueing anything: a worker tells a dead requester by it.
+	await startInstanceBeat();
+	// Before any worker can claim them: their callers died with the last run.
+	await failOrphanedJobs();
+	startEmbeddedWorker();
+	startJobReconciler();
 	await seedAuth();
 	await migrateStorageMeta();
 	startLibraryScanner();
+	startDurationSweeper();
+	startZipSweeper();
 };
 
 /** Paths under the auth basePath that are handled by SvelteKit, not better-auth */

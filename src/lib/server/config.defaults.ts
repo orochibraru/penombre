@@ -42,6 +42,7 @@ export const defaultConfigValues = {
 	auth: {
 		enableEmailSignIn: true,
 		enableOAuthSignIn: false,
+		enablePasskeySignIn: true,
 		minPasswordLength: 8,
 		secret: "change_this_secret_to_a_random_secure_value",
 		oauthProviders: [],
@@ -61,9 +62,14 @@ export const defaultConfigValues = {
 	autoRedirectProvider: "",
 	dataDir: DEFAULT_DATA_DIR,
 	...dataPaths(DEFAULT_DATA_DIR),
+	worker: {
+		mode: "embedded" as "embedded" | "external",
+		concurrency: 4,
+	},
 };
 
-export function generateExampleDotenvFile(): string {
+/** First half: identity, database, auth and OAuth providers. */
+function envCoreSection(): string {
 	return `# ===========================================
 # Penombre Configuration
 # ===========================================
@@ -109,6 +115,10 @@ ENABLE_EMAIL_SIGNIN=${defaultConfigValues.auth.enableEmailSignIn}
 # (below, or in Admin → Settings) is what turns it on.
 ENABLE_OAUTH_SIGNIN=${defaultConfigValues.auth.enableOAuthSignIn}
 
+# Force passkey sign-in on or off. Leave it out to manage it in
+# Admin → Settings.
+# ENABLE_PASSKEY_SIGNIN=${defaultConfigValues.auth.enablePasskeySignIn}
+
 # Minimum password length for email sign-in
 MIN_PASSWORD_LENGTH=${defaultConfigValues.auth.minPasswordLength}
 
@@ -129,11 +139,21 @@ OAUTH_DEFAULT_DISCOVERY_URL=https://auth.example.com/.well-known/openid-configur
 OAUTH_DEFAULT_PRETTY_NAME=Default OIDC Provider
 OAUTH_DEFAULT_PKCE=true
 OAUTH_DEFAULT_SCOPES=openid,profile,email
+`;
+}
 
+/** Second half: everything else — runtime toggles, storage, SMTP. */
+function envRuntimeSection(): string {
+	return `
 # ===========================================
 # Redis (Optional - for distributed caching)
 # ===========================================
 # REDIS_URL=redis://localhost:6379
+
+# Background worker: "embedded" runs it inside this container,
+# "external" expects a separate penombre-worker container
+WORKER_MODE=${defaultConfigValues.worker.mode}
+WORKER_CONCURRENCY=${defaultConfigValues.worker.concurrency}
 
 # ===========================================
 # Simple mode
@@ -188,4 +208,8 @@ SMTP_PASSWORD=${defaultConfigValues.smtp.password}
 SMTP_FROM=${defaultConfigValues.smtp.from}
 SMTP_SECURE=${defaultConfigValues.smtp.secure}
 `;
+}
+
+export function generateExampleDotenvFile(): string {
+	return envCoreSection() + envRuntimeSection();
 }

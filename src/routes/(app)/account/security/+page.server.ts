@@ -1,6 +1,17 @@
-import { auth } from "#lib/server/auth/index.js";
+import { fail } from "@sveltejs/kit";
+import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
 import { getConfig } from "#lib/server/config.js";
+import type { SignInMethod } from "#lib/server/db/schema.js";
 import { isTwoFactorRequired } from "#lib/server/services/app-settings.js";
+import {
+	accountCredentials,
+	effectivePreferred,
+	methodsFor,
+} from "#lib/server/services/auth-methods.js";
+import {
+	getUserPreferences,
+	updateUserPreferences,
+} from "#lib/server/services/preferences.js";
 
 export const load = async ({ request, locals }) => {
 	const [apiKeys, passkeys, accounts] = await Promise.all([
@@ -13,7 +24,22 @@ export const load = async ({ request, locals }) => {
 	// password to ask for — it gets "set" instead of "change".
 	const hasPassword = accounts.some((a) => a.providerId === "credential");
 
+	const instance = await instanceSignInMethods();
+	const signInMethods = methodsFor(instance, {
+		hasPassword,
+		hasPasskey: passkeys.length > 0,
+	});
+	const preferences = locals.user
+		? await getUserPreferences(locals.user.id)
+		: undefined;
+
 	return {
+		passkeySignInEnabled: instance.passkey,
+		signInMethods,
+		preferredSignInMethod: effectivePreferred(
+			preferences?.preferredSignInMethod,
+			signInMethods,
+		),
 		apiKeys,
 		passkeys,
 		hasPassword,
@@ -24,6 +50,24 @@ export const load = async ({ request, locals }) => {
 };
 
 export const actions = {
+	setPreferredSignInMethod: async ({ request, locals }) => {
+		if (!locals.user) {
+			return fail(401, { error: "Sign in again." });
+		}
+		const value = String((await request.formData()).get("method") ?? "");
+		const available = methodsFor(
+			await instanceSignInMethods(),
+			await accountCredentials(locals.user.id),
+		);
+		const method = effectivePreferred(value as SignInMethod, available);
+		if (value && !method) {
+			return fail(400, { error: "That sign-in method is not available." });
+		}
+		await updateUserPreferences(locals.user.id, {
+			preferredSignInMethod: method,
+		});
+		return { preferredSaved: true };
+	},
 	createApiKey: async ({ request }) => {
 		const formData = await request.formData();
 		const name = formData.get("name");

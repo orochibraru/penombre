@@ -49,8 +49,15 @@ mock.module("#lib/server/auth/index.js", () => ({
 	// What the real module resolves at init; the sign-in page reads these to
 	// decide which buttons it may offer — a method or provider enabled since
 	// boot has no endpoint yet.
-	passwordlessMethods: { magicLink: false, emailOtp: false },
 	loadedOAuthProviders: [],
+	instanceSignInMethods: mock(() =>
+		Promise.resolve({
+			password: true,
+			passkey: true,
+			magicLink: false,
+			emailOtp: false,
+		}),
+	),
 }));
 
 mock.module("#lib/server/config.js", () => ({
@@ -63,11 +70,13 @@ mock.module("#lib/server/config.js", () => ({
 			enableEmailSignIn: true,
 			minPasswordLength: 8,
 		},
+		worker: { mode: "embedded", concurrency: 4 },
 	})),
 	getStoragePath: mock(() => "/tmp/penombre-test-storage"),
 	envProvided: mock(() => ({
 		emailSignIn: true,
 		oauthSignIn: true,
+		passkeySignIn: false,
 		minPasswordLength: true,
 		smtp: true,
 	})),

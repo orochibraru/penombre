@@ -22,6 +22,24 @@ function onVolume(
 	return volumeId === null ? isNull(column) : eq(column, volumeId);
 }
 
+/**
+ * What a copy/delete job needs to map its absolute paths back to rows, echoed
+ * back in its result for `reconcile.ts` when the requester is gone.
+ */
+export interface JobContext {
+	root: string;
+	ownerId: string;
+	volumeId: string | null;
+}
+
+export function jobContext(ctx: StorageContext): JobContext {
+	return {
+		root: ctx.storagePath,
+		ownerId: ctx.user.id,
+		volumeId: ctx.volumeId,
+	};
+}
+
 /** Files belonging to this context's user, on this context's volume. */
 export function ownedFiles(ctx: StorageContext): SQL | undefined {
 	return and(

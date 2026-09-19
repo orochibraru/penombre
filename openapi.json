@@ -14725,6 +14725,22 @@
 												"onboarded": {
 													"type": "boolean"
 												},
+												"preferredSignInMethod": {
+													"anyOf": [
+														{
+															"enum": [
+																"password",
+																"passkey",
+																"magicLink",
+																"emailOtp"
+															],
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
 												"sortColumn": {
 													"anyOf": [
 														{
@@ -14834,6 +14850,22 @@
 									"onboarded": {
 										"type": "boolean"
 									},
+									"preferredSignInMethod": {
+										"anyOf": [
+											{
+												"enum": [
+													"password",
+													"passkey",
+													"magicLink",
+													"emailOtp"
+												],
+												"type": "string"
+											},
+											{
+												"type": "null"
+											}
+										]
+									},
 									"sortColumn": {
 										"anyOf": [
 											{
@@ -14909,6 +14941,22 @@
 												},
 												"onboarded": {
 													"type": "boolean"
+												},
+												"preferredSignInMethod": {
+													"anyOf": [
+														{
+															"enum": [
+																"password",
+																"passkey",
+																"magicLink",
+																"emailOtp"
+															],
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
 												},
 												"sortColumn": {
 													"anyOf": [

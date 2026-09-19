@@ -1,4 +1,3 @@
-import { Readable } from "node:stream";
 import { error } from "@sveltejs/kit";
 import type { User } from "better-auth";
 import type { Share } from "#lib/server/db/schema.js";
@@ -10,8 +9,8 @@ const shares = new ShareService();
 /** A zip of the whole shared folder. */
 async function folderZip(service: StorageService, share: Share) {
 	const folderPath = await service.getFolder(share.resourceId);
-	const { stream } = await service.createZipFromFolder(folderPath);
-	return new Response(Readable.toWeb(stream) as unknown as ReadableStream, {
+	const stream = await service.createZipFromFolder(folderPath);
+	return new Response(stream, {
 		headers: {
 			"Content-Type": "application/zip",
 			"Content-Disposition": `attachment; filename="${encodeURIComponent(share.resourceName)}.zip"`,

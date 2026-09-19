@@ -233,7 +233,7 @@
         <Card.Content class="flex flex-col gap-3">
             <!-- Only when something here really is env-owned: the passwordless
                  toggles below are database-backed and editable. -->
-            {#if data.provided.emailSignIn}
+            {#if data.provided.emailSignIn || data.provided.passkeySignIn}
                 <div
                     class="text-muted-foreground bg-muted/40 flex items-start gap-2 rounded-lg px-3 py-2.5 text-xs"
                 >
@@ -273,6 +273,40 @@
                                     count: String(data.usage.credentialAccounts),
                                 })}
                                 · {m.admin_restart_required()}
+                            </span>
+                        </span>
+                    </Label>
+                {/if}
+
+                {#if data.provided.passkeySignIn}
+                    <div
+                        class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
+                    >
+                        <span class="text-sm">{m.admin_passkey_sign_in()}</span>
+                        <Badge
+                            variant={data.env.passkeySignIn
+                                ? "secondary"
+                                : "outline"}
+                        >
+                            {data.env.passkeySignIn ? m.enabled() : m.disabled()}
+                        </Badge>
+                    </div>
+                {:else}
+                    <Label
+                        class="hover:bg-muted/40 flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors"
+                    >
+                        <Checkbox
+                            name="passkeySignInEnabled"
+                            checked={data.settings.passkeySignInEnabled ?? true}
+                        />
+                        <span class="grid gap-1 font-normal">
+                            <span class="text-sm font-medium">
+                                {m.admin_passkey_sign_in()}
+                            </span>
+                            <span class="text-muted-foreground text-xs">
+                                {m.admin_email_sign_in_usage({
+                                    count: String(data.usage.passkeyUsers),
+                                })}
                             </span>
                         </span>
                     </Label>

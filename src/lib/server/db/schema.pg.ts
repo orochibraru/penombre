@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
 	bigint,
 	boolean,
@@ -307,6 +307,8 @@ export interface AppSettingsData {
 	magicLinkEnabled?: boolean;
 	/** Passwordless sign-in by emailed one-time code. Also needs SMTP. */
 	emailOtpEnabled?: boolean;
+	/** Passkey sign-in and registration, unless `ENABLE_PASSKEY_SIGNIN` is set. */
+	passkeySignInEnabled?: boolean;
 	/** Force every account to enrol in TOTP two-factor before using the app. */
 	requireTwoFactor?: boolean;
 	/** SMTP, used when `SMTP_ENABLED` is absent from the environment. */
@@ -364,7 +366,14 @@ export interface UserPreferencesData {
 	 * primary channel, and an instance with no SMTP never sends regardless.
 	 */
 	emailNotifications?: boolean;
+	/**
+	 * What the sign-in page offers first. Treated as null wherever the method
+	 * is not currently available to the account (`effectivePreferred`).
+	 */
+	preferredSignInMethod?: SignInMethod | null;
 }
+
+export type SignInMethod = "password" | "passkey" | "magicLink" | "emailOtp";
 
 export const userPreferences = pgTable("user_preferences", {
 	userId: text("user_id")
@@ -622,6 +631,8 @@ export const files = pgTable(
 		index("files_folderId_idx").on(table.folderId),
 		index("files_path_ownerId_idx").on(table.path, table.ownerId),
 		index("files_volumeId_idx").on(table.volumeId),
+		// The duration sweep filters on it every minute.
+		index("files_category_idx").on(table.category),
 	],
 );
 
@@ -769,3 +780,54 @@ export const driveMembers = pgTable(
 
 export type Drive = typeof drives.$inferSelect;
 export type DriveMember = typeof driveMembers.$inferSelect;
+
+// =========================================================================
+// JOBS
+// =========================================================================
+
+export const jobs = pgTable(
+	"jobs",
+	{
+		id: text("id").primaryKey(),
+		type: text("type").notNull(),
+		status: text("status").default("queued").notNull(),
+		spec: text("spec").notNull(),
+		result: text("result"),
+		error: text("error"),
+		dedupeKey: text("dedupe_key"),
+		/** The app instance awaiting it (`app_instances.id`). */
+		requestedBy: text("requested_by"),
+		priority: integer("priority").default(0).notNull(),
+		attempts: integer("attempts").default(0).notNull(),
+		workerId: text("worker_id"),
+		heartbeatAt: bigint("heartbeat_at", { mode: "number" }),
+		createdAt: bigint("created_at", { mode: "number" })
+			.$defaultFn(() => Date.now())
+			.notNull(),
+		startedAt: bigint("started_at", { mode: "number" }),
+		finishedAt: bigint("finished_at", { mode: "number" }),
+	},
+	(table) => [
+		index("jobs_claim_idx").on(
+			table.status,
+			table.priority.desc().nullsFirst(),
+			table.createdAt,
+		),
+		// Two requests for the same render resolve to one job, atomically.
+		uniqueIndex("jobs_dedupe_pending_idx")
+			.on(table.dedupeKey)
+			.where(sql`status in ('queued', 'running')`),
+	],
+);
+
+/** Liveness: each worker process stamps its row every few seconds. */
+export const workers = pgTable("workers", {
+	id: text("id").primaryKey(),
+	seenAt: bigint("seen_at", { mode: "number" }).notNull(),
+});
+
+/** App processes heartbeat here, so a worker can tell when a requester died. */
+export const appInstances = pgTable("app_instances", {
+	id: text("id").primaryKey(),
+	seenAt: bigint("seen_at", { mode: "number" }).notNull(),
+});

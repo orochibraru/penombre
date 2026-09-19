@@ -4,7 +4,7 @@
 		EllipsisVerticalIcon,
 		KeyRoundIcon,
 	} from "@lucide/svelte";
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { authClient } from "#lib/auth-client.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
@@ -15,6 +15,8 @@
 	import * as Card from "#lib/components/ui/card/index.js";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { Input } from "#lib/components/ui/input/index.js";
+	import { Label } from "#lib/components/ui/label/index.js";
+	import * as RadioGroup from "#lib/components/ui/radio-group/index.js";
 	import { enhance } from "#lib/forms.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
@@ -122,6 +124,23 @@
 		});
 	}
 
+	const methodLabels = {
+		password: m.password,
+		passkey: m.admin_passkey_sign_in,
+		magicLink: m.admin_magic_link,
+		emailOtp: m.admin_email_otp,
+	};
+
+	let preferredForm: HTMLFormElement | undefined = $state();
+
+	$effect(() => {
+		if (form?.preferredSaved) {
+			toast.success(m.toast_settings_saved());
+		} else if (form?.error) {
+			toast.error(form.error);
+		}
+	});
+
 	// The action flips `data.hasPassword`, so the section swaps itself — this
 	// just closes the dialog and confirms.
 	$effect(() => {
@@ -200,14 +219,19 @@
     <Card.Header>
         <Card.Title>{m.passkeys()}</Card.Title>
         <Card.Description>{m.passkeys_description()}</Card.Description>
-        <Card.Action>
-            <Button variant="outline" onclick={() => handleRegisterPasskey()}>
-                {m.register_passkey()}
-            </Button>
-        </Card.Action>
+        {#if data.passkeySignInEnabled}
+            <Card.Action>
+                <Button variant="outline" onclick={() => handleRegisterPasskey()}>
+                    {m.register_passkey()}
+                </Button>
+            </Card.Action>
+        {/if}
     </Card.Header>
     <Card.Content>
     <div class="flex flex-col gap-2">
+        {#if !data.passkeySignInEnabled}
+            <p class="text-sm text-muted-foreground">{m.passkeys_disabled()}</p>
+        {/if}
         {#if data.passkeys.length > 0}
             {#each data.passkeys as passkey}
                 <div
@@ -238,6 +262,47 @@
     </div>
     </Card.Content>
 </Card.Root>
+
+{#if data.signInMethods.length > 0}
+    <Card.Root>
+        <Card.Header>
+            <Card.Title>{m.preferred_sign_in()}</Card.Title>
+            <Card.Description>{m.preferred_sign_in_description()}</Card.Description>
+        </Card.Header>
+        <Card.Content>
+            <form
+                bind:this={preferredForm}
+                method="POST"
+                action="?/setPreferredSignInMethod"
+                use:enhance={() =>
+                    async ({ update }) => update({ reset: false })}
+            >
+                <RadioGroup.Root
+                    name="method"
+                    class="grid gap-2"
+                    value={data.preferredSignInMethod ?? ""}
+                    onValueChange={() =>
+                        // The hidden input takes the new value on the next tick.
+                        void tick().then(() => preferredForm?.requestSubmit())}
+                >
+                    {#each ["", ...data.signInMethods] as method (method)}
+                        <Label
+                            class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center gap-3 rounded-lg border p-3 font-normal transition-colors"
+                        >
+                            <RadioGroup.Item
+                                value={method}
+                                class="data-[state=checked]:border-primary"
+                            />
+                            {method === ""
+                                ? m.preferred_sign_in_none()
+                                : methodLabels[method as keyof typeof methodLabels]()}
+                        </Label>
+                    {/each}
+                </RadioGroup.Root>
+            </form>
+        </Card.Content>
+    </Card.Root>
+{/if}
 
 <!-- API Keys -->
 <Card.Root>

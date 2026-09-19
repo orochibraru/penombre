@@ -17,6 +17,10 @@ const userPreferencesSchema = z.object({
 		.optional(),
 	onboarded: z.boolean().optional(),
 	emailNotifications: z.boolean().optional(),
+	preferredSignInMethod: z
+		.enum(["password", "passkey", "magicLink", "emailOtp"])
+		.nullable()
+		.optional(),
 });
 
 export const getPreferences = defineRoute({

@@ -46,6 +46,9 @@ function createSqliteClient(): SqliteConnection {
 	const client = new SqliteConnection(path, { create: true });
 	// Off by default in SQLite — required for the schema's cascade-delete FKs.
 	client.exec("PRAGMA foreign_keys = ON;");
+	// The Go worker writes the same file.
+	client.exec("PRAGMA journal_mode = WAL;");
+	client.exec("PRAGMA busy_timeout = 5000;");
 	return client;
 }
 

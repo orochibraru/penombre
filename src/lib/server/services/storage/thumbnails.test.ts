@@ -1,96 +1,98 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, readdirSync, statSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { bucketPeaks, writeCacheAtomically } from "./thumbnails";
 
-/** A buffer whose samples step through `values` (absolute, 0..32767). */
-function samplesOf(values: number[], perBucket: number): Int16Array {
-	const out = new Int16Array(values.length * perBucket);
-	for (const [index, value] of values.entries()) {
-		out.fill(value, index * perBucket, (index + 1) * perBucket);
-	}
-	return out;
-}
+const enqueueJob = mock(async () => "job-1");
+const awaitJob = mock(async () => ({ status: "succeeded" }));
+const finishJob = mock(async (_id: string) => true);
+const disownJob = mock(async (_id: string) => {});
+mock.module("#lib/server/services/jobs.js", () => ({
+	enqueueJob,
+	awaitJob,
+	finishJob,
+	disownJob,
+}));
 
-describe("bucketPeaks", () => {
-	test("scales the loudest bucket to 1", () => {
-		const peaks = bucketPeaks(samplesOf([1000, 2000, 4000], 8), 3);
-		expect(peaks).toEqual([0.25, 0.5, 1]);
-	});
+const { ThumbnailService } = await import("./thumbnails");
 
-	test("a quiet file still fills the bar", () => {
-		// 0.07 of full scale — the case that drew an unreadable two-pixel line
-		// when peaks were absolute.
-		const peaks = bucketPeaks(samplesOf([2300, 1150], 8), 2);
-		expect(peaks).toEqual([1, 0.5]);
-	});
-
-	test("silence is not amplified into a block", () => {
-		const peaks = bucketPeaks(samplesOf([100, 50], 8), 2);
-		expect(peaks[0]).toBeLessThan(0.01);
-	});
-
-	test("returns one entry per bucket", () => {
-		expect(bucketPeaks(samplesOf([1, 2, 3, 4], 4), 4)).toHaveLength(4);
-	});
-});
-
-describe("writeCacheAtomically", () => {
-	let dir = "";
+describe("ThumbnailService", () => {
+	let root = "";
+	const service = () => new ThumbnailService({ storagePath: root } as never);
 
 	beforeEach(async () => {
-		dir = await mkdtemp(join(tmpdir(), "penombre-thumbs-"));
+		root = await mkdtemp(join(tmpdir(), "penombre-thumbs-"));
+		enqueueJob.mockClear();
+		awaitJob.mockClear();
 	});
-
 	afterEach(async () => {
-		await rm(dir, { recursive: true, force: true });
+		await rm(root, { recursive: true, force: true });
 	});
 
-	test("writes the bytes under the final name", async () => {
-		const path = join(dir, "peaks.json");
-		await writeCacheAtomically(path, Buffer.from("[0.1,0.9]"));
-		expect(await Bun.file(path).text()).toBe("[0.1,0.9]");
-	});
-
-	test("leaves no staging file behind", async () => {
-		const path = join(dir, "peaks.json");
-		await writeCacheAtomically(path, Buffer.from("[1]"));
-		expect(readdirSync(dir)).toEqual(["peaks.json"]);
-	});
-
-	/**
-	 * The bug this exists to prevent: `existsSync` is the cache check and it
-	 * runs before the generation semaphore, so a reader that catches the
-	 * destination mid-write reads a short file and serves it as the cached
-	 * entry. Written straight to the destination, this observes sizes between
-	 * zero and the total; renamed into place, it can only ever see absent or
-	 * whole.
-	 */
-	test("a concurrent reader never sees a partial file", async () => {
-		const path = join(dir, "big.json");
-		// Large enough that the write is not over before the first poll.
-		const bytes = Buffer.alloc(16 * 1024 * 1024, 0x61);
-
-		const seen = new Set<number>();
-		// A property rather than a local: the watcher and the write run
-		// concurrently, and a plain `let` reads as never reassigned here.
-		const state: { writing: boolean } = { writing: true };
-		const watcher = (async () => {
-			while (state.writing) {
-				seen.add(existsSync(path) ? statSync(path).size : -1);
-				await Bun.sleep(0);
-			}
-		})();
-
-		await writeCacheAtomically(path, bytes);
-		state.writing = false;
-		await watcher;
-
-		const partial = [...seen].filter(
-			(size) => size !== -1 && size !== bytes.byteLength,
+	test("a cache hit never enqueues", async () => {
+		await mkdir(join(root, ".thumbnails"));
+		await writeFile(join(root, ".thumbnails", "a_b.png_300.webp"), "cached");
+		const result = await service().generateThumbnail(
+			"a/b.png",
+			"image/png",
+			300,
 		);
-		expect(partial).toEqual([]);
+		expect(result?.buffer.toString()).toBe("cached");
+		expect(enqueueJob).not.toHaveBeenCalled();
+	});
+
+	test("a miss enqueues a resolved spec and serves the worker's file", async () => {
+		const output = join(root, ".thumbnails", "song.mp3_peaks.json");
+		awaitJob.mockImplementationOnce(async () => {
+			await mkdir(join(root, ".thumbnails"), { recursive: true });
+			await writeFile(output, "[1]");
+			return { status: "succeeded" };
+		});
+		const result = await service().generateThumbnail(
+			"song.mp3",
+			"audio/mpeg",
+			300,
+		);
+		expect(result).toEqual({
+			buffer: Buffer.from("[1]"),
+			contentType: "application/json",
+		});
+		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
+			type: "thumbnail",
+			dedupeKey: output,
+			priority: "interactive",
+			spec: {
+				kind: "audio",
+				source: join(root, "song.mp3"),
+				output,
+				buckets: 400,
+			},
+		});
+		// Other tiles or a warm-up may have joined this job.
+		expect(awaitJob.mock.calls[0]?.[1]).toEqual({ cancelOnTimeout: false });
+	});
+
+	test("a failed job is a miss, not an error", async () => {
+		awaitJob.mockImplementationOnce(async () => ({ status: "failed" }));
+		expect(
+			await service().generateThumbnail("x.png", "image/png", 100),
+		).toBeNull();
+	});
+
+	test("unsupported types are never enqueued", async () => {
+		expect(
+			await service().generateThumbnail("x.zip", "application/zip", 100),
+		).toBeNull();
+		expect(enqueueJob).not.toHaveBeenCalled();
+	});
+
+	test("warm enqueues without waiting", async () => {
+		await service().warm("v.mp4", "video/mp4");
+		expect(enqueueJob).toHaveBeenCalledTimes(1);
+		// Behind everything a person is waiting on.
+		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
+			priority: "background",
+		});
+		expect(awaitJob).not.toHaveBeenCalled();
 	});
 });

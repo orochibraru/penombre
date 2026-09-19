@@ -1,4 +1,3 @@
-import { Readable } from "node:stream";
 import { error } from "@sveltejs/kit";
 import type { User } from "better-auth";
 import { SharingService } from "#lib/server/services/sharings.js";
@@ -26,8 +25,8 @@ export const GET = async ({ params, locals }) => {
 
 	if (access.resourceType === "folder") {
 		const folderPath = await service.getFolder(access.resourceId);
-		const { stream } = await service.createZipFromFolder(folderPath);
-		return new Response(Readable.toWeb(stream) as unknown as ReadableStream, {
+		const stream = await service.createZipFromFolder(folderPath);
+		return new Response(stream, {
 			headers: {
 				"Content-Type": "application/zip",
 				"Content-Disposition": "attachment",

@@ -1,7 +1,8 @@
 import type { Mock } from "bun:test";
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { auth } from "#lib/server/auth/index.js";
+import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
 import { getConfig, isAuthBypassed } from "#lib/server/config.js";
+import { db } from "#lib/server/db/index.js";
 
 const mockGetConfig = getConfig as Mock<typeof getConfig>;
 const mockIsAuthBypassed = isAuthBypassed as Mock<typeof isAuthBypassed>;
@@ -9,9 +10,18 @@ const mockSignInSocial = auth.api.signInSocial as Mock<
 	(...args: unknown[]) => Promise<{ url?: string }>
 >;
 
-const { load } = await import("./+page.server");
+const mockSelect = db.select as Mock<typeof db.select>;
+const mockInstanceMethods = instanceSignInMethods as Mock<
+	typeof instanceSignInMethods
+>;
 
-const authConfig = { enableEmailSignIn: true, enableOAuthSignIn: false };
+const { load, actions } = await import("./+page.server");
+
+const authConfig = {
+	enableEmailSignIn: true,
+	enablePasskeySignIn: true,
+	enableOAuthSignIn: false,
+};
 
 /**
  * The config mock is module-level and shared across test files, so a value
@@ -85,5 +95,121 @@ describe("load", () => {
 
 		expect(await load(event("?form"))).toMatchObject({ authConfig } as never);
 		expect(mockSignInSocial).not.toHaveBeenCalled();
+	});
+});
+
+/** Queue one drizzle query result on the shared db mock, whatever the chain. */
+function queue(result: unknown[]) {
+	const chain: unknown = new Proxy(
+		{},
+		{
+			get: (_target, prop) =>
+				prop === "then"
+					? (resolve: (v: unknown) => void) => resolve(result)
+					: () => chain,
+		},
+	);
+	mockSelect.mockReturnValueOnce(chain as never);
+}
+
+/** user row, credential row, passkey row, preferences row — in query order. */
+function account({
+	password = true,
+	passkey = false,
+	preferred,
+}: {
+	password?: boolean;
+	passkey?: boolean;
+	preferred?: string | null;
+}) {
+	queue([{ id: "u1" }]);
+	queue(password ? [{ id: "acc" }] : []);
+	queue(passkey ? [{ id: "pk" }] : []);
+	queue(
+		preferred === undefined
+			? []
+			: [{ userId: "u1", preferences: { preferredSignInMethod: preferred } }],
+	);
+}
+
+async function lookup(email = "a@example.com") {
+	const body = new FormData();
+	body.set("email", email);
+	const request = new Request("http://localhost/auth/sign-in?/lookup", {
+		method: "POST",
+		body,
+	});
+	return actions.lookup({ request } as never);
+}
+
+const allMethods = {
+	password: true,
+	passkey: true,
+	magicLink: true,
+	emailOtp: true,
+};
+
+describe("lookup", () => {
+	test("returns the account's methods with no preference by default", async () => {
+		account({});
+		expect(await lookup()).toEqual({
+			step: "password",
+			email: "a@example.com",
+			methods: ["password"],
+			preferred: null,
+		});
+	});
+
+	test("returns a usable preferred method", async () => {
+		mockInstanceMethods.mockResolvedValueOnce(allMethods);
+		account({ passkey: true, preferred: "passkey" });
+		expect(await lookup()).toMatchObject({
+			methods: ["password", "passkey", "magicLink", "emailOtp"],
+			preferred: "passkey",
+		});
+	});
+
+	test("a preferred passkey with none registered falls back to none", async () => {
+		mockInstanceMethods.mockResolvedValueOnce(allMethods);
+		account({ passkey: false, preferred: "passkey" });
+		expect(await lookup()).toMatchObject({ preferred: null });
+	});
+
+	test("a preferred method the admin disabled falls back to none", async () => {
+		mockInstanceMethods.mockResolvedValueOnce({
+			...allMethods,
+			magicLink: false,
+		});
+		account({ preferred: "magicLink" });
+		expect(await lookup()).toMatchObject({
+			methods: ["password", "emailOtp"],
+			preferred: null,
+		});
+	});
+
+	test("a passkey-only account is not sent to onboarding", async () => {
+		account({ password: false, passkey: true, preferred: "passkey" });
+		expect(await lookup()).toMatchObject({
+			step: "password",
+			methods: ["passkey"],
+			preferred: "passkey",
+		});
+	});
+
+	test("an account with neither is an invitation", async () => {
+		// No preferences read: a leftover queued result would leak into
+		// whichever suite runs next.
+		queue([{ id: "u1" }]);
+		queue([]);
+		queue([]);
+		expect(await lookup()).toEqual({
+			step: "onboarding",
+			email: "a@example.com",
+		});
+	});
+
+	test("an unknown address is a 404", async () => {
+		queue([]);
+		expect(await lookup()).toMatchObject({ status: 404 });
 	});
 });
