@@ -1,3 +1,22 @@
+## [1.8.50](https://github.com/orochibraru/penombre/compare/v1.8.49...v1.8.50) (2026-09-21)
+
+
+### Features
+
+* go worker ([#102](https://github.com/orochibraru/penombre/issues/102)) ([cd1c5f8](https://github.com/orochibraru/penombre/commit/cd1c5f84078d8d87176ee95651e79b25e055f736))
+* prek from bun ([23b7dde](https://github.com/orochibraru/penombre/commit/23b7ddecc07c38f9c884e89583abb88888ccaa3d))
+* prek in bun ([e290268](https://github.com/orochibraru/penombre/commit/e2902687fadad52a9201244247f51956f4349fd8))
+
+---
+
+## 🐳 Docker
+
+```sh
+docker pull orochibraru/penombre:1.8.50
+```
+
+[View on Docker Hub](https://hub.docker.com/r/orochibraru/penombre)
+
 ## [1.8.49](https://github.com/orochibraru/penombre/compare/v1.8.48...v1.8.49) (2026-09-19)
 
 
