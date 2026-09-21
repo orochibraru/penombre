@@ -65,6 +65,16 @@ repos:
       - id: actionlint
         name: Lint Github Actions
 
+  - repo: local
+    hooks:
+      - id: pinact
+        name: Pin Github Actions
+        entry: pinact run
+        language: golang
+        additional_dependencies:
+          - github.com/suzuki-shunsuke/pinact/v5/cmd/pinact@v5.0.0
+        files: ^\.github/(workflows|actions)/.*\.ya?ml$
+
   - repo: https://github.com/hadolint/hadolint
     rev: v2.15.1
     hooks:

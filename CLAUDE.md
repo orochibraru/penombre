@@ -1106,6 +1106,14 @@ and 103 × 3 × 30s kept a job red for 2.5h. CI stops at `maxFailures: 10`.
 Playwright already runs on Bun (`[run] bun = true` in `bunfig.toml`); there is
 nothing to switch on.
 
+### Actions are pinned by SHA, by pinact
+
+Every `uses:` is a commit SHA plus a `# vX.Y.Z` comment, enforced by the
+`pinact` prek hook. It is `language: golang`, so prek `go install`s it; nothing
+to install locally or in CI. `pinact run --update` bumps everything (export
+`GITHUB_TOKEN=$(gh auth token)` or the API rate limit bites). Write a new action
+as `owner/repo@vX` and let the hook pin it.
+
 ### `bun install` on checkout
 
 `.pre-commit-config.yaml` has a `post-checkout` hook, installed by `prepare`

@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository == 'orochibraru/penombre' && github.ref != 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Auto-update branch for Dependabot PRs
         run: gh pr update-branch "$PR_URL"
         env:
@@ -30,7 +30,7 @@ jobs:
     steps:
       - name: Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v3
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
