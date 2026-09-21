@@ -3,7 +3,7 @@
 # ID: 182c10f181da4464a3eec51b83331688
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-PREK="/opt/homebrew/bin/prek"
+PREK="/Users/nicolasboyer/Dev/penombre/node_modules/@j178/prek-darwin-arm64/prek"
 
 # Check if the full path to prek is executable, otherwise fallback to PATH
 if [ ! -x "$PREK" ]; then
