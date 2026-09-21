@@ -1113,12 +1113,15 @@ nothing to switch on.
 of a checkout, so without it the first command after a branch switch runs
 against the previous branch's dependencies.
 
-It runs `bun install --ignore-scripts` plus an explicit `svelte-kit sync`, not a
-plain `bun install`: `prepare` runs `prek install`, which rewrites `.husky/_/*`
-— tracked files — from inside the hook prek is currently running. prek then sees
-a hook that modified the working tree and every branch switch on a dirty tree
-ends in "Hook changes conflicted with the saved unstaged changes." `entry` is
-exec'd rather than run through a shell, hence the `sh -c`.
+### Hooks live in `.git/hooks`, never in the tree
+
+prek comes from `node_modules` (`@j178/prek`), and the hook scripts it writes
+bake in that binary's **absolute** path, so they are per machine and must never
+be tracked. They used to sit in `.husky/_` via `core.hooksPath`; every
+`prek install` rewrote tracked files, which made a plain `bun install` in the
+post-checkout hook abort the checkout. `prepare` unsets `core.hooksPath` so old
+clones move over on their next `bun install`. CI pins `prek-action` to the
+version in `node_modules` so both run the same prek.
 
 ### CI builds the image once
 

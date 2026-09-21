@@ -27,8 +27,7 @@ repos:
             \.example\.env|
             drizzle/|
             CHANGELOG\.md|
-            bun\.lock|
-            \.husky/_/
+            bun\.lock
           )
 
       - id: end-of-file-fixer
@@ -144,11 +143,9 @@ repos:
         stages: [pre-push]
         files: ^(src/|test\.setup\.ts$|bunfig\.toml$)
 
-      # --ignore-scripts: `prepare` reinstalls hooks, which rewrites tracked
-      # files mid-hook and makes prek abort the checkout.
       - id: bun-install
         name: Sync dependencies after checkout
-        entry: sh -c 'bun install --ignore-scripts && bun run svelte-kit sync'
+        entry: bun install
         language: system
         stages: [post-checkout]
         always_run: true

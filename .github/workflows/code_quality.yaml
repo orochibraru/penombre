@@ -34,9 +34,14 @@ jobs:
       - name: Sync SvelteKit
         run: bun run svelte-kit sync
 
+      - name: Resolve prek version
+        id: prek
+        run: echo "version=$(jq -r .version node_modules/@j178/prek/package.json)" >> "$GITHUB_OUTPUT"
+
       - name: Run prek
         uses: j178/prek-action@v3.0.0
         with:
+          prek-version: ${{ steps.prek.outputs.version }}
           extra-args: --all-files --no-fail-fast
 
       - name: Lint (MD)
