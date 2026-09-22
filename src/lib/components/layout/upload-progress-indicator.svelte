@@ -171,6 +171,7 @@
                     variant="ghost"
                     size="sm"
                     class="h-8 w-8 p-0"
+                    aria-label={expanded ? m.collapse() : m.expand()}
                     onclick={toggleExpanded}
                 >
                     {#if expanded}
@@ -183,6 +184,7 @@
                     variant="ghost"
                     size="sm"
                     class="h-8 w-8 p-0"
+                    aria-label={m.dismiss()}
                     onclick={dismiss}
                 >
                     <XIcon class="size-4" />

@@ -77,7 +77,7 @@
             aria-invalid={newFolderError !== ""}
         />
         {#if newFolderError}
-            <p class="text-xs text-red-600">
+            <p class="text-xs text-destructive">
                 {newFolderError}
             </p>
         {/if}

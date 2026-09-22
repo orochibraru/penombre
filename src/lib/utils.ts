@@ -3,7 +3,6 @@ import { twMerge } from "tailwind-merge";
 import { v4 as uuidv4 } from "uuid";
 import type { ObjectItem, ObjectList } from "#lib/api/index.js";
 import type { ButtonVariant } from "#lib/components/ui/button/index.js";
-import { m } from "#lib/paraglide/messages.js";
 import { getLocale } from "#lib/paraglide/runtime.js";
 import type { StorageLocation } from "#lib/storage-location.js";
 import { resolve } from "$app/paths";
@@ -225,6 +224,10 @@ export interface SharedFileDisplayProps {
 	onCreateFolder?: () => void;
 	sortColumn?: SortColumn;
 	sortDirection?: SortDirection;
+	/** Set by a server-paginated listing: the list already arrives in order,
+	 *  so re-sorting client-side would only be correct within the loaded
+	 *  window and wrong across a page boundary. */
+	preSorted?: boolean;
 	draggedItem?: ObjectItem | undefined;
 	dropTargetKey?: string | undefined;
 	onDragStart?: (item: ObjectItem) => void;
@@ -552,39 +555,6 @@ export function getDocumentType(
 	}
 
 	return null;
-}
-
-/**
- * "1 file · 12 KB" / "3 files · 1.2 MB".
- *
- * Paraglide's variant syntax is more ceremony than two keys and a ternary
- * for the one case we have; every locale here pluralises on `count === 1`.
- */
-export function filesCountLabel(count: number, size: string): string {
-	return count === 1
-		? m.storage_files_count_one({ count: String(count), size })
-		: m.storage_files_count({ count: String(count), size });
-}
-
-/** "1 user on this instance" / "4 users on this instance". */
-export function usersCountLabel(count: number): string {
-	return count === 1
-		? m.admin_users_count_one({ count: String(count) })
-		: m.admin_users_count({ count: String(count) });
-}
-
-/** "1 download" / "12 downloads". */
-export function downloadsCountLabel(count: number): string {
-	return count === 1
-		? m.share_download_count_one({ count: String(count) })
-		: m.share_download_count({ count: String(count) });
-}
-
-/** "Trash holds 1 file (2 KB)" / "Trash holds 4 files (8 MB)". */
-export function trashHoldsLabel(count: number, size: string): string {
-	return count === 1
-		? m.storage_trash_holds_one({ count: String(count), size })
-		: m.storage_trash_holds({ count: String(count), size });
 }
 
 /**

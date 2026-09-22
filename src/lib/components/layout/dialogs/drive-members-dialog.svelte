@@ -73,7 +73,9 @@
 	function onQuery(value: string) {
 		query = value;
 		clearTimeout(searchTimer);
-		if (!value.trim()) {
+		// The API refuses under 3 characters; the full directory must not be
+		// enumerable a page at a time.
+		if (value.trim().length < 3) {
 			results = [];
 			return;
 		}
@@ -204,7 +206,7 @@
                 </div>
             </div>
 
-            {#if query.trim()}
+            {#if query.trim().length >= 3}
                 <div class="flex flex-col gap-1">
                     {#each results as person (person.id)}
                         <button

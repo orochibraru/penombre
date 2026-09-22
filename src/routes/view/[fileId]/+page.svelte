@@ -283,7 +283,7 @@
                      to fill a viewport with, so the waveform is given the room
                      an image would have had. -->
                 <div
-                    class="bg-card/40 flex w-full min-h-0 flex-1 flex-col justify-center gap-8 rounded-2xl border p-4 lg:p-10"
+                    class="bg-card/40 flex w-full min-h-0 flex-1 flex-col justify-center gap-8 rounded-xl border p-4 lg:p-10"
                 >
                     <audio
                         bind:this={player}

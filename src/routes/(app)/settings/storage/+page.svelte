@@ -7,11 +7,7 @@
 	import * as Card from "#lib/components/ui/card/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import {
-		filesCountLabel,
-		readableFileSize,
-		trashHoldsLabel,
-	} from "#lib/utils.js";
+	import { readableFileSize } from "#lib/utils.js";
 	import { resolve } from "$app/paths";
 
 	onMount(() => {
@@ -46,10 +42,10 @@
         <Card.Header>
             <Card.Title>{m.storage_by_category()}</Card.Title>
             <Card.Description>
-                {filesCountLabel(
-                    stats.fileCount,
-                    readableFileSize(stats.used),
-                )}
+                {m.storage_files_count({
+                    count: String(stats.fileCount),
+                    size: readableFileSize(stats.used),
+                })}
             </Card.Description>
         </Card.Header>
         <Card.Content class="flex flex-col gap-3">
@@ -104,10 +100,10 @@
             >
                 <span class="flex items-center gap-2 text-sm">
                     <Trash2Icon class="text-muted-foreground size-4 shrink-0" />
-                    {trashHoldsLabel(
-                        stats.trashedCount,
-                        readableFileSize(stats.trashedBytes),
-                    )}
+                    {m.storage_trash_holds({
+                        count: String(stats.trashedCount),
+                        size: readableFileSize(stats.trashedBytes),
+                    })}
                 </span>
                 <a
                     class={buttonVariants({ variant: "outline", size: "sm" })}

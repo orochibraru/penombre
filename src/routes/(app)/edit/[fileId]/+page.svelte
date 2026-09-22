@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CheckIcon, LoaderIcon } from "@lucide/svelte";
+	import { AlertCircleIcon, CheckIcon, LoaderIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import DeckEditor from "#lib/components/editor/deck-editor.svelte";
@@ -58,8 +58,11 @@
 
 	let pending = $state<string | null>(null);
 	let saving = $state(false);
+	let saveError = $state(false);
 	let savedAt = $state<Date | null>(null);
 	let timer: ReturnType<typeof setTimeout> | undefined;
+
+	const RETRY_MS = 5000;
 
 	/**
 	 * Autosave, debounced.
@@ -84,12 +87,22 @@
 		const ok = await saveDocument(data.fileId, name, data.contentType, content);
 		saving = false;
 		if (ok) {
+			saveError = false;
 			savedAt = new Date();
 			await syncName(content);
+			// A keystroke landed while this save was in flight: its own timer
+			// found `saving` still true and bailed out without rescheduling.
+			// Pick it up now instead of waiting for another keystroke.
+			if (pending !== null) {
+				void flush();
+			}
 		} else {
-			// Put it back so the next tick retries rather than losing the edit.
+			// Put it back so the retry (or the next keystroke) doesn't lose it.
 			pending = content;
+			saveError = true;
 			toast.error(m.editor_save_error());
+			clearTimeout(timer);
+			timer = setTimeout(() => void flush(), RETRY_MS);
 		}
 	}
 
@@ -129,7 +142,7 @@
 	}}
 ></svelte:window>
 
-<div class="flex h-[calc(100vh-8rem)] w-full flex-col gap-3">
+<div class="flex h-[calc(100dvh-8rem)] w-full flex-col gap-3">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex min-w-0 flex-col">
             <h1 class="truncate text-lg font-medium">{name}</h1>
@@ -147,6 +160,11 @@
 			{#if saving}
 				<LoaderIcon class="size-3.5 animate-spin" />
 				{m.editor_saving()}
+			{:else if saveError}
+				<AlertCircleIcon class="text-destructive size-3.5" />
+				{m.editor_save_error()}
+			{:else if pending !== null}
+				{m.editor_unsaved()}
 			{:else if savedAt}
 				<CheckIcon class="size-3.5" />
 				{m.editor_saved({ time: savedAt.toLocaleTimeString() })}

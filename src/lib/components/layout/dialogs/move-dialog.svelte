@@ -581,14 +581,14 @@
         {/if}
 
         {#if isSameLocation}
-            <p class="text-xs text-amber-600 mt-2">
+            <p class="text-xs text-muted-foreground mt-2">
                 {isBulkMode
                     ? m.items_already_in_location()
                     : m.item_already_in_location()}
             </p>
         {/if}
         {#if isMovingIntoSelf}
-            <p class="text-xs text-red-600 mt-2">
+            <p class="text-xs text-destructive mt-2">
                 {m.cannot_move_into_self()}
             </p>
         {/if}
