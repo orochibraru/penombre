@@ -62,8 +62,12 @@ export function superviseWorker(
 				stderr: "inherit",
 				onExit: (_proc, code) => {
 					if (!stopping) {
+						const hint =
+							code === 127
+								? " Exit 127 usually means `go` is missing; install Go, or set WORKER_MODE=external to run the worker as its own container."
+								: "";
 						logger.warn(
-							`Worker exited (code ${code}), restarting in ${retry(startedAt)}ms`,
+							`Worker exited (code ${code}), restarting in ${retry(startedAt)}ms.${hint}`,
 						);
 					}
 				},
@@ -71,7 +75,7 @@ export function superviseWorker(
 		} catch (error) {
 			logger.error(
 				`Could not start the worker (${command[0]}), retrying in ${retry(startedAt)}ms. ` +
-					"Set WORKER_MODE=external to run it as its own container.",
+					"The worker binary is missing from this image; set WORKER_MODE=external to run it as its own container.",
 				error,
 			);
 		}

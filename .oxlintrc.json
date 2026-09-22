@@ -21,7 +21,6 @@
 		"drizzle/**",
 		"static/**",
 		"src/lib/paraglide/**",
-		"src/paraglide/**",
 		"src/lib/api/v1.d.ts"
 	],
 	"rules": {

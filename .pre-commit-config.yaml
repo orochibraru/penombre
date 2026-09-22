@@ -111,6 +111,13 @@ repos:
         stages: [pre-push]
         files: (\.go$|^go\.(mod|sum)$)
 
+      - id: i18n
+        name: Locale parity
+        entry: bun scripts/check-i18n.ts
+        language: system
+        pass_filenames: false
+        files: ^(messages/.*\.json|project\.inlang/settings\.json)$
+
       - id: biome
         name: Format and sort imports (Biome)
         entry: node_modules/.bin/biome check --write --error-on-warnings --no-errors-on-unmatched --files-ignore-unknown=true
@@ -143,7 +150,15 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^(src/|scripts/|e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$|.*\.go$|go\.(mod|sum)$)
+        files: ^(src/|scripts/|e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$|.*\.go$|go\.(mod|sum)$|package\.json$|bun\.lock$)
+
+      - id: circular
+        name: Circular imports
+        entry: bun run circular
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: ^src/.*\.ts$
 
       - id: test-unit
         name: Unit Tests
@@ -151,7 +166,7 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^(src/|test\.setup\.ts$|bunfig\.toml$)
+        files: ^(src/|scripts/|test\.setup\.ts$|bunfig\.toml$|package\.json$|bun\.lock$)
 
       - id: bun-install
         name: Sync dependencies after checkout

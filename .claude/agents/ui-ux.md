@@ -43,7 +43,8 @@ what `TODO.md` already has.
    listing (context menu included), images have `alt`, contrast holds in both
    themes.
 6. **i18n.** Hard-coded user-facing English in `.svelte` files instead of
-   paraglide messages. Keys missing from any of `messages/{en,fr,de,es}.json`.
+   paraglide messages. Keys missing from any locale in
+   `project.inlang/settings.json`.
 7. **Perceived speed.** Spinners where a skeleton or optimistic update would do,
    full reloads where an `invalidate` would, layout shift when thumbnails land.
 

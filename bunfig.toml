@@ -1,5 +1,6 @@
 [test]
 preload = ["./test.setup.ts"]
+rerunEach = 3
 coverage = true
 coveragePathIgnorePatterns = [
     "**/test.setup.ts",

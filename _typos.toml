@@ -8,6 +8,8 @@ extend-exclude = [
     "src/lib/api/v1.d.ts",
     # Machine-translated UI strings in a dozen locales, none of them English.
     "messages/",
+    # Expected renders of those strings, French and Russian among them.
+    "src/lib/i18n-plurals.test.ts",
 ]
 
 [default.extend-words]
