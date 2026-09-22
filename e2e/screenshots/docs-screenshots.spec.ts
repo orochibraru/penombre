@@ -196,6 +196,16 @@ for (const shot of SHOTS) {
 			await page.goto(shot.path);
 			await page.waitForLoadState("networkidle");
 
+			// mode-watcher toggles `.dark` on <html> from the emulated
+			// `prefers-color-scheme`; wait for it rather than trust that the
+			// media emulation alone produced the right paint before capture.
+			await page.waitForFunction(
+				(wantDark) =>
+					document.documentElement.classList.contains("dark") === wantDark,
+				theme === "dark",
+				{ timeout: 5_000 },
+			);
+
 			// Fail rather than publish a redirected, blank or errored page.
 			// The URL check catches an auth redirect, which would otherwise
 			// publish the drive under an "admin" filename.
