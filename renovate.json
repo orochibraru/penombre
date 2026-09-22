@@ -20,19 +20,19 @@
 		{
 			"groupName": "Bun & JavaScript Ecosystem",
 			"matchManagers": ["bun", "npm"],
-			"matchPackagePatterns": ["*"],
-			"groupSlug": "bun-js-monorepo"
+			"groupSlug": "bun-js-monorepo",
+			"matchPackageNames": ["*"]
 		},
 		{
 			"groupName": "Docker & Compose Infrastructure",
 			"matchManagers": ["dockerfile", "docker-compose"],
-			"matchPackagePatterns": ["*"],
-			"groupSlug": "docker-infra"
+			"groupSlug": "docker-infra",
+			"matchPackageNames": ["*"]
 		},
 		{
 			"groupName": "GitHub Actions",
 			"matchManagers": ["github-actions"],
-			"matchPackagePatterns": ["*"]
+			"matchPackageNames": ["*"]
 		},
 		{
 			"matchDepTypes": ["devDependencies"],

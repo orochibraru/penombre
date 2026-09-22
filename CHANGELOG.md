@@ -1,3 +1,11 @@
+# Changelog
+
+## [1.8.51](https://github.com/orochibraru/penombre/compare/v1.8.50...v1.8.51) (2026-09-22)
+
+### Bug Fixes
+
+* go version ([cea7ab7](https://github.com/orochibraru/penombre/commit/cea7ab7ba19efc8ed36c4c28f918fb769a93302c))
+
 ## [1.8.50](https://github.com/orochibraru/penombre/compare/v1.8.49...v1.8.50) (2026-09-21)
 
 
