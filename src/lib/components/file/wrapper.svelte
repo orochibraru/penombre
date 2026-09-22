@@ -25,6 +25,7 @@
 	import * as ButtonGroup from "#lib/components/ui/button-group/index.js";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { Input } from "#lib/components/ui/input/index.js";
+	import { fetchWindow, LISTING_PAGE_SIZE } from "#lib/pagination.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import {
 		newFolderDialogOpen,
@@ -51,12 +52,15 @@
 	} from "./preview-handover";
 
 	import {
+		clickDownload,
 		computeSelectionState,
 		createMainActions,
 		createMainMultipleActions,
 		createTrashActions,
 		createTrashMultipleActions,
 		type FileToView,
+		fetchListingPage,
+		folderZipDownloadUrl,
 		handleDownloadItem,
 		handleOpenItemFullscreen,
 		movesIntoItself,
@@ -81,10 +85,17 @@
 		layout?: "grid" | "list";
 		sortColumn?: "name" | "size" | "updatedAt" | null;
 		sortDirection?: "asc" | "desc";
+		listingLoadMode?: "scroll" | "pages";
 	}
 
+	/**
+	 * `nextCursor` is only present on a keyset-paginated response; its absence
+	 * (recent) is what tells this component there is nothing to page.
+	 * `totalSize` is the trash's, for pricing "Empty Trash" beyond what is
+	 * loaded.
+	 */
 	interface Props {
-		data: ObjectList;
+		data: ObjectList & { nextCursor?: string | null; totalSize?: number };
 		loading?: boolean;
 		preferences?: UserPreferences;
 	}
@@ -96,6 +107,7 @@
 	const initialSortDirection = $derived(preferences?.sortDirection ?? "asc");
 	// Layout is always driven by server preferences
 	const layout = $derived(preferences?.layout ?? "list");
+	const loadMode = $derived(preferences?.listingLoadMode ?? "scroll");
 
 	function handleFileDrop(files: File[]) {
 		pendingUploadFiles.set(files);
@@ -140,10 +152,179 @@
 	let draggedItem: ObjectItem | undefined = $state();
 	let dropTargetKey: string | undefined = $state();
 
+	// ================================
+	// Pagination, see CLAUDE.md "Listings are keyset-paginated"
+	// ================================
+
+	const paginated = $derived(data.nextCursor !== undefined);
+
+	let loadedItems: ObjectItem[] = $state(untrack(() => data.list ?? []));
+	/** The cursor to fetch the *next* page with; null once there is no more. */
+	let cursor: string | null = $state(untrack(() => data.nextCursor ?? null));
+	let loadingMore: boolean = $state(false);
+	/** Cursor used to fetch page N, so "Previous" can replay it. */
+	let pageCursorHistory: Array<string | null> = $state([null]);
+	let pageIndex: number = $state(0);
+
+	const totalCount = $derived(data.total ?? loadedItems.length);
+	const totalPages = $derived(
+		Math.max(1, Math.ceil(totalCount / LISTING_PAGE_SIZE)),
+	);
+
+	/** What every layout renders: loaded-so-far items, never the raw prop. */
+	const displayData: ObjectList = $derived({
+		list: loadedItems,
+		count: loadedItems.length,
+		total: totalCount,
+	});
+
+	function fetchPage(fetchCursor: string | null, limit: number) {
+		return fetchListingPage({
+			cursor: fetchCursor,
+			limit,
+			sortColumn,
+			sortDirection,
+		});
+	}
+
+	async function loadMore() {
+		if (!paginated || loadingMore || cursor === null) {
+			return;
+		}
+		loadingMore = true;
+		const listing = page.url.pathname;
+		const nextPage = await fetchPage(cursor, LISTING_PAGE_SIZE);
+		loadingMore = false;
+		if (listing !== page.url.pathname) {
+			return;
+		}
+		if (!nextPage) {
+			toast.error(m.toast_load_more_error());
+			return;
+		}
+		loadedItems = [...loadedItems, ...nextPage.list];
+		cursor = nextPage.nextCursor;
+	}
+
+	async function goToNextPage() {
+		if (!paginated || loadingMore || cursor === null) {
+			return;
+		}
+		loadingMore = true;
+		const usedCursor = cursor;
+		const nextPage = await fetchPage(usedCursor, LISTING_PAGE_SIZE);
+		loadingMore = false;
+		if (!nextPage) {
+			toast.error(m.toast_load_more_error());
+			return;
+		}
+		pageCursorHistory = [
+			...pageCursorHistory.slice(0, pageIndex + 1),
+			usedCursor,
+		];
+		pageIndex += 1;
+		loadedItems = nextPage.list;
+		cursor = nextPage.nextCursor;
+	}
+
+	async function goToPrevPage() {
+		if (!paginated || loadingMore || pageIndex === 0) {
+			return;
+		}
+		loadingMore = true;
+		const prevCursor = pageCursorHistory[pageIndex - 1] ?? null;
+		const prevPage = await fetchPage(prevCursor, LISTING_PAGE_SIZE);
+		loadingMore = false;
+		if (!prevPage) {
+			toast.error(m.toast_load_more_error());
+			return;
+		}
+		pageIndex -= 1;
+		loadedItems = prevPage.list;
+		cursor = prevPage.nextCursor;
+	}
+
+	let sentinelEl: HTMLElement | undefined = $state();
+	$effect(() => {
+		if (!(paginated && loadMode === "scroll" && sentinelEl)) {
+			return;
+		}
+		const el = sentinelEl;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting) {
+					void loadMore();
+				}
+			},
+			{ rootMargin: "800px" },
+		);
+		observer.observe(el);
+		return () => observer.disconnect();
+	});
+
+	/**
+	 * `data` changes on every navigation (another listing) and on every
+	 * `invalidate("app:files")` (a mutation on this same one). The two need
+	 * different responses: a navigation starts over at page one, but a
+	 * refresh of the same listing must not throw away how far the user had
+	 * scrolled; re-fetching a window as big as what was already loaded
+	 * keeps the DOM size, and with it the scroll position, stable.
+	 */
+	let lastData: typeof data | undefined;
+	let lastListing: string | undefined;
+	$effect(() => {
+		if (data === lastData) {
+			return;
+		}
+		const nextData = data;
+		const listing = page.url.pathname;
+		untrack(() => {
+			const sameContext = paginated && listing === lastListing;
+			const priorCount = loadedItems.length;
+			lastData = nextData;
+			lastListing = listing;
+			if (
+				paginated &&
+				sameContext &&
+				priorCount > (nextData.list?.length ?? 0)
+			) {
+				void fetchWindow(fetchPage, priorCount).then((refreshed) => {
+					if (refreshed && listing === page.url.pathname) {
+						loadedItems = refreshed.list;
+						cursor = refreshed.nextCursor;
+					}
+				});
+				return;
+			}
+			loadedItems = nextData.list ?? [];
+			cursor = nextData.nextCursor ?? null;
+			pageCursorHistory = [null];
+			pageIndex = 0;
+		});
+	});
+
+	// Paginated sort changes must re-fetch from the server: the loaded window
+	// is only sorted within itself, and re-sorting it client-side would be
+	// wrong across a page boundary the server never applied the new order to.
+	async function reloadPaginatedSort() {
+		if (!paginated) {
+			return;
+		}
+		const firstPage = await fetchPage(null, LISTING_PAGE_SIZE);
+		if (!firstPage) {
+			return;
+		}
+		loadedItems = firstPage.list;
+		cursor = firstPage.nextCursor;
+		pageCursorHistory = [null];
+		pageIndex = 0;
+	}
+
 	$effect(() => {
 		const pending = $pendingPreview;
 		const view =
-			pending && untrack(() => takePendingPreview(pending, data.list ?? []));
+			pending &&
+			untrack(() => takePendingPreview(pending, displayData.list ?? []));
 		if (view) {
 			fileToView = view;
 			viewFileOpen = true;
@@ -245,7 +426,9 @@
 			const keys = selectedKeys(checkedItems);
 			const item =
 				keys.length === 1
-					? (data.list ?? []).find((candidate) => candidate.key === keys[0])
+					? (displayData.list ?? []).find(
+							(candidate) => candidate.key === keys[0],
+						)
 					: undefined;
 			if (item) {
 				e.preventDefault();
@@ -296,43 +479,16 @@
 			const itemName = item.metadata.name ?? item.key;
 
 			if (isFolder) {
-				// Folder: download as zip via API
+				// Folder: a plain link, so the browser streams the zip straight
+				// to disk instead of a fetch buffering it whole in JS memory.
 				const folderId = item.key.endsWith("/")
 					? item.key.slice(0, -1)
 					: item.key;
-
-				toast.promise(
-					(async () => {
-						const { response, error: dlError } = await api.GET(
-							"/api/v1/storage/download/folder/{folder}",
-							{
-								params: {
-									path: { folder: encodeURIComponent(folderId) },
-									query: { folder: currentFolder || undefined },
-								},
-								parseAs: "blob",
-							},
-						);
-
-						if (dlError) {
-							throw new Error("Failed to download folder");
-						}
-						const blob = await response.blob();
-						const url = URL.createObjectURL(blob);
-						const a = document.createElement("a");
-						a.href = url;
-						a.download = `${itemName}.zip`;
-						document.body.appendChild(a);
-						a.click();
-						URL.revokeObjectURL(url);
-						a.remove();
-					})(),
-					{
-						loading: m.toast_creating_zip({ name: itemName }),
-						success: m.toast_downloaded({ name: itemName }),
-						error: m.toast_download_error({ name: itemName }),
-					},
+				clickDownload(
+					folderZipDownloadUrl(folderId, currentFolder),
+					`${itemName}.zip`,
 				);
+				toast.info(m.toast_downloaded({ name: itemName }));
 			} else {
 				// File: regular download
 				handleDownloadItem(itemName, () => {
@@ -444,7 +600,7 @@
 					const keys = selectedKeys(checkedItems);
 
 					void starSelected(
-						(data.list ?? []).filter((item) => keys.includes(item.key)),
+						(displayData.list ?? []).filter((item) => keys.includes(item.key)),
 						currentFolder,
 						() => (checkedItems = {}),
 					);
@@ -452,7 +608,7 @@
 				onShare: () => {
 					// Only offered for a single selection, so this is it.
 					const key = selectedKeys(checkedItems)[0];
-					const item = (data.list ?? []).find(
+					const item = (displayData.list ?? []).find(
 						(candidate) => candidate.key === key,
 					);
 					if (!item) {
@@ -566,6 +722,7 @@
 				}
 			};
 			void savePreferences();
+			void reloadPaginatedSort();
 		}
 	});
 
@@ -573,7 +730,7 @@
 	// Trash Operations
 	// ================================
 	function emptyTrash() {
-		checkedItems = selectAllForEmptyTrash(data);
+		checkedItems = selectAllForEmptyTrash(displayData);
 		confirmDeleteOpen = true;
 		isSingleItemAction = false;
 		emptyingTrash = true;
@@ -641,7 +798,7 @@
 	// Selection Effect
 	// ================================
 	$effect(() => {
-		const state = computeSelectionState(data, checkedItems);
+		const state = computeSelectionState(displayData, checkedItems);
 		allSelected = state.allSelected;
 		indeterminate = state.indeterminate;
 
@@ -808,8 +965,8 @@
 				type="button"
 				variant="destructive"
 				onclick={emptyTrash}
-				disabled={data.count === 0}
-                    title={data.count === 0
+				disabled={displayData.count === 0}
+                    title={displayData.count === 0
                         ? m.trash_is_empty()
                         : m.empty_trash()}
                 >
@@ -825,13 +982,14 @@
 	<div class="hidden md:block">
 		<FileTable
 			handleOpenItem={handleOpenItemWrapper}
-			files={data}
+			files={displayData}
 			itemActions={itemActions}
 			searchValue={searchValue}
 			searchResults={searchResults}
 			indeterminate={indeterminate}
 			bind:sortColumn
 			bind:sortDirection
+			preSorted={paginated}
 			onDrop={handleFileDrop}
 			onUpload={handleUpload}
 			onCreateFolder={handleCreateFolder}
@@ -850,13 +1008,14 @@
 	<div class="md:hidden">
 		<FileList
 			handleOpenItem={handleOpenItemWrapper}
-			files={data}
+			files={displayData}
 			itemActions={itemActions}
 			searchValue={searchValue}
 			searchResults={searchResults}
 			indeterminate={indeterminate}
 			sortColumn={sortColumn}
 			sortDirection={sortDirection}
+			preSorted={paginated}
 			onDrop={handleFileDrop}
 			onUpload={handleUpload}
 			onCreateFolder={handleCreateFolder}
@@ -875,13 +1034,14 @@
 {:else}
 	<FileGrid
 		handleOpenItem={handleOpenItemWrapper}
-		files={data}
+		files={displayData}
 		itemActions={itemActions}
 		searchValue={searchValue}
 		searchResults={searchResults}
 		indeterminate={indeterminate}
 		sortColumn={sortColumn}
 		sortDirection={sortDirection}
+		preSorted={paginated}
 		onDrop={handleFileDrop}
 		onUpload={handleUpload}
 		onCreateFolder={handleCreateFolder}
@@ -898,6 +1058,49 @@
 	/>
 {/if}
 
+{#if paginated}
+	{#if loadMode === "scroll"}
+		{#if cursor !== null}
+			<div bind:this={sentinelEl} class="h-px" aria-hidden="true"></div>
+		{/if}
+		{#if loadingMore}
+			<div class="flex justify-center py-4">
+				<span class="text-muted-foreground text-sm">{m.loading_more()}</span>
+			</div>
+		{/if}
+	{:else}
+		<div class="flex items-center justify-center gap-3 py-4">
+			<Button
+				variant="outline"
+				size="sm"
+				disabled={pageIndex === 0 || loadingMore}
+				onclick={goToPrevPage}
+			>
+				{m.previous_page()}
+			</Button>
+			<span class="text-muted-foreground text-sm tabular-nums">
+				{m.page_of_total({ current: pageIndex + 1, total: totalPages })}
+			</span>
+			<Button
+				variant="outline"
+				size="sm"
+				disabled={cursor === null || loadingMore}
+				onclick={goToNextPage}
+			>
+				{m.next_page()}
+			</Button>
+		</div>
+	{/if}
+	{#if allSelected && loadedItems.length < totalCount}
+		<p class="text-muted-foreground pb-2 text-center text-xs">
+			{m.selection_loaded_only({
+				loaded: loadedItems.length,
+				total: totalCount,
+			})}
+		</p>
+	{/if}
+{/if}
+
 <PreviewDialog
 	bind:open={viewFileOpen}
 	fileToView={fileToView}
@@ -909,8 +1112,9 @@
 	bind:deletingItem
 	checkedItems={checkedItems}
 	handleDeleteObject={handleDeleteObject}
-	items={data.list}
+	items={displayData.list}
 	emptyingTrash={emptyingTrash}
+	trashTotals={{ count: totalCount, size: data.totalSize ?? 0 }}
 />
 
 <RestoreDialog

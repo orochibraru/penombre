@@ -7,19 +7,24 @@
  */
 
 import { error } from "@sveltejs/kit";
+import { firstPageQuery } from "#lib/pagination.js";
 import { isSimpleMode } from "#lib/server/config.js";
 import { DriveAccessError, isStorageUnavailable } from "#lib/server/errors.js";
-import type { ObjectList } from "#lib/server/schema.js";
 import {
 	type DriveRole,
 	driveStorage,
 	drivesService,
 } from "#lib/server/services/drives.js";
+import { getUserPreferences } from "#lib/server/services/preferences.js";
+import {
+	type ListingPage,
+	pageOptions,
+} from "#lib/server/services/storage/listings.js";
 import type { BreadCrumb } from "#lib/utils.js";
 
 export interface DriveListing {
 	drive: { id: string; name: string; role: DriveRole; readOnly: boolean };
-	files: { data: ObjectList; err: undefined };
+	files: { data: ListingPage; err: undefined };
 	crumbs: BreadCrumb[];
 	title: string;
 }
@@ -77,7 +82,13 @@ export async function loadDriveListing(
 			role,
 			readOnly: role === "viewer",
 		},
-		files: { data: await service.listFiles(path || undefined), err: undefined },
+		files: {
+			data: await service.listFolderPage(
+				path || undefined,
+				pageOptions(firstPageQuery(await getUserPreferences(locals.user.id))),
+			),
+			err: undefined,
+		},
 		crumbs,
 		title: crumbs[crumbs.length - 1]?.title ?? drive.name,
 	};

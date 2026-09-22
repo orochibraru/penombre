@@ -26,6 +26,7 @@ describe("getUserPreferences", () => {
 			onboarded: false,
 			emailNotifications: false,
 			preferredSignInMethod: null,
+			listingLoadMode: "scroll",
 		});
 	});
 
@@ -51,6 +52,7 @@ describe("getUserPreferences", () => {
 			onboarded: false,
 			emailNotifications: false,
 			preferredSignInMethod: null,
+			listingLoadMode: "scroll",
 		});
 	});
 
@@ -76,6 +78,7 @@ describe("getUserPreferences", () => {
 			onboarded: false,
 			emailNotifications: false,
 			preferredSignInMethod: null,
+			listingLoadMode: "scroll",
 		});
 	});
 });
@@ -107,6 +110,7 @@ describe("updateUserPreferences", () => {
 			onboarded: false,
 			emailNotifications: false,
 			preferredSignInMethod: null,
+			listingLoadMode: "scroll",
 		});
 		expect(mockValues).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -121,6 +125,7 @@ describe("updateUserPreferences", () => {
 					onboarded: false,
 					emailNotifications: false,
 					preferredSignInMethod: null,
+					listingLoadMode: "scroll",
 				},
 			}),
 		);
@@ -157,6 +162,7 @@ describe("updateUserPreferences", () => {
 			onboarded: false,
 			emailNotifications: false,
 			preferredSignInMethod: null,
+			listingLoadMode: "scroll",
 		});
 	});
 });

@@ -22,11 +22,12 @@ import * as m from "#lib/paraglide/messages.js";
 import { itemAction } from "#lib/store/actions.js";
 import { playableMusic } from "#lib/store/music.js";
 import { getObjectUrl } from "#lib/url.js";
-import type {
-	ItemActionGroup,
-	MultipleItemsAction,
-	SortColumn,
-	SortDirection,
+import {
+	type ItemActionGroup,
+	isTrashListing,
+	type MultipleItemsAction,
+	type SortColumn,
+	type SortDirection,
 } from "#lib/utils.js";
 import { dev } from "$app/env";
 import { goto } from "$app/navigation";
@@ -420,6 +421,103 @@ export function createTrashMultipleActions(handlers: {
 // File Operations
 // ================================
 
+/**
+ * The link-form bulk-zip endpoint, for a plain `<a href download>` click.
+ *
+ * Every selected item shares `folder`, given once; `keys` is a
+ * comma-separated list of the bare names within it, not a JSON array of full
+ * paths, which used to put ~142 bytes per path in the query string, enough to
+ * hit a proxy's default header size limit around 56 items.
+ */
+// ================================
+// Listing pagination
+// ================================
+
+type ListingPage = ObjectList & { nextCursor: string | null };
+
+/**
+ * One keyset page of whatever listing is on screen: a category, the starred
+ * view, a trash, or a folder (the location header travels with the request),
+ * or null on any fetch failure.
+ */
+export async function fetchListingPage(options: {
+	cursor: string | null;
+	limit: number;
+	sortColumn: "name" | "size" | "updatedAt" | null;
+	sortDirection: "asc" | "desc";
+}): Promise<ListingPage | null> {
+	const query = {
+		cursor: options.cursor ?? undefined,
+		limit: String(options.limit),
+		sort: options.sortColumn ?? "updatedAt",
+		dir: options.sortDirection,
+	};
+	const { category, path } = page.params;
+	const { data: res, error: fetchError } = category
+		? await api.GET("/api/v1/storage/file/category/{category}", {
+				params: { path: { category }, query },
+			})
+		: page.route.id === "/(app)/starred"
+			? await api.GET("/api/v1/storage/file/starred", { params: { query } })
+			: isTrashListing(page.url.pathname)
+				? await api.GET("/api/v1/storage/file/trash", { params: { query } })
+				: path
+					? await api.GET("/api/v1/storage/list/{path}", {
+							params: { path: { path }, query },
+						})
+					: await api.GET("/api/v1/storage/list", { params: { query } });
+	if (fetchError || !res?.data) {
+		return null;
+	}
+	return res.data as ListingPage;
+}
+
+export function bulkZipDownloadUrl(folder: string, keys: string[]): string {
+	const url = new URL("/api/v1/storage/download", page.url.origin);
+	if (folder) {
+		url.searchParams.set("folder", folder);
+	}
+	url.searchParams.set("keys", keys.join(","));
+	return withLocation(`${url.pathname}?${url.searchParams.toString()}`);
+}
+
+/** One folder's zip endpoint, for a plain `<a href download>` click. */
+export function folderZipDownloadUrl(
+	folderId: string,
+	parentFolder: string,
+): string {
+	const url = new URL(
+		`/api/v1/storage/download/folder/${encodeURIComponent(folderId)}`,
+		page.url.origin,
+	);
+	if (parentFolder) {
+		url.searchParams.set("folder", parentFolder);
+	}
+	return withLocation(`${url.pathname}?${url.searchParams.toString()}`);
+}
+
+/**
+ * Click a same-origin `<a href download>`, then remove it. No `fetch`, so the
+ * browser streams straight to disk instead of buffering the response in JS
+ * memory first; but that also means there is no completion signal to wait
+ * for, so a caller's toast can only say the download started.
+ */
+export function clickDownload(url: string, filename: string): void {
+	const a = document.createElement("a");
+	a.style.display = "none";
+	a.href = url;
+	a.download = filename;
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+}
+
+/**
+ * A real `<a href download>` click, not a `fetch` + blob: the browser streams
+ * straight to disk instead of buffering the whole file in JS memory first.
+ * There is no completion signal from a plain anchor click, so the toast can
+ * only say the download started; not that it finished.
+ */
 export function handleDownloadItem(
 	itemPath: string,
 	onComplete?: () => void,
@@ -429,15 +527,7 @@ export function handleDownloadItem(
 		itemPath,
 		raw: true,
 	});
-
-	const a = document.createElement("a");
-	a.style.display = "none";
-	a.href = finalUrl;
-	a.download = itemPath;
-	document.body.appendChild(a);
-	a.target = "_blank";
-	a.click();
-	window.URL.revokeObjectURL(finalUrl);
+	clickDownload(finalUrl, itemPath);
 	onComplete?.();
 	toast.info(m.toast_downloaded_item({ name: itemPath }));
 }

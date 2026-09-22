@@ -1,12 +1,15 @@
 import { error } from "@sveltejs/kit";
 import { api } from "#lib/api/index.js";
+import { firstPageQuery } from "#lib/pagination.js";
 
-export const load = async ({ fetch, url, depends }) => {
+export const load = async ({ fetch, url, depends, parent }) => {
 	depends("app:files", "app:trash");
 
+	const { preferences } = await parent();
 	const { data, error: fetchError } = await api.GET(
 		"/api/v1/storage/file/trash",
 		{
+			params: { query: firstPageQuery(preferences) },
 			fetch,
 			baseUrl: url.origin,
 		},

@@ -7,9 +7,14 @@
  */
 
 import { error, redirect } from "@sveltejs/kit";
+import { firstPageQuery } from "#lib/pagination.js";
 import { isSimpleMode } from "#lib/server/config.js";
 import { DriveAccessError } from "#lib/server/errors.js";
-import type { ObjectList } from "#lib/server/schema.js";
+import { getUserPreferences } from "#lib/server/services/preferences.js";
+import {
+	type ListingPage,
+	pageOptions,
+} from "#lib/server/services/storage/listings.js";
 import { resolveShare } from "#lib/server/services/storage-for.js";
 import { type BreadCrumb, listingHref } from "#lib/utils.js";
 
@@ -22,7 +27,7 @@ export interface ShareListing {
 		readOnly: boolean;
 		root: string;
 	};
-	files: { data: ObjectList; err: undefined };
+	files: { data: ListingPage; err: undefined };
 	crumbs: BreadCrumb[];
 	title: string;
 }
@@ -87,7 +92,10 @@ export async function loadShareListing(
 			root: share.root,
 		},
 		files: {
-			data: await share.service.listFiles(current || undefined),
+			data: await share.service.listFolderPage(
+				current || undefined,
+				pageOptions(firstPageQuery(await getUserPreferences(locals.user.id))),
+			),
 			err: undefined,
 		},
 		crumbs,

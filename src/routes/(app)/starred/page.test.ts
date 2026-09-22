@@ -11,6 +11,9 @@ function createLoadEvent() {
 		fetch: globalThis.fetch,
 		url: new URL("http://localhost"),
 		depends: () => {},
+		parent: async () => ({
+			preferences: { sortColumn: "name", sortDirection: "asc" },
+		}),
 	};
 }
 
@@ -38,7 +41,10 @@ describe("load", () => {
 
 		expect(mockGET).toHaveBeenLastCalledWith(
 			"/api/v1/storage/file/starred",
-			expect.objectContaining({ baseUrl: "http://localhost" }),
+			expect.objectContaining({
+				params: { query: { limit: "200", sort: "name", dir: "asc" } },
+				baseUrl: "http://localhost",
+			}),
 		);
 	});
 

@@ -1,79 +1,46 @@
 import { error } from "@sveltejs/kit";
 import { api } from "#lib/api/index.js";
+import { firstPageQuery } from "#lib/pagination.js";
+import * as m from "#lib/paraglide/messages.js";
 import type { BreadCrumb } from "#lib/utils.js";
 
-export const load = async ({ params, fetch, url, depends }) => {
+export const load = async ({ params, fetch, url, depends, parent }) => {
 	depends("app:files");
 
 	const folders = params.path.split("/");
+	const chain = folders.map((_, i) => folders.slice(0, i + 1).join("/"));
 
-	const crumbs: BreadCrumb[] = [];
-	const chain: string[] = [];
-
-	crumbs.push({
-		title: "My Drive",
-		href: "/browse",
+	// The listing endpoint returns one name per breadcrumb segment alongside
+	// the listing itself, so a deep path costs one request rather than one
+	// per level.
+	const { preferences } = await parent();
+	const listing = await api.GET("/api/v1/storage/list/{path}", {
+		params: {
+			path: { path: chain[chain.length - 1] ?? "" },
+			query: firstPageQuery(preferences),
+		},
+		fetch,
+		baseUrl: url.origin,
 	});
 
-	for (const folder of folders) {
-		// Resolve display name via folder metadata
-		const parent = chain.join("/");
-
-		let title = folder;
-		try {
-			const { data: meta, error: metaError } = await api.GET(
-				"/api/v1/storage/folder/{path}/meta",
-				{
-					params: {
-						path: { path: folder },
-						query: parent ? { parent } : undefined,
-					},
-					fetch,
-					baseUrl: url.origin,
-				},
-			);
-
-			if (!metaError) {
-				const metaData = meta?.data as Record<string, unknown> | undefined;
-				if (metaData?.name) {
-					title = metaData.name as string;
-				}
-			}
-
-			crumbs.push({
-				title,
-				href: `/browse/${chain.join("/")}/${folder}`,
-			});
-		} catch {
-			// Ignore errors and use folder ID as title
-			crumbs.push({
-				title,
-				href: `/browse/${chain.join("/")}/${folder}`,
-			});
-		}
-		chain.push(folder);
-	}
-
-	const { data, error: fetchError } = await api.GET(
-		"/api/v1/storage/list/{path}",
-		{
-			params: {
-				path: {
-					path: chain.join("/"),
-				},
-			},
-			fetch,
-			baseUrl: url.origin,
-		},
-	);
-
-	if (fetchError) {
+	if (listing.error) {
 		return error(500, "Failed to load files");
 	}
 
+	const ancestorNames = listing.data.data?.ancestorNames ?? [];
+	const crumbs: BreadCrumb[] = [
+		{ title: m.nav_my_drive(), href: "/browse" },
+		...folders.map(
+			(folder, i): BreadCrumb => ({
+				title: ancestorNames[i] ?? folder,
+				href: `/browse/${chain[i]}`,
+			}),
+		),
+	];
+
 	return {
 		files: {
-			data: data.data,
+			data: listing.data.data,
 			err: undefined,
 		},
 		title: crumbs[crumbs.length - 1]?.title || folders[folders.length - 1],

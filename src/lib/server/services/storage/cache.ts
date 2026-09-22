@@ -90,9 +90,6 @@ export const CacheKeys = {
 	/** Key for recent files list */
 	recent: () => "recent",
 
-	/** Key for category listing */
-	category: (category: string) => `category:${category}`,
-
 	/** Key for counts (trash/starred) */
 	counts: () => "counts",
 

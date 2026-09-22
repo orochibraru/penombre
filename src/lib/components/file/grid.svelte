@@ -24,6 +24,7 @@
 		cn,
 		isBrowsableListing,
 		isFolderItem,
+		isTrashListing,
 		listingHref,
 		PARENT_KEY,
 		parentHref,
@@ -32,6 +33,7 @@
 		type SharedFileDisplayProps,
 		shouldDisplayAction,
 	} from "#lib/utils.js";
+	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 
@@ -52,6 +54,7 @@
 		onCreateFolder,
 		sortColumn,
 		sortDirection,
+		preSorted = false,
 		draggedItem,
 		dropTargetKey = $bindable(),
 		onDragStart,
@@ -61,6 +64,32 @@
 
 	const iconSize = "h-36 w-36";
 	const loadingAmount = 20;
+
+	/**
+	 * A tile's height scales with its width (the media well is `aspect-16/10`,
+	 * the caption below it a fixed 60px), so row height for virtualization is
+	 * computed rather than constant, and set on each tile so CSS agrees. Column count must match the CSS grid's
+	 * own breakpoints exactly or the computed height is wrong; those are
+	 * viewport-width Tailwind variants, not the container's own width, so
+	 * this reads `innerWidth`, not the measured container.
+	 *
+	 * ponytail: breakpoints are hardcoded to mirror the `grid-cols-*` classes
+	 * on the `<ul>` below. If those change, update this table too.
+	 */
+	const GRID_BREAKPOINTS: Array<{ min: number; columns: number }> = [
+		{ min: 1536, columns: 5 },
+		{ min: 1280, columns: 4 },
+		{ min: 1024, columns: 3 },
+		{ min: 640, columns: 2 },
+		{ min: 0, columns: 1 },
+	];
+	const GRID_GAP = 12;
+	const CAPTION_HEIGHT = 60;
+	const TILE_BORDER = 2;
+
+	function columnsForViewport(width: number): number {
+		return GRID_BREAKPOINTS.find((bp) => width >= bp.min)?.columns ?? 1;
+	}
 
 	/** `undefined` outside /browse and at the drive root: no `..` row there. */
 	// A share has no parent to go up to: above its root is the owner's drive.
@@ -213,6 +242,9 @@
 		if (!files.list) {
 			return files.list;
 		}
+		if (preSorted) {
+			return files.list;
+		}
 		if (!sortColumn) {
 			return sortFoldersFirst(files.list);
 		}
@@ -255,7 +287,44 @@
 		applySelection(displayed, item.key, next, checkedItems);
 		setShiftHeld(false);
 	}
+
+	let gridEl: HTMLElement | undefined = $state();
+	let containerWidth: number = $state(0);
+	let viewportWidth: number = $state(0);
+
+	const columns = $derived(Math.max(1, columnsForViewport(viewportWidth)));
+	const tileWidth = $derived(
+		containerWidth > 0
+			? (containerWidth - GRID_GAP * (columns - 1)) / columns
+			: 0,
+	);
+	const tileHeight = $derived(
+		tileWidth > 0 ? (tileWidth * 10) / 16 + CAPTION_HEIGHT + TILE_BORDER : 220,
+	);
+
+	/** Rows-of-tiles virtualization: only the rows near the viewport render. */
+	const virtualizer = createWindowVirtualizer({
+		count: () => Math.ceil(displayed.length / columns),
+		rowHeight: () => tileHeight + GRID_GAP,
+		overscan: 3,
+	});
+	$effect(() => {
+		void displayed.length;
+		void columns;
+		if (gridEl) {
+			virtualizer.bind(gridEl);
+		}
+	});
+	const visibleItems = $derived(
+		displayed.slice(virtualizer.first * columns, virtualizer.last * columns),
+	);
 </script>
+
+<svelte:window
+    bind:innerWidth={viewportWidth}
+    onscroll={virtualizer.onScroll}
+    onresize={virtualizer.onResize}
+/>
 
 {#snippet listItem(objectItem: ObjectItem)}
     {@const checked = isChecked(objectItem)}
@@ -267,6 +336,7 @@
             checked && "border-primary bg-primary/5",
             isDragTarget && "border-primary bg-primary/10",
         )}
+        style={tileWidth > 0 ? `height: ${tileHeight}px` : undefined}
         draggable={onDragStart !== undefined}
         ondragstart={(e) => handleItemDragStart(e, objectItem)}
         ondragend={handleItemDragEnd}
@@ -371,7 +441,7 @@
         </ContextMenu.Root>
         <DropdownMenu.Root>
             <DropdownMenu.Trigger
-                class="bg-background/70 text-muted-foreground hover:text-foreground data-[state=open]:bg-background absolute top-1.5 right-1.5 z-10 flex size-7 items-center justify-center rounded-[calc(var(--radius)-2px)] opacity-0 backdrop-blur-sm transition-opacity group-hover/tile:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                class="bg-background/70 text-muted-foreground hover:text-foreground data-[state=open]:bg-background absolute top-1.5 right-1.5 z-10 flex size-7 items-center justify-center rounded-[calc(var(--radius)-2px)] opacity-0 backdrop-blur-sm transition-opacity group-hover/tile:opacity-100 pointer-coarse:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
             >
                 {#snippet child({ props })}
                     <button type="button" {...props}>
@@ -444,7 +514,13 @@
         class="col-span-full flex flex-col items-center justify-center gap-4 py-12"
     >
         <div class="text-muted-foreground text-center">
-            {#if isBrowsableListing(page.url.pathname)}
+            {#if isTrashListing(page.url.pathname)}
+                <p class="text-lg font-medium">{m.trash_is_empty()}</p>
+            {:else if page.url.pathname.includes('/starred')}
+                <p class="text-lg font-medium">{m.star_files_to_find_here()}</p>
+            {:else if page.url.pathname.includes('/recent')}
+                <p class="text-lg font-medium">{m.nothing_opened_recently()}</p>
+            {:else if isBrowsableListing(page.url.pathname)}
                 <p class="text-lg font-medium">{m.no_files_yet()}</p>
                 <p class="text-sm">
                     {m.no_files_get_started()}
@@ -472,10 +548,25 @@
     </li>
 {/snippet}
 
+{#snippet virtualTiles()}
+    <!-- Rows of tiles, not individual tiles: only the rows near the
+         viewport render, `col-span-full` spacers standing in for the rest so
+         the real scrollbar still measures the whole grid. -->
+    {#if virtualizer.padTop > 0}
+        <li class="col-span-full" aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
+    {/if}
+    {#each visibleItems as objectItem (objectItem.key)}
+        {@render listItem(objectItem)}
+    {/each}
+    {#if virtualizer.padBottom > 0}
+        <li class="col-span-full" aria-hidden="true" style="height: {virtualizer.padBottom}px"></li>
+    {/if}
+{/snippet}
+
 {#snippet loadingRows()}
     {#each Array(loadingAmount) as _}
-        <li class="flex items-center justify-between py-3">
-            <Skeleton class="h-7.5 w-full rounded-sm" />
+        <li>
+            <Skeleton class="aspect-video rounded-[calc(var(--radius)+2px)]" />
         </li>
     {/each}
 {/snippet}
@@ -503,15 +594,15 @@
         </div>
     {/if}
     <ul
+        bind:this={gridEl}
+        bind:clientWidth={containerWidth}
         class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
     >
         {#if loading}
             {@render loadingRows()}
         {:else if searchValue}
             {#if sortedSearchResults && sortedSearchResults.length > 0}
-                {#each sortedSearchResults as objectItem}
-                    {@render listItem(objectItem)}
-                {/each}
+                {@render virtualTiles()}
             {:else}
                 {@render emptyListItem()}
             {/if}
@@ -520,9 +611,7 @@
                 {@render parentGridItem(parentPath)}
             {/if}
             {#if sortedFiles && sortedFiles.length > 0}
-                {#each sortedFiles as objectItem}
-                    {@render listItem(objectItem)}
-                {/each}
+                {@render virtualTiles()}
             {:else}
                 {@render emptyListItem()}
             {/if}

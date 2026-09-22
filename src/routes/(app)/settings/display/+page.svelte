@@ -1,5 +1,7 @@
 <script lang="ts">
 	import {
+		FileStackIcon,
+		InfinityIcon,
 		LayoutGridIcon,
 		LayoutListIcon,
 		type LucideIcon,
@@ -32,6 +34,9 @@
 	const layout = $derived(data.preferences?.layout ?? "list");
 	const sortColumn = $derived(data.preferences?.sortColumn ?? "name");
 	const sortDirection = $derived(data.preferences?.sortDirection ?? "asc");
+	const listingLoadMode = $derived(
+		data.preferences?.listingLoadMode ?? "scroll",
+	);
 
 	const fonts = [
 		{
@@ -84,6 +89,21 @@
 		},
 	];
 
+	const loadModes = [
+		{
+			id: "scroll" as const,
+			name: m.listing_load_mode_scroll(),
+			description: m.listing_load_mode_scroll_description(),
+			icon: InfinityIcon,
+		},
+		{
+			id: "pages" as const,
+			name: m.listing_load_mode_pages(),
+			description: m.listing_load_mode_pages_description(),
+			icon: FileStackIcon,
+		},
+	];
+
 	const sortColumns = [
 		{ value: "name", label: m.sort_name() },
 		{ value: "size", label: m.sort_size() },
@@ -111,6 +131,7 @@
 		fontFamily?: "mono" | "sans";
 		corners?: "boxy" | "rounded";
 		accent?: Accent;
+		listingLoadMode?: "scroll" | "pages";
 	}) {
 		// Paint the change immediately; the reload below only persists it.
 		applyTheme({ ...data.preferences, ...body });
@@ -317,6 +338,44 @@
                                 value={option.id}
                                 id={option.id}
                                 onclick={() => save({ layout: option.id })}
+                                class="data-[state=checked]:border-primary"
+                            />
+                            <div class="grid gap-1 font-normal">
+                                <div class="font-medium">{option.name}</div>
+                                <div
+                                    class="text-muted-foreground text-xs leading-snug text-balance"
+                                >
+                                    {option.description}
+                                </div>
+                            </div>
+                        </div>
+                        <Icon class="size-5 shrink-0" />
+                    </Label>
+                {/each}
+            </RadioGroup.Root>
+        </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+        <Card.Header>
+            <Card.Title>{m.listing_load_mode()}</Card.Title>
+            <Card.Description>
+                {m.listing_load_mode_description()}
+            </Card.Description>
+        </Card.Header>
+        <Card.Content>
+            <RadioGroup.Root class="grid gap-2" value={listingLoadMode}>
+                {#each loadModes as option (option.id)}
+                    {@const Icon = option.icon}
+                    <Label
+                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
+                    >
+                        <div class="flex items-center gap-2">
+                            <RadioGroup.Item
+                                value={option.id}
+                                id="load-mode-{option.id}"
+                                onclick={() =>
+                                    save({ listingLoadMode: option.id })}
                                 class="data-[state=checked]:border-primary"
                             />
                             <div class="grid gap-1 font-normal">

@@ -8,19 +8,24 @@
  */
 
 import { error } from "@sveltejs/kit";
+import { firstPageQuery } from "#lib/pagination.js";
 import { getVolume } from "#lib/server/config.js";
 import { isStorageUnavailable } from "#lib/server/errors.js";
-import type { ObjectList } from "#lib/server/schema.js";
 import {
 	scanOnVisit,
 	volumeScanKey,
 } from "#lib/server/services/library-scan.js";
+import { getUserPreferences } from "#lib/server/services/preferences.js";
+import {
+	type ListingPage,
+	pageOptions,
+} from "#lib/server/services/storage/listings.js";
 import { volumeStorage } from "#lib/server/services/storage-for.js";
 import type { BreadCrumb } from "#lib/utils.js";
 
 export interface VolumeListing {
 	volume: { name: string; label: string; readOnly: boolean };
-	files: { data: ObjectList; err: undefined };
+	files: { data: ListingPage; err: undefined };
 	crumbs: BreadCrumb[];
 	title: string;
 	/** A reconciliation pass is walking the mount right now. */
@@ -63,6 +68,9 @@ export async function loadVolumeListing(
 			});
 		}
 
+		const page = pageOptions(
+			firstPageQuery(await getUserPreferences(locals.user.id)),
+		);
 		return {
 			volume: {
 				name: volume.name,
@@ -71,8 +79,8 @@ export async function loadVolumeListing(
 			},
 			files: {
 				data: options.trash
-					? await service.listTrashFiles()
-					: await service.listFiles(path || undefined),
+					? await service.listTrashFiles(page)
+					: await service.listFolderPage(path || undefined, page),
 				err: undefined,
 			},
 			crumbs,

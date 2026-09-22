@@ -29,6 +29,7 @@
 		cn,
 		isBrowsableListing,
 		isFolderItem,
+		isTrashListing,
 		listingHref,
 		PARENT_KEY,
 		parentHref,
@@ -39,6 +40,7 @@
 		type SortColumn,
 		shouldDisplayAction,
 	} from "#lib/utils.js";
+	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 
@@ -59,6 +61,7 @@
 		onCreateFolder,
 		sortColumn = $bindable(null),
 		sortDirection = $bindable("asc"),
+		preSorted = false,
 		draggedItem,
 		dropTargetKey = $bindable(),
 		onDragStart,
@@ -68,6 +71,8 @@
 
 	const iconSize = "h-5 w-5";
 	const loadingAmount = 20;
+	/** Set on every row, so the virtualizer's arithmetic is the layout. */
+	const ROW_HEIGHT = 57;
 
 	/** `undefined` outside /browse and at the drive root: no `..` row there. */
 	// A share has no parent to go up to: above its root is the owner's drive.
@@ -231,6 +236,9 @@
 		if (!files.list) {
 			return files.list;
 		}
+		if (preSorted) {
+			return files.list;
+		}
 		if (!sortColumn) {
 			return sortFoldersFirst(files.list);
 		}
@@ -305,13 +313,32 @@
 			? sortedSearchResults
 			: (sortedFiles ?? []),
 	);
+
+	/** Only the rows near the viewport are in the DOM; see virtual-window.svelte.ts. */
+	const virtualizer = createWindowVirtualizer({
+		count: () => displayed.length,
+		rowHeight: () => ROW_HEIGHT,
+		overscan: 8,
+	});
+	let tableEl: HTMLElement | undefined = $state();
+	$effect(() => {
+		// A new page, a wider window preference or a folder change can move
+		// the container on screen without a scroll event to trigger it.
+		void displayed.length;
+		if (tableEl) {
+			virtualizer.bind(tableEl);
+		}
+	});
 </script>
+
+<svelte:window onscroll={virtualizer.onScroll} onresize={virtualizer.onResize} />
 
 {#snippet tableRow(objectItem: ObjectItem)}
     {@const isFolder = isFolderItem(objectItem)}
     {@const isDragTarget = dropTargetKey === objectItem.key}
     <Table.Row
         class={cn(isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "")}
+        style="height: {ROW_HEIGHT}px"
         draggable={onDragStart !== undefined}
         ondragstart={(e) => handleItemDragStart(e, objectItem)}
         ondragend={handleItemDragEnd}
@@ -520,7 +547,13 @@
         <Table.Cell colspan={12} class="h-48">
             <div class="flex flex-col items-center justify-center gap-4">
                 <div class="text-muted-foreground text-center">
-                    {#if isBrowsableListing(page.url.pathname)}
+                    {#if isTrashListing(page.url.pathname)}
+                        <p class="text-lg font-medium">{m.trash_is_empty()}</p>
+                    {:else if page.url.pathname.includes('/starred')}
+                        <p class="text-lg font-medium">{m.star_files_to_find_here()}</p>
+                    {:else if page.url.pathname.includes('/recent')}
+                        <p class="text-lg font-medium">{m.nothing_opened_recently()}</p>
+                    {:else if isBrowsableListing(page.url.pathname)}
                         <p class="text-lg font-medium">{m.no_files_yet()}</p>
                         <p class="text-sm">
                             {m.no_files_get_started()}
@@ -550,6 +583,26 @@
     </Table.Row>
 {/snippet}
 
+{#snippet virtualRows()}
+    <!-- Two spacer rows stand in for the rows not rendered, same trick as
+         sheet-editor.svelte: a row with no cell in it lays out at zero
+         height however tall it's told to be, so each spacer carries a
+         spanning td. -->
+    {#if virtualizer.padTop > 0}
+        <Table.Row aria-hidden="true">
+            <Table.Cell colspan={12} style="height: {virtualizer.padTop}px" />
+        </Table.Row>
+    {/if}
+    {#each displayed.slice(virtualizer.first, virtualizer.last) as item (item.key)}
+        {@render tableRow(item)}
+    {/each}
+    {#if virtualizer.padBottom > 0}
+        <Table.Row aria-hidden="true">
+            <Table.Cell colspan={12} style="height: {virtualizer.padBottom}px" />
+        </Table.Row>
+    {/if}
+{/snippet}
+
 {#snippet loadingRows()}
     {#each Array(loadingAmount) as _}
         <Table.Row>
@@ -572,6 +625,7 @@
 {/snippet}
 
 <div
+    bind:this={tableEl}
     class={cn(
         "relative rounded-lg border transition-all",
         isDragging && "border-primary border-2 bg-primary/5",
@@ -637,10 +691,8 @@
             {#if loading}
                 {@render loadingRows()}
             {:else if searchValue}
-                {#if sortedSearchResults && sortedSearchResults.length > 0}
-                    {#each sortedSearchResults as item}
-                        {@render tableRow(item)}
-                    {/each}
+                {#if displayed.length > 0}
+                    {@render virtualRows()}
                 {:else}
                     {@render emptyRow()}
                 {/if}
@@ -648,10 +700,8 @@
                 {#if parentPath !== undefined}
                     {@render parentRow(parentPath)}
                 {/if}
-                {#if files.count! > 0 && sortedFiles}
-                    {#each sortedFiles as item}
-                        {@render tableRow(item)}
-                    {/each}
+                {#if displayed.length > 0}
+                    {@render virtualRows()}
                 {:else}
                     {@render emptyRow()}
                 {/if}

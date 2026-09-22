@@ -15,6 +15,7 @@ const defaultPreferences: UserPreferencesData = {
 	onboarded: false,
 	emailNotifications: false,
 	preferredSignInMethod: null,
+	listingLoadMode: "scroll",
 };
 
 /**

@@ -12,6 +12,7 @@
 		layout?: "grid" | "list";
 		sortColumn?: "name" | "size" | "updatedAt" | null;
 		sortDirection?: "asc" | "desc";
+		listingLoadMode?: "scroll" | "pages";
 	}
 
 	interface Props {
