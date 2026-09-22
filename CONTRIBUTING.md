@@ -2,10 +2,14 @@
 
 ## Prerequisites
 
-- **Bun 1.4+** — the only required runtime (`preinstall` blocks npm/yarn/pnpm)
-- **Docker** — only for the end-to-end test stacks
-- **Prek** — Pre-commit tool
-- **ffmpeg** — For thumbnail generation
+- [mise](https://mise.jdx.dev), then `mise install` in the repo: it installs the
+  Bun and Go versions pinned in `mise.toml` (`preinstall` blocks npm/yarn/pnpm).
+  prek comes from `node_modules`, nothing to install.
+- **ffmpeg built with the `libwebp` encoder**, **ffprobe** and **pdftoppm**
+  (poppler), which the Go worker execs. mise can't install those; its
+  postinstall hook runs `mise run doctor`, which checks them and prints the
+  install command for what's missing.
+- **Docker**, only for the end-to-end test stacks.
 
 ## Setup
 
@@ -95,7 +99,8 @@ SKIP=test-unit git commit ...   # skip a hook for one commit
 
 Commit messages follow
 [Conventional Commits](https://www.conventionalcommits.org/) — the `commit-msg`
-hook enforces it, and releases are cut from it by semantic-release.
+hook enforces it, and releases are cut from it by
+[releaser](https://github.com/orochibraru/releaser).
 
 ## Linting gotchas
 

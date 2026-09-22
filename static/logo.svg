@@ -1,13 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="Penombre">
-  <title>Penombre</title>
-  <defs>
-    <linearGradient id="pnb-a" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="currentColor"/>
-      <stop offset="1" stop-color="currentColor" stop-opacity=".55"/>
-    </linearGradient>
-  </defs>
-  <!-- A "P" cut from a solid block: the counter is the penumbra, the soft
-       edge the name refers to. Reads at 16px because it is one shape. -->
-  <path fill="url(#pnb-a)" d="M8 5h18a13 13 0 0 1 0 26h-9v12H8V5Zm9 8v10h9a5 5 0 0 0 0-10h-9Z"/>
-  <path fill="currentColor" fill-opacity=".35" d="M31 31h9v12h-9z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+    <title>Penombre</title>
+    <rect width="48" height="48" rx="8" fill="#7c3aed" />
+    <path fill="#fff" d="M11 8h16a12 12 0 0 1 0 24h-7v9h-9V8Zm9 7v10h7a5 5 0 0 0 0-10h-7Z" />
 </svg>
