@@ -13,8 +13,13 @@ it belongs here. Prune anything that has become wrong.
 
 ## Commands
 
-Runtime is **Bun** (1.3+); use `bun`/`bunx`, not `npm`/`node` (`preinstall`
-enforces this).
+Runtime is **Bun**; use `bun`/`bunx`, not `npm`/`node` (`preinstall` enforces
+this). `mise.toml` pins Bun and Go, and `mise run doctor` checks the worker's
+ffmpeg/ffprobe/pdftoppm. Those versions live in four places that must agree:
+`mise.toml`, `package.json`'s `packageManager` (CI's `setup-bun` reads it),
+`go.mod` (CI's `setup-go` reads it) and the Dockerfile's `FROM` lines. The
+golang image sets `GOTOOLCHAIN=local`, so a `go.mod` newer than its `FROM` fails
+the image build instead of downloading a toolchain.
 
 ```bash
 bun run dev              # Vite dev server (SQLite by default, no services needed)

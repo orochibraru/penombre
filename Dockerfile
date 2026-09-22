@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS go-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-alpine AS go-builder
 ARG TARGETOS TARGETARCH APP_VERSION=""
 WORKDIR /src
 COPY go.mod go.sum ./
@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags "-s -w -X main.version=${APP_VERSION:-dev}" \
     -o /out/penombre-worker ./cmd/worker
 
-FROM oven/bun:1-alpine AS base
+FROM oven/bun:1.4.2-alpine AS base
 
 ENV BUN_FEATURE_FLAG_EXPERIMENTAL_HTTP2_CLIENT=1
 
@@ -35,11 +35,11 @@ COPY . .
 # nothing downstream would notice until someone read the About screen.
 ARG APP_VERSION=""
 RUN if [ -n "$APP_VERSION" ]; then \
-      bun -e 'const fs = require("fs"); const p = JSON.parse(fs.readFileSync("package.json", "utf8")); p.version = process.env.APP_VERSION; fs.writeFileSync("package.json", JSON.stringify(p, null, "\t") + "\n");' \
-      && baked="$(bun -e 'console.log(require("./package.json").version)')" \
-      && [ "$baked" = "$APP_VERSION" ] \
-      || { echo "APP_VERSION=$APP_VERSION was not applied to package.json (got $baked)" >&2; exit 1; } \
-      && echo "Building version $APP_VERSION"; \
+    bun -e 'const fs = require("fs"); const p = JSON.parse(fs.readFileSync("package.json", "utf8")); p.version = process.env.APP_VERSION; fs.writeFileSync("package.json", JSON.stringify(p, null, "\t") + "\n");' \
+    && baked="$(bun -e 'console.log(require("./package.json").version)')" \
+    && [ "$baked" = "$APP_VERSION" ] \
+    || { echo "APP_VERSION=$APP_VERSION was not applied to package.json (got $baked)" >&2; exit 1; } \
+    && echo "Building version $APP_VERSION"; \
     fi
 
 # `bun i --production` over the existing tree adds rather than prunes, so the
