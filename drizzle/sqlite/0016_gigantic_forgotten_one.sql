@@ -1,0 +1,1 @@
+CREATE INDEX `files_category_listing_idx` ON `files` (`owner_id`,`category`,`is_trashed`,`updated_at`);

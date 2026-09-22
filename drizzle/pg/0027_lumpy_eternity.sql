@@ -1,0 +1,2 @@
+CREATE INDEX "files_trash_idx" ON "files" USING btree ("owner_id","volume_id","is_trashed",("path" collate "C"));--> statement-breakpoint
+CREATE INDEX "folders_trash_idx" ON "folders" USING btree ("owner_id","volume_id","is_trashed",("path" collate "C"));

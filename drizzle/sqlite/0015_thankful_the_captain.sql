@@ -1,0 +1,1 @@
+CREATE INDEX `shares_resourceType_resourceId_idx` ON `shares` (`resource_type`,`resource_id`);
