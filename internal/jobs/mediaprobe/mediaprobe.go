@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/orochibraru/penombre/internal/envelope"
 	"github.com/orochibraru/penombre/internal/jobs"
 )
 
@@ -53,7 +54,7 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 			probed = append(probed, path)
 			continue
 		}
-		d, known, err := probe(ctx, path)
+		d, known, err := probeFile(ctx, path)
 		if err != nil {
 			return nil, err
 		}
@@ -63,6 +64,17 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 		}
 	}
 	return Result{Durations: durations, Probed: probed}, nil
+}
+
+// probeFile reads a sealed file through a loopback URL. A sealed file that
+// cannot be opened (no key, corrupt) is left unknown, never recorded as 0.
+func probeFile(ctx context.Context, path string) (float64, bool, error) {
+	input, stop, err := envelope.Input(ctx, envelope.Default(), path)
+	if err != nil {
+		return 0, false, nil
+	}
+	defer stop()
+	return probe(ctx, input)
 }
 
 // notMedia is ffprobe's verdict on a file it can read but cannot parse.

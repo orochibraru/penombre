@@ -18,14 +18,19 @@ import type {
 } from "#lib/server/schema.js";
 import { CacheKeys } from "./cache";
 import type { StorageContext } from "./context";
+import { purgeGrantsFor } from "./grants";
 import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import { folderDbToMetadata } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";
+import type { ThumbnailService } from "./thumbnails";
 
 const logger = new Logger("StorageService");
 
 export class FolderOperations {
-	constructor(private readonly ctx: StorageContext) {}
+	constructor(
+		private readonly ctx: StorageContext,
+		private readonly thumbnails: ThumbnailService,
+	) {}
 
 	async getFolder(folderId: string): Promise<string> {
 		const normalizedId = folderId.endsWith("/")
@@ -47,6 +52,10 @@ export class FolderOperations {
 			const newKey = toPrefix + oldKey.slice(fromPrefix.length);
 			await this.ctx.driver.copyObject(oldKey, newKey);
 			await this.ctx.driver.deleteObject(oldKey);
+			// Every descendant got a new key; its old thumbnail/peaks would
+			// otherwise sit on disk forever, unreachable by any path a
+			// listing uses.
+			await this.thumbnails.deleteThumbnails(oldKey);
 		}
 	}
 
@@ -148,7 +157,7 @@ export class FolderOperations {
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "update",
-			message: `Moved folder "${uniqueName}" to ${normalizedDest || "root"}`,
+			message: "Moved a folder",
 			level: "info",
 		});
 		await this.ctx.invalidateListingCaches();
@@ -197,10 +206,10 @@ export class FolderOperations {
 			await this.ctx.activityService.register({
 				userId: this.ctx.actor.id,
 				action: "create",
-				message: `Created folder: ${uniqueName}`,
+				message: "Created a folder",
 				level: "info",
 			});
-			logger.info(
+			logger.debug(
 				`Folder created: UUID=${folderId}, name=${uniqueName}, path=${folderPath}`,
 			);
 			await this.ctx.invalidateListingCaches();
@@ -220,12 +229,13 @@ export class FolderOperations {
 		try {
 			await this.ctx.driver.deleteObjectsByPrefix(`${normalizedKey}/`);
 
-			await this.ctx.db
+			const deletedFiles = await this.ctx.db
 				.delete(files)
 				.where(
 					and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)),
-				);
-			await this.ctx.db
+				)
+				.returning({ id: files.id });
+			const deletedFolders = await this.ctx.db
 				.delete(folders)
 				.where(
 					and(
@@ -235,15 +245,26 @@ export class FolderOperations {
 							like(folders.path, `${normalizedKey}/%`),
 						),
 					),
-				);
+				)
+				.returning({ id: folders.id });
+			await purgeGrantsFor(
+				this.ctx.db,
+				"file",
+				deletedFiles.map((f) => f.id),
+			);
+			await purgeGrantsFor(
+				this.ctx.db,
+				"folder",
+				deletedFolders.map((f) => f.id),
+			);
 
 			await this.ctx.activityService.register({
 				userId: this.ctx.actor.id,
 				action: "delete",
-				message: `Deleted folder: ${normalizedKey}`,
+				message: "Deleted a folder",
 				level: "info",
 			});
-			logger.info(`Folder deleted: ${normalizedKey}`);
+			logger.debug(`Folder deleted: ${normalizedKey}`);
 			await this.ctx.invalidateListingCaches();
 		} catch (error) {
 			logger.error("Error deleting folder:", error);
@@ -299,7 +320,7 @@ export class FolderOperations {
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "update",
-			message: `Moved folder to trash: ${normalizedKey}`,
+			message: "Moved a folder to trash",
 			level: "info",
 		});
 		await this.ctx.invalidateListingCaches();
@@ -313,7 +334,7 @@ export class FolderOperations {
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "update",
-			message: `Restored folder from trash: ${normalizedKey}`,
+			message: "Restored a folder from trash",
 			level: "info",
 		});
 		await this.ctx.invalidateListingCaches();
@@ -367,7 +388,7 @@ export class FolderOperations {
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "update",
-			message: `Updated folder metadata: ${normalizedId}`,
+			message: "Updated folder metadata",
 			level: "info",
 		});
 		await this.ctx.invalidateListingCaches();

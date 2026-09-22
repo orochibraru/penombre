@@ -18,6 +18,7 @@ import type {
 	UploadResult,
 } from "#lib/server/schema.js";
 import type { StorageContext } from "./context";
+import { purgeGrantsFor } from "./grants";
 import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import {
 	determineCategory,
@@ -100,9 +101,6 @@ export class FileOperations {
 		const updates: Partial<typeof files.$inferInsert> = {
 			updatedAt: new Date(),
 		};
-		if (data.contentType !== undefined) {
-			updates.contentType = data.contentType;
-		}
 		if (data.category !== undefined) {
 			updates.category = data.category;
 		}
@@ -130,7 +128,7 @@ export class FileOperations {
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "update",
-			message: `Updated metadata for file: ${name}`,
+			message: "Updated file metadata",
 			level: "info",
 		});
 
@@ -187,9 +185,13 @@ export class FileOperations {
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "update",
-			message: `Moved file "${uniqueName}" to ${normalizedDest || "root"}`,
+			message: "Moved a file",
 			level: "info",
 		});
+
+		// The move minted a new key; the old one's cached thumbnail/peaks would
+		// otherwise sit on disk forever, unreachable by any path a listing uses.
+		await this.thumbnails.deleteThumbnails(fileKey);
 
 		await this.ctx.invalidateListingCaches();
 	}
@@ -245,7 +247,7 @@ export class FileOperations {
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "create",
-			message: `Duplicated file "${file.name}" as "${uniqueName}"`,
+			message: "Duplicated a file",
 			level: "info",
 		});
 
@@ -366,7 +368,7 @@ export class FileOperations {
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "create",
-			message: `Created file: ${name}`,
+			message: "Created a file",
 			level: "info",
 		});
 
@@ -434,11 +436,10 @@ export class FileOperations {
 		}
 
 		const fileCount = fileList.length;
-		const folderDisplay = normalizedFolder || "root";
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,
 			action: "create",
-			message: `Created ${fileCount} file${fileCount === 1 ? "" : "s"} in ${folderDisplay}`,
+			message: `Created ${fileCount} file${fileCount === 1 ? "" : "s"}`,
 			level: "info",
 		});
 
@@ -455,11 +456,17 @@ export class FileOperations {
 	}
 
 	/** Owner and display name, for addressing a notification about this file. */
-	async findFileOwner(
-		id: string,
-	): Promise<{ ownerId: string; name: string } | null> {
+	async findFileOwner(id: string): Promise<{
+		ownerId: string;
+		name: string;
+		volumeId: string | null;
+	} | null> {
 		const [file] = await this.ctx.db
-			.select({ ownerId: files.ownerId, name: files.name })
+			.select({
+				ownerId: files.ownerId,
+				name: files.name,
+				volumeId: files.volumeId,
+			})
 			.from(files)
 			.where(and(eq(files.id, id), ownedFiles(this.ctx)));
 		return file ?? null;
@@ -515,6 +522,10 @@ export class FileOperations {
 				.set(updates)
 				.where(and(eq(files.id, id), ownedFiles(this.ctx)));
 
+			// The key is unchanged, so a stale thumbnail at the same cache path
+			// would otherwise pass `existsSync` and keep serving the old bytes
+			// forever; drop it before rebuilding.
+			await this.thumbnails.deleteThumbnails(key);
 			// Build the preview now rather than on first view. Not awaited:
 			// an ffmpeg pass over a large media file would otherwise hold the
 			// upload response open for seconds.
@@ -535,7 +546,7 @@ export class FileOperations {
 			await this.ctx.activityService.register({
 				userId: this.ctx.actor.id,
 				action: "update",
-				message: `Failed to upload file body for id: ${id}`,
+				message: "Failed to upload file body",
 				level: "error",
 			});
 			throw new Error(`Error uploading file body for id: ${id}`);
@@ -553,10 +564,11 @@ export class FileOperations {
 				await this.ctx.db
 					.delete(files)
 					.where(and(eq(files.id, file.id), ownedFiles(this.ctx)));
+				await purgeGrantsFor(this.ctx.db, "file", [file.id]);
 				await this.ctx.activityService.register({
 					userId: this.ctx.actor.id,
 					action: "delete",
-					message: `Deleted file: ${key}`,
+					message: "Deleted a file",
 					level: "info",
 				});
 			}
@@ -584,6 +596,32 @@ export class FileOperations {
 			.from(files)
 			.where(and(eq(files.id, id), ownedFiles(this.ctx)));
 		return !!file;
+	}
+
+	/** Row and byte length first, so a caller can frame a Range before streaming. */
+	async openRawFile(key: string): Promise<{
+		meta: ObjectItem;
+		size: number;
+		stream: (
+			start?: number,
+			end?: number,
+		) => Promise<ReadableStream<Uint8Array>>;
+	} | null> {
+		const [file] = await this.ctx.db
+			.select()
+			.from(files)
+			.where(and(eq(files.path, key), ownedFiles(this.ctx)));
+		if (!file) {
+			return null;
+		}
+		const size = await this.ctx.driver
+			.getObjectSize(key)
+			.catch(() => file.size);
+		return {
+			meta: fileDbToObjectItem(file),
+			size,
+			stream: (start, end) => this.ctx.driver.getObjectStream(key, start, end),
+		};
 	}
 
 	async getRawFileData(key: string): Promise<{

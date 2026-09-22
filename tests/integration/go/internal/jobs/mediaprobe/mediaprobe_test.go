@@ -1,6 +1,7 @@
 package mediaprobe_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/orochibraru/penombre/internal/envelope"
 	"github.com/orochibraru/penombre/internal/jobs"
 	"github.com/orochibraru/penombre/internal/jobs/mediaprobe"
 )
@@ -65,5 +67,27 @@ func TestProbesEveryPathInOneJob(t *testing.T) {
 	}
 	if _, ok := got[missing]; ok {
 		t.Fatal("a missing file must be absent, so the app retries it")
+	}
+}
+
+func TestSealedFileIsProbedThroughLoopbackAndKeyedByItsPath(t *testing.T) {
+	requireFFmpeg(t)
+	keys := envelope.Keyring{Current: bytes.Repeat([]byte{4}, 32)}
+	envelope.SetDefault(keys)
+	t.Cleanup(func() { envelope.SetDefault(envelope.Keyring{}) })
+	wav := oneSecondWav(t)
+	plain, _ := os.ReadFile(wav)
+	var sealed bytes.Buffer
+	w, _ := envelope.NewWriter(&sealed, keys.Current)
+	w.Write(plain)
+	w.Close()
+	os.WriteFile(wav, sealed.Bytes(), 0o644)
+
+	if d := run(t, wav)[wav]; d < 0.9 || d > 1.1 {
+		t.Fatalf("sealed wav: want ~1s, got %v", d)
+	}
+	envelope.SetDefault(envelope.Keyring{})
+	if d, known := run(t, wav)[wav]; known {
+		t.Fatalf("without its key a sealed file must stay unknown, got %v", d)
 	}
 }

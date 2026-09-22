@@ -105,6 +105,11 @@ storage directory.
 - **Everything else works as normal**: upload, download, rename, delete, search,
   thumbnails, the API.
 
+One thing simple mode does not support is `ENCRYPTION_KEY`: the shared root is a
+directory other tools read, and sealing it would hand them ciphertext. The app
+refuses to start with both. Use disk encryption instead, see
+[Encryption](encryption.md).
+
 ## No sign-in at all
 
 Set `BYPASS_AUTH=true` alongside `SIMPLE_MODE=true` and Penombre stops asking

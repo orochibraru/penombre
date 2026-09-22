@@ -18,6 +18,7 @@ import {
 	type JobOutcome,
 } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
+import { purgeGrantsFor } from "./grants";
 import { ancestorFolders } from "./mappers";
 import { bytesGone, chunks } from "./reconcile";
 import { jobContext, ownedFiles, ownedFolders } from "./scope";
@@ -144,6 +145,12 @@ export class TrashOperations {
 				.delete(folders)
 				.where(and(ownedFolders(this.ctx), inArray(folders.id, ids)));
 		}
+		await purgeGrantsFor(this.ctx.db, "file", removableFileIds);
+		await purgeGrantsFor(
+			this.ctx.db,
+			"folder",
+			removableFolders.map((folder) => folder.id),
+		);
 
 		// A false here means this process was taken for dead and the job
 		// adopted; the reconciler deletes the same rows, so nothing to redo.

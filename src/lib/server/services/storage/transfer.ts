@@ -189,6 +189,7 @@ export class TransferOperations {
 				pairs: plans.map(({ file, plan }) => ({
 					source: join(sourceStoragePath, file.path),
 					dest: join(this.ctx.storagePath, plan.filePath),
+					encrypt: this.ctx.encrypted,
 				})),
 				context: jobContext(this.ctx),
 			},

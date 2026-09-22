@@ -15,6 +15,7 @@ mock.module("#lib/server/services/jobs.js", () => ({
 }));
 
 const { ThumbnailService } = await import("./thumbnails");
+const { seal } = await import("#lib/server/crypto/envelope.js");
 
 describe("ThumbnailService", () => {
 	let root = "";
@@ -37,8 +38,56 @@ describe("ThumbnailService", () => {
 			"image/png",
 			300,
 		);
-		expect(result?.buffer.toString()).toBe("cached");
+		expect(result?.buffer?.toString()).toBe("cached");
 		expect(enqueueJob).not.toHaveBeenCalled();
+	});
+
+	test("a matching ETag answers without reading the render", async () => {
+		await mkdir(join(root, ".thumbnails"));
+		await writeFile(join(root, ".thumbnails", "a.png_300.webp"), "cached");
+		const first = await service().generateThumbnail("a.png", "image/png", 300);
+		const again = await service().generateThumbnail(
+			"a.png",
+			"image/png",
+			300,
+			first?.etag,
+		);
+		expect(again).toEqual({
+			buffer: null,
+			contentType: "image/webp",
+			etag: first?.etag ?? "",
+		});
+		await writeFile(
+			join(root, ".thumbnails", "a.png_300.webp"),
+			"a newer render",
+		);
+		const changed = await service().generateThumbnail(
+			"a.png",
+			"image/png",
+			300,
+			first?.etag,
+		);
+		expect(changed?.buffer?.toString()).toBe("a newer render");
+	});
+
+	test("a sealed cache entry is opened, and the job asks for a sealed render", async () => {
+		const keys = { current: Buffer.alloc(32, 2), previous: [] };
+		await mkdir(join(root, ".thumbnails"));
+		await writeFile(
+			join(root, ".thumbnails", "p.png_300.webp"),
+			seal(keys.current, Buffer.from("sealed")),
+		);
+		const sealed = new ThumbnailService(
+			{ storagePath: root, encrypted: true } as never,
+			keys,
+		);
+		const hit = await sealed.generateThumbnail("p.png", "image/png", 300);
+		expect(hit?.buffer?.toString()).toBe("sealed");
+
+		await sealed.warm("q.png", "image/png");
+		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
+			spec: { encrypt: true },
+		});
 	});
 
 	test("a miss enqueues a resolved spec and serves the worker's file", async () => {
@@ -53,7 +102,7 @@ describe("ThumbnailService", () => {
 			"audio/mpeg",
 			300,
 		);
-		expect(result).toEqual({
+		expect(result).toMatchObject({
 			buffer: Buffer.from("[1]"),
 			contentType: "application/json",
 		});

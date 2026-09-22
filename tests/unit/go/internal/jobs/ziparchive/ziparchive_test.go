@@ -2,6 +2,7 @@ package ziparchive_test
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/orochibraru/penombre/internal/envelope"
 	"github.com/orochibraru/penombre/internal/jobs"
 	"github.com/orochibraru/penombre/internal/jobs/ziparchive"
 )
@@ -40,8 +42,8 @@ func readZip(t *testing.T, path string) map[string]string {
 	defer r.Close()
 	out := make(map[string]string)
 	for _, f := range r.File {
-		if f.Method != zip.Deflate {
-			t.Errorf("entry %q: method = %d, want zip.Deflate", f.Name, f.Method)
+		if want := ziparchive.Method(f.Name); f.Method != want {
+			t.Errorf("entry %q: method = %d, want %d", f.Name, f.Method, want)
 		}
 		rc, err := f.Open()
 		if err != nil {
@@ -67,7 +69,7 @@ func TestRun_RoundTrip(t *testing.T) {
 		Output: output,
 		Entries: []ziparchive.Entry{
 			{Source: a, Name: "docs/a.txt"},
-			{Source: b, Name: "docs/b.txt"},
+			{Source: b, Name: "docs/b.jpg"},
 		},
 	})
 
@@ -90,7 +92,7 @@ func TestRun_RoundTrip(t *testing.T) {
 	}
 
 	got := readZip(t, output)
-	want := map[string]string{"docs/a.txt": "hello", "docs/b.txt": "world"}
+	want := map[string]string{"docs/a.txt": "hello", "docs/b.jpg": "world"}
 	if len(got) != len(want) {
 		t.Fatalf("got %d entries, want %d: %v", len(got), len(want), got)
 	}
@@ -226,6 +228,64 @@ func TestUniqueName(t *testing.T) {
 		got := ziparchive.UniqueName(used, c.in)
 		if got != c.want {
 			t.Errorf("call #%d UniqueName(%q) = %q, want %q", i, c.in, got, c.want)
+		}
+	}
+}
+
+func TestSealedSourcesAndSealedArchive(t *testing.T) {
+	keys := envelope.Keyring{Current: bytes.Repeat([]byte{3}, 32)}
+	envelope.SetDefault(keys)
+	t.Cleanup(func() { envelope.SetDefault(envelope.Keyring{}) })
+	dir := t.TempDir()
+	var sealed bytes.Buffer
+	w, _ := envelope.NewWriter(&sealed, keys.Current)
+	w.Write([]byte("secret"))
+	w.Close()
+	src := writeTemp(t, dir, "s", sealed.String())
+	plain := writeTemp(t, dir, "p", "plain")
+	out := filepath.Join(dir, "out.zip")
+
+	if _, err := ziparchive.Run(context.Background(), mustJob(t, ziparchive.Spec{
+		Output:  out,
+		Entries: []ziparchive.Entry{{Source: src, Name: "s.txt"}, {Source: plain, Name: "p.txt"}},
+		Encrypt: true,
+	})); err != nil {
+		t.Fatal(err)
+	}
+	if ok, _ := envelope.SniffFile(out); !ok {
+		t.Fatal("archive is not sealed")
+	}
+	f, size, err := keys.OpenFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	r, err := zip.NewReader(f.(io.ReaderAt), size)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range r.File {
+		rc, _ := entry.Open()
+		b, _ := io.ReadAll(rc)
+		rc.Close()
+		if want := map[string]string{"s.txt": "secret", "p.txt": "plain"}[entry.Name]; string(b) != want {
+			t.Fatalf("%s = %q", entry.Name, b)
+		}
+	}
+}
+
+func TestMethod_StoresCompressedFormats(t *testing.T) {
+	for name, want := range map[string]uint16{
+		"a/photo.JPG": zip.Store,
+		"clip.mp4":    zip.Store,
+		"song.flac":   zip.Store,
+		"bundle.zip":  zip.Store,
+		"notes.txt":   zip.Deflate,
+		"take.wav":    zip.Deflate,
+		"noext":       zip.Deflate,
+	} {
+		if got := ziparchive.Method(name); got != want {
+			t.Errorf("Method(%q) = %d, want %d", name, got, want)
 		}
 	}
 }

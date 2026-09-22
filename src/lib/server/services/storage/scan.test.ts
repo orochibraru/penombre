@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { sealedSize } from "#lib/server/crypto/envelope.js";
 import {
 	ancestorFolders,
 	estimateRemaining,
@@ -37,14 +38,20 @@ describe("refreshChangedFiles", () => {
 	/** Chainable stub: select/update read like drizzle, records what was set. */
 	function fakeDb(rows: Array<{ id: string; path: string; size: number }>) {
 		const updates: Array<Record<string, unknown>> = [];
+		const inserts: Array<Record<string, unknown>> = [];
 		return {
 			updates,
+			inserts,
 			select: (cols: Record<string, unknown>) => ({
 				from: () => ({
 					where: async () => ("size" in cols ? rows : []),
 				}),
 			}),
-			insert: () => ({ values: async () => {} }),
+			insert: () => ({
+				values: async (row: Record<string, unknown>) => {
+					inserts.push(row);
+				},
+			}),
 			delete: () => ({ where: async () => {} }),
 			update: () => ({
 				set: (values: Record<string, unknown>) => ({
@@ -101,6 +108,43 @@ describe("refreshChangedFiles", () => {
 
 		expect((await ops.scan()).updatedFiles).toBe(0);
 		expect(db.updates).toEqual([]);
+	});
+
+	// A sealed file is the plaintext size plus header and tags: without the
+	// tolerance every sealed file looked changed on every pass.
+	test("a sealed file of the recorded size is unchanged", async () => {
+		const db = fakeDb([{ id: "f1", path: "track.mp3", size: 80_000_000 }]);
+		const ops = new ScanOperations(
+			{
+				user: { id: "u1" },
+				storagePath: "/tmp/does-not-exist",
+				db,
+				invalidateListingCaches: async () => {},
+			} as never,
+			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
+			fakeDeps([{ key: "track.mp3", size: sealedSize(80_000_000) }]),
+		);
+
+		expect((await ops.scan()).updatedFiles).toBe(0);
+	});
+
+	test("an encrypted root records the plaintext size of a new file", async () => {
+		const db = fakeDb([]);
+		const ops = new ScanOperations(
+			{
+				user: { id: "u1" },
+				storagePath: "/tmp/does-not-exist",
+				encrypted: true,
+				driver: { getObjectSize: async () => 5 },
+				db,
+				invalidateListingCaches: async () => {},
+			} as never,
+			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
+			fakeDeps([{ key: "new.txt", size: sealedSize(5) }]),
+		);
+
+		expect((await ops.scan()).addedFiles).toBe(1);
+		expect(db.inserts.at(-1)).toMatchObject({ size: 5 });
 	});
 
 	// A full rescan exists to rebuild what a quick one trusts, so an

@@ -15,14 +15,17 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
+import { sealedSize } from "#lib/server/crypto/envelope.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
+import { purgeGrantsFor } from "./grants";
 import {
 	ancestorFolders,
 	determineCategory,
 	determineContentType,
 } from "./mappers";
+import { chunks } from "./reconcile";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
@@ -242,6 +245,13 @@ export class ScanOperations {
 		return result;
 	}
 
+	/** The walk reports bytes on disk; where writes are sealed, ask the driver. */
+	private plainSize(key: string, diskSize: number): Promise<number> {
+		return this.ctx.encrypted
+			? this.ctx.driver.getObjectSize(key).catch(() => diskSize)
+			: Promise.resolve(diskSize);
+	}
+
 	/** Shallowest first, so each folder's parent id already exists in the map. */
 	private async insertMissingFolders(
 		onDiskFolders: Set<string>,
@@ -292,7 +302,7 @@ export class ScanOperations {
 				folderId: parent ? (folderIdByPath.get(parent) ?? null) : null,
 				contentType: determineContentType(key),
 				category: determineCategory(key),
-				size: sizeByKey.get(key) ?? 0,
+				size: await this.plainSize(key, sizeByKey.get(key) ?? 0),
 			});
 
 			// Build the preview as part of the scan, so a mounted library is
@@ -332,14 +342,16 @@ export class ScanOperations {
 			tick(key);
 
 			const size = sizeByKey.get(key);
-			if (size === undefined || (size === known.size && !full)) {
+			// A sealed file is bigger on disk than the plaintext its row records.
+			const unchanged = size === known.size || size === sealedSize(known.size);
+			if (size === undefined || (unchanged && !full)) {
 				continue;
 			}
 
 			await this.ctx.db
 				.update(files)
 				.set({
-					size,
+					size: await this.plainSize(key, size),
 					...(full && {
 						contentType: determineContentType(key),
 						category: determineCategory(key),
@@ -371,9 +383,12 @@ export class ScanOperations {
 			return 0;
 		}
 
-		await this.ctx.db
-			.delete(files)
-			.where(and(ownedFiles(this.ctx), inArray(files.id, vanished)));
+		for (const ids of chunks(vanished)) {
+			await this.ctx.db
+				.delete(files)
+				.where(and(ownedFiles(this.ctx), inArray(files.id, ids)));
+		}
+		await purgeGrantsFor(this.ctx.db, "file", vanished);
 		return vanished.length;
 	}
 
@@ -393,9 +408,12 @@ export class ScanOperations {
 			return 0;
 		}
 
-		await this.ctx.db
-			.delete(folders)
-			.where(and(ownedFolders(this.ctx), inArray(folders.id, vanished)));
+		for (const ids of chunks(vanished)) {
+			await this.ctx.db
+				.delete(folders)
+				.where(and(ownedFolders(this.ctx), inArray(folders.id, ids)));
+		}
+		await purgeGrantsFor(this.ctx.db, "folder", vanished);
 		return vanished.length;
 	}
 }

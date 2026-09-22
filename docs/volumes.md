@@ -75,6 +75,16 @@ rejects every write — upload, rename, move, duplicate, trash and delete. The
 check lives in the storage service rather than at each route, so an endpoint
 added later cannot forget it.
 
+## Encrypted volumes
+
+`VOLUME_<NAME>_ENCRYPT=true` seals what Penombre writes to the volume (uploads,
+saves, copies into it and its thumbnail cache) with `ENCRYPTION_KEY`. Files
+already there, or written by other tools, are never rewritten: they stay
+readable by everything else on the host, and Penombre reads both kinds. Other
+tools see the files Penombre wrote as ciphertext, so leave it off for a library
+something else also reads. It needs a key and cannot be combined with
+`_READONLY`. See [Encryption](encryption.md).
+
 ## Scanning
 
 Volumes are written to from outside the app, so the database only matches the

@@ -13,6 +13,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import type { StorageContext } from "./context";
+import { purgeGrantsFor } from "./grants";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
@@ -126,10 +127,15 @@ export async function reconcileDelete(
 					inArray(files.path, batch),
 				),
 			)
-			.returning({ path: files.path });
+			.returning({ id: files.id, path: files.path });
 		for (const row of gone) {
 			await thumbnails.deleteThumbnails(row.path);
 		}
+		await purgeGrantsFor(
+			ctx.db,
+			"file",
+			gone.map((row) => row.id),
+		);
 		removed += gone.length;
 	}
 	for (const batch of chunks(deletedDirs)) {
@@ -143,6 +149,11 @@ export async function reconcileDelete(
 				),
 			)
 			.returning({ id: folders.id });
+		await purgeGrantsFor(
+			ctx.db,
+			"folder",
+			gone.map((row) => row.id),
+		);
 		removed += gone.length;
 	}
 	return removed;
