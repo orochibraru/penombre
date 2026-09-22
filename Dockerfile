@@ -25,10 +25,10 @@ FROM deps AS app-builder
 
 COPY . .
 
-# The running app reports `package.json`'s version, and a release image is
-# built before semantic-release bumps it — without this the image tagged
-# 1.8.28 reports 1.8.27. The version is computed by the `version` job in
-# publish.yaml and passed in as a build arg before any build step runs.
+# The running app reports `package.json`'s version, which only moves when a
+# release PR merges, so a canary image would report the last stable one. The
+# version is computed by the `version` job in publish.yaml and passed in as a
+# build arg before any build step runs.
 #
 # The read-back is not ceremony: the app inlines this value at build time, so a
 # patch that silently failed would ship an image that lies about itself, and

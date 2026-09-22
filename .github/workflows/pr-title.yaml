@@ -1,6 +1,6 @@
 name: PR Title
 # Squash merges use the PR title as the commit subject, which is what
-# semantic-release reads to decide whether to release.
+# releaser reads to decide the next version.
 
 on:
   pull_request:

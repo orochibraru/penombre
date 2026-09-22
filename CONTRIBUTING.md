@@ -95,7 +95,8 @@ SKIP=test-unit git commit ...   # skip a hook for one commit
 
 Commit messages follow
 [Conventional Commits](https://www.conventionalcommits.org/) — the `commit-msg`
-hook enforces it, and releases are cut from it by semantic-release.
+hook enforces it, and releases are cut from it by
+[releaser](https://github.com/orochibraru/releaser).
 
 ## Linting gotchas
 

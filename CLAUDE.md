@@ -1145,12 +1145,35 @@ locally and the publish job is skipped.
 A merge to `main` does not rebuild either. `docker.yaml` labels every image with
 its source tree (`dev.penombre.tree`); `publish.yaml`'s `tested` job finds the
 merged PR's `pr-<n>`, and when the tree matches `promote` re-tags it with a
-one-line `FROM` + `ENV PENOMBRE_RELEASE_VERSION` build — the image was built
-before semantic-release picked the version, and `config.ts` reads that override.
-A mismatch (direct push, stale PR run) takes the full path. The PR image of a
+one-line `FROM` + `ENV PENOMBRE_RELEASE_VERSION` build, since the image was
+built before the version was picked and `config.ts` reads that override. A
+mismatch (direct push, stale PR run) takes the full path. The PR image of a
 merged PR is deleted by `publish.yaml`, not `pr-cleanup.yaml`, which would race
-the promotion. The release commit carries `[skip ci]`; without it the version
-bump rebuilt and re-tested the whole pipeline a second time.
+the promotion.
+
+### Every merge is a canary; merging the release PR is the release
+
+[releaser](https://github.com/orochibraru/releaser) (`publish.yaml`) tags each
+push to `main` `vX.Y.Z-canary.N`, publishes the image as that and `:canary`, and
+keeps a `chore(release): X.Y.Z` PR open on `releaser/release`. Merging it
+re-tags that version's last canary as `:X.Y.Z` and `:latest` (`stable-images`),
+after refusing if the tree differs from the canary's beyond docs and the
+version. `latest` is never built, only promoted.
+
+- **Every commit type bumps** (`RELEASE_RULES`, `breaking` stays major). A push
+  with nothing release-worthy makes no canary but still rebuilds the release PR,
+  which would then carry code no image was built from, and the release would
+  refuse.
+- **The release branch is pushed over a deploy key** (`RELEASE_DEPLOY_KEY`).
+  Anything `github.token` pushes triggers no workflow, so the PR never got its
+  `CI Gate`. That is also why `pull_request.yaml` runs on pushes to
+  `releaser/release`: the first push lands before the PR exists.
+- **The release PR builds nothing.** `pull_request.yaml`'s `changes` job fails
+  it if it touches more than `CHANGELOG.md` and the version.
+- `version` dry-runs releaser for the tag the images get; `release` fails if the
+  real run disagrees. The `publish` concurrency group is what keeps them equal.
+- Old canary GitHub releases are pruned; their tags are not, releaser numbers
+  from them.
 
 ### TypeScript is held at 6 on purpose
 

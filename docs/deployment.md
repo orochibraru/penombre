@@ -176,6 +176,19 @@ docker inspect --format='{{.State.Health.Status}}' penombre-app-1
 
 ## Updating
 
+### Image tags
+
+| Tag              | What it is                                                     |
+| ---------------- | -------------------------------------------------------------- |
+| `latest`         | The last stable release.                                       |
+| `X.Y.Z`          | One stable release, pinned.                                    |
+| `canary`         | Every change merged to `main`, once its end-to-end tests pass. |
+| `X.Y.Z-canary.N` | One canary build, pinned.                                      |
+
+A stable release is a canary that has been promoted as is, not a new build. Run
+`canary` to get changes days before they are released, on an instance you can
+afford to restore from backup.
+
 ### 1. Back up your instance
 
 Back up your database (`pg_dump` for Postgres, or a copy of the `.sqlite` file)
