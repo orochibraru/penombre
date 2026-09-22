@@ -236,6 +236,23 @@ first. Size: `[S]` an hour, `[M]` a day, `[L]` more. Done means deleted.
       shown twice (toast + inline `Alert`). Map error codes to paraglide keys,
       one surface.
 
+## Features
+
+- [ ] [M] Release channel setting (`stable` | `canary`) so update alerts match
+      the image the instance runs. `services/version.ts` only reads
+      `releases/latest`, so a canary instance is never told about newer
+      canaries, and `isNewerVersion` splits on `.` and `Number()`s each part:
+      `1.8.51-canary.3` yields `NaN`, and comparing 1.8.51 against its own
+      canary is wrong either way. Store it in `app_settings` (instance-wide, the
+      image is per instance) with an env override under the `envProvided()`
+      rule, default from the running version (a `-canary.N` build defaults to
+      `canary`). Canary reads `releases?per_page=…` and takes the newest
+      prerelease or release, whichever is higher; compare with real semver
+      prerelease ordering. Admin → Settings select, the check's cache keyed by
+      channel, paraglide keys in all four locales, a unit test for the
+      comparisons, and `docs/deployment.md` (tags table) + `docs/env.md`. Pairs
+      with the Privacy item on making the check opt-out.
+
 ## Encryption
 
 Plan: `.claude/plans/2026-09-22-encryption.md`. Server-held key at rest only;
