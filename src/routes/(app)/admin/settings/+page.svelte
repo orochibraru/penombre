@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+		ClockIcon,
 		InfoIcon,
 		KeyRoundIcon,
 		LockIcon,
@@ -272,7 +273,6 @@
                                 {m.admin_email_sign_in_usage({
                                     count: String(data.usage.credentialAccounts),
                                 })}
-                                · {m.admin_restart_required()}
                             </span>
                         </span>
                     </Label>
@@ -426,8 +426,15 @@
                             name="smtpPassword"
                             type="password"
                             autocomplete="new-password"
-                            value={data.settings.smtp?.password ?? ""}
+                            placeholder={data.settings.smtp?.hasPassword
+                                ? "••••••••"
+                                : ""}
                         />
+                        {#if data.settings.smtp?.hasPassword}
+                            <p class="text-muted-foreground text-xs">
+                                {m.admin_smtp_password_hint()}
+                            </p>
+                        {/if}
                     </div>
                     <div class="flex flex-col gap-2 sm:col-span-2">
                         <Label for="smtpFrom">{m.admin_smtp_from()}</Label>
@@ -477,6 +484,87 @@
         </Card.Content>
     </Card.Root>
 
+    <Card.Root>
+        <Card.Header>
+            <Card.Title class="flex items-center gap-2">
+                <InfoIcon class="size-4" />
+                {m.admin_version_check()}
+            </Card.Title>
+            <Card.Description>
+                {m.admin_version_check_description()}
+            </Card.Description>
+        </Card.Header>
+        <Card.Content class="flex flex-col gap-4">
+            <Label
+                class="hover:bg-muted/40 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors data-disabled:cursor-not-allowed data-disabled:opacity-60"
+                data-disabled={data.provided.versionCheck ? "" : undefined}
+            >
+                <Checkbox
+                    name="versionCheckEnabled"
+                    checked={data.versionCheckEnabled}
+                    disabled={data.provided.versionCheck}
+                    class="mt-0.5"
+                />
+                <span class="grid gap-1 font-normal">
+                    <span class="font-medium">{m.admin_version_check_enabled()}</span>
+                    <span class="text-muted-foreground text-xs">
+                        {data.provided.versionCheck
+                            ? m.admin_env_read_only()
+                            : m.admin_version_check_hint()}
+                    </span>
+                </span>
+            </Label>
+
+            <div class="flex flex-col gap-2">
+                <Label for="releaseChannel">{m.admin_release_channel()}</Label>
+                <select
+                    id="releaseChannel"
+                    name="releaseChannel"
+                    value={data.releaseChannel}
+                    disabled={data.provided.releaseChannel}
+                    class="border-input bg-transparent ring-offset-background focus-visible:ring-ring h-9 rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <option value="stable">{m.admin_release_channel_stable()}</option>
+                    <option value="canary">{m.admin_release_channel_canary()}</option>
+                </select>
+                <p class="text-muted-foreground text-xs">
+                    {data.provided.releaseChannel
+                        ? m.admin_env_read_only()
+                        : m.admin_release_channel_hint()}
+                </p>
+            </div>
+        </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+        <Card.Header>
+            <Card.Title class="flex items-center gap-2">
+                <ClockIcon class="size-4" />
+                {m.admin_data_retention()}
+            </Card.Title>
+            <Card.Description>
+                {m.admin_data_retention_description()}
+            </Card.Description>
+        </Card.Header>
+        <Card.Content class="flex flex-col gap-2">
+            <Label for="retentionDays">{m.admin_data_retention_days()}</Label>
+            <Input
+                id="retentionDays"
+                name="retentionDays"
+                type="number"
+                min="1"
+                disabled={data.provided.dataRetention}
+                value={data.retentionDays ?? ""}
+                class="w-32"
+            />
+            <p class="text-muted-foreground text-xs">
+                {data.provided.dataRetention
+                    ? m.admin_env_read_only()
+                    : m.admin_data_retention_hint()}
+            </p>
+        </Card.Content>
+    </Card.Root>
+
     <div>
         <Button type="submit" loading={saving}>{m.save_changes()}</Button>
     </div>
@@ -492,7 +580,6 @@
         </Card.Title>
         <Card.Description>
             {m.admin_oauth_description()}
-            {m.admin_restart_required()}
         </Card.Description>
         <Card.Action>
             <Button
@@ -540,11 +627,6 @@
                         </span>
                     </span>
                     <div class="flex items-center gap-2">
-                        {#if provider.pending}
-                            <Badge variant="outline">
-                                {m.admin_oauth_pending()}
-                            </Badge>
-                        {/if}
                         <Badge variant={provider.enabled ? "secondary" : "outline"}>
                             {provider.enabled ? m.enabled() : m.disabled()}
                         </Badge>

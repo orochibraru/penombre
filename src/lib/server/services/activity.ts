@@ -73,10 +73,11 @@ export class ActivityService {
 	/**
 	 * Instance-wide audit log for admins.
 	 *
-	 * Deliberately omits `message` and `link`: those carry file and folder
-	 * names, and an admin auditing who did what has no business reading the
-	 * contents of someone else's drive. Action, actor and timestamp are
-	 * enough to answer "who deleted things last Tuesday".
+	 * Selects `message` but not `link`: writers (`storage/files.ts`,
+	 * `folders.ts`) must never put a file or folder name in `message`; an
+	 * admin auditing who did what has no business reading the contents of
+	 * someone else's drive. That invariant is what makes it safe to show
+	 * here; a name-bearing message would leak through this same query.
 	 */
 	async audit(limit = 100, offset = 0) {
 		const rows = await this.db

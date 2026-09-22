@@ -19,6 +19,7 @@ import {
 	sharings,
 	user,
 } from "#lib/server/db/schema.js";
+import { ancestorFolders } from "#lib/server/services/storage/mappers.js";
 
 const logger = new Logger("SharingService");
 
@@ -66,7 +67,16 @@ export class SharingService {
 		excludeUserId: string,
 		limit = 10,
 	): Promise<Recipient[]> {
-		const term = `%${query.trim().toLowerCase()}%`;
+		const trimmed = query.trim();
+		// Under 3 characters, or a wildcard-only query, turns this into a
+		// directory dump; one page at a time, but a dump all the same.
+		if (trimmed.length < 3) {
+			return Promise.resolve([]);
+		}
+		// `%`/`_` are LIKE metacharacters; a caller typing either must search
+		// for the literal character, not widen the match.
+		const escaped = trimmed.replace(/[%_\\]/g, (c) => `\\${c}`);
+		const term = `%${escaped.toLowerCase()}%`;
 		return this.db
 			.select({
 				id: user.id,
@@ -79,8 +89,8 @@ export class SharingService {
 				and(
 					ne(user.id, excludeUserId),
 					or(
-						sql`lower(${user.email}) like ${term}`,
-						sql`lower(${user.name}) like ${term}`,
+						sql`lower(${user.email}) like ${term} escape '\'`,
+						sql`lower(${user.name}) like ${term} escape '\'`,
 					),
 				),
 			)
@@ -408,6 +418,67 @@ export class SharingService {
 					owner: { name: row.ownerName, email: row.ownerEmail },
 				};
 			});
+	}
+
+	/**
+	 * Of `userIds`, who still has `fileId` shared with them; directly, or
+	 * through an ancestor folder.
+	 *
+	 * A note thread outlives the share it started under: a revoked sharee, or
+	 * one dropped from a folder share, must stop being notified even though
+	 * they are still in `noteParticipants`.
+	 */
+	async canReachFile(
+		ownerId: string,
+		fileId: string,
+		userIds: string[],
+	): Promise<string[]> {
+		if (userIds.length === 0) {
+			return [];
+		}
+		const [file] = await this.db
+			.select({ path: files.path })
+			.from(files)
+			.where(and(eq(files.id, fileId), eq(files.ownerId, ownerId)));
+		if (!file) {
+			return [];
+		}
+
+		// A folder's path is its own id appended to its parent's, so the last
+		// segment of every ancestor path *is* that ancestor's id: no lookup
+		// needed to turn "which folders contain this file" into ids to filter
+		// grants on.
+		const folderIds = ancestorFolders(file.path).map(
+			(path) => path.split("/").at(-1) as string,
+		);
+		const grantsOnThisResource = [
+			and(eq(sharings.resourceType, "file"), eq(sharings.resourceId, fileId)),
+			...(folderIds.length > 0
+				? [
+						and(
+							eq(sharings.resourceType, "folder"),
+							inArray(sharings.resourceId, folderIds),
+						),
+					]
+				: []),
+		];
+
+		// Filtered by resource in SQL, not loaded in full and sifted in JS: an
+		// owner who has shared thousands of other things with the same
+		// recipients must not pay for those grants to answer about one file.
+		const rows = await this.db
+			.select({ userId: sharedWith.userId })
+			.from(sharedWith)
+			.innerJoin(sharings, eq(sharings.id, sharedWith.sharingId))
+			.where(
+				and(
+					eq(sharings.ownerId, ownerId),
+					inArray(sharedWith.userId, userIds),
+					or(...grantsOnThisResource),
+				),
+			);
+		// A folder grant and a file grant can both match the same recipient.
+		return [...new Set(rows.map((row) => row.userId))];
 	}
 
 	/**

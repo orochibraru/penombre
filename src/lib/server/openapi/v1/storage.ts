@@ -28,6 +28,21 @@ const driveQuery = {
 	share: z.string().optional(),
 };
 
+/**
+ * A keyset page: omit `cursor` for the first one, pass back `nextCursor` for
+ * the next; it is null once there is no more. Ordered by `sort`/`dir` with a
+ * stable id tiebreaker, folders before files.
+ */
+const pageQuery = {
+	cursor: z.string().optional(),
+	limit: z.string().optional(),
+	sort: z.enum(["name", "size", "updatedAt"]).optional(),
+	dir: z.enum(["asc", "desc"]).optional(),
+};
+const listingPageSchema = objectListSchema.extend({
+	nextCursor: z.string().nullable(),
+});
+
 // ============================================================================
 // LIST / BROWSE
 // ============================================================================
@@ -35,24 +50,38 @@ const driveQuery = {
 export const listFiles = defineRoute({
 	method: "get",
 	path: "/api/v1/storage/list",
-	summary: "List all files",
-	description: "Returns a list of all files in the root directory",
+	summary: "List the root folder",
+	description:
+		"Returns a keyset-paginated page of the root directory's folders, then " +
+		"its files.",
 	tags: ["Storage"],
-	query: z.object(driveQuery),
-	response: objectListSchema,
+	query: z.object({ ...driveQuery, ...pageQuery }),
+	response: listingPageSchema,
 	errors: [500],
 	service: storageServiceFor,
+});
+
+/**
+ * `objectListSchema` plus one name per path segment, root first: the
+ * breadcrumb trail for this folder. A client used to fetch each segment's
+ * name with its own request; this folds them into the listing response
+ * instead. `null` means the segment's folder is gone (deleted, no longer
+ * reachable): the caller falls back to the raw id.
+ */
+const folderListingSchema = listingPageSchema.extend({
+	ancestorNames: z.array(z.string().nullable()),
 });
 
 export const listFilesInFolder = defineRoute({
 	method: "get",
 	path: "/api/v1/storage/list/{path}",
 	summary: "List files in folder",
-	description: "Returns a list of files within a specific folder path",
+	description:
+		"Returns a keyset-paginated page of a folder's subfolders, then its files.",
 	tags: ["Storage"],
 	params: z.object({ path: z.string() }),
-	query: z.object(driveQuery),
-	response: objectListSchema,
+	query: z.object({ ...driveQuery, ...pageQuery }),
+	response: folderListingSchema,
 	errors: [400, 500],
 	service: storageServiceFor,
 });
@@ -127,10 +156,11 @@ export const listTrashFiles = defineRoute({
 	method: "get",
 	path: "/api/v1/storage/file/trash",
 	summary: "List trashed files",
-	description: "Returns files currently in the trash",
+	description:
+		"Returns a keyset-paginated page of the trash's top-level folders, then files. Keys are full paths; `totalSize` is what emptying the whole trash frees.",
 	tags: ["Storage - Files"],
-	query: z.object(driveQuery),
-	response: objectListSchema,
+	query: z.object({ ...driveQuery, ...pageQuery }),
+	response: listingPageSchema.extend({ totalSize: z.number() }),
 	errors: [500],
 	service: storageServiceFor,
 });
@@ -156,10 +186,11 @@ export const listStarredFiles = defineRoute({
 	method: "get",
 	path: "/api/v1/storage/file/starred",
 	summary: "List starred files",
-	description: "Returns files marked as starred",
+	description:
+		"Returns a keyset-paginated page of starred folders, then starred files.",
 	tags: ["Storage - Files"],
-	query: z.object(driveQuery),
-	response: objectListSchema,
+	query: z.object({ ...driveQuery, ...pageQuery }),
+	response: listingPageSchema,
 	errors: [500],
 	service: storageServiceFor,
 });
@@ -180,11 +211,13 @@ export const listFilesByCategory = defineRoute({
 	method: "get",
 	path: "/api/v1/storage/file/category/{category}",
 	summary: "List files by category",
-	description: "Returns files matching the specified category",
+	description:
+		"Returns a keyset-paginated page of files matching the specified " +
+		"category.",
 	tags: ["Storage - Files"],
 	params: z.object({ category: z.string() }),
-	query: z.object(driveQuery),
-	response: objectListSchema,
+	query: z.object({ ...driveQuery, ...pageQuery }),
+	response: listingPageSchema,
 	errors: [400, 500],
 	service: storageServiceFor,
 });
@@ -521,6 +554,36 @@ export const bulkDownload = defineRoute({
 		paths: z.array(z.string()).min(1).max(100),
 	}),
 	query: z.object(driveQuery),
+	response: z.any().describe("Binary ZIP stream"),
+	errors: [400, 500],
+	service: storageServiceFor,
+});
+
+/**
+ * Above this many items the query string risks a proxy's default header size
+ * limit (nginx's 8 KB), even with bare keys. The GET form is for the common
+ * case, and the POST form (blob download) covers the rest.
+ */
+export const BULK_DOWNLOAD_LINK_MAX = 100;
+
+export const bulkDownloadLink = defineRoute({
+	method: "get",
+	path: "/api/v1/storage/download",
+	summary: "Bulk download as ZIP (link form)",
+	description:
+		"Same as the POST version, for a plain <a href> so the browser streams the download itself instead of buffering it in JS memory. Every selected item shares one folder, given once; `keys` is a comma-separated list of the bare names within it, resolved the same way the POST form's full paths are.",
+	tags: ["Storage - Downloads"],
+	query: z.object({
+		...driveQuery,
+		folder: z.string().optional(),
+		keys: z
+			.string()
+			.min(1)
+			.refine((value) => {
+				const count = value.split(",").filter(Boolean).length;
+				return count > 0 && count <= BULK_DOWNLOAD_LINK_MAX;
+			}, `keys must list 1-${BULK_DOWNLOAD_LINK_MAX} comma-separated names`),
+	}),
 	response: z.any().describe("Binary ZIP stream"),
 	errors: [400, 500],
 	service: storageServiceFor,

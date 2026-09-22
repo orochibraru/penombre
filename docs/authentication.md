@@ -64,9 +64,8 @@ the redirect URI to register with the provider, and a copy button for it.
 
 Three things worth knowing:
 
-- **Restart to activate.** The provider list is built once when the process
-  starts, so a provider you have just saved shows a _saved, not yet loaded_
-  badge and cannot sign anyone in until the instance restarts.
+- **No restart needed.** Saving a provider reloads the auth layer, and another
+  app instance sharing the database picks it up on its next OAuth request.
 - **The id is permanent.** It is stored on every account that signs in through
   the provider, so it is read-only once saved. To change it, add a new provider
   and remove the old one — people will have to link their account again.
@@ -191,6 +190,12 @@ credential is what marks it as an invitation — the sign-in flow sees it and
 routes the person to onboarding. Tick **Email invite** (available once SMTP is
 configured) to have Penombre mail them the sign-in link.
 
+Invite links expire after 7 days. An account that never finished onboarding (the
+link expired, or was lost before it reached anyone) still shows in the list with
+no password set; its row menu offers **Resend invite**, which mints a fresh link
+and invalidates any older, still-unused one for that account, so only one link
+is ever live at a time.
+
 There is deliberately **no way for an admin to set someone's password**. A
 password a second person has chosen and passed along is a password that lives in
 whatever channel carried it, and its owner believes it is theirs alone.
@@ -224,7 +229,7 @@ underlying action refuses: there would be no form to use the password on.
 Two optional methods let someone sign in without typing a password. Both are
 turned on under **Admin → Settings → Sign-in methods**, both require working
 SMTP (the toggles stay disabled until mail is configured), and both take effect
-**after the next restart** — better-auth builds its plugin list once at boot.
+immediately.
 
 | Method                    | What the person gets                           |
 | ------------------------- | ---------------------------------------------- |
@@ -251,9 +256,9 @@ Two things worth checking first:
 - **The admin test button proves the values in the form, not the saved ones.**
   It builds a one-off sender from whatever is typed in, so a passing test and a
   failing sign-in mean the settings were never saved. Save, then test again.
-- **A method enabled since the last restart has no endpoint yet.** Its button
-  stays off the sign-in screen until the restart, rather than appearing and
-  failing.
+- **A method that is off answers `403`.** The sign-in screen only offers methods
+  that are on, so a failing button means the setting changed while the page was
+  open: reload it.
 
 A relay that needs no credentials is supported: leave the SMTP username and
 password empty and no login is attempted.
@@ -396,6 +401,35 @@ curl -H "Authorization: Bearer pen_..." https://cloud.example.com/api/v1/storage
 
 API keys are rate-limited to **100 requests per minute** in production. Each key
 tracks its own request count and automatically refills.
+
+## Exporting your data
+
+**Account → Security → Export your data** offers two downloads:
+
+- **Files (.zip)**: everything at the root of your drive, zipped by the same
+  worker job the bulk-download button uses.
+- **Account data (.json)**: your profile, preferences and activity history.
+
+Both are a same-origin download, not a page fetch buffered in memory, so a large
+drive streams straight to disk.
+
+## Deleting your own account
+
+**Account → Security → Danger zone** lets you delete your own account.
+Confirmation asks for your password; an OAuth-only account with no password is
+instead let through only while its session is still fresh (signed in within the
+last 24 hours), so sign out and back in first if it refuses.
+
+Two things block a self-deletion outright, with a message explaining which:
+
+- **You are the instance's only administrator.** Promote someone else first.
+- **You own a shared drive.** Delete it or hand it to another member first,
+  otherwise its other members would lose it out from under them.
+
+Deleting cascades your files, folders, share links, sharings, API keys, passkeys
+and activity rows immediately; the bytes under `STORAGE_PATH` are cleaned up by
+the same hourly sweep that follows an admin-initiated removal (see
+[Admin → Users](admin.md#users)).
 
 ## Initial admin account
 

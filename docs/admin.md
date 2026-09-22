@@ -20,10 +20,15 @@ the storage bar for the whole volume and a per-user usage table, biggest first.
 role and ban state. A new account is created with no password: its owner chooses
 one at first sign-in. An admin cannot set it for them. The row menu can:
 
+- **Resend invite**: only on an account with no password set. Mints a fresh
+  invite link and invalidates any older, unused one for it. See
+  [Authentication](authentication.md#adding-people-to-an-instance).
 - **Make admin / Remove admin** — grant or revoke the `admin` role.
 - **Ban / Unban** — a banned user's sessions stop working immediately.
 - **Delete** — removes the account. You cannot delete your own account, since
-  that would lock the instance out of its own admin panel.
+  that would lock the instance out of its own admin panel; see
+  [Deleting your own account](authentication.md#deleting-your-own-account) for
+  the self-service path.
 
 Deleting a user cascades: their files, folders, share links, API keys, passkeys
 and activity rows go with them. The bytes under `STORAGE_PATH` are cleaned up on
@@ -49,8 +54,12 @@ the next boot.
 - **OAuth providers** — add, edit and remove OIDC providers, each with its
   client id, secret, discovery URL and scopes, and the redirect URI to register
   with the provider. Providers declared in the environment are listed read-only.
-  A new one is only usable after the instance restarts. See
-  [Authentication](authentication.md#from-the-admin-ui).
+  See [Authentication](authentication.md#from-the-admin-ui).
+- **Data retention**: how many days to keep activity log entries, notifications
+  and finished background job records. A nightly sweep deletes anything older;
+  blank keeps everything forever. Also settable with `DATA_RETENTION_DAYS`. File
+  copy/delete job records are unaffected: those are cleaned up as soon as their
+  request finishes, not on a timer.
 
 Configuration follows one rule: **an environment variable wins when it is set,
 otherwise this page governs.** A setting the environment claims is shown
@@ -58,10 +67,10 @@ read-only with a note; anything it does not claim is editable here. So removing
 `ENABLE_EMAIL_SIGNIN` from your `.env` hands that switch to the admin UI, and
 setting it again takes it back.
 
-Several things are read by the auth layer at boot — email sign-in, the
-passwordless methods and the OAuth providers — so changing them here takes
-effect **after the next restart**. The page says so next to each. Passkeys are
-the exception: switching them on or off applies immediately.
+Every sign-in setting on this page applies on the next request, with no restart:
+turning a method off refuses its sign-in endpoints straight away, and a saved
+OAuth provider can sign people in as soon as the page confirms it. People
+already signed in keep their session.
 
 ## Storage
 

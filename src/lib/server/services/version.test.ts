@@ -62,7 +62,7 @@ describe("checkForUpdate", () => {
 
 	test("returns update available when latest is newer", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({
@@ -77,12 +77,14 @@ describe("checkForUpdate", () => {
 			latestVersion: "1.1.0",
 			updateAvailable: true,
 			releaseUrl: "https://github.com/orochibraru/penombre/releases/tag/v1.1.0",
+			enabled: true,
+			channel: "stable",
 		});
 	});
 
 	test("returns no update when versions are equal", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({
@@ -98,7 +100,7 @@ describe("checkForUpdate", () => {
 
 	test("returns no update when current is newer than latest", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "2.0.0",
 		} as never);
 		mockFetchResponse({
@@ -115,7 +117,7 @@ describe("checkForUpdate", () => {
 
 	test("returns no update when version is development", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "development",
 		} as never);
 		mockFetchResponse({
@@ -132,7 +134,7 @@ describe("checkForUpdate", () => {
 
 	test("handles GitHub API non-ok response", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({ message: "rate limited" }, 403);
@@ -144,12 +146,14 @@ describe("checkForUpdate", () => {
 			latestVersion: null,
 			updateAvailable: false,
 			releaseUrl: null,
+			enabled: true,
+			channel: "stable",
 		});
 	});
 
 	test("handles fetch network error", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchFailure(new Error("Network error"));
@@ -161,7 +165,25 @@ describe("checkForUpdate", () => {
 			latestVersion: null,
 			updateAvailable: false,
 			releaseUrl: null,
+			enabled: true,
+			channel: "stable",
 		});
+	});
+
+	test("caches a failed check and does not refetch within the failure TTL", async () => {
+		const { checkForUpdate } = await importFresh();
+		mockGetConfig.mockReturnValue({
+			appVersion: "1.0.0",
+		} as never);
+		mockFetchResponse({ message: "rate limited" }, 403);
+
+		await checkForUpdate();
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+		const result = await checkForUpdate();
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+		expect(result.latestVersion).toBeNull();
+		expect(result.updateAvailable).toBe(false);
 	});
 
 	test("returns cached result on subsequent calls within TTL", async () => {
@@ -183,9 +205,53 @@ describe("checkForUpdate", () => {
 		expect(result.latestVersion).toBe("1.1.0");
 	});
 
+	test("a canary build defaults to the canary channel and picks the newest of any release type", async () => {
+		const { checkForUpdate } = await importFresh();
+		mockGetConfig.mockReturnValue({ appVersion: "1.8.51-canary.2" } as never);
+		mockFetchResponse([
+			{
+				tag_name: "v1.8.51-canary.1",
+				html_url: "https://x/canary.1",
+				prerelease: true,
+				draft: false,
+			},
+			{
+				tag_name: "v1.8.51-canary.4",
+				html_url: "https://x/canary.4",
+				prerelease: true,
+				draft: false,
+			},
+			{
+				tag_name: "v1.8.50",
+				html_url: "https://x/1.8.50",
+				prerelease: false,
+				draft: false,
+			},
+		]);
+
+		const result = await checkForUpdate();
+
+		expect(result.channel).toBe("canary");
+		expect(result.latestVersion).toBe("1.8.51-canary.4");
+		expect(result.updateAvailable).toBe(true);
+	});
+
+	test("a stable build never picks up a canary default", async () => {
+		const { checkForUpdate } = await importFresh();
+		mockGetConfig.mockReturnValue({ appVersion: "1.8.50" } as never);
+		mockFetchResponse({
+			tag_name: "v1.8.51",
+			html_url: "https://x/1.8.51",
+		});
+
+		const result = await checkForUpdate();
+
+		expect(result.channel).toBe("stable");
+	});
+
 	test("normalizes tag_name with v prefix", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({
@@ -200,7 +266,7 @@ describe("checkForUpdate", () => {
 
 	test("handles patch version comparison correctly", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "1.0.0",
 		} as never);
 		mockFetchResponse({
@@ -215,7 +281,7 @@ describe("checkForUpdate", () => {
 
 	test("handles major version comparison correctly", async () => {
 		const { checkForUpdate } = await importFresh();
-		mockGetConfig.mockReturnValueOnce({
+		mockGetConfig.mockReturnValue({
 			appVersion: "1.9.9",
 		} as never);
 		mockFetchResponse({
@@ -271,5 +337,26 @@ describe("isNewerVersion", () => {
 
 	test("handles v prefix in versions", () => {
 		expect(isNewerVersion("v1.0.0", "v1.1.0")).toBe(true);
+	});
+
+	test("a canary prerelease no longer breaks on NaN", () => {
+		// The old `.split(".").map(Number)` gave NaN for "canary.3" and
+		// compared every NaN as neither greater nor less than anything.
+		expect(isNewerVersion("1.8.51", "1.8.51-canary.3")).toBe(false);
+		expect(isNewerVersion("1.8.50", "1.8.51-canary.3")).toBe(true);
+	});
+
+	test("a release outranks its own prerelease", () => {
+		expect(isNewerVersion("1.8.51-canary.3", "1.8.51")).toBe(true);
+		expect(isNewerVersion("1.8.51", "1.8.51-canary.3")).toBe(false);
+	});
+
+	test("prerelease numbers compare numerically, not lexically", () => {
+		expect(isNewerVersion("1.8.51-canary.9", "1.8.51-canary.10")).toBe(true);
+		expect(isNewerVersion("1.8.51-canary.10", "1.8.51-canary.9")).toBe(false);
+	});
+
+	test("equal canary builds are not an update", () => {
+		expect(isNewerVersion("1.8.51-canary.3", "1.8.51-canary.3")).toBe(false);
 	});
 });

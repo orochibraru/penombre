@@ -1,47 +1,40 @@
 import { fail, redirect } from "@sveltejs/kit";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { Logger } from "#lib/logger.js";
 import { auth } from "#lib/server/auth/index.js";
 import { getConfig } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
-import { account as authAccount, user } from "#lib/server/db/schema.js";
+import { user } from "#lib/server/db/schema.js";
 import { getAppSettings } from "#lib/server/services/app-settings.js";
+import {
+	consumeInvite,
+	findValidInvite,
+} from "#lib/server/services/invites.js";
 import { resolve } from "$app/paths";
 
-/** Accounts an admin registered have no credential row until they set one. */
-async function needsPassword(email: string): Promise<boolean> {
-	const db = getDb();
-	const [account] = await db
-		.select({ id: user.id })
-		.from(user)
-		.where(eq(user.email, email))
-		.limit(1);
-	if (!account) {
-		return false;
-	}
-	const credentials = await db
-		.select({ id: authAccount.id })
-		.from(authAccount)
-		.where(
-			and(
-				eq(authAccount.userId, account.id),
-				eq(authAccount.providerId, "credential"),
-			),
-		)
-		.limit(1);
-	return credentials.length === 0;
-}
+const logger = new Logger("auth/onboarding");
 
 export const load = async ({ url }) => {
-	const email = url.searchParams.get("email")?.trim().toLowerCase() ?? "";
-	if (!(email && (await needsPassword(email)))) {
-		// Nothing to do here — either no such account, or it already has a
-		// password and belongs in the normal sign-in flow.
+	const token = url.searchParams.get("token")?.trim() ?? "";
+	const invite = token ? await findValidInvite(token) : null;
+	if (!invite) {
+		// Unknown, expired or already-used token; nothing to onboard here.
+		return redirect(307, resolve("auth/sign-in"));
+	}
+
+	const [account] = await getDb()
+		.select({ email: user.email })
+		.from(user)
+		.where(eq(user.id, invite.userId))
+		.limit(1);
+	if (!account) {
 		return redirect(307, resolve("auth/sign-in"));
 	}
 
 	const settings = await getAppSettings();
 	return {
-		email,
+		token,
+		email: account.email,
 		minLength: Math.max(
 			getConfig().auth.minPasswordLength,
 			settings.minPasswordLength ?? 8,
@@ -63,17 +56,15 @@ function isStrong(password: string): boolean {
 export const actions = {
 	setPassword: async ({ request }) => {
 		const form = await request.formData();
-		const email = String(form.get("email") ?? "")
-			.trim()
-			.toLowerCase();
+		const token = String(form.get("token") ?? "").trim();
 		const password = String(form.get("password") ?? "");
 		const confirm = String(form.get("confirm") ?? "");
 
-		if (!(await needsPassword(email))) {
-			return fail(400, { error: "This account already has a password." });
+		if (!token) {
+			return fail(400, { error: "INVITE_INVALID" });
 		}
 		if (password !== confirm) {
-			return fail(400, { error: "The passwords do not match." });
+			return fail(400, { error: "PASSWORD_MISMATCH" });
 		}
 
 		const settings = await getAppSettings();
@@ -83,23 +74,28 @@ export const actions = {
 		);
 		if (password.length < minLength) {
 			return fail(400, {
-				error: `Password must be at least ${minLength} characters.`,
+				error: "PASSWORD_TOO_SHORT",
+				errorParams: { count: String(minLength) },
 			});
 		}
 		if ((settings.requireStrongPassword ?? false) && !isStrong(password)) {
-			return fail(400, {
-				error: "Password needs upper and lower case, a digit and a symbol.",
-			});
+			return fail(400, { error: "PASSWORD_NOT_STRONG" });
 		}
 
-		const db = getDb();
-		const [record] = await db
-			.select({ id: user.id })
+		// Atomic: a second submit, or a second tab, with the same token finds
+		// it already used and fails rather than setting the password twice.
+		const invite = await consumeInvite(token);
+		if (!invite) {
+			return fail(400, { error: "INVITE_EXPIRED" });
+		}
+
+		const [record] = await getDb()
+			.select({ id: user.id, email: user.email })
 			.from(user)
-			.where(eq(user.email, email))
+			.where(eq(user.id, invite.userId))
 			.limit(1);
 		if (!record) {
-			return fail(404, { error: "No account for that address." });
+			return fail(404, { error: "INVITE_NO_ACCOUNT" });
 		}
 
 		try {
@@ -117,12 +113,13 @@ export const actions = {
 				password: hash,
 			});
 		} catch (err) {
-			return fail(500, { error: (err as Error).message });
+			logger.error("Failed to finish onboarding:", err);
+			return fail(500, { error: "ONBOARDING_FAILED" });
 		}
 
 		return redirect(
 			303,
-			`${resolve("auth/sign-in")}?email=${encodeURIComponent(email)}`,
+			`${resolve("auth/sign-in")}?email=${encodeURIComponent(record.email)}`,
 		);
 	},
 };

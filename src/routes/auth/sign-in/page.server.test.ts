@@ -112,7 +112,11 @@ function queue(result: unknown[]) {
 	mockSelect.mockReturnValueOnce(chain as never);
 }
 
-/** user row, credential row, passkey row, preferences row — in query order. */
+/**
+ * In query order: user row, then `hasAnyIdentity`'s two queries (any account
+ * row, passkey row), then `accountCredentials`'s two (credential row, passkey
+ * row again), then the preferences row.
+ */
 function account({
 	password = true,
 	passkey = false,
@@ -123,6 +127,8 @@ function account({
 	preferred?: string | null;
 }) {
 	queue([{ id: "u1" }]);
+	queue(password ? [{ id: "acc" }] : []);
+	queue(passkey ? [{ id: "pk" }] : []);
 	queue(password ? [{ id: "acc" }] : []);
 	queue(passkey ? [{ id: "pk" }] : []);
 	queue(
@@ -139,7 +145,13 @@ async function lookup(email = "a@example.com") {
 		method: "POST",
 		body,
 	});
-	return actions.lookup({ request } as never);
+	return actions.lookup({
+		request,
+		// Unique per call: the rate limiter's counter is a real, process-wide
+		// singleton, not mocked, so a fixed address would make later calls in
+		// a long test run start tripping it.
+		getClientAddress: () => crypto.randomUUID(),
+	} as never);
 }
 
 const allMethods = {

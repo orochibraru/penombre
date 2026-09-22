@@ -13,7 +13,11 @@ import {
 import type { ObjectItem } from "#lib/server/schema.js";
 import { dev } from "$app/env";
 import type { StorageContext } from "./context";
-import { generateETag } from "./mappers";
+import {
+	generateETag,
+	isActiveContentType,
+	rawFileSecurityHeaders,
+} from "./mappers";
 import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
@@ -52,30 +56,30 @@ export class ProxyService {
 	): Promise<Response | null> {
 		proxyLogger.debug(`Fetching thumbnail for: ${itemName}`);
 		const thumbSize = size === "small" ? 100 : size === "medium" ? 200 : 300;
-		const thumbData = await this.thumbnails.getThumbnail(itemName, thumbSize);
+		const thumbData = await this.thumbnails.getThumbnail(
+			itemName,
+			thumbSize,
+			ifNoneMatch,
+		);
 
 		if (!thumbData) {
-			proxyLogger.debug(
-				`Thumbnail generation failed, falling back to raw for: ${itemName}`,
-			);
+			proxyLogger.debug(`No thumbnail for: ${itemName}`);
 			return null;
 		}
 
-		const etag = generateETag({
-			size: thumbData.buffer.length,
-			mtime: Date.now(),
-		});
-
-		if (ifNoneMatch === etag) {
-			return new Response(null, { status: 304 });
+		// A thumbnail is scoped to the owner's access, not public; a caching
+		// proxy on `public, immutable` would keep serving it to anyone with the
+		// URL long after a share was revoked. Revalidating is a stat and a 304.
+		const headers = { "Cache-Control": CACHE_CONTROL, ETag: thumbData.etag };
+		if (!thumbData.buffer) {
+			return new Response(null, { status: 304, headers });
 		}
 
 		return new Response(new Uint8Array(thumbData.buffer), {
 			headers: {
+				...headers,
 				"Content-Type": thumbData.contentType,
-				"Cache-Control": "public, max-age=31536000, immutable",
 				"Content-Length": thumbData.buffer.length.toString(),
-				ETag: etag,
 			},
 			status: 200,
 		});
@@ -146,6 +150,7 @@ export class ProxyService {
 					"Accept-Ranges": "bytes",
 					"Cache-Control": CACHE_CONTROL,
 					ETag: etag,
+					...rawFileSecurityHeaders(file.contentType),
 				},
 			});
 		}
@@ -153,6 +158,11 @@ export class ProxyService {
 		proxyLogger.debug("Returning full file response");
 		const stream = await this.ctx.driver.getObjectStream(itemName);
 		const encodedName = encodeURIComponent(file.name);
+		// Active types are always downloaded, never rendered inline; the
+		// sandboxed CSP is defence in depth, this is the actual stop.
+		const disposition = isActiveContentType(file.contentType)
+			? "attachment"
+			: "inline";
 
 		return new Response(stream, {
 			status: 200,
@@ -160,9 +170,10 @@ export class ProxyService {
 				"Content-Type": file.contentType,
 				"Accept-Ranges": "bytes",
 				"Content-Length": String(size),
-				"Content-Disposition": `inline; filename*=UTF-8''${encodedName}`,
+				"Content-Disposition": `${disposition}; filename*=UTF-8''${encodedName}`,
 				"Cache-Control": CACHE_CONTROL,
 				ETag: etag,
+				...rawFileSecurityHeaders(file.contentType),
 			},
 		});
 	}

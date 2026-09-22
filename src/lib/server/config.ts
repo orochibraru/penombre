@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import process from "node:process";
 import z from "zod";
@@ -45,6 +46,8 @@ const volumeSchema = z.object({
 	path: z.string().min(1),
 	/** Refuse writes; the volume browses but cannot be modified. */
 	readOnly: z.boolean().default(false),
+	/** Seal what Penombre writes here. Existing files are never rewritten. */
+	encrypt: z.boolean().optional(),
 });
 
 export type VolumeConfig = z.infer<typeof volumeSchema>;
@@ -114,6 +117,15 @@ const configSchema = z
 				secure: z.boolean(),
 			})
 			.optional(),
+		versionCheck: z
+			.object({
+				enabled: z.boolean().default(defaultConfigValues.versionCheck.enabled),
+				releaseChannel: z.enum(["stable", "canary"]).optional(),
+			})
+			.optional()
+			.default(defaultConfigValues.versionCheck),
+		/** Days to keep activity/notification/job history. Unset keeps it forever. */
+		dataRetentionDays: z.number().int().positive().optional(),
 		simpleMode: z.boolean().default(defaultConfigValues.simpleMode),
 		bypassAuth: z.boolean().default(defaultConfigValues.bypassAuth),
 		autoRedirectProvider: z
@@ -123,6 +135,21 @@ const configSchema = z
 		storagePath: z.string().default(defaultConfigValues.storagePath),
 		dbLocation: z.string().default(defaultConfigValues.dbLocation),
 		volumes: z.array(volumeSchema).default([]),
+		encryption: z
+			.object({
+				key: z
+					.instanceof(Buffer)
+					.refine((key) => key.length === 32, {
+						message: "ENCRYPTION_KEY must be 32 bytes, base64",
+					})
+					.optional(),
+				previous: z.array(
+					z.instanceof(Buffer).refine((key) => key.length === 32, {
+						message: "ENCRYPTION_KEY_PREVIOUS keys must be 32 bytes, base64",
+					}),
+				),
+			})
+			.default({ previous: [] }),
 		worker: z
 			.object({
 				mode: z
@@ -138,6 +165,22 @@ const configSchema = z
 			.default(defaultConfigValues.worker),
 	})
 	.superRefine((config, ctx) => {
+		// Simple mode's root is a library other tools read; sealing it would
+		// turn someone's music folder into ciphertext.
+		if (config.simpleMode && config.encryption.key) {
+			ctx.addIssue({
+				code: "custom",
+				message: "ENCRYPTION_KEY is not supported with SIMPLE_MODE=true",
+			});
+		}
+		for (const volume of config.volumes.filter((v) => v.encrypt)) {
+			if (volume.readOnly || !config.encryption.key) {
+				ctx.addIssue({
+					code: "custom",
+					message: `Volume "${volume.name}": _ENCRYPT needs ENCRYPTION_KEY and a writable volume`,
+				});
+			}
+		}
 		if (config.smtp?.enabled) {
 			for (const field of REQUIRED_SMTP_FIELDS) {
 				if (!config.smtp[field]) {
@@ -175,7 +218,9 @@ export function validateConfig(config: unknown): AppConfig {
 function parseVolumes(): VolumeConfig[] {
 	const names = new Set<string>();
 	for (const key of Object.keys(env)) {
-		const match = key.match(/^VOLUME_([A-Z0-9_]+)_(PATH|LABEL|READONLY)$/);
+		const match = key.match(
+			/^VOLUME_([A-Z0-9_]+)_(PATH|LABEL|READONLY|ENCRYPT)$/,
+		);
 		if (match?.[1]) {
 			names.add(match[1]);
 		}
@@ -193,9 +238,40 @@ function parseVolumes(): VolumeConfig[] {
 			label: env[`VOLUME_${rawName}_LABEL`] || name,
 			path: resolve(path),
 			readOnly: env[`VOLUME_${rawName}_READONLY`] === "true",
+			encrypt: env[`VOLUME_${rawName}_ENCRYPT`] === "true",
 		});
 	}
 	return volumes;
+}
+
+const keyFiles = new Map<string, string>();
+
+/** Read once per path: `getConfig()` runs on every request. */
+function readKeyFile(path: string): string {
+	let raw = keyFiles.get(path);
+	if (raw === undefined) {
+		raw = readFileSync(path, "utf8").trim();
+		keyFiles.set(path, raw);
+	}
+	return raw;
+}
+
+/** `ENCRYPTION_KEY` or `_FILE`, plus `_PREVIOUS`. Mirrors `envelope.LoadKeyring` in Go. */
+function resolveEncryption(): { key?: Buffer; previous: Buffer[] } {
+	const file = env.ENCRYPTION_KEY_FILE?.trim();
+	const inline = env.ENCRYPTION_KEY?.trim();
+	if (file && inline) {
+		throw new Error("Set ENCRYPTION_KEY or ENCRYPTION_KEY_FILE, not both");
+	}
+	const raw = file ? readKeyFile(file) : inline;
+	return {
+		key: raw ? Buffer.from(raw, "base64") : undefined,
+		previous: (env.ENCRYPTION_KEY_PREVIOUS ?? "")
+			.split(",")
+			.map((part) => part.trim())
+			.filter(Boolean)
+			.map((part) => Buffer.from(part, "base64")),
+	};
 }
 
 /** Provider names appearing in any OAUTH_<NAME>_<FIELD> env var */
@@ -340,6 +416,16 @@ export function getConfig(): AppConfig {
 		auth: resolveAuthConfig(),
 		redis: redisUrl ? { url: redisUrl } : defaultConfigValues.redis,
 		smtp: resolveSmtpConfig(),
+		versionCheck: {
+			enabled: env.ENABLE_VERSION_CHECK !== "false",
+			releaseChannel:
+				env.RELEASE_CHANNEL === "stable" || env.RELEASE_CHANNEL === "canary"
+					? env.RELEASE_CHANNEL
+					: undefined,
+		},
+		dataRetentionDays: env.DATA_RETENTION_DAYS
+			? Number.parseInt(env.DATA_RETENTION_DAYS, 10)
+			: undefined,
 		simpleMode: env.SIMPLE_MODE === "true",
 		bypassAuth: env.BYPASS_AUTH === "true",
 		autoRedirectProvider: env.AUTH_AUTO_REDIRECT_PROVIDER || "",
@@ -351,6 +437,7 @@ export function getConfig(): AppConfig {
 		storagePath: resolve(env.STORAGE_PATH || paths.storagePath),
 		dbLocation: resolve(paths.dbLocation),
 		volumes: parseVolumes(),
+		encryption: resolveEncryption(),
 		// Raw, so the schema names a typo (`External`, `-1`) instead of
 		// silently falling back to the default.
 		worker: {
@@ -374,6 +461,9 @@ export function envProvided(): {
 	passkeySignIn: boolean;
 	minPasswordLength: boolean;
 	smtp: boolean;
+	versionCheck: boolean;
+	releaseChannel: boolean;
+	dataRetention: boolean;
 } {
 	return {
 		emailSignIn: env.ENABLE_EMAIL_SIGNIN !== undefined,
@@ -381,6 +471,9 @@ export function envProvided(): {
 		passkeySignIn: env.ENABLE_PASSKEY_SIGNIN !== undefined,
 		minPasswordLength: env.MIN_PASSWORD_LENGTH !== undefined,
 		smtp: env.SMTP_ENABLED !== undefined,
+		versionCheck: env.ENABLE_VERSION_CHECK !== undefined,
+		releaseChannel: env.RELEASE_CHANNEL !== undefined,
+		dataRetention: env.DATA_RETENTION_DAYS !== undefined,
 	};
 }
 

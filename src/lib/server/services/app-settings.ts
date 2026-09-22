@@ -81,12 +81,8 @@ export function signupAllowed(
 }
 
 /**
- * Providers stored in the database, for better-auth to merge with the ones
- * declared by environment variables.
- *
- * Read once at boot: better-auth builds its plugin list at module init, so a
- * provider added here only takes effect after a restart. The admin UI says so
- * rather than pretending otherwise.
+ * Providers stored in the database, merged with the env-declared ones by
+ * `refreshAuth()` in `auth/index.ts`.
  */
 export async function getStoredOAuthProviders() {
 	try {
@@ -138,10 +134,7 @@ export async function isEmailSignInEnabled(): Promise<boolean> {
 	}
 }
 
-/**
- * Whether passkey sign-in is on, resolving env over database. Read on every
- * passkey request rather than at init, so it needs no restart.
- */
+/** Whether passkey sign-in is on, resolving env over database. */
 export async function isPasskeySignInEnabled(): Promise<boolean> {
 	if (envProvided().passkeySignIn) {
 		return getConfig().auth.enablePasskeySignIn;
@@ -225,6 +218,68 @@ export async function getSmtpSettings(): Promise<{
 			from: stored.from,
 			secure: stored.secure ?? false,
 		};
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Whether the hourly GitHub release check runs, resolving env over database.
+ *
+ * Off-instance by default in the sense that it calls `api.github.com`, so
+ * this is the opt-out for a privacy-sensitive or air-gapped deployment.
+ */
+export async function isVersionCheckEnabled(
+	settings?: AppSettingsData,
+): Promise<boolean> {
+	if (envProvided().versionCheck) {
+		return getConfig().versionCheck.enabled;
+	}
+	try {
+		return (settings ?? (await getAppSettings())).versionCheckEnabled ?? true;
+	} catch {
+		return true;
+	}
+}
+
+/**
+ * Which release stream to compare the running version against.
+ *
+ * With nothing set, a `-canary.N` build defaults to watching canary; anything
+ * else watches stable; a canary image should not nag its admin about a
+ * stable release it has already moved past.
+ */
+export async function effectiveReleaseChannel(
+	settings?: AppSettingsData,
+): Promise<"stable" | "canary"> {
+	const config = getConfig();
+	if (envProvided().releaseChannel) {
+		return config.versionCheck.releaseChannel ?? "stable";
+	}
+	try {
+		const stored = (settings ?? (await getAppSettings())).releaseChannel;
+		if (stored) {
+			return stored;
+		}
+	} catch {
+		// fall through to the version-derived default
+	}
+	return config.appVersion.includes("-canary.") ? "canary" : "stable";
+}
+
+/**
+ * How many days of activity/notifications/finished-job history to keep, or
+ * `null` to keep everything forever. Resolves env over database, same rule
+ * as everything else here.
+ */
+export async function effectiveRetentionDays(
+	settings?: AppSettingsData,
+): Promise<number | null> {
+	if (envProvided().dataRetention) {
+		return getConfig().dataRetentionDays ?? null;
+	}
+	try {
+		return (settings ?? (await getAppSettings())).retentionDays ?? null;
 	} catch {
 		return null;
 	}

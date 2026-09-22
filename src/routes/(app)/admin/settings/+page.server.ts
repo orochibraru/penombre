@@ -1,12 +1,16 @@
 import { fail } from "@sveltejs/kit";
-import { loadedOAuthProviders } from "#lib/server/auth/index.js";
+import { refreshAuth } from "#lib/server/auth/index.js";
+import { requireAdmin } from "#lib/server/auth/require-admin.js";
 import { envProvided, getConfig } from "#lib/server/config.js";
 import type { AppSettingsData } from "#lib/server/db/schema.js";
 import { Email } from "#lib/server/email.js";
 import {
+	effectiveReleaseChannel,
+	effectiveRetentionDays,
 	getAppSettings,
 	getSmtpSettings,
 	isPasskeySignInEnabled,
+	isVersionCheckEnabled,
 	updateAppSettings,
 } from "#lib/server/services/app-settings.js";
 import {
@@ -16,9 +20,6 @@ import {
 } from "#lib/server/services/auth-methods.js";
 
 type StoredProvider = NonNullable<AppSettingsData["oauthProviders"]>[number];
-
-/** Provider ids the running process registered with better-auth. */
-const loadedNames = new Set(loadedOAuthProviders.map((p) => p.name));
 
 /**
  * The redirect URI the IdP has to be told about.
@@ -61,9 +62,23 @@ export const load = async () => {
 
 	const provided = envProvided();
 	const settings = await getAppSettings();
+	// Never the SMTP password or a provider's client secret: this page is
+	// still a page, and either would be serialised straight into its HTML.
+	// A blank password/secret field on save means "keep the stored one".
+	const redactedSettings = {
+		...settings,
+		smtp: settings.smtp
+			? {
+					...settings.smtp,
+					password: undefined,
+					hasPassword: !!settings.smtp.password,
+				}
+			: undefined,
+		oauthProviders: undefined,
+	};
 
 	return {
-		settings,
+		settings: redactedSettings,
 		// Which knobs the environment has claimed. Anything it has not is
 		// editable here; anything it has is shown locked.
 		provided,
@@ -75,6 +90,9 @@ export const load = async () => {
 		// one off would strand before they try it.
 		usage: await getSignInMethodUsage(),
 		twoFactorPending: await usersWithoutTwoFactor(),
+		versionCheckEnabled: await isVersionCheckEnabled(),
+		releaseChannel: await effectiveReleaseChannel(),
+		retentionDays: await effectiveRetentionDays(),
 		// Env-provided values are shown read-only: `config.ts` owns them, and
 		// letting the UI write them would give two sources of truth.
 		env: {
@@ -82,6 +100,9 @@ export const load = async () => {
 			oauthSignIn: config.auth.enableOAuthSignIn,
 			passkeySignIn: config.auth.enablePasskeySignIn,
 			minPasswordLength: config.auth.minPasswordLength,
+			versionCheckEnabled: config.versionCheck.enabled,
+			releaseChannel: config.versionCheck.releaseChannel,
+			retentionDays: config.dataRetentionDays,
 			providers: config.auth.oauthProviders.map((provider) => ({
 				name: provider.name,
 				prettyName: provider.prettyName ?? provider.name,
@@ -100,9 +121,6 @@ export const load = async () => {
 			pkce: provider.pkce ?? true,
 			enabled: provider.enabled !== false,
 			callbackUrl: callbackUrl(config.origin, provider.name),
-			// Saved but not yet registered: better-auth builds its provider
-			// list at boot, so this one cannot sign anyone in until a restart.
-			pending: !loadedNames.has(provider.name),
 		})),
 		origin: config.origin,
 	};
@@ -140,13 +158,32 @@ function domainsFromForm(form: FormData): string[] {
 	return [...new Set(domains)];
 }
 
-function smtpFromForm(form: FormData, port: number) {
+/** `undefined` for blank (keep forever); `null` for an invalid value. */
+function retentionDaysFromForm(form: FormData): number | undefined | null {
+	const input = text(form, "retentionDays");
+	if (!input) {
+		return undefined;
+	}
+	const parsed = Number(input);
+	return Number.isFinite(parsed) && parsed >= 1 ? Math.trunc(parsed) : null;
+}
+
+/**
+ * Blank means unchanged: the page never sends the stored password back, so a
+ * save that did not retype it must not overwrite it with an empty string.
+ */
+function smtpFromForm(
+	form: FormData,
+	port: number,
+	existingPassword: string | undefined,
+) {
 	return {
 		enabled: bool(form, "smtpEnabled"),
 		host: text(form, "smtpHost"),
 		port,
 		user: text(form, "smtpUser"),
-		password: String(form.get("smtpPassword") ?? ""),
+		password:
+			String(form.get("smtpPassword") ?? "").trim() || existingPassword || "",
 		from: text(form, "smtpFrom"),
 		secure: bool(form, "smtpSecure"),
 	};
@@ -200,6 +237,7 @@ export const actions = {
 	 * fields and builds a one-off sender from them.
 	 */
 	testEmail: async ({ request, locals }) => {
+		requireAdmin(locals);
 		const form = await request.formData();
 		const to = locals.user?.email;
 		if (!to) {
@@ -218,7 +256,13 @@ export const actions = {
 					host: text(form, "smtpHost"),
 					port,
 					user: text(form, "smtpUser"),
-					password: String(form.get("smtpPassword") ?? ""),
+					// The page never carries the stored password, so a blank
+					// field means "test with what is already saved", not "test
+					// with no password".
+					password:
+						String(form.get("smtpPassword") ?? "").trim() ||
+						(await getSmtpSettings())?.password ||
+						"",
 					from: text(form, "smtpFrom"),
 					secure: bool(form, "smtpSecure"),
 				};
@@ -249,12 +293,23 @@ export const actions = {
 		}
 	},
 
-	save: async ({ request }) => {
+	save: async ({ request, locals }) => {
+		requireAdmin(locals);
 		const form = await request.formData();
 
 		const minLength = Number(form.get("minPasswordLength"));
 		if (!Number.isFinite(minLength) || minLength < 8 || minLength > 128) {
 			return fail(400, { error: "Password length must be between 8 and 128." });
+		}
+
+		// Blank means "keep everything forever": the sweep is a no-op with
+		// nothing set, so there is no separate on/off toggle to fall out of
+		// sync with this field.
+		const retentionDays = retentionDaysFromForm(form);
+		if (retentionDays === null) {
+			return fail(400, {
+				error: "Retention must be a positive number of days, or left blank.",
+			});
 		}
 
 		const provided = envProvided();
@@ -325,7 +380,21 @@ export const actions = {
 				...(provided.passkeySignIn
 					? {}
 					: { passkeySignInEnabled: nextPasskey }),
-				...(provided.smtp ? {} : { smtp: smtpFromForm(form, smtpPort) }),
+				...(provided.smtp
+					? {}
+					: {
+							smtp: smtpFromForm(form, smtpPort, current.smtp?.password),
+						}),
+				...(provided.versionCheck
+					? {}
+					: { versionCheckEnabled: bool(form, "versionCheckEnabled") }),
+				...(provided.releaseChannel
+					? {}
+					: {
+							releaseChannel:
+								form.get("releaseChannel") === "canary" ? "canary" : "stable",
+						}),
+				...(provided.dataRetention ? {} : { retentionDays }),
 			});
 			return { success: true };
 		} catch (error) {
@@ -339,7 +408,8 @@ export const actions = {
 	 * so renaming it would orphan everyone who signed in through it. Editing
 	 * posts it back read-only and this treats a known id as an update.
 	 */
-	saveProvider: async ({ request }) => {
+	saveProvider: async ({ request, locals }) => {
+		requireAdmin(locals);
 		const form = await request.formData();
 		const name = slug(text(form, "providerName"));
 
@@ -403,13 +473,15 @@ export const actions = {
 
 		try {
 			await updateAppSettings({ oauthProviders: providers });
+			await refreshAuth();
 			return { providerSaved: name };
 		} catch (error) {
 			return fail(500, { error: (error as Error).message });
 		}
 	},
 
-	deleteProvider: async ({ request }) => {
+	deleteProvider: async ({ request, locals }) => {
+		requireAdmin(locals);
 		const form = await request.formData();
 		const name = text(form, "providerName");
 		const current = await getAppSettings();
@@ -424,6 +496,7 @@ export const actions = {
 
 		try {
 			await updateAppSettings({ oauthProviders: providers });
+			await refreshAuth();
 			return { providerRemoved: name };
 		} catch (error) {
 			return fail(500, { error: (error as Error).message });

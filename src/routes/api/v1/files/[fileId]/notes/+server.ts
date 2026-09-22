@@ -2,12 +2,15 @@ import type { RequestEvent } from "@sveltejs/kit";
 import { Logger } from "#lib/logger.js";
 import { Http } from "#lib/server/http.js";
 import { createNote, listNotes } from "#lib/server/openapi/v1/notes.js";
+import { drivesService } from "#lib/server/services/drives.js";
 import { NoteService } from "#lib/server/services/notes.js";
 import { NotificationService } from "#lib/server/services/notifications.js";
+import { SharingService } from "#lib/server/services/sharings.js";
 import type { StorageService } from "#lib/server/services/storage/index.js";
 
 const notes = new NoteService();
 const notifications = new NotificationService();
+const sharings = new SharingService();
 const logger = new Logger("Notes API");
 
 /**
@@ -24,9 +27,39 @@ async function canReach(
 }
 
 /**
+ * Of `userIds`, who can still reach this file: a member of the drive it
+ * lives on, or (a personal-drive file) someone it is still shared with.
+ *
+ * A note thread outlives the access that started it; a revoked sharee, or
+ * someone removed from the drive, must stop hearing about it even though
+ * `noteParticipants` still lists them.
+ */
+async function reachable(
+	ownerId: string,
+	fileId: string,
+	volumeId: string | null,
+	userIds: string[],
+): Promise<string[]> {
+	if (userIds.length === 0) {
+		return [];
+	}
+	const driveId = volumeId?.startsWith("drive:") ? volumeId.slice(6) : null;
+	if (driveId) {
+		const members = await Promise.all(
+			userIds.map(async (id) =>
+				(await drivesService.access(driveId, id)) ? id : null,
+			),
+		);
+		return members.filter((id): id is string => id !== null);
+	}
+	return sharings.canReachFile(ownerId, fileId, userIds);
+}
+
+/**
  * Tell the people who care that a note landed: the file's owner, and anyone
- * else already in the thread. The author is never told about their own note —
- * `notifyMany` dedupes, so an owner who is also a participant hears once.
+ * else already in the thread who can still reach it. The author is never
+ * told about their own note; `notifyMany` dedupes, so an owner who is also
+ * a participant hears once.
  *
  * Deliberately after the note is saved and never awaited into the response's
  * success: `notify` swallows its own failures, so a broken mail server cannot
@@ -47,7 +80,13 @@ async function announce(
 			fileId,
 			author.id,
 		);
-		const recipients = [file.ownerId, ...participants].filter(
+		const stillReachable = await reachable(
+			file.ownerId,
+			fileId,
+			file.volumeId,
+			participants,
+		);
+		const recipients = [file.ownerId, ...stillReachable].filter(
 			(id) => id !== author.id,
 		);
 		await notifications.notifyMany(

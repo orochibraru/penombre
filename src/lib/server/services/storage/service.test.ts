@@ -529,7 +529,9 @@ describe("StorageService", () => {
 			const service = new StorageService(testUser);
 			await service.deleteFile("abc-uuid.txt");
 
-			expect(mockDelete).toHaveBeenCalledTimes(1);
+			// One for the file row, two more for purgeGrantsFor's shares/sharings
+			// cleanup.
+			expect(mockDelete).toHaveBeenCalledTimes(3);
 			expect(mockDriver.deleteObject).toHaveBeenCalledWith("abc-uuid.txt");
 			expect(mockRegister).toHaveBeenCalledWith(
 				expect.objectContaining({ action: "delete", userId: "user-1" }),
@@ -882,77 +884,6 @@ describe("StorageService", () => {
 	});
 
 	// =========================================================================
-	// listTrashFiles
-	// =========================================================================
-	describe("listTrashFiles", () => {
-		test("returns combined trashed files and folders as ObjectList", async () => {
-			const trashedFile: DbFile = { ...baseFile, isTrashed: true };
-			const trashedFolder: DbFolder = { ...baseFolder, isTrashed: true };
-
-			// Promise.all: files first, folders second
-			mockNextSelect([trashedFile]);
-			mockNextSelect([trashedFolder]);
-
-			const service = new StorageService(testUser);
-			const result = await service.listTrashFiles();
-
-			expect(result.count).toBe(2);
-			expect(result.total).toBe(2);
-			// Folders come first in the result (folders are prepended)
-			// @ts-expect-error - type is ObjectItem[] but we know the order here
-			expect(result.list[0].type).toBe("folder");
-			// @ts-expect-error - type is ObjectItem[] but we know the order here
-			expect(result.list[1].type).toBe("file");
-		});
-
-		test("returns empty list when nothing is trashed", async () => {
-			// both selects return [] by default
-
-			const service = new StorageService(testUser);
-			const result = await service.listTrashFiles();
-
-			expect(result).toEqual({ list: [], count: 0, total: 0 });
-		});
-
-		test("lists a trashed folder once, priced by what it contains", async () => {
-			const trashedFolder: DbFolder = { ...baseFolder, isTrashed: true };
-			const childFile: DbFile = {
-				...baseFile,
-				id: "file-2",
-				path: "folder-uuid-1/child-uuid.txt",
-				size: 4096,
-				isTrashed: true,
-			};
-
-			mockNextSelect([childFile]);
-			mockNextSelect([trashedFolder]);
-
-			const service = new StorageService(testUser);
-			const result = await service.listTrashFiles();
-
-			expect(result.count).toBe(1);
-			expect(result.list?.[0]?.key).toBe("folder-uuid-1/");
-			expect(result.list?.[0]?.size).toBe(4096);
-		});
-
-		test("keys are full paths, so the trash can address a nested file", async () => {
-			const nestedFile: DbFile = {
-				...baseFile,
-				path: "folder-uuid-1/abc-uuid.txt",
-				isTrashed: true,
-			};
-
-			mockNextSelect([nestedFile]);
-			mockNextSelect([]);
-
-			const service = new StorageService(testUser);
-			const result = await service.listTrashFiles();
-
-			expect(result.list?.[0]?.key).toBe("folder-uuid-1/abc-uuid.txt");
-		});
-	});
-
-	// =========================================================================
 	// emptyTrash
 	// =========================================================================
 	describe("emptyTrash", () => {
@@ -974,8 +905,10 @@ describe("StorageService", () => {
 					dirs: ["/tmp/penombre-test-storage/user-user-1/folder-uuid-1"],
 				},
 			});
-			// One delete for the files, one for the folders
-			expect(mockDelete).toHaveBeenCalledTimes(2);
+			// One delete for the files, one for the folders, plus
+			// purgeGrantsFor's shares/sharings cleanup called once per
+			// resource type (2 deletes each).
+			expect(mockDelete).toHaveBeenCalledTimes(6);
 		});
 
 		test("keeps the row of a file the job reports it could not delete", async () => {

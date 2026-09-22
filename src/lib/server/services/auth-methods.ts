@@ -80,6 +80,32 @@ export async function accountCredentials(
 	};
 }
 
+/**
+ * Whether this account already has some way to sign in on its own: any
+ * `account` row (password or OAuth) or a passkey.
+ *
+ * Broader than `accountCredentials`, which only asks about a password and a
+ * passkey; an OAuth-only account holds neither, but is not a pending
+ * invite either, so offering it onboarding would let anyone who knows the
+ * address take it over.
+ */
+export async function hasAnyIdentity(userId: string): Promise<boolean> {
+	const db = getDb();
+	const [accounts, passkeys] = await Promise.all([
+		db
+			.select({ id: account.id })
+			.from(account)
+			.where(eq(account.userId, userId))
+			.limit(1),
+		db
+			.select({ id: passkey.id })
+			.from(passkey)
+			.where(eq(passkey.userId, userId))
+			.limit(1),
+	]);
+	return accounts.length > 0 || passkeys.length > 0;
+}
+
 export interface SignInMethodState {
 	/** Accounts holding a password, i.e. users who sign in with email. */
 	credentialAccounts: number;

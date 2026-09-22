@@ -189,11 +189,20 @@ A stable release is a canary that has been promoted as is, not a new build. Run
 `canary` to get changes days before they are released, on an instance you can
 afford to restore from backup.
 
+The update banner watches one of these two streams; `RELEASE_CHANNEL=stable` or
+`canary` (see [env vars](env.md)), defaulting to whichever one the image you are
+already running belongs to. Run `canary` and it tells you about `X.Y.Z-canary.N`
+builds too, not just the next `latest`.
+
 ### 1. Back up your instance
 
 Back up your database (`pg_dump` for Postgres, or a copy of the `.sqlite` file)
 and your `STORAGE_PATH` directory, using whatever tooling you already run for
 the rest of your server.
+
+With [encryption](encryption.md) on, back up `ENCRYPTION_KEY` too, but store it
+apart from those backups: a backup that holds its own key protects nothing, and
+a backup without any copy of the key restores nothing.
 
 ### 2. Pull the latest image and recreate the container
 

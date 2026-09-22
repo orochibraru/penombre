@@ -15,13 +15,19 @@ mode, and logging behavior.
 used to generate absolute URLs in OAuth callbacks and email links. In
 development this is typically `http://localhost:3000`.
 
-| Variable     | Description                                  | Default                 |
-| ------------ | -------------------------------------------- | ----------------------- |
-| `APP_NAME`   | Application name (used in UI and emails)     | `Penombre`              |
-| `APP_ENV`    | Environment (`dev`/`production`)             | `production`            |
-| `ORIGIN`     | Public origin URL (used for OAuth callbacks) | `http://localhost:3000` |
-| `LOG_LEVEL`  | `debug`, `info`, `warn`, `error`, `trace`    | `info`                  |
-| `LOG_FORMAT` | `console` or `json`                          | `console`               |
+Behind a reverse proxy, also set `ADDRESS_HEADER` (and `XFF_DEPTH` for
+`X-Forwarded-For`) so Penombre reads the real client address instead of the
+proxy's own; see [Reverse proxy](reverse-proxy.md#client-address).
+
+| Variable         | Description                                                | Default                 |
+| ---------------- | ---------------------------------------------------------- | ----------------------- |
+| `APP_NAME`       | Application name (used in UI and emails)                   | `Penombre`              |
+| `APP_ENV`        | Environment (`dev`/`production`)                           | `production`            |
+| `ORIGIN`         | Public origin URL (used for OAuth callbacks)               | `http://localhost:3000` |
+| `ADDRESS_HEADER` | Header carrying the real client IP, e.g. `x-forwarded-for` | Unset                   |
+| `XFF_DEPTH`      | Trusted proxy hops to count back in `X-Forwarded-For`      | `1`                     |
+| `LOG_LEVEL`      | `debug`, `info`, `warn`, `error`, `trace`                  | `info`                  |
+| `LOG_FORMAT`     | `console` or `json`                                        | `console`               |
 
 ## Database
 
@@ -168,13 +174,26 @@ a `_PATH` is ignored.
 
 | Variable                 | Description                               | Default |
 | ------------------------ | ----------------------------------------- | ------- |
-| `VOLUME_<NAME>_PATH`     | Absolute path to the directory (required) | —       |
+| `VOLUME_<NAME>_PATH`     | Absolute path to the directory (required) | /       |
 | `VOLUME_<NAME>_LABEL`    | What the sidebar shows                    | `NAME`  |
 | `VOLUME_<NAME>_READONLY` | Refuse every write to the volume          | `false` |
+| `VOLUME_<NAME>_ENCRYPT`  | Seal what Penombre writes (needs a key)   | `false` |
 
 A volume is one tree shared by every account, in both modes: mount a library and
 everybody browses the files already on it. Pair it with `_READONLY` when nobody
 should be able to change them.
+
+## Encryption (Optional)
+
+Seals file bytes at rest on personal and shared drives. Losing the key loses
+every sealed file: keep a copy apart from `DATA_DIR` and its backups. Refused
+with `SIMPLE_MODE=true`. See [Encryption](encryption.md) for the full guide.
+
+| Variable                  | Description                                | Default |
+| ------------------------- | ------------------------------------------ | ------- |
+| `ENCRYPTION_KEY`          | 32 random bytes, base64                    | Unset   |
+| `ENCRYPTION_KEY_FILE`     | File holding the key, e.g. a Docker secret | Unset   |
+| `ENCRYPTION_KEY_PREVIOUS` | Retired keys, comma-separated, read-only   | Unset   |
 
 ## Simple Mode (Optional)
 
@@ -190,3 +209,24 @@ ignored unless `SIMPLE_MODE=true`.
 | ------------- | -------------------------------------- | ------- |
 | `SIMPLE_MODE` | Enable simple mode (`true`/`false`)    | `false` |
 | `BYPASS_AUTH` | Disable sign-in, everyone is the owner | `false` |
+
+## Version Check (Optional)
+
+An hourly check against GitHub releases, shown as an "update available" banner.
+Also settable in Admin → Settings; the environment wins whenever it is set. See
+[Deployment](deployment.md) for the tags each channel watches.
+
+| Variable               | Description                                   | Default                                             |
+| ---------------------- | --------------------------------------------- | --------------------------------------------------- |
+| `ENABLE_VERSION_CHECK` | Run the check at all (`true`/`false`)         | `true`                                              |
+| `RELEASE_CHANNEL`      | Compare against `stable` or `canary` releases | `canary` on a `-canary.N` build, `stable` otherwise |
+
+## Data Retention (Optional)
+
+How long `activity`, `notifications` and finished background job rows are kept
+before a nightly sweep deletes them. Also settable in Admin → Settings; the
+environment wins whenever it is set. See [Admin panel](admin.md#settings).
+
+| Variable              | Description                 | Default               |
+| --------------------- | --------------------------- | --------------------- |
+| `DATA_RETENTION_DAYS` | Days to keep the rows above | unset (keeps forever) |

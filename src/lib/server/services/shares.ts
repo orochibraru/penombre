@@ -220,7 +220,13 @@ export class ShareService {
 		const [file] = await this.db
 			.select({ path: files.path })
 			.from(files)
-			.where(and(eq(files.id, fileId), eq(files.ownerId, ownerId)));
+			.where(
+				and(
+					eq(files.id, fileId),
+					eq(files.ownerId, ownerId),
+					eq(files.isTrashed, false),
+				),
+			);
 		if (!file) {
 			return false;
 		}

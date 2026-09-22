@@ -1,4 +1,5 @@
 import { fail } from "@sveltejs/kit";
+import { Logger } from "#lib/logger.js";
 import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
 import { getConfig } from "#lib/server/config.js";
 import type { SignInMethod } from "#lib/server/db/schema.js";
@@ -12,6 +13,8 @@ import {
 	getUserPreferences,
 	updateUserPreferences,
 } from "#lib/server/services/preferences.js";
+
+const logger = new Logger("account/security");
 
 export const load = async ({ request, locals }) => {
 	const [apiKeys, passkeys, accounts] = await Promise.all([
@@ -52,7 +55,7 @@ export const load = async ({ request, locals }) => {
 export const actions = {
 	setPreferredSignInMethod: async ({ request, locals }) => {
 		if (!locals.user) {
-			return fail(401, { error: "Sign in again." });
+			return fail(401, { error: "UNAUTHORIZED" });
 		}
 		const value = String((await request.formData()).get("method") ?? "");
 		const available = methodsFor(
@@ -61,7 +64,7 @@ export const actions = {
 		);
 		const method = effectivePreferred(value as SignInMethod, available);
 		if (value && !method) {
-			return fail(400, { error: "That sign-in method is not available." });
+			return fail(400, { error: "SIGN_IN_METHOD_UNAVAILABLE" });
 		}
 		await updateUserPreferences(locals.user.id, {
 			preferredSignInMethod: method,
@@ -72,7 +75,7 @@ export const actions = {
 		const formData = await request.formData();
 		const name = formData.get("name");
 		if (typeof name !== "string" || !name.trim()) {
-			return { success: false, error: "API key name is required." };
+			return { success: false, error: "API_KEY_NAME_REQUIRED" };
 		}
 		try {
 			const newApiKey = await auth.api.createApiKey({
@@ -83,10 +86,8 @@ export const actions = {
 			});
 			return { success: true, apiKey: newApiKey.key };
 		} catch (error) {
-			return {
-				success: false,
-				error: (error as Error).message || "Failed to create API key.",
-			};
+			logger.error("Failed to create an API key:", error);
+			return { success: false, error: "API_KEY_CREATE_FAILED" };
 		}
 	},
 	setPassword: async ({ request }) => {
@@ -98,22 +99,23 @@ export const actions = {
 			typeof newPassword !== "string" ||
 			typeof newPasswordConfirm !== "string"
 		) {
-			return { success: false, error: "Invalid form submission." };
+			return { success: false, error: "INVALID_FORM" };
 		}
 
 		if (newPassword !== newPasswordConfirm) {
-			return { success: false, error: "New passwords do not match." };
+			return { success: false, error: "PASSWORD_MISMATCH" };
 		}
 
 		const { auth: authConfig } = getConfig();
 		if (!authConfig.enableEmailSignIn) {
-			return { success: false, error: "Email sign-in is disabled." };
+			return { success: false, error: "EMAIL_SIGNIN_DISABLED" };
 		}
 
 		if (newPassword.length < authConfig.minPasswordLength) {
 			return {
 				success: false,
-				error: `Password must be at least ${authConfig.minPasswordLength} characters.`,
+				error: "PASSWORD_TOO_SHORT",
+				errorParams: { count: String(authConfig.minPasswordLength) },
 			};
 		}
 
@@ -127,10 +129,8 @@ export const actions = {
 			});
 			return { success: true, passwordSet: true };
 		} catch (error) {
-			return {
-				success: false,
-				error: (error as Error).message || "Failed to set password.",
-			};
+			logger.error("Failed to set a password:", error);
+			return { success: false, error: "SET_PASSWORD_FAILED" };
 		}
 	},
 	changePassword: async ({ request }) => {
@@ -144,11 +144,11 @@ export const actions = {
 			typeof newPassword !== "string" ||
 			typeof newPasswordConfirm !== "string"
 		) {
-			return { success: false, error: "Invalid form submission." };
+			return { success: false, error: "INVALID_FORM" };
 		}
 
 		if (newPassword !== newPasswordConfirm) {
-			return { success: false, error: "New passwords do not match." };
+			return { success: false, error: "PASSWORD_MISMATCH" };
 		}
 
 		try {
@@ -161,9 +161,10 @@ export const actions = {
 			});
 			return { success: true };
 		} catch (error) {
+			logger.error("Failed to change a password:", error);
 			return {
 				success: false,
-				error: (error as Error).message || "Failed to change password.",
+				error: "CHANGE_PASSWORD_FAILED",
 			};
 		}
 	},

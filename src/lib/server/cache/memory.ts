@@ -4,6 +4,9 @@ import type { CacheBackend } from "./types";
 /**
  * In-memory cache backend backed by a Map with TTL support.
  */
+/** Past this many entries, a `set` sweeps expired ones before adding another. */
+const SWEEP_THRESHOLD = 10_000;
+
 export class MemoryCacheBackend implements CacheBackend {
 	private readonly cache = new Map<
 		string,
@@ -31,6 +34,17 @@ export class MemoryCacheBackend implements CacheBackend {
 
 	async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
 		const ttl = ttlSeconds ? ttlSeconds * 1000 : this.defaultTTL;
+		// Entries only ever expire on a `get` of that same key; a caller that
+		// never re-reads a key (a rate limiter keyed by a fresh fake token on
+		// every request, say) would otherwise grow this map forever.
+		if (this.cache.size >= SWEEP_THRESHOLD) {
+			const now = Date.now();
+			for (const [k, entry] of this.cache) {
+				if (entry.expiresAt <= now) {
+					this.cache.delete(k);
+				}
+			}
+		}
 		this.cache.set(key, {
 			value,
 			expiresAt: Date.now() + ttl,

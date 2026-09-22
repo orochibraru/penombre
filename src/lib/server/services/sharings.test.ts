@@ -1,4 +1,12 @@
 import { describe, expect, test } from "bun:test";
+import {
+	files,
+	folders,
+	sharedWith,
+	sharings,
+	user,
+} from "#lib/server/db/schema.js";
+import { migratedSqlite } from "#lib/server/db/test-utils.js";
 
 const { SharingService } = await import("./sharings");
 
@@ -14,7 +22,10 @@ const { SharingService } = await import("./sharings");
  */
 function awaitable(rows: unknown[]) {
 	const promise = Promise.resolve(rows);
-	return Object.assign(promise, { returning: () => Promise.resolve(rows) });
+	return Object.assign(promise, {
+		returning: () => Promise.resolve(rows),
+		limit: () => awaitable(rows),
+	});
 }
 
 function serviceWith(answers: unknown[][]) {
@@ -26,12 +37,12 @@ function serviceWith(answers: unknown[][]) {
 	(svc as any).db = {
 		select: () => ({
 			from: () => ({
-				where: () => Promise.resolve(queue.shift() ?? []),
+				where: () => awaitable(queue.shift() ?? []),
 				innerJoin: () => ({
 					innerJoin: () => ({
-						where: () => Promise.resolve(queue.shift() ?? []),
+						where: () => awaitable(queue.shift() ?? []),
 					}),
-					where: () => Promise.resolve(queue.shift() ?? []),
+					where: () => awaitable(queue.shift() ?? []),
 				}),
 			}),
 		}),
@@ -191,5 +202,106 @@ describe("revoke", () => {
 		]);
 		expect(await svc.revoke("owner", "sw1")).toBe(true);
 		expect(deleted).toHaveLength(1);
+	});
+});
+
+describe("canReachFile", () => {
+	test("empty candidate list needs no query", async () => {
+		const { svc } = serviceWith([]);
+		expect(await svc.canReachFile("owner", "f1", [])).toEqual([]);
+	});
+
+	test("the file not being the owner's own resolves to nobody reachable", async () => {
+		const { svc } = serviceWith([[]]);
+		expect(await svc.canReachFile("owner", "f1", ["u2"])).toEqual([]);
+	});
+
+	test("a direct file share is reachable", async () => {
+		const { svc } = serviceWith([
+			[{ path: "a/b.txt" }],
+			[{ userId: "u2", resourceType: "file", resourceId: "f1" }],
+		]);
+		expect(await svc.canReachFile("owner", "f1", ["u2"])).toEqual(["u2"]);
+	});
+
+	test("a share on an ancestor folder is reachable", async () => {
+		// A folder's path is its own id, so the ancestor id the query filters
+		// on is "docs" here, the same value the join row's resourceId carries.
+		const { svc } = serviceWith([[{ path: "docs/b.txt" }], [{ userId: "u2" }]]);
+		expect(await svc.canReachFile("owner", "f1", ["u2"])).toEqual(["u2"]);
+	});
+
+	test("a share on an unrelated folder is not reachable", async () => {
+		// The SQL filter itself excludes it now; an empty join result is what
+		// the real query returns when nothing matches the resource ids.
+		const { svc } = serviceWith([[{ path: "other/b.txt" }], []]);
+		expect(await svc.canReachFile("owner", "f1", ["u2"])).toEqual([]);
+	});
+
+	test("no remaining sharedWith row means revoked", async () => {
+		const { svc } = serviceWith([[{ path: "a/b.txt" }], []]);
+		expect(await svc.canReachFile("owner", "f1", ["u2"])).toEqual([]);
+	});
+
+	// Real SQLite, real migrations: a decoy grant on an unrelated file, from
+	// the same owner to the same recipient, must not affect the answer for a
+	// different file, the case the JS-side filtering used to load in full.
+	test("a grant on an unrelated resource is filtered in SQL, not just ignored", async () => {
+		const database = migratedSqlite();
+		await database.insert(user).values([
+			{ id: "owner", name: "Owner", email: "owner@x.test" },
+			{ id: "u2", name: "Recipient", email: "u2@x.test" },
+		]);
+		await database.insert(folders).values({
+			id: "folder1",
+			name: "Docs",
+			ownerId: "owner",
+			path: "folder1",
+		});
+		await database.insert(files).values([
+			{ id: "f1", name: "a.txt", ownerId: "owner", path: "folder1/f1" },
+			{ id: "f2", name: "b.txt", ownerId: "owner", path: "f2" },
+		]);
+		const [folderSharing] = await database
+			.insert(sharings)
+			.values({
+				ownerId: "owner",
+				resourceType: "folder",
+				resourceId: "folder1",
+				permission: "read",
+			})
+			.returning();
+		const [decoySharing] = await database
+			.insert(sharings)
+			.values({
+				ownerId: "owner",
+				resourceType: "file",
+				resourceId: "f2",
+				permission: "read",
+			})
+			.returning();
+		await database.insert(sharedWith).values([
+			{ sharingId: folderSharing?.id ?? "", userId: "u2" },
+			{ sharingId: decoySharing?.id ?? "", userId: "u2" },
+		]);
+
+		const svc = new SharingService();
+		(svc as any).db = database;
+
+		expect(await svc.canReachFile("owner", "f1", ["u2"])).toEqual(["u2"]);
+	});
+});
+
+describe("searchUsers", () => {
+	test("refuses a query under 3 characters without touching the db", async () => {
+		const { svc } = serviceWith([]);
+		expect(await svc.searchUsers("ab", "me")).toEqual([]);
+	});
+
+	test("a long enough query runs", async () => {
+		const { svc } = serviceWith([[{ id: "u2", name: "Bob", email: "bob@x" }]]);
+		expect(await svc.searchUsers("bob", "me")).toEqual([
+			{ id: "u2", name: "Bob", email: "bob@x" },
+		]);
 	});
 });

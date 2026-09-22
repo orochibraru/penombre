@@ -84,7 +84,7 @@
 	async function revokeSession(sessionToken: string) {
 		const { error } = await authClient.revokeSession({ token: sessionToken });
 		if (error) {
-			throw new Error(error.message || "Failed to revoke session");
+			throw new Error(error.message || m.toast_revoke_session_error());
 		}
 		await refreshAll();
 	}
@@ -133,7 +133,7 @@
                             <span class="tabular-nums">
                                 {m.last_active({
                                     date: new Date(
-                                        session.createdAt,
+                                        session.updatedAt,
                                     ).toLocaleString(),
                                 })}
                             </span>

@@ -19,6 +19,7 @@ import {
 } from "#lib/store/upload.js";
 import { browser } from "$app/env";
 import { invalidate } from "$app/navigation";
+import { page } from "$app/state";
 import {
 	allJobs,
 	deleteJob,
@@ -215,6 +216,12 @@ export async function enqueueUploads(jobs: UploadJob[]): Promise<void> {
 	if (jobs.length === 0) {
 		return;
 	}
+	// Stamped here, not by the caller: this is the one place every job passes
+	// through before it is persisted.
+	const userId = page.data.user?.id;
+	for (const job of jobs) {
+		job.userId = userId;
+	}
 	await putJobs(jobs);
 	for (const job of jobs) {
 		known.set(job.id, job);
@@ -251,8 +258,13 @@ export async function resumeUploads(): Promise<void> {
 	if (!browser) {
 		return;
 	}
+	const userId = page.data.user?.id;
 	const stored = await allJobs();
-	const interrupted = stored.filter((job) => job.status !== "done");
+	// A row stamped for someone else (or from before this field existed) is
+	// not this user's to resume or resend; a shared machine's next sign-in
+	// must not see, or re-upload, the previous account's queue.
+	const mine = stored.filter((job) => job.userId === userId);
+	const interrupted = mine.filter((job) => job.status !== "done");
 	if (interrupted.length === 0) {
 		return;
 	}

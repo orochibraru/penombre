@@ -10,6 +10,7 @@
 import "#lib/server/openapi/schemas.js";
 
 // Route definition modules (side-effect: register with the OpenAPI registry)
+import "#lib/server/openapi/v1/account.js";
 import "#lib/server/openapi/v1/activity.js";
 import "#lib/server/openapi/v1/auth.js";
 import "#lib/server/openapi/v1/drives.js";
