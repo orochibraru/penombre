@@ -3,7 +3,7 @@
 	import type { ObjectItem } from "#lib/api/index.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import * as m from "#lib/paraglide/messages.js";
-	import { readableFileSize } from "#lib/utils.js";
+	import { isTrashListing, readableFileSize } from "#lib/utils.js";
 	import { page } from "$app/state";
 
 	interface Props {
@@ -15,6 +15,8 @@
 		items?: ObjectItem[];
 		/** Set only by "Empty Trash" — a targeted delete gets generic wording. */
 		emptyingTrash?: boolean;
+		/** The whole trash, not just what is loaded, for "Empty Trash". */
+		trashTotals?: { count: number; size: number };
 	}
 
 	let {
@@ -24,6 +26,7 @@
 		handleDeleteObject,
 		items = [],
 		emptyingTrash = false,
+		trashTotals,
 	}: Props = $props();
 
 	const selectedKeys = $derived(
@@ -36,7 +39,7 @@
 		Object.values(checkedItems).filter((name): name is string => !!name),
 	);
 
-	const isTrash = $derived(page.url.pathname.startsWith("/trash"));
+	const isTrash = $derived(isTrashListing(page.url.pathname));
 
 	/**
 	 * Bytes the selection gives back. Summed from the rows already loaded, so
@@ -44,9 +47,15 @@
 	 * been calculated, which the listing does lazily.
 	 */
 	const reclaimed = $derived(
-		items
-			.filter((item) => selectedKeys.includes(item.key))
-			.reduce((total, item) => total + (item.size ?? 0), 0),
+		emptyingTrash && trashTotals
+			? trashTotals.size
+			: items
+					.filter((item) => selectedKeys.includes(item.key))
+					.reduce((total, item) => total + (item.size ?? 0), 0),
+	);
+
+	const itemCount = $derived(
+		emptyingTrash && trashTotals ? trashTotals.count : itemNames.length,
 	);
 
 	/** Only a permanent delete actually frees disk; trashing just moves it. */
@@ -97,7 +106,7 @@
 
         <div class="flex flex-col gap-1">
             <p class="text-muted-foreground text-xs">
-                {m.items_count({ count: String(itemNames.length) })}
+                {m.items_count({ count: String(itemCount) })}
             </p>
             <ul
                 class="divide-border max-h-40 divide-y overflow-y-auto rounded-[calc(var(--radius)-2px)] border"

@@ -15,7 +15,7 @@
 	import { enhance } from "#lib/forms.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { cn, filesCountLabel, readableFileSize } from "#lib/utils.js";
+	import { cn, readableFileSize } from "#lib/utils.js";
 	import { resolve } from "$app/paths";
 
 	const { data, form } = $props();
@@ -164,10 +164,10 @@
                             </Card.Title>
               <Card.Description class="tabular-nums">
                 {#if data.resourceType === "folder"}
-                                    {filesCountLabel(
-                                        files.length,
-                                        readableFileSize(totalSize),
-                                    )}
+                                    {m.storage_files_count({
+                                        count: String(files.length),
+                                        size: readableFileSize(totalSize),
+                                    })}
                 {:else}
                   {readableFileSize(files[0]?.size ?? 0)}
                 {/if}

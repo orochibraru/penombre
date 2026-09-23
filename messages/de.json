@@ -16,6 +16,12 @@
 	"signing_in": "Anmelden...",
 	"signed_in_success": "Erfolgreich angemeldet!",
 	"sign_in_error": "Beim Anmelden ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+	"sign_in_pending_invite": "Für dieses Konto liegt eine offene Einladung vor. Prüfen Sie Ihre E-Mails oder bitten Sie einen Admin, den Link erneut zu senden.",
+	"sign_in_error_invalid_credentials": "Falsche E-Mail-Adresse oder falsches Passwort.",
+	"sign_in_error_email_not_verified": "Bestätigen Sie zuerst Ihre E-Mail-Adresse.",
+	"sign_in_error_user_not_found": "Kein Konto für diese Adresse.",
+	"sign_in_error_invalid_token": "Dieser Link oder Code ist abgelaufen. Fordern Sie einen neuen an.",
+	"sign_in_error_provider_not_found": "Dieser Anmeldeanbieter ist nicht verfügbar.",
 	"email_password_required": "E-Mail-Adresse und Passwort erforderlich",
 	"forgot_password_title": "Passwort vergessen?",
 	"forgot_password_description": "Geben Sie unten Ihre E-Mail-Adresse ein, um Ihr Passwort zurückzusetzen.",
@@ -32,8 +38,8 @@
 	"go_back_home": "Geh zurück nach Hause",
 	"authenticating_redirect": "Nach erfolgreicher Authentifizierung werden Sie in Kürze weitergeleitet.",
 	"signing_in_with_passkey": "Anmeldung mit Passkey...",
-	"sign_in_passkey_error": "Beim Anmelden mit dem Passwort ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
-	"delete_passkey": "Passwort löschen",
+	"sign_in_passkey_error": "Beim Anmelden mit dem Passkey ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+	"delete_passkey": "Passkey löschen",
 	"delete_passkey_confirmation": "Sind Sie sicher, dass Sie diesen Passkey löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
 	"delete_passkey_success": "Passkey erfolgreich gelöscht.",
 	"delete_passkey_error": "Beim Löschen des Passkeys ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
@@ -55,6 +61,7 @@
 	"nav_3d_objects": "3D-Objekte",
 	"nav_settings": "Einstellungen",
 	"nav_api": "API",
+	"navigation": "Navigation",
 	"home": "Startseite",
 	"new": "Neu",
 	"uploading_progress": "Hochladen {progress}% ({count})",
@@ -65,6 +72,9 @@
 	"cancel": "Abbrechen",
 	"loading": "Wird geladen...",
 	"close": "Schließen",
+	"collapse": "Zusammenklappen",
+	"expand": "Erweitern",
+	"dismiss": "Verwerfen",
 	"delete": "Löschen",
 	"save": "Benutzereinstellungen speichern",
 	"select_language": "Sprache auswählen",
@@ -135,6 +145,9 @@
 	"confirm_restore_title": "Sind Sie absolut sicher?",
 	"confirm_restore_description": "Dies stellt die folgenden Elemente an ihrem ursprünglichen Speicherort wieder her.",
 	"restoring": "Wird wiederhergestellt...",
+	"confirm_revoke_title": "Öffentlichen Link widerrufen?",
+	"confirm_revoke_message": "Jeder, der diesen Link hat, kann nicht mehr auf die Datei zugreifen. Diese Aktion kann nicht rückgängig gemacht werden.",
+	"revoking": "Wird widerrufen...",
 	"create_folder_title": "Neuen Ordner erstellen",
 	"create_folder_description": "Dies erstellt einen neuen Ordner im aktuellen Verzeichnis.",
 	"create": "Erstellen",
@@ -160,6 +173,9 @@
 	"no_files_yet": "Noch keine Dateien",
 	"no_files_get_started": "Laden Sie Dateien hoch oder erstellen Sie einen Ordner",
 	"no_results": "Keine Ergebnisse.",
+	"trash_is_empty": "Papierkorb ist leer",
+	"star_files_to_find_here": "Markieren Sie Dateien mit einem Stern, um sie hier zu finden",
+	"nothing_opened_recently": "Zuletzt nichts geöffnet",
 	"upload_files": "Dateien hochladen",
 	"new_folder": "Neuer Ordner",
 	"drop_files_to_upload": "Dateien zum Hochladen ablegen",
@@ -180,16 +196,37 @@
 	"layout_list": "Liste",
 	"layout_grid": "Raster",
 	"empty_trash": "Papierkorb leeren",
-	"trash_is_empty": "Papierkorb ist leer",
 	"file_preview": "Dateivorschau",
 	"upload_files_context": "Dateien hochladen",
 	"create_folder_context": "Ordner erstellen",
 	"upload_complete": "Upload abgeschlossen",
-	"items_count": "{count} Elemente",
+	"items_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element",
+				"countPlural=other": "{count} Elemente"
+			}
+		}
+	],
 	"preparing_upload": "Upload wird vorbereitet",
 	"uploading": "Hochladen",
 	"overall_progress": "Gesamtfortschritt",
-	"files_progress": "{completed} von {total} Dateien",
+	"files_progress": [
+		{
+			"declarations": [
+				"input completed",
+				"input total",
+				"local totalPlural = total: plural"
+			],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "{completed} von {total} Datei",
+				"totalPlural=other": "{completed} von {total} Dateien"
+			}
+		}
+	],
 	"left": "verbleibend",
 	"heads_up": "Achtung!",
 	"error_loading_page": "Beim Laden dieser Seite ist ein Fehler aufgetreten.",
@@ -235,8 +272,26 @@
 	"toast_renaming_item": "Element wird umbenannt",
 	"toast_item_renamed": "Element umbenannt",
 	"toast_rename_item_error": "Umbenennung fehlgeschlagen",
-	"toast_moving_items": "{count} Elemente werden verschoben...",
-	"toast_items_moved": "{successCount} von {total} Elementen nach {destination} verschoben",
+	"toast_moving_items": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element wird verschoben...",
+				"countPlural=other": "{count} Elemente werden verschoben..."
+			}
+		}
+	],
+	"toast_items_moved": [
+		{
+			"declarations": ["input total", "local totalPlural = total: plural"],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "{successCount} von {total} Element nach {destination} verschoben",
+				"totalPlural=other": "{successCount} von {total} Elementen nach {destination} verschoben"
+			}
+		}
+	],
 	"toast_move_items_error": "Verschieben der Elemente fehlgeschlagen",
 	"toast_moving_item": "{name} wird verschoben...",
 	"toast_moved_to": "Verschoben nach {destination}",
@@ -245,7 +300,7 @@
 	"toast_file_upload_failed": "Upload von {name} fehlgeschlagen.",
 	"toast_prepare_upload_error": "Vorbereitung des Uploads fehlgeschlagen.",
 	"toast_creating_zip": "Zip von \"{name}\" wird erstellt...",
-	"toast_downloaded": "\"{name}\" heruntergeladen",
+	"toast_downloaded": "Download von \"{name}\" gestartet",
 	"toast_download_error": "Download von \"{name}\" fehlgeschlagen",
 	"toast_duplicating": "\"{name}\" wird dupliziert...",
 	"toast_duplicated": "\"{name}\" dupliziert",
@@ -253,24 +308,124 @@
 	"toast_star_error": "Aktualisierung des Favoritenstatus fehlgeschlagen",
 	"toast_added_to_starred": "\"{name}\" zu Favoriten hinzugefügt",
 	"toast_removed_from_starred": "\"{name}\" aus Favoriten entfernt",
-	"toast_creating_zip_files": "Zip von {count} Dateien wird erstellt...",
-	"toast_downloaded_files": "{count} Dateien heruntergeladen",
+	"toast_creating_zip_files": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Zip von {count} Datei wird erstellt...",
+				"countPlural=other": "Zip von {count} Dateien wird erstellt..."
+			}
+		}
+	],
+	"toast_downloaded_files": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Download von {count} Datei gestartet",
+				"countPlural=other": "Download von {count} Dateien gestartet"
+			}
+		}
+	],
 	"toast_download_files_error": "Download der Dateien fehlgeschlagen",
 	"toast_opening": "\"{name}\" wird geöffnet",
 	"toast_open_error": "Öffnen von \"{name}\" fehlgeschlagen",
 	"toast_open_code_error": "Öffnen der Codedatei fehlgeschlagen.",
-	"toast_downloaded_item": "{name} heruntergeladen",
+	"toast_downloaded_item": "Download von {name} gestartet",
 	"toast_already_in_folder": "\"{name}\" befindet sich bereits in diesem Ordner",
 	"toast_move_error_detail": "Verschieben von \"{name}\" fehlgeschlagen: {message}",
-	"toast_restoring_items": "{count} Elemente werden wiederhergestellt",
-	"toast_items_restored": "{count} Elemente wiederhergestellt",
-	"toast_restore_items_error": "Wiederherstellung von {count} Elementen fehlgeschlagen",
-	"toast_deleting_permanently": "{count} Elemente werden endgültig gelöscht",
-	"toast_items_deleted_permanently": "{count} Elemente endgültig gelöscht",
-	"toast_delete_permanently_error": "Endgültiges Löschen von {count} Elementen fehlgeschlagen",
-	"toast_moving_to_trash": "{count} Elemente werden in den Papierkorb verschoben",
-	"toast_items_moved_to_trash": "{count} Elemente in den Papierkorb verschoben",
-	"toast_move_to_trash_error": "Verschieben von {count} Elementen in den Papierkorb fehlgeschlagen",
+	"toast_restoring_items": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element wird wiederhergestellt",
+				"countPlural=other": "{count} Elemente werden wiederhergestellt"
+			}
+		}
+	],
+	"toast_items_restored": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element wiederhergestellt",
+				"countPlural=other": "{count} Elemente wiederhergestellt"
+			}
+		}
+	],
+	"toast_restore_items_error": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Wiederherstellung von {count} Element fehlgeschlagen",
+				"countPlural=other": "Wiederherstellung von {count} Elementen fehlgeschlagen"
+			}
+		}
+	],
+	"toast_deleting_permanently": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element wird endgültig gelöscht",
+				"countPlural=other": "{count} Elemente werden endgültig gelöscht"
+			}
+		}
+	],
+	"toast_items_deleted_permanently": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element endgültig gelöscht",
+				"countPlural=other": "{count} Elemente endgültig gelöscht"
+			}
+		}
+	],
+	"toast_delete_permanently_error": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Endgültiges Löschen von {count} Element fehlgeschlagen",
+				"countPlural=other": "Endgültiges Löschen von {count} Elementen fehlgeschlagen"
+			}
+		}
+	],
+	"toast_moving_to_trash": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element wird in den Papierkorb verschoben",
+				"countPlural=other": "{count} Elemente werden in den Papierkorb verschoben"
+			}
+		}
+	],
+	"toast_items_moved_to_trash": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element in den Papierkorb verschoben",
+				"countPlural=other": "{count} Elemente in den Papierkorb verschoben"
+			}
+		}
+	],
+	"toast_move_to_trash_error": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Verschieben von {count} Element in den Papierkorb fehlgeschlagen",
+				"countPlural=other": "Verschieben von {count} Elementen in den Papierkorb fehlgeschlagen"
+			}
+		}
+	],
+	"undo": "Rückgängig",
 	"title_settings_general": "Einstellungen - Allgemein",
 	"title_settings_storage": "Einstellungen - Speicher",
 	"title_account_details": "Konto - Details",
@@ -302,7 +457,16 @@
 	"share_password_placeholder": "Leer lassen für kein Passwort",
 	"share_expiry": "Läuft ab",
 	"share_expiry_never": "Nie",
-	"share_expiry_days": "In {count} Tagen",
+	"share_expiry_days": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "In {count} Tag",
+				"countPlural=other": "In {count} Tagen"
+			}
+		}
+	],
 	"share_requires_auth": "Nur angemeldete Benutzer können diesen Link öffnen",
 	"share_link": "Freigabelink",
 	"share_link_hint": "Jeder mit diesem Link kann ihn öffnen, vorbehaltlich der obigen Optionen.",
@@ -310,7 +474,16 @@
 	"copy_link": "Link kopieren",
 	"no_shares": "Sie haben noch nichts geteilt.",
 	"shared_description": "Von Ihnen erstellte Links, um Dateien mit allen zu teilen, die sie haben.",
-	"share_download_count": "{count} Downloads",
+	"share_download_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Download",
+				"countPlural=other": "{count} Downloads"
+			}
+		}
+	],
 	"toast_share_created": "Freigabelink erstellt",
 	"toast_share_create_error": "Freigabelink konnte nicht erstellt werden",
 	"toast_share_revoked": "Freigabelink widerrufen",
@@ -320,12 +493,30 @@
 	"storage_usage_description": "Was Ihre Dateien auf dem Volume dieser Instanz belegen.",
 	"storage_used_of": "{used} von {total} belegt",
 	"storage_available": "{size} verfügbar",
-	"storage_files_count": "{count} Dateien · {size}",
+	"storage_files_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Datei · {size}",
+				"countPlural=other": "{count} Dateien · {size}"
+			}
+		}
+	],
 	"storage_by_category": "Nach Kategorie",
 	"storage_no_files": "Noch keine Dateien.",
 	"storage_cleanup": "Aufräumen",
 	"storage_cleanup_description": "Speicherplatz, den Sie jetzt freigeben können.",
-	"storage_trash_holds": "Der Papierkorb enthält {count} Dateien ({size})",
+	"storage_trash_holds": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Der Papierkorb enthält {count} Datei ({size})",
+				"countPlural=other": "Der Papierkorb enthält {count} Dateien ({size})"
+			}
+		}
+	],
 	"storage_largest_files": "Größte Dateien",
 	"title_admin_activity": "Aktivitätsprotokoll",
 	"admin_activity": "Aktivitätsprotokoll",
@@ -365,6 +556,18 @@
 	"sort_ascending": "Aufsteigend",
 	"sort_descending": "Absteigend",
 	"toast_preferences_saved": "Einstellungen gespeichert",
+	"listing_load_mode": "Lademodus",
+	"listing_load_mode_description": "Wie ein großer Ordner oder eine große Kategorie über die erste Seite hinaus weiterlädt.",
+	"listing_load_mode_scroll": "Endloses Scrollen",
+	"listing_load_mode_scroll_description": "Lädt beim Herunterscrollen automatisch weiter.",
+	"listing_load_mode_pages": "Seiten",
+	"listing_load_mode_pages_description": "Lädt jeweils eine Seite, mit Seitensteuerung.",
+	"loading_more": "Wird geladen…",
+	"previous_page": "Zurück",
+	"next_page": "Weiter",
+	"page_of_total": "Seite {current} von {total}",
+	"selection_loaded_only": "{loaded} von {total} geladen: „Alle auswählen“ wählt nur das Geladene aus",
+	"toast_load_more_error": "Weitere Dateien konnten nicht geladen werden",
 	"storage_legend_you": "Sie",
 	"storage_legend_other": "Andere Daten",
 	"storage_legend_free": "Frei",
@@ -379,13 +582,9 @@
 	"admin_storage_path": "Pfad",
 	"default_sort_description": "Wie Ordnerinhalte beim Öffnen sortiert werden.",
 	"password_set": "Festgelegt",
-	"storage_files_count_one": "{count} Datei · {size}",
-	"admin_users_count_one": "{count} Benutzer auf dieser Instanz",
-	"share_download_count_one": "{count} Download",
 	"share_expired": "Abgelaufen",
 	"share_badge_password": "Passwort",
 	"share_badge_signin": "Anmeldung",
-	"storage_trash_holds_one": "Der Papierkorb enthält {count} Datei ({size})",
 	"storage_review_trash": "Ansehen",
 	"done": "Fertig",
 	"share_tab_link": "Link",
@@ -457,11 +656,12 @@
 	"onboarding_finish": "Loslegen",
 	"onboarding_skip": "Überspringen",
 	"admin_invite_user": "Benutzer hinzufügen",
-	"admin_invite_hint": "Registriert die Adresse. Das Passwort wählt die Person bei der ersten Anmeldung selbst — Sie sehen es nie.",
+	"admin_invite_hint": "Registriert die Adresse und erstellt einen einmaligen Einladungslink. Das Passwort wählt die Person beim Öffnen selbst; Sie sehen es nie.",
 	"admin_invite_name": "Name (optional)",
 	"admin_invite_name_placeholder": "Wird aus der E-Mail abgeleitet, wenn leer",
 	"admin_invite_submit": "Hinzufügen",
-	"toast_user_invited": "{email} kann sich jetzt anmelden",
+	"toast_user_invited": "{email} wurde eingeladen",
+	"toast_invite_link_copied": "Einladungslink kopiert",
 	"sign_in_change_email": "Andere Adresse verwenden",
 	"onboarding_password_title": "Passwort wählen",
 	"onboarding_password_description": "Ihr Konto für {email} ist bereit — legen Sie ein Passwort fest.",
@@ -477,22 +677,48 @@
 	"admin_smtp_port": "Port",
 	"admin_smtp_user": "Benutzername",
 	"admin_smtp_password": "Passwort",
+	"admin_smtp_password_hint": "Leer lassen, um das gespeicherte Passwort zu behalten.",
 	"admin_smtp_from": "Absenderadresse",
 	"admin_smtp_secure": "TLS verwenden",
 	"admin_smtp_secure_hint": "An für Port 465, aus für 587 mit STARTTLS.",
-	"admin_restart_required": "Wird nach dem nächsten Neustart wirksam.",
 	"admin_require_two_factor": "Zwei-Faktor-Authentifizierung verlangen",
 	"admin_require_two_factor_hint": "Alle müssen eine Authenticator-App einrichten, bevor sie die App nutzen können.",
-	"admin_require_two_factor_pending": "{count} Konto/Konten haben sie noch nicht eingerichtet und werden beim nächsten Besuch dazu aufgefordert.",
+	"admin_require_two_factor_pending": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Konto hat sie noch nicht eingerichtet und wird beim nächsten Besuch dazu aufgefordert.",
+				"countPlural=other": "{count} Konten haben sie noch nicht eingerichtet und werden beim nächsten Besuch dazu aufgefordert."
+			}
+		}
+	],
 	"admin_magic_link": "Anmeldelink per E-Mail",
-	"admin_magic_link_hint": "Ein Einmal-Link, der den Inhaber anmeldet. Wirkt nach dem nächsten Neustart.",
+	"admin_magic_link_hint": "Ein Einmal-Link, der den Inhaber anmeldet.",
 	"admin_email_otp": "Einmalcode per E-Mail",
-	"admin_email_otp_hint": "Ein kurzer Code per E-Mail statt eines Passworts. Wirkt nach dem nächsten Neustart.",
+	"admin_email_otp_hint": "Ein kurzer Code per E-Mail statt eines Passworts.",
 	"admin_needs_smtp": "Konfigurieren Sie unten SMTP, um dies zu aktivieren.",
-	"admin_email_sign_in_usage": "{count} Konto/Konten melden sich so an",
+	"admin_email_sign_in_usage": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Konto meldet sich so an",
+				"countPlural=other": "{count} Konten melden sich so an"
+			}
+		}
+	],
 	"admin_smtp_test": "Test-E-Mail senden",
 	"admin_smtp_test_hint": "Verwendet die Werte oben, gespeichert oder nicht.",
 	"admin_smtp_test_sent": "Test-E-Mail an {email} gesendet.",
+	"admin_version_check": "Versionsprüfung",
+	"admin_version_check_description": "Die stündliche Prüfung gegen GitHub-Releases für das Update-Banner.",
+	"admin_version_check_enabled": "Auf Updates prüfen",
+	"admin_version_check_hint": "Ruft einmal pro Stunde api.github.com auf. Für eine abgeschottete oder datenschutzsensible Bereitstellung deaktivieren.",
+	"admin_release_channel": "Release-Kanal",
+	"admin_release_channel_stable": "Stabil",
+	"admin_release_channel_canary": "Canary",
+	"admin_release_channel_hint": "Mit welchem Release-Stream die laufende Version verglichen wird.",
 	"sign_in_sending_link": "Link wird gesendet…",
 	"sign_in_link_sent": "Sehen Sie in Ihrem Posteingang nach dem Anmeldelink.",
 	"sign_in_sending_code": "Code wird gesendet…",
@@ -557,6 +783,7 @@
 	"editor_saving": "Wird gespeichert…",
 	"editor_saved": "Gespeichert um {time}",
 	"editor_save_error": "Speichern fehlgeschlagen. Neuer Versuch…",
+	"editor_unsaved": "Ungespeicherte Änderungen",
 	"editor_unsupported": "Für diesen Dateityp gibt es keinen Editor.",
 	"editor_office_note": "Wird in die Originaldatei zurückgeschrieben. Formatierungen, die dieser Editor nicht anzeigen kann, bleiben erhalten – außer bei Text, den Sie ändern.",
 	"sheet_add_row": "Zeile hinzufügen",
@@ -570,7 +797,16 @@
 	"clear_selection": "Leeren",
 	"seek": "Spulen",
 	"back": "Zurück",
-	"upload_action": "{count} Datei(en) hochladen",
+	"upload_action": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Datei hochladen",
+				"countPlural=other": "{count} Dateien hochladen"
+			}
+		}
+	],
 	"upload_files_heading": "Dateien",
 	"upload_files_hint": "Landen direkt im gerade geöffneten Ordner.",
 	"upload_folder_heading": "Ordner",
@@ -581,14 +817,22 @@
 	"upload_failed_title": "Fehlgeschlagen",
 	"upload_failed_interrupted": "Beim Schließen des Tabs abgebrochen",
 	"upload_retry": "Erneut versuchen",
-	"upload_resumed": "{count} unterbrochene(r) Upload(s) werden fortgesetzt",
+	"upload_resumed": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} unterbrochener Upload wird fortgesetzt",
+				"countPlural=other": "{count} unterbrochene Uploads werden fortgesetzt"
+			}
+		}
+	],
 	"sign_in_with_passkey": "Mit einem Passkey anmelden",
 	"upload_worker_error": "Uploads konnten in diesem Browser nicht gestartet werden.",
 	"notifications_title": "Benachrichtigungen",
 	"notifications_empty": "Nichts Neues.",
 	"notifications_mark_all_read": "Alle als gelesen markieren",
-	"notifications_unread_one": "1 ungelesen",
-	"notifications_unread_other": "{count} ungelesen",
+	"notifications_unread": "{count} ungelesen",
 	"notification_note": "{actor} hat eine Notiz zu {item} hinterlassen",
 	"notification_share": "{actor} hat {item} mit dir geteilt",
 	"notification_note_generic": "Zu {item} wurde eine neue Notiz hinterlassen",
@@ -616,12 +860,20 @@
 	"admin_oauth_enabled": "Diesen Anbieter auf der Anmeldeseite anbieten",
 	"admin_oauth_callback": "Beim Anbieter zu hinterlegende Redirect-URI",
 	"admin_oauth_callback_new": "Die Redirect-URI lautet {url} — hinterlegen Sie sie beim Anbieter.",
-	"admin_oauth_pending": "Gespeichert, noch nicht geladen",
 	"admin_oauth_from_env": "Aus der Umgebung",
 	"admin_oauth_saved": "{name} gespeichert. Nach einem Neustart kann damit angemeldet werden.",
 	"admin_oauth_removed": "{name} entfernt.",
 	"toast_trash_emptied": "Papierkorb geleert, {size} freigegeben",
-	"toast_trash_emptied_partial": "{count} Elemente konnten nicht gelöscht werden und sind weiterhin im Papierkorb",
+	"toast_trash_emptied_partial": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element konnte nicht gelöscht werden und ist weiterhin im Papierkorb",
+				"countPlural=other": "{count} Elemente konnten nicht gelöscht werden und sind weiterhin im Papierkorb"
+			}
+		}
+	],
 	"toast_emptying_trash": "Papierkorb wird geleert",
 	"toast_empty_trash_error": "Papierkorb konnte nicht geleert werden",
 	"nav_drives": "Gemeinsame Laufwerke",
@@ -666,14 +918,45 @@
 	"copy_here": "Hierher kopieren",
 	"copying": "Wird kopiert…",
 	"transfer_destination": "Ziel",
-	"toast_copying_items": "{count} Element(e) werden kopiert…",
-	"toast_items_copied": "{successCount} von {total} Element(en) nach {destination} kopiert",
+	"toast_copying_items": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Element wird kopiert…",
+				"countPlural=other": "{count} Elemente werden kopiert…"
+			}
+		}
+	],
+	"toast_items_copied": [
+		{
+			"declarations": ["input total", "local totalPlural = total: plural"],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "{successCount} von {total} Element nach {destination} kopiert",
+				"totalPlural=other": "{successCount} von {total} Elementen nach {destination} kopiert"
+			}
+		}
+	],
 	"toast_copy_items_error": "Kopieren fehlgeschlagen",
 	"volume_rescan": "Neu scannen",
 	"volume_rescan_error": "Scan konnte nicht gestartet werden",
 	"volume_scan_listing": "Dateien werden gesucht…",
 	"volume_scan_folders": "Ordner werden hinzugefügt…",
-	"volume_scan_files": "{done} von {total} Dateien",
+	"volume_scan_files": [
+		{
+			"declarations": [
+				"input done",
+				"input total",
+				"local totalPlural = total: plural"
+			],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "{done} von {total} Datei",
+				"totalPlural=other": "{done} von {total} Dateien"
+			}
+		}
+	],
 	"volume_scan_cleanup": "Entferntes wird bereinigt…",
 	"volume_scan_eta": "Noch etwa {time}",
 	"volume_rescan_options": "Scan-Optionen",
@@ -687,5 +970,44 @@
 	"preferred_sign_in": "Bevorzugte Anmeldemethode",
 	"preferred_sign_in_description": "Was die Anmeldeseite auf einem Gerät, das sich an Sie erinnert, zuerst anbietet. Die anderen Methoden bleiben einen Klick entfernt.",
 	"preferred_sign_in_none": "Keine Präferenz",
-	"passkeys_disabled": "Die Anmeldung mit Passkeys ist auf dieser Instanz deaktiviert."
+	"passkeys_disabled": "Die Anmeldung mit Passkeys ist auf dieser Instanz deaktiviert.",
+	"admin_resend_invite": "Einladung erneut senden",
+	"form_error_generic": "Etwas ist schiefgelaufen. Versuchen Sie es erneut.",
+	"form_error_missing_fields": "Name und E-Mail-Adresse sind erforderlich.",
+	"form_error_unauthorized": "Bitte erneut anmelden.",
+	"form_error_email_change_requires_smtp": "Die E-Mail-Änderung ist ohne aktiviertes SMTP nicht möglich.",
+	"form_error_email_update_failed": "Beim Aktualisieren der E-Mail ist ein unerwarteter Fehler aufgetreten.",
+	"form_error_account_update_failed": "Kontodaten konnten nicht aktualisiert werden.",
+	"form_error_sign_in_method_unavailable": "Diese Anmeldemethode ist nicht verfügbar.",
+	"form_error_api_key_name_required": "Ein Name für den API-Schlüssel ist erforderlich.",
+	"form_error_api_key_create_failed": "API-Schlüssel konnte nicht erstellt werden.",
+	"form_error_invalid_form": "Ungültige Formularübermittlung.",
+	"form_error_password_mismatch": "Die neuen Passwörter stimmen nicht überein.",
+	"form_error_email_signin_disabled": "Die Anmeldung per E-Mail ist deaktiviert.",
+	"form_error_password_too_short": "Das Passwort muss mindestens {count} Zeichen lang sein.",
+	"form_error_set_password_failed": "Passwort konnte nicht festgelegt werden.",
+	"form_error_change_password_failed": "Passwort konnte nicht geändert werden.",
+	"form_error_invite_invalid": "Dieser Einladungslink ist ungültig.",
+	"form_error_password_not_strong": "Das Passwort benötigt Groß- und Kleinbuchstaben, eine Ziffer und ein Symbol.",
+	"form_error_invite_expired": "Dieser Einladungslink ist abgelaufen oder wurde bereits verwendet.",
+	"form_error_invite_no_account": "Kein Konto für diese Einladung gefunden.",
+	"form_error_onboarding_failed": "Die Kontoeinrichtung konnte nicht abgeschlossen werden. Versuchen Sie es erneut.",
+	"account_export_title": "Ihre Daten exportieren",
+	"account_export_description": "Laden Sie alles, was Ihnen gehört, als ein ZIP-Archiv herunter, oder Ihre Kontodaten als JSON.",
+	"account_export_files": "Dateien herunterladen (.zip)",
+	"account_export_data": "Kontodaten herunterladen (.json)",
+	"toast_export_started": "Der Download startet …",
+	"account_danger_zone": "Gefahrenzone",
+	"account_delete_description": "Löscht Ihr Konto und alles darin dauerhaft. Dies kann nicht rückgängig gemacht werden.",
+	"account_delete_button": "Konto löschen",
+	"account_delete_confirm_title": "Konto löschen?",
+	"account_delete_confirm_body": "Dadurch werden Ihr Konto, Ihre Dateien und Ordner dauerhaft gelöscht und jede von Ihnen gewährte Freigabe beendet. Dies kann nicht rückgängig gemacht werden.",
+	"account_delete_no_password_hint": "Sie haben sich ohne Passwort angemeldet; eine Bestätigung wird nur verlangt, wenn Ihre Sitzung noch aktuell ist.",
+	"toast_deleting_account": "Konto wird gelöscht …",
+	"toast_account_deleted": "Konto gelöscht",
+	"toast_delete_account_error": "Ihr Konto konnte nicht gelöscht werden.",
+	"admin_data_retention": "Datenaufbewahrung",
+	"admin_data_retention_description": "Wie lange Aktivitätsverlauf, Benachrichtigungen und abgeschlossene Hintergrundjobs aufbewahrt werden, bevor ein nächtlicher Sweep sie entfernt.",
+	"admin_data_retention_days": "Aufbewahrung (Tage)",
+	"admin_data_retention_hint": "Leer lassen, um alles dauerhaft zu behalten."
 }

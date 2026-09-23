@@ -1,0 +1,2 @@
+CREATE INDEX `files_trash_idx` ON `files` (`owner_id`,`volume_id`,`is_trashed`,`path`);--> statement-breakpoint
+CREATE INDEX `folders_trash_idx` ON `folders` (`owner_id`,`volume_id`,`is_trashed`,`path`);

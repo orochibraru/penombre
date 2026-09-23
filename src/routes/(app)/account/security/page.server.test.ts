@@ -144,7 +144,7 @@ describe("createApiKey", () => {
 		const result = await actions.createApiKey(createRequest({}) as never);
 		expect(result).toEqual({
 			success: false,
-			error: "API key name is required.",
+			error: "API_KEY_NAME_REQUIRED",
 		});
 	});
 
@@ -154,7 +154,7 @@ describe("createApiKey", () => {
 		);
 		expect(result).toEqual({
 			success: false,
-			error: "API key name is required.",
+			error: "API_KEY_NAME_REQUIRED",
 		});
 	});
 
@@ -175,7 +175,7 @@ describe("createApiKey", () => {
 		);
 	});
 
-	test("returns error when createApiKey throws", async () => {
+	test("returns a generic error when createApiKey throws, never the raw message", async () => {
 		mockCreateApiKey.mockRejectedValueOnce(new Error("Rate limited"));
 
 		const result = await actions.createApiKey(
@@ -183,19 +183,7 @@ describe("createApiKey", () => {
 		);
 		expect(result).toEqual({
 			success: false,
-			error: "Rate limited",
-		});
-	});
-
-	test("returns fallback error when exception has no message", async () => {
-		mockCreateApiKey.mockRejectedValueOnce(new Error(""));
-
-		const result = await actions.createApiKey(
-			createRequest({ name: "My Key" }) as never,
-		);
-		expect(result).toEqual({
-			success: false,
-			error: "Failed to create API key.",
+			error: "API_KEY_CREATE_FAILED",
 		});
 	});
 });
@@ -205,7 +193,7 @@ describe("changePassword", () => {
 		const result = await actions.changePassword(createRequest({}) as never);
 		expect(result).toEqual({
 			success: false,
-			error: "Invalid form submission.",
+			error: "INVALID_FORM",
 		});
 	});
 
@@ -215,7 +203,7 @@ describe("changePassword", () => {
 		);
 		expect(result).toEqual({
 			success: false,
-			error: "Invalid form submission.",
+			error: "INVALID_FORM",
 		});
 	});
 
@@ -228,7 +216,7 @@ describe("changePassword", () => {
 		);
 		expect(result).toEqual({
 			success: false,
-			error: "Invalid form submission.",
+			error: "INVALID_FORM",
 		});
 	});
 
@@ -242,7 +230,7 @@ describe("changePassword", () => {
 		);
 		expect(result).toEqual({
 			success: false,
-			error: "New passwords do not match.",
+			error: "PASSWORD_MISMATCH",
 		});
 	});
 
@@ -267,7 +255,7 @@ describe("changePassword", () => {
 		);
 	});
 
-	test("returns error when changePassword throws", async () => {
+	test("returns a generic error when changePassword throws, never the raw message", async () => {
 		mockChangePassword.mockRejectedValueOnce(
 			new Error("Current password is incorrect"),
 		);
@@ -281,23 +269,7 @@ describe("changePassword", () => {
 		);
 		expect(result).toEqual({
 			success: false,
-			error: "Current password is incorrect",
-		});
-	});
-
-	test("returns fallback error when exception has no message", async () => {
-		mockChangePassword.mockRejectedValueOnce(new Error(""));
-
-		const result = await actions.changePassword(
-			createRequest({
-				currentPassword: "old123",
-				newPassword: "new123",
-				newPasswordConfirm: "new123",
-			}) as never,
-		);
-		expect(result).toEqual({
-			success: false,
-			error: "Failed to change password.",
+			error: "CHANGE_PASSWORD_FAILED",
 		});
 	});
 });

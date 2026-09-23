@@ -61,21 +61,21 @@ const sessionUser: UserWithSession = {
 describe("updateAccount", () => {
 	test("returns 400 when both name and email are missing", async () => {
 		const result = await actions.updateAccount(createRequest({}) as never);
-		expect(result).toEqual(fail(400, { error: "Name and email are required" }));
+		expect(result).toEqual(fail(400, { error: "MISSING_FIELDS" }));
 	});
 
 	test("returns 400 when name is missing", async () => {
 		const result = await actions.updateAccount(
 			createRequest({ email: "john@example.com" }) as never,
 		);
-		expect(result).toEqual(fail(400, { error: "Name and email are required" }));
+		expect(result).toEqual(fail(400, { error: "MISSING_FIELDS" }));
 	});
 
 	test("returns 400 when email is missing", async () => {
 		const result = await actions.updateAccount(
 			createRequest({ name: "John" }) as never,
 		);
-		expect(result).toEqual(fail(400, { error: "Name and email are required" }));
+		expect(result).toEqual(fail(400, { error: "MISSING_FIELDS" }));
 	});
 
 	test("returns 401 when no session exists", async () => {
@@ -84,7 +84,7 @@ describe("updateAccount", () => {
 		const result = await actions.updateAccount(
 			createRequest({ name: "John", email: "john@example.com" }) as never,
 		);
-		expect(result).toEqual(fail(401, { error: "Unauthorized" }));
+		expect(result).toEqual(fail(401, { error: "UNAUTHORIZED" }));
 	});
 
 	test("returns 401 when session has no user", async () => {
@@ -93,7 +93,7 @@ describe("updateAccount", () => {
 		const result = await actions.updateAccount(
 			createRequest({ name: "John", email: "john@example.com" }) as never,
 		);
-		expect(result).toEqual(fail(401, { error: "Unauthorized" }));
+		expect(result).toEqual(fail(401, { error: "UNAUTHORIZED" }));
 	});
 
 	test("returns success when only name changes", async () => {
@@ -125,9 +125,7 @@ describe("updateAccount", () => {
 		const result = await actions.updateAccount(
 			createRequest({ name: "John Doe", email: "new@example.com" }) as never,
 		);
-		expect(result).toEqual(
-			fail(400, { error: "Email change is not allowed without SMTP enabled" }),
-		);
+		expect(result).toEqual(fail(400, { error: "EMAIL_CHANGE_REQUIRES_SMTP" }));
 	});
 
 	test("updates email when SMTP is enabled", async () => {
@@ -162,7 +160,7 @@ describe("updateAccount", () => {
 		);
 		expect(result).toEqual(
 			fail(500, {
-				error: "An unexpected error occurred while updating email",
+				error: "EMAIL_UPDATE_FAILED",
 			}),
 		);
 	});
@@ -189,9 +187,7 @@ describe("updateAccount", () => {
 		const result = await actions.updateAccount(
 			createRequest({ name: "Jane Doe", email: "john@example.com" }) as never,
 		);
-		expect(result).toEqual(
-			fail(500, { error: "Failed to update account details" }),
-		);
+		expect(result).toEqual(fail(500, { error: "ACCOUNT_UPDATE_FAILED" }));
 	});
 
 	test("returns 500 when name update throws", async () => {
@@ -203,7 +199,7 @@ describe("updateAccount", () => {
 		);
 		expect(result).toEqual(
 			fail(500, {
-				error: "An unexpected error occurred while updating account details",
+				error: "ACCOUNT_UPDATE_FAILED",
 			}),
 		);
 	});

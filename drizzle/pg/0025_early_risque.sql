@@ -1,0 +1,2 @@
+CREATE INDEX "files_category_name_idx" ON "files" USING btree ("owner_id","category","is_trashed","name");--> statement-breakpoint
+CREATE INDEX "files_category_size_idx" ON "files" USING btree ("owner_id","category","is_trashed","size");

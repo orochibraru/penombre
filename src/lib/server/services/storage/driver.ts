@@ -1,5 +1,7 @@
 import { join } from "node:path";
 import { getStoragePath } from "#lib/server/config.js";
+import { keyring } from "#lib/server/crypto/keyring.js";
+import { EncryptedStorageDriver } from "./drivers/encrypted";
 import { LocalStorageDriver } from "./drivers/local";
 
 /**
@@ -63,8 +65,21 @@ export interface StorageDriver {
  * Create a `StorageDriver` for a specific user, rooted at the user's folder
  * under `config.storagePath`. Call once per request / service construction.
  */
-export function createUserStorageDriver(userFolder: string): StorageDriver {
-	return new LocalStorageDriver(join(getStoragePath(), userFolder));
+export function createUserStorageDriver(
+	userFolder: string,
+	encrypt = false,
+): StorageDriver {
+	return localDriver(join(getStoragePath(), userFolder), encrypt);
+}
+
+/** Always wrapped: a sealed file must open even where writes are not sealed. */
+function localDriver(root: string, encrypt: boolean): StorageDriver {
+	return new EncryptedStorageDriver(
+		new LocalStorageDriver(root),
+		root,
+		keyring(),
+		encrypt,
+	);
 }
 
 /**
@@ -77,6 +92,7 @@ export function createUserStorageDriver(userFolder: string): StorageDriver {
 export function createVolumeStorageDriver(
 	volumePath: string,
 	userFolder: string,
+	encrypt = false,
 ): StorageDriver {
-	return new LocalStorageDriver(join(volumePath, userFolder));
+	return localDriver(join(volumePath, userFolder), encrypt);
 }

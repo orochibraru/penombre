@@ -255,6 +255,10 @@ export const shares = pgTable(
 	(table) => [
 		index("shares_ownerId_idx").on(table.ownerId),
 		index("shares_token_idx").on(table.token),
+		index("shares_resourceType_resourceId_idx").on(
+			table.resourceType,
+			table.resourceId,
+		),
 	],
 );
 
@@ -264,6 +268,39 @@ export const sharesRelations = relations(shares, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+/**
+ * A single-use, admin-issued token binding onboarding to one account.
+ *
+ * Without this, `auth/onboarding` had no way to tell "an admin invited this
+ * address" from "I typed a stranger's email in the URL"; any account with
+ * no credential row (OAuth-only, passkey-only, magic-link-only users
+ * included) could be walked straight to setting a password and taking it
+ * over. The token is the only thing that proves the request is the invite.
+ */
+export const invites = pgTable(
+	"invites",
+	{
+		id: text("id").primaryKey(),
+		token: text("token").notNull().unique(),
+		userId: text("user_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		createdBy: text("created_by").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		expiresAt: timestamp("expires_at").notNull(),
+		/** Null until consumed; a second attempt with the same token fails. */
+		usedAt: timestamp("used_at"),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("invites_userId_idx").on(table.userId),
+		index("invites_token_idx").on(table.token),
+	],
+);
 
 // =========================================================================
 // INSTANCE SETTINGS
@@ -311,6 +348,8 @@ export interface AppSettingsData {
 	passkeySignInEnabled?: boolean;
 	/** Force every account to enrol in TOTP two-factor before using the app. */
 	requireTwoFactor?: boolean;
+	/** Id of the key this instance's files are sealed with; the boot guard reads it. */
+	encryptionKeyId?: string;
 	/** SMTP, used when `SMTP_ENABLED` is absent from the environment. */
 	smtp?: {
 		enabled?: boolean;
@@ -331,6 +370,15 @@ export interface AppSettingsData {
 		pkce?: boolean;
 		enabled?: boolean;
 	}>;
+	/** Whether the hourly GitHub release check runs at all. */
+	versionCheckEnabled?: boolean;
+	/** Which release stream `checkForUpdate` compares the running version against. */
+	releaseChannel?: "stable" | "canary";
+	/**
+	 * Days to keep `activity`/`notifications` rows and finished, non-caller-bound
+	 * `jobs` rows. Unset keeps everything forever.
+	 */
+	retentionDays?: number;
 }
 
 export const appSettings = pgTable("app_settings", {
@@ -371,6 +419,11 @@ export interface UserPreferencesData {
 	 * is not currently available to the account (`effectivePreferred`).
 	 */
 	preferredSignInMethod?: SignInMethod | null;
+	/**
+	 * How a paginated listing keeps loading past its first page: append more
+	 * as the user scrolls, or hand them prev/next controls instead.
+	 */
+	listingLoadMode?: "scroll" | "pages";
 }
 
 export type SignInMethod = "password" | "passkey" | "magicLink" | "emailOtp";
@@ -496,7 +549,9 @@ export const fileNotes = pgTable(
 	"file_notes",
 	{
 		id: text("id").primaryKey(),
-		fileId: text("file_id").notNull(),
+		fileId: text("file_id")
+			.notNull()
+			.references(() => files.id, { onDelete: "cascade" }),
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
@@ -572,6 +627,30 @@ export const folders = pgTable(
 		index("folders_parentId_idx").on(table.parentId),
 		index("folders_path_ownerId_idx").on(table.path, table.ownerId),
 		index("folders_volumeId_idx").on(table.volumeId),
+		index("folders_listing_idx").on(
+			table.ownerId,
+			table.parentId,
+			table.isTrashed,
+			table.updatedAt,
+		),
+		index("folders_name_idx").on(
+			table.ownerId,
+			table.parentId,
+			table.isTrashed,
+			sql`lower(${table.name})`,
+		),
+		index("folders_starred_idx").on(
+			table.ownerId,
+			table.isStarred,
+			table.isTrashed,
+		),
+		// The trash's "under a trashed folder" probe ranges over path.
+		index("folders_trash_idx").on(
+			table.ownerId,
+			table.volumeId,
+			table.isTrashed,
+			sql`(${table.path} collate "C")`,
+		),
 	],
 );
 
@@ -633,6 +712,57 @@ export const files = pgTable(
 		index("files_volumeId_idx").on(table.volumeId),
 		// The duration sweep filters on it every minute.
 		index("files_category_idx").on(table.category),
+		// The category listing's keyset page: owner + category + trash state is
+		// the filter, updatedAt the default sort, name and size the others.
+		index("files_category_listing_idx").on(
+			table.ownerId,
+			table.category,
+			table.isTrashed,
+			table.updatedAt,
+		),
+		index("files_category_name_idx").on(
+			table.ownerId,
+			table.category,
+			table.isTrashed,
+			sql`lower(${table.name})`,
+		),
+		index("files_category_size_idx").on(
+			table.ownerId,
+			table.category,
+			table.isTrashed,
+			table.size,
+		),
+		// Folder and starred listings page folders, then files, on these.
+		index("files_folder_listing_idx").on(
+			table.ownerId,
+			table.folderId,
+			table.isTrashed,
+			table.updatedAt,
+		),
+		index("files_folder_name_idx").on(
+			table.ownerId,
+			table.folderId,
+			table.isTrashed,
+			sql`lower(${table.name})`,
+		),
+		index("files_folder_size_idx").on(
+			table.ownerId,
+			table.folderId,
+			table.isTrashed,
+			table.size,
+		),
+		index("files_starred_idx").on(
+			table.ownerId,
+			table.isStarred,
+			table.isTrashed,
+		),
+		// Trashed folders sum the trashed files in their path range.
+		index("files_trash_idx").on(
+			table.ownerId,
+			table.volumeId,
+			table.isTrashed,
+			sql`(${table.path} collate "C")`,
+		),
 	],
 );
 
@@ -662,6 +792,7 @@ export type Verification = typeof verification.$inferSelect;
 export type Activity = typeof activity.$inferSelect;
 export type Sharing = typeof sharings.$inferSelect;
 export type Share = typeof shares.$inferSelect;
+export type Invite = typeof invites.$inferSelect;
 export type AppSettings = typeof appSettings.$inferSelect;
 export type SharedWith = typeof sharedWith.$inferSelect;
 export type UserPreferences = typeof userPreferences.$inferSelect;

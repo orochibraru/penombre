@@ -28,9 +28,9 @@ export const searchUsers = defineRoute({
 	path: "/api/v1/users/search",
 	summary: "Search users to share with",
 	description:
-		"Matches a query against user names and emails. Requires a query — the full directory is not enumerable.",
+		"Matches a query against user names and emails. Requires at least 3 characters; the full directory is not enumerable.",
 	tags: ["Sharings"],
-	query: z.object({ q: z.string().min(1) }),
+	query: z.object({ q: z.string().min(3) }),
 	response: z.array(recipientSchema),
 	errors: [400, 500],
 });

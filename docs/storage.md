@@ -47,19 +47,35 @@ makes a copy beside it — a folder with everything inside. **Copy to…** and
 **Move** can send items to another drive or volume as well as another folder;
 see [moving files in and out](shared-drives.md#moving-files-in-and-out).
 
+## Big folders
+
+A folder, a shared drive, a mounted volume, a share, the starred view, a
+category and the trash all load a page at a time, so a folder of tens of
+thousands of files opens as fast as a small one. Folders come first, then files,
+in the order you picked (name, size or last modified); the server applies it, so
+a row further down is still in the right place. **Settings → Display → Loading
+mode** picks infinite scroll or previous/next pages. **Select all** selects what
+is loaded and says so. **Recent** still loads whole.
+
+Through the API those listings answer with a `nextCursor`: pass it back as
+`cursor` for the next page (`limit`, `sort` and `dir` stay the same), until it
+comes back `null`. `total` counts every row, not just the page. The trash
+listing also carries `totalSize`, the bytes emptying the whole trash frees.
+
 ## The trash
 
 Deleting an item moves it to the trash, where it still occupies disk space until
 it is removed for good. A folder goes in whole: its files and subfolders travel
 with it, and restoring the folder brings them all back. The trash lists the
 folder itself rather than everything inside it, so what you see is what you
-selected.
+selected; a folder's size is what its trashed contents hold.
 
-**Empty Trash** hands the whole job to the server in one request, which is what
-lets it report the exact amount of space it gave back. A file whose bytes cannot
-be removed — a read-only volume, a permissions problem — keeps its entry in the
-trash and is counted in the message, rather than disappearing from the list
-while its data stays on disk.
+**Empty Trash** empties everything, not just the rows loaded so far, and its
+confirmation counts and prices the whole trash. It hands the job to the server
+in one request, which is what lets it report the exact amount of space it gave
+back. A file whose bytes cannot be removed (a read-only volume, a permissions
+problem) keeps its entry in the trash and is counted in the message, rather than
+disappearing from the list while its data stays on disk.
 
 ## Seeing what you use
 
@@ -117,3 +133,7 @@ Two things to set on the Syncthing side:
 - **Pick a conflict strategy.** Syncthing keeps both sides of a conflict as
   `*.sync-conflict-*` files; Penombre lists them like any other file rather than
   resolving them for you.
+
+Simple mode cannot run with `ENCRYPTION_KEY` (see [Encryption](encryption.md)).
+On an encrypted drive-mode instance, anything that reads `STORAGE_PATH` behind
+Penombre's back, Syncthing included, sees sealed files, not your documents.

@@ -41,3 +41,13 @@ func TestLoadConfigReadsTheParentPID(t *testing.T) {
 		t.Fatalf("got %d, %v", cfg.ParentPID, err)
 	}
 }
+
+func TestLoadConfigReadsTheEncryptionKey(t *testing.T) {
+	cfg, err := worker.LoadConfig(env(map[string]string{"DATABASE_URL": "file:x.db", "ENCRYPTION_KEY": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="}))
+	if err != nil || !cfg.Keyring.Enabled() {
+		t.Fatalf("key not loaded: %v", err)
+	}
+	if _, err := worker.LoadConfig(env(map[string]string{"DATABASE_URL": "file:x.db", "ENCRYPTION_KEY": "short"})); err == nil {
+		t.Fatal("a bad key was accepted")
+	}
+}

@@ -2,6 +2,14 @@ import process from "node:process";
 import { defineConfig } from "@playwright/test";
 import base from "./playwright.config";
 
+// The Postgres shard runs with encryption at rest; SQLite stays plaintext.
+// A test-only key, derived so no key-shaped literal is committed; the
+// `test:e2e:pg` script derives the same one for the compose stack.
+process.env.E2E_ENCRYPTION_KEY ??= Buffer.from(
+	"penombre-e2e-encryption-test-key",
+).toString("base64");
+process.env.E2E_COMPOSE_PROJECT = "penombre-e2e-pg";
+
 /**
  * Same suite as `playwright.config.ts`, run against PostgreSQL instead of the
  * default SQLite — Postgres is optional for users, so it gets its own job
@@ -34,6 +42,7 @@ export default defineConfig({
 		env: {
 			E2E_PORT: "3002",
 			E2E_DATABASE_URL: "postgresql://postgres:postgres@db:5432/penombre_e2e",
+			E2E_ENCRYPTION_KEY: process.env.E2E_ENCRYPTION_KEY,
 		},
 	},
 });

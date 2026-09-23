@@ -270,7 +270,13 @@
                 {displaySize(size)}
             </span>
         </div>
-        <Button variant="outline" size="icon" class="shrink-0" onclick={remove}>
+        <Button
+            variant="outline"
+            size="icon"
+            class="shrink-0"
+            aria-label={m.delete()}
+            onclick={remove}
+        >
             <XIcon />
         </Button>
     </div>

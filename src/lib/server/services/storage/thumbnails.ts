@@ -8,16 +8,30 @@
 
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
-import { unlink } from "node:fs/promises";
+import { stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { and, eq } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
+import {
+	isSealed,
+	type Keyring,
+	openWhole,
+} from "#lib/server/crypto/envelope.js";
+import { keyring } from "#lib/server/crypto/keyring.js";
 import { files } from "#lib/server/db/schema.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
+import { generateETag } from "./mappers";
 import { ownedFiles } from "./scope";
 
 const logger = new Logger("StorageService");
+
+/** `buffer` is null when `ifNoneMatch` already names this render. */
+export interface Thumbnail {
+	buffer: Buffer | null;
+	contentType: string;
+	etag: string;
+}
 
 const IMAGE_TYPES = [
 	"image/jpeg",
@@ -76,7 +90,10 @@ function kindOf(contentType: string): Kind | undefined {
 }
 
 export class ThumbnailService {
-	constructor(private readonly ctx: StorageContext) {}
+	constructor(
+		private readonly ctx: StorageContext,
+		private readonly keys: Keyring = keyring(),
+	) {}
 
 	async deleteThumbnails(key: string): Promise<void> {
 		try {
@@ -128,6 +145,7 @@ export class ThumbnailService {
 					output,
 					size,
 					buckets: ThumbnailService.PEAK_BUCKETS,
+					encrypt: this.ctx.encrypted,
 				},
 			},
 		};
@@ -149,7 +167,8 @@ export class ThumbnailService {
 	async getThumbnail(
 		key: string,
 		size = 300,
-	): Promise<{ buffer: Buffer; contentType: string } | null> {
+		ifNoneMatch?: string,
+	): Promise<Thumbnail | null> {
 		const [file] = await this.ctx.db
 			.select({ contentType: files.contentType })
 			.from(files)
@@ -157,14 +176,15 @@ export class ThumbnailService {
 		if (!file) {
 			return null;
 		}
-		return this.generateThumbnail(key, file.contentType, size);
+		return this.generateThumbnail(key, file.contentType, size, ifNoneMatch);
 	}
 
 	async generateThumbnail(
 		key: string,
 		contentType: string,
 		size = 300,
-	): Promise<{ buffer: Buffer; contentType: string } | null> {
+		ifNoneMatch?: string,
+	): Promise<Thumbnail | null> {
 		const plan = this.plan(key, contentType, size);
 		if (!plan) {
 			return null;
@@ -184,8 +204,19 @@ export class ThumbnailService {
 					return null;
 				}
 			}
-			const bytes = await Bun.file(plan.output).arrayBuffer();
-			return { buffer: Buffer.from(bytes), contentType: plan.outputType };
+			const info = await stat(plan.output);
+			const etag = generateETag({ size: info.size, mtime: info.mtimeMs });
+			if (ifNoneMatch === etag) {
+				return { buffer: null, contentType: plan.outputType, etag };
+			}
+			const bytes = await Bun.file(plan.output).bytes();
+			return {
+				buffer: isSealed(bytes)
+					? openWhole(this.keys, bytes)
+					: Buffer.from(bytes),
+				contentType: plan.outputType,
+				etag,
+			};
 		} catch (error) {
 			logger.error(`[thumbnail] Error generating thumbnail for ${key}:`, error);
 			return null;

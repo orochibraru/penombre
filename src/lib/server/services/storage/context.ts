@@ -37,6 +37,8 @@ export interface StorageContext {
 	readonly scope?: StorageScope;
 	/** Refuse writes — set for volumes declared read-only. */
 	readonly readOnly: boolean;
+	/** New bytes here are sealed. Reads never trust it: they sniff the file. */
+	readonly encrypted: boolean;
 	/** Local filesystem base, used for thumbnail caching (always local) */
 	readonly storagePath: string;
 	readonly db: ReturnType<typeof getDb>;

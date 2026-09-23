@@ -13,8 +13,9 @@ import {
 	isSimpleMode,
 	type VolumeConfig,
 } from "#lib/server/config.js";
+import { encryptionEnabled } from "#lib/server/crypto/keyring.js";
 import { getDb } from "#lib/server/db/index.js";
-import { user } from "#lib/server/db/schema.js";
+import { drives, user } from "#lib/server/db/schema.js";
 import {
 	DriveAccessError,
 	FileOrFolderNotFoundError,
@@ -44,6 +45,7 @@ import {
 import fileTypesData from "./file-types.json" with { type: "json" };
 import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
+import type { ListingPage, ListingPageOptions, TrashPage } from "./listings";
 import { ListingOperations } from "./listings";
 import { probeMissingDurations } from "./media";
 import { type FileProxyRequest, ProxyService } from "./proxy";
@@ -139,9 +141,10 @@ export class StorageService {
 		);
 		// A scoped listing must never be served to the owner, nor theirs to it.
 		this.cache = options.scope ? new NullCacheBackend() : this.listingCache;
+		const encrypted = volume ? volume.encrypt === true : encryptionEnabled();
 		this.driver = volume
-			? createVolumeStorageDriver(volume.path, this.userFolder)
-			: createUserStorageDriver(this.userFolder);
+			? createVolumeStorageDriver(volume.path, this.userFolder, encrypted)
+			: createUserStorageDriver(this.userFolder, encrypted);
 		this.db = getDb();
 
 		this.ctx = {
@@ -151,6 +154,7 @@ export class StorageService {
 			volumeId: this.volume?.name ?? null,
 			scope: options.scope,
 			readOnly: (this.volume?.readOnly ?? false) || options.readOnly === true,
+			encrypted,
 			storagePath: this.storagePath,
 			db: this.db,
 			cache: this.cache,
@@ -161,7 +165,7 @@ export class StorageService {
 		this.thumbnails = new ThumbnailService(this.ctx);
 		this.zip = new ZipService(this.ctx);
 		this.fileOperations = new FileOperations(this.ctx, this.thumbnails);
-		this.folderOperations = new FolderOperations(this.ctx);
+		this.folderOperations = new FolderOperations(this.ctx, this.thumbnails);
 		this.listingOperations = new ListingOperations(this.ctx);
 		this.scanOperations = new ScanOperations(this.ctx, this.thumbnails);
 		this.trashOperations = new TrashOperations(this.ctx, this.thumbnails);
@@ -312,7 +316,11 @@ export class StorageService {
 		return this.fileOperations.findFileById(id);
 	}
 
-	findFileOwner(id: string): Promise<{ ownerId: string; name: string } | null> {
+	findFileOwner(id: string): Promise<{
+		ownerId: string;
+		name: string;
+		volumeId: string | null;
+	} | null> {
 		return this.fileOperations.findFileOwner(id);
 	}
 
@@ -333,6 +341,10 @@ export class StorageService {
 
 	fileExistsById(id: string): Promise<boolean> {
 		return this.fileOperations.fileExistsById(id);
+	}
+
+	openRawFile(key: string) {
+		return this.fileOperations.openRawFile(key);
 	}
 
 	getRawFileData(key: string): Promise<{
@@ -441,8 +453,8 @@ export class StorageService {
 		return this.listingOperations.abstractListFiles(options);
 	}
 
-	listTrashFiles(): Promise<ObjectList> {
-		return this.listingOperations.listTrashFiles();
+	listTrashFiles(options?: ListingPageOptions): Promise<TrashPage> {
+		return this.listingOperations.listTrashFiles(options);
 	}
 
 	emptyTrash(): Promise<EmptyTrashResult> {
@@ -451,8 +463,18 @@ export class StorageService {
 		return this.trashOperations.emptyTrash();
 	}
 
-	listFilesPerCategory(category: FileCategory): Promise<ObjectList> {
-		return this.listingOperations.listFilesPerCategory(category);
+	listFilesPerCategory(
+		category: FileCategory,
+		options?: ListingPageOptions,
+	): Promise<ListingPage> {
+		return this.listingOperations.listFilesPerCategory(category, options);
+	}
+
+	listFolderPage(
+		prefix?: string,
+		options?: ListingPageOptions,
+	): Promise<ListingPage> {
+		return this.listingOperations.listFolderPage(prefix, options);
 	}
 
 	listFiles(
@@ -466,8 +488,8 @@ export class StorageService {
 		return this.listingOperations.listRecentFiles();
 	}
 
-	listStarredFiles(): Promise<ObjectList> {
-		return this.listingOperations.listStarredFiles();
+	listStarredFiles(options?: ListingPageOptions): Promise<ListingPage> {
+		return this.listingOperations.listStarredFiles(options);
 	}
 
 	searchFiles(query: string, limit = 50): Promise<ObjectList> {
@@ -528,6 +550,10 @@ export class StorageService {
 		return this.zip.createZipFromPaths(filePaths);
 	}
 
+	public createAccountExport(): Promise<ReadableStream<Uint8Array> | null> {
+		return this.zip.createAccountExport();
+	}
+
 	public createZipFromFolder(
 		folderPath: string,
 	): Promise<ReadableStream<Uint8Array>> {
@@ -577,8 +603,8 @@ export class StorageService {
 			this.listingCache.deleteByPrefix("list:"),
 			this.listingCache.deleteByPrefix("folders:"),
 			this.listingCache.deleteByPrefix("folder-size:"),
-			this.listingCache.delete(CacheKeys.starred()),
-			this.listingCache.delete(CacheKeys.trashed()),
+			this.listingCache.deleteByPrefix(CacheKeys.starred()),
+			this.listingCache.deleteByPrefix(CacheKeys.trashed()),
 			this.listingCache.delete(CacheKeys.recent()),
 			this.listingCache.deleteByPrefix(CacheKeys.counts()),
 			this.listingCache.deleteByPrefix("category:"),
@@ -673,9 +699,22 @@ export class StorageService {
 		return availableDiskSpace(StorageService.getAdminStoragePath());
 	}
 
+	/**
+	 * Removes what `removeUser` cascades in the database but never touches on
+	 * disk: a deleted user's own `user-<id>` tree (their `.thumbnails` live
+	 * under it), and any `drives/<id>` they owned; `drives.ownerId` cascades
+	 * too, so its row is already gone by the time this runs.
+	 *
+	 * A scan against the current `user`/`drives` rows rather than a job fired
+	 * at delete time: it also catches whatever a crash mid-deletion, or a
+	 * user removed some other way, left behind.
+	 */
 	public static async cleanupDeletedUserStorage(): Promise<void> {
 		const db = getDb();
-		const usersList = await db.select().from(user);
+		const [usersList, drivesList] = await Promise.all([
+			db.select().from(user),
+			db.select({ id: drives.id }).from(drives),
+		]);
 		if (usersList.length === 0) {
 			logger.info("No users found in database. Skipping storage cleanup.");
 			return;
@@ -688,13 +727,14 @@ export class StorageService {
 			);
 			return;
 		}
+
+		const knownUserIds = new Set(usersList.map((u) => u.id));
+		const knownDriveIds = new Set(drivesList.map((d) => d.id));
+		const failures: { message: string; error: unknown }[] = [];
+
 		const storageDir = await fs.promises.readdir(storageBasePath, {
 			withFileTypes: true,
 		});
-
-		const knownUserIds = new Set(usersList.map((u) => u.id));
-		const failures: { message: string; error: unknown }[] = [];
-
 		for (const dirent of storageDir) {
 			if (!(dirent.isDirectory() && dirent.name.startsWith("user-"))) {
 				continue;
@@ -715,6 +755,30 @@ export class StorageService {
 					message: `Failed to delete storage for user ID: ${userId} at path: ${userStoragePath}`,
 					error,
 				});
+			}
+		}
+
+		const drivesBasePath = join(storageBasePath, "drives");
+		if (existsSync(drivesBasePath)) {
+			const drivesDir = await fs.promises.readdir(drivesBasePath, {
+				withFileTypes: true,
+			});
+			for (const dirent of drivesDir) {
+				if (!dirent.isDirectory() || knownDriveIds.has(dirent.name)) {
+					continue;
+				}
+				const drivePath = join(drivesBasePath, dirent.name);
+				try {
+					await rm(drivePath, { recursive: true });
+					logger.info(
+						`Deleted storage for non-existent drive ID: ${dirent.name} at path: ${drivePath}`,
+					);
+				} catch (error) {
+					failures.push({
+						message: `Failed to delete storage for drive ID: ${dirent.name} at path: ${drivePath}`,
+						error,
+					});
+				}
 			}
 		}
 

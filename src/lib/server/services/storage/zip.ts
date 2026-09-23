@@ -8,12 +8,18 @@
 
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { mkdir, readdir, stat, unlink } from "node:fs/promises";
+import { link, mkdir, readdir, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { and, eq, like } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { getStoragePath } from "#lib/server/config.js";
+import {
+	isSealed,
+	type Keyring,
+	openRange,
+} from "#lib/server/crypto/envelope.js";
+import { encryptionEnabled, keyring } from "#lib/server/crypto/keyring.js";
 import type { Folder as DbFolder } from "#lib/server/db/schema.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
@@ -141,9 +147,14 @@ export class ZipService {
 		await this.collectFolder(entries, normalizedPath, folderRecord);
 	}
 
-	/** Enqueue the archive job, wait for it, and hand back a self-deleting stream. */
+	/**
+	 * Enqueue the archive job, wait for it, and hand back a self-deleting
+	 * stream. With a `dedupeKey` a retry joins the running job, so each waiter
+	 * streams its own hard link and the shared archive is left to the sweep.
+	 */
 	private async buildZip(
 		entries: ZipEntry[],
+		dedupeKey?: string,
 	): Promise<ReadableStream<Uint8Array>> {
 		await mkdir(zipDir(), { recursive: true });
 		const output = join(zipDir(), `${randomUUID()}.zip`);
@@ -151,21 +162,23 @@ export class ZipService {
 
 		const jobId = await enqueueJob({
 			type: "zip",
-			spec: { output, entries },
+			spec: { output, entries, encrypt: encryptionEnabled() },
+			dedupeKey,
 			priority: "interactive",
 		});
 		const job = await awaitJob(jobId, {
 			timeoutMs: ZIP_JOB_TIMEOUT_MS,
-			consume: true,
+			consume: !dedupeKey,
+			cancelOnTimeout: !dedupeKey,
 		});
 		if (!job || job.status !== "succeeded") {
 			throw new Error(
 				`Zip job ${jobId} ${job ? `failed: ${job.error}` : "timed out"}`,
 			);
 		}
-		const { skipped = [] } = JSON.parse(job.result ?? "{}") as {
-			skipped?: string[];
-		};
+		const { skipped = [], output: built = output } = JSON.parse(
+			job.result ?? "{}",
+		) as { skipped?: string[]; output?: string };
 		for (const source of skipped) {
 			logger.warn(`[bulk-download] Skipped a file missing on disk: ${source}`);
 		}
@@ -173,7 +186,55 @@ export class ZipService {
 		logger.debug(
 			`[bulk-download] Archive ready in ${(performance.now() - startTime).toFixed(0)}ms`,
 		);
-		return streamAndCleanUp(output);
+		if (!dedupeKey) {
+			return streamAndCleanUp(output);
+		}
+		const mine = join(zipDir(), `${randomUUID()}.zip`);
+		await link(built, mine);
+		return streamAndCleanUp(mine);
+	}
+
+	/** Every non-trashed file the context owns, named by its display path. */
+	async createAccountExport(): Promise<ReadableStream<Uint8Array> | null> {
+		const [allFolders, allFiles] = await Promise.all([
+			this.ctx.db
+				.select({
+					path: folders.path,
+					name: folders.name,
+					isTrashed: folders.isTrashed,
+				})
+				.from(folders)
+				.where(ownedFolders(this.ctx)),
+			this.ctx.db
+				.select({ path: files.path, name: files.name })
+				.from(files)
+				.where(and(ownedFiles(this.ctx), eq(files.isTrashed, false))),
+		]);
+		const names = new Map(allFolders.map((f) => [f.path, f.name]));
+		const trashed = new Set(
+			allFolders.filter((f) => f.isTrashed).map((f) => f.path),
+		);
+		const entries: ZipEntry[] = [];
+		for (const file of allFiles) {
+			const display: string[] = [];
+			let prefix = "";
+			let inTrash = false;
+			for (const segment of file.path.split("/").slice(0, -1)) {
+				prefix = prefix ? `${prefix}/${segment}` : segment;
+				display.push(names.get(prefix) ?? segment);
+				inTrash ||= trashed.has(prefix);
+			}
+			if (!inTrash) {
+				entries.push({
+					source: join(this.ctx.storagePath, file.path),
+					name: [...display, file.name].join("/"),
+				});
+			}
+		}
+		if (entries.length === 0) {
+			return null;
+		}
+		return this.buildZip(entries, `export:${this.ctx.user.id}`);
 	}
 
 	async createZipFromPaths(
@@ -216,7 +277,35 @@ export class ZipService {
 }
 
 /** Stream a finished archive, deleting it on end, error or cancel alike. */
-export function streamAndCleanUp(path: string): ReadableStream<Uint8Array> {
+export async function streamAndCleanUp(
+	path: string,
+	keys: Keyring = keyring(),
+): Promise<ReadableStream<Uint8Array>> {
+	const file = Bun.file(path);
+	if (!isSealed(await file.slice(0, 8).bytes())) {
+		return streamPlain(path);
+	}
+	const cleanUp = () => {
+		unlink(path).catch((error: unknown) => {
+			logger.warn(`[bulk-download] Failed to delete temp zip ${path}:`, error);
+		});
+	};
+	try {
+		return await openRange(
+			keys,
+			{
+				size: file.size,
+				read: (offset, length) => file.slice(offset, offset + length).bytes(),
+			},
+			{ onClose: cleanUp },
+		);
+	} catch (error) {
+		cleanUp();
+		throw error;
+	}
+}
+
+function streamPlain(path: string): ReadableStream<Uint8Array> {
 	const nodeStream = createReadStream(path);
 	let cleanedUp = false;
 	const cleanUp = () => {

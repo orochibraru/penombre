@@ -15,7 +15,7 @@
 	import { enhance } from "#lib/forms.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { cn, usersCountLabel } from "#lib/utils.js";
+	import { cn } from "#lib/utils.js";
 
 	onMount(() => {
 		title.set(m.title_admin_users());
@@ -30,6 +30,14 @@
 			toast.error(form.error);
 		} else if (form?.invited) {
 			toast.success(m.toast_user_invited({ email: form.invited }));
+			if (form.onboardingUrl) {
+				// No mail was sent for this invite, so the link only exists here;
+				// hand it to the admin the one place they can still get it.
+				navigator.clipboard
+					.writeText(form.onboardingUrl)
+					.then(() => toast.info(m.toast_invite_link_copied()))
+					.catch(() => {});
+			}
 		}
 	});
 
@@ -58,11 +66,25 @@
 			.slice(0, 2)
 			.map((part) => part[0]?.toUpperCase() ?? "")
 			.join("");
+
+	/**
+	 * `image` is any URL a user can set on their own account (better-auth's
+	 * `update-user`), and this page loads it for every user just by being
+	 * opened; an attacker-hosted URL would be a tracking pixel for the admin.
+	 * Only render one the instance itself served.
+	 */
+	function isSafeAvatar(url: string): boolean {
+		try {
+			return new URL(url, data.origin).origin === data.origin;
+		} catch {
+			return false;
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-5">
     <p class="text-muted-foreground text-sm">
-        {usersCountLabel(data.users.total)}
+        {m.admin_users_count({ count: String(data.users.total) })}
     </p>
 
     <form
@@ -77,6 +99,7 @@
         <input type="hidden" name="userId" />
         <input type="hidden" name="role" />
         <input type="hidden" name="banned" />
+        <input type="hidden" name="sendEmail" />
     </form>
 
     <Card.Root>
@@ -152,7 +175,7 @@
                     class="flex flex-wrap items-center justify-between gap-3 px-4"
                 >
                     <div class="flex min-w-0 items-center gap-3">
-                        {#if user.image}
+                        {#if user.image && isSafeAvatar(user.image)}
                             <img
                                 src={user.image}
                                 alt=""
@@ -208,6 +231,24 @@
                             {/snippet}
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content align="end">
+                            {#if data.invitable.includes(user.id)}
+                                <DropdownMenu.Item
+                                    onclick={() =>
+                                        submit(
+                                            "?/resendInvite",
+                                            {
+                                                userId: user.id,
+                                                sendEmail: data.smtpEnabled
+                                                    ? "on"
+                                                    : "",
+                                            },
+                                            pendingForm,
+                                        )}
+                                >
+                                    {m.admin_resend_invite()}
+                                </DropdownMenu.Item>
+                                <DropdownMenu.Separator />
+                            {/if}
                             <DropdownMenu.Item
                                 onclick={() =>
                                     submit(

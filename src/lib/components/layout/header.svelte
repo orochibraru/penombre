@@ -8,6 +8,7 @@
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { Separator } from "#lib/components/ui/separator/index.js";
 	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
+	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
 	import type { BreadCrumb } from "#lib/utils.js";
 	import { goto } from "$app/navigation";
@@ -48,16 +49,23 @@
                 {#if page.data.crumbs}
                     {@const crumbs: BreadCrumb[] = page.data.crumbs}
                     {#if isDesktop.current}
-                        {#each crumbs as crumb}
-                            {@const index = crumbs.indexOf(crumb)}
-                            {#if index !== crumbs.length && index !== 0}
+                        {#each crumbs as crumb, index}
+                            {#if index > 0}
                                 <Breadcrumb.Separator />
                             {/if}
-                            <Breadcrumb.Item class="md:text-sm">
-                                <Breadcrumb.Link href={crumb.href}>
-                                    {crumb.title}
-                                </Breadcrumb.Link>
-                            </Breadcrumb.Item>
+                            {#if index === crumbs.length - 1}
+                                <Breadcrumb.Item class="min-w-0 md:text-sm">
+                                    <Breadcrumb.Page class="truncate">
+                                        {crumb.title}
+                                    </Breadcrumb.Page>
+                                </Breadcrumb.Item>
+                            {:else}
+                                <Breadcrumb.Item class="min-w-0 md:text-sm">
+                                    <Breadcrumb.Link href={crumb.href} class="truncate">
+                                        {crumb.title}
+                                    </Breadcrumb.Link>
+                                </Breadcrumb.Item>
+                            {/if}
                         {/each}
                     {:else}
                         {@const firstCrumb = crumbs[0]}
@@ -72,11 +80,13 @@
                                     {firstCrumb.title}
                                 </Breadcrumb.Link>
                             </Breadcrumb.Item>
-                            <Breadcrumb.Separator />
+                            {#if crumbs.length > 1}
+                                <Breadcrumb.Separator />
+                            {/if}
                         {/if}
                         {#if crumbs.length > 2}
                             <DropdownMenu.Root>
-                                <DropdownMenu.Trigger>
+                                <DropdownMenu.Trigger aria-label={m.navigation()}>
                                     <EllipsisIcon />
                                 </DropdownMenu.Trigger>
                                 <DropdownMenu.Content>
@@ -93,17 +103,17 @@
                             </DropdownMenu.Root>
                             <Breadcrumb.Separator />
                         {/if}
-                        {#if lastCrumb}
+                        {#if lastCrumb && crumbs.length > 1}
                             <Breadcrumb.Item class="md:text-sm">
-                                <Breadcrumb.Link href={lastCrumb.href}>
+                                <Breadcrumb.Page class="truncate">
                                     {lastCrumb.title}
-                                </Breadcrumb.Link>
+                                </Breadcrumb.Page>
                             </Breadcrumb.Item>
                         {/if}
                     {/if}
                 {:else}
                     <Breadcrumb.Item class="md:text-sm">
-                        <Breadcrumb.Link>{$title}</Breadcrumb.Link>
+                        <Breadcrumb.Page>{$title}</Breadcrumb.Page>
                     </Breadcrumb.Item>
                 {/if}
             </Breadcrumb.List>

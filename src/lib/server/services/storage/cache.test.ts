@@ -198,10 +198,6 @@ describe("CacheKeys", () => {
 		expect(CacheKeys.recent()).toBe("recent");
 	});
 
-	test("category", () => {
-		expect(CacheKeys.category("IMAGES")).toBe("category:IMAGES");
-	});
-
 	test("counts", () => {
 		expect(CacheKeys.counts()).toBe("counts");
 	});

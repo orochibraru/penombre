@@ -112,9 +112,7 @@
             </span>
         {/if}
         <span class="sr-only">
-            {unread === 1
-                ? m.notifications_unread_one()
-                : m.notifications_unread_other({ count: String(unread) })}
+            {m.notifications_unread({ count: String(unread) })}
         </span>
     </DropdownMenu.Trigger>
     <DropdownMenu.Content align="end" class="w-80 max-w-[calc(100vw-2rem)]">

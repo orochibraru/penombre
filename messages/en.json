@@ -16,6 +16,12 @@
 	"signing_in": "Signing in...",
 	"signed_in_success": "Signed in successfully!",
 	"sign_in_error": "There was an error when signing in. Please try again.",
+	"sign_in_pending_invite": "This account has a pending invite. Check your email, or ask an admin to resend the link.",
+	"sign_in_error_invalid_credentials": "Wrong email or password.",
+	"sign_in_error_email_not_verified": "Verify your email address first.",
+	"sign_in_error_user_not_found": "No account for that address.",
+	"sign_in_error_invalid_token": "That link or code has expired. Request a new one.",
+	"sign_in_error_provider_not_found": "That sign-in provider is not available.",
 	"email_password_required": "Email and password are required",
 	"forgot_password_title": "Forgot your password?",
 	"forgot_password_description": "Enter your email below to reset your password.",
@@ -55,6 +61,7 @@
 	"nav_3d_objects": "3D Objects",
 	"nav_settings": "Settings",
 	"nav_api": "API",
+	"navigation": "Navigation",
 	"home": "Home",
 	"new": "New",
 	"uploading_progress": "Uploading {progress}% ({count})",
@@ -65,6 +72,9 @@
 	"cancel": "Cancel",
 	"loading": "Loading...",
 	"close": "Close",
+	"collapse": "Collapse",
+	"expand": "Expand",
+	"dismiss": "Dismiss",
 	"delete": "Delete",
 	"save": "Save user preferences",
 	"select_language": "Select language",
@@ -88,7 +98,16 @@
 	"user_management": "User Management",
 	"storage_management": "Storage Management",
 	"available_storage": "Available Storage space: {size}",
-	"user_count": "This instance currently has {count} user(s).",
+	"user_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "This instance currently has {count} user.",
+				"countPlural=other": "This instance currently has {count} users."
+			}
+		}
+	],
 	"account_details": "Account Details",
 	"name": "Name",
 	"session_management": "Session Management",
@@ -135,6 +154,9 @@
 	"confirm_restore_title": "Are you absolutely sure?",
 	"confirm_restore_description": "This will permanently restore the following items to their original location.",
 	"restoring": "Restoring...",
+	"confirm_revoke_title": "Revoke public link?",
+	"confirm_revoke_message": "Anyone with this link will no longer be able to access the file. This action cannot be undone.",
+	"revoking": "Revoking...",
 	"create_folder_title": "Create a new folder",
 	"create_folder_description": "This will create a new folder in the current directory.",
 	"create": "Create",
@@ -160,6 +182,9 @@
 	"no_files_yet": "No files yet",
 	"no_files_get_started": "Upload files or create a folder to get started",
 	"no_results": "No results.",
+	"trash_is_empty": "Trash is empty",
+	"star_files_to_find_here": "Star files to find them here",
+	"nothing_opened_recently": "Nothing opened recently",
 	"upload_files": "Upload Files",
 	"new_folder": "New Folder",
 	"drop_files_to_upload": "Drop files to upload",
@@ -180,16 +205,37 @@
 	"layout_list": "List",
 	"layout_grid": "Grid",
 	"empty_trash": "Empty Trash",
-	"trash_is_empty": "Trash is empty",
 	"file_preview": "File Preview",
 	"upload_files_context": "Upload files",
 	"create_folder_context": "Create folder",
 	"upload_complete": "Upload complete",
-	"items_count": "{count} items",
+	"items_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} item",
+				"countPlural=other": "{count} items"
+			}
+		}
+	],
 	"preparing_upload": "Preparing upload",
 	"uploading": "Uploading",
 	"overall_progress": "Overall progress",
-	"files_progress": "{completed} of {total} files",
+	"files_progress": [
+		{
+			"declarations": [
+				"input completed",
+				"input total",
+				"local totalPlural = total: plural"
+			],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "{completed} of {total} file",
+				"totalPlural=other": "{completed} of {total} files"
+			}
+		}
+	],
 	"left": "left",
 	"heads_up": "Heads up!",
 	"error_loading_page": "There was an error loading this page.",
@@ -235,8 +281,26 @@
 	"toast_renaming_item": "Renaming item",
 	"toast_item_renamed": "Item renamed",
 	"toast_rename_item_error": "Failed to rename item",
-	"toast_moving_items": "Moving {count} items...",
-	"toast_items_moved": "Moved {successCount} of {total} items to {destination}",
+	"toast_moving_items": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Moving {count} item...",
+				"countPlural=other": "Moving {count} items..."
+			}
+		}
+	],
+	"toast_items_moved": [
+		{
+			"declarations": ["input total", "local totalPlural = total: plural"],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "Moved {successCount} of {total} item to {destination}",
+				"totalPlural=other": "Moved {successCount} of {total} items to {destination}"
+			}
+		}
+	],
 	"toast_move_items_error": "Failed to move items",
 	"toast_moving_item": "Moving {name}...",
 	"toast_moved_to": "Moved to {destination}",
@@ -245,7 +309,7 @@
 	"toast_file_upload_failed": "{name} failed to upload.",
 	"toast_prepare_upload_error": "Failed to prepare files for upload.",
 	"toast_creating_zip": "Creating zip of \"{name}\"...",
-	"toast_downloaded": "Downloaded \"{name}\"",
+	"toast_downloaded": "Download of \"{name}\" started",
 	"toast_download_error": "Failed to download \"{name}\"",
 	"toast_duplicating": "Duplicating \"{name}\"...",
 	"toast_duplicated": "Duplicated \"{name}\"",
@@ -253,24 +317,124 @@
 	"toast_star_error": "Failed to update star status",
 	"toast_added_to_starred": "Added \"{name}\" to starred",
 	"toast_removed_from_starred": "Removed \"{name}\" from starred",
-	"toast_creating_zip_files": "Creating zip of {count} files...",
-	"toast_downloaded_files": "Downloaded {count} files",
+	"toast_creating_zip_files": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Creating zip of {count} file...",
+				"countPlural=other": "Creating zip of {count} files..."
+			}
+		}
+	],
+	"toast_downloaded_files": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Download of {count} file started",
+				"countPlural=other": "Download of {count} files started"
+			}
+		}
+	],
 	"toast_download_files_error": "Failed to download files",
 	"toast_opening": "Opening \"{name}\"",
 	"toast_open_error": "Failed to open \"{name}\"",
 	"toast_open_code_error": "Failed to open code file.",
-	"toast_downloaded_item": "Downloaded {name}",
+	"toast_downloaded_item": "Download of {name} started",
 	"toast_already_in_folder": "\"{name}\" is already in this folder",
 	"toast_move_error_detail": "Failed to move \"{name}\": {message}",
-	"toast_restoring_items": "Restoring {count} items",
-	"toast_items_restored": "{count} items restored",
-	"toast_restore_items_error": "Failed to restore {count} items",
-	"toast_deleting_permanently": "Deleting {count} items permanently",
-	"toast_items_deleted_permanently": "{count} items deleted permanently",
-	"toast_delete_permanently_error": "Failed to delete {count} items permanently",
-	"toast_moving_to_trash": "Moving {count} items to trash",
-	"toast_items_moved_to_trash": "{count} items moved to trash",
-	"toast_move_to_trash_error": "Failed to move {count} items to trash",
+	"toast_restoring_items": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Restoring {count} item",
+				"countPlural=other": "Restoring {count} items"
+			}
+		}
+	],
+	"toast_items_restored": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} item restored",
+				"countPlural=other": "{count} items restored"
+			}
+		}
+	],
+	"toast_restore_items_error": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Failed to restore {count} item",
+				"countPlural=other": "Failed to restore {count} items"
+			}
+		}
+	],
+	"toast_deleting_permanently": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Deleting {count} item permanently",
+				"countPlural=other": "Deleting {count} items permanently"
+			}
+		}
+	],
+	"toast_items_deleted_permanently": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} item deleted permanently",
+				"countPlural=other": "{count} items deleted permanently"
+			}
+		}
+	],
+	"toast_delete_permanently_error": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Failed to delete {count} item permanently",
+				"countPlural=other": "Failed to delete {count} items permanently"
+			}
+		}
+	],
+	"toast_moving_to_trash": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Moving {count} item to trash",
+				"countPlural=other": "Moving {count} items to trash"
+			}
+		}
+	],
+	"toast_items_moved_to_trash": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} item moved to trash",
+				"countPlural=other": "{count} items moved to trash"
+			}
+		}
+	],
+	"toast_move_to_trash_error": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Failed to move {count} item to trash",
+				"countPlural=other": "Failed to move {count} items to trash"
+			}
+		}
+	],
+	"undo": "Undo",
 	"title_settings_general": "Settings - General",
 	"title_settings_storage": "Settings - Storage",
 	"title_account_details": "Account - Details",
@@ -302,7 +466,16 @@
 	"share_password_placeholder": "Leave empty for no password",
 	"share_expiry": "Expires",
 	"share_expiry_never": "Never",
-	"share_expiry_days": "In {count} days",
+	"share_expiry_days": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "In {count} day",
+				"countPlural=other": "In {count} days"
+			}
+		}
+	],
 	"share_requires_auth": "Only signed-in users can open this link",
 	"share_link": "Share link",
 	"share_link_hint": "Anyone with this link can open it, subject to the options above.",
@@ -310,7 +483,16 @@
 	"copy_link": "Copy link",
 	"no_shares": "You have not shared anything yet.",
 	"shared_description": "Links you created to share files with anyone who has them.",
-	"share_download_count": "{count} downloads",
+	"share_download_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} download",
+				"countPlural=other": "{count} downloads"
+			}
+		}
+	],
 	"toast_share_created": "Share link created",
 	"toast_share_create_error": "Failed to create share link",
 	"toast_share_revoked": "Share link revoked",
@@ -320,12 +502,30 @@
 	"storage_usage_description": "What your files take up on this instance's volume.",
 	"storage_used_of": "{used} used of {total}",
 	"storage_available": "{size} available",
-	"storage_files_count": "{count} files · {size}",
+	"storage_files_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} file · {size}",
+				"countPlural=other": "{count} files · {size}"
+			}
+		}
+	],
 	"storage_by_category": "By category",
 	"storage_no_files": "No files yet.",
 	"storage_cleanup": "Cleanup",
 	"storage_cleanup_description": "Space you can reclaim right now.",
-	"storage_trash_holds": "Trash holds {count} files ({size})",
+	"storage_trash_holds": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Trash holds {count} file ({size})",
+				"countPlural=other": "Trash holds {count} files ({size})"
+			}
+		}
+	],
 	"storage_largest_files": "Largest files",
 	"title_admin_activity": "Activity log",
 	"admin_activity": "Activity log",
@@ -347,7 +547,16 @@
 	"previous": "Previous",
 	"next": "Next",
 	"page_of": "Page {page} of {total}",
-	"admin_users_count": "{count} users on this instance",
+	"admin_users_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} user on this instance",
+				"countPlural=other": "{count} users on this instance"
+			}
+		}
+	],
 	"admin_user_banned": "Banned",
 	"admin_promote": "Make admin",
 	"admin_demote": "Remove admin",
@@ -365,6 +574,18 @@
 	"sort_ascending": "Ascending",
 	"sort_descending": "Descending",
 	"toast_preferences_saved": "Preferences saved",
+	"listing_load_mode": "Loading mode",
+	"listing_load_mode_description": "How a large folder or category keeps loading past its first page.",
+	"listing_load_mode_scroll": "Infinite scroll",
+	"listing_load_mode_scroll_description": "Keep loading more as you scroll down.",
+	"listing_load_mode_pages": "Pages",
+	"listing_load_mode_pages_description": "Load one page at a time, with page controls.",
+	"loading_more": "Loading more…",
+	"previous_page": "Previous",
+	"next_page": "Next",
+	"page_of_total": "Page {current} of {total}",
+	"selection_loaded_only": "{loaded} of {total} loaded: “select all” only selects what's loaded",
+	"toast_load_more_error": "Couldn't load more files",
 	"storage_legend_you": "You",
 	"storage_legend_other": "Other data",
 	"storage_legend_free": "Free",
@@ -379,13 +600,9 @@
 	"admin_storage_path": "Path",
 	"default_sort_description": "How folder contents are ordered when you open them.",
 	"password_set": "Set",
-	"storage_files_count_one": "{count} file · {size}",
-	"admin_users_count_one": "{count} user on this instance",
-	"share_download_count_one": "{count} download",
 	"share_expired": "Expired",
 	"share_badge_password": "Password",
 	"share_badge_signin": "Sign-in",
-	"storage_trash_holds_one": "Trash holds {count} file ({size})",
 	"storage_review_trash": "Review",
 	"done": "Done",
 	"share_tab_link": "Link",
@@ -457,15 +674,25 @@
 	"onboarding_finish": "Get started",
 	"onboarding_skip": "Skip",
 	"admin_invite_user": "Add a user",
-	"admin_invite_hint": "Registers the address. They set their own password the first time they sign in — you never see it.",
+	"admin_invite_hint": "Registers the address and issues a one-time invite link. They set their own password by opening it; you never see it.",
 	"admin_invite_name": "Name (optional)",
 	"admin_invite_name_placeholder": "Taken from the email if left blank",
 	"admin_invite_submit": "Add user",
-	"toast_user_invited": "{email} can now sign in",
+	"toast_user_invited": "{email} was invited",
+	"toast_invite_link_copied": "Invite link copied to clipboard",
 	"sign_in_change_email": "Use a different address",
 	"onboarding_password_title": "Choose a password",
 	"onboarding_password_description": "Your account for {email} is ready — set a password to finish.",
-	"onboarding_password_rules": "At least {count} characters.",
+	"onboarding_password_rules": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "At least {count} character.",
+				"countPlural=other": "At least {count} characters."
+			}
+		}
+	],
 	"onboarding_password_strong": "Include upper and lower case, a digit and a symbol.",
 	"onboarding_password_submit": "Set password and continue",
 	"admin_send_invite_email": "Email them a sign-in link",
@@ -477,22 +704,48 @@
 	"admin_smtp_port": "Port",
 	"admin_smtp_user": "Username",
 	"admin_smtp_password": "Password",
+	"admin_smtp_password_hint": "Leave blank to keep the saved password.",
 	"admin_smtp_from": "From address",
 	"admin_smtp_secure": "Use TLS",
 	"admin_smtp_secure_hint": "On for port 465; off for 587 with STARTTLS.",
-	"admin_restart_required": "Applies after the next restart.",
 	"admin_require_two_factor": "Require two-factor authentication",
 	"admin_require_two_factor_hint": "Everyone must set up an authenticator app before they can use the app.",
-	"admin_require_two_factor_pending": "{count} account(s) have not set it up yet and will be asked to on their next visit.",
+	"admin_require_two_factor_pending": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} account has not set it up yet and will be asked to on its next visit.",
+				"countPlural=other": "{count} accounts have not set it up yet and will be asked to on their next visit."
+			}
+		}
+	],
 	"admin_magic_link": "Emailed sign-in link",
-	"admin_magic_link_hint": "A one-time link that signs the holder in. Applies after the next restart.",
+	"admin_magic_link_hint": "A one-time link that signs the holder in.",
 	"admin_email_otp": "Emailed one-time code",
-	"admin_email_otp_hint": "A short code sent by email instead of a password. Applies after the next restart.",
+	"admin_email_otp_hint": "A short code sent by email instead of a password.",
 	"admin_needs_smtp": "Configure SMTP below to enable this.",
-	"admin_email_sign_in_usage": "{count} account(s) sign in this way",
+	"admin_email_sign_in_usage": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} account signs in this way",
+				"countPlural=other": "{count} accounts sign in this way"
+			}
+		}
+	],
 	"admin_smtp_test": "Send test email",
 	"admin_smtp_test_hint": "Uses the values above, saved or not.",
 	"admin_smtp_test_sent": "Test email sent to {email}.",
+	"admin_version_check": "Version check",
+	"admin_version_check_description": "The hourly check against GitHub releases for the update banner.",
+	"admin_version_check_enabled": "Check for updates",
+	"admin_version_check_hint": "Calls api.github.com once an hour. Turn off for an air-gapped or privacy-sensitive deployment.",
+	"admin_release_channel": "Release channel",
+	"admin_release_channel_stable": "Stable",
+	"admin_release_channel_canary": "Canary",
+	"admin_release_channel_hint": "Which release stream to compare the running version against.",
 	"sign_in_sending_link": "Sending your link…",
 	"sign_in_link_sent": "Check your inbox for the sign-in link.",
 	"sign_in_sending_code": "Sending your code…",
@@ -536,7 +789,16 @@
 	"setup_description": "Create the administrator account. Nothing else can be used until this exists.",
 	"setup_name": "Your name (optional)",
 	"setup_name_placeholder": "Taken from the email if left blank",
-	"setup_password_hint": "At least {count} characters.",
+	"setup_password_hint": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "At least {count} character.",
+				"countPlural=other": "At least {count} characters."
+			}
+		}
+	],
 	"setup_submit": "Create administrator",
 	"notes_title": "Notes",
 	"notes_empty": "No notes yet.",
@@ -557,6 +819,7 @@
 	"editor_saving": "Saving…",
 	"editor_saved": "Saved at {time}",
 	"editor_save_error": "Could not save. Retrying…",
+	"editor_unsaved": "Unsaved changes",
 	"editor_unsupported": "This file type has no editor.",
 	"editor_office_note": "Saved back into the original file. Formatting this editor cannot show is kept — except on text you change.",
 	"sheet_add_row": "Add row",
@@ -570,7 +833,16 @@
 	"clear_selection": "Clear",
 	"seek": "Seek",
 	"back": "Back",
-	"upload_action": "Upload {count} file(s)",
+	"upload_action": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Upload {count} file",
+				"countPlural=other": "Upload {count} files"
+			}
+		}
+	],
 	"upload_files_heading": "Files",
 	"upload_files_hint": "Land directly in the folder you are browsing.",
 	"upload_folder_heading": "Folder",
@@ -581,14 +853,31 @@
 	"upload_failed_title": "Failed",
 	"upload_failed_interrupted": "Interrupted when the tab closed",
 	"upload_retry": "Retry",
-	"upload_resumed": "Resuming {count} interrupted upload(s)",
+	"upload_resumed": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Resuming {count} interrupted upload",
+				"countPlural=other": "Resuming {count} interrupted uploads"
+			}
+		}
+	],
 	"sign_in_with_passkey": "Sign in with a passkey",
 	"upload_worker_error": "Uploads could not be started in this browser.",
 	"notifications_title": "Notifications",
 	"notifications_empty": "Nothing new.",
 	"notifications_mark_all_read": "Mark all as read",
-	"notifications_unread_one": "1 unread",
-	"notifications_unread_other": "{count} unread",
+	"notifications_unread": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} unread",
+				"countPlural=other": "{count} unread"
+			}
+		}
+	],
 	"notification_note": "{actor} left a note on {item}",
 	"notification_share": "{actor} shared {item} with you",
 	"notification_note_generic": "A new note was left on {item}",
@@ -616,12 +905,20 @@
 	"admin_oauth_enabled": "Offer this provider on the sign-in page",
 	"admin_oauth_callback": "Redirect URI to register with the provider",
 	"admin_oauth_callback_new": "The redirect URI is {url} — register it with the provider.",
-	"admin_oauth_pending": "Saved, not yet loaded",
 	"admin_oauth_from_env": "From the environment",
 	"admin_oauth_saved": "{name} saved. Restart to let people sign in with it.",
 	"admin_oauth_removed": "{name} removed.",
 	"toast_trash_emptied": "Trash emptied, {size} freed",
-	"toast_trash_emptied_partial": "{count} items could not be deleted and are still in the trash",
+	"toast_trash_emptied_partial": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} item could not be deleted and is still in the trash",
+				"countPlural=other": "{count} items could not be deleted and are still in the trash"
+			}
+		}
+	],
 	"toast_emptying_trash": "Emptying the trash",
 	"toast_empty_trash_error": "Failed to empty the trash",
 	"nav_drives": "Shared drives",
@@ -666,14 +963,45 @@
 	"copy_here": "Copy here",
 	"copying": "Copying…",
 	"transfer_destination": "Destination",
-	"toast_copying_items": "Copying {count} item(s)…",
-	"toast_items_copied": "Copied {successCount} of {total} item(s) to {destination}",
+	"toast_copying_items": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Copying {count} item…",
+				"countPlural=other": "Copying {count} items…"
+			}
+		}
+	],
+	"toast_items_copied": [
+		{
+			"declarations": ["input total", "local totalPlural = total: plural"],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "Copied {successCount} of {total} item to {destination}",
+				"totalPlural=other": "Copied {successCount} of {total} items to {destination}"
+			}
+		}
+	],
 	"toast_copy_items_error": "Failed to copy items",
 	"volume_rescan": "Rescan",
 	"volume_rescan_error": "Could not start a scan",
 	"volume_scan_listing": "Looking for files…",
 	"volume_scan_folders": "Adding folders…",
-	"volume_scan_files": "{done} of {total} files",
+	"volume_scan_files": [
+		{
+			"declarations": [
+				"input done",
+				"input total",
+				"local totalPlural = total: plural"
+			],
+			"selectors": ["totalPlural"],
+			"match": {
+				"totalPlural=one": "{done} of {total} file",
+				"totalPlural=other": "{done} of {total} files"
+			}
+		}
+	],
 	"volume_scan_cleanup": "Removing what is gone…",
 	"volume_scan_eta": "About {time} left",
 	"volume_rescan_options": "Scan options",
@@ -687,5 +1015,53 @@
 	"preferred_sign_in": "Preferred sign-in method",
 	"preferred_sign_in_description": "What the sign-in page offers first on a device that remembers you. The other methods stay one click away.",
 	"preferred_sign_in_none": "No preference",
-	"passkeys_disabled": "Passkey sign-in is turned off on this instance."
+	"passkeys_disabled": "Passkey sign-in is turned off on this instance.",
+	"admin_resend_invite": "Resend invite",
+	"form_error_generic": "Something went wrong. Try again.",
+	"form_error_missing_fields": "Name and email are required.",
+	"form_error_unauthorized": "Sign in again.",
+	"form_error_email_change_requires_smtp": "Email change is not allowed without SMTP enabled.",
+	"form_error_email_update_failed": "An unexpected error occurred while updating email.",
+	"form_error_account_update_failed": "Failed to update account details.",
+	"form_error_sign_in_method_unavailable": "That sign-in method is not available.",
+	"form_error_api_key_name_required": "API key name is required.",
+	"form_error_api_key_create_failed": "Failed to create API key.",
+	"form_error_invalid_form": "Invalid form submission.",
+	"form_error_password_mismatch": "New passwords do not match.",
+	"form_error_email_signin_disabled": "Email sign-in is disabled.",
+	"form_error_password_too_short": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Password must be at least {count} character.",
+				"countPlural=other": "Password must be at least {count} characters."
+			}
+		}
+	],
+	"form_error_set_password_failed": "Failed to set password.",
+	"form_error_change_password_failed": "Failed to change password.",
+	"form_error_invite_invalid": "This invite link is invalid.",
+	"form_error_password_not_strong": "Password needs upper and lower case, a digit and a symbol.",
+	"form_error_invite_expired": "This invite link has expired or was already used.",
+	"form_error_invite_no_account": "No account for that invite.",
+	"form_error_onboarding_failed": "Could not finish setting up your account. Try again.",
+	"account_export_title": "Export your data",
+	"account_export_description": "Download everything you own as one ZIP archive, or your account data as JSON.",
+	"account_export_files": "Download files (.zip)",
+	"account_export_data": "Download account data (.json)",
+	"toast_export_started": "Your download is starting…",
+	"account_danger_zone": "Danger zone",
+	"account_delete_description": "Permanently delete your account and everything in it. This cannot be undone.",
+	"account_delete_button": "Delete account",
+	"account_delete_confirm_title": "Delete your account?",
+	"account_delete_confirm_body": "This permanently deletes your account, files and folders, and ends every share you granted. This cannot be undone.",
+	"account_delete_no_password_hint": "You signed in without a password, so we'll only ask for confirmation if your session is still fresh.",
+	"toast_deleting_account": "Deleting your account…",
+	"toast_account_deleted": "Account deleted",
+	"toast_delete_account_error": "Could not delete your account.",
+	"admin_data_retention": "Data retention",
+	"admin_data_retention_description": "How long activity history, notifications and finished background job records are kept before a nightly sweep removes them.",
+	"admin_data_retention_days": "Retention (days)",
+	"admin_data_retention_hint": "Leave blank to keep everything forever."
 }

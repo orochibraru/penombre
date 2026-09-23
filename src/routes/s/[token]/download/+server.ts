@@ -3,6 +3,11 @@ import type { User } from "better-auth";
 import type { Share } from "#lib/server/db/schema.js";
 import { ShareService, unlockCookieName } from "#lib/server/services/shares.js";
 import { StorageService } from "#lib/server/services/storage/index.js";
+import {
+	isActiveContentType,
+	parseRange,
+	rawFileSecurityHeaders,
+} from "#lib/server/services/storage/mappers.js";
 
 const shares = new ShareService();
 
@@ -19,28 +24,6 @@ async function folderZip(service: StorageService, share: Share) {
 	});
 }
 
-/** Parse `Range: bytes=start-end` against a known length. */
-function parseRange(
-	header: string | null,
-	size: number,
-): { start: number; end: number } | null {
-	const match = /^bytes=(\d*)-(\d*)$/.exec(header?.trim() ?? "");
-	if (!match) {
-		return null;
-	}
-	const [, rawStart, rawEnd] = match;
-	// A suffix range ("-500") means the last N bytes.
-	const start = rawStart ? Number(rawStart) : size - Number(rawEnd || 0);
-	const end = rawStart ? (rawEnd ? Number(rawEnd) : size - 1) : size - 1;
-	if (!(Number.isFinite(start) && Number.isFinite(end))) {
-		return null;
-	}
-	if (start < 0 || end >= size || start > end) {
-		return null;
-	}
-	return { start, end };
-}
-
 /**
  * One file's bytes, or null when it has gone missing since the share.
  *
@@ -55,8 +38,8 @@ async function fileBody(
 	options: { inline: boolean; range: string | null },
 ): Promise<Response | null> {
 	const path = await service.findFileById(fileId);
-	const raw = path ? await service.getRawFileData(path) : null;
-	if (!raw) {
+	const raw = path ? await service.openRawFile(path) : null;
+	if (!raw || raw.meta.metadata.isTrashed) {
 		return null;
 	}
 
@@ -65,39 +48,42 @@ async function fileBody(
 	const filename = encodeURIComponent(
 		raw.meta.metadata.name ?? share.resourceName,
 	);
-	// The buffer is the truth: `raw.size` is the database's copy, and a stale
-	// row would send a Content-Length that truncates the body.
-	const size = raw.buffer.byteLength;
+	const { size } = raw;
 
-	const disposition = options.inline
+	// Active types are always downloaded, never rendered inline, whatever the
+	// caller asked for; an HTML or SVG file must not run script on the
+	// instance origin with the visitor's (or nobody's) session.
+	const inline = options.inline && !isActiveContentType(contentType);
+	const disposition = inline
 		? `inline; filename="${filename}"`
 		: `attachment; filename="${filename}"`;
 
-	if (options.inline) {
+	if (inline) {
 		const range = parseRange(options.range, size);
 		if (range) {
-			const slice = raw.buffer.slice(range.start, range.end + 1);
-			return new Response(slice, {
+			return new Response(await raw.stream(range.start, range.end), {
 				status: 206,
 				headers: {
 					"Content-Type": contentType,
 					"Content-Disposition": disposition,
 					"Content-Range": `bytes ${range.start}-${range.end}/${size}`,
-					"Content-Length": String(slice.byteLength),
+					"Content-Length": String(range.end - range.start + 1),
 					"Accept-Ranges": "bytes",
 					"Cache-Control": "no-store",
+					...rawFileSecurityHeaders(contentType),
 				},
 			});
 		}
 	}
 
-	return new Response(raw.buffer, {
+	return new Response(await raw.stream(), {
 		headers: {
 			"Content-Type": contentType,
 			"Content-Disposition": disposition,
 			"Content-Length": String(size),
-			...(options.inline ? { "Accept-Ranges": "bytes" } : {}),
+			...(inline ? { "Accept-Ranges": "bytes" } : {}),
 			"Cache-Control": "no-store",
+			...rawFileSecurityHeaders(contentType),
 		},
 	});
 }

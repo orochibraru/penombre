@@ -562,7 +562,7 @@
 		<MusicPlayer />
 		<div
             class={cn(
-                "bg-background fixed bottom-0 left-0 w-full rounded-t-4xl border-t px-8 py-2 transition-transform duration-300 md:hidden",
+                "bg-background fixed bottom-0 left-0 w-full rounded-t-xl border-t px-8 py-2 transition-transform duration-300 md:hidden",
                 bottomBarHidden && "translate-y-full",
             )}
 		>

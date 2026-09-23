@@ -182,7 +182,7 @@
                     {#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
                         {Math.round($uploadingItems[item.key] ?? 0)}%
                     {:else}
-                        <XIcon class="size-4 text-red-600" />
+                        <XIcon class="size-4 text-destructive" />
                     {/if}
                 </span>
             {:else if isFolderItem(item)}
@@ -267,7 +267,7 @@
                         {Math.round($uploadingItems[item.key] ?? 0)}%
                     </span>
                 {:else}
-                    <XIcon class="h-4 w-4 text-red-600" />
+                    <XIcon class="h-4 w-4 text-destructive" />
                 {/if}
             </div>
         {:else if item.metadata.category}

@@ -4,9 +4,9 @@ import { AUTH_STORAGE_STATE } from "../helpers";
 test.use({ storageState: AUTH_STORAGE_STATE });
 
 /**
- * Providers can come from the environment or from here. The UI half is what
- * this covers: better-auth only picks a stored provider up at boot, so the
- * row says so rather than pretending the button works already.
+ * Providers can come from the environment or from here. Saving one reloads
+ * the auth layer (`refreshAuth`), so this also checks the instance offers it
+ * straight away rather than after a restart.
  */
 test.describe("OAuth providers", () => {
 	test("an admin adds a provider and removes it again", async ({ page }) => {
@@ -33,8 +33,13 @@ test.describe("OAuth providers", () => {
 		const row = page.locator('[data-provider="e2e-oidc"]');
 		await expect(row).toBeVisible({ timeout: 10_000 });
 		await expect(row).toContainText("E2E Provider");
-		// Saved is not loaded: the plugin list was built when the process started.
-		await expect(row).toContainText(/not yet loaded/i);
+
+		// No restart: the instance registered it on save.
+		await expect(async () => {
+			const listed = await page.request.get("/api/v1/auth/providers");
+			expect(listed.ok()).toBe(true);
+			expect(await listed.text()).toContain("e2e-oidc");
+		}).toPass({ timeout: 10_000 });
 
 		// The secret is never sent back to the page, so editing starts blank.
 		await row.getByRole("button", { name: "Edit" }).click();
@@ -45,6 +50,11 @@ test.describe("OAuth providers", () => {
 		await expect(page.locator('[data-provider="e2e-oidc"]')).toHaveCount(0, {
 			timeout: 10_000,
 		});
+
+		await expect(async () => {
+			const listed = await page.request.get("/api/v1/auth/providers");
+			expect(await listed.text()).not.toContain("e2e-oidc");
+		}).toPass({ timeout: 10_000 });
 
 		expect(errors).toEqual([]);
 	});

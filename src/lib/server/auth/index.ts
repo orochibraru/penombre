@@ -21,9 +21,15 @@ import { getDb } from "#lib/server/db/index.js";
 import * as schema from "#lib/server/db/schema.js";
 import { Email } from "#lib/server/email.js";
 import {
+	assertCanDeleteAccount,
+	LastAdminError,
+	OwnsSharedDriveError,
+} from "#lib/server/services/account-deletion.js";
+import {
 	getPasswordlessSettings,
 	getStoredOAuthProviders,
 	isEmailSignInEnabled,
+	isOAuthSignInEnabled,
 	isPasskeySignInEnabled,
 } from "#lib/server/services/app-settings.js";
 import type { InstanceMethods } from "#lib/server/services/auth-methods.js";
@@ -40,86 +46,99 @@ if (!(process.env.ORIGIN || dev || building)) {
 const config = getConfig();
 
 /**
- * Providers configured in the admin UI, merged with the env-declared ones.
- *
- * Top-level await on purpose: better-auth builds its plugin list once at
- * module init, so this is the only point at which a stored provider can be
- * added. A provider saved later therefore needs a restart, which the admin UI
- * states. Failures fall back to env-only rather than blocking boot.
- */
-const storedProviders = await getStoredOAuthProviders().catch(() => []);
-
-// Same story for email sign-in: resolved once at init, so toggling it in the
-// admin UI takes effect on the next restart.
-const emailSignInEnabled = await isEmailSignInEnabled().catch(
-	() => config.auth.enableEmailSignIn,
-);
-
-// Passwordless methods, resolved at init for the same reason. Both are
-// already gated on SMTP being configured by `getPasswordlessSettings`.
-const passwordless = await getPasswordlessSettings().catch(() => ({
-	magicLink: false,
-	emailOtp: false,
-}));
-
-/**
- * Every sign-in method this process can answer right now.
- *
- * The sign-in page must offer these rather than re-reading the settings:
- * a live read is true the moment an admin saves, but the plugin list was
- * built at module init, so the button appeared for an endpoint that did not
- * exist and posting to it 404'd with no message at all. Passkeys are the
- * exception: they are gated per request (`hooks.before`), so read live.
+ * Every sign-in method this instance answers right now, read live: each one is
+ * gated per request in `hooks.before`, so a toggle saved in the admin UI takes
+ * effect on the next request, in every app process.
  */
 export async function instanceSignInMethods(): Promise<InstanceMethods> {
-	return {
-		password: emailSignInEnabled,
-		passkey: await isPasskeySignInEnabled(),
-		...passwordless,
-	};
+	const [password, passkey, passwordless] = await Promise.all([
+		isEmailSignInEnabled(),
+		isPasskeySignInEnabled(),
+		getPasswordlessSettings(),
+	]);
+	return { password, passkey, ...passwordless };
 }
 
-/** Sign-in and enrolment; listing and deleting stay open when it is off. */
-const PASSKEY_GATED = new Set([
-	"/passkey/generate-authenticate-options",
-	"/passkey/verify-authentication",
-	"/passkey/generate-register-options",
-	"/passkey/verify-registration",
-]);
+/** Endpoints refused while their method is off; the plugins stay loaded. */
+const METHOD_GATES: {
+	matches: (path: string) => boolean;
+	enabled: () => Promise<boolean>;
+	name: string;
+}[] = [
+	{
+		name: "Password sign-in",
+		matches: (path) =>
+			path === "/sign-in/email" ||
+			path === "/request-password-reset" ||
+			path.startsWith("/reset-password"),
+		enabled: isEmailSignInEnabled,
+	},
+	{
+		name: "Passkey sign-in",
+		matches: (path) =>
+			path === "/passkey/generate-authenticate-options" ||
+			path === "/passkey/verify-authentication" ||
+			path === "/passkey/generate-register-options" ||
+			path === "/passkey/verify-registration",
+		enabled: isPasskeySignInEnabled,
+	},
+	{
+		name: "Magic link sign-in",
+		matches: (path) =>
+			path === "/sign-in/magic-link" || path === "/magic-link/verify",
+		enabled: async () => (await getPasswordlessSettings()).magicLink,
+	},
+	{
+		name: "Email code sign-in",
+		matches: (path) =>
+			path === "/sign-in/email-otp" ||
+			path === "/forget-password/email-otp" ||
+			path.startsWith("/email-otp/"),
+		enabled: async () => (await getPasswordlessSettings()).emailOtp,
+	},
+	{
+		name: "OAuth sign-in",
+		matches: (path) =>
+			path === "/sign-in/oauth2" ||
+			path === "/sign-in/social" ||
+			path.startsWith("/oauth2/") ||
+			path.startsWith("/callback/"),
+		enabled: isOAuthSignInEnabled,
+	},
+];
+
+interface OAuthProvider {
+	name: string;
+	clientId: string;
+	clientSecret: string;
+	discoveryUrl: string;
+	pkce: boolean;
+	prettyName?: string;
+	scopes: string[];
+	enabled: boolean;
+}
 
 // Env wins on a name collision: `config.ts` is the source of truth for
 // anything declared there, and the UI shows those read-only.
-const envProviderNames = new Set(
-	config.auth.oauthProviders.map((provider) => provider.name),
-);
-const oauthProviders = [
-	...config.auth.oauthProviders,
-	...storedProviders
-		.filter((provider) => !envProviderNames.has(provider.name))
-		.map((provider) => ({
-			name: provider.name,
-			clientId: provider.clientId,
-			clientSecret: provider.clientSecret,
-			discoveryUrl: provider.discoveryUrl,
-			pkce: provider.pkce ?? true,
-			prettyName: provider.prettyName,
-			scopes: provider.scopes ?? ["openid", "profile", "email"],
-			enabled: provider.enabled ?? true,
-		})),
-];
-
-/**
- * The providers this process actually registered, public fields only.
- *
- * Same reason as `instanceSignInMethods`: one saved in the admin UI has no
- * endpoint until the next boot, so a page offering it beforehand would post
- * to a 404. Never the client id or secret — this is read by the sign-in page.
- */
-export const loadedOAuthProviders = oauthProviders.map((provider) => ({
-	name: provider.name,
-	prettyName: provider.prettyName ?? provider.name,
-	enabled: provider.enabled,
-}));
+async function resolveOAuthProviders(): Promise<OAuthProvider[]> {
+	const stored = await getStoredOAuthProviders().catch(() => []);
+	const envNames = new Set(config.auth.oauthProviders.map((p) => p.name));
+	return [
+		...config.auth.oauthProviders,
+		...stored
+			.filter((provider) => !envNames.has(provider.name))
+			.map((provider) => ({
+				name: provider.name,
+				clientId: provider.clientId,
+				clientSecret: provider.clientSecret,
+				discoveryUrl: provider.discoveryUrl,
+				pkce: provider.pkce ?? true,
+				prettyName: provider.prettyName,
+				scopes: provider.scopes ?? ["openid", "profile", "email"],
+				enabled: provider.enabled ?? true,
+			})),
+	];
+}
 
 /**
  * Send a sign-in email, turning a transport failure into something the caller
@@ -145,96 +164,36 @@ async function sendSignInEmail(
 		await message.send();
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : String(error);
-		logger.error(`Could not send "${subject}" to ${to}: ${reason}`);
+		// The domain is enough to spot "every gmail.com address fails" without
+		// putting a full address in the log.
+		const domain = to.split("@")[1] ?? "unknown";
+		logger.error(`Could not send "${subject}" to @${domain}: ${reason}`);
 		throw new APIError("INTERNAL_SERVER_ERROR", {
 			message: `Could not send the sign-in email: ${reason}`,
 		});
 	}
 }
 
-export const auth = betterAuth({
-	baseURL: config.origin
-		? config.origin
-		: dev
-			? "http://localhost:5173"
-			: (() => {
-					throw new Error("ORIGIN environment variable is not set");
-				})(),
-	trustedOrigins: dev
-		? ["http://localhost:*/**", "http://192.168.*.*:*/**"]
-		: [config.origin],
-	secret: config.auth.secret,
-	basePath: "/api/v1/auth",
-	rateLimit: {
-		window: 15 * 60, // 15 minutes (better-auth takes seconds here)
-		max: 100, // limit each IP to 100 requests per window
-		enabled: !dev, // Disable rate limiting in development for easier testing
-	},
-	logger: {
-		level: dev ? "debug" : config.logLevel,
-		log: (level, message, ...metadata) => {
-			// Send logs to a custom logging service
-			logger.log({
-				level,
-				message,
-				metadata,
-			});
-		},
-	},
-	database: drizzleAdapter(getDb(), {
-		provider: isSqliteDialect() ? "sqlite" : "pg",
-		schema,
-	}),
-	hooks: {
-		before: createAuthMiddleware(async (ctx) => {
-			if (PASSKEY_GATED.has(ctx.path) && !(await isPasskeySignInEnabled())) {
-				throw new APIError("FORBIDDEN", {
-					message: "Passkey sign-in is disabled on this instance.",
-				});
-			}
-		}),
-		after: createAuthMiddleware(async (ctx) => {
-			const session = ctx.context.session;
-			const data = ctx.context.returned;
-			// @ts-expect-error - BetterAuth types are not great, so we need to assert the type here
-			if (data?.url) {
-				// @ts-expect-error - BetterAuth types are not great, so we need to assert the type here
-				const redirectUrl = new URL(data.url as string);
-				logger.debug("Redirect URL:", redirectUrl);
-			}
-			if (session) {
-				const storageService = new StorageService(session.user);
-				try {
-					await storageService.ensureUserDirectory();
-				} catch (error) {
-					logger.error("Error creating user storage directory:", error);
-				}
-			}
-		}),
-	},
-	emailAndPassword: {
-		enabled: emailSignInEnabled,
-		disableSignUp: true,
-		minPasswordLength: config.auth.minPasswordLength,
-	},
-	emailVerification: {
-		sendOnSignUp: isSmtpEnabled(),
-		sendVerificationEmail: async (params) => {
-			const fullUrl = new URL(params.url);
-			// If not hostname, add it
-			if (!fullUrl.hostname) {
-				fullUrl.hostname = "localhost:5173"; // Change this to your frontend domain
-				fullUrl.protocol = "http:"; // or 'https:' in production
-			}
-			const email = await Email.create({
-				to: params.user.email,
-				subject: "Verify your email address",
-				content: `Click the link to verify your email: ${fullUrl.toString()}`,
-			});
-			await email.send();
-		},
-	},
-	plugins: [
+/** `assertCanDeleteAccount`'s own errors, translated into what the client reads. */
+async function guardAccountDeletion(user: {
+	id: string;
+	role?: string | null;
+}): Promise<void> {
+	try {
+		await assertCanDeleteAccount(user);
+	} catch (error) {
+		if (
+			error instanceof LastAdminError ||
+			error instanceof OwnsSharedDriveError
+		) {
+			throw new APIError("BAD_REQUEST", { message: error.message });
+		}
+		throw error;
+	}
+}
+
+function authPlugins(oauthProviders: OAuthProvider[]) {
+	return [
 		openAPI({
 			path: "/openapi",
 			disableDefaultReference: true,
@@ -256,40 +215,30 @@ export const auth = betterAuth({
 		// The `requireTwoFactor` setting only decides who is forced to enrol.
 		twoFactor({ issuer: "Penombre" }),
 
-		...(passwordless.magicLink
-			? [
-					magicLink({
-						// Only ever sent to an address that already has an account:
-						// signup stays closed unless the admin opened it.
-						disableSignUp: true,
-						sendMagicLink: async ({ email, url }) => {
-							await sendSignInEmail(
-								email,
-								"Your sign-in link",
-								`Use this link to sign in: ${url}\n\nIt expires shortly and can only be used once. If you did not ask for it, ignore this email.`,
-							);
-						},
-					}),
-				]
-			: []),
-		...(passwordless.emailOtp
-			? [
-					emailOTP({
-						disableSignUp: true,
-						sendVerificationOTP: async ({ email, otp, type }) => {
-							const subject =
-								type === "sign-in"
-									? "Your sign-in code"
-									: "Your verification code";
-							await sendSignInEmail(
-								email,
-								subject,
-								`Your code is ${otp}\n\nIt expires shortly. If you did not ask for it, ignore this email.`,
-							);
-						},
-					}),
-				]
-			: []),
+		magicLink({
+			// Only ever sent to an address that already has an account:
+			// signup stays closed unless the admin opened it.
+			disableSignUp: true,
+			sendMagicLink: async ({ email, url }) => {
+				await sendSignInEmail(
+					email,
+					"Your sign-in link",
+					`Use this link to sign in: ${url}\n\nIt expires shortly and can only be used once. If you did not ask for it, ignore this email.`,
+				);
+			},
+		}),
+		emailOTP({
+			disableSignUp: true,
+			sendVerificationOTP: async ({ email, otp, type }) => {
+				const subject =
+					type === "sign-in" ? "Your sign-in code" : "Your verification code";
+				await sendSignInEmail(
+					email,
+					subject,
+					`Your code is ${otp}\n\nIt expires shortly. If you did not ask for it, ignore this email.`,
+				);
+			},
+		}),
 		bearer(),
 		apiKey({
 			enableSessionForAPIKeys: true,
@@ -313,8 +262,157 @@ export const auth = betterAuth({
 		// Must stay last: it forwards `Set-Cookie` to SvelteKit's cookie store,
 		// so any plugin whose `hooks.after` runs later would lose its cookies.
 		sveltekitCookies(getRequestEvent),
-	],
+	] as const;
+}
+
+function buildAuth(oauthProviders: OAuthProvider[]) {
+	return betterAuth({
+		baseURL: config.origin
+			? config.origin
+			: dev
+				? "http://localhost:5173"
+				: (() => {
+						throw new Error("ORIGIN environment variable is not set");
+					})(),
+		trustedOrigins: dev
+			? ["http://localhost:*/**", "http://192.168.*.*:*/**"]
+			: [config.origin],
+		secret: config.auth.secret,
+		basePath: "/api/v1/auth",
+		rateLimit: {
+			window: 15 * 60, // 15 minutes (better-auth takes seconds here)
+			max: 100, // limit each IP to 100 requests per window
+			enabled: !dev, // Disable rate limiting in development for easier testing
+		},
+		logger: {
+			level: dev ? "debug" : config.logLevel,
+			log: (level, message, ...metadata) => {
+				// Send logs to a custom logging service
+				logger.log({
+					level,
+					message,
+					metadata,
+				});
+			},
+		},
+		database: drizzleAdapter(getDb(), {
+			provider: isSqliteDialect() ? "sqlite" : "pg",
+			schema,
+		}),
+		hooks: {
+			before: createAuthMiddleware(async (ctx) => {
+				const gate = METHOD_GATES.find((g) => g.matches(ctx.path));
+				if (gate && !(await gate.enabled())) {
+					throw new APIError("FORBIDDEN", {
+						message: `${gate.name} is disabled on this instance.`,
+					});
+				}
+			}),
+			after: createAuthMiddleware(async (ctx) => {
+				const session = ctx.context.session;
+				const data = ctx.context.returned;
+				// @ts-expect-error - BetterAuth types are not great, so we need to assert the type here
+				if (data?.url) {
+					// @ts-expect-error - BetterAuth types are not great, so we need to assert the type here
+					const redirectUrl = new URL(data.url as string);
+					logger.debug("Redirect URL:", redirectUrl);
+				}
+				if (session) {
+					const storageService = new StorageService(session.user);
+					try {
+						await storageService.ensureUserDirectory();
+					} catch (error) {
+						logger.error("Error creating user storage directory:", error);
+					}
+				}
+			}),
+		},
+		emailAndPassword: {
+			enabled: true,
+			disableSignUp: true,
+			minPasswordLength: config.auth.minPasswordLength,
+		},
+		emailVerification: {
+			sendOnSignUp: isSmtpEnabled(),
+			sendVerificationEmail: async (params) => {
+				const fullUrl = new URL(params.url);
+				// If not hostname, add it
+				if (!fullUrl.hostname) {
+					fullUrl.hostname = "localhost:5173"; // Change this to your frontend domain
+					fullUrl.protocol = "http:"; // or 'https:' in production
+				}
+				const email = await Email.create({
+					to: params.user.email,
+					subject: "Verify your email address",
+					content: `Click the link to verify your email: ${fullUrl.toString()}`,
+				});
+				await email.send();
+			},
+		},
+		user: {
+			deleteUser: {
+				enabled: true,
+				beforeDelete: guardAccountDeletion,
+			},
+		},
+		plugins: [...authPlugins(oauthProviders)],
+	});
+}
+
+type Auth = ReturnType<typeof buildAuth>;
+
+/**
+ * The OAuth provider list is part of better-auth's configuration, not
+ * something a request can gate, so a saved provider means a new instance.
+ * `auth` stays one object for every importer and forwards to the current one.
+ */
+let current: { auth: Auth; providers: OAuthProvider[]; key: string };
+{
+	const providers = await resolveOAuthProviders();
+	current = {
+		auth: buildAuth(providers),
+		providers,
+		key: JSON.stringify(providers),
+	};
+}
+let refreshing: Promise<void> | undefined;
+
+export const auth: Auth = new Proxy({} as Auth, {
+	get: (_target, prop) => Reflect.get(current.auth, prop, current.auth),
 });
+
+/**
+ * Rebuild the instance if the stored providers changed, whoever changed them:
+ * the admin action calls it, and every OAuth request checks, so another app
+ * process picks a new provider up on its first use.
+ */
+export function refreshAuth(): Promise<void> {
+	refreshing ??= (async () => {
+		try {
+			const providers = await resolveOAuthProviders();
+			const key = JSON.stringify(providers);
+			if (key !== current.key) {
+				current = { auth: buildAuth(providers), providers, key };
+				logger.info("OAuth providers changed, auth reloaded");
+			}
+		} finally {
+			refreshing = undefined;
+		}
+	})();
+	return refreshing;
+}
+
+/** The providers the current instance registered, public fields only. */
+export async function loadedOAuthProviders(): Promise<
+	{ name: string; prettyName: string; enabled: boolean }[]
+> {
+	await refreshAuth();
+	return current.providers.map((provider) => ({
+		name: provider.name,
+		prettyName: provider.prettyName ?? provider.name,
+		enabled: provider.enabled,
+	}));
+}
 
 export interface AuthType {
 	user: typeof auth.$Infer.Session.user | null;

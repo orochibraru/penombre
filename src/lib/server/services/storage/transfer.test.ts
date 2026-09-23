@@ -46,6 +46,7 @@ function setup() {
 	const inserted: unknown[] = [];
 	const ctx = {
 		storagePath: "/target",
+		encrypted: true,
 		user: { id: "u1" },
 		volumeId: null,
 		driver: {
@@ -107,7 +108,13 @@ describe("TransferOperations.importTree", () => {
 		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
 			type: "copy",
 			spec: {
-				pairs: [{ source: "/source/a.txt", dest: "/target/dest/a.txt" }],
+				pairs: [
+					{
+						source: "/source/a.txt",
+						dest: "/target/dest/a.txt",
+						encrypt: true,
+					},
+				],
 			},
 			priority: "mutation",
 		});

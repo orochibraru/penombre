@@ -21,6 +21,7 @@ const userPreferencesSchema = z.object({
 		.enum(["password", "passkey", "magicLink", "emailOtp"])
 		.nullable()
 		.optional(),
+	listingLoadMode: z.enum(["scroll", "pages"]).optional(),
 });
 
 export const getPreferences = defineRoute({

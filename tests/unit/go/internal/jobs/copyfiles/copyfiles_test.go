@@ -1,12 +1,16 @@
 package copyfiles_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/orochibraru/penombre/internal/envelope"
 	"github.com/orochibraru/penombre/internal/jobs"
 	"github.com/orochibraru/penombre/internal/jobs/copyfiles"
 )
@@ -140,5 +144,54 @@ func TestResultNamesEveryDestinationAndEchoesTheContext(t *testing.T) {
 	}
 	if string(res.Context) != `{"root":"/r"}` {
 		t.Fatalf("context = %s", res.Context)
+	}
+}
+
+func TestSealingMatrix(t *testing.T) {
+	keys := envelope.Keyring{Current: bytes.Repeat([]byte{1}, 32)}
+	envelope.SetDefault(keys)
+	t.Cleanup(func() { envelope.SetDefault(envelope.Keyring{}) })
+	dir := t.TempDir()
+	plain := filepath.Join(dir, "plain")
+	os.WriteFile(plain, []byte("content"), 0o644)
+	var sealedBytes bytes.Buffer
+	w, _ := envelope.NewWriter(&sealedBytes, keys.Current)
+	w.Write([]byte("content"))
+	w.Close()
+	sealed := filepath.Join(dir, "sealed")
+	os.WriteFile(sealed, sealedBytes.Bytes(), 0o644)
+
+	cases := []struct {
+		src         string
+		encrypt     bool
+		wantSealed  bool
+		wantRawCopy bool
+	}{
+		{plain, false, false, true},
+		{plain, true, true, false},
+		{sealed, true, true, true},
+		{sealed, false, false, false},
+	}
+	for i, c := range cases {
+		dest := filepath.Join(dir, "out", fmt.Sprint(i))
+		res, err := copyfiles.Run(context.Background(), mustJob(t, copyfiles.Spec{Pairs: []copyfiles.Pair{{Source: c.src, Dest: dest, Encrypt: c.encrypt}}}))
+		if err != nil || len(res.(copyfiles.Result).Failed) != 0 {
+			t.Fatalf("case %d: %v %+v", i, err, res)
+		}
+		isSealed, _ := envelope.SniffFile(dest)
+		if isSealed != c.wantSealed {
+			t.Fatalf("case %d: sealed = %v", i, isSealed)
+		}
+		srcBytes, _ := os.ReadFile(c.src)
+		destBytes, _ := os.ReadFile(dest)
+		if bytes.Equal(srcBytes, destBytes) != c.wantRawCopy {
+			t.Fatalf("case %d: raw copy = %v", i, !c.wantRawCopy)
+		}
+		f, _, _ := keys.OpenFile(dest)
+		got, _ := io.ReadAll(f)
+		f.Close()
+		if string(got) != "content" {
+			t.Fatalf("case %d: content %q", i, got)
+		}
 	}
 }

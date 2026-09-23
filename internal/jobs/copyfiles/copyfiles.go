@@ -11,12 +11,15 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/orochibraru/penombre/internal/envelope"
 	"github.com/orochibraru/penombre/internal/jobs"
 )
 
 type Pair struct {
 	Source string `json:"source"`
 	Dest   string `json:"dest"`
+	// Encrypt: the destination root seals what lands in it.
+	Encrypt bool `json:"encrypt"`
 }
 
 type Spec struct {
@@ -56,7 +59,7 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 			res.Failed = append(res.Failed, Failure{Index: i, Dest: p.Dest, Error: "interrupted: " + err.Error()})
 			continue
 		}
-		if err := copyOne(p.Source, p.Dest); err != nil {
+		if err := copyOne(p); err != nil {
 			res.Failed = append(res.Failed, Failure{Index: i, Dest: p.Dest, Error: err.Error()})
 			continue
 		}
@@ -65,12 +68,23 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 	return res, nil
 }
 
-func copyOne(src, dest string) error {
-	dir := filepath.Dir(dest)
+func copyOne(p Pair) error {
+	dir := filepath.Dir(p.Dest)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	in, err := os.Open(src)
+	// Same form on both sides is a raw copy: the file key is in the header.
+	sealed, err := envelope.SniffFile(p.Source)
+	if err != nil {
+		return err
+	}
+	keys := envelope.Default()
+	var in io.ReadCloser
+	if sealed == p.Encrypt {
+		in, err = os.Open(p.Source)
+	} else {
+		in, _, err = keys.OpenFile(p.Source)
+	}
 	if err != nil {
 		return err
 	}
@@ -81,7 +95,14 @@ func copyOne(src, dest string) error {
 		return err
 	}
 	stagedPath := staged.Name()
-	if _, err := io.Copy(staged, in); err != nil {
+	out, err := keys.SealTo(staged, p.Encrypt && !sealed)
+	if err == nil {
+		_, err = io.Copy(out, in)
+	}
+	if err == nil {
+		err = out.Close()
+	}
+	if err != nil {
 		staged.Close()
 		os.Remove(stagedPath)
 		return err
@@ -90,7 +111,7 @@ func copyOne(src, dest string) error {
 		os.Remove(stagedPath)
 		return err
 	}
-	if err := os.Rename(stagedPath, dest); err != nil {
+	if err := os.Rename(stagedPath, p.Dest); err != nil {
 		os.Remove(stagedPath)
 		return err
 	}

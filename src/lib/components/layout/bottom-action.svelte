@@ -3,6 +3,7 @@
 	import type { Snippet } from "svelte";
 	import { slide } from "svelte/transition";
 	import Button from "#lib/components/ui/button/button.svelte";
+	import * as m from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
 
 	interface Props {
@@ -73,7 +74,7 @@
                         variant="ghost"
                         size="sm"
                         class="text-xs"
-                        title={closeLabel ?? "Close"}
+                        title={closeLabel ?? m.close()}
                         onclick={close}
                     >
                         <XIcon class="size-3.5" />
@@ -85,7 +86,7 @@
             <div class="mb-2 flex items-center justify-between">
                 <p class="font-medium">{title}</p>
                 {#if showCloseButton}
-                    <Button variant="ghost" title="Close" onclick={close}>
+                    <Button variant="ghost" title={m.close()} onclick={close}>
                         <XIcon />
                     </Button>
                 {/if}

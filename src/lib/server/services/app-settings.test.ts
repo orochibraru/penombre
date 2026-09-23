@@ -6,7 +6,12 @@ const mockSelect = db.select as Mock<typeof db.select>;
 const mockEnvProvided = envProvided as Mock<typeof envProvided>;
 const mockGetConfig = getConfig as Mock<typeof getConfig>;
 
-const { isOAuthSignInEnabled } = await import("./app-settings");
+const {
+	isOAuthSignInEnabled,
+	isVersionCheckEnabled,
+	effectiveReleaseChannel,
+	effectiveRetentionDays,
+} = await import("./app-settings");
 
 /**
  * `mock.module` is global, so a `mockReturnValue` here would reconfigure every
@@ -18,11 +23,16 @@ const defaultProvided = {
 	passkeySignIn: false,
 	minPasswordLength: true,
 	smtp: true,
+	versionCheck: false,
+	releaseChannel: false,
+	dataRetention: false,
 };
 
 const defaultConfig = {
 	smtp: undefined,
 	appName: "Penombre",
+	appVersion: "1.0.0",
+	versionCheck: { enabled: true, releaseChannel: undefined },
 	origin: "http://localhost:5173",
 	auth: {
 		secret: "test-secret",
@@ -105,5 +115,140 @@ describe("isOAuthSignInEnabled", () => {
 		settingsRow(null);
 
 		expect(await isOAuthSignInEnabled()).toBe(true);
+	});
+});
+
+describe("isVersionCheckEnabled", () => {
+	test("the environment wins when it declares the setting", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			versionCheck: true,
+		} as never);
+		mockGetConfig.mockReturnValue({
+			...defaultConfig,
+			versionCheck: { enabled: false },
+		} as never);
+
+		expect(await isVersionCheckEnabled()).toBe(false);
+	});
+
+	test("falls back to the stored setting when the environment is silent", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			versionCheck: false,
+		} as never);
+		config({});
+		settingsRow({ versionCheckEnabled: false });
+
+		expect(await isVersionCheckEnabled()).toBe(false);
+	});
+
+	test("defaults to on with nothing set", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			versionCheck: false,
+		} as never);
+		config({});
+		settingsRow(null);
+
+		expect(await isVersionCheckEnabled()).toBe(true);
+	});
+});
+
+describe("effectiveReleaseChannel", () => {
+	test("the environment wins when it declares the channel", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			releaseChannel: true,
+		} as never);
+		mockGetConfig.mockReturnValue({
+			...defaultConfig,
+			versionCheck: { enabled: true, releaseChannel: "canary" },
+		} as never);
+
+		expect(await effectiveReleaseChannel()).toBe("canary");
+	});
+
+	test("falls back to the stored channel", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			releaseChannel: false,
+		} as never);
+		config({});
+		settingsRow({ releaseChannel: "canary" });
+
+		expect(await effectiveReleaseChannel()).toBe("canary");
+	});
+
+	test("a canary build defaults to canary with nothing set", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			releaseChannel: false,
+		} as never);
+		mockGetConfig.mockReturnValue({
+			...defaultConfig,
+			appVersion: "1.8.51-canary.2",
+		} as never);
+		settingsRow(null);
+
+		expect(await effectiveReleaseChannel()).toBe("canary");
+	});
+
+	test("a stable build defaults to stable with nothing set", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			releaseChannel: false,
+		} as never);
+		config({});
+		settingsRow(null);
+
+		expect(await effectiveReleaseChannel()).toBe("stable");
+	});
+});
+
+describe("effectiveRetentionDays", () => {
+	test("the environment wins when it declares a window", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			dataRetention: true,
+		} as never);
+		mockGetConfig.mockReturnValue({
+			...defaultConfig,
+			dataRetentionDays: 30,
+		} as never);
+
+		expect(await effectiveRetentionDays()).toBe(30);
+	});
+
+	test("an environment window of nothing set means disabled", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			dataRetention: true,
+		} as never);
+		mockGetConfig.mockReturnValue(defaultConfig as never);
+
+		expect(await effectiveRetentionDays()).toBeNull();
+	});
+
+	test("falls back to the stored window", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			dataRetention: false,
+		} as never);
+		config({});
+		settingsRow({ retentionDays: 90 });
+
+		expect(await effectiveRetentionDays()).toBe(90);
+	});
+
+	test("nothing set anywhere means disabled", async () => {
+		mockEnvProvided.mockReturnValue({
+			...defaultProvided,
+			dataRetention: false,
+		} as never);
+		config({});
+		settingsRow(null);
+
+		expect(await effectiveRetentionDays()).toBeNull();
 	});
 });

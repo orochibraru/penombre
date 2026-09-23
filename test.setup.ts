@@ -46,10 +46,8 @@ mock.module("#lib/server/auth/index.js", () => ({
 			listUsers: mock(() => Promise.resolve({ users: [] })),
 		},
 	},
-	// What the real module resolves at init; the sign-in page reads these to
-	// decide which buttons it may offer — a method or provider enabled since
-	// boot has no endpoint yet.
-	loadedOAuthProviders: [],
+	loadedOAuthProviders: mock(() => Promise.resolve([])),
+	refreshAuth: mock(() => Promise.resolve()),
 	instanceSignInMethods: mock(() =>
 		Promise.resolve({
 			password: true,
@@ -79,6 +77,9 @@ mock.module("#lib/server/config.js", () => ({
 		passkeySignIn: false,
 		minPasswordLength: true,
 		smtp: true,
+		versionCheck: false,
+		releaseChannel: false,
+		dataRetention: false,
 	})),
 	isSimpleMode: mock(() => false),
 	isAuthBypassed: mock(() => false),

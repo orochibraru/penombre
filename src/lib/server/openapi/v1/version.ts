@@ -18,6 +18,8 @@ export const checkVersion = defineRoute({
 		latestVersion: z.string().nullable(),
 		updateAvailable: z.boolean(),
 		releaseUrl: z.string().nullable(),
+		enabled: z.boolean(),
+		channel: z.enum(["stable", "canary"]),
 	}),
 	errors: [500],
 });

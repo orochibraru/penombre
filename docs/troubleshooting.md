@@ -59,6 +59,28 @@ docker compose logs app --tail 50
 The most common reasons are a missing `DATABASE_URL`, an unreachable database,
 or an invalid `AUTH_SECRET`.
 
+### Files are sealed with key ..., but ENCRYPTION_KEY is not set
+
+The instance has sealed files with a key, and this boot has none. Set
+`ENCRYPTION_KEY` (or `ENCRYPTION_KEY_FILE`) back to that key. See
+[Encryption](encryption.md).
+
+### ENCRYPTION_KEY (id ...) is not the key files are sealed with
+
+The key changed. If that was a rotation, put the old key in
+`ENCRYPTION_KEY_PREVIOUS` and restart; otherwise restore the original key.
+
+### ENCRYPTION_KEY is not supported with SIMPLE_MODE=true
+
+Simple mode's root is shared with other tools, so it is never sealed. Remove the
+key and protect the disk instead.
+
+### Previews or durations fail with "sealed with key ..., not loaded"
+
+The worker does not have the key the app has. An external worker needs the same
+`ENCRYPTION_KEY` (or `ENCRYPTION_KEY_FILE`) and `ENCRYPTION_KEY_PREVIOUS`; see
+[Worker](worker.md).
+
 ## Authentication
 
 ### The setup screen keeps appearing, or never appears

@@ -4,6 +4,161 @@
  */
 
 export interface paths {
+	"/api/v1/account/data": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Export account data
+		 * @description Returns the caller's profile, preferences and activity as JSON.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								activity: {
+									action: string;
+									createdAt: string;
+									id: string;
+									level: string;
+									link: string | null;
+									message: string;
+								}[];
+								preferences: {
+									[key: string]: unknown;
+								};
+								user: {
+									createdAt: string;
+									email: string;
+									id: string;
+									name: string;
+								};
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/account/export": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Export owned files
+		 * @description Streams every top-level file and folder the caller owns as one ZIP archive.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Binary ZIP stream */
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/activity": {
 		parameters: {
 			query?: never;
@@ -1806,6 +1961,228 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/auth/email-otp/change-email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Verify new email with OTP and change the email if verification is successful */
+		post: operations["changeEmailWithEmailOTP"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/email-otp/check-verification-otp": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Verify an email with an OTP */
+		post: operations["verifyEmailWithOTP"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/email-otp/request-email-change": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Request email change with verification OTP sent to the new email */
+		post: operations["requestEmailChangeWithEmailOTP"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/email-otp/request-password-reset": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Request password reset with email and OTP */
+		post: operations["requestPasswordResetWithEmailOTP"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/email-otp/reset-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Reset password with email and OTP */
+		post: operations["resetPasswordWithEmailOTP"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/email-otp/send-verification-otp": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Send a verification OTP to an email */
+		post: operations["sendEmailVerificationOTP"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/email-otp/verify-email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Verify email with OTP */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description Email address to verify */
+						email: string;
+						/** @description OTP to verify */
+						otp: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/**
+							 * @description Indicates if the verification was successful
+							 * @enum {boolean}
+							 */
+							status: true;
+							/** @description Session token if autoSignInAfterVerification is enabled, otherwise null */
+							token: string | null;
+							user: components["schemas"]["User"];
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/auth/error": {
 		parameters: {
 			query?: never;
@@ -1902,6 +2279,23 @@ export interface paths {
 		};
 		put?: never;
 		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/forget-password/email-otp": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Deprecated: Use /email-otp/request-password-reset instead. */
+		post: operations["forgetPasswordWithEmailOTP"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -2092,6 +2486,23 @@ export interface paths {
 		};
 		/** @description List all active sessions for the user */
 		get: operations["listUserSessions"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/magic-link/verify": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Verify magic link */
+		get: operations["verifyMagicLink"];
 		put?: never;
 		post?: never;
 		delete?: never;
@@ -3200,6 +3611,40 @@ export interface paths {
 		put?: never;
 		/** @description Sign in with email and password */
 		post: operations["signInEmail"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/sign-in/email-otp": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign in with email and OTP */
+		post: operations["signInWithEmailOTP"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/sign-in/magic-link": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Sign in with magic link */
+		post: operations["signInWithMagicLink"];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -5566,6 +6011,8 @@ export interface paths {
 								fontFamily?: "mono" | "sans";
 								/** @enum {string} */
 								layout?: "grid" | "list";
+								/** @enum {string} */
+								listingLoadMode?: "scroll" | "pages";
 								onboarded?: boolean;
 								preferredSignInMethod?:
 									| ("password" | "passkey" | "magicLink" | "emailOtp")
@@ -5620,6 +6067,8 @@ export interface paths {
 						fontFamily?: "mono" | "sans";
 						/** @enum {string} */
 						layout?: "grid" | "list";
+						/** @enum {string} */
+						listingLoadMode?: "scroll" | "pages";
 						onboarded?: boolean;
 						preferredSignInMethod?:
 							| ("password" | "passkey" | "magicLink" | "emailOtp")
@@ -5654,6 +6103,8 @@ export interface paths {
 								fontFamily?: "mono" | "sans";
 								/** @enum {string} */
 								layout?: "grid" | "list";
+								/** @enum {string} */
+								listingLoadMode?: "scroll" | "pages";
 								onboarded?: boolean;
 								preferredSignInMethod?:
 									| ("password" | "passkey" | "magicLink" | "emailOtp")
@@ -6166,7 +6617,66 @@ export interface paths {
 			path?: never;
 			cookie?: never;
 		};
-		get?: never;
+		/**
+		 * Bulk download as ZIP (link form)
+		 * @description Same as the POST version, for a plain <a href> so the browser streams the download itself instead of buffering it in JS memory. Every selected item shares one folder, given once; `keys` is a comma-separated list of the bare names within it, resolved the same way the POST form's full paths are.
+		 */
+		get: {
+			parameters: {
+				query: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+					folder?: string;
+					keys: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description Binary ZIP stream */
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
 		put?: never;
 		/**
 		 * Bulk download as ZIP
@@ -6719,7 +7229,7 @@ export interface paths {
 		};
 		/**
 		 * List files by category
-		 * @description Returns files matching the specified category
+		 * @description Returns a keyset-paginated page of files matching the specified category.
 		 */
 		get: {
 			parameters: {
@@ -6727,6 +7237,10 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
+					cursor?: string;
+					limit?: string;
+					sort?: "name" | "size" | "updatedAt";
+					dir?: "asc" | "desc";
 				};
 				header?: never;
 				path: {
@@ -6869,6 +7383,7 @@ export interface paths {
 									type: "file" | "folder";
 									updatedAt?: string;
 								}[];
+								nextCursor: string | null;
 								/** @default 0 */
 								total: number;
 							};
@@ -7189,7 +7704,7 @@ export interface paths {
 		};
 		/**
 		 * List starred files
-		 * @description Returns files marked as starred
+		 * @description Returns a keyset-paginated page of starred folders, then starred files.
 		 */
 		get: {
 			parameters: {
@@ -7197,6 +7712,10 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
+					cursor?: string;
+					limit?: string;
+					sort?: "name" | "size" | "updatedAt";
+					dir?: "asc" | "desc";
 				};
 				header?: never;
 				path?: never;
@@ -7337,6 +7856,7 @@ export interface paths {
 									type: "file" | "folder";
 									updatedAt?: string;
 								}[];
+								nextCursor: string | null;
 								/** @default 0 */
 								total: number;
 							};
@@ -7380,7 +7900,7 @@ export interface paths {
 		};
 		/**
 		 * List trashed files
-		 * @description Returns files currently in the trash
+		 * @description Returns a keyset-paginated page of the trash's top-level folders, then files. Keys are full paths; `totalSize` is what emptying the whole trash frees.
 		 */
 		get: {
 			parameters: {
@@ -7388,6 +7908,10 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
+					cursor?: string;
+					limit?: string;
+					sort?: "name" | "size" | "updatedAt";
+					dir?: "asc" | "desc";
 				};
 				header?: never;
 				path?: never;
@@ -7528,8 +8052,10 @@ export interface paths {
 									type: "file" | "folder";
 									updatedAt?: string;
 								}[];
+								nextCursor: string | null;
 								/** @default 0 */
 								total: number;
+								totalSize: number;
 							};
 						};
 					};
@@ -7785,92 +8311,6 @@ export interface paths {
 							| "CODE"
 							| "ARCHIVES"
 							| "UNKNOWN";
-						/** @enum {string} */
-						contentType?:
-							| "application/pdf"
-							| "application/msword"
-							| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-							| "application/vnd.ms-excel"
-							| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-							| "application/vnd.ms-powerpoint"
-							| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-							| "application/vnd.oasis.opendocument.text"
-							| "application/rtf"
-							| "application/epub+zip"
-							| "application/vnd.google-apps.document"
-							| "application/vnd.google-apps.spreadsheet"
-							| "application/vnd.google-apps.presentation"
-							| "text/plain"
-							| "text/csv"
-							| "text/html"
-							| "text/css"
-							| "text/yaml"
-							| "image/jpeg"
-							| "image/png"
-							| "image/gif"
-							| "image/webp"
-							| "image/svg+xml"
-							| "image/bmp"
-							| "image/x-icon"
-							| "image/tiff"
-							| "image/heic"
-							| "video/mp4"
-							| "video/webm"
-							| "video/x-msvideo"
-							| "video/x-matroska"
-							| "video/quicktime"
-							| "video/x-ms-wmv"
-							| "video/x-flv"
-							| "video/mpeg"
-							| "video/3gpp"
-							| "video/ogg"
-							| "audio/mpeg"
-							| "audio/wav"
-							| "audio/flac"
-							| "audio/aac"
-							| "audio/ogg"
-							| "audio/mp4"
-							| "audio/x-ms-wma"
-							| "audio/aiff"
-							| "application/json"
-							| "application/xml"
-							| "application/javascript"
-							| "application/vnd.google-apps.form"
-							| "application/zip"
-							| "application/vnd.rar"
-							| "application/x-7z-compressed"
-							| "application/x-tar"
-							| "application/gzip"
-							| "application/x-bzip2"
-							| "application/x-xz"
-							| "application/vnd.ms-cab-compressed"
-							| "application/x-iso9660-image"
-							| "application/x-apple-diskimage"
-							| "application/x-xar"
-							| "application/vnd.debian.binary-package"
-							| "application/x-rpm"
-							| "application/vnd.android.package-archive"
-							| "application/java-archive"
-							| "application/x-webarchive"
-							| "application/x-stuffit"
-							| "application/x-stuffitx"
-							| "application/x-lzip"
-							| "application/x-lzma"
-							| "application/x-lzop"
-							| "application/x-compress"
-							| "application/zstd"
-							| "application/x-brotli"
-							| "model/stl"
-							| "model/obj"
-							| "model/gltf+json"
-							| "model/gltf-binary"
-							| "model/fbx"
-							| "model/3mf"
-							| "model/x3d+xml"
-							| "model/vnd.collada+xml"
-							| "application/x-blender"
-							| "application/x-tgif"
-							| "application/octet-stream";
 						isStarred?: boolean;
 						isTrashed?: boolean;
 						key?: string;
@@ -9406,8 +9846,8 @@ export interface paths {
 			cookie?: never;
 		};
 		/**
-		 * List all files
-		 * @description Returns a list of all files in the root directory
+		 * List the root folder
+		 * @description Returns a keyset-paginated page of the root directory's folders, then its files.
 		 */
 		get: {
 			parameters: {
@@ -9415,6 +9855,10 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
+					cursor?: string;
+					limit?: string;
+					sort?: "name" | "size" | "updatedAt";
+					dir?: "asc" | "desc";
 				};
 				header?: never;
 				path?: never;
@@ -9555,6 +9999,7 @@ export interface paths {
 									type: "file" | "folder";
 									updatedAt?: string;
 								}[];
+								nextCursor: string | null;
 								/** @default 0 */
 								total: number;
 							};
@@ -9789,7 +10234,7 @@ export interface paths {
 		};
 		/**
 		 * List files in folder
-		 * @description Returns a list of files within a specific folder path
+		 * @description Returns a keyset-paginated page of a folder's subfolders, then its files.
 		 */
 		get: {
 			parameters: {
@@ -9797,6 +10242,10 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
+					cursor?: string;
+					limit?: string;
+					sort?: "name" | "size" | "updatedAt";
+					dir?: "asc" | "desc";
 				};
 				header?: never;
 				path: {
@@ -9814,6 +10263,7 @@ export interface paths {
 					content: {
 						"application/json": {
 							data?: {
+								ancestorNames: (string | null)[];
 								/** @default 0 */
 								count: number;
 								list: {
@@ -9939,6 +10389,7 @@ export interface paths {
 									type: "file" | "folder";
 									updatedAt?: string;
 								}[];
+								nextCursor: string | null;
 								/** @default 0 */
 								total: number;
 							};
@@ -10267,7 +10718,7 @@ export interface paths {
 		};
 		/**
 		 * Search users to share with
-		 * @description Matches a query against user names and emails. Requires a query — the full directory is not enumerable.
+		 * @description Matches a query against user names and emails. Requires at least 3 characters; the full directory is not enumerable.
 		 */
 		get: {
 			parameters: {
@@ -10361,7 +10812,10 @@ export interface paths {
 					content: {
 						"application/json": {
 							data?: {
+								/** @enum {string} */
+								channel: "stable" | "canary";
 								currentVersion: string;
+								enabled: boolean;
 								latestVersion: string | null;
 								releaseUrl: string | null;
 								updateAvailable: boolean;
@@ -11162,92 +11616,6 @@ export interface components {
 				| "CODE"
 				| "ARCHIVES"
 				| "UNKNOWN";
-			/** @enum {string} */
-			contentType?:
-				| "application/pdf"
-				| "application/msword"
-				| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-				| "application/vnd.ms-excel"
-				| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-				| "application/vnd.ms-powerpoint"
-				| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-				| "application/vnd.oasis.opendocument.text"
-				| "application/rtf"
-				| "application/epub+zip"
-				| "application/vnd.google-apps.document"
-				| "application/vnd.google-apps.spreadsheet"
-				| "application/vnd.google-apps.presentation"
-				| "text/plain"
-				| "text/csv"
-				| "text/html"
-				| "text/css"
-				| "text/yaml"
-				| "image/jpeg"
-				| "image/png"
-				| "image/gif"
-				| "image/webp"
-				| "image/svg+xml"
-				| "image/bmp"
-				| "image/x-icon"
-				| "image/tiff"
-				| "image/heic"
-				| "video/mp4"
-				| "video/webm"
-				| "video/x-msvideo"
-				| "video/x-matroska"
-				| "video/quicktime"
-				| "video/x-ms-wmv"
-				| "video/x-flv"
-				| "video/mpeg"
-				| "video/3gpp"
-				| "video/ogg"
-				| "audio/mpeg"
-				| "audio/wav"
-				| "audio/flac"
-				| "audio/aac"
-				| "audio/ogg"
-				| "audio/mp4"
-				| "audio/x-ms-wma"
-				| "audio/aiff"
-				| "application/json"
-				| "application/xml"
-				| "application/javascript"
-				| "application/vnd.google-apps.form"
-				| "application/zip"
-				| "application/vnd.rar"
-				| "application/x-7z-compressed"
-				| "application/x-tar"
-				| "application/gzip"
-				| "application/x-bzip2"
-				| "application/x-xz"
-				| "application/vnd.ms-cab-compressed"
-				| "application/x-iso9660-image"
-				| "application/x-apple-diskimage"
-				| "application/x-xar"
-				| "application/vnd.debian.binary-package"
-				| "application/x-rpm"
-				| "application/vnd.android.package-archive"
-				| "application/java-archive"
-				| "application/x-webarchive"
-				| "application/x-stuffit"
-				| "application/x-stuffitx"
-				| "application/x-lzip"
-				| "application/x-lzma"
-				| "application/x-lzop"
-				| "application/x-compress"
-				| "application/zstd"
-				| "application/x-brotli"
-				| "model/stl"
-				| "model/obj"
-				| "model/gltf+json"
-				| "model/gltf-binary"
-				| "model/fbx"
-				| "model/3mf"
-				| "model/x3d+xml"
-				| "model/vnd.collada+xml"
-				| "application/x-blender"
-				| "application/x-tgif"
-				| "application/octet-stream";
 			isStarred?: boolean;
 			isTrashed?: boolean;
 			key?: string;
@@ -13017,6 +13385,700 @@ export interface operations {
 			};
 		};
 	};
+	changeEmailWithEmailOTP: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description New email address to verify and change to */
+					newEmail: string;
+					/** @description OTP sent to the new email */
+					otp: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	verifyEmailWithOTP: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Email address the OTP was sent to */
+					email: string;
+					/** @description OTP to verify */
+					otp: string;
+					/**
+					 * @description Type of the OTP
+					 * @enum {string}
+					 */
+					type:
+						| "email-verification"
+						| "sign-in"
+						| "forget-password"
+						| "change-email";
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	requestEmailChangeWithEmailOTP: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description New email address to send the OTP */
+					newEmail: string;
+					otp?: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	requestPasswordResetWithEmailOTP: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Email address to send the OTP */
+					email: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @description Indicates if the OTP was sent successfully */
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	resetPasswordWithEmailOTP: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Email address to reset the password */
+					email: string;
+					/** @description OTP sent to the email */
+					otp: string;
+					/** @description New password */
+					password: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	sendEmailVerificationOTP: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Email address to send the OTP */
+					email: string;
+					/**
+					 * @description Type of the OTP
+					 * @enum {string}
+					 */
+					type:
+						| "email-verification"
+						| "sign-in"
+						| "forget-password"
+						| "change-email";
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	forgetPasswordWithEmailOTP: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Email address to send the OTP */
+					email: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @description Indicates if the OTP was sent successfully */
+						success?: boolean;
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
 	getSession: {
 		parameters: {
 			query?: never;
@@ -13472,6 +14534,100 @@ export interface operations {
 				};
 				content: {
 					"application/json": components["schemas"]["Session"][];
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	verifyMagicLink: {
+		parameters: {
+			query?: {
+				token?: string;
+				callbackURL?: string;
+				errorCallbackURL?: string;
+				newUserCallbackURL?: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						session?: components["schemas"]["Session"];
+						user?: components["schemas"]["User"];
+					};
 				};
 			};
 			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
@@ -14407,6 +15563,218 @@ export interface operations {
 						token: string;
 						url?: string | null;
 						user: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	signInWithEmailOTP: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description Email address to sign in */
+					email: string;
+					/** @description User profile image URL. Only used if the user is registering for the first time. */
+					image?: string;
+					/** @description User display name. Only used if the user is registering for the first time. Eg: "my-name" */
+					name?: string;
+					/** @description OTP sent to the email */
+					otp: string;
+				} & {
+					[key: string]: unknown;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						/** @description Session token for the authenticated session */
+						token: string;
+						user: components["schemas"]["User"];
+					};
+				};
+			};
+			/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+			400: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Unauthorized. Due to missing or invalid authentication. */
+			401: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message: string;
+					};
+				};
+			};
+			/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+			403: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Not Found. The requested resource was not found. */
+			404: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+			429: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+			/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+			500: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						message?: string;
+					};
+				};
+			};
+		};
+	};
+	signInWithMagicLink: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": {
+					/** @description URL to redirect after magic link verification */
+					callbackURL?: string;
+					/** @description Email address to send the magic link */
+					email: string;
+					/** @description URL to redirect after error. */
+					errorCallbackURL?: string;
+					/** @description Additional metadata to pass to sendMagicLink. */
+					metadata?: {
+						[key: string]: unknown;
+					};
+					/** @description User display name. Only used if the user is registering for the first time. Eg: "my-name" */
+					name?: string;
+					/** @description URL to redirect after new user signup. Only used if the user is registering for the first time. */
+					newUserCallbackURL?: string;
+				};
+			};
+		};
+		responses: {
+			/** @description Success */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": {
+						status?: boolean;
 					};
 				};
 			};

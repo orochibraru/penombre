@@ -76,7 +76,7 @@ export class Email {
 	}
 
 	public send() {
-		logger.info(`Sending email to: ${this.to}, subject: ${this.subject}`);
+		logger.debug(`Sending email to: ${this.to}, subject: ${this.subject}`);
 		return this.transporter.sendMail({
 			to: this.to,
 			from: this.from,

@@ -41,6 +41,13 @@ export interface UploadJob {
 	status: UploadStatus;
 	error?: string;
 	createdAt: number;
+	/**
+	 * Whoever queued it. Stamped by `enqueueUploads`, not the caller; a job
+	 * with no match (a different user, or a pre-existing row from before this
+	 * field existed) is never resumed, so a shared machine's next sign-in
+	 * cannot see, and does not re-send, the previous account's uploads.
+	 */
+	userId?: string;
 }
 
 const DB_NAME = "penombre-uploads";

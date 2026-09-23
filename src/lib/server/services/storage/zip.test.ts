@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { mkdir, rm, utimes, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { seal } from "#lib/server/crypto/envelope.js";
 import { files, folders } from "#lib/server/db/schema.js";
 
 // `getStoragePath` is mocked (test.setup.ts) to this fixed path.
@@ -218,6 +219,59 @@ describe("ZipService", () => {
 			new ZipService(fakeCtx(db)).createZipFromFolder("f1"),
 		).rejects.toThrow(/timed out/);
 	});
+
+	test("an account export is one query per table, deduped per user", async () => {
+		const db = fakeDb({
+			folders: [
+				[
+					{ path: "f1", name: "Photos", isTrashed: false },
+					{ path: "f1/f2", name: "2024", isTrashed: false },
+					{ path: "gone", name: "Old", isTrashed: true },
+				],
+			],
+			files: [
+				[
+					{ path: "root.txt", name: "root.txt" },
+					{ path: "f1/f2/k1", name: "a.png" },
+					{ path: "gone/k2", name: "left.txt" },
+				],
+			],
+		});
+		const shared = join(ZIP_DIR, "shared.zip");
+		awaitJob.mockImplementationOnce(async () => {
+			await writeFile(shared, "export");
+			return {
+				status: "succeeded",
+				result: JSON.stringify({ output: shared }),
+			} as never;
+		});
+
+		const stream = await new ZipService(fakeCtx(db)).createAccountExport();
+		expect(await new Response(stream).text()).toBe("export");
+
+		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
+			dedupeKey: "export:u1",
+			spec: {
+				entries: [
+					{ source: join("/vol", "root.txt"), name: "root.txt" },
+					{ source: join("/vol", "f1/f2/k1"), name: "Photos/2024/a.png" },
+				],
+			},
+		});
+		// Another waiter may still need the shared archive.
+		expect(awaitJob.mock.calls[0]?.[1]).toMatchObject({
+			consume: false,
+			cancelOnTimeout: false,
+		});
+		expect(existsSync(shared)).toBe(true);
+		await rm(shared);
+	});
+
+	test("an empty account exports nothing", async () => {
+		const db = fakeDb({ folders: [[]], files: [[]] });
+		expect(await new ZipService(fakeCtx(db)).createAccountExport()).toBeNull();
+		expect(enqueueJob).not.toHaveBeenCalled();
+	});
 });
 
 describe("streamAndCleanUp", () => {
@@ -232,7 +286,7 @@ describe("streamAndCleanUp", () => {
 		const path = join(ZIP_DIR, "end.zip");
 		await writeFile(path, "hello world");
 
-		const text = await new Response(streamAndCleanUp(path)).text();
+		const text = await new Response(await streamAndCleanUp(path)).text();
 		expect(text).toBe("hello world");
 
 		await waitUntil(() => !existsSync(path));
@@ -243,7 +297,7 @@ describe("streamAndCleanUp", () => {
 		const path = join(ZIP_DIR, "cancel.zip");
 		await writeFile(path, "x".repeat(1024 * 1024));
 
-		const reader = streamAndCleanUp(path).getReader();
+		const reader = (await streamAndCleanUp(path)).getReader();
 		await reader.read();
 		await reader.cancel();
 
@@ -251,10 +305,21 @@ describe("streamAndCleanUp", () => {
 		expect(existsSync(path)).toBe(false);
 	});
 
+	test("opens a sealed archive and deletes it once read", async () => {
+		const path = join(ZIP_DIR, "sealed.zip");
+		const keys = { current: Buffer.alloc(32, 5), previous: [] };
+		await writeFile(path, seal(keys.current, Buffer.from("zipped bytes")));
+
+		const text = await new Response(await streamAndCleanUp(path, keys)).text();
+		expect(text).toBe("zipped bytes");
+
+		await waitUntil(() => !existsSync(path));
+		expect(existsSync(path)).toBe(false);
+	});
+
 	test("surfaces the error instead of a silent empty stream when the file is gone", async () => {
 		const path = join(ZIP_DIR, "missing.zip");
-		const reader = streamAndCleanUp(path).getReader();
-		await expect(reader.read()).rejects.toThrow();
+		await expect(streamAndCleanUp(path)).rejects.toThrow();
 	});
 });
 

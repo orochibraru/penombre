@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/orochibraru/penombre/internal/envelope"
 )
 
 type Config struct {
@@ -22,6 +24,7 @@ type Config struct {
 	Timeouts map[string]time.Duration
 	// ParentPID is the app that spawned this embedded worker; 0 when external.
 	ParentPID int
+	Keyring   envelope.Keyring
 }
 
 func LoadConfig(getenv func(string) string) (Config, error) {
@@ -49,6 +52,11 @@ func LoadConfig(getenv func(string) string) (Config, error) {
 		}
 		cfg.ParentPID = n
 	}
+	keyring, err := envelope.LoadKeyring(getenv)
+	if err != nil {
+		return cfg, err
+	}
+	cfg.Keyring = keyring
 	if cfg.ID == "" {
 		host, _ := os.Hostname()
 		cfg.ID = fmt.Sprintf("%s-%d", host, os.Getpid())

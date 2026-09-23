@@ -57,6 +57,9 @@ export const defaultConfigValues = {
 		from: "noreply@example.com",
 		secure: false,
 	},
+	versionCheck: {
+		enabled: true,
+	},
 	simpleMode: false,
 	bypassAuth: false,
 	autoRedirectProvider: "",
@@ -196,6 +199,21 @@ BYPASS_AUTH=${defaultConfigValues.bypassAuth}
 # VOLUME_MEDIA_PATH=/mnt/media
 # VOLUME_MEDIA_LABEL=Media library
 # VOLUME_MEDIA_READONLY=false
+# Seal what Penombre writes to this volume (needs ENCRYPTION_KEY). Files
+# already there, or dropped in by other tools, are never rewritten.
+# VOLUME_MEDIA_ENCRYPT=false
+
+# ===========================================
+# Encryption at rest (Optional)
+# ===========================================
+# Seals file bytes on personal and shared drives with AES-256-GCM. Lose the
+# key and every sealed file is gone for good: back it up apart from DATA_DIR.
+# Not supported with SIMPLE_MODE=true. Generate one: openssl rand -base64 32
+# ENCRYPTION_KEY=
+# Or read it from a file, e.g. a Docker secret outside DATA_DIR:
+# ENCRYPTION_KEY_FILE=/run/secrets/penombre_encryption_key
+# Retired keys, comma-separated, kept only to read files not yet rewrapped:
+# ENCRYPTION_KEY_PREVIOUS=
 
 # ===========================================
 # SMTP (Optional - for email features)
@@ -207,6 +225,27 @@ SMTP_USER=${defaultConfigValues.smtp.user}
 SMTP_PASSWORD=${defaultConfigValues.smtp.password}
 SMTP_FROM=${defaultConfigValues.smtp.from}
 SMTP_SECURE=${defaultConfigValues.smtp.secure}
+
+# ===========================================
+# Version check (Optional)
+# ===========================================
+# Hourly check against GitHub releases for the "update available" banner.
+# Off-instance by default in the sense that it calls api.github.com; set to
+# false for an air-gapped or privacy-sensitive deployment.
+ENABLE_VERSION_CHECK=${defaultConfigValues.versionCheck.enabled}
+
+# Which release stream to compare against: "stable" or "canary". Defaults to
+# "canary" when the running version itself is a "-canary.N" build, "stable"
+# otherwise. Also settable in Admin → Settings.
+# RELEASE_CHANNEL=stable
+
+# ===========================================
+# Data retention (Optional)
+# ===========================================
+# Days to keep activity log entries, notifications and finished background
+# job rows before a nightly sweep deletes them. Unset keeps everything
+# forever. Also settable in Admin → Settings.
+# DATA_RETENTION_DAYS=90
 `;
 }
 

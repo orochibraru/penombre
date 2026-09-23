@@ -94,6 +94,7 @@ describe("enqueueJob", () => {
 
 describe("awaitJob", () => {
 	test("returns status, error and result once it finishes", async () => {
+		await workerSeen(Date.now());
 		const id = await enqueueJob(
 			{ type: "t", spec: {}, priority: "mutation" },
 			database,

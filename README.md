@@ -12,8 +12,17 @@ with a bill of exactly zero.
 [Project page](https://orochibraru.com/penombre)
 
 <!-- Regenerate with `bun run screenshots`; do not edit by hand. -->
+<!-- markdownlint-disable MD033 -->
 
-[![Penombre, browsing a drive](docs/images/hero.png)](https://orochibraru.com/penombre/docs/showcase)
+<a href="https://orochibraru.com/penombre/docs/showcase">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/hero.png">
+    <img alt="Penombre, browsing a drive" src="docs/images/hero.png">
+  </picture>
+</a>
+
+<!-- markdownlint-enable MD033 -->
 
 **[See the full showcase →](https://orochibraru.com/penombre/docs/showcase)** —
 every screen, light and dark, generated from a real instance.
@@ -122,4 +131,5 @@ Built with these open-source technologies:
 - [Drizzle ORM](https://orm.drizzle.team/) - TypeScript ORM
 - [Better Auth](https://www.better-auth.com/) - Authentication library
 - [SQLite](https://sqlite.org/) - Database
-- [Biome](https://biomejs.dev/) - Linter and formatter
+- [oxlint](https://oxc.rs/) - Linter
+- [Biome](https://biomejs.dev/) - Formatter

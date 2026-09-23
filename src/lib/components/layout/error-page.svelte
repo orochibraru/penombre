@@ -25,12 +25,12 @@
     )}
 >
     <div class="flex flex-col gap-5 p-5 text-center">
-        <h1 class="text-center text-[5rem] font-bold text-gray-700">
+        <h1 class="text-center text-[5rem] font-bold text-foreground">
             {page.status ?? 500}
         </h1>
 
         {#if page.status === 404}
-            <p class="text-2xl text-gray-800">{m.error_not_found()}</p>
+            <p class="text-2xl text-muted-foreground">{m.error_not_found()}</p>
             {#if dev}
                 <p class="text-lg">{page.error?.message}</p>
             {:else}
@@ -41,7 +41,7 @@
         {:else if page.status === 503}
             <!-- The mount is there and the app cannot read it: a problem only
                  whoever runs the container can fix, so say which one it is. -->
-            <p class="text-2xl text-gray-800">
+            <p class="text-2xl text-muted-foreground">
                 {m.error_storage_unreachable()}
             </p>
             <p class="max-w-3xl text-lg">
@@ -53,10 +53,10 @@
                 </p>
             {/if}
         {:else if page.status >= 401 && page.status <= 403}
-            <p class="text-2xl text-gray-800">{m.error_no_access()}</p>
+            <p class="text-2xl text-muted-foreground">{m.error_no_access()}</p>
             <p class="text-lg">{m.error_unauthorized()}</p>
         {:else}
-            <p class="text-2xl text-gray-800">{m.error_something_wrong()}</p>
+            <p class="text-2xl text-muted-foreground">{m.error_something_wrong()}</p>
             {#if dev || page.status === 403 || page.status === 401}
                 <p class="max-w-3xl overflow-x-auto text-lg">
                     {page.error?.message}

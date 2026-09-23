@@ -24,11 +24,16 @@ the image build instead of downloading a toolchain.
 ```bash
 bun run dev              # Vite dev server (SQLite by default, no services needed)
 bun run build            # svelte-kit sync && vite build
-bun run check            # svelte-check (app) + type-check for scripts, in parallel
+bun run preview          # preview the production build
+bun run check            # check:app && check:scripts && check:go, sequentially
 
 bun run lint             # oxlint + biome + markdownlint + tailwint
 bun run lint:fix         # fix everything fixable
+bun run lint:md          # markdownlint-cli2 only
+bun run lint:ts          # oxlint + biome only
+bun run lint:tailwind    # tailwint only
 bun run format           # biome format --write
+bun run circular         # madge circular-import check (src/, .ts only)
 
 bun test                                    # unit tests (fully mocked, no services needed)
 bun test src/lib/server/services/user.test.ts   # single file
@@ -37,10 +42,20 @@ bun run test:docker      # unit tests in Docker (mirrors CI, adds real Redis)
 bun run test:e2e         # Playwright e2e on SQLite (the default stack)
 bun run test:e2e:pg      # Playwright e2e on PostgreSQL
 bun run test:e2e:ui      # Playwright UI mode
+bun run test:e2e:headed  # Playwright e2e, headed browser
 
-bun run db:generate      # generate a Drizzle migration from schema.ts changes
-bun run db:studio        # Drizzle Studio
-bun run gen:api          # regenerate OpenAPI spec + typed API client
+bun run db:generate         # generate Drizzle migrations for both dialects
+bun run db:generate:pg      # ...Postgres only
+bun run db:generate:sqlite  # ...SQLite only
+bun run db:studio           # Drizzle Studio
+bun run migrate:storage     # one-off: migrate legacy storage metadata
+
+bun run gen              # gen:env && gen:api && format
+bun run gen:api           # alias of gen:openapi
+bun run gen:env           # regenerate .example.env from config.defaults.ts
+bun run gen:openapi       # regenerate openapi.json + the typed client types
+bun run gen:paraglide     # compile messages/*.json into src/lib/paraglide
+bun run machine-translate # inlang machine translation for messages/*.json
 
 bun run check:go            # go vet, cmd/ + internal/ + tests/{unit,integration}/go (also part of `bun run check`)
 bun run test:go             # go test -race, unit + integration together
@@ -63,8 +78,10 @@ runs 3x to catch flakiness) and coverage thresholds.
 Git hooks run via [prek](https://github.com/j178/prek)
 (`.pre-commit-config.yaml`, wired by `bun install`'s `prepare` script; the
 installed hook types come from `default_install_hook_types`). Commits run the
-fast linters on staged files; **pushes** run `bun run check` and `bun test`. CI
-runs the pre-commit stage with `--all-files`:
+fast linters on staged files; **pushes** run `bun run check`, `bun test`,
+`bun run circular` and, when a `.go` file changed, `go test -race` over unit
+**and** integration tests (so ffmpeg and pdftoppm must be installed). CI runs
+the pre-commit stage with `--all-files`:
 
 ```bash
 prek run --all-files                        # every pre-commit hook, whole repo
@@ -75,26 +92,9 @@ SKIP=test-unit git push ...                 # skip one hook
 
 ## Architecture
 
-The **SvelteKit app lives at the repo root** (frontend + backend API):
-
-```text
-.                  # SvelteKit app (frontend + backend API)
-├── src/
-│   ├── routes/    # pages ((app)/, auth/) and API endpoints (api/v1/**/+server.ts)
-│   └── lib/
-│       ├── server/          # server-only code (#lib/server, never bundled to client)
-│       │   ├── openapi/v1/  # route contracts: defineRoute() calls, one file per resource
-│       │   ├── services/    # business logic (storage, activity, preferences, user, version)
-│       │   └── db/          # Drizzle schema + client
-│       └── components/      # Svelte 5 UI (shadcn-svelte in components/ui)
-├── drizzle/       # SQL migrations generated from src/lib/server/db/schema.ts
-├── e2e/           # Playwright tests
-└── tests/         # Go tests for cmd/ and internal/, split unit vs integration
-```
-
-Despite what the README says, there is **no Hono** in this codebase — API routes
-are plain SvelteKit `+server.ts` handlers built with a custom `defineRoute()`
-wrapper.
+The **SvelteKit app lives at the repo root** (frontend + backend API). API
+routes are plain SvelteKit `+server.ts` handlers built with a custom
+`defineRoute()` wrapper, not a separate framework.
 
 ### API route pattern
 
@@ -123,13 +123,17 @@ won't validate, won't show up in the OpenAPI spec, and the docs client
 ### Storage: DB metadata vs. object bytes
 
 File/folder **metadata** (name, path, size, mimetype, trash state, owner) lives
-in the database (`files`/`folders` tables in `db/schema.ts`) — SQLite by
-default, Postgres optional, picked from the `DATABASE_URL` scheme by
-`db/dialect.ts`. The actual **bytes** live behind the `StorageDriver` interface
-(`#lib/server/services/storage/driver.ts`), implemented only by
-`LocalStorageDriver` (filesystem under `STORAGE_PATH`); the interface stays
-because every consumer and test double types against it. All driver methods take
-keys relative to a user's storage root. `StorageService`
+in the database (`files`/`folders` tables); SQLite by default, Postgres
+optional, picked from the `DATABASE_URL` scheme by `db/dialect.ts`. The real
+table definitions live in `db/schema.pg.ts`/`db/schema.sqlite.ts`, kept
+structurally in sync by hand; `db/schema.ts` is a dialect-resolving shim that
+re-exports whichever one is active under one Postgres-shaped type, so the rest
+of the app imports from `db/schema.ts` and compiles against a single schema
+regardless of which DB is running. The actual **bytes** live behind the
+`StorageDriver` interface (`#lib/server/services/storage/driver.ts`),
+implemented only by `LocalStorageDriver` (filesystem under `STORAGE_PATH`); the
+interface stays because every consumer and test double types against it. All
+driver methods take keys relative to a user's storage root. `StorageService`
 (`#lib/server/services/storage/service.ts`) is the facade on top of the driver +
 DB that route handlers use; it's lazily instantiated per-request onto
 `event.locals.storageService` in `hooks.server.ts`.
@@ -301,9 +305,8 @@ service module wrap it for listing/metadata caching.
 
 ### i18n
 
-Messages live in `messages/*.json`, compiled by paraglide-js into
-`src/paraglide/messages` (also mirrored under `src/lib/paraglide`). Don't
-hand-edit generated paraglide output.
+Messages live in `messages/*.json`, compiled by `gen:paraglide` into
+`src/lib/paraglide` only. Don't hand-edit generated paraglide output.
 
 ## Documentation (required)
 
@@ -416,6 +419,58 @@ Onboarding then writes the credential itself via
 `ctx.password.hash()`. It cannot use `changePassword` (no current password) or
 `setUserPassword` (needs an admin session the invitee does not have).
 
+**The missing credential is not the proof; the invite token is.** Onboarding
+used to accept any address with no credential row, which is also every OAuth-,
+passkey- and magic-link-only account, and sign-in's `lookup` pointed at exactly
+those: anyone could set a password on them. `setPassword` now consumes a
+single-use token from `invites` (`services/invites.ts`, atomic
+`update ... returning`), and `lookup` never offers onboarding to an account
+holding any `account` row or passkey (`hasAnyIdentity()`).
+
+### A form action is not behind its layout's `load`
+
+SvelteKit runs a form action before any `load`, layout loads included, and
+`hooks.server.ts` has no auth gate. The admin check in `admin/+layout.server.ts`
+therefore protected navigation only: a bare POST to `/admin/settings?/save`
+rewrote SMTP and OAuth with no session at all. Every admin action calls
+`requireAdmin(locals)` (`auth/require-admin.ts`) itself, and any new action
+anywhere checks its own caller.
+
+### Raw bytes are served sandboxed, except PDFs
+
+A stored HTML or SVG file opened from its raw URL ran script on the instance
+origin with the viewer's session. `rawFileSecurityHeaders()`
+(`storage/mappers.ts`) puts `Content-Security-Policy: sandbox` and `nosniff` on
+every raw response, and active types (`isActiveContentType`: HTML, XHTML, SVG,
+XML) are always served as `attachment`. PDFs get `nosniff` only: Chrome refuses
+to display a sandboxed PDF at all, which blanked every `<embed>` preview. Every
+route serving file bytes must spread those headers.
+
+### A periodic job must never reject
+
+Bun exits the process on an unhandled promise rejection. A `void sweep()` from a
+`setInterval` that let one database or filesystem error escape took the whole
+app down on the hour. Every scheduled job in `hooks.server.ts` catches and logs,
+like `sweepStaleZips`.
+
+### Rate limits need the real client address
+
+`#lib/server/rate-limit.ts` keys on `getClientAddress()`, which behind a reverse
+proxy is the proxy's IP unless `ADDRESS_HEADER` (and `XFF_DEPTH`) are set, which
+svelte-smol reads like adapter-node. Without them the sign-in `lookup` limit is
+one bucket for the whole instance and 30 requests lock everyone out. See
+`docs/reverse-proxy.md`. A limiter keyed on caller-chosen values (share tokens)
+counts only once the value is known to exist, or each fake one is a cache entry
+that is never read again.
+
+### Shares and grants have no foreign key
+
+`shares.resource_id` and `sharings.resource_id` point at a file **or** a folder,
+so no constraint can cascade them. Every place a file or folder row is
+permanently deleted calls `purgeGrantsFor()` (`storage/grants.ts`), which chunks
+its ids: an `inArray` over a 70k-item trash is past Postgres's 65535 bind
+parameters and throws after the bytes are already gone.
+
 ### A hidden `required` input blocks form submission
 
 The two-step sign-in hides the password field until the address is known. Its
@@ -436,18 +491,16 @@ default with no way to change it once the var was removed from `.env`. The admin
 UI renders a setting read-only only when `envProvided()` says the environment
 claims it.
 
-Anything better-auth reads at init (email sign-in, OAuth providers) is resolved
-once via top-level `await` in `auth/index.ts`, so a change there needs a
-restart. The UI says so.
+Sign-in settings need no restart; see "Sign-in settings apply on the next
+request".
 
 ### OAuth providers come from two places
 
 Env-declared (`OAUTH_<NAME>_*`, owned by `config.ts`) and stored (`app_settings`
 `oauthProviders`, written by **Admin → Settings**). `auth/index.ts` merges them
-at init with env winning a name collision, and exports `loadedOAuthProviders` —
-which is what the sign-in page and `/api/v1/auth/providers` must read. The
-config list would offer a button for a provider this process never registered,
-which is the same trap as the passwordless methods above.
+with env winning a name collision, and `loadedOAuthProviders()` is what the
+sign-in page and `/api/v1/auth/providers` must read: it refreshes first, so it
+never offers a provider the running instance has not registered.
 
 Three more things that bite:
 
@@ -481,11 +534,21 @@ count `passkey.userId`.
 `validateSignInMethods` takes the stranded-count lookup as its third argument so
 the rules can be tested without a database; the default is the real query.
 
-### Passkey sign-in is gated per request, not at init
+### Sign-in settings apply on the next request
 
-The passkey plugin is always loaded. `hooks.before` in `auth/index.ts` refuses
-the four sign-in/registration endpoints (403) while `isPasskeySignInEnabled()`
-is false, so toggling it needs no restart. List and delete stay open.
+Every plugin is always loaded (password, passkey, magic link, email OTP). The
+toggles are enforced by `METHOD_GATES` in `hooks.before` (`auth/index.ts`),
+which reads the live setting and answers 403 on that method's sign-in, reset and
+enrolment endpoints. Building the plugin list from the settings at init used to
+leave a disabled method signing people in until the next restart.
+
+OAuth providers cannot be gated that way: they are better-auth configuration.
+`auth` is therefore a proxy over an instance that `refreshAuth()` rebuilds when
+the resolved provider list changes. The admin actions call it after a save, and
+`hooks.server.ts` calls it before any OAuth request (`OAUTH_PATH`), so another
+app process catches up on first use. Importers keep `auth.api.*` unchanged.
+Adding a new gated endpoint means adding its path to `METHOD_GATES`; the
+endpoint paths come from the plugins' `createAuthEndpoint` calls.
 
 ### A preferred sign-in method is a hint, never a gate
 
@@ -536,13 +599,11 @@ _advertises_ AUTH rejected the message with `Missing credentials for "PLAIN"` �
 which is exactly how an unauthenticated internal relay is reached. The block is
 spread in only when a user or password is actually set.
 
-### The sign-in page offers what the process loaded, not what the DB says
+### The sign-in page offers what is on right now
 
-`getPasswordlessSettings()` is true the moment an admin saves, but the plugin
-list was built at module init — so the button appeared for an endpoint that did
-not exist and posting to it 404'd with no message. The page reads
-`instanceSignInMethods()` (`auth/index.ts`: password, magic link and OTP as
-resolved at init, passkey live) instead. `test.setup.ts` mocks that export too.
+The page reads `instanceSignInMethods()` (`auth/index.ts`), which is live for
+every method, so it never shows a button whose endpoint `METHOD_GATES` refuses.
+`test.setup.ts` mocks that export, `loadedOAuthProviders` and `refreshAuth`.
 
 ### Notifications are structured rows, not sentences
 
@@ -563,13 +624,11 @@ only _newly_ granted recipients are told.
 Its `db` is a `private get`, so tests shadow it with `Object.defineProperty`
 rather than assigning.
 
-### Passwordless methods need a restart
+### Passwordless methods are gated on SMTP
 
-better-auth builds its plugin list once at module init, so `magicLink` and
-`emailOTP` are resolved by top-level await in `auth/index.ts`. Toggling them in
-the admin UI takes effect on the next boot; the UI says so. Both are gated on
-SMTP in `getPasswordlessSettings()` rather than only in the UI, so removing mail
-afterwards disables them rather than leaving a method that silently fails.
+Both are gated on SMTP in `getPasswordlessSettings()` rather than only in the
+UI, so removing mail afterwards disables them rather than leaving a method that
+silently fails.
 
 ### Adding a user preference
 
@@ -605,7 +664,10 @@ Three rules hold together here, and breaking any one of them loses files:
 - **The trash lists top-level entries only** (`listTrashFiles` drops anything
   under another trashed folder) and gives each folder the size of the trashed
   files beneath it. Otherwise one subtree is listed, priced and deleted many
-  times over.
+  times over. Both are SQL now (see "Listings are keyset-paginated"): "top
+  level" is a `NOT EXISTS` over trashed folders whose path is a proper prefix,
+  tested with `substr(...) = ancestor.path || '/'`, never `LIKE` (a volume
+  folder named `a_b` is a wildcard, and SQLite's `LIKE` ignores case).
 - **Trash keys are full paths**, unlike a folder listing, whose keys are one
   segment to be re-joined with the folder on screen. The trash is flat and has
   no such context, so a nested row could address nothing: its delete 404'd, or
@@ -634,8 +696,8 @@ scan simply re-creates the row, with nothing under it lost.
 
 Emptying is one request for the same reason the bulk actions are pooled
 (`MAX_PARALLEL_REQUESTS` in `wrapper-bulk.svelte.ts`): a request per row over a
-large selection is where the partial failures came from, and the client can only
-price what the page happens to be showing.
+large selection is where the partial failures came from. The trash pages, so the
+client prices the whole of it from the response's `total` and `totalSize`.
 
 ### The sidebar counts come from the layout load
 
@@ -695,6 +757,67 @@ Two constraints on anything added here:
   screen), stored on the job rather than recomputed, so a resumed upload does
   not depend on where the user has navigated since.
 
+### Listings are keyset-paginated
+
+A category of a big library (a Reaper media folder) used to load every row and
+render them all, which hung the tab. Categories, folders (browse, shared drives,
+volumes, shared-with-me) and starred now all go through `mixedPage` in
+`listings.ts`: SQL pages on `(sortKey, id)` with an opaque cursor
+(`mappers.ts`), `id` as the tiebreaker so a tie never skips or repeats a row.
+Folders and files are two tables in one order, folders first, so there is no
+UNION: folders are read first and files fill what is left of the page. The
+cursor names the last row's segment (`k: "folder"`), so the next page resumes in
+folders (and falls through to files) or in files only. A folder has no size, so
+a size sort lists folders by name.
+
+Names sort on `lower(name)`, with matching expression indexes
+(`files_folder_name_idx`, `folders_name_idx`, `files_category_name_idx`). The
+cursor stores the raw name and SQL lowers both sides: lowering it in JS would
+disagree with SQLite's ASCII-only `lower` and skip rows. Starred rows are few,
+so they get only `(owner, is_starred, is_trashed)` indexes.
+
+`total` is a cached count beside the pages. Cache keys live under `list:`,
+`starred:` and `category:`, all dropped by prefix in `invalidateListingCaches`;
+a new listing needs its prefix there; the trash's is `trashed` (its pages,
+`trashed:total`, which is also the badge, and `trashed:size`). Recent does not
+page.
+
+The trash pages through the same `mixedPage`, with two extras. Its ancestor
+probe and the folder sizes are prefix ranges on `path` (`folders_trash_idx`,
+`files_trash_idx` on owner, volume, trash state, path): an ancestor sorts
+between the path's first segment and the path, a descendant between `p/` and
+`p0`. Postgres builds those indexes on `path collate "C"` and the queries
+compare the same way (`bytewise()`): a linguistic collation may skip `/`, which
+puts `p/x` after `p0` and prices a folder at nothing. Sizes are computed for the
+page's folders only, and a drizzle select field renders a column unqualified, so
+the correlated subquery names `"folders"."path"` itself or binds to its own
+table. **Empty Trash** still deletes every trashed row server-side; its dialog
+counts and prices from `total` and `totalSize`, not from what is loaded.
+`listings.pg.test.ts` runs the same queries when `DATABASE_URL` names Postgres.
+
+The server caps a page at `LISTING_MAX_PAGE_SIZE`, so a refresh that must keep a
+deep scroll uses `fetchWindow` (`#lib/pagination.ts`), which pages until the
+loaded count is covered. The wrapper pages whenever the response carries
+`nextCursor`, fetching the next page from whichever endpoint the route is
+(`fetchListingPage`), and tells a navigation from a refresh by
+`page.url.pathname`; a page that lands after the pathname changed is dropped.
+First pages come from `firstPageQuery(preferences)`, so the server's order is
+the one the wrapper shows. The server sorts, so `preSorted` tells
+list/table/grid not to re-sort a partial window, and a sort change re-fetches
+page one.
+
+Rendering is bounded separately and everywhere: `#lib/virtual-window.svelte.ts`
+mounts only the rows near the viewport (fixed row height plus spacers, the
+sheet-editor trick, but driven by the window's scroll because listings scroll
+with the page). The grid's column count mirrors its `grid-cols-*` breakpoints in
+JS; change one and change the other. The row height is set on each row or tile
+in CSS, not just assumed: an estimate that drifts by a few pixels is thousands
+off at 20k rows. `listingLoadMode` picks infinite scroll or page controls.
+"Select all" selects what is loaded, and says so.
+
+`service.listFiles` still returns a whole folder: the public share page and the
+old tests use it. Listing routes call `listFolderPage`.
+
 ### Waveforms are data, not pictures
 
 Audio "thumbnails" return **JSON peak data**, not an image: the endpoint answers
@@ -723,6 +846,10 @@ rather than an object.
 The API takes **named** sizes (`small` | `medium` | `large`), not pixels — three
 discrete values keep the on-disk cache bounded. `getObjectUrl` once sent
 `size=300` and every thumbnail request 400'd.
+
+Its ETag is the cache file's `stat` (mtime + size), compared before the render
+is read or opened, so a revalidation (`private, no-cache`) is a 304 without a
+decrypt. An ETag built from `Date.now()` never matched and every tile refetched.
 
 A thumbnail request must **never** fall back to serving the original file. It
 did, so a grid of audio tiles pulled ~100 MB per WAV. It now 404s and the client
@@ -906,9 +1033,39 @@ language from the extension.
 
 ### i18n keys
 
-Every key must exist in **all four** locales (`messages/{en,fr,de,es}.json`) or
-`bun run check` fails. There is no working ICU plural support here — use two
-flat keys plus a helper in `utils.ts` (see `filesCountLabel`).
+Every key must exist in **every** locale listed in
+`project.inlang/settings.json` (thirteen: en, fr, de, es, it, nl, sv, fi, pl,
+ru, ja, ko, zh), so a new key ships with a real translation in each; the
+language picker lists whatever that file declares. Paraglide itself never
+complains: a key missing from a locale silently falls back to `en`, and
+`bun run check` passes. `bun run lint:i18n` (`scripts/check-i18n.ts`, part of
+`bun run lint` and a pre-commit hook on `messages/`) is what fails on a missing
+or extra key, or on a message whose placeholders differ from `en`'s.
+
+Counts use paraglide's real plural-variant messages (`@inlang/paraglide-js`
+^2.25, plugin-message-format's JSON schema), not flat `_one`/`_other` keys.
+CLAUDE.md once said plurals did not work here; nobody had checked the installed
+version. A pluralized message is a one-element array:
+`declarations: ["input count", "local countPlural = count: plural"]`,
+`selectors: ["countPlural"]`,
+`match: {"countPlural=one": "...", "countPlural=other": "..."}`. `countPlural`'s
+value comes from `new Intl.PluralRules(locale, options).select(Number(count))`
+(paraglide's `plural()` in the compiled `registry.js`), so write a `match` arm
+for every category that locale's `Intl.PluralRules` can produce for an
+**integer** input: `one`/`other` for most locales, `one`/`few`/`many`/`other`
+for ru and pl (`2`→few, `5`→many, `21`→one again: real CLDR paucal rules, not
+approximated), and just `one`/`other` for fr (fr's `many` category exists in
+CLDR but only fires for non-integers, which count messages never are). A locale
+that only ever produces `other` (ja, ko, zh) or where every category renders
+identical text needs no array at all; a plain string works, since paraglide
+falls back to that locale's own text regardless of which category was selected.
+Different locales for the same key can use different shapes (array vs plain
+string); the compiler handles each locale's message independently.
+
+Call sites pass `{count: String(n), ...}` same as before; paraglide picks the
+branch. The old `filesCountLabel`/`usersCountLabel`/`downloadsCountLabel`/
+`trashHoldsLabel` wrappers in `utils.ts` that branched on `count === 1` are
+gone, so call `m.<key>({count: String(n), ...})` directly.
 
 ### Test isolation
 
@@ -921,6 +1078,12 @@ file leaks into every file that runs after it. Two consequences:
   restore it in `afterAll`, or it reconfigures everything downstream.
 
 Prefer stubbing a method on the instance under test over mocking a module.
+
+Module-level state bites the same way without mocking. `jobs.ts` remembers, per
+process, that a worker was seen after boot, which ends the boot grace for every
+later test. A test that needs a job to be waited on seeds a live worker row
+itself (`workerSeen()` in `jobs.test.ts`) or passes its own `bootedAt` to
+`awaitJob`; leaning on the default grace failed only under `rerunEach`.
 
 ### Go tests live under `tests/`, split unit vs integration
 
@@ -1101,15 +1264,47 @@ down by a settling listing never runs its handler, so "the click worked" and
 ### E2E has a five-minute budget
 
 Each E2E job has `timeout-minutes: 5`, deliberately tight: the app is fast, so a
-slow suite is a bug. The suite is split `--shard=N/2` per dialect, each shard on
-its own fresh stack, which is why tests may stay serial (`workers: 1`) inside
-one. A spec that pushes a shard over budget gets faster or moves, the budget
-does not grow.
+slow suite is a bug. The suite is split `--shard=N/4` per dialect, each shard on
+its own fresh stack. A spec that pushes a shard over budget gets faster or
+moves, the budget does not grow. The same split works locally:
+`bun run test:e2e --shard=1/4` (the script passes its arguments through).
+
+`workers: 1` is not a choice about speed: every spec shares one instance and one
+drive, so several upload the same fixture names and only the shard split keeps
+them apart. Run the whole suite in one shard and specs fail on each other's
+leftovers (`test-upload.txt` becomes `test-upload (1).txt`). Until each spec
+owns its own user or folder, sharding is the only lever, and parallel workers
+would be a flake machine.
+
+Browsers are cached per Playwright version (`actions/cache` on
+`~/.cache/ms-playwright`), which is 30s a job over 8 jobs; a cache hit still
+runs `playwright install-deps`, since the system libraries are not in it.
 
 A broken build is the other way to blow it: every test times out three times,
 and 103 × 3 × 30s kept a job red for 2.5h. CI stops at `maxFailures: 10`.
 Playwright already runs on Bun (`[run] bun = true` in `bunfig.toml`); there is
 nothing to switch on.
+
+### A type-only import can still look circular
+
+`bun run circular` (`scripts/circular.ts`, madge) reported a cycle between
+`storage/driver.ts` and `storage/drivers/local.ts` that wasn't one: `local.ts`
+only imports `StorageDriver` as `import type`, but madge's TypeScript detective
+counts a type-only import as a real edge unless told otherwise
+(`detectiveOptions: { ts: { skipTypeImports: true } }`). madge also has no
+`.svelte` support at all (no svelte detective in `precinct`), so the check only
+ever covers `src/**/*.ts`.
+
+### SvelteKit's own warnings bypass Vite's `customLogger`
+
+The "plugins ... use the `transformIndexHtml` hook which is not supported"
+warning (vite-plugin-pwa, printed by every `svelte-kit sync`) comes from
+SvelteKit's own internal `logger()` util (`@sveltejs/kit/src/core/utils.js`),
+which calls `console.log` directly; setting Vite's `customLogger` in
+`vite.config.ts` does nothing for it. Silencing just that one message means
+patching `console.log` in `vite.config.ts` itself (scoped to the exact
+substring); the plugin is still live (see the webmanifest link tag in
+`+layout.svelte`), only the noise is gone.
 
 ### Actions are pinned by SHA, by pinact
 
@@ -1213,6 +1408,17 @@ bypass is the exception: nobody signs in, so `seedAuth` creates one
 credential-less owner to attribute files to. The e2e auth setup runs the
 onboarding flow when it lands on that screen.
 
+### Self-deletion and admin removal are two different code paths
+
+Better-auth's own `/delete-user` endpoint (`user.deleteUser` in `auth/index.ts`,
+`beforeDelete: assertCanDeleteAccount`) is what the account page's self-service
+**Delete account** calls; it password-or-freshness-checks the caller and is
+where the "last admin" and "owns a shared drive" refusals live. The admin
+plugin's own `removeUser` (Admin → Users → Delete) is a **separate** endpoint
+that never runs that hook. It can't be used to strand the instance anyway, since
+it already refuses removing yourself, so there is no missing check, just two
+independent gates worth knowing about before "fixing" one by editing the other.
+
 ### Every E2E spec must declare its own auth
 
 The `chromium` project in `playwright.config.ts` sets **no** `storageState` —
@@ -1296,10 +1502,23 @@ screen cannot be published as marketing.
 
 It first seeds one dummy of every supported kind from `e2e/fixtures/showcase-*`
 (image, video, track, PDF, sheet, deck, code, 3D model, archive), so the shots
-exercise every preview path rather than showing an empty drive.
+exercise every preview path rather than showing an empty drive. That seeding
+runs once, not per theme.
 
-`docs/showcase.md` publishes those files and the README links to it with a
-single hero image — there is no demo instance. Markdown carries plain relative
+Every shot is captured twice, light then dark, via
+`page.emulateMedia({ colorScheme })`: the app follows system theme by default
+(see "Shipped UI defaults" above), so emulating the media query is what drives
+it, not a stored preference. The dark filename carries a `-dark` suffix; light
+keeps the bare name so existing references don't move. Because the theme is
+applied client-side by `mode-watcher` reacting to that media query, the spec
+waits for `document.documentElement`'s `.dark` class to actually match the
+requested scheme before it shoots, since asserting text is visible is not enough
+to know the right theme painted.
+
+`docs/showcase.md` publishes both variants of every shot side by side, and the
+README hero is a `<picture>` with `prefers-color-scheme` sources (wrapped in
+`<!-- markdownlint-disable MD033 -->` / `enable`, since raw HTML is otherwise
+linted out); there is no demo instance. Markdown carries plain relative
 `docs/images/…` srcs so GitHub renders them directly; the docs repo rewrites
 them for the site.
 
@@ -1346,7 +1565,7 @@ which is how a self-hosted box is reached. The server takes either spelling
 (`storageServiceFor` reads the query first), and `?drive=` stays the documented
 one for the things that have no client to carry a header: media `src` URLs
 (`getObjectUrl`), the upload worker's XHR, and `/view` + `/edit`, which are
-outside `/drives` and so get it from `withDrive()` on the link.
+outside `/drives` and so get it from `withLocation()` on the link.
 
 ### A volume is a volume, whether it is a mount or a drive
 
@@ -1487,6 +1706,11 @@ timeout), and streams the finished file back with `streamAndCleanUp`, which
 deletes it on read-to-completion, cancel or error alike. `.tmp/zips` is a
 dot-directory on purpose so `scan.ts`'s `isScannable` already skips it.
 
+Already-compressed formats (`ziparchive.Method`, by extension) are stored, not
+deflated. The account export is deduped per user (`export:<id>`): a retry joins
+the running job, so it is awaited without `consume`, and each waiter streams its
+own hard link of the archive, which is left for `sweepStaleZips`.
+
 A source missing from disk (deleted outside Penombre on a volume, row not yet
 scanned away) is skipped and reported in `skipped`, not a failed archive — the
 old `archiver` code treated ENOENT as a warning too.
@@ -1496,6 +1720,56 @@ leaves an orphaned file there — there is no cancellation API to stop a running
 job. `sweepStaleZips()` (called once at boot and hourly from `hooks.server.ts`)
 deletes anything older than an hour and never throws; it is the cleanup for
 exactly that case.
+
+### Bytes may be sealed; the disk says so
+
+With `ENCRYPTION_KEY` set, file bytes are sealed in the envelope v1 format
+(`#lib/server/crypto/envelope.ts`, `internal/envelope`, vectors both must
+reproduce in `tests/fixtures/envelope-v1.json`). What holds it together:
+
+- **Sniffing is the truth, never a flag.** Whether a file is sealed is its first
+  8 bytes (`PNMBENC\x01`). There is no `files.encrypted` column: a crash between
+  a rename and a row update would make it lie, and a mixed tree during the
+  migration sweep just works. `ctx.encrypted` only decides whether _writes_ are
+  sealed; every driver is wrapped by `EncryptedStorageDriver`, which opens
+  whatever is sealed whatever the flag says.
+- **The file key lives in the header**, wrapped by the instance key. So a raw
+  byte copy of a sealed file is a valid sealed file: copy, move and duplicate
+  stay raw, and Go needs no key lookup. A rotation rewrites only the header, via
+  a staged copy (never in place: a torn 76-byte write loses the file).
+- **No key material in job specs or logs.** Specs carry `encrypt: bool` only;
+  the worker loads the same env vars (`envelope.LoadKeyring`). A worker without
+  the key fails with `sealed with key <id>, not loaded`.
+- **ffmpeg/ffprobe read sealed files over loopback HTTP** (`envelope.Input`,
+  random 128-bit path token, `http.ServeContent`), because `pipe:` is not
+  seekable and a moov-at-end MP4 (any phone video) needs to seek. pdftoppm takes
+  stdin (a plaintext PDF goes by path, so poppler need not buffer it). Nothing
+  is decrypted to a temp file, renders go to memory.
+- **Sealing is pull-based.** `sealStream(kek, source)` seals one chunk per pull
+  and byte arrays are fed in 1 MiB pieces, so a slow disk holds back the reads
+  instead of queueing the whole sealed file in memory. Downloads (public links,
+  sharings) stream through `openRawFile` with Range, never `getRawFileData`,
+  which decrypts the whole file.
+- **The migration sweep resumes.** Each `encrypt` pass stops at a file and a
+  byte budget and returns `next`; the app passes it back as `after`, so a pass
+  never re-sniffs what earlier passes sealed. A restart rewalks once.
+- **Every open checks the last chunk**, which carries the flag that detects
+  truncation, so a range read that never reaches the end still refuses a cut
+  file.
+- **Scan tolerance:** a sealed file is `sealedSize(row.size)` on disk, which
+  `refreshChangedFiles` treats as unchanged. Without it every sealed file looked
+  changed every pass and lost its duration and thumbnail.
+- **Stage files are dot-named** (`.<name>.<uuid>.tmp`): the scan and the sweep
+  both skip dot-names, and the sweep also skips `<name>.<uuid>.tmp` (thumbnail
+  renders). A new writer that stages must follow one of those two forms.
+- **Simple mode + key is refused** in config, and the sweep never seals a
+  mounted volume (it only rewraps one while a retired key is loaded):
+  `VOLUME_<NAME>_ENCRYPT` seals only what Penombre writes there.
+- **Boot guard:** `app_settings.encryptionKeyId` records the key on first boot.
+  Missing or wrong key later refuses the boot (`assertEncryptionKey`), before
+  the worker starts.
+- A plaintext file that happens to start with the magic bytes reads as a corrupt
+  sealed file. That is the price of sniffing.
 
 ### Sidebar groups truncate at five
 

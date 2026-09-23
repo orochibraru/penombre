@@ -36,10 +36,10 @@ bun run db:generate  # Generate Drizzle migrations (Postgres + SQLite)
 bun run db:studio    # Open Drizzle Studio
 
 # Quality
-bun run lint         # biome + markdownlint + tailwint
+bun run lint         # oxlint + biome + markdownlint + tailwint
 bun run lint:fix     # ...and fix what is fixable
 bun run format       # biome format --write
-bun run check        # Type-check app and scripts
+bun run check        # check:app && check:scripts && check:go, sequentially
 bun run check:app    # svelte-check on the app alone
 bun run circular     # Report circular imports
 
@@ -58,9 +58,9 @@ bun run gen:env      # Regenerate .example.env
 ```
 
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
-`$app/*`/`$env/*`/`$lib/server/*` and the Drizzle `db` object — they need no
-database or Redis. `bunfig.toml` also sets `rerunEach = 3` to catch flaky tests,
-and enforces coverage thresholds.
+`$app/*`/`#lib/server/*` and the Drizzle `db` object; they need no database or
+Redis. `bunfig.toml` also sets `rerunEach = 3` to catch flaky tests, and
+enforces coverage thresholds.
 
 ## Adding an API endpoint
 
@@ -79,22 +79,25 @@ generated client. Run `bun run gen:api` after changing either half.
 
 ## Database changes
 
-Edit `src/lib/server/db/schema.ts`, then run `bun run db:generate` — it emits
-migrations for both dialects (`drizzle/pg/` and `drizzle/sqlite/`). Migrations
-run automatically on boot.
+Edit `src/lib/server/db/schema.pg.ts` **and** `schema.sqlite.ts` (kept
+structurally in sync by hand; `schema.ts` is a dialect-resolving shim that
+re-exports whichever is active, and is what the rest of the app imports from),
+then run `bun run db:generate`; it emits migrations for both dialects
+(`drizzle/pg/` and `drizzle/sqlite/`). Migrations run automatically on boot.
 
 ## Git hooks
 
 `bun install` runs `prek install`, which wires `.pre-commit-config.yaml` into
-`.git/hooks`. The same config runs in CI, so a green local commit means a green
-CI lint job. Install prek with `brew install prek` (or see its
-[README](https://github.com/j178/prek)); the `prepare` script is a no-op without
-it.
+`.git/hooks`; prek itself comes from `node_modules` (`@j178/prek`), nothing
+extra to install. The pre-commit stage (fast linters) runs on every commit and
+also runs in CI over the whole repo; `check` and `test-unit` are pre-push hooks,
+so a green commit does not mean green CI; those two still run on `git push` and
+in CI's own type-check/test job.
 
 ```bash
 prek run --all-files   # run every hook over the whole repo
 prek run biome         # run a single hook
-SKIP=test-unit git commit ...   # skip a hook for one commit
+SKIP=test-unit git push ...   # skip a hook for one push
 ```
 
 Commit messages follow
@@ -104,7 +107,8 @@ hook enforces it, and releases are cut from it by
 
 ## Linting gotchas
 
-- `console.*` is a Biome error in app code — use `Logger` from `$lib/logger`.
+- `console.*` is an oxlint error in app code; use `Logger` from `#lib/logger`.
+  Biome only formats and sorts imports here; its linter is off.
 - Floating and misused promises are errors — `await` them or handle them.
-- Don't hand-edit generated output: `src/lib/paraglide`, `src/paraglide`,
-  `src/lib/api/v1.d.ts`, `drizzle/`, `.example.env`.
+- Don't hand-edit generated output: `src/lib/paraglide`, `src/lib/api/v1.d.ts`,
+  `drizzle/`, `.example.env`.

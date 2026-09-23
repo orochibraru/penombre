@@ -9,8 +9,6 @@
 		},
 		"MD028": false
 	},
-	"fix": true,
-	"globs": ["**/*.md", "!**/node_modules/**"],
 	"ignores": [
 		"**/node_modules",
 		"build",
@@ -18,7 +16,6 @@
 		"dist",
 		"project.inlang",
 		"src/lib/paraglide",
-		"src/paraglide",
 		"test-results",
 		"playwright-report",
 		// The PostgreSQL run writes its report beside the SQLite one, and its

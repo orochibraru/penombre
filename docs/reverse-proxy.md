@@ -20,6 +20,24 @@ Your reverse proxy must:
   uploads, so limit enforcement should happen at the proxy level if needed.
 - Not buffer responses — streaming is used for file downloads.
 
+## Client address {#client-address}
+
+Forwarding the `X-Forwarded-For` header is not enough on its own: Penombre only
+trusts a header you explicitly name, or it falls back to the TCP connection's
+own address, which behind a proxy is the proxy's address for every request. Set
+`ADDRESS_HEADER=x-forwarded-for` (and `XFF_DEPTH`, the number of trusted proxy
+hops to count back from the end of that header, `1` by default) so Penombre
+reads the real client address instead.
+
+This is not cosmetic. The client address is what per-IP rate limiting keys on,
+sign-in lookups, share-link unlock attempts, so without it every request behind
+the proxy shares one bucket, and thirty attempts from anywhere lock out every
+visitor at once.
+
+Only set `ADDRESS_HEADER` when every request actually goes through a proxy you
+control: a client can set `X-Forwarded-For` itself, and a value trusted with no
+proxy in front to overwrite it lets that client claim any address it likes.
+
 ## Caddy
 
 [Caddy](https://caddyserver.com/) handles HTTPS automatically via Let's Encrypt.

@@ -4,6 +4,7 @@
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Field from "#lib/components/ui/field/index.js";
 	import { Input } from "#lib/components/ui/input/index.js";
+	import { mapFormError } from "#lib/form-errors.js";
 	import { enhance } from "#lib/forms.js";
 	import { m } from "#lib/paraglide/messages.js";
 
@@ -41,11 +42,18 @@
             {#if form?.error}
                 <Alert.Root variant="destructive">
                     <Alert.Title>{m.error_title()}</Alert.Title>
-                    <Alert.Description>{form.error}</Alert.Description>
+                    <Alert.Description>
+                        {mapFormError(
+                            form.error,
+                            "errorParams" in form
+                                ? (form.errorParams as { count?: string })
+                                : undefined,
+                        )}
+                    </Alert.Description>
                 </Alert.Root>
             {/if}
 
-            <input type="hidden" name="email" value={data.email} />
+            <input type="hidden" name="token" value={data.token} />
 
             <Field.Field>
                 <Field.Label for="password">{m.new_password()}</Field.Label>

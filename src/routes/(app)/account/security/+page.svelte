@@ -17,10 +17,12 @@
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { Label } from "#lib/components/ui/label/index.js";
 	import * as RadioGroup from "#lib/components/ui/radio-group/index.js";
+	import { mapFormError } from "#lib/form-errors.js";
 	import { enhance } from "#lib/forms.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { refreshAll } from "$app/navigation";
+	import { goto, refreshAll } from "$app/navigation";
+	import { resolve } from "$app/paths";
 
 	onMount(() => {
 		title.set(m.title_account_security());
@@ -34,6 +36,8 @@
 	let passkeyToDelete: string = $state("");
 	let deletePasskeyDialogOpen: boolean = $state(false);
 	let apiKeyToDelete: string = $state("");
+	let deleteAccountDialogOpen: boolean = $state(false);
+	let deleteAccountPassword: string = $state("");
 	let loading: boolean = $state(false);
 	let newPasswordError: string = $state("");
 	let currentPassword: string = $state("");
@@ -110,7 +114,7 @@
 			if (error.message) {
 				throw new Error(String(error.message));
 			}
-			throw new Error("Failed to register passkey");
+			throw new Error(m.toast_register_passkey_error());
 		}
 
 		await refreshAll();
@@ -137,7 +141,7 @@
 		if (form?.preferredSaved) {
 			toast.success(m.toast_settings_saved());
 		} else if (form?.error) {
-			toast.error(form.error);
+			toast.error(mapFormError(form.error, form.errorParams));
 		}
 	});
 
@@ -165,6 +169,33 @@
 		deletePasskeyDialogOpen = false;
 		passkeyToDelete = "";
 		loading = false;
+	}
+
+	/**
+	 * better-auth checks a password when one is given, and falls back to
+	 * session freshness (signed in within the last 24h) otherwise: an
+	 * OAuth-only account has no password to ask for.
+	 */
+	async function deleteAccountHandler() {
+		loading = true;
+		const { error } = await authClient.deleteUser(
+			data.hasPassword ? { password: deleteAccountPassword } : {},
+		);
+		loading = false;
+		if (error) {
+			throw new Error(error.message || m.toast_delete_account_error());
+		}
+		deleteAccountDialogOpen = false;
+		await goto(resolve("auth/sign-in"), { replace: true });
+	}
+
+	function handleDeleteAccount() {
+		return toast.promise(deleteAccountHandler(), {
+			loading: m.toast_deleting_account(),
+			success: m.toast_account_deleted(),
+			error: (e) =>
+				e instanceof Error ? e.message : m.toast_delete_account_error(),
+		});
 	}
 </script>
 
@@ -370,9 +401,11 @@
 
                         <DropdownMenu.Root>
                             <DropdownMenu.Trigger>
-                                <Button variant="ghost">
-                                    <EllipsisVerticalIcon />
-                                </Button>
+                                {#snippet child({ props })}
+                                    <Button variant="ghost" {...props} title={m.open_menu()}>
+                                        <EllipsisVerticalIcon />
+                                    </Button>
+                                {/snippet}
                             </DropdownMenu.Trigger>
                             <DropdownMenu.Content>
                                 <DropdownMenu.Group>
@@ -396,6 +429,22 @@
         {/if}
     </div>
     </Card.Content>
+</Card.Root>
+
+<!-- Danger zone -->
+<Card.Root class="border-destructive/40">
+    <Card.Header>
+        <Card.Title class="text-destructive">{m.account_danger_zone()}</Card.Title>
+        <Card.Description>{m.account_delete_description()}</Card.Description>
+        <Card.Action>
+            <Button
+                variant="destructive"
+                onclick={() => (deleteAccountDialogOpen = true)}
+            >
+                {m.account_delete_button()}
+            </Button>
+        </Card.Action>
+    </Card.Header>
 </Card.Root>
 
 </div>
@@ -474,7 +523,7 @@
             aria-invalid={newPasswordError !== ""}
         />
         {#if newPasswordError}
-            <p class="text-xs text-red-600">
+            <p class="text-xs text-destructive">
                 {newPasswordError}
             </p>
         {/if}
@@ -509,4 +558,30 @@
             class="w-full"
         />
     </div>
+</ResponsiveDialog>
+
+<!-- Delete Account Dialog -->
+<ResponsiveDialog
+    bind:open={deleteAccountDialogOpen}
+    bind:loading
+    title={m.account_delete_confirm_title()}
+    description={m.account_delete_confirm_body()}
+    submitLabel={m.delete()}
+    loadingLabel={m.deleting()}
+    submitVariant="destructive"
+    onsubmit={() => handleDeleteAccount()}
+>
+    {#if data.hasPassword}
+        <Input
+            type="password"
+            autocomplete="current-password"
+            bind:value={deleteAccountPassword}
+            placeholder={m.current_password()}
+            class="w-full"
+        />
+    {:else}
+        <p class="text-muted-foreground text-sm">
+            {m.account_delete_no_password_hint()}
+        </p>
+    {/if}
 </ResponsiveDialog>

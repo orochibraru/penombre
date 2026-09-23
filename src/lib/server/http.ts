@@ -34,23 +34,15 @@ export class Http {
 	}
 
 	public static ServerError(message: string, error: unknown) {
-		logger.error(message, error);
-		if (error instanceof Error) {
-			return Http.StandardizedResponse(
-				{
-					message,
-					context: error.message,
-				},
-				{
-					status: 500,
-				},
-			);
-		}
-
+		// Never `error.message` in the response: a Drizzle error carries the
+		// failed SQL and its bound params, a driver error an absolute path.
+		// The real message is in the log line, keyed by the same id.
+		const errorId = crypto.randomUUID();
+		logger.error(`${message} [${errorId}]`, error);
 		return Http.StandardizedResponse(
 			{
 				message,
-				context: "Internal server error",
+				context: { errorId },
 			},
 			{
 				status: 500,

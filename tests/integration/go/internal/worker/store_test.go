@@ -299,3 +299,17 @@ func TestPruneKeepsUnreconciledCopyAndDeleteResults(t *testing.T) {
 		t.Fatal("a long-silent app instance must be forgotten")
 	}
 }
+
+func TestEncryptionKeyIDReadsTheAppMarker(t *testing.T) {
+	s, raw := openTestStore(t)
+	ctx := context.Background()
+	if id, err := s.EncryptionKeyID(ctx); err != nil || id != "" {
+		t.Fatalf("no settings row: %q, %v", id, err)
+	}
+	if _, err := raw.Exec(`insert into app_settings (id, settings, updated_at) values ('instance', '{"encryptionKeyId":"abcd"}', 0)`); err != nil {
+		t.Fatal(err)
+	}
+	if id, err := s.EncryptionKeyID(ctx); err != nil || id != "abcd" {
+		t.Fatalf("got %q, %v", id, err)
+	}
+}

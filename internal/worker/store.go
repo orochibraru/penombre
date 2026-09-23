@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -189,4 +190,24 @@ func (s *Store) Prune(ctx context.Context, leaseTimeout time.Duration) error {
 		}
 	}
 	return nil
+}
+
+// EncryptionKeyID is the key id the app recorded when it first sealed a file,
+// or "" when it never has.
+func (s *Store) EncryptionKeyID(ctx context.Context) (string, error) {
+	var raw []byte
+	err := s.db.QueryRowContext(ctx, `select settings from app_settings where id = 'instance'`).Scan(&raw)
+	if errors.Is(err, sql.ErrNoRows) || raw == nil {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	var settings struct {
+		EncryptionKeyID string `json:"encryptionKeyId"`
+	}
+	if err := json.Unmarshal(raw, &settings); err != nil {
+		return "", err
+	}
+	return settings.EncryptionKeyID, nil
 }

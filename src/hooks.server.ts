@@ -12,13 +12,17 @@ import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
 import { Logger } from "#lib/logger.js";
 import { baseLocale, getLocale } from "#lib/paraglide/runtime.js";
 import type { AuthType } from "#lib/server/auth/index.js";
-import { auth } from "#lib/server/auth/index.js";
+import { auth, refreshAuth } from "#lib/server/auth/index.js";
 import { needsSetup, seedAuth } from "#lib/server/auth/seed.js";
 import { getConfig, isAuthBypassed, isSimpleMode } from "#lib/server/config.js";
 import { csrfHandler } from "#lib/server/csrf.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb, resetDb } from "#lib/server/db/index.js";
 import { startDurationSweeper } from "#lib/server/services/duration-sweep.js";
+import {
+	assertEncryptionKey,
+	startEncryptionSweep,
+} from "#lib/server/services/encryption.js";
 import { startJobReconciler } from "#lib/server/services/job-reconcile.js";
 import {
 	failOrphanedJobs,
@@ -29,6 +33,8 @@ import {
 	startLibraryScanner,
 } from "#lib/server/services/library-scan.js";
 import { getUserPreferences } from "#lib/server/services/preferences.js";
+import { startRetentionSweeper } from "#lib/server/services/retention-sweep.js";
+import { ShareService } from "#lib/server/services/shares.js";
 import {
 	migrateStorageMeta,
 	StorageService,
@@ -52,6 +58,53 @@ function startZipSweeper(): void {
 	globalForZipSweep.__zip_sweep_timer = setInterval(() => {
 		void sweepStaleZips();
 	}, ZIP_SWEEP_INTERVAL_MS);
+}
+
+const USER_STORAGE_SWEEP_INTERVAL_MS = 60 * 60 * 1000;
+const globalForUserStorageSweep = globalThis as unknown as {
+	__user_storage_sweep_timer?: ReturnType<typeof setInterval>;
+};
+
+function runUserStorageSweep(): void {
+	void StorageService.cleanupDeletedUserStorage().catch((error) => {
+		logger.error("User storage sweep failed", error);
+	});
+}
+
+/** Removes on-disk storage `removeUser` cascades away in the database but never touches. */
+function startUserStorageSweeper(): void {
+	if (globalForUserStorageSweep.__user_storage_sweep_timer) {
+		return;
+	}
+	runUserStorageSweep();
+	globalForUserStorageSweep.__user_storage_sweep_timer = setInterval(
+		runUserStorageSweep,
+		USER_STORAGE_SWEEP_INTERVAL_MS,
+	);
+}
+
+const SHARE_PURGE_INTERVAL_MS = 60 * 60 * 1000;
+const globalForSharePurge = globalThis as unknown as {
+	__share_purge_timer?: ReturnType<typeof setInterval>;
+};
+const shares = new ShareService();
+
+function runSharePurge(): void {
+	void shares.purgeExpired().catch((error) => {
+		logger.error("Share purge failed", error);
+	});
+}
+
+/** `ShareService.purgeExpired` had no caller; an expired link's row, and its frozen name, sat forever. */
+function startSharePurger(): void {
+	if (globalForSharePurge.__share_purge_timer) {
+		return;
+	}
+	runSharePurge();
+	globalForSharePurge.__share_purge_timer = setInterval(
+		runSharePurge,
+		SHARE_PURGE_INTERVAL_MS,
+	);
 }
 
 /** The session user, with the admin plugin's extra fields. */
@@ -90,8 +143,11 @@ export const handleError: HandleServerError = ({ event, error, kind }) => {
 	);
 
 	return {
-		message:
-			error instanceof Error ? error.message : "An unknown error occurred.",
+		// Never `error.message`: a Drizzle error carries the failed SQL and its
+		// bound params, a driver error an absolute path; and this reaches
+		// public pages too (`/s/[token]`). The real message is in the log line
+		// above, keyed by the same id.
+		message: "An unknown error occurred.",
 		errorId,
 	};
 };
@@ -184,6 +240,12 @@ export const init = async () => {
 
 	await waitForDatabase();
 	await runMigrations();
+	// Before the worker starts: sealed files with no key to open them must stop
+	// the boot, not surface as a failure on every read.
+	await assertEncryptionKey().catch((error: unknown) => {
+		logger.error(error instanceof Error ? error.message : error);
+		process.exit(1);
+	});
 	// Before enqueueing anything: a worker tells a dead requester by it.
 	await startInstanceBeat();
 	// Before any worker can claim them: their callers died with the last run.
@@ -194,7 +256,11 @@ export const init = async () => {
 	await migrateStorageMeta();
 	startLibraryScanner();
 	startDurationSweeper();
+	startEncryptionSweep();
 	startZipSweeper();
+	startUserStorageSweeper();
+	startSharePurger();
+	startRetentionSweeper();
 };
 
 /** Paths under the auth basePath that are handled by SvelteKit, not better-auth */
@@ -255,7 +321,11 @@ async function apiKeyAuth(
 		.catch(() => null);
 
 	if (!result?.valid) {
-		logger.warn("Invalid API key authentication attempt", { key: rawKey });
+		// Never the raw key: a typo or a revoked key is still a live credential
+		// for as long as the log file exists.
+		logger.warn("Invalid API key authentication attempt", {
+			keyPrefix: rawKey.slice(0, 8),
+		});
 		return new Response(JSON.stringify({ error: "Unauthorized" }), {
 			status: 401,
 		});
@@ -317,6 +387,9 @@ const authHandler: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
+	if (OAUTH_PATH.test(event.url.pathname)) {
+		await refreshAuth();
+	}
 	return svelteKitHandler({ event, resolve, auth, building });
 };
 
@@ -383,6 +456,10 @@ function allowedDuringSetup(pathname: string): boolean {
 		pathname === "/favicon.ico"
 	);
 }
+
+/** Requests that reach a provider, so they need the current provider list. */
+const OAUTH_PATH =
+	/^\/api\/v1\/auth\/(sign-in\/(oauth2|social)|oauth2\/|callback\/)/;
 
 const generalHandler: Handle = async ({ event, resolve }) => {
 	const isUpload =

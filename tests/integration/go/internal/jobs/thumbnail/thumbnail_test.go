@@ -1,15 +1,18 @@
 package thumbnail_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/orochibraru/penombre/internal/envelope"
 	"github.com/orochibraru/penombre/internal/jobs"
 	"github.com/orochibraru/penombre/internal/jobs/thumbnail"
 )
@@ -154,5 +157,109 @@ func TestPDFFirstPageBecomesWebp(t *testing.T) {
 	}
 	if left, _ := filepath.Glob(filepath.Join(dir, "*.png")); len(left) != 0 {
 		t.Fatalf("intermediate page left behind: %v", left)
+	}
+}
+
+var testKeys = envelope.Keyring{Current: bytes.Repeat([]byte{9}, 32)}
+
+// sealInPlace replaces path with its sealed form, as the migration sweep would.
+func sealInPlace(t *testing.T, path string) {
+	t.Helper()
+	plain, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	w, _ := envelope.NewWriter(&out, testKeys.Current)
+	w.Write(plain)
+	w.Close()
+	if err := os.WriteFile(path, out.Bytes(), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func openSealed(t *testing.T, path string) []byte {
+	t.Helper()
+	if ok, _ := envelope.SniffFile(path); !ok {
+		t.Fatalf("%s is not sealed", path)
+	}
+	f, _, err := testKeys.OpenFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	b, _ := io.ReadAll(f)
+	return b
+}
+
+func withKeys(t *testing.T) {
+	envelope.SetDefault(testKeys)
+	t.Cleanup(func() { envelope.SetDefault(envelope.Keyring{}) })
+}
+
+// A phone video keeps its index (moov) after the media data. ffmpeg has to
+// seek to the end to read it, which a pipe cannot do: that is why a sealed
+// source is served over loopback HTTP rather than piped in.
+func TestSealedMoovAtEndVideo(t *testing.T) {
+	needFFmpeg(t)
+	withKeys(t)
+	dir := t.TempDir()
+	src := filepath.Join(dir, "in.mp4")
+	ffmpeg(t, "-f", "lavfi", "-i", "testsrc=duration=3:size=320x240:rate=10", "-c:v", "mpeg4", "-movflags", "-faststart", src)
+	raw, _ := os.ReadFile(src)
+	if bytes.Index(raw, []byte("moov")) < bytes.Index(raw, []byte("mdat")) {
+		t.Fatal("fixture has its moov first; it would not exercise seeking")
+	}
+	sealInPlace(t, src)
+	out, err := run(t, thumbnail.Spec{Kind: "video", Source: src, Output: filepath.Join(dir, "o.webp"), Size: 100, Encrypt: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b := openSealed(t, out); len(b) < 12 || string(b[8:12]) != "WEBP" {
+		t.Fatal("output is not a sealed webp")
+	}
+}
+
+func TestSealedPDFAndAudio(t *testing.T) {
+	needFFmpeg(t)
+	if _, err := exec.LookPath("pdftoppm"); err != nil {
+		t.Skip("pdftoppm not installed")
+	}
+	withKeys(t)
+	dir := t.TempDir()
+	doc := filepath.Join(dir, "doc.pdf")
+	os.WriteFile(doc, minimalPDF(), 0o644)
+	sealInPlace(t, doc)
+	out, err := run(t, thumbnail.Spec{Kind: "pdf", Source: doc, Output: filepath.Join(dir, "doc.webp"), Size: 300})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Encrypt off: a sealed source may still feed a plaintext cache.
+	if b, _ := os.ReadFile(out); len(b) < 12 || string(b[8:12]) != "WEBP" {
+		t.Fatal("output is not a webp")
+	}
+
+	wav := filepath.Join(dir, "in.wav")
+	ffmpeg(t, "-f", "lavfi", "-i", "sine=frequency=440:duration=1", wav)
+	sealInPlace(t, wav)
+	out, err = run(t, thumbnail.Spec{Kind: "audio", Source: wav, Output: filepath.Join(dir, "peaks.json"), Buckets: 50, Encrypt: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var peaks []float64
+	if err := json.Unmarshal(openSealed(t, out), &peaks); err != nil || len(peaks) != 50 {
+		t.Fatalf("want 50 peaks, got %d (%v)", len(peaks), err)
+	}
+}
+
+func TestSealedSourceWithoutItsKeyFails(t *testing.T) {
+	needFFmpeg(t)
+	dir := t.TempDir()
+	src := filepath.Join(dir, "in.png")
+	ffmpeg(t, "-f", "lavfi", "-i", "color=red:size=40x20", "-frames:v", "1", src)
+	sealInPlace(t, src)
+	_, err := run(t, thumbnail.Spec{Kind: "image", Source: src, Output: filepath.Join(dir, "o.webp"), Size: 100})
+	if err == nil || !strings.Contains(err.Error(), "not loaded") {
+		t.Fatalf("want a missing-key error, got %v", err)
 	}
 }

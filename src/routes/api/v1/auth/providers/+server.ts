@@ -1,12 +1,13 @@
 import { loadedOAuthProviders } from "#lib/server/auth/index.js";
-import { getConfig } from "#lib/server/config.js";
 import { Http } from "#lib/server/http.js";
 import { listAuthProviders } from "#lib/server/openapi/v1/auth.js";
-import { isOAuthSignInEnabled } from "#lib/server/services/app-settings.js";
+import {
+	isEmailSignInEnabled,
+	isOAuthSignInEnabled,
+} from "#lib/server/services/app-settings.js";
 
 export const GET = listAuthProviders.handler(async () => {
 	try {
-		const config = getConfig();
 		const providers: {
 			name: string;
 			prettyName: string;
@@ -14,7 +15,7 @@ export const GET = listAuthProviders.handler(async () => {
 			enabled: boolean;
 		}[] = [];
 
-		if (config.auth.enableEmailSignIn) {
+		if (await isEmailSignInEnabled()) {
 			providers.push({
 				name: "email",
 				prettyName: "Email",
@@ -23,11 +24,8 @@ export const GET = listAuthProviders.handler(async () => {
 			});
 		}
 
-		// The loaded list, not the configured one: it includes providers added
-		// in the admin UI, and excludes any saved since this process booted —
-		// which have no endpoint to sign in through yet.
 		if (await isOAuthSignInEnabled()) {
-			for (const provider of loadedOAuthProviders) {
+			for (const provider of await loadedOAuthProviders()) {
 				providers.push({
 					name: provider.name,
 					prettyName: provider.prettyName,

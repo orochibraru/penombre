@@ -172,12 +172,14 @@ export const batchFileSchema = z.object({
 	),
 });
 
+// No `contentType` here on purpose: a client that could set it could make
+// any file serve as `text/html`/`image/svg+xml` and run script on the
+// instance origin. A rename already recomputes it from the new extension.
 export const updateFileSchema = z.object({
 	type: z.string().optional(),
 	category: fileCategorySchema.optional(),
 	tags: z.array(z.string()).optional(),
 	key: z.string().optional(),
-	contentType: fileContentTypeSchema.optional(),
 	isTrashed: z.boolean().optional(),
 	isStarred: z.boolean().optional(),
 });

@@ -8,10 +8,12 @@ import {
 import { getConfig, isAuthBypassed } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
 import { user } from "#lib/server/db/schema.js";
+import { isRateLimited } from "#lib/server/rate-limit.js";
 import { isOAuthSignInEnabled } from "#lib/server/services/app-settings.js";
 import {
 	accountCredentials,
 	effectivePreferred,
+	hasAnyIdentity,
 	methodsFor,
 } from "#lib/server/services/auth-methods.js";
 import { getUserPreferences } from "#lib/server/services/preferences.js";
@@ -55,10 +57,7 @@ export const load = async ({ url, request }) => {
 				methods.password || methods.magicLink || methods.emailOtp,
 			enablePasskeySignIn: methods.passkey,
 			enableOAuthSignIn: await isOAuthSignInEnabled(),
-			// What the running process loaded, not what the settings currently
-			// say: the plugins are built once at init, so a provider added
-			// since boot has no endpoint yet and its button would only 404.
-			oauthProviders: loadedOAuthProviders,
+			oauthProviders: await loadedOAuthProviders(),
 		},
 	};
 };
@@ -73,14 +72,26 @@ export const load = async ({ url, request }) => {
  *
  * ponytail: this does confirm whether an address has an account, which a
  * combined email+password form does not. That is the accepted trade of every
- * email-first flow (Google, Microsoft, GitHub all do it); better-auth's rate
- * limiter caps how fast the endpoint can be walked. If enumeration ever
- * matters more than the flow, return `has-password` unconditionally and let
- * the password step fail instead. The method list widens it slightly: it says
- * whether the account holds a passkey.
+ * email-first flow (Google, Microsoft, GitHub all do it); a per-IP throttle
+ * (`isRateLimited`, not better-auth's; its limiter only covers
+ * `/api/v1/auth/**`) caps how fast the endpoint can be walked. If
+ * enumeration ever matters more than the flow, return `has-password`
+ * unconditionally and let the password step fail instead. The method list
+ * widens it slightly: it says whether the account holds a passkey.
  */
 export const actions = {
-	lookup: async ({ request }) => {
+	lookup: async ({ request, getClientAddress }) => {
+		if (
+			await isRateLimited(`sign-in-lookup:${getClientAddress()}`, {
+				max: 30,
+				windowSeconds: 5 * 60,
+			})
+		) {
+			return fail(429, {
+				step: "email",
+				error: "Too many attempts. Try again later.",
+			});
+		}
 		const form = await request.formData();
 		const email = String(form.get("email") ?? "")
 			.trim()
@@ -104,10 +115,14 @@ export const actions = {
 			});
 		}
 
-		const credentials = await accountCredentials(account.id);
-		if (!(credentials.hasPassword || credentials.hasPasskey)) {
+		if (!(await hasAnyIdentity(account.id))) {
+			// No password, no passkey, no OAuth account either: a genuine
+			// pending invite. This is informational only; the onboarding page
+			// itself requires the token an admin issued, so this cannot be used
+			// to reach it for someone else's address.
 			return { step: "onboarding", email };
 		}
+		const credentials = await accountCredentials(account.id);
 
 		const methods = methodsFor(await instanceSignInMethods(), credentials);
 		const { preferredSignInMethod } = await getUserPreferences(account.id);

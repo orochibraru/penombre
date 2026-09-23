@@ -35,13 +35,17 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		return redirect(302, resolve("account/security"));
 	}
 
-	const [activityResult, fileCount, preferences, versionCheck] =
-		await Promise.all([
-			api.GET("/api/v1/activity", { fetch, baseUrl: url.origin }),
-			api.GET("/api/v1/storage/file/counts", { fetch, baseUrl: url.origin }),
-			api.GET("/api/v1/preferences", { fetch, baseUrl: url.origin }),
-			api.GET("/api/v1/version/check", { fetch, baseUrl: url.origin }),
-		]);
+	// Streamed, not awaited: an air-gapped or rate-limited instance must not
+	// hold the whole page open for GitHub's response on every navigation.
+	const versionCheck = api
+		.GET("/api/v1/version/check", { fetch, baseUrl: url.origin })
+		.then((result) => result.data?.data);
+
+	const [activityResult, fileCount, preferences] = await Promise.all([
+		api.GET("/api/v1/activity", { fetch, baseUrl: url.origin }),
+		api.GET("/api/v1/storage/file/counts", { fetch, baseUrl: url.origin }),
+		api.GET("/api/v1/preferences", { fetch, baseUrl: url.origin }),
+	]);
 
 	// Parse counts, default to 0 if failed
 	let counts = { trash: 0, starred: 0 };
@@ -82,6 +86,6 @@ export const load = async ({ fetch, url, locals, depends }) => {
 			label: volume.label,
 			readOnly: volume.readOnly,
 		})),
-		versionCheck: versionCheck.data?.data,
+		versionCheck,
 	};
 };

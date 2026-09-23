@@ -17,6 +17,7 @@
 		cn,
 		isBrowsableListing,
 		isFolderItem,
+		isTrashListing,
 		PARENT_KEY,
 		parentHref,
 		resolveDropDestination,
@@ -24,6 +25,7 @@
 		type SharedFileDisplayProps,
 		shouldDisplayAction,
 	} from "#lib/utils.js";
+	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
 	import { page } from "$app/state";
 
 	let {
@@ -43,6 +45,7 @@
 		onCreateFolder,
 		sortColumn,
 		sortDirection,
+		preSorted = false,
 		draggedItem,
 		dropTargetKey = $bindable(),
 		onDragStart,
@@ -52,6 +55,9 @@
 
 	const iconSize = "h-6 w-6";
 	const loadingAmount = 20;
+	/** A row's pitch: the height set on each `li` plus the list's `gap-1`. */
+	const ROW_HEIGHT = 64;
+	const ROW_GAP = 4;
 
 	/** `undefined` outside /browse and at the drive root: no `..` row there. */
 	// A share has no parent to go up to: above its root is the owner's drive.
@@ -206,6 +212,9 @@
 		if (!files.list) {
 			return files.list;
 		}
+		if (preSorted) {
+			return files.list;
+		}
 		if (!sortColumn) {
 			return sortFoldersFirst(files.list);
 		}
@@ -221,7 +230,29 @@
 		}
 		return [...searchResults].sort(compareItems);
 	});
+
+	/** Only the rows near the viewport are in the DOM; see virtual-window.svelte.ts. */
+	const displayedItems = $derived(
+		searchValue ? (sortedSearchResults ?? []) : (sortedFiles ?? []),
+	);
+	const virtualizer = createWindowVirtualizer({
+		count: () => displayedItems.length,
+		rowHeight: () => ROW_HEIGHT,
+		overscan: 8,
+	});
+	let listEl: HTMLElement | undefined = $state();
+	$effect(() => {
+		// Re-measure whenever the row count changes: a new page, a bigger
+		// window preference or a folder change can move the container on
+		// screen without a scroll event to trigger it.
+		void displayedItems.length;
+		if (listEl) {
+			virtualizer.bind(listEl);
+		}
+	});
 </script>
+
+<svelte:window onscroll={virtualizer.onScroll} onresize={virtualizer.onResize} />
 
 {#snippet listItem(item: ObjectItem)}
     {@const checked = isChecked(item)}
@@ -233,6 +264,7 @@
             checked ? "bg-primary/5" : "",
             isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
         )}
+        style="height: {ROW_HEIGHT - ROW_GAP}px"
         draggable={onDragStart !== undefined}
         ondragstart={(e) => handleItemDragStart(e, item)}
         ondragend={handleItemDragEnd}
@@ -257,7 +289,8 @@
                 actionableItem = item;
                 actionsContextOpen = true;
             }}
-            class="shrink-0 py-1 pl-5"
+            aria-label={m.open_menu()}
+            class="shrink-0 py-1 pl-2 pr-3 rounded transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
             <EllipsisVerticalIcon class="h-5 w-5" />
         </button>
@@ -289,7 +322,13 @@
 {#snippet emptyListItem()}
     <li class="flex flex-col items-center justify-center gap-4 py-12">
         <div class="text-muted-foreground text-center">
-            {#if isBrowsableListing(page.url.pathname)}
+            {#if isTrashListing(page.url.pathname)}
+                <p class="text-lg font-medium">{m.trash_is_empty()}</p>
+            {:else if page.url.pathname.includes('/starred')}
+                <p class="text-lg font-medium">{m.star_files_to_find_here()}</p>
+            {:else if page.url.pathname.includes('/recent')}
+                <p class="text-lg font-medium">{m.nothing_opened_recently()}</p>
+            {:else if isBrowsableListing(page.url.pathname)}
                 <p class="text-lg font-medium">{m.no_files_yet()}</p>
                 <p class="text-sm">
                     {m.no_files_get_started()}
@@ -347,14 +386,20 @@
             <p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
         </div>
     {/if}
-    <ul class="flex flex-col gap-1">
+    <ul class="flex flex-col gap-1" bind:this={listEl}>
         {#if loading}
             {@render loadingRows()}
         {:else if searchValue}
-            {#if sortedSearchResults && sortedSearchResults.length > 0}
-                {#each sortedSearchResults as objectItem}
+            {#if displayedItems.length > 0}
+                {#if virtualizer.padTop > 0}
+                    <li aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
+                {/if}
+                {#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.key)}
                     {@render listItem(objectItem)}
                 {/each}
+                {#if virtualizer.padBottom > 0}
+                    <li aria-hidden="true" style="height: {virtualizer.padBottom}px"></li>
+                {/if}
             {:else}
                 {@render emptyListItem()}
             {/if}
@@ -362,10 +407,16 @@
             {#if parentPath !== undefined}
                 {@render parentListItem(parentPath)}
             {/if}
-            {#if sortedFiles && sortedFiles.length > 0}
-                {#each sortedFiles as objectItem}
+            {#if displayedItems.length > 0}
+                {#if virtualizer.padTop > 0}
+                    <li aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
+                {/if}
+                {#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.key)}
                     {@render listItem(objectItem)}
                 {/each}
+                {#if virtualizer.padBottom > 0}
+                    <li aria-hidden="true" style="height: {virtualizer.padBottom}px"></li>
+                {/if}
             {:else}
                 {@render emptyListItem()}
             {/if}
@@ -408,7 +459,7 @@
                                     class={cn(
                                         "disabled:text-muted-foreground hover:text-primary flex w-full text-md items-center justify-start gap-3 text-balance transition-colors",
                                         act.variant === "destructive"
-                                            ? "text-red-600 hover:text-red-800 disabled:text-red-300"
+                                            ? "text-destructive hover:text-destructive/80 disabled:text-destructive/50"
                                             : "",
                                     )}
                                 >

@@ -280,7 +280,7 @@
 	<div class="flex w-full items-center gap-2">
 		<div class="flex items-center justify-between gap-2">
 			{#if loading}
-                <Button disabled>
+                <Button disabled title={m.loading()}>
                     <Spinner />
                 </Button>
 			{:else if paused}
@@ -354,18 +354,20 @@
 		><MaximizeIcon /></Button>
 
 		<Popover.Root>
-			<Popover.Trigger title={m.change_volume()}>
-				<Button variant="outline">
-					{#if volume === 1}
-						<Volume2Icon />
-					{:else if volume > 0 && volume < 1}
-						<Volume1Icon />
-					{:else if volume === 0}
-						<VolumeXIcon />
-					{:else}
-						<VolumeXIcon />
-					{/if}
-				</Button>
+			<Popover.Trigger>
+				{#snippet child({ props })}
+					<Button variant="outline" {...props} title={m.change_volume()}>
+						{#if volume === 1}
+							<Volume2Icon />
+						{:else if volume > 0 && volume < 1}
+							<Volume1Icon />
+						{:else if volume === 0}
+							<VolumeXIcon />
+						{:else}
+							<VolumeXIcon />
+						{/if}
+					</Button>
+				{/snippet}
 			</Popover.Trigger>
 			<Popover.Content class="w-10">
 				<Slider

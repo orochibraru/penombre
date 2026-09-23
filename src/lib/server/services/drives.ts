@@ -17,6 +17,7 @@ import { join } from "node:path";
 import { and, eq, inArray, or } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { getStoragePath, type VolumeConfig } from "#lib/server/config.js";
+import { encryptionEnabled } from "#lib/server/crypto/keyring.js";
 import { getDb } from "#lib/server/db/index.js";
 import {
 	type Drive,
@@ -82,6 +83,7 @@ export function driveVolume(drive: Drive, role: DriveRole): VolumeConfig {
 		label: drive.name,
 		path: drivePath(drive.id),
 		readOnly: role === "viewer",
+		encrypt: encryptionEnabled(),
 	};
 }
 

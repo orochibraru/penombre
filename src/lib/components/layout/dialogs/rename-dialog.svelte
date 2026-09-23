@@ -145,7 +145,7 @@
             aria-invalid={error !== ""}
         />
         {#if error}
-            <p class="text-xs text-red-600">
+            <p class="text-xs text-destructive">
                 {error}
             </p>
         {/if}

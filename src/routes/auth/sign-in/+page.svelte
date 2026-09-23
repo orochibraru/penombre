@@ -76,8 +76,9 @@
 				return;
 			}
 			error = true;
-			errorMessage = err.message ? String(err.message) : defaultErrorMessage;
-			toast.error(errorMessage);
+			// The inline alert below is this flow's only surface; no toast, so
+			// the same failure is not said twice.
+			errorMessage = mapAuthError("code" in err ? err.code : undefined);
 			return;
 		}
 
@@ -88,58 +89,71 @@
 
 	const defaultErrorMessage = m.sign_in_error();
 
+	/**
+	 * better-auth's own error messages are English prose meant for a
+	 * developer console, not a translated UI; and they used to reach fr/de/es
+	 * visitors verbatim. `code` is the stable, localizable part; only a few
+	 * are reachable from this page, so anything else falls back to the
+	 * generic message rather than growing an exhaustive table nobody keeps
+	 * in sync with better-auth's own list.
+	 */
+	function mapAuthError(code: string | undefined): string {
+		switch (code) {
+			case "INVALID_EMAIL_OR_PASSWORD":
+			case "INVALID_PASSWORD":
+				return m.sign_in_error_invalid_credentials();
+			case "EMAIL_NOT_VERIFIED":
+				return m.sign_in_error_email_not_verified();
+			case "USER_NOT_FOUND":
+			case "USER_EMAIL_NOT_FOUND":
+				return m.sign_in_error_user_not_found();
+			case "INVALID_TOKEN":
+			case "TOKEN_EXPIRED":
+				return m.sign_in_error_invalid_token();
+			case "PROVIDER_NOT_FOUND":
+				return m.sign_in_error_provider_not_found();
+			default:
+				return defaultErrorMessage;
+		}
+	}
+
 	function handleOauthSignin(provider: string) {
 		loading = true;
+		// The toast is this flow's only surface; the message is already
+		// translated at the throw site, in `oauthSignInPromise`.
 		return toast.promise(oauthSignInPromise(provider), {
 			loading: m.signing_in_with_provider({ provider }),
 			success: m.redirecting_to_provider({ provider }),
 			error: (e) => {
 				loading = false;
-				errorMessage = defaultErrorMessage;
-
-				if (e instanceof Error) {
-					errorMessage = e.message;
-					return e.message;
-				}
-				return defaultErrorMessage;
+				return e instanceof Error ? e.message : defaultErrorMessage;
 			},
 		});
 	}
 
 	function handleEmailSignin() {
 		loading = true;
+		// The toast is this flow's only surface; the message is already
+		// translated at the throw site, in `emailSignInPromise`.
 		return toast.promise(emailSignInPromise(), {
 			loading: m.signing_in(),
 			success: m.signed_in_success(),
 			error: (e) => {
 				loading = false;
-				errorMessage = defaultErrorMessage;
-
-				if (e instanceof Error) {
-					errorMessage = e.message;
-					return e.message;
-				}
-
-				return defaultErrorMessage;
+				return e instanceof Error ? e.message : defaultErrorMessage;
 			},
 		});
 	}
 
 	async function oauthSignInPromise(provider: string) {
-		try {
-			const res = await authClient.signIn.social({
-				provider,
-			});
-			if (res.error) {
-				error = true;
-				throw new Error(res.error.message || "Error signing in with OAuth2");
-			}
-			if (res.data.url) {
-				window.location.href = res.data.url;
-			}
-		} catch (e) {
-			error = true;
-			throw e;
+		const res = await authClient.signIn.social({
+			provider,
+		});
+		if (res.error) {
+			throw new Error(mapAuthError(res.error.code));
+		}
+		if (res.data.url) {
+			window.location.href = res.data.url;
 		}
 	}
 
@@ -188,7 +202,7 @@
 			callbackURL: "/",
 		});
 		if (err) {
-			throw new Error(err.message || m.sign_in_error());
+			throw new Error(mapAuthError(err.code));
 		}
 	}
 
@@ -199,6 +213,8 @@
 		// The link signs in on whichever tab opens it, not here.
 		remember(email);
 		loading = true;
+		// The toast is this flow's only surface; the message is already
+		// translated at the throw site, in `magicLinkSignIn`.
 		return toast.promise(magicLinkSignIn(), {
 			loading: m.sign_in_sending_link(),
 			success: () => {
@@ -207,9 +223,7 @@
 			},
 			error: (e) => {
 				loading = false;
-				errorMessage = e instanceof Error ? e.message : defaultErrorMessage;
-				error = true;
-				return errorMessage;
+				return e instanceof Error ? e.message : defaultErrorMessage;
 			},
 		});
 	}
@@ -220,7 +234,7 @@
 			type: "sign-in",
 		});
 		if (err) {
-			throw new Error(err.message || m.sign_in_error());
+			throw new Error(mapAuthError(err.code));
 		}
 		otpSent = true;
 	}
@@ -238,9 +252,7 @@
 			},
 			error: (e) => {
 				loading = false;
-				errorMessage = e instanceof Error ? e.message : defaultErrorMessage;
-				error = true;
-				return errorMessage;
+				return e instanceof Error ? e.message : defaultErrorMessage;
 			},
 		});
 	}
@@ -248,8 +260,7 @@
 	async function otpSignInPromise() {
 		const { error: err } = await authClient.signIn.emailOtp({ email, otp });
 		if (err) {
-			error = true;
-			throw new Error(err.message || m.sign_in_error());
+			throw new Error(mapAuthError(err.code));
 		}
 		remember(email);
 		goto(resolve("/(app)"), { replace: true, refreshAll: true });
@@ -262,8 +273,7 @@
 			success: m.signed_in_success(),
 			error: (e) => {
 				loading = false;
-				errorMessage = e instanceof Error ? e.message : defaultErrorMessage;
-				return errorMessage;
+				return e instanceof Error ? e.message : defaultErrorMessage;
 			},
 		});
 	}
@@ -308,9 +318,10 @@
 
 			const step = payload.data?.step;
 			if (step === "onboarding") {
-				await goto(`/auth/onboarding?email=${encodeURIComponent(email)}`, {
-					replace: true,
-				});
+				// Onboarding now needs the token from the admin's invite link;
+				// this address alone cannot reach it any more.
+				error = true;
+				errorMessage = m.sign_in_pending_invite();
 				return;
 			}
 			methods = (payload.data?.methods as Method[] | undefined) ?? [];
@@ -333,21 +344,13 @@
 		if (!(email && password)) {
 			throw new Error(m.email_password_required());
 		}
-		try {
-			const res = await authClient.signIn.email({ email, password });
-			if (res.error) {
-				error = true;
-				throw new Error(
-					res.error.message || "Error signing in with email and password",
-				);
-			}
-
-			remember(email);
-			goto(resolve("/(app)"), { replace: true, refreshAll: true });
-		} catch (e) {
-			error = true;
-			throw e;
+		const res = await authClient.signIn.email({ email, password });
+		if (res.error) {
+			throw new Error(mapAuthError(res.error.code));
 		}
+
+		remember(email);
+		goto(resolve("/(app)"), { replace: true, refreshAll: true });
 	}
 </script>
 

@@ -39,7 +39,7 @@ env:
 
 jobs:
   e2e:
-    name: Tests (E2E, ${{ matrix.dialect }}, ${{ matrix.shard }}/2)
+    name: Tests (E2E, ${{ matrix.dialect }}, ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     # The budget, not a safety net: the app is fast, so the suite must be.
     timeout-minutes: 5
@@ -47,8 +47,9 @@ jobs:
       fail-fast: false
       matrix:
         dialect: [SQLite, PostgreSQL]
-        # Each shard gets its own stack, so tests stay serial within one.
-        shard: [1, 2]
+        # Each shard gets its own stack, so tests stay serial within one;
+        # more shards is the only way to cut wall time until they are.
+        shard: [1, 2, 3, 4]
         include:
           - dialect: SQLite
             script: test:e2e
@@ -99,11 +100,28 @@ jobs:
           docker pull "$ref"
           echo "E2E_IMAGE=$ref" >> "$GITHUB_ENV"
 
-      - name: Install Playwright's Chromium
-        run: bunx playwright install --with-deps chromium
+      - name: Resolve the Playwright version
+        id: playwright
+        run: echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
 
-      - name: Tests (E2E, ${{ matrix.dialect }}, ${{ matrix.shard }}/2)
-        run: bun run ${{ matrix.script }} --shard=${{ matrix.shard }}/2
+      # About 30s per job otherwise, on every job of the matrix.
+      - name: Cache Playwright's browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      - name: Install Playwright's Chromium
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            bunx playwright install-deps chromium
+          else
+            bunx playwright install --with-deps chromium
+          fi
+
+      - name: Tests (E2E, ${{ matrix.dialect }}, ${{ matrix.shard }}/4)
+        run: bun run ${{ matrix.script }} --shard=${{ matrix.shard }}/4
 
       - name: Upload Playwright report
         if: failure()

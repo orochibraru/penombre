@@ -42,6 +42,7 @@ var timeouts = map[string]time.Duration{
 	"zip":         2 * time.Hour,
 	"copy":        6 * time.Hour,
 	"delete":      2 * time.Hour,
+	"encrypt":     6 * time.Hour,
 }
 
 const defaultTimeout = time.Hour

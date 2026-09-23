@@ -42,6 +42,8 @@ services:
       # for a NAS share anyway.
       VOLUME_E2E_PATH: "/data/e2e-volume"
       VOLUME_E2E_LABEL: "E2E volume"
+      # Set by the Postgres run only, so one shard is sealed and one is not.
+      ENCRYPTION_KEY: "${E2E_ENCRYPTION_KEY:-}"
 
   db:
     profiles: [pg]

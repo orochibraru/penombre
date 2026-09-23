@@ -34,6 +34,61 @@ export function determineContentType(key: string): FileContentType {
 	return fileTypes.contentTypes[extension] || "application/octet-stream";
 }
 
+/** Types a browser renders as a page and can run script from. */
+const ACTIVE_CONTENT_TYPES = new Set([
+	"text/html",
+	"application/xhtml+xml",
+	"image/svg+xml",
+	"application/xml",
+	"text/xml",
+]);
+
+/** Whether opening this type directly in a browser can run script. */
+export function isActiveContentType(contentType: string): boolean {
+	return ACTIVE_CONTENT_TYPES.has(contentType.toLowerCase());
+}
+
+/**
+ * Headers on every raw file response, whoever's serving it.
+ *
+ * `sandbox` strips scripts, forms and navigation from anything rendered
+ * inline; `nosniff` stops the browser guessing past the declared type. PDFs
+ * skip the sandbox: Chrome refuses to display a sandboxed PDF at all, which
+ * broke every `<embed>` preview, and a PDF runs no script on our origin.
+ */
+export function rawFileSecurityHeaders(
+	contentType: string,
+): Record<string, string> {
+	return contentType.toLowerCase() === "application/pdf"
+		? { "X-Content-Type-Options": "nosniff" }
+		: {
+				"Content-Security-Policy": "sandbox",
+				"X-Content-Type-Options": "nosniff",
+			};
+}
+
+/** Parse `Range: bytes=start-end` against a known length. */
+export function parseRange(
+	header: string | null,
+	size: number,
+): { start: number; end: number } | null {
+	const match = /^bytes=(\d*)-(\d*)$/.exec(header?.trim() ?? "");
+	if (!match) {
+		return null;
+	}
+	const [, rawStart, rawEnd] = match;
+	// A suffix range ("-500") means the last N bytes.
+	const start = rawStart ? Number(rawStart) : size - Number(rawEnd || 0);
+	const end = rawStart ? (rawEnd ? Number(rawEnd) : size - 1) : size - 1;
+	if (!(Number.isFinite(start) && Number.isFinite(end))) {
+		return null;
+	}
+	if (start < 0 || end >= size || start > end) {
+		return null;
+	}
+	return { start, end };
+}
+
 export function determineCategory(key: string): FileCategory {
 	const extension = key.split(".").pop()?.toLowerCase();
 	if (!extension) {
@@ -204,6 +259,43 @@ export function compareSearchRelevance(
 		relevanceScore(nameB, b, searchTerm) -
 			relevanceScore(nameA, a, searchTerm) || nameA.localeCompare(nameB)
 	);
+}
+
+/**
+ * A keyset cursor: the sort column's value on the last row seen, plus its id.
+ * `k` marks a folder row in a listing that pages folders before files.
+ */
+export interface ListingCursor {
+	v: string | number;
+	id: string;
+	k?: "folder";
+}
+
+/** Opaque to the client on purpose: the sort value and id are ours to reshape. */
+export function encodeCursor(cursor: ListingCursor): string {
+	return Buffer.from(JSON.stringify(cursor)).toString("base64url");
+}
+
+/** A cursor that fails to decode is treated as "start over", not a 400. */
+export function decodeCursor(raw: string): ListingCursor | null {
+	try {
+		const parsed: unknown = JSON.parse(
+			Buffer.from(raw, "base64url").toString("utf8"),
+		);
+		if (
+			parsed &&
+			typeof parsed === "object" &&
+			"v" in parsed &&
+			"id" in parsed &&
+			(typeof parsed.v === "string" || typeof parsed.v === "number") &&
+			typeof parsed.id === "string"
+		) {
+			return parsed as ListingCursor;
+		}
+		return null;
+	} catch {
+		return null;
+	}
 }
 
 /** Slice `items` down to the requested page, keeping the unpaginated total */

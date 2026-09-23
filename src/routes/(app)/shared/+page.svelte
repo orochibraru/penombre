@@ -10,12 +10,13 @@
 	import { toast } from "svelte-sonner";
 	import { api } from "#lib/api/index.js";
 	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import Badge from "#lib/components/ui/badge/badge.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Card from "#lib/components/ui/card/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { cn, downloadsCountLabel } from "#lib/utils.js";
+	import { cn } from "#lib/utils.js";
 	import { invalidate } from "$app/navigation";
 
 	const { data } = $props();
@@ -24,6 +25,10 @@
 
 	let copiedId: string | null = $state(null);
 	let revokingId: string | null = $state(null);
+	let revokeConfirmOpen: boolean = $state(false);
+	let revokeShareId: string | null = $state(null);
+
+	let isRevoking = $state(false);
 
 	async function copy(share: { id: string; token: string }) {
 		await navigator.clipboard.writeText(
@@ -38,12 +43,24 @@
 		}, 2000);
 	}
 
-	async function revoke(id: string) {
-		revokingId = id;
+	function openRevokeConfirm(id: string) {
+		revokeShareId = id;
+		revokeConfirmOpen = true;
+	}
+
+	async function confirmRevoke() {
+		if (!revokeShareId) {
+			return;
+		}
+		isRevoking = true;
+		revokingId = revokeShareId;
 		const { error } = await api.DELETE("/api/v1/shares/{id}", {
-			params: { path: { id } },
+			params: { path: { id: revokeShareId } },
 		});
 		revokingId = null;
+		isRevoking = false;
+		revokeConfirmOpen = false;
+		revokeShareId = null;
 		if (error) {
 			toast.error(m.toast_share_revoke_error());
 			return;
@@ -145,9 +162,9 @@
                                         <span
                                             class="text-muted-foreground text-xs tabular-nums"
                                         >
-                                            {downloadsCountLabel(
-                                                share.downloadCount,
-                                            )}
+                                            {m.share_download_count({
+                                                count: String(share.downloadCount),
+                                            })}
                                         </span>
                                         {#if share.hasPassword}
                                             <Badge variant="secondary">
@@ -182,7 +199,7 @@
                                     size="sm"
                                     class="text-muted-foreground hover:text-destructive"
                                     loading={revokingId === share.id}
-                                    onclick={() => revoke(share.id)}
+                                    onclick={() => openRevokeConfirm(share.id)}
                                 >
                                     <Link2OffIcon class="size-4" />
                                     {m.revoke()}
@@ -194,3 +211,18 @@
             </div>
         {/if}
 </div>
+
+<ResponsiveDialog
+	bind:open={revokeConfirmOpen}
+	bind:loading={isRevoking}
+	size="sm"
+	title={m.confirm_revoke_title()}
+	submitLabel={m.revoke()}
+	loadingLabel={m.revoking()}
+	submitVariant="destructive"
+	onsubmit={confirmRevoke}
+>
+	<p class="text-sm text-muted-foreground">
+		{m.confirm_revoke_message()}
+	</p>
+</ResponsiveDialog>

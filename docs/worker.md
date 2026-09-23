@@ -53,6 +53,10 @@ carries **absolute paths** resolved by the app:
 - The same storage mount, at the **same path** — `/data` above, and the same for
   every `VOLUME_<NAME>_PATH` the app declares.
 - The same `DATABASE_URL`.
+- The same `ENCRYPTION_KEY` (or `ENCRYPTION_KEY_FILE`) and
+  `ENCRYPTION_KEY_PREVIOUS`, when [encryption](encryption.md) is on. Keys never
+  travel in a job; a worker without them fails every job that touches a sealed
+  file with `sealed with key <id>, not loaded`, and says so once at startup.
 
 Scale `WORKER_CONCURRENCY` on the worker container independently of the app —
 see [Environment variables](env.md#worker) for both variables.
