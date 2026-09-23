@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.52](https://github.com/orochibraru/penombre/compare/v1.8.51...v1.8.52) (2026-09-23)
+
+### Features
+
+* app polishing (#108) ([4f8fa98](https://github.com/orochibraru/penombre/commit/4f8fa98d9b2e2f7f29bea26325acd1f4fa809efc))
+
 ## [1.8.51](https://github.com/orochibraru/penombre/compare/v1.8.50...v1.8.51) (2026-09-22)
 
 ### Bug Fixes
