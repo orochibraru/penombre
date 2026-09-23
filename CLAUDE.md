@@ -1264,10 +1264,21 @@ down by a settling listing never runs its handler, so "the click worked" and
 ### E2E has a five-minute budget
 
 Each E2E job has `timeout-minutes: 5`, deliberately tight: the app is fast, so a
-slow suite is a bug. The suite is split `--shard=N/2` per dialect, each shard on
-its own fresh stack, which is why tests may stay serial (`workers: 1`) inside
-one. A spec that pushes a shard over budget gets faster or moves, the budget
-does not grow.
+slow suite is a bug. The suite is split `--shard=N/4` per dialect, each shard on
+its own fresh stack. A spec that pushes a shard over budget gets faster or
+moves, the budget does not grow. The same split works locally:
+`bun run test:e2e --shard=1/4` (the script passes its arguments through).
+
+`workers: 1` is not a choice about speed: every spec shares one instance and one
+drive, so several upload the same fixture names and only the shard split keeps
+them apart. Run the whole suite in one shard and specs fail on each other's
+leftovers (`test-upload.txt` becomes `test-upload (1).txt`). Until each spec
+owns its own user or folder, sharding is the only lever, and parallel workers
+would be a flake machine.
+
+Browsers are cached per Playwright version (`actions/cache` on
+`~/.cache/ms-playwright`), which is 30s a job over 8 jobs; a cache hit still
+runs `playwright install-deps`, since the system libraries are not in it.
 
 A broken build is the other way to blow it: every test times out three times,
 and 103 × 3 × 30s kept a job red for 2.5h. CI stops at `maxFailures: 10`.
