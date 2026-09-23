@@ -19,17 +19,24 @@ import {
 } from "#lib/server/cache/index.js";
 
 const globalForRateLimit = globalThis as unknown as {
-	__rate_limit_backend?: CacheBackend;
+	__rate_limit_memory?: CacheBackend;
 };
 
+/**
+ * Only the in-memory counters are kept: a `RedisCacheBackend` holds the client
+ * it was built with, and `closeRedis()` leaves that one closed forever, so the
+ * Redis store is rebuilt per call around whatever client is live now.
+ */
 function store(): CacheBackend {
-	if (!globalForRateLimit.__rate_limit_backend) {
-		const redisUrl = process.env.REDIS_URL;
-		globalForRateLimit.__rate_limit_backend = redisUrl
-			? new RedisCacheBackend(getRedisClient(redisUrl), "penombre:ratelimit:")
-			: new MemoryCacheBackend();
+	const redisUrl = process.env.REDIS_URL;
+	if (redisUrl) {
+		return new RedisCacheBackend(
+			getRedisClient(redisUrl),
+			"penombre:ratelimit:",
+		);
 	}
-	return globalForRateLimit.__rate_limit_backend;
+	globalForRateLimit.__rate_limit_memory ??= new MemoryCacheBackend();
+	return globalForRateLimit.__rate_limit_memory;
 }
 
 /** True when `key` has already used up its budget for the window. */
