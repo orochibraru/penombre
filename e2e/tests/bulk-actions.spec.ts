@@ -1,27 +1,23 @@
-import { join } from "node:path";
-import process from "node:process";
 import { expect, test } from "@playwright/test";
-import { AUTH_STORAGE_STATE, goToBrowse, openUploadDialog } from "../helpers";
+import { AUTH_STORAGE_STATE, goToBrowse } from "../helpers";
 
 test.use({ storageState: AUTH_STORAGE_STATE });
 
 /** Asserts on each action's effect, never on the button existing. */
 
-/** Upload fixtures and return the names that landed. */
-async function seed(page: import("@playwright/test").Page, names: string[]) {
+/**
+ * Two files through the API, then a fresh listing. Seeding by upload raced the
+ * post-upload refresh, which re-rendered the rows under the checkbox clicks.
+ */
+async function seed(page: import("@playwright/test").Page) {
+	const stamp = Date.now();
+	for (const name of [`e2e-bulk-a-${stamp}.txt`, `e2e-bulk-b-${stamp}.txt`]) {
+		const created = await page.request.post("/api/v1/storage/file", {
+			data: { name, size: 16 },
+		});
+		expect(created.ok()).toBeTruthy();
+	}
 	await goToBrowse(page);
-	await openUploadDialog(page);
-	const dialog = page.getByRole("dialog");
-	await dialog
-		.locator("input[type=file]")
-		.first()
-		.setInputFiles(
-			names.map((name) => join(process.cwd(), "e2e", "fixtures", name)),
-		);
-	await dialog.getByRole("button", { name: /upload/i }).click();
-	await expect(page.getByText(names[0] ?? "").first()).toBeVisible({
-		timeout: 20_000,
-	});
 }
 
 /**
@@ -73,7 +69,7 @@ test.describe("Bulk actions", () => {
 	});
 
 	test("the bar's buttons are actually clickable", async ({ page }) => {
-		await seed(page, ["test-upload.txt", "test-image.png"]);
+		await seed(page);
 		await selectRows(page, 2);
 
 		// A fixed overlay in the same corner used to intercept these clicks,
@@ -131,7 +127,7 @@ test.describe("Bulk actions", () => {
 	test("Share is offered for one item and withheld for several", async ({
 		page,
 	}) => {
-		await seed(page, ["test-upload.txt", "test-image.png"]);
+		await seed(page);
 
 		await selectRows(page, 1);
 		await expect(
@@ -149,7 +145,7 @@ test.describe("Bulk actions", () => {
 	});
 
 	test("Clear empties the selection", async ({ page }) => {
-		await seed(page, ["test-upload.txt", "test-image.png"]);
+		await seed(page);
 		await selectRows(page, 2);
 
 		await page.getByRole("button", { name: "Clear" }).click();
@@ -159,7 +155,7 @@ test.describe("Bulk actions", () => {
 	});
 
 	test("the count follows deselection", async ({ page }) => {
-		await seed(page, ["test-upload.txt", "test-image.png"]);
+		await seed(page);
 		await selectRows(page, 2);
 
 		// Unticking writes `false` rather than deleting the key, so a naive

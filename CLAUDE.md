@@ -1560,7 +1560,10 @@ a menu animating in slides a neighbour under them — a CI run duplicated a file
 instead of opening it. It deliberately does **not** treat a vanished menu as a
 successful click — a menu also closes on a stray pointer move, and that shortcut
 made a test assert against a navigation that never happened. After an upload,
-wait for `networkidle` before touching the row at all.
+wait for `networkidle` before touching the row at all. A spec that only needs
+rows to exist seeds them through the API and then loads the page, as
+`bulk-actions.spec.ts` does. Seeding by upload let the post-upload refresh swap
+the rows out from under its checkbox clicks.
 
 ### E2E runs against a container, not your working tree
 
