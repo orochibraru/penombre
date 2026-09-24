@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 const AUTH_STORAGE_STATE = "e2e/.auth/user.json";
 
@@ -36,7 +36,7 @@ export async function rightClickItem(page: Page, name: string) {
 	// A single right-click can silently fail if the element isn't fully stable.
 	const menu = page.locator('[role="menu"]');
 	for (let i = 0; i < 3; i++) {
-		await target.click({ button: "right" });
+		await openContextMenu(page, target);
 		// waitFor, not isVisible: the latter resolves immediately, so a menu
 		// still animating in reads as absent and the click is retried in vain.
 		const appeared = await menu
@@ -44,76 +44,38 @@ export async function rightClickItem(page: Page, name: string) {
 			.then(() => true)
 			.catch(() => false);
 		if (appeared) {
-			await clearPointer(page);
 			return;
 		}
 	}
 	// Final assertion — surfaces a clear error if all retries failed
 	await expect(menu).toBeVisible({ timeout: 3000 });
-	await clearPointer(page);
 }
 
 /**
- * A row low on the screen opens its menu shifted up, under the pointer the
- * right-click left there. The entry beneath it is highlighted, and a
- * dispatched click on another entry then ran both: Notes opened Share too.
+ * The event, not a right-click. Linux Chromium opens the menu on mousedown,
+ * and a row low on the screen opens it shifted up under the pointer: the
+ * button's release then selected the entry there, so Notes also opened Share.
  */
-async function clearPointer(page: Page) {
-	await page.mouse.move(0, 0);
-}
-
-/**
- * Pick an entry from the open context menu, re-opening it if it goes.
- *
- * A listing that refreshes — an upload settling, a thumbnail arriving — tears
- * the menu down mid-click, and Playwright then waits for an element that no
- * longer exists. Under load in CI that is a guaranteed 30s timeout rather than
- * a rare one, so the menu is reopened on the item rather than trusted to stay.
- *
- * `confirm` is what the entry was supposed to do — a navigation, a dialog.
- * Pass it whenever there is one. A forced click reports success as soon as it
- * is dispatched, but a menu being torn down at that instant never runs its
- * handler, so "the click worked" and "the thing happened" are different
- * questions, and only the second one is worth retrying on.
- */
-export async function chooseMenuItem(
-	page: Page,
-	itemName: string,
-	entry: RegExp | string,
-	confirm?: () => Promise<unknown>,
-) {
-	const menuItem = page.getByRole("menuitem", { name: entry });
-	for (let attempt = 0; attempt < 3; attempt++) {
-		try {
-			await expect(menuItem.first()).toBeVisible({ timeout: 5000 });
-			// Not a click: a menu still animating in never passes the stability
-			// check, and a forced click lands by coordinates on whichever entry
-			// has slid under them — Duplicate, in the run that caught it.
-			await menuItem.first().dispatchEvent("click", {}, { timeout: 5000 });
-			await confirm?.();
-			return;
-		} catch (error) {
-			if (attempt === 2) {
-				throw error;
-			}
-			// Never assume a vanished menu means the entry fired: it also
-			// closes on a stray pointer move, and the caller would then assert
-			// against something that never happened.
-			await page.keyboard.press("Escape");
-			await rightClickItem(page, itemName);
-		}
+async function openContextMenu(page: Page, target: Locator) {
+	await target.waitFor({ state: "visible" });
+	const box = await target.boundingBox();
+	if (!box) {
+		throw new Error("context menu target has no box");
 	}
-}
-
-/** Open the ellipsis dropdown menu on an item by its visible name. */
-export async function openItemMenu(page: Page, name: string) {
-	const row = page
-		.getByRole("row")
-		.filter({ hasText: name })
-		.or(page.locator("[data-item]").filter({ hasText: name }))
-		.first();
-	await row.hover();
-	await row.getByRole("button", { name: "Open menu" }).click();
+	await page.evaluate(
+		({ x, y }) => {
+			document.elementFromPoint(x, y)?.dispatchEvent(
+				new MouseEvent("contextmenu", {
+					bubbles: true,
+					cancelable: true,
+					button: 2,
+					clientX: x,
+					clientY: y,
+				}),
+			);
+		},
+		{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
+	);
 }
 
 // ---------------------------------------------------------------------------

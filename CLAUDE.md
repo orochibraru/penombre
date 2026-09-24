@@ -1562,10 +1562,11 @@ successful click — a menu also closes on a stray pointer move, and that shortc
 made a test assert against a navigation that never happened. After an upload,
 wait for `networkidle` before touching the row at all.
 
-`rightClickItem` moves the pointer to the corner once the menu is open. A row
-low on the screen opens its menu shifted up, under the pointer the right-click
-left there; that entry is highlighted, and a dispatched click on another entry
-ran both (Notes opened Share too, PostgreSQL CI only). It surfaced when uploads
+`rightClickItem` dispatches a `contextmenu` event at the row's centre instead of
+right-clicking. Linux Chromium opens the menu on mousedown, and a row low on the
+screen opens it shifted up under the pointer: the button's release then selected
+the entry there, so Notes also opened Share (CI only; macOS never reproduced
+it). Moving the mouse away after opening was too late. It surfaced when uploads
 started keeping the file's own date: a fresh upload no longer sorts to the top
 of a date listing. A spec that only needs rows to exist seeds them through the
 API and then loads the page, as `bulk-actions.spec.ts` does. Seeding by upload
