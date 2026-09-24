@@ -3,11 +3,15 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - ".agents/**"
-      - ".claude/**"
+    # `paths`, not `paths-ignore`: only `paths` takes exceptions, and a merged
+    # release PR can touch CHANGELOG.md alone. Ignoring it skipped the release.
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "!.agents/**"
+      - "!.claude/**"
+      - "CHANGELOG.md"
 
 concurrency:
   group: publish
