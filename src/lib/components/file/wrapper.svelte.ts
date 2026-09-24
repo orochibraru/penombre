@@ -4,6 +4,7 @@ import {
 	CopyPlusIcon,
 	DownloadIcon,
 	FolderInputIcon,
+	LinkIcon,
 	MaximizeIcon,
 	MessageSquareTextIcon,
 	PencilLineIcon,
@@ -258,6 +259,7 @@ export function createMainActions(handlers: {
 	onDuplicate: (item: ObjectItem) => void;
 	onStar: (item: ObjectItem) => void;
 	onShare: (item: ObjectItem) => void;
+	onCopyLink: (item: ObjectItem) => void;
 	onNotes: (item: ObjectItem) => void;
 	onMoveToTrash: (item: ObjectItem) => void;
 }): ItemActionGroup[] {
@@ -286,6 +288,12 @@ export function createMainActions(handlers: {
 					title: "Share",
 					icon: ShareIcon,
 					action: handlers.onShare,
+				},
+				{
+					title: "Copy link",
+					icon: LinkIcon,
+					action: handlers.onCopyLink,
+					folderOnly: true,
 				},
 			],
 		},
@@ -558,6 +566,7 @@ export async function handleOpenItem(
 	const finalUrl = getObjectUrl({
 		baseUrl: page.url,
 		itemPath: item.key,
+		fileId: item.metadata.id,
 		raw: true,
 	});
 

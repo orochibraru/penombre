@@ -11,7 +11,7 @@ const defaultPreferences: UserPreferencesData = {
 	sortDirection: "desc",
 	fontFamily: "sans",
 	corners: "rounded",
-	accent: "purple",
+	accent: "bordeaux",
 	onboarded: false,
 	emailNotifications: false,
 	preferredSignInMethod: null,

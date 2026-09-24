@@ -19,6 +19,12 @@ export type ThumbnailSize = "small" | "medium" | "large";
 interface ObjectUrlProps {
 	baseUrl: ReadonlyURL;
 	itemPath: string;
+	/**
+	 * Addresses the file by row id instead of `itemPath`. A listing key is only
+	 * the last path segment, so a view with no folder in its URL (categories,
+	 * starred, search) cannot build the path from it.
+	 */
+	fileId?: string;
 	raw?: boolean;
 	thumbnail?: boolean;
 	size?: ThumbnailSize;
@@ -27,13 +33,13 @@ interface ObjectUrlProps {
 export function getObjectUrl({
 	baseUrl,
 	itemPath,
+	fileId,
 	raw,
 	thumbnail,
 	size,
 }: ObjectUrlProps): string {
-	const fullPath = page.params.path
-		? `${page.params.path}/${itemPath}`
-		: itemPath;
+	const fullPath =
+		fileId ?? (page.params.path ? `${page.params.path}/${itemPath}` : itemPath);
 
 	const finalBaseUrl = buildOriginUrl(baseUrl).toString();
 

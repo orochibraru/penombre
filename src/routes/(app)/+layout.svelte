@@ -367,7 +367,6 @@
 							title: m.admin(),
 							url: "/admin",
 							icon: ShieldIcon,
-							accentColor: "amber",
 						},
 					] satisfies NavItem[])
 				: []),

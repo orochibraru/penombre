@@ -68,6 +68,15 @@ copied into the recipient's own drive with **Copy to…**.
 Putting an item in the trash stops serving it to everyone it was shared with,
 without revoking the grants — restore it and they have access again.
 
+## Folder links
+
+Right-click a folder and choose **Copy link** to get an address for other people
+on the same instance, such as `https://drive.example.com/go/folder/<id>`. It is
+not a public link and grants nothing: whoever opens it is sent to the folder the
+way they can reach it (their own drive, a shared drive they belong to, a volume,
+or **Shared with me** when it or a folder above it was shared with them). Anyone
+else gets a "not found", the same as for a folder that does not exist.
+
 ## Managing links
 
 **My links** in the sidebar lists every link you own, with its expiry, download

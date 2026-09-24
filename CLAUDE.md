@@ -392,11 +392,18 @@ a colour or radius in a component.
 
 ### Shipped UI defaults
 
-System theme, purple accent, standard (sans) typeface, rounded corners, list
-layout, sorted by last modified descending. These live in **two** places that
-must agree: `defaultPreferences` (`services/preferences.ts`) and the `:root`
-block in `app.css` — the CSS base is what unauthenticated pages (sign-in) use,
-since `applyTheme()` only runs once a session's preferences have loaded.
+System theme, bordeaux accent, standard (sans) typeface, rounded corners, list
+layout, sorted by last modified descending. The accent default lives in
+`defaultPreferences` (`services/preferences.ts`), `applyTheme()`'s fallback,
+onboarding's seed and `themeHandler` in `hooks.server.ts`, which stamps
+`data-accent` into every page's HTML, signed in or not. The unstyled `:root` in
+`app.css` is purple and only shows under `data-accent="purple"`. A saved accent
+wins over the default, so an account that kept purple through onboarding stays
+purple.
+
+The logo is inline SVG (`components/logo.svelte`) filled with `--primary`; an
+`<img src="/logo.svg">` cannot read page CSS and stayed purple under every
+accent. The static `favicon.svg`/`logo.*` carry the default's colour.
 
 ### Shiki output is not styled by its wrapper
 
@@ -650,6 +657,32 @@ context's `volumeId`. Paths are only unique _within_ a volume, so an owner-only
 query can match a row on the wrong mount. New rows must stamp
 `volumeId: this.ctx.volumeId`. The main drive stores `null`. See
 `docs/volumes.md`.
+
+### One live row per path, and a listing key is not an identity
+
+`files_live_path_idx` / `folders_live_path_idx` are unique on
+`(owner_id, coalesce(volume_id, ''), path)` for live rows. Two scan passes
+racing (before the in-flight registry, or two app processes) inserted the same
+mounted file twice, and the listing, keyed by `key`, died hydrating on
+`each_key_duplicate` inside Svelte's own boundary, which masked the real error.
+The scan inserts with `onConflictDoNothing()` (a folder then reads back the
+winner's id for its children); everything the app creates itself has a UUID
+filename and cannot collide. A restore over a path that came back live is a
+unique violation, which `Http.ServerError` answers as 409 (`isUniqueViolation`,
+SQLite `SQLITE_CONSTRAINT_UNIQUE` or Postgres `23505`, through Drizzle's
+`cause`).
+
+Listings key rows by `metadata.id`, and raw/thumbnail/peaks URLs pass `fileId`
+to `getObjectUrl`, which `GET /storage/file/{id}` resolves like `PUT` does.
+`key` is the last path segment: a category, starred or search view has no folder
+in its URL to rebuild the path from, so every nested file 404'd there.
+
+**drizzle-kit mangles an index expression containing a comma** in the SQLite
+dialect (`coalesce("volume_id"`, `'')` became two backticked "columns"). Check
+generated SQLite SQL for expression indexes and hand-fix it; the snapshot, not
+the SQL, is what the next diff compares. `live-path.test.ts` migrates to the
+version before, seeds duplicates, then applies the rest; copy that shape for any
+migration that rewrites data.
 
 ### The trash is a subtree, and its keys are full paths
 
@@ -1269,6 +1302,12 @@ its own fresh stack. A spec that pushes a shard over budget gets faster or
 moves, the budget does not grow. The same split works locally:
 `bun run test:e2e --shard=1/4` (the script passes its arguments through).
 
+A container left from an earlier run keeps its drive, and `up --build` does not
+reset its volumes: after a few local runs `test-audio.wav` is
+`test-audio (10).wav` and specs fail on each other's leftovers. Reset with
+`docker compose -f compose.e2e.yaml -p penombre-e2e down -v` before trusting a
+local failure.
+
 `workers: 1` is not a choice about speed: every spec shares one instance and one
 drive, so several upload the same fixture names and only the shard split keeps
 them apart. Run the whole suite in one shard and specs fail on each other's
@@ -1694,6 +1733,16 @@ owner's personal-drive service, and every link to something on a shared drive or
 mounted volume 500'd on `getFolder`. `fileIsInFolder` compares volumes too:
 every mount has the same owner, and a mount's paths are real names that can
 repeat across mounts.
+
+### A folder link names the folder, not a URL
+
+A browse URL is per viewer: `/browse/<path>` is the viewer's own drive, and a
+folder shared with them is under their own `/shared-with-me/<grant>/…`. **Copy
+link** therefore hands out `/go/folder/<id>` (`routes/go/folder`), which sends
+each viewer to their way in (own drive, drive membership, volume, or a grant on
+the folder or any ancestor: a personal path is its ancestors' ids) and answers
+404, never 403, otherwise. `copyText()` in `#lib/utils` falls back to
+`execCommand` because `navigator.clipboard` needs a secure context.
 
 ### Copying between places is export + import
 

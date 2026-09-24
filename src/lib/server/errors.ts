@@ -70,3 +70,28 @@ export function rethrowUnreachable(error: unknown, path: string): never {
 export function isStorageUnavailable(error: unknown): boolean {
 	return error instanceof StorageUnavailableError;
 }
+
+/**
+ * A unique index refused a row: `SQLITE_CONSTRAINT_UNIQUE`, or Postgres's
+ * SQLSTATE 23505. Drizzle wraps the driver's error, so the causes are walked.
+ */
+export function isUniqueViolation(error: unknown): boolean {
+	for (
+		let e = error;
+		e instanceof Object;
+		e = (e as { cause?: unknown }).cause
+	) {
+		const { code, errno } = e as { code?: unknown; errno?: unknown };
+		if (
+			code === "SQLITE_CONSTRAINT_UNIQUE" ||
+			code === "23505" ||
+			errno === "23505"
+		) {
+			return true;
+		}
+		if (e === (e as { cause?: unknown }).cause) {
+			break;
+		}
+	}
+	return false;
+}

@@ -48,9 +48,14 @@ describe("refreshChangedFiles", () => {
 				}),
 			}),
 			insert: () => ({
-				values: async (row: Record<string, unknown>) => {
-					inserts.push(row);
-				},
+				values: (row: Record<string, unknown>) => ({
+					onConflictDoNothing: () => ({
+						returning: async () => {
+							inserts.push(row);
+							return [{ id: row.id }];
+						},
+					}),
+				}),
 			}),
 			delete: () => ({ where: async () => {} }),
 			update: () => ({

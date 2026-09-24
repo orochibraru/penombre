@@ -593,7 +593,7 @@
             <Table.Cell colspan={12} style="height: {virtualizer.padTop}px" />
         </Table.Row>
     {/if}
-    {#each displayed.slice(virtualizer.first, virtualizer.last) as item (item.key)}
+    {#each displayed.slice(virtualizer.first, virtualizer.last) as item (item.metadata.id)}
         {@render tableRow(item)}
     {/each}
     {#if virtualizer.padBottom > 0}

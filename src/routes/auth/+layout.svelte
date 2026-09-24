@@ -1,5 +1,7 @@
 <script lang="ts">
+	import AuthBackdrop from "#lib/components/auth-backdrop.svelte";
 	import LanguageDropdown from "#lib/components/language-dropdown.svelte";
+	import Logo from "#lib/components/logo.svelte";
 	import * as Card from "#lib/components/ui/card/index.js";
 	import { resolve } from "$app/paths";
 
@@ -12,17 +14,17 @@
   app.css) — the default card is translucent, and a password field read
   through a blurred gradient is not a password field anybody can read.
 -->
+<AuthBackdrop />
 <div
     class="flex min-h-svh flex-col items-center justify-center gap-6 px-4 py-10"
 >
-    <a href={resolve("/(app)")} class="flex items-center gap-2 font-medium">
-        <img
-            src="/logo.svg"
-            alt={`${data.config.appName} logo`}
-            class="text-primary size-8"
-        />
+    <a
+        href={resolve("/(app)")}
+        class="flex flex-col items-center gap-3 font-semibold tracking-tight"
+    >
+        <Logo label={`${data.config.appName} logo`} class="size-14" />
         <span
-            class="from-primary to-brand-2 bg-linear-to-r bg-clip-text text-lg text-transparent"
+            class="from-primary to-brand-2 bg-linear-to-r bg-clip-text text-2xl text-transparent"
         >
             {data.config.appName}
         </span>

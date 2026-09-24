@@ -409,7 +409,7 @@ const themeHandler: Handle = async ({ event, resolve }) => {
 	// calls, assets and anything else.
 	const wantsHtml = event.request.headers.get("accept")?.includes("text/html");
 
-	let theme = { font: "sans", corners: "rounded", accent: "purple" };
+	let theme = { font: "sans", corners: "rounded", accent: "bordeaux" };
 	if (wantsHtml && event.locals.user) {
 		try {
 			const prefs = await getUserPreferences(event.locals.user.id);

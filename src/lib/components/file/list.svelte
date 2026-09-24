@@ -394,7 +394,7 @@
                 {#if virtualizer.padTop > 0}
                     <li aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
                 {/if}
-                {#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.key)}
+                {#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.metadata.id)}
                     {@render listItem(objectItem)}
                 {/each}
                 {#if virtualizer.padBottom > 0}
@@ -411,7 +411,7 @@
                 {#if virtualizer.padTop > 0}
                     <li aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
                 {/if}
-                {#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.key)}
+                {#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.metadata.id)}
                     {@render listItem(objectItem)}
                 {/each}
                 {#if virtualizer.padBottom > 0}

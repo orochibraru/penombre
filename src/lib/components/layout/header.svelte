@@ -4,6 +4,7 @@
 	import { MediaQuery } from "svelte/reactivity";
 	import Notifications from "#lib/components/layout/notifications.svelte";
 	import UserMenu from "#lib/components/layout/user-menu.svelte";
+	import Logo from "#lib/components/logo.svelte";
 	import * as Breadcrumb from "#lib/components/ui/breadcrumb/index.js";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { Separator } from "#lib/components/ui/separator/index.js";
@@ -33,11 +34,7 @@
              also leaves nothing branding the app there, hence the logo. -->
         <Sidebar.Trigger class="-ml-1 hidden md:flex" />
         <a href={resolve("/(app)")} class="-ml-1 me-1 flex items-center md:hidden">
-            <img
-                src="/logo.svg"
-                alt={`${page.data.config.appName} logo`}
-                class="text-primary size-6"
-            />
+            <Logo label={`${page.data.config.appName} logo`} class="size-6" />
         </a>
         <Separator
             orientation="vertical"

@@ -16652,6 +16652,7 @@
 											"properties": {
 												"accent": {
 													"enum": [
+														"bordeaux",
 														"purple",
 														"blue",
 														"teal",
@@ -16784,6 +16785,7 @@
 								"properties": {
 									"accent": {
 										"enum": [
+											"bordeaux",
 											"purple",
 											"blue",
 											"teal",
@@ -16883,6 +16885,7 @@
 											"properties": {
 												"accent": {
 													"enum": [
+														"bordeaux",
 														"purple",
 														"blue",
 														"teal",

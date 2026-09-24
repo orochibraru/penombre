@@ -555,7 +555,7 @@
     {#if virtualizer.padTop > 0}
         <li class="col-span-full" aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
     {/if}
-    {#each visibleItems as objectItem (objectItem.key)}
+    {#each visibleItems as objectItem (objectItem.metadata.id)}
         {@render listItem(objectItem)}
     {/each}
     {#if virtualizer.padBottom > 0}

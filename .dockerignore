@@ -29,6 +29,9 @@ LICENSE
 # Temp
 /tmp/
 
+# Local runtime state: the dev drive's real files and SQLite database.
+/data/
+
 # Node
 **/node_modules/
 **/dist/

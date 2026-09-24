@@ -6084,6 +6084,7 @@ export interface paths {
 							data?: {
 								/** @enum {string} */
 								accent?:
+									| "bordeaux"
 									| "purple"
 									| "blue"
 									| "teal"
@@ -6145,7 +6146,14 @@ export interface paths {
 				content: {
 					"application/json": {
 						/** @enum {string} */
-						accent?: "purple" | "blue" | "teal" | "green" | "amber" | "rose";
+						accent?:
+							| "bordeaux"
+							| "purple"
+							| "blue"
+							| "teal"
+							| "green"
+							| "amber"
+							| "rose";
 						/** @enum {string} */
 						corners?: "boxy" | "rounded";
 						emailNotifications?: boolean;
@@ -6176,6 +6184,7 @@ export interface paths {
 							data?: {
 								/** @enum {string} */
 								accent?:
+									| "bordeaux"
 									| "purple"
 									| "blue"
 									| "teal"

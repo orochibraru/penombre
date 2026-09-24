@@ -1,4 +1,5 @@
 import { Logger } from "#lib/logger.js";
+import { isUniqueViolation } from "#lib/server/errors.js";
 
 const logger = new Logger("HTTP_ERROR");
 
@@ -34,6 +35,11 @@ export class Http {
 	}
 
 	public static ServerError(message: string, error: unknown) {
+		// Two rows for one path: something already exists there (a file
+		// restored over one that appeared since), which is the caller's to fix.
+		if (isUniqueViolation(error)) {
+			return Http.Conflict("Something with that name already exists here.");
+		}
 		// Never `error.message` in the response: a Drizzle error carries the
 		// failed SQL and its bound params, a driver error an absolute path.
 		// The real message is in the log line, keyed by the same id.
