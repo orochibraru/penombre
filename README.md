@@ -30,35 +30,100 @@ every screen, light and dark, generated from a real instance.
 ## What it is
 
 Penombre is a file storage and synchronisation platform for people who want
-their files back. Drop it on a box, mount a volume, and you get a modern web
-drive: uploads, folders, automatic categories for images, documents and music,
-recoverable soft-trash, recent files, and OAuth logins — without renting the
-disk from anyone.
+their files back. Drop it on a box, point it at your disks, and you get a modern
+web drive — without renting the disk from anyone.
 
 It runs on **SQLite out of the box**: one container, one volume, no database
 server to run alongside it. PostgreSQL stays supported the day you outgrow that.
 
 ## Features
 
-- **Modern web UI** — SvelteKit 5, TailwindCSS 4 and shadcn-svelte. Responsive,
-  fast, keyboard-friendly.
-- **Real auth** — Better Auth: session cookies, OAuth providers and API keys for
-  scripts.
-- **Smart categories** — files sort themselves into images, documents, music and
-  more as they land.
-- **File versions** — re-upload a file and the old one becomes a version you can
-  play, preview or restore, instead of `final-final-really.wav`.
-- **Soft trash** — deletion is recoverable, because everyone deletes the wrong
-  folder eventually.
-- **REST API** — OpenAPI-documented `/api/v1` endpoints with API-key auth,
-  generated from Zod contracts.
-- **Simple mode** — run it as a bare shared file browser: mount a volume, share
-  the login, browse together. See
-  [the docs](https://orochibraru.com/penombre/docs/simple-mode).
-- **No database server** — SQLite with Drizzle by default. Point `DATABASE_URL`
-  at Postgres if you'd rather.
-- **Docker-first** — one `docker run` off the published `orochibraru/penombre`
-  image and you're storing files. Local filesystem storage at `STORAGE_PATH`.
+### Your files
+
+- **Uploads that survive a reload** — files and whole folders, queued in the
+  browser and resumed after a closed tab.
+  [Uploads](https://orochibraru.com/penombre/docs/uploads)
+- **Everything you expect from a drive** — folders, search, starred, recent,
+  automatic categories (images, music, video, documents…), zip downloads, and a
+  trash that gives things back.
+  [Storage](https://orochibraru.com/penombre/docs/storage)
+- **Copy and move anywhere** — between folders, shared drives and mounted
+  volumes, in one dialog.
+- **Big folders stay fast** — listings page from the database and render only
+  what is on screen, so a 20,000-file sample library scrolls like ten files.
+
+### Music and media
+
+- **A real music player** — the waveform is the progress bar, redrawn in your
+  accent colour; skip, restart, change the speed without changing the pitch, or
+  transpose without changing the tempo.
+  [Media](https://orochibraru.com/penombre/docs/media)
+- **Notes pinned to a moment** — timestamped comments drawn on the waveform, for
+  "the kick is too loud at 1:12".
+  [Media](https://orochibraru.com/penombre/docs/media#notes-pinned-to-a-moment)
+- **Previews for almost everything** — images, video, PDFs, code, 3D models,
+  with a full-screen viewer that keeps the playhead when you go in and out.
+
+### Versions
+
+- **No more `final-final-really.wav`** — upload a file with the same name and
+  the old one becomes a version you can play, preview or restore. Switch takes
+  mid-playback and compare two mixes at the same bar.
+  [Versioning](https://orochibraru.com/penombre/docs/versioning)
+- **Merge old takes into one file** — select `Song-001.mp3` … `Song-014.mp3`,
+  order them by date or by name, preview the result, merge.
+  [Merging](https://orochibraru.com/penombre/docs/versioning#merging-files-into-versions)
+
+### Documents
+
+- **Documents, sheets and decks** in the browser, stored as plain HTML, CSV and
+  Markdown files — no private format.
+  [Documents](https://orochibraru.com/penombre/docs/documents)
+- **Word, Excel and PowerPoint edited in place** — the original file is kept,
+  only the text you changed is written back.
+
+### Sharing
+
+- **Links** with an optional password, expiry and sign-in requirement.
+  [Sharing](https://orochibraru.com/penombre/docs/sharing)
+- **People** on the instance, as viewers, editors or with full access; they are
+  notified in the app and by email.
+  [Notifications](https://orochibraru.com/penombre/docs/notifications)
+- **Shared drives** owned by a team rather than a person, with member roles and
+  a trash of their own.
+  [Shared drives](https://orochibraru.com/penombre/docs/shared-drives)
+
+### Your disks, your layout
+
+- **Mount what you already have** — declare a directory as a volume and its
+  files show up, rescanned every minute, read-only if you like.
+  [Volumes](https://orochibraru.com/penombre/docs/volumes)
+- **Syncthing-friendly** — what Penombre writes to a volume keeps its real name
+  and its modification date, so the folder reads the same on every peer.
+  [Syncing with Syncthing](https://orochibraru.com/penombre/docs/storage#syncing-with-syncthing)
+- **Simple mode** — no per-user drives, just one shared library everybody
+  browses. [Simple mode](https://orochibraru.com/penombre/docs/simple-mode)
+- **Encryption at rest** — file bytes sealed with a key you hold, rotatable,
+  recoverable without Penombre.
+  [Encryption](https://orochibraru.com/penombre/docs/encryption)
+
+### Sign-in and administration
+
+- **Every way in** — password, passkeys, magic links, emailed codes, two-factor
+  and any OpenID Connect provider (Pocket ID, Google…), each switchable live
+  from the admin panel.
+  [Authentication](https://orochibraru.com/penombre/docs/authentication)
+- **Invitations, users, SMTP, storage and an activity log** in one admin panel.
+  [Admin](https://orochibraru.com/penombre/docs/admin)
+- **A documented REST API** — every `/api/v1` endpoint is in the OpenAPI spec,
+  with API keys for scripts.
+
+### Made to be lived in
+
+- **Thirteen languages**, light and dark themes, a choice of accent colours,
+  typefaces and corner styles.
+- **A phone layout that is not an afterthought** — bottom bar, drawer
+  navigation, the player and uploads all fit.
 
 ## Run it
 
@@ -68,8 +133,6 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
 docker run -d --name penombre \
   -p 3000:3000 \
   -v penombre_data:/data \
-  -e ADMIN_EMAIL=you@example.com \
-  -e ADMIN_PASSWORD=change-me \
   -e AUTH_SECRET=$(openssl rand -hex 32) \
   -e ORIGIN=https://drive.example.com \
   orochibraru/penombre:latest
@@ -87,8 +150,6 @@ services:
     volumes:
       - penombre_data:/data
     environment:
-      ADMIN_EMAIL: you@example.com
-      ADMIN_PASSWORD: change-me
       AUTH_SECRET: a-long-random-string
       ORIGIN: https://drive.example.com
 
@@ -96,13 +157,15 @@ volumes:
   penombre_data:
 ```
 
-Either way it comes up on <http://localhost:3000>. One volume holds the lot: the
-SQLite database under `/data/db`, your files under `/data/storage`. Those four
-variables are the only ones required on a first run.
+Either way it comes up on <http://localhost:3000>, on a setup screen that
+creates the first administrator. One volume holds the lot: the SQLite database
+under `/data/db`, your files under `/data/storage`. Those two variables are the
+only ones required.
 
 The [getting started guide](https://orochibraru.com/penombre/docs) walks through
 it properly, and [the env reference](https://orochibraru.com/penombre/docs/env)
-covers everything else: OAuth providers, SMTP, Redis, Postgres, simple mode.
+covers everything else: OAuth providers, SMTP, Redis, Postgres, volumes, simple
+mode.
 
 ## How it's built
 
@@ -112,6 +175,8 @@ covers everything else: OAuth providers, SMTP, Redis, Postgres, simple mode.
 - **Database** — SQLite with Drizzle ORM, PostgreSQL optional, chosen from the
   `DATABASE_URL` scheme
 - **Storage** — plain local filesystem, so your files stay files
+- **Worker** — a Go process for thumbnails, waveforms, scans, zips and bulk
+  copies, embedded or run as its own container
 - **Auth** — Better Auth
 
 ## Contributing
