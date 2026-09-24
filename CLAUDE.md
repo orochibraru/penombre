@@ -1497,7 +1497,9 @@ The music player spans that corner, so the upload progress panel sitting at
 volume buttons — every click on them went to the panel for as long as an upload
 was listed. It stacks above the player from `--player-height` now, the way
 `selection-bar.svelte` already did. Any new floating panel down there has to do
-the same.
+the same. The selection bar is centred at that same offset and wide enough to
+reach under the panel, so it publishes `--selection-height` and the panel stacks
+on that too — widening the panel once hid the bar's **Clear**.
 
 The symptom in E2E is a click that retries until the test times out, with
 `subtree intercepts pointer events` naming the panel — read that line, it says

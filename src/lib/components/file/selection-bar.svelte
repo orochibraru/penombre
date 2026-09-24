@@ -22,9 +22,31 @@
 		actions: MultipleItemsAction[];
 		onclear: () => void;
 	} = $props();
+
+	// The upload panel stacks above this bar; at the same offset it covered
+	// the bar's right end, Clear included.
+	let panel: HTMLElement | null = $state(null);
+
+	$effect(() => {
+		const root = document.documentElement;
+		if (!panel) {
+			root.style.removeProperty("--selection-height");
+			return;
+		}
+		const observer = new ResizeObserver(([entry]) => {
+			const height = entry?.target.getBoundingClientRect().height ?? 0;
+			root.style.setProperty("--selection-height", `${height + 8}px`);
+		});
+		observer.observe(panel);
+		return () => {
+			observer.disconnect();
+			root.style.removeProperty("--selection-height");
+		};
+	});
 </script>
 
 <BottomAction
+    bind:ref={panel}
     compact
     {open}
     title={m.selected_count({ count: String(count) })}

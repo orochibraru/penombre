@@ -174,8 +174,9 @@
             // `--player-height` it publishes: pinned to the corner this panel
             // covers the player's own buttons, which are then unclickable for
             // as long as an upload is listed.
-            "bottom-[calc(5rem+var(--player-height,0px))]",
-            "lg:bottom-[calc(1.25rem+var(--player-height,0px))]",
+            // Same for the selection bar, via `--selection-height`.
+            "bottom-[calc(5rem+var(--player-height,0px)+var(--selection-height,0px))]",
+            "lg:bottom-[calc(1.25rem+var(--player-height,0px)+var(--selection-height,0px))]",
         )}
     >
         <div class="flex items-center gap-1 py-1.5 pr-1.5 pl-3">
