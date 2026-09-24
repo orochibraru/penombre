@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+		ChevronDownIcon,
 		CircleCheckIcon,
 		CircleIcon,
 		FileArchiveIcon,
@@ -10,6 +11,7 @@
 		FileTextIcon,
 		FileVideoCameraIcon,
 		FolderIcon,
+		HistoryIcon,
 		PauseIcon,
 		Rotate3dIcon,
 		StarIcon,
@@ -30,6 +32,11 @@
 	import { playableMusic } from "#lib/store/music.js";
 	import { uploadedItems, uploadingItems } from "#lib/store/upload.js";
 	import {
+		expandedVersions,
+		historyFor,
+		toggleVersions,
+	} from "#lib/store/versions.js";
+	import {
 		cn,
 		getDocumentType,
 		ItemStatus,
@@ -39,6 +46,7 @@
 		secondsToMinutes,
 		stripFolders,
 	} from "#lib/utils.js";
+	import { displayTitle, versionLabel, versionOf } from "#lib/versions.js";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 
@@ -96,7 +104,7 @@
 
 	async function handleClick(e?: MouseEvent | CustomEvent<null>) {
 		e?.preventDefault();
-		if (indeterminate) {
+		if (indeterminate && !version) {
 			return toggleCheck();
 		}
 
@@ -120,10 +128,90 @@
 	}
 
 	function handleLongPress() {
+		if (version) {
+			return;
+		}
 		navigator.vibrate?.(50);
 		return toggleCheck();
 	}
+
+	const naming = $derived(page.data.preferences?.versionNaming);
+	/** Set on a row that is an earlier version, not the file itself. */
+	const version = $derived(versionOf(baseItem));
+	/** What the player calls this row, so only the right one lights up. */
+	const playTitle = $derived(displayTitle(item, naming));
+	const expanded = $derived(!!$expandedVersions[baseItem.metadata.id]);
+
+	/** A row unfolds its versions; a tile has nowhere to put them. */
+	function showVersions() {
+		if (layout === "grid") {
+			historyFor.set(baseItem);
+		} else {
+			void toggleVersions(baseItem.metadata.id);
+		}
+	}
+
+	// The listing's row, not the upload store's copy: that one is fetched
+	// once per upload and knows nothing of versions.
+	const versionSeq = $derived(baseItem.metadata.versionSeq);
+	const currentVersionLabel = $derived(
+		versionSeq
+			? versionLabel(
+					page.data.preferences?.versionNaming,
+					versionSeq + 1,
+					baseItem.updatedAt ?? baseItem.metadata.createdAt,
+				)
+			: "",
+	);
 </script>
+
+{#snippet versionPill()}
+    {#if version}
+        <Badge variant="outline" class="shrink-0 px-1.5 py-0 text-[10px]">
+            {versionLabel(naming, version.seq, baseItem.updatedAt ?? "")}
+        </Badge>
+        {#if version.authorName}
+            <span class="text-muted-foreground truncate text-xs">
+                {version.authorName}
+            </span>
+        {/if}
+    {:else if versionSeq}
+        <!-- Not a <button>: the whole row already is one. Capture handlers,
+             because the row's tap listener is native while Svelte delegates
+             a plain onclick to the root: stopping it there is too late. -->
+        <span
+            role="button"
+            tabindex="0"
+            title={expanded ? m.versions_hide() : m.versions_show()}
+            aria-expanded={expanded}
+            class="shrink-0"
+            onclickcapture={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                showVersions();
+            }}
+            ontouchstartcapture={(e) => e.stopPropagation()}
+            ontouchendcapture={(e) => e.stopPropagation()}
+            onkeydown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showVersions();
+                }
+            }}
+        >
+            <Badge
+                variant="secondary"
+                class="hover:bg-primary/20 cursor-pointer gap-0.5 px-1.5 py-0 text-[10px]"
+            >
+                {currentVersionLabel}
+                <ChevronDownIcon
+                    class={cn("size-3 transition-transform", expanded && "rotate-180")}
+                />
+            </Badge>
+        </span>
+    {/if}
+{/snippet}
 
 {#if isFolder && layout === "list"}
     <button
@@ -152,6 +240,7 @@
                     fill="#eab308"
                 />
             {/if}
+            {@render versionPill()}
         </span>
     </button>
 {:else if layout === "grid"}
@@ -228,7 +317,7 @@
                 class={cn(
                     "truncate text-xs leading-tight",
                     $playableMusic &&
-                        $playableMusic.title === (item.metadata.name ?? item.key)
+                        $playableMusic.title === playTitle
                         ? "text-primary font-medium"
                         : "font-medium",
                 )}
@@ -242,8 +331,52 @@
                 {isFolderItem(item)
                     ? m.folder()
                     : readableFileSize(item.size ?? 0)}
+                {@render versionPill()}
             </span>
         </div>
+    </button>
+{:else if version && layout === "list"}
+    <!-- A child of the row above: indented on a rail, led by its label, and
+         without the file name, which that row already shows. -->
+    <button
+        use:touchAction
+        onclick={handleClick}
+        ontap={handleClick}
+        class="flex h-full w-full min-w-0 flex-row items-center gap-3 pl-3"
+    >
+        <span class="bg-primary/30 h-full w-0.5 shrink-0 self-stretch"></span>
+        {#if $playableMusic && $playableMusic.title === playTitle}
+            {#if $playableMusic.isPlaying}
+                <NowPlaying />
+            {:else}
+                <PauseIcon class="text-primary size-4 shrink-0" />
+            {/if}
+        {:else}
+            <HistoryIcon class="text-muted-foreground size-4 shrink-0" />
+        {/if}
+        <span class="flex min-w-0 flex-1 items-baseline gap-2 text-start">
+            <span
+                class={cn(
+                    "shrink-0 text-sm font-medium tabular-nums",
+                    $playableMusic && $playableMusic.title === playTitle
+                        ? "text-primary"
+                        : "",
+                )}
+            >
+                {versionLabel(naming, version.seq, baseItem.updatedAt ?? "")}
+            </span>
+            <span class="text-muted-foreground truncate text-xs">
+                {#if naming !== "date" && baseItem.updatedAt}
+                    {new Date(baseItem.updatedAt).toLocaleString(undefined, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                    })}
+                {/if}
+                {#if version.authorName}
+                    · {version.authorName}
+                {/if}
+            </span>
+        </span>
     </button>
 {:else}
     <button
@@ -285,7 +418,7 @@
                         <FileTextIcon class={cn(iconSize, "text-blue-600")} />
                     {/if}
                 {:else if item.metadata.category === FileCategoryEnum.MUSIC}
-                    {#if $playableMusic && $playableMusic.title === (item.metadata.name ?? item.key)}
+                    {#if $playableMusic && $playableMusic.title === playTitle}
                         {#if $playableMusic.isPlaying}
                             <NowPlaying />
                         {:else}
@@ -319,8 +452,7 @@
                 class={cn(
                     "flex min-w-0 items-center gap-1 text-base lg:text-sm",
                     $playableMusic &&
-                        $playableMusic.title ===
-                            (item.metadata.name ?? item.key)
+                        $playableMusic.title === playTitle
                         ? "text-primary font-medium"
                         : getItemStatus() === ItemStatus.UPLOADING
                           ? "text-gray-500 dark:text-gray-300"
@@ -339,6 +471,7 @@
                         fill="#eab308"
                     />
                 {/if}
+                {@render versionPill()}
             </p>
             {#if item.metadata.category || item.parent}
                 <p class="truncate text-xs text-muted-foreground">

@@ -46,6 +46,7 @@ export function notesView(item: ObjectItem): FileToView {
 			peaks: peaksUrl(item),
 			isPlaying: false,
 			fileId: item.metadata.id,
+			item,
 		});
 	}
 	return { item, src: fullscreenUrl(item), type: "notes" };

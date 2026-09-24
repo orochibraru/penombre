@@ -1,4 +1,5 @@
 import { type Writable, writable } from "svelte/store";
+import type { ObjectItem } from "#lib/api/index.js";
 
 export type PlayableMusic = {
 	title: string;
@@ -8,6 +9,10 @@ export type PlayableMusic = {
 	isPlaying: boolean;
 	/** The item this track came from, so a note can be attached to it. */
 	fileId?: string;
+	/** The file being played, current or not, for the version switcher. */
+	item?: ObjectItem;
+	/** Which earlier version is playing; absent is the current file. */
+	versionId?: string;
 	/**
 	 * Seconds the next load should start at. Set when playback moves between
 	 * the global player and the full-screen viewer, which are separate

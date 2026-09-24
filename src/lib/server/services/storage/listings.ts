@@ -46,6 +46,7 @@ import {
 	paginateItems,
 } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";
+import { latestSeqs } from "./versions";
 
 export type ListingSortColumn = "name" | "size" | "updatedAt";
 export type ListingSortDirection = "asc" | "desc";
@@ -558,6 +559,16 @@ export class ListingOperations {
 					: null;
 
 		const list = await toItems(pageFolders, pageFiles);
+		const seqs = await latestSeqs(
+			this.ctx,
+			pageFiles.map((file) => file.id),
+		);
+		for (const item of list) {
+			const seq = seqs.get(item.metadata.id);
+			if (seq !== undefined) {
+				item.metadata.versionSeq = seq;
+			}
+		}
 		const result: ListingPage = {
 			list,
 			count: list.length,

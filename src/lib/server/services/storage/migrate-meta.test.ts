@@ -260,6 +260,16 @@ describe("migrateStorageMeta — folders", () => {
 		expect(childRow?.parentId).toBe("parent-id");
 	});
 
+	test("ignores .versions, which became a folder on every boot", async () => {
+		const userDir = join(tmpDir, "user-u5");
+		await mkdir(join(userDir, ".versions", "file-id"), { recursive: true });
+		await writeFile(join(userDir, ".versions", "file-id", "v1"), "x");
+
+		mockNextSelect([{ id: "u5" }]);
+		await migrateStorageMeta(tmpDir);
+		expect(insertCount()).toBe(0);
+	});
+
 	test("ignores .thumbnails directories", async () => {
 		const userDir = join(tmpDir, "user-u4");
 		const thumbDir = join(userDir, ".thumbnails");

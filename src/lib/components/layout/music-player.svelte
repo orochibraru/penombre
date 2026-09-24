@@ -9,8 +9,14 @@
 		VolumeXIcon,
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
-	import { withResume } from "#lib/components/file/file-links.js";
+	import type { ObjectItem } from "#lib/api/index.js";
+	import {
+		peaksUrl as peaksUrlFor,
+		rawUrl,
+		withResume,
+	} from "#lib/components/file/file-links.js";
 	import NotesPanel from "#lib/components/file/notes-panel.svelte";
+	import VersionSelect from "#lib/components/file/version-select.svelte";
 	import Waveform from "#lib/components/file/waveform.svelte";
 	import BottomAction from "#lib/components/layout/bottom-action.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";
@@ -27,11 +33,29 @@
 		playbackPosition,
 	} from "#lib/store/music.js";
 	import { fileNotes, loadFileNotes, noteMarkers } from "#lib/store/notes.js";
+	import { displayTitle } from "#lib/versions.js";
 	import { page } from "$app/state";
 	import type { ResolvedPathname } from "$app/types";
 
 	function clearCurrent() {
 		$playableMusic = null;
+	}
+
+	/** Another take of the same file, picked up where this one is. */
+	function switchTake(target: ObjectItem, versionId: string | null) {
+		playableMusic.update(
+			(music) =>
+				music && {
+					...music,
+					title: displayTitle(target, page.data.preferences?.versionNaming),
+					source: rawUrl(target),
+					peaks: peaksUrlFor(target),
+					isPlaying: !paused,
+					fileId: versionId ? undefined : target.metadata.id,
+					versionId: versionId ?? undefined,
+					startAt: currentTime,
+				},
+		);
 	}
 
 	let player: HTMLAudioElement;
@@ -307,6 +331,13 @@
             <p class="text-xs text-nowrap">
                 {formatTime(currentTime)} / {formatTime(duration)}
             </p>
+			{#if $playableMusic?.item}
+				<VersionSelect
+					file={$playableMusic.item}
+					selected={$playableMusic.versionId ?? null}
+					onselect={switchTake}
+				/>
+			{/if}
 		</div>
 		{#if peaksUrl}
 			<Waveform

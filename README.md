@@ -46,6 +46,8 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
   scripts.
 - **Smart categories** — files sort themselves into images, documents, music and
   more as they land.
+- **File versions** — re-upload a file and the old one becomes a version you can
+  play, preview or restore, instead of `final-final-really.wav`.
 - **Soft trash** — deletion is recoverable, because everyone deletes the wrong
   folder eventually.
 - **REST API** — OpenAPI-documented `/api/v1` endpoints with API-key auth,

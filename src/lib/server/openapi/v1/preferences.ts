@@ -22,6 +22,7 @@ const userPreferencesSchema = z.object({
 		.nullable()
 		.optional(),
 	listingLoadMode: z.enum(["scroll", "pages"]).optional(),
+	versionNaming: z.enum(["sequential", "date"]).optional(),
 });
 
 export const getPreferences = defineRoute({

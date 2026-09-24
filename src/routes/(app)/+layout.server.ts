@@ -1,7 +1,10 @@
 import { redirect } from "@sveltejs/kit";
 import { api } from "#lib/api/index.js";
 import { getConfig, getVolumes, isSimpleMode } from "#lib/server/config.js";
-import { isTwoFactorRequired } from "#lib/server/services/app-settings.js";
+import {
+	getAppSettings,
+	isTwoFactorRequired,
+} from "#lib/server/services/app-settings.js";
 import { drivesService } from "#lib/server/services/drives.js";
 import { SharingService } from "#lib/server/services/sharings.js";
 import { resolve } from "$app/paths";
@@ -87,5 +90,7 @@ export const load = async ({ fetch, url, locals, depends }) => {
 			readOnly: volume.readOnly,
 		})),
 		versionCheck,
+		// Hides every versioning action while the admin has it off.
+		versioning: (await getAppSettings()).versioningEnabled ?? false,
 	};
 };

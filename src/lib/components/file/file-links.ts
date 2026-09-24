@@ -10,6 +10,7 @@ import type { ObjectItem } from "#lib/api/index.js";
 import { locationOf, locationQuery } from "#lib/storage-location.js";
 import { playableMusic, playbackPosition } from "#lib/store/music.js";
 import { getObjectUrl } from "#lib/url.js";
+import { type VersionRef, versionOf } from "#lib/versions.js";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { page } from "$app/state";
@@ -29,8 +30,25 @@ export function withLocation(href: string): string {
 	return `${href}${href.includes("?") ? "&" : "?"}${query}`;
 }
 
+/** An earlier version's endpoint, absolute like `getObjectUrl`'s. */
+function versionUrl(
+	version: VersionRef,
+	endpoint: "raw" | "thumbnail",
+	params: Record<string, string> = {},
+): string {
+	const query = new URLSearchParams(params);
+	const location = locationQuery(locationOf(page.params));
+	const path = `/api/v1/storage/file/${encodeURIComponent(version.fileId)}/versions/${encodeURIComponent(version.id)}/${endpoint}`;
+	const search = [query.toString(), location].filter(Boolean).join("&");
+	return new URL(search ? `${path}?${search}` : path, page.url.origin).href;
+}
+
 /** Raw bytes of a file, as served by the proxy route. */
 export function rawUrl(item: ObjectItem): string {
+	const version = versionOf(item);
+	if (version) {
+		return versionUrl(version, "raw");
+	}
 	return getObjectUrl({
 		baseUrl: page.url,
 		itemPath: item.key,
@@ -39,15 +57,33 @@ export function rawUrl(item: ObjectItem): string {
 	});
 }
 
-/** Peak-data URL for an audio file, which the waveform reads as JSON. */
-export function peaksUrl(item: ObjectItem): string {
+/** A saved download of the bytes, for the Download action. */
+export function downloadUrl(item: ObjectItem): string {
+	const version = versionOf(item);
+	return version ? versionUrl(version, "raw", { download: "1" }) : rawUrl(item);
+}
+
+/** A thumbnail; for audio the same URL answers with waveform peaks. */
+export function thumbnailUrl(
+	item: ObjectItem,
+	size: "small" | "medium" | "large" = "large",
+): string {
+	const version = versionOf(item);
+	if (version) {
+		return versionUrl(version, "thumbnail", { size });
+	}
 	return getObjectUrl({
 		baseUrl: page.url,
 		itemPath: item.key,
 		fileId: item.metadata.id,
 		thumbnail: true,
-		size: "large",
+		size,
 	});
+}
+
+/** Peak-data URL for an audio file, which the waveform reads as JSON. */
+export function peaksUrl(item: ObjectItem): string {
+	return thumbnailUrl(item, "large");
 }
 
 /** Media kinds that get Penombre's own full-screen viewer. */
@@ -61,8 +97,11 @@ const VIEWABLE = new Set(["IMAGES", "VIDEO", "MUSIC"]);
  * still the raw file, which is what a PDF or a text file wants.
  */
 function hasViewer(item: ObjectItem): boolean {
+	// `/view` loads a file by id; it has no way to show an earlier version.
 	return Boolean(
-		item.metadata.id && VIEWABLE.has(item.metadata.category ?? ""),
+		item.metadata.id &&
+			!versionOf(item) &&
+			VIEWABLE.has(item.metadata.category ?? ""),
 	);
 }
 

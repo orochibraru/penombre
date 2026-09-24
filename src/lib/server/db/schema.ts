@@ -64,6 +64,9 @@ export const twoFactor = (
 export const fileNotes = (
 	sqliteActive ? sqlite.fileNotes : pg.fileNotes
 ) as typeof pg.fileNotes;
+export const fileVersions = (
+	sqliteActive ? sqlite.fileVersions : pg.fileVersions
+) as typeof pg.fileVersions;
 export const folders = (
 	sqliteActive ? sqlite.folders : pg.folders
 ) as typeof pg.folders;
@@ -89,6 +92,7 @@ export const appInstances = (
 
 export type {
 	AppSettingsData,
+	FolderSettingsData,
 	SignInMethod,
 	UserPreferencesData,
 } from "./schema.pg";
@@ -111,6 +115,7 @@ export type Apikey = typeof pg.apikey.$inferSelect;
 export type Passkey = typeof pg.passkey.$inferSelect;
 export type TwoFactor = typeof pg.twoFactor.$inferSelect;
 export type FileNote = typeof pg.fileNotes.$inferSelect;
+export type FileVersion = typeof pg.fileVersions.$inferSelect;
 export type Folder = typeof pg.folders.$inferSelect;
 export type File = typeof pg.files.$inferSelect;
 export type Notification = typeof pg.notifications.$inferSelect;

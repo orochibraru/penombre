@@ -26,6 +26,12 @@ Pick a folder and Penombre asks what to do with the folder itself:
 OS bookkeeping files (`.DS_Store`, `Thumbs.db`, `._*`, `.git`, and friends) are
 skipped either way.
 
+## Uploading a name that already exists
+
+With [file versioning](versioning.md) on for the folder, a file whose name is
+already there replaces it, and the old bytes become an earlier version you can
+restore. Anywhere else, the upload lands beside it as `name (1).ext`.
+
 ## Transfers survive a reload
 
 Uploads run in a Web Worker, not on the page, so a large transfer does not

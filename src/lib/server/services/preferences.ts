@@ -16,6 +16,7 @@ const defaultPreferences: UserPreferencesData = {
 	emailNotifications: false,
 	preferredSignInMethod: null,
 	listingLoadMode: "scroll",
+	versionNaming: "sequential",
 };
 
 /**

@@ -6,7 +6,7 @@
  */
 
 import { and, eq, isNull } from "drizzle-orm";
-import { files, folders } from "#lib/server/db/schema.js";
+import { type File, files, folders } from "#lib/server/db/schema.js";
 import type { StorageContext } from "./context";
 import { ownedFiles, ownedFolders } from "./scope";
 
@@ -82,4 +82,24 @@ export async function getUniqueDisplayName(
 		newName = `${baseName} (${counter})${extension}`;
 	}
 	return newName;
+}
+
+/** The untrashed file in a folder whose name matches, as `getUniqueDisplayName` compares. */
+export async function findLiveSibling(
+	ctx: StorageContext,
+	name: string,
+	folderId: string | null,
+): Promise<File | undefined> {
+	const siblings = await ctx.db
+		.select()
+		.from(files)
+		.where(
+			and(
+				ownedFiles(ctx),
+				eq(files.isTrashed, false),
+				folderId ? eq(files.folderId, folderId) : isNull(files.folderId),
+			),
+		);
+	const wanted = name.toLowerCase();
+	return siblings.find((file) => file.name.toLowerCase() === wanted);
 }

@@ -30,6 +30,18 @@ describe("ThumbnailService", () => {
 		await rm(root, { recursive: true, force: true });
 	});
 
+	test("a version adopts the renders its bytes already have", async () => {
+		await mkdir(join(root, ".thumbnails"));
+		await writeFile(join(root, ".thumbnails", "d_f.wav_peaks.json"), "[1]");
+		await service().adopt("d/f.wav", ".versions/f/v1");
+		const result = await service().generateThumbnail(
+			".versions/f/v1",
+			"audio/wav",
+		);
+		expect(result?.buffer?.toString()).toBe("[1]");
+		expect(enqueueJob).not.toHaveBeenCalled();
+	});
+
 	test("a cache hit never enqueues", async () => {
 		await mkdir(join(root, ".thumbnails"));
 		await writeFile(join(root, ".thumbnails", "a_b.png_300.webp"), "cached");

@@ -9,7 +9,7 @@ import { saveOfficeDocument } from "#lib/server/openapi/v1/storage.js";
  * honest — the client never holds a `.docx` it could mangle.
  */
 export const POST = saveOfficeDocument.handler(
-	async ({ params, body, service }) => {
+	async ({ params, query, body, service }) => {
 		const path = await service.findFileById(params.id);
 		if (!path) {
 			return Http.NotFound(`File ${params.id} not found`);
@@ -39,7 +39,9 @@ export const POST = saveOfficeDocument.handler(
 		}
 
 		try {
-			await service.uploadFileBody(params.id, bytes);
+			await service.uploadFileBody(params.id, bytes, {
+				snapshot: query.snapshot !== "0",
+			});
 			return Http.Ok({ message: "Document saved." });
 		} catch (err) {
 			return Http.ServerError("Save error", err);

@@ -14,6 +14,7 @@ const mockDriver: { [K in keyof StorageDriver]: ReturnType<typeof mock> } = {
 	deleteObject: mock(async () => {}),
 	deleteObjectsByPrefix: mock(async () => {}),
 	copyObject: mock(async () => {}),
+	linkObject: mock(async () => {}),
 	objectExists: mock(async () => false),
 	listObjectKeys: mock(async () => [] as string[]),
 	ensureRootExists: mock(async () => {}),

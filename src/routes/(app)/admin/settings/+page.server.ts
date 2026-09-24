@@ -168,6 +168,14 @@ function retentionDaysFromForm(form: FormData): number | undefined | null {
 	return Number.isFinite(parsed) && parsed >= 1 ? Math.trunc(parsed) : null;
 }
 
+/** `null` for a value outside 1–1000. */
+function maxVersionsFromForm(form: FormData): number | null {
+	const parsed = Number(text(form, "maxVersionsPerFile") || 10);
+	return Number.isInteger(parsed) && parsed >= 1 && parsed <= 1000
+		? parsed
+		: null;
+}
+
 /**
  * Blank means unchanged: the page never sends the stored password back, so a
  * save that did not retype it must not overwrite it with an empty string.
@@ -312,6 +320,13 @@ export const actions = {
 			});
 		}
 
+		const maxVersions = maxVersionsFromForm(form);
+		if (maxVersions === null) {
+			return fail(400, {
+				error: "Versions kept per file must be between 1 and 1000.",
+			});
+		}
+
 		const provided = envProvided();
 		const config = getConfig();
 		const current = await getAppSettings();
@@ -395,6 +410,8 @@ export const actions = {
 								form.get("releaseChannel") === "canary" ? "canary" : "stable",
 						}),
 				...(provided.dataRetention ? {} : { retentionDays }),
+				versioningEnabled: bool(form, "versioningEnabled"),
+				maxVersionsPerFile: maxVersions,
 			});
 			return { success: true };
 		} catch (error) {

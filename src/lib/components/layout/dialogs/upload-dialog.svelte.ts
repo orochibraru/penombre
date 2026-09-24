@@ -266,6 +266,7 @@ async function createFolderMetadata(
 						name: item.name,
 						size: item.file.size,
 					})),
+					mode: "upload",
 				},
 			},
 		);

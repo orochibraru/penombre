@@ -47,6 +47,9 @@ makes a copy beside it — a folder with everything inside. **Copy to…** and
 **Move** can send items to another drive or volume as well as another folder;
 see [moving files in and out](shared-drives.md#moving-files-in-and-out).
 
+Neither a duplicate nor a copy to another place takes a file's earlier versions
+with it; see [File versioning](versioning.md#what-does-not-carry-versions).
+
 ## Big folders
 
 A folder, a shared drive, a mounted volume, a share, the starred view, a
@@ -80,10 +83,11 @@ disappearing from the list while its data stays on disk.
 ## Seeing what you use
 
 **Settings → Storage** reports your own usage: total bytes across your live
-files, a breakdown by category, how much the trash is still holding, and your
-ten largest files. The bar shows your usage against the whole volume — the
-lighter segment is everything else on that filesystem, including other users'
-files, since Penombre shares one disk between accounts.
+files, a breakdown by category, how much the trash is still holding, how much
+[earlier versions](versioning.md) hold, and your ten largest files. The bar
+shows your usage, versions included, against the whole volume — the lighter
+segment is everything else on that filesystem, including other users' files,
+since Penombre shares one disk between accounts.
 
 Admins get the instance-wide view under **Admin → Storage**: the resolved
 storage path, total files and bytes, trashed bytes across all accounts, and a

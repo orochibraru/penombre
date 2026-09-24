@@ -1842,6 +1842,55 @@ reproduce in `tests/fixtures/envelope-v1.json`). What holds it together:
 - A plaintext file that happens to start with the magic bytes reads as a corrupt
   sealed file. That is the price of sniffing.
 
+### A version is a hard link, so nothing writes in place
+
+File versions (`services/storage/versions.ts`, `docs/versioning.md`) keep a
+file's earlier bytes at `<root>/.versions/<fileId>/<versionId>`, made by
+`driver.linkObject` — a hard link, a copy only across devices. That is only safe
+because `LocalStorageDriver.writeObject` stages to `.<name>.<uuid>.tmp` and
+renames over the key: a write in place would rewrite every version sharing the
+inode. Never add a writer that opens the key itself.
+
+- **Rows cascade, bytes do not.** `file_versions` cascades with `files`, so
+  every place that deletes file rows calls `dropVersionBytes` beside
+  `purgeGrantsFor(…, "file", …)`. A new delete path needs both. Empty-trash does
+  it in Node after the rows go, not in the Go delete job, so a file whose own
+  delete failed keeps its versions.
+- **A placeholder is not a version.** `createBatchFiles` stores the _declared_
+  size on the empty placeholder row, so "is there anything to keep" asks the
+  disk (`getObjectSize`), never the row.
+- **Upload-onto-same-name reuses the row** (`mode: "upload"`, `findLiveSibling`)
+  and never inserts, which is why `files_live_path_idx` never sees it. It must
+  not write the empty placeholder either.
+- `seq` is never renumbered, so labels survive pruning. SQLite refuses `OFFSET`
+  without `LIMIT`; the prune slices in JS.
+- `migratedSqlite()` does not turn on `foreign_keys`; a test relying on a
+  cascade runs the pragma itself, as `db/index.ts` does in production.
+- The upload and folder-settings menu entries carry `hidden()`, read by
+  `shouldDisplayAction` at render, so the admin switch needs no reload.
+- **Unfolded versions are rows, not a panel.** `withVersions` splices them into
+  the array each layout virtualizes, at the same fixed height, so the scroll
+  math stays exact. They never enter `displayData.list`: selection, bulk actions
+  and the delete dialog walk that by `key`. A version row is an `ObjectItem`
+  with its own `metadata.id` (`<file>:v:<version>`) plus `version`; every URL
+  goes through `file-links.ts` (`rawUrl`, `thumbnailUrl`, `downloadUrl`), which
+  routes it to the versions endpoints. Calling `getObjectUrl` directly for a row
+  addresses the current file. Version rows are shorter than files, so the
+  virtualizer takes `heightOf` and sums offsets per change of rows;
+  `rowAtOffset` is the tested search. The grid does not unfold: its pill opens
+  the history modal (`historyFor`).
+- **`migrate-meta.ts` walks every directory on every boot** and turned
+  `.versions` into folder rows. It now skips every dot-directory, like the
+  scan's `isScannable`; a new app-owned dot-directory needs nothing more, but a
+  walker that does not skip them will list the app's internals as folders.
+
+### A migration test cuts the journal, it does not filter it
+
+`live-path.test.ts` migrates to "just before" a migration by dropping that entry
+and **everything after it**. Dropping only the one entry applied newer
+migrations first, and drizzle's migrator, which compares timestamps, then
+skipped the older one entirely.
+
 ### Sidebar groups truncate at five
 
 `sidebarItems()` (`#lib/sidebar.ts`) caps shared drives and shared-with-me rows

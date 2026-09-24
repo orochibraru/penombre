@@ -10,7 +10,13 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getStoragePath } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
-import { activity, files, shares, user } from "#lib/server/db/schema.js";
+import {
+	activity,
+	files,
+	fileVersions,
+	shares,
+	user,
+} from "#lib/server/db/schema.js";
 import { diskSpace } from "./storage/disk-space";
 
 /** How many "biggest file" rows a cleanup panel shows. */
@@ -36,6 +42,9 @@ export interface StorageStats {
 	/** Bytes held by trashed files — reclaimed by emptying the trash. */
 	trashedBytes: number;
 	trashedCount: number;
+	/** Bytes held by earlier versions of the user's files. */
+	versionBytes: number;
+	versionCount: number;
 	byCategory: CategoryUsage[];
 	largestFiles: CleanupCandidate[];
 	/** Filesystem numbers for the volume backing the storage root. */
@@ -67,48 +76,59 @@ export class StatsService {
 	async forUser(userId: string): Promise<StorageStats> {
 		const owned = eq(files.ownerId, userId);
 
-		const [live, trashed, byCategory, largestFiles] = await Promise.all([
-			this.db
-				.select({
-					bytes: sql<number>`coalesce(sum(${files.size}), 0)`,
-					count: sql<number>`count(*)`,
-				})
-				.from(files)
-				.where(and(owned, eq(files.isTrashed, false))),
-			this.db
-				.select({
-					bytes: sql<number>`coalesce(sum(${files.size}), 0)`,
-					count: sql<number>`count(*)`,
-				})
-				.from(files)
-				.where(and(owned, eq(files.isTrashed, true))),
-			this.db
-				.select({
-					category: files.category,
-					bytes: sql<number>`coalesce(sum(${files.size}), 0)`,
-					count: sql<number>`count(*)`,
-				})
-				.from(files)
-				.where(and(owned, eq(files.isTrashed, false)))
-				.groupBy(files.category),
-			this.db
-				.select({
-					id: files.id,
-					name: files.name,
-					size: files.size,
-					updatedAt: files.updatedAt,
-				})
-				.from(files)
-				.where(and(owned, eq(files.isTrashed, false)))
-				.orderBy(desc(files.size))
-				.limit(CLEANUP_LIMIT),
-		]);
+		const [live, trashed, byCategory, largestFiles, versions] =
+			await Promise.all([
+				this.db
+					.select({
+						bytes: sql<number>`coalesce(sum(${files.size}), 0)`,
+						count: sql<number>`count(*)`,
+					})
+					.from(files)
+					.where(and(owned, eq(files.isTrashed, false))),
+				this.db
+					.select({
+						bytes: sql<number>`coalesce(sum(${files.size}), 0)`,
+						count: sql<number>`count(*)`,
+					})
+					.from(files)
+					.where(and(owned, eq(files.isTrashed, true))),
+				this.db
+					.select({
+						category: files.category,
+						bytes: sql<number>`coalesce(sum(${files.size}), 0)`,
+						count: sql<number>`count(*)`,
+					})
+					.from(files)
+					.where(and(owned, eq(files.isTrashed, false)))
+					.groupBy(files.category),
+				this.db
+					.select({
+						id: files.id,
+						name: files.name,
+						size: files.size,
+						updatedAt: files.updatedAt,
+					})
+					.from(files)
+					.where(and(owned, eq(files.isTrashed, false)))
+					.orderBy(desc(files.size))
+					.limit(CLEANUP_LIMIT),
+				this.db
+					.select({
+						bytes: sql<number>`coalesce(sum(${fileVersions.size}), 0)`,
+						count: sql<number>`count(*)`,
+					})
+					.from(fileVersions)
+					.innerJoin(files, eq(files.id, fileVersions.fileId))
+					.where(owned),
+			]);
 
 		return {
 			used: Number(live[0]?.bytes ?? 0),
 			fileCount: Number(live[0]?.count ?? 0),
 			trashedBytes: Number(trashed[0]?.bytes ?? 0),
 			trashedCount: Number(trashed[0]?.count ?? 0),
+			versionBytes: Number(versions[0]?.bytes ?? 0),
+			versionCount: Number(versions[0]?.count ?? 0),
 			byCategory: byCategory
 				.map((row) => ({
 					category: row.category,

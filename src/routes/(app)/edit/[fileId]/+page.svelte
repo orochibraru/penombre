@@ -1,10 +1,17 @@
 <script lang="ts">
-	import { AlertCircleIcon, CheckIcon, LoaderIcon } from "@lucide/svelte";
+	import {
+		AlertCircleIcon,
+		CheckIcon,
+		HistoryIcon,
+		LoaderIcon,
+	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { api } from "#lib/api/index.js";
 	import DeckEditor from "#lib/components/editor/deck-editor.svelte";
 	import DocumentEditor from "#lib/components/editor/document-editor.svelte";
 	import SheetEditor from "#lib/components/editor/sheet-editor.svelte";
+	import { Button } from "#lib/components/ui/button/index.js";
 	import {
 		baseName,
 		editorKindForName,
@@ -17,6 +24,7 @@
 	import { title } from "#lib/store/title.js";
 	import { browser } from "$app/env";
 	import { beforeNavigate } from "$app/navigation";
+	import { page } from "$app/state";
 
 	const { data } = $props();
 
@@ -60,6 +68,9 @@
 	let saving = $state(false);
 	let saveError = $state(false);
 	let savedAt = $state<Date | null>(null);
+	/** Whether this session's first save has kept the pre-edit bytes. */
+	let snapshotted = false;
+	let keepingVersion = $state(false);
 	let timer: ReturnType<typeof setTimeout> | undefined;
 
 	const RETRY_MS = 5000;
@@ -84,9 +95,14 @@
 		const content = pending;
 		pending = null;
 		saving = true;
-		const ok = await saveDocument(data.fileId, name, data.contentType, content);
+		const ok = await saveDocument(
+			{ id: data.fileId, name, contentType: data.contentType },
+			content,
+			!snapshotted,
+		);
 		saving = false;
 		if (ok) {
+			snapshotted = true;
 			saveError = false;
 			savedAt = new Date();
 			await syncName(content);
@@ -103,6 +119,22 @@
 			toast.error(m.editor_save_error());
 			clearTimeout(timer);
 			timer = setTimeout(() => void flush(), RETRY_MS);
+		}
+	}
+
+	/** Keeps what is on screen now as a version. */
+	async function saveAsVersion() {
+		keepingVersion = true;
+		clearTimeout(timer);
+		await flush();
+		const { error } = await api.POST("/api/v1/storage/file/{id}/versions", {
+			params: { path: { id: data.fileId } },
+		});
+		keepingVersion = false;
+		if (error) {
+			toast.error(m.versions_save_error());
+		} else {
+			toast.success(m.versions_saved());
 		}
 	}
 
@@ -154,6 +186,19 @@
                 </p>
 			{/if}
 		</div>
+		<div class="flex items-center gap-3">
+		{#if page.data.versioning}
+			<Button
+				variant="outline"
+				size="sm"
+				loading={keepingVersion}
+				disabled={saving}
+				onclick={saveAsVersion}
+			>
+				<HistoryIcon class="size-4" />
+				{m.versions_save_as()}
+			</Button>
+		{/if}
 		<span
 			class="text-muted-foreground flex items-center gap-1.5 text-xs tabular-nums"
 		>
@@ -170,6 +215,7 @@
 				{m.editor_saved({ time: savedAt.toLocaleTimeString() })}
 			{/if}
 		</span>
+		</div>
 	</div>
 
 	{#if kind === "document"}

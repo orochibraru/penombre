@@ -23,6 +23,7 @@ import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import { folderDbToMetadata } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+import { dropVersionBytes } from "./versions";
 
 const logger = new Logger("StorageService");
 
@@ -250,6 +251,10 @@ export class FolderOperations {
 			await purgeGrantsFor(
 				this.ctx.db,
 				"file",
+				deletedFiles.map((f) => f.id),
+			);
+			await dropVersionBytes(
+				this.ctx,
 				deletedFiles.map((f) => f.id),
 			);
 			await purgeGrantsFor(

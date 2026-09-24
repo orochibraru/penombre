@@ -4,6 +4,7 @@ import {
 	DriveAccessError,
 	ReadOnlyVolumeError,
 	StorageUnavailableError,
+	VersioningDisabledError,
 } from "#lib/server/errors.js";
 import { Http } from "#lib/server/http.js";
 import type { ResolvedPathname } from "$app/types";
@@ -155,7 +156,10 @@ function refusalResponse(error: unknown): Response | undefined {
 			? Http.NotFound(error.message)
 			: Http.Forbidden(error.message);
 	}
-	if (error instanceof ReadOnlyVolumeError) {
+	if (
+		error instanceof ReadOnlyVolumeError ||
+		error instanceof VersioningDisabledError
+	) {
 		return Http.Forbidden(error.message);
 	}
 	if (error instanceof StorageUnavailableError) {

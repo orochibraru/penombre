@@ -23,6 +23,7 @@ import { ancestorFolders } from "./mappers";
 import { bytesGone, chunks } from "./reconcile";
 import { jobContext, ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+import { dropVersionBytes } from "./versions";
 
 const logger = new Logger("StorageTrash");
 
@@ -146,6 +147,7 @@ export class TrashOperations {
 				.where(and(ownedFolders(this.ctx), inArray(folders.id, ids)));
 		}
 		await purgeGrantsFor(this.ctx.db, "file", removableFileIds);
+		await dropVersionBytes(this.ctx, removableFileIds);
 		await purgeGrantsFor(
 			this.ctx.db,
 			"folder",

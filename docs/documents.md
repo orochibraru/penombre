@@ -107,6 +107,11 @@ again when you navigate away; the header shows whether a save is in flight and
 when the last one landed. If a save fails it is retried rather than dropped, and
 leaving the page with unsaved text prompts you first.
 
+With [file versioning](versioning.md) on, the first save of each editing session
+keeps what the file held before you opened it, so a session can always be
+undone; autosave does not add a version every two seconds. **Save as version**
+in the header keeps what is on screen right now.
+
 Because these are ordinary files, everything else in Penombre applies to them
 unchanged: they can be shared, starred, moved, trashed and searched like
 anything else.

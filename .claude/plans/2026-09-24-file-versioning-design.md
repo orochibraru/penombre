@@ -94,7 +94,8 @@ ends there. It snapshots only when all hold:
 
 - `snapshot` is not `false`;
 - versioning is effective for the file's folder;
-- the stored size is > 0 (an upload's placeholder row is not a version).
+- the bytes on disk are non-empty. Not the row's size: a batch placeholder row
+  already carries the declared size.
 
 `POST …/versions` calls `snapshot(file)` directly (current bytes, no write).
 
@@ -105,8 +106,9 @@ has:
 
 - `deleteFile`: remove `.versions/<id>/`.
 - `deleteFolder`: the same for its `.returning` ids.
-- `emptyTrash`: add each file's `.versions/<id>` to the Go delete job's `dirs`.
-  A dir failure is only logged, like folders.
+- `emptyTrash`: `dropVersionBytes` for the rows it removed, in Node after the
+  rows go. Not the Go delete job: that runs before the outcome is known, and
+  would take the versions of a file whose own delete failed.
 - `reconcileDelete`: the same dirs for the ids it drops.
 
 A stray `.versions/<id>/` left by a crash is unreferenced bytes, never a
@@ -159,7 +161,8 @@ scope apply. Then `bun run gen:api`.
 | PUT    | `/storage/folder/{id}/settings`             | save                     |
 
 - `{id}` is `metadata.id`. A version always belongs to `{id}`; a `vid` of
-  another file is 404.
+  another file is 404. A folder's `{path}` is its id or its path: the toolbar
+  button only knows the path, and on a volume that is real names.
 - **Restore** is `uploadFileBody(id, openRawFile(version))`: it snapshots the
   current bytes first, and thumbnails and duration refresh through the existing
   path. The restored version stays listed.

@@ -34,6 +34,7 @@
 				{ "slug": "uploads", "icon": "upload" },
 				{ "slug": "media", "icon": "music" },
 				{ "slug": "documents", "icon": "file-text" },
+				{ "slug": "versioning", "title": "File versioning", "icon": "history" },
 				{ "slug": "sharing", "icon": "share-2" },
 				{ "slug": "shared-drives", "icon": "users" },
 				{ "slug": "notifications", "icon": "bell" }

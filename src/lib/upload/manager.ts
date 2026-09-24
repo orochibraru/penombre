@@ -17,6 +17,7 @@ import {
 	uploadingItemsNames,
 	uploadStats,
 } from "#lib/store/upload.js";
+import { refreshVersions } from "#lib/store/versions.js";
 import { browser } from "$app/env";
 import { invalidate } from "$app/navigation";
 import { page } from "$app/state";
@@ -97,6 +98,8 @@ async function onDone(job: UploadJob): Promise<void> {
 	dropProgress(job.rowKey);
 	await deleteJob(job.id);
 	known.delete(job.id);
+	// A replaced file has a new version; an unfolded list should show it.
+	void refreshVersions(job.fileId);
 }
 
 async function onFailed(job: UploadJob, message: string): Promise<void> {

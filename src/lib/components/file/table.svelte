@@ -25,6 +25,7 @@
 	import * as Table from "#lib/components/ui/table/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { locationOf } from "#lib/storage-location.js";
+	import { expandedVersions } from "#lib/store/versions.js";
 	import {
 		cn,
 		isBrowsableListing,
@@ -40,9 +41,11 @@
 		type SortColumn,
 		shouldDisplayAction,
 	} from "#lib/utils.js";
+	import { versionOf, withVersions } from "#lib/versions.js";
 	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import { actionsFor } from "./version-actions.js";
 
 	let {
 		handleOpenItem,
@@ -73,6 +76,8 @@
 	const loadingAmount = 20;
 	/** Set on every row, so the virtualizer's arithmetic is the layout. */
 	const ROW_HEIGHT = 57;
+	/** An unfolded version is a sub-row, deliberately shorter than a file. */
+	const VERSION_ROW_HEIGHT = 40;
 
 	/** `undefined` outside /browse and at the drive root: no `..` row there. */
 	// A share has no parent to go up to: above its root is the owner's drive.
@@ -314,17 +319,22 @@
 			: (sortedFiles ?? []),
 	);
 
+	/** What renders: `displayed` plus any unfolded versions, as rows. */
+	const rows = $derived(withVersions(displayed, $expandedVersions));
+
 	/** Only the rows near the viewport are in the DOM; see virtual-window.svelte.ts. */
 	const virtualizer = createWindowVirtualizer({
-		count: () => displayed.length,
+		count: () => rows.length,
 		rowHeight: () => ROW_HEIGHT,
+		heightOf: (i) =>
+			rows[i] && versionOf(rows[i]) ? VERSION_ROW_HEIGHT : ROW_HEIGHT,
 		overscan: 8,
 	});
 	let tableEl: HTMLElement | undefined = $state();
 	$effect(() => {
 		// A new page, a wider window preference or a folder change can move
 		// the container on screen without a scroll event to trigger it.
-		void displayed.length;
+		void rows.length;
 		if (tableEl) {
 			virtualizer.bind(tableEl);
 		}
@@ -336,10 +346,14 @@
 {#snippet tableRow(objectItem: ObjectItem)}
     {@const isFolder = isFolderItem(objectItem)}
     {@const isDragTarget = dropTargetKey === objectItem.key}
+    {@const version = versionOf(objectItem)}
     <Table.Row
-        class={cn(isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "")}
-        style="height: {ROW_HEIGHT}px"
-        draggable={onDragStart !== undefined}
+        class={cn(
+            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+            version ? "bg-muted/30" : "",
+        )}
+        style="height: {version ? VERSION_ROW_HEIGHT : ROW_HEIGHT}px"
+        draggable={onDragStart !== undefined && !version}
         ondragstart={(e) => handleItemDragStart(e, objectItem)}
         ondragend={handleItemDragEnd}
         ondragover={isFolder
@@ -360,6 +374,8 @@
             onkeydowncapture={(e: KeyboardEvent) => setShiftHeld(e.shiftKey)}
         >
             <Checkbox
+                class={version ? "invisible" : ""}
+                disabled={!!version}
                 checked={isChecked(objectItem)}
                 onCheckedChange={(checked) => {
                     applySelection(
@@ -409,7 +425,7 @@
                     </div>
                 </ContextMenu.Trigger>
                 <ContextMenu.Content>
-                    {#each itemActions as action}
+                    {#each actionsFor(objectItem, itemActions) as action}
                         <ContextMenu.Group>
                             {#each action.actions as act}
                                 {#if shouldDisplayAction( { action: act, item: objectItem }, )}
@@ -435,7 +451,7 @@
                             {/each}
                         </ContextMenu.Group>
                         {@const isLast =
-                            action === itemActions[itemActions.length - 1]}
+                            action === actionsFor(objectItem, itemActions).at(-1)}
                         {#if !isLast}
                             <ContextMenu.Separator />
                         {/if}
@@ -481,7 +497,7 @@
                         {/snippet}
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
-                        {#each itemActions as action}
+                        {#each actionsFor(objectItem, itemActions) as action}
                             <DropdownMenu.Group>
                                 {#each action.actions as act}
                                     {#if shouldDisplayAction( { action: act, item: objectItem }, )}
@@ -508,7 +524,7 @@
                                 {/each}
                             </DropdownMenu.Group>
                             {@const isLast =
-                                action === itemActions[itemActions.length - 1]}
+                                action === actionsFor(objectItem, itemActions).at(-1)}
                             {#if !isLast}
                                 <DropdownMenu.Separator />
                             {/if}
@@ -593,7 +609,7 @@
             <Table.Cell colspan={12} style="height: {virtualizer.padTop}px" />
         </Table.Row>
     {/if}
-    {#each displayed.slice(virtualizer.first, virtualizer.last) as item (item.metadata.id)}
+    {#each rows.slice(virtualizer.first, virtualizer.last) as item (item.metadata.id)}
         {@render tableRow(item)}
     {/each}
     {#if virtualizer.padBottom > 0}

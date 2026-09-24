@@ -379,6 +379,16 @@ export interface AppSettingsData {
 	 * `jobs` rows. Unset keeps everything forever.
 	 */
 	retentionDays?: number;
+	/** File versioning; folders may opt out. Off unless set. */
+	versioningEnabled?: boolean;
+	/** Versions kept per file; a folder may lower it, never raise it. */
+	maxVersionsPerFile?: number;
+}
+
+/** Per-folder overrides; an unset key inherits from the nearest ancestor. */
+export interface FolderSettingsData {
+	versioning?: boolean;
+	maxVersions?: number;
 }
 
 export const appSettings = pgTable("app_settings", {
@@ -424,6 +434,8 @@ export interface UserPreferencesData {
 	 * as the user scrolls, or hand them prev/next controls instead.
 	 */
 	listingLoadMode?: "scroll" | "pages";
+	/** How a file version is labelled: `v3`, or the date it was kept. */
+	versionNaming?: "sequential" | "date";
 }
 
 export type SignInMethod = "password" | "passkey" | "magicLink" | "emailOtp";
@@ -569,6 +581,34 @@ export const fileNotes = pgTable(
 	],
 );
 
+/**
+ * Earlier bytes of a file, kept under `<root>/.versions/<fileId>/<id>`.
+ * `seq` never moves, so a label survives the oldest versions being pruned.
+ */
+export const fileVersions = pgTable(
+	"file_versions",
+	{
+		id: text("id").primaryKey(),
+		fileId: text("file_id")
+			.notNull()
+			.references(() => files.id, { onDelete: "cascade" }),
+		seq: integer("seq").notNull(),
+		size: bigint("size", { mode: "number" }).default(0).notNull(),
+		contentType: text("content_type")
+			.default("application/octet-stream")
+			.notNull(),
+		createdBy: text("created_by").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		uniqueIndex("file_versions_file_seq_idx").on(table.fileId, table.seq),
+	],
+);
+
 export const fileNotesRelations = relations(fileNotes, ({ one }) => ({
 	user: one(user, {
 		fields: [fileNotes.userId],
@@ -614,6 +654,7 @@ export const folders = pgTable(
 		isTrashed: boolean("is_trashed").default(false).notNull(),
 		isStarred: boolean("is_starred").default(false).notNull(),
 		tags: text("tags").array().default([]).notNull(),
+		settings: jsonb("settings").$type<FolderSettingsData>(),
 		createdAt: timestamp("created_at")
 			.$defaultFn(() => new Date())
 			.notNull(),

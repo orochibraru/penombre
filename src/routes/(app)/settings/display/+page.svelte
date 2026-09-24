@@ -1,9 +1,11 @@
 <script lang="ts">
 	import {
+		CalendarIcon,
 		FileStackIcon,
 		InfinityIcon,
 		LayoutGridIcon,
 		LayoutListIcon,
+		ListOrderedIcon,
 		type LucideIcon,
 		MonitorIcon,
 		MoonIcon,
@@ -36,6 +38,9 @@
 	const sortDirection = $derived(data.preferences?.sortDirection ?? "asc");
 	const listingLoadMode = $derived(
 		data.preferences?.listingLoadMode ?? "scroll",
+	);
+	const versionNaming = $derived(
+		data.preferences?.versionNaming ?? "sequential",
 	);
 
 	const fonts = [
@@ -104,6 +109,21 @@
 		},
 	];
 
+	const namingOptions = [
+		{
+			id: "sequential" as const,
+			name: m.version_naming_sequential(),
+			description: m.version_naming_sequential_description(),
+			icon: ListOrderedIcon,
+		},
+		{
+			id: "date" as const,
+			name: m.version_naming_date(),
+			description: m.version_naming_date_description(),
+			icon: CalendarIcon,
+		},
+	];
+
 	const sortColumns = [
 		{ value: "name", label: m.sort_name() },
 		{ value: "size", label: m.sort_size() },
@@ -132,6 +152,7 @@
 		corners?: "boxy" | "rounded";
 		accent?: Accent;
 		listingLoadMode?: "scroll" | "pages";
+		versionNaming?: "sequential" | "date";
 	}) {
 		// Paint the change immediately; the reload below only persists it.
 		applyTheme({ ...data.preferences, ...body });
@@ -376,6 +397,41 @@
                                 id="load-mode-{option.id}"
                                 onclick={() =>
                                     save({ listingLoadMode: option.id })}
+                                class="data-[state=checked]:border-primary"
+                            />
+                            <div class="grid gap-1 font-normal">
+                                <div class="font-medium">{option.name}</div>
+                                <div
+                                    class="text-muted-foreground text-xs leading-snug text-balance"
+                                >
+                                    {option.description}
+                                </div>
+                            </div>
+                        </div>
+                        <Icon class="size-5 shrink-0" />
+                    </Label>
+                {/each}
+            </RadioGroup.Root>
+        </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+        <Card.Header>
+            <Card.Title>{m.version_naming()}</Card.Title>
+            <Card.Description>{m.version_naming_description()}</Card.Description>
+        </Card.Header>
+        <Card.Content>
+            <RadioGroup.Root class="grid gap-2" value={versionNaming}>
+                {#each namingOptions as option (option.id)}
+                    {@const Icon = option.icon}
+                    <Label
+                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
+                    >
+                        <div class="flex items-center gap-2">
+                            <RadioGroup.Item
+                                value={option.id}
+                                id="version-naming-{option.id}"
+                                onclick={() => save({ versionNaming: option.id })}
                                 class="data-[state=checked]:border-primary"
                             />
                             <div class="grid gap-1 font-normal">

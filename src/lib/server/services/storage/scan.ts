@@ -28,6 +28,7 @@ import {
 import { chunks } from "./reconcile";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+import { dropVersionBytes } from "./versions";
 
 export { ancestorFolders };
 
@@ -419,6 +420,7 @@ export class ScanOperations {
 				.where(and(ownedFiles(this.ctx), inArray(files.id, ids)));
 		}
 		await purgeGrantsFor(this.ctx.db, "file", vanished);
+		await dropVersionBytes(this.ctx, vanished);
 		return vanished.length;
 	}
 

@@ -15,6 +15,10 @@ in both light and dark: a baked-in image could do neither.
 
 A file the server cannot analyse falls back to a plain progress bar.
 
+A track with [earlier versions](versioning.md) gets a version picker beside the
+time. Switching keeps the playhead where it is, so two mixes can be compared at
+the same bar; image and video previews have the same picker.
+
 ## Notes, pinned to a moment
 
 Every file has a notes thread — right-click → **Notes**, or the panel beside any

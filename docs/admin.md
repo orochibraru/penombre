@@ -60,6 +60,9 @@ the next boot.
   blank keeps everything forever. Also settable with `DATA_RETENTION_DAYS`. File
   copy/delete job records are unaffected: those are cleaned up as soon as their
   request finishes, not on a timer.
+- **File versioning**: whether files keep their earlier versions, and how many
+  each file keeps. Folders can opt out or lower the limit. See
+  [File versioning](versioning.md).
 
 Configuration follows one rule: **an environment variable wins when it is set,
 otherwise this page governs.** A setting the environment claims is shown

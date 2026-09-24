@@ -15,7 +15,11 @@ import {
 } from "#lib/server/config.js";
 import { encryptionEnabled } from "#lib/server/crypto/keyring.js";
 import { getDb } from "#lib/server/db/index.js";
-import { drives, user } from "#lib/server/db/schema.js";
+import {
+	drives,
+	type FolderSettingsData,
+	user,
+} from "#lib/server/db/schema.js";
 import {
 	DriveAccessError,
 	FileOrFolderNotFoundError,
@@ -63,6 +67,15 @@ import {
 	type TransferResult,
 } from "./transfer";
 import { type EmptyTrashResult, TrashOperations } from "./trash";
+import { VersionOperations } from "./version-ops";
+import {
+	adminVersioning,
+	type FolderVersioning,
+	folderVersioning,
+	latestSeqs,
+	setFolderSettings,
+	type Versioning,
+} from "./versions";
 import { ZipService } from "./zip";
 
 const logger = new Logger("StorageService");
@@ -104,6 +117,7 @@ export class StorageService {
 	private readonly zip: ZipService;
 	private readonly proxy: ProxyService;
 	private readonly fileOperations: FileOperations;
+	private readonly versionOperations: VersionOperations;
 	private readonly folderOperations: FolderOperations;
 	private readonly listingOperations: ListingOperations;
 	private readonly scanOperations: ScanOperations;
@@ -165,6 +179,7 @@ export class StorageService {
 		this.thumbnails = new ThumbnailService(this.ctx);
 		this.zip = new ZipService(this.ctx);
 		this.fileOperations = new FileOperations(this.ctx, this.thumbnails);
+		this.versionOperations = new VersionOperations(this.ctx, this.thumbnails);
 		this.folderOperations = new FolderOperations(this.ctx, this.thumbnails);
 		this.listingOperations = new ListingOperations(this.ctx);
 		this.scanOperations = new ScanOperations(this.ctx, this.thumbnails);
@@ -306,10 +321,11 @@ export class StorageService {
 	createBatchFiles(
 		fileList: NewFile[],
 		folder?: string,
+		mode?: "create" | "upload",
 	): Promise<UploadResult[]> {
 		this.assertWritable();
 		this.assertInScope(folder);
-		return this.fileOperations.createBatchFiles(fileList, folder);
+		return this.fileOperations.createBatchFiles(fileList, folder, mode);
 	}
 
 	findFileById(id: string): Promise<string | null> {
@@ -324,9 +340,82 @@ export class StorageService {
 		return this.fileOperations.findFileOwner(id);
 	}
 
-	uploadFileBody(id: string, body: Blob | Buffer | Uint8Array): Promise<void> {
+	uploadFileBody(
+		id: string,
+		body: Blob | Buffer | Uint8Array,
+		options?: { snapshot?: boolean },
+	): Promise<void> {
 		this.assertWritable();
-		return this.fileOperations.uploadFileBody(id, body);
+		return this.fileOperations.uploadFileBody(id, body, options);
+	}
+
+	// =========================================================================
+	// VERSIONS
+	// =========================================================================
+
+	listFileVersions(id: string) {
+		return this.versionOperations.listFileVersions(id);
+	}
+
+	openVersion(id: string, versionId: string) {
+		return this.versionOperations.openVersion(id, versionId);
+	}
+
+	versionThumbnail(
+		id: string,
+		versionId: string,
+		size: number,
+		ifNoneMatch?: string,
+	) {
+		return this.versionOperations.versionThumbnail(
+			id,
+			versionId,
+			size,
+			ifNoneMatch,
+		);
+	}
+
+	snapshotFile(id: string) {
+		this.assertWritable();
+		return this.versionOperations.snapshotFile(id);
+	}
+
+	restoreVersion(id: string, versionId: string): Promise<boolean> {
+		this.assertWritable();
+		return this.versionOperations.restoreVersion(id, versionId);
+	}
+
+	deleteFileVersion(id: string, versionId: string): Promise<boolean> {
+		this.assertWritable();
+		return this.versionOperations.deleteFileVersion(id, versionId);
+	}
+
+	fileVersioning(id: string): Promise<Versioning | null> {
+		return this.versionOperations.fileVersioning(id);
+	}
+
+	/** Highest kept version per file, for the listing's pill. */
+	latestVersionSeqs(fileIds: string[]): Promise<Map<string, number>> {
+		return latestSeqs(this.ctx, fileIds);
+	}
+
+	async getFolderVersioning(
+		folderId: string,
+	): Promise<FolderVersioning | null> {
+		return folderVersioning(this.ctx, folderId, await adminVersioning());
+	}
+
+	async setFolderSettings(
+		folderId: string,
+		settings: FolderSettingsData,
+	): Promise<boolean> {
+		this.assertWritable();
+		const current = await this.getFolderVersioning(folderId);
+		if (!current) {
+			return false;
+		}
+		this.assertInScope(current.path, true);
+		return setFolderSettings(this.ctx, folderId, settings);
 	}
 
 	async deleteFile(key: string): Promise<void> {

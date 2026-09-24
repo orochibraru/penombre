@@ -56,6 +56,7 @@ function setup(
 		},
 		activityService: { register: mock(async () => {}) },
 		actor: { id: "user-1" },
+		driver: { deleteObjectsByPrefix: mock(async (_prefix: string) => {}) },
 		invalidateListingCaches: mock(async () => {}),
 	};
 	const thumbnails = { deleteThumbnails: mock(async () => {}) };
@@ -69,12 +70,15 @@ describe("TrashOperations.emptyTrash", () => {
 		awaitJob.mockClear();
 		const trashedFiles: FileRow[] = [{ id: "f1", path: "a.txt", size: 10 }];
 		const trashedFolders: FolderRow[] = [{ id: "d1", path: "d1" }];
-		const { ops, thumbnails } = setup(trashedFiles, trashedFolders);
+		const { ops, ctx, thumbnails } = setup(trashedFiles, trashedFolders);
 
 		const result = await ops.emptyTrash();
 
 		expect(result).toEqual({ deleted: 2, freed: 10, failed: 0 });
 		expect(thumbnails.deleteThumbnails).toHaveBeenCalledWith("a.txt");
+		expect(ctx.driver.deleteObjectsByPrefix).toHaveBeenCalledWith(
+			".versions/f1/",
+		);
 		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
 			type: "delete",
 			spec: { files: ["/root/a.txt"], dirs: ["/root/d1"] },

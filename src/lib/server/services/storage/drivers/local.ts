@@ -1,8 +1,9 @@
 /* oxlint-disable require-await -- methods implement the async StorageDriver contract; `async` keeps the Promise return type without wrapping every result. */
+import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
-import { mkdir, readdir, rm, unlink } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { link, mkdir, readdir, rename, rm, unlink } from "node:fs/promises";
+import { basename, dirname, join } from "node:path";
 import { Logger } from "#lib/logger.js";
 import { rethrowUnreachable } from "#lib/server/errors.js";
 import { availableDiskSpace } from "../disk-space";
@@ -44,11 +45,34 @@ export class LocalStorageDriver implements StorageDriver {
 	): Promise<void> {
 		const path = this.fullPath(key);
 		await mkdir(dirname(path), { recursive: true });
-		// A stream is written as it arrives, never held whole in memory.
-		if (data instanceof ReadableStream) {
-			await Bun.write(path, new Response(data));
-		} else {
-			await Bun.write(path, data);
+		// Staged and renamed in: a version hard-links the old inode, and a
+		// write in place would rewrite it too. Dot-named so the scan skips it.
+		const stage = join(dirname(path), `.${basename(path)}.${randomUUID()}.tmp`);
+		try {
+			// A stream is written as it arrives, never held whole in memory.
+			if (data instanceof ReadableStream) {
+				await Bun.write(stage, new Response(data));
+			} else {
+				await Bun.write(stage, data);
+			}
+			await rename(stage, path);
+		} catch (error) {
+			await unlink(stage).catch(() => undefined);
+			throw error;
+		}
+	}
+
+	async linkObject(src: string, dest: string): Promise<void> {
+		const destPath = this.fullPath(dest);
+		await mkdir(dirname(destPath), { recursive: true });
+		try {
+			await link(this.fullPath(src), destPath);
+		} catch (error) {
+			const code = (error as NodeJS.ErrnoException).code;
+			if (code !== "EXDEV" && code !== "EPERM" && code !== "ENOTSUP") {
+				throw error;
+			}
+			await this.writeObject(dest, Bun.file(this.fullPath(src)).stream());
 		}
 	}
 

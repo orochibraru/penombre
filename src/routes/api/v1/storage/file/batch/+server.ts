@@ -5,7 +5,11 @@ import { createBatchFiles } from "#lib/server/openapi/v1/storage.js";
 export const POST = createBatchFiles.handler(
 	async ({ query, body, service }) => {
 		try {
-			const results = await service.createBatchFiles(body.files, query.folder);
+			const results = await service.createBatchFiles(
+				body.files,
+				query.folder,
+				body.mode,
+			);
 			return Http.Ok(results);
 		} catch (error) {
 			if (error instanceof FileOrFolderNotFoundError) {

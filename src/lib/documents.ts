@@ -217,14 +217,17 @@ export async function renameDocument(
  * `.docx` it could get wrong.
  */
 export async function saveDocument(
-	fileId: string,
-	filename: string,
-	contentType: string,
+	file: { id: string; name: string; contentType: string },
 	content: string,
+	snapshot = false,
 ): Promise<boolean> {
+	const { id: fileId, name: filename, contentType } = file;
+	// Only a session's first save keeps the bytes it replaces as a version;
+	// autosave every two seconds would otherwise fill the history.
+	const query = { snapshot: snapshot ? ("1" as const) : ("0" as const) };
 	if (officeKindForName(filename)) {
 		const { error } = await api.POST("/api/v1/storage/file/{id}/office", {
-			params: { path: { id: fileId } },
+			params: { path: { id: fileId }, query },
 			body: { content },
 		});
 		return !error;
@@ -233,7 +236,7 @@ export async function saveDocument(
 	const form = new FormData();
 	form.set("file", new File([content], filename, { type: contentType }));
 	const { error } = await api.POST("/api/v1/storage/file/{id}/upload", {
-		params: { path: { id: fileId } },
+		params: { path: { id: fileId }, query },
 		body: form as never,
 	});
 	return !error;

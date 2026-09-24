@@ -58,6 +58,14 @@ describe("writeObject / readObject", () => {
 		const result = await driver.readObject("f.txt");
 		expect(new TextDecoder().decode(result)).toBe("second");
 	});
+
+	test("an overwrite leaves a linked copy untouched", async () => {
+		await driver.writeObject("f.txt", new TextEncoder().encode("first"));
+		await driver.linkObject("f.txt", ".versions/f/v1");
+		await driver.writeObject("f.txt", new TextEncoder().encode("second"));
+		const kept = await driver.readObject(".versions/f/v1");
+		expect(new TextDecoder().decode(kept)).toBe("first");
+	});
 });
 
 // ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
-import { stat, unlink } from "node:fs/promises";
+import { link, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { and, eq } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
@@ -110,6 +110,30 @@ export class ThumbnailService {
 			}
 		} catch (error) {
 			logger.warn("Error deleting thumbnails:", error);
+		}
+	}
+
+	/**
+	 * Gives `toKey` the renders `fromKey` already has, as hard links. A version
+	 * is a link to the bytes those renders were made from, so they are its
+	 * renders too — and the file's own are about to be deleted for new bytes.
+	 */
+	async adopt(fromKey: string, toKey: string): Promise<void> {
+		try {
+			const thumbDir = join(this.ctx.storagePath, ".thumbnails");
+			const from = `${fromKey.replace(/\//g, "_")}_`;
+			const to = `${toKey.replace(/\//g, "_")}_`;
+			const entries = await fs.promises.readdir(thumbDir).catch(() => []);
+			for (const entry of entries) {
+				if (entry.startsWith(from) && !entry.endsWith(".tmp")) {
+					await link(
+						join(thumbDir, entry),
+						join(thumbDir, to + entry.slice(from.length)),
+					).catch(() => undefined);
+				}
+			}
+		} catch (error) {
+			logger.warn("Error adopting thumbnails:", error);
 		}
 	}
 

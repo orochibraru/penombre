@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SparklesIcon, Trash2Icon } from "@lucide/svelte";
+	import { HistoryIcon, SparklesIcon, Trash2Icon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import StorageUsage from "#lib/components/storage-usage.svelte";
@@ -31,7 +31,7 @@
     <Card.Root>
         <Card.Content>
             <StorageUsage
-                used={stats.used}
+                used={stats.used + stats.versionBytes}
                 total={stats.disk.total}
                 available={stats.disk.available}
             />
@@ -110,6 +110,18 @@
                     href={resolve('trash')}
                 >{m.storage_review_trash()}</a>
             </div>
+
+            {#if stats.versionCount > 0}
+                <div
+                    class="bg-muted/50 flex flex-wrap items-center gap-2 rounded-lg px-3 py-2.5 text-sm"
+                >
+                    <HistoryIcon class="text-muted-foreground size-4 shrink-0" />
+                    {m.storage_versions_hold({
+                        count: String(stats.versionCount),
+                        size: readableFileSize(stats.versionBytes),
+                    })}
+                </div>
+            {/if}
 
             {#if stats.largestFiles.length > 0}
                 <div class="flex flex-col gap-2">

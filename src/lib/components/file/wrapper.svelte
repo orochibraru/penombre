@@ -16,6 +16,7 @@
 	import PreviewDialog from "#lib/components/file/preview-dialog.svelte";
 	import SelectionBar from "#lib/components/file/selection-bar.svelte";
 	import FileTable from "#lib/components/file/table.svelte";
+	import VersioningControls from "#lib/components/file/versioning-controls.svelte";
 	import DeleteDialog from "#lib/components/layout/dialogs/delete-dialog.svelte";
 	import MoveDialog from "#lib/components/layout/dialogs/move-dialog.svelte";
 	import RestoreDialog from "#lib/components/layout/dialogs/restore-dialog.svelte";
@@ -34,7 +35,6 @@
 	} from "#lib/store/upload.js";
 	import {
 		cn,
-		copyText,
 		isFolderItem,
 		isTrashListing,
 		readableFileSize,
@@ -55,6 +55,7 @@
 	import {
 		clickDownload,
 		computeSelectionState,
+		copyFolderLink,
 		createMainActions,
 		createMainMultipleActions,
 		createTrashActions,
@@ -143,6 +144,7 @@
 	let actionsContextOpen: boolean = $state(false);
 	let actionableItem: ObjectItem | undefined = $state();
 	let viewFileOpen: boolean = $state(false);
+	let versioning: VersioningControls | undefined = $state();
 	// Initialize from server-provided preferences to avoid hydration flash
 	let sortColumn: SortColumn = $derived(initialSortColumn);
 	let sortDirection: SortDirection = $derived(initialSortDirection);
@@ -581,17 +583,16 @@
 		},
 		onCopyLink: (item) => {
 			actionsContextOpen = false;
-			// Names the folder, not this page's URL, which means something
-			// else to every viewer; the server sends each to their own way in.
-			const link = `${page.url.origin}/go/folder/${item.metadata.id}`;
-			void copyText(link).then((copied) =>
-				copied ? toast.success(m.toast_link_copied()) : toast.info(link),
-			);
+			copyFolderLink(item);
 		},
 		onNotes: (item) => {
 			fileToView = notesView(item);
 			viewFileOpen = true;
 			actionsContextOpen = false;
+		},
+		onVersioning: (item) => {
+			actionsContextOpen = false;
+			versioning?.open(item);
 		},
 		onMoveToTrash: (item) => {
 			prepareForSingleItemAction(item);
@@ -970,6 +971,12 @@
                     {layout === "grid" ? m.layout_grid() : m.layout_list()}
                 </span>
 		</Button>
+		<VersioningControls
+			bind:this={versioning}
+			{currentFolder}
+			{isTrash}
+			onopen={handleOpenItemWrapper}
+		/>
 		{#if isTrash}
 			<Button
 				type="button"
@@ -1113,7 +1120,7 @@
 
 <PreviewDialog
 	bind:open={viewFileOpen}
-	fileToView={fileToView}
+	bind:fileToView
 	currentUserId={page.data.user?.id}
 />
 

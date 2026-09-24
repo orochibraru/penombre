@@ -74,7 +74,9 @@ async function collectFolderItems(
 		if (!entry.isDirectory()) {
 			continue;
 		}
-		if (entry.name === ".thumbnails") {
+		// The app's own dot-directories (`.thumbnails`, `.versions`, `.tmp`)
+		// are never folders; `.versions` became one on every boot.
+		if (entry.name.startsWith(".")) {
 			continue;
 		}
 
@@ -125,7 +127,7 @@ async function collectFileItems(
 
 	for (const entry of entries) {
 		if (entry.isDirectory()) {
-			if (entry.name === ".thumbnails") {
+			if (entry.name.startsWith(".")) {
 				continue;
 			}
 			result.push(

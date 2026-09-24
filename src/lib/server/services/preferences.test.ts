@@ -27,6 +27,7 @@ describe("getUserPreferences", () => {
 			emailNotifications: false,
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
+			versionNaming: "sequential",
 		});
 	});
 
@@ -53,6 +54,7 @@ describe("getUserPreferences", () => {
 			emailNotifications: false,
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
+			versionNaming: "sequential",
 		});
 	});
 
@@ -79,6 +81,7 @@ describe("getUserPreferences", () => {
 			emailNotifications: false,
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
+			versionNaming: "sequential",
 		});
 	});
 });
@@ -111,6 +114,7 @@ describe("updateUserPreferences", () => {
 			emailNotifications: false,
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
+			versionNaming: "sequential",
 		});
 		expect(mockValues).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -126,6 +130,7 @@ describe("updateUserPreferences", () => {
 					emailNotifications: false,
 					preferredSignInMethod: null,
 					listingLoadMode: "scroll",
+					versionNaming: "sequential",
 				},
 			}),
 		);
@@ -163,6 +168,7 @@ describe("updateUserPreferences", () => {
 			emailNotifications: false,
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
+			versionNaming: "sequential",
 		});
 	});
 });

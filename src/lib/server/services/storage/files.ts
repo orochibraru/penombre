@@ -1,4 +1,3 @@
-import { FileCategoryEnum } from "#lib/file-helpers.js";
 /**
  * Per-file operations: create, read, update, move, duplicate and delete.
  *
@@ -19,7 +18,11 @@ import type {
 } from "#lib/server/schema.js";
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
-import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
+import {
+	findLiveSibling,
+	getFolderIdByPath,
+	getUniqueDisplayName,
+} from "./lookups";
 import {
 	determineCategory,
 	determineContentType,
@@ -28,9 +31,10 @@ import {
 	fileDbToObjectItem,
 	generateFileNameWithExtension,
 } from "./mappers";
-import { recordDurations } from "./media";
 import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+import { afterWrite, VersionOperations } from "./version-ops";
+import { adminVersioning, dropVersionBytes, versioningAt } from "./versions";
 
 const logger = new Logger("StorageService");
 
@@ -41,10 +45,14 @@ export interface PlannedImport {
 }
 
 export class FileOperations {
+	private readonly versions: VersionOperations;
+
 	constructor(
 		private readonly ctx: StorageContext,
 		private readonly thumbnails: ThumbnailService,
-	) {}
+	) {
+		this.versions = new VersionOperations(ctx, thumbnails);
+	}
 
 	async getFile(path: string): Promise<ObjectItem> {
 		const [file] = await this.ctx.db
@@ -381,18 +389,44 @@ export class FileOperations {
 		};
 	}
 
+	/**
+	 * `upload` mode, in a folder that versions, hands back the live file of
+	 * the same name instead of a `name (1)`: the upload then replaces its
+	 * bytes and keeps the old ones as a version.
+	 */
 	async createBatchFiles(
 		fileList: NewFile[],
 		folder?: string,
+		mode: "create" | "upload" = "create",
 	): Promise<UploadResult[]> {
 		const results: UploadResult[] = [];
 		const { path: normalizedFolder, id: folderId } =
 			await this.resolveDestination(folder);
+		const replaces =
+			mode === "upload" &&
+			(
+				await versioningAt(
+					this.ctx,
+					normalizedFolder || null,
+					await adminVersioning(),
+				)
+			).enabled;
 
 		for (const file of fileList) {
 			const name = file.name.includes("/")
 				? (file.name.split("/").pop() ?? file.name)
 				: file.name;
+			const existing = replaces
+				? await findLiveSibling(this.ctx, name, folderId)
+				: undefined;
+			if (existing) {
+				results.push({
+					id: existing.id,
+					finalName: existing.path,
+					metadata: fileDbToMetadata(existing),
+				});
+				continue;
+			}
 			const uniqueName = await getUniqueDisplayName(
 				this.ctx,
 				name,
@@ -472,75 +506,39 @@ export class FileOperations {
 		return file ?? null;
 	}
 
-	async uploadFileBody(
-		id: string,
-		body: Blob | Buffer | Uint8Array,
-	): Promise<void> {
+	private async findOwnFile(id: string): Promise<DbFile | undefined> {
 		const [file] = await this.ctx.db
 			.select()
 			.from(files)
 			.where(and(eq(files.id, id), ownedFiles(this.ctx)));
+		return file;
+	}
+
+	async uploadFileBody(
+		id: string,
+		body: Blob | Buffer | Uint8Array,
+		options: { snapshot?: boolean } = {},
+	): Promise<void> {
+		const file = await this.findOwnFile(id);
 		if (!file) {
 			throw new Error(`Failed to find file with id: ${id}`);
 		}
 
-		const key = file.path;
 		try {
 			let data: Uint8Array;
-			let actualSize: number;
 			if (body instanceof Uint8Array) {
 				data = body;
-				actualSize = body.byteLength;
 			} else if (Buffer.isBuffer(body)) {
 				data = new Uint8Array(body);
-				actualSize = body.length;
 			} else {
-				const ab = await (body as Blob).arrayBuffer();
-				data = new Uint8Array(ab);
-				actualSize = ab.byteLength;
+				data = new Uint8Array(await (body as Blob).arrayBuffer());
 			}
 
-			await this.ctx.driver.writeObject(key, data);
-
-			const updatedAt = new Date();
-			const updates: Partial<typeof files.$inferInsert> = {
-				size: actualSize,
-				updatedAt,
-			};
-
-			const category = determineCategory(file.name);
-			// The old bytes' duration no longer applies; the new one lands
-			// when the probe does, off the request.
-			if (category === FileCategoryEnum.MUSIC) {
-				updates.musicDuration = null;
-			} else if (category === FileCategoryEnum.VIDEO) {
-				updates.videoDuration = null;
+			if (options.snapshot !== false) {
+				await this.versions.keepVersion(file);
 			}
-
-			await this.ctx.db
-				.update(files)
-				.set(updates)
-				.where(and(eq(files.id, id), ownedFiles(this.ctx)));
-
-			// The key is unchanged, so a stale thumbnail at the same cache path
-			// would otherwise pass `existsSync` and keep serving the old bytes
-			// forever; drop it before rebuilding.
-			await this.thumbnails.deleteThumbnails(key);
-			// Build the preview now rather than on first view. Not awaited:
-			// an ffmpeg pass over a large media file would otherwise hold the
-			// upload response open for seconds.
-			this.thumbnails.warm(key, file.contentType).catch(() => {
-				// `warm` already logs; nothing further to do here.
-			});
-			if (
-				category === FileCategoryEnum.MUSIC ||
-				category === FileCategoryEnum.VIDEO
-			) {
-				// Never throws; not awaited so the upload answers now.
-				void recordDurations(this.ctx, [
-					{ id, path: key, category, updatedAt },
-				]);
-			}
+			await this.ctx.driver.writeObject(file.path, data);
+			await afterWrite(this.ctx, this.thumbnails, file, data.byteLength);
 		} catch (error) {
 			logger.error("Error uploading file body:", error);
 			await this.ctx.activityService.register({
@@ -565,6 +563,7 @@ export class FileOperations {
 					.delete(files)
 					.where(and(eq(files.id, file.id), ownedFiles(this.ctx)));
 				await purgeGrantsFor(this.ctx.db, "file", [file.id]);
+				await dropVersionBytes(this.ctx, [file.id]);
 				await this.ctx.activityService.register({
 					userId: this.ctx.actor.id,
 					action: "delete",

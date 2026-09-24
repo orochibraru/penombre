@@ -6107,6 +6107,8 @@ export interface paths {
 								sortColumn?: ("name" | "size" | "updatedAt") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";
+								/** @enum {string} */
+								versionNaming?: "sequential" | "date";
 							};
 						};
 					};
@@ -6170,6 +6172,8 @@ export interface paths {
 						sortColumn?: ("name" | "size" | "updatedAt") | null;
 						/** @enum {string} */
 						sortDirection?: "asc" | "desc";
+						/** @enum {string} */
+						versionNaming?: "sequential" | "date";
 					};
 				};
 			};
@@ -6207,6 +6211,8 @@ export interface paths {
 								sortColumn?: ("name" | "size" | "updatedAt") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";
+								/** @enum {string} */
+								versionNaming?: "sequential" | "date";
 							};
 						};
 					};
@@ -7073,6 +7079,7 @@ export interface paths {
 									name?: string;
 									owner: string;
 									tags?: string[];
+									versionSeq?: number;
 									video?: {
 										duration?: number;
 									};
@@ -7148,6 +7155,8 @@ export interface paths {
 							name: string;
 							size: number;
 						}[];
+						/** @enum {string} */
+						mode?: "create" | "upload";
 					};
 				};
 			};
@@ -7272,6 +7281,7 @@ export interface paths {
 									name?: string;
 									owner: string;
 									tags?: string[];
+									versionSeq?: number;
 									video?: {
 										duration?: number;
 									};
@@ -7467,6 +7477,7 @@ export interface paths {
 										name?: string;
 										owner: string;
 										tags?: string[];
+										versionSeq?: number;
 										video?: {
 											duration?: number;
 										};
@@ -7736,6 +7747,7 @@ export interface paths {
 										name?: string;
 										owner: string;
 										tags?: string[];
+										versionSeq?: number;
 										video?: {
 											duration?: number;
 										};
@@ -7940,6 +7952,7 @@ export interface paths {
 										name?: string;
 										owner: string;
 										tags?: string[];
+										versionSeq?: number;
 										video?: {
 											duration?: number;
 										};
@@ -8136,6 +8149,7 @@ export interface paths {
 										name?: string;
 										owner: string;
 										tags?: string[];
+										versionSeq?: number;
 										video?: {
 											duration?: number;
 										};
@@ -8331,6 +8345,7 @@ export interface paths {
 									name?: string;
 									owner: string;
 									tags?: string[];
+									versionSeq?: number;
 									video?: {
 										duration?: number;
 									};
@@ -8671,6 +8686,7 @@ export interface paths {
 									name?: string;
 									owner: string;
 									tags?: string[];
+									versionSeq?: number;
 									video?: {
 										duration?: number;
 									};
@@ -8821,6 +8837,7 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
+					snapshot?: "0" | "1";
 				};
 				header?: never;
 				path: {
@@ -8922,6 +8939,7 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
+					snapshot?: "0" | "1";
 				};
 				header?: never;
 				path: {
@@ -8980,6 +8998,490 @@ export interface paths {
 				};
 			};
 		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/versions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** List a file's versions */
+		get: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								current: {
+									nextSeq: number;
+									size: number;
+									/** Format: date-time */
+									updatedAt: string;
+								};
+								versioning: {
+									enabled: boolean;
+									max: number;
+								};
+								versions: {
+									authorName: string | null;
+									contentType: string;
+									/** Format: date-time */
+									createdAt: string;
+									id: string;
+									seq: number;
+									size: number;
+								}[];
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/** Keep the current bytes as a version */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								authorName: string | null;
+								contentType: string;
+								/** Format: date-time */
+								createdAt: string;
+								id: string;
+								seq: number;
+								size: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/versions/{versionId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/** Delete a version */
+		delete: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+					versionId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/versions/{versionId}/raw": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Download a version
+		 * @description The version's bytes, with Range support. Served inline so it can be previewed; `download=1` asks for an attachment.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+					download?: "1";
+				};
+				header?: never;
+				path: {
+					id: string;
+					versionId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/versions/{versionId}/restore": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Restore a version
+		 * @description The current bytes are kept as a new version first, so a restore never loses anything. The restored version stays listed.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+					versionId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/versions/{versionId}/thumbnail": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * A version's thumbnail
+		 * @description A webp thumbnail, or JSON waveform peaks for audio. 404 when the version's type has no preview; never the bytes themselves.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+					size?: "small" | "medium" | "large";
+				};
+				header?: never;
+				path: {
+					id: string;
+					versionId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -9776,6 +10278,171 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/storage/folder/{path}/settings": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get a folder's settings
+		 * @description `path` is the folder's id or its path. Returns what the folder sets, what applies inside it, and what it would inherit if it set nothing.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								adminEnabled: boolean;
+								adminMax: number;
+								effective: {
+									enabled: boolean;
+									max: number;
+								};
+								inherited: {
+									enabled: boolean;
+									max: number;
+								};
+								settings: {
+									maxVersions?: number;
+									versioning?: boolean;
+								};
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Save a folder's settings
+		 * @description An absent key inherits from the nearest ancestor that sets it.
+		 */
+		put: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					path: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						maxVersions?: number;
+						versioning?: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/storage/folder/{path}/size": {
 		parameters: {
 			query?: never;
@@ -10083,6 +10750,7 @@ export interface paths {
 										name?: string;
 										owner: string;
 										tags?: string[];
+										versionSeq?: number;
 										video?: {
 											duration?: number;
 										};
@@ -10275,6 +10943,7 @@ export interface paths {
 										name?: string;
 										owner: string;
 										tags?: string[];
+										versionSeq?: number;
 										video?: {
 											duration?: number;
 										};
@@ -10473,6 +11142,7 @@ export interface paths {
 										name?: string;
 										owner: string;
 										tags?: string[];
+										versionSeq?: number;
 										video?: {
 											duration?: number;
 										};
@@ -11384,6 +12054,7 @@ export interface components {
 			name?: string;
 			owner: string;
 			tags?: string[];
+			versionSeq?: number;
 			video?: {
 				duration?: number;
 			};
@@ -11514,6 +12185,7 @@ export interface components {
 				name?: string;
 				owner: string;
 				tags?: string[];
+				versionSeq?: number;
 				video?: {
 					duration?: number;
 				};
@@ -11640,6 +12312,7 @@ export interface components {
 					name?: string;
 					owner: string;
 					tags?: string[];
+					versionSeq?: number;
 					video?: {
 						duration?: number;
 					};
@@ -11830,6 +12503,7 @@ export interface components {
 				name?: string;
 				owner: string;
 				tags?: string[];
+				versionSeq?: number;
 				video?: {
 					duration?: number;
 				};

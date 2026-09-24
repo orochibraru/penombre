@@ -20,6 +20,14 @@ export class ReadOnlyVolumeError extends Error {
 	}
 }
 
+/** Versioning asked for while the admin has it turned off. */
+export class VersioningDisabledError extends Error {
+	constructor(message = "File versioning is turned off") {
+		super(message);
+		this.name = "VersioningDisabledError";
+	}
+}
+
 /**
  * A shared drive that does not exist, or that the caller is not a member of.
  *

@@ -17,7 +17,11 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core";
-import type { AppSettingsData, UserPreferencesData } from "./schema.pg";
+import type {
+	AppSettingsData,
+	FolderSettingsData,
+	UserPreferencesData,
+} from "./schema.pg";
 
 export const user = sqliteTable("user", {
 	id: text("id").primaryKey(),
@@ -387,6 +391,30 @@ export const fileNotes = sqliteTable(
 	],
 );
 
+export const fileVersions = sqliteTable(
+	"file_versions",
+	{
+		id: text("id").primaryKey(),
+		fileId: text("file_id")
+			.notNull()
+			.references(() => files.id, { onDelete: "cascade" }),
+		seq: integer("seq").notNull(),
+		size: integer("size", { mode: "number" }).default(0).notNull(),
+		contentType: text("content_type")
+			.default("application/octet-stream")
+			.notNull(),
+		createdBy: text("created_by").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		uniqueIndex("file_versions_file_seq_idx").on(table.fileId, table.seq),
+	],
+);
+
 // =========================================================================
 // FOLDERS
 // =========================================================================
@@ -414,6 +442,7 @@ export const folders = sqliteTable(
 			.$type<string[]>()
 			.default([])
 			.notNull(),
+		settings: text("settings", { mode: "json" }).$type<FolderSettingsData>(),
 		createdAt: integer("created_at", { mode: "timestamp_ms" })
 			.$defaultFn(() => new Date())
 			.notNull(),

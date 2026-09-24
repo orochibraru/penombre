@@ -456,6 +456,9 @@
 						},
 						"type": "array"
 					},
+					"versionSeq": {
+						"type": "number"
+					},
 					"video": {
 						"additionalProperties": false,
 						"properties": {
@@ -683,6 +686,9 @@
 								},
 								"type": "array"
 							},
+							"versionSeq": {
+								"type": "number"
+							},
 							"video": {
 								"additionalProperties": false,
 								"properties": {
@@ -885,6 +891,9 @@
 												"type": "string"
 											},
 											"type": "array"
+										},
+										"versionSeq": {
+											"type": "number"
 										},
 										"video": {
 											"additionalProperties": false,
@@ -1275,6 +1284,9 @@
 									"type": "string"
 								},
 								"type": "array"
+							},
+							"versionSeq": {
+								"type": "number"
 							},
 							"video": {
 								"additionalProperties": false,
@@ -16733,6 +16745,13 @@
 														"desc"
 													],
 													"type": "string"
+												},
+												"versionNaming": {
+													"enum": [
+														"sequential",
+														"date"
+													],
+													"type": "string"
 												}
 											},
 											"type": "object"
@@ -16866,6 +16885,13 @@
 											"desc"
 										],
 										"type": "string"
+									},
+									"versionNaming": {
+										"enum": [
+											"sequential",
+											"date"
+										],
+										"type": "string"
 									}
 								},
 								"type": "object"
@@ -16964,6 +16990,13 @@
 													"enum": [
 														"asc",
 														"desc"
+													],
+													"type": "string"
+												},
+												"versionNaming": {
+													"enum": [
+														"sequential",
+														"date"
 													],
 													"type": "string"
 												}
@@ -18268,6 +18301,9 @@
 															},
 															"type": "array"
 														},
+														"versionSeq": {
+															"type": "number"
+														},
 														"video": {
 															"additionalProperties": false,
 															"properties": {
@@ -18406,6 +18442,13 @@
 											"type": "object"
 										},
 										"type": "array"
+									},
+									"mode": {
+										"enum": [
+											"create",
+											"upload"
+										],
+										"type": "string"
 									}
 								},
 								"required": [
@@ -18573,6 +18616,9 @@
 																	"type": "string"
 																},
 																"type": "array"
+															},
+															"versionSeq": {
+																"type": "number"
 															},
 															"video": {
 																"additionalProperties": false,
@@ -18891,6 +18937,9 @@
 																			"type": "string"
 																		},
 																		"type": "array"
+																	},
+																	"versionSeq": {
+																		"type": "number"
 																	},
 																	"video": {
 																		"additionalProperties": false,
@@ -19306,6 +19355,9 @@
 																		},
 																		"type": "array"
 																	},
+																	"versionSeq": {
+																		"type": "number"
+																	},
 																	"video": {
 																		"additionalProperties": false,
 																		"properties": {
@@ -19648,6 +19700,9 @@
 																		},
 																		"type": "array"
 																	},
+																	"versionSeq": {
+																		"type": "number"
+																	},
 																	"video": {
 																		"additionalProperties": false,
 																		"properties": {
@@ -19986,6 +20041,9 @@
 																			"type": "string"
 																		},
 																		"type": "array"
+																	},
+																	"versionSeq": {
+																		"type": "number"
 																	},
 																	"video": {
 																		"additionalProperties": false,
@@ -20419,6 +20477,9 @@
 																"type": "string"
 															},
 															"type": "array"
+														},
+														"versionSeq": {
+															"type": "number"
 														},
 														"video": {
 															"additionalProperties": false,
@@ -20862,6 +20923,9 @@
 															},
 															"type": "array"
 														},
+														"versionSeq": {
+															"type": "number"
+														},
 														"video": {
 															"additionalProperties": false,
 															"properties": {
@@ -21117,6 +21181,19 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "snapshot",
+						"required": false,
+						"schema": {
+							"description": "0 skips keeping the old bytes as a version",
+							"enum": [
+								"0",
+								"1"
+							],
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -21261,6 +21338,19 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "snapshot",
+						"required": false,
+						"schema": {
+							"description": "0 skips keeping the old bytes as a version",
+							"enum": [
+								"0",
+								"1"
+							],
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -21346,6 +21436,791 @@
 				"summary": "Upload file content",
 				"tags": [
 					"Storage - Files"
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/versions": {
+			"get": {
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"current": {
+													"additionalProperties": false,
+													"properties": {
+														"nextSeq": {
+															"type": "number"
+														},
+														"size": {
+															"type": "number"
+														},
+														"updatedAt": {
+															"format": "date-time",
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+															"type": "string"
+														}
+													},
+													"required": [
+														"size",
+														"updatedAt",
+														"nextSeq"
+													],
+													"type": "object"
+												},
+												"versioning": {
+													"additionalProperties": false,
+													"properties": {
+														"enabled": {
+															"type": "boolean"
+														},
+														"max": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"enabled",
+														"max"
+													],
+													"type": "object"
+												},
+												"versions": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"authorName": {
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
+															"contentType": {
+																"type": "string"
+															},
+															"createdAt": {
+																"format": "date-time",
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																"type": "string"
+															},
+															"id": {
+																"type": "string"
+															},
+															"seq": {
+																"type": "number"
+															},
+															"size": {
+																"type": "number"
+															}
+														},
+														"required": [
+															"id",
+															"seq",
+															"size",
+															"contentType",
+															"authorName",
+															"createdAt"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												}
+											},
+											"required": [
+												"current",
+												"versions",
+												"versioning"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List a file's versions",
+				"tags": [
+					"Storage - Versions"
+				]
+			},
+			"post": {
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"authorName": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"contentType": {
+													"type": "string"
+												},
+												"createdAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												},
+												"seq": {
+													"type": "number"
+												},
+												"size": {
+													"type": "number"
+												}
+											},
+											"required": [
+												"id",
+												"seq",
+												"size",
+												"contentType",
+												"authorName",
+												"createdAt"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Keep the current bytes as a version",
+				"tags": [
+					"Storage - Versions"
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/versions/{versionId}": {
+			"delete": {
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "versionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"message"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Delete a version",
+				"tags": [
+					"Storage - Versions"
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/versions/{versionId}/raw": {
+			"get": {
+				"description": "The version's bytes, with Range support. Served inline so it can be previewed; `download=1` asks for an attachment.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "versionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "download",
+						"required": false,
+						"schema": {
+							"enum": [
+								"1"
+							],
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Download a version",
+				"tags": [
+					"Storage - Versions"
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/versions/{versionId}/restore": {
+			"post": {
+				"description": "The current bytes are kept as a new version first, so a restore never loses anything. The restored version stays listed.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "versionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"message"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Restore a version",
+				"tags": [
+					"Storage - Versions"
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/versions/{versionId}/thumbnail": {
+			"get": {
+				"description": "A webp thumbnail, or JSON waveform peaks for audio. 404 when the version's type has no preview; never the bytes themselves.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "versionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "size",
+						"required": false,
+						"schema": {
+							"enum": [
+								"small",
+								"medium",
+								"large"
+							],
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "A version's thumbnail",
+				"tags": [
+					"Storage - Versions"
 				]
 			}
 		},
@@ -22568,6 +23443,296 @@
 				]
 			}
 		},
+		"/api/v1/storage/folder/{path}/settings": {
+			"get": {
+				"description": "`path` is the folder's id or its path. Returns what the folder sets, what applies inside it, and what it would inherit if it set nothing.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"adminEnabled": {
+													"type": "boolean"
+												},
+												"adminMax": {
+													"type": "number"
+												},
+												"effective": {
+													"additionalProperties": false,
+													"properties": {
+														"enabled": {
+															"type": "boolean"
+														},
+														"max": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"enabled",
+														"max"
+													],
+													"type": "object"
+												},
+												"inherited": {
+													"additionalProperties": false,
+													"properties": {
+														"enabled": {
+															"type": "boolean"
+														},
+														"max": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"enabled",
+														"max"
+													],
+													"type": "object"
+												},
+												"settings": {
+													"additionalProperties": false,
+													"properties": {
+														"maxVersions": {
+															"maximum": 1000,
+															"minimum": 1,
+															"type": "integer"
+														},
+														"versioning": {
+															"type": "boolean"
+														}
+													},
+													"type": "object"
+												}
+											},
+											"required": [
+												"settings",
+												"effective",
+												"inherited",
+												"adminEnabled",
+												"adminMax"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Get a folder's settings",
+				"tags": [
+					"Storage - Folders"
+				]
+			},
+			"put": {
+				"description": "An absent key inherits from the nearest ancestor that sets it.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"maxVersions": {
+										"maximum": 1000,
+										"minimum": 1,
+										"type": "integer"
+									},
+									"versioning": {
+										"type": "boolean"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"message"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Save a folder's settings",
+				"tags": [
+					"Storage - Folders"
+				]
+			}
+		},
 		"/api/v1/storage/folder/{path}/size": {
 			"get": {
 				"description": "Calculates and returns the total size of a folder in bytes",
@@ -23022,6 +24187,9 @@
 																		},
 																		"type": "array"
 																	},
+																	"versionSeq": {
+																		"type": "number"
+																	},
 																	"video": {
 																		"additionalProperties": false,
 																		"properties": {
@@ -23319,6 +24487,9 @@
 																			"type": "string"
 																		},
 																		"type": "array"
+																	},
+																	"versionSeq": {
+																		"type": "number"
 																	},
 																	"video": {
 																		"additionalProperties": false,
@@ -23668,6 +24839,9 @@
 																			"type": "string"
 																		},
 																		"type": "array"
+																	},
+																	"versionSeq": {
+																		"type": "number"
 																	},
 																	"video": {
 																		"additionalProperties": false,

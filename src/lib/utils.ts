@@ -196,6 +196,8 @@ export interface ItemAction {
 	disabled?: boolean;
 	fileOnly?: boolean;
 	folderOnly?: boolean;
+	/** Checked each time the menu renders. */
+	hidden?: () => boolean;
 	/** Set to true when title/icon are functions that need the item to resolve */
 	dynamic?: boolean;
 }
@@ -361,6 +363,9 @@ export function shouldDisplayAction({
 	action: ItemAction;
 	item: ObjectItem;
 }) {
+	if (action.hidden?.()) {
+		return false;
+	}
 	const isFolder = isFolderItem(item);
 	if (isFolder && action.fileOnly) {
 		return false;

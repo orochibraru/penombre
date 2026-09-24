@@ -16,6 +16,7 @@ import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+import { dropVersionBytes } from "./versions";
 
 const logger = new Logger("StorageReconcile");
 
@@ -134,6 +135,10 @@ export async function reconcileDelete(
 		await purgeGrantsFor(
 			ctx.db,
 			"file",
+			gone.map((row) => row.id),
+		);
+		await dropVersionBytes(
+			ctx,
 			gone.map((row) => row.id),
 		);
 		removed += gone.length;

@@ -130,6 +130,11 @@ export const createBatchFiles = defineRoute({
 	}),
 	body: z.object({
 		files: z.array(z.object({ name: z.string(), size: z.number() })),
+		/**
+		 * `upload`: where the folder versions, a name that already exists
+		 * answers with that file, whose bytes the upload then replaces.
+		 */
+		mode: z.enum(["create", "upload"]).optional(),
 	}),
 	response: z.array(uploadResultSchema),
 	errors: [400, 500],
@@ -253,7 +258,13 @@ export const uploadFile = defineRoute({
 		file: z.any().describe("The file to upload"),
 	}),
 	isFormData: true,
-	query: z.object(driveQuery),
+	query: z.object({
+		...driveQuery,
+		snapshot: z
+			.enum(["0", "1"])
+			.optional()
+			.describe("0 skips keeping the old bytes as a version"),
+	}),
 	response: z.object({ message: z.string() }),
 	errors: [400, 500],
 	service: storageServiceFor,
@@ -273,7 +284,13 @@ export const saveOfficeDocument = defineRoute({
 	body: z.object({
 		content: z.string().describe("The edited text, in the format for its kind"),
 	}),
-	query: z.object(driveQuery),
+	query: z.object({
+		...driveQuery,
+		snapshot: z
+			.enum(["0", "1"])
+			.optional()
+			.describe("0 skips keeping the old bytes as a version"),
+	}),
 	response: z.object({ message: z.string() }),
 	errors: [400, 404, 422, 500],
 	service: storageServiceFor,

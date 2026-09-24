@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		ClockIcon,
+		HistoryIcon,
 		InfoIcon,
 		KeyRoundIcon,
 		LockIcon,
@@ -562,6 +563,46 @@
                     ? m.admin_env_read_only()
                     : m.admin_data_retention_hint()}
             </p>
+        </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+        <Card.Header>
+            <Card.Title class="flex items-center gap-2">
+                <HistoryIcon class="size-4" />
+                {m.admin_versioning()}
+            </Card.Title>
+            <Card.Description>{m.admin_versioning_description()}</Card.Description>
+        </Card.Header>
+        <Card.Content class="flex flex-col gap-4">
+            <Label
+                class="hover:bg-muted/40 flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+            >
+                <Checkbox
+                    name="versioningEnabled"
+                    checked={data.settings.versioningEnabled ?? false}
+                    class="mt-0.5"
+                />
+                <span class="grid gap-1 font-normal">
+                    <span class="font-medium">{m.admin_versioning_enabled()}</span>
+                    <span class="text-muted-foreground text-xs">
+                        {m.admin_versioning_enabled_hint()}
+                    </span>
+                </span>
+            </Label>
+            <div class="flex flex-col gap-2">
+                <Label for="maxVersionsPerFile">{m.admin_versioning_max()}</Label>
+                <Input
+                    id="maxVersionsPerFile"
+                    name="maxVersionsPerFile"
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={data.settings.maxVersionsPerFile ?? 10}
+                    class="w-32"
+                />
+                <p class="text-muted-foreground text-xs">{m.admin_versioning_max_hint()}</p>
+            </div>
         </Card.Content>
     </Card.Root>
 

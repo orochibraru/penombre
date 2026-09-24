@@ -140,6 +140,8 @@ export const fileMetadataSchema = z.object({
 			duration: z.number().optional(),
 		})
 		.optional(),
+	/** Highest kept version; the current bytes are `v{versionSeq + 1}`. */
+	versionSeq: z.number().optional(),
 });
 
 export const objectItemSchema = z.object({

@@ -45,6 +45,13 @@ export interface StorageDriver {
 	/** Copy an object from `src` to `dest` (both relative to the user root). */
 	copyObject: (src: string, dest: string) => Promise<void>;
 
+	/**
+	 * Make `dest` share `src`'s bytes: a hard link, or a copy where the
+	 * filesystem refuses one. `writeObject` never rewrites in place, so a
+	 * later write to `src` leaves `dest` alone.
+	 */
+	linkObject: (src: string, dest: string) => Promise<void>;
+
 	/** Return true if the object exists. */
 	objectExists: (key: string) => Promise<boolean>;
 

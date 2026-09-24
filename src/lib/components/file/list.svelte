@@ -13,6 +13,7 @@
 	import { Skeleton } from "#lib/components/ui/skeleton/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { locationOf } from "#lib/storage-location.js";
+	import { expandedVersions } from "#lib/store/versions.js";
 	import {
 		cn,
 		isBrowsableListing,
@@ -25,8 +26,10 @@
 		type SharedFileDisplayProps,
 		shouldDisplayAction,
 	} from "#lib/utils.js";
+	import { versionOf, withVersions } from "#lib/versions.js";
 	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
 	import { page } from "$app/state";
+	import { actionsFor } from "./version-actions.js";
 
 	let {
 		handleOpenItem,
@@ -57,6 +60,8 @@
 	const loadingAmount = 20;
 	/** A row's pitch: the height set on each `li` plus the list's `gap-1`. */
 	const ROW_HEIGHT = 64;
+	/** An unfolded version is a sub-row, deliberately shorter than a file. */
+	const VERSION_ROW_HEIGHT = 44;
 	const ROW_GAP = 4;
 
 	/** `undefined` outside /browse and at the drive root: no `..` row there. */
@@ -233,11 +238,18 @@
 
 	/** Only the rows near the viewport are in the DOM; see virtual-window.svelte.ts. */
 	const displayedItems = $derived(
-		searchValue ? (sortedSearchResults ?? []) : (sortedFiles ?? []),
+		withVersions(
+			searchValue ? (sortedSearchResults ?? []) : (sortedFiles ?? []),
+			$expandedVersions,
+		),
 	);
 	const virtualizer = createWindowVirtualizer({
 		count: () => displayedItems.length,
 		rowHeight: () => ROW_HEIGHT,
+		heightOf: (i) =>
+			displayedItems[i] && versionOf(displayedItems[i])
+				? VERSION_ROW_HEIGHT
+				: ROW_HEIGHT,
 		overscan: 8,
 	});
 	let listEl: HTMLElement | undefined = $state();
@@ -258,14 +270,16 @@
     {@const checked = isChecked(item)}
     {@const isFolder = isFolderItem(item)}
     {@const isDragTarget = dropTargetKey === item.key}
+    {@const version = versionOf(item)}
     <li
         class={cn(
             "flex min-w-0 items-center justify-between rounded-xl px-1 py-3 transition-colors",
             checked ? "bg-primary/5" : "",
+            version ? "bg-muted/30 py-0" : "",
             isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
         )}
-        style="height: {ROW_HEIGHT - ROW_GAP}px"
-        draggable={onDragStart !== undefined}
+        style="height: {(version ? VERSION_ROW_HEIGHT : ROW_HEIGHT) - ROW_GAP}px"
+        draggable={onDragStart !== undefined && !version}
         ondragstart={(e) => handleItemDragStart(e, item)}
         ondragend={handleItemDragEnd}
         ondragover={isFolder
@@ -440,7 +454,7 @@
             <div class="mx-auto flex w-full flex-col items-start gap-5 pb-5">
                 {#if actionableItem}
                     {@const item = actionableItem}
-                    {#each itemActions as action}
+                    {#each actionsFor(actionableItem, itemActions) as action}
                         {#each action.actions as act}
                             {#if shouldDisplayAction({ action: act, item })}
                                 {@const Icon = act.dynamic
@@ -469,7 +483,7 @@
                             {/if}
                         {/each}
                         {@const isLast =
-                            action === itemActions[itemActions.length - 1]}
+                            action === actionsFor(actionableItem, itemActions).at(-1)}
                         {#if !isLast}
                             <hr
                                 class="my-2 w-full border-muted-foreground/30"

@@ -4,10 +4,12 @@ import {
 	CopyPlusIcon,
 	DownloadIcon,
 	FolderInputIcon,
+	HistoryIcon,
 	LinkIcon,
 	MaximizeIcon,
 	MessageSquareTextIcon,
 	PencilLineIcon,
+	SettingsIcon,
 	ShareIcon,
 	StarIcon,
 	StarOffIcon,
@@ -24,17 +26,20 @@ import { itemAction } from "#lib/store/actions.js";
 import { playableMusic } from "#lib/store/music.js";
 import { getObjectUrl } from "#lib/url.js";
 import {
+	copyText,
+	type ItemAction,
 	type ItemActionGroup,
 	isTrashListing,
 	type MultipleItemsAction,
 	type SortColumn,
 	type SortDirection,
 } from "#lib/utils.js";
+import { displayTitle, versionOf } from "#lib/versions.js";
 import { dev } from "$app/env";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { page } from "$app/state";
-import { peaksUrl, withLocation } from "./file-links";
+import { peaksUrl, rawUrl, withLocation } from "./file-links";
 
 export {
 	fullscreenUrl,
@@ -261,6 +266,8 @@ export function createMainActions(handlers: {
 	onShare: (item: ObjectItem) => void;
 	onCopyLink: (item: ObjectItem) => void;
 	onNotes: (item: ObjectItem) => void;
+	/** A new version for a file, folder settings for a folder. */
+	onVersioning: (item: ObjectItem) => void;
 	onMoveToTrash: (item: ObjectItem) => void;
 }): ItemActionGroup[] {
 	return [
@@ -295,6 +302,7 @@ export function createMainActions(handlers: {
 					action: handlers.onCopyLink,
 					folderOnly: true,
 				},
+				...versioningActions(handlers.onVersioning),
 			],
 		},
 		{
@@ -553,8 +561,10 @@ export async function handleOpenItem(
 	// A document Penombre can edit opens in its editor rather than a preview:
 	// opening a spreadsheet to look at a read-only rendering of it is not what
 	// anybody means by "open".
+	const version = versionOf(item);
+	// The editor edits the current file; a version only previews.
 	const editable = editorKindForName(item.metadata.name ?? item.key);
-	if (editable && item.metadata.id) {
+	if (editable && item.metadata.id && !version) {
 		await goto(
 			withLocation(
 				resolve("/(app)/edit/[fileId]", { fileId: item.metadata.id }),
@@ -563,12 +573,7 @@ export async function handleOpenItem(
 		return;
 	}
 
-	const finalUrl = getObjectUrl({
-		baseUrl: page.url,
-		itemPath: item.key,
-		fileId: item.metadata.id,
-		raw: true,
-	});
+	const finalUrl = rawUrl(item);
 
 	if (item.metadata.category === "CODE") {
 		const codeReq = await fetch(finalUrl);
@@ -602,11 +607,14 @@ export async function handleOpenItem(
 
 	if (item.metadata.category === "MUSIC") {
 		playableMusic.set({
-			title: item.metadata.name || item.key,
+			title: displayTitle(item, page.data.preferences?.versionNaming),
 			source: finalUrl,
 			peaks: peaksUrl(item),
 			isPlaying: !dev,
-			fileId: item.metadata.id,
+			// No notes thread or full-screen viewer for an earlier take.
+			fileId: version ? undefined : item.metadata.id,
+			item: version?.file ?? item,
+			versionId: version?.id,
 		});
 		return;
 	}
@@ -757,4 +765,35 @@ export function triggerRenameAction(
 		open: true,
 		item,
 	});
+}
+
+function versioningActions(action: (item: ObjectItem) => void): ItemAction[] {
+	const hidden = () => !page.data.versioning;
+	return [
+		{
+			title: "Upload new version",
+			icon: HistoryIcon,
+			action,
+			fileOnly: true,
+			hidden,
+		},
+		{
+			title: "Folder settings",
+			icon: SettingsIcon,
+			action,
+			folderOnly: true,
+			hidden,
+		},
+	];
+}
+
+/**
+ * Names the folder, not this page's URL, which means something else to every
+ * viewer; the server sends each to their own way in.
+ */
+export function copyFolderLink(item: ObjectItem): void {
+	const link = `${page.url.origin}/go/folder/${item.metadata.id}`;
+	void copyText(link).then((copied) =>
+		copied ? toast.success(m.toast_link_copied()) : toast.info(link),
+	);
 }

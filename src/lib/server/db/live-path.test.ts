@@ -21,9 +21,10 @@ function before(): string {
 	cpSync(MIGRATIONS, dir, { recursive: true });
 	const journalPath = join(dir, "meta/_journal.json");
 	const journal = JSON.parse(readFileSync(journalPath, "utf8"));
-	journal.entries = journal.entries.filter(
-		(entry: { tag: string }) => entry.tag !== TAG,
+	const cut = journal.entries.findIndex(
+		(entry: { tag: string }) => entry.tag === TAG,
 	);
+	journal.entries = journal.entries.slice(0, cut);
 	writeFileSync(journalPath, JSON.stringify(journal));
 	return dir;
 }

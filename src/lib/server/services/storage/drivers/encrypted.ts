@@ -126,6 +126,11 @@ export class EncryptedStorageDriver implements StorageDriver {
 		return this.inner.copyObject(src, dest);
 	}
 
+	/** Raw: a sealed file carries its own key, so its link is sealed too. */
+	linkObject(src: string, dest: string): Promise<void> {
+		return this.inner.linkObject(src, dest);
+	}
+
 	deleteObject(key: string): Promise<void> {
 		return this.inner.deleteObject(key);
 	}

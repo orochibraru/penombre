@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { MaximizeIcon, MessageSquareTextIcon } from "@lucide/svelte";
 	import { untrack } from "svelte";
+	import type { ObjectItem } from "#lib/api/index.js";
 	import NotesPanel from "#lib/components/file/notes-panel.svelte";
 	import Waveform from "#lib/components/file/waveform.svelte";
 	import VideoPlayer from "#lib/components/layout/video-player.svelte";
@@ -17,8 +18,10 @@
 	} from "#lib/store/music.js";
 	import { fileNotes, noteMarkers } from "#lib/store/notes.js";
 	import { cn, readableFileSize } from "#lib/utils.js";
+	import { versionOf } from "#lib/versions.js";
 	import type { ResolvedPathname } from "$app/types";
-	import { fullscreenUrl } from "./file-links";
+	import { fullscreenUrl, rawUrl } from "./file-links";
+	import VersionSelect from "./version-select.svelte";
 	import type { FileToView } from "./wrapper.svelte.js";
 
 	/**
@@ -28,7 +31,7 @@
 	 */
 	let {
 		open = $bindable(false),
-		fileToView,
+		fileToView = $bindable(),
 		currentUserId,
 	}: {
 		open: boolean;
@@ -70,6 +73,26 @@
 		),
 	);
 
+	/** The file behind what is shown, when what is shown is a version. */
+	const baseItem = $derived(
+		fileToView
+			? (versionOf(fileToView.item)?.file ?? fileToView.item)
+			: undefined,
+	);
+
+	/** Same view, other take; a video picks up where this one is. */
+	function switchTake(target: ObjectItem) {
+		if (!fileToView) {
+			return;
+		}
+		fileToView = {
+			...fileToView,
+			item: target,
+			src: rawUrl(target),
+			startAt: fileToView.type === "video" ? viewerTime : undefined,
+		};
+	}
+
 	function stampTime(seconds: number): string {
 		const total = Math.max(0, Math.floor(seconds || 0));
 		return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(
@@ -97,6 +120,13 @@
                 </Badge>
             {/if}
             <div class="flex items-center gap-2 pr-5">
+                {#if baseItem && (fileToView.type === "image" || fileToView.type === "video")}
+                    <VersionSelect
+                        file={baseItem}
+                        selected={versionOf(fileToView.item)?.id ?? null}
+                        onselect={switchTake}
+                    />
+                {/if}
                 {#if fileToView.item.metadata.id && !notesOnly}
                     <Button
                         type="button"

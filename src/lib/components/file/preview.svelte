@@ -8,14 +8,16 @@
 	import type { ObjectItem } from "#lib/api/index.js";
 	import DocumentIcon from "#lib/components/file/document-icon.svelte";
 	import DocumentKindIcon from "#lib/components/file/document-kind-icon.svelte";
+	import {
+		rawUrl,
+		thumbnailUrl as thumbUrlFor,
+	} from "#lib/components/file/file-links.js";
 	import Waveform from "#lib/components/file/waveform.svelte";
 	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.js";
 	import { kindForName } from "#lib/documents.js";
 	import { isCodeItem } from "#lib/file-utils.js";
-	import { getObjectUrl } from "#lib/url.js";
 	import { getFileIconType } from "#lib/utils.js";
-	import { page } from "$app/state";
 
 	interface Props {
 		item: ObjectItem;
@@ -61,21 +63,10 @@
 	let thumbnailLoading = $state(true);
 
 	$effect(() => {
-		objectUrl = getObjectUrl({
-			raw: true,
-			itemPath: item.key,
-			fileId: item.metadata.id,
-			baseUrl: page.url,
-		});
+		objectUrl = rawUrl(item);
 
 		if (isImage || isVideo || isPdf || isAudio) {
-			thumbnailUrl = getObjectUrl({
-				thumbnail: true,
-				size: "large",
-				itemPath: item.key,
-				fileId: item.metadata.id,
-				baseUrl: page.url,
-			});
+			thumbnailUrl = thumbUrlFor(item, "large");
 			thumbnailError = false;
 			thumbnailLoading = true;
 		}
