@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.8.53](https://github.com/orochibraru/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
+
+### Features
+
+* **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/orochibraru/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
+* **storage:** opt-in encryption at rest ([cedc38f](https://github.com/orochibraru/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
+* **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/orochibraru/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
+* **db:** migrations for invites, activity scrub, note FK and listing indexes ([0395439](https://github.com/orochibraru/penombre/commit/03954398ad7d2956b5a8d3d84554b2ee6537d563))
+
+### Bug Fixes
+
+* auto merge shit ([2fb140e](https://github.com/orochibraru/penombre/commit/2fb140e2e32c1d52c6fa4f2bec73149622578d94))
+* drive leaking into My Drive, links from drives and volumes, and report browser errors to the server ([ccdcec9](https://github.com/orochibraru/penombre/commit/ccdcec96c486c2e77f33fb5eaf617ebf31161e0a))
+* **e2e:** the provider row no longer says "not yet loaded" ([2966157](https://github.com/orochibraru/penombre/commit/2966157ad40975bb403c8e2c878130f89aa0ce70))
+* **rate-limit:** rebuild the redis store per call ([0add2a3](https://github.com/orochibraru/penombre/commit/0add2a3783c2e8237687506c931cf65d39997911))
+* **ui:** accessibility, theming and interaction fixes ([434f9b5](https://github.com/orochibraru/penombre/commit/434f9b5a86080f17b2dda565757160ee7a2cb49e))
+* **security:** lock down admin actions, onboarding, raw files and data leaks ([a609994](https://github.com/orochibraru/penombre/commit/a609994f8c0cb95bafd0d09ea9e75f649a657e51))
+
+### Documentation
+
+* **todo:** e2e spec isolation and redis in unit tests ([4074b74](https://github.com/orochibraru/penombre/commit/4074b74fd51044c323348ae53751d488006d470d))
+* light and dark screenshots, CLAUDE.md ([4f09ee1](https://github.com/orochibraru/penombre/commit/4f09ee12528f45bf41f71467c96f7d1a92d79355))
+
 ## [1.8.52](https://github.com/orochibraru/penombre/compare/v1.8.51...v1.8.52) (2026-09-23)
 
 ### Features
