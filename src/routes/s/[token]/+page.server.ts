@@ -28,23 +28,6 @@ function toPublicDto(item: ObjectItem) {
 	};
 }
 
-/**
- * Only what an anonymous visitor needs to see or download a file: no owner
- * id, tags, star or trash state.
- */
-function toPublicDto(item: ObjectItem) {
-	return {
-		key: item.key,
-		size: item.size ?? 0,
-		metadata: {
-			id: item.metadata.id,
-			name: item.metadata.name ?? "",
-			category: item.metadata.category,
-			contentType: item.metadata.contentType,
-		},
-	};
-}
-
 export const load = async ({ params, locals, cookies }) => {
 	const { token } = params;
 	const result = await shares.access(token, {
