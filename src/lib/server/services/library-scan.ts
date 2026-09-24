@@ -160,6 +160,9 @@ function reporterFor(key: string): ScanReporter {
 	};
 }
 
+/** Simple mode's shared drive, tracked like a volume. */
+export const LIBRARY_SCAN_KEY = "library";
+
 /** What a volume's passes are tracked under. */
 export function volumeScanKey(volumeName: string): string {
 	return `volume:${volumeName}`;
@@ -238,9 +241,12 @@ export async function scanLibrary(): Promise<void> {
 		if (!owner) {
 			return;
 		}
-		// Simple mode's shared drive.
+		// Simple mode's shared drive, through the registry the Rescan button
+		// and its progress stream use, so the two never crawl it at once.
 		if (isSimpleMode()) {
-			await new StorageService(owner).scanStorage();
+			await runScan(LIBRARY_SCAN_KEY, (report) =>
+				new StorageService(owner).scanStorage(report),
+			);
 		}
 
 		const volumes = getVolumes();

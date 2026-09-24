@@ -105,7 +105,8 @@ describe("refreshChangedFiles", () => {
 				id: "f1",
 				path: "old.mp3",
 				size: 10,
-				updatedAt: new Date(),
+				// Stamped by an older scan: later than the file, whatever the clock.
+				updatedAt: new Date(mtime + 86_400_000),
 			} as never,
 		]);
 		const ops = new ScanOperations(
@@ -128,6 +129,38 @@ describe("refreshChangedFiles", () => {
 
 		expect(db.updates).toEqual([{ updatedAt: new Date(mtime) }]);
 		expect(db.inserts[0]?.updatedAt).toEqual(new Date(mtime));
+	});
+
+	test("a same-size rewrite newer than its row is re-read", async () => {
+		const mtime = Date.UTC(2026, 8, 24, 20);
+		const db = fakeDb([
+			{
+				id: "f1",
+				path: "take.wav",
+				size: 10,
+				updatedAt: new Date(mtime - 60_000),
+			} as never,
+		]);
+		const deleted: string[] = [];
+		const ops = new ScanOperations(
+			{
+				user: { id: "u1" },
+				storagePath: "/tmp/does-not-exist",
+				db,
+				invalidateListingCaches: async () => {},
+			} as never,
+			{
+				warm: async () => {},
+				deleteThumbnails: async (key: string) => {
+					deleted.push(key);
+				},
+			} as never,
+			{ listStorageRoot: async () => [{ key: "take.wav", size: 10, mtime }] },
+		);
+
+		expect((await ops.scan()).updatedFiles).toBe(1);
+		expect(db.updates[0]?.updatedAt).toEqual(new Date(mtime));
+		expect(deleted).toEqual(["take.wav"]);
 	});
 
 	test("leaves an unchanged file alone", async () => {

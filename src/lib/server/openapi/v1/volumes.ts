@@ -48,3 +48,28 @@ export const volumeScanEvents = defineRoute({
 	response: scanStatusSchema,
 	errors: [404],
 });
+
+export const rescanLibrary = defineRoute({
+	method: "post",
+	path: "/api/v1/library/scan",
+	summary: "Rescan the library (simple mode)",
+	description:
+		"Simple mode's shared drive, like a volume's Rescan: starts a pass now, skipping the cooldown. 404 outside simple mode.",
+	tags: ["Volumes"],
+	body: z.object({
+		mode: z.enum(["quick", "full"]).default("quick"),
+	}),
+	response: z.object({ started: z.boolean() }),
+	errors: [404],
+});
+
+export const libraryScanEvents = defineRoute({
+	method: "get",
+	path: "/api/v1/library/scan/events",
+	summary: "Follow the library's scan (simple mode)",
+	description:
+		"A `text/event-stream` of the shared drive's scan status, like a volume's. 404 outside simple mode.",
+	tags: ["Volumes"],
+	response: scanStatusSchema,
+	errors: [404],
+});

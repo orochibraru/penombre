@@ -48,7 +48,7 @@ import {
 import { ownedFiles, ownedFolders } from "./scope";
 import { latestSeqs } from "./versions";
 
-export type ListingSortColumn = "name" | "size" | "updatedAt";
+export type ListingSortColumn = "name" | "size" | "updatedAt" | "type";
 export type ListingSortDirection = "asc" | "desc";
 
 export interface ListingPageOptions {
@@ -110,6 +110,17 @@ function sortKey(
 				: sortKey(table, "name", "asc");
 		case "updatedAt":
 			return { column, direction, expr: table.updatedAt };
+		// One string, so the cursor stays one value: kinds grouped, then names.
+		// `!` sorts below every character a MIME type uses.
+		// ponytail: no index behind it; add an expression index if big folders page slowly by type.
+		case "type":
+			return table === files
+				? {
+						column,
+						direction,
+						expr: sql`lower(${files.contentType} || '!' || ${files.name})`,
+					}
+				: sortKey(table, "name", "asc");
 	}
 }
 
@@ -123,7 +134,9 @@ function cursorFor(
 			? row.name
 			: key.column === "size"
 				? (row as DbFile).size
-				: row.updatedAt.getTime();
+				: key.column === "type"
+					? `${(row as DbFile).contentType}!${row.name}`
+					: row.updatedAt.getTime();
 	return encodeCursor(
 		kind === "folder" ? { v, id: row.id, k: "folder" } : { v, id: row.id },
 	);
@@ -138,7 +151,7 @@ function cursorFor(
 function keysetAfter(key: SortKey, id: AnyColumn, cursor: ListingCursor) {
 	const cmp = key.direction === "asc" ? gt : lt;
 	const v =
-		key.column === "name"
+		key.column === "name" || key.column === "type"
 			? sql`lower(cast(${String(cursor.v)} as text))`
 			: key.column === "size"
 				? Number(cursor.v)

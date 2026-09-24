@@ -27,7 +27,13 @@ export function loadSortPreference(): SortPreference {
 
 	try {
 		const parsed = JSON.parse(stored) as Partial<SortPreference>;
-		const validColumns: SortColumn[] = ["name", "size", "updatedAt", null];
+		const validColumns: SortColumn[] = [
+			"name",
+			"size",
+			"updatedAt",
+			"type",
+			null,
+		];
 		const validDirections: SortDirection[] = ["asc", "desc"];
 
 		if (

@@ -55,10 +55,11 @@ with it; see [File versioning](versioning.md#what-does-not-carry-versions).
 A folder, a shared drive, a mounted volume, a share, the starred view, a
 category and the trash all load a page at a time, so a folder of tens of
 thousands of files opens as fast as a small one. Folders come first, then files,
-in the order you picked (name, size or last modified); the server applies it, so
-a row further down is still in the right place. **Settings → Display → Loading
-mode** picks infinite scroll or previous/next pages. **Select all** selects what
-is loaded and says so. **Recent** still loads whole.
+in the order you picked (name, size, last modified or type); the server applies
+it, so a row further down is still in the right place. Type groups files by kind
+(every MP3, then every WAV, …), by name within each. **Settings → Display →
+Loading mode** picks infinite scroll or previous/next pages. **Select all**
+selects what is loaded and says so. **Recent** still loads whole.
 
 Through the API those listings answer with a `nextCursor`: pass it back as
 `cursor` for the next page (`limit`, `sort` and `dir` stay the same), until it

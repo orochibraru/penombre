@@ -27,6 +27,11 @@ A version is the file's bytes as they were just before something replaced them:
 An empty file makes no version, which is also what keeps a fresh upload from
 recording its own placeholder.
 
+- **Another program replacing the file** on simple mode's drive or a mounted
+  volume (Syncthing, rsync): the next scan keeps the previous bytes. See the
+  [FAQ](faq.md#is-a-file-overwritten-by-syncthing-or-rsync-kept-as-a-version)
+  for what that covers.
+
 ## Merging files into versions
 
 Takes that were saved as separate files (`Song-001.wav`, `Song-002 (1).wav`,
@@ -48,6 +53,21 @@ Select two or more files and choose **Merge as versions** in the selection bar:
   A file that already has versions of its own can only be the one that stays.
 
 Folders cannot be merged, and the option is hidden while versioning is off.
+
+If the file that stays already has versions, they take part: the preview lists
+them among the new takes, in the order you picked, so an older take merged in
+later lands before them instead of on top.
+
+## Drag and drop
+
+In list and table layouts:
+
+- **Drop a file on another file** to open the merge dialog with both.
+- **Drop a file from your computer on a file** to upload it as that file's new
+  version, whatever its name.
+- **Drag an unfolded version onto another** to move it to that place. The
+  versions are renumbered `v1`, `v2`, … in their new order.
+- **Drag a version onto its file** to restore it, after confirming.
 
 ## Seeing versions
 
@@ -77,8 +97,8 @@ version**; in a folder that does not keep versions, the option says so rather
 than replacing the file.
 
 Labels are numbers (`v1`, `v2`, …) or the date each version was kept, picked
-under **Settings → Display → Version names**. Numbers never shift: once `v1` is
-pruned, `v2` stays `v2`.
+under **Settings → Display → Version names**. Pruning never shifts them: once
+`v1` is pruned, `v2` stays `v2`. Only reordering renumbers.
 
 ## How many are kept
 
@@ -136,6 +156,7 @@ Every route takes the usual `drive`, `volume` or `share` query parameter.
 | `POST`   | `/api/v1/storage/file/{id}/versions/{versionId}/restore`   | Restore a version                  |
 | `DELETE` | `/api/v1/storage/file/{id}/versions/{versionId}`           | Delete a version                   |
 | `POST`   | `/api/v1/storage/versions/merge`                           | Merge files into one's versions    |
+| `PUT`    | `/api/v1/storage/file/{id}/versions/order`                 | Reorder and renumber versions      |
 | `GET`    | `/api/v1/storage/file/{id}/versions/{versionId}/raw`       | Its bytes; `download=1` to save    |
 | `GET`    | `/api/v1/storage/file/{id}/versions/{versionId}/thumbnail` | Thumbnail, or peaks for audio      |
 | `GET`    | `/api/v1/storage/folder/{path}/settings`                   | A folder's settings, and inherited |

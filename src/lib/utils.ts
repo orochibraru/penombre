@@ -206,7 +206,7 @@ export interface ItemActionGroup {
 	actions: ItemAction[];
 }
 
-export type SortColumn = "name" | "size" | "updatedAt" | null;
+export type SortColumn = "name" | "size" | "updatedAt" | "type" | null;
 export type SortDirection = "asc" | "desc";
 
 export interface SharedFileDisplayProps {

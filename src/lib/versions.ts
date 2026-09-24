@@ -131,23 +131,35 @@ export function mergedName(names: string[]): string {
 
 export type MergeOrder = "date" | "name";
 
-const byName = (a: ObjectItem, b: ObjectItem) =>
-	(a.metadata.name || a.key).localeCompare(
-		b.metadata.name || b.key,
-		undefined,
-		{
-			numeric: true,
-			sensitivity: "base",
-		},
-	);
+interface Take {
+	name: string;
+	at?: string | Date | null;
+}
 
 /**
- * Takes oldest first, as a merge keeps them: by their files' own dates, or by
- * name with numbers compared as numbers (`-2` before `-10`). The last stays.
+ * Takes oldest first, as a merge keeps them: by their own dates, or by name
+ * with numbers compared as numbers (`-2` before `-10`).
  */
-export function mergeOrder(items: ObjectItem[], by: MergeOrder): ObjectItem[] {
-	const time = (item: ObjectItem) => new Date(item.updatedAt ?? 0).getTime();
-	return items.toSorted(
+export function sortTakes<T extends Take>(takes: T[], by: MergeOrder): T[] {
+	const time = (take: Take) => new Date(take.at ?? 0).getTime();
+	const byName = (a: Take, b: Take) =>
+		a.name.localeCompare(b.name, undefined, {
+			numeric: true,
+			sensitivity: "base",
+		});
+	return takes.toSorted(
 		by === "date" ? (a, b) => time(a) - time(b) || byName(a, b) : byName,
 	);
+}
+
+/** Files oldest first; the last stays. */
+export function mergeOrder(items: ObjectItem[], by: MergeOrder): ObjectItem[] {
+	return sortTakes(
+		items.map((item) => ({
+			item,
+			name: item.metadata.name || item.key,
+			at: item.updatedAt,
+		})),
+		by,
+	).map(({ item }) => item);
 }

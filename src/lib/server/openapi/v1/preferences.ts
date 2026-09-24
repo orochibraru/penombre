@@ -8,7 +8,10 @@ import { defineRoute } from "#lib/server/openapi/index.js";
 
 const userPreferencesSchema = z.object({
 	layout: z.enum(["grid", "list"]).optional(),
-	sortColumn: z.enum(["name", "size", "updatedAt"]).nullable().optional(),
+	sortColumn: z
+		.enum(["name", "size", "updatedAt", "type"])
+		.nullable()
+		.optional(),
 	sortDirection: z.enum(["asc", "desc"]).optional(),
 	fontFamily: z.enum(["mono", "sans"]).optional(),
 	corners: z.enum(["boxy", "rounded"]).optional(),

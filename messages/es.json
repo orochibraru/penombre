@@ -201,6 +201,9 @@
 	"sort_size_smallest": "Tamaño (Menor)",
 	"sort_date_newest": "Fecha (Más reciente)",
 	"sort_date_oldest": "Fecha (Más antigua)",
+	"sort_type": "Tipo",
+	"sort_type_asc": "Tipo (A-Z)",
+	"sort_type_desc": "Tipo (Z-A)",
 	"layout": "Diseño",
 	"layout_list": "Lista",
 	"layout_grid": "Cuadrícula",
@@ -1111,6 +1114,8 @@
 	"versions_merging": "Fusionando…",
 	"versions_merged": "Archivos fusionados como versiones: {count}",
 	"versions_merge_error": "No se pudieron fusionar los archivos",
+	"versions_reorder_error": "No se pudieron reordenar las versiones",
+	"versions_drop_one": "Suelta un solo archivo para convertirlo en una nueva versión",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

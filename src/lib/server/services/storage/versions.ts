@@ -7,7 +7,7 @@
 
 import { readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { and, desc, eq, inArray, max, or } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, max, or, sql } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import {
 	type File as DbFile,
@@ -132,9 +132,12 @@ export async function snapshot(
 	limit: number,
 	{
 		dropThumbnails = () => Promise.resolve(),
+		place = (key) => ctx.driver.linkObject(file.path, key),
 		...meta
 	}: {
 		dropThumbnails?: (key: string) => Promise<void>;
+		/** Puts the version's bytes at `key`; a link to the file by default. */
+		place?: (key: string) => Promise<void>;
 		/** A merged-in file's name and mtime. */
 		name?: string;
 		createdAt?: Date;
@@ -142,7 +145,7 @@ export async function snapshot(
 ): Promise<FileVersion> {
 	const id = crypto.randomUUID();
 	const key = versionKey(file.id, id);
-	await ctx.driver.linkObject(file.path, key);
+	await place(key);
 	const size = await ctx.driver.getObjectSize(key);
 
 	let row: FileVersion | undefined;
@@ -223,6 +226,46 @@ export async function getVersion(
 			and(eq(fileVersions.fileId, fileId), eq(fileVersions.id, versionId)),
 		);
 	return version ?? null;
+}
+
+/**
+ * Renumbers a file's versions `v1..vN` in the order given, oldest first.
+ * False unless `ids` is exactly the file's versions. Two passes, through
+ * negatives, so no row ever takes a seq another still holds.
+ */
+export async function reorderVersions(
+	ctx: StorageContext,
+	fileId: string,
+	ids: string[],
+): Promise<boolean> {
+	const rows = await ctx.db
+		.select({ id: fileVersions.id })
+		.from(fileVersions)
+		.where(eq(fileVersions.fileId, fileId));
+	const known = new Set(rows.map((row) => row.id));
+	if (
+		ids.length !== known.size ||
+		new Set(ids).size !== ids.length ||
+		!ids.every((id) => known.has(id))
+	) {
+		return false;
+	}
+	if (ids.length === 0) {
+		return true;
+	}
+	const cases = sql.join(
+		ids.map((id, i) => sql`when ${id} then ${-(i + 1)}`),
+		sql` `,
+	);
+	await ctx.db
+		.update(fileVersions)
+		.set({ seq: sql`case ${fileVersions.id} ${cases} end` })
+		.where(eq(fileVersions.fileId, fileId));
+	await ctx.db
+		.update(fileVersions)
+		.set({ seq: sql`-${fileVersions.seq}` })
+		.where(and(eq(fileVersions.fileId, fileId), lt(fileVersions.seq, 0)));
+	return true;
 }
 
 export async function deleteVersion(

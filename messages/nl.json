@@ -201,6 +201,9 @@
 	"sort_size_smallest": "Grootte (kleinste eerst)",
 	"sort_date_newest": "Datum (nieuwste eerst)",
 	"sort_date_oldest": "Datum (oudste eerst)",
+	"sort_type": "Type",
+	"sort_type_asc": "Type (A-Z)",
+	"sort_type_desc": "Type (Z-A)",
 	"layout": "Lay-out",
 	"layout_list": "Lijst",
 	"layout_grid": "Raster",
@@ -1111,6 +1114,8 @@
 	"versions_merging": "Samenvoegen…",
 	"versions_merged": "Bestanden samengevoegd als versies: {count}",
 	"versions_merge_error": "De bestanden konden niet worden samengevoegd",
+	"versions_reorder_error": "De versies konden niet opnieuw worden geordend",
+	"versions_drop_one": "Sleep één bestand om er een nieuwe versie van te maken",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

@@ -24,6 +24,8 @@ type Entry struct {
 	Size int64  `json:"size"`
 	// Epoch milliseconds, so a scanned row carries the file's own date.
 	MTime int64 `json:"mtime"`
+	// A string: some filesystems hand out inodes past 2^53.
+	Ino string `json:"ino,omitempty"`
 }
 
 type Result struct {
@@ -82,6 +84,7 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 			Key:   filepath.ToSlash(rel),
 			Size:  info.Size(),
 			MTime: info.ModTime().UnixMilli(),
+			Ino:   inode(info),
 		})
 		return nil
 	})

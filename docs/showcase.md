@@ -29,8 +29,8 @@ to tens of thousands of files (a Reaper project's media folder, say), so each
 loads a page at a time instead of the whole thing at once. **Settings →
 Display** has a **Loading mode** for it: infinite scroll keeps appending more as
 you scroll down, or switch to **Pages** for prev/next controls instead. Either
-way the sort order you pick there (name, size, or last modified) is applied on
-the server, so a page further down the list is still in the right order.
+way the sort order you pick there (name, size, last modified or type) is applied
+on the server, so a page further down the list is still in the right order.
 
 ## Previews and notes
 

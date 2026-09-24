@@ -5,7 +5,7 @@ export const LISTING_MAX_PAGE_SIZE = 500;
 
 /** A first page's query, in the order the user last chose. */
 export function firstPageQuery(preferences?: {
-	sortColumn?: "name" | "size" | "updatedAt" | null;
+	sortColumn?: "name" | "size" | "updatedAt" | "type" | null;
 	sortDirection?: "asc" | "desc";
 }) {
 	return {

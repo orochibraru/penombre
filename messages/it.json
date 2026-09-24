@@ -192,6 +192,9 @@
 	"sort_size_smallest": "Dimensione (più piccola)",
 	"sort_date_newest": "Data (più recente)",
 	"sort_date_oldest": "Data (meno recente)",
+	"sort_type": "Tipo",
+	"sort_type_asc": "Tipo (A-Z)",
+	"sort_type_desc": "Tipo (Z-A)",
 	"layout": "Visualizzazione",
 	"layout_list": "Elenco",
 	"layout_grid": "Griglia",
@@ -1031,6 +1034,8 @@
 	"versions_merging": "Unione in corso…",
 	"versions_merged": "File uniti come versioni: {count}",
 	"versions_merge_error": "Impossibile unire i file",
+	"versions_reorder_error": "Impossibile riordinare le versioni",
+	"versions_drop_one": "Rilascia un solo file per farne una nuova versione",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

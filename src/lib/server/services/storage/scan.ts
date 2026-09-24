@@ -14,7 +14,7 @@ import { FileCategoryEnum } from "#lib/file-helpers.js";
 import { and, eq, inArray } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { sealedSize } from "#lib/server/crypto/envelope.js";
-import { files, folders } from "#lib/server/db/schema.js";
+import { type File as DbFile, files, folders } from "#lib/server/db/schema.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
@@ -25,11 +25,29 @@ import {
 } from "./mappers";
 import { bytesGone, chunks } from "./reconcile";
 import { ownedFiles, ownedFolders } from "./scope";
+import { promoteShadow, relinkShadow } from "./shadow";
 import type { ThumbnailService } from "./thumbnails";
 import { nameUuidPaths } from "./uuid-names";
-import { dropVersionBytes } from "./versions";
+import {
+	type AdminVersioning,
+	adminVersioning,
+	dropVersionBytes,
+} from "./versions";
 
 export { ancestorFolders };
+
+/** What a pass knows of a file row. */
+type ScannedFile = Pick<
+	DbFile,
+	| "id"
+	| "path"
+	| "size"
+	| "updatedAt"
+	| "inode"
+	| "name"
+	| "contentType"
+	| "folderId"
+>;
 
 /** A file on disk, as the `scan-list` Go job reports it. */
 export interface ScanEntry {
@@ -37,6 +55,8 @@ export interface ScanEntry {
 	size: number;
 	/** Epoch ms; absent from a worker older than this field. */
 	mtime?: number;
+	/** Absent where the platform has none: nothing is then versioned. */
+	ino?: string;
 }
 
 /** The scannable keys on disk and their sizes, bundled to keep call sites at 4 params. */
@@ -44,6 +64,9 @@ interface Listing {
 	keys: string[];
 	sizeByKey: Map<string, number>;
 	mtimeByKey: Map<string, number>;
+	inoByKey: Map<string, string>;
+	/** Set while versioning is on: outside replaces are then kept. */
+	versioning?: AdminVersioning;
 }
 
 const LISTING_TIMEOUT_MS = 30 * 60_000;
@@ -174,9 +197,11 @@ export class ScanOperations {
 		{ full = false }: { full?: boolean } = {},
 	): Promise<ScanResult> {
 		report({ phase: "listing", done: 0, total: 0 });
-		if (this.ctx.namedPaths && !this.ctx.readOnly) {
+		const writable = this.ctx.namedPaths && !this.ctx.readOnly;
+		if (writable) {
 			await nameUuidPaths(this.ctx, this.thumbnails);
 		}
+		const admin = writable ? await adminVersioning() : undefined;
 		const entries = (
 			await this.deps.listStorageRoot(this.ctx.storagePath)
 		).filter((entry) => isScannable(entry.key));
@@ -189,6 +214,12 @@ export class ScanOperations {
 					entry.mtime ? [[entry.key, entry.mtime] as const] : [],
 				),
 			),
+			inoByKey: new Map(
+				entries.flatMap((entry) =>
+					entry.ino ? [[entry.key, entry.ino] as const] : [],
+				),
+			),
+			versioning: admin?.enabled ? admin : undefined,
 		};
 
 		const [existingFolders, existingFiles] = await Promise.all([
@@ -202,6 +233,10 @@ export class ScanOperations {
 					path: files.path,
 					size: files.size,
 					updatedAt: files.updatedAt,
+					inode: files.inode,
+					name: files.name,
+					contentType: files.contentType,
+					folderId: files.folderId,
 				})
 				.from(files)
 				.where(ownedFiles(this.ctx)),
@@ -323,7 +358,7 @@ export class ScanOperations {
 	}
 
 	private async insertMissingFiles(
-		{ keys, sizeByKey, mtimeByKey }: Listing,
+		{ keys, sizeByKey, mtimeByKey, inoByKey, versioning }: Listing,
 		knownFilePaths: Set<string>,
 		folderIdByPath: Map<string, string>,
 		tick: (key: string) => void = () => undefined,
@@ -351,6 +386,9 @@ export class ScanOperations {
 					contentType: determineContentType(key),
 					category: determineCategory(key),
 					size: await this.plainSize(key, sizeByKey.get(key) ?? 0),
+					// Only with a shadow beside it: a row scanned with versioning
+					// off must still get one once it is turned on.
+					inode: versioning ? (inoByKey.get(key) ?? null) : null,
 					...dated,
 				})
 				.onConflictDoNothing()
@@ -358,6 +396,9 @@ export class ScanOperations {
 			if (!inserted) {
 				tick(key);
 				continue;
+			}
+			if (versioning) {
+				await relinkShadow(this.ctx, inserted.id, key);
 			}
 
 			// Build the preview as part of the scan, so a mounted library is
@@ -381,13 +422,8 @@ export class ScanOperations {
 	 * that keeps the size is only caught by a full rescan.
 	 */
 	private async refreshChangedFiles(
-		existingFiles: Array<{
-			id: string;
-			path: string;
-			size: number;
-			updatedAt: Date;
-		}>,
-		{ keys, sizeByKey, mtimeByKey }: Listing,
+		existingFiles: ScannedFile[],
+		{ keys, sizeByKey, mtimeByKey, inoByKey, versioning }: Listing,
 		tick: (key: string) => void = () => undefined,
 		full = false,
 	): Promise<number> {
@@ -404,8 +440,27 @@ export class ScanOperations {
 			const size = sizeByKey.get(key);
 			const mtime = mtimeByKey.get(key);
 			// A sealed file is bigger on disk than the plaintext its row records.
-			const unchanged = size === known.size || size === sealedSize(known.size);
-			if (size === undefined || (unchanged && !full)) {
+			const sameSize = size === known.size || size === sealedSize(known.size);
+			// A re-render of the same length is the same size to the byte; only
+			// the date says it changed. A row stamped by an older scan is newer
+			// than its file, so that direction is a re-date, never a re-render.
+			const rewritten =
+				mtime !== undefined &&
+				mtime - known.updatedAt.getTime() > DATE_SLACK_MS;
+			const ino = inoByKey.get(key);
+			if (versioning && ino && ino !== known.inode) {
+				// Before the renders below are dropped: the version keeps them.
+				if (known.inode && rewritten) {
+					await promoteShadow(this.ctx, this.thumbnails, known, versioning);
+				}
+				await relinkShadow(this.ctx, known.id, key);
+				await this.ctx.db
+					.update(files)
+					// `updatedAt` restated, or `$onUpdate` stamps it with now.
+					.set({ inode: ino, updatedAt: known.updatedAt })
+					.where(and(eq(files.id, known.id), ownedFiles(this.ctx)));
+			}
+			if (size === undefined || (sameSize && !rewritten && !full)) {
 				// Rows scanned before dates were kept carry the scan's time.
 				if (
 					mtime &&

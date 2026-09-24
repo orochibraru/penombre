@@ -30,6 +30,7 @@
 	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
 	import { page } from "$app/state";
 	import { actionsFor } from "./version-actions.js";
+	import { itemDrop } from "./version-drop";
 
 	let {
 		handleOpenItem,
@@ -118,8 +119,14 @@
 		onDragEnd();
 	}
 
+	const dropCtx = {
+		dragged: () => draggedItem,
+		setTarget: (key: string | undefined) => (dropTargetKey = key),
+		onmerged: () => (checkedItems = {}),
+	};
+
 	function handleFolderDragOver(e: DragEvent, folderKey: string) {
-		if (!(draggedItem && onDropOnFolder)) {
+		if (!(draggedItem && onDropOnFolder) || versionOf(draggedItem)) {
 			return;
 		}
 		e.preventDefault();
@@ -139,7 +146,7 @@
 	}
 
 	function handleFolderDrop(e: DragEvent, folderKey: string) {
-		if (!(draggedItem && onDropOnFolder)) {
+		if (!(draggedItem && onDropOnFolder) || versionOf(draggedItem)) {
 			return;
 		}
 		e.preventDefault();
@@ -191,6 +198,12 @@
 				break;
 			case "updatedAt":
 				comparison = getItemDate(a) - getItemDate(b);
+				break;
+			case "type":
+				comparison =
+					(a.metadata.contentType ?? "").localeCompare(
+						b.metadata.contentType ?? "",
+					) || getItemName(a).localeCompare(getItemName(b));
 				break;
 			default:
 				return 0;
@@ -279,16 +292,16 @@
             isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
         )}
         style="height: {(version ? VERSION_ROW_HEIGHT : ROW_HEIGHT) - ROW_GAP}px"
-        draggable={onDragStart !== undefined && !version}
+        draggable={onDragStart !== undefined}
         ondragstart={(e) => handleItemDragStart(e, item)}
         ondragend={handleItemDragEnd}
         ondragover={isFolder
             ? (e) => handleFolderDragOver(e, item.key)
-            : undefined}
+            : itemDrop(item, dropCtx).ondragover}
         ondragleave={isFolder
             ? (e) => handleFolderDragLeave(e, item.key)
-            : undefined}
-        ondrop={isFolder ? (e) => handleFolderDrop(e, item.key) : undefined}
+            : itemDrop(item, dropCtx).ondragleave}
+        ondrop={isFolder ? (e) => handleFolderDrop(e, item.key) : itemDrop(item, dropCtx).ondrop}
     >
         <FilePrefix
             layout="list"

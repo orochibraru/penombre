@@ -201,6 +201,9 @@
 	"sort_size_smallest": "Koko (pienin ensin)",
 	"sort_date_newest": "Päivämäärä (uusin ensin)",
 	"sort_date_oldest": "Päivämäärä (vanhin ensin)",
+	"sort_type": "Tyyppi",
+	"sort_type_asc": "Tyyppi (A-Ö)",
+	"sort_type_desc": "Tyyppi (Ö-A)",
 	"layout": "Asettelu",
 	"layout_list": "Luettelo",
 	"layout_grid": "Ruudukko",
@@ -1048,6 +1051,8 @@
 	"versions_merging": "Yhdistetään…",
 	"versions_merged": "Versioiksi yhdistetyt tiedostot: {count}",
 	"versions_merge_error": "Tiedostoja ei voitu yhdistää",
+	"versions_reorder_error": "Versioiden järjestystä ei voitu muuttaa",
+	"versions_drop_one": "Pudota yksi tiedosto tehdäksesi siitä uuden version",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

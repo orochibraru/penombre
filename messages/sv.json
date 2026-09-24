@@ -192,6 +192,9 @@
 	"sort_size_smallest": "Storlek (minst)",
 	"sort_date_newest": "Datum (nyast)",
 	"sort_date_oldest": "Datum (äldst)",
+	"sort_type": "Typ",
+	"sort_type_asc": "Typ (A-Ö)",
+	"sort_type_desc": "Typ (Ö-A)",
 	"layout": "Layout",
 	"layout_list": "Lista",
 	"layout_grid": "Rutnät",
@@ -949,6 +952,8 @@
 	"versions_merging": "Slår ihop…",
 	"versions_merged": "Filer sammanslagna som versioner: {count}",
 	"versions_merge_error": "Det gick inte att slå ihop filerna",
+	"versions_reorder_error": "Det gick inte att ordna om versionerna",
+	"versions_drop_one": "Släpp en enda fil för att göra den till en ny version",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

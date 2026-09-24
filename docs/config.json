@@ -37,7 +37,8 @@
 				{ "slug": "versioning", "title": "File versioning", "icon": "history" },
 				{ "slug": "sharing", "icon": "share-2" },
 				{ "slug": "shared-drives", "icon": "users" },
-				{ "slug": "notifications", "icon": "bell" }
+				{ "slug": "notifications", "icon": "bell" },
+				{ "slug": "faq", "title": "FAQ", "icon": "circle-help" }
 			]
 		},
 		{

@@ -3,6 +3,7 @@
 	import { toast } from "svelte-sonner";
 	import { api, type ObjectItem } from "#lib/api/index.js";
 	import FolderSettingsDialog from "#lib/components/file/folder-settings-dialog.svelte";
+	import { uploadVersion } from "#lib/components/file/version-drop.js";
 	import VersionHistoryDialog from "#lib/components/file/version-history-dialog.svelte";
 	import MergeVersionsDialog from "#lib/components/layout/dialogs/merge-versions-dialog.svelte";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
@@ -13,7 +14,6 @@
 		pendingVersionAction,
 		refreshVersions,
 	} from "#lib/store/versions.js";
-	import { enqueueUploads } from "#lib/upload/manager.js";
 	import { isFolderItem, randomId } from "#lib/utils.js";
 	import { displayTitle, versionOf } from "#lib/versions.js";
 	import { invalidate } from "$app/navigation";
@@ -55,22 +55,13 @@
 	});
 
 	/** Folder settings for a folder, a new version for a file. */
-	export async function open(item: ObjectItem) {
+	export function open(item: ObjectItem) {
 		if (isFolderItem(item)) {
 			folderSettings = {
 				open: true,
 				id: item.metadata.id,
 				name: item.metadata.name ?? item.key,
 			};
-			return;
-		}
-		// In a folder that does not version, a new upload would simply
-		// replace the file and keep nothing.
-		const { data } = await api.GET("/api/v1/storage/file/{id}/versions", {
-			params: { path: { id: item.metadata.id } },
-		});
-		if (!data?.data?.versioning.enabled) {
-			toast.info(m.versions_not_kept());
 			return;
 		}
 		replacing = item;
@@ -82,23 +73,9 @@
 		const file = input.files?.[0];
 		const item = replacing;
 		input.value = "";
-		if (!(file && item)) {
-			return;
+		if (file && item) {
+			await uploadVersion(item, file);
 		}
-		await enqueueUploads([
-			{
-				id: randomId(),
-				fileId: item.metadata.id,
-				finalName: currentFolder ? `${currentFolder}/${item.key}` : item.key,
-				rowKey: item.key,
-				location: locationOf(page.params),
-				displayName: item.metadata.name ?? item.key,
-				size: file.size,
-				file,
-				status: "pending",
-				createdAt: Date.now(),
-			},
-		]);
 	}
 
 	async function confirm() {

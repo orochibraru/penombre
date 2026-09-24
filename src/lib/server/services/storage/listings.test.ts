@@ -261,6 +261,25 @@ describe("listFolderPage", () => {
 		]);
 	});
 
+	test("a type sort groups kinds, names within, across pages", async () => {
+		await addFolder("d1", "z-folder");
+		await addFile("w2", "b.wav", { contentType: "audio/wav" });
+		await addFile("m1", "b.mp3", { contentType: "audio/mpeg" });
+		await addFile("w1", "a.wav", { contentType: "audio/wav" });
+		await addFile("m2", "A.mp3", { contentType: "audio/mpeg" });
+
+		const ops = new ListingOperations(ctx());
+		const pages = await drain((cursor) =>
+			ops.listFolderPage(undefined, {
+				cursor,
+				limit: 2,
+				sortColumn: "type",
+				sortDirection: "asc",
+			}),
+		);
+		expect(pages.flat()).toEqual(["d1", "m2", "m1", "w1", "w2"]);
+	});
+
 	test("lists one folder's children, never trashed ones", async () => {
 		await addFolder("d1", "parent");
 		await addFolder("d2", "child", { path: "d1/d2", parentId: "d1" });

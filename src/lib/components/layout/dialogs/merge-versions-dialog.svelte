@@ -5,6 +5,7 @@
 		FileIcon,
 		FileMusicIcon,
 		GitMergeIcon,
+		HistoryIcon,
 		SortAscIcon,
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
@@ -15,8 +16,18 @@
 	import { Label } from "#lib/components/ui/label/index.js";
 	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.js";
 	import * as m from "#lib/paraglide/messages.js";
-	import { mergeVersionsOf, refreshVersions } from "#lib/store/versions.js";
-	import { type MergeOrder, mergedName, mergeOrder } from "#lib/versions.js";
+	import {
+		loadVersions,
+		mergeVersionsOf,
+		refreshVersions,
+	} from "#lib/store/versions.js";
+	import {
+		type ListedVersion,
+		type MergeOrder,
+		mergedName,
+		mergeOrder,
+		sortTakes,
+	} from "#lib/versions.js";
 	import { invalidate } from "$app/navigation";
 
 	let loading = $state(false);
@@ -25,8 +36,51 @@
 	const nameId = $props.id();
 
 	const open = $derived($mergeVersionsOf !== null);
-	/** Oldest first, exactly as the server will keep them: the last stays. */
-	const ordered = $derived(mergeOrder($mergeVersionsOf?.items ?? [], order));
+	const files = $derived(mergeOrder($mergeVersionsOf?.items ?? [], order));
+	/** The file that stays: the last one in the chosen order. */
+	const target = $derived(files.at(-1));
+
+	// Its own history takes part: an older take merged in lands before it.
+	let history: ListedVersion[] = $state([]);
+	$effect(() => {
+		const id = target?.metadata.id;
+		history = [];
+		if (id) {
+			void loadVersions(id).then((versions) => {
+				if (target?.metadata.id === id) {
+					history = versions ?? [];
+				}
+			});
+		}
+	});
+
+	interface Entry {
+		/** A file id, or `v:<id>` for a version the target already has. */
+		token: string;
+		name: string;
+		at?: string;
+		item?: ObjectItem;
+	}
+
+	/** Oldest first, exactly as the server will keep them; the target follows. */
+	const entries: Entry[] = $derived(
+		sortTakes(
+			[
+				...history.map((version) => ({
+					token: `v:${version.id}`,
+					name: version.name ?? (target ? label(target) : ""),
+					at: version.createdAt,
+				})),
+				...files.slice(0, -1).map((item) => ({
+					token: item.metadata.id,
+					name: label(item),
+					at: item.updatedAt,
+					item,
+				})),
+			],
+			order,
+		),
+	);
 
 	// Writes only `name`: reading back what it writes looped until Svelte gave up.
 	$effect(() => {
@@ -41,9 +95,9 @@
 	});
 
 	const label = (item: ObjectItem) => item.metadata.name || item.key;
-	const when = (item: ObjectItem) =>
-		item.updatedAt
-			? new Date(item.updatedAt).toLocaleString(undefined, {
+	const when = (at?: string) =>
+		at
+			? new Date(at).toLocaleString(undefined, {
 					dateStyle: "medium",
 					timeStyle: "short",
 				})
@@ -54,7 +108,10 @@
 		loading = true;
 		const { data, error } = await api.POST("/api/v1/storage/versions/merge", {
 			body: {
-				ids: ordered.map((item) => item.metadata.id),
+				ids: [
+					...entries.map((entry) => entry.token),
+					target?.metadata.id ?? "",
+				],
 				name: name.trim() || undefined,
 			},
 		});
@@ -66,7 +123,7 @@
 			);
 			return;
 		}
-		toast.success(m.versions_merged({ count: String(ordered.length) }));
+		toast.success(m.versions_merged({ count: String(files.length) }));
 		$mergeVersionsOf?.onmerged();
 		mergeVersionsOf.set(null);
 		await invalidate("app:files");
@@ -123,41 +180,56 @@
                 class="bg-muted/40 max-h-72 min-w-0 divide-y overflow-y-auto rounded-lg border"
                 aria-label={m.versions_merge_preview()}
             >
-                {#each ordered as item, index (item.metadata.id)}
-                    {@const Icon =
-                        item.metadata.category === "MUSIC" ? FileMusicIcon : FileIcon}
-                    {@const last = index === ordered.length - 1}
-                    <li
-                        class={[
-                            "flex min-w-0 items-center gap-3 px-3 py-2.5 text-sm",
-                            last && "bg-primary/10",
-                        ]}
-                    >
+                {#each entries as entry, index (entry.token)}
+                    {@const Icon = !entry.item
+                        ? HistoryIcon
+                        : entry.item.metadata.category === "MUSIC"
+                          ? FileMusicIcon
+                          : FileIcon}
+                    <li class="flex min-w-0 items-center gap-3 px-3 py-2.5 text-sm">
                         <Badge
-                            variant={last ? "default" : "outline"}
+                            variant="outline"
                             class="w-14 shrink-0 justify-center tabular-nums"
                         >
-                            {last ? m.versions_latest() : `v${index + 1}`}
+                            v{index + 1}
                         </Badge>
                         <Icon class="text-primary size-4 shrink-0" />
                         <div class="flex min-w-0 flex-1 flex-col">
-                            {#if last && name.trim() && name.trim() !== label(item)}
+                            <span class="truncate">{entry.name}</span>
+                            <span class="text-muted-foreground text-xs">
+                                {when(entry.at)}
+                            </span>
+                        </div>
+                    </li>
+                {/each}
+                {#if target}
+                    {@const Icon =
+                        target.metadata.category === "MUSIC" ? FileMusicIcon : FileIcon}
+                    <li
+                        class="bg-primary/10 flex min-w-0 items-center gap-3 px-3 py-2.5 text-sm"
+                    >
+                        <Badge class="w-14 shrink-0 justify-center">
+                            {m.versions_latest()}
+                        </Badge>
+                        <Icon class="text-primary size-4 shrink-0" />
+                        <div class="flex min-w-0 flex-1 flex-col">
+                            {#if name.trim() && name.trim() !== label(target)}
                                 <span class="flex min-w-0 items-center gap-1.5">
                                     <span class="text-muted-foreground truncate line-through">
-                                        {label(item)}
+                                        {label(target)}
                                     </span>
                                     <ArrowRightIcon class="size-3 shrink-0" />
                                     <span class="truncate font-medium">{name.trim()}</span>
                                 </span>
                             {:else}
-                                <span class={["truncate", last && "font-medium"]}>
-                                    {label(item)}
-                                </span>
+                                <span class="truncate font-medium">{label(target)}</span>
                             {/if}
-                            <span class="text-muted-foreground text-xs">{when(item)}</span>
+                            <span class="text-muted-foreground text-xs">
+                                {when(target.updatedAt)}
+                            </span>
                         </div>
                     </li>
-                {/each}
+                {/if}
             </ol>
         </div>
     </div>

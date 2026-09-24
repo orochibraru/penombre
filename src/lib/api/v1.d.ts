@@ -5912,6 +5912,164 @@ export interface paths {
 		};
 		trace?: never;
 	};
+	"/api/v1/library/scan": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Rescan the library (simple mode)
+		 * @description Simple mode's shared drive, like a volume's Rescan: starts a pass now, skipping the cooldown. 404 outside simple mode.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/**
+						 * @default quick
+						 * @enum {string}
+						 */
+						mode: "quick" | "full";
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								started: boolean;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/library/scan/events": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Follow the library's scan (simple mode)
+		 * @description A `text/event-stream` of the shared drive's scan status, like a volume's. 404 outside simple mode.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								etaSeconds?: number;
+								scanning: boolean;
+								step?: {
+									current?: string;
+									done: number;
+									/** @enum {string} */
+									phase: "listing" | "folders" | "files" | "cleanup";
+									total: number;
+								};
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/notifications": {
 		parameters: {
 			query?: never;
@@ -6104,7 +6262,7 @@ export interface paths {
 								preferredSignInMethod?:
 									| ("password" | "passkey" | "magicLink" | "emailOtp")
 									| null;
-								sortColumn?: ("name" | "size" | "updatedAt") | null;
+								sortColumn?: ("name" | "size" | "updatedAt" | "type") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";
 								/** @enum {string} */
@@ -6169,7 +6327,7 @@ export interface paths {
 						preferredSignInMethod?:
 							| ("password" | "passkey" | "magicLink" | "emailOtp")
 							| null;
-						sortColumn?: ("name" | "size" | "updatedAt") | null;
+						sortColumn?: ("name" | "size" | "updatedAt" | "type") | null;
 						/** @enum {string} */
 						sortDirection?: "asc" | "desc";
 						/** @enum {string} */
@@ -6208,7 +6366,7 @@ export interface paths {
 								preferredSignInMethod?:
 									| ("password" | "passkey" | "magicLink" | "emailOtp")
 									| null;
-								sortColumn?: ("name" | "size" | "updatedAt") | null;
+								sortColumn?: ("name" | "size" | "updatedAt" | "type") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";
 								/** @enum {string} */
@@ -7344,7 +7502,7 @@ export interface paths {
 					share?: string;
 					cursor?: string;
 					limit?: string;
-					sort?: "name" | "size" | "updatedAt";
+					sort?: "name" | "size" | "updatedAt" | "type";
 					dir?: "asc" | "desc";
 				};
 				header?: never;
@@ -7821,7 +7979,7 @@ export interface paths {
 					share?: string;
 					cursor?: string;
 					limit?: string;
-					sort?: "name" | "size" | "updatedAt";
+					sort?: "name" | "size" | "updatedAt" | "type";
 					dir?: "asc" | "desc";
 				};
 				header?: never;
@@ -8018,7 +8176,7 @@ export interface paths {
 					share?: string;
 					cursor?: string;
 					limit?: string;
-					sort?: "name" | "size" | "updatedAt";
+					sort?: "name" | "size" | "updatedAt" | "type";
 					dir?: "asc" | "desc";
 				};
 				header?: never;
@@ -9164,6 +9322,106 @@ export interface paths {
 				};
 			};
 		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/versions/order": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		/**
+		 * Reorder a file's versions
+		 * @description `ids` are every version of the file, oldest first; they are renumbered v1..vN in that order.
+		 */
+		put: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						ids: string[];
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -10623,7 +10881,7 @@ export interface paths {
 					share?: string;
 					cursor?: string;
 					limit?: string;
-					sort?: "name" | "size" | "updatedAt";
+					sort?: "name" | "size" | "updatedAt" | "type";
 					dir?: "asc" | "desc";
 				};
 				header?: never;
@@ -11012,7 +11270,7 @@ export interface paths {
 					share?: string;
 					cursor?: string;
 					limit?: string;
-					sort?: "name" | "size" | "updatedAt";
+					sort?: "name" | "size" | "updatedAt" | "type";
 					dir?: "asc" | "desc";
 				};
 				header?: never;
@@ -11489,7 +11747,7 @@ export interface paths {
 		put?: never;
 		/**
 		 * Merge files into one file's versions
-		 * @description `ids` are oldest first: the last stays, every other one becomes one of its versions in that order, keeping its name and date, and is deleted. Its notes move to the kept file. 409 when a merged file already has versions or the folder keeps fewer versions than the merge would make.
+		 * @description `ids` are oldest first: the last stays, every other one becomes one of its versions in that order, keeping its name and date, and is deleted. If the kept file already has versions, list each as `v:<versionId>` where it belongs, or the new ones are appended. Its notes move to the kept file. 409 when a merged file already has versions or the folder keeps fewer versions than the merge would make.
 		 */
 		post: {
 			parameters: {

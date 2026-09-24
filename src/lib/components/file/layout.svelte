@@ -10,7 +10,7 @@
 
 	interface UserPreferences {
 		layout?: "grid" | "list";
-		sortColumn?: "name" | "size" | "updatedAt" | null;
+		sortColumn?: "name" | "size" | "updatedAt" | "type" | null;
 		sortDirection?: "asc" | "desc";
 		listingLoadMode?: "scroll" | "pages";
 	}

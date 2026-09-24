@@ -36,7 +36,7 @@ const driveQuery = {
 const pageQuery = {
 	cursor: z.string().optional(),
 	limit: z.string().optional(),
-	sort: z.enum(["name", "size", "updatedAt"]).optional(),
+	sort: z.enum(["name", "size", "updatedAt", "type"]).optional(),
 	dir: z.enum(["asc", "desc"]).optional(),
 };
 const listingPageSchema = objectListSchema.extend({

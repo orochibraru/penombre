@@ -54,6 +54,11 @@ Hidden entries (`.DS_Store`, `.git/…`) and thumbnail caches are skipped. The
 scan never rewrites your files: it only reads names and sizes to build the
 index, so your folder layout on disk stays exactly as it is.
 
+**My Drive** has the same **Rescan** button and live progress banner as a
+[mounted volume](volumes.md#scanning), for when you do not want to wait for the
+next pass. Through the API it is `POST /api/v1/library/scan` and
+`GET /api/v1/library/scan/events`.
+
 What you create or upload in Penombre is written under its own name too, so the
 volume reads the same from a file manager or a Syncthing peer. A name already
 taken, even by something in the trash, gets a number: `Take (1).wav`. Folders

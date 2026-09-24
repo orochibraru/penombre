@@ -1747,10 +1747,13 @@ held the page open for as long as walking the mount took — minutes on a NAS, a
 indistinguishable from a hang.
 
 Both schedules — the minute timer and a page visit — go through **one**
-in-flight registry keyed by volume. Two registries meant the timer's pass was
-invisible to the page (which then reported "not scanning" while the mount was
-still being crawled) and the two could crawl the same tree at once; the badge
-flickering between visits was that disagreement showing.
+in-flight registry keyed by volume. Simple mode's own drive is in it too, under
+`LIBRARY_SCAN_KEY`, which is what its Rescan button and event stream
+(`/api/v1/library/scan`) read; it used to be scanned outside the registry. Two
+registries meant the timer's pass was invisible to the page (which then reported
+"not scanning" while the mount was still being crawled) and the two could crawl
+the same tree at once; the badge flickering between visits was that disagreement
+showing.
 
 The 30s cooldown is load-bearing, not tuning: the poll re-runs the load, so
 without it each refresh would start a fresh pass the moment the last one ended
@@ -1929,8 +1932,25 @@ inode. Never add a writer that opens the key itself.
   `mtime`; new rows take it and every pass re-dates rows more than 2s off.
   Uploads send `File.lastModified` as `?mtime=` (multipart does not carry it)
   and the server `utimes` the bytes to match. Browsers expose no creation time.
-- `seq` is never renumbered, so labels survive pruning. SQLite refuses `OFFSET`
-  without `LIMIT`; the prune slices in JS.
+  Direction matters: a file **newer** than its row was rewritten outside
+  Penombre (a same-length WAV re-render is the same size to the byte) and is
+  re-read; a row newer than its file was stamped by an older scan and is only
+  re-dated, or the first pass would re-render a whole library.
+- **Outside replaces become versions during the scan** (`shadow.ts`). Each file
+  has a hard link, `.versions/<id>/shadow`, and its row the `inode` the scan
+  saw. A new inode on a file newer than its row (the `rewritten` rule) is a
+  temp+rename from outside: the shadow is renamed into a version via
+  `snapshot`'s `place`, dated the row's old `updatedAt`, then relinked. The
+  inode is stored **only when a shadow was made**, or a file scanned with
+  versioning off never gets one. Never a copy fallback: a shadow would double
+  the library. A key rotation's rewrap also renames the file, so it can version
+  identical bytes once; accepted.
+- `seq` is renumbered only by an explicit reorder (`reorderVersions`), never by
+  pruning, so labels survive pruning. The renumber goes through negative seqs in
+  two statements: `(file_id, seq)` is unique and checked per row. A merge into a
+  file that has versions sends them as `v:<id>` among the file ids, so the whole
+  history comes out in the previewed order. SQLite refuses `OFFSET` without
+  `LIMIT`; the prune slices in JS.
 - `migratedSqlite()` does not turn on `foreign_keys`; a test relying on a
   cascade runs the pragma itself, as `db/index.ts` does in production.
 - The upload and folder-settings menu entries carry `hidden()`, read by

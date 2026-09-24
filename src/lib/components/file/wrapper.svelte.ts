@@ -465,7 +465,7 @@ type ListingPage = ObjectList & { nextCursor: string | null };
 export async function fetchListingPage(options: {
 	cursor: string | null;
 	limit: number;
-	sortColumn: "name" | "size" | "updatedAt" | null;
+	sortColumn: "name" | "size" | "updatedAt" | "type" | null;
 	sortDirection: "asc" | "desc";
 }): Promise<ListingPage | null> {
 	const query = {

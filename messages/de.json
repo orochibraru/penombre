@@ -192,6 +192,9 @@
 	"sort_size_smallest": "Größe (Kleinste)",
 	"sort_date_newest": "Datum (Neueste)",
 	"sort_date_oldest": "Datum (Älteste)",
+	"sort_type": "Typ",
+	"sort_type_asc": "Typ (A-Z)",
+	"sort_type_desc": "Typ (Z-A)",
 	"layout": "Ansicht",
 	"layout_list": "Liste",
 	"layout_grid": "Raster",
@@ -1066,6 +1069,8 @@
 	"versions_merging": "Wird zusammengeführt…",
 	"versions_merged": "Als Versionen zusammengeführte Dateien: {count}",
 	"versions_merge_error": "Die Dateien konnten nicht zusammengeführt werden",
+	"versions_reorder_error": "Die Versionen konnten nicht neu geordnet werden",
+	"versions_drop_one": "Nur eine Datei ablegen, um sie zur neuen Version zu machen",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

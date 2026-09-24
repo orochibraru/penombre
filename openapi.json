@@ -16440,6 +16440,202 @@
 				]
 			}
 		},
+		"/api/v1/library/scan": {
+			"post": {
+				"description": "Simple mode's shared drive, like a volume's Rescan: starts a pass now, skipping the cooldown. 404 outside simple mode.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"mode": {
+										"default": "quick",
+										"enum": [
+											"quick",
+											"full"
+										],
+										"type": "string"
+									}
+								},
+								"required": [
+									"mode"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"started": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"started"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Rescan the library (simple mode)",
+				"tags": [
+					"Volumes"
+				]
+			}
+		},
+		"/api/v1/library/scan/events": {
+			"get": {
+				"description": "A `text/event-stream` of the shared drive's scan status, like a volume's. 404 outside simple mode.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"etaSeconds": {
+													"type": "number"
+												},
+												"scanning": {
+													"type": "boolean"
+												},
+												"step": {
+													"additionalProperties": false,
+													"properties": {
+														"current": {
+															"type": "string"
+														},
+														"done": {
+															"type": "number"
+														},
+														"phase": {
+															"enum": [
+																"listing",
+																"folders",
+																"files",
+																"cleanup"
+															],
+															"type": "string"
+														},
+														"total": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"phase",
+														"done",
+														"total"
+													],
+													"type": "object"
+												}
+											},
+											"required": [
+												"scanning"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Follow the library's scan (simple mode)",
+				"tags": [
+					"Volumes"
+				]
+			}
+		},
 		"/api/v1/notifications": {
 			"get": {
 				"description": "Most recent first, with the unread count so a client can render the badge from one call.",
@@ -16730,7 +16926,8 @@
 															"enum": [
 																"name",
 																"size",
-																"updatedAt"
+																"updatedAt",
+																"type"
 															],
 															"type": "string"
 														},
@@ -16870,7 +17067,8 @@
 												"enum": [
 													"name",
 													"size",
-													"updatedAt"
+													"updatedAt",
+													"type"
 												],
 												"type": "string"
 											},
@@ -16977,7 +17175,8 @@
 															"enum": [
 																"name",
 																"size",
-																"updatedAt"
+																"updatedAt",
+																"type"
 															],
 															"type": "string"
 														},
@@ -18759,7 +18958,8 @@
 							"enum": [
 								"name",
 								"size",
-								"updatedAt"
+								"updatedAt",
+								"type"
 							],
 							"type": "string"
 						}
@@ -19521,7 +19721,8 @@
 							"enum": [
 								"name",
 								"size",
-								"updatedAt"
+								"updatedAt",
+								"type"
 							],
 							"type": "string"
 						}
@@ -19863,7 +20064,8 @@
 							"enum": [
 								"name",
 								"size",
-								"updatedAt"
+								"updatedAt",
+								"type"
 							],
 							"type": "string"
 						}
@@ -21775,6 +21977,153 @@
 					}
 				],
 				"summary": "Keep the current bytes as a version",
+				"tags": [
+					"Storage - Versions"
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/versions/order": {
+			"put": {
+				"description": "`ids` are every version of the file, oldest first; they are renumbered v1..vN in that order.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"ids": {
+										"items": {
+											"type": "string"
+										},
+										"maxItems": 1000,
+										"type": "array"
+									}
+								},
+								"required": [
+									"ids"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"message": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"message"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Reorder a file's versions",
 				"tags": [
 					"Storage - Versions"
 				]
@@ -24037,7 +24386,8 @@
 							"enum": [
 								"name",
 								"size",
-								"updatedAt"
+								"updatedAt",
+								"type"
 							],
 							"type": "string"
 						}
@@ -24681,7 +25031,8 @@
 							"enum": [
 								"name",
 								"size",
-								"updatedAt"
+								"updatedAt",
+								"type"
 							],
 							"type": "string"
 						}
@@ -25474,7 +25825,7 @@
 		},
 		"/api/v1/storage/versions/merge": {
 			"post": {
-				"description": "`ids` are oldest first: the last stays, every other one becomes one of its versions in that order, keeping its name and date, and is deleted. Its notes move to the kept file. 409 when a merged file already has versions or the folder keeps fewer versions than the merge would make.",
+				"description": "`ids` are oldest first: the last stays, every other one becomes one of its versions in that order, keeping its name and date, and is deleted. If the kept file already has versions, list each as `v:<versionId>` where it belongs, or the new ones are appended. Its notes move to the kept file. 409 when a merged file already has versions or the folder keeps fewer versions than the merge would make.",
 				"parameters": [
 					{
 						"in": "query",
@@ -25511,7 +25862,7 @@
 										"items": {
 											"type": "string"
 										},
-										"maxItems": 1000,
+										"maxItems": 2000,
 										"minItems": 2,
 										"type": "array"
 									},

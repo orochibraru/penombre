@@ -203,6 +203,9 @@
 	"sort_size_smallest": "Размер (сначала маленькие)",
 	"sort_date_newest": "Дата (сначала новые)",
 	"sort_date_oldest": "Дата (сначала старые)",
+	"sort_type": "Тип",
+	"sort_type_asc": "Тип (А-Я)",
+	"sort_type_desc": "Тип (Я-А)",
 	"layout": "Вид",
 	"layout_list": "Список",
 	"layout_grid": "Сетка",
@@ -1087,6 +1090,8 @@
 	"versions_merging": "Объединение…",
 	"versions_merged": "Файлов объединено в версии: {count}",
 	"versions_merge_error": "Не удалось объединить файлы",
+	"versions_reorder_error": "Не удалось изменить порядок версий",
+	"versions_drop_one": "Перетащите один файл, чтобы сделать его новой версией",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

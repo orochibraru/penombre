@@ -144,3 +144,21 @@ func TestReportsModificationTime(t *testing.T) {
 		t.Fatalf("got %+v, want mtime %d", out.Entries, at.UnixMilli())
 	}
 }
+
+func TestReportsANewInodeWhenAFileIsReplaced(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "take.wav")
+	write(t, path, "old")
+	before := run(t, root).Entries[0].Ino
+	staged := filepath.Join(root, ".take.wav.tmp")
+	write(t, staged, "new")
+	if err := os.Rename(staged, path); err != nil {
+		t.Fatal(err)
+	}
+
+	after := run(t, root).Entries[0].Ino
+
+	if before == "" || before == after {
+		t.Fatalf("inode before %q, after %q", before, after)
+	}
+}

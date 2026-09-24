@@ -51,7 +51,7 @@
 		pendingPreview,
 		takePendingPreview,
 	} from "./preview-handover";
-
+	import { SORT_GROUPS } from "./sort-options";
 	import {
 		clickDownload,
 		computeSelectionState,
@@ -86,7 +86,7 @@
 
 	interface UserPreferences {
 		layout?: "grid" | "list";
-		sortColumn?: "name" | "size" | "updatedAt" | null;
+		sortColumn?: "name" | "size" | "updatedAt" | "type" | null;
 		sortDirection?: "asc" | "desc";
 		listingLoadMode?: "scroll" | "pages";
 	}
@@ -853,11 +853,7 @@
 						<ArrowUpDownIcon class="h-4 w-4" />
 						<span class="inline">
 							{#if sortColumn}
-								{sortColumn === "name"
-									? m.sort_name()
-                                        : sortColumn === "size"
-                                          ? m.sort_size()
-                                          : m.sort_date()}
+								{SORT_GROUPS.find((g) => g.column === sortColumn)?.label()}
                                     {sortDirection === "asc" ? "↑" : "↓"}
 							{:else}
 								{m.sort()}
@@ -868,87 +864,24 @@
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end">
 				<DropdownMenu.Label>{m.sort_by()}</DropdownMenu.Label>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item
-					onclick={() => {
-						sortColumn = "name";
-						sortDirection = "asc";
-					}}
-				>
-					{#if sortColumn === "name" && sortDirection === "asc"}
-						<CheckIcon class="h-4 w-4" />
-					{:else}
-						<span class="w-4"></span>
-					{/if}
-					{m.sort_name_asc()}
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					onclick={() => {
-						sortColumn = "name";
-						sortDirection = "desc";
-					}}
-				>
-					{#if sortColumn === "name" && sortDirection === "desc"}
-						<CheckIcon class="h-4 w-4" />
-					{:else}
-						<span class="w-4"></span>
-					{/if}
-					{m.sort_name_desc()}
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item
-					onclick={() => {
-						sortColumn = "size";
-						sortDirection = "desc";
-					}}
-				>
-					{#if sortColumn === "size" && sortDirection === "desc"}
-						<CheckIcon class="h-4 w-4" />
-					{:else}
-						<span class="w-4"></span>
-					{/if}
-					{m.sort_size_largest()}
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					onclick={() => {
-						sortColumn = "size";
-						sortDirection = "asc";
-					}}
-				>
-					{#if sortColumn === "size" && sortDirection === "asc"}
-						<CheckIcon class="h-4 w-4" />
-					{:else}
-						<span class="w-4"></span>
-					{/if}
-					{m.sort_size_smallest()}
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item
-					onclick={() => {
-						sortColumn = "updatedAt";
-						sortDirection = "desc";
-					}}
-				>
-					{#if sortColumn === "updatedAt" && sortDirection === "desc"}
-						<CheckIcon class="h-4 w-4" />
-					{:else}
-						<span class="w-4"></span>
-					{/if}
-					{m.sort_date_newest()}
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					onclick={() => {
-						sortColumn = "updatedAt";
-						sortDirection = "asc";
-					}}
-				>
-					{#if sortColumn === "updatedAt" && sortDirection === "asc"}
-						<CheckIcon class="h-4 w-4" />
-					{:else}
-						<span class="w-4"></span>
-					{/if}
-					{m.sort_date_oldest()}
-				</DropdownMenu.Item>
+				{#each SORT_GROUPS as group (group.column)}
+					<DropdownMenu.Separator />
+					{#each group.options as option (option.direction)}
+						<DropdownMenu.Item
+							onclick={() => {
+								sortColumn = group.column;
+								sortDirection = option.direction;
+							}}
+						>
+							{#if sortColumn === group.column && sortDirection === option.direction}
+								<CheckIcon class="h-4 w-4" />
+							{:else}
+								<span class="w-4"></span>
+							{/if}
+							{option.label()}
+						</DropdownMenu.Item>
+					{/each}
+				{/each}
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 		<Button

@@ -128,6 +128,7 @@
 		{ value: "name", label: m.sort_name() },
 		{ value: "size", label: m.sort_size() },
 		{ value: "updatedAt", label: m.sort_updated() },
+		{ value: "type", label: m.sort_type() },
 	];
 
 	const sortDirections = [
@@ -146,7 +147,7 @@
 	/** Persist one preference field; the layout store re-reads via invalidate. */
 	async function save(body: {
 		layout?: "grid" | "list";
-		sortColumn?: "name" | "size" | "updatedAt";
+		sortColumn?: "name" | "size" | "updatedAt" | "type";
 		sortDirection?: "asc" | "desc";
 		fontFamily?: "mono" | "sans";
 		corners?: "boxy" | "rounded";
@@ -461,7 +462,7 @@
                 value={sortColumn}
                 onValueChange={(value) =>
                     save({
-                        sortColumn: value as "name" | "size" | "updatedAt",
+                        sortColumn: value as "name" | "size" | "updatedAt" | "type",
                     })}
             >
                 <Select.Trigger class="w-full">

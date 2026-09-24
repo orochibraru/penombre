@@ -403,13 +403,16 @@ export class StorageService {
 		if (!plan) {
 			return null;
 		}
-		const { target, sources, max } = plan;
+		const { target, sources, order, max } = plan;
+		const made = new Map<string, string>();
 		// One at a time, each deleted only once its version exists: a
 		// failure part way leaves every take either a file or a version.
 		for (const source of sources) {
-			await this.versionOperations.absorb(target, source, max);
+			const version = await this.versionOperations.absorb(target, source, max);
+			made.set(source.file.id, version.id);
 			await this.fileOperations.deleteFile(source.file.path);
 		}
+		await this.versionOperations.place(target.id, order, made);
 		const wanted = name?.trim();
 		if (wanted && wanted.toLowerCase() !== target.name.toLowerCase()) {
 			const folder = target.path.includes("/")
@@ -421,6 +424,11 @@ export class StorageService {
 		}
 		await this.ctx.invalidateListingCaches();
 		return target.id;
+	}
+
+	reorderFileVersions(id: string, versionIds: string[]): Promise<boolean> {
+		this.assertWritable();
+		return this.versionOperations.reorder(id, versionIds);
 	}
 
 	fileVersioning(id: string): Promise<Versioning | null> {

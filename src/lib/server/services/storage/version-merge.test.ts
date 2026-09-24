@@ -20,7 +20,12 @@ import type { StorageContext } from "./context";
 import { LocalStorageDriver } from "./drivers/local";
 import type { ThumbnailService } from "./thumbnails";
 import { VersionOperations } from "./version-ops";
-import { listVersions, snapshot, versionKey } from "./versions";
+import {
+	listVersions,
+	reorderVersions,
+	snapshot,
+	versionKey,
+} from "./versions";
 
 const settings = spyOn(appSettings, "getAppSettings").mockResolvedValue({
 	versioningEnabled: true,
@@ -52,6 +57,7 @@ beforeEach(async () => {
 		storagePath: root,
 		db,
 		driver: new LocalStorageDriver(root),
+		invalidateListingCaches: () => Promise.resolve(),
 	} as unknown as StorageContext;
 	ops = new VersionOperations(ctx, {
 		adopt: () => Promise.resolve(),
@@ -130,5 +136,63 @@ describe("merging files as versions", () => {
 	test("a missing file is a miss, not a partial merge", async () => {
 		await take("a", "Song-001.wav", 1);
 		expect(await ops.planMerge(["a", "nope"])).toBeNull();
+	});
+
+	test("an older take merged into a history lands where it is placed", async () => {
+		await take("cur", "Song.wav", 5);
+		const kept = await snapshot(
+			ctx,
+			{ id: "cur", path: "Song.wav", contentType: "" },
+			3,
+			{ name: "Song-002.wav" },
+		);
+		await take("old", "Song-001.wav", 1);
+
+		const plan = await ops.planMerge(["old", `v:${kept.id}`, "cur"]);
+		expect(plan?.order).toEqual([{ file: "old" }, { version: kept.id }]);
+		const [source] = plan?.sources ?? [];
+		const made = await ops.absorb(plan!.target, source!, plan!.max);
+		await ops.reorder("cur", [made.id, kept.id]);
+
+		const history = (await listVersions(ctx, "cur")).reverse();
+		expect(history.map((v) => [v.seq, v.name])).toEqual([
+			[1, "Song-001.wav"],
+			[2, "Song-002.wav"],
+		]);
+	});
+
+	test("a preview that missed a version is refused", async () => {
+		await take("cur", "Song.wav", 5);
+		await snapshot(ctx, { id: "cur", path: "Song.wav", contentType: "" }, 3);
+		await take("old", "Song-001.wav", 1);
+		await expect(
+			ops.planMerge(["old", "v:someone-else", "cur"]),
+		).rejects.toThrow(VersionMergeError);
+	});
+});
+
+describe("reordering versions", () => {
+	test("renumbers v1..vN in the order given", async () => {
+		await take("f", "Song.wav", 1);
+		const f = { id: "f", path: "Song.wav", contentType: "" };
+		const a = await snapshot(ctx, f, 5);
+		const b = await snapshot(ctx, f, 5);
+		const c = await snapshot(ctx, f, 5);
+
+		expect(await reorderVersions(ctx, "f", [c.id, a.id, b.id])).toBeTrue();
+
+		const seqs = Object.fromEntries(
+			(await listVersions(ctx, "f")).map((v) => [v.id, v.seq]),
+		);
+		expect(seqs).toEqual({ [c.id]: 1, [a.id]: 2, [b.id]: 3 });
+	});
+
+	test("refuses a list that is not exactly the file's versions", async () => {
+		await take("f", "Song.wav", 1);
+		const f = { id: "f", path: "Song.wav", contentType: "" };
+		const a = await snapshot(ctx, f, 5);
+		await snapshot(ctx, f, 5);
+		expect(await reorderVersions(ctx, "f", [a.id])).toBeFalse();
+		expect(await reorderVersions(ctx, "f", [a.id, a.id])).toBeFalse();
 	});
 });

@@ -30,6 +30,7 @@ import {
 	type ListedVersion,
 	latestSeqs,
 	listVersions,
+	reorderVersions,
 	snapshot,
 	type Versioning,
 	versioningForFile,
@@ -90,10 +91,17 @@ interface DatedFile {
 
 export interface MergePlan {
 	target: DbFile;
-	/** Oldest first, so their seqs follow the order they were made in. */
 	sources: DatedFile[];
+	/**
+	 * The target's history once merged, oldest first: source file ids and its
+	 * existing version ids. Absent when the caller only appends.
+	 */
+	order?: Array<{ file: string } | { version: string }>;
 	max: number;
 }
+
+/** `v:<id>` in a merge's ids names one of the kept file's existing versions. */
+const VERSION_TOKEN = "v:";
 
 export class VersionOperations {
 	constructor(
@@ -149,8 +157,13 @@ export class VersionOperations {
 	 * rest become its versions in that order, each dated by its file's mtime.
 	 * Null when any id is not a live file here.
 	 */
-	async planMerge(ids: string[]): Promise<MergePlan | null> {
-		const unique = [...new Set(ids)];
+	async planMerge(tokens: string[]): Promise<MergePlan | null> {
+		const unique = [...new Set(tokens)].filter(
+			(id) => !id.startsWith(VERSION_TOKEN),
+		);
+		const placed = tokens
+			.filter((id) => id.startsWith(VERSION_TOKEN))
+			.map((id) => id.slice(VERSION_TOKEN.length));
 		if (unique.length < 2) {
 			throw new VersionMergeError("Select at least two files to merge");
 		}
@@ -196,21 +209,41 @@ export class VersionOperations {
 			);
 		}
 		const { max } = await versioningForFile(this.ctx, target.file, admin);
-		const total =
-			(await listVersions(this.ctx, target.file.id)).length + sources.length;
+		const existing = await listVersions(this.ctx, target.file.id);
+		const total = existing.length + sources.length;
 		if (total > max) {
 			throw new VersionMergeError(
 				`This folder keeps ${max} versions per file; merging would make ${total}`,
 			);
 		}
-		return { target: target.file, sources, max };
+		if (placed.length === 0) {
+			return { target: target.file, sources, max };
+		}
+		const ids = new Set(existing.map((v) => v.id));
+		if (placed.length !== ids.size || !placed.every((id) => ids.has(id))) {
+			throw new VersionMergeError(
+				"The history changed since the preview; open the merge again",
+			);
+		}
+		const order = tokens
+			.filter((id) => id !== target.file.id)
+			.map((id) =>
+				id.startsWith(VERSION_TOKEN)
+					? { version: id.slice(VERSION_TOKEN.length) }
+					: { file: id },
+			);
+		return { target: target.file, sources, order, max };
 	}
 
 	/**
 	 * `source`'s bytes become a version of `target`, dated and named after
 	 * it, and its notes move over. The caller then deletes `source`.
 	 */
-	async absorb(target: DbFile, source: DatedFile, max: number): Promise<void> {
+	async absorb(
+		target: DbFile,
+		source: DatedFile,
+		max: number,
+	): Promise<FileVersion> {
 		const version = await snapshot(
 			this.ctx,
 			{
@@ -233,6 +266,33 @@ export class VersionOperations {
 			.update(fileNotes)
 			.set({ fileId: target.id })
 			.where(eq(fileNotes.fileId, source.file.id));
+		return version;
+	}
+
+	/** A merge's order, with each absorbed file replaced by its new version. */
+	async place(
+		fileId: string,
+		order: MergePlan["order"],
+		made: Map<string, string>,
+	): Promise<void> {
+		if (order) {
+			await this.reorder(
+				fileId,
+				order.map((entry) =>
+					"file" in entry ? (made.get(entry.file) ?? "") : entry.version,
+				),
+			);
+		}
+	}
+
+	/** Renumbers a file's versions in the order given; false if it is not here. */
+	async reorder(fileId: string, versionIds: string[]): Promise<boolean> {
+		const file = await this.findOwnFile(fileId);
+		if (!(file && (await reorderVersions(this.ctx, fileId, versionIds)))) {
+			return false;
+		}
+		await this.ctx.invalidateListingCaches();
+		return true;
 	}
 
 	/** Cuts a version of the current bytes, whatever the folder says. */

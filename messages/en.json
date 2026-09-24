@@ -201,6 +201,9 @@
 	"sort_size_smallest": "Size (Smallest)",
 	"sort_date_newest": "Date (Newest)",
 	"sort_date_oldest": "Date (Oldest)",
+	"sort_type": "Type",
+	"sort_type_asc": "Type (A-Z)",
+	"sort_type_desc": "Type (Z-A)",
 	"layout": "Layout",
 	"layout_list": "List",
 	"layout_grid": "Grid",
@@ -1129,6 +1132,8 @@
 		}
 	],
 	"versions_merge_error": "Could not merge the files",
+	"versions_reorder_error": "Could not reorder the versions",
+	"versions_drop_one": "Drop one file to make it a new version",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

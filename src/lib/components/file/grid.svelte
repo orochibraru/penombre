@@ -217,6 +217,12 @@
 			case "updatedAt":
 				comparison = getItemDate(a) - getItemDate(b);
 				break;
+			case "type":
+				comparison =
+					(a.metadata.contentType ?? "").localeCompare(
+						b.metadata.contentType ?? "",
+					) || getItemName(a).localeCompare(getItemName(b));
+				break;
 			default:
 				return 0;
 		}

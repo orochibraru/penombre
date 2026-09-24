@@ -514,6 +514,12 @@ export const files = sqliteTable(
 			.default("application/octet-stream")
 			.notNull(),
 		category: text("category").default("UNKNOWN").notNull(),
+		/**
+		 * The inode the last scan saw at `path`. A new one means the file was
+		 * replaced on disk (Syncthing, rsync), which is when a scan keeps the
+		 * old bytes as a version.
+		 */
+		inode: text("inode"),
 		size: integer("size", { mode: "number" }).default(0).notNull(),
 		isTrashed: integer("is_trashed", { mode: "boolean" })
 			.default(false)

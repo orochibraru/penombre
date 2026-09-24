@@ -95,15 +95,18 @@ directory if Penombre looks. Three things trigger a scan:
 - The **Rescan** button in the volume's header, which starts a pass straight
   away. It is disabled while one is already running. Its arrow offers two kinds:
   - **Quick scan** (what the button itself does, and what the automatic passes
-    do): adds new files, removes missing ones, and re-reads a file only when its
-    size changed.
+    do): adds new files, removes missing ones, and re-reads a file when its size
+    changed or its modification date moved past what Penombre recorded.
   - **Rescan everything**: re-reads every file from scratch — type, duration and
     thumbnails — even when its size is the same. Use it after a thumbnail went
     wrong or a file type was misdetected. Files keep their identity, so stars,
     notes and shares survive it. Expect it to take a while on a large library.
 
 A scan adds files that appeared, drops rows for files that vanished, re-reads
-media whose bytes changed, and builds thumbnails and waveforms as it goes.
+media whose bytes changed, and builds thumbnails and waveforms as it goes. With
+[file versioning](versioning.md) on, a file that another program replaced
+(Syncthing, rsync) keeps its previous bytes as a version: see the
+[FAQ](faq.md#is-a-file-overwritten-by-syncthing-or-rsync-kept-as-a-version).
 
 It runs **in the background**, so opening a volume never waits for it: the page
 lists what is already known and says _Scanning your files_ while a pass is

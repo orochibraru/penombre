@@ -406,7 +406,7 @@ export const appSettings = pgTable("app_settings", {
 
 export interface UserPreferencesData {
 	layout?: "grid" | "list";
-	sortColumn?: "name" | "size" | "updatedAt" | null;
+	sortColumn?: "name" | "size" | "updatedAt" | "type" | null;
 	sortDirection?: "asc" | "desc";
 	/** Interface typeface: the monospace default, or the system sans stack. */
 	fontFamily?: "mono" | "sans";
@@ -740,6 +740,12 @@ export const files = pgTable(
 			.default("application/octet-stream")
 			.notNull(),
 		category: text("category").default("UNKNOWN").notNull(),
+		/**
+		 * The inode the last scan saw at `path`. A new one means the file was
+		 * replaced on disk (Syncthing, rsync), which is when a scan keeps the
+		 * old bytes as a version.
+		 */
+		inode: text("inode"),
 		size: bigint("size", { mode: "number" }).default(0).notNull(),
 		isTrashed: boolean("is_trashed").default(false).notNull(),
 		isStarred: boolean("is_starred").default(false).notNull(),

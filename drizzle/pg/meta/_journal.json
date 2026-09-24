@@ -225,6 +225,13 @@
       "when": 1790260657804,
       "tag": "0031_mixed_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790275821562,
+      "tag": "0032_left_master_chief",
+      "breakpoints": true
     }
   ]
 }

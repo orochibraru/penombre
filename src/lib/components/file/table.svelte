@@ -46,6 +46,7 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { actionsFor } from "./version-actions.js";
+	import { itemDrop } from "./version-drop";
 
 	let {
 		handleOpenItem,
@@ -135,8 +136,14 @@
 		onDragEnd();
 	}
 
+	const dropCtx = {
+		dragged: () => draggedItem,
+		setTarget: (key: string | undefined) => (dropTargetKey = key),
+		onmerged: () => (checkedItems = {}),
+	};
+
 	function handleFolderDragOver(e: DragEvent, folderKey: string) {
-		if (!(draggedItem && onDropOnFolder)) {
+		if (!(draggedItem && onDropOnFolder) || versionOf(draggedItem)) {
 			return;
 		}
 		e.preventDefault();
@@ -156,7 +163,7 @@
 	}
 
 	function handleFolderDrop(e: DragEvent, folderKey: string) {
-		if (!(draggedItem && onDropOnFolder)) {
+		if (!(draggedItem && onDropOnFolder) || versionOf(draggedItem)) {
 			return;
 		}
 		e.preventDefault();
@@ -214,6 +221,12 @@
 				break;
 			case "updatedAt":
 				comparison = getItemDate(a) - getItemDate(b);
+				break;
+			case "type":
+				comparison =
+					(a.metadata.contentType ?? "").localeCompare(
+						b.metadata.contentType ?? "",
+					) || getItemName(a).localeCompare(getItemName(b));
 				break;
 			default:
 				// No column selected, just maintain folder-first order
@@ -353,18 +366,18 @@
             version ? "bg-muted/30" : "",
         )}
         style="height: {version ? VERSION_ROW_HEIGHT : ROW_HEIGHT}px"
-        draggable={onDragStart !== undefined && !version}
+        draggable={onDragStart !== undefined}
         ondragstart={(e) => handleItemDragStart(e, objectItem)}
         ondragend={handleItemDragEnd}
         ondragover={isFolder
             ? (e) => handleFolderDragOver(e, objectItem.key)
-            : undefined}
+            : itemDrop(objectItem, dropCtx).ondragover}
         ondragleave={isFolder
             ? (e) => handleFolderDragLeave(e, objectItem.key)
-            : undefined}
+            : itemDrop(objectItem, dropCtx).ondragleave}
         ondrop={isFolder
             ? (e) => handleFolderDrop(e, objectItem.key)
-            : undefined}
+            : itemDrop(objectItem, dropCtx).ondrop}
     >
         <!-- The checkbox component reports a boolean, not the event, so the
              modifier is captured on the way down. -->
