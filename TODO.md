@@ -18,3 +18,9 @@ deleted.
       rate limiter held a closed client). Either run `test:docker` in the
       pre-push hook when the cache changes, or start a throwaway Redis in the
       unit-test script.
+
+## Features
+
+- [ ] Ability to restore files from versioning, but sanitized with proper
+      ordering. Also ability to download not only the latest version or version
+      by version but also ALL versions as a zip.
