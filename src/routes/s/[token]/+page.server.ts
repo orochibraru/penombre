@@ -1,5 +1,4 @@
 import { error, fail } from "@sveltejs/kit";
-import type { User } from "better-auth";
 import { getConfig } from "#lib/server/config.js";
 import { isRateLimited } from "#lib/server/rate-limit.js";
 import type { ObjectItem } from "#lib/server/schema.js";
@@ -8,14 +7,9 @@ import {
 	unlockCookieName,
 	unlockToken,
 } from "#lib/server/services/shares.js";
-import { StorageService } from "#lib/server/services/storage/index.js";
+import { shareLinkStorage } from "#lib/server/services/storage-for.js";
 
 const shares = new ShareService();
-
-/** Serving a share runs as its owner — the visitor has no drive of their own. */
-function ownerService(ownerId: string) {
-	return new StorageService({ id: ownerId } as User);
-}
 
 /**
  * Only what an anonymous visitor needs to see or download a file: no owner
@@ -53,7 +47,13 @@ export const load = async ({ params, locals, cookies }) => {
 	}
 
 	const { share } = result;
-	const service = ownerService(share.ownerId);
+	const service = await shareLinkStorage(share);
+	if (!service) {
+		return error(
+			404,
+			`The shared ${share.resourceType} is no longer available.`,
+		);
+	}
 
 	if (share.resourceType === "file") {
 		const path = await service.findFileById(share.resourceId);

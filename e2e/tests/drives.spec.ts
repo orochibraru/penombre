@@ -196,9 +196,9 @@ test.describe("shared drives", () => {
 	// suite puts there, so the assertion would read another test's file. The
 	// isolation check is the first test, with a name nothing else uses.
 
-	// A load runs *during* the navigation, so the API client must key the
-	// drive off where it is going, not off the page it is leaving — otherwise
-	// My Drive lists the shared drive's files until a full reload.
+	// A load runs for a route that is not `page` yet, so the API client must
+	// not key the drive off the page being left — otherwise My Drive lists the
+	// shared drive's files until a full reload.
 	test("leaving a drive by link shows My Drive's own files", async ({
 		page,
 	}) => {
@@ -209,8 +209,14 @@ test.describe("shared drives", () => {
 		await goToDrive(page, drive);
 		await expectItemVisible(page, fileName);
 
-		// A client-side navigation, not a fresh document: that is the bug.
-		await page.getByRole("link", { name: "My Drive" }).first().click();
+		// A client-side navigation, not a fresh document: that is the bug. The
+		// hover matters: a person's cursor rests long enough to preload, and a
+		// preload is not a navigation, so `navigating.to` cannot rescue it.
+		const myDrive = page.getByRole("link", { name: "My Drive" }).first();
+		const preload = page.waitForRequest("**/api/v1/storage/list**");
+		await myDrive.hover();
+		await preload;
+		await myDrive.click();
 		await page.waitForURL("**/browse");
 		await expectItemAbsent(page, fileName);
 	});

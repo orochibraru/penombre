@@ -15002,6 +15002,108 @@
 				]
 			}
 		},
+		"/api/v1/client-errors": {
+			"post": {
+				"description": "Logs an unexpected error thrown in the browser under the id the error page shows. Does not require authentication, so a crash on the sign-in page is reported too.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"errorId": {
+										"maxLength": 64,
+										"type": "string"
+									},
+									"message": {
+										"maxLength": 2000,
+										"type": "string"
+									},
+									"stack": {
+										"maxLength": 8000,
+										"type": "string"
+									},
+									"url": {
+										"maxLength": 2000,
+										"type": "string"
+									}
+								},
+								"required": [
+									"errorId",
+									"message",
+									"url"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {},
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Too Many Requests"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"summary": "Report a browser error",
+				"tags": [
+					"Diagnostics"
+				]
+			}
+		},
 		"/api/v1/drives": {
 			"get": {
 				"description": "Every drive the caller owns or is a member of",

@@ -218,6 +218,27 @@ export async function serviceForRoot(root: {
 }
 
 /**
+ * The tree a public link's resource lives in. A link on a shared drive or a
+ * mounted volume must not be read through the owner's personal drive.
+ */
+export async function shareLinkStorage(share: {
+	ownerId: string;
+	resourceType: "file" | "folder";
+	resourceId: string;
+}): Promise<StorageService | undefined> {
+	const table = share.resourceType === "folder" ? folders : files;
+	const [row] = await getDb()
+		.select({ volumeId: table.volumeId })
+		.from(table)
+		.where(
+			and(eq(table.id, share.resourceId), eq(table.ownerId, share.ownerId)),
+		);
+	return row
+		? serviceForRoot({ ownerId: share.ownerId, volumeId: row.volumeId })
+		: undefined;
+}
+
+/**
  * A service bound to a mounted volume.
  *
  * Its rows belong to the shared owner — the first account ever created —

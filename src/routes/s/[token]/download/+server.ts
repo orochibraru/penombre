@@ -1,13 +1,13 @@
 import { error } from "@sveltejs/kit";
-import type { User } from "better-auth";
 import type { Share } from "#lib/server/db/schema.js";
 import { ShareService, unlockCookieName } from "#lib/server/services/shares.js";
-import { StorageService } from "#lib/server/services/storage/index.js";
+import type { StorageService } from "#lib/server/services/storage/index.js";
 import {
 	isActiveContentType,
 	parseRange,
 	rawFileSecurityHeaders,
 } from "#lib/server/services/storage/mappers.js";
+import { shareLinkStorage } from "#lib/server/services/storage-for.js";
 
 const shares = new ShareService();
 
@@ -120,7 +120,10 @@ export const GET = async ({ params, url, locals, cookies, request }) => {
 	}
 
 	const { share } = result;
-	const service = new StorageService({ id: share.ownerId } as User);
+	const service = await shareLinkStorage(share);
+	if (!service) {
+		return error(404, "File not found.");
+	}
 	const requestedFile = url.searchParams.get("file");
 	const inline = url.searchParams.has("inline");
 

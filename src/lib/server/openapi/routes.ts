@@ -13,6 +13,7 @@ import "#lib/server/openapi/schemas.js";
 import "#lib/server/openapi/v1/account.js";
 import "#lib/server/openapi/v1/activity.js";
 import "#lib/server/openapi/v1/auth.js";
+import "#lib/server/openapi/v1/client-errors.js";
 import "#lib/server/openapi/v1/drives.js";
 import "#lib/server/openapi/v1/notes.js";
 import "#lib/server/openapi/v1/notifications.js";
