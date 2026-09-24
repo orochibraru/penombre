@@ -44,11 +44,22 @@ export async function rightClickItem(page: Page, name: string) {
 			.then(() => true)
 			.catch(() => false);
 		if (appeared) {
+			await clearPointer(page);
 			return;
 		}
 	}
 	// Final assertion — surfaces a clear error if all retries failed
 	await expect(menu).toBeVisible({ timeout: 3000 });
+	await clearPointer(page);
+}
+
+/**
+ * A row low on the screen opens its menu shifted up, under the pointer the
+ * right-click left there. The entry beneath it is highlighted, and a
+ * dispatched click on another entry then ran both: Notes opened Share too.
+ */
+async function clearPointer(page: Page) {
+	await page.mouse.move(0, 0);
 }
 
 /**

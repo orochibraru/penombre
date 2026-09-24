@@ -1560,10 +1560,16 @@ a menu animating in slides a neighbour under them — a CI run duplicated a file
 instead of opening it. It deliberately does **not** treat a vanished menu as a
 successful click — a menu also closes on a stray pointer move, and that shortcut
 made a test assert against a navigation that never happened. After an upload,
-wait for `networkidle` before touching the row at all. A spec that only needs
-rows to exist seeds them through the API and then loads the page, as
-`bulk-actions.spec.ts` does. Seeding by upload let the post-upload refresh swap
-the rows out from under its checkbox clicks.
+wait for `networkidle` before touching the row at all.
+
+`rightClickItem` moves the pointer to the corner once the menu is open. A row
+low on the screen opens its menu shifted up, under the pointer the right-click
+left there; that entry is highlighted, and a dispatched click on another entry
+ran both (Notes opened Share too, PostgreSQL CI only). It surfaced when uploads
+started keeping the file's own date: a fresh upload no longer sorts to the top
+of a date listing. A spec that only needs rows to exist seeds them through the
+API and then loads the page, as `bulk-actions.spec.ts` does. Seeding by upload
+let the post-upload refresh swap the rows out from under its checkbox clicks.
 
 ### E2E runs against a container, not your working tree
 
