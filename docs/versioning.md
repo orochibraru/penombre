@@ -58,6 +58,20 @@ If the file that stays already has versions, they take part: the preview lists
 them among the new takes, in the order you picked, so an older take merged in
 later lands before them instead of on top.
 
+## Taking versions back out
+
+The reverse of a merge. **Extract as file**, on a version's own menu, turns it
+back into a file beside its own; **Extract all versions**, on a file that has
+some, does it for every one. Each comes out under the name it had (or
+`Song v3.wav` for a version that never had its own), made unique, and dated by
+its own bytes, so a listing sorted by date shows them in history order. The
+bytes move rather than being copied, and the file keeps its current content.
+
+**Download all versions** gives one zip of the whole history, oldest first, then
+the current file, numbered so any file manager lists them in that order:
+`01 - Song-001.wav`, `02 - Song-002.wav`, `03 - Song.wav`. Every file keeps its
+modification date inside the zip.
+
 ## Drag and drop
 
 In list and table layouts:
@@ -157,6 +171,8 @@ Every route takes the usual `drive`, `volume` or `share` query parameter.
 | `DELETE` | `/api/v1/storage/file/{id}/versions/{versionId}`           | Delete a version                   |
 | `POST`   | `/api/v1/storage/versions/merge`                           | Merge files into one's versions    |
 | `PUT`    | `/api/v1/storage/file/{id}/versions/order`                 | Reorder and renumber versions      |
+| `POST`   | `/api/v1/storage/file/{id}/versions/extract`               | Turn versions back into files      |
+| `GET`    | `/api/v1/storage/file/{id}/versions/zip`                   | Every version as one zip           |
 | `GET`    | `/api/v1/storage/file/{id}/versions/{versionId}/raw`       | Its bytes; `download=1` to save    |
 | `GET`    | `/api/v1/storage/file/{id}/versions/{versionId}/thumbnail` | Thumbnail, or peaks for audio      |
 | `GET`    | `/api/v1/storage/folder/{path}/settings`                   | A folder's settings, and inherited |
@@ -174,5 +190,7 @@ version, which is how the editor's autosave avoids one every two seconds.
 - **Move** within the same drive keeps the versions. A move to another drive or
   volume is a copy followed by a delete, so the versions stay behind and are
   deleted with the original.
-- Deleting a file for good, emptying the trash, or a file vanishing from a
-  mounted volume deletes its versions as well.
+- Deleting a file for good, emptying the trash, or a file deleted from a mounted
+  volume deletes its versions as well. A file **renamed or moved** on disk keeps
+  them: the scan recognises it (see the
+  [FAQ](faq.md#what-happens-when-i-rename-or-move-a-file-on-disk)).

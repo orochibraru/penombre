@@ -32,3 +32,15 @@ Other ways to keep renders:
   [Merge as versions](versioning.md#merging-files-into-versions).
 - **Replace the file through Penombre**: drop the new render onto the file, or
   use **Upload new version**.
+
+## What happens when I rename or move a file on disk?
+
+It keeps everything: its versions, notes, stars and share links follow it to the
+new name or folder, and its name in Penombre becomes the new one. The scan
+recognises the file by its inode, which a rename or a move within the same disk
+keeps, or, when it has none recorded, by an identical size and modification
+date, as long as only one file matches.
+
+What is not recognised is treated as a deletion and a new file: two files with
+the same size and date renamed at once, or a copy followed by a delete that
+changed the date. Versions of a file deleted from disk are deleted with it.

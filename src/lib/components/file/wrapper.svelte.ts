@@ -39,7 +39,8 @@ import { dev } from "$app/env";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { page } from "$app/state";
-import { peaksUrl, rawUrl, withLocation } from "./file-links";
+import { clickDownload, peaksUrl, rawUrl, withLocation } from "./file-links";
+import { fileHistoryActions } from "./version-actions";
 import { mergeVersionsAction } from "./wrapper-merge";
 
 export {
@@ -524,15 +525,7 @@ export function folderZipDownloadUrl(
  * memory first; but that also means there is no completion signal to wait
  * for, so a caller's toast can only say the download started.
  */
-export function clickDownload(url: string, filename: string): void {
-	const a = document.createElement("a");
-	a.style.display = "none";
-	a.href = url;
-	a.download = filename;
-	document.body.appendChild(a);
-	a.click();
-	a.remove();
-}
+export { clickDownload } from "./file-links";
 
 /**
  * A real `<a href download>` click, not a `fetch` + blob: the browser streams
@@ -783,6 +776,7 @@ function versioningActions(action: (item: ObjectItem) => void): ItemAction[] {
 			fileOnly: true,
 			hidden,
 		},
+		...fileHistoryActions(),
 		{
 			title: "Folder settings",
 			icon: SettingsIcon,

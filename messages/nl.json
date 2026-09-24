@@ -1114,6 +1114,8 @@
 	"versions_merging": "Samenvoegen…",
 	"versions_merged": "Bestanden samengevoegd als versies: {count}",
 	"versions_merge_error": "De bestanden konden niet worden samengevoegd",
+	"versions_extract_error": "De versies konden niet worden uitgepakt",
+	"versions_extracted": "Versies als bestanden uitgepakt: {count}",
 	"versions_reorder_error": "De versies konden niet opnieuw worden geordend",
 	"versions_drop_one": "Sleep één bestand om er een nieuwe versie van te maken",
 	"storage_versions_hold": [

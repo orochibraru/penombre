@@ -1051,6 +1051,8 @@
 	"versions_merging": "Yhdistetään…",
 	"versions_merged": "Versioiksi yhdistetyt tiedostot: {count}",
 	"versions_merge_error": "Tiedostoja ei voitu yhdistää",
+	"versions_extract_error": "Versioita ei voitu purkaa",
+	"versions_extracted": "Tiedostoiksi puretut versiot: {count}",
 	"versions_reorder_error": "Versioiden järjestystä ei voitu muuttaa",
 	"versions_drop_one": "Pudota yksi tiedosto tehdäksesi siitä uuden version",
 	"storage_versions_hold": [

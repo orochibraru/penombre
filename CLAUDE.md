@@ -1936,6 +1936,18 @@ inode. Never add a writer that opens the key itself.
   Penombre (a same-length WAV re-render is the same size to the byte) and is
   re-read; a row newer than its file was stamped by an older scan and is only
   re-dated, or the first pass would re-render a whole library.
+- **Extracting a version is a move** (`extract` in `version-ops.ts`): its bytes
+  are renamed out of `.versions` over the placeholder `diskName` claimed, the
+  row inserted, then the version row deleted; a failed insert renames the bytes
+  back. The new file is dated by the bytes' mtime, not the version's
+  `createdAt`, which for an upload's version is when it was kept.
+- **A file renamed on disk keeps its row** (`renames.ts`, before the scan
+  inserts anything). Without it the scan deleted the row, its versions (bytes
+  included), notes, stars and shares, then imported the file as new. Matched by
+  inode, else by size and date when exactly one vanished row and one new file
+  share them; ambiguous pairs are left to delete-and-insert. The row keeps its
+  inode, so a size-and-date match (a new inode) is relinked by the inode check
+  further down.
 - **Outside replaces become versions during the scan** (`shadow.ts`). Each file
   has a hard link, `.versions/<id>/shadow`, and its row the `inode` the scan
   saw. A new inode on a file newer than its row (the `rewritten` rule) is a

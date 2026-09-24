@@ -51,7 +51,6 @@ import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
 import type { ListingPage, ListingPageOptions, TrashPage } from "./listings";
 import { ListingOperations } from "./listings";
-import { getUniqueDisplayName } from "./lookups";
 import { probeMissingDurations } from "./media";
 import { type FileProxyRequest, ProxyService } from "./proxy";
 import {
@@ -182,7 +181,11 @@ export class StorageService {
 		this.thumbnails = new ThumbnailService(this.ctx);
 		this.zip = new ZipService(this.ctx);
 		this.fileOperations = new FileOperations(this.ctx, this.thumbnails);
-		this.versionOperations = new VersionOperations(this.ctx, this.thumbnails);
+		this.versionOperations = new VersionOperations(
+			this.ctx,
+			this.thumbnails,
+			this.fileOperations,
+		);
 		this.folderOperations = new FolderOperations(this.ctx, this.thumbnails);
 		this.listingOperations = new ListingOperations(this.ctx);
 		this.scanOperations = new ScanOperations(this.ctx, this.thumbnails);
@@ -397,33 +400,21 @@ export class StorageService {
 	 * The newest of `ids` stays; the rest become its versions, oldest first,
 	 * and are deleted. Returns the kept file's id, null if any is not here.
 	 */
-	async mergeAsVersions(ids: string[], name?: string): Promise<string | null> {
+	mergeAsVersions(ids: string[], name?: string): Promise<string | null> {
 		this.assertWritable();
-		const plan = await this.versionOperations.planMerge(ids);
-		if (!plan) {
-			return null;
-		}
-		const { target, sources, order, max } = plan;
-		const made = new Map<string, string>();
-		// One at a time, each deleted only once its version exists: a
-		// failure part way leaves every take either a file or a version.
-		for (const source of sources) {
-			const version = await this.versionOperations.absorb(target, source, max);
-			made.set(source.file.id, version.id);
-			await this.fileOperations.deleteFile(source.file.path);
-		}
-		await this.versionOperations.place(target.id, order, made);
-		const wanted = name?.trim();
-		if (wanted && wanted.toLowerCase() !== target.name.toLowerCase()) {
-			const folder = target.path.includes("/")
-				? target.path.slice(0, target.path.lastIndexOf("/"))
-				: undefined;
-			await this.fileOperations.updateFile(target.path, {
-				key: await getUniqueDisplayName(this.ctx, wanted, folder, "file"),
-			});
-		}
-		await this.ctx.invalidateListingCaches();
-		return target.id;
+		return this.versionOperations.merge(ids, name);
+	}
+
+	extractVersions(id: string, versionIds?: string[]) {
+		this.assertWritable();
+		return this.versionOperations.extract(id, versionIds);
+	}
+
+	async versionsZip(id: string) {
+		const listed = await this.versionOperations.listFileVersions(id);
+		return listed?.versions.length
+			? this.zip.createVersionsZip(listed.file, listed.versions.toReversed())
+			: null;
 	}
 
 	reorderFileVersions(id: string, versionIds: string[]): Promise<boolean> {

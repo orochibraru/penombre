@@ -1132,6 +1132,17 @@
 		}
 	],
 	"versions_merge_error": "Could not merge the files",
+	"versions_extract_error": "Could not extract the versions",
+	"versions_extracted": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} version extracted as a file",
+				"countPlural=other": "{count} versions extracted as files"
+			}
+		}
+	],
 	"versions_reorder_error": "Could not reorder the versions",
 	"versions_drop_one": "Drop one file to make it a new version",
 	"storage_versions_hold": [

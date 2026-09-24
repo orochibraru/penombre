@@ -952,6 +952,8 @@
 	"versions_merging": "Slår ihop…",
 	"versions_merged": "Filer sammanslagna som versioner: {count}",
 	"versions_merge_error": "Det gick inte att slå ihop filerna",
+	"versions_extract_error": "Det gick inte att extrahera versionerna",
+	"versions_extracted": "Versioner extraherade som filer: {count}",
 	"versions_reorder_error": "Det gick inte att ordna om versionerna",
 	"versions_drop_one": "Släpp en enda fil för att göra den till en ny version",
 	"storage_versions_hold": [

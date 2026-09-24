@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/orochibraru/penombre/internal/envelope"
 	"github.com/orochibraru/penombre/internal/jobs"
@@ -79,7 +80,7 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 			continue
 		}
 		if err == nil {
-			err = appendFile(zw, src, UniqueName(used, e.Name))
+			err = appendFile(zw, src, UniqueName(used, e.Name), modTime(e.Source))
 		}
 		if err != nil {
 			zw.Close()
@@ -107,10 +108,24 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 	return Result{Output: s.Output, Bytes: info.Size(), Skipped: skipped}, nil
 }
 
-func appendFile(zw *zip.Writer, src io.ReadCloser, name string) error {
+// modTime is the source's date for its entry: without it every file in the
+// archive read 1980, and renders were told apart by nothing but their names.
+func modTime(path string) time.Time {
+	info, err := os.Stat(path)
+	if err != nil {
+		return time.Time{}
+	}
+	return info.ModTime()
+}
+
+func appendFile(zw *zip.Writer, src io.ReadCloser, name string, modified time.Time) error {
 	defer src.Close()
 
-	w, err := zw.CreateHeader(&zip.FileHeader{Name: name, Method: Method(name)})
+	w, err := zw.CreateHeader(&zip.FileHeader{
+		Name:     name,
+		Method:   Method(name),
+		Modified: modified,
+	})
 	if err != nil {
 		return err
 	}

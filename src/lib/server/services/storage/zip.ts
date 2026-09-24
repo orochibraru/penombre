@@ -26,6 +26,7 @@ import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import { buildDisplayPathForFile } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";
+import { versionKey } from "./versions";
 
 const logger = new Logger("StorageService");
 
@@ -235,6 +236,30 @@ export class ZipService {
 			return null;
 		}
 		return this.buildZip(entries, `export:${this.ctx.user.id}`);
+	}
+
+	/**
+	 * A file's history, oldest first, then the file itself, numbered so a file
+	 * manager lists them in that order: `01 - Song-001.wav` … `04 - Song.wav`.
+	 */
+	createVersionsZip(
+		file: { id: string; path: string; name: string },
+		versions: Array<{ id: string; name: string | null }>,
+	): Promise<ReadableStream<Uint8Array>> {
+		const takes = [
+			...versions.map((version) => ({
+				source: join(this.ctx.storagePath, versionKey(file.id, version.id)),
+				name: version.name ?? file.name,
+			})),
+			{ source: join(this.ctx.storagePath, file.path), name: file.name },
+		];
+		const width = Math.max(2, String(takes.length).length);
+		return this.buildZip(
+			takes.map((take, i) => ({
+				source: take.source,
+				name: `${String(i + 1).padStart(width, "0")} - ${take.name}`,
+			})),
+		);
 	}
 
 	async createZipFromPaths(

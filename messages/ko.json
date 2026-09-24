@@ -818,6 +818,8 @@
 	"versions_merging": "병합 중…",
 	"versions_merged": "{count}개 파일을 버전으로 병합했습니다",
 	"versions_merge_error": "파일을 병합할 수 없습니다",
+	"versions_extract_error": "버전을 추출할 수 없습니다",
+	"versions_extracted": "{count}개 버전을 파일로 추출했습니다",
 	"versions_reorder_error": "버전 순서를 바꿀 수 없습니다",
 	"versions_drop_one": "새 버전으로 만들 파일 하나만 끌어다 놓으세요",
 	"storage_versions_hold": "이전 버전 {count}개 ({size})",

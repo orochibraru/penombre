@@ -24,6 +24,7 @@ import {
 	determineContentType,
 } from "./mappers";
 import { bytesGone, chunks } from "./reconcile";
+import { followRenames } from "./renames";
 import { ownedFiles, ownedFolders } from "./scope";
 import { promoteShadow, relinkShadow } from "./shadow";
 import type { ThumbnailService } from "./thumbnails";
@@ -245,8 +246,6 @@ export class ScanOperations {
 		const folderIdByPath = new Map(
 			existingFolders.map((f) => [f.path, f.id] as const),
 		);
-		const knownFilePaths = new Set(existingFiles.map((f) => f.path));
-
 		const onDiskFolders = new Set(keys.flatMap(ancestorFolders));
 
 		const result = { ...EMPTY_RESULT };
@@ -255,6 +254,15 @@ export class ScanOperations {
 			onDiskFolders,
 			folderIdByPath,
 		);
+		// Before inserting: a renamed file keeps its row, versions included,
+		// instead of being dropped and imported again as new.
+		result.updatedFiles += await followRenames(
+			{ ctx: this.ctx, thumbnails: this.thumbnails },
+			existingFiles,
+			listing,
+			folderIdByPath,
+		);
+		const knownFilePaths = new Set(existingFiles.map((f) => f.path));
 
 		// One count across both file passes: every key on disk is visited once,
 		// either inserted or re-stat'ed.
@@ -270,7 +278,7 @@ export class ScanOperations {
 			folderIdByPath,
 			tick,
 		);
-		result.updatedFiles = await this.refreshChangedFiles(
+		result.updatedFiles += await this.refreshChangedFiles(
 			existingFiles,
 			listing,
 			tick,

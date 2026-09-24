@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/orochibraru/penombre/internal/envelope"
 	"github.com/orochibraru/penombre/internal/jobs"
@@ -287,5 +288,32 @@ func TestMethod_StoresCompressedFormats(t *testing.T) {
 		if got := ziparchive.Method(name); got != want {
 			t.Errorf("Method(%q) = %d, want %d", name, got, want)
 		}
+	}
+}
+
+func TestRun_EntriesKeepTheirSourceDate(t *testing.T) {
+	dir := t.TempDir()
+	a := writeTemp(t, dir, "take.wav", "render")
+	at := time.Date(2026, 2, 24, 19, 35, 0, 0, time.UTC)
+	if err := os.Chtimes(a, at, at); err != nil {
+		t.Fatal(err)
+	}
+	output := filepath.Join(dir, "out.zip")
+	job := mustJob(t, ziparchive.Spec{
+		Output:  output,
+		Entries: []ziparchive.Entry{{Source: a, Name: "01 - take.wav"}},
+	})
+
+	if _, err := ziparchive.Run(context.Background(), job); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	r, err := zip.OpenReader(output)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	if got := r.File[0].Modified; !got.Equal(at) {
+		t.Fatalf("Modified = %v, want %v", got, at)
 	}
 }

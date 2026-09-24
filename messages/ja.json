@@ -818,6 +818,8 @@
 	"versions_merging": "統合中…",
 	"versions_merged": "{count} 件のファイルをバージョンとして統合しました",
 	"versions_merge_error": "ファイルを統合できませんでした",
+	"versions_extract_error": "バージョンを取り出せませんでした",
+	"versions_extracted": "{count} 件のバージョンをファイルとして取り出しました",
 	"versions_reorder_error": "バージョンを並べ替えられませんでした",
 	"versions_drop_one": "新しいバージョンにするファイルは 1 つだけドロップしてください",
 	"storage_versions_hold": "以前のバージョン {count} 件（{size}）",

@@ -7,7 +7,7 @@ import {
 	spyOn,
 	test,
 } from "bun:test";
-import { mkdtemp, rm, utimes } from "node:fs/promises";
+import { mkdtemp, readdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { eq, sql } from "drizzle-orm";
@@ -194,5 +194,41 @@ describe("reordering versions", () => {
 		await snapshot(ctx, f, 5);
 		expect(await reorderVersions(ctx, "f", [a.id])).toBeFalse();
 		expect(await reorderVersions(ctx, "f", [a.id, a.id])).toBeFalse();
+	});
+});
+
+describe("extracting versions", () => {
+	test("moves each version out as a file named after it", async () => {
+		Object.assign(ctx, { namedPaths: true, volumeId: null });
+		await take("f", "Song.wav", 3);
+		const f = { id: "f", path: "Song.wav", contentType: "audio/wav" };
+		await snapshot(ctx, f, 5, { name: "Song-001.wav" });
+		await snapshot(ctx, f, 5);
+
+		const ids = await ops.extract("f");
+
+		expect(ids).toHaveLength(2);
+		const rows = await db.select().from(files);
+		expect(rows.map((r) => r.name).toSorted()).toEqual([
+			"Song v2.wav",
+			"Song-001.wav",
+			"Song.wav",
+		]);
+		expect(await listVersions(ctx, "f")).toEqual([]);
+		expect(
+			new TextDecoder().decode(await ctx.driver.readObject("Song-001.wav")),
+		).toBe("f");
+		expect(await readdir(join(root, ".versions", "f"))).toEqual([]);
+	});
+
+	test("takes only the versions asked for", async () => {
+		await take("f", "Song.wav", 3);
+		const f = { id: "f", path: "Song.wav", contentType: "audio/wav" };
+		const keep = await snapshot(ctx, f, 5);
+		const out = await snapshot(ctx, f, 5);
+
+		await ops.extract("f", [out.id]);
+
+		expect((await listVersions(ctx, "f")).map((v) => v.id)).toEqual([keep.id]);
 	});
 });

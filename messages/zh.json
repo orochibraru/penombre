@@ -818,6 +818,8 @@
 	"versions_merging": "正在合并…",
 	"versions_merged": "已将 {count} 个文件合并为版本",
 	"versions_merge_error": "无法合并文件",
+	"versions_extract_error": "无法提取版本",
+	"versions_extracted": "已将 {count} 个版本提取为文件",
 	"versions_reorder_error": "无法重新排序版本",
 	"versions_drop_one": "请只拖放一个文件作为新版本",
 	"storage_versions_hold": "{count} 个旧版本（{size}）",

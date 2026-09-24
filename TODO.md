@@ -20,7 +20,3 @@ deleted.
       unit-test script.
 
 ## Features
-
-- [ ] Ability to restore files from versioning, but sanitized with proper
-      ordering. Also ability to download not only the latest version or version
-      by version but also ALL versions as a zip.

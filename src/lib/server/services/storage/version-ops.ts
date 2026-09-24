@@ -4,7 +4,7 @@
  * `versions.ts`'s; this adds the file lookups and the renders.
  */
 
-import { stat } from "node:fs/promises";
+import { rename, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
 import { FileCategoryEnum } from "#lib/file-helpers.js";
@@ -13,13 +13,20 @@ import {
 	type FileVersion,
 	fileNotes,
 	files,
+	fileVersions,
 } from "#lib/server/db/schema.js";
 import {
 	VersioningDisabledError,
 	VersionMergeError,
 } from "#lib/server/errors.js";
 import type { StorageContext } from "./context";
-import { determineCategory, fileDbToObjectItem } from "./mappers";
+import type { FileOperations } from "./files";
+import { diskName, getUniqueDisplayName } from "./lookups";
+import {
+	determineCategory,
+	fileDbToObjectItem,
+	generateFileNameWithExtension,
+} from "./mappers";
 import { recordDurations } from "./media";
 import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
@@ -107,7 +114,42 @@ export class VersionOperations {
 	constructor(
 		private readonly ctx: StorageContext,
 		private readonly thumbnails: ThumbnailService,
+		/** Deletes the merged-away files and renames the kept one. */
+		private readonly fileOperations?: FileOperations,
 	) {}
+
+	/**
+	 * The newest of `ids` in the order given stays; the rest become its
+	 * versions, placed as previewed, and are deleted. Returns the kept file's
+	 * id, null if any is not here.
+	 */
+	async merge(ids: string[], name?: string): Promise<string | null> {
+		const plan = await this.planMerge(ids);
+		if (!(plan && this.fileOperations)) {
+			return null;
+		}
+		const { target, sources, order, max } = plan;
+		const made = new Map<string, string>();
+		// One at a time, each deleted only once its version exists: a
+		// failure part way leaves every take either a file or a version.
+		for (const source of sources) {
+			const version = await this.absorb(target, source, max);
+			made.set(source.file.id, version.id);
+			await this.fileOperations.deleteFile(source.file.path);
+		}
+		await this.place(target.id, order, made);
+		const wanted = name?.trim();
+		if (wanted && wanted.toLowerCase() !== target.name.toLowerCase()) {
+			const folder = target.path.includes("/")
+				? target.path.slice(0, target.path.lastIndexOf("/"))
+				: undefined;
+			await this.fileOperations.updateFile(target.path, {
+				key: await getUniqueDisplayName(this.ctx, wanted, folder, "file"),
+			});
+		}
+		await this.ctx.invalidateListingCaches();
+		return target.id;
+	}
 
 	/** Whether a file's folder versions, and how many it keeps. */
 	async fileVersioning(id: string): Promise<Versioning | null> {
@@ -267,6 +309,84 @@ export class VersionOperations {
 			.set({ fileId: target.id })
 			.where(eq(fileNotes.fileId, source.file.id));
 		return version;
+	}
+
+	/**
+	 * Versions back out as files beside the file, the reverse of a merge: each
+	 * under its original name (made unique), dated by its own bytes. A move,
+	 * not a copy: the bytes are renamed out of the history. All of them when
+	 * `versionIds` is absent. Returns the new files' ids, null if not here.
+	 */
+	async extract(
+		fileId: string,
+		versionIds?: string[],
+	): Promise<string[] | null> {
+		const file = await this.findOwnFile(fileId);
+		if (!file) {
+			return null;
+		}
+		const wanted = versionIds && new Set(versionIds);
+		const versions = (await listVersions(this.ctx, fileId))
+			.filter((version) => !wanted || wanted.has(version.id))
+			.toReversed();
+		const parent = file.path.includes("/")
+			? file.path.slice(0, file.path.lastIndexOf("/"))
+			: undefined;
+		const dot = file.name.lastIndexOf(".");
+		const [stem, ext] =
+			dot > 0
+				? [file.name.slice(0, dot), file.name.slice(dot)]
+				: [file.name, ""];
+		const created: string[] = [];
+		for (const version of versions) {
+			const name = await getUniqueDisplayName(
+				this.ctx,
+				version.name ?? `${stem} v${version.seq}${ext}`,
+				parent,
+				"file",
+			);
+			const segment = await diskName(this.ctx, parent, name, {
+				fallback: generateFileNameWithExtension(name),
+				file: true,
+			});
+			const path = parent ? `${parent}/${segment}` : segment;
+			const from = versionKey(fileId, version.id);
+			const source = join(this.ctx.storagePath, from);
+			// Its own date: the render's, not when it was kept.
+			const at = await stat(source).then(
+				(s) => s.mtime,
+				() => version.createdAt,
+			);
+			await this.thumbnails.adopt(from, path);
+			// Over the placeholder `diskName` claimed.
+			await rename(source, join(this.ctx.storagePath, path));
+			const id = crypto.randomUUID();
+			try {
+				await this.ctx.db.insert(files).values({
+					id,
+					name,
+					ownerId: this.ctx.user.id,
+					volumeId: this.ctx.volumeId,
+					path,
+					folderId: file.folderId,
+					contentType: version.contentType,
+					category: determineCategory(name),
+					size: version.size,
+					createdAt: at,
+					updatedAt: at,
+				});
+			} catch (error) {
+				await rename(join(this.ctx.storagePath, path), source);
+				throw error;
+			}
+			await this.ctx.db
+				.delete(fileVersions)
+				.where(eq(fileVersions.id, version.id));
+			await this.thumbnails.deleteThumbnails(from);
+			created.push(id);
+		}
+		await this.ctx.invalidateListingCaches();
+		return created;
 	}
 
 	/** A merge's order, with each absorbed file replaced by its new version. */

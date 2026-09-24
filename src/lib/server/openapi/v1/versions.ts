@@ -108,6 +108,38 @@ export const reorderFileVersions = defineRoute({
 	service: storageServiceFor,
 });
 
+export const extractFileVersions = defineRoute({
+	method: "post",
+	path: "/api/v1/storage/file/{id}/versions/extract",
+	summary: "Turn versions back into files",
+	description:
+		"The reverse of a merge: each version leaves the history and becomes a " +
+		"file beside this one, under its original name made unique, dated by " +
+		"its own bytes. `ids` picks versions; absent takes them all.",
+	tags: ["Storage - Versions"],
+	params: z.object({ id: z.string() }),
+	query: z.object(driveQuery),
+	body: z.object({ ids: z.array(z.string()).max(1000).optional() }),
+	response: z.object({ ids: z.array(z.string()) }),
+	errors: [403, 404, 500],
+	service: storageServiceFor,
+});
+
+export const downloadAllFileVersions = defineRoute({
+	method: "get",
+	path: "/api/v1/storage/file/{id}/versions/zip",
+	summary: "Download every version as a zip",
+	description:
+		"The history oldest first, then the current file, numbered so they list " +
+		"in that order: `01 - Song-001.wav` … `04 - Song.wav`.",
+	tags: ["Storage - Versions"],
+	params: z.object({ id: z.string() }),
+	query: z.object(driveQuery),
+	response: z.any(),
+	errors: [404, 500],
+	service: storageServiceFor,
+});
+
 export const restoreFileVersion = defineRoute({
 	method: "post",
 	path: "/api/v1/storage/file/{id}/versions/{versionId}/restore",

@@ -1034,6 +1034,8 @@
 	"versions_merging": "Unione in corso…",
 	"versions_merged": "File uniti come versioni: {count}",
 	"versions_merge_error": "Impossibile unire i file",
+	"versions_extract_error": "Impossibile estrarre le versioni",
+	"versions_extracted": "Versioni estratte come file: {count}",
 	"versions_reorder_error": "Impossibile riordinare le versioni",
 	"versions_drop_one": "Rilascia un solo file per farne una nuova versione",
 	"storage_versions_hold": [

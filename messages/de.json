@@ -1069,6 +1069,8 @@
 	"versions_merging": "Wird zusammengeführt…",
 	"versions_merged": "Als Versionen zusammengeführte Dateien: {count}",
 	"versions_merge_error": "Die Dateien konnten nicht zusammengeführt werden",
+	"versions_extract_error": "Die Versionen konnten nicht extrahiert werden",
+	"versions_extracted": "Als Dateien extrahierte Versionen: {count}",
 	"versions_reorder_error": "Die Versionen konnten nicht neu geordnet werden",
 	"versions_drop_one": "Nur eine Datei ablegen, um sie zur neuen Version zu machen",
 	"storage_versions_hold": [

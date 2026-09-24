@@ -157,3 +157,13 @@ export function handleOpenItemFullscreen(item: ObjectItem): void {
 		window.location.assign(url);
 	}
 }
+
+export function clickDownload(url: string, filename: string): void {
+	const a = document.createElement("a");
+	a.style.display = "none";
+	a.href = url;
+	a.download = filename;
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+}

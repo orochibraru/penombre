@@ -187,3 +187,86 @@ describe("files replaced outside Penombre", () => {
 		).toEqual(["two", "one"]);
 	});
 });
+
+describe("files renamed on disk", () => {
+	test("keep their row and their versions", async () => {
+		await writeFile(join(root, "take.wav"), "one");
+		await utimes(
+			join(root, "take.wav"),
+			new Date(1_000_000),
+			new Date(1_000_000),
+		);
+		await scanner.scan();
+		await replace("take.wav", "two", new Date(2_000_000));
+		await scanner.scan();
+		const [before] = await db.select().from(files);
+
+		await rename(join(root, "take.wav"), join(root, "Final mix.wav"));
+		await scanner.scan();
+
+		const rows = await db.select().from(files);
+		expect(rows.map((r) => [r.id, r.path, r.name])).toEqual([
+			[before?.id, "Final mix.wav", "Final mix.wav"],
+		]);
+		const [version] = await listVersions(ctx, before?.id ?? "");
+		expect(await read(versionKey(before?.id ?? "", version?.id ?? ""))).toBe(
+			"one",
+		);
+	});
+
+	test("are matched by size and date when no inode was recorded", async () => {
+		settings.mockResolvedValue({ versioningEnabled: false } as never);
+		try {
+			await writeFile(join(root, "take.wav"), "one");
+			await utimes(
+				join(root, "take.wav"),
+				new Date(1_000_000),
+				new Date(1_000_000),
+			);
+			await scanner.scan();
+			const [before] = await db.select().from(files);
+			expect(before?.inode).toBeNull();
+
+			await rename(join(root, "take.wav"), join(root, "renamed.wav"));
+			await scanner.scan();
+
+			const rows = await db.select().from(files);
+			expect(rows.map((r) => [r.id, r.path])).toEqual([
+				[before?.id, "renamed.wav"],
+			]);
+		} finally {
+			settings.mockResolvedValue({
+				versioningEnabled: true,
+				maxVersionsPerFile: 5,
+			} as never);
+		}
+	});
+
+	test("two lookalikes are not guessed between", async () => {
+		settings.mockResolvedValue({ versioningEnabled: false } as never);
+		try {
+			for (const name of ["a.wav", "b.wav"]) {
+				await writeFile(join(root, name), "same");
+				await utimes(
+					join(root, name),
+					new Date(1_000_000),
+					new Date(1_000_000),
+				);
+			}
+			await scanner.scan();
+			const before = new Set((await db.select().from(files)).map((r) => r.id));
+
+			await rename(join(root, "a.wav"), join(root, "c.wav"));
+			await rename(join(root, "b.wav"), join(root, "d.wav"));
+			await scanner.scan();
+
+			const after = (await db.select().from(files)).map((r) => r.id);
+			expect(after.some((id) => before.has(id))).toBeFalse();
+		} finally {
+			settings.mockResolvedValue({
+				versioningEnabled: true,
+				maxVersionsPerFile: 5,
+			} as never);
+		}
+	});
+});

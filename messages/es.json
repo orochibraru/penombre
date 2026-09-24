@@ -1114,6 +1114,8 @@
 	"versions_merging": "Fusionando…",
 	"versions_merged": "Archivos fusionados como versiones: {count}",
 	"versions_merge_error": "No se pudieron fusionar los archivos",
+	"versions_extract_error": "No se pudieron extraer las versiones",
+	"versions_extracted": "Versiones extraídas como archivos: {count}",
 	"versions_reorder_error": "No se pudieron reordenar las versiones",
 	"versions_drop_one": "Suelta un solo archivo para convertirlo en una nueva versión",
 	"storage_versions_hold": [

@@ -1079,6 +1079,8 @@
 	"versions_merging": "Scalanie…",
 	"versions_merged": "Pliki scalone jako wersje: {count}",
 	"versions_merge_error": "Nie udało się scalić plików",
+	"versions_extract_error": "Nie udało się wyodrębnić wersji",
+	"versions_extracted": "Wersje wyodrębnione jako pliki: {count}",
 	"versions_reorder_error": "Nie udało się zmienić kolejności wersji",
 	"versions_drop_one": "Upuść jeden plik, aby stał się nową wersją",
 	"storage_versions_hold": [
