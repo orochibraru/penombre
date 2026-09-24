@@ -403,6 +403,8 @@ export const fileVersions = sqliteTable(
 		contentType: text("content_type")
 			.default("application/octet-stream")
 			.notNull(),
+		/** The file it came from, when merged in from a separate file. */
+		name: text("name"),
 		createdBy: text("created_by").references(() => user.id, {
 			onDelete: "set null",
 		}),

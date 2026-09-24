@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/orochibraru/penombre/internal/jobs"
 	"github.com/orochibraru/penombre/internal/jobs/scanlist"
@@ -125,5 +126,21 @@ func TestSymlinksReportTheirTarget(t *testing.T) {
 
 	if len(out.Entries) != 1 || out.Entries[0].Key != "linked.mp3" || out.Entries[0].Size != 10 {
 		t.Fatalf("got %+v", out.Entries)
+	}
+}
+
+func TestReportsModificationTime(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "take.mp3")
+	write(t, path, "x")
+	at := time.Date(2026, 2, 24, 19, 35, 0, 0, time.UTC)
+	if err := os.Chtimes(path, at, at); err != nil {
+		t.Fatal(err)
+	}
+
+	out := run(t, root)
+
+	if len(out.Entries) != 1 || out.Entries[0].MTime != at.UnixMilli() {
+		t.Fatalf("got %+v, want mtime %d", out.Entries, at.UnixMilli())
 	}
 }

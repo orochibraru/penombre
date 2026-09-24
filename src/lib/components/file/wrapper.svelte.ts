@@ -40,6 +40,7 @@ import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { page } from "$app/state";
 import { peaksUrl, rawUrl, withLocation } from "./file-links";
+import { mergeVersionsAction } from "./wrapper-merge";
 
 export {
 	fullscreenUrl,
@@ -361,6 +362,8 @@ export function createMainMultipleActions(
 		onStar: () => void;
 		onShare: () => void;
 		onMoveToTrash: () => void;
+		/** Absent when the selection cannot merge. */
+		onMergeVersions?: () => void;
 	},
 	selectedCount: number,
 ): MultipleItemsAction[] {
@@ -401,6 +404,9 @@ export function createMainMultipleActions(
 						action: handlers.onShare,
 					},
 				]
+			: []),
+		...(handlers.onMergeVersions
+			? [mergeVersionsAction(handlers.onMergeVersions)]
 			: []),
 		{
 			title: "Move to Trash",

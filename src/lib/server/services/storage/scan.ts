@@ -26,6 +26,7 @@ import {
 import { bytesGone, chunks } from "./reconcile";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+import { nameUuidPaths } from "./uuid-names";
 import { dropVersionBytes } from "./versions";
 
 export { ancestorFolders };
@@ -34,15 +35,21 @@ export { ancestorFolders };
 export interface ScanEntry {
 	key: string;
 	size: number;
+	/** Epoch ms; absent from a worker older than this field. */
+	mtime?: number;
 }
 
 /** The scannable keys on disk and their sizes, bundled to keep call sites at 4 params. */
 interface Listing {
 	keys: string[];
 	sizeByKey: Map<string, number>;
+	mtimeByKey: Map<string, number>;
 }
 
 const LISTING_TIMEOUT_MS = 30 * 60_000;
+
+/** A write stamps its row a moment apart from the file's mtime. */
+const DATE_SLACK_MS = 2000;
 
 /** Walks `root` via the `scan-list` job. Exported so a test can stub scan()'s listing. */
 export async function listStorageRoot(root: string): Promise<ScanEntry[]> {
@@ -167,6 +174,9 @@ export class ScanOperations {
 		{ full = false }: { full?: boolean } = {},
 	): Promise<ScanResult> {
 		report({ phase: "listing", done: 0, total: 0 });
+		if (this.ctx.namedPaths && !this.ctx.readOnly) {
+			await nameUuidPaths(this.ctx, this.thumbnails);
+		}
 		const entries = (
 			await this.deps.listStorageRoot(this.ctx.storagePath)
 		).filter((entry) => isScannable(entry.key));
@@ -174,6 +184,11 @@ export class ScanOperations {
 		const listing: Listing = {
 			keys,
 			sizeByKey: new Map(entries.map((entry) => [entry.key, entry.size])),
+			mtimeByKey: new Map(
+				entries.flatMap((entry) =>
+					entry.mtime ? [[entry.key, entry.mtime] as const] : [],
+				),
+			),
 		};
 
 		const [existingFolders, existingFiles] = await Promise.all([
@@ -182,7 +197,12 @@ export class ScanOperations {
 				.from(folders)
 				.where(ownedFolders(this.ctx)),
 			this.ctx.db
-				.select({ id: files.id, path: files.path, size: files.size })
+				.select({
+					id: files.id,
+					path: files.path,
+					size: files.size,
+					updatedAt: files.updatedAt,
+				})
 				.from(files)
 				.where(ownedFiles(this.ctx)),
 		]);
@@ -303,7 +323,7 @@ export class ScanOperations {
 	}
 
 	private async insertMissingFiles(
-		{ keys, sizeByKey }: Listing,
+		{ keys, sizeByKey, mtimeByKey }: Listing,
 		knownFilePaths: Set<string>,
 		folderIdByPath: Map<string, string>,
 		tick: (key: string) => void = () => undefined,
@@ -313,6 +333,11 @@ export class ScanOperations {
 		let added = 0;
 		for (const key of missing) {
 			const parent = parentPath(key);
+			const mtime = mtimeByKey.get(key);
+			// The file's own date, not the scan's: every take read as equally new.
+			const dated = mtime
+				? { createdAt: new Date(mtime), updatedAt: new Date(mtime) }
+				: {};
 
 			const [inserted] = await this.ctx.db
 				.insert(files)
@@ -326,6 +351,7 @@ export class ScanOperations {
 					contentType: determineContentType(key),
 					category: determineCategory(key),
 					size: await this.plainSize(key, sizeByKey.get(key) ?? 0),
+					...dated,
 				})
 				.onConflictDoNothing()
 				.returning({ id: files.id });
@@ -355,8 +381,13 @@ export class ScanOperations {
 	 * that keeps the size is only caught by a full rescan.
 	 */
 	private async refreshChangedFiles(
-		existingFiles: Array<{ id: string; path: string; size: number }>,
-		{ keys, sizeByKey }: Listing,
+		existingFiles: Array<{
+			id: string;
+			path: string;
+			size: number;
+			updatedAt: Date;
+		}>,
+		{ keys, sizeByKey, mtimeByKey }: Listing,
 		tick: (key: string) => void = () => undefined,
 		full = false,
 	): Promise<number> {
@@ -371,9 +402,21 @@ export class ScanOperations {
 			tick(key);
 
 			const size = sizeByKey.get(key);
+			const mtime = mtimeByKey.get(key);
 			// A sealed file is bigger on disk than the plaintext its row records.
 			const unchanged = size === known.size || size === sealedSize(known.size);
 			if (size === undefined || (unchanged && !full)) {
+				// Rows scanned before dates were kept carry the scan's time.
+				if (
+					mtime &&
+					Math.abs(known.updatedAt.getTime() - mtime) > DATE_SLACK_MS
+				) {
+					await this.ctx.db
+						.update(files)
+						.set({ updatedAt: new Date(mtime) })
+						.where(and(eq(files.id, known.id), ownedFiles(this.ctx)));
+					updated++;
+				}
 				continue;
 			}
 
@@ -386,7 +429,7 @@ export class ScanOperations {
 						category: determineCategory(key),
 					}),
 					...unknownDuration(key),
-					updatedAt: new Date(),
+					updatedAt: mtime ? new Date(mtime) : new Date(),
 				})
 				.where(and(eq(files.id, known.id), ownedFiles(this.ctx)));
 

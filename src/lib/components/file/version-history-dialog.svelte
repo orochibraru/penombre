@@ -94,6 +94,7 @@
                         <span class="text-muted-foreground truncate text-xs">
                             {readableFileSize(version.size)}
                             · {new Date(version.createdAt).toLocaleString()}
+                            {#if version.name}· {version.name}{/if}
                             {#if version.authorName}· {version.authorName}{/if}
                         </span>
                     </button>

@@ -772,6 +772,15 @@
 	"deck_empty": "Pusty slajd",
 	"clear_selection": "Wyczyść",
 	"seek": "Przewiń",
+	"player_restart": "Od początku",
+	"player_back": "{seconds} sekund wstecz",
+	"player_forward": "{seconds} sekund do przodu",
+	"player_speed": "Prędkość odtwarzania",
+	"player_pitch": "Wysokość dźwięku",
+	"player_pitch_insecure": "Zmiana wysokości wymaga HTTPS",
+	"player_semitones": "{count} pt",
+	"player_pitch_error": "Nie udało się zmienić wysokości",
+	"player_tuning": "Prędkość i wysokość",
 	"back": "Wstecz",
 	"upload_action": [
 		{
@@ -1056,6 +1065,17 @@
 	"versions_save_as": "Zapisz jako wersję",
 	"versions_save_error": "Nie udało się zapisać wersji",
 	"versions_saved": "Zapisano wersję",
+	"versions_merge_title": "Scal jako wersje",
+	"versions_merge_description": "Zostaje ostatni plik z listy; pozostałe stają się jego wcześniejszymi wersjami w pokazanej kolejności, z nazwą i datą. Ich notatki przechodzą do niego. Gwiazdki i linki udostępniania pozostałych są usuwane.",
+	"versions_merge_name": "Nazwa scalonego pliku",
+	"versions_merge_order": "Kolejność",
+	"versions_merge_by_date": "Data pliku",
+	"versions_merge_by_name": "Nazwa",
+	"versions_merge_preview": "Wynikowe wersje",
+	"versions_merge_submit": "Scal",
+	"versions_merging": "Scalanie…",
+	"versions_merged": "Pliki scalone jako wersje: {count}",
+	"versions_merge_error": "Nie udało się scalić plików",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

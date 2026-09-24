@@ -81,6 +81,7 @@
 		starSelected,
 	} from "./wrapper-bulk.svelte.js";
 	import { duplicateItem, isDuplicateShortcut } from "./wrapper-duplicate";
+	import { mergeHandler } from "./wrapper-merge";
 	import { isSearchShortcut, searchFiles } from "./wrapper-search";
 
 	interface UserPreferences {
@@ -603,6 +604,14 @@
 	let itemActions = $derived(isTrash ? trashActions : mainActions);
 
 	// Multiple item actions
+	function openBulkMove(mode: typeof moveMode) {
+		moveItems = { ...checkedItems };
+		moveItem = undefined; // Clear single item mode
+		moveMode = mode;
+		moveDialogOpen = true;
+		actionsContextOpen = false;
+	}
+
 	const mainMultipleActions = $derived(
 		createMainMultipleActions(
 			{
@@ -643,22 +652,12 @@
 					}
 					checkedItems = {};
 				},
-				onMove: () => {
-					// Copy checked items to moveItems for bulk move
-					moveItems = { ...checkedItems };
-					moveItem = undefined; // Clear single item mode
-					moveMode = "move";
-					moveDialogOpen = true;
-					actionsContextOpen = false;
-				},
-				onCopy: () => {
-					moveItems = { ...checkedItems };
-					moveItem = undefined;
-					moveMode = "copy";
-					moveDialogOpen = true;
-					actionsContextOpen = false;
-				},
+				onMove: () => openBulkMove("move"),
+				onCopy: () => openBulkMove("copy"),
 				onMoveToTrash: handleDeleteObject,
+				onMergeVersions: mergeHandler(displayData.list, checkedItems, () => {
+					checkedItems = {};
+				}),
 			},
 			selectedItemCount,
 		),

@@ -24,6 +24,11 @@ export interface StorageContext {
 	/** `user-<id>`, the per-user root inside the storage backend */
 	readonly userFolder: string;
 	/**
+	 * A tree people also browse outside Penombre (simple mode, a volume):
+	 * new folders are named after themselves on disk, not a UUID.
+	 */
+	readonly namedPaths: boolean;
+	/**
 	 * The mounted volume this context reads and writes, or null for the user's
 	 * own drive. Every `files`/`folders` query filters on it, so a service
 	 * bound to a volume can never see or touch another one's rows.

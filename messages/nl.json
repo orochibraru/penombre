@@ -832,6 +832,15 @@
 	"deck_empty": "Lege dia",
 	"clear_selection": "Wissen",
 	"seek": "Spoelen",
+	"player_restart": "Opnieuw vanaf het begin",
+	"player_back": "{seconds} seconden terug",
+	"player_forward": "{seconds} seconden vooruit",
+	"player_speed": "Afspeelsnelheid",
+	"player_pitch": "Toonhoogte",
+	"player_pitch_insecure": "Toonhoogte wijzigen vereist HTTPS",
+	"player_semitones": "{count} st",
+	"player_pitch_error": "Kan de toonhoogte niet wijzigen",
+	"player_tuning": "Snelheid en toonhoogte",
 	"back": "Terug",
 	"upload_action": [
 		{
@@ -1091,6 +1100,17 @@
 	"versions_save_as": "Opslaan als versie",
 	"versions_save_error": "Kan geen versie opslaan",
 	"versions_saved": "Versie opgeslagen",
+	"versions_merge_title": "Samenvoegen als versies",
+	"versions_merge_description": "Het laatste bestand in de lijst blijft; de andere worden de eerdere versies ervan in de getoonde volgorde, met hun naam en datum. Hun notities gaan mee. Sterren en deellinks van de andere worden verwijderd.",
+	"versions_merge_name": "Naam van het samengevoegde bestand",
+	"versions_merge_order": "Volgorde",
+	"versions_merge_by_date": "Bestandsdatum",
+	"versions_merge_by_name": "Naam",
+	"versions_merge_preview": "Resulterende versies",
+	"versions_merge_submit": "Samenvoegen",
+	"versions_merging": "Samenvoegen…",
+	"versions_merged": "Bestanden samengevoegd als versies: {count}",
+	"versions_merge_error": "De bestanden konden niet worden samengevoegd",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

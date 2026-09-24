@@ -40,8 +40,12 @@ const sent = new Map<string, number>();
 let rate = new TransferRate();
 
 function uploadUrl(job: UploadJob): string {
-	const query = locationQuery(job.location ?? {});
-	return `/api/v1/storage/file/${encodeURIComponent(job.fileId)}/upload${query ? `?${query}` : ""}`;
+	const query = new URLSearchParams(locationQuery(job.location ?? {}));
+	// The file's own date; multipart does not carry it to the server.
+	if (job.file.lastModified > 0) {
+		query.set("mtime", String(job.file.lastModified));
+	}
+	return `/api/v1/storage/file/${encodeURIComponent(job.fileId)}/upload?${query}`;
 }
 
 function toWorkerJob(job: UploadJob): WorkerJob {

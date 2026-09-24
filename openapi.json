@@ -21351,6 +21351,17 @@
 							],
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "mtime",
+						"required": false,
+						"schema": {
+							"description": "The file's own last-modified time, epoch ms; kept on the row and the bytes",
+							"exclusiveMinimum": 0,
+							"maximum": 9007199254740991,
+							"type": "integer"
+						}
 					}
 				],
 				"requestBody": {
@@ -21543,6 +21554,12 @@
 															"id": {
 																"type": "string"
 															},
+															"name": {
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
 															"seq": {
 																"type": "number"
 															},
@@ -21555,6 +21572,7 @@
 															"seq",
 															"size",
 															"contentType",
+															"name",
 															"authorName",
 															"createdAt"
 														],
@@ -21679,6 +21697,12 @@
 												"id": {
 													"type": "string"
 												},
+												"name": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
 												"seq": {
 													"type": "number"
 												},
@@ -21691,6 +21715,7 @@
 												"seq",
 												"size",
 												"contentType",
+												"name",
 												"authorName",
 												"createdAt"
 											],
@@ -25440,6 +25465,151 @@
 				"summary": "Empty the trash",
 				"tags": [
 					"Storage"
+				]
+			}
+		},
+		"/api/v1/storage/versions/merge": {
+			"post": {
+				"description": "`ids` are oldest first: the last stays, every other one becomes one of its versions in that order, keeping its name and date, and is deleted. Its notes move to the kept file. 409 when a merged file already has versions or the folder keeps fewer versions than the merge would make.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"ids": {
+										"items": {
+											"type": "string"
+										},
+										"maxItems": 1000,
+										"minItems": 2,
+										"type": "array"
+									},
+									"name": {
+										"maxLength": 255,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"required": [
+									"ids"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Conflict"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Merge files into one file's versions",
+				"tags": [
+					"Storage - Versions"
 				]
 			}
 		},

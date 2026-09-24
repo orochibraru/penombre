@@ -1,14 +1,19 @@
 <script lang="ts">
 	import {
+		FastForwardIcon,
+		GaugeIcon,
 		MaximizeIcon,
 		MessageSquareTextIcon,
 		PauseIcon,
 		PlayIcon,
+		RewindIcon,
+		SkipBackIcon,
 		Volume1Icon,
 		Volume2Icon,
 		VolumeXIcon,
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
+	import { toast } from "svelte-sonner";
 	import type { ObjectItem } from "#lib/api/index.js";
 	import {
 		peaksUrl as peaksUrlFor,
@@ -19,12 +24,14 @@
 	import VersionSelect from "#lib/components/file/version-select.svelte";
 	import Waveform from "#lib/components/file/waveform.svelte";
 	import BottomAction from "#lib/components/layout/bottom-action.svelte";
+	import PlaybackTuning from "#lib/components/layout/playback-tuning.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Popover from "#lib/components/ui/popover/index.js";
 	import { Progress } from "#lib/components/ui/progress/index.js";
 	import { Slider } from "#lib/components/ui/slider/index.js";
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import * as m from "#lib/paraglide/messages.js";
+	import { tune } from "#lib/playback-tuning.js";
 	import {
 		type PlaybackCommand,
 		playableMusic,
@@ -58,7 +65,9 @@
 		);
 	}
 
-	let player: HTMLAudioElement;
+	// State, not a plain `let`: the element only exists while a track is open,
+	// and an effect that ran before it did would never run again.
+	let player: HTMLAudioElement | undefined = $state();
 
 	// Nothing is loaded yet; the binding takes over as soon as there is an
 	// element. Whether a new track starts is `autoplayPending` below, not this.
@@ -75,6 +84,32 @@
 		playbackDuration.set(duration);
 	});
 	let volume = $state(1);
+
+	/** Kept across tracks: comparing takes means hearing them the same way. */
+	let speed = $state(1);
+	let semitones = $state(0);
+	$effect(() => {
+		if (!player) {
+			return;
+		}
+		tune(player, speed, semitones).catch(() => {
+			toast.error(m.player_pitch_error());
+			semitones = 0;
+		});
+	});
+
+	const SKIP_SECONDS = 5;
+
+	function skip(by: number) {
+		currentTime = Math.min(Math.max(currentTime + by, 0), duration || 0);
+	}
+
+	function restart() {
+		currentTime = 0;
+		if (paused) {
+			void player?.play().then(() => setPlaying(true));
+		}
+	}
 	let loading: boolean = $state(true);
 	let seeking: boolean = $state(false);
 
@@ -303,6 +338,17 @@
 >
 	<div class="flex w-full items-center gap-2">
 		<div class="flex items-center justify-between gap-2">
+			<Button variant="ghost" size="icon" title={m.player_restart()} onclick={restart}>
+				<SkipBackIcon />
+			</Button>
+			<Button
+				variant="ghost"
+				size="icon"
+				title={m.player_back({ seconds: String(SKIP_SECONDS) })}
+				onclick={() => skip(-SKIP_SECONDS)}
+			>
+				<RewindIcon />
+			</Button>
 			{#if loading}
                 <Button disabled title={m.loading()}>
                     <Spinner />
@@ -328,6 +374,14 @@
                     <PauseIcon />
                 </Button>
 			{/if}
+			<Button
+				variant="ghost"
+				size="icon"
+				title={m.player_forward({ seconds: String(SKIP_SECONDS) })}
+				onclick={() => skip(SKIP_SECONDS)}
+			>
+				<FastForwardIcon />
+			</Button>
             <p class="text-xs text-nowrap">
                 {formatTime(currentTime)} / {formatTime(duration)}
             </p>
@@ -378,6 +432,24 @@
                 <MessageSquareTextIcon />
             </Button>
 		{/if}
+		<div class="hidden items-center gap-2 lg:flex">
+			<PlaybackTuning bind:speed bind:semitones />
+		</div>
+		<!-- Wrapped: the trigger's props replace a class set on the button. -->
+		<div class="lg:hidden">
+			<Popover.Root>
+				<Popover.Trigger>
+					{#snippet child({ props })}
+						<Button variant="outline" {...props} title={m.player_tuning()}>
+							<GaugeIcon />
+						</Button>
+					{/snippet}
+				</Popover.Trigger>
+				<Popover.Content class="flex w-auto gap-2">
+					<PlaybackTuning bind:speed bind:semitones />
+				</Popover.Content>
+			</Popover.Root>
+		</div>
 		<Button
 			variant="outline"
 			title={m.open_fullscreen()}
@@ -446,7 +518,7 @@
 			}
 			autoplayPending = false;
             player
-                .play()
+                ?.play()
                 .then(() => setPlaying(true))
                 .catch(() => {
 				// Autoplay refused: show the paused state instead.

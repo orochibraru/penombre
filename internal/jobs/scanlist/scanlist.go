@@ -22,6 +22,8 @@ type Spec struct {
 type Entry struct {
 	Key  string `json:"key"`
 	Size int64  `json:"size"`
+	// Epoch milliseconds, so a scanned row carries the file's own date.
+	MTime int64 `json:"mtime"`
 }
 
 type Result struct {
@@ -76,7 +78,11 @@ func Run(ctx context.Context, job jobs.Job) (any, error) {
 		if err != nil {
 			return err
 		}
-		entries = append(entries, Entry{Key: filepath.ToSlash(rel), Size: info.Size()})
+		entries = append(entries, Entry{
+			Key:   filepath.ToSlash(rel),
+			Size:  info.Size(),
+			MTime: info.ModTime().UnixMilli(),
+		})
 		return nil
 	})
 	if err != nil {

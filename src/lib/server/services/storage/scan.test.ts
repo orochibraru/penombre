@@ -98,6 +98,38 @@ describe("refreshChangedFiles", () => {
 		expect(deleted).toEqual(["track.mp3"]);
 	});
 
+	test("dates rows by the file's own mtime, not the scan's", async () => {
+		const mtime = Date.UTC(2026, 1, 24, 19, 35);
+		const db = fakeDb([
+			{
+				id: "f1",
+				path: "old.mp3",
+				size: 10,
+				updatedAt: new Date(),
+			} as never,
+		]);
+		const ops = new ScanOperations(
+			{
+				user: { id: "u1" },
+				storagePath: "/tmp/does-not-exist",
+				db,
+				invalidateListingCaches: async () => {},
+			} as never,
+			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
+			{
+				listStorageRoot: async () => [
+					{ key: "old.mp3", size: 10, mtime },
+					{ key: "new.mp3", size: 10, mtime },
+				],
+			},
+		);
+
+		await ops.scan();
+
+		expect(db.updates).toEqual([{ updatedAt: new Date(mtime) }]);
+		expect(db.inserts[0]?.updatedAt).toEqual(new Date(mtime));
+	});
+
 	test("leaves an unchanged file alone", async () => {
 		const db = fakeDb([{ id: "f1", path: "track.mp3", size: 80_000_000 }]);
 		const ops = new ScanOperations(

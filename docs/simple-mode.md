@@ -54,6 +54,12 @@ Hidden entries (`.DS_Store`, `.git/…`) and thumbnail caches are skipped. The
 scan never rewrites your files: it only reads names and sizes to build the
 index, so your folder layout on disk stays exactly as it is.
 
+What you create or upload in Penombre is written under its own name too, so the
+volume reads the same from a file manager or a Syncthing peer. A name already
+taken, even by something in the trash, gets a number: `Take (1).wav`. Folders
+and files that older versions of Penombre wrote as long random IDs are renamed
+to their display names by the next scan.
+
 ## The whole stack
 
 SQLite is the default, so simple mode needs exactly one container — no database

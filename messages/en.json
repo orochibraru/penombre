@@ -832,6 +832,15 @@
 	"deck_empty": "Empty slide",
 	"clear_selection": "Clear",
 	"seek": "Seek",
+	"player_restart": "Start from the top",
+	"player_back": "Back {seconds} seconds",
+	"player_forward": "Forward {seconds} seconds",
+	"player_speed": "Playback speed",
+	"player_pitch": "Pitch",
+	"player_pitch_insecure": "Changing pitch needs HTTPS",
+	"player_semitones": "{count} st",
+	"player_pitch_error": "Could not change the pitch",
+	"player_tuning": "Speed and pitch",
 	"back": "Back",
 	"upload_action": [
 		{
@@ -1100,6 +1109,26 @@
 	"versions_save_as": "Save as version",
 	"versions_save_error": "Could not save a version",
 	"versions_saved": "Version saved",
+	"versions_merge_title": "Merge as versions",
+	"versions_merge_description": "The last one in the list stays; the others become its earlier versions in the order shown, keeping their names and dates. Their notes move to it. Stars and share links on the others are removed.",
+	"versions_merge_name": "Name of the merged file",
+	"versions_merge_order": "Order",
+	"versions_merge_by_date": "File date",
+	"versions_merge_by_name": "Name",
+	"versions_merge_preview": "Resulting versions",
+	"versions_merge_submit": "Merge",
+	"versions_merging": "Merging…",
+	"versions_merged": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} file merged as versions",
+				"countPlural=other": "{count} files merged as versions"
+			}
+		}
+	],
+	"versions_merge_error": "Could not merge the files",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

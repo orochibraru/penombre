@@ -10,6 +10,12 @@ export const expandedVersions = writable<Record<string, ListedVersion[]>>({});
 /** The file whose history the grid's modal shows; tiles do not unfold. */
 export const historyFor = writable<ObjectItem | null>(null);
 
+/** Files waiting on the merge dialog to become one file's versions. */
+export const mergeVersionsOf = writable<{
+	items: ObjectItem[];
+	onmerged: () => void;
+} | null>(null);
+
 /** A restore or delete waiting on its confirmation dialog. */
 export const pendingVersionAction = writable<{
 	item: ObjectItem;

@@ -28,6 +28,14 @@ export class VersioningDisabledError extends Error {
 	}
 }
 
+/** A set of files that cannot become one file's versions. */
+export class VersionMergeError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "VersionMergeError";
+	}
+}
+
 /**
  * A shared drive that does not exist, or that the caller is not a member of.
  *

@@ -24,6 +24,7 @@ export const GET = listFileVersions.handler(async ({ params, service }) => {
 			seq: version.seq,
 			size: version.size,
 			contentType: version.contentType,
+			name: version.name,
 			authorName: version.authorName,
 			createdAt: version.createdAt.toISOString(),
 		})),
@@ -41,6 +42,7 @@ export const POST = createFileVersion.handler(async ({ params, service }) => {
 		seq: version.seq,
 		size: version.size,
 		contentType: version.contentType,
+		name: version.name,
 		authorName: null,
 		createdAt: version.createdAt.toISOString(),
 	});

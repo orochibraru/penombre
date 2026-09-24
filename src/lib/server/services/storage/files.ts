@@ -5,6 +5,8 @@
  * every mutation touches both and then drops the cached listings.
  */
 
+import { utimes } from "node:fs/promises";
+import { join } from "node:path";
 import { and, eq } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { type File as DbFile, files } from "#lib/server/db/schema.js";
@@ -19,6 +21,7 @@ import type {
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
 import {
+	diskName,
 	findLiveSibling,
 	getFolderIdByPath,
 	getUniqueDisplayName,
@@ -164,11 +167,20 @@ export class FileOperations {
 			: fileKey;
 		const extension = extractExtension(currentFileName);
 		const newUUID = crypto.randomUUID();
-		const newFileName = extension ? `${newUUID}.${extension}` : newUUID;
 
 		const normalizedDest = destinationFolder.endsWith("/")
 			? destinationFolder.slice(0, -1)
 			: destinationFolder;
+		const newFileName = await diskName(
+			this.ctx,
+			normalizedDest || undefined,
+			uniqueName,
+			{
+				fallback: extension ? `${newUUID}.${extension}` : newUUID,
+				self: fileKey,
+				file: true,
+			},
+		);
 		const newPath = normalizedDest
 			? `${normalizedDest}/${newFileName}`
 			: newFileName;
@@ -224,7 +236,12 @@ export class FileOperations {
 			"file",
 		);
 
-		const newFileNameWithExt = generateFileNameWithExtension(uniqueName);
+		const newFileNameWithExt = await diskName(
+			this.ctx,
+			parentFolder,
+			uniqueName,
+			{ fallback: generateFileNameWithExtension(uniqueName), file: true },
+		);
 		const newPath = parentFolder
 			? `${parentFolder}/${newFileNameWithExt}`
 			: newFileNameWithExt;
@@ -285,7 +302,12 @@ export class FileOperations {
 			normalizedFolder,
 			"file",
 		);
-		const fileName = generateFileNameWithExtension(uniqueName);
+		const fileName = await diskName(
+			this.ctx,
+			normalizedFolder || undefined,
+			uniqueName,
+			{ fallback: generateFileNameWithExtension(uniqueName), file: true },
+		);
 		const filePath = normalizedFolder
 			? `${normalizedFolder}/${fileName}`
 			: fileName;
@@ -344,7 +366,12 @@ export class FileOperations {
 			"file",
 		);
 
-		const fileNameWithExt = generateFileNameWithExtension(uniqueName);
+		const fileNameWithExt = await diskName(
+			this.ctx,
+			normalizedFolder || undefined,
+			uniqueName,
+			{ fallback: generateFileNameWithExtension(uniqueName), file: true },
+		);
 		const filePath = normalizedFolder
 			? `${normalizedFolder}/${fileNameWithExt}`
 			: fileNameWithExt;
@@ -433,7 +460,12 @@ export class FileOperations {
 				normalizedFolder,
 				"file",
 			);
-			const fileNameWithExt = generateFileNameWithExtension(uniqueName);
+			const fileNameWithExt = await diskName(
+				this.ctx,
+				normalizedFolder || undefined,
+				uniqueName,
+				{ fallback: generateFileNameWithExtension(uniqueName), file: true },
+			);
 			const filePath = normalizedFolder
 				? `${normalizedFolder}/${fileNameWithExt}`
 				: fileNameWithExt;
@@ -517,7 +549,7 @@ export class FileOperations {
 	async uploadFileBody(
 		id: string,
 		body: Blob | Buffer | Uint8Array,
-		options: { snapshot?: boolean } = {},
+		options: { snapshot?: boolean; modifiedAt?: Date } = {},
 	): Promise<void> {
 		const file = await this.findOwnFile(id);
 		if (!file) {
@@ -538,7 +570,22 @@ export class FileOperations {
 				await this.versions.keepVersion(file);
 			}
 			await this.ctx.driver.writeObject(file.path, data);
-			await afterWrite(this.ctx, this.thumbnails, file, data.byteLength);
+			const { modifiedAt } = options;
+			if (modifiedAt) {
+				// The file's own date, as a copy in a file manager keeps it.
+				// Best effort: the bytes landed, a date is no reason to fail.
+				await utimes(
+					join(this.ctx.storagePath, file.path),
+					modifiedAt,
+					modifiedAt,
+				).catch((error: unknown) => {
+					logger.warn(`Could not date ${file.path}`, error);
+				});
+			}
+			await afterWrite(this.ctx, this.thumbnails, file, {
+				size: data.byteLength,
+				updatedAt: modifiedAt,
+			});
 		} catch (error) {
 			logger.error("Error uploading file body:", error);
 			await this.ctx.activityService.register({

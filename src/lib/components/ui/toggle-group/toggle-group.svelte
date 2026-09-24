@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { getContext, onMount, setContext } from "svelte";
+	import { getContext, setContext } from "svelte";
 	import type { ToggleVariants } from "#lib/components/ui/toggle/index.js";
 	export function setToggleGroupCtx(props: ToggleVariants) {
 		setContext("toggleGroup", props);
@@ -23,11 +23,15 @@
         ...restProps
     }: ToggleGroupPrimitive.RootProps & ToggleVariants = $props();
 
-    onMount(() => {
-        setToggleGroupCtx({
-            variant,
-            size,
-        });
+    // During init: `setContext` in `onMount` is too late, and every item
+    // then crashed reading `variant` off an undefined context.
+    setToggleGroupCtx({
+        get variant() {
+            return variant;
+        },
+        get size() {
+            return size;
+        },
     });
 </script>
 

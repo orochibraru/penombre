@@ -264,6 +264,14 @@ export const uploadFile = defineRoute({
 			.enum(["0", "1"])
 			.optional()
 			.describe("0 skips keeping the old bytes as a version"),
+		mtime: z.coerce
+			.number()
+			.int()
+			.positive()
+			.optional()
+			.describe(
+				"The file's own last-modified time, epoch ms; kept on the row and the bytes",
+			),
 	}),
 	response: z.object({ message: z.string() }),
 	errors: [400, 500],

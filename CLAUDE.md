@@ -666,8 +666,8 @@ racing (before the in-flight registry, or two app processes) inserted the same
 mounted file twice, and the listing, keyed by `key`, died hydrating on
 `each_key_duplicate` inside Svelte's own boundary, which masked the real error.
 The scan inserts with `onConflictDoNothing()` (a folder then reads back the
-winner's id for its children); everything the app creates itself has a UUID
-filename and cannot collide. A restore over a path that came back live is a
+winner's id for its children); what the app creates claims its name first (see
+"On disk, a name is claimed"). A restore over a path that came back live is a
 unique violation, which `Http.ServerError` answers as 409 (`isUniqueViolation`,
 SQLite `SQLITE_CONSTRAINT_UNIQUE` or Postgres `23505`, through Drizzle's
 `cause`).
@@ -954,6 +954,16 @@ The same file's _event handlers_ mutate freely; that is fine, they are not
 effects. `setPlaying()` exists so the unsafe spelling is nowhere in the file to
 be copied back into one.
 
+An effect guarded on a `bind:this` element needs that element in `$state`. The
+player's `<audio>` only exists while a track is open, so a tuning effect that
+returned early on a plain `let player` tracked nothing and never ran again:
+speed and pitch selects that changed their label and nothing else. And a dialog
+effect that wrote `items` then read it back to build a name crashed the page the
+moment it opened; derive what can be derived.
+
+A bits-ui trigger's `child` snippet `props` replace a `class` set before the
+spread, so a `lg:hidden` there never applies; wrap the trigger instead.
+
 Commands are also one object, not one action per call: two `commandPlayback()`
 calls in a tick collapse to the last write before the effect runs, so "seek then
 pause" as two commands silently dropped the seek.
@@ -1156,10 +1166,11 @@ activity views — mono log lines, not cards or a table — differing only by
 admin table used to omit entirely. File and folder names are never written into
 these rows, which is what makes the message safe to show an admin.
 
-### A folder path is a chain of UUIDs, and a file key is not an id
+### A folder path is a chain of segments, and a file key is not an id
 
-`folders.path` is the folder's own id appended to its parent's path, so a nested
-folder's path is `uuid/uuid/uuid`, and the browse URL is that same chain
+`folders.path` is the folder's own disk segment appended to its parent's path:
+`uuid/uuid/uuid` on a personal drive in full mode, real names elsewhere (see "On
+disk, a name is claimed"). The browse URL is that same chain
 (`page.params.path`). Taking `.split("/").pop()` of it gives a segment that
 matches no row: `getFolderIdByPath` returns null while the caller still prefixes
 the file's path with it, producing a row filed in the root that claims to live
@@ -1173,6 +1184,28 @@ folder (`query.folder`), which is why every mutation in `wrapper.svelte.ts`
 carries `currentFolder`. Views that list across folders (starred, recent,
 search, the editor) have no such folder, so `PUT /api/v1/storage/file/{id}`
 falls back to `findFileById` when the path misses. Prefer passing `metadata.id`.
+
+### On disk, a name is claimed
+
+Where the tree is browsed outside Penombre (`ctx.namedPaths`: simple mode, any
+volume or shared drive), a new or moved file or folder is named after itself on
+disk, not `<uuid>.<ext>` — a Syncthing peer saw a folder of UUIDs. `diskName()`
+(`lookups.ts`) picks the name and **claims it** before returning: an exclusive
+create (`open` with `wx`, or a non-recursive `mkdir`), after checking rows
+case-insensitively (a macOS peer cannot hold `a` beside `A`), trashed ones
+included since they keep their bytes. The claim is not optional: a transfer
+inserts its row only after the worker copied the bytes, so two copies of `a.wav`
+racing into one folder both found it free, and the loser's `reconcileCopy`
+deleted the winner's bytes. Every writer renames over the empty placeholder.
+`safeSegment` turns a leading dot into `_`: a user folder named `.versions`
+would otherwise be the app's own, and a dot-name is invisible to the scan.
+
+Rows made before this keep UUID names on disk until the scan renames them
+(`nameUuidPaths`, at the start of every pass of a named tree): inside the pass,
+so the scan never sees a renamed path with no row, which it would import twice
+while dropping the old row and its notes. A rename is a filesystem `rename`,
+never copy+delete, and a failure puts the bytes back or removes the claim.
+Shared drives are not scanned, so theirs stay UUIDs.
 
 ### Documents are ordinary files
 
@@ -1869,6 +1902,18 @@ inode. Never add a writer that opens the key itself.
 - **Upload-onto-same-name reuses the row** (`mode: "upload"`, `findLiveSibling`)
   and never inserts, which is why `files_live_path_idx` never sees it. It must
   not write the empty placeholder either.
+- **A merge keeps the order the dialog previewed**: the client sorts
+  (`mergeOrder`, by the rows' `updatedAt` or by name) and sends ids oldest
+  first; `planMerge` keeps the last and never re-sorts, so the preview is the
+  result. Each take is linked in and only then deleted, one at a time; notes
+  move to the kept file (`file_notes` cascades). Over the folder's limit is
+  refused, not pruned.
+- **A file row's `updatedAt` is its file's mtime.** The scan used to stamp every
+  imported row with the scan's time, so a whole library read as modified the
+  minute it was found and a merge by date meant nothing. `scan-list` reports
+  `mtime`; new rows take it and every pass re-dates rows more than 2s off.
+  Uploads send `File.lastModified` as `?mtime=` (multipart does not carry it)
+  and the server `utimes` the bytes to match. Browsers expose no creation time.
 - `seq` is never renumbered, so labels survive pruning. SQLite refuses `OFFSET`
   without `LIMIT`; the prune slices in JS.
 - `migratedSqlite()` does not turn on `foreign_keys`; a test relying on a

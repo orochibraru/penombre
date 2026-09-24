@@ -27,6 +27,28 @@ A version is the file's bytes as they were just before something replaced them:
 An empty file makes no version, which is also what keeps a fresh upload from
 recording its own placeholder.
 
+## Merging files into versions
+
+Takes that were saved as separate files (`Song-001.wav`, `Song-002 (1).wav`,
+`Song-2026-09-07-23_26_16.wav`) can be folded into one file after the fact.
+Select two or more files and choose **Merge as versions** in the selection bar:
+
+- Pick the **order**: by each file's own modification date, or by name, with
+  numbers compared as numbers (`-2` before `-10`). The dialog previews the
+  result: `v1`, `v2`, … down to the file that stays, last.
+- Every file above the last becomes one of its versions in that order, keeping
+  its own name and its modification date, and is then removed from the folder.
+- The dialog suggests a name for the file that stays, with the take numbers,
+  copy suffixes and date stamps removed (`Song.wav`). Change it or keep it; the
+  preview shows the rename.
+- Notes on the merged files move to the file that stays. Their stars and share
+  links are removed with them.
+- A merge that would make more versions than the folder keeps is refused rather
+  than deleting the oldest takes: raise the folder's limit or pick fewer files.
+  A file that already has versions of its own can only be the one that stays.
+
+Folders cannot be merged, and the option is hidden while versioning is off.
+
 ## Seeing versions
 
 A file with versions shows its current label beside its name (`v3`). In list
@@ -113,6 +135,7 @@ Every route takes the usual `drive`, `volume` or `share` query parameter.
 | `POST`   | `/api/v1/storage/file/{id}/versions`                       | Keep the current bytes as one      |
 | `POST`   | `/api/v1/storage/file/{id}/versions/{versionId}/restore`   | Restore a version                  |
 | `DELETE` | `/api/v1/storage/file/{id}/versions/{versionId}`           | Delete a version                   |
+| `POST`   | `/api/v1/storage/versions/merge`                           | Merge files into one's versions    |
 | `GET`    | `/api/v1/storage/file/{id}/versions/{versionId}/raw`       | Its bytes; `download=1` to save    |
 | `GET`    | `/api/v1/storage/file/{id}/versions/{versionId}/thumbnail` | Thumbnail, or peaks for audio      |
 | `GET`    | `/api/v1/storage/folder/{path}/settings`                   | A folder's settings, and inherited |

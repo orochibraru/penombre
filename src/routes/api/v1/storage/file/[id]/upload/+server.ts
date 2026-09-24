@@ -28,6 +28,7 @@ export const POST = uploadFile.handler(
 		try {
 			await service.uploadFileBody(params.id, file, {
 				snapshot: query.snapshot !== "0",
+				modifiedAt: query.mtime ? new Date(query.mtime) : undefined,
 			});
 			return Http.Ok({
 				message: "File uploaded successfully.",

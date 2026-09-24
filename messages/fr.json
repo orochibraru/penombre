@@ -832,6 +832,15 @@
 	"deck_empty": "Diapositive vide",
 	"clear_selection": "Effacer",
 	"seek": "Se déplacer",
+	"player_restart": "Reprendre depuis le début",
+	"player_back": "Reculer de {seconds} secondes",
+	"player_forward": "Avancer de {seconds} secondes",
+	"player_speed": "Vitesse de lecture",
+	"player_pitch": "Hauteur",
+	"player_pitch_insecure": "Changer la hauteur nécessite HTTPS",
+	"player_semitones": "{count} dt",
+	"player_pitch_error": "Impossible de changer la hauteur",
+	"player_tuning": "Vitesse et hauteur",
 	"back": "Retour",
 	"upload_action": [
 		{
@@ -1100,6 +1109,17 @@
 	"versions_save_as": "Enregistrer une version",
 	"versions_save_error": "Impossible d'enregistrer une version",
 	"versions_saved": "Version enregistrée",
+	"versions_merge_title": "Fusionner en versions",
+	"versions_merge_description": "Le dernier fichier de la liste est conservé ; les autres deviennent ses versions précédentes dans l'ordre affiché, avec leur nom et leur date. Leurs notes lui sont transférées. Les favoris et liens de partage des autres sont supprimés.",
+	"versions_merge_name": "Nom du fichier fusionné",
+	"versions_merge_order": "Ordre",
+	"versions_merge_by_date": "Date du fichier",
+	"versions_merge_by_name": "Nom",
+	"versions_merge_preview": "Versions obtenues",
+	"versions_merge_submit": "Fusionner",
+	"versions_merging": "Fusion…",
+	"versions_merged": "Fichiers fusionnés en versions : {count}",
+	"versions_merge_error": "Impossible de fusionner les fichiers",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

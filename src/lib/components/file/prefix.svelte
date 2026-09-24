@@ -170,9 +170,9 @@
         <Badge variant="outline" class="shrink-0 px-1.5 py-0 text-[10px]">
             {versionLabel(naming, version.seq, baseItem.updatedAt ?? "")}
         </Badge>
-        {#if version.authorName}
+        {#if version.name || version.authorName}
             <span class="text-muted-foreground truncate text-xs">
-                {version.authorName}
+                {[version.name, version.authorName].filter(Boolean).join(" · ")}
             </span>
         {/if}
     {:else if versionSeq}
@@ -371,6 +371,9 @@
                         dateStyle: "medium",
                         timeStyle: "short",
                     })}
+                {/if}
+                {#if version.name}
+                    · {version.name}
                 {/if}
                 {#if version.authorName}
                     · {version.authorName}

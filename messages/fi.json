@@ -760,6 +760,15 @@
 	"deck_empty": "Tyhjä dia",
 	"clear_selection": "Tyhjennä",
 	"seek": "Siirry kohtaan",
+	"player_restart": "Aloita alusta",
+	"player_back": "{seconds} sekuntia taaksepäin",
+	"player_forward": "{seconds} sekuntia eteenpäin",
+	"player_speed": "Toistonopeus",
+	"player_pitch": "Sävelkorkeus",
+	"player_pitch_insecure": "Sävelkorkeuden muuttaminen vaatii HTTPS:n",
+	"player_semitones": "{count} st",
+	"player_pitch_error": "Sävelkorkeutta ei voitu muuttaa",
+	"player_tuning": "Nopeus ja sävelkorkeus",
 	"back": "Takaisin",
 	"upload_action": [
 		{
@@ -1028,6 +1037,17 @@
 	"versions_save_as": "Tallenna versiona",
 	"versions_save_error": "Versiota ei voitu tallentaa",
 	"versions_saved": "Versio tallennettu",
+	"versions_merge_title": "Yhdistä versioiksi",
+	"versions_merge_description": "Listan viimeinen jää; muista tulee sen aiemmat versiot näytetyssä järjestyksessä nimineen ja päivämäärineen. Niiden muistiinpanot siirtyvät sille. Muiden tähdet ja jakolinkit poistetaan.",
+	"versions_merge_name": "Yhdistetyn tiedoston nimi",
+	"versions_merge_order": "Järjestys",
+	"versions_merge_by_date": "Tiedoston päivämäärä",
+	"versions_merge_by_name": "Nimi",
+	"versions_merge_preview": "Syntyvät versiot",
+	"versions_merge_submit": "Yhdistä",
+	"versions_merging": "Yhdistetään…",
+	"versions_merged": "Versioiksi yhdistetyt tiedostot: {count}",
+	"versions_merge_error": "Tiedostoja ei voitu yhdistää",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

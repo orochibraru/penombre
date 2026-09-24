@@ -796,6 +796,15 @@
 	"deck_empty": "Leere Folie",
 	"clear_selection": "Leeren",
 	"seek": "Spulen",
+	"player_restart": "Von vorne beginnen",
+	"player_back": "{seconds} Sekunden zurück",
+	"player_forward": "{seconds} Sekunden vor",
+	"player_speed": "Wiedergabegeschwindigkeit",
+	"player_pitch": "Tonhöhe",
+	"player_pitch_insecure": "Tonhöhe ändern erfordert HTTPS",
+	"player_semitones": "{count} HT",
+	"player_pitch_error": "Tonhöhe konnte nicht geändert werden",
+	"player_tuning": "Tempo und Tonhöhe",
 	"back": "Zurück",
 	"upload_action": [
 		{
@@ -1046,6 +1055,17 @@
 	"versions_save_as": "Als Version speichern",
 	"versions_save_error": "Version konnte nicht gespeichert werden",
 	"versions_saved": "Version gespeichert",
+	"versions_merge_title": "Als Versionen zusammenführen",
+	"versions_merge_description": "Die letzte Datei der Liste bleibt; die anderen werden in der gezeigten Reihenfolge ihre früheren Versionen, mit Name und Datum. Ihre Notizen wandern mit. Favoriten und Freigabelinks der anderen werden entfernt.",
+	"versions_merge_name": "Name der zusammengeführten Datei",
+	"versions_merge_order": "Reihenfolge",
+	"versions_merge_by_date": "Dateidatum",
+	"versions_merge_by_name": "Name",
+	"versions_merge_preview": "Entstehende Versionen",
+	"versions_merge_submit": "Zusammenführen",
+	"versions_merging": "Wird zusammengeführt…",
+	"versions_merged": "Als Versionen zusammengeführte Dateien: {count}",
+	"versions_merge_error": "Die Dateien konnten nicht zusammengeführt werden",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

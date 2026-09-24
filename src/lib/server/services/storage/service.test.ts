@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, type Mock, mock, test } from "bun:test";
 import { existsSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type {
 	File as DbFile,
@@ -1172,10 +1174,12 @@ describe("StorageService", () => {
 	describe("transfer", () => {
 		test("a file is copied into the target with a fresh row", async () => {
 			const source = new StorageService(testUser);
+			// A volume names what it writes, so the name is claimed on disk.
+			const mount = await mkdtemp(join(tmpdir(), "penombre-media-"));
 			const target = new StorageService(testUser, {
 				name: "media",
 				label: "Media",
-				path: "/mnt/media",
+				path: mount,
 				readOnly: false,
 			});
 			mockNextSelect([]); // no name collision in the target
@@ -1193,7 +1197,8 @@ describe("StorageService", () => {
 			expect(pair?.source).toBe(
 				"/tmp/penombre-test-storage/user-user-1/abc-uuid.txt",
 			);
-			expect(pair?.dest?.startsWith("/mnt/media/")).toBe(true);
+			expect(pair?.dest).toBe(join(mount, baseFile.name));
+			await rm(mount, { recursive: true, force: true });
 			const batch = values.mock.calls[0]?.[0] as unknown as
 				| Record<string, unknown>[]
 				| undefined;

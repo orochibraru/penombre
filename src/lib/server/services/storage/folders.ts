@@ -24,7 +24,7 @@ import type {
 import { CacheKeys } from "./cache";
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
-import { getFolderIdByPath, getUniqueDisplayName } from "./lookups";
+import { diskName, getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import { folderDbToMetadata } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
@@ -126,12 +126,16 @@ export class FolderOperations {
 			"folder",
 		);
 
-		const physicalName = normalizedKey.includes("/")
+		const currentSegment = normalizedKey.includes("/")
 			? (normalizedKey.split("/").pop() ?? normalizedKey)
 			: normalizedKey;
 		const normalizedDest = destinationFolder.endsWith("/")
 			? destinationFolder.slice(0, -1)
 			: destinationFolder;
+		const physicalName = await diskName(this.ctx, normalizedDest, uniqueName, {
+			fallback: currentSegment,
+			self: normalizedKey,
+		});
 		const newFolderPath = normalizedDest
 			? `${normalizedDest}/${physicalName}`
 			: physicalName;
@@ -197,9 +201,12 @@ export class FolderOperations {
 		);
 
 		const folderId = crypto.randomUUID();
+		const segment = await diskName(this.ctx, normalizedParent, uniqueName, {
+			fallback: folderId,
+		});
 		const folderPath = normalizedParent
-			? `${normalizedParent}/${folderId}`
-			: folderId;
+			? `${normalizedParent}/${segment}`
+			: segment;
 
 		const parentId = normalizedParent
 			? await getFolderIdByPath(this.ctx, normalizedParent)

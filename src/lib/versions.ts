@@ -13,6 +13,8 @@ export interface VersionRef {
 	file: ObjectItem;
 	id: string;
 	seq: number;
+	/** The file it came from, when merged in from a separate file. */
+	name: string | null;
 	authorName: string | null;
 }
 
@@ -54,6 +56,7 @@ export function versionItem(file: ObjectItem, version: ListedVersion) {
 			file,
 			id: version.id,
 			seq: version.seq,
+			name: version.name,
 			authorName: version.authorName,
 		},
 	} satisfies ObjectItem & { version: VersionRef };
@@ -83,9 +86,68 @@ export function displayTitle(
 	item: ObjectItem,
 	naming: VersionNaming | undefined,
 ): string {
-	const name = item.metadata.name || item.key;
 	const version = versionOf(item);
+	const name = version?.name || item.metadata.name || item.key;
 	return version
 		? `${name} · ${versionLabel(naming, version.seq, item.updatedAt ?? "")}`
 		: name;
+}
+
+/** A render's take marker: ` (1)`, `-001`, `-v2`, a date stamp and what follows it. */
+const TAKE_SUFFIXES = [
+	/ \(\d+\)$/,
+	/[-_ ]\d{4}-\d{2}-\d{2}(?:[-_ T]\d{2}[-_:.]\d{2}(?:[-_:.]\d{2})?)?.*$/,
+	/[-_ ]v?\d{1,4}$/i,
+];
+
+/**
+ * What a set of takes is a take of: `Song-001.wav`, `Song-002 (1).wav` and
+ * `Song-2026-09-07-23_26_16-notes.wav` are all `Song.wav`. The extension is
+ * the last name's.
+ */
+export function mergedName(names: string[]): string {
+	const last = names.at(-1) ?? "";
+	const dot = last.lastIndexOf(".");
+	const extension = dot > 0 ? last.slice(dot) : "";
+	const stems = names.map((name) => {
+		let stem =
+			name.lastIndexOf(".") > 0 ? name.slice(0, name.lastIndexOf(".")) : name;
+		for (const suffix of TAKE_SUFFIXES) {
+			stem = stem.replace(suffix, "");
+		}
+		return stem;
+	});
+	let common = stems[0] ?? "";
+	for (const stem of stems) {
+		let i = 0;
+		while (i < common.length && common[i] === stem[i]) {
+			i++;
+		}
+		common = common.slice(0, i);
+	}
+	common = common.replace(/[-_ .]+$/, "");
+	return common ? `${common}${extension}` : last;
+}
+
+export type MergeOrder = "date" | "name";
+
+const byName = (a: ObjectItem, b: ObjectItem) =>
+	(a.metadata.name || a.key).localeCompare(
+		b.metadata.name || b.key,
+		undefined,
+		{
+			numeric: true,
+			sensitivity: "base",
+		},
+	);
+
+/**
+ * Takes oldest first, as a merge keeps them: by their files' own dates, or by
+ * name with numbers compared as numbers (`-2` before `-10`). The last stays.
+ */
+export function mergeOrder(items: ObjectItem[], by: MergeOrder): ObjectItem[] {
+	const time = (item: ObjectItem) => new Date(item.updatedAt ?? 0).getTime();
+	return items.toSorted(
+		by === "date" ? (a, b) => time(a) - time(b) || byName(a, b) : byName,
+	);
 }

@@ -8940,6 +8940,7 @@ export interface paths {
 					volume?: string;
 					share?: string;
 					snapshot?: "0" | "1";
+					mtime?: number;
 				};
 				header?: never;
 				path: {
@@ -9051,6 +9052,7 @@ export interface paths {
 									/** Format: date-time */
 									createdAt: string;
 									id: string;
+									name: string | null;
 									seq: number;
 									size: number;
 								}[];
@@ -9117,6 +9119,7 @@ export interface paths {
 								/** Format: date-time */
 								createdAt: string;
 								id: string;
+								name: string | null;
 								seq: number;
 								size: number;
 							};
@@ -11469,6 +11472,105 @@ export interface paths {
 				};
 			};
 		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/versions/merge": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Merge files into one file's versions
+		 * @description `ids` are oldest first: the last stays, every other one becomes one of its versions in that order, keeping its name and date, and is deleted. Its notes move to the kept file. 409 when a merged file already has versions or the folder keeps fewer versions than the merge would make.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						ids: string[];
+						name?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Conflict */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
 		options?: never;
 		head?: never;
 		patch?: never;

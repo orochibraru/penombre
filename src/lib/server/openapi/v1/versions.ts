@@ -20,6 +20,8 @@ export const versionSchema = z.object({
 	seq: z.number(),
 	size: z.number(),
 	contentType: z.string(),
+	/** The file it came from, when merged in from a separate file. */
+	name: z.string().nullable(),
 	authorName: z.string().nullable(),
 	createdAt: z.iso.datetime(),
 });
@@ -63,6 +65,28 @@ export const createFileVersion = defineRoute({
 	query: z.object(driveQuery),
 	response: versionSchema,
 	errors: [403, 404, 500],
+	service: storageServiceFor,
+});
+
+export const mergeFileVersions = defineRoute({
+	method: "post",
+	path: "/api/v1/storage/versions/merge",
+	summary: "Merge files into one file's versions",
+	description:
+		"`ids` are oldest first: the last stays, every other one becomes one of " +
+		"its versions in that order, keeping its name and date, and is deleted. " +
+		"Its notes move to the kept file. 409 when a merged file already has " +
+		"versions or the folder keeps fewer versions than the merge would make.",
+	tags: ["Storage - Versions"],
+	query: z.object(driveQuery),
+	body: z.object({
+		/** Oldest first; the last one stays. */
+		ids: z.array(z.string()).min(2).max(1000),
+		/** Renames the kept file; absent keeps its name. */
+		name: z.string().trim().min(1).max(255).optional(),
+	}),
+	response: z.object({ id: z.string() }),
+	errors: [403, 404, 409, 500],
 	service: storageServiceFor,
 });
 

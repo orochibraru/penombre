@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import type { ObjectItem } from "#lib/api/index.js";
-import { displayTitle, type ListedVersion, withVersions } from "./versions";
+import {
+	displayTitle,
+	type ListedVersion,
+	mergedName,
+	mergeOrder,
+	withVersions,
+} from "./versions";
 
 const file = (id: string) =>
 	({
@@ -40,5 +46,63 @@ describe("withVersions", () => {
 			"a.wav · v2",
 		);
 		expect(displayTitle(rows[0] as ObjectItem, "sequential")).toBe("a.wav");
+	});
+});
+
+describe("mergedName", () => {
+	test("strips counters, copy suffixes and date stamps", () => {
+		expect(
+			mergedName([
+				"Dystopian Fantasies-001 (1).wav",
+				"Dystopian Fantasies-008.wav",
+				"Dystopian Fantasies-2026-09-10-17_34_14.wav",
+			]),
+		).toBe("Dystopian Fantasies.wav");
+	});
+
+	test("drops a tag after the date stamp", () => {
+		expect(
+			mergedName([
+				"Questionable Strategies-2026-09-20-11_58_41-notes-nico.wav",
+				"Questionable Strategies-2026-09-20-19_20_47.wav",
+			]),
+		).toBe("Questionable Strategies.wav");
+	});
+
+	test("keeps the common prefix of unrelated names", () => {
+		expect(mergedName(["mix final.wav", "mix final really.wav"])).toBe(
+			"mix final.wav",
+		);
+	});
+
+	test("falls back to the last name when nothing is shared", () => {
+		expect(mergedName(["a.wav", "b.wav"])).toBe("b.wav");
+	});
+});
+
+describe("mergeOrder", () => {
+	const take = (name: string, updatedAt: string) =>
+		({ key: name, updatedAt, metadata: { name } }) as unknown as ObjectItem;
+	const names = (items: ObjectItem[]) => items.map((i) => i.metadata.name);
+	const takes = [
+		take("Song-2026-09-07-23_26_16.mp3", "2026-09-07T21:27:00Z"),
+		take("Song-010.mp3", "2026-03-13T10:00:00Z"),
+		take("Song-002.mp3", "2026-02-24T19:05:00Z"),
+	];
+
+	test("by date follows the files' own dates", () => {
+		expect(names(mergeOrder(takes, "date"))).toEqual([
+			"Song-002.mp3",
+			"Song-010.mp3",
+			"Song-2026-09-07-23_26_16.mp3",
+		]);
+	});
+
+	test("by name compares numbers as numbers", () => {
+		expect(
+			names(
+				mergeOrder([take("Song-10.mp3", ""), take("Song-9.mp3", "")], "name"),
+			),
+		).toEqual(["Song-9.mp3", "Song-10.mp3"]);
 	});
 });

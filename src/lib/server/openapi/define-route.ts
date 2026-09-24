@@ -5,6 +5,7 @@ import {
 	ReadOnlyVolumeError,
 	StorageUnavailableError,
 	VersioningDisabledError,
+	VersionMergeError,
 } from "#lib/server/errors.js";
 import { Http } from "#lib/server/http.js";
 import type { ResolvedPathname } from "$app/types";
@@ -161,6 +162,9 @@ function refusalResponse(error: unknown): Response | undefined {
 		error instanceof VersioningDisabledError
 	) {
 		return Http.Forbidden(error.message);
+	}
+	if (error instanceof VersionMergeError) {
+		return Http.Conflict(error.message);
 	}
 	if (error instanceof StorageUnavailableError) {
 		return Http.ServiceUnavailable(error.message);

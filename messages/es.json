@@ -832,6 +832,15 @@
 	"deck_empty": "Diapositiva vacía",
 	"clear_selection": "Borrar",
 	"seek": "Buscar",
+	"player_restart": "Empezar desde el principio",
+	"player_back": "Retroceder {seconds} segundos",
+	"player_forward": "Avanzar {seconds} segundos",
+	"player_speed": "Velocidad de reproducción",
+	"player_pitch": "Tono",
+	"player_pitch_insecure": "Cambiar el tono requiere HTTPS",
+	"player_semitones": "{count} st",
+	"player_pitch_error": "No se pudo cambiar el tono",
+	"player_tuning": "Velocidad y tono",
 	"back": "Atrás",
 	"upload_action": [
 		{
@@ -1091,6 +1100,17 @@
 	"versions_save_as": "Guardar como versión",
 	"versions_save_error": "No se pudo guardar una versión",
 	"versions_saved": "Versión guardada",
+	"versions_merge_title": "Fusionar como versiones",
+	"versions_merge_description": "Se conserva el último de la lista; los demás pasan a ser sus versiones anteriores en el orden mostrado, con su nombre y fecha. Sus notas pasan a él. Se eliminan los favoritos y enlaces compartidos de los demás.",
+	"versions_merge_name": "Nombre del archivo fusionado",
+	"versions_merge_order": "Orden",
+	"versions_merge_by_date": "Fecha del archivo",
+	"versions_merge_by_name": "Nombre",
+	"versions_merge_preview": "Versiones resultantes",
+	"versions_merge_submit": "Fusionar",
+	"versions_merging": "Fusionando…",
+	"versions_merged": "Archivos fusionados como versiones: {count}",
+	"versions_merge_error": "No se pudieron fusionar los archivos",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

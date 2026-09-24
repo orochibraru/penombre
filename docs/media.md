@@ -2,6 +2,12 @@
 
 Images, video and audio get more than a download link.
 
+## File dates
+
+A file's **Modified** date is the one it had on your computer, not the moment it
+reached Penombre. Uploads keep it, and so do files the library scan finds on a
+volume. Browsers do not share a file's creation date, so that one is not kept.
+
 ## The music player
 
 Opening a track loads it into a player pinned to the bottom of the window; it
@@ -14,6 +20,17 @@ why it re-colours instantly when you change your accent, and why it looks right
 in both light and dark: a baked-in image could do neither.
 
 A file the server cannot analyse falls back to a plain progress bar.
+
+Beside play, **Start from the top** jumps back to 0:00 and plays, and the two
+arrows skip back or forward five seconds. **Speed** (0.5× to 2×) changes the
+tempo without changing the pitch, and **Pitch** transposes by up to an octave
+either way without changing the tempo, for playing along in another key. Both
+stay set when you switch tracks or versions, so takes are compared at the same
+settings. On a phone they sit behind the gauge button.
+
+Pitch runs in the browser's audio engine, which browsers only allow over HTTPS
+(or on `localhost`); on an instance reached over plain HTTP the pitch control is
+disabled and says so. Speed works either way.
 
 A track with [earlier versions](versioning.md) gets a version picker beside the
 time. Switching keeps the playhead where it is, so two mixes can be compared at

@@ -4,6 +4,7 @@
 	import { api, type ObjectItem } from "#lib/api/index.js";
 	import FolderSettingsDialog from "#lib/components/file/folder-settings-dialog.svelte";
 	import VersionHistoryDialog from "#lib/components/file/version-history-dialog.svelte";
+	import MergeVersionsDialog from "#lib/components/layout/dialogs/merge-versions-dialog.svelte";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Button } from "#lib/components/ui/button/index.js";
 	import { m } from "#lib/paraglide/messages.js";
@@ -159,6 +160,7 @@
 {/if}
 
 <VersionHistoryDialog {onopen} />
+<MergeVersionsDialog />
 
 <FolderSettingsDialog
     bind:open={folderSettings.open}

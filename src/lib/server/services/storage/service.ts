@@ -51,6 +51,7 @@ import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
 import type { ListingPage, ListingPageOptions, TrashPage } from "./listings";
 import { ListingOperations } from "./listings";
+import { getUniqueDisplayName } from "./lookups";
 import { probeMissingDurations } from "./media";
 import { type FileProxyRequest, ProxyService } from "./proxy";
 import {
@@ -141,7 +142,8 @@ export class StorageService {
 		// A volume — a mounted directory or a shared drive — is one tree for
 		// everyone, rooted at the mount itself. Only the main drive is split
 		// per user, and only in full mode.
-		this.userFolder = volume || isSimpleMode() ? "" : `user-${user.id}`;
+		const namedPaths = !!volume || isSimpleMode();
+		this.userFolder = namedPaths ? "" : `user-${user.id}`;
 		this.volume = volume ?? null;
 		this.storagePath = join(
 			volume ? volume.path : getStoragePath(),
@@ -165,6 +167,7 @@ export class StorageService {
 			user: this.user,
 			actor: actor ?? this.user,
 			userFolder: this.userFolder,
+			namedPaths,
 			volumeId: this.volume?.name ?? null,
 			scope: options.scope,
 			readOnly: (this.volume?.readOnly ?? false) || options.readOnly === true,
@@ -343,7 +346,7 @@ export class StorageService {
 	uploadFileBody(
 		id: string,
 		body: Blob | Buffer | Uint8Array,
-		options?: { snapshot?: boolean },
+		options?: { snapshot?: boolean; modifiedAt?: Date },
 	): Promise<void> {
 		this.assertWritable();
 		return this.fileOperations.uploadFileBody(id, body, options);
@@ -388,6 +391,36 @@ export class StorageService {
 	deleteFileVersion(id: string, versionId: string): Promise<boolean> {
 		this.assertWritable();
 		return this.versionOperations.deleteFileVersion(id, versionId);
+	}
+
+	/**
+	 * The newest of `ids` stays; the rest become its versions, oldest first,
+	 * and are deleted. Returns the kept file's id, null if any is not here.
+	 */
+	async mergeAsVersions(ids: string[], name?: string): Promise<string | null> {
+		this.assertWritable();
+		const plan = await this.versionOperations.planMerge(ids);
+		if (!plan) {
+			return null;
+		}
+		const { target, sources, max } = plan;
+		// One at a time, each deleted only once its version exists: a
+		// failure part way leaves every take either a file or a version.
+		for (const source of sources) {
+			await this.versionOperations.absorb(target, source, max);
+			await this.fileOperations.deleteFile(source.file.path);
+		}
+		const wanted = name?.trim();
+		if (wanted && wanted.toLowerCase() !== target.name.toLowerCase()) {
+			const folder = target.path.includes("/")
+				? target.path.slice(0, target.path.lastIndexOf("/"))
+				: undefined;
+			await this.fileOperations.updateFile(target.path, {
+				key: await getUniqueDisplayName(this.ctx, wanted, folder, "file"),
+			});
+		}
+		await this.ctx.invalidateListingCaches();
+		return target.id;
 	}
 
 	fileVersioning(id: string): Promise<Versioning | null> {

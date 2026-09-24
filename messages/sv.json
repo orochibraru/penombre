@@ -697,6 +697,15 @@
 	"deck_empty": "Tom bild",
 	"clear_selection": "Rensa",
 	"seek": "Spola",
+	"player_restart": "Börja från början",
+	"player_back": "Bakåt {seconds} sekunder",
+	"player_forward": "Framåt {seconds} sekunder",
+	"player_speed": "Uppspelningshastighet",
+	"player_pitch": "Tonhöjd",
+	"player_pitch_insecure": "Att ändra tonhöjd kräver HTTPS",
+	"player_semitones": "{count} ht",
+	"player_pitch_error": "Det gick inte att ändra tonhöjden",
+	"player_tuning": "Hastighet och tonhöjd",
 	"back": "Tillbaka",
 	"upload_action": [
 		{
@@ -929,6 +938,17 @@
 	"versions_save_as": "Spara som version",
 	"versions_save_error": "Kunde inte spara en version",
 	"versions_saved": "Version sparad",
+	"versions_merge_title": "Slå ihop som versioner",
+	"versions_merge_description": "Den sista i listan behålls; de andra blir dess tidigare versioner i den visade ordningen, med sina namn och datum. Deras anteckningar flyttas dit. Stjärnor och delningslänkar på de andra tas bort.",
+	"versions_merge_name": "Namn på den sammanslagna filen",
+	"versions_merge_order": "Ordning",
+	"versions_merge_by_date": "Fildatum",
+	"versions_merge_by_name": "Namn",
+	"versions_merge_preview": "Resulterande versioner",
+	"versions_merge_submit": "Slå ihop",
+	"versions_merging": "Slår ihop…",
+	"versions_merged": "Filer sammanslagna som versioner: {count}",
+	"versions_merge_error": "Det gick inte att slå ihop filerna",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

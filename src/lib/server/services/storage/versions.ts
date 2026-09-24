@@ -130,7 +130,15 @@ export async function snapshot(
 	ctx: StorageContext,
 	file: Pick<DbFile, "id" | "path" | "contentType">,
 	limit: number,
-	dropThumbnails: (key: string) => Promise<void> = () => Promise.resolve(),
+	{
+		dropThumbnails = () => Promise.resolve(),
+		...meta
+	}: {
+		dropThumbnails?: (key: string) => Promise<void>;
+		/** A merged-in file's name and mtime. */
+		name?: string;
+		createdAt?: Date;
+	} = {},
 ): Promise<FileVersion> {
 	const id = crypto.randomUUID();
 	const key = versionKey(file.id, id);
@@ -153,6 +161,7 @@ export async function snapshot(
 					size,
 					contentType: file.contentType,
 					createdBy: ctx.actor.id,
+					...meta,
 				})
 				.returning();
 		} catch (error) {
