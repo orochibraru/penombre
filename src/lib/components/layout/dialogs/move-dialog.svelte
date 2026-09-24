@@ -530,65 +530,69 @@
     submitDisabled={!canMove}
     form={{ onsubmit: handleMove }}
 >
-    {#if destinations.length > 1}
-        <Select.Root type="single" bind:value={destinationKey}>
-            <Select.Trigger
-                class="w-full"
-                aria-label={m.transfer_destination()}
-            >
-                {destination?.label}
-            </Select.Trigger>
-            <Select.Content>
-                {#each destinations as option (option.key)}
-                    <Select.Item value={option.key}>{option.label}</Select.Item>
-                {/each}
-            </Select.Content>
-        </Select.Root>
-    {/if}
-    <div class="flex flex-col gap-2 max-h-[50vh] overflow-y-auto">
-        <button
-            type="button"
-            onclick={() => selectFolder(destination?.root ?? "", "")}
-            class={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors",
-                selectedFolder === (destination?.root ?? "")
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted",
-            )}
-        >
-            <span class="w-5"></span>
-            <HomeIcon class="h-5 w-5" />
-            <span class="text-sm font-medium">{destination?.label}</span>
-        </button>
-
-        {#if loadingFolders}
-            <div class="flex items-center justify-center py-8">
-                <span class="text-muted-foreground text-sm">
-                    {m.loading_folders()}
-                    <Spinner />
-                </span>
-            </div>
-        {:else if folderTree.length === 0}
-            <div class="flex items-center justify-center py-8">
-                <span class="text-muted-foreground text-sm">
-                    {m.no_folders_available()}
-                </span>
-            </div>
-        {:else}
-            {#each folderTree as node}
-                {@render folderItem(node, 0)}
-            {/each}
+    <div class="flex min-w-0 flex-col gap-3">
+        {#if destinations.length > 1}
+            <Select.Root type="single" bind:value={destinationKey}>
+                <Select.Trigger
+                    class="w-full"
+                    aria-label={m.transfer_destination()}
+                >
+                    {destination?.label}
+                </Select.Trigger>
+                <Select.Content>
+                    {#each destinations as option (option.key)}
+                        <Select.Item value={option.key}>{option.label}</Select.Item>
+                    {/each}
+                </Select.Content>
+            </Select.Root>
         {/if}
+        <div
+            class="flex max-h-[50vh] flex-col gap-1 overflow-y-auto rounded-lg border p-1"
+        >
+            <button
+                type="button"
+                onclick={() => selectFolder(destination?.root ?? "", "")}
+                class={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors",
+                    selectedFolder === (destination?.root ?? "")
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted",
+                )}
+            >
+                <span class="w-5"></span>
+                <HomeIcon class="h-5 w-5" />
+                <span class="text-sm font-medium">{destination?.label}</span>
+            </button>
+
+            {#if loadingFolders}
+                <div class="flex items-center justify-center py-8">
+                    <span class="text-muted-foreground text-sm">
+                        {m.loading_folders()}
+                        <Spinner />
+                    </span>
+                </div>
+            {:else if folderTree.length === 0}
+                <div class="flex items-center justify-center py-8">
+                    <span class="text-muted-foreground text-sm">
+                        {m.no_folders_available()}
+                    </span>
+                </div>
+            {:else}
+                {#each folderTree as node}
+                    {@render folderItem(node, 0)}
+                {/each}
+            {/if}
+        </div>
 
         {#if isSameLocation}
-            <p class="text-xs text-muted-foreground mt-2">
+            <p class="text-xs text-muted-foreground">
                 {isBulkMode
                     ? m.items_already_in_location()
                     : m.item_already_in_location()}
             </p>
         {/if}
         {#if isMovingIntoSelf}
-            <p class="text-xs text-destructive mt-2">
+            <p class="text-xs text-destructive">
                 {m.cannot_move_into_self()}
             </p>
         {/if}

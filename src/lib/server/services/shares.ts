@@ -210,7 +210,7 @@ export class ShareService {
 		fileId: string,
 	): Promise<boolean> {
 		const [folder] = await this.db
-			.select({ path: folders.path })
+			.select({ path: folders.path, volumeId: folders.volumeId })
 			.from(folders)
 			.where(and(eq(folders.id, folderId), eq(folders.ownerId, ownerId)));
 		if (!folder) {
@@ -218,7 +218,7 @@ export class ShareService {
 		}
 
 		const [file] = await this.db
-			.select({ path: files.path })
+			.select({ path: files.path, volumeId: files.volumeId })
 			.from(files)
 			.where(
 				and(
@@ -231,7 +231,10 @@ export class ShareService {
 			return false;
 		}
 
-		return file.path.startsWith(`${folder.path}/`);
+		return (
+			file.volumeId === folder.volumeId &&
+			file.path.startsWith(`${folder.path}/`)
+		);
 	}
 
 	async recordDownload(shareId: string): Promise<void> {

@@ -6,7 +6,7 @@ import {
 	VOLUME_HEADER,
 } from "#lib/storage-location.js";
 import { browser } from "$app/env";
-import { navigating, page } from "$app/state";
+import { page } from "$app/state";
 import type { components, paths } from "./v1";
 
 /**
@@ -33,8 +33,11 @@ import type { components, paths } from "./v1";
  * });
  * ```
  */
+const defaultFetch = (request: Request) => globalThis.fetch(request);
+
 export const api = createClient<paths>({
 	credentials: "include",
+	fetch: defaultFetch,
 });
 
 /**
@@ -47,15 +50,16 @@ export const api = createClient<paths>({
  * skipped — `page` is not theirs to read — so a load that needs it passes
  * `query: { drive }` / `{ volume }` itself, and an explicit one always wins.
  *
- * **The navigation target wins over the current page.** A load runs *during*
- * the navigation, while `page` still describes the page being left — so
- * leaving a drive for `/browse` fetched My Drive's listing with the drive's
- * header still on it, and the personal drive showed the shared drive's files
- * until a full reload. `navigating.to` is the route whose load is running.
+ * **Loads are skipped too.** A load passes its own `fetch` and runs for a
+ * route that is not `page` yet: during a navigation `page` is the one being
+ * left, and during a hover preload even `navigating` is empty. Either way
+ * the drive's header rode along to `/browse`, and My Drive showed the shared
+ * drive's files. Every universal load is a personal-drive route, which is the
+ * server's default, so a load names nothing.
  */
 api.use({
-	onRequest({ request }) {
-		if (!browser) {
+	onRequest({ request, options }) {
+		if (!browser || options.fetch !== defaultFetch) {
 			return;
 		}
 		const url = new URL(request.url);
@@ -67,8 +71,7 @@ api.use({
 			return;
 		}
 
-		const target = navigating.to ?? page;
-		const { drive, volume, share } = locationFrom(target.params, target.url);
+		const { drive, volume, share } = locationFrom(page.params, page.url);
 		if (drive) {
 			request.headers.set(DRIVE_HEADER, drive);
 		} else if (volume) {

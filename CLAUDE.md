@@ -1617,19 +1617,30 @@ SvelteKit 3 sends **every** error through it, `error()` calls and 404s included,
 tagged with `kind`. Both hooks act only on `kind === "unknown"`; stamping the
 rest would replace a deliberate `error(403, "…")` with a generic message.
 
-### During a navigation, `page` is the page you are leaving
+### A load is never on `page`, and not always on `navigating.to`
 
-A universal load runs _while_ the navigation is in flight, so anything it reads
-from `$app/state`'s `page` describes the **previous** route. `#lib/api`'s drive
-middleware read `page.params.drive` and therefore sent the drive's header with
-`/browse`'s own listing request: leaving a shared drive by a sidebar link showed
-the drive's files in My Drive until a full reload, which is why it looked like a
-cache bug. It reads `navigating.to ?? page` — the route whose load is actually
-running. Anything else keyed off the current route from outside a component owes
-itself the same check.
+A universal load runs for a route that is not `page` yet. `#lib/api`'s drive
+middleware read `page.params.drive` and sent the drive's header with `/browse`'s
+listing, so leaving a shared drive showed its files in My Drive. Reading
+`navigating.to ?? page` fixed a click but not a **hover preload**
+(`data-sveltekit-preload-data="hover"`): a preload is no navigation, so
+`navigating.to` is null, and the click then reuses the preloaded, wrong
+response. Automation clicks too fast to trigger a preload, which is why
+`drives.spec.ts` passed while every human saw it.
 
-`drives.spec.ts` covers it by _clicking_ the link; a `page.goto` is a fresh
-document and passes either way.
+The middleware now skips any request made with a caller's own `fetch`, which is
+exactly the loads (`options.fetch !== defaultFetch`). Every universal load is a
+personal-drive route, the server's default; a load that ever needs a location
+passes `query: { drive }` itself. Anything else keyed off the current route from
+outside a component has the same problem.
+
+### Browser errors reach the server log
+
+`hooks.client.ts` posts every unexpected client error to
+`/api/v1/client-errors`, logged as `Browser error [<id>]` under the id the error
+page shows. It is open to anonymous callers (sign-in can crash too), so it is
+rate-limited per IP, length-capped by its Zod schema and JSON-quotes every field
+so a message cannot forge log lines.
 
 ### Opening a volume must not wait for its scan
 
@@ -1674,6 +1685,15 @@ A file share's scope includes its **parent folder** so that folder can be listed
 stay refused. Share URLs keep the owner's full paths
 (`/shared-with-me/[share]/[...path]`), and the listing load redirects anything
 outside the share back to its root; `page.data.share.root` hides the `..` row.
+
+### A public link reads its resource's own volume
+
+`shares` has no volume column, so `/s/[token]` resolves the tree from the shared
+row's `volume_id` (`shareLinkStorage` in `storage-for.ts`). It used to build the
+owner's personal-drive service, and every link to something on a shared drive or
+mounted volume 500'd on `getFolder`. `fileIsInFolder` compares volumes too:
+every mount has the same owner, and a mount's paths are real names that can
+repeat across mounts.
 
 ### Copying between places is export + import
 

@@ -303,3 +303,16 @@ Check the health endpoint:
 ```bash
 curl http://localhost:3000/api/health
 ```
+
+### An error page shows an Error ID
+
+Every error page carries an ID, and the same ID is in the server log whether the
+error happened on the server or in the browser. Search the logs for it:
+
+```bash
+docker compose logs app | grep '<Error ID>'
+```
+
+Errors thrown in the browser are logged as `Browser error [<id>]` with the page
+URL, the account (or `anonymous`) and the stack. Browsers report at most 30 of
+them per address every five minutes.
