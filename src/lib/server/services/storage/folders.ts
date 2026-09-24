@@ -184,7 +184,7 @@ export class FolderOperations {
 	async createFolder(
 		name: string,
 		parent?: string,
-	): Promise<{ id: string; name: string }> {
+	): Promise<{ id: string; name: string; path: string }> {
 		logger.info(`Creating folder: name=${name}, parent=${parent}`);
 
 		const normalizedParent = parent
@@ -235,7 +235,7 @@ export class FolderOperations {
 				`Folder created: UUID=${folderId}, name=${uniqueName}, path=${folderPath}`,
 			);
 			await this.ctx.invalidateListingCaches();
-			return { id: folderId, name: uniqueName };
+			return { id: folderId, name: uniqueName, path: folderPath };
 		} catch (error) {
 			logger.error("Error creating folder:", error);
 			throw new Error("Failed to create folder");

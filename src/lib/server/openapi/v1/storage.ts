@@ -392,6 +392,7 @@ export const createFolder = defineRoute({
 		message: z.string(),
 		id: z.string(),
 		name: z.string(),
+		path: z.string(),
 	}),
 	errors: [400, 500],
 	service: storageServiceFor,

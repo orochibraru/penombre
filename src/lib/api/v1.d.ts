@@ -9586,6 +9586,7 @@ export interface paths {
 								id: string;
 								message: string;
 								name: string;
+								path: string;
 							};
 						};
 					};

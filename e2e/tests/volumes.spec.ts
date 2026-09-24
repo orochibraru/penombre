@@ -102,11 +102,11 @@ test.describe("Mounted volumes", () => {
 			{ data: { name: folderName } },
 		);
 		expect(folder.ok()).toBeTruthy();
-		const folderId = (await folder.json()).data.id as string;
+		const folderPath = (await folder.json()).data.path as string;
 
 		const inside = `inside-${Date.now()}.txt`;
 		const file = await page.request.post(
-			`/api/v1/storage/file?volume=${VOLUME}&folder=${folderId}`,
+			`/api/v1/storage/file?volume=${VOLUME}&folder=${encodeURIComponent(folderPath)}`,
 			{ data: { name: inside, size: 12 } },
 		);
 		expect(file.ok()).toBeTruthy();
@@ -116,7 +116,7 @@ test.describe("Mounted volumes", () => {
 
 		// Clicking the row must stay on the volume, not land on /browse.
 		await page.getByText(folderName).first().click();
-		await page.waitForURL(`**/volumes/${VOLUME}/${folderId}`);
+		await page.waitForURL(`**/volumes/${VOLUME}/${folderPath}`);
 		await expectItemVisible(page, inside);
 	});
 

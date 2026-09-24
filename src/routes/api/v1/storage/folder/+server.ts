@@ -21,6 +21,7 @@ export const POST = createFolder.handler(async ({ body, service }) => {
 					message: "Folder created successfully.",
 					id: result.id,
 					name: result.name,
+					path: result.path,
 				},
 			},
 			{ status: 201 },

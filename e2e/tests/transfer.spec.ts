@@ -26,7 +26,7 @@ async function createFolder(page: Page, name: string, query = "") {
 		data: { name },
 	});
 	expect(resp.ok()).toBeTruthy();
-	return (await resp.json()).data.id as string;
+	return (await resp.json()).data.path as string;
 }
 
 async function createFile(page: Page, name: string, query = "") {
@@ -85,7 +85,11 @@ test.describe("copy and move between drives", () => {
 		const folderName = `e2e-moved-${Date.now()}`;
 		const folder = await createFolder(page, folderName, `?drive=${drive}`);
 		const inside = `inside-${Date.now()}.txt`;
-		await createFile(page, inside, `?drive=${drive}&folder=${folder}`);
+		await createFile(
+			page,
+			inside,
+			`?drive=${drive}&folder=${encodeURIComponent(folder)}`,
+		);
 
 		const resp = await page.request.post(
 			`/api/v1/storage/transfer?drive=${drive}`,

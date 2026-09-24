@@ -492,7 +492,7 @@ export class StorageService {
 	createFolder(
 		name: string,
 		parent?: string,
-	): Promise<{ id: string; name: string }> {
+	): Promise<{ id: string; name: string; path: string }> {
 		this.assertWritable();
 		this.assertInScope(parent);
 		return this.folderOperations.createFolder(name, parent);

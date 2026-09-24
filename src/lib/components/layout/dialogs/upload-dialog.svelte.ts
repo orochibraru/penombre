@@ -4,8 +4,8 @@
  * Browser folder uploads give us files carrying a `relativePath`; before the
  * files themselves can be uploaded, every nested folder in those paths has to
  * exist server-side. This module creates the missing ones (reusing any that are
- * already there) and returns the display-path → folder-UUID mapping the upload
- * step needs.
+ * already there) and returns the display-path → folder-path mapping the upload
+ * step needs. Only the server knows a new folder's path (UUIDs or real names).
  */
 
 import { api, type UploadResult } from "#lib/api/index.js";
@@ -60,12 +60,12 @@ function groupPathsByDepth(folderPaths: Set<string>): Map<number, string[]> {
 	return pathsByDepth;
 }
 
-/** Existing folders as lowercased display path → UUID, or null if the tree is unavailable */
+/** Existing folders as lowercased path → path, or null if the tree is unavailable */
 async function fetchExistingFolders(): Promise<Map<string, string> | null> {
 	try {
 		const { data: treeData } = await api.GET("/api/v1/storage/folder/tree");
 		if (treeData?.data) {
-			return new Map(treeData.data.map((f) => [f.path.toLowerCase(), f.id]));
+			return new Map(treeData.data.map((f) => [f.path.toLowerCase(), f.path]));
 		}
 	} catch {
 		// no tree available; the caller falls through and attempts every folder
@@ -73,23 +73,16 @@ async function fetchExistingFolders(): Promise<Map<string, string> | null> {
 	return null;
 }
 
-/** Translate a display path into the UUID path the API expects */
-function buildParentUuidPath(
-	parentParts: string[],
-	folderPathToUuid: Map<string, string>,
+/** Server path of the folder a relative display path maps to, rooted at the current folder */
+function resolveFolderPath(
+	displayFolderPath: string,
+	folderPaths: Map<string, string>,
 ): string {
-	let parentUuidPath = page.params.path || "";
-
-	for (const [index] of parentParts.entries()) {
-		const uuid = folderPathToUuid.get(
-			parentParts.slice(0, index + 1).join("/"),
-		);
-		if (uuid) {
-			parentUuidPath = parentUuidPath ? `${parentUuidPath}/${uuid}` : uuid;
-		}
-	}
-
-	return parentUuidPath;
+	return (
+		(displayFolderPath && folderPaths.get(displayFolderPath)) ||
+		page.params.path ||
+		""
+	);
 }
 
 /** Absolute display path of a folder, including the folder we are browsing */
@@ -102,10 +95,10 @@ function buildFullDisplayPath(
 		.join("/");
 }
 
-/** Create one folder (or reuse the existing one), recording its UUID */
+/** Create one folder (or reuse the existing one), recording its path */
 async function ensureFolder(
 	folderPath: string,
-	folderPathToUuid: Map<string, string>,
+	folderPaths: Map<string, string>,
 	existingFolders: Map<string, string> | null,
 ): Promise<void> {
 	const parts = folderPath.split("/");
@@ -116,9 +109,9 @@ async function ensureFolder(
 		folderName,
 	);
 
-	const existingUuid = existingFolders?.get(fullDisplayPath.toLowerCase());
-	if (existingUuid) {
-		folderPathToUuid.set(folderPath, existingUuid);
+	const existing = existingFolders?.get(fullDisplayPath.toLowerCase());
+	if (existing) {
+		folderPaths.set(folderPath, existing);
 		return;
 	}
 
@@ -126,15 +119,16 @@ async function ensureFolder(
 		const { data: folderData } = await api.POST("/api/v1/storage/folder", {
 			body: {
 				name: folderName,
-				parent: buildParentUuidPath(parentParts, folderPathToUuid) || undefined,
+				parent:
+					resolveFolderPath(parentParts.join("/"), folderPaths) || undefined,
 			},
 		});
 
 		if (folderData?.data) {
-			const folderId = folderData.data.id;
-			folderPathToUuid.set(folderPath, folderId);
+			const created = folderData.data.path;
+			folderPaths.set(folderPath, created);
 			// Cache it locally so a sibling path doesn't try to create it again
-			existingFolders?.set(fullDisplayPath.toLowerCase(), folderId);
+			existingFolders?.set(fullDisplayPath.toLowerCase(), created);
 		}
 	} catch {
 		// folder creation failed; the per-file upload reports it
@@ -143,13 +137,13 @@ async function ensureFolder(
 
 /**
  * Create every folder the uploaded files need, parents first.
- * Returns a map of display-name path → folder UUID.
+ * Returns a map of display-name path → folder path.
  */
 export async function createFoldersForUpload(
 	folderFilesSnapshot: FileWithPath[],
 	keepRoot: boolean,
 ): Promise<Map<string, string>> {
-	const folderPathToUuid = new Map<string, string>();
+	const folderPaths = new Map<string, string>();
 	const pathsByDepth = groupPathsByDepth(
 		collectFolderPaths(folderFilesSnapshot, keepRoot),
 	);
@@ -159,12 +153,12 @@ export async function createFoldersForUpload(
 	for (const depth of Array.from(pathsByDepth.keys()).sort((a, b) => a - b)) {
 		await Promise.all(
 			(pathsByDepth.get(depth) ?? []).map((folderPath) =>
-				ensureFolder(folderPath, folderPathToUuid, existingFolders),
+				ensureFolder(folderPath, folderPaths, existingFolders),
 			),
 		);
 	}
 
-	return folderPathToUuid;
+	return folderPaths;
 }
 
 export interface FullResult {
@@ -178,47 +172,24 @@ interface QueuedFile {
 	name: string;
 }
 
-/** UUID path of the folder a relative display path maps to, rooted at the current folder */
-function resolveFolderUuidPath(
-	displayFolderPath: string,
-	folderPathToUuid: Map<string, string>,
-): string {
-	let folderUuidPath = page.params.path || "";
-	if (!displayFolderPath) {
-		return folderUuidPath;
-	}
-
-	const folderParts = displayFolderPath.split("/");
-	for (const [index] of folderParts.entries()) {
-		const uuid = folderPathToUuid.get(
-			folderParts.slice(0, index + 1).join("/"),
-		);
-		if (uuid) {
-			folderUuidPath = folderUuidPath ? `${folderUuidPath}/${uuid}` : uuid;
-		}
-	}
-
-	return folderUuidPath;
-}
-
 /**
- * Bucket every file by the UUID path of the folder it belongs in, so metadata
+ * Bucket every file by the path of the folder it belongs in, so metadata
  * can be created one batch request per folder.
  */
 export function groupFilesByFolder(
 	regularFiles: File[],
 	folderFiles: FileWithPath[],
-	folderPathToUuid: Map<string, string>,
+	folderPaths: Map<string, string>,
 	keepRoot: boolean,
 ): Record<string, QueuedFile[]> {
 	const filesByFolder: Record<string, QueuedFile[]> = {};
 
-	const push = (folderUuidPath: string, entry: QueuedFile) => {
-		const group = filesByFolder[folderUuidPath];
+	const push = (folderPath: string, entry: QueuedFile) => {
+		const group = filesByFolder[folderPath];
 		if (group) {
 			group.push(entry);
 		} else {
-			filesByFolder[folderUuidPath] = [entry];
+			filesByFolder[folderPath] = [entry];
 		}
 	};
 
@@ -237,7 +208,7 @@ export function groupFilesByFolder(
 				? pathParts.slice(1, -1).join("/")
 				: "";
 
-		push(resolveFolderUuidPath(displayFolderPath, folderPathToUuid), {
+		push(resolveFolderPath(displayFolderPath, folderPaths), {
 			file,
 			name: fileName,
 		});

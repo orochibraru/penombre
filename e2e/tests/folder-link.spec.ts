@@ -51,10 +51,13 @@ test.describe("folder links", () => {
 				`/api/v1/storage/folder?drive=${driveId}`,
 				{ data: { name: "inside" } },
 			);
-			const id = (await folder.json()).data.id as string;
+			const { id, path } = (await folder.json()).data as {
+				id: string;
+				path: string;
+			};
 
 			await page.goto(`/go/folder/${id}`);
-			await expect(page).toHaveURL(new RegExp(`/drives/${driveId}/${id}$`));
+			await expect(page).toHaveURL(new RegExp(`/drives/${driveId}/${path}$`));
 		} finally {
 			await page.request.delete(`/api/v1/drives/${driveId}`, {
 				headers: sameOrigin(),

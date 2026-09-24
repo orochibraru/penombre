@@ -45,7 +45,7 @@ async function createFolderIn(page: Page, drive: string, name: string) {
 		{ data: { name } },
 	);
 	expect(resp.ok()).toBeTruthy();
-	return (await resp.json()).data.id as string;
+	return (await resp.json()).data.path as string;
 }
 
 async function createFileIn(page: Page, drive: string, name: string) {
@@ -113,16 +113,16 @@ test.describe("shared drives", () => {
 	}) => {
 		const drive = await createDrive(page, `${PREFIX} folders ${Date.now()}`);
 		const folderName = `drive-folder-${Date.now()}`;
-		const folderId = await createFolderIn(page, drive, folderName);
+		const folder = await createFolderIn(page, drive, folderName);
 		const inside = `inside-${Date.now()}.txt`;
 
 		const resp = await page.request.post(
-			`/api/v1/storage/file?drive=${drive}&folder=${folderId}`,
+			`/api/v1/storage/file?drive=${drive}&folder=${encodeURIComponent(folder)}`,
 			{ data: { name: inside, size: 32 } },
 		);
 		expect(resp.ok()).toBeTruthy();
 
-		await goToDrive(page, drive, `/${folderId}`);
+		await goToDrive(page, drive, `/${folder}`);
 		await expectItemVisible(page, inside);
 
 		await deleteDrive(page, drive);

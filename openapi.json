@@ -22412,12 +22412,16 @@
 												},
 												"name": {
 													"type": "string"
+												},
+												"path": {
+													"type": "string"
 												}
 											},
 											"required": [
 												"message",
 												"id",
-												"name"
+												"name",
+												"path"
 											],
 											"type": "object"
 										}

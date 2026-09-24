@@ -199,7 +199,7 @@
 		};
 
 		// Folders first: a file's metadata row needs the folder it belongs to.
-		const folderPathToUuid = await createFoldersForUpload(
+		const folderPaths = await createFoldersForUpload(
 			folderFilesSnapshot,
 			keepRoot,
 		);
@@ -212,7 +212,7 @@
 				groupFilesByFolder(
 					regularFiles,
 					folderFilesSnapshot,
-					folderPathToUuid,
+					folderPaths,
 					keepRoot,
 				),
 				BATCH_SIZE,

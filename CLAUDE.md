@@ -1178,6 +1178,11 @@ in a folder and is unreachable by its own key. `resolveDestination()` in
 `services/storage/files.ts` now refuses an unresolvable folder outright (400),
 so a create either lands where it says or fails.
 
+A folder's id is its path only on a personal drive at the root.
+`POST /api/v1/storage/folder` returns `path`; address the new folder by that.
+The folder-upload dialog and four E2E specs joined ids into paths, which broke
+on every drive and volume the day those got real names.
+
 `fileDbToObjectItem` sets `key` to the **last path segment** only, so an item
 from a listing cannot address its own file unless the caller re-attaches the
 folder (`query.folder`), which is why every mutation in `wrapper.svelte.ts`
