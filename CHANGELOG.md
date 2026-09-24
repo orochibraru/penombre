@@ -4,6 +4,40 @@
 
 ### Features
 
+* merge files as versions, real names and dates on disk, player controls ([e3d0e0c](https://github.com/orochibraru/penombre/commit/e3d0e0c210bec01d3a176a9a40822ef66dc08d67))
+* file versioning ([66927af](https://github.com/orochibraru/penombre/commit/66927afd6a83df3684dd1ec39805dd23ffeafa6d))
+* bordeaux theme, penumbra logo, folder links and upload pill; fix duplicate rows and category 404s ([e2bae55](https://github.com/orochibraru/penombre/commit/e2bae5595c39d32ac3a56727011c4500729073b3))
+* **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/orochibraru/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
+* **storage:** opt-in encryption at rest ([cedc38f](https://github.com/orochibraru/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
+* **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/orochibraru/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
+* **db:** migrations for invites, activity scrub, note FK and listing indexes ([0395439](https://github.com/orochibraru/penombre/commit/03954398ad7d2956b5a8d3d84554b2ee6537d563))
+
+### Bug Fixes
+
+* e2e again ([1cca7f2](https://github.com/orochibraru/penombre/commit/1cca7f263aca2a30478dc0aa7520363ab2c6c56f))
+* ci again ([a3543d5](https://github.com/orochibraru/penombre/commit/a3543d56e54880d68fbf240de65021da059b9f96))
+* **e2e:** move the pointer off a freshly opened context menu ([fed6883](https://github.com/orochibraru/penombre/commit/fed688385cde2a88dbc636f45d4d715cb9a6771d))
+* bulk actions e2E ([f8b7624](https://github.com/orochibraru/penombre/commit/f8b7624d0c2ebf5db44e1cc084c03572a21f6814))
+* e2E ([1f97336](https://github.com/orochibraru/penombre/commit/1f973364da1a5fd8164f267becf1d0c4db880b92))
+* creating an empty folder gets cleaned up if left empty for a minute => create physical folder on disk ([f114f19](https://github.com/orochibraru/penombre/commit/f114f193d39d5ec77846c3d293ec9ec57a01a1a2))
+* releaser version ([664f6cb](https://github.com/orochibraru/penombre/commit/664f6cb2a9b26165e144b202c60648f32d2e40cf))
+* tests ([78cb028](https://github.com/orochibraru/penombre/commit/78cb0282fb529ce47d04ffd359e2c77b14b95adc))
+* auto merge shit ([2fb140e](https://github.com/orochibraru/penombre/commit/2fb140e2e32c1d52c6fa4f2bec73149622578d94))
+* drive leaking into My Drive, links from drives and volumes, and report browser errors to the server ([ccdcec9](https://github.com/orochibraru/penombre/commit/ccdcec96c486c2e77f33fb5eaf617ebf31161e0a))
+* **e2e:** the provider row no longer says "not yet loaded" ([2966157](https://github.com/orochibraru/penombre/commit/2966157ad40975bb403c8e2c878130f89aa0ce70))
+* **rate-limit:** rebuild the redis store per call ([0add2a3](https://github.com/orochibraru/penombre/commit/0add2a3783c2e8237687506c931cf65d39997911))
+* **ui:** accessibility, theming and interaction fixes ([434f9b5](https://github.com/orochibraru/penombre/commit/434f9b5a86080f17b2dda565757160ee7a2cb49e))
+* **security:** lock down admin actions, onboarding, raw files and data leaks ([a609994](https://github.com/orochibraru/penombre/commit/a609994f8c0cb95bafd0d09ea9e75f649a657e51))
+
+### Documentation
+
+* **todo:** e2e spec isolation and redis in unit tests ([4074b74](https://github.com/orochibraru/penombre/commit/4074b74fd51044c323348ae53751d488006d470d))
+* light and dark screenshots, CLAUDE.md ([4f09ee1](https://github.com/orochibraru/penombre/commit/4f09ee12528f45bf41f71467c96f7d1a92d79355))
+
+## [1.8.53](https://github.com/orochibraru/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
+
+### Features
+
 * **listings:** keyset pagination and virtualized rendering ([b35573f](https://github.com/orochibraru/penombre/commit/b35573f1d4871ef0de459154ab10fc1d14352705))
 * **storage:** opt-in encryption at rest ([cedc38f](https://github.com/orochibraru/penombre/commit/cedc38f49b84e66df4c14ff1ac1b1790f8ddf413))
 * **i18n:** nine new locales, native plurals, parity lint ([884b30b](https://github.com/orochibraru/penombre/commit/884b30b0afbd42b2e41cdbd2ac126cf6ecd65c16))
