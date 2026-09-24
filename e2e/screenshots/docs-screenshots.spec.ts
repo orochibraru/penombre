@@ -218,10 +218,11 @@ for (const shot of SHOTS) {
 			await settle(page);
 
 			const suffix = theme === "dark" ? "-dark" : "";
-			await page.screenshot({
-				path: join(OUT_DIR, `${shot.name}${suffix}.png`),
-				fullPage: false,
-			});
+			const png = await page.screenshot({ fullPage: false });
+			await Bun.write(
+				join(OUT_DIR, `${shot.name}${suffix}.webp`),
+				await new Bun.Image(png).webp({ quality: 90 }).bytes(),
+			);
 		});
 	}
 }

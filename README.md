@@ -16,9 +16,9 @@ with a bill of exactly zero.
 
 <a href="https://orochibraru.com/penombre/docs/showcase">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="docs/images/hero.png">
-    <img alt="Penombre, browsing a drive" src="docs/images/hero.png">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/hero.webp">
+    <img alt="Penombre, browsing a drive" src="docs/images/hero.webp">
   </picture>
 </a>
 

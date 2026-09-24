@@ -1541,6 +1541,10 @@ anything under test that imports `#lib/paraglide/messages.js` needs that step.
 `docs/images/`. It asserts each page renders before capturing, so a broken
 screen cannot be published as marketing.
 
+Shots are WebP (q90), encoded with Bun's built-in `Bun.Image` — no `sharp`. pngs
+were ~7 MB of repo per run for the same pixels; this is ~0.9 MB. That only works
+because Playwright runs on Bun (`[run] bun = true`).
+
 It first seeds one dummy of every supported kind from `e2e/fixtures/showcase-*`
 (image, video, track, PDF, sheet, deck, code, 3D model, archive), so the shots
 exercise every preview path rather than showing an empty drive. That seeding

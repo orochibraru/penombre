@@ -16,13 +16,13 @@ The grid view, with thumbnails generated at upload time — video frames, PDF
 first pages, and waveforms drawn from peak data so they follow your accent
 colour.
 
-![The drive in grid view](images/hero.png)
-![The drive in grid view, dark](images/hero-dark.png)
+![The drive in grid view](images/hero.webp)
+![The drive in grid view, dark](images/hero-dark.webp)
 
 The list view, with per-type icons and the categories sidebar.
 
-![The drive in list view](images/browse.png)
-![The drive in list view, dark](images/browse-dark.png)
+![The drive in list view](images/browse.webp)
+![The drive in list view, dark](images/browse-dark.webp)
 
 A folder, a category (Music, Documents, Images, …) or your starred items can run
 to tens of thousands of files (a Reaper project's media folder, say), so each
@@ -38,8 +38,8 @@ Files open in place. Images, video, PDFs and highlighted source sit beside a
 notes thread; on a track or a video a note can be pinned to a moment, and
 clicking the timestamp moves the playhead there.
 
-![The preview dialog](images/preview.png)
-![The preview dialog, dark](images/preview-dark.png)
+![The preview dialog](images/preview.webp)
+![The preview dialog, dark](images/preview-dark.webp)
 
 ## Music
 
@@ -47,45 +47,45 @@ Audio plays in a persistent bottom player whose progress bar is the waveform
 itself, filling with the accent colour as the track runs. Click anywhere on it
 to seek.
 
-![The music player](images/music.png)
-![The music player, dark](images/music-dark.png)
+![The music player](images/music.webp)
+![The music player, dark](images/music-dark.webp)
 
 ## Categories
 
 Files sort themselves as they land — images, video, music, documents, code,
 archives and 3D objects — with no tagging to do.
 
-![The images category](images/categories.png)
-![The images category, dark](images/categories-dark.png)
+![The images category](images/categories.webp)
+![The images category, dark](images/categories-dark.webp)
 
 ## Recent, shared and trash
 
-![Recently modified files](images/recent.png)
-![Recently modified files, dark](images/recent-dark.png)
+![Recently modified files](images/recent.webp)
+![Recently modified files, dark](images/recent-dark.webp)
 
-![Share links you own](images/shared.png)
-![Share links you own, dark](images/shared-dark.png)
+![Share links you own](images/shared.webp)
+![Share links you own, dark](images/shared-dark.webp)
 
-![The trash](images/trash.png) ![The trash, dark](images/trash-dark.png)
+![The trash](images/trash.webp) ![The trash, dark](images/trash-dark.webp)
 
 ## Appearance
 
 Three attributes on `<html>` — typeface, corners and accent — re-theme the whole
 app, including the aurora behind it.
 
-![Appearance settings](images/settings-appearance.png)
-![Appearance settings, dark](images/settings-appearance-dark.png)
+![Appearance settings](images/settings-appearance.webp)
+![Appearance settings, dark](images/settings-appearance-dark.webp)
 
-![Storage settings](images/settings-storage.png)
-![Storage settings, dark](images/settings-storage-dark.png)
+![Storage settings](images/settings-storage.webp)
+![Storage settings, dark](images/settings-storage-dark.webp)
 
 ## Administration
 
 Instance statistics, per-user storage, user management, and an audit log that
 deliberately records no file names.
 
-![The admin dashboard](images/admin.png)
-![The admin dashboard, dark](images/admin-dark.png)
+![The admin dashboard](images/admin.webp)
+![The admin dashboard, dark](images/admin-dark.webp)
 
-![The admin activity log](images/admin-activity.png)
-![The admin activity log, dark](images/admin-activity-dark.png)
+![The admin activity log](images/admin-activity.webp)
+![The admin activity log, dark](images/admin-activity-dark.webp)
