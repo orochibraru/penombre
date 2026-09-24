@@ -64,6 +64,7 @@
 		objectUrl = getObjectUrl({
 			raw: true,
 			itemPath: item.key,
+			fileId: item.metadata.id,
 			baseUrl: page.url,
 		});
 
@@ -72,6 +73,7 @@
 				thumbnail: true,
 				size: "large",
 				itemPath: item.key,
+				fileId: item.metadata.id,
 				baseUrl: page.url,
 			});
 			thumbnailError = false;

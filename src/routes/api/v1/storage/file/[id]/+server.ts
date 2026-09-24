@@ -9,10 +9,17 @@ import {
 export const GET = getFile.handler(
 	async ({ params, query, event, service }) => {
 		const decodedItemName = decodeURIComponent(params.id);
+		// Same fallback as PUT: views listing across folders send the id.
+		const target = (await service.fileExists(decodedItemName))
+			? decodedItemName
+			: await service.findFileById(decodedItemName);
+		if (!target) {
+			return Http.NotFound("File not found");
+		}
 
 		try {
 			const result = await service.handleProxyRequest({
-				itemName: decodedItemName,
+				itemName: target,
 				raw: query.raw === "true",
 				thumbnail: query.thumbnail === "true",
 				size: query.size,

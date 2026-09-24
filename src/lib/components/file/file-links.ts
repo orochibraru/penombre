@@ -34,6 +34,7 @@ export function rawUrl(item: ObjectItem): string {
 	return getObjectUrl({
 		baseUrl: page.url,
 		itemPath: item.key,
+		fileId: item.metadata.id,
 		raw: true,
 	});
 }
@@ -43,6 +44,7 @@ export function peaksUrl(item: ObjectItem): string {
 	return getObjectUrl({
 		baseUrl: page.url,
 		itemPath: item.key,
+		fileId: item.metadata.id,
 		thumbnail: true,
 		size: "large",
 	});

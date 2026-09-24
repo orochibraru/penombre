@@ -28,6 +28,7 @@ import {
 	putJobs,
 	type UploadJob,
 } from "./queue";
+import { TransferRate } from "./rate";
 import type { WorkerEvent, WorkerJob, WorkerRequest } from "./worker";
 
 let worker: Worker | undefined;
@@ -35,6 +36,7 @@ let worker: Worker | undefined;
 const known = new Map<string, UploadJob>();
 /** Bytes sent per job, for the speed and ETA readout. */
 const sent = new Map<string, number>();
+let rate = new TransferRate();
 
 function uploadUrl(job: UploadJob): string {
 	const query = locationQuery(job.location ?? {});
@@ -53,14 +55,12 @@ function toWorkerJob(job: UploadJob): WorkerJob {
 function refreshStats(): void {
 	uploadStats.update((stats) => {
 		const uploaded = [...sent.values()].reduce((sum, n) => sum + n, 0);
-		const elapsed = stats.startTime ? (Date.now() - stats.startTime) / 1000 : 0;
-		const speed = elapsed > 0 ? uploaded / elapsed : 0;
-		const remaining = Math.max(0, stats.totalBytes - uploaded);
+		rate.sample(uploaded);
 		return {
 			...stats,
 			uploadedBytes: uploaded,
-			speed,
-			eta: speed > 0 ? Math.round(remaining / speed) : 0,
+			speed: rate.speed(),
+			eta: rate.eta(Math.max(0, stats.totalBytes - uploaded)),
 		};
 	});
 }
@@ -192,6 +192,7 @@ function send(request: WorkerRequest): void {
 function accountFor(jobs: UploadJob[]): void {
 	const fresh = known.size === jobs.length;
 	if (fresh) {
+		rate = new TransferRate();
 		for (const id of sent.keys()) {
 			if (!known.has(id)) {
 				sent.delete(id);

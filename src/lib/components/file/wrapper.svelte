@@ -34,6 +34,7 @@
 	} from "#lib/store/upload.js";
 	import {
 		cn,
+		copyText,
 		isFolderItem,
 		isTrashListing,
 		readableFileSize,
@@ -577,6 +578,15 @@
 			shareItem = item;
 			shareDialogOpen = true;
 			actionsContextOpen = false;
+		},
+		onCopyLink: (item) => {
+			actionsContextOpen = false;
+			// Names the folder, not this page's URL, which means something
+			// else to every viewer; the server sends each to their own way in.
+			const link = `${page.url.origin}/go/folder/${item.metadata.id}`;
+			void copyText(link).then((copied) =>
+				copied ? toast.success(m.toast_link_copied()) : toast.info(link),
+			);
 		},
 		onNotes: (item) => {
 			fileToView = notesView(item);

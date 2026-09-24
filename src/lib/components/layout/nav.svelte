@@ -148,6 +148,9 @@
                                     <Icon
                                         class={cn(
                                             "md:h-4.5 md:w-4.5",
+                                            // Categories keep their own colours;
+                                            // everything else wears the accent.
+                                            !item.accentColor && "text-primary",
                                             item.accentColor === "indigo" ? "text-indigo-500" : "",
                                             item.accentColor === "orange" ? "text-orange-500" : "",
                                             item.accentColor === "pink" ? "text-pink-500" : "",

@@ -451,6 +451,12 @@ export const folders = sqliteTable(
 			table.isTrashed,
 			table.path,
 		),
+		// One live row per path: two racing scans each inserted the same
+		// file, and a keyed listing then crashed on the duplicate. NULL is the
+		// main drive, and NULLs never collide, hence the coalesce.
+		uniqueIndex("folders_live_path_idx")
+			.on(table.ownerId, sql`coalesce(${table.volumeId}, '')`, table.path)
+			.where(sql`is_trashed = 0`),
 	],
 );
 
@@ -556,6 +562,10 @@ export const files = sqliteTable(
 			table.isTrashed,
 			table.path,
 		),
+		// See folders_live_path_idx.
+		uniqueIndex("files_live_path_idx")
+			.on(table.ownerId, sql`coalesce(${table.volumeId}, '')`, table.path)
+			.where(sql`is_trashed = 0`),
 	],
 );
 

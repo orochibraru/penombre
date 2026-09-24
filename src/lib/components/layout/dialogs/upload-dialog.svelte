@@ -236,11 +236,14 @@
 			throw e;
 		}
 
-		$preparingUpload = { active: false, status: "" };
-
 		// From here on the worker owns it: the dialog is already closed, and a
-		// reload picks the queue back up from IndexedDB.
-		await enqueueUploads(jobs);
+		// reload picks the queue back up from IndexedDB. Persisting a large
+		// batch takes seconds, so the panel stays up until progress takes over.
+		try {
+			await enqueueUploads(jobs);
+		} finally {
+			$preparingUpload = { active: false, status: "" };
+		}
 	}
 </script>
 

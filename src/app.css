@@ -433,6 +433,12 @@ body::after {
 
 /* The accent drives the solid colour, the gradient and the aurora together,
    so picking one restyles the whole surface, not just buttons. */
+:root[data-accent="bordeaux"] {
+	--primary: oklch(0.44 0.15 8);
+	--brand-2: oklch(0.56 0.17 350);
+	--brand-3: oklch(0.68 0.12 40);
+}
+
 :root[data-accent="blue"] {
 	--primary: oklch(0.52 0.2 262);
 	--brand-2: oklch(0.64 0.16 220);
@@ -465,6 +471,9 @@ body::after {
 
 /* Dark mode wants the same hues a couple of steps lighter, so `text-primary`
    stays legible on a dark surface (see the contrast note on the nav rows). */
+.dark:root[data-accent="bordeaux"] {
+	--primary: oklch(0.62 0.17 12);
+}
 .dark:root[data-accent="blue"] {
 	--primary: oklch(0.72 0.16 262);
 }
@@ -481,6 +490,7 @@ body::after {
 	--primary: oklch(0.72 0.17 12);
 }
 
+:root[data-accent="bordeaux"],
 :root[data-accent="blue"],
 :root[data-accent="teal"],
 :root[data-accent="green"],

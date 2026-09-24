@@ -263,20 +263,42 @@ export class ScanOperations {
 
 		let added = 0;
 		for (const path of missing) {
-			const id = crypto.randomUUID();
 			const parent = parentPath(path);
 
-			await this.ctx.db.insert(folders).values({
-				id,
-				name: basename(path),
-				ownerId: this.ctx.user.id,
-				volumeId: this.ctx.volumeId,
-				path,
-				parentId: parent ? (folderIdByPath.get(parent) ?? null) : null,
-			});
-
-			folderIdByPath.set(path, id);
-			added++;
+			// Another pass (or process) may have inserted it since we listed;
+			// the unique index keeps one row, and its id is the parent to use.
+			const [inserted] = await this.ctx.db
+				.insert(folders)
+				.values({
+					id: crypto.randomUUID(),
+					name: basename(path),
+					ownerId: this.ctx.user.id,
+					volumeId: this.ctx.volumeId,
+					path,
+					parentId: parent ? (folderIdByPath.get(parent) ?? null) : null,
+				})
+				.onConflictDoNothing()
+				.returning({ id: folders.id });
+			const id =
+				inserted?.id ??
+				(
+					await this.ctx.db
+						.select({ id: folders.id })
+						.from(folders)
+						.where(
+							and(
+								eq(folders.path, path),
+								eq(folders.isTrashed, false),
+								ownedFolders(this.ctx),
+							),
+						)
+				)[0]?.id;
+			if (id) {
+				folderIdByPath.set(path, id);
+			}
+			if (inserted) {
+				added++;
+			}
 		}
 		return added;
 	}
@@ -293,17 +315,25 @@ export class ScanOperations {
 		for (const key of missing) {
 			const parent = parentPath(key);
 
-			await this.ctx.db.insert(files).values({
-				id: crypto.randomUUID(),
-				name: basename(key),
-				ownerId: this.ctx.user.id,
-				volumeId: this.ctx.volumeId,
-				path: key,
-				folderId: parent ? (folderIdByPath.get(parent) ?? null) : null,
-				contentType: determineContentType(key),
-				category: determineCategory(key),
-				size: await this.plainSize(key, sizeByKey.get(key) ?? 0),
-			});
+			const [inserted] = await this.ctx.db
+				.insert(files)
+				.values({
+					id: crypto.randomUUID(),
+					name: basename(key),
+					ownerId: this.ctx.user.id,
+					volumeId: this.ctx.volumeId,
+					path: key,
+					folderId: parent ? (folderIdByPath.get(parent) ?? null) : null,
+					contentType: determineContentType(key),
+					category: determineCategory(key),
+					size: await this.plainSize(key, sizeByKey.get(key) ?? 0),
+				})
+				.onConflictDoNothing()
+				.returning({ id: files.id });
+			if (!inserted) {
+				tick(key);
+				continue;
+			}
 
 			// Build the preview as part of the scan, so a mounted library is
 			// browsable without every tile triggering an ffmpeg run.

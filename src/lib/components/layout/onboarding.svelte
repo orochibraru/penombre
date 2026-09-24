@@ -40,7 +40,9 @@
 	const seed = untrack(
 		() => (preferences ?? {}) as Record<string, string | undefined>,
 	);
-	let accent = $state<Accent>((seed.accent as Accent | undefined) ?? "purple");
+	let accent = $state<Accent>(
+		(seed.accent as Accent | undefined) ?? "bordeaux",
+	);
 	let fontFamily = $state<"mono" | "sans">(
 		(seed.fontFamily as "mono" | "sans" | undefined) ?? "sans",
 	);

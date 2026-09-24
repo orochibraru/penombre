@@ -3,14 +3,11 @@
 		AlertTriangleIcon,
 		CheckIcon,
 		ChevronDownIcon,
-		ChevronUpIcon,
 		RotateCwIcon,
 		XIcon,
 	} from "@lucide/svelte";
 	import { fly, slide } from "svelte/transition";
 	import { Button } from "#lib/components/ui/button/index.js";
-	import { Progress } from "#lib/components/ui/progress/index.js";
-	import Spinner from "#lib/components/ui/spinner.svelte";
 	import * as m from "#lib/paraglide/messages.js";
 	import {
 		failedUploads,
@@ -22,41 +19,53 @@
 		uploadStats,
 	} from "#lib/store/upload.js";
 	import { dismissFailed, retryUpload } from "#lib/upload/manager.js";
-	import { cn } from "#lib/utils.js";
+	import { cn, etaLabel } from "#lib/utils.js";
 
-	let expanded = $state(true);
-	let isUploading = $derived(
-		$preparingUpload.active || $globalUploadProgress.isUploading,
+	let expanded = $state(false);
+
+	const preparing = $derived($preparingUpload.active);
+	const uploading = $derived($globalUploadProgress.isUploading);
+	const failedCount = $derived($failedUploads.length);
+	const doneCount = $derived(Object.keys($uploadedItems).length);
+	const busy = $derived(preparing || uploading);
+	const completed = $derived(!busy && doneCount > 0 && failedCount === 0);
+	const visible = $derived(busy || doneCount > 0 || failedCount > 0);
+	// A failure needs a decision, so its list is never hidden behind a click.
+	const open = $derived(expanded || (!busy && failedCount > 0));
+
+	// Bytes, not the mean of per-file percentages: finished files leave that
+	// map, which made the overall figure jump backwards on every completion.
+	const percent = $derived(
+		$uploadStats.totalBytes > 0
+			? Math.min(
+					100,
+					Math.round(
+						($uploadStats.uploadedBytes / $uploadStats.totalBytes) * 100,
+					),
+				)
+			: 0,
 	);
-	let isCompleted = $derived(
-		!$globalUploadProgress.isUploading &&
-			Object.keys($uploadedItems).length > 0,
-	);
+
+	const RADIUS = 9;
+	const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 	/**
 	 * Still warns, but it is now a courtesy rather than a data-loss guard:
 	 * the queue lives in IndexedDB and resumes on the next load.
 	 */
 	function handleBeforeUnload(e: BeforeUnloadEvent) {
-		if (isUploading) {
+		if (busy) {
 			e.preventDefault();
 		}
 	}
 
 	$effect(() => {
-		if (isUploading) {
-			window.addEventListener("beforeunload", handleBeforeUnload);
-		} else {
-			window.removeEventListener("beforeunload", handleBeforeUnload);
+		if (!busy) {
+			return;
 		}
-
-		return () => {
-			window.removeEventListener("beforeunload", handleBeforeUnload);
-		};
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
 	});
-
-	// No guard on client-side navigation any more: the transfer lives in a
-	// worker owned by the layout, so moving between pages does not touch it.
 
 	function formatSpeed(bytesPerSec: number): string {
 		if (bytesPerSec >= 1024 * 1024) {
@@ -68,21 +77,8 @@
 		return `${Math.round(bytesPerSec)} B/s`;
 	}
 
-	function formatEta(seconds: number): string {
-		if (seconds < 60) {
-			return `${seconds}s`;
-		}
-		if (seconds < 3600) {
-			const m = Math.floor(seconds / 60);
-			const s = seconds % 60;
-			return s > 0 ? `${m}m ${s}s` : `${m}m`;
-		}
-		const h = Math.floor(seconds / 3600);
-		const m = Math.floor((seconds % 3600) / 60);
-		return m > 0 ? `${h}h ${m}m` : `${h}h`;
-	}
-
 	function dismiss() {
+		expanded = false;
 		failedUploads.set([]);
 		uploadedItems.set({});
 		uploadingItems.set({});
@@ -98,19 +94,82 @@
 			eta: 0,
 		});
 	}
-
-	function toggleExpanded() {
-		expanded = !expanded;
-	}
 </script>
 
-{#if $preparingUpload.active || $globalUploadProgress.isUploading || isCompleted || $failedUploads.length > 0}
+{#snippet ring()}
+    <svg
+        class="size-6 shrink-0 -rotate-90 text-primary"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+    >
+        <circle
+            cx="12"
+            cy="12"
+            r={RADIUS}
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            class="opacity-20"
+        />
+        <circle
+            cx="12"
+            cy="12"
+            r={RADIUS}
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-dasharray={CIRCUMFERENCE}
+            stroke-dashoffset={preparing
+                ? CIRCUMFERENCE * 0.75
+                : CIRCUMFERENCE * (1 - percent / 100)}
+            class={cn(
+                "transition-[stroke-dashoffset] duration-500",
+                preparing && "origin-center animate-spin",
+            )}
+        />
+    </svg>
+{/snippet}
+
+{#snippet status()}
+    {#if failedCount > 0 && !busy}
+        <AlertTriangleIcon class="size-5 shrink-0 text-destructive" />
+        <span class="truncate font-medium">
+            {m.upload_failed_title()} · {m.items_count({
+                count: String(failedCount),
+            })}
+        </span>
+    {:else if completed}
+        <CheckIcon class="size-5 shrink-0 text-primary" />
+        <span class="truncate font-medium">
+            {m.upload_complete()} · {m.items_count({
+                count: String(doneCount),
+            })}
+        </span>
+    {:else if preparing}
+        {@render ring()}
+        <span class="truncate font-medium">{m.preparing_upload()}</span>
+    {:else}
+        {@render ring()}
+        <span class="font-medium tabular-nums">{percent}%</span>
+        <span class="truncate text-muted-foreground">
+            {m.files_progress({
+                completed: String($uploadStats.completedFiles),
+                total: String($uploadStats.totalFiles),
+            })}{$uploadStats.eta > 0
+                ? ` · ${etaLabel($uploadStats.eta)} ${m.left()}`
+                : ""}
+        </span>
+    {/if}
+{/snippet}
+
+{#if visible}
     <div
         data-testid="upload-progress-indicator"
-        transition:fly={{ y: 100, duration: 300 }}
+        transition:fly={{ y: 24, duration: 200 }}
         class={cn(
-            "fixed right-4 z-50 w-80 rounded-lg border bg-surface-base shadow-2xl",
-            "md:right-6",
+            "fixed right-4 z-50 w-[min(22rem,calc(100vw-2rem))] border bg-surface-base shadow-lg",
+            "rounded-xl md:right-6",
             // Stacked above the music player like the selection bar, from the
             // `--player-height` it publishes: pinned to the corner this panel
             // covers the player's own buttons, which are then unclickable for
@@ -119,209 +178,123 @@
             "lg:bottom-[calc(1.25rem+var(--player-height,0px))]",
         )}
     >
-        <!-- Header -->
-        <div
-            class="flex items-center justify-between border-b bg-muted/30 px-4 py-3"
-        >
+        <div class="flex items-center gap-1 py-1.5 pr-1.5 pl-3">
             <button
-                onclick={toggleExpanded}
-                class="flex flex-1 items-center gap-2 text-left transition-colors hover:text-primary"
+                type="button"
+                class="flex min-w-0 flex-1 items-center gap-2 text-left text-sm"
+                aria-expanded={open}
+                aria-label={open ? m.collapse() : m.expand()}
+                onclick={() => (expanded = !open)}
             >
-                {#if $failedUploads.length > 0 && !$globalUploadProgress.isUploading && !$preparingUpload.active}
-                    <div class="flex items-center gap-2">
-                        <AlertTriangleIcon class="text-destructive size-5" />
-                        <div>
-                            <p class="font-medium">{m.upload_failed_title()}</p>
-                            <p class="text-sm">
-                                {m.items_count({
-                                    count: String($failedUploads.length),
-                                })}
-                            </p>
-                        </div>
-                    </div>
-                {:else if isCompleted}
-                    <div class="flex items-center gap-2">
-                        <CheckIcon class="size-5 text-green-600" />
-                        <div>
-                            <p class="font-medium">{m.upload_complete()}</p>
-                            <p class="text-sm">
-                                {m.items_count({
-                                    count: String(
-                                        Object.keys($uploadedItems).length,
-                                    ),
-                                })}
-                            </p>
-                        </div>
-                    </div>
-                {:else if $preparingUpload.active}
-                    <span class="font-medium flex items-center gap-2">
-                        {m.preparing_upload()}
-                        <Spinner />
-                    </span>
-                {:else}
-                    <span class="font-medium flex items-center gap-2">
-                        {m.uploading()}
-                        <Spinner />
-                    </span>
-                {/if}
+                {@render status()}
             </button>
-
-            <div class="flex items-center gap-1">
+            <Button
+                variant="ghost"
+                size="icon"
+                class="size-7 shrink-0"
+                aria-label={open ? m.collapse() : m.expand()}
+                onclick={() => (expanded = !open)}
+            >
+                <ChevronDownIcon
+                    class={cn("size-4 transition-transform", !open && "rotate-180")}
+                />
+            </Button>
+            {#if !busy}
                 <Button
                     variant="ghost"
-                    size="sm"
-                    class="h-8 w-8 p-0"
-                    aria-label={expanded ? m.collapse() : m.expand()}
-                    onclick={toggleExpanded}
-                >
-                    {#if expanded}
-                        <ChevronDownIcon class="size-4" />
-                    {:else}
-                        <ChevronUpIcon class="size-4" />
-                    {/if}
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    class="h-8 w-8 p-0"
+                    size="icon"
+                    class="size-7 shrink-0"
                     aria-label={m.dismiss()}
                     onclick={dismiss}
                 >
                     <XIcon class="size-4" />
                 </Button>
-            </div>
+            {/if}
         </div>
 
-        <!-- Content -->
-        {#if expanded}
+        {#if open}
             <div
-                transition:slide={{ duration: 200 }}
-                class="max-h-80 overflow-y-auto p-4"
+                transition:slide={{ duration: 180 }}
+                class="max-h-72 overflow-y-auto border-t px-3 pt-2 pb-3"
             >
-                {#if $failedUploads.length > 0}
+                {#if uploading && $uploadStats.speed > 0}
+                    <p class="pb-2 text-xs text-muted-foreground tabular-nums">
+                        {formatSpeed($uploadStats.speed)}
+                    </p>
+                {/if}
+                <ul class="space-y-2.5 text-sm">
                     <!-- Kept until acted on: a transfer cut off by closing the
                          tab is recorded as failed, so it is still here next
                          time rather than having quietly vanished. -->
-                    <div class="mb-3 space-y-2">
-                        {#each $failedUploads as failure (failure.id)}
-                            <div
-                                class="border-destructive/40 bg-destructive/5 flex items-center gap-2 rounded-md border p-2 text-sm"
-                            >
-                                <AlertTriangleIcon
-                                    class="text-destructive size-4 shrink-0"
-                                />
-                                <div class="min-w-0 flex-1">
-                                    <p class="truncate">
-                                        {failure.displayName}
-                                    </p>
-                                    <p
-                                        class="text-muted-foreground truncate text-xs"
-                                    >
-                                        {failure.error === "interrupted"
-                                            ? m.upload_failed_interrupted()
-                                            : failure.error}
-                                    </p>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    class="h-7 px-2"
-                                    title={m.upload_retry()}
-                                    onclick={() => void retryUpload(failure.id)}
-                                >
-                                    <RotateCwIcon class="size-3.5" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    class="h-7 px-2"
-                                    onclick={() => void dismissFailed(failure.id)}
-                                >
-                                    <XIcon class="size-3.5" />
-                                </Button>
+                    {#each $failedUploads as failure (failure.id)}
+                        <li class="flex items-center gap-2">
+                            <AlertTriangleIcon
+                                class="size-4 shrink-0 text-destructive"
+                            />
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate">{failure.displayName}</p>
+                                <p class="truncate text-xs text-muted-foreground">
+                                    {failure.error === "interrupted"
+                                        ? m.upload_failed_interrupted()
+                                        : failure.error}
+                                </p>
                             </div>
-                        {/each}
-                    </div>
-                {/if}
-                {#if isCompleted}
-                    <div class="space-y-2">
-                        {#each Object.entries($uploadedItems) as [key, item]}
-                            <div
-                                class="flex items-center gap-2 rounded-md bg-muted/30 p-2 text-sm"
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="size-7"
+                                aria-label={m.upload_retry()}
+                                onclick={() => void retryUpload(failure.id)}
                             >
-                                <CheckIcon
-                                    class="size-4 shrink-0 text-green-600"
-                                />
-                                <span class="flex-1 truncate">
-                                    {item.metadata.name || key}
+                                <RotateCwIcon class="size-3.5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                class="size-7"
+                                aria-label={m.dismiss()}
+                                onclick={() => void dismissFailed(failure.id)}
+                            >
+                                <XIcon class="size-3.5" />
+                            </Button>
+                        </li>
+                    {/each}
+                    {#each Object.entries($uploadingItems) as [key, progress] (key)}
+                        <li>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="truncate">
+                                    {$uploadingItemsNames[key] || key}
+                                </span>
+                                <span
+                                    class="shrink-0 text-xs text-muted-foreground tabular-nums"
+                                >
+                                    {Math.round(progress)}%
                                 </span>
                             </div>
-                        {/each}
-                    </div>
-                {:else if $preparingUpload.active}
-                    <div class="flex items-center gap-3 py-2">
-                        <span class="text-sm text-muted-foreground">
-                            {$preparingUpload.status}
-                        </span>
-                    </div>
-                {:else}
-                    <div class="mb-3">
-                        <div
-                            class="mb-1 flex items-center justify-between text-sm"
-                        >
-                            <span class="text-muted-foreground">
-                                {m.overall_progress()}
-                            </span>
-                            <span class="font-medium">
-                                {$globalUploadProgress.progress}%
-                            </span>
-                        </div>
-                        <Progress
-                            value={$globalUploadProgress.progress}
-                            class="h-2"
-                        />
-                        <div
-                            class="mt-1.5 flex items-center justify-between text-xs text-muted-foreground"
-                        >
-                            <span>
-                                {m.files_progress({
-                                    completed: String(
-                                        $uploadStats.completedFiles,
-                                    ),
-                                    total: String($uploadStats.totalFiles),
-                                })}
-                            </span>
-                            <span>
-                                {#if $uploadStats.speed > 0}
-                                    {formatSpeed($uploadStats.speed)}
-                                    {#if $uploadStats.eta > 0}
-                                        &middot; {formatEta($uploadStats.eta)}
-                                        {m.left()}
-                                    {/if}
-                                {/if}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        {#each Object.entries($uploadingItems) as [key, progress]}
-                            <div class="space-y-1">
+                            <div
+                                class="mt-1 h-0.5 overflow-hidden bg-primary/15"
+                            >
                                 <div
-                                    class="flex items-center justify-between text-sm"
-                                >
-                                    <span class="flex-1 truncate"
-                                        >{$uploadingItemsNames[key] ||
-                                            key}</span
-                                    >
-                                    <span class="text-muted-foreground text-xs">
-                                        {Math.round(progress)}%
-                                    </span>
-                                </div>
-                                <Progress value={progress} class="h-1.5" />
+                                    class="h-full bg-primary transition-[width] duration-300"
+                                    style="width: {progress}%"
+                                ></div>
                             </div>
-                        {/each}
-                    </div>
-                {/if}
+                        </li>
+                    {/each}
+                    {#each Object.entries($uploadedItems) as [key, item] (key)}
+                        <li class="flex items-center gap-2 text-muted-foreground">
+                            <CheckIcon class="size-4 shrink-0 text-primary" />
+                            <span class="truncate">
+                                {item.metadata.name || key}
+                            </span>
+                        </li>
+                    {/each}
+                    {#if preparing && $preparingUpload.status}
+                        <li class="text-xs text-muted-foreground">
+                            {$preparingUpload.status}
+                        </li>
+                    {/if}
+                </ul>
             </div>
         {/if}
     </div>

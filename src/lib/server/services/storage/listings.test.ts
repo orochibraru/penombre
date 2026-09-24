@@ -90,7 +90,7 @@ describe("listFilesPerCategory", () => {
 		// the keyset condition from skipping or repeating a row on a tie.
 		await addFile("1", "a.mp3");
 		await addFile("2", "b.mp3");
-		await addFile("3", "b.mp3");
+		await addFile("3", "b.mp3", { path: "elsewhere/b.mp3" });
 		await addFile("4", "c.mp3");
 
 		const ops = new ListingOperations(ctx());

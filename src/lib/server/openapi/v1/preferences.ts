@@ -13,7 +13,7 @@ const userPreferencesSchema = z.object({
 	fontFamily: z.enum(["mono", "sans"]).optional(),
 	corners: z.enum(["boxy", "rounded"]).optional(),
 	accent: z
-		.enum(["purple", "blue", "teal", "green", "amber", "rose"])
+		.enum(["bordeaux", "purple", "blue", "teal", "green", "amber", "rose"])
 		.optional(),
 	onboarded: z.boolean().optional(),
 	emailNotifications: z.boolean().optional(),

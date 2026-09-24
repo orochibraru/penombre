@@ -623,3 +623,26 @@ export function etaLabel(seconds: number): string {
 		unitDisplay: "long",
 	}).format(value);
 }
+
+/**
+ * Put `text` on the clipboard. `navigator.clipboard` only exists in a secure
+ * context, and a self-hosted instance is often reached over plain HTTP first,
+ * so a selected textarea and `execCommand` are the fallback there.
+ */
+export async function copyText(text: string): Promise<boolean> {
+	try {
+		await navigator.clipboard.writeText(text);
+		return true;
+	} catch {
+		const area = document.createElement("textarea");
+		area.value = text;
+		area.style.position = "fixed";
+		area.style.opacity = "0";
+		document.body.append(area);
+		area.select();
+		// oxlint-disable-next-line typescript/no-deprecated -- the only clipboard API outside a secure context
+		const copied = document.execCommand("copy");
+		area.remove();
+		return copied;
+	}
+}

@@ -13,6 +13,7 @@ export interface ThemePreferences {
 }
 
 export const ACCENTS = [
+	"bordeaux",
 	"purple",
 	"blue",
 	"teal",
@@ -25,6 +26,7 @@ export type Accent = (typeof ACCENTS)[number];
 
 /** The swatch shown in the picker, kept in step with `app.css`. */
 export const ACCENT_SWATCH: Record<Accent, string> = {
+	bordeaux: "oklch(0.44 0.15 8)",
 	purple: "oklch(0.54 0.25 293)",
 	blue: "oklch(0.52 0.2 262)",
 	teal: "oklch(0.5 0.13 195)",
@@ -40,5 +42,5 @@ export function applyTheme(prefs: ThemePreferences | null | undefined): void {
 	const root = document.documentElement;
 	root.dataset.font = prefs?.fontFamily ?? "sans";
 	root.dataset.corners = prefs?.corners ?? "rounded";
-	root.dataset.accent = prefs?.accent ?? "purple";
+	root.dataset.accent = prefs?.accent ?? "bordeaux";
 }

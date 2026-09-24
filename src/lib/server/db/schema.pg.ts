@@ -403,7 +403,7 @@ export interface UserPreferencesData {
 	/** Corner treatment across the whole UI. */
 	corners?: "boxy" | "rounded";
 	/** Named accent, mapped to an oklch hue in `app.css`. */
-	accent?: "purple" | "blue" | "teal" | "green" | "amber" | "rose";
+	accent?: "bordeaux" | "purple" | "blue" | "teal" | "green" | "amber" | "rose";
 	/**
 	 * Set once the first-run walkthrough has been completed or skipped. Lives
 	 * here rather than on `user` so inviting an account needs no migration.
@@ -651,6 +651,12 @@ export const folders = pgTable(
 			table.isTrashed,
 			sql`(${table.path} collate "C")`,
 		),
+		// One live row per path: two racing scans each inserted the same
+		// file, and a keyed listing then crashed on the duplicate. NULL is the
+		// main drive, and NULLs never collide, hence the coalesce.
+		uniqueIndex("folders_live_path_idx")
+			.on(table.ownerId, sql`coalesce(${table.volumeId}, '')`, table.path)
+			.where(sql`is_trashed = false`),
 	],
 );
 
@@ -763,6 +769,10 @@ export const files = pgTable(
 			table.isTrashed,
 			sql`(${table.path} collate "C")`,
 		),
+		// See folders_live_path_idx.
+		uniqueIndex("files_live_path_idx")
+			.on(table.ownerId, sql`coalesce(${table.volumeId}, '')`, table.path)
+			.where(sql`is_trashed = false`),
 	],
 );
 
