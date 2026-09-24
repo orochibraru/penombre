@@ -11,8 +11,6 @@ import { FileCategoryEnum } from "#lib/file-helpers.js";
  * Runs on boot and on an interval in simple mode (see `hooks.server.ts`).
  */
 
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { and, eq, inArray } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { sealedSize } from "#lib/server/crypto/envelope.js";
@@ -25,7 +23,7 @@ import {
 	determineCategory,
 	determineContentType,
 } from "./mappers";
-import { chunks } from "./reconcile";
+import { bytesGone, chunks } from "./reconcile";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 import { dropVersionBytes } from "./versions";
@@ -432,9 +430,12 @@ export class ScanOperations {
 	private async removeVanishedFolders(
 		existingFolders: Array<{ id: string; path: string }>,
 	): Promise<number> {
-		const vanished = existingFolders
-			.filter(({ path }) => !existsSync(join(this.ctx.storagePath, path)))
-			.map(({ id }) => id);
+		const vanished: string[] = [];
+		for (const { id, path } of existingFolders) {
+			if (await bytesGone(this.ctx, path)) {
+				vanished.push(id);
+			}
+		}
 
 		if (vanished.length === 0) {
 			return 0;

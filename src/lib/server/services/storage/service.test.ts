@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, type Mock, mock, test } from "bun:test";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type {
 	File as DbFile,
 	Folder as DbFolder,
@@ -490,6 +492,8 @@ describe("StorageService", () => {
 			expect(result.name).toBe("Photos");
 			expect(typeof result.id).toBe("string");
 			expect(result.id).toHaveLength(36); // UUID
+			// The scan drops a folder row with no directory.
+			expect(existsSync(join(service.getStoragePath(), result.id))).toBeTrue();
 			expect(mockRegister).toHaveBeenCalledWith(
 				expect.objectContaining({ action: "create", userId: "user-1" }),
 			);

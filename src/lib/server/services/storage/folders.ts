@@ -6,11 +6,16 @@
  * the matching objects in the storage backend.
  */
 
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { and, eq, isNull, like, or, sql } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import type { File as DbFile } from "#lib/server/db/schema.js";
 import { files, folders } from "#lib/server/db/schema.js";
-import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
+import {
+	FileOrFolderNotFoundError,
+	rethrowUnreachable,
+} from "#lib/server/errors.js";
 import type {
 	DirectoryList,
 	FileMetadata,
@@ -45,6 +50,14 @@ export class FolderOperations {
 			throw new FileOrFolderNotFoundError(`Folder not found: ${folderId}`);
 		}
 		return `${normalizedId}/`;
+	}
+
+	/** The scan drops any folder row whose directory is missing. */
+	private async ensureDir(path: string): Promise<void> {
+		const dir = join(this.ctx.storagePath, path);
+		await mkdir(dir, { recursive: true }).catch((error: unknown) =>
+			rethrowUnreachable(error, dir),
+		);
 	}
 
 	async relocateObjects(fromPrefix: string, toPrefix: string): Promise<void> {
@@ -82,12 +95,11 @@ export class FolderOperations {
 				and(ownedFolders(this.ctx), like(folders.path, `${fromPrefix}/%`)),
 			);
 		for (const sf of allSubFolders) {
+			const path = toPrefix + sf.path.slice(fromPrefix.length);
+			await this.ensureDir(path);
 			await this.ctx.db
 				.update(folders)
-				.set({
-					path: toPrefix + sf.path.slice(fromPrefix.length),
-					updatedAt: new Date(),
-				})
+				.set({ path, updatedAt: new Date() })
 				.where(eq(folders.id, sf.id));
 		}
 	}
@@ -139,6 +151,7 @@ export class FolderOperations {
 			await this.relocateObjects(normalizedKey, newFolderPath);
 		}
 
+		await this.ensureDir(newFolderPath);
 		await this.repathDescendants(normalizedKey, newFolderPath, allFilesUnder);
 
 		// Update the root folder itself
@@ -192,6 +205,7 @@ export class FolderOperations {
 			? await getFolderIdByPath(this.ctx, normalizedParent)
 			: null;
 
+		await this.ensureDir(folderPath);
 		try {
 			await this.ctx.db.insert(folders).values({
 				id: folderId,

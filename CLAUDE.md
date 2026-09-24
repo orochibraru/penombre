@@ -720,12 +720,15 @@ already gone are not a failure — Go treats `os.ErrNotExist` as success, the sa
 ENOENT rule. The Go side has its own invariant worth knowing: `deletefiles.Run`
 removes files before `os.RemoveAll`ing directories, and skips (reports failed)
 any directory that still holds a file which failed to delete — reversing that
-order would let a directory sweep away bytes TS just decided to keep. On the
-main drive and shared drives a folder's row is safe to remove regardless of that
-job's outcome: `createFolder` never touches the filesystem, a directory only
-exists once some file under it is written. On a mounted volume a scanned folder
-**is** a real directory, so one in `failedDirs` can outlive its row — the next
-scan simply re-creates the row, with nothing under it lost.
+order would let a directory sweep away bytes TS just decided to keep. A folder's
+row is safe to remove regardless of that job's outcome: one in `failedDirs` can
+outlive its row, and the next scan re-creates the row only if a file is still
+under it, with nothing lost.
+
+**Every folder row has a directory.** `createFolder` and `moveFolder` `mkdir`
+it, because the scan (`removeVanishedFolders`) drops any folder row whose
+directory is gone. Before that, an empty folder made in the UI of a scanned root
+(simple mode, a volume) vanished within a minute.
 
 Emptying is one request for the same reason the bulk actions are pooled
 (`MAX_PARALLEL_REQUESTS` in `wrapper-bulk.svelte.ts`): a request per row over a
