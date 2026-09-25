@@ -1205,6 +1205,14 @@ deleted the winner's bytes. Every writer renames over the empty placeholder.
 `safeSegment` turns a leading dot into `_`: a user folder named `.versions`
 would otherwise be the app's own, and a dot-name is invisible to the scan.
 
+A rename in the UI renames on disk too (`renameOnDisk` in `uuid-names.ts`, from
+`updateFile` and `updateFolderMeta`), then updates the row **by id**: its path
+just moved. `diskName` treats a case-only change as the item's own path, or
+`Take.wav` would come out `Take (1).wav`. Because Penombre now moves bytes the
+scan's listing never saw, the scan re-checks the disk before deleting a vanished
+row (`bytesGone`) and before following a rename: a listing minutes old on a big
+mount would otherwise drop a freshly renamed file with its versions.
+
 Rows made before this keep UUID names on disk until the scan renames them
 (`nameUuidPaths`, at the start of every pass of a named tree): inside the pass,
 so the scan never sees a renamed path with no row, which it would import twice

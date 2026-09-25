@@ -510,9 +510,15 @@ export class ScanOperations {
 		keys: string[],
 	): Promise<number> {
 		const onDisk = new Set(keys);
-		const vanished = existingFiles
-			.filter((file) => !onDisk.has(file.path))
-			.map((file) => file.id);
+		// Checked again against the disk: the listing is minutes old on a big
+		// mount, and a rename made in Penombre since then moved a row to a path
+		// the listing never saw. Deleting it would take its versions too.
+		const vanished: string[] = [];
+		for (const file of existingFiles) {
+			if (!onDisk.has(file.path) && (await bytesGone(this.ctx, file.path))) {
+				vanished.push(file.id);
+			}
+		}
 
 		if (vanished.length === 0) {
 			return 0;

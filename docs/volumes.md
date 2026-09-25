@@ -132,9 +132,10 @@ Penombre sends `X-Accel-Buffering: no` for nginx.
 ## What is stored where
 
 Folders and files you create or upload on a volume keep their names on disk, so
-the mount reads the same from outside Penombre. A name already taken, even by
-something in the trash, gets a number: `Take (1).wav`. Anything an older version
-of Penombre wrote under a random ID is renamed by the next scan.
+the mount reads the same from outside Penombre, and renaming one in Penombre
+renames it on disk. A name already taken, even by something in the trash, gets a
+number: `Take (1).wav`. Anything an older version of Penombre wrote under a
+random ID is renamed by the next scan.
 
 ## When the mount cannot be read
 

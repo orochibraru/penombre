@@ -15,6 +15,7 @@ import { sealedSize } from "#lib/server/crypto/envelope.js";
 import { type File as DbFile, files } from "#lib/server/db/schema.js";
 import type { StorageContext } from "./context";
 import { determineCategory, determineContentType } from "./mappers";
+import { bytesGone } from "./reconcile";
 import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
@@ -107,6 +108,14 @@ export async function followRenames(
 			}
 		}
 		if (!row || taken.has(row.id)) {
+			continue;
+		}
+		// The listing can be older than the rows: a rename made in Penombre
+		// meanwhile would otherwise be followed back to where it came from.
+		if (
+			!(await bytesGone(scope.ctx, row.path)) ||
+			(await bytesGone(scope.ctx, key))
+		) {
 			continue;
 		}
 		taken.add(row.id);

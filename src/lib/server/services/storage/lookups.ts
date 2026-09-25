@@ -144,7 +144,11 @@ export async function diskName(
 	for (let n = 0; n < 1000; n++) {
 		const segment = n === 0 ? base : `${stem} (${n})${extension}`;
 		const path = parent ? `${parent}/${segment}` : segment;
-		if (path === self || (await claim(ctx, path, file === true))) {
+		// A case-only rename is its own path: it must not be told it is taken.
+		if (
+			path.toLowerCase() === self?.toLowerCase() ||
+			(await claim(ctx, path, file === true))
+		) {
 			return segment;
 		}
 	}

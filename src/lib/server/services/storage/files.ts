@@ -36,6 +36,7 @@ import {
 } from "./mappers";
 import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+import { renameOnDisk } from "./uuid-names";
 import { afterWrite, VersionOperations } from "./version-ops";
 import { adminVersioning, dropVersionBytes, versioningAt } from "./versions";
 
@@ -129,12 +130,21 @@ export class FileOperations {
 			updates.name = newName;
 			updates.contentType = determineContentType(newName);
 			updates.category = determineCategory(newName);
+			// Where the tree is browsed outside Penombre the disk is the name.
+			if (this.ctx.namedPaths && newName !== file.name) {
+				await renameOnDisk(this.ctx, this.thumbnails, {
+					path: file.path,
+					name: newName,
+					kind: "file",
+				});
+			}
 		}
 
+		// By id: a rename on disk just moved the path.
 		await this.ctx.db
 			.update(files)
 			.set(updates)
-			.where(and(eq(files.path, name), ownedFiles(this.ctx)));
+			.where(and(eq(files.id, file.id), ownedFiles(this.ctx)));
 
 		await this.ctx.activityService.register({
 			userId: this.ctx.actor.id,

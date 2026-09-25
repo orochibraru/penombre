@@ -28,6 +28,7 @@ import { diskName, getFolderIdByPath, getUniqueDisplayName } from "./lookups";
 import { folderDbToMetadata } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
+import { renameOnDisk } from "./uuid-names";
 import { dropVersionBytes } from "./versions";
 
 const logger = new Logger("StorageService");
@@ -396,8 +397,17 @@ export class FolderOperations {
 		if (Array.isArray(data.tags)) {
 			updates.tags = data.tags;
 		}
+		let path = normalizedId;
 		if (typeof data.name === "string") {
 			updates.name = data.name;
+			// Where the tree is browsed outside Penombre the disk is the name.
+			if (this.ctx.namedPaths && data.name !== folder.name) {
+				path = await renameOnDisk(this.ctx, this.thumbnails, {
+					path: folder.path,
+					name: data.name,
+					kind: "folder",
+				});
+			}
 		}
 
 		await this.ctx.db
@@ -408,7 +418,7 @@ export class FolderOperations {
 		// The UI trashes and restores a folder through this route, so the
 		// subtree has to follow — see setTrashedRecursively.
 		if (typeof data.isTrashed === "boolean") {
-			await this.setTrashedRecursively(normalizedId, data.isTrashed);
+			await this.setTrashedRecursively(path, data.isTrashed);
 		}
 
 		await this.ctx.activityService.register({

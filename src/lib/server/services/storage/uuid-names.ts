@@ -108,40 +108,54 @@ async function renameOne(
 	row: Row,
 	kind: "folder" | "file",
 ): Promise<boolean> {
-	const [parent, segment] = split(row.path);
-	let to: string | undefined;
-	let moved = false;
 	try {
-		const wanted = await diskName(ctx, parent, row.name, {
-			fallback: segment,
-			file: kind === "file",
-		});
-		if (wanted === segment) {
-			return false;
-		}
-		to = parent ? `${parent}/${wanted}` : wanted;
-		// Over the empty placeholder `diskName` claimed.
-		await rename(join(ctx.storagePath, row.path), join(ctx.storagePath, to));
-		moved = true;
-		await repath(ctx, row.path, to);
-		if (kind === "file") {
-			await thumbnails.adopt(row.path, to);
-			await thumbnails.deleteThumbnails(row.path);
-		}
-		return true;
+		return (await renameOnDisk(ctx, thumbnails, { ...row, kind })) !== row.path;
 	} catch (error) {
 		logger.error(`Could not rename ${row.path}`, error);
-		if (to) {
-			const claimed = join(ctx.storagePath, to);
-			// Bytes back under the row, or the claim gone: either way the
-			// scan must not find a path no row owns.
-			await (moved
-				? rename(claimed, join(ctx.storagePath, row.path))
-				: kind === "folder"
-					? rmdir(claimed)
-					: rm(claimed, { force: true })
-			).catch(() => undefined);
-		}
 		return false;
+	}
+}
+
+/**
+ * Renames a file or folder on disk to `name` in its own folder, claimed like
+ * any new name, and moves every row at or under it. Returns the new path, the
+ * same one when nothing changed. Throws after putting the bytes back or
+ * dropping the claim: the scan must never find a path no row owns.
+ */
+export async function renameOnDisk(
+	ctx: StorageContext,
+	thumbnails: ThumbnailService,
+	{ path, name, kind }: { path: string; name: string; kind: "folder" | "file" },
+): Promise<string> {
+	const [parent, segment] = split(path);
+	const wanted = await diskName(ctx, parent, name, {
+		fallback: segment,
+		file: kind === "file",
+		self: path,
+	});
+	if (wanted === segment) {
+		return path;
+	}
+	const to = parent ? `${parent}/${wanted}` : wanted;
+	let moved = false;
+	try {
+		// Over the empty placeholder `diskName` claimed.
+		await rename(join(ctx.storagePath, path), join(ctx.storagePath, to));
+		moved = true;
+		await repath(ctx, path, to);
+		if (kind === "file") {
+			await thumbnails.adopt(path, to);
+			await thumbnails.deleteThumbnails(path);
+		}
+		return to;
+	} catch (error) {
+		const claimed = join(ctx.storagePath, to);
+		await (moved
+			? rename(claimed, join(ctx.storagePath, path))
+			: kind === "folder"
+				? rmdir(claimed)
+				: rm(claimed, { force: true })
+		).catch(() => undefined);
+		throw error;
 	}
 }
