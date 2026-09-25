@@ -96,9 +96,6 @@ export async function nameUuidPaths(
 			}
 		}
 	}
-	if (renamed > 0) {
-		await ctx.invalidateListingCaches();
-	}
 	return renamed;
 }
 

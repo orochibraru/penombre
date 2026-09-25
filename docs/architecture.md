@@ -99,22 +99,16 @@ Better Auth handles authentication with the following plugins:
 On startup, the server hook (`hooks.server.ts`) waits for the database, runs
 Drizzle migrations, and seeds the initial admin account if no users exist.
 
-#### Caching
+#### Rate limits
 
-The storage service uses a per-user cache to avoid repeated database and
-filesystem queries for file listings, metadata, and folder sizes. The cache
-layer is pluggable — the backend is selected automatically based on the
-environment:
+Sign-in lookups, share-link passwords and browser error reports are
+rate-limited. The counters live in memory, one set per app instance; with
+`REDIS_URL` set they live in Redis and are shared by every instance. See
+[Environment variables](env.md#redis-optional).
 
-| Environment            | Backend    | Behavior                                                |
-| ---------------------- | ---------- | ------------------------------------------------------- |
-| Development (no Redis) | **Null**   | Caching disabled to avoid stale data during development |
-| Production (no Redis)  | **Memory** | In-process `Map` with TTL (default 30 s)                |
-| Any (with `REDIS_URL`) | **Redis**  | Distributed cache shared across instances               |
-
-All three backends implement the same async `CacheBackend` interface, so the
-rest of the codebase is backend-agnostic. See
-[Environment variables](env.md#redis-optional) for configuration.
+Listings are not cached: they are keyset-paginated SQL on indexed columns, a few
+milliseconds even for a folder of twenty thousand files, and always read the
+current rows.
 
 #### Configuration
 

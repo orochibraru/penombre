@@ -88,7 +88,6 @@ export async function afterWrite(
 		// Never throws; not awaited so the upload answers now.
 		void recordDurations(ctx, [{ id, path: key, category, updatedAt }]);
 	}
-	await ctx.invalidateListingCaches();
 }
 
 interface DatedFile {
@@ -147,7 +146,6 @@ export class VersionOperations {
 				key: await getUniqueDisplayName(this.ctx, wanted, folder, "file"),
 			});
 		}
-		await this.ctx.invalidateListingCaches();
 		return target.id;
 	}
 
@@ -385,7 +383,6 @@ export class VersionOperations {
 			await this.thumbnails.deleteThumbnails(from);
 			created.push(id);
 		}
-		await this.ctx.invalidateListingCaches();
 		return created;
 	}
 
@@ -411,7 +408,6 @@ export class VersionOperations {
 		if (!(file && (await reorderVersions(this.ctx, fileId, versionIds)))) {
 			return false;
 		}
-		await this.ctx.invalidateListingCaches();
 		return true;
 	}
 
@@ -427,7 +423,6 @@ export class VersionOperations {
 		}
 		const versioning = await versioningForFile(this.ctx, file, admin);
 		const version = await this.keep(file, versioning.max);
-		await this.ctx.invalidateListingCaches();
 		return version;
 	}
 
@@ -499,7 +494,6 @@ export class VersionOperations {
 			return false;
 		}
 		await this.thumbnails.deleteThumbnails(versionKey(id, versionId));
-		await this.ctx.invalidateListingCaches();
 		return true;
 	}
 }

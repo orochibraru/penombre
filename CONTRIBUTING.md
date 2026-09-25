@@ -36,7 +36,7 @@ bun run db:generate  # Generate Drizzle migrations (Postgres + SQLite)
 bun run db:studio    # Open Drizzle Studio
 
 # Quality
-bun run lint         # oxlint + biome + markdownlint + tailwint
+bun run lint         # oxlint + biome + markdownlint + tailwint + i18n + agnix
 bun run lint:fix     # ...and fix what is fixable
 bun run format       # biome format --write
 bun run check        # check:app && check:scripts && check:go, sequentially

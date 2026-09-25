@@ -65,6 +65,12 @@ repos:
       - id: actionlint
         name: Lint Github Actions
 
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.30.1
+    hooks:
+      - id: zizmor
+        name: Audit Github Actions security (zizmor)
+
   - repo: local
     hooks:
       - id: pinact
@@ -136,6 +142,13 @@ repos:
         entry: node_modules/.bin/markdownlint-cli2 --fix
         language: system
         types: [markdown]
+
+      - id: agnix
+        name: Lint AI config (agnix)
+        entry: node_modules/.bin/agnix --strict .
+        language: system
+        pass_filenames: false
+        files: (\.md$|^\.claude/|^\.agnix\.toml$)
 
       - id: lint-tailwind
         name: Lint (Tailwind)

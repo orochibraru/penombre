@@ -21,7 +21,6 @@ import type {
 	FileMetadata,
 	FolderItem,
 } from "#lib/server/schema.js";
-import { CacheKeys } from "./cache";
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
 import { diskName, getFolderIdByPath, getUniqueDisplayName } from "./lookups";
@@ -179,7 +178,6 @@ export class FolderOperations {
 			message: "Moved a folder",
 			level: "info",
 		});
-		await this.ctx.invalidateListingCaches();
 	}
 
 	async createFolder(
@@ -235,7 +233,6 @@ export class FolderOperations {
 			logger.debug(
 				`Folder created: UUID=${folderId}, name=${uniqueName}, path=${folderPath}`,
 			);
-			await this.ctx.invalidateListingCaches();
 			return { id: folderId, name: uniqueName, path: folderPath };
 		} catch (error) {
 			logger.error("Error creating folder:", error);
@@ -292,7 +289,6 @@ export class FolderOperations {
 				level: "info",
 			});
 			logger.debug(`Folder deleted: ${normalizedKey}`);
-			await this.ctx.invalidateListingCaches();
 		} catch (error) {
 			logger.error("Error deleting folder:", error);
 			throw new Error(`Error deleting folder with key: ${key}`);
@@ -350,7 +346,6 @@ export class FolderOperations {
 			message: "Moved a folder to trash",
 			level: "info",
 		});
-		await this.ctx.invalidateListingCaches();
 	}
 
 	async restoreFolder(key: string): Promise<void> {
@@ -364,7 +359,6 @@ export class FolderOperations {
 			message: "Restored a folder from trash",
 			level: "info",
 		});
-		await this.ctx.invalidateListingCaches();
 	}
 
 	async updateFolderMeta(
@@ -427,7 +421,6 @@ export class FolderOperations {
 			message: "Updated folder metadata",
 			level: "info",
 		});
-		await this.ctx.invalidateListingCaches();
 	}
 
 	async getFolderMeta(folderId: string): Promise<FileMetadata | null> {
@@ -468,15 +461,6 @@ export class FolderOperations {
 		options?: { includeTrashed?: boolean; onlyTrashed?: boolean },
 	): Promise<DirectoryList> {
 		const normalizedPrefix = !prefix || prefix === "/" ? "" : prefix;
-		const cacheKey = CacheKeys.folders(
-			normalizedPrefix,
-			Boolean(options?.onlyTrashed),
-		);
-		const cached = await this.ctx.cache.get<DirectoryList>(cacheKey);
-		if (cached) {
-			return cached;
-		}
-
 		const parentFolderId = normalizedPrefix
 			? await getFolderIdByPath(this.ctx, normalizedPrefix)
 			: null;
@@ -504,7 +488,6 @@ export class FolderOperations {
 			})
 			.map((r) => r.id);
 
-		await this.ctx.cache.set(cacheKey, result);
 		return result;
 	}
 
@@ -539,18 +522,11 @@ export class FolderOperations {
 		const normalizedKey = folderKey.endsWith("/")
 			? folderKey.slice(0, -1)
 			: folderKey;
-		const cacheKey = `folder-size:${normalizedKey}`;
-		const cached = await this.ctx.cache.get<number>(cacheKey);
-		if (cached !== undefined) {
-			return cached;
-		}
-
 		const [result] = await this.ctx.db
 			.select({ totalSize: sql<number>`COALESCE(SUM(${files.size}), 0)` })
 			.from(files)
 			.where(and(ownedFiles(this.ctx), like(files.path, `${normalizedKey}/%`)));
 		const totalSize = Number(result?.totalSize ?? 0);
-		await this.ctx.cache.set(cacheKey, totalSize, 300);
 		logger.info(
 			`Calculated size for folder: ${folderKey}, size: ${totalSize} bytes`,
 		);

@@ -57,7 +57,6 @@ function setup(
 		activityService: { register: mock(async () => {}) },
 		actor: { id: "user-1" },
 		driver: { deleteObjectsByPrefix: mock(async (_prefix: string) => {}) },
-		invalidateListingCaches: mock(async () => {}),
 	};
 	const thumbnails = { deleteThumbnails: mock(async () => {}) };
 	const ops = new TrashOperations(ctx as never, thumbnails as never);

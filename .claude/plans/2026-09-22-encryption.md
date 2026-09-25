@@ -260,8 +260,9 @@ Design choices:
 - `hooks.server.ts` `init()`: `assertEncryptionKey()` right after migrations,
   before the worker starts; `startEncryptionSweep()` beside the duration
   sweeper.
-- Worker without a key: jobs on sealed files fail with "sealed with key <id>,
-  not loaded (set ENCRYPTION_KEY on the worker)"; one startup warning.
+- Worker without a key: jobs on sealed files fail with
+  `sealed with key <id>, not loaded (set ENCRYPTION_KEY on the worker)`; one
+  startup warning.
 
 ### 7. Schema
 

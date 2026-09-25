@@ -42,7 +42,7 @@ services:
       - storage_data:/data
     env_file: .env
     # environment:
-    #   - REDIS_URL=redis://redis:6379  # Uncomment to enable Redis caching
+    #   - REDIS_URL=redis://redis:6379  # Shares rate limits across instances
 
   # Optional: uncomment to enable distributed caching with Redis
   # redis:

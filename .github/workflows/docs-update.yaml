@@ -4,14 +4,19 @@ on:
     paths:
       - "docs/**"
 
+# The trigger authenticates with its own token, never the job's.
+permissions: {}
+
 jobs:
   trigger-docs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger docs build
+        env:
+          DOCS_TRIGGER_TOKEN: ${{ secrets.DOCS_TRIGGER_TOKEN }}
         run: |
           curl -X POST \
-            -H "Authorization: token ${{ secrets.DOCS_TRIGGER_TOKEN }}" \
+            -H "Authorization: token $DOCS_TRIGGER_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/orochibraru/orochibraru/dispatches \
             -d '{"event_type":"docs-update"}'

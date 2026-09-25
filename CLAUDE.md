@@ -27,9 +27,10 @@ bun run build            # svelte-kit sync && vite build
 bun run preview          # preview the production build
 bun run check            # check:app && check:scripts && check:go, sequentially
 
-bun run lint             # oxlint + biome + markdownlint + tailwint
+bun run lint             # oxlint + biome + markdownlint + tailwint + i18n + agnix
 bun run lint:fix         # fix everything fixable
 bun run lint:md          # markdownlint-cli2 only
+bun run lint:ai          # agnix: CLAUDE.md, .claude/, skills (config in .agnix.toml)
 bun run lint:ts          # oxlint + biome only
 bun run lint:tailwind    # tailwint only
 bun run format           # biome format --write
@@ -298,10 +299,12 @@ list — `parseOAuthProviders()` discovers provider names by scanning env keys.
 
 ### Cache
 
-`#lib/server/cache` is a pluggable async cache (`CacheBackend` interface) with
-`MemoryCacheBackend` (default, in-process), `RedisCacheBackend` (`REDIS_URL`
-set), and `NullCacheBackend` (no-op). `CacheManager`/`CacheKeys` in the storage
-service module wrap it for listing/metadata caching.
+`#lib/server/cache` (`CacheBackend`: Memory, Redis with `REDIS_URL`, Null) now
+serves only the rate limiter. Storage listings used to be cached per user for
+30s behind a wholesale invalidation called from 28 places; a page is ~2.5ms of
+indexed SQL on a 20k-file folder, hits were rare, and every new listing or
+counter was one missed prefix away from a stale badge. It was removed. Do not
+bring a listing cache back without a measurement that needs it.
 
 ### i18n
 
@@ -356,13 +359,12 @@ never leave a changelog in a comment.
 
 ## Layout rules
 
-**Do not reach for `max-w-*` by default.** Most things should fill their
-container — the page shell and the tab strip already bound the content. A width
-cap is a deliberate choice for a specific reason (a single-column reading
-measure, a form that would look absurd at 2000px), not a reflex to add to every
-wrapper. Panes inside tabs are full width. When a wide screen leaves a layout
-looking sparse, add columns (`xl:grid-cols-2`, `2xl:grid-cols-3`) rather than
-capping the width.
+**Do not reach for `max-w-*` by default.** Most things must fill their container
+— the page shell and the tab strip already bound the content. A width cap is a
+deliberate choice for a specific reason (a single-column reading measure, a form
+that would look absurd at 2000px), not a reflex to add to every wrapper. Panes
+inside tabs are full width. When a wide screen leaves a layout looking sparse,
+add columns (`xl:grid-cols-2`, `2xl:grid-cols-3`) rather than capping the width.
 
 ## Gotchas learned the hard way
 
@@ -739,10 +741,7 @@ client prices the whole of it from the response's `total` and `totalSize`.
 
 `(app)/+layout.server.ts` fetches `/storage/file/counts`, so it must
 `depends("app:files")` — a mutation invalidates that key, and without the
-dependency the badges keep the numbers they were booted with. Server-side,
-`invalidateListingCaches` has to drop the `counts` **prefix**: the two counters
-are stored under `counts:trashed` / `counts:starred`, which an exact-key delete
-never touched.
+dependency the badges keep the numbers they were booted with.
 
 ### A dialog is a grid, so its body needs `min-w-0`
 
@@ -812,11 +811,8 @@ cursor stores the raw name and SQL lowers both sides: lowering it in JS would
 disagree with SQLite's ASCII-only `lower` and skip rows. Starred rows are few,
 so they get only `(owner, is_starred, is_trashed)` indexes.
 
-`total` is a cached count beside the pages. Cache keys live under `list:`,
-`starred:` and `category:`, all dropped by prefix in `invalidateListingCaches`;
-a new listing needs its prefix there; the trash's is `trashed` (its pages,
-`trashed:total`, which is also the badge, and `trashed:size`). Recent does not
-page.
+`total` is a count beside the pages; the trash's is also its badge. Recent does
+not page.
 
 The trash pages through the same `mixedPage`, with two extras. Its ancestor
 probe and the folder sizes are prefix ranges on `path` (`folders_trash_idx`,
@@ -1402,6 +1398,22 @@ to install locally or in CI. `pinact run --update` bumps everything (export
 `GITHUB_TOKEN=$(gh auth token)` or the API rate limit bites). Write a new action
 as `owner/repo@vX` and let the hook pin it.
 
+### Workflows pass `zizmor`
+
+The `zizmor` prek hook audits `.github/workflows`. Three rules follow from it:
+
+- **No `${{ }}` inside `run:`.** Put the expression in the step's `env:` and
+  read `$VAR`; use `$RUNNER_TEMP`, `$GITHUB_REPOSITORY`, `$GITHUB_SHA` rather
+  than their expressions.
+- **Checkouts set `persist-credentials: false`.** The release checkout is the
+  exception: releaser pushes over the deploy key it persists, so it carries an
+  inline `# zizmor: ignore[artipacked]`.
+- **Permissions are per job, and no `secrets: inherit`.** A called workflow gets
+  only the secrets it names.
+
+`self-repository` is off (`.github/zizmor.yml`): actionlint does not parse
+`uses: $/...` yet.
+
 ### `bun install` on checkout
 
 `.pre-commit-config.yaml` has a `post-checkout` hook, installed by `prepare`
@@ -1472,6 +1484,17 @@ reproposed. Lift it when svelte-check ships tsgo support, not before.
 
 `nodemailer` 10 cut `Transporter`'s second type argument (the options type); it
 takes only `SentMessageInfo` now.
+
+### agnix needs its binary fetched
+
+`agnix` (`bun run lint:ai`, a prek hook on Markdown and `.claude/`) is a wrapper
+that downloads a native binary in its postinstall. Bun skips install scripts for
+packages not in `trustedDependencies`, where it is now; CI installs with
+`--ignore-scripts`, so `code_quality.yaml` runs
+`bun node_modules/agnix/install.js` before prek. `.agnix.toml` disables four
+rules that score CLAUDE.md as a short prompt (length, keyword placement, every
+"never"); each is commented there. `bun pm trust` rewrote `package.json` with
+spaces: run Biome over it after.
 
 ### Type checks run on push, not commit
 
@@ -1636,8 +1659,8 @@ in the sidebar of every shot; that is why `drives.spec.ts` names its drives
 
 `services/drives.ts` builds a `VolumeConfig` at request time —
 `volume_id = drive:<id>`, rooted at `STORAGE_PATH/drives/<id>` — so every
-existing storage query, cache key, mutation and read-only check scopes to it
-with no changes under `services/storage`. Three things hold it together:
+existing storage query, mutation and read-only check scopes to it with no
+changes under `services/storage`. Three things hold it together:
 
 - **`shared: true` on the volume.** Without it `StorageService` splits the mount
   per user in full mode (`user-<id>`), which is exactly what a shared drive must
@@ -1759,8 +1782,8 @@ in-flight registry keyed by volume. Simple mode's own drive is in it too, under
 `LIBRARY_SCAN_KEY`, which is what its Rescan button and event stream
 (`/api/v1/library/scan`) read; it used to be scanned outside the registry. Two
 registries meant the timer's pass was invisible to the page (which then reported
-"not scanning" while the mount was still being crawled) and the two could crawl
-the same tree at once; the badge flickering between visits was that disagreement
+"not scanning" while the mount was still being crawled) and the two crawled the
+same tree at once; the badge flickering between visits was that disagreement
 showing.
 
 The 30s cooldown is load-bearing, not tuning: the poll re-runs the load, so
@@ -1775,7 +1798,7 @@ and the banner would never go away.
 route. `ownedFiles`/`ownedFolders` apply the scope, so every query is narrowed
 for free; do not add a storage query that bypasses them.
 
-Three things the scope alone does not cover, all handled in `service.ts`:
+Two things the scope alone does not cover, both handled in `service.ts`:
 
 - **Writes that name a destination** (create, move, duplicate) do not read a row
   there first, so `assertInScope` checks the path. `strict` refuses the shared
@@ -1783,9 +1806,6 @@ Three things the scope alone does not cover, all handled in `service.ts`:
   it. A shared _file_ allows no creates at all.
 - **`writeFile`/`deleteFile` touch bytes by key even when no row matched**, so a
   scoped call must find its row first (`assertFileInScope`).
-- **The listing cache is per owner.** A scoped service reads a
-  `NullCacheBackend` — or the owner would be served the recipient's narrowed
-  listing, and vice versa — but still clears the owner's cache on a mutation.
 
 A file share's scope includes its **parent folder** so that folder can be listed
 (showing just the file); that is why folder mutations under a file scope must

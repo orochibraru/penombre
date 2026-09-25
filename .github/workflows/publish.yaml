@@ -26,9 +26,9 @@ env:
   # code no canary image was built from.
   RELEASE_RULES: breaking=major,feat=patch,docs=patch,refactor=patch,style=patch,test=patch,build=patch,ci=patch,chore=patch
 
+# The release job widens its own; images go to Docker Hub.
 permissions:
   contents: read
-  packages: write
 
 # Every merge is a canary: `X.Y.Z-canary.N` and `:canary`, promoted from the
 # merged PR's tested image when the tree matches, built from scratch otherwise.
@@ -44,6 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Dry-run release to compute the next version
@@ -88,6 +89,8 @@ jobs:
       image: ${{ steps.find.outputs.image }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Match the merged PR's image by source tree
         id: find
@@ -95,7 +98,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           IMAGE: docker.io/orochibraru/penombre
         run: |
-          pr="$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+          pr="$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
             --jq '[.[] | select(.merged_at != null)][0].number // empty')"
           echo "pr=$pr" >> "$GITHUB_OUTPUT"
           [ -n "$pr" ] || { echo "Not a PR merge."; exit 0; }
@@ -118,7 +121,6 @@ jobs:
     needs: [tested]
     if: needs.tested.outputs.image == ''
     uses: ./.github/workflows/code_quality.yaml
-    secrets: inherit
 
   build-app:
     name: Docker Build (App)
@@ -197,6 +199,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Check the canary is what this release ships
@@ -259,7 +262,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
+          # releaser pushes over the key this persists
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }} # zizmor: ignore[artipacked]
 
       - name: Tag, release and update the release PR
         id: releaser

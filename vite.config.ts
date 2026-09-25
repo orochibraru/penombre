@@ -5,7 +5,7 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { SvelteKitPWA } from "@vite-pwa/sveltekit";
-import { defineConfig, type UserConfig } from "vite";
+import { defineConfig, loadEnv, type UserConfig } from "vite";
 
 // SvelteKit's own unsupported-plugin warning (vite-plugin-pwa's
 // transformIndexHtml hook, which svelte-smol's adapter output doesn't call)
@@ -26,6 +26,14 @@ console.log = (...args) => {
 	}
 	rawLog(...args);
 };
+
+// `config.ts` reads `process.env`, and `bun run dev` hands vite neither
+// `.env` nor a runtime that loads it. The shell still wins.
+for (const [key, value] of Object.entries(
+	loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), ""),
+)) {
+	process.env[key] ??= value;
+}
 
 export default defineConfig({
 	plugins: [

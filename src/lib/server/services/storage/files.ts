@@ -97,8 +97,6 @@ export class FileOperations {
 				})
 				.where(and(eq(files.path, path), ownedFiles(this.ctx)));
 		}
-
-		await this.ctx.invalidateListingCaches();
 	}
 
 	async updateFile(name: string, data: UpdateFile): Promise<void> {
@@ -152,8 +150,6 @@ export class FileOperations {
 			message: "Updated file metadata",
 			level: "info",
 		});
-
-		await this.ctx.invalidateListingCaches();
 	}
 
 	async moveFile(fileKey: string, destinationFolder: string): Promise<void> {
@@ -222,8 +218,6 @@ export class FileOperations {
 		// The move minted a new key; the old one's cached thumbnail/peaks would
 		// otherwise sit on disk forever, unreachable by any path a listing uses.
 		await this.thumbnails.deleteThumbnails(fileKey);
-
-		await this.ctx.invalidateListingCaches();
 	}
 
 	async duplicateFile(fileKey: string): Promise<ObjectItem> {
@@ -289,7 +283,6 @@ export class FileOperations {
 		if (!newFile) {
 			throw new Error("Failed to insert duplicated file into database");
 		}
-		await this.ctx.invalidateListingCaches();
 		return fileDbToObjectItem(newFile);
 	}
 
@@ -417,8 +410,6 @@ export class FileOperations {
 			level: "info",
 		});
 
-		await this.ctx.invalidateListingCaches();
-
 		return {
 			id: newFile.id,
 			finalName: filePath,
@@ -519,7 +510,6 @@ export class FileOperations {
 			level: "info",
 		});
 
-		await this.ctx.invalidateListingCaches();
 		return results;
 	}
 
@@ -631,7 +621,6 @@ export class FileOperations {
 
 			await this.ctx.driver.deleteObject(key);
 			await this.thumbnails.deleteThumbnails(key);
-			await this.ctx.invalidateListingCaches();
 		} catch (error) {
 			logger.error("Error deleting file:", error);
 			throw new Error(`Error deleting file with key: ${key}`);

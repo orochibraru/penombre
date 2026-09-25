@@ -1,0 +1,5 @@
+rules:
+  # Suggests `uses: $/...` for local reusable workflows; actionlint does not
+  # parse that syntax yet.
+  self-repository:
+    disable: true

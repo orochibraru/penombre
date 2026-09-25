@@ -5,10 +5,6 @@ import { join } from "node:path";
 import type { User } from "better-auth";
 import { Logger } from "#lib/logger.js";
 import {
-	type CacheBackend,
-	NullCacheBackend,
-} from "#lib/server/cache/index.js";
-import {
 	getStoragePath,
 	isSimpleMode,
 	type VolumeConfig,
@@ -38,7 +34,6 @@ import type {
 	UploadResult,
 } from "#lib/server/schema.js";
 import { ActivityService } from "#lib/server/services/activity.js";
-import { CacheKeys, CacheManager } from "./cache";
 import type { StorageContext, StorageScope } from "./context";
 import { availableDiskSpace } from "./disk-space";
 import {
@@ -84,8 +79,6 @@ const logger = new Logger("StorageService");
 // Module-level singletons
 // =========================================================================
 
-const cacheManager = new CacheManager();
-
 interface FileTypesMapping {
 	contentTypes: Record<string, FileContentType>;
 	categories: Record<string, FileCategory>;
@@ -107,9 +100,6 @@ export class StorageService {
 	private readonly volume: VolumeConfig | null;
 	private readonly user: User;
 	private readonly activityService: ActivityService = new ActivityService();
-	private readonly cache: CacheBackend;
-	/** The owner's listing cache, which a scoped service clears but never reads. */
-	private readonly listingCache: CacheBackend;
 	private readonly driver: StorageDriver;
 	private readonly db: ReturnType<typeof getDb>;
 	private readonly ctx: StorageContext;
@@ -149,13 +139,6 @@ export class StorageService {
 			this.userFolder,
 		);
 		this.user = user;
-		// Cached listings are keyed per user *and* per volume, or switching
-		// volumes would serve the previous one's directory listing.
-		this.listingCache = cacheManager.getUserCache(
-			volume ? `${user.id}:${volume.name}` : user.id,
-		);
-		// A scoped listing must never be served to the owner, nor theirs to it.
-		this.cache = options.scope ? new NullCacheBackend() : this.listingCache;
 		const encrypted = volume ? volume.encrypt === true : encryptionEnabled();
 		this.driver = volume
 			? createVolumeStorageDriver(volume.path, this.userFolder, encrypted)
@@ -173,10 +156,8 @@ export class StorageService {
 			encrypted,
 			storagePath: this.storagePath,
 			db: this.db,
-			cache: this.cache,
 			driver: this.driver,
 			activityService: this.activityService,
-			invalidateListingCaches: () => this.invalidateListingCaches(),
 		};
 		this.thumbnails = new ThumbnailService(this.ctx);
 		this.zip = new ZipService(this.ctx);
@@ -642,9 +623,6 @@ export class StorageService {
 						this.thumbnails,
 						result as DeleteResult,
 					);
-		if (removed > 0) {
-			await this.invalidateListingCaches();
-		}
 		return removed;
 	}
 
@@ -713,24 +691,6 @@ export class StorageService {
 		ifNoneMatch?: string,
 	): Promise<Response | null> {
 		return this.proxy.handleThumbnailRequest(itemName, size, ifNoneMatch);
-	}
-
-	// =========================================================================
-	// CACHE
-	// =========================================================================
-
-	private async invalidateListingCaches(): Promise<void> {
-		await Promise.all([
-			this.listingCache.deleteByPrefix("list:"),
-			this.listingCache.deleteByPrefix("folders:"),
-			this.listingCache.deleteByPrefix("folder-size:"),
-			this.listingCache.deleteByPrefix(CacheKeys.starred()),
-			this.listingCache.deleteByPrefix(CacheKeys.trashed()),
-			this.listingCache.delete(CacheKeys.recent()),
-			this.listingCache.deleteByPrefix(CacheKeys.counts()),
-			this.listingCache.deleteByPrefix("category:"),
-			this.listingCache.delete(CacheKeys.fileIdIndex()),
-		]);
 	}
 
 	// =========================================================================

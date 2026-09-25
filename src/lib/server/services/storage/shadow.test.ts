@@ -84,7 +84,6 @@ beforeEach(async () => {
 		storagePath: root,
 		db,
 		driver: new LocalStorageDriver(root),
-		invalidateListingCaches: () => Promise.resolve(),
 	} as unknown as StorageContext;
 	scanner = new ScanOperations(ctx, thumbnails, { listStorageRoot });
 });

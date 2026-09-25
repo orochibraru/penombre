@@ -30,7 +30,6 @@ function context(namedPaths: boolean) {
 		db,
 		driver: new LocalStorageDriver(root),
 		activityService: { register: () => Promise.resolve() },
-		invalidateListingCaches: () => Promise.resolve(),
 	} as unknown as StorageContext;
 }
 

@@ -15,9 +15,9 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   CI: true
 
+# Every called workflow reads the repo only; images go to Docker Hub.
 permissions:
   contents: read
-  packages: write
 
 # code quality → build (by digest) → e2e → tag `pr-<number>`.
 jobs:
@@ -29,6 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       # A release PR must bump nothing but the version: the images it ships are
@@ -58,7 +59,6 @@ jobs:
     needs: [changes]
     if: needs.changes.outputs.build == 'true'
     uses: ./.github/workflows/code_quality.yaml
-    secrets: inherit
 
   build-app:
     name: Docker Build (App)

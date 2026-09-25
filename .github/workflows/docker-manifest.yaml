@@ -76,11 +76,11 @@ jobs:
           # shellcheck disable=SC2046
           docker buildx imagetools create \
             $(jq -cr '.target."docker-metadata-action".tags | map("-t " + .) | join(" ")' "$RUNNER_TEMP/bake-meta.json") \
-            $(printf '${{ env.IMAGE }}@sha256:%s ' *)
+            $(printf "$IMAGE@sha256:%s " *)
 
       - name: Inspect image
         id: inspect
         run: |
-          tag=$(jq -r '.target."docker-metadata-action".args.DOCKER_META_VERSION' "${{ runner.temp }}/bake-meta.json")
+          tag=$(jq -r '.target."docker-metadata-action".args.DOCKER_META_VERSION' "$RUNNER_TEMP/bake-meta.json")
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          docker buildx imagetools inspect "${{ env.IMAGE }}:$tag"
+          docker buildx imagetools inspect "$IMAGE:$tag"

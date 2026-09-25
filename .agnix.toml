@@ -1,0 +1,27 @@
+# agnix: lints the AI agent configuration (CLAUDE.md, .claude/, skills).
+# Run with `bun run lint:ai`; prek runs it on those files at commit.
+
+tools = ["claude-code"]
+exclude = [
+    "node_modules/**",
+    ".git/**",
+    ".svelte-kit/**",
+    "build/**",
+    "src/lib/paraglide/**",
+]
+
+[rules]
+# CLAUDE.md here is a long log of gotchas, read whole, not a short prompt.
+# These four score it as a prompt: they want under 200 lines and 1,500
+# tokens, "must" near the top or bottom, and every "never" rephrased. Most of
+# its "never"s describe behaviour ("a handler never sees them"), and
+# splitting it into @imports would load the same tokens anyway.
+disabled_rules = [
+    "CC-MEM-006", # negative instruction without a positive alternative
+    "CC-MEM-008", # critical keyword in the middle of the document
+    "CC-MEM-009", # token limit
+    "CC-MEM-014", # line limit
+]
+
+[tool_versions]
+claude_code = "2.1.278"

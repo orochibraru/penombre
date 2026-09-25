@@ -110,14 +110,10 @@ UI, which can manage providers of its own.
 
 ## Redis (Optional)
 
-Penombre includes an in-memory cache for file listings and metadata. By default,
-each app instance maintains its own cache in-process. To share the cache across
-multiple instances or preserve it across restarts, you can connect an external
-Redis server.
-
-When `REDIS_URL` is set, all caching is offloaded to Redis. When it is not set,
-caching falls back to an in-process memory cache (production) or is disabled
-entirely (development).
+Penombre rate-limits sign-in lookups, share-link passwords and browser error
+reports. Each app instance keeps those counters in memory. When you run several
+instances behind one address, set `REDIS_URL` so they share one set of counters;
+a single instance needs nothing.
 
 | Variable    | Description             | Default |
 | ----------- | ----------------------- | ------- |

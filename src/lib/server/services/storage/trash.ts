@@ -165,7 +165,6 @@ export class TrashOperations {
 			message: `Emptied the trash: ${deleted} item${deleted === 1 ? "" : "s"}`,
 			level: "info",
 		});
-		await this.ctx.invalidateListingCaches();
 
 		return { deleted, freed, failed: survivingPaths.length };
 	}

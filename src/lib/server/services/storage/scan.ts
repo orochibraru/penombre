@@ -296,7 +296,6 @@ export class ScanOperations {
 			result.removedFiles;
 
 		if (changed > 0) {
-			await this.ctx.invalidateListingCaches();
 			logger.info(
 				`Scan: +${result.addedFolders} folder(s), +${result.addedFiles} file(s), ` +
 					`~${result.updatedFiles} file(s), ` +

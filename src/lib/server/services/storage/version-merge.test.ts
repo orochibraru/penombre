@@ -57,7 +57,6 @@ beforeEach(async () => {
 		storagePath: root,
 		db,
 		driver: new LocalStorageDriver(root),
-		invalidateListingCaches: () => Promise.resolve(),
 	} as unknown as StorageContext;
 	ops = new VersionOperations(ctx, {
 		adopt: () => Promise.resolve(),

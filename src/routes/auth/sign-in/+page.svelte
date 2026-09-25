@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { LoaderCircleIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { authClient } from "#lib/auth-client.js";
@@ -20,6 +21,8 @@
 	let password: string = $state("");
 	let error: boolean = $state(false);
 	let errorMessage: string = $state("");
+	/** Set while a sign-in is under way; replaces the methods with a loader. */
+	let progress: string | null = $state(null);
 
 	/** The last account signed in on this device, to skip the email step. */
 	const REMEMBERED = "penombre:sign-in-email";
@@ -82,9 +85,24 @@
 			return;
 		}
 
-		remember(signedIn?.user?.email ?? (email || undefined));
-		toast.success(m.signed_in_success());
-		goto(resolve("/(app)"), { replace: true, refreshAll: true });
+		await enterApp(signedIn?.user?.email ?? (email || undefined));
+	}
+
+	/** The app's first load takes a second or two; the loader covers it. */
+	async function enterApp(address: string | undefined) {
+		remember(address);
+		progress = m.signed_in_success();
+		try {
+			await goto(resolve("/(app)"), { replace: true, refreshAll: true });
+		} catch {
+			progress = null;
+			toast.error(defaultErrorMessage);
+		}
+	}
+
+	function failed(message: string) {
+		progress = null;
+		toast.error(message);
 	}
 
 	const defaultErrorMessage = m.sign_in_error();
@@ -117,44 +135,31 @@
 		}
 	}
 
-	function handleOauthSignin(provider: string) {
-		loading = true;
-		// The toast is this flow's only surface; the message is already
-		// translated at the throw site, in `oauthSignInPromise`.
-		return toast.promise(oauthSignInPromise(provider), {
-			loading: m.signing_in_with_provider({ provider }),
-			success: m.redirecting_to_provider({ provider }),
-			error: (e) => {
-				loading = false;
-				return e instanceof Error ? e.message : defaultErrorMessage;
-			},
-		});
-	}
-
-	function handleEmailSignin() {
-		loading = true;
-		// The toast is this flow's only surface; the message is already
-		// translated at the throw site, in `emailSignInPromise`.
-		return toast.promise(emailSignInPromise(), {
-			loading: m.signing_in(),
-			success: m.signed_in_success(),
-			error: (e) => {
-				loading = false;
-				return e instanceof Error ? e.message : defaultErrorMessage;
-			},
-		});
-	}
-
-	async function oauthSignInPromise(provider: string) {
-		const res = await authClient.signIn.social({
-			provider,
-		});
+	async function handleOauthSignin(provider: string) {
+		progress = m.signing_in_with_provider({ provider });
+		const res = await authClient.signIn.social({ provider });
 		if (res.error) {
-			throw new Error(mapAuthError(res.error.code));
+			failed(mapAuthError(res.error.code));
+			return;
 		}
 		if (res.data.url) {
+			progress = m.redirecting_to_provider({ provider });
 			window.location.href = res.data.url;
 		}
+	}
+
+	async function handleEmailSignin() {
+		if (!(email && password)) {
+			toast.error(m.email_password_required());
+			return;
+		}
+		progress = m.signing_in();
+		const res = await authClient.signIn.email({ email, password });
+		if (res.error) {
+			failed(mapAuthError(res.error.code));
+			return;
+		}
+		await enterApp(email);
 	}
 
 	/** True once the address has been resolved to an existing account. */
@@ -257,25 +262,14 @@
 		});
 	}
 
-	async function otpSignInPromise() {
+	async function handleOtpSignin() {
+		progress = m.signing_in();
 		const { error: err } = await authClient.signIn.emailOtp({ email, otp });
 		if (err) {
-			throw new Error(mapAuthError(err.code));
+			failed(mapAuthError(err.code));
+			return;
 		}
-		remember(email);
-		goto(resolve("/(app)"), { replace: true, refreshAll: true });
-	}
-
-	function handleOtpSignin() {
-		loading = true;
-		return toast.promise(otpSignInPromise(), {
-			loading: m.signing_in(),
-			success: m.signed_in_success(),
-			error: (e) => {
-				loading = false;
-				return e instanceof Error ? e.message : defaultErrorMessage;
-			},
-		});
+		await enterApp(email);
 	}
 
 	/**
@@ -339,19 +333,6 @@
 			loading = false;
 		}
 	}
-
-	async function emailSignInPromise() {
-		if (!(email && password)) {
-			throw new Error(m.email_password_required());
-		}
-		const res = await authClient.signIn.email({ email, password });
-		if (res.error) {
-			throw new Error(mapAuthError(res.error.code));
-		}
-
-		remember(email);
-		goto(resolve("/(app)"), { replace: true, refreshAll: true });
-	}
 </script>
 
 <form
@@ -359,9 +340,9 @@
     onsubmit={(e) => {
         e.preventDefault();
         if (otpSent) {
-            handleOtpSignin();
+            void handleOtpSignin();
         } else if (showPassword) {
-            handleEmailSignin();
+            void handleEmailSignin();
         } else {
             void lookupEmail();
         }
@@ -384,6 +365,16 @@
                     </p>
                 {/if}
             </div>
+            {#if progress}
+                <div
+                    class="text-muted-foreground flex flex-col items-center gap-3 py-8"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <LoaderCircleIcon class="text-primary size-8 animate-spin" />
+                    <p class="text-sm">{progress}</p>
+                </div>
+            {:else}
             {#if error}
                 <Alert.Root class="mb-2" variant="destructive">
                     <Alert.Title>{m.error_title()}</Alert.Title>
@@ -531,7 +522,7 @@
                             variant="outline"
                             class="w-full"
                             {loading}
-                            onclick={() => handleOauthSignin(provider.name)}
+                            onclick={() => void handleOauthSignin(provider.name)}
                         >
                             {#if !data.authConfig.enableEmailSignIn}
                                 {m.continue_with()}
@@ -559,6 +550,7 @@
                 >
                     {m.sign_in_more_ways()}
                 </button>
+            {/if}
             {/if}
         </Field.Group>
     </Field.FieldSet>

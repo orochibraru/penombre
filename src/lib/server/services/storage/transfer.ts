@@ -179,7 +179,6 @@ export class TransferOperations {
 		}
 
 		if (plans.length === 0) {
-			await this.ctx.invalidateListingCaches();
 			return { copied: 0, failed };
 		}
 
@@ -223,7 +222,6 @@ export class TransferOperations {
 			});
 		}
 
-		await this.ctx.invalidateListingCaches();
 		// Ownership lost mid-apply: the adopter may still be removing bytes
 		// our check just saw, so nothing counts as confirmed. The source
 		// survives; a re-run of the move loses nothing.

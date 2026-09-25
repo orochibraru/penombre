@@ -9,7 +9,6 @@ import { join } from "node:path";
 import { SQL } from "bun";
 import { drizzle } from "drizzle-orm/bun-sql";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
-import { NullCacheBackend } from "#lib/server/cache/index.js";
 import { files, folders, user } from "#lib/server/db/schema.js";
 
 const url = process.env.DATABASE_URL ?? "";
@@ -64,7 +63,6 @@ describe.skipIf(!onPostgres)("listTrashFiles on Postgres", () => {
 			db,
 			user: { id },
 			volumeId: null,
-			cache: new NullCacheBackend(),
 		} as never);
 		const page = await ops.listTrashFiles({
 			sortColumn: "name",

@@ -38,7 +38,6 @@ beforeEach(async () => {
 		namedPaths: true,
 		storagePath: root,
 		db,
-		invalidateListingCaches: () => Promise.resolve(),
 	} as unknown as StorageContext;
 });
 

@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -32,6 +34,10 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+
+      # Install scripts are off above; the agnix hook needs its binary.
+      - name: Fetch the agnix binary
+        run: bun node_modules/agnix/install.js
 
       - name: Sync SvelteKit
         run: bun run svelte-kit sync
@@ -69,6 +75,8 @@ jobs:
       REDIS_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0

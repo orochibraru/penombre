@@ -1,8 +1,6 @@
 /**
  * Listing and search: browsing a folder, the trash/recent/starred views,
  * category filters, and full-text search over names.
- *
- * Every result is cached per user and invalidated wholesale on any mutation.
  */
 
 import {
@@ -33,7 +31,6 @@ import type {
 	ObjectItem,
 	ObjectList,
 } from "#lib/server/schema.js";
-import { CacheKeys } from "./cache";
 import type { StorageContext } from "./context";
 import { getFolderIdByPath } from "./lookups";
 import {
@@ -236,15 +233,8 @@ export class ListingOperations {
 		offset?: number;
 	}): Promise<ObjectList> {
 		const prefix = options.parent ?? "";
-		const cacheKey = CacheKeys.listing(prefix, JSON.stringify(options));
-		const cached = await this.ctx.cache.get<ObjectList>(cacheKey);
-		if (cached) {
-			return cached;
-		}
-
 		if (options.recursive) {
 			const result = await this.listFilesRecursive(options);
-			await this.ctx.cache.set(cacheKey, result);
 			return result;
 		}
 
@@ -258,7 +248,6 @@ export class ListingOperations {
 		// Prefix given but folder not found → return empty
 		if (normalizedPrefix && folderId === null) {
 			const empty: ObjectList = { list: [], count: 0, total: 0 };
-			await this.ctx.cache.set(cacheKey, empty);
 			return empty;
 		}
 
@@ -274,7 +263,6 @@ export class ListingOperations {
 		items.sort((a, b) => a.key.localeCompare(b.key));
 
 		const result = paginateItems(items, options);
-		await this.ctx.cache.set(cacheKey, result);
 		return result;
 	}
 
@@ -331,7 +319,7 @@ export class ListingOperations {
 	 */
 	async listTrashFiles(options: ListingPageOptions = {}): Promise<TrashPage> {
 		const [page, totalSize] = await Promise.all([
-			this.mixedPage(CacheKeys.trashed(), this.trashWhere(), options, (f, x) =>
+			this.mixedPage(this.trashWhere(), options, (f, x) =>
 				this.trashItems(f, x),
 			),
 			this.trashSize(),
@@ -405,17 +393,11 @@ export class ListingOperations {
 
 	/** What emptying the trash frees: every trashed file, nested or not. */
 	private async trashSize(): Promise<number> {
-		const cacheKey = `${CacheKeys.trashed()}:size`;
-		const cached = await this.ctx.cache.get<number>(cacheKey);
-		if (cached !== undefined) {
-			return cached;
-		}
 		const [row] = await this.ctx.db
 			.select({ size: sql<number>`coalesce(sum(${files.size}), 0)` })
 			.from(files)
 			.where(and(ownedFiles(this.ctx), eq(files.isTrashed, true)));
 		const size = Number(row?.size ?? 0);
-		await this.ctx.cache.set(cacheKey, size);
 		return size;
 	}
 
@@ -430,7 +412,6 @@ export class ListingOperations {
 		options: ListingPageOptions = {},
 	): Promise<ListingPage> {
 		return this.mixedPage(
-			`category:${category}`,
 			{
 				folders: undefined,
 				files: and(
@@ -459,7 +440,6 @@ export class ListingOperations {
 			return { list: [], count: 0, total: 0, nextCursor: null };
 		}
 		return this.mixedPage(
-			CacheKeys.listing(path, "page"),
 			{
 				folders: and(
 					ownedFolders(this.ctx),
@@ -478,7 +458,6 @@ export class ListingOperations {
 
 	listStarredFiles(options: ListingPageOptions = {}): Promise<ListingPage> {
 		return this.mixedPage(
-			CacheKeys.starred(),
 			{
 				folders: and(
 					ownedFolders(this.ctx),
@@ -501,7 +480,6 @@ export class ListingOperations {
 	 * tell "more" from "done" without a second round trip.
 	 */
 	private async mixedPage(
-		cacheBase: string,
 		where: { folders: SQL | undefined; files: SQL | undefined },
 		options: ListingPageOptions,
 		toItems: (
@@ -512,12 +490,6 @@ export class ListingOperations {
 		const sortColumn = options.sortColumn ?? "updatedAt";
 		const sortDirection = options.sortDirection ?? "desc";
 		const limit = pageSize(options.limit);
-		const cacheKey = `${cacheBase}:${sortColumn}:${sortDirection}:${limit}:${options.cursor ?? "start"}`;
-		const cached = await this.ctx.cache.get<ListingPage>(cacheKey);
-		if (cached) {
-			return cached;
-		}
-
 		const cursor = options.cursor ? decodeCursor(options.cursor) : null;
 		const inFiles = cursor !== null && cursor.k !== "folder";
 		const folderKey = sortKey(folders, sortColumn, sortDirection);
@@ -585,22 +557,16 @@ export class ListingOperations {
 		const result: ListingPage = {
 			list,
 			count: list.length,
-			total: await this.countListing(cacheBase, where),
+			total: await this.countListing(where),
 			nextCursor,
 		};
-		await this.ctx.cache.set(cacheKey, result);
 		return result;
 	}
 
-	private async countListing(
-		cacheBase: string,
-		where: { folders: SQL | undefined; files: SQL | undefined },
-	): Promise<number> {
-		const cacheKey = `${cacheBase}:total`;
-		const cached = await this.ctx.cache.get<number>(cacheKey);
-		if (cached !== undefined) {
-			return cached;
-		}
+	private async countListing(where: {
+		folders: SQL | undefined;
+		files: SQL | undefined;
+	}): Promise<number> {
 		const count = sql<number>`COUNT(*)`;
 		const [[fileCount], [folderCount]] = await Promise.all([
 			this.ctx.db.select({ count }).from(files).where(where.files),
@@ -610,7 +576,6 @@ export class ListingOperations {
 		]);
 		const total =
 			Number(fileCount?.count ?? 0) + Number(folderCount?.count ?? 0);
-		await this.ctx.cache.set(cacheKey, total);
 		return total;
 	}
 
@@ -624,12 +589,6 @@ export class ListingOperations {
 	}
 
 	async listRecentFiles(): Promise<ObjectList> {
-		const cacheKey = CacheKeys.recent();
-		const cached = await this.ctx.cache.get<ObjectList>(cacheKey);
-		if (cached) {
-			return cached;
-		}
-
 		const recentFiles = await this.ctx.db
 			.select()
 			.from(files)
@@ -672,7 +631,6 @@ export class ListingOperations {
 		});
 
 		const result: ObjectList = { list, count: list.length, total: list.length };
-		await this.ctx.cache.set(cacheKey, result);
 		return result;
 	}
 
@@ -713,22 +671,15 @@ export class ListingOperations {
 
 	/** The trash listing's own total, so the badge cannot disagree with it. */
 	countTrashedItems(): Promise<number> {
-		return this.countListing(CacheKeys.trashed(), this.trashWhere());
+		return this.countListing(this.trashWhere());
 	}
 
 	async countStarredItems(): Promise<number> {
-		const cacheKey = `${CacheKeys.counts()}:starred`;
-		const cached = await this.ctx.cache.get<number>(cacheKey);
-		if (cached !== undefined) {
-			return cached;
-		}
-
 		const [result] = await this.ctx.db
 			.select({ count: sql<number>`COUNT(*)` })
 			.from(files)
 			.where(and(ownedFiles(this.ctx), eq(files.isStarred, true)));
 		const count = Number(result?.count ?? 0);
-		await this.ctx.cache.set(cacheKey, count);
 		return count;
 	}
 }

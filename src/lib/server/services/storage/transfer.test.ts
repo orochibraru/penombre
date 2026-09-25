@@ -70,7 +70,6 @@ function setup() {
 				},
 			}),
 		},
-		invalidateListingCaches: mock(async () => {}),
 	};
 	const fileOps = {
 		importFile: mock(async (_file: unknown, folder: string | undefined) =>

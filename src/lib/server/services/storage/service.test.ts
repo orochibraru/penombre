@@ -75,51 +75,6 @@ mock.module("#lib/server/services/activity.js", () => ({
 	},
 }));
 
-mock.module("./cache", () => {
-	function makeUserCache() {
-		return {
-			get: async () => undefined,
-			set: async () => {},
-			delete: async () => false as const,
-			deleteByPrefix: async () => 0 as const,
-			clear: async () => {},
-			getSize: async () => 0 as const,
-		};
-	}
-	return {
-		CacheKeys: {
-			starred: () => "starred",
-			trashed: () => "trashed",
-			recent: () => "recent",
-			counts: () => "counts",
-			fileIdIndex: () => "file-id-index",
-			listing: (p: string, o?: string) =>
-				`list:${p || "root"}${o ? `:${o}` : ""}`,
-			folders: (p: string, trashedOnly = false) =>
-				`folders:${p || "root"}:${trashedOnly ? "trashed" : "normal"}`,
-			fileMeta: (k: string) => `meta:${k}`,
-			folderMeta: (k: string) => `folder-meta:${k}`,
-			folderSize: (k: string) => `folder-size:${k}`,
-			category: (c: string) => `category:${c}`,
-		},
-		CacheManager: class {
-			_caches = new Map<string, ReturnType<typeof makeUserCache>>();
-			getUserCache(userId: string) {
-				if (!this._caches.has(userId)) {
-					this._caches.set(userId, makeUserCache());
-				}
-				return this._caches.get(userId);
-			}
-			async clearUserCache(userId: string): Promise<void> {
-				this._caches.delete(userId);
-			}
-			async clearAllCaches(): Promise<void> {
-				this._caches.clear();
-			}
-		},
-	};
-});
-
 // ---------------------------------------------------------------------------
 // Extend the shared mockDb with update + delete chains
 // ---------------------------------------------------------------------------

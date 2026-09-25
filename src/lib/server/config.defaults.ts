@@ -149,7 +149,7 @@ OAUTH_DEFAULT_SCOPES=openid,profile,email
 function envRuntimeSection(): string {
 	return `
 # ===========================================
-# Redis (Optional - for distributed caching)
+# Redis (Optional - shares rate limits across app instances)
 # ===========================================
 # REDIS_URL=redis://localhost:6379
 

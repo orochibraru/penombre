@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { NullCacheBackend } from "#lib/server/cache/index.js";
 import type { Database } from "#lib/server/db/index.js";
 import { files, folders, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
@@ -14,7 +13,6 @@ function ctx(ownerId = "u1", extra: Record<string, unknown> = {}) {
 		db: database,
 		user: { id: ownerId },
 		volumeId: null,
-		cache: new NullCacheBackend(),
 		...extra,
 	} as never;
 }

@@ -80,7 +80,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{
 				warm: async () => {},
@@ -114,7 +113,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
 			{
@@ -147,7 +145,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{
 				warm: async () => {},
@@ -170,7 +167,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
 			fakeDeps([{ key: "track.mp3", size: 80_000_000 }]),
@@ -189,7 +185,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
 			fakeDeps([{ key: "track.mp3", size: sealedSize(80_000_000) }]),
@@ -207,7 +202,6 @@ describe("refreshChangedFiles", () => {
 				encrypted: true,
 				driver: { getObjectSize: async () => 5 },
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
 			fakeDeps([{ key: "new.txt", size: sealedSize(5) }]),
@@ -227,7 +221,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{
 				warm: async () => {},
@@ -252,7 +245,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/library",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
 			fakeDeps([{ key: "track.mp3", size: 2 }]),
@@ -270,7 +262,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
 			fakeDeps([
@@ -298,7 +289,6 @@ describe("refreshChangedFiles", () => {
 				user: { id: "u1" },
 				storagePath: "/tmp/does-not-exist",
 				db,
-				invalidateListingCaches: async () => {},
 			} as never,
 			{ deleteThumbnails: async () => {}, warm: async () => {} } as never,
 			fakeDeps([
