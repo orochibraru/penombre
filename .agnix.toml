@@ -1,5 +1,5 @@
 # agnix: lints the AI agent configuration (CLAUDE.md, .claude/, skills).
-# Run with `bun run lint:ai`; prek runs it on those files at commit.
+# Run with `prek run agnix --all-files`; prek runs it on those files at commit.
 
 tools = ["claude-code"]
 exclude = [

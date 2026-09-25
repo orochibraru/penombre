@@ -27,13 +27,7 @@ bun run build            # svelte-kit sync && vite build
 bun run preview          # preview the production build
 bun run check            # check:app && check:scripts && check:go, sequentially
 
-bun run lint             # oxlint + biome + markdownlint + tailwint + i18n + agnix
-bun run lint:fix         # fix everything fixable
-bun run lint:md          # markdownlint-cli2 only
-bun run lint:ai          # agnix: CLAUDE.md, .claude/, skills (config in .agnix.toml)
-bun run lint:ts          # oxlint + biome only
-bun run lint:tailwind    # tailwint only
-bun run format           # biome format --write
+bun run lint             # every pre-commit hook over the whole repo, fixing what it can
 bun run circular         # madge circular-import check (src/, .ts only)
 
 bun test                                    # unit tests (fully mocked, no services needed)
@@ -88,8 +82,14 @@ the pre-commit stage with `--all-files`:
 prek run --all-files                        # every pre-commit hook, whole repo
 prek run --all-files --hook-stage pre-push  # type check + unit tests
 prek run oxlint                             # a single hook
+prek run markdownlint vale --all-files      # a few hooks, whole repo
 SKIP=test-unit git push ...                 # skip one hook
 ```
+
+A linter's command lives in `.pre-commit-config.yaml` and nowhere else: there
+are no per-linter scripts, and `bun run lint` is just `prek run --all-files`.
+Where a script already exists (`check`, `circular`, `test:go`), the hook calls
+it instead of repeating its command.
 
 ## Architecture
 
@@ -328,9 +328,10 @@ else to write them and nothing in this repo renders them.
   `https://orochibraru.com/docs-config.schema.json`).
 - Also regenerate `.example.env` (`bun run gen:env`) when you touch
   `config.defaults.ts`.
-- `bun run lint:md` must pass: 80-column prose, aligned table pipes. Relative
-  links between guides (`simple-mode.md#anchor`) are rewritten by the docs site
-  — use them instead of absolute URLs.
+- `markdownlint` and `vale` must pass
+  (`prek run markdownlint vale --all-files`): 80-column prose, aligned table
+  pipes. Relative links between guides (`simple-mode.md#anchor`) are rewritten
+  by the docs site — use them instead of absolute URLs.
 
 A feature that isn't in `docs/` isn't finished.
 
@@ -1080,9 +1081,9 @@ Every key must exist in **every** locale listed in
 ru, ja, ko, zh), so a new key ships with a real translation in each; the
 language picker lists whatever that file declares. Paraglide itself never
 complains: a key missing from a locale silently falls back to `en`, and
-`bun run check` passes. `bun run lint:i18n` (`scripts/check-i18n.ts`, part of
-`bun run lint` and a pre-commit hook on `messages/`) is what fails on a missing
-or extra key, or on a message whose placeholders differ from `en`'s.
+`bun run check` passes. The `i18n` prek hook (`scripts/check-i18n.ts`, on
+`messages/`) is what fails on a missing or extra key, or on a message whose
+placeholders differ from `en`'s.
 
 Counts use paraglide's real plural-variant messages (`@inlang/paraglide-js`
 ^2.25, plugin-message-format's JSON schema), not flat `_one`/`_other` keys.
@@ -1485,16 +1486,30 @@ reproposed. Lift it when svelte-check ships tsgo support, not before.
 `nodemailer` 10 cut `Transporter`'s second type argument (the options type); it
 takes only `SentMessageInfo` now.
 
+### Vale runs the built-in style only
+
+`docs/` and `README.md` go through Vale's own `Vale` style: spelling and
+repeated words. Google and write-good were tried and dropped: they flag the
+house style itself (em dashes, British spelling, no Oxford comma, passive) on
+nearly every line. No package means no `vale sync` and no network in the hook;
+prek builds Vale from its repo (`language: golang`), so nothing to install.
+
+A real word Vale does not know goes in
+`.vale/styles/config/vocabularies/Penombre/accept.txt`. Entries are
+case-sensitive regexes that also reject other casings (`Vale.Terms`), so write
+`[Nn]ginx` when both appear. The dictionary lacks possessives of words it
+otherwise knows (`admin's`), hence the `(?i)…'s` line. Keep regexes free of
+fragments `typos` reads as misspellings: spell alternatives out whole.
+
 ### agnix needs its binary fetched
 
-`agnix` (`bun run lint:ai`, a prek hook on Markdown and `.claude/`) is a wrapper
-that downloads a native binary in its postinstall. Bun skips install scripts for
-packages not in `trustedDependencies`, where it is now; CI installs with
-`--ignore-scripts`, so `code_quality.yaml` runs
-`bun node_modules/agnix/install.js` before prek. `.agnix.toml` disables four
-rules that score CLAUDE.md as a short prompt (length, keyword placement, every
-"never"); each is commented there. `bun pm trust` rewrote `package.json` with
-spaces: run Biome over it after.
+`agnix` (a prek hook on Markdown and `.claude/`) is a wrapper that downloads a
+native binary in its postinstall. Bun skips install scripts for packages not in
+`trustedDependencies`, where it is now; CI installs with `--ignore-scripts`, so
+`code_quality.yaml` runs `bun node_modules/agnix/install.js` before prek.
+`.agnix.toml` disables four rules that score CLAUDE.md as a short prompt
+(length, keyword placement, every "never"); each is commented there.
+`bun pm trust` rewrote `package.json` with spaces: run Biome over it after.
 
 ### Type checks run on push, not commit
 
