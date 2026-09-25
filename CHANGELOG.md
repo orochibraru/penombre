@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.8.54](https://github.com/orochibraru/penombre/compare/v1.8.53...v1.8.54) (2026-09-25)
+
+### Features
+
+* restore versions as zips ([e0d0478](https://github.com/orochibraru/penombre/commit/e0d0478aed8b4e74c8740dafe0b0813aba5fe00d))
+* synced files from disk get versioning too ([9189ed5](https://github.com/orochibraru/penombre/commit/9189ed53e43b3c25f1e5565b684ed82c8cb79f55))
+
+### Bug Fixes
+
+* rename on disk ([46a6ed4](https://github.com/orochibraru/penombre/commit/46a6ed4cac5335075150e3ce4390fd90bb3447a1))
+
 ## [1.8.53](https://github.com/orochibraru/penombre/compare/v1.8.52...v1.8.53) (2026-09-24)
 
 ### Features
