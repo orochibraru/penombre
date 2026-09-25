@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.8.55](https://github.com/orochibraru/penombre/compare/v1.8.54...v1.8.55) (2026-09-25)
+
 ## [1.8.54](https://github.com/orochibraru/penombre/compare/v1.8.53...v1.8.54) (2026-09-25)
 
 ### Features
