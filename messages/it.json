@@ -1037,7 +1037,10 @@
 	"versions_extract_error": "Impossibile estrarre le versioni",
 	"versions_extracted": "Versioni estratte come file: {count}",
 	"versions_reorder_error": "Impossibile riordinare le versioni",
-	"versions_drop_one": "Rilascia un solo file per farne una nuova versione",
+	"versions_drop_title": "Nuova versione o file separato?",
+	"versions_drop_hint": "Caricare {name} come nuova versione di {target} o come file separato in questa cartella?",
+	"versions_drop_as_version": "Nuova versione",
+	"versions_drop_as_file": "File separato",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
