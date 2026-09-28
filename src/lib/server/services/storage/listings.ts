@@ -64,6 +64,41 @@ export interface TrashPage extends ListingPage {
 	totalSize: number;
 }
 
+/** An item addressed by name, for clients that walk the tree (WebDAV). */
+export interface TreeEntry {
+	type: "file" | "folder";
+	id: string;
+	name: string;
+	path: string;
+	size: number;
+	updatedAt: Date;
+	contentType: string;
+}
+
+function fileEntry(file: DbFile): TreeEntry {
+	return {
+		type: "file",
+		id: file.id,
+		name: file.name,
+		path: file.path,
+		size: file.size,
+		updatedAt: file.updatedAt,
+		contentType: file.contentType,
+	};
+}
+
+function folderEntry(folder: DbFolder): TreeEntry {
+	return {
+		type: "folder",
+		id: folder.id,
+		name: folder.name,
+		path: folder.path,
+		size: 0,
+		updatedAt: folder.updatedAt,
+		contentType: "httpd/unix-directory",
+	};
+}
+
 function plainItems(pageFolders: DbFolder[], pageFiles: DbFile[]) {
 	return [
 		...pageFolders.map((f) => folderDbToObjectItem(f)),
@@ -222,6 +257,83 @@ export class ListingOperations {
 					),
 				),
 		]);
+	}
+
+	/** `""` is the root; undefined when the folder does not exist. */
+	private async parentId(
+		parentPath: string,
+	): Promise<string | null | undefined> {
+		if (!parentPath) {
+			return null;
+		}
+		return (await getFolderIdByPath(this.ctx, parentPath)) ?? undefined;
+	}
+
+	async treeEntries(parentPath: string): Promise<TreeEntry[] | null> {
+		const id = await this.parentId(parentPath);
+		if (id === undefined) {
+			return null;
+		}
+		const [fileRows, folderRows] = await this.fetchDirectChildren(id, {});
+		return [...folderRows.map(folderEntry), ...fileRows.map(fileEntry)];
+	}
+
+	/** Case-insensitive, as `getUniqueDisplayName` dedupes. */
+	async treeEntry(parentPath: string, name: string): Promise<TreeEntry | null> {
+		const id = await this.parentId(parentPath);
+		if (id === undefined) {
+			return null;
+		}
+		const [folder] = await this.ctx.db
+			.select()
+			.from(folders)
+			.where(
+				and(
+					ownedFolders(this.ctx),
+					id ? eq(folders.parentId, id) : isNull(folders.parentId),
+					eq(folders.isTrashed, false),
+					sql`lower(${folders.name}) = lower(${name})`,
+				),
+			)
+			// A Linux volume can hold `a` beside `A`: the exact one first.
+			.orderBy(sql`${folders.name} = ${name} desc`)
+			.limit(1);
+		if (folder) {
+			return folderEntry(folder);
+		}
+		const [file] = await this.ctx.db
+			.select()
+			.from(files)
+			.where(
+				and(
+					ownedFiles(this.ctx),
+					id ? eq(files.folderId, id) : isNull(files.folderId),
+					eq(files.isTrashed, false),
+					sql`lower(${files.name}) = lower(${name})`,
+				),
+			)
+			// A Linux volume can hold `a` beside `A`: the exact one first.
+			.orderBy(sql`${files.name} = ${name} desc`)
+			.limit(1);
+		return file ? fileEntry(file) : null;
+	}
+
+	async treeEntryById(
+		type: "file" | "folder",
+		id: string,
+	): Promise<TreeEntry | null> {
+		if (type === "folder") {
+			const [folder] = await this.ctx.db
+				.select()
+				.from(folders)
+				.where(and(ownedFolders(this.ctx), eq(folders.id, id)));
+			return folder ? folderEntry(folder) : null;
+		}
+		const [file] = await this.ctx.db
+			.select()
+			.from(files)
+			.where(and(ownedFiles(this.ctx), eq(files.id, id)));
+		return file ? fileEntry(file) : null;
 	}
 
 	async abstractListFiles(options: {

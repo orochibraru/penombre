@@ -4,8 +4,8 @@
  * `versions.ts`'s; this adds the file lookups and the renders.
  */
 
-import { rename, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, rename, stat } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { and, eq, inArray, max as maxOf } from "drizzle-orm";
 import { FileCategoryEnum } from "#lib/file-helpers.js";
 import {
@@ -21,6 +21,7 @@ import {
 } from "#lib/server/errors.js";
 import type { StorageContext } from "./context";
 import type { FileOperations } from "./files";
+import { purgeGrantsFor } from "./grants";
 import { diskName, getUniqueDisplayName } from "./lookups";
 import {
 	determineCategory,
@@ -33,6 +34,7 @@ import type { ThumbnailService } from "./thumbnails";
 import {
 	adminVersioning,
 	deleteVersion,
+	dropVersionBytes,
 	getVersion,
 	type ListedVersion,
 	listVersions,
@@ -149,6 +151,55 @@ export class VersionOperations {
 			});
 		}
 		return target.id;
+	}
+
+	/**
+	 * Save-by-rename: `source` was written beside `target` and moved over it.
+	 * The target keeps its id, notes, shares and history; its old bytes become
+	 * a version where its folder versions. False when either is not a live
+	 * file here.
+	 */
+	async replace(targetId: string, sourceId: string): Promise<boolean> {
+		const [target, source] = await Promise.all([
+			this.findOwnFile(targetId),
+			this.findOwnFile(sourceId),
+		]);
+		if (
+			!(target && source) ||
+			target.id === source.id ||
+			target.isTrashed ||
+			source.isTrashed
+		) {
+			return false;
+		}
+		await this.carry(target.id, {
+			file: source,
+			at: source.updatedAt,
+			history: (await listVersions(this.ctx, source.id))
+				.toReversed()
+				.map((v) => v.id),
+		});
+		await this.ctx.db
+			.update(fileNotes)
+			.set({ fileId: target.id })
+			.where(eq(fileNotes.fileId, source.id));
+		// A hard link: the rename below replaces the name, not these bytes.
+		await this.keepVersion(target);
+		await rename(
+			join(this.ctx.storagePath, source.path),
+			join(this.ctx.storagePath, target.path),
+		);
+		await this.thumbnails.deleteThumbnails(source.path);
+		await this.ctx.db
+			.delete(files)
+			.where(and(eq(files.id, source.id), ownedFiles(this.ctx)));
+		await purgeGrantsFor(this.ctx.db, "file", [source.id]);
+		await dropVersionBytes(this.ctx, [source.id]);
+		await afterWrite(this.ctx, this.thumbnails, target, {
+			size: source.size,
+			updatedAt: source.updatedAt,
+		});
+		return true;
 	}
 
 	/** Whether a file's folder versions, and how many it keeps. */
@@ -283,6 +334,8 @@ export class VersionOperations {
 		for (const versionId of source.history) {
 			const from = versionKey(source.file.id, versionId);
 			const to = versionKey(targetId, versionId);
+			// A target with no history has no directory yet.
+			await mkdir(dirname(join(this.ctx.storagePath, to)), { recursive: true });
 			await rename(
 				join(this.ctx.storagePath, from),
 				join(this.ctx.storagePath, to),

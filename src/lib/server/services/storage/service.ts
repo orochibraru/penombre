@@ -44,7 +44,12 @@ import {
 import fileTypesData from "./file-types.json" with { type: "json" };
 import { FileOperations } from "./files";
 import { FolderOperations } from "./folders";
-import type { ListingPage, ListingPageOptions, TrashPage } from "./listings";
+import type {
+	ListingPage,
+	ListingPageOptions,
+	TrashPage,
+	TreeEntry,
+} from "./listings";
 import { ListingOperations } from "./listings";
 import { probeMissingDurations } from "./media";
 import { type FileProxyRequest, ProxyService } from "./proxy";
@@ -386,6 +391,12 @@ export class StorageService {
 		return this.versionOperations.merge(ids, name);
 	}
 
+	/** Save-by-rename; see `VersionOperations.replace`. */
+	replaceFile(targetId: string, sourceId: string): Promise<boolean> {
+		this.assertWritable();
+		return this.versionOperations.replace(targetId, sourceId);
+	}
+
 	extractVersions(id: string, versionIds?: string[]) {
 		this.assertWritable();
 		return this.versionOperations.extract(id, versionIds);
@@ -577,6 +588,21 @@ export class StorageService {
 		options?: ListingPageOptions,
 	): Promise<ListingPage> {
 		return this.listingOperations.listFolderPage(prefix, options);
+	}
+
+	treeEntries(parentPath: string): Promise<TreeEntry[] | null> {
+		return this.listingOperations.treeEntries(parentPath);
+	}
+
+	treeEntry(parentPath: string, name: string): Promise<TreeEntry | null> {
+		return this.listingOperations.treeEntry(parentPath, name);
+	}
+
+	treeEntryById(
+		type: "file" | "folder",
+		id: string,
+	): Promise<TreeEntry | null> {
+		return this.listingOperations.treeEntryById(type, id);
 	}
 
 	listFiles(
