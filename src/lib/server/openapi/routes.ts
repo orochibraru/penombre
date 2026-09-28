@@ -20,6 +20,7 @@ import "#lib/server/openapi/v1/notifications.js";
 import "#lib/server/openapi/v1/preferences.js";
 import "#lib/server/openapi/v1/shares.js";
 import "#lib/server/openapi/v1/sharings.js";
+import "#lib/server/openapi/v1/shortcuts.js";
 import "#lib/server/openapi/v1/storage.js";
 import "#lib/server/openapi/v1/version.js";
 import "#lib/server/openapi/v1/versions.js";

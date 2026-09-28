@@ -3,6 +3,7 @@
 A self-hosted drive. All the convenience of cloud storage, on hardware you own,
 with a bill of exactly zero.
 
+[![Penombre | AlternativeTo](https://alternativeto.net/static/badges/badge-compact-color.svg)](https://alternativeto.net/software/penombre/about/?utm_source=badge&utm_medium=referral)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Latest Release](https://img.shields.io/github/v/release/orochibraru/penombre)
 ![Docker Pulls](https://img.shields.io/docker/pulls/orochibraru/penombre)

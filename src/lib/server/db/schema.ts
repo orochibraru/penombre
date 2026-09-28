@@ -89,6 +89,9 @@ export const workers = (
 export const appInstances = (
 	sqliteActive ? sqlite.appInstances : pg.appInstances
 ) as typeof pg.appInstances;
+export const sidebarShortcuts = (
+	sqliteActive ? sqlite.sidebarShortcuts : pg.sidebarShortcuts
+) as typeof pg.sidebarShortcuts;
 
 export type {
 	AppSettingsData,

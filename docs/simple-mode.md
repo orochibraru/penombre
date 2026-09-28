@@ -106,6 +106,9 @@ storage directory.
 - **Trimmed navigation.** Recent, Starred, Shared, and Categories are hidden —
   just Browse, Trash, and Settings. Trash stays, so an accidental delete is
   still recoverable. The hidden pages return 404 if you type their URL directly.
+- **Shared shortcuts.** Folders pinned to the sidebar belong to the shared
+  drive, so every account sees the same shortcuts in the same order. See
+  [Getting around](getting-started.md#5-getting-around).
 
 ## What doesn't change
 

@@ -83,6 +83,7 @@ mock.module("#lib/server/config.js", () => ({
 	})),
 	isSimpleMode: mock(() => false),
 	isAuthBypassed: mock(() => false),
+	getVolume: mock(() => undefined),
 }));
 
 mock.module("#lib/logger.js", () => ({

@@ -1,28 +1,25 @@
 /**
- * Folders and files Penombre created before it named them after themselves
- * sit on disk as `<uuid>` / `<uuid>.<ext>`: unreadable on a Syncthing peer.
- * Each scan pass of a named tree renames them to their display names. It runs
- * inside the pass, so the scan never sees a renamed path without its row
- * (which it would import twice, and drop the old row with its stars and notes).
+ * Rows whose disk name is not their display name: `<uuid>` / `<uuid>.<ext>`
+ * from before Penombre named things after themselves (unreadable on a
+ * Syncthing peer), and renames made before a rename moved the bytes too (a
+ * merge named `Song.wav` kept `Song-take3.wav` on disk, so the next export of
+ * `Song.wav` became a second file). Each scan pass of a named tree renames
+ * them on disk. It runs inside the pass, so the scan never sees a renamed path
+ * without its row (which it would import twice, and drop the old row with its
+ * stars and notes).
  */
 
-import { rename, rm, rmdir } from "node:fs/promises";
+import { lstat, rename, rm, rmdir } from "node:fs/promises";
 import { join } from "node:path";
-import { and, eq, like, or, sql } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import type { StorageContext } from "./context";
-import { diskName } from "./lookups";
+import { diskName, safeSegment } from "./lookups";
 import { ownedFiles, ownedFolders } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
 const logger = new Logger("UuidNames");
-
-const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-const FOLDER_SEGMENT = new RegExp(`^${UUID}$`);
-const FILE_SEGMENT = new RegExp(`^${UUID}(\\.[^/]*)?$`);
-/** Narrows the SQL before the regex; `_` is any one character. */
-const UUID_LIKE = "%________-____-____-____-____________%";
 
 interface Row {
 	id: string;
@@ -57,25 +54,19 @@ async function repath(ctx: StorageContext, from: string, to: string) {
 	}
 }
 
-async function uuidRows(ctx: StorageContext, kind: "folder" | "file") {
+async function misnamedRows(ctx: StorageContext, kind: "folder" | "file") {
 	const table = kind === "folder" ? folders : files;
-	const pattern = kind === "folder" ? FOLDER_SEGMENT : FILE_SEGMENT;
 	const rows: Row[] = await ctx.db
 		.select({ id: table.id, name: table.name, path: table.path })
 		.from(table)
-		.where(
-			and(
-				kind === "folder" ? ownedFolders(ctx) : ownedFiles(ctx),
-				like(table.path, UUID_LIKE),
-			),
-		);
+		.where(kind === "folder" ? ownedFolders(ctx) : ownedFiles(ctx));
 	return rows
-		.filter((row) => pattern.test(split(row.path)[1]))
+		.filter((row) => split(row.path)[1] !== safeSegment(row.name))
 		.toSorted((a, b) => a.path.split("/").length - b.path.split("/").length);
 }
 
 /** Returns how many were renamed. Never throws: the scan must go on. */
-export async function nameUuidPaths(
+export async function matchDiskNames(
 	ctx: StorageContext,
 	thumbnails: ThumbnailService,
 ): Promise<number> {
@@ -84,7 +75,7 @@ export async function nameUuidPaths(
 	for (const kind of ["folder", "file"] as const) {
 		// Re-read after each one: renaming a folder moves the paths under it.
 		for (;;) {
-			const rows = await uuidRows(ctx, kind).catch(() => [] as Row[]);
+			const rows = await misnamedRows(ctx, kind).catch(() => [] as Row[]);
 			const row = rows.find((candidate) => !skipped.has(candidate.id));
 			if (!row) {
 				break;
@@ -106,6 +97,19 @@ async function renameOne(
 	kind: "folder" | "file",
 ): Promise<boolean> {
 	try {
+		// Taken: `Song-take3.wav` says more than the `Song (1).wav` it would get.
+		const [parent, segment] = split(row.path);
+		const wanted = safeSegment(row.name);
+		const to = parent ? `${parent}/${wanted}` : wanted;
+		if (
+			wanted.toLowerCase() !== segment.toLowerCase() &&
+			(await lstat(join(ctx.storagePath, to)).then(
+				() => true,
+				() => false,
+			))
+		) {
+			return false;
+		}
 		return (await renameOnDisk(ctx, thumbnails, { ...row, kind })) !== row.path;
 	} catch (error) {
 		logger.error(`Could not rename ${row.path}`, error);

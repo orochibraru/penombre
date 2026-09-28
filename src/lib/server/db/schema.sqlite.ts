@@ -730,3 +730,30 @@ export const appInstances = sqliteTable("app_instances", {
 	id: text("id").primaryKey(),
 	seenAt: integer("seen_at", { mode: "number" }).notNull(),
 });
+
+/**
+ * Folders pinned to the sidebar, by the storage owner: the shared owner in
+ * simple mode, so everyone sees the same ones.
+ */
+export const sidebarShortcuts = sqliteTable(
+	"sidebar_shortcuts",
+	{
+		id: text("id").primaryKey(),
+		ownerId: text("owner_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		folderId: text("folder_id")
+			.notNull()
+			.references(() => folders.id, { onDelete: "cascade" }),
+		position: integer("position").notNull(),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		uniqueIndex("sidebar_shortcuts_owner_folder_idx").on(
+			table.ownerId,
+			table.folderId,
+		),
+	],
+);

@@ -1056,5 +1056,11 @@
 	"versions_title": "Cronologia versioni",
 	"versions_latest": "Attuale",
 	"versions_empty": "Ancora nessuna versione precedente.",
-	"versions_switch": "Versione"
+	"versions_switch": "Versione",
+	"nav_shortcuts": "Scorciatoie",
+	"shortcuts_drop_hint": "Trascina qui una cartella",
+	"shortcut_remove": "Rimuovi {name} dalla barra laterale",
+	"toast_shortcut_added": "\"{name}\" aggiunto alla barra laterale",
+	"toast_shortcut_removed": "\"{name}\" rimosso dalla barra laterale",
+	"toast_shortcut_error": "Impossibile aggiornare le scorciatoie"
 }

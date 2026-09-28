@@ -1091,5 +1091,11 @@
 	"versions_title": "Versionsverlauf",
 	"versions_latest": "Aktuell",
 	"versions_empty": "Noch keine früheren Versionen.",
-	"versions_switch": "Version"
+	"versions_switch": "Version",
+	"nav_shortcuts": "Verknüpfungen",
+	"shortcuts_drop_hint": "Ordner hier ablegen",
+	"shortcut_remove": "{name} aus der Seitenleiste entfernen",
+	"toast_shortcut_added": "\"{name}\" zur Seitenleiste hinzugefügt",
+	"toast_shortcut_removed": "\"{name}\" aus der Seitenleiste entfernt",
+	"toast_shortcut_error": "Verknüpfungen konnten nicht aktualisiert werden"
 }

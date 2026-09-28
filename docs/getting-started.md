@@ -56,6 +56,13 @@ On a desktop the left sidebar holds everything: your drive, categories, any
 mounted volumes, settings, the API reference and — if you are an administrator —
 the admin panel.
 
+Folders you open often can be pinned to it as **Shortcuts**: drag a folder from
+a listing onto the sidebar, or pick **Add to sidebar** from its menu. Drag a
+shortcut to reorder it; the cross beside it unpins it. A shortcut to something
+you can no longer open disappears from your sidebar, and one to a deleted folder
+goes with it. In [simple mode](simple-mode.md) the shortcuts are shared:
+everyone sees, reorders and unpins the same list.
+
 On a phone that sidebar is replaced by the button in the middle of the bottom
 bar. It opens a drawer with the same navigation plus the create and upload
 actions, so nothing is desktop-only. The admin panel is in there too; it used to

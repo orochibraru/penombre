@@ -28,7 +28,7 @@ import { followRenames } from "./renames";
 import { ownedFiles, ownedFolders } from "./scope";
 import { promoteShadow, relinkShadow } from "./shadow";
 import type { ThumbnailService } from "./thumbnails";
-import { nameUuidPaths } from "./uuid-names";
+import { matchDiskNames } from "./uuid-names";
 import {
 	type AdminVersioning,
 	adminVersioning,
@@ -200,7 +200,7 @@ export class ScanOperations {
 		report({ phase: "listing", done: 0, total: 0 });
 		const writable = this.ctx.namedPaths && !this.ctx.readOnly;
 		if (writable) {
-			await nameUuidPaths(this.ctx, this.thumbnails);
+			await matchDiskNames(this.ctx, this.thumbnails);
 		}
 		const admin = writable ? await adminVersioning() : undefined;
 		const entries = (

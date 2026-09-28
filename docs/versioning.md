@@ -50,7 +50,8 @@ Select two or more files and choose **Merge as versions** in the selection bar:
   links are removed with them.
 - A merge that would make more versions than the folder keeps is refused rather
   than deleting the oldest takes: raise the folder's limit or pick fewer files.
-  A file that already has versions of its own can only be the one that stays.
+- A merged file that has versions of its own brings them along: they land just
+  before it, oldest first, and count towards the folder's limit.
 
 Folders cannot be merged, and the option is hidden while versioning is off.
 

@@ -974,5 +974,11 @@
 	"versions_title": "Versionshistorik",
 	"versions_latest": "Senaste",
 	"versions_empty": "Inga tidigare versioner än.",
-	"versions_switch": "Version"
+	"versions_switch": "Version",
+	"nav_shortcuts": "Genvägar",
+	"shortcuts_drop_hint": "Släpp en mapp här",
+	"shortcut_remove": "Ta bort {name} från sidofältet",
+	"toast_shortcut_added": "\"{name}\" har lagts till i sidofältet",
+	"toast_shortcut_removed": "\"{name}\" har tagits bort från sidofältet",
+	"toast_shortcut_error": "Det gick inte att uppdatera genvägarna"
 }

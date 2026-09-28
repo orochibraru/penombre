@@ -1136,5 +1136,11 @@
 	"versions_title": "Versiegeschiedenis",
 	"versions_latest": "Huidig",
 	"versions_empty": "Nog geen eerdere versies.",
-	"versions_switch": "Versie"
+	"versions_switch": "Versie",
+	"nav_shortcuts": "Snelkoppelingen",
+	"shortcuts_drop_hint": "Sleep hier een map naartoe",
+	"shortcut_remove": "{name} uit de zijbalk verwijderen",
+	"toast_shortcut_added": "\"{name}\" aan de zijbalk toegevoegd",
+	"toast_shortcut_removed": "\"{name}\" uit de zijbalk verwijderd",
+	"toast_shortcut_error": "Snelkoppelingen konden niet worden bijgewerkt"
 }

@@ -1136,5 +1136,11 @@
 	"versions_title": "Historial de versiones",
 	"versions_latest": "Actual",
 	"versions_empty": "Aún no hay versiones anteriores.",
-	"versions_switch": "Versión"
+	"versions_switch": "Versión",
+	"nav_shortcuts": "Accesos directos",
+	"shortcuts_drop_hint": "Suelta una carpeta aquí",
+	"shortcut_remove": "Quitar {name} de la barra lateral",
+	"toast_shortcut_added": "\"{name}\" añadido a la barra lateral",
+	"toast_shortcut_removed": "\"{name}\" quitado de la barra lateral",
+	"toast_shortcut_error": "No se pudieron actualizar los accesos directos"
 }

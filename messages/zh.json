@@ -831,5 +831,11 @@
 	"versions_title": "版本历史",
 	"versions_latest": "最新",
 	"versions_empty": "暂无旧版本。",
-	"versions_switch": "版本"
+	"versions_switch": "版本",
+	"nav_shortcuts": "快捷方式",
+	"shortcuts_drop_hint": "将文件夹拖放到此处",
+	"shortcut_remove": "从侧边栏移除 {name}",
+	"toast_shortcut_added": "已将“{name}”添加到侧边栏",
+	"toast_shortcut_removed": "已将“{name}”从侧边栏移除",
+	"toast_shortcut_error": "无法更新快捷方式"
 }

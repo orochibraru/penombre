@@ -38,6 +38,7 @@ mock.module("#lib/server/config.js", () => ({
 	}),
 	isSimpleMode: () => false,
 	isAuthBypassed: () => false,
+	getVolume: () => undefined,
 }));
 
 // ---------------------------------------------------------------------------

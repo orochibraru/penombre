@@ -1073,5 +1073,11 @@
 	"versions_title": "Versiohistoria",
 	"versions_latest": "Uusin",
 	"versions_empty": "Ei vielä aiempia versioita.",
-	"versions_switch": "Versio"
+	"versions_switch": "Versio",
+	"nav_shortcuts": "Pikakuvakkeet",
+	"shortcuts_drop_hint": "Pudota kansio tähän",
+	"shortcut_remove": "Poista {name} sivupalkista",
+	"toast_shortcut_added": "\"{name}\" lisätty sivupalkkiin",
+	"toast_shortcut_removed": "\"{name}\" poistettu sivupalkista",
+	"toast_shortcut_error": "Pikakuvakkeita ei voitu päivittää"
 }

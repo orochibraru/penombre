@@ -831,5 +831,11 @@
 	"versions_title": "バージョン履歴",
 	"versions_latest": "最新",
 	"versions_empty": "以前のバージョンはまだありません。",
-	"versions_switch": "バージョン"
+	"versions_switch": "バージョン",
+	"nav_shortcuts": "ショートカット",
+	"shortcuts_drop_hint": "ここにフォルダーをドロップ",
+	"shortcut_remove": "{name} をサイドバーから削除",
+	"toast_shortcut_added": "「{name}」をサイドバーに追加しました",
+	"toast_shortcut_removed": "「{name}」をサイドバーから削除しました",
+	"toast_shortcut_error": "ショートカットを更新できませんでした"
 }

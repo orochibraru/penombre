@@ -1211,11 +1211,15 @@ row (`bytesGone`) and before following a rename: a listing minutes old on a big
 mount would otherwise drop a freshly renamed file with its versions.
 
 Rows made before this keep UUID names on disk until the scan renames them
-(`nameUuidPaths`, at the start of every pass of a named tree): inside the pass,
+(`matchDiskNames`, at the start of every pass of a named tree): inside the pass,
 so the scan never sees a renamed path with no row, which it would import twice
-while dropping the old row and its notes. A rename is a filesystem `rename`,
-never copy+delete, and a failure puts the bytes back or removes the claim.
-Shared drives are not scanned, so theirs stay UUIDs.
+while dropping the old row and its notes. It renames **any** row whose segment
+is not `safeSegment(name)`, not just UUIDs: a merge before 1.8.54 renamed the
+kept row to `Song.wav` but left `Song-take3.wav` on disk, so the next export of
+`Song.wav` from a synced peer was a new path and became a second file. A name
+already on disk is skipped rather than suffixed. A rename is a filesystem
+`rename`, never copy+delete, and a failure puts the bytes back or removes the
+claim. Shared drives are not scanned, so theirs stay UUIDs.
 
 ### Documents are ordinary files
 
@@ -1968,7 +1972,10 @@ inode. Never add a writer that opens the key itself.
   first; `planMerge` keeps the last and never re-sorts, so the preview is the
   result. Each take is linked in and only then deleted, one at a time; notes
   move to the kept file (`file_notes` cascades). Over the folder's limit is
-  refused, not pruned.
+  refused, not pruned. A merged-away file's own versions are carried first
+  (`carry`: bytes renamed into the target's `.versions/`, then the row
+  re-parented), or deleting it would take them; the preview does not list them,
+  they land as a block just before their file.
 - **A file row's `updatedAt` is its file's mtime.** The scan used to stamp every
   imported row with the scan's time, so a whole library read as modified the
   minute it was found and a merge by date meant nothing. `scan-list` reports
@@ -2032,6 +2039,21 @@ inode. Never add a writer that opens the key itself.
 and **everything after it**. Dropping only the one entry applied newer
 migrations first, and drizzle's migrator, which compares timestamps, then
 skipped the older one entirely.
+
+### Sidebar shortcuts belong to the storage owner
+
+`sidebar_shortcuts` rows are keyed on `locals.storageOwner`, not the session
+user, which is the whole of "shared in simple mode, per user in full mode" with
+one code path. Each is resolved per viewer by `folderHref()`
+(`services/shortcuts.ts`), the same function behind `/go/folder/<id>`: a
+shortcut the viewer can no longer reach is dropped from their list rather than
+leaking the folder's name. The folder FK cascades, so a deleted folder takes its
+shortcut; a scan that drops and re-creates a folder row loses it too.
+
+A listing drag reaches the sidebar through the `draggedFolder` store
+(`offerFolderDrag` in `wrapper-shortcut.ts`), cleared by a window `dragend` in
+`shortcuts-nav.svelte`: the group only renders while there are shortcuts or a
+folder is in flight, so it can be dropped on from empty.
 
 ### Sidebar groups truncate at five
 

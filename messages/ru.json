@@ -1114,5 +1114,11 @@
 	"versions_title": "История версий",
 	"versions_latest": "Текущая",
 	"versions_empty": "Предыдущих версий пока нет.",
-	"versions_switch": "Версия"
+	"versions_switch": "Версия",
+	"nav_shortcuts": "Ярлыки",
+	"shortcuts_drop_hint": "Перетащите сюда папку",
+	"shortcut_remove": "Убрать {name} с боковой панели",
+	"toast_shortcut_added": "«{name}» добавлена на боковую панель",
+	"toast_shortcut_removed": "«{name}» убрана с боковой панели",
+	"toast_shortcut_error": "Не удалось обновить ярлыки"
 }

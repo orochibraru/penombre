@@ -7,6 +7,7 @@ import {
 } from "#lib/server/services/app-settings.js";
 import { drivesService } from "#lib/server/services/drives.js";
 import { SharingService } from "#lib/server/services/sharings.js";
+import { listShortcuts } from "#lib/server/services/shortcuts.js";
 import { resolve } from "$app/paths";
 
 const sharings = new SharingService();
@@ -21,6 +22,7 @@ export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:drives");
 	// And the items shared with the caller.
 	depends("app:shares");
+	depends("app:shortcuts");
 
 	if (!(locals.user && locals.session)) {
 		return redirect(302, resolve("auth/sign-in"));
@@ -82,6 +84,10 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		isAdmin,
 		drives,
 		sharedWithMe,
+		shortcuts: await listShortcuts(
+			locals.storageOwner?.id ?? locals.user.id,
+			locals.user.id,
+		),
 		// Mounted volumes appear in the sidebar as extra drives. Simple mode
 		// shares each one whole; full mode gives every user a subdirectory.
 		volumes: getVolumes().map((volume) => ({

@@ -83,6 +83,7 @@
 	import { duplicateItem, isDuplicateShortcut } from "./wrapper-duplicate";
 	import { mergeHandler } from "./wrapper-merge";
 	import { isSearchShortcut, searchFiles } from "./wrapper-search";
+	import { offerFolderDrag } from "./wrapper-shortcut";
 
 	interface UserPreferences {
 		layout?: "grid" | "list";
@@ -750,7 +751,7 @@
 	// Drag and Drop Operations
 	// ================================
 	function handleDragStart(item: ObjectItem) {
-		draggedItem = item;
+		draggedItem = offerFolderDrag(item);
 	}
 
 	function handleDragEnd() {
@@ -759,11 +760,10 @@
 	}
 
 	function handleDropOnFolder(targetFolder: string) {
-		if (!draggedItem) {
-			return;
+		if (draggedItem) {
+			handleDragAndDropMove(draggedItem, targetFolder);
+			handleDragEnd();
 		}
-		handleDragAndDropMove(draggedItem, targetFolder);
-		handleDragEnd();
 	}
 
 	function handleDragAndDropMove(item: ObjectItem, destinationFolder: string) {

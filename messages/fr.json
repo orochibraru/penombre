@@ -1145,5 +1145,11 @@
 	"versions_title": "Historique des versions",
 	"versions_latest": "Actuelle",
 	"versions_empty": "Aucune version précédente pour l'instant.",
-	"versions_switch": "Version"
+	"versions_switch": "Version",
+	"nav_shortcuts": "Raccourcis",
+	"shortcuts_drop_hint": "Déposez un dossier ici",
+	"shortcut_remove": "Retirer {name} de la barre latérale",
+	"toast_shortcut_added": "\"{name}\" ajouté à la barre latérale",
+	"toast_shortcut_removed": "\"{name}\" retiré de la barre latérale",
+	"toast_shortcut_error": "Impossible de mettre à jour les raccourcis"
 }

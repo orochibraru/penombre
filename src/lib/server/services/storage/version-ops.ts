@@ -6,7 +6,7 @@
 
 import { rename, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, max as maxOf } from "drizzle-orm";
 import { FileCategoryEnum } from "#lib/file-helpers.js";
 import {
 	type File as DbFile,
@@ -35,7 +35,6 @@ import {
 	deleteVersion,
 	getVersion,
 	type ListedVersion,
-	latestSeqs,
 	listVersions,
 	reorderVersions,
 	snapshot,
@@ -93,6 +92,8 @@ export async function afterWrite(
 interface DatedFile {
 	file: DbFile;
 	at: Date;
+	/** Its own versions, oldest first: they move over just before it. */
+	history: string[];
 }
 
 export interface MergePlan {
@@ -132,11 +133,12 @@ export class VersionOperations {
 		// One at a time, each deleted only once its version exists: a
 		// failure part way leaves every take either a file or a version.
 		for (const source of sources) {
+			await this.carry(target.id, source);
 			const version = await this.absorb(target, source, max);
 			made.set(source.file.id, version.id);
 			await this.fileOperations.deleteFile(source.file.path);
 		}
-		await this.place(target.id, order, made);
+		await this.place(target.id, order, made, sources);
 		const wanted = name?.trim();
 		if (wanted && wanted.toLowerCase() !== target.name.toLowerCase()) {
 			const folder = target.path.includes("/")
@@ -226,7 +228,7 @@ export class VersionOperations {
 		}
 
 		const byId = new Map(rows.map((row) => [row.id, row] as const));
-		const dated = await Promise.all(
+		const dated: DatedFile[] = await Promise.all(
 			unique.map(async (id) => {
 				const file = byId.get(id) as DbFile;
 				return {
@@ -235,22 +237,20 @@ export class VersionOperations {
 						(s) => s.mtime,
 						() => file.updatedAt,
 					),
+					history: (await listVersions(this.ctx, id))
+						.toReversed()
+						.map((v) => v.id),
 				};
 			}),
 		);
 		const target = dated.at(-1) as DatedFile;
 		const sources = dated.slice(0, -1);
 
-		const seqs = await latestSeqs(this.ctx, unique);
-		const withHistory = sources.find(({ file }) => seqs.has(file.id));
-		if (withHistory) {
-			throw new VersionMergeError(
-				`"${withHistory.file.name}" already has versions of its own`,
-			);
-		}
 		const { max } = await versioningForFile(this.ctx, target.file, admin);
-		const existing = await listVersions(this.ctx, target.file.id);
-		const total = existing.length + sources.length;
+		const existing = target.history;
+		const total =
+			existing.length +
+			sources.reduce((sum, source) => sum + 1 + source.history.length, 0);
 		if (total > max) {
 			throw new VersionMergeError(
 				`This folder keeps ${max} versions per file; merging would make ${total}`,
@@ -259,7 +259,7 @@ export class VersionOperations {
 		if (placed.length === 0) {
 			return { target: target.file, sources, max };
 		}
-		const ids = new Set(existing.map((v) => v.id));
+		const ids = new Set(existing);
 		if (placed.length !== ids.size || !placed.every((id) => ids.has(id))) {
 			throw new VersionMergeError(
 				"The history changed since the preview; open the merge again",
@@ -273,6 +273,38 @@ export class VersionOperations {
 					: { file: id },
 			);
 		return { target: target.file, sources, order, max };
+	}
+
+	/**
+	 * Moves `source`'s versions onto `target`, oldest first, bytes before
+	 * rows: deleting `source` afterwards would take them with it.
+	 */
+	private async carry(targetId: string, source: DatedFile): Promise<void> {
+		for (const versionId of source.history) {
+			const from = versionKey(source.file.id, versionId);
+			const to = versionKey(targetId, versionId);
+			await rename(
+				join(this.ctx.storagePath, from),
+				join(this.ctx.storagePath, to),
+			);
+			try {
+				const [last] = await this.ctx.db
+					.select({ seq: maxOf(fileVersions.seq) })
+					.from(fileVersions)
+					.where(eq(fileVersions.fileId, targetId));
+				await this.ctx.db
+					.update(fileVersions)
+					.set({ fileId: targetId, seq: (last?.seq ?? 0) + 1 })
+					.where(eq(fileVersions.id, versionId));
+			} catch (error) {
+				await rename(
+					join(this.ctx.storagePath, to),
+					join(this.ctx.storagePath, from),
+				);
+				throw error;
+			}
+			await this.thumbnails.adopt(from, to);
+		}
 	}
 
 	/**
@@ -386,17 +418,24 @@ export class VersionOperations {
 		return created;
 	}
 
-	/** A merge's order, with each absorbed file replaced by its new version. */
+	/**
+	 * A merge's order, with each absorbed file replaced by its carried
+	 * history and then its new version.
+	 */
 	async place(
 		fileId: string,
 		order: MergePlan["order"],
 		made: Map<string, string>,
+		sources: DatedFile[] = [],
 	): Promise<void> {
 		if (order) {
+			const histories = new Map(sources.map((s) => [s.file.id, s.history]));
 			await this.reorder(
 				fileId,
-				order.map((entry) =>
-					"file" in entry ? (made.get(entry.file) ?? "") : entry.version,
+				order.flatMap((entry) =>
+					"file" in entry
+						? [...(histories.get(entry.file) ?? []), made.get(entry.file) ?? ""]
+						: [entry.version],
 				),
 			);
 		}
