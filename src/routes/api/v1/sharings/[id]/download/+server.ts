@@ -1,5 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { User } from "better-auth";
+import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { SharingService } from "#lib/server/services/sharings.js";
 import { StorageService } from "#lib/server/services/storage/index.js";
 import {
@@ -20,7 +21,9 @@ export const GET = async ({ params, locals, request }) => {
 		return error(401, "Sign in to open this.");
 	}
 
-	const access = await sharings.resolveAccess(locals.user.id, params.id);
+	const access = isDriveOnly(locals.user)
+		? null
+		: await sharings.resolveAccess(locals.user.id, params.id);
 	if (!access) {
 		return error(404, "Not shared with you.");
 	}

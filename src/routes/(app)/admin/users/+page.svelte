@@ -41,6 +41,9 @@
 		}
 	});
 
+	// Drive-only accounts mean nothing when everyone shares one drive.
+	const simpleMode = $derived(data.config?.simpleMode ?? false);
+
 	/** Submit a hidden form for one row action without a dialog per action. */
 	function submit(
 		action: string,
@@ -100,6 +103,7 @@
         <input type="hidden" name="role" />
         <input type="hidden" name="banned" />
         <input type="hidden" name="sendEmail" />
+        <input type="hidden" name="driveOnly" />
     </form>
 
     <Card.Root>
@@ -160,6 +164,16 @@
                             ? m.admin_send_invite_email()
                             : m.admin_send_invite_email_disabled()}
                     </label>
+                    {#if !simpleMode}
+                        <label class="flex cursor-pointer items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                name="driveOnly"
+                                class="accent-primary size-3.5"
+                            />
+                            {m.admin_invite_drive_only()}
+                        </label>
+                    {/if}
                     <Button type="submit">{m.admin_invite_submit()}</Button>
                 </div>
             </form>
@@ -206,6 +220,11 @@
                                 {#if user.banned}
                                     <Badge variant="destructive">
                                         {m.admin_user_banned()}
+                                    </Badge>
+                                {/if}
+                                {#if data.driveOnlyUsers.includes(user.id) && !simpleMode}
+                                    <Badge variant="secondary">
+                                        {m.admin_user_drive_only()}
                                     </Badge>
                                 {/if}
                             </p>
@@ -282,6 +301,25 @@
                             >
                                 {user.banned ? m.admin_unban() : m.admin_ban()}
                             </DropdownMenu.Item>
+                            {#if user.role !== "admin" && !simpleMode}
+                                <DropdownMenu.Item
+                                    onclick={() =>
+                                        submit(
+                                            "?/setDriveOnly",
+                                            {
+                                                userId: user.id,
+                                                driveOnly: data.driveOnlyUsers.includes(user.id)
+                                                    ? "false"
+                                                    : "true",
+                                            },
+                                            pendingForm,
+                                        )}
+                                >
+                                    {data.driveOnlyUsers.includes(user.id)
+                                        ? m.admin_give_personal_drive()
+                                        : m.admin_restrict_to_drives()}
+                                </DropdownMenu.Item>
+                            {/if}
                             <DropdownMenu.Separator />
                             <DropdownMenu.Item
                                 variant="destructive"

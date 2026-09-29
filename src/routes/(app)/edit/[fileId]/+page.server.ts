@@ -1,6 +1,7 @@
 import { error } from "@sveltejs/kit";
 import { officeKindForName } from "#lib/documents.js";
 import { Logger } from "#lib/logger.js";
+import { DriveAccessError } from "#lib/server/errors.js";
 import { officeToText } from "#lib/server/office/index.js";
 import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
@@ -16,6 +17,11 @@ export const load = async ({ params, url, locals }) => {
 	const service = await storageServiceFor(locals.storageOwner ?? locals.user, {
 		url,
 		locals,
+	}).catch((refusal: unknown) => {
+		if (refusal instanceof DriveAccessError) {
+			return error(404, "That document does not exist.");
+		}
+		throw refusal;
 	});
 	const path = await service.findFileById(params.fileId);
 	if (!path) {

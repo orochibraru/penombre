@@ -1004,5 +1004,10 @@
 	"desktop_app_homebrew_description": "På macOS och Linux installerar Homebrew den med rclone, håller den uppdaterad och startar den vid inloggning.",
 	"desktop_app_server_title": "Serveradress",
 	"desktop_app_server_description": "Klistra in den i appen när den frågar efter din server och godkänn sedan inloggningen i webbläsaren.",
-	"desktop_app_copy_address": "Kopiera adress"
+	"desktop_app_copy_address": "Kopiera adress",
+	"admin_invite_drive_only": "Endast delade enheter (ingen egen enhet)",
+	"admin_user_drive_only": "Endast enheter",
+	"admin_restrict_to_drives": "Begränsa till delade enheter",
+	"admin_give_personal_drive": "Ge en egen enhet",
+	"drives_empty_drive_only": "Du är inte med i någon enhet än. Be den som bjöd in dig att lägga till dig."
 }

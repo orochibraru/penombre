@@ -30,6 +30,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 env:
   TZ: Europe/Paris
@@ -72,6 +73,17 @@ jobs:
 
       - name: Sync SvelteKit
         run: bun run svelte-kit sync
+
+      # postgres and redis, and a fork's local build, pull from Docker Hub,
+      # which rate-limits CI. mirror.gcr.io does not; misses fall back.
+      - name: Pull Docker Hub images through mirror.gcr.io
+        run: |
+          set -euo pipefail
+          config=/etc/docker/daemon.json
+          current="$(sudo cat "$config" 2>/dev/null || echo '{}')"
+          jq '. + {"registry-mirrors": ["https://mirror.gcr.io"]}' <<<"$current" \
+            | sudo tee "$config" >/dev/null
+          sudo systemctl restart docker
 
       - name: Login to Container registry
         if: inputs.pulled

@@ -16,6 +16,7 @@
 
 import type { User } from "better-auth";
 import { and, eq } from "drizzle-orm";
+import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getVolume, type VolumeConfig } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
 import { drives, files, folders, user } from "#lib/server/db/schema.js";
@@ -66,6 +67,11 @@ export async function storageServiceFor(
 			sessionUser.id,
 		);
 		return driveStorage(drive, role, sessionUser);
+	}
+
+	// A volume, a share or the caller's own drive: none exist for this account.
+	if (isDriveOnly(sessionUser)) {
+		throw new DriveAccessError(404, "No personal drive");
 	}
 
 	const volumeName = parameter(event, "volume", VOLUME_HEADER);
@@ -249,6 +255,10 @@ export async function volumeStorage(
 	volume: VolumeConfig,
 	actor: NonNullable<App.Locals["user"]>,
 ): Promise<StorageService> {
+	// The volume pages and scan routes come here without `storageServiceFor`.
+	if (isDriveOnly(actor)) {
+		throw new DriveAccessError(404, "No such volume");
+	}
 	const owner = (await loadSharedOwner()) ?? actor;
 	const service = new StorageService(owner, volume, actor);
 	await service.ensureUserDirectory();

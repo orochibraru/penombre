@@ -1121,5 +1121,10 @@
 	"desktop_app_homebrew_description": "Unter macOS und Linux installiert Homebrew sie mit rclone, hält sie aktuell und startet sie bei der Anmeldung.",
 	"desktop_app_server_title": "Serveradresse",
 	"desktop_app_server_description": "Füge sie in die App ein, wenn sie nach deinem Server fragt, und bestätige dann die Anmeldung im Browser.",
-	"desktop_app_copy_address": "Adresse kopieren"
+	"desktop_app_copy_address": "Adresse kopieren",
+	"admin_invite_drive_only": "Nur geteilte Laufwerke (kein eigenes Laufwerk)",
+	"admin_user_drive_only": "Nur Laufwerke",
+	"admin_restrict_to_drives": "Auf geteilte Laufwerke beschränken",
+	"admin_give_personal_drive": "Eigenes Laufwerk geben",
+	"drives_empty_drive_only": "Du bist noch in keinem Laufwerk. Bitte die Person, die dich eingeladen hat, dich hinzuzufügen."
 }

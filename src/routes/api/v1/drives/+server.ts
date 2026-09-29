@@ -1,3 +1,4 @@
+import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { Http } from "#lib/server/http.js";
 import { createDrive, listDrives } from "#lib/server/openapi/v1/drives.js";
 import { drivesService, rethrowRefusal } from "#lib/server/services/drives.js";
@@ -12,6 +13,11 @@ export const GET = listDrives.handler(async ({ user }) => {
 });
 
 export const POST = createDrive.handler(async ({ body, user }) => {
+	if (isDriveOnly(user)) {
+		return Http.Forbidden(
+			"This account can only use the drives it is a member of",
+		);
+	}
 	try {
 		return Http.Ok(await drivesService.create(user.id, body.name.trim()));
 	} catch (error) {

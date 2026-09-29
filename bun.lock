@@ -34,7 +34,7 @@
         "@inlang/cli": "^3.3.7",
         "@inlang/paraglide-js": "^2.25.4",
         "@j178/prek": "^0.5.3",
-        "@orochibraru/svelte-smol": "^1.7.0-next.3",
+        "@orochibraru/svelte-smol": "^1.8.2",
         "@playwright/test": "^1.63.0",
         "@shikijs/langs": "^4.4.3",
         "@shikijs/themes": "^4.4.3",
@@ -490,7 +490,7 @@
 
     "@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.43.0", "", {}, "sha512-eSYWTm620tTk45EKSedaUL8MFYI8hW164hIXsgIHyxu3VobUB3fFCu5t0hQby6OoWRPsG1KkKUG2M5UadiLiVg=="],
 
-    "@orochibraru/svelte-smol": ["@orochibraru/svelte-smol@1.7.0-next.3", "", { "peerDependencies": { "@sveltejs/kit": "^3.0.0-next.0" } }, "sha512-sgh19rKhTOUzCw34G9cRIQpxL6+RVu7v3lW8LpuQ/KtYRbrJVZCLNVsENyoqDK4Lgcr67h9LUZ1/Gt0eM+Bn7A=="],
+    "@orochibraru/svelte-smol": ["@orochibraru/svelte-smol@1.8.2", "", { "peerDependencies": { "@sveltejs/kit": "^2.0.0 || ^3.0.0-next.0" } }, "sha512-HusoIUV54+SouIeai+1mcxVJmJ9mJL3ja/Y/mwcliy/3tF/aR2O3/78XZ/c/fsIAg1qIpcNqQGYWgeXw1sMeOw=="],
 
     "@oxc-minify/binding-android-arm-eabi": ["@oxc-minify/binding-android-arm-eabi@0.136.0", "", { "os": "android", "cpu": "arm" }, "sha512-gk1jzky1vLeOcK7w9Ib2RT/UooZ7O21s8YSeXCsy4tzsmguKb3Cbsv/Ra2fKhMp4mKeKCzvC1Xa41OfSBWfWdQ=="],
 

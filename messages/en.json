@@ -1193,5 +1193,10 @@
 	"desktop_app_homebrew_description": "On macOS and Linux, Homebrew installs it with rclone, keeps it updated and starts it at login.",
 	"desktop_app_server_title": "Server address",
 	"desktop_app_server_description": "Paste it into the app when it asks for your server, then approve the sign-in in your browser.",
-	"desktop_app_copy_address": "Copy address"
+	"desktop_app_copy_address": "Copy address",
+	"admin_invite_drive_only": "Shared drives only (no personal drive)",
+	"admin_user_drive_only": "Drives only",
+	"admin_restrict_to_drives": "Restrict to shared drives",
+	"admin_give_personal_drive": "Give a personal drive",
+	"drives_empty_drive_only": "You are not in any drive yet. Ask whoever invited you to add you to one."
 }

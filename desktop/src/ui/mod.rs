@@ -14,8 +14,8 @@ use egui::{CornerRadius, Frame, Margin, RichText, Stroke, Ui, Vec2};
 use fastframe_fonts::Weight;
 
 pub use folders::home_relative;
-pub use theme::install;
 use theme::{Icon, Palette, RADIUS, palette};
+pub use theme::{app_icon, install};
 use widgets::card;
 
 use crate::app::Login;

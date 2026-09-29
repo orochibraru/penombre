@@ -50,11 +50,22 @@ fn main() -> eframe::Result<()> {
     Shell::new(app, &waker)
         .idle(fastframe_tray::idle)
         .run(|lease| {
+            let mut viewport = egui::ViewportBuilder::default().with_title("Penombre Sync");
+            if let Some(icon) = ui::app_icon() {
+                viewport = viewport.with_icon(icon);
+            }
             let options = eframe::NativeOptions {
-                viewport: egui::ViewportBuilder::default()
-                    .with_title("Penombre Sync")
+                viewport: viewport
                     .with_inner_size([440.0, 520.0])
                     .with_min_inner_size([380.0, 420.0]),
+                // The default app menu's Quit is `terminate:`, which exits the
+                // process on the spot: tray and sync included. ⌘Q only closes
+                // the window instead (`Window::ui`); the tray's Quit quits.
+                #[cfg(target_os = "macos")]
+                event_loop_builder: Some(Box::new(|builder| {
+                    use winit::platform::macos::EventLoopBuilderExtMacOS;
+                    builder.with_default_menu(false);
+                })),
                 ..Default::default()
             };
             eframe::run_native(

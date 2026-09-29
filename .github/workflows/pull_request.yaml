@@ -15,7 +15,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   CI: true
 
-# Every called workflow reads the repo only; images go to Docker Hub.
+# Every called workflow reads the repo only; images go to ghcr.io.
 permissions:
   contents: read
 
@@ -115,6 +115,9 @@ jobs:
   build-app:
     name: Docker Build (App)
     needs: [code_quality]
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/docker.yaml
     with:
       image_tag: pr-${{ github.event.pull_request.number }}
@@ -122,39 +125,45 @@ jobs:
       push: ${{ github.event.pull_request.head.repo.full_name == github.repository
         }}
       image_name: orochibraru/penombre
-      registry_name: docker.io
-      registry_username: orochibraru
+      registry_name: ghcr.io
+      registry_username: ${{ github.actor }}
       bake_target: app
     secrets:
-      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      registry_password: ${{ github.token }}
 
   e2e:
     name: E2E
     needs: [build-app]
+    permissions:
+      contents: read
+      packages: read
     uses: ./.github/workflows/e2e.yaml
     with:
       image: ${{ needs.build-app.outputs.image }}
-      registry_name: docker.io
-      registry_username: orochibraru
+      registry_name: ghcr.io
+      registry_username: ${{ github.actor }}
       bake_target: app
       pulled: ${{ github.event.pull_request.head.repo.full_name == github.repository
         }}
     secrets:
-      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      registry_password: ${{ github.token }}
 
   publish:
     name: Publish pr-${{ github.event.pull_request.number }}
     needs: [e2e]
     # A fork pushed no digests.
     if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/docker-manifest.yaml
     with:
       image_name: orochibraru/penombre
-      registry_name: docker.io
-      registry_username: orochibraru
+      registry_name: ghcr.io
+      registry_username: ${{ github.actor }}
       bake_target: app
     secrets:
-      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      registry_password: ${{ github.token }}
 
   gate:
     name: CI Gate

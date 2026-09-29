@@ -529,6 +529,10 @@ export class StorageService {
 		return this.folderOperations.getFullFolderPath(folderId, parentId);
 	}
 
+	resolveListedFolder(key: string, parent?: string): Promise<string | null> {
+		return this.folderOperations.resolveListedFolder(key, parent);
+	}
+
 	folderExists(key: string): Promise<boolean> {
 		return this.folderOperations.folderExists(key);
 	}

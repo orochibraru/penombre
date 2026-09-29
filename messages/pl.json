@@ -1133,5 +1133,10 @@
 	"desktop_app_homebrew_description": "W systemach macOS i Linux Homebrew instaluje ją razem z rclone, aktualizuje i uruchamia przy logowaniu.",
 	"desktop_app_server_title": "Adres serwera",
 	"desktop_app_server_description": "Wklej go w aplikacji, gdy zapyta o serwer, a następnie zatwierdź logowanie w przeglądarce.",
-	"desktop_app_copy_address": "Kopiuj adres"
+	"desktop_app_copy_address": "Kopiuj adres",
+	"admin_invite_drive_only": "Tylko dyski współdzielone (bez własnego dysku)",
+	"admin_user_drive_only": "Tylko dyski",
+	"admin_restrict_to_drives": "Ogranicz do dysków współdzielonych",
+	"admin_give_personal_drive": "Przyznaj własny dysk",
+	"drives_empty_drive_only": "Nie należysz jeszcze do żadnego dysku. Poproś osobę, która cię zaprosiła, o dodanie."
 }

@@ -1381,6 +1381,11 @@
 						"format": "date-time",
 						"type": "string"
 					},
+					"driveOnly": {
+						"default": false,
+						"readOnly": true,
+						"type": "boolean"
+					},
 					"email": {
 						"type": "string"
 					},
@@ -16128,6 +16133,16 @@
 							}
 						},
 						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
 					},
 					"500": {
 						"content": {

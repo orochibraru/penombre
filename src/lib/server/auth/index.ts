@@ -16,6 +16,7 @@ import {
 } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
 import { Logger } from "#lib/logger.js";
+import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getConfig, isSmtpEnabled } from "#lib/server/config.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb } from "#lib/server/db/index.js";
@@ -326,7 +327,7 @@ function buildAuth(oauthProviders: OAuthProvider[]) {
 					const redirectUrl = new URL(data.url as string);
 					logger.debug("Redirect URL:", redirectUrl);
 				}
-				if (session) {
+				if (session && !isDriveOnly(session.user)) {
 					const storageService = new StorageService(session.user);
 					try {
 						await storageService.ensureUserDirectory();
@@ -359,6 +360,11 @@ function buildAuth(oauthProviders: OAuthProvider[]) {
 			},
 		},
 		user: {
+			additionalFields: {
+				// Set by an admin only: `input: false` keeps it out of
+				// `/update-user`, or the account could lift it itself.
+				driveOnly: { type: "boolean", defaultValue: false, input: false },
+			},
 			deleteUser: {
 				enabled: true,
 				beforeDelete: guardAccountDeletion,

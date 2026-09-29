@@ -134,15 +134,17 @@
                     {m.layout_list()}
                 {/if}
             </Button>
-            <Button
-                onclick={() => {
-                    newName = "";
-                    createOpen = true;
-                }}
-            >
-                <PlusIcon />
-                {m.drive_new()}
-            </Button>
+            {#if !page.data.driveOnly}
+                <Button
+                    onclick={() => {
+                        newName = "";
+                        createOpen = true;
+                    }}
+                >
+                    <PlusIcon />
+                    {m.drive_new()}
+                </Button>
+            {/if}
         </div>
     </div>
 
@@ -154,7 +156,9 @@
                 <HardDriveIcon class="text-muted-foreground size-6" />
                 <p class="text-lg font-medium">{m.drives_empty()}</p>
                 <p class="text-muted-foreground text-sm">
-                    {m.drives_empty_hint()}
+                    {page.data.driveOnly
+                        ? m.drives_empty_drive_only()
+                        : m.drives_empty_hint()}
                 </p>
             </Card.Content>
         </Card.Root>

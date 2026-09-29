@@ -53,7 +53,11 @@ export default defineConfig({
 			// compile: false → plain build/index.js bundle instead of a single
 			// binary, because sharp ships a native (.node) addon that
 			// `bun build --compile` can't embed.
-			adapter: adapter({ compile: false }),
+			adapter: adapter({
+				buildOptions: {
+					compile: false,
+				},
+			}),
 			// Checked by `csrfHandler` in hooks.server.ts instead.
 			csrf: { trustedOrigins: ["*"] },
 		}),

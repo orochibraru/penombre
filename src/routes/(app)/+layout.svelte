@@ -79,6 +79,9 @@
 	// (recent/starred/shared/categories) but keep trash for undo safety.
 	const simpleMode = $derived(data.config?.simpleMode ?? false);
 
+	// No personal drive, shares or volumes: only the drives it belongs to.
+	const driveOnly = $derived(data.driveOnly ?? false);
+
 	// Auth bypass: nobody signs in, so there's no profile/admin to show.
 	const authBypassed = $derived(data.authBypassed ?? false);
 
@@ -201,89 +204,92 @@
 	);
 
 	const nav: NavMenus = $derived({
-		general: [
-			{
-				title: m.nav_my_drive(),
-				url: "/browse",
-				icon: FolderIcon,
-				hideOnMobile: true,
-			},
-			...(simpleMode
+		general: driveOnly
+			? []
+			: [
+					{
+						title: m.nav_my_drive(),
+						url: "/browse",
+						icon: FolderIcon,
+						hideOnMobile: true,
+					},
+					...(simpleMode
+						? []
+						: ([
+								{
+									title: m.nav_recent(),
+									url: "/recent",
+									icon: ClockFadingIcon,
+									hideOnMobile: true,
+								},
+								{
+									title: m.nav_starred(),
+									url: "/starred",
+									icon: StarIcon,
+									count: data.counts?.starred,
+								},
+								{
+									title: m.nav_shared(),
+									url: "/shared",
+									icon: Link2Icon,
+									// Or it would light up on /shared-with-me too.
+									isRoot: true,
+								},
+							] satisfies NavItem[])),
+					{
+						title: m.nav_trash(),
+						url: "/trash",
+						icon: TrashIcon,
+						count: data.counts?.trash,
+					},
+				],
+		categories:
+			simpleMode || driveOnly
 				? []
 				: ([
 						{
-							title: m.nav_recent(),
-							url: "/recent",
-							icon: ClockFadingIcon,
-							hideOnMobile: true,
+							title: m.nav_music(),
+							url: `/categories/${FileCategoryEnum.MUSIC}`,
+							icon: MusicIcon,
+							accentColor: "pink",
 						},
 						{
-							title: m.nav_starred(),
-							url: "/starred",
-							icon: StarIcon,
-							count: data.counts?.starred,
+							title: m.nav_documents(),
+							url: `/categories/${FileCategoryEnum.DOCUMENTS}`,
+							icon: FileIcon,
+							accentColor: "indigo",
 						},
 						{
-							title: m.nav_shared(),
-							url: "/shared",
-							icon: Link2Icon,
-							// Or it would light up on /shared-with-me too.
-							isRoot: true,
+							title: m.nav_images(),
+							url: `/categories/${FileCategoryEnum.IMAGES}`,
+							icon: ImageIcon,
+							accentColor: "orange",
 						},
-					] satisfies NavItem[])),
-			{
-				title: m.nav_trash(),
-				url: "/trash",
-				icon: TrashIcon,
-				count: data.counts?.trash,
-			},
-		],
-		categories: simpleMode
-			? []
-			: ([
-					{
-						title: m.nav_music(),
-						url: `/categories/${FileCategoryEnum.MUSIC}`,
-						icon: MusicIcon,
-						accentColor: "pink",
-					},
-					{
-						title: m.nav_documents(),
-						url: `/categories/${FileCategoryEnum.DOCUMENTS}`,
-						icon: FileIcon,
-						accentColor: "indigo",
-					},
-					{
-						title: m.nav_images(),
-						url: `/categories/${FileCategoryEnum.IMAGES}`,
-						icon: ImageIcon,
-						accentColor: "orange",
-					},
-					{
-						title: m.nav_code(),
-						url: `/categories/${FileCategoryEnum.CODE}`,
-						icon: CodeIcon,
-						accentColor: "green",
-					},
-					{
-						title: m.nav_video(),
-						url: `/categories/${FileCategoryEnum.VIDEO}`,
-						icon: VideoIcon,
-						accentColor: "purple",
-					},
-					{
-						title: m.nav_archives(),
-						url: `/categories/${FileCategoryEnum.ARCHIVES}`,
-						icon: FileArchiveIcon,
-						accentColor: "teal",
-					},
-					{
-						title: m.nav_3d_objects(),
-						url: `/categories/${FileCategoryEnum.THREE_D}`,
-						icon: Rotate3dIcon,
-						accentColor: "rose",
-					},
-				] satisfies NavItem[]),
+						{
+							title: m.nav_code(),
+							url: `/categories/${FileCategoryEnum.CODE}`,
+							icon: CodeIcon,
+							accentColor: "green",
+						},
+						{
+							title: m.nav_video(),
+							url: `/categories/${FileCategoryEnum.VIDEO}`,
+							icon: VideoIcon,
+							accentColor: "purple",
+						},
+						{
+							title: m.nav_archives(),
+							url: `/categories/${FileCategoryEnum.ARCHIVES}`,
+							icon: FileArchiveIcon,
+							accentColor: "teal",
+						},
+						{
+							title: m.nav_3d_objects(),
+							url: `/categories/${FileCategoryEnum.THREE_D}`,
+							icon: Rotate3dIcon,
+							accentColor: "rose",
+						},
+					] satisfies NavItem[]),
 		// A shared drive is reached from its own group, so it reads as a place
 		// rather than as another view of your own files. The group's first row
 		// is the page that creates them.
@@ -319,36 +325,37 @@
 							] satisfies NavItem[])
 						: []),
 				] satisfies NavItem[]),
-		sharedWithMe: simpleMode
-			? []
-			: ([
-					{
-						title: m.nav_shared_with_me_all(),
-						url: "/shared-with-me",
-						icon: UsersIcon,
-						isRoot: true,
-					},
-					...sidebarShareList.shown.map(
-						(entry): NavItem => ({
-							title: entry.name,
-							url: `/shared-with-me/${entry.id}`,
-							icon: entry.resourceType === "folder" ? FolderIcon : FileIcon,
-						}),
-					),
+		sharedWithMe:
+			simpleMode || driveOnly
+				? []
+				: ([
+						{
+							title: m.nav_shared_with_me_all(),
+							url: "/shared-with-me",
+							icon: UsersIcon,
+							isRoot: true,
+						},
+						...sidebarShareList.shown.map(
+							(entry): NavItem => ({
+								title: entry.name,
+								url: `/shared-with-me/${entry.id}`,
+								icon: entry.resourceType === "folder" ? FolderIcon : FileIcon,
+							}),
+						),
 
-					...(sidebarShareList.hidden > 0
-						? ([
-								{
-									title: m.nav_drives_more({
-										count: sidebarShareList.hidden,
-									}),
-									url: "/shared-with-me",
-									icon: EllipsisIcon,
-									neverActive: true,
-								},
-							] satisfies NavItem[])
-						: []),
-				] satisfies NavItem[]),
+						...(sidebarShareList.hidden > 0
+							? ([
+									{
+										title: m.nav_drives_more({
+											count: sidebarShareList.hidden,
+										}),
+										url: "/shared-with-me",
+										icon: EllipsisIcon,
+										neverActive: true,
+									},
+								] satisfies NavItem[])
+							: []),
+					] satisfies NavItem[]),
 		volumes: (data.volumes ?? []).map((volume) => ({
 			title: volume.label,
 			url: `/volumes/${volume.name}`,
@@ -451,7 +458,9 @@
 	// Pages where the upload/new button should be hidden
 	const noUploadPages = ["/settings", "/account", "/admin", "/api-docs"];
 	let showUploadButton = $derived(
-		!noUploadPages.some((p) => page.url.pathname.startsWith(p)),
+		!noUploadPages.some((p) => page.url.pathname.startsWith(p)) &&
+			// Anywhere but inside a drive it would upload to a drive it has not.
+			(!driveOnly || !!page.params.drive),
 	);
 </script>
 
@@ -536,7 +545,9 @@
 			{/if}
 		</Sidebar.Header>
 		<Sidebar.Content>
-			<Nav title={m.nav_general()} items={nav.general} />
+			{#if (nav.general ?? []).length > 0}
+				<Nav title={m.nav_general()} items={nav.general} />
+			{/if}
 			<ShortcutsNav shortcuts={data.shortcuts ?? []} />
 			{#if (nav.drives ?? []).length > 0}
 				<Nav title={m.nav_drives()} items={nav.drives ?? []} />
@@ -550,7 +561,7 @@
 			{#if (nav.volumes ?? []).length > 0}
 				<Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
 			{/if}
-			{#if !simpleMode}
+			{#if (nav.categories ?? []).length > 0}
 				<Nav title={m.nav_categories()} items={nav.categories} />
 			{/if}
             <Nav title={m.nav_help()} items={nav.help} class="mt-auto" />
@@ -580,13 +591,13 @@
 		>
 			<div class="flex items-center justify-between gap-5">
 				<a
-					href={resolve('browse')}
-					class={cn(bottomNavItemClass, isActive("/browse") ? "text-primary" : "")}
+					href={driveOnly ? resolve("/(app)/drives/shared") : resolve('browse')}
+					class={cn(bottomNavItemClass, isActive(driveOnly ? "/drives" : "/browse") ? "text-primary" : "")}
 				>
 					<FolderIcon class={bottomNavItemIconClass} />
 					{m.home()}
 				</a>
-				{#if !simpleMode}
+				{#if !simpleMode && !driveOnly}
 					<a
 						href={resolve('recent')}
 						class={cn(bottomNavItemClass, isActive("/recent") ? "text-primary" : "")}
@@ -597,7 +608,7 @@
 				{/if}
 
 				<!-- The account lives in the header's avatar menu, as on desktop. -->
-				{#if !simpleMode}
+				{#if !simpleMode && !driveOnly}
 					<a
 						href={resolve('starred')}
 						class={cn(bottomNavItemClass, isActive("/starred") ? "text-primary" : "")}

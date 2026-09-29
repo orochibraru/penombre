@@ -861,5 +861,10 @@
 	"desktop_app_homebrew_description": "在 macOS 和 Linux 上，Homebrew 会连同 rclone 一起安装、保持更新，并在登录时启动。",
 	"desktop_app_server_title": "服务器地址",
 	"desktop_app_server_description": "在应用询问服务器时粘贴此地址，然后在浏览器中批准登录。",
-	"desktop_app_copy_address": "复制地址"
+	"desktop_app_copy_address": "复制地址",
+	"admin_invite_drive_only": "仅共享盘（无个人盘）",
+	"admin_user_drive_only": "仅共享盘",
+	"admin_restrict_to_drives": "限制为共享盘",
+	"admin_give_personal_drive": "提供个人盘",
+	"drives_empty_drive_only": "你还没有加入任何共享盘。请让邀请你的人把你加进去。"
 }

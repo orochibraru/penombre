@@ -1,5 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 import { api } from "#lib/api/index.js";
+import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getConfig, getVolumes, isSimpleMode } from "#lib/server/config.js";
 import {
 	getAppSettings,
@@ -11,6 +12,17 @@ import { listShortcuts } from "#lib/server/services/shortcuts.js";
 import { resolve } from "$app/paths";
 
 const sharings = new SharingService();
+
+/** All a drive-only account may open; storage APIs refuse the rest anyway. */
+const DRIVE_ONLY_PATHS = [
+	"/drives",
+	"/edit",
+	"/settings",
+	"/account",
+	"/api-docs",
+];
+const within = (path: string, prefix: string) =>
+	path === prefix || path.startsWith(`${prefix}/`);
 
 export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:preferences");
@@ -38,6 +50,23 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		(await isTwoFactorRequired())
 	) {
 		return redirect(302, resolve("account/security"));
+	}
+
+	const driveOnly = isDriveOnly(locals.user);
+	const pathname = url.pathname;
+	if (
+		driveOnly &&
+		(within(pathname, "/settings/storage") ||
+			!DRIVE_ONLY_PATHS.some((prefix) => within(pathname, prefix)))
+	) {
+		// Home is their drive, when there is just the one.
+		const [only, ...more] = await drivesService.listForUser(locals.user.id);
+		return redirect(
+			302,
+			only && more.length === 0
+				? resolve("/(app)/drives/[drive]", { drive: only.id })
+				: resolve("/(app)/drives/shared"),
+		);
 	}
 
 	// Streamed, not awaited: an air-gapped or rate-limited instance must not
@@ -68,13 +97,15 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		? [[], []]
 		: await Promise.all([
 				drivesService.listForUser(locals.user.id),
-				sharings.listSharedWithMe(locals.user.id),
+				driveOnly ? [] : sharings.listSharedWithMe(locals.user.id),
 			]);
 
 	const config = getConfig();
 
 	return {
 		user: locals.user,
+		// No personal drive, shares or volumes: the layout hides them.
+		driveOnly,
 		config,
 		session: locals.session,
 		activity: activityResult.data?.data,
@@ -90,7 +121,7 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		),
 		// Mounted volumes appear in the sidebar as extra drives. Simple mode
 		// shares each one whole; full mode gives every user a subdirectory.
-		volumes: getVolumes().map((volume) => ({
+		volumes: (driveOnly ? [] : getVolumes()).map((volume) => ({
 			name: volume.name,
 			label: volume.label,
 			readOnly: volume.readOnly,

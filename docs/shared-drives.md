@@ -78,6 +78,27 @@ consequences worth knowing:
 
 Activity rows name the person who actually did the thing, not the drive's owner.
 
+## People who only see drives
+
+An account can be **drives only**: no drive of its own, only the shared drives
+it is a member of. It is how you give a client, a band member or a contractor a
+[simple mode](simple-mode.md)-like view of one drive while you keep every
+feature. Tick **Shared drives only** when inviting them in **Admin → Users**, or
+switch an existing account from its row menu, then add them to a drive from
+**Members**.
+
+Such an account signs in straight to its drive (or to **All drives** when it is
+on several). It has no My Drive, Recent, Starred, trash of its own, shared
+links, shared-with-me items, categories, mounted volumes or storage page, and it
+cannot create drives. Its role in each drive is whatever you give it: viewer,
+editor or manager. The server enforces this, not only the menus: the API,
+[WebDAV](webdav.md) and the [desktop app](desktop.md) offer it its drives and
+nothing else.
+
+Switching an account to drives only hides its own drive without deleting it;
+switching it back shows it again. Simple mode ignores the setting, since
+everyone already shares one drive there.
+
 ## Deleting a drive
 
 **All drives → ⋯ → Delete drive**, owner only. It deletes the drive's files for

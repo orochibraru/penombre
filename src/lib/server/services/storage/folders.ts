@@ -447,6 +447,40 @@ export class FolderOperations {
 		return folderPrefix;
 	}
 
+	/**
+	 * The path of the folder a listing showed as `key` under `parent`, or null.
+	 * Its own path first; failing that, the one child of that parent whose
+	 * last segment is `key`: a row whose path does not match its place (a
+	 * transfer before 1.8.59 made those) is listed there but addressed by
+	 * nothing else, so it could never be trashed or deleted.
+	 */
+	async resolveListedFolder(
+		key: string,
+		parent?: string,
+	): Promise<string | null> {
+		const path = this.getFullFolderPath(key, parent);
+		if (await getFolderIdByPath(this.ctx, path)) {
+			return path;
+		}
+		const parentId = parent ? await getFolderIdByPath(this.ctx, parent) : null;
+		if (parent && !parentId) {
+			return null;
+		}
+		const segment = key.replace(/\/$/, "");
+		const siblings = await this.ctx.db
+			.select({ path: folders.path })
+			.from(folders)
+			.where(
+				and(
+					ownedFolders(this.ctx),
+					parentId ? eq(folders.parentId, parentId) : isNull(folders.parentId),
+				),
+			);
+		const matches = siblings.filter((row) => row.path.endsWith(`/${segment}`));
+		const [only] = matches;
+		return only && matches.length === 1 ? `${only.path}/` : null;
+	}
+
 	async folderExists(key: string): Promise<boolean> {
 		const normalizedKey = key.endsWith("/") ? key.slice(0, -1) : key;
 		const [folder] = await this.ctx.db

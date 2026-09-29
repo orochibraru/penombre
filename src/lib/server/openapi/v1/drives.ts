@@ -44,7 +44,7 @@ export const createDrive = defineRoute({
 	tags: ["Drives"],
 	body: z.object({ name: z.string().min(1).max(120) }),
 	response: driveSchema,
-	errors: [400, 500],
+	errors: [400, 403, 500],
 });
 
 export const renameDrive = defineRoute({

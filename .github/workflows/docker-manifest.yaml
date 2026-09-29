@@ -21,8 +21,19 @@ on:
         required: true
         description: "The target whose digests should be merged, e.g. app"
         type: string
+      mirror_registry:
+        required: false
+        default: ""
+        description: "A second registry that gets every tag too, e.g. docker.io"
+        type: string
+      mirror_username:
+        required: false
+        default: ""
+        type: string
     secrets:
       registry_password:
+        required: false
+      mirror_password:
         required: false
     outputs:
       image-tag:
@@ -31,6 +42,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 env:
   IMAGE: ${{ inputs.registry_name }}/${{ inputs.image_name }}
@@ -77,6 +89,26 @@ jobs:
           docker buildx imagetools create \
             $(jq -cr '.target."docker-metadata-action".tags | map("-t " + .) | join(" ")' "$RUNNER_TEMP/bake-meta.json") \
             $(printf "$IMAGE@sha256:%s " *)
+
+      - name: Login to the mirror registry
+        if: inputs.mirror_registry != ''
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ${{ inputs.mirror_registry }}
+          username: ${{ inputs.mirror_username }}
+          password: ${{ secrets.mirror_password }}
+
+      # Copied from the registry just written, so the mirror is never pulled.
+      - name: Copy every tag to the mirror
+        if: inputs.mirror_registry != ''
+        env:
+          MIRROR: ${{ inputs.mirror_registry }}/${{ inputs.image_name }}
+        run: |
+          set -euo pipefail
+          jq -r '.target."docker-metadata-action".tags[] | sub(".*:"; "")' "$RUNNER_TEMP/bake-meta.json" \
+            | while read -r tag; do
+                docker buildx imagetools create -t "$MIRROR:$tag" "$IMAGE:$tag"
+              done
 
       - name: Inspect image
         id: inspect

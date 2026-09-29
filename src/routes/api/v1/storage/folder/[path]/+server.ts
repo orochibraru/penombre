@@ -16,10 +16,13 @@ export const GET = getFolder.handler(async ({ params, service }) => {
 });
 
 export const PUT = updateFolder.handler(async ({ params, body, service }) => {
-	const folderPath = service.getFullFolderPath(
+	const folderPath = await service.resolveListedFolder(
 		params.path,
 		body.parentFolderId,
 	);
+	if (!folderPath) {
+		return Http.NotFound("Folder not found");
+	}
 	try {
 		await service.updateFolderMeta(folderPath, body);
 		return Http.Ok({ message: "Folder metadata updated." });
@@ -33,10 +36,13 @@ export const PUT = updateFolder.handler(async ({ params, body, service }) => {
 
 export const DELETE = deleteFolder.handler(
 	async ({ params, body, service }) => {
-		const folderPath = service.getFullFolderPath(
+		const folderPath = await service.resolveListedFolder(
 			params.path,
 			body.parentFolderId,
 		);
+		if (!folderPath) {
+			return Http.NotFound("Folder not found");
+		}
 		try {
 			await service.deleteFolder(folderPath);
 			return Http.Ok({ message: "Folder permanently deleted." });

@@ -5775,6 +5775,15 @@ export interface paths {
 						"application/json": components["schemas"]["ErrorResponse"];
 					};
 				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
 				/** @description Internal Server Error */
 				500: {
 					headers: {
@@ -13928,6 +13937,8 @@ export interface components {
 			readonly banned: boolean;
 			/** Format: date-time */
 			createdAt: string;
+			/** @default false */
+			readonly driveOnly: boolean;
 			email: string;
 			/** @default false */
 			readonly emailVerified: boolean;

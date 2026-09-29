@@ -1166,5 +1166,10 @@
 	"desktop_app_homebrew_description": "En macOS y Linux, Homebrew la instala con rclone, la mantiene actualizada y la inicia al iniciar sesión.",
 	"desktop_app_server_title": "Dirección del servidor",
 	"desktop_app_server_description": "Pégala en la aplicación cuando te pida tu servidor y luego aprueba el inicio de sesión en tu navegador.",
-	"desktop_app_copy_address": "Copiar dirección"
+	"desktop_app_copy_address": "Copiar dirección",
+	"admin_invite_drive_only": "Solo unidades compartidas (sin unidad personal)",
+	"admin_user_drive_only": "Solo unidades",
+	"admin_restrict_to_drives": "Limitar a unidades compartidas",
+	"admin_give_personal_drive": "Dar una unidad personal",
+	"drives_empty_drive_only": "Aún no estás en ninguna unidad. Pide a quien te invitó que te añada a una."
 }

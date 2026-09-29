@@ -1166,5 +1166,10 @@
 	"desktop_app_homebrew_description": "Op macOS en Linux installeert Homebrew haar met rclone, houdt haar bijgewerkt en start haar bij het inloggen.",
 	"desktop_app_server_title": "Serveradres",
 	"desktop_app_server_description": "Plak het in de app wanneer die om je server vraagt en keur daarna de aanmelding goed in je browser.",
-	"desktop_app_copy_address": "Adres kopiëren"
+	"desktop_app_copy_address": "Adres kopiëren",
+	"admin_invite_drive_only": "Alleen gedeelde schijven (geen eigen schijf)",
+	"admin_user_drive_only": "Alleen schijven",
+	"admin_restrict_to_drives": "Beperken tot gedeelde schijven",
+	"admin_give_personal_drive": "Eigen schijf geven",
+	"drives_empty_drive_only": "Je zit nog in geen enkele schijf. Vraag degene die je uitnodigde om je toe te voegen."
 }

@@ -44,13 +44,21 @@ fn home() -> Option<PathBuf> {
     directories::BaseDirs::new().map(|d| d.home_dir().to_path_buf())
 }
 
-fn brew_service(home: &Path, formula: &str) -> PathBuf {
+/// Homebrew 7 names new service files `sh.brew.<formula>`; older ones kept
+/// `homebrew.mxcl.<formula>` (launchd) or `homebrew.<formula>` (systemd).
+fn brew_services(home: &Path, formula: &str) -> [PathBuf; 2] {
     if cfg!(target_os = "macos") {
-        home.join(format!(
-            "Library/LaunchAgents/homebrew.mxcl.{formula}.plist"
-        ))
+        let dir = home.join("Library/LaunchAgents");
+        [
+            dir.join(format!("sh.brew.{formula}.plist")),
+            dir.join(format!("homebrew.mxcl.{formula}.plist")),
+        ]
     } else {
-        home.join(format!(".config/systemd/user/homebrew.{formula}.service"))
+        let dir = home.join(".config/systemd/user");
+        [
+            dir.join(format!("sh.brew.{formula}.service")),
+            dir.join(format!("homebrew.{formula}.service")),
+        ]
     }
 }
 
@@ -65,7 +73,8 @@ fn launcher(home: &Path) -> Option<PathBuf> {
 }
 
 fn state_in(home: &Path) -> Login {
-    if let Some((_, stop)) = BREW.iter().find(|(f, _)| brew_service(home, f).exists()) {
+    let installed = |formula: &str| brew_services(home, formula).iter().any(|p| p.exists());
+    if let Some((_, stop)) = BREW.iter().find(|(formula, _)| installed(formula)) {
         return Login::Homebrew(stop);
     }
     match launcher(home) {
@@ -193,10 +202,18 @@ mod tests {
         set_in(&home, exe, false).unwrap();
         set_in(&home, exe, false).unwrap();
         assert_eq!(state_in(&home), Login::Off);
-        let brew = brew_service(&home, BREW[1].0);
-        std::fs::create_dir_all(brew.parent().unwrap()).unwrap();
-        std::fs::write(&brew, "").unwrap();
-        assert_eq!(state_in(&home), Login::Homebrew(BREW[1].1));
+        // Both names Homebrew has written, each on its own.
+        for brew in brew_services(&home, BREW[1].0) {
+            std::fs::create_dir_all(brew.parent().unwrap()).unwrap();
+            std::fs::write(&brew, "").unwrap();
+            assert_eq!(
+                state_in(&home),
+                Login::Homebrew(BREW[1].1),
+                "{}",
+                brew.display()
+            );
+            std::fs::remove_file(&brew).unwrap();
+        }
         let _ = std::fs::remove_dir_all(&home);
     }
 

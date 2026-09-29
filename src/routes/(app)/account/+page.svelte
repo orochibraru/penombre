@@ -11,6 +11,7 @@
 	import { enhance } from "#lib/forms.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
+	import { page } from "$app/state";
 
 	onMount(() => {
 		title.set(m.title_account_details());
@@ -118,17 +119,19 @@
             <Card.Description>{m.account_export_description()}</Card.Description>
         </Card.Header>
         <Card.Content class="flex flex-wrap gap-3">
-            <Button
-                variant="outline"
-                onclick={() =>
-                    downloadExport(
-                        "/api/v1/account/export",
-                        "penombre-export.zip",
-                    )}
-            >
-                <DownloadIcon />
-                {m.account_export_files()}
-            </Button>
+            {#if !page.data.driveOnly}
+                <Button
+                    variant="outline"
+                    onclick={() =>
+                        downloadExport(
+                            "/api/v1/account/export",
+                            "penombre-export.zip",
+                        )}
+                >
+                    <DownloadIcon />
+                    {m.account_export_files()}
+                </Button>
+            {/if}
             <Button
                 variant="outline"
                 onclick={() =>

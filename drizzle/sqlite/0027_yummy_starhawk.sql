@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `drive_only` integer DEFAULT false NOT NULL;

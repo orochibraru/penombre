@@ -861,5 +861,10 @@
 	"desktop_app_homebrew_description": "macOS と Linux では、Homebrew が rclone と一緒にインストールし、更新を管理し、ログイン時に起動します。",
 	"desktop_app_server_title": "サーバーのアドレス",
 	"desktop_app_server_description": "アプリがサーバーを尋ねたら貼り付け、ブラウザーでサインインを承認してください。",
-	"desktop_app_copy_address": "アドレスをコピー"
+	"desktop_app_copy_address": "アドレスをコピー",
+	"admin_invite_drive_only": "共有ドライブのみ（個人ドライブなし）",
+	"admin_user_drive_only": "ドライブのみ",
+	"admin_restrict_to_drives": "共有ドライブのみに制限",
+	"admin_give_personal_drive": "個人ドライブを付与",
+	"drives_empty_drive_only": "まだどのドライブにも参加していません。招待した人に追加を依頼してください。"
 }

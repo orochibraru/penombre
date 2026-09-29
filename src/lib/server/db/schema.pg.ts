@@ -28,6 +28,8 @@ export const user = pgTable("user", {
 	banReason: text("ban_reason"),
 	banExpires: timestamp("ban_expires"),
 	twoFactorEnabled: boolean("two_factor_enabled").default(false),
+	/** No personal drive: only the shared drives the account is a member of. */
+	driveOnly: boolean("drive_only").default(false).notNull(),
 });
 
 export const session = pgTable(

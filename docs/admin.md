@@ -18,13 +18,18 @@ the storage bar for the whole volume and a per-user usage table, biggest first.
 
 `/admin/users` adds people by email address and lists every account with its
 role and ban state. A new account is created with no password: its owner chooses
-one at first sign-in. An admin cannot set it for them. The row menu can:
+one at first sign-in. An admin cannot set it for them. Tick **Shared drives
+only** when inviting someone who should see nothing but the drives you add them
+to. The row menu can:
 
 - **Resend invite**: only on an account with no password set. Mints a fresh
   invite link and invalidates any older, unused one for it. See
   [Authentication](authentication.md#adding-people-to-an-instance).
 - **Make admin / Remove admin** — grant or revoke the `admin` role.
 - **Ban / Unban** — a banned user's sessions stop working immediately.
+- **Restrict to shared drives / Give a personal drive** — switch the account to
+  [drives only](shared-drives.md#people-who-only-see-drives) and back. Not
+  offered for an admin, and making someone an admin gives them their drive back.
 - **Delete** — removes the account. You cannot delete your own account, since
   that would lock the instance out of its own admin panel; see
   [Deleting your own account](authentication.md#deleting-your-own-account) for

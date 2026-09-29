@@ -10,9 +10,6 @@ on:
       pr_number:
         required: true
         type: string
-    secrets:
-      DOCKER_HUB_TOKEN:
-        required: true
 
 concurrency:
   group: pr-cleanup-${{ inputs.pr_number || github.event.pull_request.number }}
@@ -20,6 +17,7 @@ concurrency:
 
 permissions:
   contents: read
+  packages: write
 
 env:
   TZ: Europe/Paris
@@ -34,36 +32,24 @@ jobs:
       github.repository && !github.event.pull_request.merged)
     runs-on: ubuntu-latest
     steps:
-      - name: Delete the tag from Docker Hub
+      # The package version carrying the tag. Its per-platform children stay
+      # untagged; a public package's storage is free.
+      - name: Delete the tag from ghcr.io
         env:
-          DOCKER_HUB_USERNAME: orochibraru
-          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-          REPOSITORY: orochibraru/penombre
+          GH_TOKEN: ${{ github.token }}
+          OWNER: orochibraru
+          PACKAGE: penombre
           TAG: pr-${{ inputs.pr_number || github.event.pull_request.number }}
         run: |
           set -euo pipefail
-
-          token="$(
-            curl -fsS -X POST https://hub.docker.com/v2/users/login/ \
-              -H 'Content-Type: application/json' \
-              -d "$(jq -nc --arg u "$DOCKER_HUB_USERNAME" --arg p "$DOCKER_HUB_TOKEN" \
-                    '{username: $u, password: $p}')" \
-              | jq -r .token
-          )"
-          if [ -z "$token" ] || [ "$token" = "null" ]; then
-            echo "::error::Could not authenticate against Docker Hub"
-            exit 1
+          versions="users/$OWNER/packages/container/$PACKAGE/versions"
+          ids="$(gh api --paginate "$versions" \
+            --jq ".[] | select(.metadata.container.tags | index(\"$TAG\")) | .id")"
+          id="${ids%%$'\n'*}"
+          # None is normal: e2e failed, so the tag was never published.
+          if [ -z "$id" ]; then
+            echo "No $PACKAGE:$TAG to delete"
+            exit 0
           fi
-
-          status="$(
-            curl -sS -o /dev/null -w '%{http_code}' -X DELETE \
-              -H "Authorization: JWT $token" \
-              "https://hub.docker.com/v2/repositories/${REPOSITORY}/tags/${TAG}/"
-          )"
-
-          case "$status" in
-            # 404 is normal: e2e failed, so the tag was never published.
-            204|202) echo "Deleted ${REPOSITORY}:${TAG}" ;;
-            404) echo "No ${REPOSITORY}:${TAG} to delete" ;;
-            *) echo "::error::Deleting ${REPOSITORY}:${TAG} failed with HTTP ${status}"; exit 1 ;;
-          esac
+          gh api -X DELETE "$versions/$id"
+          echo "Deleted $PACKAGE:$TAG"

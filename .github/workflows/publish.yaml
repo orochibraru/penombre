@@ -26,7 +26,8 @@ env:
   # code no canary image was built from.
   RELEASE_RULES: breaking=major,feat=patch,docs=patch,refactor=patch,style=patch,test=patch,build=patch,ci=patch,chore=patch
 
-# The release job widens its own; images go to Docker Hub.
+# Jobs widen their own. CI's images live on ghcr.io; Docker Hub only gets the
+# published tags (version, canary, latest), so CI never pulls from it.
 permissions:
   contents: read
 
@@ -84,6 +85,9 @@ jobs:
     needs: [version]
     if: needs.version.outputs.mode == 'canary'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     outputs:
       pr: ${{ steps.find.outputs.pr }}
       image: ${{ steps.find.outputs.image }}
@@ -92,11 +96,18 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Login to ghcr.io
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
       - name: Match the merged PR's image by source tree
         id: find
         env:
           GH_TOKEN: ${{ github.token }}
-          IMAGE: docker.io/orochibraru/penombre
+          IMAGE: ghcr.io/orochibraru/penombre
         run: |
           pr="$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
             --jq '[.[] | select(.merged_at != null)][0].number // empty')"
@@ -128,51 +139,73 @@ jobs:
     needs:
       - code_quality
       - version
+    permissions:
+      contents: read
+      packages: write
     with:
       image_tag: ${{ needs.version.outputs.version }}
       extra_tag: canary
       app_version: ${{ needs.version.outputs.version }}
       image_name: orochibraru/penombre
-      registry_name: docker.io
-      registry_username: orochibraru
+      registry_name: ghcr.io
+      registry_username: ${{ github.actor }}
       bake_target: app
     secrets:
-      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      registry_password: ${{ github.token }}
 
   e2e:
     name: E2E
     needs: [build-app]
+    permissions:
+      contents: read
+      packages: read
     uses: ./.github/workflows/e2e.yaml
     with:
       image: ${{ needs.build-app.outputs.image }}
-      registry_name: docker.io
-      registry_username: orochibraru
+      registry_name: ghcr.io
+      registry_username: ${{ github.actor }}
       bake_target: app
     secrets:
-      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      registry_password: ${{ github.token }}
 
   publish:
     name: Publish ${{ needs.version.outputs.version }}
     needs: [version, e2e]
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/docker-manifest.yaml
     with:
       image_name: orochibraru/penombre
-      registry_name: docker.io
-      registry_username: orochibraru
+      registry_name: ghcr.io
+      registry_username: ${{ github.actor }}
       bake_target: app
+      mirror_registry: docker.io
+      mirror_username: orochibraru
     secrets:
-      registry_password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      registry_password: ${{ github.token }}
+      mirror_password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
   promote:
     name: Promote ${{ needs.version.outputs.version }}
     needs: [tested, version]
     if: needs.tested.outputs.image != ''
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      - name: Login to Container registry
+      - name: Login to ghcr.io
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Login to Docker Hub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: docker.io
@@ -189,13 +222,18 @@ jobs:
           printf 'FROM %s\nENV PENOMBRE_RELEASE_VERSION=%s\n' "$SOURCE" "$VERSION" \
             | docker buildx build --platform linux/amd64,linux/arm64 --push \
               -t "docker.io/orochibraru/penombre:$VERSION" \
-              -t docker.io/orochibraru/penombre:canary -
+              -t docker.io/orochibraru/penombre:canary \
+              -t "ghcr.io/orochibraru/penombre:$VERSION" \
+              -t ghcr.io/orochibraru/penombre:canary -
 
   stable-images:
     name: Promote Canary to ${{ needs.version.outputs.version }}
     needs: [version]
     if: needs.version.outputs.mode == 'stable'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -221,12 +259,19 @@ jobs:
             exit 1
           fi
           echo "Releasing $tag ($sha)."
-          echo "image=docker.io/orochibraru/penombre:${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/orochibraru/penombre:${tag#v}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      - name: Login to Container registry
+      - name: Login to ghcr.io
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Login to Docker Hub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: docker.io
@@ -242,7 +287,10 @@ jobs:
             | docker buildx build --platform linux/amd64,linux/arm64 --push \
               -t "docker.io/orochibraru/penombre:$VERSION" \
               -t docker.io/orochibraru/penombre:latest \
-              -t docker.io/orochibraru/penombre:canary -
+              -t docker.io/orochibraru/penombre:canary \
+              -t "ghcr.io/orochibraru/penombre:$VERSION" \
+              -t ghcr.io/orochibraru/penombre:latest \
+              -t ghcr.io/orochibraru/penombre:canary -
 
   release:
     name: Release ${{ needs.version.outputs.version }}
@@ -401,8 +449,9 @@ jobs:
     name: Delete PR Image
     needs: [tested, release]
     if: always() && needs.tested.outputs.pr != ''
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/pr-cleanup.yaml
     with:
       pr_number: ${{ needs.tested.outputs.pr }}
-    secrets:
-      DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}

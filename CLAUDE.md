@@ -1477,6 +1477,17 @@ mismatch (direct push, stale PR run) takes the full path. The PR image of a
 merged PR is deleted by `publish.yaml`, not `pr-cleanup.yaml`, which would race
 the promotion.
 
+**CI never pulls from Docker Hub.** It answered 429 mid-release, logged in or
+not: eight e2e shards, promotions and every build's base images add up. CI's own
+images (digests, `pr-<n>`, and a copy of every published tag, which the stable
+promotion reads) live on `ghcr.io/orochibraru/penombre`, reached with
+`github.token`, so each calling job grants `packages`. Docker Hub only receives
+published tags: `docker-manifest.yaml` copies them over (`mirror_registry`), and
+the promotions push to both. Third-party images (base images in builds, postgres
+and redis in e2e) come through `mirror.gcr.io`, set as a registry mirror for
+buildkit and the e2e runner's daemon. The ghcr.io package must stay **public**:
+a private one bills its storage, and CI writes a lot of it.
+
 ### Every merge is a canary; merging the release PR is the release
 
 [releaser](https://github.com/orochibraru/releaser) (`publish.yaml`) tags each
@@ -1542,7 +1553,16 @@ The app's update check (`desktop/src/update.rs`) reads GitHub's releases list
 and counts a release only once it carries this platform's asset: the desktop
 builds land minutes after the release itself. It treats the unstamped `0.1.0` as
 a source build and never checks. The formula names and the brew-service plist
-names in `login.rs` must follow the tap's.
+names in `login.rs` must follow the tap's. Homebrew 7 writes new service files
+as `sh.brew.<formula>`; older installs keep `homebrew.mxcl.<formula>`, so
+`login.rs` checks both.
+
+A bare binary has no bundle for the Dock to take an icon from, so the app
+renders `assets/logo-light.svg` at startup and hands it to eframe
+(`ui::app_icon`). On macOS the default app menu is off (`with_default_menu`):
+its Quit is `terminate:`, which exits the process outright, tray and sync
+included. ⌘Q closes the window like its close button; only the tray's Quit ends
+the app.
 
 **Install and restart** swaps the binary by `rename` (Windows moves the running
 `.exe` aside to `.old` first: it cannot be overwritten), staged in a dot-folder
@@ -1780,6 +1800,29 @@ A drive has its own trash at `/drives/[drive]/trash`, because `/trash` lists the
 caller's own rows and a drive's belong to the drive. `isTrashListing` in
 `utils.ts` is what tells the wrapper to show the restore/delete/empty actions
 there.
+
+### A drive-only account has no personal drive
+
+`user.drive_only` (better-auth `additionalFields`, `input: false` so the account
+cannot lift it through `/update-user`) is read only through `isDriveOnly()`
+(`auth/drive-only.ts`), which also makes it mean nothing in simple mode.
+Enforcement is server-side and sits where the paths converge:
+
+- `storageServiceFor` refuses everything after its drive branch (volume, share,
+  personal drive) with a 404, which covers the storage API, versions, notes,
+  export, WebDAV `/dav/me`, `/view` and `/edit`. `volumeStorage` refuses too,
+  since the volume pages and scan routes call it directly.
+- `(app)/+layout.server.ts` redirects any page outside `DRIVE_ONLY_PATHS`
+  (drives, edit, settings but not storage, account, API docs) to the account's
+  drive, or to All drives when it has several.
+- Drive creation answers 403, the DAV root lists drives only, the grant download
+  404s, and `ensureUserDirectory` is skipped at sign-in.
+
+The menus hide what the server refuses, from `data.driveOnly`. Admin actions
+never let an admin be drive-only; promoting one clears it. The admin page reads
+the flag as `driveOnlyUsers`: better-auth's `UserWithRole` type does not carry
+additional fields, and a page-data key named `driveOnly` would shadow the
+layout's.
 
 ### The drive travels as a header, not a rewritten URL
 

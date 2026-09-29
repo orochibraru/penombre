@@ -1103,5 +1103,10 @@
 	"desktop_app_homebrew_description": "macOS:ssä ja Linuxissa Homebrew asentaa sen rclonen kanssa, pitää sen ajan tasalla ja käynnistää sen kirjautuessa.",
 	"desktop_app_server_title": "Palvelimen osoite",
 	"desktop_app_server_description": "Liitä se sovellukseen, kun se kysyy palvelinta, ja hyväksy sitten kirjautuminen selaimessa.",
-	"desktop_app_copy_address": "Kopioi osoite"
+	"desktop_app_copy_address": "Kopioi osoite",
+	"admin_invite_drive_only": "Vain jaetut asemat (ei omaa asemaa)",
+	"admin_user_drive_only": "Vain asemat",
+	"admin_restrict_to_drives": "Rajoita jaettuihin asemiin",
+	"admin_give_personal_drive": "Anna oma asema",
+	"drives_empty_drive_only": "Et ole vielä yhdessäkään asemassa. Pyydä kutsujaasi lisäämään sinut."
 }

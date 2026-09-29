@@ -23,7 +23,8 @@ impl eframe::App for Window {
         let ctx = ui.ctx().clone();
         self.app.tick();
         // ponytail: the window flashes once on a configured start; macOS only makes the tray item with a window.
-        if std::mem::take(&mut self.app.hide_on_first_frame) || self.app.quit {
+        let close_keys = ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::Q));
+        if std::mem::take(&mut self.app.hide_on_first_frame) || self.app.quit || close_keys {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
         }
         if std::mem::take(&mut self.app.show) {

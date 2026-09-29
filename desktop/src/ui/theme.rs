@@ -73,6 +73,41 @@ pub(super) fn palette(ui: &Ui) -> &'static Palette {
 pub(super) const RADIUS: u8 = 8;
 
 /// Once per egui context: fonts, icons, and both themes, following the system.
+/// The Dock and taskbar icon. A bare binary has no bundle for macOS to take
+/// one from, so without it the Dock shows a generic executable.
+pub fn app_icon() -> Option<egui::IconData> {
+    const SIZE: u32 = 512;
+    // macOS draws its own icons inside a margin; the logo's viewBox has none.
+    const ART: f32 = 0.82;
+    let tree = resvg::usvg::Tree::from_data(
+        include_bytes!("../../assets/logo-light.svg"),
+        &resvg::usvg::Options::default(),
+    )
+    .ok()?;
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(SIZE, SIZE)?;
+    let scale = SIZE as f32 * ART / tree.size().width();
+    let offset = SIZE as f32 * (1.0 - ART) / 2.0;
+    resvg::render(
+        &tree,
+        resvg::tiny_skia::Transform::from_row(scale, 0.0, 0.0, scale, offset, offset),
+        &mut pixmap.as_mut(),
+    );
+    // tiny-skia keeps alpha premultiplied; IconData wants it straight.
+    let rgba = pixmap
+        .pixels()
+        .iter()
+        .flat_map(|pixel| {
+            let c = pixel.demultiply();
+            [c.red(), c.green(), c.blue(), c.alpha()]
+        })
+        .collect();
+    Some(egui::IconData {
+        rgba,
+        width: SIZE,
+        height: SIZE,
+    })
+}
+
 pub fn install(ctx: &egui::Context) {
     egui_extras::install_image_loaders(ctx);
     fastframe_icons::install::<Icon>(ctx);
@@ -136,4 +171,27 @@ fn visuals(theme: Theme, p: &Palette) -> egui::Visuals {
         w.expansion = 0.0;
     }
     v
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn the_app_icon_is_the_logo_with_a_margin() {
+        let icon = super::app_icon().expect("the logo renders");
+        assert_eq!((icon.width, icon.height), (512, 512));
+        assert_eq!(icon.rgba.len(), 512 * 512 * 4);
+        let at = |x: usize, y: usize| &icon.rgba[(y * 512 + x) * 4..][..4];
+        assert_eq!(at(4, 4)[3], 0, "the margin is transparent");
+        let lit = at(160, 360);
+        assert!(
+            lit[3] > 200 && lit[0] > lit[2],
+            "bordeaux in the crescent: {lit:?}"
+        );
+        if let Some(dir) = std::env::var_os("PENOMBRE_SYNC_SNAPSHOTS") {
+            image::RgbaImage::from_raw(512, 512, icon.rgba)
+                .unwrap()
+                .save(std::path::Path::new(&dir).join("app-icon.png"))
+                .unwrap();
+        }
+    }
 }

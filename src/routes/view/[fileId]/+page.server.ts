@@ -1,4 +1,5 @@
 import { error, redirect } from "@sveltejs/kit";
+import { DriveAccessError } from "#lib/server/errors.js";
 import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
 /**
@@ -18,6 +19,11 @@ export const load = async ({ params, url, locals }) => {
 	const service = await storageServiceFor(locals.storageOwner ?? locals.user, {
 		url,
 		locals,
+	}).catch((refusal: unknown) => {
+		if (refusal instanceof DriveAccessError) {
+			return error(404, "That file does not exist.");
+		}
+		throw refusal;
 	});
 	const path = await service.findFileById(params.fileId);
 	if (!path) {

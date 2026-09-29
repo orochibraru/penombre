@@ -861,5 +861,10 @@
 	"desktop_app_homebrew_description": "macOS와 Linux에서는 Homebrew가 rclone과 함께 설치하고, 최신 상태로 유지하며, 로그인 시 실행합니다.",
 	"desktop_app_server_title": "서버 주소",
 	"desktop_app_server_description": "앱이 서버를 물으면 붙여 넣은 뒤 브라우저에서 로그인을 승인하세요.",
-	"desktop_app_copy_address": "주소 복사"
+	"desktop_app_copy_address": "주소 복사",
+	"admin_invite_drive_only": "공유 드라이브만 (개인 드라이브 없음)",
+	"admin_user_drive_only": "드라이브만",
+	"admin_restrict_to_drives": "공유 드라이브로 제한",
+	"admin_give_personal_drive": "개인 드라이브 제공",
+	"drives_empty_drive_only": "아직 참여한 드라이브가 없습니다. 초대한 사람에게 추가를 요청하세요."
 }

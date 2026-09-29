@@ -45,6 +45,10 @@ export const user = sqliteTable("user", {
 	twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" }).default(
 		false,
 	),
+	/** No personal drive: only the shared drives the account is a member of. */
+	driveOnly: integer("drive_only", { mode: "boolean" })
+		.default(false)
+		.notNull(),
 });
 
 export const session = sqliteTable(

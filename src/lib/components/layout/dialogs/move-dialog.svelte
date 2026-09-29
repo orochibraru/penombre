@@ -68,9 +68,9 @@
 
 	// Only places the caller may write to.
 	const destinations: Destination[] = $derived.by(() => {
-		const list: Destination[] = [
-			{ key: "personal", label: m.nav_my_drive(), location: {}, root: "" },
-		];
+		const list: Destination[] = page.data.driveOnly
+			? []
+			: [{ key: "personal", label: m.nav_my_drive(), location: {}, root: "" }];
 		for (const drive of page.data.drives ?? []) {
 			if (drive.role !== "viewer") {
 				list.push({

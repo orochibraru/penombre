@@ -35,12 +35,28 @@ export const load = async ({ request }) => {
 			: [];
 		const withCredential = new Set(credentialRows.map((row) => row.userId));
 		const invitable = userIds.filter((id) => !withCredential.has(id));
+		// Not on better-auth's `UserWithRole` type, so read beside it. Named
+		// apart from the layout's `driveOnly`, which page data would shadow.
+		const driveOnlyUsers = userIds.length
+			? (
+					await getDb()
+						.select({ id: userTable.id })
+						.from(userTable)
+						.where(
+							and(
+								eq(userTable.driveOnly, true),
+								inArray(userTable.id, userIds),
+							),
+						)
+				).map((row) => row.id)
+			: [];
 
 		// Emailing an invitation is only offered when a mail server is
 		// configured; otherwise the admin passes the link on themselves.
 		return {
 			users,
 			invitable,
+			driveOnlyUsers,
 			smtpEnabled: (await getSmtpSettings()) !== null,
 			origin: getConfig().origin,
 		};
@@ -98,6 +114,7 @@ export const actions = {
 		const email = field(form, "email")?.trim().toLowerCase();
 		const name = field(form, "name")?.trim();
 		const sendEmail = form.get("sendEmail") === "on";
+		const driveOnly = form.get("driveOnly") === "on";
 
 		if (!(email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))) {
 			return fail(400, { error: "A valid email address is required." });
@@ -113,6 +130,7 @@ export const actions = {
 					// `createUser` demands one, so this satisfies it and goes.
 					password: crypto.randomUUID(),
 					role: "user",
+					data: { driveOnly },
 				},
 			});
 
@@ -236,6 +254,13 @@ export const actions = {
 				headers: request.headers,
 				body: { userId, role },
 			});
+			if (role === "admin") {
+				// An administrator always has a drive of their own.
+				await getDb()
+					.update(userTable)
+					.set({ driveOnly: false })
+					.where(eq(userTable.id, userId));
+			}
 			return { success: true };
 		} catch (err) {
 			return fail(500, { error: (err as Error).message });
@@ -268,6 +293,33 @@ export const actions = {
 		} catch (err) {
 			return fail(500, { error: (err as Error).message });
 		}
+	},
+
+	setDriveOnly: async ({ request, locals }) => {
+		requireAdmin(locals);
+		const form = await request.formData();
+		const userId = field(form, "userId");
+		if (!userId) {
+			return fail(400, { error: "A user is required." });
+		}
+		// The wanted state, like `setBanned`. Turning it off gives an empty
+		// personal drive; turning it on hides one without deleting it.
+		const driveOnly = form.get("driveOnly") === "true";
+		const [target] = await getDb()
+			.select({ role: userTable.role })
+			.from(userTable)
+			.where(eq(userTable.id, userId));
+		if (!target) {
+			return fail(404, { error: "No such user." });
+		}
+		if (driveOnly && target.role === "admin") {
+			return fail(400, { error: "An administrator always has a drive." });
+		}
+		await getDb()
+			.update(userTable)
+			.set({ driveOnly })
+			.where(eq(userTable.id, userId));
+		return { success: true };
 	},
 
 	removeUser: async ({ request, locals }) => {

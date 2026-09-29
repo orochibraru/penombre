@@ -1,6 +1,7 @@
 name: Docker Build
 # Pushes by digest only. The tag comes later, from `docker-manifest.yaml`,
-# so nothing is published under a friendly name before e2e has passed.
+# so nothing is published under a friendly name before e2e has passed. CI's
+# own images live on ghcr.io; Docker Hub only ever receives published tags.
 
 on:
   workflow_call:
@@ -53,6 +54,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 env:
   IMAGE: ${{ inputs.registry_name }}/${{ inputs.image_name }}
@@ -123,6 +125,12 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        # Base images through Google's public Docker Hub cache: Docker Hub
+        # rate-limits CI (429s), mirror.gcr.io does not. Misses fall back.
+        with:
+          buildkitd-config-inline: |
+            [registry."docker.io"]
+              mirrors = ["mirror.gcr.io"]
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

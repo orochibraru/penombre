@@ -1,3 +1,4 @@
+import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getVolumes, isSimpleMode } from "#lib/server/config.js";
 import { DAV_CHALLENGE } from "#lib/server/dav/auth.js";
 import { davOptions, davRoot, handleDav } from "#lib/server/dav/handler.js";
@@ -11,14 +12,18 @@ export const trailingSlash = "ignore";
 
 /** `fallback`, not per-method exports: PROPFIND, MKCOL, MOVE and LOCK have none. */
 /** What the sidebar lists, minus read-only volumes: nothing could sync into one. */
-async function places(user: { id: string }) {
+async function places(user: NonNullable<App.Locals["user"]>) {
 	const drives = isSimpleMode() ? [] : await drivesService.listForUser(user.id);
+	const driveList = drives.map((d) => ({
+		href: `/dav/drives/${encodeURIComponent(d.id)}/`,
+		name: d.name,
+	}));
+	if (isDriveOnly(user)) {
+		return driveList;
+	}
 	return [
 		{ href: "/dav/me/", name: "My drive" },
-		...drives.map((d) => ({
-			href: `/dav/drives/${encodeURIComponent(d.id)}/`,
-			name: d.name,
-		})),
+		...driveList,
 		...getVolumes()
 			.filter((v) => !v.readOnly)
 			.map((v) => ({

@@ -1144,5 +1144,10 @@
 	"desktop_app_homebrew_description": "В macOS и Linux Homebrew устанавливает его вместе с rclone, обновляет и запускает при входе в систему.",
 	"desktop_app_server_title": "Адрес сервера",
 	"desktop_app_server_description": "Вставьте его в приложение, когда оно запросит сервер, затем подтвердите вход в браузере.",
-	"desktop_app_copy_address": "Скопировать адрес"
+	"desktop_app_copy_address": "Скопировать адрес",
+	"admin_invite_drive_only": "Только общие диски (без личного диска)",
+	"admin_user_drive_only": "Только диски",
+	"admin_restrict_to_drives": "Ограничить общими дисками",
+	"admin_give_personal_drive": "Выдать личный диск",
+	"drives_empty_drive_only": "Вы пока не состоите ни в одном диске. Попросите пригласившего вас добавить вас."
 }
