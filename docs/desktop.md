@@ -23,11 +23,55 @@ then runs the sync on its own.
   key reaches rclone through its environment only, never a configuration file.
 - **Junk stays local.** `.DS_Store`, `._*`, `Thumbs.db`, `desktop.ini` and
   similar system files are never uploaded.
-- **It tells you what happened.** The app shows whether a sync is running and
-  how far along it is, lists the files that failed, retries what can be retried
-  and notifies you when something needs you.
+- **It shows what is happening.** While a folder syncs, the window shows its
+  progress, the files moving and their own progress. Afterwards it lists the
+  files synced recently, in which direction, and the files that failed with the
+  reason.
+- **Failures are retried.** A file that fails is tried again a minute later. If
+  it fails again you get one notification naming it; you are not told again
+  until it has synced and broken anew.
+- **It notices when the server is gone.** Before each sync the app checks the
+  server answers. If it doesn't, nothing is synced, a banner says since when and
+  why, and the app asks again every 30 seconds, syncing as soon as the server is
+  back; **Retry now** asks at once. An outage lasting past the second check
+  sends one notification; a server restarting in a few seconds does not.
+- **Pause.** **Pause syncing**, in the tray menu or the window, stops syncing
+  and interrupts a sync in progress. The app remembers it across restarts;
+  **Resume syncing** catches up at once with what changed meanwhile.
 
-Closing the window keeps the app in the tray; quit from the tray menu.
+Closing the window keeps the app in the tray; quit from the tray menu. Only one
+copy runs at a time: opening it again brings the running one forward.
+
+## Settings
+
+The **Settings** view, beside **Sync** at the top of the window, holds:
+
+- **Account.** The server, the key's name, **Sign out**, and **Change server**,
+  which signs out and signs in to another one.
+- **Start at login.** A switch, using the system's own mechanism (a login item
+  on macOS, a startup entry on Linux, the registry on Windows). When
+  `brew services` already starts the app it says so and stays locked, so two
+  copies never run; `brew services stop penombre-sync` hands it back.
+- **Permissions.** Whether notifications can be shown, whether each synced
+  folder can be read, where rclone is, and whether the key can be read from the
+  credential store, each with a button to the right system setting when one
+  exists. macOS protects Documents, Desktop and Downloads: syncing one needs
+  access under **Privacy & Security → Files and Folders** or **Full Disk
+  Access**.
+
+On macOS the app is a plain program, not an `.app`, so it cannot ask for
+notification permission or have its own entry in **System Settings →
+Notifications**. Its notifications are shown by Script Editor; allow those.
+
+## Good to know
+
+- A folder, or the place it syncs to, must not be completely empty: rclone
+  refuses to sync against an empty side, to protect you from a wipe.
+- A file that keeps failing makes each later sync of its folder a full
+  comparison until it goes through. Fix the cause, a file too large for your
+  reverse proxy for example (see [Reverse proxy](reverse-proxy.md)), and it
+  settles.
+- Folders sync one after another, so a large one delays the next.
 
 ## Requirements
 
