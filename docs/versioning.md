@@ -78,8 +78,9 @@ modification date inside the zip.
 In list and table layouts:
 
 - **Drop a file on another file** to open the merge dialog with both.
-- **Drop a file from your computer on a file** to upload it as that file's new
-  version, whatever its name.
+- **Drop a file from your computer on a file** to choose between uploading it as
+  that file's new version, whatever its name, or as a separate file in the
+  folder. Dropping several files uploads them to the folder.
 - **Drag an unfolded version onto another** to move it to that place. The
   versions are renumbered `v1`, `v2`, … in their new order.
 - **Drag a version onto its file** to restore it, after confirming.

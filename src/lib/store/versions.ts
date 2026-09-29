@@ -16,6 +16,12 @@ export const mergeVersionsOf = writable<{
 	onmerged: () => void;
 } | null>(null);
 
+/** A file from the computer dropped on a row: a version of it, or its own file. */
+export const pendingVersionDrop = writable<{
+	item: ObjectItem;
+	file: File;
+} | null>(null);
+
 /** A restore or delete waiting on its confirmation dialog. */
 export const pendingVersionAction = writable<{
 	item: ObjectItem;

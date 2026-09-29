@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.56](https://github.com/orochibraru/penombre/compare/v1.8.55...v1.8.56) (2026-09-28)
+
+### Features
+
+* sidebar folder shortcuts, merge files with their versions, fix outside renders duplicating renamed files ([30921f1](https://github.com/orochibraru/penombre/commit/30921f12ed9714d1340b7c11c0094a2b364b3aca))
+
 ## [1.8.55](https://github.com/orochibraru/penombre/compare/v1.8.54...v1.8.55) (2026-09-25)
 
 ## [1.8.54](https://github.com/orochibraru/penombre/compare/v1.8.53...v1.8.54) (2026-09-25)

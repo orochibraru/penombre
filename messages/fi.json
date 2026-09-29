@@ -1054,7 +1054,10 @@
 	"versions_extract_error": "Versioita ei voitu purkaa",
 	"versions_extracted": "Tiedostoiksi puretut versiot: {count}",
 	"versions_reorder_error": "Versioiden järjestystä ei voitu muuttaa",
-	"versions_drop_one": "Pudota yksi tiedosto tehdäksesi siitä uuden version",
+	"versions_drop_title": "Uusi versio vai erillinen tiedosto?",
+	"versions_drop_hint": "Lähetetäänkö {name} tiedoston {target} uutena versiona vai erillisenä tiedostona tähän kansioon?",
+	"versions_drop_as_version": "Uusi versio",
+	"versions_drop_as_file": "Erillinen tiedosto",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

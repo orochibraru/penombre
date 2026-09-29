@@ -2,10 +2,12 @@ import { toast } from "svelte-sonner";
 import { api, type ObjectItem } from "#lib/api/index.js";
 import * as m from "#lib/paraglide/messages.js";
 import { locationOf } from "#lib/storage-location.js";
+import { pendingUploadFiles, uploadDialogOpen } from "#lib/store/upload.js";
 import {
 	loadVersions,
 	mergeVersionsOf,
 	pendingVersionAction,
+	pendingVersionDrop,
 	refreshVersions,
 } from "#lib/store/versions.js";
 import { enqueueUploads } from "#lib/upload/manager.js";
@@ -42,6 +44,12 @@ export async function uploadVersion(item: ObjectItem, file: File) {
 	]);
 }
 
+/** Files dropped on a row but meant for the folder. */
+export function uploadSeparately(files: File[]) {
+	pendingUploadFiles.set(files);
+	uploadDialogOpen.set(true);
+}
+
 /** Moves `moved` to where `onto` is, oldest first, and renumbers. */
 async function reorder(fileId: string, moved: string, onto: string) {
 	const versions = await loadVersions(fileId);
@@ -63,8 +71,8 @@ async function reorder(fileId: string, moved: string, onto: string) {
 }
 
 /**
- * What landing on a file or version row means. Files from the computer: a new
- * version. A file from the listing: the merge dialog. A version: its new place
+ * What landing on a file or version row means. One file from the computer: ask
+ * whether it is a new version or a file of its own; several: an upload. A file from the listing: the merge dialog. A version: its new place
  * among the others, or, dropped on its own file, a restore.
  */
 async function drop(
@@ -77,10 +85,10 @@ async function drop(
 	const file = onto?.file ?? target;
 	if (files.length > 0) {
 		if (files.length > 1) {
-			toast.info(m.versions_drop_one());
+			uploadSeparately(files);
 			return;
 		}
-		await uploadVersion(file, files[0] as File);
+		pendingVersionDrop.set({ item: file, file: files[0] as File });
 		return;
 	}
 	if (!dragged) {

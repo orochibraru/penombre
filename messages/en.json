@@ -1144,7 +1144,10 @@
 		}
 	],
 	"versions_reorder_error": "Could not reorder the versions",
-	"versions_drop_one": "Drop one file to make it a new version",
+	"versions_drop_title": "New version or separate file?",
+	"versions_drop_hint": "Upload {name} as a new version of {target}, or as a separate file in this folder?",
+	"versions_drop_as_version": "New version",
+	"versions_drop_as_file": "Separate file",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
