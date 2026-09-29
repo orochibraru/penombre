@@ -332,6 +332,7 @@
 	"share_download_count": "다운로드 {count}회",
 	"toast_share_created": "공유 링크가 생성되었습니다",
 	"toast_share_create_error": "공유 링크 생성에 실패했습니다",
+	"toast_share_forbidden": "소유하지 않은 파일을 공유할 권한이 없습니다.",
 	"toast_share_revoked": "공유 링크가 취소되었습니다",
 	"toast_share_revoke_error": "공유 링크 취소에 실패했습니다",
 	"toast_link_copied": "링크가 클립보드에 복사되었습니다",

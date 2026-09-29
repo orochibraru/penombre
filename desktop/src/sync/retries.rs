@@ -15,6 +15,8 @@ pub struct Failure {
 #[derive(Default)]
 pub struct Retries {
     files: BTreeMap<(String, String), (Failure, u32)>,
+    /// Runs in a row that failed before any file did (auth, a 429, a bad path).
+    runs: BTreeMap<String, u32>,
     fresh: bool,
 }
 
@@ -29,6 +31,7 @@ impl Retries {
     ) -> Vec<Failure> {
         if clean {
             self.files.retain(|(k, _), _| k != key);
+            self.runs.remove(key);
             return Vec::new();
         }
         for name in synced {
@@ -51,6 +54,14 @@ impl Retries {
         notify
     }
 
+    /// A run that failed with no file to blame. The second in a row returns a
+    /// notice, once, until the pair syncs again.
+    pub fn run_failed(&mut self, key: &str, label: &str, error: &str) -> Option<String> {
+        let count = self.runs.entry(key.to_owned()).or_default();
+        *count += 1;
+        (*count == 2).then(|| format!("{label} can't sync — {}", reason(error)))
+    }
+
     /// Whether the run just recorded failed a file for the first time; clears it.
     pub fn retry_soon(&mut self) -> bool {
         std::mem::take(&mut self.fresh)
@@ -58,6 +69,7 @@ impl Retries {
 
     pub fn keep_pairs(&mut self, keys: &[String]) {
         self.files.retain(|(k, _), _| keys.contains(k));
+        self.runs.retain(|k, _| keys.contains(k));
     }
 
     pub fn failures(&self) -> Vec<Failure> {
@@ -65,18 +77,21 @@ impl Retries {
     }
 }
 
+/// rclone's last clause is the useful one: `...: 429 Too Many Requests`.
+fn reason(message: &str) -> String {
+    let last = message.rsplit(": ").next().unwrap_or_default();
+    last.lines()
+        .next()
+        .unwrap_or_default()
+        .chars()
+        .take(80)
+        .collect()
+}
+
 /// One notification for everything that just failed twice.
 pub fn notice(failed: &[Failure]) -> Option<String> {
     let first = failed.first()?;
-    let reason = first
-        .message
-        .rsplit(": ")
-        .next()
-        .unwrap_or_default()
-        .lines()
-        .next()
-        .unwrap_or_default();
-    let reason: String = reason.chars().take(80).collect();
+    let reason = reason(&first.message);
     let what = match failed {
         [one] => one.name.rsplit('/').next().unwrap_or(&one.name).to_owned(),
         many => format!("{} files", many.len()),
@@ -134,5 +149,20 @@ mod tests {
             "Couldn't sync 2 files — 413 Request Entity Too Large"
         );
         assert_eq!(notice(&[]), None);
+    }
+
+    #[test]
+    fn a_pair_that_cannot_start_is_reported_once_per_streak() {
+        let error = r#"CRITICAL: Failed to create file system: read metadata failed: {"error":"Too many failed attempts"}: 429 Too Many Requests"#;
+        let mut r = Retries::default();
+        assert_eq!(r.run_failed("k", "Music", error), None);
+        assert_eq!(
+            r.run_failed("k", "Music", error).unwrap(),
+            "Music can't sync — 429 Too Many Requests"
+        );
+        assert_eq!(r.run_failed("k", "Music", error), None);
+        r.record("k", true, &[], vec![]);
+        assert_eq!(r.run_failed("k", "Music", error), None);
+        assert!(r.run_failed("k", "Music", error).is_some(), "a new streak");
     }
 }

@@ -29,16 +29,19 @@ the drive you have open is always listed. The management page lives at
 Members are added by name or email, the same search the Share dialog uses, and
 each is given one role:
 
-| Role    | Can do                                                       |
-| ------- | ------------------------------------------------------------ |
-| Manager | Everything below, plus adding members and renaming the drive |
-| Editor  | Read, upload, edit, move, trash and restore                  |
-| Viewer  | Read and download only; every write is refused               |
+| Role    | Can do                                                                       |
+| ------- | ---------------------------------------------------------------------------- |
+| Manager | Everything below, plus adding members, renaming the drive and creating links |
+| Editor  | Read, upload, edit, move, trash and restore                                  |
+| Viewer  | Read and download only; every write is refused                               |
 
 The owner is a manager who cannot be removed, and is the only person who can
 delete the drive. Adding someone who is already a member **changes** their role
 rather than granting a second one, and anyone may remove themselves from a drive
 they no longer want to see.
+
+A public link to something on a drive lists under **My links** of the manager
+who made it, and stops working once they are no longer a manager of that drive.
 
 New members are notified the way a share is; a role change is not news, so it is
 silent.

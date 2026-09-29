@@ -446,6 +446,7 @@
 	"share_download_count": "Liczba pobrań: {count}",
 	"toast_share_created": "Link udostępniania utworzony",
 	"toast_share_create_error": "Nie udało się utworzyć linku udostępniania",
+	"toast_share_forbidden": "Nie masz uprawnień do udostępniania plików, których nie jesteś właścicielem.",
 	"toast_share_revoked": "Link udostępniania odwołany",
 	"toast_share_revoke_error": "Nie udało się odwołać linku",
 	"toast_link_copied": "Link skopiowany do schowka",

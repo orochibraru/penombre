@@ -7100,7 +7100,7 @@ export interface paths {
 		put?: never;
 		/**
 		 * Create a share link
-		 * @description Creates a token-addressed link to a file or folder the caller owns
+		 * @description Creates a token-addressed link to a file or folder the caller owns, or one on a shared drive they manage
 		 */
 		post: {
 			parameters: {
@@ -7157,6 +7157,15 @@ export interface paths {
 				};
 				/** @description Unauthorized */
 				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
 					headers: {
 						[name: string]: unknown;
 					};

@@ -498,6 +498,7 @@
 	],
 	"toast_share_created": "Lien de partage créé",
 	"toast_share_create_error": "Échec de la création du lien de partage",
+	"toast_share_forbidden": "Vous n'avez pas l'autorisation de partager des fichiers dont vous n'êtes pas propriétaire.",
 	"toast_share_revoked": "Lien de partage révoqué",
 	"toast_share_revoke_error": "Échec de la révocation du lien",
 	"toast_link_copied": "Lien copié dans le presse-papiers",

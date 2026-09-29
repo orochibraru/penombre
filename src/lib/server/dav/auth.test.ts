@@ -44,6 +44,20 @@ describe("cachedKeyUser", () => {
 		expect(await cachedKeyUser(bad, refuse, 1)).toBeNull();
 		expect(refusals).toBe(2);
 	});
+
+	test("concurrent misses share one verification", async () => {
+		const key = crypto.randomUUID();
+		let calls = 0;
+		const verify = async () => {
+			calls++;
+			await Bun.sleep(5);
+			return { id: "u" };
+		};
+		await Promise.all(
+			Array.from({ length: 8 }, () => cachedKeyUser(key, verify, 0)),
+		);
+		expect(calls).toBe(1);
+	});
 });
 
 describe("keyHint", () => {

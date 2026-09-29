@@ -332,6 +332,7 @@
 	"share_download_count": "{count} 次下载",
 	"toast_share_created": "共享链接已创建",
 	"toast_share_create_error": "共享链接创建失败",
+	"toast_share_forbidden": "您无权共享不属于您的文件。",
 	"toast_share_revoked": "共享链接已吊销",
 	"toast_share_revoke_error": "共享链接吊销失败",
 	"toast_link_copied": "链接已复制到剪贴板",

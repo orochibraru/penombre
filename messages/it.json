@@ -449,6 +449,7 @@
 	"share_download_count": "{count} download",
 	"toast_share_created": "Link di condivisione creato",
 	"toast_share_create_error": "Impossibile creare il link di condivisione",
+	"toast_share_forbidden": "Non hai l'autorizzazione per condividere file di cui non sei proprietario.",
 	"toast_share_revoked": "Link di condivisione revocato",
 	"toast_share_revoke_error": "Impossibile revocare il link di condivisione",
 	"toast_link_copied": "Link copiato negli appunti",

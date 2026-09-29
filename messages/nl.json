@@ -498,6 +498,7 @@
 	],
 	"toast_share_created": "Deellink aangemaakt",
 	"toast_share_create_error": "Aanmaken van deellink mislukt",
+	"toast_share_forbidden": "Je hebt geen toestemming om bestanden te delen die niet van jou zijn.",
 	"toast_share_revoked": "Deellink ingetrokken",
 	"toast_share_revoke_error": "Intrekken van deellink mislukt",
 	"toast_link_copied": "Link gekopieerd naar klembord",

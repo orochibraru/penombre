@@ -18229,7 +18229,7 @@
 				]
 			},
 			"post": {
-				"description": "Creates a token-addressed link to a file or folder the caller owns",
+				"description": "Creates a token-addressed link to a file or folder the caller owns, or one on a shared drive they manage",
 				"requestBody": {
 					"content": {
 						"application/json": {
@@ -18365,6 +18365,16 @@
 							}
 						},
 						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
 					},
 					"404": {
 						"content": {

@@ -77,6 +77,7 @@ pub fn worker(
         let mut halted = false;
         let mut lost = false;
         let mut twice = Vec::new();
+        let mut stuck = Vec::new();
         for pair in &mut current.pairs {
             if control.halted() {
                 halted = true;
@@ -131,7 +132,7 @@ pub fn worker(
             {
                 pair.resynced = false;
             }
-            let failed = failed
+            let failed: Vec<_> = failed
                 .into_iter()
                 .filter(|(name, _)| !synced.contains(name))
                 .map(|(name, message)| Failure {
@@ -142,7 +143,11 @@ pub fn worker(
                 })
                 .collect();
             let key = pair.key(&current.server);
+            let blameless = failed.is_empty();
             twice.extend(retries.record(&key, outcome.is_ok(), &synced, failed));
+            if let (Err(error), true) = (&outcome, blameless) {
+                stuck.extend(retries.run_failed(&key, &label, error));
+            }
             match outcome {
                 Ok(()) => log::info!("synced {label}"),
                 Err(error) => {
@@ -164,8 +169,10 @@ pub fn worker(
                 .collect(),
         });
         wake.now();
-        if let Some(text) = notice(&twice).filter(|_| !halted) {
-            show(&text);
+        if !halted {
+            for text in stuck.iter().cloned().chain(notice(&twice)) {
+                show(&text);
+            }
         }
         if lost {
             schedule.unreachable(Instant::now());

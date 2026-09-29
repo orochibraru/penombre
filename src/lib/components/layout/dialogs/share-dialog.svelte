@@ -197,7 +197,7 @@
 		}
 		loading = true;
 		try {
-			const { data, error } = await api.POST("/api/v1/shares", {
+			const { data, error, response } = await api.POST("/api/v1/shares", {
 				body: {
 					...target,
 					...(password ? { password } : {}),
@@ -207,7 +207,11 @@
 			});
 
 			if (error || !data?.data) {
-				toast.error(m.toast_share_create_error());
+				toast.error(
+					response.status === 403
+						? m.toast_share_forbidden()
+						: m.toast_share_create_error(),
+				);
 				return;
 			}
 

@@ -28,6 +28,7 @@ import {
 } from "#lib/storage-location.js";
 import { driveStorage, drivesService, driveVolume } from "./drives";
 import { loadSharedOwner } from "./library-scan";
+import { ShareService } from "./shares";
 import { SharingService } from "./sharings";
 import { StorageService } from "./storage";
 import type { StorageScope } from "./storage/context";
@@ -232,16 +233,14 @@ export async function shareLinkStorage(share: {
 	resourceType: "file" | "folder";
 	resourceId: string;
 }): Promise<StorageService | undefined> {
-	const table = share.resourceType === "folder" ? folders : files;
-	const [row] = await getDb()
-		.select({ volumeId: table.volumeId })
-		.from(table)
-		.where(
-			and(eq(table.id, share.resourceId), eq(table.ownerId, share.ownerId)),
-		);
-	return row
-		? serviceForRoot({ ownerId: share.ownerId, volumeId: row.volumeId })
-		: undefined;
+	const row = await new ShareService().resolveShareable(
+		share.ownerId,
+		share.resourceType,
+		share.resourceId,
+	);
+	return typeof row === "string"
+		? undefined
+		: serviceForRoot({ ownerId: row.ownerId, volumeId: row.volumeId });
 }
 
 /**

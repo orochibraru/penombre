@@ -8,11 +8,18 @@
  */
 
 import type { User } from "better-auth";
-import { and, desc, eq, isNotNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, lte, or, sql } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { getConfig } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
-import { files, folders, type Share, shares } from "#lib/server/db/schema.js";
+import {
+	driveMembers,
+	drives,
+	files,
+	folders,
+	type Share,
+	shares,
+} from "#lib/server/db/schema.js";
 
 const logger = new Logger("ShareService");
 
@@ -34,6 +41,13 @@ export interface CreateShareInput {
 	requiresAuth?: boolean;
 }
 
+/** The row a link resolves to: its tree is the row owner's, on its volume. */
+export interface ShareableRow {
+	name: string;
+	ownerId: string;
+	volumeId: string | null;
+}
+
 export type ShareAccess =
 	| { ok: true; share: Share }
 	| { ok: false; reason: "not-found" | "expired" | "auth" | "password" };
@@ -42,22 +56,24 @@ export class ShareService {
 	private readonly db = getDb();
 
 	/**
-	 * Create a link for a resource the caller owns.
-	 * Returns null when the resource does not exist or is not theirs — the
-	 * ownership check is here rather than at the route so every caller gets it.
+	 * Create a link for a resource the caller may share (`resolveShareable`).
+	 * `ownerId` is the link's creator: whose "My links" it lists in.
 	 */
-	async create(input: CreateShareInput): Promise<Share | null> {
-		const resourceName = await this.resolveOwnedName(
+	async create(
+		input: CreateShareInput,
+	): Promise<Share | "not-found" | "forbidden"> {
+		const row = await this.resolveShareable(
 			input.ownerId,
 			input.resourceType,
 			input.resourceId,
 		);
-		if (resourceName === null) {
+		if (typeof row === "string") {
 			logger.warn(
-				`Refusing share: ${input.resourceType} ${input.resourceId} not owned by ${input.ownerId}`,
+				`Refusing share: ${input.resourceType} ${input.resourceId} ${row} for ${input.ownerId}`,
 			);
-			return null;
+			return row;
 		}
+		const resourceName = row.name;
 
 		const expiresAt =
 			input.expiresInDays && input.expiresInDays > 0
@@ -81,27 +97,60 @@ export class ShareService {
 			})
 			.returning();
 
-		return share ?? null;
+		if (!share) {
+			throw new Error("Share insert returned no row");
+		}
+		return share;
 	}
 
-	/** Name of the resource if `ownerId` owns it, else null. */
-	private async resolveOwnedName(
-		ownerId: string,
+	/**
+	 * The resource's row if `userId` may link to it: they own the row, or it
+	 * sits on a shared drive they manage. Checked again every time the link is
+	 * opened, so a manager's links die with their role.
+	 */
+	async resolveShareable(
+		userId: string,
 		resourceType: "file" | "folder",
 		resourceId: string,
-	): Promise<string | null> {
-		if (resourceType === "folder") {
-			const [row] = await this.db
-				.select({ name: folders.name })
-				.from(folders)
-				.where(and(eq(folders.id, resourceId), eq(folders.ownerId, ownerId)));
-			return row?.name ?? null;
-		}
+	): Promise<ShareableRow | "not-found" | "forbidden"> {
+		const table = resourceType === "folder" ? folders : files;
 		const [row] = await this.db
-			.select({ name: files.name })
-			.from(files)
-			.where(and(eq(files.id, resourceId), eq(files.ownerId, ownerId)));
-		return row?.name ?? null;
+			.select({
+				name: table.name,
+				ownerId: table.ownerId,
+				volumeId: table.volumeId,
+			})
+			.from(table)
+			.where(eq(table.id, resourceId));
+		if (!row) {
+			return "not-found";
+		}
+		if (row.ownerId === userId) {
+			return row;
+		}
+		const driveId = row.volumeId?.startsWith("drive:")
+			? row.volumeId.slice("drive:".length)
+			: null;
+		if (!driveId) {
+			return "forbidden";
+		}
+		const [manager] = await this.db
+			.select({ id: drives.id })
+			.from(drives)
+			.leftJoin(
+				driveMembers,
+				and(
+					eq(driveMembers.driveId, drives.id),
+					eq(driveMembers.userId, userId),
+				),
+			)
+			.where(
+				and(
+					eq(drives.id, driveId),
+					or(eq(drives.ownerId, userId), eq(driveMembers.role, "manager")),
+				),
+			);
+		return manager ? row : "forbidden";
 	}
 
 	/** Every link owned by a user, newest first. */
@@ -204,34 +253,33 @@ export class ShareService {
 	 * one query — with the trailing slash, so "folder-1" does not match
 	 * "folder-10/secret.txt".
 	 */
-	async fileIsInFolder(
-		ownerId: string,
-		folderId: string,
-		fileId: string,
-	): Promise<boolean> {
+	async fileIsInFolder(folderId: string, fileId: string): Promise<boolean> {
 		const [folder] = await this.db
-			.select({ path: folders.path, volumeId: folders.volumeId })
+			.select({
+				path: folders.path,
+				volumeId: folders.volumeId,
+				ownerId: folders.ownerId,
+			})
 			.from(folders)
-			.where(and(eq(folders.id, folderId), eq(folders.ownerId, ownerId)));
+			.where(eq(folders.id, folderId));
 		if (!folder) {
 			return false;
 		}
 
 		const [file] = await this.db
-			.select({ path: files.path, volumeId: files.volumeId })
+			.select({
+				path: files.path,
+				volumeId: files.volumeId,
+				ownerId: files.ownerId,
+			})
 			.from(files)
-			.where(
-				and(
-					eq(files.id, fileId),
-					eq(files.ownerId, ownerId),
-					eq(files.isTrashed, false),
-				),
-			);
+			.where(and(eq(files.id, fileId), eq(files.isTrashed, false)));
 		if (!file) {
 			return false;
 		}
 
 		return (
+			file.ownerId === folder.ownerId &&
 			file.volumeId === folder.volumeId &&
 			file.path.startsWith(`${folder.path}/`)
 		);

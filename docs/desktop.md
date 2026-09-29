@@ -35,7 +35,9 @@ then runs the sync on its own.
   reason.
 - **Failures are retried.** A file that fails is tried again a minute later. If
   it fails again you get one notification naming it; you are not told again
-  until it has synced and broken anew.
+  until it has synced and broken anew. A folder pair that fails before any file
+  does (a refused key, a rate limit, a missing folder) notifies the same way:
+  once, on its second failed sync in a row.
 - **It notices when the server is gone.** Before each sync the app checks the
   server answers. If it doesn't, nothing is synced, a banner says since when and
   why, and the app asks again every 30 seconds, syncing as soon as the server is

@@ -498,6 +498,7 @@
 	],
 	"toast_share_created": "Share link created",
 	"toast_share_create_error": "Failed to create share link",
+	"toast_share_forbidden": "You do not have permission to share files you do not own.",
 	"toast_share_revoked": "Share link revoked",
 	"toast_share_revoke_error": "Failed to revoke share link",
 	"toast_link_copied": "Link copied to clipboard",

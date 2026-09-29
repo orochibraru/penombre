@@ -498,6 +498,7 @@
 	],
 	"toast_share_created": "Enlace de compartir creado",
 	"toast_share_create_error": "No se pudo crear el enlace",
+	"toast_share_forbidden": "No tienes permiso para compartir archivos que no son tuyos.",
 	"toast_share_revoked": "Enlace revocado",
 	"toast_share_revoke_error": "No se pudo revocar el enlace",
 	"toast_link_copied": "Enlace copiado al portapapeles",

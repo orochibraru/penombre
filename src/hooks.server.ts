@@ -5,6 +5,7 @@ import {
 	type HandleServerError,
 	sequence,
 } from "@sveltejs/kit/hooks";
+import { isAPIError } from "better-auth/api";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { sql } from "drizzle-orm";
 import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
@@ -310,17 +311,28 @@ async function resolveStorageOwner(sessionUser: User): Promise<User> {
 /** Invalid keys one address may try before it is refused outright. */
 const KEY_FAILURES = { max: 20, windowSeconds: 15 * 60 };
 
+/** A valid key over better-auth's per-key limit: not a bad guess. */
+class KeyRateLimited extends Error {}
+
 /** The key's user, or null for an invalid key. */
 async function keyUser(rawKey: string): Promise<User | null> {
 	const result = await auth.api
 		.verifyApiKey({ body: { key: rawKey } })
 		.catch(() => null);
+	if (result?.error?.code === "RATE_LIMITED") {
+		throw new KeyRateLimited();
+	}
 	if (!result?.valid) {
 		return null;
 	}
-	const session = await auth.api.getSession({
-		headers: new Headers({ "x-api-key": rawKey }),
-	});
+	const session = await auth.api
+		.getSession({ headers: new Headers({ "x-api-key": rawKey }) })
+		.catch((error: unknown) => {
+			if (isAPIError(error) && error.status === "TOO_MANY_REQUESTS") {
+				throw new KeyRateLimited();
+			}
+			throw error;
+		});
 	return session?.user ?? null;
 }
 
@@ -356,9 +368,20 @@ async function apiKeyAuth(
 		});
 	}
 
-	const sessionUser = dav
-		? await cachedKeyUser(rawKey, keyUser)
-		: await keyUser(rawKey);
+	let sessionUser: User | null;
+	try {
+		sessionUser = dav
+			? await cachedKeyUser(rawKey, keyUser)
+			: await keyUser(rawKey);
+	} catch (error) {
+		if (!(error instanceof KeyRateLimited)) {
+			throw error;
+		}
+		return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
+			status: 429,
+			headers: { "retry-after": "60" },
+		});
+	}
 
 	if (!sessionUser) {
 		// Never the raw key: a typo or a revoked key is still a live credential

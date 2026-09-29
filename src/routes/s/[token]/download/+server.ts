@@ -93,7 +93,7 @@ function mayServe(share: Share, fileId: string): Promise<boolean> {
 	if (share.resourceType === "folder") {
 		// A folder share must not become a read-anything capability: the id
 		// comes from the query string, so prove it is under the shared folder.
-		return shares.fileIsInFolder(share.ownerId, share.resourceId, fileId);
+		return shares.fileIsInFolder(share.resourceId, fileId);
 	}
 	// A file share is a link to exactly one file.
 	return Promise.resolve(fileId === share.resourceId);

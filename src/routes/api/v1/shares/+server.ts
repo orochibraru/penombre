@@ -16,8 +16,11 @@ export const GET = listShares.handler(async ({ user }) => {
 export const POST = createShare.handler(async ({ body, user }) => {
 	try {
 		const share = await shares.create({ ownerId: user.id, ...body });
-		if (!share) {
+		if (share === "not-found") {
 			return Http.NotFound("Resource not found");
+		}
+		if (share === "forbidden") {
+			return Http.Forbidden();
 		}
 		return Http.Ok(toShareDto(share));
 	} catch (error) {

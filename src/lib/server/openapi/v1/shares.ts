@@ -44,11 +44,11 @@ export const createShare = defineRoute({
 	path: "/api/v1/shares",
 	summary: "Create a share link",
 	description:
-		"Creates a token-addressed link to a file or folder the caller owns",
+		"Creates a token-addressed link to a file or folder the caller owns, or one on a shared drive they manage",
 	tags: ["Shares"],
 	body: createShareBody,
 	response: shareSchema,
-	errors: [400, 404, 500],
+	errors: [400, 403, 404, 500],
 });
 
 export const revokeShare = defineRoute({

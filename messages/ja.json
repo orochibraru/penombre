@@ -332,6 +332,7 @@
 	"share_download_count": "{count}回ダウンロード",
 	"toast_share_created": "共有リンクを作成しました",
 	"toast_share_create_error": "共有リンクの作成に失敗しました",
+	"toast_share_forbidden": "自分が所有していないファイルを共有する権限がありません。",
 	"toast_share_revoked": "共有リンクを取り消しました",
 	"toast_share_revoke_error": "共有リンクの取り消しに失敗しました",
 	"toast_link_copied": "リンクをクリップボードにコピーしました",

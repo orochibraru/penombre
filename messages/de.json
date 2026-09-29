@@ -489,6 +489,7 @@
 	],
 	"toast_share_created": "Freigabelink erstellt",
 	"toast_share_create_error": "Freigabelink konnte nicht erstellt werden",
+	"toast_share_forbidden": "Sie haben keine Berechtigung, Dateien zu teilen, die Ihnen nicht gehören.",
 	"toast_share_revoked": "Freigabelink widerrufen",
 	"toast_share_revoke_error": "Freigabelink konnte nicht widerrufen werden",
 	"toast_link_copied": "Link in die Zwischenablage kopiert",

@@ -19,12 +19,15 @@ export function basicPassword(header: string | null): string | null {
 
 const TTL_MS = 60_000;
 const verified = new Map<string, { user: unknown; until: number }>();
+const inFlight = new Map<string, Promise<unknown>>();
 
 /**
  * A sync client sends a request per file; the API-key plugin allows 100 a
- * minute. Costs a revoked key up to a minute of life.
+ * minute. Costs a revoked key up to a minute of life. Concurrent misses share
+ * one verification: rclone's parallel requests all missing at expiry spent the
+ * key's budget in a burst.
  */
-export async function cachedKeyUser<U>(
+export function cachedKeyUser<U>(
 	key: string,
 	verify: (key: string) => Promise<U | null>,
 	now = Date.now(),
@@ -32,15 +35,24 @@ export async function cachedKeyUser<U>(
 	const id = createHash("sha256").update(key).digest("hex");
 	const hit = verified.get(id);
 	if (hit && hit.until > now) {
-		return hit.user as U;
+		return Promise.resolve(hit.user as U);
 	}
-	const user = await verify(key);
-	if (user) {
-		verified.set(id, { user, until: now + TTL_MS });
-	} else {
-		verified.delete(id);
+	const pending = inFlight.get(id);
+	if (pending) {
+		return pending as Promise<U | null>;
 	}
-	return user;
+	const check = verify(key)
+		.then((user) => {
+			if (user) {
+				verified.set(id, { user, until: now + TTL_MS });
+			} else {
+				verified.delete(id);
+			}
+			return user;
+		})
+		.finally(() => inFlight.delete(id));
+	inFlight.set(id, check);
+	return check;
 }
 
 /** What a failed attempt may log. A Basic password may be the account's. */

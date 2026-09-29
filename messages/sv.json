@@ -390,6 +390,7 @@
 	],
 	"toast_share_created": "Delningslänk skapad",
 	"toast_share_create_error": "Kunde inte skapa delningslänken",
+	"toast_share_forbidden": "Du har inte behörighet att dela filer som du inte äger.",
 	"toast_share_revoked": "Delningslänken återkallades",
 	"toast_share_revoke_error": "Kunde inte återkalla delningslänken",
 	"toast_link_copied": "Länken kopierades",

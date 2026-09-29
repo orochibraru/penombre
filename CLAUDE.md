@@ -1991,6 +1991,32 @@ stay refused. Share URLs keep the owner's full paths
 (`/shared-with-me/[share]/[...path]`), and the listing load redirects anything
 outside the share back to its root; `page.data.share.root` hides the `..` row.
 
+### svelte-smol is held below 1.8
+
+1.8's Kit 3 handler takes `origin` from the build-time `paths.origin` and
+ignores the runtime `ORIGIN`, then guesses the origin from `Host` **as https**.
+On a plain-HTTP instance `event.url.origin` no longer matched the browser's
+`Origin`, and `csrf.ts` refused every form POST, setup included. Dev does not
+use the adapter, so only e2e (a production build) shows it. `renovate.json`
+holds it at `<1.8` until the adapter reads `ORIGIN` again.
+
+### A link's owner is its creator, not the row's
+
+`shares.owner_id` is who made the link (their **My links**, their revoke). The
+tree comes from the resource row itself. `resolveShareable` (`shares.ts`) is the
+one permission check, at create and at every open (`shareLinkStorage`): the row
+owner, or a manager of the drive the row sits on. Requiring
+`files.owner_id = shares.owner_id` refused every drive manager, since a drive's
+rows all belong to its creator.
+
+### A valid API key can still fail verification
+
+better-auth's API-key plugin limits each key to 100 verifications a minute and
+reports going over as `valid: false`, `code: "RATE_LIMITED"`. The per-address
+lockout counted that as a bad key and locked the sync client out for 15 minutes.
+`keyUser` throws `KeyRateLimited` (a 429, not counted), and `cachedKeyUser`
+shares one in-flight verification between concurrent misses.
+
 ### A public link reads its resource's own volume
 
 `shares` has no volume column, so `/s/[token]` resolves the tree from the shared

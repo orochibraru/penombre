@@ -444,6 +444,7 @@
 	],
 	"toast_share_created": "Jakolinkki luotu",
 	"toast_share_create_error": "Jakolinkin luonti epäonnistui",
+	"toast_share_forbidden": "Sinulla ei ole oikeutta jakaa tiedostoja, jotka eivät ole sinun.",
 	"toast_share_revoked": "Jakolinkki peruutettu",
 	"toast_share_revoke_error": "Jakolinkin peruutus epäonnistui",
 	"toast_link_copied": "Linkki kopioitu leikepöydälle",
