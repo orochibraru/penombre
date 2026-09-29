@@ -44,9 +44,6 @@ on:
           a fork: GitHub withholds secrets from those, so a registry login there
           can only fail."
         type: boolean
-    secrets:
-      registry_password:
-        required: false
     outputs:
       image:
         description: "Registry path of the built image, without a tag"
@@ -147,7 +144,7 @@ jobs:
         with:
           registry: ${{ inputs.registry_name }}
           username: ${{ inputs.registry_username }}
-          password: ${{ secrets.registry_password }}
+          password: ${{ github.token }}
 
       - name: Build
         id: bake

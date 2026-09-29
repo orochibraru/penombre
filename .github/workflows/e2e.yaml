@@ -24,9 +24,6 @@ on:
         default: true
         description: "False when no image was pushed (forks), forcing a local build"
         type: boolean
-    secrets:
-      registry_password:
-        required: false
 
 permissions:
   contents: read
@@ -91,7 +88,7 @@ jobs:
         with:
           registry: ${{ inputs.registry_name }}
           username: ${{ inputs.registry_username }}
-          password: ${{ secrets.registry_password }}
+          password: ${{ github.token }}
 
       # The digest file is named after the digest.
       - name: Download amd64 digest

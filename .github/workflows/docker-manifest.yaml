@@ -31,8 +31,6 @@ on:
         default: ""
         type: string
     secrets:
-      registry_password:
-        required: false
       mirror_password:
         required: false
     outputs:
@@ -78,7 +76,7 @@ jobs:
         with:
           registry: ${{ inputs.registry_name }}
           username: ${{ inputs.registry_username }}
-          password: ${{ secrets.registry_password }}
+          password: ${{ github.token }}
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests

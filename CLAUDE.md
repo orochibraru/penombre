@@ -1519,8 +1519,10 @@ promotion reads) live on `ghcr.io/orochibraru/penombre`, reached with
 published tags: `docker-manifest.yaml` copies them over (`mirror_registry`), and
 the promotions push to both. Third-party images (base images in builds, postgres
 and redis in e2e) come through `mirror.gcr.io`, set as a registry mirror for
-buildkit and the e2e runner's daemon. The ghcr.io package must stay **public**:
-a private one bills its storage, and CI writes a lot of it.
+buildkit and the e2e runner's daemon. A called workflow logs in with its own
+`github.token`: passed from the caller as `secrets: x: ${{ github.token }}` it
+arrives **empty** ("Password required"). The ghcr.io package must stay
+**public**: a private one bills its storage, and CI writes a lot of it.
 
 ### Every merge is a canary; merging the release PR is the release
 

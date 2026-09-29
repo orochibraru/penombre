@@ -150,8 +150,6 @@ jobs:
       registry_name: ghcr.io
       registry_username: ${{ github.actor }}
       bake_target: app
-    secrets:
-      registry_password: ${{ github.token }}
 
   e2e:
     name: E2E
@@ -165,8 +163,6 @@ jobs:
       registry_name: ghcr.io
       registry_username: ${{ github.actor }}
       bake_target: app
-    secrets:
-      registry_password: ${{ github.token }}
 
   publish:
     name: Publish ${{ needs.version.outputs.version }}
@@ -183,7 +179,6 @@ jobs:
       mirror_registry: docker.io
       mirror_username: orochibraru
     secrets:
-      registry_password: ${{ github.token }}
       mirror_password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
   promote:

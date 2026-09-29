@@ -128,8 +128,6 @@ jobs:
       registry_name: ghcr.io
       registry_username: ${{ github.actor }}
       bake_target: app
-    secrets:
-      registry_password: ${{ github.token }}
 
   e2e:
     name: E2E
@@ -145,8 +143,6 @@ jobs:
       bake_target: app
       pulled: ${{ github.event.pull_request.head.repo.full_name == github.repository
         }}
-    secrets:
-      registry_password: ${{ github.token }}
 
   publish:
     name: Publish pr-${{ github.event.pull_request.number }}
@@ -162,8 +158,6 @@ jobs:
       registry_name: ghcr.io
       registry_username: ${{ github.actor }}
       bake_target: app
-    secrets:
-      registry_password: ${{ github.token }}
 
   gate:
     name: CI Gate
