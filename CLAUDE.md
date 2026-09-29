@@ -455,6 +455,37 @@ single-use token from `invites` (`services/invites.ts`, atomic
 `update ... returning`), and `lookup` never offers onboarding to an account
 holding any `account` row or passkey (`hasAnyIdentity()`).
 
+Without the token, the mailbox is the proof. `lookup` offers an invited account
+(no identity yet) the methods that authenticate an address, emailed link and
+code, plus **Email me a link to set a password**. That link is better-auth's
+password reset (`auth/password-link.ts`), whose `resetPassword` creates the
+credential when there is none, so forgotten passwords and first passwords are
+one flow. Onboarding writes its credential directly, past `METHOD_GATES`, so it
+checks that password sign-in is on itself. Every form that sets a password
+validates with `passwordRules`/`passwordProblem` first: better-auth only knows
+the environment's minimum, not the admin's settings.
+
+### A page reloads from its form's action URL
+
+After a failed `use:enhance` submit, SvelteKit 3 re-runs the page's load from
+the **action** URL (`?/setPassword`), not the page's. A load that reads its own
+query string (`?token=`, `?user_code=`) then finds nothing: onboarding bounced
+to sign-in on every rejected password, hiding the error and the fact that
+nothing was saved. Carry the query in the action
+(`action="?/setPassword&token=…"`). `update({ refreshAll: false })` does not
+stop that reload.
+
+### Every email goes through the template
+
+`Email.sendTemplate(to, content)` lays out `renderEmail` (`email-template.ts`):
+inline-styled HTML plus a text twin, every value escaped, since notifications
+carry names users choose. The sender is shown as the instance's name. A relay
+may still rewrite the address (Brevo does for an unauthenticated domain); that
+is the provider, not Penombre.
+
+Sign-in returns to where the person was going: every redirect to it uses
+`signInReturningTo(url)` (`#lib/next.ts`), read back by `nextPath`.
+
 ### A form action is not behind its layout's `load`
 
 SvelteKit runs a form action before any `load`, layout loads included, and

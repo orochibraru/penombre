@@ -1091,5 +1091,15 @@
 	"admin_user_drive_only": "Solo unità",
 	"admin_restrict_to_drives": "Limita alle unità condivise",
 	"admin_give_personal_drive": "Assegna un'unità personale",
-	"drives_empty_drive_only": "Non fai ancora parte di nessuna unità. Chiedi a chi ti ha invitato di aggiungerti."
+	"drives_empty_drive_only": "Non fai ancora parte di nessuna unità. Chiedi a chi ti ha invitato di aggiungerti.",
+	"onboarding_no_password": "Le password sono disattivate su questa istanza. Continua per accedere a {email} con un link o un codice inviato per email.",
+	"sign_in_set_password": "Inviami un link per impostare una password",
+	"password_link_sent": "Controlla la posta: se {email} ha un account, è in arrivo un link per impostarne la password.",
+	"password_link_unavailable": "Questa istanza non può inviare email. Chiedi a un amministratore un link per impostare la password.",
+	"password_link_limited": "Troppe richieste. Riprova tra qualche minuto.",
+	"reset_password_title": "Scegli una nuova password",
+	"reset_password_submit": "Salva password",
+	"reset_password_done": "Password salvata. Accedi con quella.",
+	"form_error_reset_expired": "Questo link è scaduto o è già stato usato. Richiedine uno nuovo.",
+	"onboarding_account_ready": "Il tuo account è pronto"
 }

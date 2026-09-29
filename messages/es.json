@@ -1171,5 +1171,15 @@
 	"admin_user_drive_only": "Solo unidades",
 	"admin_restrict_to_drives": "Limitar a unidades compartidas",
 	"admin_give_personal_drive": "Dar una unidad personal",
-	"drives_empty_drive_only": "Aún no estás en ninguna unidad. Pide a quien te invitó que te añada a una."
+	"drives_empty_drive_only": "Aún no estás en ninguna unidad. Pide a quien te invitó que te añada a una.",
+	"onboarding_no_password": "Las contraseñas están desactivadas en esta instancia. Continúa para iniciar sesión en {email} con un enlace o un código enviado por correo.",
+	"sign_in_set_password": "Enviarme un enlace para establecer una contraseña",
+	"password_link_sent": "Revisa tu bandeja: si {email} tiene una cuenta, va de camino un enlace para establecer su contraseña.",
+	"password_link_unavailable": "Esta instancia no puede enviar correos. Pide a un administrador un enlace para establecer tu contraseña.",
+	"password_link_limited": "Demasiadas solicitudes. Inténtalo de nuevo en unos minutos.",
+	"reset_password_title": "Elige una nueva contraseña",
+	"reset_password_submit": "Guardar contraseña",
+	"reset_password_done": "Contraseña guardada. Inicia sesión con ella.",
+	"form_error_reset_expired": "Este enlace ha caducado o ya se usó. Pide uno nuevo.",
+	"onboarding_account_ready": "Tu cuenta está lista"
 }

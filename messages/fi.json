@@ -1108,5 +1108,15 @@
 	"admin_user_drive_only": "Vain asemat",
 	"admin_restrict_to_drives": "Rajoita jaettuihin asemiin",
 	"admin_give_personal_drive": "Anna oma asema",
-	"drives_empty_drive_only": "Et ole vielä yhdessäkään asemassa. Pyydä kutsujaasi lisäämään sinut."
+	"drives_empty_drive_only": "Et ole vielä yhdessäkään asemassa. Pyydä kutsujaasi lisäämään sinut.",
+	"onboarding_no_password": "Salasanat ovat pois käytöstä tässä instanssissa. Jatka kirjautuaksesi tilille {email} sähköpostilla lähetetyllä linkillä tai koodilla.",
+	"sign_in_set_password": "Lähetä linkki salasanan asettamiseen",
+	"password_link_sent": "Tarkista saapuneet: jos osoitteella {email} on tili, linkki salasanan asettamiseen on tulossa.",
+	"password_link_unavailable": "Tämä instanssi ei voi lähettää sähköpostia. Pyydä ylläpitäjältä linkki salasanan asettamiseen.",
+	"password_link_limited": "Liian monta pyyntöä. Yritä uudelleen muutaman minuutin kuluttua.",
+	"reset_password_title": "Valitse uusi salasana",
+	"reset_password_submit": "Tallenna salasana",
+	"reset_password_done": "Salasana tallennettu. Kirjaudu sillä sisään.",
+	"form_error_reset_expired": "Linkki on vanhentunut tai jo käytetty. Pyydä uusi.",
+	"onboarding_account_ready": "Tilisi on valmis"
 }

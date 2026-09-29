@@ -1,4 +1,5 @@
 import { error, redirect } from "@sveltejs/kit";
+import { signInReturningTo } from "#lib/next.js";
 import { DriveAccessError } from "#lib/server/errors.js";
 import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
@@ -10,7 +11,7 @@ import { storageServiceFor } from "#lib/server/services/storage-for.js";
  */
 export const load = async ({ params, url, locals }) => {
 	if (!locals.user) {
-		return redirect(302, "/auth/sign-in");
+		return redirect(302, signInReturningTo(url));
 	}
 
 	// `?drive=`/`?volume=` rather than a route parameter: this route is under

@@ -1009,5 +1009,15 @@
 	"admin_user_drive_only": "Endast enheter",
 	"admin_restrict_to_drives": "Begränsa till delade enheter",
 	"admin_give_personal_drive": "Ge en egen enhet",
-	"drives_empty_drive_only": "Du är inte med i någon enhet än. Be den som bjöd in dig att lägga till dig."
+	"drives_empty_drive_only": "Du är inte med i någon enhet än. Be den som bjöd in dig att lägga till dig.",
+	"onboarding_no_password": "Lösenord är avstängda på den här instansen. Fortsätt för att logga in på {email} med en länk eller kod via e-post.",
+	"sign_in_set_password": "Skicka en länk för att välja lösenord",
+	"password_link_sent": "Kolla inkorgen: om {email} har ett konto är en länk för att välja lösenord på väg.",
+	"password_link_unavailable": "Den här instansen kan inte skicka e-post. Be en administratör om en länk för att välja lösenord.",
+	"password_link_limited": "För många förfrågningar. Försök igen om några minuter.",
+	"reset_password_title": "Välj ett nytt lösenord",
+	"reset_password_submit": "Spara lösenord",
+	"reset_password_done": "Lösenordet är sparat. Logga in med det.",
+	"form_error_reset_expired": "Länken har gått ut eller redan använts. Be om en ny.",
+	"onboarding_account_ready": "Ditt konto är klart"
 }

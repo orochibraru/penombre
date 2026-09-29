@@ -46,8 +46,13 @@ Set `SMTP_SECURE=true` for port 465 (implicit TLS) and `false` for port 587
 
 ### Forgot password
 
-Password reset is available when SMTP is enabled. Users receive an email with a
-reset link. If SMTP is disabled, the forgot-password flow is not available.
+**Forgot your password?** on the sign-in page mails a link to set a new one,
+when password sign-in is on and mail is configured. The link lands on
+`/auth/reset-password`, expires after an hour, works once, and signs out every
+other session of that account. The new password follows the same rules as
+everywhere else (minimum length, and the strong-password setting). The page
+answers the same way whether or not the address has an account. Without SMTP it
+says so and points to an admin.
 
 ## OAuth
 
@@ -177,9 +182,11 @@ Sign-in is **email first**: the address is entered on its own, and Penombre then
 asks for whatever that account actually needs.
 
 - **A known account with a password** gets the password field.
-- **A known account without one** — an address an admin registered — goes to
-  `/auth/onboarding` to choose a password. No admin ever sees it, and no mail
-  server is involved.
+- **A known account without one** — someone an admin invited who has not
+  finished — is offered what can sign it in without a password: an emailed
+  sign-in link or code, when those are on, and **Email me a link to set a
+  password** when passwords are on. Receiving the email is what proves the
+  address, just as the admin's invite link does.
 - **An unknown address** is told to ask an admin. Whether an address can sign
   itself up is governed by **Admin → Settings → Sign-ups**, including an
   optional allow-list of email domains.
@@ -189,6 +196,10 @@ name), and the account is created with no credential at all. That absent
 credential is what marks it as an invitation — the sign-in flow sees it and
 routes the person to onboarding. Tick **Email invite** (available once SMTP is
 configured) to have Penombre mail them the sign-in link.
+
+The invite link leads to `/auth/onboarding`, where the person chooses a
+password. While password sign-in is off, it offers no password: it sends them to
+sign in with an emailed link or code instead.
 
 Invite links expire after 7 days. An account that never finished onboarding (the
 link expired, or was lost before it reached anyone) still shows in the list with

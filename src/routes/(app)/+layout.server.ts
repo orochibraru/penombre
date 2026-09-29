@@ -1,5 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 import { api } from "#lib/api/index.js";
+import { signInReturningTo } from "#lib/next.js";
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getConfig, getVolumes, isSimpleMode } from "#lib/server/config.js";
 import {
@@ -37,7 +38,7 @@ export const load = async ({ fetch, url, locals, depends }) => {
 	depends("app:shortcuts");
 
 	if (!(locals.user && locals.session)) {
-		return redirect(302, resolve("auth/sign-in"));
+		return redirect(302, signInReturningTo(url));
 	}
 
 	// Enrolment gate. The security page is exempt or the redirect would loop —

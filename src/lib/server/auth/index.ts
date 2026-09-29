@@ -22,6 +22,7 @@ import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb } from "#lib/server/db/index.js";
 import * as schema from "#lib/server/db/schema.js";
 import { Email } from "#lib/server/email.js";
+import type { EmailContent } from "#lib/server/email-template.js";
 import {
 	assertCanDeleteAccount,
 	LastAdminError,
@@ -160,12 +161,11 @@ async function resolveOAuthProviders(): Promise<OAuthProvider[]> {
  */
 async function sendSignInEmail(
 	to: string,
-	subject: string,
-	content: string,
+	content: EmailContent,
 ): Promise<void> {
+	const subject = content.subject;
 	try {
-		const message = await Email.create({ to, subject, content });
-		await message.send();
+		await Email.sendTemplate(to, content);
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : String(error);
 		// The domain is enough to spot "every gmail.com address fails" without
@@ -224,11 +224,14 @@ function authPlugins(oauthProviders: OAuthProvider[]) {
 			// signup stays closed unless the admin opened it.
 			disableSignUp: true,
 			sendMagicLink: async ({ email, url }) => {
-				await sendSignInEmail(
-					email,
-					"Your sign-in link",
-					`Use this link to sign in: ${url}\n\nIt expires shortly and can only be used once. If you did not ask for it, ignore this email.`,
-				);
+				await sendSignInEmail(email, {
+					subject: "Your sign-in link",
+					heading: "Sign in",
+					lines: [`Use the button below to sign in to ${getConfig().appName}.`],
+					action: { label: "Sign in", url },
+					footnote:
+						"The link expires shortly and works once. If you did not ask for it, ignore this email.",
+				});
 			},
 		}),
 		emailOTP({
@@ -236,11 +239,13 @@ function authPlugins(oauthProviders: OAuthProvider[]) {
 			sendVerificationOTP: async ({ email, otp, type }) => {
 				const subject =
 					type === "sign-in" ? "Your sign-in code" : "Your verification code";
-				await sendSignInEmail(
-					email,
+				await sendSignInEmail(email, {
 					subject,
-					`Your code is ${otp}\n\nIt expires shortly. If you did not ask for it, ignore this email.`,
-				);
+					heading: subject,
+					lines: ["Enter this code where you asked for it:", otp],
+					footnote:
+						"It expires shortly. If you did not ask for it, ignore this email.",
+				});
 			},
 		}),
 		bearer(),
@@ -341,6 +346,21 @@ function buildAuth(oauthProviders: OAuthProvider[]) {
 			enabled: true,
 			disableSignUp: true,
 			minPasswordLength: config.auth.minPasswordLength,
+			// Also how an invited account with no password yet sets one:
+			// `resetPassword` creates the credential when there is none.
+			sendResetPassword: async ({ user, url }) => {
+				await sendSignInEmail(user.email, {
+					subject: "Set your password",
+					heading: "Set your password",
+					lines: [
+						`Someone asked to set the password of your ${getConfig().appName} account, ${user.email}.`,
+					],
+					action: { label: "Choose a password", url },
+					footnote:
+						"The link expires in an hour and works once. If you did not ask for it, ignore this email: your password stays as it is.",
+				});
+			},
+			revokeSessionsOnPasswordReset: true,
 		},
 		emailVerification: {
 			sendOnSignUp: isSmtpEnabled(),
@@ -351,12 +371,12 @@ function buildAuth(oauthProviders: OAuthProvider[]) {
 					fullUrl.hostname = "localhost:5173"; // Change this to your frontend domain
 					fullUrl.protocol = "http:"; // or 'https:' in production
 				}
-				const email = await Email.create({
-					to: params.user.email,
+				await Email.sendTemplate(params.user.email, {
 					subject: "Verify your email address",
-					content: `Click the link to verify your email: ${fullUrl.toString()}`,
+					heading: "Verify your email address",
+					lines: ["Confirm that this address is yours."],
+					action: { label: "Verify email", url: fullUrl.toString() },
 				});
-				await email.send();
 			},
 		},
 		user: {

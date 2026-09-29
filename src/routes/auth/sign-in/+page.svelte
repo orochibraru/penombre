@@ -49,7 +49,15 @@
 		} catch {
 			saved = null;
 		}
-		if (saved && data.authConfig.enableEmailSignIn) {
+		if (page.url.searchParams.has("reset")) {
+			toast.success(m.reset_password_done());
+		}
+		// Onboarding and the reset page hand the address over.
+		const handed = page.url.searchParams.get("email");
+		if (handed && data.authConfig.enableEmailSignIn) {
+			email = handed;
+			void lookupEmail();
+		} else if (saved && data.authConfig.enableEmailSignIn) {
 			email = saved;
 			void lookupEmail(true);
 		}
@@ -182,6 +190,8 @@
 	let methods = $state<Method[]>([]);
 	let preferred = $state<Method | null>(null);
 	let showAll = $state(false);
+	/** An invited account can have a link mailed to set its first password. */
+	let setPassword = $state(false);
 
 	const focused = $derived(knownEmail && !!preferred && !showAll);
 	const offers = (method: Method) =>
@@ -202,6 +212,7 @@
 		methods = [];
 		preferred = null;
 		showAll = false;
+		setPassword = false;
 		remember(undefined);
 	}
 
@@ -280,6 +291,31 @@
 		await enterApp(email);
 	}
 
+	async function requestPasswordLink() {
+		loading = true;
+		try {
+			const body = new FormData();
+			body.set("email", email);
+			const res = await fetch("?/passwordLink", {
+				method: "POST",
+				body,
+				headers: { accept: "application/json" },
+			});
+			const payload = deserializeAction(await res.text());
+			if (payload.type === "success") {
+				toast.success(m.password_link_sent({ email }));
+			} else if (payload.type === "failure") {
+				toast.error(
+					payload.data?.outcome === "limited"
+						? m.password_link_limited()
+						: m.password_link_unavailable(),
+				);
+			}
+		} finally {
+			loading = false;
+		}
+	}
+
 	/**
 	 * Resolve what to ask for next.
 	 *
@@ -328,6 +364,7 @@
 			}
 			methods = (payload.data?.methods as Method[] | undefined) ?? [];
 			preferred = (payload.data?.preferred as Method | null) ?? null;
+			setPassword = payload.data?.setPassword === true;
 			showAll = false;
 			knownEmail = true;
 			if (preferred === "passkey") {
@@ -502,6 +539,17 @@
                             </Button>
                         {/if}
                     </div>
+                {/if}
+                {#if knownEmail && setPassword && !otpSent}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        class="w-full"
+                        {loading}
+                        onclick={requestPasswordLink}
+                    >
+                        {m.sign_in_set_password()}
+                    </Button>
                 {/if}
                 {#if !focused && data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
                     <Field.Separator>{m.or_continue_with()}</Field.Separator>

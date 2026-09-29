@@ -1,11 +1,13 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
-import { auth } from "#lib/server/auth/index.js";
-import { getConfig } from "#lib/server/config.js";
+import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
+import {
+	passwordProblem,
+	passwordRules,
+} from "#lib/server/auth/password-rules.js";
 import { getDb } from "#lib/server/db/index.js";
 import { user } from "#lib/server/db/schema.js";
-import { getAppSettings } from "#lib/server/services/app-settings.js";
 import {
 	consumeInvite,
 	findValidInvite,
@@ -31,27 +33,16 @@ export const load = async ({ url }) => {
 		return redirect(307, resolve("auth/sign-in"));
 	}
 
-	const settings = await getAppSettings();
+	const rules = await passwordRules();
 	return {
 		token,
 		email: account.email,
-		minLength: Math.max(
-			getConfig().auth.minPasswordLength,
-			settings.minPasswordLength ?? 8,
-		),
-		requireStrong: settings.requireStrongPassword ?? false,
+		// Off: the account signs in with an emailed link or code instead.
+		passwordEnabled: (await instanceSignInMethods()).password,
+		minLength: rules.minLength,
+		requireStrong: rules.requireStrong,
 	};
 };
-
-/** Mixed case, a digit and a symbol. */
-function isStrong(password: string): boolean {
-	return (
-		/[a-z]/.test(password) &&
-		/[A-Z]/.test(password) &&
-		/\d/.test(password) &&
-		/[^A-Za-z0-9]/.test(password)
-	);
-}
 
 export const actions = {
 	setPassword: async ({ request }) => {
@@ -63,23 +54,15 @@ export const actions = {
 		if (!token) {
 			return fail(400, { error: "INVITE_INVALID" });
 		}
-		if (password !== confirm) {
-			return fail(400, { error: "PASSWORD_MISMATCH" });
-		}
 
-		const settings = await getAppSettings();
-		const minLength = Math.max(
-			getConfig().auth.minPasswordLength,
-			settings.minPasswordLength ?? 8,
-		);
-		if (password.length < minLength) {
-			return fail(400, {
-				error: "PASSWORD_TOO_SHORT",
-				errorParams: { count: String(minLength) },
-			});
+		// Written directly, not through a better-auth endpoint, so the method
+		// gate does not apply: check it here.
+		if (!(await instanceSignInMethods()).password) {
+			return fail(403, { error: "EMAIL_SIGNIN_DISABLED" });
 		}
-		if ((settings.requireStrongPassword ?? false) && !isStrong(password)) {
-			return fail(400, { error: "PASSWORD_NOT_STRONG" });
+		const problem = passwordProblem(password, confirm, await passwordRules());
+		if (problem) {
+			return fail(400, problem);
 		}
 
 		// Atomic: a second submit, or a second tab, with the same token finds

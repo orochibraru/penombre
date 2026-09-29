@@ -70,12 +70,12 @@
             <Button
                 type="submit"
                 variant="outline"
-                formaction="?/deny"
+                formaction="?/deny&user_code={encodeURIComponent(data.userCode ?? '')}"
                 disabled={loading}
             >
                 {m.device_deny()}
             </Button>
-            <Button type="submit" formaction="?/approve" disabled={loading}>
+            <Button type="submit" formaction="?/approve&user_code={encodeURIComponent(data.userCode ?? '')}" disabled={loading}>
                 {m.device_approve()}
             </Button>
         </form>

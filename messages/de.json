@@ -1126,5 +1126,15 @@
 	"admin_user_drive_only": "Nur Laufwerke",
 	"admin_restrict_to_drives": "Auf geteilte Laufwerke beschränken",
 	"admin_give_personal_drive": "Eigenes Laufwerk geben",
-	"drives_empty_drive_only": "Du bist noch in keinem Laufwerk. Bitte die Person, die dich eingeladen hat, dich hinzuzufügen."
+	"drives_empty_drive_only": "Du bist noch in keinem Laufwerk. Bitte die Person, die dich eingeladen hat, dich hinzuzufügen.",
+	"onboarding_no_password": "Passwörter sind auf dieser Instanz deaktiviert. Weiter, um dich bei {email} mit einem per E-Mail gesendeten Link oder Code anzumelden.",
+	"sign_in_set_password": "Link zum Festlegen eines Passworts senden",
+	"password_link_sent": "Sieh in dein Postfach: Wenn {email} ein Konto hat, ist ein Link zum Festlegen des Passworts unterwegs.",
+	"password_link_unavailable": "Diese Instanz kann keine E-Mails senden. Bitte einen Admin um einen Link zum Festlegen deines Passworts.",
+	"password_link_limited": "Zu viele Anfragen. Versuche es in ein paar Minuten erneut.",
+	"reset_password_title": "Neues Passwort wählen",
+	"reset_password_submit": "Passwort speichern",
+	"reset_password_done": "Passwort gespeichert. Melde dich damit an.",
+	"form_error_reset_expired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordere einen neuen an.",
+	"onboarding_account_ready": "Dein Konto ist bereit"
 }

@@ -52,6 +52,8 @@ export function mapFormError(
 			return m.form_error_invite_expired();
 		case "INVITE_NO_ACCOUNT":
 			return m.form_error_invite_no_account();
+		case "RESET_EXPIRED":
+			return m.form_error_reset_expired();
 		case "ONBOARDING_FAILED":
 			return m.form_error_onboarding_failed();
 		default:

@@ -4,6 +4,7 @@ import { requireAdmin } from "#lib/server/auth/require-admin.js";
 import { envProvided, getConfig } from "#lib/server/config.js";
 import type { AppSettingsData } from "#lib/server/db/schema.js";
 import { Email } from "#lib/server/email.js";
+import { renderEmail } from "#lib/server/email-template.js";
 import {
 	effectiveReleaseChannel,
 	effectiveRetentionDays,
@@ -281,11 +282,19 @@ export const actions = {
 			});
 		}
 
+		// Laid out like every real email, so the test shows what people get.
+		const rendered = renderEmail({
+			subject: `${getConfig().appName}: test email`,
+			heading: "Outgoing mail works",
+			lines: [
+				"This is a test message from your instance. If you are reading it, people will get their invites, sign-in links and notifications.",
+			],
+		});
 		const message = {
 			to,
-			subject: "Penombre SMTP test",
-			content:
-				"This is a test message from your Penombre instance.\n\nIf you are reading it, outgoing mail works.",
+			subject: rendered.subject,
+			content: rendered.text,
+			html: rendered.html,
 		};
 
 		try {

@@ -79,12 +79,14 @@ async function sendInvite(
 		return null;
 	}
 	try {
-		const mail = await Email.create({
-			to: email,
-			subject: `You have been added to ${getConfig().appName}`,
-			content: `An account has been created for you. Open ${onboardingUrl} to choose a password.`,
+		const { appName } = getConfig();
+		await Email.sendTemplate(email, {
+			subject: `You have been added to ${appName}`,
+			heading: `Welcome to ${appName}`,
+			lines: [`An account has been created for you, ${email}.`],
+			action: { label: "Set up my account", url: onboardingUrl },
+			footnote: "The link expires in 7 days and works once.",
 		});
-		await mail.send();
 		return null;
 	} catch (error) {
 		return (error as Error).message;

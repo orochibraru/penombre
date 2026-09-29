@@ -866,5 +866,15 @@
 	"admin_user_drive_only": "ドライブのみ",
 	"admin_restrict_to_drives": "共有ドライブのみに制限",
 	"admin_give_personal_drive": "個人ドライブを付与",
-	"drives_empty_drive_only": "まだどのドライブにも参加していません。招待した人に追加を依頼してください。"
+	"drives_empty_drive_only": "まだどのドライブにも参加していません。招待した人に追加を依頼してください。",
+	"onboarding_no_password": "このインスタンスではパスワードが無効です。メールで届くリンクまたはコードで {email} にサインインしてください。",
+	"sign_in_set_password": "パスワード設定用のリンクをメールで送る",
+	"password_link_sent": "受信トレイを確認してください。{email} のアカウントがあれば、パスワード設定用のリンクが届きます。",
+	"password_link_unavailable": "このインスタンスはメールを送信できません。パスワード設定用のリンクを管理者に依頼してください。",
+	"password_link_limited": "リクエストが多すぎます。数分後にもう一度お試しください。",
+	"reset_password_title": "新しいパスワードを設定",
+	"reset_password_submit": "パスワードを保存",
+	"reset_password_done": "パスワードを保存しました。このパスワードでサインインしてください。",
+	"form_error_reset_expired": "このリンクは期限切れか、すでに使用されています。新しいリンクを依頼してください。",
+	"onboarding_account_ready": "アカウントの準備ができました"
 }

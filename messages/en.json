@@ -1198,5 +1198,15 @@
 	"admin_user_drive_only": "Drives only",
 	"admin_restrict_to_drives": "Restrict to shared drives",
 	"admin_give_personal_drive": "Give a personal drive",
-	"drives_empty_drive_only": "You are not in any drive yet. Ask whoever invited you to add you to one."
+	"drives_empty_drive_only": "You are not in any drive yet. Ask whoever invited you to add you to one.",
+	"onboarding_no_password": "Passwords are off on this instance. Continue to sign in to {email} with a link or a code sent by email.",
+	"sign_in_set_password": "Email me a link to set a password",
+	"password_link_sent": "Check your inbox: if {email} has an account, a link to set its password is on its way.",
+	"password_link_unavailable": "This instance cannot send email. Ask an admin for a link to set your password.",
+	"password_link_limited": "Too many requests. Try again in a few minutes.",
+	"reset_password_title": "Choose a new password",
+	"reset_password_submit": "Save password",
+	"reset_password_done": "Password saved. Sign in with it.",
+	"form_error_reset_expired": "This link has expired or was already used. Ask for a new one.",
+	"onboarding_account_ready": "Your account is ready"
 }

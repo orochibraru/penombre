@@ -6,6 +6,10 @@ import {
 	instanceSignInMethods,
 	loadedOAuthProviders,
 } from "#lib/server/auth/index.js";
+import {
+	canMailPasswordLinks,
+	requestPasswordLink,
+} from "#lib/server/auth/password-link.js";
 import { getConfig, isAuthBypassed } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
 import { user } from "#lib/server/db/schema.js";
@@ -117,11 +121,19 @@ export const actions = {
 		}
 
 		if (!(await hasAnyIdentity(account.id))) {
-			// No password, no passkey, no OAuth account either: a genuine
-			// pending invite. This is informational only; the onboarding page
-			// itself requires the token an admin issued, so this cannot be used
-			// to reach it for someone else's address.
-			return { step: "onboarding", email };
+			// Invited, never finished: no password, passkey or OAuth link yet.
+			// What proves the address here is the mailbox: an emailed link or
+			// code signs in, and an emailed link sets a password. Neither is
+			// the admin's token, and neither reaches this account without it.
+			const methods = methodsFor(await instanceSignInMethods(), {
+				hasPassword: false,
+				hasPasskey: false,
+			});
+			const setPassword = await canMailPasswordLinks();
+			if (methods.length === 0 && !setPassword) {
+				return { step: "onboarding", email };
+			}
+			return { step: "password", email, methods, preferred: null, setPassword };
 		}
 		const credentials = await accountCredentials(account.id);
 
@@ -133,6 +145,23 @@ export const actions = {
 			email,
 			methods,
 			preferred: effectivePreferred(preferredSignInMethod, methods),
+			setPassword: false,
 		};
+	},
+
+	/** "Email me a link to set a password", for an invited account. */
+	passwordLink: async ({ request, getClientAddress }) => {
+		const form = await request.formData();
+		const email = String(form.get("email") ?? "")
+			.trim()
+			.toLowerCase();
+		if (!email) {
+			return fail(400, { error: "Enter your email address." });
+		}
+		const outcome = await requestPasswordLink(email, getClientAddress());
+		if (outcome !== "sent") {
+			return fail(outcome === "limited" ? 429 : 503, { outcome });
+		}
+		return { sent: email };
 	},
 };

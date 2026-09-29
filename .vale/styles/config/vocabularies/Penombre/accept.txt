@@ -63,3 +63,4 @@ KWallet
 rustup
 toolchain
 Xcode
+Brevo

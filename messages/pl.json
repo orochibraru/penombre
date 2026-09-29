@@ -1138,5 +1138,15 @@
 	"admin_user_drive_only": "Tylko dyski",
 	"admin_restrict_to_drives": "Ogranicz do dysków współdzielonych",
 	"admin_give_personal_drive": "Przyznaj własny dysk",
-	"drives_empty_drive_only": "Nie należysz jeszcze do żadnego dysku. Poproś osobę, która cię zaprosiła, o dodanie."
+	"drives_empty_drive_only": "Nie należysz jeszcze do żadnego dysku. Poproś osobę, która cię zaprosiła, o dodanie.",
+	"onboarding_no_password": "Hasła są wyłączone na tej instancji. Przejdź dalej, aby zalogować się do {email} linkiem lub kodem wysłanym e-mailem.",
+	"sign_in_set_password": "Wyślij mi link do ustawienia hasła",
+	"password_link_sent": "Sprawdź skrzynkę: jeśli {email} ma konto, link do ustawienia hasła jest w drodze.",
+	"password_link_unavailable": "Ta instancja nie może wysyłać e-maili. Poproś administratora o link do ustawienia hasła.",
+	"password_link_limited": "Zbyt wiele żądań. Spróbuj ponownie za kilka minut.",
+	"reset_password_title": "Wybierz nowe hasło",
+	"reset_password_submit": "Zapisz hasło",
+	"reset_password_done": "Hasło zapisane. Zaloguj się nim.",
+	"form_error_reset_expired": "Link wygasł lub został już użyty. Poproś o nowy.",
+	"onboarding_account_ready": "Twoje konto jest gotowe"
 }

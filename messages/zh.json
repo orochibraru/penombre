@@ -866,5 +866,15 @@
 	"admin_user_drive_only": "仅共享盘",
 	"admin_restrict_to_drives": "限制为共享盘",
 	"admin_give_personal_drive": "提供个人盘",
-	"drives_empty_drive_only": "你还没有加入任何共享盘。请让邀请你的人把你加进去。"
+	"drives_empty_drive_only": "你还没有加入任何共享盘。请让邀请你的人把你加进去。",
+	"onboarding_no_password": "此实例已关闭密码登录。请继续使用发送到邮箱的链接或验证码登录 {email}。",
+	"sign_in_set_password": "发送设置密码的链接",
+	"password_link_sent": "请查看收件箱：如果 {email} 有账户，设置密码的链接正在发送中。",
+	"password_link_unavailable": "此实例无法发送邮件。请向管理员索取设置密码的链接。",
+	"password_link_limited": "请求过多。请几分钟后再试。",
+	"reset_password_title": "设置新密码",
+	"reset_password_submit": "保存密码",
+	"reset_password_done": "密码已保存。请用它登录。",
+	"form_error_reset_expired": "此链接已过期或已被使用。请重新申请。",
+	"onboarding_account_ready": "你的账户已就绪"
 }

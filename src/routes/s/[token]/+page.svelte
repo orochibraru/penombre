@@ -135,7 +135,7 @@
           <Card.Content class="flex justify-center">
             <a
               class={buttonVariants({ variant: "default" })}
-              href="{resolve('auth/sign-in')}?redirect={encodeURIComponent(resolve('/s/[token]', { token: data.token }))}"
+              href="{resolve('auth/sign-in')}?next={encodeURIComponent(resolve('/s/[token]', { token: data.token }))}"
             >{m.sign_in()}</a>
           </Card.Content>
         {/if}

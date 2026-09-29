@@ -16,6 +16,7 @@ import { Logger } from "#lib/logger.js";
 import { getDb } from "#lib/server/db/index.js";
 import { fileNotes, notifications, user } from "#lib/server/db/schema.js";
 import { Email } from "#lib/server/email.js";
+import type { EmailContent } from "#lib/server/email-template.js";
 import { getSmtpSettings } from "#lib/server/services/app-settings.js";
 import { getUserPreferences } from "#lib/server/services/preferences.js";
 
@@ -48,14 +49,25 @@ const emailSubject: Record<NotificationType, string> = {
 	share: "Something was shared with you",
 };
 
-function emailBody(input: NotificationInput, origin: string): string {
+function emailContent(input: NotificationInput, origin: string): EmailContent {
 	const who = input.actorName ?? "Someone";
 	const what = input.resourceName ?? "an item";
 	const line =
 		input.type === "note"
 			? `${who} left a note on ${what}.`
 			: `${who} shared ${what} with you.`;
-	return input.link ? `${line}\n\n${origin}${input.link}` : line;
+	return {
+		subject: emailSubject[input.type],
+		heading: emailSubject[input.type],
+		lines: [line],
+		...(input.link
+			? { action: { label: "Open it", url: `${origin}${input.link}` } }
+			: {}),
+		footnote:
+			input.type === "share"
+				? undefined
+				: "You get these because email notifications are on in your settings.",
+	};
 }
 
 function toRow(row: {
@@ -160,12 +172,10 @@ export class NotificationService {
 			return;
 		}
 
-		const message = await Email.create({
-			to: recipient.email,
-			subject: emailSubject[input.type],
-			content: emailBody(input, origin ?? ""),
-		});
-		await message.send();
+		await Email.sendTemplate(
+			recipient.email,
+			emailContent(input, origin ?? ""),
+		);
 	}
 
 	async list(userId: string, limit = 30): Promise<NotificationRow[]> {

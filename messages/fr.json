@@ -1180,5 +1180,15 @@
 	"admin_user_drive_only": "Disques partagés",
 	"admin_restrict_to_drives": "Limiter aux disques partagés",
 	"admin_give_personal_drive": "Donner un disque personnel",
-	"drives_empty_drive_only": "Vous n'êtes encore dans aucun disque. Demandez à la personne qui vous a invité de vous y ajouter."
+	"drives_empty_drive_only": "Vous n'êtes encore dans aucun disque. Demandez à la personne qui vous a invité de vous y ajouter.",
+	"onboarding_no_password": "Les mots de passe sont désactivés sur cette instance. Continuez pour vous connecter à {email} avec un lien ou un code envoyé par e-mail.",
+	"sign_in_set_password": "M'envoyer un lien pour définir un mot de passe",
+	"password_link_sent": "Vérifiez votre boîte mail : si {email} a un compte, un lien pour définir son mot de passe est en route.",
+	"password_link_unavailable": "Cette instance ne peut pas envoyer d'e-mails. Demandez à un administrateur un lien pour définir votre mot de passe.",
+	"password_link_limited": "Trop de demandes. Réessayez dans quelques minutes.",
+	"reset_password_title": "Choisissez un nouveau mot de passe",
+	"reset_password_submit": "Enregistrer le mot de passe",
+	"reset_password_done": "Mot de passe enregistré. Connectez-vous avec.",
+	"form_error_reset_expired": "Ce lien a expiré ou a déjà été utilisé. Demandez-en un nouveau.",
+	"onboarding_account_ready": "Votre compte est prêt"
 }

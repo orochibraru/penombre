@@ -2,20 +2,39 @@
 	import { KeyRoundIcon } from "@lucide/svelte";
 	import * as Alert from "#lib/components/ui/alert/index.js";
 	import Button from "#lib/components/ui/button/button.svelte";
+	import { buttonVariants } from "#lib/components/ui/button/index.js";
 	import * as Field from "#lib/components/ui/field/index.js";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { mapFormError } from "#lib/form-errors.js";
 	import { enhance } from "#lib/forms.js";
 	import { m } from "#lib/paraglide/messages.js";
+	import { resolve } from "$app/paths";
 
 	const { data, form } = $props();
 
 	let loading = $state(false);
 </script>
 
+{#if !data.passwordEnabled}
+    <div class="flex flex-col items-center gap-4 text-center">
+        <h1 class="text-2xl font-bold">{m.onboarding_account_ready()}</h1>
+        <p class="text-muted-foreground text-sm text-balance">
+            {m.onboarding_no_password({ email: data.email })}
+        </p>
+        <a
+            class={buttonVariants({ class: "w-full" })}
+            href={`${resolve("auth/sign-in")}?email=${encodeURIComponent(data.email)}`}
+        >
+            {m.continue()}
+        </a>
+    </div>
+{:else}
+<!-- The token rides in the action URL too: after a failed submit SvelteKit
+     reloads from the action's URL, and a load without it bounced to sign-in,
+     hiding the error. -->
 <form
     method="POST"
-    action="?/setPassword"
+    action="?/setPassword&token={encodeURIComponent(data.token)}"
     class="flex flex-col gap-6"
     use:enhance={() => {
         loading = true;
@@ -94,3 +113,4 @@
         </Field.Group>
     </Field.FieldSet>
 </form>
+{/if}

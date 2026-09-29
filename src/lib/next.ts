@@ -9,3 +9,14 @@ export function nextPath(
 	const next = url.searchParams.get("next");
 	return next && /^\/(?![/\\])/.test(next) ? next : fallback;
 }
+
+/** Sign-in, coming back to `url` afterwards (home needs no `next`). */
+export function signInReturningTo(url: {
+	pathname: string;
+	search: string;
+}): string {
+	const back = url.pathname + url.search;
+	return back === "/"
+		? "/auth/sign-in"
+		: `/auth/sign-in?next=${encodeURIComponent(back)}`;
+}

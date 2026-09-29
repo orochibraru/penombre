@@ -1171,5 +1171,15 @@
 	"admin_user_drive_only": "Alleen schijven",
 	"admin_restrict_to_drives": "Beperken tot gedeelde schijven",
 	"admin_give_personal_drive": "Eigen schijf geven",
-	"drives_empty_drive_only": "Je zit nog in geen enkele schijf. Vraag degene die je uitnodigde om je toe te voegen."
+	"drives_empty_drive_only": "Je zit nog in geen enkele schijf. Vraag degene die je uitnodigde om je toe te voegen.",
+	"onboarding_no_password": "Wachtwoorden staan uit op deze instantie. Ga verder om je bij {email} aan te melden met een link of code per e-mail.",
+	"sign_in_set_password": "Stuur me een link om een wachtwoord in te stellen",
+	"password_link_sent": "Kijk in je inbox: als {email} een account heeft, is er een link onderweg om het wachtwoord in te stellen.",
+	"password_link_unavailable": "Deze instantie kan geen e-mail versturen. Vraag een beheerder om een link om je wachtwoord in te stellen.",
+	"password_link_limited": "Te veel verzoeken. Probeer het over een paar minuten opnieuw.",
+	"reset_password_title": "Kies een nieuw wachtwoord",
+	"reset_password_submit": "Wachtwoord opslaan",
+	"reset_password_done": "Wachtwoord opgeslagen. Meld je ermee aan.",
+	"form_error_reset_expired": "Deze link is verlopen of al gebruikt. Vraag een nieuwe aan.",
+	"onboarding_account_ready": "Je account is klaar"
 }

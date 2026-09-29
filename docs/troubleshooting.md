@@ -171,6 +171,14 @@ SMTP_SECURE=false
 Use `SMTP_SECURE=true` for port 465 (implicit TLS) and `false` for port 587
 (STARTTLS).
 
+### Emails arrive from another address than the one configured
+
+Penombre sends from exactly the configured address, with the instance's name as
+the sender name. A relay that has not verified your domain may replace it: Brevo
+sends from `@…brevosend.com`, Gmail from the signed-in account. Authenticate the
+sending domain with the provider (its DKIM, SPF and DMARC records), or use an
+address it already accepts as a sender.
+
 ### SMTP connection refused / authentication failed
 
 - Verify your SMTP host and port are correct.

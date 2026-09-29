@@ -2,6 +2,7 @@ import { createTransport, type Transporter } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import { Logger } from "#lib/logger.js";
 import { getConfig } from "#lib/server/config.js";
+import { type EmailContent, renderEmail } from "#lib/server/email-template.js";
 import { getSmtpSettings } from "#lib/server/services/app-settings.js";
 
 const logger = new Logger("Email");
@@ -20,7 +21,17 @@ export interface SmtpConfig {
 interface EmailProps {
 	to: string;
 	subject: string;
+	/** Plain text; always sent, and all a text-only client shows. */
 	content: string;
+	html?: string;
+}
+
+/** `no-reply@x` → `"Penombre" <no-reply@x>`; an address that names itself stays. */
+export function withSenderName(from: string, name: string): string {
+	if (from.includes("<") || !name) {
+		return from;
+	}
+	return `"${name.replaceAll('"', "")}" <${from.trim()}>`;
 }
 
 export class Email {
@@ -28,6 +39,7 @@ export class Email {
 	to: string;
 	subject: string;
 	content: string;
+	html?: string;
 	transporter: Transporter<SMTPTransport.SentMessageInfo>;
 
 	/**
@@ -45,11 +57,22 @@ export class Email {
 		return new Email(props, smtp);
 	}
 
-	constructor({ to, subject, content }: EmailProps, smtpOverride?: SmtpConfig) {
+	/** Lay `content` out with the shared template and send it. */
+	static async sendTemplate(to: string, content: EmailContent): Promise<void> {
+		const { subject, text, html } = renderEmail(content);
+		const message = await Email.create({ to, subject, content: text, html });
+		await message.send();
+	}
+
+	constructor(
+		{ to, subject, content, html }: EmailProps,
+		smtpOverride?: SmtpConfig,
+	) {
 		logger.debug(`Preparing email to: ${to}, subject: ${subject}`);
 		this.to = to;
 		this.subject = subject;
 		this.content = content;
+		this.html = html;
 
 		const smtpConfig = smtpOverride ?? getConfig().smtp;
 		if (!smtpConfig?.enabled) {
@@ -57,7 +80,7 @@ export class Email {
 			throw new Error("SMTP configuration is not defined or not enabled");
 		}
 
-		this.from = smtpConfig.from;
+		this.from = withSenderName(smtpConfig.from, getConfig().appName);
 
 		this.transporter = createTransport({
 			host: smtpConfig.host,
@@ -82,6 +105,7 @@ export class Email {
 			from: this.from,
 			subject: this.subject,
 			text: this.content,
+			...(this.html ? { html: this.html } : {}),
 		});
 	}
 }

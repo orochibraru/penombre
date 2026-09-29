@@ -169,6 +169,7 @@ describe("lookup", () => {
 			email: "a@example.com",
 			methods: ["password"],
 			preferred: null,
+			setPassword: false,
 		});
 	});
 
@@ -217,6 +218,18 @@ describe("lookup", () => {
 		expect(await lookup()).toEqual({
 			step: "onboarding",
 			email: "a@example.com",
+		});
+	});
+
+	test("an invitation is offered what signs in without a password", async () => {
+		mockInstanceMethods.mockResolvedValueOnce(allMethods);
+		queue([{ id: "u1" }]);
+		queue([]);
+		queue([]);
+		expect(await lookup()).toMatchObject({
+			step: "password",
+			methods: ["magicLink", "emailOtp"],
+			preferred: null,
 		});
 	});
 

@@ -866,5 +866,15 @@
 	"admin_user_drive_only": "드라이브만",
 	"admin_restrict_to_drives": "공유 드라이브로 제한",
 	"admin_give_personal_drive": "개인 드라이브 제공",
-	"drives_empty_drive_only": "아직 참여한 드라이브가 없습니다. 초대한 사람에게 추가를 요청하세요."
+	"drives_empty_drive_only": "아직 참여한 드라이브가 없습니다. 초대한 사람에게 추가를 요청하세요.",
+	"onboarding_no_password": "이 인스턴스에서는 비밀번호가 꺼져 있습니다. 이메일로 받은 링크나 코드로 {email}에 로그인하세요.",
+	"sign_in_set_password": "비밀번호 설정 링크 받기",
+	"password_link_sent": "받은편지함을 확인하세요. {email} 계정이 있다면 비밀번호 설정 링크가 발송됩니다.",
+	"password_link_unavailable": "이 인스턴스는 이메일을 보낼 수 없습니다. 관리자에게 비밀번호 설정 링크를 요청하세요.",
+	"password_link_limited": "요청이 너무 많습니다. 몇 분 후 다시 시도하세요.",
+	"reset_password_title": "새 비밀번호 설정",
+	"reset_password_submit": "비밀번호 저장",
+	"reset_password_done": "비밀번호가 저장되었습니다. 이 비밀번호로 로그인하세요.",
+	"form_error_reset_expired": "이 링크는 만료되었거나 이미 사용되었습니다. 새 링크를 요청하세요.",
+	"onboarding_account_ready": "계정이 준비되었습니다"
 }
