@@ -9,11 +9,6 @@
 			"allowedVersions": "<7"
 		},
 		{
-			"description": "1.8 on Kit 3 ignores the runtime ORIGIN and assumes https: every form POST on a plain-HTTP instance fails CSRF",
-			"matchPackageNames": ["@orochibraru/svelte-smol"],
-			"allowedVersions": "<1.8"
-		},
-		{
 			"description": "2.5.14 reports every null check on RegExp.exec as unnecessary",
 			"matchPackageNames": ["@biomejs/biome"],
 			"allowedVersions": "!/^2\\.5\\.14$/"

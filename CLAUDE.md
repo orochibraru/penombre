@@ -1991,15 +1991,6 @@ stay refused. Share URLs keep the owner's full paths
 (`/shared-with-me/[share]/[...path]`), and the listing load redirects anything
 outside the share back to its root; `page.data.share.root` hides the `..` row.
 
-### svelte-smol is held below 1.8
-
-1.8's Kit 3 handler takes `origin` from the build-time `paths.origin` and
-ignores the runtime `ORIGIN`, then guesses the origin from `Host` **as https**.
-On a plain-HTTP instance `event.url.origin` no longer matched the browser's
-`Origin`, and `csrf.ts` refused every form POST, setup included. Dev does not
-use the adapter, so only e2e (a production build) shows it. `renovate.json`
-holds it at `<1.8` until the adapter reads `ORIGIN` again.
-
 ### A link's owner is its creator, not the row's
 
 `shares.owner_id` is who made the link (their **My links**, their revoke). The
