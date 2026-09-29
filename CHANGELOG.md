@@ -4,6 +4,23 @@
 
 ### Features
 
+* plain text files (New → Text file, Edit action), API key lockout per address, sign-in button icons; fix drive trash crash on duplicate names, upload dialog duplicate keys, editor 404 for new documents on volumes ([5711e8f](https://github.com/orochibraru/penombre/commit/5711e8fd0f6676ae1fc561a70a659e50a9a2afb4))
+* drive-only accounts, desktop updater, release channel, exclusions and tray progress; CI images on ghcr.io; fix nested transfers into drives and unreachable folders ([6da0b3f](https://github.com/orochibraru/penombre/commit/6da0b3f855837827aac3fe8c3190afa00f9024f5))
+* desktop updater, release channel, exclusions and tray progress; fix nested transfers into drives ([934fa2a](https://github.com/orochibraru/penombre/commit/934fa2a0a28b635bd6d98a13b2abbf32321814a8))
+* sync client (#119) ([63be0e8](https://github.com/orochibraru/penombre/commit/63be0e847e32d870fcacf132735f464df04ec27f))
+
+### Bug Fixes
+
+* svelte adapter ([573212d](https://github.com/orochibraru/penombre/commit/573212d9d47c5bdb9fd65370a88322e2441762ee))
+* drive managers can create share links (403 toast for the rest), rate-limited API keys no longer trip the lockout, sync client notifies when a folder pair can't start; pin svelte-smol <1.8 (ignored ORIGIN, every form POST failed CSRF on HTTP) ([0d5d033](https://github.com/orochibraru/penombre/commit/0d5d0337012618245d08d784910f1a80b1c9f742))
+* ci ([63a4cd0](https://github.com/orochibraru/penombre/commit/63a4cd094765ae117b6dfe1979ac66cf09fc8528))
+* onboarding lost its errors, invited accounts had no way in; add password reset, return-to after sign-in, email templates ([6cdba33](https://github.com/orochibraru/penombre/commit/6cdba332b4f9c226daf801f1e45401d01141a641))
+* user search on SQLite (template literal turned escape '\' into an empty ESCAPE) ([9adf1bc](https://github.com/orochibraru/penombre/commit/9adf1bc1f439252f07d3faa025ffe8cdf75ee017))
+
+## [1.8.58](https://github.com/orochibraru/penombre/compare/v1.8.57...v1.8.58) (2026-09-29)
+
+### Features
+
 * desktop updater, release channel, exclusions and tray progress; fix nested transfers into drives ([934fa2a](https://github.com/orochibraru/penombre/commit/934fa2a0a28b635bd6d98a13b2abbf32321814a8))
 * sync client (#119) ([63be0e8](https://github.com/orochibraru/penombre/commit/63be0e847e32d870fcacf132735f464df04ec27f))
 
