@@ -32,6 +32,7 @@
 			"icon": "folder",
 			"pages": [
 				{ "slug": "uploads", "icon": "upload" },
+				{ "slug": "webdav", "title": "WebDAV and sync", "icon": "refresh-cw" },
 				{ "slug": "media", "icon": "music" },
 				{ "slug": "documents", "icon": "file-text" },
 				{ "slug": "versioning", "title": "File versioning", "icon": "history" },

@@ -402,6 +402,9 @@ curl -H "Authorization: Bearer pen_..." https://cloud.example.com/api/v1/storage
 API keys are rate-limited to **100 requests per minute** in production. Each key
 tracks its own request count and automatically refills.
 
+The same key signs a WebDAV client in, as the password of HTTP Basic, on `/dav/`
+only. See [WebDAV and sync](webdav.md).
+
 ## Exporting your data
 
 **Account → Security → Export your data** offers two downloads:

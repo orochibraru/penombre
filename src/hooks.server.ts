@@ -16,6 +16,13 @@ import { auth, refreshAuth } from "#lib/server/auth/index.js";
 import { needsSetup, seedAuth } from "#lib/server/auth/seed.js";
 import { getConfig, isAuthBypassed, isSimpleMode } from "#lib/server/config.js";
 import { csrfHandler } from "#lib/server/csrf.js";
+import {
+	basicPassword,
+	cachedKeyUser,
+	DAV_CHALLENGE,
+	keyHint,
+} from "#lib/server/dav/auth.js";
+import { DAV_PREFIX, parseDavPath } from "#lib/server/dav/location.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb, resetDb } from "#lib/server/db/index.js";
 import { startDurationSweeper } from "#lib/server/services/duration-sweep.js";
@@ -299,47 +306,59 @@ async function resolveStorageOwner(sessionUser: User): Promise<User> {
 	return sharedOwner ?? sessionUser;
 }
 
+/** The key's user, or null for an invalid key. */
+async function keyUser(rawKey: string): Promise<User | null> {
+	const result = await auth.api
+		.verifyApiKey({ body: { key: rawKey } })
+		.catch(() => null);
+	if (!result?.valid) {
+		return null;
+	}
+	const session = await auth.api.getSession({
+		headers: new Headers({ "x-api-key": rawKey }),
+	});
+	return session?.user ?? null;
+}
+
 /**
- * Fallback auth for programmatic clients: `x-api-key: <key>` or
- * `Authorization: Bearer <key>`. Returns a 401 response when a key is present
- * but invalid, otherwise undefined (no key = anonymous, not an error).
+ * Fallback auth for programmatic clients: `x-api-key: <key>`,
+ * `Authorization: Bearer <key>`, or on `/dav/` Basic with the key as the
+ * password. Returns a 401 response when a key is present but invalid,
+ * otherwise undefined (no key = anonymous, not an error).
  */
 async function apiKeyAuth(
 	event: Parameters<Handle>[0]["event"],
 ): Promise<Response | undefined> {
 	const authHeader = event.request.headers.get("authorization");
-	const rawKey =
+	const dav = event.url.pathname.startsWith(DAV_PREFIX);
+	const headerKey =
 		event.request.headers.get("x-api-key") ??
 		(authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null);
+	const rawKey = headerKey ?? (dav ? basicPassword(authHeader) : null);
 
 	if (!rawKey) {
 		return;
 	}
 
-	const result = await auth.api
-		.verifyApiKey({ body: { key: rawKey } })
-		.catch(() => null);
+	const sessionUser = dav
+		? await cachedKeyUser(rawKey, keyUser)
+		: await keyUser(rawKey);
 
-	if (!result?.valid) {
+	if (!sessionUser) {
 		// Never the raw key: a typo or a revoked key is still a live credential
 		// for as long as the log file exists.
 		logger.warn("Invalid API key authentication attempt", {
-			keyPrefix: rawKey.slice(0, 8),
+			keyPrefix: keyHint(rawKey, !headerKey),
 		});
 		return new Response(JSON.stringify({ error: "Unauthorized" }), {
 			status: 401,
+			headers: dav ? DAV_CHALLENGE : undefined,
 		});
 	}
 
-	const session = await auth.api.getSession({
-		headers: new Headers({ "x-api-key": rawKey }),
-	});
-
-	if (session?.session && session.user) {
-		event.locals.user = session.user;
-		event.locals.storageOwner = await resolveStorageOwner(session.user);
-		event.locals.storageService = new StorageService(event.locals.storageOwner);
-	}
+	event.locals.user = sessionUser;
+	event.locals.storageOwner = await resolveStorageOwner(sessionUser);
+	event.locals.storageService = new StorageService(event.locals.storageOwner);
 }
 
 const authHandler: Handle = async ({ event, resolve }) => {
@@ -504,14 +523,20 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 
 	const isAsset =
 		!event.url.pathname.endsWith("/") && event.url.pathname.includes(".");
-	if (res.status >= 400 && !isAsset && res.status !== 404) {
-		logger.error(
-			`Error on ${event.request.method} ${event.url.pathname} - ${res.status}`,
-		);
+	const dav = event.url.pathname.startsWith(DAV_PREFIX);
+	// A DAV path is file names; a DAV 4xx (auth challenge, MKCOL probe) is routine.
+	const shown = dav
+		? `${parseDavPath(event.url.pathname)?.base ?? "/dav"}/…`
+		: event.url.pathname;
+	if (
+		res.status >= 400 &&
+		!isAsset &&
+		res.status !== 404 &&
+		!(dav && res.status < 500)
+	) {
+		logger.error(`Error on ${event.request.method} ${shown} - ${res.status}`);
 	} else {
-		logger.info(
-			`${event.request.method} ${event.url.pathname} - ${res.status}`,
-		);
+		logger.info(`${event.request.method} ${shown} - ${res.status}`);
 	}
 	return res;
 };

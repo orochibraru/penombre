@@ -36,4 +36,20 @@ describe("csrfHandler", () => {
 		expect(await status("DELETE", { "x-api-key": "k" })).toBe(200);
 		expect(await status("DELETE", { authorization: "Bearer k" })).toBe(200);
 	});
+
+	test("leaves /dav/ to its own auth", async () => {
+		const request = new Request(`${APP}/dav/me/a.txt`, {
+			method: "PUT",
+			headers: {
+				"content-type": "text/plain",
+				authorization: "Basic eDp5",
+			},
+		});
+		const event = { request, url: new URL(request.url) } as RequestEvent;
+		const res = await csrfHandler({
+			event,
+			resolve: () => new Response(null, { status: 200 }),
+		});
+		expect(res.status).toBe(200);
+	});
 });

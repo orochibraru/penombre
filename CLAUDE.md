@@ -86,6 +86,9 @@ prek run markdownlint vale --all-files      # a few hooks, whole repo
 SKIP=test-unit git push ...                 # skip one hook
 ```
 
+`--all-files` means tracked files: a new file is not linted until it is staged,
+so `git add -N` it before trusting a green `bun run lint`.
+
 A linter's command lives in `.pre-commit-config.yaml` and nowhere else: there
 are no per-linter scripts, and `bun run lint` is just `prek run --all-files`.
 Where a script already exists (`check`, `circular`, `test:go`), the hook calls
@@ -1558,6 +1561,11 @@ the sign-in page, which reads like a broken session rather than a missing line.
 The `setup` project still runs (its job is writing that file), so the failure
 looks unrelated to authentication.
 
+The reverse bites too: `playwright.request.newContext()` inside a test inherits
+that `storageState`, so a context meant to be anonymous carries the session.
+`webdav.spec.ts` asserted a 401 and got 207 until it passed
+`storageState: { cookies: [], origins: [] }`.
+
 ### ProseKit: core only, and browser only
 
 `document-editor.svelte` uses `prosekit/core` + `prosekit/basic` and nothing
@@ -1896,6 +1904,46 @@ leaves an orphaned file there — there is no cancellation API to stop a running
 job. `sweepStaleZips()` (called once at boot and hourly from `hooks.server.ts`)
 deletes anything older than an hour and never throws; it is the cleanup for
 exactly that case.
+
+### WebDAV lives at `/dav`, outside the API
+
+`src/routes/dav/[...path]/+server.ts` exports only `fallback`, because PROPFIND,
+MKCOL, MOVE and LOCK have no named export, and sets `trailingSlash = "ignore"`:
+Kit 308'd `/dav/me/` to `/dav/me`, and DAV clients do not follow a redirect on
+PROPFIND. A scope word leads every path (`/dav/me`, `/dav/drives/<id>`,
+`/dav/volumes/<name>`): a DAV client cannot send `x-drive`, and a personal
+folder may be called `drives`.
+
+- **Auth is Basic with an API key as the password**, `/dav/` only (`apiKeyAuth`
+  in `hooks.server.ts`). A verified key is cached for 60s (`cachedKeyUser`):
+  rclone sends a request per file and the API-key plugin allows 100 a minute.
+  `csrf.ts` skips `/dav/`, which has no POST.
+- **Names resolve case-insensitively** (`treeEntry`), as `getUniqueDisplayName`
+  dedupes; otherwise a PUT of `A.txt` beside `a.txt` became `A (1).txt` and the
+  client lost its own file. A PUT whose created name still differs is deleted
+  and answered 409.
+- **Every mutation goes through the existing service calls.** MOVE is
+  `moveFile`/`moveFolder` then a rename, never delete + PUT, so notes, versions
+  and shares survive; DELETE trashes; PUT over a file snapshots it.
+- **MOVE onto an existing file is a save, not a replace-by-trash.** Editors and
+  Finder write a temp file and rename it over the original; `replaceFile`
+  (`VersionOperations.replace`) keeps the original's row, links its old bytes
+  into a version, and renames the temp's bytes in. Trashing the destination
+  instead reset the file's history on every save.
+- **Office's safe save** is a different dance: rename the original away, MOVE
+  the temp onto the freed name, DELETE the backup. A per-process `SaveMemo` (row
+  ids, one minute) turns that DELETE into `replaceFile(backup ← temp)` plus a
+  rename back, and only that DELETE: keying on the MOVE alone would merge a file
+  someone just renamed with an unrelated one moved in.
+- MOVE compares the Destination's **path** only, never its host: with `ORIGIN`
+  set every request reads as that host, so a client on a LAN IP was 502'd.
+- A Basic password is never logged, not even its prefix (`keyHint`): Finder
+  autofills the account password there.
+- LOCK is a fake and PROPPATCH stores nothing: Finder mounts read-only and
+  Explorer fails every copy without them.
+- `generalHandler` logs a DAV path as its base only (the rest is file names) and
+  a DAV 4xx at info: the 401 challenge and rclone's MKCOL probe on an existing
+  folder happen on every sync.
 
 ### Bytes may be sealed; the disk says so
 

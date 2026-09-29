@@ -1,0 +1,73 @@
+# WebDAV and sync
+
+Every Penombre tree is served over WebDAV, so the file manager you already use
+can mount it and [rclone](https://rclone.org) can keep a local folder in sync
+with it. There is no desktop client to install.
+
+## Addresses
+
+| Tree             | Address                                         |
+| ---------------- | ----------------------------------------------- |
+| Your drive       | `https://files.example.com/dav/me/`             |
+| A shared drive   | `https://files.example.com/dav/drives/<id>/`    |
+| A mounted volume | `https://files.example.com/dav/volumes/<name>/` |
+
+A shared drive's id is the last part of its address in the browser. Items shared
+_with_ you are not reachable over WebDAV.
+
+## Signing in
+
+Create an API key under **Settings → API keys**. Sign in with any user name and
+the key as the password. Your account password does not work here, and neither
+does two-factor: the key is the credential, so revoke it to cut a device off. A
+revoked key keeps working for up to a minute.
+
+## rclone
+
+```bash
+rclone config create penombre webdav \
+  url=https://files.example.com/dav/me vendor=owncloud \
+  user=me pass=YOUR_API_KEY --obscure
+```
+
+`vendor=owncloud` matters: it is what makes rclone send each file's modification
+time, without which every sync uploads everything again.
+
+Two-way sync, the first run and then every run after it:
+
+```bash
+rclone bisync ~/Penombre penombre: --resync
+rclone bisync ~/Penombre penombre:
+```
+
+Run the second line from cron, a systemd timer or launchd. For a graphical front
+end, `rclone rcd --rc-web-gui` opens rclone's own web UI.
+
+## File managers
+
+- **macOS Finder:** Go → Connect to Server, enter the address.
+- **Windows Explorer:** This PC → Map network drive → "Connect to a website",
+  enter the address. Windows only sends a password over HTTPS.
+- **GNOME Files:** Other Locations, enter `davs://files.example.com/dav/me/`.
+
+## How it behaves
+
+- Deleting sends the item to the trash, where you can restore it.
+- Saving over a file keeps it the same file, whether the app writes it directly
+  or writes a temporary file and renames it over: its notes, shares and history
+  stay, and its old bytes become a version when the folder keeps versions (see
+  [File versioning](versioning.md)). With versioning off the old bytes are
+  replaced, as an upload would replace them.
+- Renames and moves keep the file's notes, versions, stars and shares.
+- Names are matched without regard to case, as Penombre's own names are.
+- `.DS_Store`, `._*`, `Thumbs.db` and `desktop.ini` are accepted and dropped.
+
+## Limitations
+
+- An upload is held in memory while it is written, so a very large file needs
+  that much free memory on the server.
+- Copying on the server is not supported. rclone asks for it only when copying
+  between two Penombre paths; add `--disable Copy` there.
+- Locks are advisory: Finder and Explorer get one, and nothing enforces it.
+- Your reverse proxy must pass WebDAV methods (`PROPFIND`, `MKCOL`, `MOVE`,
+  `LOCK`) through. See [Reverse proxy](reverse-proxy.md).
