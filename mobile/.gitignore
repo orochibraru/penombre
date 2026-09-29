@@ -1,0 +1,7 @@
+.gradle/
+build/
+.kotlin/
+local.properties
+*.xcuserstate
+xcuserdata/
+iosApp/build/

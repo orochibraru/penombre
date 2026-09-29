@@ -34,6 +34,7 @@
 				{ "slug": "uploads", "icon": "upload" },
 				{ "slug": "webdav", "title": "WebDAV and sync", "icon": "refresh-cw" },
 				{ "slug": "desktop", "title": "Desktop sync", "icon": "monitor" },
+				{ "slug": "mobile", "title": "Mobile app", "icon": "smartphone" },
 				{ "slug": "media", "icon": "music" },
 				{ "slug": "documents", "icon": "file-text" },
 				{ "slug": "versioning", "title": "File versioning", "icon": "history" },

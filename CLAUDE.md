@@ -1608,6 +1608,35 @@ old one's instance lock (`claim_when_free`); a plain `claim` would knock on the
 quitting instance and exit. Homebrew installs are refused: replacing a Cellar
 binary under brew's feet breaks `brew upgrade`.
 
+### The mobile app signs in to a real session
+
+`mobile/` is a Kotlin Multiplatform project (Compose Multiplatform UI for
+Android and iOS); the design is `specs/2026-09-29-mobile-app-design.md`. Sign-in
+is an authorization code grant with PKCE (`auth/mobile.ts`): the system browser
+opens `/auth/mobile/authorize`, which redirects to `penombre://auth?code=…`, and
+`POST /api/v1/mobile/token` trades the code for an ordinary better-auth session,
+so the phone is listed and revocable under Sessions. Codes live hashed in
+`verification` and are consumed by `delete … returning`, so two racing
+redemptions never both win.
+
+- The token route is not under `/api/v1/auth`: `svelteKitHandler` answers that
+  whole basePath, so a SvelteKit route there 404s unless listed in
+  `customAuthPaths`.
+- The native side sends `Authorization: Bearer <token>`, which `bearer()`
+  already turns into a session in `getSession`. The embedded WebView gets the
+  same session as a cookie the app plants; its value is better-call's
+  `signCookieValue`: `encodeURIComponent(token + "." + base64(HMAC-SHA256))`,
+  named from `authCookies.sessionToken.name` (it gains `__Secure-` on HTTPS).
+- AGP 9 refuses `kotlin.multiplatform` and `com.android.application` in one
+  module, hence the KMP library `shared` plus a thin `androidApp`.
+- Testing on a phone against `bun run dev`: `adb reverse tcp:5173 tcp:5173` and
+  use `http://localhost:5173`. A passkey is bound to its domain, so the phone
+  cannot use the Mac's `localhost` passkey; sign in another way. Vite's
+  dependency optimizer can re-bundle mid-session and answer 504 for the stale
+  `?v=` hash: the page renders and never hydrates, so nothing is clickable.
+  Restart with `bun run dev -- --force`.
+- Nothing in CI or prek builds `mobile/` yet.
+
 ### TypeScript is held at 6 on purpose
 
 `svelte-check` refuses TypeScript 7 outright — it wants _both_ TS 6 and TS 7

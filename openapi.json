@@ -17500,6 +17500,149 @@
 				]
 			}
 		},
+		"/api/v1/mobile/token": {
+			"post": {
+				"description": "Redeems the single-use code from /auth/mobile/authorize with its PKCE verifier and returns a new session: its token for `Authorization: Bearer`, and its signed cookie for the app's embedded browser.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"code": {
+										"maxLength": 128,
+										"type": "string"
+									},
+									"code_verifier": {
+										"maxLength": 128,
+										"minLength": 43,
+										"type": "string"
+									}
+								},
+								"required": [
+									"code",
+									"code_verifier"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"cookie": {
+													"additionalProperties": false,
+													"properties": {
+														"name": {
+															"type": "string"
+														},
+														"value": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"name",
+														"value"
+													],
+													"type": "object"
+												},
+												"expiresAt": {
+													"type": "string"
+												},
+												"token": {
+													"type": "string"
+												},
+												"user": {
+													"additionalProperties": false,
+													"properties": {
+														"email": {
+															"type": "string"
+														},
+														"id": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"id",
+														"name",
+														"email"
+													],
+													"type": "object"
+												}
+											},
+											"required": [
+												"token",
+												"expiresAt",
+												"cookie",
+												"user"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Too Many Requests"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"summary": "Exchange a mobile sign-in code",
+				"tags": [
+					"Auth"
+				]
+			}
+		},
 		"/api/v1/notifications": {
 			"get": {
 				"description": "Most recent first, with the unread count so a client can render the badge from one call.",
