@@ -8,11 +8,13 @@
 	import * as Field from "#lib/components/ui/field/index.js";
 	import Input from "#lib/components/ui/input/input.svelte";
 	import { deserializeAction } from "#lib/forms.js";
+	import { nextPath } from "#lib/next.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
 	import { cn } from "#lib/utils.js";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 
 	let { data } = $props();
 
@@ -93,7 +95,10 @@
 		remember(address);
 		progress = m.signed_in_success();
 		try {
-			await goto(resolve("/(app)"), { replace: true, refreshAll: true });
+			await goto(nextPath(page.url, resolve("/(app)")), {
+				replace: true,
+				refreshAll: true,
+			});
 		} catch {
 			progress = null;
 			toast.error(defaultErrorMessage);
@@ -137,7 +142,10 @@
 
 	async function handleOauthSignin(provider: string) {
 		progress = m.signing_in_with_provider({ provider });
-		const res = await authClient.signIn.social({ provider });
+		const res = await authClient.signIn.social({
+			provider,
+			callbackURL: nextPath(page.url, "/"),
+		});
 		if (res.error) {
 			failed(mapAuthError(res.error.code));
 			return;
@@ -204,7 +212,7 @@
 	async function magicLinkSignIn() {
 		const { error: err } = await authClient.signIn.magicLink({
 			email,
-			callbackURL: "/",
+			callbackURL: nextPath(page.url, "/"),
 		});
 		if (err) {
 			throw new Error(mapAuthError(err.code));

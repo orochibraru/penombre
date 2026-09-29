@@ -54,11 +54,13 @@ jobs:
           prek-version: ${{ steps.prek.outputs.version }}
           extra-args: --all-files --no-fail-fast
 
-      - name: Circular imports
-        run: bun run circular
-
-      - name: Type check
-        run: bun run check
+      - name: Type check and circular imports
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          prek-version: ${{ steps.prek.outputs.version }}
+          extra-args: --all-files --hook-stage pre-push check circular
 
   ts-test:
     name: Tests (TS)
@@ -100,11 +102,14 @@ jobs:
       - name: Install ffmpeg and poppler
         run: sudo apt-get update && sudo apt-get install -y ffmpeg poppler-utils
 
-      - name: Tests (Unit)
-        run: bun test --bail
+      - name: Resolve prek version
+        id: prek
+        run: echo "version=$(jq -r .version node_modules/@j178/prek/package.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Tests (Go, unit)
-        run: bun run test:go:unit
-
-      - name: Tests (Go, integration)
-        run: bun run test:go:integration
+      - name: Tests (unit and Go)
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          prek-version: ${{ steps.prek.outputs.version }}
+          extra-args: --all-files --hook-stage pre-push test-unit test-go

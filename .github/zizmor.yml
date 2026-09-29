@@ -3,3 +3,8 @@ rules:
   # parse that syntax yet.
   self-repository:
     disable: true
+  # Flagged for its `push` trigger, which is releaser/release only and never
+  # runs a cache-writing job; a PR's cache is scoped to its own ref.
+  cache-poisoning:
+    ignore:
+      - pull_request.yaml

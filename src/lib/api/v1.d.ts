@@ -1961,6 +1961,619 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/auth/device": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description Verify user code and get device authorization status */
+		get: {
+			parameters: {
+				query?: {
+					user_code?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Device authorization status */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description The client requesting authorization, returned only to the authenticated user who owns this request */
+							client_id?: string;
+							/** @description The requested scopes, returned only to the authenticated user who owns this request */
+							scope?: string;
+							/**
+							 * @description Current status of the device authorization
+							 * @enum {string}
+							 */
+							status?: "pending" | "approved" | "denied";
+							/** @description The user code to verify */
+							user_code?: string;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/device/approve": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Approve device authorization */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The user code to approve */
+						userCode: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							success?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/device/code": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * @description Request a device and user code
+		 *
+		 *     Follow [rfc8628#section-3.2](https://datatracker.ietf.org/doc/html/rfc8628#section-3.2)
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The client ID of the application */
+						client_id: string;
+						/** @description Space-separated list of scopes */
+						scope?: string;
+						/** @description The user ID to which the device code should be pre-bound. */
+						user_id?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description The device verification code */
+							device_code?: string;
+							/** @description Lifetime in seconds of the device code */
+							expires_in?: number;
+							/** @description Minimum polling interval in seconds */
+							interval?: number;
+							/** @description The user code to display */
+							user_code?: string;
+							/**
+							 * Format: uri
+							 * @description The URL for user verification. Defaults to /device if not configured.
+							 */
+							verification_uri?: string;
+							/**
+							 * Format: uri
+							 * @description The complete URL with user code as query parameter.
+							 */
+							verification_uri_complete?: string;
+						};
+					};
+				};
+				/** @description Error response */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @enum {string} */
+							error?:
+								| "invalid_request"
+								| "invalid_client"
+								| "unauthorized_client"
+								| "invalid_scope";
+							error_description?: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Server error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @enum {string} */
+							error?: "server_error";
+							error_description?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/device/deny": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/** @description Deny device authorization */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The user code to deny */
+						userCode: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							success?: boolean;
+						};
+					};
+				};
+				/** @description Bad Request. Usually due to missing parameters, or invalid parameters. */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/auth/device/token": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * @description Exchange device code for access token
+		 *
+		 *     Follow [rfc8628#section-3.4](https://datatracker.ietf.org/doc/html/rfc8628#section-3.4)
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description The client ID of the application */
+						client_id: string;
+						/** @description The device verification code */
+						device_code: string;
+						/**
+						 * @description The grant type for device flow
+						 * @enum {unknown}
+						 */
+						grant_type: "urn:ietf:params:oauth:grant-type:device_code";
+					};
+				};
+			};
+			responses: {
+				/** @description Success */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							session?: components["schemas"]["Session"];
+							user?: components["schemas"]["User"];
+						};
+					};
+				};
+				/** @description Error response */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @enum {string} */
+							error?:
+								| "authorization_pending"
+								| "slow_down"
+								| "expired_token"
+								| "access_denied"
+								| "invalid_request"
+								| "invalid_grant";
+							error_description?: string;
+						};
+					};
+				};
+				/** @description Unauthorized. Due to missing or invalid authentication. */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message: string;
+						};
+					};
+				};
+				/** @description Forbidden. You do not have permission to access this resource or to perform this action. */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Not Found. The requested resource was not found. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Too Many Requests. You have exceeded the rate limit. Try again later. */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+				/** @description Internal Server Error. This is a problem with the server that you cannot fix. */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							message?: string;
+						};
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/auth/email-otp/change-email": {
 		parameters: {
 			query?: never;
@@ -12625,6 +13238,20 @@ export interface components {
 				name: string;
 				size: number;
 			}[];
+		};
+		DeviceCode: {
+			clientId?: string;
+			deviceCode: string;
+			/** Format: date-time */
+			expiresAt: string;
+			readonly id: string;
+			/** Format: date-time */
+			lastPolledAt?: string;
+			pollingInterval?: number;
+			scope?: string;
+			status: string;
+			userCode: string;
+			userId?: string;
 		};
 		DirectoryList: string[];
 		ErrorResponse: {

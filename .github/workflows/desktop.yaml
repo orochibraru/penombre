@@ -1,0 +1,109 @@
+name: Desktop
+# Builds Penombre Sync for every platform and attaches it to the release
+# `v<version>`, which must already exist.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        description: "Release version without the v, e.g. 1.8.57 or 1.8.57-canary.3"
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  TZ: Europe/Paris
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CI: true
+  CARGO_TERM_COLOR: never
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          # Cross-built on the arm runner: no C toolchain beyond Xcode's.
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          # The oldest runner, for the oldest glibc the binary will need. No
+          # -dev packages: X11, Wayland and GL are dlopened, D-Bus is Rust.
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-22.04
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the Rust toolchain
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          toolchain="$(sed -n 's/^rust-version = "\([^"]*\)".*/\1/p' Cargo.toml)"
+          rustup toolchain install "$toolchain" --profile minimal --target "$TARGET"
+          rustup default "$toolchain"
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: desktop
+          key: ${{ matrix.target }}
+
+      # Cargo.lock records the package's own version too, so both change or
+      # `--locked` refuses to build. `\r?`: Windows checks out CRLF.
+      - name: Stamp the release version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          perl -0pi -e 's/(\[package\]\r?\nname = "penombre-sync"\r?\nversion = )"[^"]*"/$1"$ENV{VERSION}"/' Cargo.toml
+          perl -0pi -e 's/(name = "penombre-sync"\r?\nversion = )"[^"]*"/$1"$ENV{VERSION}"/' Cargo.lock
+          grep -qF "version = \"$VERSION\"" Cargo.toml
+          grep -qF "version = \"$VERSION\"" Cargo.lock
+
+      - name: Build
+        env:
+          TARGET: ${{ matrix.target }}
+        run: cargo build --release --locked --target "$TARGET"
+
+      - name: Package
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          out="$PWD/dist"
+          mkdir -p "$out"
+          cp ../LICENSE "target/$TARGET/release/"
+          cd "target/$TARGET/release"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            asset="penombre-sync-$TARGET.zip"
+            7z a -tzip "$out/$asset" penombre-sync.exe LICENSE
+          else
+            asset="penombre-sync-$TARGET.tar.gz"
+            tar -czf "$out/$asset" penombre-sync LICENSE
+          fi
+          cd "$out"
+          if command -v sha256sum >/dev/null; then
+            sha256sum "$asset" > "$asset.sha256"
+          else
+            shasum -a 256 "$asset" > "$asset.sha256"
+          fi
+          cat "$asset.sha256"
+
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: gh release upload "v$VERSION" dist/* --clobber --repo "$GITHUB_REPOSITORY"

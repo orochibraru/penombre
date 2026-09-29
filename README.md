@@ -103,6 +103,10 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
   keep a folder in two-way sync with rclone; a save over a file becomes a
   version, a delete lands in the trash.
   [WebDAV and sync](https://orochibraru.com/penombre/docs/webdav)
+- **A desktop sync app** — a tray app for macOS, Linux and Windows that keeps
+  several local folders in two-way sync with your drive, shared drives or
+  volumes; `brew install orochibraru/tap/penombre-sync`.
+  [Desktop sync](https://orochibraru.com/penombre/docs/desktop)
 - **Syncthing-friendly** — what Penombre writes to a volume keeps its real name
   and its modification date, so the folder reads the same on every peer.
   [Syncing with Syncthing](https://orochibraru.com/penombre/docs/storage#syncing-with-syncthing)

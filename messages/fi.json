@@ -1082,5 +1082,14 @@
 	"shortcut_remove": "Poista {name} sivupalkista",
 	"toast_shortcut_added": "\"{name}\" lisätty sivupalkkiin",
 	"toast_shortcut_removed": "\"{name}\" poistettu sivupalkista",
-	"toast_shortcut_error": "Pikakuvakkeita ei voitu päivittää"
+	"toast_shortcut_error": "Pikakuvakkeita ei voitu päivittää",
+	"device_title": "Yhdistetäänkö Penombre Sync?",
+	"device_description": "Laite pyytää lupaa synkronoida tiedostosi. Varmista, että tämä koodi vastaa laitteen näyttämää.",
+	"device_approve": "Hyväksy",
+	"device_deny": "Hylkää",
+	"device_approved": "Hyväksytty. Voit palata Penombre Synciin.",
+	"device_denied": "Hylätty. Laitetta ei kirjattu sisään.",
+	"device_invalid": "Koodi on virheellinen tai vanhentunut. Aloita alusta Penombre Syncissä.",
+	"device_code_label": "Koodi",
+	"device_continue": "Jatka"
 }

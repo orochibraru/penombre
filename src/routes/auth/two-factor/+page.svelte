@@ -6,9 +6,11 @@
 	import * as Field from "#lib/components/ui/field/index.js";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { Label } from "#lib/components/ui/label/index.js";
+	import { nextPath } from "#lib/next.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 
 	/**
 	 * The second step of a sign-in that needs another factor.
@@ -36,7 +38,10 @@
 			errorMessage = error.message || m.two_factor_invalid();
 			return;
 		}
-		await goto(resolve("/(app)"), { replace: true, refreshAll: true });
+		await goto(nextPath(page.url, resolve("/(app)")), {
+			replace: true,
+			refreshAll: true,
+		});
 	}
 </script>
 

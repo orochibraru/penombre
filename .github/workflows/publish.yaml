@@ -292,6 +292,79 @@ jobs:
             --jq '[.[] | select(.isPrerelease)] | .[5:] | .[].tagName' \
             | xargs -r -n1 gh release delete --yes
 
+  desktop:
+    name: Desktop ${{ needs.version.outputs.version }}
+    needs: [version, release]
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/desktop.yaml
+    with:
+      version: ${{ needs.version.outputs.version }}
+
+  # The tap's formula is rendered here, per stable release, from the checksums
+  # the desktop jobs attached. The tap has no workflow of its own.
+  homebrew:
+    name: Homebrew Tap
+    needs: [version, desktop]
+    if: ${{ !cancelled() && needs.version.outputs.mode == 'stable' &&
+      needs.desktop.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Render the formula
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          sums="$RUNNER_TEMP/sums"
+          gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern '*.tar.gz.sha256' --dir "$sums"
+          args=(-e "s/@VERSION@/$VERSION/")
+          for target in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu; do
+            args+=(-e "s/@SHA256_$target@/$(cut -d' ' -f1 "$sums/penombre-sync-$target.tar.gz.sha256")/")
+          done
+          mkdir -p "$RUNNER_TEMP/tap/Formula"
+          sed "${args[@]}" packaging/homebrew/penombre-sync.rb.tmpl > "$RUNNER_TEMP/tap/Formula/penombre-sync.rb"
+          cp packaging/homebrew/README.md "$RUNNER_TEMP/tap/README.md"
+          if grep -n '@[A-Za-z0-9_-]*@' "$RUNNER_TEMP/tap/Formula/penombre-sync.rb"; then
+            echo "::error::Unrendered placeholder in the formula."
+            exit 1
+          fi
+
+      # A deploy key, not a token: it reaches the tap and nothing else. GitHub's
+      # host keys come from its API over TLS rather than a first-use scan. The
+      # fetch finds nothing on the tap's very first push.
+      - name: Push to orochibraru/homebrew-tap
+        env:
+          DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          key="$RUNNER_TEMP/tap_key"
+          (umask 077 && printf '%s\n' "$DEPLOY_KEY" > "$key")
+          curl -fsS https://api.github.com/meta \
+            | jq -r '.ssh_keys[] | "github.com " + .' > "$RUNNER_TEMP/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/known_hosts -o StrictHostKeyChecking=yes"
+          cd "$RUNNER_TEMP/tap"
+          git init -q -b main
+          git remote add origin git@github.com:orochibraru/homebrew-tap.git
+          if git fetch -q --depth 1 origin main; then
+            git reset -q FETCH_HEAD
+          fi
+          git add Formula/penombre-sync.rb README.md
+          if git diff --cached --quiet; then
+            echo "The tap already carries penombre-sync $VERSION."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "penombre-sync $VERSION"
+          git push origin main
+
   cleanup:
     name: Delete PR Image
     needs: [tested, release]

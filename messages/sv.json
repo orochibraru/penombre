@@ -983,5 +983,14 @@
 	"shortcut_remove": "Ta bort {name} från sidofältet",
 	"toast_shortcut_added": "\"{name}\" har lagts till i sidofältet",
 	"toast_shortcut_removed": "\"{name}\" har tagits bort från sidofältet",
-	"toast_shortcut_error": "Det gick inte att uppdatera genvägarna"
+	"toast_shortcut_error": "Det gick inte att uppdatera genvägarna",
+	"device_title": "Ansluta Penombre Sync?",
+	"device_description": "En enhet vill synkronisera dina filer. Kontrollera att koden stämmer med den som visas där.",
+	"device_approve": "Godkänn",
+	"device_deny": "Neka",
+	"device_approved": "Godkänt. Du kan gå tillbaka till Penombre Sync.",
+	"device_denied": "Nekat. Enheten loggades inte in.",
+	"device_invalid": "Koden är ogiltig eller har gått ut. Börja om från Penombre Sync.",
+	"device_code_label": "Kod",
+	"device_continue": "Fortsätt"
 }

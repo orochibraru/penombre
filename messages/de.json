@@ -1100,5 +1100,14 @@
 	"shortcut_remove": "{name} aus der Seitenleiste entfernen",
 	"toast_shortcut_added": "\"{name}\" zur Seitenleiste hinzugefügt",
 	"toast_shortcut_removed": "\"{name}\" aus der Seitenleiste entfernt",
-	"toast_shortcut_error": "Verknüpfungen konnten nicht aktualisiert werden"
+	"toast_shortcut_error": "Verknüpfungen konnten nicht aktualisiert werden",
+	"device_title": "Penombre Sync verbinden?",
+	"device_description": "Ein Gerät möchte deine Dateien synchronisieren. Prüfe, ob dieser Code mit dem dort angezeigten übereinstimmt.",
+	"device_approve": "Erlauben",
+	"device_deny": "Ablehnen",
+	"device_approved": "Erlaubt. Du kannst zu Penombre Sync zurückkehren.",
+	"device_denied": "Abgelehnt. Das Gerät wurde nicht angemeldet.",
+	"device_invalid": "Dieser Code ist ungültig oder abgelaufen. Starte in Penombre Sync neu.",
+	"device_code_label": "Code",
+	"device_continue": "Weiter"
 }

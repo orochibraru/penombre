@@ -1,0 +1,13 @@
+default_job = "clippy"
+
+[jobs.clippy]
+command = ["cargo", "clippy", "--all-targets", "--color", "always", "--", "-D", "warnings"]
+need_stdout = false
+
+# The app never exits on its own: kill it and start the new build on each change.
+[jobs.run]
+command = ["cargo", "run", "--color", "always"]
+need_stdout = true
+allow_warnings = true
+background = false
+on_change_strategy = "kill_then_restart"

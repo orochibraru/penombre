@@ -840,5 +840,14 @@
 	"shortcut_remove": "{name} をサイドバーから削除",
 	"toast_shortcut_added": "「{name}」をサイドバーに追加しました",
 	"toast_shortcut_removed": "「{name}」をサイドバーから削除しました",
-	"toast_shortcut_error": "ショートカットを更新できませんでした"
+	"toast_shortcut_error": "ショートカットを更新できませんでした",
+	"device_title": "Penombre Sync を接続しますか？",
+	"device_description": "デバイスがファイルの同期を求めています。このコードがデバイスに表示されているものと一致するか確認してください。",
+	"device_approve": "許可",
+	"device_deny": "拒否",
+	"device_approved": "許可しました。Penombre Sync に戻ってください。",
+	"device_denied": "拒否しました。そのデバイスはサインインしていません。",
+	"device_invalid": "このコードは無効か期限切れです。Penombre Sync からやり直してください。",
+	"device_code_label": "コード",
+	"device_continue": "続ける"
 }

@@ -61,6 +61,9 @@ export const passkey = (
 export const twoFactor = (
 	sqliteActive ? sqlite.twoFactor : pg.twoFactor
 ) as typeof pg.twoFactor;
+export const deviceCode = (
+	sqliteActive ? sqlite.deviceCode : pg.deviceCode
+) as typeof pg.deviceCode;
 export const fileNotes = (
 	sqliteActive ? sqlite.fileNotes : pg.fileNotes
 ) as typeof pg.fileNotes;

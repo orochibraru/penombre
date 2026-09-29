@@ -1,0 +1,48 @@
+[package]
+name = "penombre-sync"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+license = "MIT"
+description = "Keeps a local folder in two-way sync with a Penombre drive"
+publish = false
+
+[dependencies]
+directories = "6"
+eframe = { version = "0.36", default-features = false, features = ["glow", "default_fonts", "wayland", "x11"] }
+egui = "0.36"
+egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
+# Same revision spotifast builds with; move them together.
+fastframe-fonts = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7" }
+fastframe-icons = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7" }
+fastframe-log = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7" }
+fastframe-shell = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7" }
+fastframe-tray = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7" }
+keyring-core = "1"
+log = "0.4"
+notify = "8"
+open = "5"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls-native-roots"] }
+rfd = "0.17"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# macOS shows nothing from an unbundled binary through it; osascript does.
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+notify-rust = "4"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+apple-native-keyring-store = { version = "1.0.2", features = ["keychain"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-native-keyring-store = { version = "1.1", default-features = false }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus-secret-service-keyring-store = { version = "1.0.1", features = ["rt-async-io-crypto-rust"] }
+
+[dev-dependencies]
+egui_kittest = { version = "0.36", features = ["wgpu"] }
+image = { version = "0.25", default-features = false, features = ["png"] }

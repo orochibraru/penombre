@@ -183,6 +183,13 @@
       "when": 1790615286950,
       "tag": "0025_lowly_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1790676298420,
+      "tag": "0026_graceful_hairball",
+      "breakpoints": true
     }
   ]
 }

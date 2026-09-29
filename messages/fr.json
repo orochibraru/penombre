@@ -1154,5 +1154,14 @@
 	"shortcut_remove": "Retirer {name} de la barre latérale",
 	"toast_shortcut_added": "\"{name}\" ajouté à la barre latérale",
 	"toast_shortcut_removed": "\"{name}\" retiré de la barre latérale",
-	"toast_shortcut_error": "Impossible de mettre à jour les raccourcis"
+	"toast_shortcut_error": "Impossible de mettre à jour les raccourcis",
+	"device_title": "Connecter Penombre Sync ?",
+	"device_description": "Un appareil demande à synchroniser vos fichiers. Vérifiez que ce code correspond à celui qu'il affiche.",
+	"device_approve": "Autoriser",
+	"device_deny": "Refuser",
+	"device_approved": "Autorisé. Vous pouvez revenir à Penombre Sync.",
+	"device_denied": "Refusé. Cet appareil n'a pas été connecté.",
+	"device_invalid": "Ce code est invalide ou a expiré. Recommencez depuis Penombre Sync.",
+	"device_code_label": "Code",
+	"device_continue": "Continuer"
 }

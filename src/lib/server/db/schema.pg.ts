@@ -550,6 +550,23 @@ export const twoFactor = pgTable(
 );
 
 /**
+ * Pending sign-ins from the desktop sync client (better-auth's device
+ * authorization plugin). Property names are the plugin's.
+ */
+export const deviceCode = pgTable("device_code", {
+	id: text("id").primaryKey(),
+	deviceCode: text("device_code").notNull().unique(),
+	userCode: text("user_code").notNull().unique(),
+	userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+	expiresAt: timestamp("expires_at").notNull(),
+	status: text("status").notNull(),
+	lastPolledAt: timestamp("last_polled_at"),
+	pollingInterval: integer("polling_interval"),
+	clientId: text("client_id"),
+	scope: text("scope"),
+});
+
+/**
  * Notes attached to a file.
  *
  * `timestampSeconds` is what makes a note a comment on a moment rather than on

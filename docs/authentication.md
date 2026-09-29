@@ -405,6 +405,18 @@ tracks its own request count and automatically refills.
 The same key signs a WebDAV client in, as the password of HTTP Basic, on `/dav/`
 only. See [WebDAV and sync](webdav.md).
 
+## Signing in a desktop app
+
+The Penombre Sync desktop app never asks for your password. It shows a short
+code and opens **/auth/device** in your browser, where you confirm the code
+matches and choose **Approve** or **Deny**. Sign in first if the browser is not
+already; you land back on the approval page afterwards. Two-factor, passkeys and
+OpenID Connect accounts all work, because the browser does the signing in.
+
+An approved app creates its own API key, named after the computer, and keeps it
+in the system keychain. It appears under **Settings → API keys**; revoking it
+there disconnects that computer. Codes expire after ten minutes and work once.
+
 ## Exporting your data
 
 **Account → Security → Export your data** offers two downloads:

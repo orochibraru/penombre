@@ -840,5 +840,14 @@
 	"shortcut_remove": "从侧边栏移除 {name}",
 	"toast_shortcut_added": "已将“{name}”添加到侧边栏",
 	"toast_shortcut_removed": "已将“{name}”从侧边栏移除",
-	"toast_shortcut_error": "无法更新快捷方式"
+	"toast_shortcut_error": "无法更新快捷方式",
+	"device_title": "连接 Penombre Sync？",
+	"device_description": "有设备请求同步你的文件。请确认此代码与设备上显示的一致。",
+	"device_approve": "批准",
+	"device_deny": "拒绝",
+	"device_approved": "已批准。你可以返回 Penombre Sync。",
+	"device_denied": "已拒绝。该设备未登录。",
+	"device_invalid": "此代码无效或已过期。请在 Penombre Sync 中重新开始。",
+	"device_code_label": "代码",
+	"device_continue": "继续"
 }

@@ -840,5 +840,14 @@
 	"shortcut_remove": "사이드바에서 {name} 제거",
 	"toast_shortcut_added": "\"{name}\"을(를) 사이드바에 추가했습니다",
 	"toast_shortcut_removed": "\"{name}\"을(를) 사이드바에서 제거했습니다",
-	"toast_shortcut_error": "바로가기를 업데이트할 수 없습니다"
+	"toast_shortcut_error": "바로가기를 업데이트할 수 없습니다",
+	"device_title": "Penombre Sync를 연결할까요?",
+	"device_description": "기기가 파일 동기화를 요청하고 있습니다. 이 코드가 기기에 표시된 코드와 같은지 확인하세요.",
+	"device_approve": "승인",
+	"device_deny": "거부",
+	"device_approved": "승인되었습니다. Penombre Sync로 돌아가세요.",
+	"device_denied": "거부되었습니다. 해당 기기는 로그인되지 않았습니다.",
+	"device_invalid": "코드가 잘못되었거나 만료되었습니다. Penombre Sync에서 다시 시작하세요.",
+	"device_code_label": "코드",
+	"device_continue": "계속"
 }

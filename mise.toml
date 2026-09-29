@@ -1,6 +1,9 @@
 [tools]
 bun = "1.4.2"
 go = "1.27.1"
+# The desktop app: desktop/Cargo.toml's `rust-version`, and the rclone it drives.
+rust = { version = "1.98", components = "rustfmt,clippy" }
+rclone = "1.75.1"
 
 [tasks.doctor]
 description = "Check the binaries the Go worker execs: ffmpeg with libwebp, ffprobe, pdftoppm"
@@ -14,6 +17,7 @@ if command -v ffmpeg >/dev/null && ! ffmpeg -hide_banner -encoders 2>/dev/null |
   ok=1
 fi
 command -v docker >/dev/null || echo "docker not found: only needed for test:e2e and test:docker"
+command -v rclone >/dev/null || echo "rclone not found: only needed by the desktop app (mise install)"
 [ "$ok" = 0 ] && echo "ffmpeg (libwebp), ffprobe and pdftoppm ok"
 exit "$ok"
 '''

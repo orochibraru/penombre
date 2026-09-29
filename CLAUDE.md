@@ -19,7 +19,10 @@ ffmpeg/ffprobe/pdftoppm. Those versions live in four places that must agree:
 `mise.toml`, `package.json`'s `packageManager` (CI's `setup-bun` reads it),
 `go.mod` (CI's `setup-go` reads it) and the Dockerfile's `FROM` lines. The
 golang image sets `GOTOOLCHAIN=local`, so a `go.mod` newer than its `FROM` fails
-the image build instead of downloading a toolchain.
+the image build instead of downloading a toolchain. It also pins Rust and rclone
+for the desktop app; Rust must match `desktop/Cargo.toml`'s `rust-version`,
+which is what CI and the release builds install. CI does not use mise: its jobs
+install their own toolchains.
 
 ```bash
 bun run dev              # Vite dev server (SQLite by default, no services needed)
@@ -65,6 +68,12 @@ thumbnails. On macOS: `brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-webp`
 (after `brew uninstall ffmpeg` if the core formula is already installed).
 Ubuntu/CI's `apt-get install ffmpeg` already includes it.
 
+`dev` and `preview` run `bunx --bun vite`: the database driver is `bun:sqlite`,
+which Node cannot load. `[run] bun = true` in `bunfig.toml` is not enough on its
+own — Bun reads `bunfig.toml` from the current directory only, so `bun run dev`
+from a subdirectory (`desktop/`) found the root `package.json` but ran Vite on
+Node, and every page was a 500.
+
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
 `$app/*`/`#lib/server/*` modules and the Drizzle `db` object — tests don't need
 a database or Redis running. `bunfig.toml` also sets `rerunEach = 3` (each test
@@ -89,10 +98,16 @@ SKIP=test-unit git push ...                 # skip one hook
 `--all-files` means tracked files: a new file is not linted until it is staged,
 so `git add -N` it before trusting a green `bun run lint`.
 
-A linter's command lives in `.pre-commit-config.yaml` and nowhere else: there
-are no per-linter scripts, and `bun run lint` is just `prek run --all-files`.
-Where a script already exists (`check`, `circular`, `test:go`), the hook calls
-it instead of repeating its command.
+**Rule: every linter, formatter, type check and test suite is a prek hook, and
+runs only through prek, locally and in CI.** Its command lives in
+`.pre-commit-config.yaml` and nowhere else: there are no per-linter scripts,
+`bun run lint` is just `prek run --all-files`, and CI calls hooks by id
+(`prek run --all-files --hook-stage pre-push check circular`), never the tool
+itself. A new tool gets a hook first; a workflow step running `cargo clippy` or
+`bun run check` directly is a second source of truth and a bug. Where a script
+already exists (`check`, `circular`, `test:go`), the hook calls it instead of
+repeating its command. The desktop app's hooks (`format-rust`, `clippy`,
+`test-rust`) `cd desktop` first: it is its own Cargo project.
 
 ## Architecture
 
@@ -1483,6 +1498,29 @@ version. `latest` is never built, only promoted.
 - Old canary GitHub releases are pruned; their tags are not, releaser numbers
   from them.
 
+### The desktop app ships with every release, the tap with stable ones
+
+`publish.yaml`'s `desktop` job calls `desktop.yaml` after `release`, canary or
+stable, and each target uploads `penombre-sync-<target>.tar.gz` (`.zip` on
+Windows) plus a `.sha256` to that release. `desktop/Cargo.toml` stays at
+`0.1.0`: the build stamps the release version into it **and** into `Cargo.lock`,
+whose own `penombre-sync` entry otherwise makes `--locked` refuse. Stable
+binaries are rebuilt from the release commit, not promoted from the canary,
+because the version is baked in. Linux builds on `ubuntu-22.04` for an older
+glibc floor and needs no `-dev` package (X11, Wayland and GL are dlopened; tray,
+keyring and file dialog speak D-Bus in Rust) — do not add one without a link
+error that asks for it. The toolchain is `rust-version`, read from `Cargo.toml`.
+
+`homebrew` runs for stable releases only: it renders
+`packaging/homebrew/penombre-sync.rb.tmpl` from the release's checksums and
+pushes it with `packaging/homebrew/README.md` to `orochibraru/homebrew-tap`
+`main`, over the `HOMEBREW_TAP_DEPLOY_KEY` secret (a write deploy key on the
+tap; a PAT would reach every repo its owner can). Never edit the tap by hand. It
+is a **formula**, not a cask: a cask cannot declare `service`, and
+`brew services` is how it starts at login, with `std_service_path_env` so
+launchd finds Homebrew's rclone. `keep_alive crashed: true`, because quitting
+from the tray exits 0 and must stay quit.
+
 ### TypeScript is held at 6 on purpose
 
 `svelte-check` refuses TypeScript 7 outright — it wants _both_ TS 6 and TS 7
@@ -1520,9 +1558,12 @@ native binary in its postinstall. Bun skips install scripts for packages not in
 
 ### Type checks run on push, not commit
 
-`bun run check` and `bun test` are `pre-push` hooks, so a commit stays fast.
-CI's prek step runs only the pre-commit stage, which is why `code_quality.yaml`
-runs `bun run check` and the "Codegen is current" step itself.
+`check`, `circular`, the test suites and `clippy` are `pre-push` hooks, so a
+commit stays fast. A bare `prek run` is the pre-commit stage only, so CI runs
+the pre-push hooks it needs as a second prek call with `--hook-stage pre-push`
+and their ids: `check circular` in Code Quality, `test-unit test-go` in the test
+job, `clippy test-rust` in the desktop job. Formatting Rust is pre-commit, so it
+rides along with every other formatter in Code Quality.
 
 ### Never cache a missing shared owner
 
@@ -1939,11 +1980,26 @@ folder may be called `drives`.
   set every request reads as that host, so a client on a LAN IP was 502'd.
 - A Basic password is never logged, not even its prefix (`keyHint`): Finder
   autofills the account password there.
+- **The sync client signs in with the device flow** (better-auth's
+  `deviceAuthorization`, client id `SYNC_CLIENT_ID`, page `/auth/device`). The
+  page's `load` calls `deviceVerify` with the session first: that binds the code
+  to the user, and `deviceApprove` refuses an unbound code. The client then
+  mints its own API key with the session token as Bearer and signs that session
+  out, so DAV only ever sees API keys. Sign-in takes `?next=` (`nextPath`,
+  same-site paths only) so the approval link survives signing in;
+  `onTwoFactorRedirect` carries the query string through the challenge.
+- `/dav/` itself answers PROPFIND with the caller's places (`places()` in the
+  route: the sidebar's rules, minus read-only volumes, which nothing could sync
+  into). The desktop client builds its "Sync to" list from it.
+- The client syncs several folder pairs against `/dav`; a pair nested in
+  another, on either side, is excluded from the outer one by an rclone filters
+  file, and the filter lines are part of its resync key, because bisync refuses
+  a changed filter without `--resync`.
 - LOCK is a fake and PROPPATCH stores nothing: Finder mounts read-only and
   Explorer fails every copy without them.
-- `generalHandler` logs a DAV path as its base only (the rest is file names) and
-  a DAV 4xx at info: the 401 challenge and rclone's MKCOL probe on an existing
-  folder happen on every sync.
+- `generalHandler` logs a DAV path as its base only (the rest is file names),
+  and DAV requests at debug, 5xx aside: rclone sends an MKCOL for every uploaded
+  file's parent, which is a routine 405 once the folder exists.
 
 ### Bytes may be sealed; the disk says so
 
