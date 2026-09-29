@@ -88,9 +88,11 @@ export class SharingService {
 			.where(
 				and(
 					ne(user.id, excludeUserId),
+					// `\\`, not `\`: in a template literal `\'` is only a quote,
+					// and SQLite refuses the empty ESCAPE that leaves.
 					or(
-						sql`lower(${user.email}) like ${term} escape '\'`,
-						sql`lower(${user.name}) like ${term} escape '\'`,
+						sql`lower(${user.email}) like ${term} escape '\\'`,
+						sql`lower(${user.name}) like ${term} escape '\\'`,
 					),
 				),
 			)

@@ -305,3 +305,37 @@ describe("searchUsers", () => {
 		]);
 	});
 });
+
+describe("searchUsers", () => {
+	// Against real SQLite: `escape '\'` in a template literal reached it as
+	// `escape ''`, which SQLite refuses, so every search came back empty.
+	test("finds people by part of their name or email", async () => {
+		const db = migratedSqlite();
+		const now = new Date();
+		const person = (id: string, name: string, email: string) => ({
+			id,
+			name,
+			email,
+			emailVerified: true,
+			createdAt: now,
+			updatedAt: now,
+		});
+		await db
+			.insert(user)
+			.values([
+				person("me", "Oro", "oro@x.test"),
+				person("b", "Baptiste", "bap6@x.test"),
+				person("p", "Percent", "a%b@x.test"),
+			] as never);
+		const svc = new SharingService();
+		(svc as any).db = db;
+
+		const names = async (q: string) =>
+			(await svc.searchUsers(q, "me")).map((r) => r.name);
+		expect(await names("Bapt")).toEqual(["Baptiste"]);
+		expect(await names("BAP6@")).toEqual(["Baptiste"]);
+		// `%` is searched for, not used as a wildcard.
+		expect(await names("a%b")).toEqual(["Percent"]);
+		expect(await names("oro")).toEqual([]);
+	});
+});

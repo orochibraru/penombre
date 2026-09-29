@@ -2219,6 +2219,13 @@ inode. Never add a writer that opens the key itself.
   scan's `isScannable`; a new app-owned dot-directory needs nothing more, but a
   walker that does not skip them will list the app's internals as folders.
 
+### A backslash in a `sql` template is an escape first
+
+Drizzle's `sql` is a template literal, so `escape '\'` reached the database as
+`escape ''`: Postgres accepts that, SQLite refuses every such query. User search
+(sharing, drive members) found nobody on any SQLite instance. Write `'\\'`.
+`sharings.test.ts` runs the search against real SQLite for this.
+
 ### A migration test cuts the journal, it does not filter it
 
 `live-path.test.ts` migrates to "just before" a migration by dropping that entry
