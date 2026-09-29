@@ -1065,5 +1065,14 @@
 	"shortcut_remove": "Rimuovi {name} dalla barra laterale",
 	"toast_shortcut_added": "\"{name}\" aggiunto alla barra laterale",
 	"toast_shortcut_removed": "\"{name}\" rimosso dalla barra laterale",
-	"toast_shortcut_error": "Impossibile aggiornare le scorciatoie"
+	"toast_shortcut_error": "Impossibile aggiornare le scorciatoie",
+	"device_title": "Collegare Penombre Sync?",
+	"device_description": "Un dispositivo chiede di sincronizzare i tuoi file. Verifica che questo codice corrisponda a quello mostrato.",
+	"device_approve": "Approva",
+	"device_deny": "Rifiuta",
+	"device_approved": "Approvato. Puoi tornare a Penombre Sync.",
+	"device_denied": "Rifiutato. Quel dispositivo non ha effettuato l'accesso.",
+	"device_invalid": "Questo codice non è valido o è scaduto. Ricomincia da Penombre Sync.",
+	"device_code_label": "Codice",
+	"device_continue": "Continua"
 }

@@ -65,6 +65,12 @@ thumbnails. On macOS: `brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-webp`
 (after `brew uninstall ffmpeg` if the core formula is already installed).
 Ubuntu/CI's `apt-get install ffmpeg` already includes it.
 
+`dev` and `preview` run `bunx --bun vite`: the database driver is `bun:sqlite`,
+which Node cannot load. `[run] bun = true` in `bunfig.toml` is not enough on its
+own — Bun reads `bunfig.toml` from the current directory only, so `bun run dev`
+from a subdirectory (`desktop/`) found the root `package.json` but ran Vite on
+Node, and every page was a 500.
+
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
 `$app/*`/`#lib/server/*` modules and the Drizzle `db` object — tests don't need
 a database or Redis running. `bunfig.toml` also sets `rerunEach = 3` (each test
@@ -1483,6 +1489,29 @@ version. `latest` is never built, only promoted.
 - Old canary GitHub releases are pruned; their tags are not, releaser numbers
   from them.
 
+### The desktop app ships with every release, the tap with stable ones
+
+`publish.yaml`'s `desktop` job calls `desktop.yaml` after `release`, canary or
+stable, and each target uploads `penombre-sync-<target>.tar.gz` (`.zip` on
+Windows) plus a `.sha256` to that release. `desktop/Cargo.toml` stays at
+`0.1.0`: the build stamps the release version into it **and** into `Cargo.lock`,
+whose own `penombre-sync` entry otherwise makes `--locked` refuse. Stable
+binaries are rebuilt from the release commit, not promoted from the canary,
+because the version is baked in. Linux builds on `ubuntu-22.04` for an older
+glibc floor and needs no `-dev` package (X11, Wayland and GL are dlopened; tray,
+keyring and file dialog speak D-Bus in Rust) — do not add one without a link
+error that asks for it. The toolchain is `rust-version`, read from `Cargo.toml`.
+
+`homebrew` runs for stable releases only: it renders
+`packaging/homebrew/penombre-sync.rb.tmpl` from the release's checksums and
+pushes it with `packaging/homebrew/README.md` to `orochibraru/homebrew-tap`
+`main`, over the `HOMEBREW_TAP_DEPLOY_KEY` secret (a write deploy key on the
+tap; a PAT would reach every repo its owner can). Never edit the tap by hand. It
+is a **formula**, not a cask: a cask cannot declare `service`, and
+`brew services` is how it starts at login, with `std_service_path_env` so
+launchd finds Homebrew's rclone. `keep_alive crashed: true`, because quitting
+from the tray exits 0 and must stay quit.
+
 ### TypeScript is held at 6 on purpose
 
 `svelte-check` refuses TypeScript 7 outright — it wants _both_ TS 6 and TS 7
@@ -1939,11 +1968,26 @@ folder may be called `drives`.
   set every request reads as that host, so a client on a LAN IP was 502'd.
 - A Basic password is never logged, not even its prefix (`keyHint`): Finder
   autofills the account password there.
+- **The sync client signs in with the device flow** (better-auth's
+  `deviceAuthorization`, client id `SYNC_CLIENT_ID`, page `/auth/device`). The
+  page's `load` calls `deviceVerify` with the session first: that binds the code
+  to the user, and `deviceApprove` refuses an unbound code. The client then
+  mints its own API key with the session token as Bearer and signs that session
+  out, so DAV only ever sees API keys. Sign-in takes `?next=` (`nextPath`,
+  same-site paths only) so the approval link survives signing in;
+  `onTwoFactorRedirect` carries the query string through the challenge.
+- `/dav/` itself answers PROPFIND with the caller's places (`places()` in the
+  route: the sidebar's rules, minus read-only volumes, which nothing could sync
+  into). The desktop client builds its "Sync to" list from it.
+- The client syncs several folder pairs against `/dav`; a pair nested in
+  another, on either side, is excluded from the outer one by an rclone filters
+  file, and the filter lines are part of its resync key, because bisync refuses
+  a changed filter without `--resync`.
 - LOCK is a fake and PROPPATCH stores nothing: Finder mounts read-only and
   Explorer fails every copy without them.
-- `generalHandler` logs a DAV path as its base only (the rest is file names) and
-  a DAV 4xx at info: the 401 challenge and rclone's MKCOL probe on an existing
-  folder happen on every sync.
+- `generalHandler` logs a DAV path as its base only (the rest is file names),
+  and DAV requests at debug, 5xx aside: rclone sends an MKCOL for every uploaded
+  file's parent, which is a routine 405 once the folder exists.
 
 ### Bytes may be sealed; the disk says so
 

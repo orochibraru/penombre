@@ -1172,5 +1172,14 @@
 	"shortcut_remove": "Remove {name} from the sidebar",
 	"toast_shortcut_added": "Added \"{name}\" to the sidebar",
 	"toast_shortcut_removed": "Removed \"{name}\" from the sidebar",
-	"toast_shortcut_error": "Could not update the sidebar shortcuts"
+	"toast_shortcut_error": "Could not update the sidebar shortcuts",
+	"device_title": "Connect Penombre Sync?",
+	"device_description": "A device is asking to sync your files. Make sure this code matches the one it shows.",
+	"device_approve": "Approve",
+	"device_deny": "Deny",
+	"device_approved": "Approved. You can go back to Penombre Sync.",
+	"device_denied": "Denied. That device was not signed in.",
+	"device_invalid": "This code is invalid or has expired. Start again from Penombre Sync.",
+	"device_code_label": "Code",
+	"device_continue": "Continue"
 }

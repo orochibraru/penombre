@@ -7,6 +7,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import {
 	admin,
 	bearer,
+	deviceAuthorization,
 	emailOTP,
 	genericOAuth,
 	magicLink,
@@ -60,6 +61,8 @@ export async function instanceSignInMethods(): Promise<InstanceMethods> {
 }
 
 /** Endpoints refused while their method is off; the plugins stay loaded. */
+export const SYNC_CLIENT_ID = "penombre-sync";
+
 const METHOD_GATES: {
 	matches: (path: string) => boolean;
 	enabled: () => Promise<boolean>;
@@ -240,6 +243,12 @@ function authPlugins(oauthProviders: OAuthProvider[]) {
 			},
 		}),
 		bearer(),
+		// The desktop sync client signs in by showing a code approved at /device.
+		deviceAuthorization({
+			verificationUri: "/auth/device",
+			expiresIn: "10m",
+			validateClient: (clientId) => clientId === SYNC_CLIENT_ID,
+		}),
 		apiKey({
 			enableSessionForAPIKeys: true,
 			rateLimit: {

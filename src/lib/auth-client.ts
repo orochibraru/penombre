@@ -19,7 +19,8 @@ export const authClient = createAuthClient({
 		// `twoFactorRedirect`, which lands here rather than at the app.
 		twoFactorClient({
 			onTwoFactorRedirect() {
-				globalThis.location.href = "/auth/two-factor";
+				// Keeps `?next=`, so the challenge returns where sign-in would have.
+				globalThis.location.href = `/auth/two-factor${globalThis.location.search}`;
 			},
 		}),
 	],

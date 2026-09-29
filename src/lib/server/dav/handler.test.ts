@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { UpdateFile } from "#lib/server/schema.js";
 import type { TreeEntry } from "#lib/server/services/storage/listings.js";
-import { type DavService, handleDav, newSaveMemo } from "./handler";
+import { type DavService, davRoot, handleDav, newSaveMemo } from "./handler";
 import { parseDavPath } from "./location";
 
 function entry(
@@ -503,5 +503,42 @@ describe("Office's safe save", () => {
 		tree.calls.length = 0;
 		await dav(tree, "DELETE", "/dav/me/a.txt");
 		expect(tree.calls).toEqual(['update a.txt {"isTrashed":true}']);
+	});
+});
+
+describe("the /dav/ root", () => {
+	test("lists every place as a folder, depth 0 only itself", async () => {
+		const places = [
+			{ href: "/dav/me/", name: "My drive" },
+			{ href: "/dav/volumes/music/", name: "Music" },
+		];
+		const res = davRoot(
+			new Request("http://app.test/dav/", {
+				method: "PROPFIND",
+				headers: { depth: "1" },
+			}),
+			places,
+		);
+		expect(res.status).toBe(207);
+		const body = await res.text();
+		expect(body).toContain("<d:href>/dav/</d:href>");
+		expect(body).toContain("<d:href>/dav/volumes/music/</d:href>");
+		expect(body).toContain("<d:displayname>Music</d:displayname>");
+		const self = await davRoot(
+			new Request("http://app.test/dav/", {
+				method: "PROPFIND",
+				headers: { depth: "0" },
+			}),
+			places,
+		).text();
+		expect(self).not.toContain("/dav/me/");
+	});
+
+	test("is read-only", () => {
+		const res = davRoot(
+			new Request("http://app.test/dav/", { method: "PUT" }),
+			[],
+		);
+		expect(res.status).toBe(405);
 	});
 });

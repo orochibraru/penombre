@@ -524,19 +524,25 @@ const generalHandler: Handle = async ({ event, resolve }) => {
 	const isAsset =
 		!event.url.pathname.endsWith("/") && event.url.pathname.includes(".");
 	const dav = event.url.pathname.startsWith(DAV_PREFIX);
-	// A DAV path is file names; a DAV 4xx (auth challenge, MKCOL probe) is routine.
-	const shown = dav
-		? `${parseDavPath(event.url.pathname)?.base ?? "/dav"}/…`
-		: event.url.pathname;
-	if (
-		res.status >= 400 &&
-		!isAsset &&
-		res.status !== 404 &&
-		!(dav && res.status < 500)
-	) {
-		logger.error(`Error on ${event.request.method} ${shown} - ${res.status}`);
+	// A DAV path is file names. A sync is several requests per file, and its
+	// 4xx are routine: the 401 challenge, and a 405 for every MKCOL rclone
+	// sends to make sure an existing parent folder is there.
+	if (dav) {
+		const base = `${parseDavPath(event.url.pathname)?.base ?? "/dav"}/…`;
+		const line = `${event.request.method} ${base} - ${res.status}`;
+		if (res.status >= 500) {
+			logger.error(`Error on ${line}`);
+		} else {
+			logger.debug(line);
+		}
+	} else if (res.status >= 400 && !isAsset && res.status !== 404) {
+		logger.error(
+			`Error on ${event.request.method} ${event.url.pathname} - ${res.status}`,
+		);
 	} else {
-		logger.info(`${event.request.method} ${shown} - ${res.status}`);
+		logger.info(
+			`${event.request.method} ${event.url.pathname} - ${res.status}`,
+		);
 	}
 	return res;
 };

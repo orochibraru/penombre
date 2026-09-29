@@ -2,7 +2,8 @@
 
 Every Penombre tree is served over WebDAV, so the file manager you already use
 can mount it and [rclone](https://rclone.org) can keep a local folder in sync
-with it. There is no desktop client to install.
+with it. [Penombre Sync](desktop.md), the desktop tray app, sets that up for you
+and runs it in the background.
 
 ## WebDAV or Syncthing?
 
@@ -28,6 +29,10 @@ Start with WebDAV unless you already run Syncthing on that machine.
 
 A shared drive's id is the last part of its address in the browser. Items shared
 _with_ you are not reachable over WebDAV.
+
+`https://files.example.com/dav/` itself lists every place you can sync to: your
+drive, your shared drives and the volumes that are not read-only. Mount it to
+see them all in one place.
 
 ## Signing in
 

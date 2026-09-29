@@ -1112,5 +1112,14 @@
 	"shortcut_remove": "Usuń {name} z paska bocznego",
 	"toast_shortcut_added": "Dodano „{name}” do paska bocznego",
 	"toast_shortcut_removed": "Usunięto „{name}” z paska bocznego",
-	"toast_shortcut_error": "Nie udało się zaktualizować skrótów"
+	"toast_shortcut_error": "Nie udało się zaktualizować skrótów",
+	"device_title": "Połączyć Penombre Sync?",
+	"device_description": "Urządzenie prosi o synchronizację Twoich plików. Sprawdź, czy ten kod zgadza się z wyświetlanym na nim.",
+	"device_approve": "Zatwierdź",
+	"device_deny": "Odrzuć",
+	"device_approved": "Zatwierdzono. Możesz wrócić do Penombre Sync.",
+	"device_denied": "Odrzucono. To urządzenie nie zostało zalogowane.",
+	"device_invalid": "Ten kod jest nieprawidłowy lub wygasł. Zacznij od nowa w Penombre Sync.",
+	"device_code_label": "Kod",
+	"device_continue": "Dalej"
 }

@@ -1,5 +1,6 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
+import { nextPath } from "#lib/next.js";
 import {
 	auth,
 	instanceSignInMethods,
@@ -28,14 +29,14 @@ export const load = async ({ url, request }) => {
 
 	if (!skip) {
 		if (isAuthBypassed()) {
-			redirect(302, resolve("/(app)"));
+			redirect(302, nextPath(url, resolve("/(app)")));
 		}
 
 		if (config.autoRedirectProvider) {
 			const { url: providerUrl } = await auth.api.signInSocial({
 				body: {
 					provider: config.autoRedirectProvider,
-					callbackURL: resolve("/(app)"),
+					callbackURL: nextPath(url, resolve("/(app)")),
 				},
 				headers: request.headers,
 			});

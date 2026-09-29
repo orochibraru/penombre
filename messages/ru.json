@@ -1123,5 +1123,14 @@
 	"shortcut_remove": "Убрать {name} с боковой панели",
 	"toast_shortcut_added": "«{name}» добавлена на боковую панель",
 	"toast_shortcut_removed": "«{name}» убрана с боковой панели",
-	"toast_shortcut_error": "Не удалось обновить ярлыки"
+	"toast_shortcut_error": "Не удалось обновить ярлыки",
+	"device_title": "Подключить Penombre Sync?",
+	"device_description": "Устройство запрашивает синхронизацию ваших файлов. Убедитесь, что этот код совпадает с показанным на нём.",
+	"device_approve": "Разрешить",
+	"device_deny": "Отклонить",
+	"device_approved": "Разрешено. Можете вернуться в Penombre Sync.",
+	"device_denied": "Отклонено. Устройство не было авторизовано.",
+	"device_invalid": "Код недействителен или истёк. Начните заново в Penombre Sync.",
+	"device_code_label": "Код",
+	"device_continue": "Продолжить"
 }

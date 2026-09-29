@@ -513,6 +513,32 @@ async function proppatch(
 	);
 }
 
+export interface Place {
+	href: string;
+	name: string;
+}
+
+function folderAt(name: string): TreeEntry {
+	return { ...ROOT, name };
+}
+
+/** `/dav/` itself: every place the caller can sync, so a client can offer them. */
+export function davRoot(request: Request, places: Place[]): Response {
+	if (request.method === "OPTIONS") {
+		return davOptions();
+	}
+	if (request.method !== "PROPFIND") {
+		return status(405, { allow: "OPTIONS, PROPFIND" });
+	}
+	const parts = [propResponse("/dav/", folderAt("Penombre"))];
+	if (request.headers.get("depth") !== "0") {
+		for (const place of places) {
+			parts.push(propResponse(place.href, folderAt(place.name)));
+		}
+	}
+	return multistatus(parts);
+}
+
 export async function handleDav(
 	request: Request,
 	service: DavService,
