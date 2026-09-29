@@ -27,6 +27,9 @@ A version is the file's bytes as they were just before something replaced them:
 An empty file makes no version, which is also what keeps a fresh upload from
 recording its own placeholder.
 
+- **Saving over a file through [WebDAV](webdav.md)**: a Finder copy, an editor's
+  save, Office's safe save or an rclone sync. The file stays the same one and
+  its previous bytes become a version.
 - **Another program replacing the file** on simple mode's drive or a mounted
   volume (Syncthing, rsync): the next scan keeps the previous bytes. See the
   [FAQ](faq.md#is-a-file-overwritten-by-syncthing-or-rsync-kept-as-a-version)

@@ -53,7 +53,7 @@ Zod
 [Rr]edis
 [Rr]escans?
 [Rr]escanned
-rclone
+[Rr]clone
 cron
 systemd
 launchd

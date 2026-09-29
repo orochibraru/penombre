@@ -4,6 +4,20 @@ Every Penombre tree is served over WebDAV, so the file manager you already use
 can mount it and [rclone](https://rclone.org) can keep a local folder in sync
 with it. There is no desktop client to install.
 
+## WebDAV or Syncthing?
+
+Both keep a folder on your computer in step with Penombre; they reach it from
+opposite ends.
+
+- **WebDAV** goes through Penombre. It works in every mode, on your own drive,
+  on shared drives and on volumes, with encryption on, from anywhere the web
+  interface is reachable. Deletes land in the trash and saves become versions.
+- **[Syncthing](storage.md#syncing-with-syncthing)** works on the directory
+  behind Penombre, on the server itself. It needs [simple mode](simple-mode.md)
+  or a [volume](volumes.md), no encryption, and a Syncthing peer on the server.
+
+Start with WebDAV unless you already run Syncthing on that machine.
+
 ## Addresses
 
 | Tree             | Address                                         |
@@ -40,8 +54,17 @@ rclone bisync ~/Penombre penombre: --resync
 rclone bisync ~/Penombre penombre:
 ```
 
-Run the second line from cron, a systemd timer or launchd. For a graphical front
-end, `rclone rcd --rc-web-gui` opens rclone's own web UI.
+Run the second line from cron, a systemd timer or launchd.
+
+### With a graphical client
+
+Every rclone front end reads the same configuration, so the remote created above
+shows up in all of them:
+
+- `rclone rcd --rc-web-gui --rc-user=me --rc-pass=CHOOSE_ONE` opens rclone's own
+  web interface: browse, upload, rename and delete from its **Explorer**.
+- [Rclone UI](https://rcloneui.com) and [RcloneView](https://rcloneview.com) are
+  desktop applications on top of rclone, with scheduled sync jobs.
 
 ## File managers
 
@@ -54,8 +77,9 @@ end, `rclone rcd --rc-web-gui` opens rclone's own web UI.
 
 - Deleting sends the item to the trash, where you can restore it.
 - Saving over a file keeps it the same file, whether the app writes it directly
-  or writes a temporary file and renames it over: its notes, shares and history
-  stay, and its old bytes become a version when the folder keeps versions (see
+  or writes a temporary file and renames it over (the safe save of Word and
+  Excel included): its notes, shares and history stay, and its old bytes become
+  a version when the folder keeps versions (see
   [File versioning](versioning.md)). With versioning off the old bytes are
   replaced, as an upload would replace them.
 - Renames and moves keep the file's notes, versions, stars and shares.

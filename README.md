@@ -99,6 +99,10 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
 - **Mount what you already have** — declare a directory as a volume and its
   files show up, rescanned every minute, read-only if you like.
   [Volumes](https://orochibraru.com/penombre/docs/volumes)
+- **WebDAV and sync** — mount any drive in Finder, Explorer or GNOME Files, or
+  keep a folder in two-way sync with rclone; a save over a file becomes a
+  version, a delete lands in the trash.
+  [WebDAV and sync](https://orochibraru.com/penombre/docs/webdav)
 - **Syncthing-friendly** — what Penombre writes to a volume keeps its real name
   and its modification date, so the folder reads the same on every peer.
   [Syncing with Syncthing](https://orochibraru.com/penombre/docs/storage#syncing-with-syncthing)
