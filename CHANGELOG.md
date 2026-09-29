@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.58](https://github.com/orochibraru/penombre/compare/v1.8.57...v1.8.58) (2026-09-29)
+
+### Features
+
+* desktop updater, release channel, exclusions and tray progress; fix nested transfers into drives ([934fa2a](https://github.com/orochibraru/penombre/commit/934fa2a0a28b635bd6d98a13b2abbf32321814a8))
+* sync client (#119) ([63be0e8](https://github.com/orochibraru/penombre/commit/63be0e847e32d870fcacf132735f464df04ec27f))
+
 ## [1.8.57](https://github.com/orochibraru/penombre/compare/v1.8.56...v1.8.57) (2026-09-29)
 
 ### Features
