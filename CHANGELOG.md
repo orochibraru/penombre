@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.59](https://github.com/orochibraru/penombre/compare/v1.8.58...v1.8.59) (2026-09-29)
+
+### Features
+
+* mobile app MVP (Kotlin Multiplatform, PKCE sign-in to a real session), desktop .dmg/.exe/.AppImage downloads with AppImage self-update; fix: API key lockout refused valid keys, invalid x-api-key answered 500, unit coverage under threshold ([f5f3afb](https://github.com/orochibraru/penombre/commit/f5f3afb3902d29e883b8da55f4524a4a8d161678))
+* mobile base ([9b104f1](https://github.com/orochibraru/penombre/commit/9b104f1a1ba44eea882286b2dfa81ff006ebe654))
+
 ## [1.8.58](https://github.com/orochibraru/penombre/compare/v1.8.57...v1.8.58) (2026-09-29)
 
 ### Features
