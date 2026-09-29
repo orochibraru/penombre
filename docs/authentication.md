@@ -483,17 +483,16 @@ per 15 minutes per IP address**. This protects against brute-force attacks. Rate
 limiting is disabled in development mode.
 
 Invalid API keys lock an address out. After **20 invalid keys in 15 minutes**,
-from an `x-api-key` or `Bearer` header or a WebDAV password, every request
-carrying a key from that address answers `429` for the next 15 minutes, without
-the key being checked. Each attempt is logged with its address, and the lockout
-once, so a `fail2ban` filter on `Locked out` can ban the address at the
-firewall. A sync client left running with a revoked key locks its own address
-out the same way; replace the key and it recovers on its own.
+from an `x-api-key` or `Bearer` header or a WebDAV password, further invalid
+keys from that address answer `429` for the next 15 minutes and are no longer
+logged. Valid keys keep working from a locked-out address. Each attempt is
+logged with its address and user agent, and the lockout once, so a `fail2ban`
+filter on `Locked out` can ban the address at the firewall, and the user agent
+tells you which client is still holding a revoked key.
 
 This keys on the client address, so behind a reverse proxy set `ADDRESS_HEADER`
 (see [Reverse proxy](reverse-proxy.md)). Without it every request arrives from
-the proxy's address, and one client sending bad keys locks out every API and
-WebDAV client at once.
+the proxy's address, and the log cannot tell your clients apart.
 
 ## No authentication at all
 

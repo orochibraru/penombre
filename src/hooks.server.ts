@@ -356,18 +356,6 @@ async function apiKeyAuth(
 		return;
 	}
 
-	// Refused before the lookup: a locked-out address costs no query. Keyed on
-	// the client address, so behind a proxy this needs ADDRESS_HEADER or one
-	// bad client locks out every key holder.
-	const address = event.getClientAddress();
-	const failures = `api-key-fail:${address}`;
-	if (await isLockedOut(failures, KEY_FAILURES.max)) {
-		return new Response(JSON.stringify({ error: "Too many failed attempts" }), {
-			status: 429,
-			headers: { "retry-after": String(KEY_FAILURES.windowSeconds) },
-		});
-	}
-
 	let sessionUser: User | null;
 	try {
 		sessionUser = dav
@@ -384,12 +372,26 @@ async function apiKeyAuth(
 	}
 
 	if (!sessionUser) {
+		// After the lookup, never before: keys cannot be guessed, and refusing
+		// first let one stale client behind a proxy lock out every valid key.
+		const address = event.getClientAddress();
+		const failures = `api-key-fail:${address}`;
+		if (await isLockedOut(failures, KEY_FAILURES.max)) {
+			return new Response(
+				JSON.stringify({ error: "Too many failed attempts" }),
+				{
+					status: 429,
+					headers: { "retry-after": String(KEY_FAILURES.windowSeconds) },
+				},
+			);
+		}
+		const count = await recordFailure(failures, KEY_FAILURES.windowSeconds);
 		// Never the raw key: a typo or a revoked key is still a live credential
 		// for as long as the log file exists.
-		const count = await recordFailure(failures, KEY_FAILURES.windowSeconds);
 		logger.warn("Invalid API key authentication attempt", {
 			address,
 			keyPrefix: keyHint(rawKey, !headerKey),
+			userAgent: event.request.headers.get("user-agent")?.slice(0, 200),
 		});
 		if (count === KEY_FAILURES.max) {
 			logger.warn(
@@ -408,9 +410,16 @@ async function apiKeyAuth(
 }
 
 const authHandler: Handle = async ({ event, resolve }) => {
-	const session = await auth.api.getSession({
-		headers: event.request.headers,
-	});
+	// A bad `x-api-key` throws here (sessions for API keys are on); leave it to
+	// `apiKeyAuth`, which counts it and answers 401 instead of a 500.
+	const session = await auth.api
+		.getSession({ headers: event.request.headers })
+		.catch((error: unknown) => {
+			if (isAPIError(error) && error.body?.code === "INVALID_API_KEY") {
+				return null;
+			}
+			throw error;
+		});
 
 	if (session) {
 		// Make session and user available on server

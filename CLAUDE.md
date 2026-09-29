@@ -1559,14 +1559,22 @@ uploads after, so it cannot be used here.
 
 `publish.yaml`'s `desktop` job calls `desktop.yaml` after `release`, canary or
 stable, and each target uploads `penombre-sync-<target>.tar.gz` (`.zip` on
-Windows) plus a `.sha256` to that release. `desktop/Cargo.toml` stays at
-`0.1.0`: the build stamps the release version into it **and** into `Cargo.lock`,
-whose own `penombre-sync` entry otherwise makes `--locked` refuse. Stable
-binaries are rebuilt from the release commit, not promoted from the canary,
-because the version is baked in. Linux builds on `ubuntu-22.04` for an older
-glibc floor and needs no `-dev` package (X11, Wayland and GL are dlopened; tray,
-keyring and file dialog speak D-Bus in Rust) — do not add one without a link
-error that asks for it. The toolchain is `rust-version`, read from `Cargo.toml`.
+Windows), which the updater and the formula read, plus what people download: a
+`.dmg` (an unsigned `.app` whose icon is the committed `assets/icon.png`, since
+no runner has an SVG rasterizer), the bare `.exe`, and
+`penombre-sync-x86_64.AppImage` (appimagetool and its runtime pinned by
+checksum; the floating `continuous` runtime is never fetched). Every file gets a
+`.sha256`. The `.app` bundle is not codesigned as a whole: the linker's ad-hoc
+signature on the binary is enough to launch, and a bundle seal would break the
+first time the updater renames a new binary into it. `desktop/Cargo.toml` stays
+at `0.1.0`: the build stamps the release version into it **and** into
+`Cargo.lock`, whose own `penombre-sync` entry otherwise makes `--locked` refuse.
+Stable binaries are rebuilt from the release commit, not promoted from the
+canary, because the version is baked in. Linux builds on `ubuntu-22.04` for an
+older glibc floor and needs no `-dev` package (X11, Wayland and GL are dlopened;
+tray, keyring and file dialog speak D-Bus in Rust) — do not add one without a
+link error that asks for it. The toolchain is `rust-version`, read from
+`Cargo.toml`.
 
 `homebrew` renders `packaging/homebrew/penombre-sync.rb.tmpl` from the release's
 checksums, as `penombre-sync` for a stable release and `penombre-sync-canary`
@@ -1606,7 +1614,9 @@ beside it so the rename stays on one filesystem, and verified against the
 release's `.sha256`. The new process starts with `--updated` and waits for the
 old one's instance lock (`claim_when_free`); a plain `claim` would knock on the
 quitting instance and exit. Homebrew installs are refused: replacing a Cellar
-binary under brew's feet breaks `brew upgrade`.
+binary under brew's feet breaks `brew upgrade`. An AppImage runs from a
+read-only mount, so with `$APPIMAGE` set the updater downloads the `.AppImage`
+itself and renames it over that file instead.
 
 ### The mobile app signs in to a real session
 

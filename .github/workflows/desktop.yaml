@@ -78,6 +78,8 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: cargo build --release --locked --target "$TARGET"
 
+      # The archive is what the updater and the Homebrew formula read; the
+      # .dmg, .exe and .AppImage are what people download.
       - name: Package
         env:
           TARGET: ${{ matrix.target }}
@@ -85,22 +87,94 @@ jobs:
           set -euo pipefail
           out="$PWD/dist"
           mkdir -p "$out"
-          cp ../LICENSE "target/$TARGET/release/"
-          cd "target/$TARGET/release"
+          bin="target/$TARGET/release"
+          cp ../LICENSE "$bin/"
           if [ "$RUNNER_OS" = "Windows" ]; then
-            asset="penombre-sync-$TARGET.zip"
-            7z a -tzip "$out/$asset" penombre-sync.exe LICENSE
+            (cd "$bin" && 7z a -tzip "$out/penombre-sync-$TARGET.zip" penombre-sync.exe LICENSE)
+            cp "$bin/penombre-sync.exe" "$out/penombre-sync-$TARGET.exe"
           else
-            asset="penombre-sync-$TARGET.tar.gz"
-            tar -czf "$out/$asset" penombre-sync LICENSE
+            tar -czf "$out/penombre-sync-$TARGET.tar.gz" -C "$bin" penombre-sync LICENSE
           fi
-          cd "$out"
-          if command -v sha256sum >/dev/null; then
-            sha256sum "$asset" > "$asset.sha256"
-          else
-            shasum -a 256 "$asset" > "$asset.sha256"
-          fi
-          cat "$asset.sha256"
+
+      - name: Package the macOS app
+        if: runner.os == 'macOS'
+        env:
+          TARGET: ${{ matrix.target }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          stage="$RUNNER_TEMP/dmg"
+          app="$stage/Penombre Sync.app"
+          mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+          cp "target/$TARGET/release/penombre-sync" "$app/Contents/MacOS/"
+          iconset="$RUNNER_TEMP/icon.iconset"
+          mkdir -p "$iconset"
+          for size in 16 32 128 256 512; do
+            sips -z "$size" "$size" assets/icon.png --out "$iconset/icon_${size}x${size}.png" >/dev/null
+            double=$((size * 2))
+            sips -z "$double" "$double" assets/icon.png --out "$iconset/icon_${size}x${size}@2x.png" >/dev/null
+          done
+          iconutil -c icns "$iconset" -o "$app/Contents/Resources/icon.icns"
+          # Bundle versions must be numeric: a canary's suffix is dropped.
+          cat > "$app/Contents/Info.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleName</key><string>Penombre Sync</string>
+            <key>CFBundleIdentifier</key><string>dev.penombre.sync</string>
+            <key>CFBundleExecutable</key><string>penombre-sync</string>
+            <key>CFBundleIconFile</key><string>icon</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>CFBundleShortVersionString</key><string>${VERSION%%-*}</string>
+            <key>CFBundleVersion</key><string>${VERSION%%-*}</string>
+            <key>LSMinimumSystemVersion</key><string>11.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict>
+          </plist>
+          PLIST
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname "Penombre Sync" -srcfolder "$stage" -ov -format UDZO "dist/penombre-sync-$TARGET.dmg"
+
+      - name: Package the AppImage
+        if: runner.os == 'Linux'
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/appimage"
+          mkdir -p "$tools"
+          curl -fsSL -o "$tools/appimagetool" https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+          curl -fsSL -o "$tools/runtime" https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64
+          (cd "$tools" && sha256sum -c) <<SUMS
+          ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0  appimagetool
+          2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d  runtime
+          SUMS
+          chmod +x "$tools/appimagetool"
+          appdir="$RUNNER_TEMP/Penombre.AppDir"
+          mkdir -p "$appdir/usr/bin"
+          cp "target/$TARGET/release/penombre-sync" "$appdir/usr/bin/"
+          ln -s usr/bin/penombre-sync "$appdir/AppRun"
+          cp assets/icon.png "$appdir/penombre-sync.png"
+          printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=Penombre Sync' \
+            'Exec=penombre-sync' 'Icon=penombre-sync' 'Categories=Network;FileTransfer;' \
+            > "$appdir/penombre-sync.desktop"
+          # No FUSE on the runner: the tool runs from its own extracted copy.
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$tools/appimagetool" --no-appstream \
+            --runtime-file "$tools/runtime" "$appdir" dist/penombre-sync-x86_64.AppImage
+
+      - name: Checksum
+        run: |
+          set -euo pipefail
+          cd dist
+          for asset in *; do
+            if command -v sha256sum >/dev/null; then
+              sha256sum "$asset" > "$asset.sha256"
+            else
+              shasum -a 256 "$asset" > "$asset.sha256"
+            fi
+            cat "$asset.sha256"
+          done
 
       - name: Upload to the release
         env:

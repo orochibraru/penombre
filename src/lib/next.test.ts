@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { nextPath } from "./next";
+import { nextPath, signInReturningTo } from "./next";
 
 const at = (search: string) => new URL(`http://app.test/auth/sign-in${search}`);
 
@@ -22,5 +22,19 @@ describe("nextPath", () => {
 			);
 		}
 		expect(nextPath(at(""), "/home")).toBe("/home");
+	});
+});
+
+describe("signInReturningTo", () => {
+	test("home needs no next", () => {
+		expect(signInReturningTo({ pathname: "/", search: "" })).toBe(
+			"/auth/sign-in",
+		);
+	});
+
+	test("carries the path and query back", () => {
+		expect(
+			signInReturningTo({ pathname: "/auth/device", search: "?user_code=AB" }),
+		).toBe("/auth/sign-in?next=%2Fauth%2Fdevice%3Fuser_code%3DAB");
 	});
 });

@@ -73,7 +73,18 @@ struct Asset {
     name: String,
 }
 
+const APPIMAGE: &str = "penombre-sync-x86_64.AppImage";
+
+/// Set by the AppImage runtime: the binary then runs from a read-only mount,
+/// so an update replaces the `.AppImage` file itself.
+fn appimage() -> Option<PathBuf> {
+    std::env::var_os("APPIMAGE").map(PathBuf::from)
+}
+
 fn asset() -> Option<&'static str> {
+    if appimage().is_some() {
+        return Some(APPIMAGE);
+    }
     match (std::env::consts::OS, std::env::consts::ARCH) {
         ("macos", "aarch64") => Some("penombre-sync-aarch64-apple-darwin.tar.gz"),
         ("macos", "x86_64") => Some("penombre-sync-x86_64-apple-darwin.tar.gz"),
@@ -198,13 +209,22 @@ pub fn install(release: &Release) -> Result<PathBuf, String> {
     let sums = get(&format!("{url}.sha256"))?;
     verify(&archive, &String::from_utf8_lossy(&sums))?;
 
-    let exe = std::env::current_exe()
-        .and_then(|p| p.canonicalize())
-        .map_err(|e| e.to_string())?;
+    let appimage = appimage();
+    let exe = match &appimage {
+        Some(file) => file.clone(),
+        None => std::env::current_exe()
+            .and_then(|p| p.canonicalize())
+            .map_err(|e| e.to_string())?,
+    };
     let dir = exe.parent().ok_or("The app has no folder.")?;
     // Beside the binary, so the final rename stays on one filesystem.
     let stage = dir.join(format!(".penombre-sync-update-{}", std::process::id()));
-    let result = unpack_into(&stage, asset, &archive).and_then(|binary| replace(&binary, &exe));
+    let staged = if appimage.is_some() {
+        stage_file(&stage, asset, &archive)
+    } else {
+        unpack_into(&stage, asset, &archive)
+    };
+    let result = staged.and_then(|binary| replace(&binary, &exe));
     let _ = std::fs::remove_dir_all(&stage);
     result.map(|()| exe)
 }
@@ -225,12 +245,17 @@ fn verify(archive: &[u8], sums: &str) -> Result<(), String> {
     }
 }
 
-/// `tar` reads both archives: Windows ships bsdtar since 10.
-fn unpack_into(stage: &Path, asset: &str, archive: &[u8]) -> Result<PathBuf, String> {
+fn stage_file(stage: &Path, asset: &str, bytes: &[u8]) -> Result<PathBuf, String> {
     let cannot = |e: std::io::Error| format!("Cannot write to {}: {e}", stage.display());
     std::fs::create_dir_all(stage).map_err(cannot)?;
     let file = stage.join(asset);
-    std::fs::write(&file, archive).map_err(cannot)?;
+    std::fs::write(&file, bytes).map_err(cannot)?;
+    Ok(file)
+}
+
+/// `tar` reads both archives: Windows ships bsdtar since 10.
+fn unpack_into(stage: &Path, asset: &str, archive: &[u8]) -> Result<PathBuf, String> {
+    let file = stage_file(stage, asset, archive)?;
     let status = std::process::Command::new("tar")
         .arg("-xf")
         .arg(&file)

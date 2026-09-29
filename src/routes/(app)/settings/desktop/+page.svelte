@@ -21,11 +21,23 @@
 		{
 			id: "aarch64-apple-darwin",
 			system: "macOS (Apple silicon)",
-			ext: "tar.gz",
+			file: "penombre-sync-aarch64-apple-darwin.dmg",
 		},
-		{ id: "x86_64-apple-darwin", system: "macOS (Intel)", ext: "tar.gz" },
-		{ id: "x86_64-unknown-linux-gnu", system: "Linux (x86_64)", ext: "tar.gz" },
-		{ id: "x86_64-pc-windows-msvc", system: "Windows (x86_64)", ext: "zip" },
+		{
+			id: "x86_64-apple-darwin",
+			system: "macOS (Intel)",
+			file: "penombre-sync-x86_64-apple-darwin.dmg",
+		},
+		{
+			id: "x86_64-unknown-linux-gnu",
+			system: "Linux (x86_64)",
+			file: "penombre-sync-x86_64.AppImage",
+		},
+		{
+			id: "x86_64-pc-windows-msvc",
+			system: "Windows (x86_64)",
+			file: "penombre-sync-x86_64-pc-windows-msvc.exe",
+		},
 	] as const;
 	type Target = (typeof TARGETS)[number];
 
@@ -35,7 +47,7 @@
 		data.version.includes("-") ? "penombre-sync-canary" : "penombre-sync",
 	);
 	const url = (target: Target) =>
-		`${RELEASES}/download/v${data.version}/penombre-sync-${target.id}.${target.ext}`;
+		`${RELEASES}/download/v${data.version}/${target.file}`;
 
 	// Browsers do not tell Apple silicon from Intel; the newer is likelier.
 	let detected = $state<Target>();

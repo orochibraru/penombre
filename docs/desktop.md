@@ -135,24 +135,31 @@ channel in **Settings** shows the exact command.
 
 Every Penombre release on
 [GitHub](https://github.com/orochibraru/penombre/releases) carries the app, with
-a `.sha256` checksum beside each archive:
+a `.sha256` checksum beside each file:
 
-| System                | Asset                                           |
-| --------------------- | ----------------------------------------------- |
-| macOS, Apple silicon  | `penombre-sync-aarch64-apple-darwin.tar.gz`     |
-| macOS, Intel          | `penombre-sync-x86_64-apple-darwin.tar.gz`      |
-| Linux, x86_64 (glibc) | `penombre-sync-x86_64-unknown-linux-gnu.tar.gz` |
-| Windows, x86_64       | `penombre-sync-x86_64-pc-windows-msvc.zip`      |
+| System                | Download                                   |
+| --------------------- | ------------------------------------------ |
+| macOS, Apple silicon  | `penombre-sync-aarch64-apple-darwin.dmg`   |
+| macOS, Intel          | `penombre-sync-x86_64-apple-darwin.dmg`    |
+| Linux, x86_64 (glibc) | `penombre-sync-x86_64.AppImage`            |
+| Windows, x86_64       | `penombre-sync-x86_64-pc-windows-msvc.exe` |
 
 Stable releases are `vX.Y.Z`; `vX.Y.Z-canary.N` pre-releases carry every merge
-before it ships. Unpack the archive and put `penombre-sync` somewhere on your
-`PATH`, and rclone on it too.
+before it ships. On macOS, open the `.dmg` and drag **Penombre Sync** to
+**Applications**. On Linux, make the AppImage executable
+(`chmod +x penombre-sync-x86_64.AppImage`) and run it. On Windows, run the
+`.exe`. Each updates itself in place from **Settings**. rclone must be on your
+`PATH` in every case.
 
-The builds are not signed. On macOS, Gatekeeper refuses a downloaded binary
-until you clear its quarantine flag:
+The same releases also carry plain archives (`.tar.gz`, `.zip` on Windows)
+holding the bare binary, which is what the in-app updater and Homebrew use.
+
+The builds are not signed. On macOS, the first launch is refused: open **System
+Settings → Privacy & Security** and choose **Open Anyway**, or clear the
+quarantine flag:
 
 ```bash
-xattr -d com.apple.quarantine penombre-sync
+xattr -dr com.apple.quarantine "/Applications/Penombre Sync.app"
 ```
 
 Windows SmartScreen asks once; choose **More info → Run anyway**.
