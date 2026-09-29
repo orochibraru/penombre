@@ -17968,6 +17968,366 @@
 				]
 			}
 		},
+		"/api/v1/shortcuts": {
+			"get": {
+				"description": "Folders pinned to the sidebar, in order, each with where the caller reaches it. Shared by everyone in simple mode.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"folderId": {
+														"type": "string"
+													},
+													"href": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"folderId",
+													"name",
+													"href"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List sidebar shortcuts",
+				"tags": [
+					"Shortcuts"
+				]
+			},
+			"post": {
+				"description": "Appends it; pinning it again changes nothing.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"folderId": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"folderId"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"folderId": {
+														"type": "string"
+													},
+													"href": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"folderId",
+													"name",
+													"href"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Pin a folder to the sidebar",
+				"tags": [
+					"Shortcuts"
+				]
+			},
+			"put": {
+				"description": "`folderIds` is the whole list, in its new order.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"folderIds": {
+										"items": {
+											"type": "string"
+										},
+										"type": "array"
+									}
+								},
+								"required": [
+									"folderIds"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"folderId": {
+														"type": "string"
+													},
+													"href": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"folderId",
+													"name",
+													"href"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Reorder sidebar shortcuts",
+				"tags": [
+					"Shortcuts"
+				]
+			}
+		},
+		"/api/v1/shortcuts/{folderId}": {
+			"delete": {
+				"parameters": [
+					{
+						"in": "path",
+						"name": "folderId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"folderId": {
+														"type": "string"
+													},
+													"href": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"folderId",
+													"name",
+													"href"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Unpin a folder from the sidebar",
+				"tags": [
+					"Shortcuts"
+				]
+			}
+		},
 		"/api/v1/storage/download": {
 			"get": {
 				"description": "Same as the POST version, for a plain <a href> so the browser streams the download itself instead of buffering it in JS memory. Every selected item shares one folder, given once; `keys` is a comma-separated list of the bare names within it, resolved the same way the POST form's full paths are.",
@@ -26055,7 +26415,7 @@
 		},
 		"/api/v1/storage/versions/merge": {
 			"post": {
-				"description": "`ids` are oldest first: the last stays, every other one becomes one of its versions in that order, keeping its name and date, and is deleted. If the kept file already has versions, list each as `v:<versionId>` where it belongs, or the new ones are appended. Its notes move to the kept file. 409 when a merged file already has versions or the folder keeps fewer versions than the merge would make.",
+				"description": "`ids` are oldest first: the last stays, every other one becomes one of its versions in that order, keeping its name and date, and is deleted. If the kept file already has versions, list each as `v:<versionId>` where it belongs, or the new ones are appended. A merged file's own versions move over just before it. Its notes move to the kept file. 409 when the folder keeps fewer versions than the merge would make.",
 				"parameters": [
 					{
 						"in": "query",

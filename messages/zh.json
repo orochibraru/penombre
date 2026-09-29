@@ -821,7 +821,10 @@
 	"versions_extract_error": "无法提取版本",
 	"versions_extracted": "已将 {count} 个版本提取为文件",
 	"versions_reorder_error": "无法重新排序版本",
-	"versions_drop_one": "请只拖放一个文件作为新版本",
+	"versions_drop_title": "新版本还是单独文件？",
+	"versions_drop_hint": "将 {name} 上传为 {target} 的新版本，还是作为单独文件上传到此文件夹？",
+	"versions_drop_as_version": "新版本",
+	"versions_drop_as_file": "单独文件",
 	"storage_versions_hold": "{count} 个旧版本（{size}）",
 	"versions_show": "显示版本",
 	"versions_hide": "隐藏版本",
@@ -831,5 +834,11 @@
 	"versions_title": "版本历史",
 	"versions_latest": "最新",
 	"versions_empty": "暂无旧版本。",
-	"versions_switch": "版本"
+	"versions_switch": "版本",
+	"nav_shortcuts": "快捷方式",
+	"shortcuts_drop_hint": "将文件夹拖放到此处",
+	"shortcut_remove": "从侧边栏移除 {name}",
+	"toast_shortcut_added": "已将“{name}”添加到侧边栏",
+	"toast_shortcut_removed": "已将“{name}”从侧边栏移除",
+	"toast_shortcut_error": "无法更新快捷方式"
 }

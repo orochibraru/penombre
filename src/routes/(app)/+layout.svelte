@@ -39,6 +39,7 @@
 		type NavMenus,
 	} from "#lib/components/layout/nav.svelte";
 	import Onboarding from "#lib/components/layout/onboarding.svelte";
+	import ShortcutsNav from "#lib/components/layout/shortcuts-nav.svelte";
 	import UploadProgressIndicator from "#lib/components/layout/upload-progress-indicator.svelte";
 	import VersionCheck from "#lib/components/layout/version-check.svelte";
 	import SidebarBranding from "#lib/components/sidebar-branding.svelte";
@@ -70,6 +71,7 @@
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { navigating, page } from "$app/state";
+	import type { ResolvedPathname } from "$app/types";
 
 	const { children, data } = $props();
 
@@ -382,6 +384,16 @@
 	const mobileNavGroups = $derived(
 		[
 			{ title: m.nav_general(), items: nav.general },
+			{
+				title: m.nav_shortcuts(),
+				items: (data.shortcuts ?? []).map(
+					(shortcut): NavItem => ({
+						title: shortcut.name,
+						url: shortcut.href as ResolvedPathname,
+						icon: FolderIcon,
+					}),
+				),
+			},
 			{ title: m.nav_drives(), items: nav.drives },
 			{ title: m.nav_shared_with_me(), items: nav.sharedWithMe },
 			{ title: m.nav_volumes(), items: nav.volumes },
@@ -525,6 +537,7 @@
 		</Sidebar.Header>
 		<Sidebar.Content>
 			<Nav title={m.nav_general()} items={nav.general} />
+			<ShortcutsNav shortcuts={data.shortcuts ?? []} />
 			{#if (nav.drives ?? []).length > 0}
 				<Nav title={m.nav_drives()} items={nav.drives ?? []} />
 			{/if}

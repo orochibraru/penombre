@@ -53,3 +53,7 @@ Zod
 [Rr]edis
 [Rr]escans?
 [Rr]escanned
+[Rr]clone
+cron
+systemd
+launchd

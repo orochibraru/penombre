@@ -8,7 +8,7 @@ import { files, folders, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 import type { StorageContext } from "./context";
 import type { ThumbnailService } from "./thumbnails";
-import { nameUuidPaths } from "./uuid-names";
+import { matchDiskNames } from "./uuid-names";
 
 const A = "810aa574-41f8-43c8-8767-a3f071b34020";
 const B = "68f60a88-23e8-418e-a944-6990d7cf8038";
@@ -53,7 +53,7 @@ const paths = async () =>
 		.map((row) => row.path)
 		.toSorted();
 
-describe("renaming UUID-named paths", () => {
+describe("matching disk names to row names", () => {
 	test("folders, then files under them, take their display names", async () => {
 		await mkdir(join(root, A));
 		await writeFile(join(root, A, `${B}.wav`), "take");
@@ -68,7 +68,7 @@ describe("renaming UUID-named paths", () => {
 			folderId: A,
 		});
 
-		expect(await nameUuidPaths(ctx, thumbnails)).toBe(2);
+		expect(await matchDiskNames(ctx, thumbnails)).toBe(2);
 
 		expect(await paths()).toEqual([
 			"riff kivavit",
@@ -85,21 +85,41 @@ describe("renaming UUID-named paths", () => {
 			.insert(files)
 			.values({ id: C, name: "lost.wav", ownerId: "u", path: `${C}.wav` });
 
-		expect(await nameUuidPaths(ctx, thumbnails)).toBe(0);
+		expect(await matchDiskNames(ctx, thumbnails)).toBe(0);
 
 		expect(await paths()).toEqual([`${C}.wav`]);
 		expect(await readdir(root)).toEqual([]);
 	});
 
-	test("a scanned name that merely contains a UUID is left alone", async () => {
-		await writeFile(join(root, `mix-${B}.wav`), "x");
+	test("a row renamed without its bytes moves them to its name", async () => {
+		await writeFile(join(root, "Song-2026-09-20.wav"), "x");
 		await db.insert(files).values({
 			id: B,
-			name: "mix.wav",
+			name: "Song.wav",
 			ownerId: "u",
-			path: `mix-${B}.wav`,
+			path: "Song-2026-09-20.wav",
 		});
 
-		expect(await nameUuidPaths(ctx, thumbnails)).toBe(0);
+		expect(await matchDiskNames(ctx, thumbnails)).toBe(1);
+
+		expect(await paths()).toEqual(["Song.wav"]);
+		expect(await readdir(root)).toEqual(["Song.wav"]);
+	});
+
+	test("a name another row holds is left as it is, every pass", async () => {
+		await writeFile(join(root, "Song.wav"), "new");
+		await writeFile(join(root, "Song-take3.wav"), "old");
+		await db.insert(files).values([
+			{ id: A, name: "Song.wav", ownerId: "u", path: "Song.wav" },
+			{ id: B, name: "Song.wav", ownerId: "u", path: "Song-take3.wav" },
+		]);
+
+		expect(await matchDiskNames(ctx, thumbnails)).toBe(0);
+		expect(await matchDiskNames(ctx, thumbnails)).toBe(0);
+
+		expect((await readdir(root)).toSorted()).toEqual([
+			"Song-take3.wav",
+			"Song.wav",
+		]);
 	});
 });

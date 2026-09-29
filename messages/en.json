@@ -1144,7 +1144,10 @@
 		}
 	],
 	"versions_reorder_error": "Could not reorder the versions",
-	"versions_drop_one": "Drop one file to make it a new version",
+	"versions_drop_title": "New version or separate file?",
+	"versions_drop_hint": "Upload {name} as a new version of {target}, or as a separate file in this folder?",
+	"versions_drop_as_version": "New version",
+	"versions_drop_as_file": "Separate file",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -1163,5 +1166,11 @@
 	"versions_title": "Version history",
 	"versions_latest": "Latest",
 	"versions_empty": "No earlier versions yet.",
-	"versions_switch": "Version"
+	"versions_switch": "Version",
+	"nav_shortcuts": "Shortcuts",
+	"shortcuts_drop_hint": "Drop a folder here",
+	"shortcut_remove": "Remove {name} from the sidebar",
+	"toast_shortcut_added": "Added \"{name}\" to the sidebar",
+	"toast_shortcut_removed": "Removed \"{name}\" from the sidebar",
+	"toast_shortcut_error": "Could not update the sidebar shortcuts"
 }

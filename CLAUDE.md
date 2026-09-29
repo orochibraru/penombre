@@ -86,6 +86,9 @@ prek run markdownlint vale --all-files      # a few hooks, whole repo
 SKIP=test-unit git push ...                 # skip one hook
 ```
 
+`--all-files` means tracked files: a new file is not linted until it is staged,
+so `git add -N` it before trusting a green `bun run lint`.
+
 A linter's command lives in `.pre-commit-config.yaml` and nowhere else: there
 are no per-linter scripts, and `bun run lint` is just `prek run --all-files`.
 Where a script already exists (`check`, `circular`, `test:go`), the hook calls
@@ -1211,11 +1214,15 @@ row (`bytesGone`) and before following a rename: a listing minutes old on a big
 mount would otherwise drop a freshly renamed file with its versions.
 
 Rows made before this keep UUID names on disk until the scan renames them
-(`nameUuidPaths`, at the start of every pass of a named tree): inside the pass,
+(`matchDiskNames`, at the start of every pass of a named tree): inside the pass,
 so the scan never sees a renamed path with no row, which it would import twice
-while dropping the old row and its notes. A rename is a filesystem `rename`,
-never copy+delete, and a failure puts the bytes back or removes the claim.
-Shared drives are not scanned, so theirs stay UUIDs.
+while dropping the old row and its notes. It renames **any** row whose segment
+is not `safeSegment(name)`, not just UUIDs: a merge before 1.8.54 renamed the
+kept row to `Song.wav` but left `Song-take3.wav` on disk, so the next export of
+`Song.wav` from a synced peer was a new path and became a second file. A name
+already on disk is skipped rather than suffixed. A rename is a filesystem
+`rename`, never copy+delete, and a failure puts the bytes back or removes the
+claim. Shared drives are not scanned, so theirs stay UUIDs.
 
 ### Documents are ordinary files
 
@@ -1553,6 +1560,11 @@ file that forgets it runs signed out, and every test in it fails by landing on
 the sign-in page, which reads like a broken session rather than a missing line.
 The `setup` project still runs (its job is writing that file), so the failure
 looks unrelated to authentication.
+
+The reverse bites too: `playwright.request.newContext()` inside a test inherits
+that `storageState`, so a context meant to be anonymous carries the session.
+`webdav.spec.ts` asserted a 401 and got 207 until it passed
+`storageState: { cookies: [], origins: [] }`.
 
 ### ProseKit: core only, and browser only
 
@@ -1893,6 +1905,46 @@ job. `sweepStaleZips()` (called once at boot and hourly from `hooks.server.ts`)
 deletes anything older than an hour and never throws; it is the cleanup for
 exactly that case.
 
+### WebDAV lives at `/dav`, outside the API
+
+`src/routes/dav/[...path]/+server.ts` exports only `fallback`, because PROPFIND,
+MKCOL, MOVE and LOCK have no named export, and sets `trailingSlash = "ignore"`:
+Kit 308'd `/dav/me/` to `/dav/me`, and DAV clients do not follow a redirect on
+PROPFIND. A scope word leads every path (`/dav/me`, `/dav/drives/<id>`,
+`/dav/volumes/<name>`): a DAV client cannot send `x-drive`, and a personal
+folder may be called `drives`.
+
+- **Auth is Basic with an API key as the password**, `/dav/` only (`apiKeyAuth`
+  in `hooks.server.ts`). A verified key is cached for 60s (`cachedKeyUser`):
+  rclone sends a request per file and the API-key plugin allows 100 a minute.
+  `csrf.ts` skips `/dav/`, which has no POST.
+- **Names resolve case-insensitively** (`treeEntry`), as `getUniqueDisplayName`
+  dedupes; otherwise a PUT of `A.txt` beside `a.txt` became `A (1).txt` and the
+  client lost its own file. A PUT whose created name still differs is deleted
+  and answered 409.
+- **Every mutation goes through the existing service calls.** MOVE is
+  `moveFile`/`moveFolder` then a rename, never delete + PUT, so notes, versions
+  and shares survive; DELETE trashes; PUT over a file snapshots it.
+- **MOVE onto an existing file is a save, not a replace-by-trash.** Editors and
+  Finder write a temp file and rename it over the original; `replaceFile`
+  (`VersionOperations.replace`) keeps the original's row, links its old bytes
+  into a version, and renames the temp's bytes in. Trashing the destination
+  instead reset the file's history on every save.
+- **Office's safe save** is a different dance: rename the original away, MOVE
+  the temp onto the freed name, DELETE the backup. A per-process `SaveMemo` (row
+  ids, one minute) turns that DELETE into `replaceFile(backup ← temp)` plus a
+  rename back, and only that DELETE: keying on the MOVE alone would merge a file
+  someone just renamed with an unrelated one moved in.
+- MOVE compares the Destination's **path** only, never its host: with `ORIGIN`
+  set every request reads as that host, so a client on a LAN IP was 502'd.
+- A Basic password is never logged, not even its prefix (`keyHint`): Finder
+  autofills the account password there.
+- LOCK is a fake and PROPPATCH stores nothing: Finder mounts read-only and
+  Explorer fails every copy without them.
+- `generalHandler` logs a DAV path as its base only (the rest is file names) and
+  a DAV 4xx at info: the 401 challenge and rclone's MKCOL probe on an existing
+  folder happen on every sync.
+
 ### Bytes may be sealed; the disk says so
 
 With `ENCRYPTION_KEY` set, file bytes are sealed in the envelope v1 format
@@ -1968,7 +2020,10 @@ inode. Never add a writer that opens the key itself.
   first; `planMerge` keeps the last and never re-sorts, so the preview is the
   result. Each take is linked in and only then deleted, one at a time; notes
   move to the kept file (`file_notes` cascades). Over the folder's limit is
-  refused, not pruned.
+  refused, not pruned. A merged-away file's own versions are carried first
+  (`carry`: bytes renamed into the target's `.versions/`, then the row
+  re-parented), or deleting it would take them; the preview does not list them,
+  they land as a block just before their file.
 - **A file row's `updatedAt` is its file's mtime.** The scan used to stamp every
   imported row with the scan's time, so a whole library read as modified the
   minute it was found and a merge by date meant nothing. `scan-list` reports
@@ -2032,6 +2087,21 @@ inode. Never add a writer that opens the key itself.
 and **everything after it**. Dropping only the one entry applied newer
 migrations first, and drizzle's migrator, which compares timestamps, then
 skipped the older one entirely.
+
+### Sidebar shortcuts belong to the storage owner
+
+`sidebar_shortcuts` rows are keyed on `locals.storageOwner`, not the session
+user, which is the whole of "shared in simple mode, per user in full mode" with
+one code path. Each is resolved per viewer by `folderHref()`
+(`services/shortcuts.ts`), the same function behind `/go/folder/<id>`: a
+shortcut the viewer can no longer reach is dropped from their list rather than
+leaking the folder's name. The folder FK cascades, so a deleted folder takes its
+shortcut; a scan that drops and re-creates a folder row loses it too.
+
+A listing drag reaches the sidebar through the `draggedFolder` store
+(`offerFolderDrag` in `wrapper-shortcut.ts`), cleared by a window `dragend` in
+`shortcuts-nav.svelte`: the group only renders while there are shortcuts or a
+folder is in flight, so it can be dropped on from empty.
 
 ### Sidebar groups truncate at five
 

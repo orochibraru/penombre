@@ -486,3 +486,55 @@ describe("listTrashFiles", () => {
 		expect(await ops.countTrashedItems()).toBe(4);
 	});
 });
+
+describe("tree entries", () => {
+	test("children of the root and of a folder, trashed ones hidden", async () => {
+		await addFolder("f1", "Music");
+		await addFile("1", "a.wav", { path: "a.wav" });
+		await addFile("2", "b.wav", { path: "f1/b.wav", folderId: "f1" });
+		await addFile("3", "gone.wav", { path: "gone.wav", isTrashed: true });
+
+		const ops = new ListingOperations(ctx());
+		const root = await ops.treeEntries("");
+		expect(root?.map((e) => [e.type, e.name])).toEqual([
+			["folder", "Music"],
+			["file", "a.wav"],
+		]);
+		expect((await ops.treeEntries("f1"))?.map((e) => e.path)).toEqual([
+			"f1/b.wav",
+		]);
+		expect(await ops.treeEntries("nope")).toBeNull();
+	});
+
+	test("a name matches case-insensitively, and never a trashed row", async () => {
+		await addFolder("f1", "Music");
+		await addFile("1", "Take.wav", { path: "f1/Take.wav", folderId: "f1" });
+		await addFile("2", "old.wav", {
+			path: "f1/old.wav",
+			folderId: "f1",
+			isTrashed: true,
+		});
+
+		const ops = new ListingOperations(ctx());
+		expect((await ops.treeEntry("", "music"))?.id).toBe("f1");
+		expect((await ops.treeEntry("f1", "TAKE.WAV"))?.id).toBe("1");
+		expect(await ops.treeEntry("f1", "old.wav")).toBeNull();
+		expect(await ops.treeEntry("missing", "Take.wav")).toBeNull();
+	});
+
+	test("an exact name wins over a case variant beside it", async () => {
+		// A Linux volume can hold both; the app never creates the pair.
+		await addFile("lower", "a.txt", { path: "a.txt" });
+		await addFile("upper", "A.txt", { path: "A.txt" });
+		const ops = new ListingOperations(ctx());
+		expect((await ops.treeEntry("", "A.txt"))?.id).toBe("upper");
+		expect((await ops.treeEntry("", "a.txt"))?.id).toBe("lower");
+	});
+
+	test("by id reports the current path", async () => {
+		await addFile("1", "a.wav", { path: "x/a.wav" });
+		const ops = new ListingOperations(ctx());
+		expect((await ops.treeEntryById("file", "1"))?.path).toBe("x/a.wav");
+		expect(await ops.treeEntryById("folder", "1")).toBeNull();
+	});
+});

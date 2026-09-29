@@ -3,6 +3,7 @@
 A self-hosted drive. All the convenience of cloud storage, on hardware you own,
 with a bill of exactly zero.
 
+[![Penombre | AlternativeTo](https://alternativeto.net/static/badges/badge-compact-color.svg)](https://alternativeto.net/software/penombre/about/?utm_source=badge&utm_medium=referral)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Latest Release](https://img.shields.io/github/v/release/orochibraru/penombre)
 ![Docker Pulls](https://img.shields.io/docker/pulls/orochibraru/penombre)
@@ -98,6 +99,10 @@ server to run alongside it. PostgreSQL stays supported the day you outgrow that.
 - **Mount what you already have** — declare a directory as a volume and its
   files show up, rescanned every minute, read-only if you like.
   [Volumes](https://orochibraru.com/penombre/docs/volumes)
+- **WebDAV and sync** — mount any drive in Finder, Explorer or GNOME Files, or
+  keep a folder in two-way sync with rclone; a save over a file becomes a
+  version, a delete lands in the trash.
+  [WebDAV and sync](https://orochibraru.com/penombre/docs/webdav)
 - **Syncthing-friendly** — what Penombre writes to a volume keeps its real name
   and its modification date, so the folder reads the same on every peer.
   [Syncing with Syncthing](https://orochibraru.com/penombre/docs/storage#syncing-with-syncthing)

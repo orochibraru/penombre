@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.8.57](https://github.com/orochibraru/penombre/compare/v1.8.56...v1.8.57) (2026-09-29)
+
+### Features
+
+* dav (#118) ([f209fdc](https://github.com/orochibraru/penombre/commit/f209fdc5b538f24213b4928b5f9bf60f53b0b298))
+
+### Bug Fixes
+
+* dnd upload ([8f4d0c3](https://github.com/orochibraru/penombre/commit/8f4d0c3510dca72ad72ad638e39caaded85380b3))
+
+## [1.8.56](https://github.com/orochibraru/penombre/compare/v1.8.55...v1.8.56) (2026-09-28)
+
+### Features
+
+* sidebar folder shortcuts, merge files with their versions, fix outside renders duplicating renamed files ([30921f1](https://github.com/orochibraru/penombre/commit/30921f12ed9714d1340b7c11c0094a2b364b3aca))
+
 ## [1.8.55](https://github.com/orochibraru/penombre/compare/v1.8.54...v1.8.55) (2026-09-25)
 
 ## [1.8.54](https://github.com/orochibraru/penombre/compare/v1.8.53...v1.8.54) (2026-09-25)

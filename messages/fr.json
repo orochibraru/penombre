@@ -1126,7 +1126,10 @@
 	"versions_extract_error": "Impossible d'extraire les versions",
 	"versions_extracted": "Versions extraites en fichiers : {count}",
 	"versions_reorder_error": "Impossible de réordonner les versions",
-	"versions_drop_one": "Déposez un seul fichier pour en faire une nouvelle version",
+	"versions_drop_title": "Nouvelle version ou fichier séparé ?",
+	"versions_drop_hint": "Envoyer {name} comme nouvelle version de {target}, ou comme fichier séparé dans ce dossier ?",
+	"versions_drop_as_version": "Nouvelle version",
+	"versions_drop_as_file": "Fichier séparé",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -1145,5 +1148,11 @@
 	"versions_title": "Historique des versions",
 	"versions_latest": "Actuelle",
 	"versions_empty": "Aucune version précédente pour l'instant.",
-	"versions_switch": "Version"
+	"versions_switch": "Version",
+	"nav_shortcuts": "Raccourcis",
+	"shortcuts_drop_hint": "Déposez un dossier ici",
+	"shortcut_remove": "Retirer {name} de la barre latérale",
+	"toast_shortcut_added": "\"{name}\" ajouté à la barre latérale",
+	"toast_shortcut_removed": "\"{name}\" retiré de la barre latérale",
+	"toast_shortcut_error": "Impossible de mettre à jour les raccourcis"
 }

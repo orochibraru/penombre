@@ -4,9 +4,9 @@
  * `versions.ts`'s; this adds the file lookups and the renders.
  */
 
-import { rename, stat } from "node:fs/promises";
-import { join } from "node:path";
-import { and, eq, inArray } from "drizzle-orm";
+import { mkdir, rename, stat } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { and, eq, inArray, max as maxOf } from "drizzle-orm";
 import { FileCategoryEnum } from "#lib/file-helpers.js";
 import {
 	type File as DbFile,
@@ -21,6 +21,7 @@ import {
 } from "#lib/server/errors.js";
 import type { StorageContext } from "./context";
 import type { FileOperations } from "./files";
+import { purgeGrantsFor } from "./grants";
 import { diskName, getUniqueDisplayName } from "./lookups";
 import {
 	determineCategory,
@@ -33,9 +34,9 @@ import type { ThumbnailService } from "./thumbnails";
 import {
 	adminVersioning,
 	deleteVersion,
+	dropVersionBytes,
 	getVersion,
 	type ListedVersion,
-	latestSeqs,
 	listVersions,
 	reorderVersions,
 	snapshot,
@@ -93,6 +94,8 @@ export async function afterWrite(
 interface DatedFile {
 	file: DbFile;
 	at: Date;
+	/** Its own versions, oldest first: they move over just before it. */
+	history: string[];
 }
 
 export interface MergePlan {
@@ -132,11 +135,12 @@ export class VersionOperations {
 		// One at a time, each deleted only once its version exists: a
 		// failure part way leaves every take either a file or a version.
 		for (const source of sources) {
+			await this.carry(target.id, source);
 			const version = await this.absorb(target, source, max);
 			made.set(source.file.id, version.id);
 			await this.fileOperations.deleteFile(source.file.path);
 		}
-		await this.place(target.id, order, made);
+		await this.place(target.id, order, made, sources);
 		const wanted = name?.trim();
 		if (wanted && wanted.toLowerCase() !== target.name.toLowerCase()) {
 			const folder = target.path.includes("/")
@@ -147,6 +151,55 @@ export class VersionOperations {
 			});
 		}
 		return target.id;
+	}
+
+	/**
+	 * Save-by-rename: `source` was written beside `target` and moved over it.
+	 * The target keeps its id, notes, shares and history; its old bytes become
+	 * a version where its folder versions. False when either is not a live
+	 * file here.
+	 */
+	async replace(targetId: string, sourceId: string): Promise<boolean> {
+		const [target, source] = await Promise.all([
+			this.findOwnFile(targetId),
+			this.findOwnFile(sourceId),
+		]);
+		if (
+			!(target && source) ||
+			target.id === source.id ||
+			target.isTrashed ||
+			source.isTrashed
+		) {
+			return false;
+		}
+		await this.carry(target.id, {
+			file: source,
+			at: source.updatedAt,
+			history: (await listVersions(this.ctx, source.id))
+				.toReversed()
+				.map((v) => v.id),
+		});
+		await this.ctx.db
+			.update(fileNotes)
+			.set({ fileId: target.id })
+			.where(eq(fileNotes.fileId, source.id));
+		// A hard link: the rename below replaces the name, not these bytes.
+		await this.keepVersion(target);
+		await rename(
+			join(this.ctx.storagePath, source.path),
+			join(this.ctx.storagePath, target.path),
+		);
+		await this.thumbnails.deleteThumbnails(source.path);
+		await this.ctx.db
+			.delete(files)
+			.where(and(eq(files.id, source.id), ownedFiles(this.ctx)));
+		await purgeGrantsFor(this.ctx.db, "file", [source.id]);
+		await dropVersionBytes(this.ctx, [source.id]);
+		await afterWrite(this.ctx, this.thumbnails, target, {
+			size: source.size,
+			updatedAt: source.updatedAt,
+		});
+		return true;
 	}
 
 	/** Whether a file's folder versions, and how many it keeps. */
@@ -226,7 +279,7 @@ export class VersionOperations {
 		}
 
 		const byId = new Map(rows.map((row) => [row.id, row] as const));
-		const dated = await Promise.all(
+		const dated: DatedFile[] = await Promise.all(
 			unique.map(async (id) => {
 				const file = byId.get(id) as DbFile;
 				return {
@@ -235,22 +288,20 @@ export class VersionOperations {
 						(s) => s.mtime,
 						() => file.updatedAt,
 					),
+					history: (await listVersions(this.ctx, id))
+						.toReversed()
+						.map((v) => v.id),
 				};
 			}),
 		);
 		const target = dated.at(-1) as DatedFile;
 		const sources = dated.slice(0, -1);
 
-		const seqs = await latestSeqs(this.ctx, unique);
-		const withHistory = sources.find(({ file }) => seqs.has(file.id));
-		if (withHistory) {
-			throw new VersionMergeError(
-				`"${withHistory.file.name}" already has versions of its own`,
-			);
-		}
 		const { max } = await versioningForFile(this.ctx, target.file, admin);
-		const existing = await listVersions(this.ctx, target.file.id);
-		const total = existing.length + sources.length;
+		const existing = target.history;
+		const total =
+			existing.length +
+			sources.reduce((sum, source) => sum + 1 + source.history.length, 0);
 		if (total > max) {
 			throw new VersionMergeError(
 				`This folder keeps ${max} versions per file; merging would make ${total}`,
@@ -259,7 +310,7 @@ export class VersionOperations {
 		if (placed.length === 0) {
 			return { target: target.file, sources, max };
 		}
-		const ids = new Set(existing.map((v) => v.id));
+		const ids = new Set(existing);
 		if (placed.length !== ids.size || !placed.every((id) => ids.has(id))) {
 			throw new VersionMergeError(
 				"The history changed since the preview; open the merge again",
@@ -273,6 +324,40 @@ export class VersionOperations {
 					: { file: id },
 			);
 		return { target: target.file, sources, order, max };
+	}
+
+	/**
+	 * Moves `source`'s versions onto `target`, oldest first, bytes before
+	 * rows: deleting `source` afterwards would take them with it.
+	 */
+	private async carry(targetId: string, source: DatedFile): Promise<void> {
+		for (const versionId of source.history) {
+			const from = versionKey(source.file.id, versionId);
+			const to = versionKey(targetId, versionId);
+			// A target with no history has no directory yet.
+			await mkdir(dirname(join(this.ctx.storagePath, to)), { recursive: true });
+			await rename(
+				join(this.ctx.storagePath, from),
+				join(this.ctx.storagePath, to),
+			);
+			try {
+				const [last] = await this.ctx.db
+					.select({ seq: maxOf(fileVersions.seq) })
+					.from(fileVersions)
+					.where(eq(fileVersions.fileId, targetId));
+				await this.ctx.db
+					.update(fileVersions)
+					.set({ fileId: targetId, seq: (last?.seq ?? 0) + 1 })
+					.where(eq(fileVersions.id, versionId));
+			} catch (error) {
+				await rename(
+					join(this.ctx.storagePath, to),
+					join(this.ctx.storagePath, from),
+				);
+				throw error;
+			}
+			await this.thumbnails.adopt(from, to);
+		}
 	}
 
 	/**
@@ -386,17 +471,24 @@ export class VersionOperations {
 		return created;
 	}
 
-	/** A merge's order, with each absorbed file replaced by its new version. */
+	/**
+	 * A merge's order, with each absorbed file replaced by its carried
+	 * history and then its new version.
+	 */
 	async place(
 		fileId: string,
 		order: MergePlan["order"],
 		made: Map<string, string>,
+		sources: DatedFile[] = [],
 	): Promise<void> {
 		if (order) {
+			const histories = new Map(sources.map((s) => [s.file.id, s.history]));
 			await this.reorder(
 				fileId,
-				order.map((entry) =>
-					"file" in entry ? (made.get(entry.file) ?? "") : entry.version,
+				order.flatMap((entry) =>
+					"file" in entry
+						? [...(histories.get(entry.file) ?? []), made.get(entry.file) ?? ""]
+						: [entry.version],
 				),
 			);
 		}

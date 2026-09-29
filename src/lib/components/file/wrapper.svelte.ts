@@ -9,6 +9,8 @@ import {
 	MaximizeIcon,
 	MessageSquareTextIcon,
 	PencilLineIcon,
+	PinIcon,
+	PinOffIcon,
 	SettingsIcon,
 	ShareIcon,
 	StarIcon,
@@ -42,6 +44,7 @@ import { page } from "$app/state";
 import { clickDownload, peaksUrl, rawUrl, withLocation } from "./file-links";
 import { fileHistoryActions } from "./version-actions";
 import { mergeVersionsAction } from "./wrapper-merge";
+import { isShortcut, toggleShortcut } from "./wrapper-shortcut";
 
 export {
 	fullscreenUrl,
@@ -303,6 +306,14 @@ export function createMainActions(handlers: {
 					icon: LinkIcon,
 					action: handlers.onCopyLink,
 					folderOnly: true,
+				},
+				{
+					title: (item: ObjectItem) =>
+						isShortcut(item) ? "Remove from sidebar" : "Add to sidebar",
+					icon: (item: ObjectItem) => (isShortcut(item) ? PinOffIcon : PinIcon),
+					action: (item: ObjectItem) => void toggleShortcut(item),
+					folderOnly: true,
+					dynamic: true,
 				},
 				...versioningActions(handlers.onVersioning),
 			],

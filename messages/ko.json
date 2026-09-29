@@ -821,7 +821,10 @@
 	"versions_extract_error": "버전을 추출할 수 없습니다",
 	"versions_extracted": "{count}개 버전을 파일로 추출했습니다",
 	"versions_reorder_error": "버전 순서를 바꿀 수 없습니다",
-	"versions_drop_one": "새 버전으로 만들 파일 하나만 끌어다 놓으세요",
+	"versions_drop_title": "새 버전 또는 별도 파일?",
+	"versions_drop_hint": "{name}을(를) {target}의 새 버전으로 업로드할까요, 아니면 이 폴더에 별도 파일로 업로드할까요?",
+	"versions_drop_as_version": "새 버전",
+	"versions_drop_as_file": "별도 파일",
 	"storage_versions_hold": "이전 버전 {count}개 ({size})",
 	"versions_show": "버전 보기",
 	"versions_hide": "버전 숨기기",
@@ -831,5 +834,11 @@
 	"versions_title": "버전 기록",
 	"versions_latest": "최신",
 	"versions_empty": "아직 이전 버전이 없습니다.",
-	"versions_switch": "버전"
+	"versions_switch": "버전",
+	"nav_shortcuts": "바로가기",
+	"shortcuts_drop_hint": "여기에 폴더를 끌어다 놓으세요",
+	"shortcut_remove": "사이드바에서 {name} 제거",
+	"toast_shortcut_added": "\"{name}\"을(를) 사이드바에 추가했습니다",
+	"toast_shortcut_removed": "\"{name}\"을(를) 사이드바에서 제거했습니다",
+	"toast_shortcut_error": "바로가기를 업데이트할 수 없습니다"
 }

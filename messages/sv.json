@@ -955,7 +955,10 @@
 	"versions_extract_error": "Det gick inte att extrahera versionerna",
 	"versions_extracted": "Versioner extraherade som filer: {count}",
 	"versions_reorder_error": "Det gick inte att ordna om versionerna",
-	"versions_drop_one": "Släpp en enda fil för att göra den till en ny version",
+	"versions_drop_title": "Ny version eller separat fil?",
+	"versions_drop_hint": "Ladda upp {name} som en ny version av {target}, eller som en separat fil i den här mappen?",
+	"versions_drop_as_version": "Ny version",
+	"versions_drop_as_file": "Separat fil",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -974,5 +977,11 @@
 	"versions_title": "Versionshistorik",
 	"versions_latest": "Senaste",
 	"versions_empty": "Inga tidigare versioner än.",
-	"versions_switch": "Version"
+	"versions_switch": "Version",
+	"nav_shortcuts": "Genvägar",
+	"shortcuts_drop_hint": "Släpp en mapp här",
+	"shortcut_remove": "Ta bort {name} från sidofältet",
+	"toast_shortcut_added": "\"{name}\" har lagts till i sidofältet",
+	"toast_shortcut_removed": "\"{name}\" har tagits bort från sidofältet",
+	"toast_shortcut_error": "Det gick inte att uppdatera genvägarna"
 }

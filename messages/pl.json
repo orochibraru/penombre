@@ -1082,7 +1082,10 @@
 	"versions_extract_error": "Nie udało się wyodrębnić wersji",
 	"versions_extracted": "Wersje wyodrębnione jako pliki: {count}",
 	"versions_reorder_error": "Nie udało się zmienić kolejności wersji",
-	"versions_drop_one": "Upuść jeden plik, aby stał się nową wersją",
+	"versions_drop_title": "Nowa wersja czy osobny plik?",
+	"versions_drop_hint": "Przesłać {name} jako nową wersję {target} czy jako osobny plik w tym folderze?",
+	"versions_drop_as_version": "Nowa wersja",
+	"versions_drop_as_file": "Osobny plik",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -1103,5 +1106,11 @@
 	"versions_title": "Historia wersji",
 	"versions_latest": "Najnowsza",
 	"versions_empty": "Brak wcześniejszych wersji.",
-	"versions_switch": "Wersja"
+	"versions_switch": "Wersja",
+	"nav_shortcuts": "Skróty",
+	"shortcuts_drop_hint": "Upuść tutaj folder",
+	"shortcut_remove": "Usuń {name} z paska bocznego",
+	"toast_shortcut_added": "Dodano „{name}” do paska bocznego",
+	"toast_shortcut_removed": "Usunięto „{name}” z paska bocznego",
+	"toast_shortcut_error": "Nie udało się zaktualizować skrótów"
 }

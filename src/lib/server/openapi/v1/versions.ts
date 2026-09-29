@@ -77,8 +77,9 @@ export const mergeFileVersions = defineRoute({
 		"its versions in that order, keeping its name and date, and is deleted. " +
 		"If the kept file already has versions, list each as `v:<versionId>` " +
 		"where it belongs, or the new ones are appended. " +
-		"Its notes move to the kept file. 409 when a merged file already has " +
-		"versions or the folder keeps fewer versions than the merge would make.",
+		"A merged file's own versions move over just before it. " +
+		"Its notes move to the kept file. 409 when the folder keeps fewer " +
+		"versions than the merge would make.",
 	tags: ["Storage - Versions"],
 	query: z.object(driveQuery),
 	body: z.object({

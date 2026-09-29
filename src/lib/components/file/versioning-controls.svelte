@@ -3,7 +3,10 @@
 	import { toast } from "svelte-sonner";
 	import { api, type ObjectItem } from "#lib/api/index.js";
 	import FolderSettingsDialog from "#lib/components/file/folder-settings-dialog.svelte";
-	import { uploadVersion } from "#lib/components/file/version-drop.js";
+	import {
+		uploadSeparately,
+		uploadVersion,
+	} from "#lib/components/file/version-drop.js";
 	import VersionHistoryDialog from "#lib/components/file/version-history-dialog.svelte";
 	import MergeVersionsDialog from "#lib/components/layout/dialogs/merge-versions-dialog.svelte";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
@@ -12,6 +15,7 @@
 	import { locationOf } from "#lib/storage-location.js";
 	import {
 		pendingVersionAction,
+		pendingVersionDrop,
 		refreshVersions,
 	} from "#lib/store/versions.js";
 	import { isFolderItem, randomId } from "#lib/utils.js";
@@ -53,6 +57,21 @@
 			pendingVersionAction.set(null);
 		}
 	});
+
+	const dropped = $derived($pendingVersionDrop);
+
+	async function resolveDrop(asVersion: boolean) {
+		const request = $pendingVersionDrop;
+		pendingVersionDrop.set(null);
+		if (!request) {
+			return;
+		}
+		if (asVersion) {
+			await uploadVersion(request.item, request.file);
+		} else {
+			uploadSeparately([request.file]);
+		}
+	}
 
 	/** Folder settings for a folder, a new version for a file. */
 	export function open(item: ObjectItem) {
@@ -166,4 +185,25 @@
             ? m.versions_delete_hint()
             : m.versions_restore_hint()}
     </p>
+</ResponsiveDialog>
+
+<ResponsiveDialog
+    bind:open={() => !!dropped, (value) => !value && pendingVersionDrop.set(null)}
+    size="sm"
+    title={m.versions_drop_title()}
+>
+    <p class="text-muted-foreground text-sm">
+        {m.versions_drop_hint({
+            name: dropped?.file.name ?? "",
+            target: dropped?.item.metadata.name ?? dropped?.item.key ?? "",
+        })}
+    </p>
+    {#snippet footer()}
+        <Button onclick={() => resolveDrop(true)}>
+            {m.versions_drop_as_version()}
+        </Button>
+        <Button variant="outline" onclick={() => resolveDrop(false)}>
+            {m.versions_drop_as_file()}
+        </Button>
+    {/snippet}
 </ResponsiveDialog>

@@ -110,11 +110,20 @@ volumes:
 Penombre needs read/write access and reports free space from that filesystem, so
 mount the share before the container starts.
 
+## Syncing a device
+
+There are two ways to keep a folder on a laptop in step with Penombre:
+
+- **[WebDAV](webdav.md)**, through Penombre itself, with rclone or a file
+  manager. It works in every mode and on every drive, encrypted or not. Start
+  here.
+- **Syncthing**, on the directory behind Penombre, described below. Use it if
+  Syncthing already runs on the server.
+
 ## Syncing with Syncthing
 
-Penombre has no sync client of its own, and isn't going to grow one — a
-directory of files is exactly what [Syncthing](https://syncthing.net) already
-does well. Point it at the same directory the container mounts:
+A directory of files is exactly what [Syncthing](https://syncthing.net) syncs
+well. Point it at the same directory the container mounts:
 
 ```yaml
 volumes:

@@ -27,6 +27,9 @@ A version is the file's bytes as they were just before something replaced them:
 An empty file makes no version, which is also what keeps a fresh upload from
 recording its own placeholder.
 
+- **Saving over a file through [WebDAV](webdav.md)**: a Finder copy, an editor's
+  save, Office's safe save or an rclone sync. The file stays the same one and
+  its previous bytes become a version.
 - **Another program replacing the file** on simple mode's drive or a mounted
   volume (Syncthing, rsync): the next scan keeps the previous bytes. See the
   [FAQ](faq.md#is-a-file-overwritten-by-syncthing-or-rsync-kept-as-a-version)
@@ -50,7 +53,8 @@ Select two or more files and choose **Merge as versions** in the selection bar:
   links are removed with them.
 - A merge that would make more versions than the folder keeps is refused rather
   than deleting the oldest takes: raise the folder's limit or pick fewer files.
-  A file that already has versions of its own can only be the one that stays.
+- A merged file that has versions of its own brings them along: they land just
+  before it, oldest first, and count towards the folder's limit.
 
 Folders cannot be merged, and the option is hidden while versioning is off.
 
@@ -77,8 +81,9 @@ modification date inside the zip.
 In list and table layouts:
 
 - **Drop a file on another file** to open the merge dialog with both.
-- **Drop a file from your computer on a file** to upload it as that file's new
-  version, whatever its name.
+- **Drop a file from your computer on a file** to choose between uploading it as
+  that file's new version, whatever its name, or as a separate file in the
+  folder. Dropping several files uploads them to the folder.
 - **Drag an unfolded version onto another** to move it to that place. The
   versions are renumbered `v1`, `v2`, … in their new order.
 - **Drag a version onto its file** to restore it, after confirming.

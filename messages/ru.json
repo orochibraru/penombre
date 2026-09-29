@@ -1093,7 +1093,10 @@
 	"versions_extract_error": "Не удалось извлечь версии",
 	"versions_extracted": "Версий извлечено в файлы: {count}",
 	"versions_reorder_error": "Не удалось изменить порядок версий",
-	"versions_drop_one": "Перетащите один файл, чтобы сделать его новой версией",
+	"versions_drop_title": "Новая версия или отдельный файл?",
+	"versions_drop_hint": "Загрузить {name} как новую версию {target} или как отдельный файл в эту папку?",
+	"versions_drop_as_version": "Новая версия",
+	"versions_drop_as_file": "Отдельный файл",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -1114,5 +1117,11 @@
 	"versions_title": "История версий",
 	"versions_latest": "Текущая",
 	"versions_empty": "Предыдущих версий пока нет.",
-	"versions_switch": "Версия"
+	"versions_switch": "Версия",
+	"nav_shortcuts": "Ярлыки",
+	"shortcuts_drop_hint": "Перетащите сюда папку",
+	"shortcut_remove": "Убрать {name} с боковой панели",
+	"toast_shortcut_added": "«{name}» добавлена на боковую панель",
+	"toast_shortcut_removed": "«{name}» убрана с боковой панели",
+	"toast_shortcut_error": "Не удалось обновить ярлыки"
 }

@@ -821,7 +821,10 @@
 	"versions_extract_error": "バージョンを取り出せませんでした",
 	"versions_extracted": "{count} 件のバージョンをファイルとして取り出しました",
 	"versions_reorder_error": "バージョンを並べ替えられませんでした",
-	"versions_drop_one": "新しいバージョンにするファイルは 1 つだけドロップしてください",
+	"versions_drop_title": "新しいバージョンか別のファイルか",
+	"versions_drop_hint": "{name} を {target} の新しいバージョンとしてアップロードしますか？それともこのフォルダーに別のファイルとしてアップロードしますか？",
+	"versions_drop_as_version": "新しいバージョン",
+	"versions_drop_as_file": "別のファイル",
 	"storage_versions_hold": "以前のバージョン {count} 件（{size}）",
 	"versions_show": "バージョンを表示",
 	"versions_hide": "バージョンを隠す",
@@ -831,5 +834,11 @@
 	"versions_title": "バージョン履歴",
 	"versions_latest": "最新",
 	"versions_empty": "以前のバージョンはまだありません。",
-	"versions_switch": "バージョン"
+	"versions_switch": "バージョン",
+	"nav_shortcuts": "ショートカット",
+	"shortcuts_drop_hint": "ここにフォルダーをドロップ",
+	"shortcut_remove": "{name} をサイドバーから削除",
+	"toast_shortcut_added": "「{name}」をサイドバーに追加しました",
+	"toast_shortcut_removed": "「{name}」をサイドバーから削除しました",
+	"toast_shortcut_error": "ショートカットを更新できませんでした"
 }

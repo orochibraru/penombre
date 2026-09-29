@@ -125,10 +125,53 @@ describe("merging files as versions", () => {
 		);
 	});
 
-	test("refuses a merged-away file that has versions of its own", async () => {
+	test("a merged-away file brings its own versions, just before it", async () => {
+		await take("a", "Song.wav", 1);
+		const old = await snapshot(
+			ctx,
+			{ id: "a", path: "Song.wav", contentType: "" },
+			3,
+			{ name: "Song-first.wav" },
+		);
+		await take("b", "Song-new.wav", 2);
+		const early = await snapshot(
+			ctx,
+			{ id: "b", path: "Song-new.wav", contentType: "" },
+			3,
+			{ name: "Song-partial.wav" },
+		);
+		const merging = new VersionOperations(
+			ctx,
+			{
+				adopt: () => Promise.resolve(),
+				deleteThumbnails: () => Promise.resolve(),
+			} as unknown as ThumbnailService,
+			{
+				deleteFile: (path: string) =>
+					db.delete(files).where(eq(files.path, path)),
+			} as never,
+		);
+
+		expect(await merging.merge(["a", `v:${early.id}`, "b"])).toBe("b");
+
+		const history = (await listVersions(ctx, "b")).reverse();
+		expect(history.map((v) => v.name)).toEqual([
+			"Song-first.wav",
+			"Song.wav",
+			"Song-partial.wav",
+		]);
+		expect(history.map((v) => v.seq)).toEqual([1, 2, 3]);
+		const bytes = await ctx.driver.readObject(versionKey("b", old.id));
+		expect(new TextDecoder().decode(bytes)).toBe("a");
+	});
+
+	test("a merged-away file's versions count towards the limit", async () => {
 		await take("a", "Song-001.wav", 1);
 		await take("b", "Song-002.wav", 2);
-		await snapshot(ctx, { id: "a", path: "Song-001.wav", contentType: "" }, 3);
+		const a = { id: "a", path: "Song-001.wav", contentType: "" };
+		await snapshot(ctx, a, 5);
+		await snapshot(ctx, a, 5);
+		await snapshot(ctx, a, 5);
 		await expect(ops.planMerge(["a", "b"])).rejects.toThrow(VersionMergeError);
 	});
 

@@ -19,6 +19,9 @@ Your reverse proxy must:
 - Allow large request bodies — Penombre sets `BODY_SIZE_LIMIT=Infinity` for file
   uploads, so limit enforcement should happen at the proxy level if needed.
 - Not buffer responses — streaming is used for file downloads.
+- Pass [WebDAV](webdav.md) methods (`PROPFIND`, `PROPPATCH`, `MKCOL`, `MOVE`,
+  `LOCK`, `UNLOCK`) through untouched. Caddy, Nginx's `proxy_pass` and Traefik
+  do by default; a WAF or a CDN in front may not.
 
 ## Client address {#client-address}
 

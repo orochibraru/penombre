@@ -1117,7 +1117,10 @@
 	"versions_extract_error": "No se pudieron extraer las versiones",
 	"versions_extracted": "Versiones extraídas como archivos: {count}",
 	"versions_reorder_error": "No se pudieron reordenar las versiones",
-	"versions_drop_one": "Suelta un solo archivo para convertirlo en una nueva versión",
+	"versions_drop_title": "¿Nueva versión o archivo aparte?",
+	"versions_drop_hint": "¿Subir {name} como nueva versión de {target} o como archivo aparte en esta carpeta?",
+	"versions_drop_as_version": "Nueva versión",
+	"versions_drop_as_file": "Archivo aparte",
 	"storage_versions_hold": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -1136,5 +1139,11 @@
 	"versions_title": "Historial de versiones",
 	"versions_latest": "Actual",
 	"versions_empty": "Aún no hay versiones anteriores.",
-	"versions_switch": "Versión"
+	"versions_switch": "Versión",
+	"nav_shortcuts": "Accesos directos",
+	"shortcuts_drop_hint": "Suelta una carpeta aquí",
+	"shortcut_remove": "Quitar {name} de la barra lateral",
+	"toast_shortcut_added": "\"{name}\" añadido a la barra lateral",
+	"toast_shortcut_removed": "\"{name}\" quitado de la barra lateral",
+	"toast_shortcut_error": "No se pudieron actualizar los accesos directos"
 }

@@ -19,3 +19,5 @@ The backlog, and the only one. Filled by the `devex`, `ui-ux`, `privacy` and
       unit-test script.
 
 ## Features
+
+## Bugs
