@@ -1109,5 +1109,17 @@
 	"device_denied": "Abgelehnt. Das Gerät wurde nicht angemeldet.",
 	"device_invalid": "Dieser Code ist ungültig oder abgelaufen. Starte in Penombre Sync neu.",
 	"device_code_label": "Code",
-	"device_continue": "Weiter"
+	"device_continue": "Weiter",
+	"settings_nav_desktop": "Desktop-App",
+	"title_settings_desktop": "Einstellungen - Desktop-App",
+	"desktop_app_description": "Hält Ordner auf deinem Computer in beide Richtungen mit Penombre synchron. Diese Builds passen zur Version dieses Servers, {version}.",
+	"desktop_app_download": "Für {system} herunterladen",
+	"desktop_app_other_systems": "Andere Systeme",
+	"desktop_app_all_releases": "Alle Versionen",
+	"desktop_app_guide": "Installationsanleitung",
+	"desktop_app_requirements": "Sie benötigt rclone. Die Builds sind nicht signiert: Die Anleitung erklärt, wie man sie öffnet.",
+	"desktop_app_homebrew_description": "Unter macOS und Linux installiert Homebrew sie mit rclone, hält sie aktuell und startet sie bei der Anmeldung.",
+	"desktop_app_server_title": "Serveradresse",
+	"desktop_app_server_description": "Füge sie in die App ein, wenn sie nach deinem Server fragt, und bestätige dann die Anmeldung im Browser.",
+	"desktop_app_copy_address": "Adresse kopieren"
 }

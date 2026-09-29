@@ -7,6 +7,7 @@ mod places;
 mod store;
 mod sync;
 mod ui;
+mod update;
 
 use fastframe_shell::{Shell, Waker};
 
@@ -25,7 +26,12 @@ fn main() -> eframe::Result<()> {
     {
         eprintln!("no logger: {error}");
     }
-    let instance = match instance::claim(&dirs.data) {
+    let claim = if std::env::args().any(|arg| arg == update::RESTARTED) {
+        instance::claim_when_free(&dirs.data, std::time::Duration::from_secs(15))
+    } else {
+        instance::claim(&dirs.data)
+    };
+    let instance = match claim {
         Ok(instance::Claim::First(instance)) => instance,
         Ok(instance::Claim::Second) => {
             log::info!("already running; showed that one instead");

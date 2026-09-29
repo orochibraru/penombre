@@ -19,6 +19,7 @@ use theme::{Icon, Palette, RADIUS, palette};
 use widgets::card;
 
 use crate::app::Login;
+use crate::update::{Channel, Found};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Tab {
@@ -69,6 +70,13 @@ pub struct Adding<'a> {
     pub error: Option<&'a str>,
 }
 
+/// A folder's exclusions, open for editing.
+pub struct Excluding<'a> {
+    pub index: usize,
+    pub pattern: &'a mut String,
+    pub error: Option<&'a str>,
+}
+
 pub struct View<'a> {
     pub tab: Tab,
     pub server: &'a mut String,
@@ -81,6 +89,7 @@ pub struct View<'a> {
     pub auth_error: Option<&'a str>,
     pub pairs: &'a [crate::store::Pair],
     pub adding: Option<Adding<'a>>,
+    pub excluding: Option<Excluding<'a>>,
     pub rclone_missing: bool,
     pub status: &'a str,
     pub state: SyncState,
@@ -92,7 +101,18 @@ pub struct View<'a> {
     pub failures: &'a [crate::sync::Failure],
     /// The server stopped answering.
     pub down: Option<&'a crate::sync::Down>,
+    pub updates: Updates<'a>,
     pub now: std::time::SystemTime,
+}
+
+pub struct Updates<'a> {
+    pub version: &'a str,
+    pub channel: Channel,
+    pub found: &'a Found,
+    /// The Homebrew formula that installed this build.
+    pub brew: Option<&'a str>,
+    pub installing: bool,
+    pub install_error: Option<&'a str>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -108,8 +128,14 @@ pub enum Action {
     ConfirmAdd,
     CancelAdd,
     Remove(usize),
+    ToggleExclusions(usize),
+    AddExclusion,
+    ExcludeFolder,
+    RemoveExclusion(usize),
     SyncNow,
     Pause(bool),
+    Channel(Channel),
+    InstallUpdate,
 }
 
 pub fn draw(ui: &mut Ui, mut view: View<'_>) -> Option<Action> {
@@ -292,11 +318,13 @@ mod tests {
                 local: "/Users/me/Penombre".into(),
                 remote: "me".into(),
                 label: "My drive".into(),
+                ignored: Vec::new(),
             },
             crate::store::Pair {
                 local: "/Users/me/Documents".into(),
                 remote: "me/Documents".into(),
                 label: "My drive / Documents".into(),
+                ignored: vec!["node_modules/".into(), "/Archive/".into()],
             },
         ];
         let places = vec![
@@ -418,6 +446,10 @@ mod tests {
                 ..BASE
             },
             Case {
+                name: "excluding",
+                ..BASE
+            },
+            Case {
                 name: "settings",
                 tab: Tab::Settings,
                 login: Login::Homebrew("brew services stop penombre-sync"),
@@ -517,6 +549,8 @@ mod tests {
                 };
                 let (tab, login) = (case.tab, case.login);
                 let adding = case.name == "adding";
+                let excluding = case.name == "excluding";
+                let mut pattern = "*.reapeaks".to_owned();
                 let mut choice = 1;
                 let mut subfolder = "Reaper".to_owned();
                 let mut installed = false;
@@ -531,6 +565,10 @@ mod tests {
                 let down = case.down.then(|| crate::sync::Down {
                     since: now - Duration::from_secs(3 * 60),
                     reason: "the connection was refused or the host is unknown".into(),
+                });
+                let found = Found::Newer(crate::update::Release {
+                    version: "1.8.59".into(),
+                    url: String::new(),
                 });
                 let mut harness = egui_kittest::Harness::builder()
                     .with_size(Vec2::new(440.0, 720.0))
@@ -556,6 +594,11 @@ mod tests {
                                         phase: phase(),
                                         auth_error: None,
                                         pairs: &pairs,
+                                        excluding: excluding.then_some(Excluding {
+                                            index: 1,
+                                            pattern: &mut pattern,
+                                            error: None,
+                                        }),
                                         adding: adding.then(|| Adding {
                                             local: std::path::Path::new("/Users/me/Music/Reaper"),
                                             places: Some(Ok(&places)),
@@ -571,6 +614,14 @@ mod tests {
                                         recent: &recent,
                                         failures: &failures,
                                         down: down.as_ref(),
+                                        updates: Updates {
+                                            version: "1.8.58",
+                                            channel: Channel::Stable,
+                                            found: &found,
+                                            brew: None,
+                                            installing: false,
+                                            install_error: None,
+                                        },
                                         now,
                                     },
                                 );

@@ -273,6 +273,9 @@ jobs:
           rules: ${{ env.RELEASE_RULES }}
           prerelease: canary
           release-pr: "true"
+          # Releases are immutable once published: the desktop builds attach
+          # to the draft, and `publish-release` publishes it.
+          draft: "true"
 
       - name: Fail if the release doesn't match the images
         if: steps.releaser.outputs.version != needs.version.outputs.version
@@ -302,13 +305,33 @@ jobs:
     with:
       version: ${{ needs.version.outputs.version }}
 
-  # The tap's formula is rendered here, per stable release, from the checksums
-  # the desktop jobs attached. The tap has no workflow of its own.
+  # Published even when a desktop build failed: the server release must not
+  # wait on it, and a draft is invisible to everyone else.
+  publish-release:
+    name: Publish Release ${{ needs.version.outputs.version }}
+    needs: [version, release, desktop]
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+          MODE: ${{ needs.version.outputs.mode }}
+        run: |
+          latest=false
+          [ "$MODE" = stable ] && latest=true
+          gh release edit "v$VERSION" --repo "$GITHUB_REPOSITORY" --draft=false --latest="$latest"
+
+  # The tap's formula is rendered here, per release, from the checksums the
+  # desktop jobs attached. The tap has no workflow of its own.
   homebrew:
     name: Homebrew Tap
-    needs: [version, desktop]
-    if: ${{ !cancelled() && needs.version.outputs.mode == 'stable' &&
-      needs.desktop.result == 'success' }}
+    needs: [version, desktop, publish-release]
+    if: ${{ !cancelled() && needs.desktop.result == 'success' &&
+      needs.publish-release.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -319,18 +342,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.version.outputs.version }}
+          MODE: ${{ needs.version.outputs.mode }}
         run: |
           set -euo pipefail
+          # Canaries go to their own formula; `@canary` is not a name Homebrew
+          # can turn into a class.
+          if [ "$MODE" = stable ]; then
+            formula=penombre-sync class=PenombreSync other=penombre-sync-canary
+          else
+            formula=penombre-sync-canary class=PenombreSyncCanary other=penombre-sync
+          fi
+          echo "FORMULA=$formula" >> "$GITHUB_ENV"
           sums="$RUNNER_TEMP/sums"
           gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern '*.tar.gz.sha256' --dir "$sums"
-          args=(-e "s/@VERSION@/$VERSION/")
+          args=(-e "s/@VERSION@/$VERSION/" -e "s/@CLASS@/$class/" -e "s/@OTHER@/$other/")
           for target in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu; do
             args+=(-e "s/@SHA256_$target@/$(cut -d' ' -f1 "$sums/penombre-sync-$target.tar.gz.sha256")/")
           done
           mkdir -p "$RUNNER_TEMP/tap/Formula"
-          sed "${args[@]}" packaging/homebrew/penombre-sync.rb.tmpl > "$RUNNER_TEMP/tap/Formula/penombre-sync.rb"
+          sed "${args[@]}" packaging/homebrew/penombre-sync.rb.tmpl > "$RUNNER_TEMP/tap/Formula/$formula.rb"
           cp packaging/homebrew/README.md "$RUNNER_TEMP/tap/README.md"
-          if grep -n '@[A-Za-z0-9_-]*@' "$RUNNER_TEMP/tap/Formula/penombre-sync.rb"; then
+          if grep -n '@[A-Za-z0-9_-]*@' "$RUNNER_TEMP/tap/Formula/$formula.rb"; then
             echo "::error::Unrendered placeholder in the formula."
             exit 1
           fi
@@ -355,14 +387,14 @@ jobs:
           if git fetch -q --depth 1 origin main; then
             git reset -q FETCH_HEAD
           fi
-          git add Formula/penombre-sync.rb README.md
+          git add "Formula/$FORMULA.rb" README.md
           if git diff --cached --quiet; then
-            echo "The tap already carries penombre-sync $VERSION."
+            echo "The tap already carries $FORMULA $VERSION."
             exit 0
           fi
           git -c user.name="github-actions[bot]" \
             -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -q -m "penombre-sync $VERSION"
+            commit -q -m "$FORMULA $VERSION"
           git push origin main
 
   cleanup:

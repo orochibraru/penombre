@@ -1154,5 +1154,17 @@
 	"device_denied": "Denegado. Ese dispositivo no ha iniciado sesión.",
 	"device_invalid": "Este código no es válido o ha caducado. Vuelve a empezar desde Penombre Sync.",
 	"device_code_label": "Código",
-	"device_continue": "Continuar"
+	"device_continue": "Continuar",
+	"settings_nav_desktop": "Aplicación de escritorio",
+	"title_settings_desktop": "Ajustes - Aplicación de escritorio",
+	"desktop_app_description": "Mantiene carpetas de tu ordenador sincronizadas en ambos sentidos con Penombre. Estas compilaciones corresponden a la versión de este servidor, {version}.",
+	"desktop_app_download": "Descargar para {system}",
+	"desktop_app_other_systems": "Otros sistemas",
+	"desktop_app_all_releases": "Todas las versiones",
+	"desktop_app_guide": "Guía de instalación",
+	"desktop_app_requirements": "Necesita rclone. Las compilaciones no están firmadas: la guía explica cómo abrirlas.",
+	"desktop_app_homebrew_description": "En macOS y Linux, Homebrew la instala con rclone, la mantiene actualizada y la inicia al iniciar sesión.",
+	"desktop_app_server_title": "Dirección del servidor",
+	"desktop_app_server_description": "Pégala en la aplicación cuando te pida tu servidor y luego aprueba el inicio de sesión en tu navegador.",
+	"desktop_app_copy_address": "Copiar dirección"
 }

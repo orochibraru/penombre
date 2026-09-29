@@ -1181,5 +1181,17 @@
 	"device_denied": "Denied. That device was not signed in.",
 	"device_invalid": "This code is invalid or has expired. Start again from Penombre Sync.",
 	"device_code_label": "Code",
-	"device_continue": "Continue"
+	"device_continue": "Continue",
+	"settings_nav_desktop": "Desktop app",
+	"title_settings_desktop": "Settings - Desktop app",
+	"desktop_app_description": "Keeps folders on your computer in two-way sync with Penombre. These builds match this server's version, {version}.",
+	"desktop_app_download": "Download for {system}",
+	"desktop_app_other_systems": "Other systems",
+	"desktop_app_all_releases": "All releases",
+	"desktop_app_guide": "Installation guide",
+	"desktop_app_requirements": "It needs rclone. The builds are not signed: the guide says how to open them.",
+	"desktop_app_homebrew_description": "On macOS and Linux, Homebrew installs it with rclone, keeps it updated and starts it at login.",
+	"desktop_app_server_title": "Server address",
+	"desktop_app_server_description": "Paste it into the app when it asks for your server, then approve the sign-in in your browser.",
+	"desktop_app_copy_address": "Copy address"
 }

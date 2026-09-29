@@ -1074,5 +1074,17 @@
 	"device_denied": "Rifiutato. Quel dispositivo non ha effettuato l'accesso.",
 	"device_invalid": "Questo codice non è valido o è scaduto. Ricomincia da Penombre Sync.",
 	"device_code_label": "Codice",
-	"device_continue": "Continua"
+	"device_continue": "Continua",
+	"settings_nav_desktop": "App desktop",
+	"title_settings_desktop": "Impostazioni - App desktop",
+	"desktop_app_description": "Mantiene le cartelle del tuo computer sincronizzate in entrambe le direzioni con Penombre. Queste build corrispondono alla versione di questo server, {version}.",
+	"desktop_app_download": "Scarica per {system}",
+	"desktop_app_other_systems": "Altri sistemi",
+	"desktop_app_all_releases": "Tutte le versioni",
+	"desktop_app_guide": "Guida all'installazione",
+	"desktop_app_requirements": "Richiede rclone. Le build non sono firmate: la guida spiega come aprirle.",
+	"desktop_app_homebrew_description": "Su macOS e Linux, Homebrew la installa con rclone, la mantiene aggiornata e la avvia all'accesso.",
+	"desktop_app_server_title": "Indirizzo del server",
+	"desktop_app_server_description": "Incollalo nell'app quando chiede il tuo server, poi approva l'accesso nel browser.",
+	"desktop_app_copy_address": "Copia indirizzo"
 }

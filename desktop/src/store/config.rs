@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use super::Dirs;
+use crate::update::{self, Channel};
 
 /// One local folder kept in sync with one place on the server.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -13,6 +14,9 @@ pub struct Pair {
     pub remote: String,
     /// Where it lands, for people: `My drive / Documents`.
     pub label: String,
+    /// What the user keeps out of it: `*.bak`, `node_modules/`, `/Renders/`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ignored: Vec<String>,
 }
 
 #[derive(Default, Serialize, Deserialize)]
@@ -29,6 +33,10 @@ pub struct Config {
     pub paused: bool,
     /// What the server calls this app's API key.
     pub key_name: Option<String>,
+    /// None follows the channel this build came from.
+    pub channel: Option<Channel>,
+    /// The newest version a notification already announced.
+    pub announced: Option<String>,
 }
 
 impl Config {
@@ -49,12 +57,17 @@ impl Config {
         }
     }
 
+    pub fn channel(&self) -> Channel {
+        self.channel.unwrap_or_else(|| Channel::of(update::VERSION))
+    }
+
     pub fn pairs(&self) -> Vec<Pair> {
         self.pairs.clone().unwrap_or_else(|| {
             vec![Pair {
                 local: self.folder.clone().unwrap_or_else(default_folder),
                 remote: "me".into(),
                 label: "My drive".into(),
+                ignored: Vec::new(),
             }]
         })
     }
@@ -112,7 +125,8 @@ mod tests {
             vec![Pair {
                 local: "/x/Sync".into(),
                 remote: "me".into(),
-                label: "My drive".into()
+                label: "My drive".into(),
+                ignored: Vec::new(),
             }]
         );
         let emptied = Config {
@@ -128,6 +142,7 @@ mod tests {
             local: l.into(),
             remote: r.into(),
             label: String::new(),
+            ignored: Vec::new(),
         };
         let pairs = [pair("/h/Penombre", "me")];
         assert!(conflict(&pairs, &pair("/h/Penombre", "me/X")).is_some());

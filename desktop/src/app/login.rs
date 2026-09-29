@@ -15,7 +15,14 @@ pub enum Login {
 }
 
 const LABEL: &str = "dev.penombre.sync";
-const BREW_STOP: &str = "brew services stop penombre-sync";
+/// Each formula's service, and the command that stops it.
+const BREW: [(&str, &str); 2] = [
+    ("penombre-sync", "brew services stop penombre-sync"),
+    (
+        "penombre-sync-canary",
+        "brew services stop penombre-sync-canary",
+    ),
+];
 
 pub fn state() -> Login {
     let Some(home) = home() else {
@@ -37,11 +44,13 @@ fn home() -> Option<PathBuf> {
     directories::BaseDirs::new().map(|d| d.home_dir().to_path_buf())
 }
 
-fn brew_service(home: &Path) -> PathBuf {
+fn brew_service(home: &Path, formula: &str) -> PathBuf {
     if cfg!(target_os = "macos") {
-        home.join("Library/LaunchAgents/homebrew.mxcl.penombre-sync.plist")
+        home.join(format!(
+            "Library/LaunchAgents/homebrew.mxcl.{formula}.plist"
+        ))
     } else {
-        home.join(".config/systemd/user/homebrew.penombre-sync.service")
+        home.join(format!(".config/systemd/user/homebrew.{formula}.service"))
     }
 }
 
@@ -56,8 +65,8 @@ fn launcher(home: &Path) -> Option<PathBuf> {
 }
 
 fn state_in(home: &Path) -> Login {
-    if brew_service(home).exists() {
-        return Login::Homebrew(BREW_STOP);
+    if let Some((_, stop)) = BREW.iter().find(|(f, _)| brew_service(home, f).exists()) {
+        return Login::Homebrew(stop);
     }
     match launcher(home) {
         Some(path) if path.exists() => Login::On,
@@ -184,10 +193,10 @@ mod tests {
         set_in(&home, exe, false).unwrap();
         set_in(&home, exe, false).unwrap();
         assert_eq!(state_in(&home), Login::Off);
-        let brew = brew_service(&home);
+        let brew = brew_service(&home, BREW[1].0);
         std::fs::create_dir_all(brew.parent().unwrap()).unwrap();
         std::fs::write(&brew, "").unwrap();
-        assert_eq!(state_in(&home), Login::Homebrew(BREW_STOP));
+        assert_eq!(state_in(&home), Login::Homebrew(BREW[1].1));
         let _ = std::fs::remove_dir_all(&home);
     }
 

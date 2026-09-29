@@ -14,6 +14,9 @@ brew install orochibraru/tap/penombre-sync
 brew services start penombre-sync
 ```
 
+Canary builds, cut on every merge, are `penombre-sync-canary`; the two conflict,
+so uninstall one before installing the other.
+
 `brew services start` launches it now and at every login. Quitting it from the
 tray keeps it quit until the next login or `brew services restart`.
 

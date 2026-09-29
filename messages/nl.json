@@ -1154,5 +1154,17 @@
 	"device_denied": "Geweigerd. Dat apparaat is niet aangemeld.",
 	"device_invalid": "Deze code is ongeldig of verlopen. Begin opnieuw vanuit Penombre Sync.",
 	"device_code_label": "Code",
-	"device_continue": "Doorgaan"
+	"device_continue": "Doorgaan",
+	"settings_nav_desktop": "Desktop-app",
+	"title_settings_desktop": "Instellingen - Desktop-app",
+	"desktop_app_description": "Houdt mappen op je computer in beide richtingen gesynchroniseerd met Penombre. Deze builds horen bij de versie van deze server, {version}.",
+	"desktop_app_download": "Downloaden voor {system}",
+	"desktop_app_other_systems": "Andere systemen",
+	"desktop_app_all_releases": "Alle versies",
+	"desktop_app_guide": "Installatiehandleiding",
+	"desktop_app_requirements": "Vereist rclone. De builds zijn niet ondertekend: de handleiding legt uit hoe je ze opent.",
+	"desktop_app_homebrew_description": "Op macOS en Linux installeert Homebrew haar met rclone, houdt haar bijgewerkt en start haar bij het inloggen.",
+	"desktop_app_server_title": "Serveradres",
+	"desktop_app_server_description": "Plak het in de app wanneer die om je server vraagt en keur daarna de aanmelding goed in je browser.",
+	"desktop_app_copy_address": "Adres kopiëren"
 }

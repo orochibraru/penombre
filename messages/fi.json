@@ -1091,5 +1091,17 @@
 	"device_denied": "Hylätty. Laitetta ei kirjattu sisään.",
 	"device_invalid": "Koodi on virheellinen tai vanhentunut. Aloita alusta Penombre Syncissä.",
 	"device_code_label": "Koodi",
-	"device_continue": "Jatka"
+	"device_continue": "Jatka",
+	"settings_nav_desktop": "Työpöytäsovellus",
+	"title_settings_desktop": "Asetukset - Työpöytäsovellus",
+	"desktop_app_description": "Pitää tietokoneesi kansiot kaksisuuntaisesti synkronoituina Penombren kanssa. Nämä versiot vastaavat tämän palvelimen versiota {version}.",
+	"desktop_app_download": "Lataa: {system}",
+	"desktop_app_other_systems": "Muut järjestelmät",
+	"desktop_app_all_releases": "Kaikki versiot",
+	"desktop_app_guide": "Asennusohje",
+	"desktop_app_requirements": "Vaatii rclonen. Versioita ei ole allekirjoitettu: ohje kertoo, miten ne avataan.",
+	"desktop_app_homebrew_description": "macOS:ssä ja Linuxissa Homebrew asentaa sen rclonen kanssa, pitää sen ajan tasalla ja käynnistää sen kirjautuessa.",
+	"desktop_app_server_title": "Palvelimen osoite",
+	"desktop_app_server_description": "Liitä se sovellukseen, kun se kysyy palvelinta, ja hyväksy sitten kirjautuminen selaimessa.",
+	"desktop_app_copy_address": "Kopioi osoite"
 }

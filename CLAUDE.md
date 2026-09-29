@@ -1194,9 +1194,12 @@ in a folder and is unreachable by its own key. `resolveDestination()` in
 so a create either lands where it says or fails.
 
 A folder's id is its path only on a personal drive at the root.
-`POST /api/v1/storage/folder` returns `path`; address the new folder by that.
-The folder-upload dialog and four E2E specs joined ids into paths, which broke
-on every drive and volume the day those got real names.
+`POST /api/v1/storage/folder` returns `path`; address the new folder by that. A
+move or copy into a drive or volume (`recreateFolders` in `transfer.ts`) once
+nested children under `<parent>/<new id>`: they matched no row, landed at the
+drive root with no parent, took none of their files, and 404'd on delete. The
+folder-upload dialog and four E2E specs joined ids into paths, which broke on
+every drive and volume the day those got real names.
 
 `fileDbToObjectItem` sets `key` to the **last path segment** only, so an item
 from a listing cannot address its own file unless the caller re-attaches the
@@ -1498,7 +1501,14 @@ version. `latest` is never built, only promoted.
 - Old canary GitHub releases are pruned; their tags are not, releaser numbers
   from them.
 
-### The desktop app ships with every release, the tap with stable ones
+### The desktop app ships with every release, to the tap too
+
+**Releases are immutable** (a repository setting): once published, nothing can
+be attached. releaser therefore creates the release as a draft
+(`draft: "true"`), the desktop builds upload to that draft, and
+`publish-release` publishes it — even when a desktop build failed, so the server
+release never waits on one. releaser's own artifact mode publishes first and
+uploads after, so it cannot be used here.
 
 `publish.yaml`'s `desktop` job calls `desktop.yaml` after `release`, canary or
 stable, and each target uploads `penombre-sync-<target>.tar.gz` (`.zip` on
@@ -1511,15 +1521,36 @@ glibc floor and needs no `-dev` package (X11, Wayland and GL are dlopened; tray,
 keyring and file dialog speak D-Bus in Rust) — do not add one without a link
 error that asks for it. The toolchain is `rust-version`, read from `Cargo.toml`.
 
-`homebrew` runs for stable releases only: it renders
-`packaging/homebrew/penombre-sync.rb.tmpl` from the release's checksums and
-pushes it with `packaging/homebrew/README.md` to `orochibraru/homebrew-tap`
-`main`, over the `HOMEBREW_TAP_DEPLOY_KEY` secret (a write deploy key on the
-tap; a PAT would reach every repo its owner can). Never edit the tap by hand. It
-is a **formula**, not a cask: a cask cannot declare `service`, and
-`brew services` is how it starts at login, with `std_service_path_env` so
-launchd finds Homebrew's rclone. `keep_alive crashed: true`, because quitting
-from the tray exits 0 and must stay quit.
+`homebrew` renders `packaging/homebrew/penombre-sync.rb.tmpl` from the release's
+checksums, as `penombre-sync` for a stable release and `penombre-sync-canary`
+for a canary (`conflicts_with` each other; `foo@canary` is not usable, Homebrew
+only turns `@<digit>` into a class name), and pushes it with
+`packaging/homebrew/README.md` to `orochibraru/homebrew-tap` `main`, over the
+`HOMEBREW_TAP_DEPLOY_KEY` secret (a write deploy key on the tap; a PAT would
+reach every repo its owner can). Never edit the tap by hand. It is a
+**formula**, not a cask: a cask cannot declare `service`, and `brew services` is
+how it starts at login, with `std_service_path_env` so launchd finds Homebrew's
+rclone. `keep_alive crashed: true`, because quitting from the tray exits 0 and
+must stay quit.
+
+`fastframe-tray` comes from our fork (`orochibraru/fastframe`, pinned by rev in
+`desktop/Cargo.toml`'s `[patch]`) for `Tray::set_status`, the menu-bar
+percentage. Drop the patch once `crmne/fastframe` releases it; until then a
+fastframe bump must move the fork too.
+
+The app's update check (`desktop/src/update.rs`) reads GitHub's releases list
+and counts a release only once it carries this platform's asset: the desktop
+builds land minutes after the release itself. It treats the unstamped `0.1.0` as
+a source build and never checks. The formula names and the brew-service plist
+names in `login.rs` must follow the tap's.
+
+**Install and restart** swaps the binary by `rename` (Windows moves the running
+`.exe` aside to `.old` first: it cannot be overwritten), staged in a dot-folder
+beside it so the rename stays on one filesystem, and verified against the
+release's `.sha256`. The new process starts with `--updated` and waits for the
+old one's instance lock (`claim_when_free`); a plain `claim` would knock on the
+quitting instance and exit. Homebrew installs are refused: replacing a Cellar
+binary under brew's feet breaks `brew upgrade`.
 
 ### TypeScript is held at 6 on purpose
 
@@ -1994,7 +2025,15 @@ folder may be called `drives`.
 - The client syncs several folder pairs against `/dav`; a pair nested in
   another, on either side, is excluded from the outer one by an rclone filters
   file, and the filter lines are part of its resync key, because bisync refuses
-  a changed filter without `--resync`.
+  a changed filter without `--resync`. A pair's own exclusions (`Pair::ignored`)
+  join those lines through `filters::rule`, which refuses what rclone would read
+  as a comment or a rule, and a bare `!`, which clears every rule.
+- **Another instance's internals are dropped**, at any depth: `.versions`,
+  `.thumbnails` and `.tmp` (`APP_DIRS`), accepted and never stored, like OS
+  litter. A folder Syncthing mirrored off a simple-mode instance carries them,
+  and syncing it elsewhere uploaded thousands of version files as ordinary ones.
+  The desktop client filters the same three. Only those names: dropping every
+  dot-name would silently lose a `.gitignore`.
 - LOCK is a fake and PROPPATCH stores nothing: Finder mounts read-only and
   Explorer fails every copy without them.
 - `generalHandler` logs a DAV path as its base only (the rest is file names),

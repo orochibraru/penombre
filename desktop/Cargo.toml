@@ -26,6 +26,7 @@ reqwest = { version = "0.12", default-features = false, features = ["blocking", 
 rfd = "0.17"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.11"
 
 # macOS shows nothing from an unbundled binary through it; osascript does.
 [target.'cfg(not(target_os = "macos"))'.dependencies]
@@ -46,3 +47,8 @@ zbus-secret-service-keyring-store = { version = "1.0.1", features = ["rt-async-i
 [dev-dependencies]
 egui_kittest = { version = "0.36", features = ["wgpu"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
+
+# `Tray::set_status` (the menu-bar percentage), on our fork until upstream has
+# it. Drop this once crmne/fastframe tags a release with it.
+[patch."https://github.com/crmne/fastframe"]
+fastframe-tray = { git = "https://github.com/orochibraru/fastframe", rev = "12fe1e59d5f965f3520d0096eab1ca318170eb5c" }

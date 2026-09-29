@@ -1293,7 +1293,7 @@ dependencies = [
 [[package]]
 name = "fastframe-tray"
 version = "0.1.7"
-source = "git+https://github.com/crmne/fastframe?tag=v0.1.7#9cb28309097ef313ca38570e4d9d53faed92bdd1"
+source = "git+https://github.com/orochibraru/fastframe?rev=12fe1e59d5f965f3520d0096eab1ca318170eb5c#12fe1e59d5f965f3520d0096eab1ca318170eb5c"
 dependencies = [
  "ksni",
  "log",
@@ -3142,6 +3142,7 @@ dependencies = [
  "rfd",
  "serde",
  "serde_json",
+ "sha2",
  "windows-native-keyring-store",
  "zbus-secret-service-keyring-store",
 ]

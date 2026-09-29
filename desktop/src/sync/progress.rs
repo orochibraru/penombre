@@ -14,6 +14,14 @@ pub struct Progress {
     pub transferring: Vec<Transfer>,
 }
 
+impl Progress {
+    /// None until rclone has counted what there is to move.
+    pub fn percent(&self) -> Option<u8> {
+        (self.total_bytes > 0)
+            .then(|| (self.bytes.min(self.total_bytes) * 100 / self.total_bytes) as u8)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Transfer {
     pub name: String,

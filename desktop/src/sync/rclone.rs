@@ -329,6 +329,7 @@ mod tests {
             local: local.into(),
             remote: remote.into(),
             label: String::new(),
+            ignored: Vec::new(),
         }
     }
 

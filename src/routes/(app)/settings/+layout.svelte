@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { CogIcon, HardDriveIcon, PaletteIcon } from "@lucide/svelte";
+	import {
+		CogIcon,
+		HardDriveIcon,
+		MonitorDownIcon,
+		PaletteIcon,
+	} from "@lucide/svelte";
 	import SectionTabs, {
 		type SectionTab,
 	} from "#lib/components/layout/section-tabs.svelte";
@@ -21,6 +26,11 @@
 			title: m.settings_nav_storage(),
 			url: "/settings/storage",
 			icon: HardDriveIcon,
+		},
+		{
+			title: m.settings_nav_desktop(),
+			url: "/settings/desktop",
+			icon: MonitorDownIcon,
 		},
 	];
 

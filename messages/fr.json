@@ -1163,5 +1163,17 @@
 	"device_denied": "Refusé. Cet appareil n'a pas été connecté.",
 	"device_invalid": "Ce code est invalide ou a expiré. Recommencez depuis Penombre Sync.",
 	"device_code_label": "Code",
-	"device_continue": "Continuer"
+	"device_continue": "Continuer",
+	"settings_nav_desktop": "Application de bureau",
+	"title_settings_desktop": "Paramètres - Application de bureau",
+	"desktop_app_description": "Synchronise dans les deux sens des dossiers de votre ordinateur avec Penombre. Ces versions correspondent à celle de ce serveur, {version}.",
+	"desktop_app_download": "Télécharger pour {system}",
+	"desktop_app_other_systems": "Autres systèmes",
+	"desktop_app_all_releases": "Toutes les versions",
+	"desktop_app_guide": "Guide d'installation",
+	"desktop_app_requirements": "Elle nécessite rclone. Les versions ne sont pas signées : le guide explique comment les ouvrir.",
+	"desktop_app_homebrew_description": "Sur macOS et Linux, Homebrew l'installe avec rclone, la met à jour et la lance à l'ouverture de session.",
+	"desktop_app_server_title": "Adresse du serveur",
+	"desktop_app_server_description": "Collez-la dans l'application quand elle demande votre serveur, puis approuvez la connexion dans votre navigateur.",
+	"desktop_app_copy_address": "Copier l'adresse"
 }

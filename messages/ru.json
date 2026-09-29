@@ -1132,5 +1132,17 @@
 	"device_denied": "Отклонено. Устройство не было авторизовано.",
 	"device_invalid": "Код недействителен или истёк. Начните заново в Penombre Sync.",
 	"device_code_label": "Код",
-	"device_continue": "Продолжить"
+	"device_continue": "Продолжить",
+	"settings_nav_desktop": "Приложение для компьютера",
+	"title_settings_desktop": "Настройки - Приложение для компьютера",
+	"desktop_app_description": "Синхронизирует папки на компьютере с Penombre в обе стороны. Эти сборки соответствуют версии этого сервера, {version}.",
+	"desktop_app_download": "Скачать для {system}",
+	"desktop_app_other_systems": "Другие системы",
+	"desktop_app_all_releases": "Все выпуски",
+	"desktop_app_guide": "Руководство по установке",
+	"desktop_app_requirements": "Требуется rclone. Сборки не подписаны: в руководстве описано, как их открыть.",
+	"desktop_app_homebrew_description": "В macOS и Linux Homebrew устанавливает его вместе с rclone, обновляет и запускает при входе в систему.",
+	"desktop_app_server_title": "Адрес сервера",
+	"desktop_app_server_description": "Вставьте его в приложение, когда оно запросит сервер, затем подтвердите вход в браузере.",
+	"desktop_app_copy_address": "Скопировать адрес"
 }

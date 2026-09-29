@@ -849,5 +849,17 @@
 	"device_denied": "거부되었습니다. 해당 기기는 로그인되지 않았습니다.",
 	"device_invalid": "코드가 잘못되었거나 만료되었습니다. Penombre Sync에서 다시 시작하세요.",
 	"device_code_label": "코드",
-	"device_continue": "계속"
+	"device_continue": "계속",
+	"settings_nav_desktop": "데스크톱 앱",
+	"title_settings_desktop": "설정 - 데스크톱 앱",
+	"desktop_app_description": "컴퓨터의 폴더를 Penombre와 양방향으로 동기화합니다. 이 빌드는 이 서버의 버전 {version}에 맞춰져 있습니다.",
+	"desktop_app_download": "{system}용 다운로드",
+	"desktop_app_other_systems": "다른 시스템",
+	"desktop_app_all_releases": "모든 릴리스",
+	"desktop_app_guide": "설치 가이드",
+	"desktop_app_requirements": "rclone이 필요합니다. 빌드에 서명이 없으므로 여는 방법은 가이드를 참고하세요.",
+	"desktop_app_homebrew_description": "macOS와 Linux에서는 Homebrew가 rclone과 함께 설치하고, 최신 상태로 유지하며, 로그인 시 실행합니다.",
+	"desktop_app_server_title": "서버 주소",
+	"desktop_app_server_description": "앱이 서버를 물으면 붙여 넣은 뒤 브라우저에서 로그인을 승인하세요.",
+	"desktop_app_copy_address": "주소 복사"
 }

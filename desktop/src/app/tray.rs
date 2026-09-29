@@ -53,6 +53,17 @@ impl App {
         }
     }
 
+    /// Beside the icon in the menu bar (the tooltip elsewhere): only while
+    /// syncing.
+    pub(super) fn update_tray_status(&mut self, status: Option<String>) {
+        if let Some(tray) = &mut self.tray
+            && status != self.tray_status
+        {
+            tray.set_status(status.clone());
+            self.tray_status = status;
+        }
+    }
+
     pub(super) fn update_tray_label(&mut self, label: String) {
         if let Some(tray) = &mut self.tray
             && label != self.tray_label

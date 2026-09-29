@@ -230,7 +230,7 @@ impl<F: Fn()> Throttled<F> {
     }
 }
 
-fn show(text: &str) {
+pub fn show(text: &str) {
     log::warn!("{text}");
     #[cfg(target_os = "macos")]
     let shown = std::process::Command::new("osascript")
@@ -306,6 +306,7 @@ mod tests {
                     local: root.join("local"),
                     remote: "me".into(),
                     label: "My drive".into(),
+                    ignored: Vec::new(),
                 },
                 excludes: vec![],
                 resynced: true,

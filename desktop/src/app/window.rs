@@ -6,6 +6,7 @@ use fastframe_shell::Held;
 use super::App;
 use crate::sync::{self, Cmd};
 use crate::ui;
+use crate::update;
 
 pub struct Window {
     app: Held<App>,
@@ -88,6 +89,11 @@ impl App {
                 phase,
                 auth_error: self.auth_error.as_deref(),
                 pairs: &pairs,
+                excluding: self.excluding.as_mut().map(|open| ui::Excluding {
+                    index: open.index,
+                    pattern: &mut open.pattern,
+                    error: open.error.as_deref(),
+                }),
                 adding: self.adding.as_mut().map(|add| ui::Adding {
                     local: &add.local,
                     places: add
@@ -113,6 +119,14 @@ impl App {
                 recent: self.recent.make_contiguous(),
                 failures: &self.failures,
                 down: self.down.as_ref(),
+                updates: ui::Updates {
+                    version: update::VERSION,
+                    channel: self.config.channel(),
+                    found: &self.found,
+                    brew: self.brew,
+                    installing: self.installing.is_some(),
+                    install_error: self.install_error.as_deref(),
+                },
                 now: SystemTime::now(),
             },
         );
@@ -139,10 +153,16 @@ impl App {
             Some(ui::Action::ConfirmAdd) => self.confirm_adding(),
             Some(ui::Action::CancelAdd) => self.adding = None,
             Some(ui::Action::Remove(index)) => self.remove_pair(index),
+            Some(ui::Action::ToggleExclusions(index)) => self.toggle_exclusions(index),
+            Some(ui::Action::AddExclusion) => self.add_exclusion(),
+            Some(ui::Action::ExcludeFolder) => self.exclude_folder(),
+            Some(ui::Action::RemoveExclusion(which)) => self.remove_exclusion(which),
             Some(ui::Action::SyncNow) => {
                 let _ = self.sync.send(Cmd::SyncNow);
             }
             Some(ui::Action::Pause(paused)) => self.set_paused(paused),
+            Some(ui::Action::Channel(channel)) => self.set_channel(channel),
+            Some(ui::Action::InstallUpdate) => self.install_update(),
             None => {}
         }
     }

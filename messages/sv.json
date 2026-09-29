@@ -992,5 +992,17 @@
 	"device_denied": "Nekat. Enheten loggades inte in.",
 	"device_invalid": "Koden är ogiltig eller har gått ut. Börja om från Penombre Sync.",
 	"device_code_label": "Kod",
-	"device_continue": "Fortsätt"
+	"device_continue": "Fortsätt",
+	"settings_nav_desktop": "Skrivbordsapp",
+	"title_settings_desktop": "Inställningar - Skrivbordsapp",
+	"desktop_app_description": "Håller mappar på din dator synkade åt båda hållen med Penombre. Dessa byggen matchar serverns version, {version}.",
+	"desktop_app_download": "Ladda ner för {system}",
+	"desktop_app_other_systems": "Andra system",
+	"desktop_app_all_releases": "Alla versioner",
+	"desktop_app_guide": "Installationsguide",
+	"desktop_app_requirements": "Kräver rclone. Byggena är inte signerade: guiden förklarar hur du öppnar dem.",
+	"desktop_app_homebrew_description": "På macOS och Linux installerar Homebrew den med rclone, håller den uppdaterad och startar den vid inloggning.",
+	"desktop_app_server_title": "Serveradress",
+	"desktop_app_server_description": "Klistra in den i appen när den frågar efter din server och godkänn sedan inloggningen i webbläsaren.",
+	"desktop_app_copy_address": "Kopiera adress"
 }

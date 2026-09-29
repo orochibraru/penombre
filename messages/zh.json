@@ -849,5 +849,17 @@
 	"device_denied": "已拒绝。该设备未登录。",
 	"device_invalid": "此代码无效或已过期。请在 Penombre Sync 中重新开始。",
 	"device_code_label": "代码",
-	"device_continue": "继续"
+	"device_continue": "继续",
+	"settings_nav_desktop": "桌面应用",
+	"title_settings_desktop": "设置 - 桌面应用",
+	"desktop_app_description": "让电脑上的文件夹与 Penombre 双向同步。这些版本与此服务器的版本 {version} 对应。",
+	"desktop_app_download": "下载 {system} 版",
+	"desktop_app_other_systems": "其他系统",
+	"desktop_app_all_releases": "所有版本",
+	"desktop_app_guide": "安装指南",
+	"desktop_app_requirements": "需要 rclone。这些版本未签名：打开方法请参阅指南。",
+	"desktop_app_homebrew_description": "在 macOS 和 Linux 上，Homebrew 会连同 rclone 一起安装、保持更新，并在登录时启动。",
+	"desktop_app_server_title": "服务器地址",
+	"desktop_app_server_description": "在应用询问服务器时粘贴此地址，然后在浏览器中批准登录。",
+	"desktop_app_copy_address": "复制地址"
 }

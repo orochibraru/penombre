@@ -20,6 +20,23 @@ pub enum Claim {
 }
 
 pub fn claim(dir: &Path) -> std::io::Result<Claim> {
+    claim_with(dir, true)
+}
+
+/// After an update the old instance is still quitting: wait for its lock
+/// rather than knocking on it and exiting.
+pub fn claim_when_free(dir: &Path, within: Duration) -> std::io::Result<Claim> {
+    let deadline = std::time::Instant::now() + within;
+    while std::time::Instant::now() < deadline {
+        if let Claim::First(instance) = claim_with(dir, false)? {
+            return Ok(Claim::First(instance));
+        }
+        std::thread::sleep(Duration::from_millis(100));
+    }
+    claim(dir)
+}
+
+fn claim_with(dir: &Path, knock: bool) -> std::io::Result<Claim> {
     std::fs::create_dir_all(dir)?;
     let mut file = OpenOptions::new()
         .read(true)
@@ -29,6 +46,7 @@ pub fn claim(dir: &Path) -> std::io::Result<Claim> {
         .open(dir.join("instance.lock"))?;
     match file.try_lock() {
         Ok(()) => {}
+        Err(TryLockError::WouldBlock) if !knock => return Ok(Claim::Second),
         Err(TryLockError::WouldBlock) => {
             let mut port = String::new();
             file.read_to_string(&mut port)?;
@@ -76,6 +94,22 @@ mod tests {
             matches!(claim(&dir), Ok(Claim::First(_)))
         });
         assert!(reclaimed, "the lock outlived the first instance");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_relaunch_waits_for_the_old_instance_instead_of_knocking() {
+        let dir = std::env::temp_dir().join(format!("penombre-relaunch-{}", std::process::id()));
+        let Ok(Claim::First(old)) = claim(&dir) else {
+            panic!("no first claim");
+        };
+        let quitting = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(300));
+            drop(old);
+        });
+        let claimed = claim_when_free(&dir, Duration::from_secs(5)).unwrap();
+        quitting.join().unwrap();
+        assert!(matches!(claimed, Claim::First(_)));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

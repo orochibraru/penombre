@@ -5,13 +5,14 @@ use fastframe_fonts::Weight;
 
 use super::theme::{Icon, Palette, RADIUS};
 use super::widgets::{error_line, primary, secondary};
-use super::{Action, Adding, Phase, View};
+use super::{Action, Adding, Excluding, Phase, View};
 
 pub(super) fn folders(ui: &mut Ui, p: &Palette, view: &mut View<'_>, action: &mut Option<Action>) {
     if view.pairs.is_empty() && view.adding.is_none() {
         ui.label(RichText::new("No folder syncs yet.").color(p.subtle));
     }
-    for (index, pair) in view.pairs.iter().enumerate() {
+    let pairs = view.pairs;
+    for (index, pair) in pairs.iter().enumerate() {
         ui.horizontal(|ui| {
             ui.add(Icon::Folder.image(p.subtle, 18.0));
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
@@ -40,9 +41,27 @@ pub(super) fn folders(ui: &mut Ui, p: &Palette, view: &mut View<'_>, action: &mu
                         )
                         .truncate(),
                     );
+                    let count = pair.ignored.len();
+                    let text = match count {
+                        0 => "Exclude files…".to_owned(),
+                        1 => "1 exclusion".to_owned(),
+                        n => format!("{n} exclusions"),
+                    };
+                    let link = ui
+                        .add(
+                            egui::Label::new(RichText::new(text).small().color(p.primary))
+                                .sense(egui::Sense::click()),
+                        )
+                        .on_hover_cursor(egui::CursorIcon::PointingHand);
+                    if link.clicked() {
+                        *action = Some(Action::ToggleExclusions(index));
+                    }
                 });
             });
         });
+        if let Some(open) = view.excluding.as_mut().filter(|open| open.index == index) {
+            exclusions(ui, p, &pair.ignored, open, action);
+        }
     }
     let signed_in = matches!(view.phase, Phase::SignedIn);
     match &mut view.adding {
@@ -58,6 +77,75 @@ pub(super) fn folders(ui: &mut Ui, p: &Palette, view: &mut View<'_>, action: &mu
             }
         }
     }
+}
+
+fn exclusions(
+    ui: &mut Ui,
+    p: &Palette,
+    ignored: &[String],
+    open: &mut Excluding<'_>,
+    action: &mut Option<Action>,
+) {
+    Frame::new()
+        .fill(p.muted)
+        .corner_radius(CornerRadius::same(RADIUS))
+        .inner_margin(Margin::same(12))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            if ignored.is_empty() {
+                ui.label(RichText::new("Nothing excluded.").color(p.subtle));
+            }
+            for (which, pattern) in ignored.iter().enumerate() {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(pattern).monospace().color(p.text));
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        let remove = ui
+                            .add(
+                                egui::Button::image(Icon::Remove.image(p.subtle, 14.0))
+                                    .frame(false),
+                            )
+                            .on_hover_text("Sync it again");
+                        if remove.clicked() {
+                            *action = Some(Action::RemoveExclusion(which));
+                        }
+                    });
+                });
+            }
+            let field = ui.add(
+                egui::TextEdit::singleline(&mut *open.pattern)
+                    .hint_text("*.bak, node_modules/, /Renders/")
+                    .margin(Margin::symmetric(10, 8))
+                    .desired_width(f32::INFINITY),
+            );
+            if field.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                *action = Some(Action::AddExclusion);
+            }
+            ui.label(
+                RichText::new(
+                    "*.bak: files anywhere · name/: folders anywhere · /name/: from the top. \
+                     Excluded files stay where they are, on both sides.",
+                )
+                .small()
+                .color(p.subtle),
+            );
+            if let Some(error) = open.error {
+                error_line(ui, p, error);
+            }
+            ui.horizontal(|ui| {
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                    let ready = !open.pattern.trim().is_empty();
+                    if primary(ui, p, "Exclude", None, ready, false) {
+                        *action = Some(Action::AddExclusion);
+                    }
+                    if secondary(ui, p, "Pick a folder…", None) {
+                        *action = Some(Action::ExcludeFolder);
+                    }
+                    if secondary(ui, p, "Done", None) {
+                        *action = Some(Action::ToggleExclusions(open.index));
+                    }
+                });
+            });
+        });
 }
 
 fn adding_form(ui: &mut Ui, p: &Palette, adding: &mut Adding<'_>, action: &mut Option<Action>) {

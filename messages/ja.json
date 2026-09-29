@@ -849,5 +849,17 @@
 	"device_denied": "拒否しました。そのデバイスはサインインしていません。",
 	"device_invalid": "このコードは無効か期限切れです。Penombre Sync からやり直してください。",
 	"device_code_label": "コード",
-	"device_continue": "続ける"
+	"device_continue": "続ける",
+	"settings_nav_desktop": "デスクトップアプリ",
+	"title_settings_desktop": "設定 - デスクトップアプリ",
+	"desktop_app_description": "コンピューター上のフォルダーを Penombre と双方向に同期します。これらのビルドはこのサーバーのバージョン {version} に対応しています。",
+	"desktop_app_download": "{system} 版をダウンロード",
+	"desktop_app_other_systems": "その他のシステム",
+	"desktop_app_all_releases": "すべてのリリース",
+	"desktop_app_guide": "インストールガイド",
+	"desktop_app_requirements": "rclone が必要です。ビルドは署名されていません。開き方はガイドを参照してください。",
+	"desktop_app_homebrew_description": "macOS と Linux では、Homebrew が rclone と一緒にインストールし、更新を管理し、ログイン時に起動します。",
+	"desktop_app_server_title": "サーバーのアドレス",
+	"desktop_app_server_description": "アプリがサーバーを尋ねたら貼り付け、ブラウザーでサインインを承認してください。",
+	"desktop_app_copy_address": "アドレスをコピー"
 }

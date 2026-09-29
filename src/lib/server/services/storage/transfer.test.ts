@@ -77,7 +77,7 @@ function setup() {
 		),
 	};
 	const folderOps = {
-		createFolder: mock(async () => ({ id: "f1", name: "f" })),
+		createFolder: mock(async () => ({ id: "f1", name: "f", path: "f" })),
 	};
 	const thumbnails = { warm: mock(async () => {}) };
 	const ops = new TransferOperations(
@@ -127,6 +127,39 @@ describe("TransferOperations.importTree", () => {
 			spec: { context: { root: "/target" } },
 		});
 		expect(thumbnails.warm).toHaveBeenCalledWith("dest/a.txt", "text/plain");
+	});
+
+	test("nests a folder tree by the paths the target gives its folders", async () => {
+		const { ops, fileOps, folderOps } = setup();
+		// A drive or volume names folders on disk: a path is not an id there.
+		folderOps.createFolder.mockImplementation((async (
+			name: string,
+			parent?: string,
+		) => ({
+			id: `id-${name}`,
+			name,
+			path: parent ? `${parent}/${name}` : name,
+		})) as never);
+		const folder = (path: string) =>
+			({ name: path.split("/").pop(), path }) as never;
+
+		await ops.importTree(
+			{
+				type: "folder",
+				root: folder("src/Docs"),
+				folders: [folder("src/Docs/Banque"), folder("src/Docs/Banque/2024")],
+				files: [dbFile({ path: "src/Docs/Banque/2024/a.txt" })],
+			},
+			"dest",
+			"/source",
+		);
+
+		expect(folderOps.createFolder.mock.calls).toEqual([
+			["Docs", "dest"],
+			["Banque", "dest/Docs"],
+			["2024", "dest/Docs/Banque"],
+		] as never);
+		expect(fileOps.importFile.mock.calls[0]?.[1]).toBe("dest/Docs/Banque/2024");
 	});
 
 	test("never enqueues a job when there is nothing to copy", async () => {

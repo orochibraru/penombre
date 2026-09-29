@@ -21,6 +21,7 @@ use crate::places::Place;
 use crate::store::{self, Config, Dirs};
 use crate::sync::{self, Cmd, Control, Down, Failure, Progress, Status, Synced};
 use crate::ui;
+use crate::update::{self, Channel, Found};
 
 pub use login::Login;
 pub use window::Window;
@@ -36,6 +37,13 @@ type LastSync = (SystemTime, Result<(), String>);
 const RECENT: usize = 20;
 /// How long rclone gets to stop on its own after SIGTERM.
 const GRACE: Duration = Duration::from_secs(3);
+
+/// A folder's exclusions, open for editing.
+struct Excluding {
+    index: usize,
+    pattern: String,
+    error: Option<String>,
+}
 
 struct AddState {
     local: PathBuf,
@@ -63,6 +71,7 @@ pub struct App {
     sign_in: Option<SignIn>,
     auth_error: Option<String>,
     adding: Option<AddState>,
+    excluding: Option<Excluding>,
     sync: Sender<Cmd>,
     status: Receiver<Status>,
     control: Arc<Control>,
@@ -73,8 +82,17 @@ pub struct App {
     failures: Vec<Failure>,
     down: Option<Down>,
     last: Option<LastSync>,
+    channel_tx: Sender<Channel>,
+    found_rx: Receiver<(Channel, Found)>,
+    found: Found,
+    /// The Homebrew formula that installed this binary.
+    brew: Option<&'static str>,
+    /// An install under way, and the last one's failure.
+    installing: Option<Receiver<Result<PathBuf, String>>>,
+    install_error: Option<String>,
     tray: Option<Tray>,
     tray_label: String,
+    tray_status: Option<String>,
     waker: Waker,
     show: bool,
     quit: bool,
@@ -118,6 +136,8 @@ impl App {
             }
         });
         let wake = waker.clone();
+        let (channel_tx, found_rx) = update::watch(config.channel(), move || wake.wake());
+        let wake = waker.clone();
         let tray = Tray::spawn(tray::config(), move || wake.wake());
         let mut app = Self {
             dirs,
@@ -139,6 +159,7 @@ impl App {
             sign_in: None,
             auth_error: None,
             adding: None,
+            excluding: None,
             sync: sync_tx,
             status: status_rx,
             control,
@@ -148,8 +169,15 @@ impl App {
             failures: Vec::new(),
             down: None,
             last: None,
+            channel_tx,
+            found_rx,
+            found: Found::Checking,
+            brew: update::installed_formula(),
+            installing: None,
+            install_error: None,
             tray,
             tray_label: String::new(),
+            tray_status: None,
             waker: waker.clone(),
             show: false,
             quit: false,
@@ -227,6 +255,14 @@ impl App {
                 }
             }
         }
+        while let Ok((channel, found)) = self.found_rx.try_recv() {
+            // A check started before the channel changed.
+            if channel == self.config.channel() {
+                self.announce(&found);
+                self.found = found;
+            }
+        }
+        self.poll_install();
         if self.knocked.swap(false, Ordering::Relaxed) {
             self.show = true;
         }
@@ -238,10 +274,16 @@ impl App {
             self.config.paused,
             self.down.is_some(),
             self.running,
+            self.progress.as_ref().and_then(|(_, p)| p.percent()),
             self.last.as_ref(),
             SystemTime::now(),
         );
         self.update_tray_label(label);
+        let status = self.running.then(|| {
+            let percent = self.progress.as_ref().and_then(|(_, p)| p.percent());
+            percent.map_or_else(|| "…".to_owned(), |p| format!("{p}%"))
+        });
+        self.update_tray_status(status);
     }
 }
 

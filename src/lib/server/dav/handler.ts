@@ -105,7 +105,7 @@ async function propfind(
 			'<d:error xmlns:d="DAV:"><d:propfind-finite-depth/></d:error>',
 		);
 	}
-	if (isOsJunk(loc.segments.at(-1))) {
+	if (dropped(loc.segments)) {
 		return status(404);
 	}
 	const entry = await resolve(service, loc.segments);
@@ -132,7 +132,7 @@ async function get(
 	service: DavService,
 	loc: DavLocation,
 ): Promise<Response> {
-	if (isOsJunk(loc.segments.at(-1))) {
+	if (dropped(loc.segments)) {
 		return status(404);
 	}
 	const entry = await resolve(service, loc.segments);
@@ -155,10 +155,16 @@ async function get(
 }
 
 const OS_JUNK = new Set([".DS_Store", "Thumbs.db", "desktop.ini"]);
+/** Another instance's internals, mirrored along with its tree by Syncthing. */
+const APP_DIRS = new Set([".versions", ".thumbnails", ".tmp"]);
 
-/** Finder and Explorer litter every folder they touch. */
-function isOsJunk(name: string | undefined): boolean {
-	return !!name && (OS_JUNK.has(name) || name.startsWith("._"));
+/** Accepted and never stored: Finder and Explorer litter, and app internals. */
+function dropped(segments: string[]): boolean {
+	const name = segments.at(-1);
+	return (
+		(!!name && (OS_JUNK.has(name) || name.startsWith("._"))) ||
+		segments.some((segment) => APP_DIRS.has(segment))
+	);
 }
 
 function split(segments: string[]): [string[], string] {
@@ -187,7 +193,7 @@ async function put(
 	if (!name) {
 		return status(405, { allow: ALLOW });
 	}
-	if (isOsJunk(name)) {
+	if (dropped(loc.segments)) {
 		await request.body?.cancel();
 		return status(201);
 	}
@@ -239,6 +245,9 @@ async function mkcol(
 	const [parentSegments, name] = split(loc.segments);
 	if (!name) {
 		return status(405, { allow: ALLOW });
+	}
+	if (dropped(loc.segments)) {
+		return status(201);
 	}
 	const parent = await resolve(service, parentSegments);
 	if (parent?.type !== "folder") {
@@ -356,7 +365,7 @@ async function remove(
 	if (loc.segments.length === 0) {
 		return status(403);
 	}
-	if (isOsJunk(loc.segments.at(-1))) {
+	if (dropped(loc.segments)) {
 		return status(204);
 	}
 	const entry = await resolve(service, loc.segments);

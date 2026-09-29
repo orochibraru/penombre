@@ -23,6 +23,12 @@ then runs the sync on its own.
   key reaches rclone through its environment only, never a configuration file.
 - **Junk stays local.** `.DS_Store`, `._*`, `Thumbs.db`, `desktop.ini` and
   similar system files are never uploaded.
+- **You choose what stays out.** Under each folder, **Exclude files…** takes a
+  folder picked inside it, or a pattern: `*.bak` for files anywhere,
+  `node_modules/` for folders of that name anywhere, `/Renders/` for one folder
+  at the top. Excluded files are left where they are, on both sides: nothing is
+  deleted, they just stop syncing. Changing the list makes the next sync of that
+  folder a full comparison, which takes longer once.
 - **It shows what is happening.** While a folder syncs, the window shows its
   progress, the files moving and their own progress. Afterwards it lists the
   files synced recently, in which direction, and the files that failed with the
@@ -52,6 +58,15 @@ The **Settings** view, beside **Sync** at the top of the window, holds:
   on macOS, a startup entry on Linux, the registry on Windows). When
   `brew services` already starts the app it says so and stays locked, so two
   copies never run; `brew services stop penombre-sync` hands it back.
+- **Updates.** The version running and its release channel: **Stable** for
+  releases, **Canary** for every merge before it ships (and the stable releases
+  after them). The app checks GitHub every six hours and when the channel
+  changes, and notifies once per new version. **Install and restart** downloads
+  that version for your system, checks it against its published SHA-256,
+  replaces the app in place and relaunches it; the folder holding the app must
+  be writable by you. A Homebrew install is updated by Homebrew instead, and the
+  card shows the `brew` command. It starts on the channel it was released on,
+  and a build from source never checks.
 - **Permissions.** Whether notifications can be shown, whether each synced
   folder can be read, where rclone is, and whether the key can be read from the
   credential store, each with a button to the right system setting when one
@@ -72,12 +87,23 @@ Notifications**. Its notifications are shown by Script Editor; allow those.
   reverse proxy for example (see [Reverse proxy](reverse-proxy.md)), and it
   settles.
 - Folders sync one after another, so a large one delays the next.
+- A folder copied or mirrored off a Penombre server (Syncthing, for example) can
+  hold the server's own `.versions`, `.thumbnails` and `.tmp` folders. They are
+  never synced: they mean nothing to another server. File versions do not carry
+  over between servers.
 
 ## Requirements
 
 - A Penombre server reachable over HTTPS (or plain HTTP on your own network).
 - [rclone](https://rclone.org/install/). The app does not bundle it; Homebrew
   installs it for you.
+
+## Get it from your server
+
+**Settings → Desktop app** in Penombre offers the build that matches the
+server's own version (a canary server offers the canary build), picks your
+system, shows the Homebrew command, and has the server address to paste into the
+app.
 
 ## Install with Homebrew
 
@@ -92,6 +118,16 @@ brew services start penombre-sync
 and it stays quit until the next login; if it crashes it is restarted. Its log
 is `$(brew --prefix)/var/log/penombre-sync.log`. `brew upgrade` brings each new
 stable release.
+
+Canary builds are their own formula, updated on every merge:
+
+```bash
+brew install orochibraru/tap/penombre-sync-canary
+brew services start penombre-sync-canary
+```
+
+The two conflict: uninstall one before installing the other. Switching the
+channel in **Settings** shows the exact command.
 
 ## Download
 

@@ -285,6 +285,24 @@ describe("PUT", () => {
 	});
 });
 
+describe("Penombre's own folders", () => {
+	// A tree mirrored off another instance carries its internals along.
+	test("are accepted and dropped at any depth, never created", async () => {
+		const tree = music();
+		for (const dir of [".versions", ".thumbnails", ".tmp"]) {
+			expect((await dav(tree, "MKCOL", `/dav/me/Music/${dir}`)).status).toBe(
+				201,
+			);
+			expect(
+				(await dav(tree, "PUT", `/dav/me/Music/${dir}/id/v1`, { body: "x" }))
+					.status,
+			).toBe(201);
+			expect((await dav(tree, "PROPFIND", `/dav/me/${dir}`)).status).toBe(404);
+		}
+		expect(tree.calls).toEqual([]);
+	});
+});
+
 describe("MKCOL", () => {
 	test("creates, refuses an existing name, a missing parent and a body", async () => {
 		const tree = music();

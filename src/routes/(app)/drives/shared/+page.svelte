@@ -2,6 +2,8 @@
 	import {
 		EllipsisVerticalIcon,
 		HardDriveIcon,
+		LayoutGridIcon,
+		LayoutListIcon,
 		PlusIcon,
 		UsersIcon,
 	} from "@lucide/svelte";
@@ -19,12 +21,22 @@
 	import { title } from "#lib/store/title.js";
 	import { invalidate } from "$app/navigation";
 	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 
 	const { data } = $props();
 
 	$title = m.drives_title();
 
 	const drives = $derived((data.drives ?? []) as DriveSummary[]);
+	// The file listings' own setting: one switch governs both.
+	const layout = $derived(page.data.preferences?.layout ?? "list");
+
+	async function toggleLayout() {
+		await api.PUT("/api/v1/preferences", {
+			body: { layout: layout === "grid" ? "list" : "grid" },
+		});
+		await invalidate("app:preferences");
+	}
 
 	let createOpen = $state(false);
 	let newName = $state("");
@@ -108,15 +120,30 @@
                 {m.drives_description()}
             </p>
         </div>
-        <Button
-            onclick={() => {
-                newName = "";
-                createOpen = true;
-            }}
-        >
-            <PlusIcon />
-            {m.drive_new()}
-        </Button>
+        <div class="flex gap-2">
+            <Button
+                variant="outline"
+                title={m.layout()}
+                onclick={toggleLayout}
+            >
+                {#if layout === "grid"}
+                    <LayoutGridIcon />
+                    {m.layout_grid()}
+                {:else}
+                    <LayoutListIcon />
+                    {m.layout_list()}
+                {/if}
+            </Button>
+            <Button
+                onclick={() => {
+                    newName = "";
+                    createOpen = true;
+                }}
+            >
+                <PlusIcon />
+                {m.drive_new()}
+            </Button>
+        </div>
     </div>
 
     {#if drives.length === 0}
@@ -131,84 +158,101 @@
                 </p>
             </Card.Content>
         </Card.Root>
-    {:else}
+    {:else if layout === "grid"}
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {#each drives as drive (drive.id)}
                 <Card.Root>
                     <Card.Header>
                         <Card.Title class="flex min-w-0 items-center gap-2">
                             <HardDriveIcon class="text-primary size-4 shrink-0" />
-                            <a
-                                class="truncate hover:underline"
-                                href={resolve("/(app)/drives/[drive]", {
-                                    drive: drive.id,
-                                })}
-                            >
-                                {drive.name}
-                            </a>
+                            {@render link(drive)}
                         </Card.Title>
-                        <Card.Description>
-                            <Badge variant="secondary">
-                                {drive.owner
-                                    ? m.drive_role_owner()
-                                    : roleLabels[drive.role]}
-                            </Badge>
-                        </Card.Description>
-                        <Card.Action>
-                            <DropdownMenu.Root>
-                                <DropdownMenu.Trigger>
-                                    {#snippet child({ props })}
-                                        <Button
-                                            {...props}
-                                            variant="ghost"
-                                            size="icon"
-                                            aria-label={m.menu()}
-                                        >
-                                            <EllipsisVerticalIcon />
-                                        </Button>
-                                    {/snippet}
-                                </DropdownMenu.Trigger>
-                                <DropdownMenu.Content align="end">
-                                    <DropdownMenu.Item
-                                        onclick={() => {
-                                            membersDrive = drive;
-                                            membersOpen = true;
-                                        }}
-                                    >
-                                        <UsersIcon />
-                                        {m.drive_members()}
-                                    </DropdownMenu.Item>
-                                    {#if drive.role === "manager"}
-                                        <DropdownMenu.Item
-                                            onclick={() => {
-                                                renameTarget = drive;
-                                                renameName = drive.name;
-                                                renameOpen = true;
-                                            }}
-                                        >
-                                            {m.drive_rename()}
-                                        </DropdownMenu.Item>
-                                    {/if}
-                                    {#if drive.owner}
-                                        <DropdownMenu.Item
-                                            variant="destructive"
-                                            onclick={() => {
-                                                deleteTarget = drive;
-                                                deleteOpen = true;
-                                            }}
-                                        >
-                                            {m.drive_delete()}
-                                        </DropdownMenu.Item>
-                                    {/if}
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Root>
-                        </Card.Action>
+                        <Card.Description>{@render role(drive)}</Card.Description>
+                        <Card.Action>{@render actions(drive)}</Card.Action>
                     </Card.Header>
                 </Card.Root>
             {/each}
         </div>
+    {:else}
+        <Card.Root class="py-0">
+            <ul class="divide-y">
+                {#each drives as drive (drive.id)}
+                    <li class="flex items-center gap-3 px-4 py-2">
+                        <HardDriveIcon class="text-primary size-4 shrink-0" />
+                        <span class="flex min-w-0 flex-1">{@render link(drive)}</span>
+                        {@render role(drive)}
+                        {@render actions(drive)}
+                    </li>
+                {/each}
+            </ul>
+        </Card.Root>
     {/if}
 </div>
+
+{#snippet link(drive: DriveSummary)}
+    <a
+        class="truncate font-medium hover:underline"
+        href={resolve("/(app)/drives/[drive]", { drive: drive.id })}
+    >
+        {drive.name}
+    </a>
+{/snippet}
+
+{#snippet role(drive: DriveSummary)}
+    <Badge variant="secondary">
+        {drive.owner ? m.drive_role_owner() : roleLabels[drive.role]}
+    </Badge>
+{/snippet}
+
+{#snippet actions(drive: DriveSummary)}
+    <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+            {#snippet child({ props })}
+                <Button
+                    {...props}
+                    variant="ghost"
+                    size="icon"
+                    aria-label={m.menu()}
+                >
+                    <EllipsisVerticalIcon />
+                </Button>
+            {/snippet}
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end">
+                <DropdownMenu.Item
+                    onclick={() => {
+                        membersDrive = drive;
+                        membersOpen = true;
+                    }}
+                >
+                    <UsersIcon />
+                    {m.drive_members()}
+                </DropdownMenu.Item>
+                {#if drive.role === "manager"}
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            renameTarget = drive;
+                            renameName = drive.name;
+                            renameOpen = true;
+                        }}
+                    >
+                        {m.drive_rename()}
+                    </DropdownMenu.Item>
+                {/if}
+                {#if drive.owner}
+                    <DropdownMenu.Item
+                        variant="destructive"
+                        onclick={() => {
+                            deleteTarget = drive;
+                            deleteOpen = true;
+                        }}
+                    >
+                        {m.drive_delete()}
+                    </DropdownMenu.Item>
+                {/if}
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
+{/snippet}
 
 <ResponsiveDialog
     bind:open={createOpen}

@@ -135,12 +135,13 @@ export class TransferOperations {
 			root.name,
 			dest || undefined,
 		);
-		newPathOf.set(root.path, dest ? `${dest}/${created.id}` : created.id);
+		// Its path, never its id: a drive or volume names folders on disk.
+		newPathOf.set(root.path, created.path);
 		for (const folder of descendants) {
 			const parent = newPathOf.get(parentOf(folder.path));
 			if (parent !== undefined) {
 				const child = await this.folderOps.createFolder(folder.name, parent);
-				newPathOf.set(folder.path, `${parent}/${child.id}`);
+				newPathOf.set(folder.path, child.path);
 			}
 		}
 		return newPathOf;

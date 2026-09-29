@@ -10,12 +10,12 @@ use std::time::SystemTime;
 
 use crate::store::Pair;
 
-pub use filters::excludes;
+pub use filters::{excludes, rule};
 pub use progress::{Change, Progress};
 pub use rclone::{Control, find_rclone};
 pub use reach::Down;
 pub use retries::Failure;
-pub use worker::{host, worker};
+pub use worker::{host, show, worker};
 
 #[derive(Clone)]
 pub struct Target {
