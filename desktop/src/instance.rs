@@ -69,7 +69,13 @@ mod tests {
         });
         assert!(knocked, "the second one knocked");
         drop(first);
-        assert!(matches!(claim(&dir), Ok(Claim::First(_))));
+        // A child forked by a parallel test keeps the lock's file description
+        // until it execs, so the release can lag by a moment.
+        let reclaimed = (0..100).any(|_| {
+            std::thread::sleep(Duration::from_millis(20));
+            matches!(claim(&dir), Ok(Claim::First(_)))
+        });
+        assert!(reclaimed, "the lock outlived the first instance");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

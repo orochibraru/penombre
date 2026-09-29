@@ -12,6 +12,9 @@ This is an MVP: it proves the idea, it is not packaged.
 - Rust 1.98 or newer.
 - [rclone](https://rclone.org/install/) on `PATH`. The app does not bundle it.
 
+`mise install` at the repository root installs both, at the versions the project
+pins.
+
 ## Run
 
 ```bash

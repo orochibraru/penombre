@@ -69,14 +69,12 @@ jobs:
     if: needs.changes.outputs.build == 'true'
     uses: ./.github/workflows/code_quality.yaml
 
+  # Formatting runs with every other pre-commit hook in Code Quality.
   desktop:
-    name: Desktop (fmt, clippy, tests)
+    name: Desktop (clippy, tests)
     needs: [changes]
     if: needs.changes.outputs.desktop == 'true'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: desktop
     env:
       CARGO_TERM_COLOR: never
     steps:
@@ -86,7 +84,7 @@ jobs:
 
       - name: Install the Rust toolchain
         run: |
-          toolchain="$(sed -n 's/^rust-version = "\([^"]*\)".*/\1/p' Cargo.toml)"
+          toolchain="$(sed -n 's/^rust-version = "\([^"]*\)".*/\1/p' desktop/Cargo.toml)"
           rustup toolchain install "$toolchain" --profile minimal --component rustfmt,clippy
           rustup default "$toolchain"
 
@@ -94,14 +92,25 @@ jobs:
         with:
           workspaces: desktop
 
-      - name: Format
-        run: cargo fmt --check
+      - name: Setup bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
 
-      - name: Clippy
-        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Tests
-        run: cargo test --locked
+      - name: Resolve prek version
+        id: prek
+        run: echo "version=$(jq -r .version node_modules/@j178/prek/package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Clippy and tests
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          prek-version: ${{ steps.prek.outputs.version }}
+          extra-args: --all-files --hook-stage pre-push clippy test-rust
 
   build-app:
     name: Docker Build (App)

@@ -67,10 +67,14 @@ impl Control {
     fn terminate(&self) -> Option<u32> {
         let mut slot = self.slot();
         let child = slot.as_mut()?;
+        // A signal, not the `kill` program: minimal systems do not ship it.
         #[cfg(unix)]
-        let _ = Command::new("kill")
-            .args(["-TERM", &child.id().to_string()])
-            .status();
+        if let Ok(pid) = libc::pid_t::try_from(child.id()) {
+            // SAFETY: plain kill(2) on a child still held in the slot, so not reaped.
+            unsafe {
+                libc::kill(pid, libc::SIGTERM);
+            }
+        }
         #[cfg(not(unix))]
         let _ = child.kill();
         Some(child.id())

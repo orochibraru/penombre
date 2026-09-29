@@ -19,7 +19,10 @@ ffmpeg/ffprobe/pdftoppm. Those versions live in four places that must agree:
 `mise.toml`, `package.json`'s `packageManager` (CI's `setup-bun` reads it),
 `go.mod` (CI's `setup-go` reads it) and the Dockerfile's `FROM` lines. The
 golang image sets `GOTOOLCHAIN=local`, so a `go.mod` newer than its `FROM` fails
-the image build instead of downloading a toolchain.
+the image build instead of downloading a toolchain. It also pins Rust and rclone
+for the desktop app; Rust must match `desktop/Cargo.toml`'s `rust-version`,
+which is what CI and the release builds install. CI does not use mise: its jobs
+install their own toolchains.
 
 ```bash
 bun run dev              # Vite dev server (SQLite by default, no services needed)
@@ -95,10 +98,16 @@ SKIP=test-unit git push ...                 # skip one hook
 `--all-files` means tracked files: a new file is not linted until it is staged,
 so `git add -N` it before trusting a green `bun run lint`.
 
-A linter's command lives in `.pre-commit-config.yaml` and nowhere else: there
-are no per-linter scripts, and `bun run lint` is just `prek run --all-files`.
-Where a script already exists (`check`, `circular`, `test:go`), the hook calls
-it instead of repeating its command.
+**Rule: every linter, formatter, type check and test suite is a prek hook, and
+runs only through prek, locally and in CI.** Its command lives in
+`.pre-commit-config.yaml` and nowhere else: there are no per-linter scripts,
+`bun run lint` is just `prek run --all-files`, and CI calls hooks by id
+(`prek run --all-files --hook-stage pre-push check circular`), never the tool
+itself. A new tool gets a hook first; a workflow step running `cargo clippy` or
+`bun run check` directly is a second source of truth and a bug. Where a script
+already exists (`check`, `circular`, `test:go`), the hook calls it instead of
+repeating its command. The desktop app's hooks (`format-rust`, `clippy`,
+`test-rust`) `cd desktop` first: it is its own Cargo project.
 
 ## Architecture
 
@@ -1549,9 +1558,12 @@ native binary in its postinstall. Bun skips install scripts for packages not in
 
 ### Type checks run on push, not commit
 
-`bun run check` and `bun test` are `pre-push` hooks, so a commit stays fast.
-CI's prek step runs only the pre-commit stage, which is why `code_quality.yaml`
-runs `bun run check` and the "Codegen is current" step itself.
+`check`, `circular`, the test suites and `clippy` are `pre-push` hooks, so a
+commit stays fast. A bare `prek run` is the pre-commit stage only, so CI runs
+the pre-push hooks it needs as a second prek call with `--hook-stage pre-push`
+and their ids: `check circular` in Code Quality, `test-unit test-go` in the test
+job, `clippy test-rust` in the desktop job. Formatting Rust is pre-commit, so it
+rides along with every other formatter in Code Quality.
 
 ### Never cache a missing shared owner
 

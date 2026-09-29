@@ -125,6 +125,29 @@ repos:
         stages: [pre-push]
         files: (\.go$|^go\.(mod|sum)$)
 
+      - id: format-rust
+        name: Formatting (Rust)
+        entry: sh -c 'cd desktop && cargo fmt'
+        language: system
+        pass_filenames: false
+        files: ^desktop/.*\.rs$
+
+      - id: clippy
+        name: Linting (Rust)
+        entry: sh -c 'cd desktop && cargo clippy --all-targets --locked -- -D warnings'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: ^desktop/
+
+      - id: test-rust
+        name: Tests (Rust)
+        entry: sh -c 'cd desktop && cargo test --locked'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: ^desktop/
+
       - id: i18n
         name: Locale parity
         entry: bun scripts/check-i18n.ts
