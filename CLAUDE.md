@@ -1561,6 +1561,11 @@ the sign-in page, which reads like a broken session rather than a missing line.
 The `setup` project still runs (its job is writing that file), so the failure
 looks unrelated to authentication.
 
+The reverse bites too: `playwright.request.newContext()` inside a test inherits
+that `storageState`, so a context meant to be anonymous carries the session.
+`webdav.spec.ts` asserted a 401 and got 207 until it passed
+`storageState: { cookies: [], origins: [] }`.
+
 ### ProseKit: core only, and browser only
 
 `document-editor.svelte` uses `prosekit/core` + `prosekit/basic` and nothing

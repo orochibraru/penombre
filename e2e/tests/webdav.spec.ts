@@ -15,8 +15,12 @@ test("an API key reaches the drive over WebDAV", async ({
 	expect(created.ok()).toBeTruthy();
 	const { key } = (await created.json()) as { key: string };
 
-	// No cookies: Basic must carry this on its own.
-	const dav = await playwright.request.newContext({ baseURL });
+	// Explicitly empty: a context made here inherits the test's storageState,
+	// and its session cookie answered for Basic.
+	const dav = await playwright.request.newContext({
+		baseURL,
+		storageState: { cookies: [], origins: [] },
+	});
 	const auth = {
 		authorization: `Basic ${Buffer.from(`e2e:${key}`).toString("base64")}`,
 	};
