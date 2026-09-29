@@ -43,6 +43,7 @@ import { resolve } from "$app/paths";
 import { page } from "$app/state";
 import { clickDownload, peaksUrl, rawUrl, withLocation } from "./file-links";
 import { fileHistoryActions } from "./version-actions";
+import { editAsText } from "./wrapper-edit";
 import { mergeVersionsAction } from "./wrapper-merge";
 import { isShortcut, toggleShortcut } from "./wrapper-shortcut";
 
@@ -290,6 +291,7 @@ export function createMainActions(handlers: {
 					action: handlers.onOpenFullscreen,
 					fileOnly: true,
 				},
+				editAsText,
 				{
 					title: "Notes",
 					icon: MessageSquareTextIcon,

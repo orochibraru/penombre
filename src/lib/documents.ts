@@ -102,15 +102,27 @@ export function documentColor(name: string): string | null {
 }
 
 /** Create an empty document, returning its file id. */
-export async function createDocument(
+export function createDocument(
 	kind: DocumentKind,
 	title: string,
 	folder?: string,
 ): Promise<string | null> {
 	const spec = DOCUMENT_KINDS[kind];
-	const filename = `${title}.${spec.extension}`;
-	const content = spec.initial(title);
+	return createTextFile(
+		`${title}.${spec.extension}`,
+		spec.initial(title),
+		spec.contentType,
+		folder,
+	);
+}
 
+/** Create a file holding `content`, returning its id. */
+export async function createTextFile(
+	filename: string,
+	content: string,
+	contentType = "text/plain",
+	folder?: string,
+): Promise<string | null> {
 	const created = await api.POST("/api/v1/storage/file", {
 		params: { query: folder ? { folder } : {} },
 		body: { name: filename, size: new Blob([content]).size },
@@ -120,8 +132,9 @@ export async function createDocument(
 		return null;
 	}
 
+	// Uploaded even when empty: the editor opens bytes, not a row.
 	const form = new FormData();
-	form.set("file", new File([content], filename, { type: spec.contentType }));
+	form.set("file", new File([content], filename, { type: contentType }));
 	const uploaded = await api.POST("/api/v1/storage/file/{id}/upload", {
 		params: { path: { id } },
 		body: form as never,

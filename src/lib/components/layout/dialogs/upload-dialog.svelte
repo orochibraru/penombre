@@ -366,7 +366,7 @@
     {/if}
 
     <div class={cn("flex flex-col gap-3", totalFileCount > 0 && "mb-5")}>
-        {#each files as file, i (file.name)}
+        {#each files as file, i}
             {@render entry(file.name, file.size, () => removeFile(i), false)}
         {/each}
         {#each folderFiles as file, i (`folder-${file.relativePath}`)}

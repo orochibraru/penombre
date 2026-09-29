@@ -482,6 +482,19 @@ In production, all authentication endpoints are rate-limited to **100 requests
 per 15 minutes per IP address**. This protects against brute-force attacks. Rate
 limiting is disabled in development mode.
 
+Invalid API keys lock an address out. After **20 invalid keys in 15 minutes**,
+from an `x-api-key` or `Bearer` header or a WebDAV password, every request
+carrying a key from that address answers `429` for the next 15 minutes, without
+the key being checked. Each attempt is logged with its address, and the lockout
+once, so a `fail2ban` filter on `Locked out` can ban the address at the
+firewall. A sync client left running with a revoked key locks its own address
+out the same way; replace the key and it recovers on its own.
+
+This keys on the client address, so behind a reverse proxy set `ADDRESS_HEADER`
+(see [Reverse proxy](reverse-proxy.md)). Without it every request arrives from
+the proxy's address, and one client sending bad keys locks out every API and
+WebDAV client at once.
+
 ## No authentication at all
 
 [Simple mode](simple-mode.md) can run with authentication switched off entirely

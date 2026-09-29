@@ -12,6 +12,7 @@
 	import DocumentEditor from "#lib/components/editor/document-editor.svelte";
 	import SheetEditor from "#lib/components/editor/sheet-editor.svelte";
 	import { Button } from "#lib/components/ui/button/index.js";
+	import { Textarea } from "#lib/components/ui/textarea/index.js";
 	import {
 		baseName,
 		editorKindForName,
@@ -230,6 +231,11 @@
     {:else if kind === "presentation"}
         <DeckEditor content={data.content} onChange={queue} />
     {:else}
-        <p class="text-muted-foreground text-sm">{m.editor_unsupported()}</p>
+        <Textarea
+            value={data.content}
+            oninput={(event) => queue(event.currentTarget.value)}
+            spellcheck="false"
+            class="min-h-0 flex-1 resize-none font-mono text-sm"
+        />
     {/if}
 </div>

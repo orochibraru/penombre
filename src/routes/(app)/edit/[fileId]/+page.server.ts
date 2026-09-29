@@ -55,12 +55,15 @@ export const load = async ({ params, url, locals }) => {
 		}
 	}
 
+	// Saving a binary decoded as text would destroy it.
+	if (new Uint8Array(raw.buffer.slice(0, 8192)).includes(0)) {
+		return error(422, "That file is not text.");
+	}
+
 	return {
 		fileId: params.fileId,
 		name,
 		contentType: raw.meta.metadata.contentType ?? "text/plain",
-		// Text by definition: only the three native kinds reach here, and
-		// each of them stores a text format.
 		content: new TextDecoder().decode(raw.buffer),
 		office: false as const,
 	};

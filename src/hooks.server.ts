@@ -25,6 +25,7 @@ import {
 import { DAV_PREFIX, parseDavPath } from "#lib/server/dav/location.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb, resetDb } from "#lib/server/db/index.js";
+import { isLockedOut, recordFailure } from "#lib/server/rate-limit.js";
 import { startDurationSweeper } from "#lib/server/services/duration-sweep.js";
 import {
 	assertEncryptionKey,
@@ -306,6 +307,9 @@ async function resolveStorageOwner(sessionUser: User): Promise<User> {
 	return sharedOwner ?? sessionUser;
 }
 
+/** Invalid keys one address may try before it is refused outright. */
+const KEY_FAILURES = { max: 20, windowSeconds: 15 * 60 };
+
 /** The key's user, or null for an invalid key. */
 async function keyUser(rawKey: string): Promise<User | null> {
 	const result = await auth.api
@@ -340,6 +344,18 @@ async function apiKeyAuth(
 		return;
 	}
 
+	// Refused before the lookup: a locked-out address costs no query. Keyed on
+	// the client address, so behind a proxy this needs ADDRESS_HEADER or one
+	// bad client locks out every key holder.
+	const address = event.getClientAddress();
+	const failures = `api-key-fail:${address}`;
+	if (await isLockedOut(failures, KEY_FAILURES.max)) {
+		return new Response(JSON.stringify({ error: "Too many failed attempts" }), {
+			status: 429,
+			headers: { "retry-after": String(KEY_FAILURES.windowSeconds) },
+		});
+	}
+
 	const sessionUser = dav
 		? await cachedKeyUser(rawKey, keyUser)
 		: await keyUser(rawKey);
@@ -347,9 +363,16 @@ async function apiKeyAuth(
 	if (!sessionUser) {
 		// Never the raw key: a typo or a revoked key is still a live credential
 		// for as long as the log file exists.
+		const count = await recordFailure(failures, KEY_FAILURES.windowSeconds);
 		logger.warn("Invalid API key authentication attempt", {
+			address,
 			keyPrefix: keyHint(rawKey, !headerKey),
 		});
+		if (count === KEY_FAILURES.max) {
+			logger.warn(
+				`Locked out ${address} after ${count} invalid API keys, for ${KEY_FAILURES.windowSeconds / 60} minutes`,
+			);
+		}
 		return new Response(JSON.stringify({ error: "Unauthorized" }), {
 			status: 401,
 			headers: dav ? DAV_CHALLENGE : undefined,

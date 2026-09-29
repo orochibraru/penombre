@@ -5,6 +5,7 @@
 		CodeIcon,
 		EllipsisIcon,
 		FileArchiveIcon,
+		FileCodeIcon,
 		FileIcon,
 		FileTextIcon,
 		FolderIcon,
@@ -29,7 +30,9 @@
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { withLocation } from "#lib/components/file/file-links.js";
 	import NewFolderDialog from "#lib/components/layout/dialogs/new-folder-dialog.svelte";
+	import NewTextFileDialog from "#lib/components/layout/dialogs/new-text-file-dialog.svelte";
 	import UploadDialog from "#lib/components/layout/dialogs/upload-dialog.svelte";
 	import SiteHeader from "#lib/components/layout/header.svelte";
 	import MusicPlayer from "#lib/components/layout/music-player.svelte";
@@ -146,6 +149,7 @@
 
 	let creatingDocument = $state(false);
 	let newMenuOpen = $state(false);
+	let newTextFileOpen = $state(false);
 
 	async function newDocument(kind: DocumentKind) {
 		const entry = newDocumentKinds.find((item) => item.kind === kind);
@@ -164,7 +168,7 @@
 			toast.error(m.new_document_error());
 			return;
 		}
-		await goto(resolve("/(app)/edit/[fileId]", { fileId: id }));
+		await goto(withLocation(resolve("/(app)/edit/[fileId]", { fileId: id })));
 	}
 	let mobileMenuDrawerOpen: boolean = $state(false);
 	let mobileNewDrawerOpen: boolean = $state(false);
@@ -538,6 +542,10 @@
                                         {entry.label}
                                     </DropdownMenu.Item>
 								{/each}
+								<DropdownMenu.Item
+									class="font-medium"
+									onclick={() => newTextFileOpen = true}
+								><FileCodeIcon />{m.new_text_file()}</DropdownMenu.Item>
 							</DropdownMenu.Group>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
@@ -648,6 +656,7 @@
 <Onboarding bind:open={onboardingOpen} preferences={data.preferences} />
 
 <NewFolderDialog bind:open={$newFolderDialogOpen} />
+<NewTextFileDialog bind:open={newTextFileOpen} />
 <UploadDialog bind:open={$uploadDialogOpen} bind:loading={uploadLoading} />
 <UploadProgressIndicator />
 
@@ -735,6 +744,15 @@
 									{entry.label}
 								</Button>
 							{/each}
+							<Button
+								class="w-full justify-start"
+								variant="outline"
+								size="lg"
+								onclick={() => fromMobileNew(() => newTextFileOpen = true)}
+							>
+								<FileCodeIcon class="w-5! h-5!" />
+								{m.new_text_file()}
+							</Button>
 						</div>
 					</Drawer.Content>
 				</Drawer.NestedRoot>

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { closeRedis } from "./cache/index.js";
-import { isRateLimited } from "./rate-limit";
+import { isLockedOut, isRateLimited, recordFailure } from "./rate-limit";
 
 describe("isRateLimited", () => {
 	test("allows up to the max, then refuses", async () => {
@@ -28,5 +28,16 @@ describe("isRateLimited", () => {
 		expect(await isRateLimited(key, { max: 2, windowSeconds: 60 })).toBe(false);
 		await closeRedis();
 		expect(await isRateLimited(key, { max: 2, windowSeconds: 60 })).toBe(false);
+	});
+});
+
+describe("lockout", () => {
+	test("locks once failures reach the max, never before", async () => {
+		const key = `test:${crypto.randomUUID()}`;
+		expect(await isLockedOut(key, 2)).toBe(false);
+		expect(await recordFailure(key, 60)).toBe(1);
+		expect(await isLockedOut(key, 2)).toBe(false);
+		expect(await recordFailure(key, 60)).toBe(2);
+		expect(await isLockedOut(key, 2)).toBe(true);
 	});
 });

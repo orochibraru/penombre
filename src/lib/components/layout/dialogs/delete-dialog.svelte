@@ -29,15 +29,13 @@
 		trashTotals,
 	}: Props = $props();
 
-	const selectedKeys = $derived(
-		Object.entries(checkedItems)
-			.filter(([, name]) => !!name)
-			.map(([key]) => key),
+	const selected = $derived(
+		Object.entries(checkedItems).filter(
+			(entry): entry is [string, string] => !!entry[1],
+		),
 	);
 
-	const itemNames = $derived(
-		Object.values(checkedItems).filter((name): name is string => !!name),
-	);
+	const selectedKeys = $derived(selected.map(([key]) => key));
 
 	const isTrash = $derived(isTrashListing(page.url.pathname));
 
@@ -55,7 +53,7 @@
 	);
 
 	const itemCount = $derived(
-		emptyingTrash && trashTotals ? trashTotals.count : itemNames.length,
+		emptyingTrash && trashTotals ? trashTotals.count : selected.length,
 	);
 
 	/** Only a permanent delete actually frees disk; trashing just moves it. */
@@ -111,7 +109,8 @@
             <ul
                 class="divide-border max-h-40 divide-y overflow-y-auto rounded-[calc(var(--radius)-2px)] border"
             >
-                {#each itemNames as name (name)}
+                <!-- Keyed by item: names repeat across folders. -->
+                {#each selected as [key, name] (key)}
                     <li class="truncate px-3 py-1.5 text-xs" title={name}>
                         {name}
                     </li>

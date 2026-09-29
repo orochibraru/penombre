@@ -1283,7 +1283,10 @@ trash, sharing, search and thumbnails for free. Adding a kind means adding it to
 `DOCUMENT_KINDS`, `kindForName` and the editor route's branch.
 
 `handleOpenItem` routes an editable file to `/edit/[fileId]` before anything
-else, so extensions handled there never reach the preview dialog.
+else, so extensions handled there never reach the preview dialog. Any other file
+reaching `/edit` (the **Edit** context action, `wrapper-edit.ts`) gets the plain
+textarea; the load refuses one with a NUL byte in its first 8 KiB, since saving
+a binary back as text destroys it.
 
 ### Office files are edited in place, not imported
 

@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { LoaderCircleIcon } from "@lucide/svelte";
+	import {
+		ArrowRightIcon,
+		FingerprintPatternIcon,
+		KeyRoundIcon,
+		LoaderCircleIcon,
+		LogInIcon,
+		MailIcon,
+		RectangleEllipsisIcon,
+	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { authClient } from "#lib/auth-client.js";
@@ -460,6 +468,7 @@
                     <Field.Field>
                         <Button class="w-full" type="submit" {loading}>
                             {m.continue()}
+                            <ArrowRightIcon />
                         </Button>
                     </Field.Field>
                 {/if}
@@ -485,6 +494,7 @@
                 </Field.Field>
                 <Field.Field class={showPassword ? "" : "hidden"}>
                     <Button class="w-full" type="submit" {loading}>
+                        <LogInIcon />
                         {m.sign_in()}
                     </Button>
                 </Field.Field>
@@ -509,6 +519,7 @@
                     </Field.Field>
                     <Field.Field>
                         <Button class="w-full" type="submit" {loading}>
+                            <LogInIcon />
                             {m.sign_in()}
                         </Button>
                     </Field.Field>
@@ -524,6 +535,7 @@
                                 {loading}
                                 onclick={handleMagicLink}
                             >
+                                <MailIcon />
                                 {m.sign_in_email_link()}
                             </Button>
                         {/if}
@@ -535,6 +547,7 @@
                                 {loading}
                                 onclick={handleSendOtp}
                             >
+                                <RectangleEllipsisIcon />
                                 {m.sign_in_email_code()}
                             </Button>
                         {/if}
@@ -548,6 +561,7 @@
                         {loading}
                         onclick={requestPasswordLink}
                     >
+                        <KeyRoundIcon />
                         {m.sign_in_set_password()}
                     </Button>
                 {/if}
@@ -580,6 +594,7 @@
                             {loading}
                             onclick={() => void handleOauthSignin(provider.name)}
                         >
+                            <LogInIcon />
                             {#if !data.authConfig.enableEmailSignIn}
                                 {m.continue_with()}
                             {/if}
@@ -595,6 +610,7 @@
                     {loading}
                     onclick={handlePasskeySignIn}
                 >
+                    <FingerprintPatternIcon />
                     {m.sign_in_with_passkey()}
                 </Button>
             {/if}

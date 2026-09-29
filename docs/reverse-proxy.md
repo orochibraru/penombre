@@ -35,7 +35,7 @@ reads the real client address instead.
 This is not cosmetic. The client address is what per-IP rate limiting keys on,
 sign-in lookups, share-link unlock attempts, so without it every request behind
 the proxy shares one bucket, and thirty attempts from anywhere lock out every
-visitor at once.
+visitor at once. The invalid API key lockout keys on it too.
 
 Only set `ADDRESS_HEADER` when every request actually goes through a proxy you
 control: a client can set `X-Forwarded-For` itself, and a value trusted with no

@@ -55,3 +55,24 @@ export async function isRateLimited(
 	await cache.set(key, count + 1, options.windowSeconds);
 	return false;
 }
+
+/**
+ * A lockout: failures are counted with `recordFailure`, and `isLockedOut`
+ * holds once they reach `max`. Unlike `isRateLimited`, successes cost nothing,
+ * and a refused request is not counted, so the lock lifts `windowSeconds`
+ * after the last failure.
+ */
+export async function isLockedOut(key: string, max: number): Promise<boolean> {
+	return ((await store().get<number>(key)) ?? 0) >= max;
+}
+
+/** Counts one failure against `key`; returns the new total. */
+export async function recordFailure(
+	key: string,
+	windowSeconds: number,
+): Promise<number> {
+	const cache = store();
+	const count = ((await cache.get<number>(key)) ?? 0) + 1;
+	await cache.set(key, count, windowSeconds);
+	return count;
+}

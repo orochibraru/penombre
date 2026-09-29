@@ -118,6 +118,18 @@ anything else.
 
 A new document is created in the folder you are browsing, not at the root.
 
+## Plain text files
+
+**New → Text file** asks for a name and opens an empty file in a plain text
+editor, for configuration files and the like: name it with its extension
+(`nginx.conf`, `.env`, `notes.txt`). It saves the same way as the other editors.
+
+Existing text files keep opening in the read-only preview. **Edit** in a file's
+right-click menu opens it in the text editor; it is offered for code and
+configuration files, `.txt` and `.log`, and files with no extension. A file that
+turns out to hold binary data is refused rather than opened, since saving it
+back as text would destroy it.
+
 ## The name follows the title
 
 A document's file name tracks its own heading: retitle the `<h1>` of a document
