@@ -19,7 +19,7 @@ use crate::auth::AuthEvent;
 use crate::instance::Instance;
 use crate::places::Place;
 use crate::store::{self, Config, Dirs};
-use crate::sync::{self, Cmd, Control, Failure, Progress, Status, Synced};
+use crate::sync::{self, Cmd, Control, Down, Failure, Progress, Status, Synced};
 use crate::ui;
 
 pub use login::Login;
@@ -71,6 +71,7 @@ pub struct App {
     progress: Option<(String, Progress)>,
     recent: VecDeque<Synced>,
     failures: Vec<Failure>,
+    down: Option<Down>,
     last: Option<LastSync>,
     tray: Option<Tray>,
     tray_label: String,
@@ -145,6 +146,7 @@ impl App {
             progress: None,
             recent: VecDeque::new(),
             failures: Vec::new(),
+            down: None,
             last: None,
             tray,
             tray_label: String::new(),
@@ -185,6 +187,7 @@ impl App {
     fn tick(&mut self) {
         while let Ok(status) = self.status.try_recv() {
             match status {
+                Status::Reach(down) => self.down = down,
                 Status::Started => {
                     self.running = true;
                     self.progress = None;
@@ -233,6 +236,7 @@ impl App {
         let label = status::status_line(
             self.key.is_some(),
             self.config.paused,
+            self.down.is_some(),
             self.running,
             self.last.as_ref(),
             SystemTime::now(),

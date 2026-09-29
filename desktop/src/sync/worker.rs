@@ -8,6 +8,7 @@ use notify::Watcher;
 
 use super::progress::Line;
 use super::rclone::{Control, bisync};
+use super::reach::{self, Outage};
 use super::retries::{Failure, Retries, notice};
 use super::schedule::{PERIOD, Schedule};
 use super::{Cmd, Status, Synced, Target};
@@ -27,6 +28,7 @@ pub fn worker(
     let mut _watchers: Vec<notify::RecommendedWatcher> = Vec::new();
     let mut schedule = Schedule::new(Instant::now());
     let mut retries = Retries::default();
+    let mut outage = Outage::default();
     let mut wake = Throttled { wake, last: None };
     loop {
         let timeout = schedule.next().saturating_duration_since(Instant::now());
@@ -63,10 +65,17 @@ pub fn worker(
         if !schedule.due(Instant::now()) {
             continue;
         }
+        // Without a server every file would fail, count toward a notification
+        // and could send each pair back to a full resync.
+        if !reachable(&current.server, &mut outage, &status, &mut wake) {
+            schedule.unreachable(Instant::now());
+            continue;
+        }
         let _ = status.send(Status::Started);
         wake.now();
         let mut result = Ok(());
         let mut halted = false;
+        let mut lost = false;
         let mut twice = Vec::new();
         for pair in &mut current.pairs {
             if control.halted() {
@@ -110,6 +119,10 @@ pub fn worker(
                 halted = true;
                 break;
             }
+            if outcome.is_err() && !reachable(&current.server, &mut outage, &status, &mut wake) {
+                lost = true;
+                break;
+            }
             if outcome.is_ok() {
                 pair.resynced = true;
             } else if outcome
@@ -143,7 +156,7 @@ pub fn worker(
         let _ = status.send(Status::Failures(retries.failures()));
         let _ = status.send(Status::Finished {
             at: SystemTime::now(),
-            result: (!halted).then_some(result),
+            result: (!halted && !lost).then_some(result),
             resynced: current
                 .pairs
                 .iter()
@@ -154,8 +167,45 @@ pub fn worker(
         if let Some(text) = notice(&twice).filter(|_| !halted) {
             show(&text);
         }
-        schedule.synced(Instant::now(), retries.retry_soon());
+        if lost {
+            schedule.unreachable(Instant::now());
+        } else {
+            schedule.synced(Instant::now(), retries.retry_soon());
+        }
     }
+}
+
+/// Probes the server, tells the window, and notifies once per outage.
+fn reachable<F: Fn()>(
+    server: &str,
+    outage: &mut Outage,
+    status: &Sender<Status>,
+    wake: &mut Throttled<F>,
+) -> bool {
+    let answer = reach::probe(server);
+    let up = answer.is_ok();
+    let change = outage.record(answer, SystemTime::now());
+    if change != reach::Change::Same || !up {
+        let _ = status.send(Status::Reach(outage.down().cloned()));
+        wake.now();
+    }
+    match change {
+        reach::Change::Notify => show(&format!(
+            "Can't reach {} — syncing resumes when it's back.",
+            host(server)
+        )),
+        reach::Change::WentDown => log::warn!("{server} is not answering"),
+        reach::Change::CameBack => log::info!("{server} answers again"),
+        reach::Change::Same => {}
+    }
+    up
+}
+
+pub fn host(server: &str) -> &str {
+    server
+        .trim_start_matches("https://")
+        .trim_start_matches("http://")
+        .trim_end_matches('/')
 }
 
 /// A run can log thousands of files a second; the window redraws a few times.
@@ -223,4 +273,57 @@ fn watch(folder: &Path, tx: Sender<Cmd>) -> Option<notify::RecommendedWatcher> {
         .map_err(|e| log::warn!("cannot watch {}: {e}", folder.display()))
         .ok()?;
     Some(watcher)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::mpsc::channel;
+
+    use super::*;
+    use crate::store::Pair;
+
+    #[test]
+    fn a_server_that_does_not_answer_gets_no_sync_only_a_warning() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let server = format!("http://127.0.0.1:{}", listener.local_addr().unwrap().port());
+        drop(listener);
+        let root = std::env::temp_dir().join(format!("penombre-down-{}", std::process::id()));
+        let dirs = crate::store::Dirs {
+            config: root.join("config"),
+            data: root.join("data"),
+        };
+        let (tx, rx) = channel();
+        let (status_tx, status) = channel();
+        let worker_tx = tx.clone();
+        let handle = std::thread::spawn(move || {
+            worker(rx, worker_tx, status_tx, || {}, dirs, Arc::default())
+        });
+        tx.send(Cmd::Target(Some(Target {
+            server,
+            key: "unused".into(),
+            pairs: vec![super::super::PairTarget {
+                pair: Pair {
+                    local: root.join("local"),
+                    remote: "me".into(),
+                    label: "My drive".into(),
+                },
+                excludes: vec![],
+                resynced: true,
+            }],
+        })))
+        .unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let mut down = false;
+        while Instant::now() < deadline && !down {
+            match status.recv_timeout(Duration::from_millis(200)) {
+                Ok(Status::Reach(Some(_))) => down = true,
+                Ok(Status::Started) => panic!("synced against a server that is not there"),
+                _ => {}
+            }
+        }
+        tx.send(Cmd::Quit).unwrap();
+        handle.join().unwrap();
+        let _ = std::fs::remove_dir_all(&root);
+        assert!(down, "the window was never told");
+    }
 }

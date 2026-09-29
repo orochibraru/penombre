@@ -49,6 +49,12 @@ impl Schedule {
         !self.paused && self.next() <= now
     }
 
+    /// Ask the server again soon; local changes wait for it to answer.
+    pub fn unreachable(&mut self, now: Instant) {
+        self.periodic = now + super::reach::PROBE;
+        self.settle = None;
+    }
+
     pub fn synced(&mut self, now: Instant, retry: bool) {
         self.periodic = now + if retry { RETRY } else { PERIOD };
         self.settle = None;
@@ -77,6 +83,23 @@ mod tests {
         assert_eq!(s.next(), t0 + Duration::from_secs(67) + PERIOD);
         s.sync_now(t0 + Duration::from_secs(70));
         assert!(s.due(t0 + Duration::from_secs(70)));
+    }
+
+    #[test]
+    fn an_unreachable_server_is_asked_again_soon_and_sync_now_asks_at_once() {
+        let t0 = Instant::now();
+        let mut s = Schedule::new(t0);
+        s.changed(t0);
+        s.unreachable(t0);
+        assert_eq!(s.next(), t0 + super::super::reach::PROBE);
+        s.changed(t0 + Duration::from_secs(1));
+        assert!(
+            s.due(t0 + Duration::from_secs(6)),
+            "a local change still asks"
+        );
+        s.unreachable(t0 + Duration::from_secs(6));
+        s.sync_now(t0 + Duration::from_secs(7));
+        assert!(s.due(t0 + Duration::from_secs(7)), "Retry now asks at once");
     }
 
     #[test]

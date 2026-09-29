@@ -1,6 +1,7 @@
 mod filters;
 pub mod progress;
 mod rclone;
+mod reach;
 mod retries;
 mod schedule;
 mod worker;
@@ -12,8 +13,9 @@ use crate::store::Pair;
 pub use filters::excludes;
 pub use progress::{Change, Progress};
 pub use rclone::{Control, find_rclone};
+pub use reach::Down;
 pub use retries::Failure;
-pub use worker::worker;
+pub use worker::{host, worker};
 
 #[derive(Clone)]
 pub struct Target {
@@ -54,6 +56,8 @@ pub struct Synced {
 }
 
 pub enum Status {
+    /// Whether the server answers: None once it does again.
+    Reach(Option<Down>),
     Started,
     /// The label of the pair now syncing.
     Pair(String),

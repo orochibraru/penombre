@@ -152,6 +152,7 @@ impl App {
     pub(super) fn sign_out(&mut self) {
         store::delete_key(&self.config.server);
         self.key = None;
+        self.down = None;
         self.config.key_name = None;
         self.config.save(&self.dirs);
         self.checks = None;

@@ -90,6 +90,8 @@ pub struct View<'a> {
     /// Newest first.
     pub recent: &'a [crate::sync::Synced],
     pub failures: &'a [crate::sync::Failure],
+    /// The server stopped answering.
+    pub down: Option<&'a crate::sync::Down>,
     pub now: std::time::SystemTime,
 }
 
@@ -124,6 +126,9 @@ pub fn draw(ui: &mut Ui, mut view: View<'_>) -> Option<Action> {
                 }
                 match view.tab {
                     Tab::Sync => {
+                        if let Some(down) = view.down.filter(|_| view.state != SyncState::Paused) {
+                            unreachable(ui, p, &view, down, &mut action);
+                        }
                         card(ui, p, "Folders", |ui| {
                             folders::folders(ui, p, &mut view, &mut action)
                         });
@@ -160,6 +165,59 @@ fn header(ui: &mut Ui, p: &Palette, tab: Tab, action: &mut Option<Action>) {
             }
         });
     });
+}
+
+fn unreachable(
+    ui: &mut Ui,
+    p: &Palette,
+    view: &View<'_>,
+    down: &crate::sync::Down,
+    action: &mut Option<Action>,
+) {
+    let host = crate::sync::host(view.server);
+    let minutes = view
+        .now
+        .duration_since(down.since)
+        .unwrap_or_default()
+        .as_secs()
+        / 60;
+    let since = match minutes {
+        0 => "just now".to_owned(),
+        1 => "for 1 minute".to_owned(),
+        n => format!("for {n} minutes"),
+    };
+    Frame::new()
+        .fill(p.danger.linear_multiply(0.12))
+        .stroke(Stroke::new(1.0, p.danger.linear_multiply(0.5)))
+        .corner_radius(CornerRadius::same(RADIUS))
+        .inner_margin(Margin::symmetric(12, 10))
+        .show(ui, |ui| {
+            ui.set_width(ui.available_width());
+            ui.horizontal(|ui| {
+                ui.add(Icon::Alert.image(p.danger, 16.0));
+                ui.label(
+                    RichText::new(format!("Can't reach {host}"))
+                        .font(Weight::Medium.font_id(14.0))
+                        .color(p.text),
+                );
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if widgets::secondary(ui, p, "Retry now", Some(Icon::Refresh)) {
+                        *action = Some(Action::SyncNow);
+                    }
+                });
+            });
+            ui.add(
+                egui::Label::new(
+                    RichText::new(format!(
+                        "Not answering {since}: {}. Syncing resumes on its own once it's back.",
+                        down.reason
+                    ))
+                    .small()
+                    .color(p.subtle),
+                )
+                .wrap(),
+            );
+        });
 }
 
 fn callout(ui: &mut Ui, p: &Palette) {
@@ -201,6 +259,7 @@ mod tests {
         progress: bool,
         recent: bool,
         failures: bool,
+        down: bool,
     }
 
     const BASE: Case = Case {
@@ -216,6 +275,7 @@ mod tests {
         progress: false,
         recent: false,
         failures: false,
+        down: false,
     };
 
     /// `PENOMBRE_SYNC_SNAPSHOTS=<dir> cargo test snapshots` writes every state, in both themes.
@@ -418,6 +478,14 @@ mod tests {
                 ..BASE
             },
             Case {
+                name: "unreachable",
+                state: SyncState::Failed,
+                status: "Can't reach server",
+                recent: true,
+                down: true,
+                ..BASE
+            },
+            Case {
                 name: "paused",
                 state: SyncState::Paused,
                 status: "Paused",
@@ -460,6 +528,10 @@ mod tests {
                 } = case;
                 let (show_error, missing, show_progress) =
                     (case.error, case.missing, case.progress);
+                let down = case.down.then(|| crate::sync::Down {
+                    since: now - Duration::from_secs(3 * 60),
+                    reason: "the connection was refused or the host is unknown".into(),
+                });
                 let mut harness = egui_kittest::Harness::builder()
                     .with_size(Vec2::new(440.0, 720.0))
                     .build_ui(move |ui| {
@@ -498,6 +570,7 @@ mod tests {
                                         progress: show_progress.then_some(("My drive", &progress)),
                                         recent: &recent,
                                         failures: &failures,
+                                        down: down.as_ref(),
                                         now,
                                     },
                                 );

@@ -65,6 +65,7 @@ impl App {
         let state = match (&self.last, self.running, self.key.is_some()) {
             (_, _, false) => ui::SyncState::Off,
             _ if self.config.paused => ui::SyncState::Paused,
+            _ if self.down.is_some() => ui::SyncState::Failed,
             (_, true, _) => ui::SyncState::Running,
             (Some((_, Err(_))), ..) => ui::SyncState::Failed,
             (Some((_, Ok(()))), ..) => ui::SyncState::Ok,
@@ -98,7 +99,7 @@ impl App {
                     error: add.error.as_deref(),
                 }),
                 rclone_missing: sync::find_rclone().is_none(),
-                status: if state == ui::SyncState::Failed {
+                status: if state == ui::SyncState::Failed && self.down.is_none() {
                     "Sync failed"
                 } else {
                     &self.tray_label
@@ -111,6 +112,7 @@ impl App {
                     .map(|(label, progress)| (label.as_str(), progress)),
                 recent: self.recent.make_contiguous(),
                 failures: &self.failures,
+                down: self.down.as_ref(),
                 now: SystemTime::now(),
             },
         );

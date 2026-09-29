@@ -63,7 +63,11 @@ mod tests {
         };
         assert!(matches!(claim(&dir), Ok(Claim::Second)));
         first.listener.set_nonblocking(true).unwrap();
-        assert!(first.listener.accept().is_ok(), "the second one knocked");
+        let knocked = (0..100).any(|_| {
+            std::thread::sleep(Duration::from_millis(10));
+            first.listener.accept().is_ok()
+        });
+        assert!(knocked, "the second one knocked");
         drop(first);
         assert!(matches!(claim(&dir), Ok(Claim::First(_))));
         let _ = std::fs::remove_dir_all(&dir);
