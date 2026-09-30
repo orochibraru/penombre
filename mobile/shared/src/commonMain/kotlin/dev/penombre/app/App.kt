@@ -21,9 +21,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Language
@@ -154,7 +154,10 @@ fun App() {
                 )
             }
         } else {
-            Signed(current, accent, setAccent) { SessionStore.save(null); session = null }
+            Signed(current, accent, setAccent) {
+                SessionStore.save(null)
+                session = null
+            }
         }
     }
 }
@@ -253,6 +256,8 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
     // What is pushed over the tabs; the last one shows.
     val screens = remember { mutableStateListOf<Screen>() }
     var tab by rememberSaveable { mutableStateOf(Tab.Home) }
+    // Bumped on every tab tap: the tab starts over, so Home is the drive's root.
+    var tapped by remember { mutableStateOf(0) }
 
     val screening = remember(session) { Screening(session) }
     var preview by remember { mutableStateOf<Preview?>(null) }
@@ -278,6 +283,7 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
                 BottomBar(tab) {
                     screens.clear()
                     tab = it
+                    tapped++
                 }
             }
         },
@@ -309,7 +315,16 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
 
     // Every screen under the top one stays alive, unseen: coming back from a
     // viewer must find the folder, the list and the scroll as they were left.
-    Layer(screens.isEmpty()) { Tabs(host, tab) { scope.launch { api.signOut(); leave() } } }
+    Layer(screens.isEmpty()) {
+        key(tapped) {
+            Tabs(host, tab) {
+                scope.launch {
+                    api.signOut()
+                    leave()
+                }
+            }
+        }
+    }
     screens.forEachIndexed { index, screen ->
         key(index, screen) {
             Layer(index == screens.lastIndex) {
@@ -319,14 +334,23 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
                         containerColor = brand.ground,
                         topBar = { Header("Penombre", onBack = host.back, compact = true) },
                     ) { WebPage(screen.url, session, Modifier.fillMaxSize().padding(it)) }
+
                     is TrashScreen -> TrashView(host, screen.place)
+
                     DrivesScreen -> DrivesView(host)
+
                     is DriveScreen -> DriveView(host, screen.drive)
+
                     is PhotoScreen -> PhotoView(host, screen.place, screen.photos, screen.index)
+
                     is VideoScreen -> VideoView(host)
+
                     is VersionsScreen -> VersionsView(host, screen.place, screen.item)
+
                     SettingsScreen -> SettingsView(host, accent, onAccent)
+
                     SearchScreen -> SearchView(host)
+
                     is PdfScreen -> PdfView(host, screen.place, screen.item)
                 }
             }
@@ -361,6 +385,7 @@ private fun Tabs(host: Host, tab: Tab, onSignOut: () -> Unit) {
     }
     when (tab) {
         Tab.Home -> Browser(host, personal, "My Drive", bottomBar = bar)
+
         else -> Scaffold(
             containerColor = Color.Transparent,
             topBar = { Header(tab.label, onBack = null) },

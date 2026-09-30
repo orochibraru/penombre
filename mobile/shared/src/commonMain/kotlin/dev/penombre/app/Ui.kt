@@ -2,8 +2,8 @@ package dev.penombre.app
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,9 +19,9 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Article
@@ -48,8 +48,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -71,8 +71,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -361,18 +361,29 @@ private val DECK = setOf("ppt", "pptx", "odp", "key", "md")
 // sheets and decks are told apart by extension, as there.
 fun iconFor(item: Item): Pair<ImageVector, Color?> = when {
     item.isFolder -> Icons.Outlined.Folder to null
+
     else -> when (item.metadata.category) {
         "IMAGES" -> Icons.Outlined.Image to Color(0xFFFB923C)
+
         "VIDEO" -> Icons.Outlined.Movie to Color(0xFF60A5FA)
+
         "MUSIC" -> Icons.Outlined.MusicNote to Color(0xFFF472B6)
+
         "ARCHIVES" -> Icons.Outlined.FolderZip to Color(0xFF0D9488)
+
         "CODE" -> Icons.Outlined.Code to Color(0xFF4ADE80)
+
         "3D" -> Icons.Outlined.ViewInAr to Color(0xFFE11D48)
+
         else -> when (item.title.substringAfterLast('.', "").lowercase()) {
             "pdf" -> Icons.Outlined.PictureAsPdf to Color(0xFFEF4444)
+
             in DOCUMENT -> Icons.AutoMirrored.Outlined.Article to Color(0xFF3B82F6)
+
             in SHEET -> Icons.Outlined.TableChart to Color(0xFF22C55E)
+
             in DECK -> Icons.Outlined.Slideshow to Color(0xFFF97316)
+
             else -> if (item.metadata.category == "DOCUMENTS") {
                 Icons.Outlined.Description to Color(0xFF2563EB)
             } else {
@@ -424,7 +435,10 @@ fun Listing(
         while (!done) {
             if (!fresh) snapshotFlow { nearEnd }.first { it }
             loading = true
-            host.attempt({ error = it; done = true }) {
+            host.attempt({
+                error = it
+                done = true
+            }) {
                 val page = load(cursor)
                 onPage(page)
                 if (fresh) items.clear()
@@ -521,8 +535,7 @@ fun formatSize(bytes: Long): String {
     return if (unit == 0) "$bytes B" else "${(value * 10).toLong() / 10.0} ${units[unit]}"
 }
 
-fun initials(name: String): String =
-    name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.take(2).joinToString("") { it.first().uppercase() }
+fun initials(name: String): String = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }.take(2).joinToString("") { it.first().uppercase() }
 
 /** The day of an ISO timestamp. No time: it is UTC, and would read as local. */
 fun shortDate(iso: String): String = iso.take(10)

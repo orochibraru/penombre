@@ -41,8 +41,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -177,8 +177,11 @@ fun DrivesView(host: Host) {
             val list = drives
             when {
                 error != null -> Note(error!!, Modifier.align(Alignment.Center), MaterialTheme.colorScheme.error)
+
                 list == null -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = brand.accent)
+
                 list.isEmpty() -> Note("You are not on any shared drive yet.", Modifier.align(Alignment.Center))
+
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(list, key = { it.id }) { drive ->
                         Entry(Icons.Outlined.Group, drive.name, drive.role.replaceFirstChar { it.uppercase() }) {
@@ -324,7 +327,10 @@ fun SettingsView(host: Host, accent: String, onAccent: (String) -> Unit) {
                                 val before = accent
                                 onAccent(name)
                                 scope.launch {
-                                    host.attempt({ status = it; onAccent(before) }) {
+                                    host.attempt({
+                                        status = it
+                                        onAccent(before)
+                                    }) {
                                         host.api.setAccent(name)
                                         status = null
                                     }

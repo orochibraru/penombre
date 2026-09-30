@@ -135,8 +135,7 @@ class Refused(message: String) : Exception(message)
 private class Refusal(val message: String? = null, val error: String? = null)
 
 /** What an error answer says: `{ "message": … }`, sometimes `{ "error": … }`. */
-internal fun refusal(body: String): String? =
-    runCatching { json.decodeFromString<Refusal>(body) }.getOrNull()?.let { it.message ?: it.error }
+internal fun refusal(body: String): String? = runCatching { json.decodeFromString<Refusal>(body) }.getOrNull()?.let { it.message ?: it.error }
 
 /** Whose tree a request acts on: the account's own drive, a shared one, or a mount. */
 data class Place(val drive: String? = null, val volume: String? = null)
@@ -148,21 +147,18 @@ internal fun listingUrl(server: String, path: String): String {
 }
 
 /** The folder routes take the whole path as one segment, slashes escaped. */
-internal fun folderUrl(server: String, path: String): String =
-    "$server/api/v1/storage/folder/${path.encodeURLParameter()}"
+internal fun folderUrl(server: String, path: String): String = "$server/api/v1/storage/folder/${path.encodeURLParameter()}"
 
 /**
  * A folder's path is its parent's plus its own key, the last segment. A
  * folder's key ends in a slash, which a path must not carry: nested, it made
  * `a//b/`, a folder the server has never heard of.
  */
-internal fun childPath(parent: String, key: String): String =
-    key.trimEnd('/').let { if (parent.isEmpty()) it else "$parent/$it" }
+internal fun childPath(parent: String, key: String): String = key.trimEnd('/').let { if (parent.isEmpty()) it else "$parent/$it" }
 
-private fun drive(place: Place) =
-    place.drive?.let { "&drive=${it.encodeURLParameter()}" }
-        ?: place.volume?.let { "&volume=${it.encodeURLParameter()}" }
-        ?: ""
+private fun drive(place: Place) = place.drive?.let { "&drive=${it.encodeURLParameter()}" }
+    ?: place.volume?.let { "&volume=${it.encodeURLParameter()}" }
+    ?: ""
 
 /**
  * An earlier version stands in a list as `<file id>:v:<version id>`, as on the
@@ -177,21 +173,18 @@ private fun versionUrl(server: String, place: Place, id: String, endpoint: Strin
 }
 
 /** A file's own bytes, or those of a video's rendition of this height. */
-internal fun rawUrl(server: String, place: Place, id: String, rendition: Int? = null) =
-    versionUrl(server, place, id, "raw")
-        ?: "$server/api/v1/storage/file/$id?raw=true${drive(place)}${rendition?.let { "&rendition=$it" } ?: ""}"
+internal fun rawUrl(server: String, place: Place, id: String, rendition: Int? = null) = versionUrl(server, place, id, "raw")
+    ?: "$server/api/v1/storage/file/$id?raw=true${drive(place)}${rendition?.let { "&rendition=$it" } ?: ""}"
 
 /** The web app's editor for a document, where the file lives. */
-internal fun editUrl(server: String, place: Place, id: String) =
-    "$server/edit/$id" + drive(place).replaceFirst("&", "?")
+internal fun editUrl(server: String, place: Place, id: String) = "$server/edit/$id" + drive(place).replaceFirst("&", "?")
 
 /** The heights a video can be asked for below its original. */
 val RENDITIONS = listOf(720, 480)
 
 /** Its thumbnail, in one of the server's named sizes; `preview` is one to look at. */
-internal fun thumbnailUrl(server: String, place: Place, id: String, size: String) =
-    versionUrl(server, place, id, "thumbnail", "size=$size")
-        ?: "$server/api/v1/storage/file/$id?thumbnail=true&size=$size${drive(place)}"
+internal fun thumbnailUrl(server: String, place: Place, id: String, size: String) = versionUrl(server, place, id, "thumbnail", "size=$size")
+    ?: "$server/api/v1/storage/file/$id?thumbnail=true&size=$size${drive(place)}"
 
 internal val json = Json { ignoreUnknownKeys = true }
 
@@ -386,8 +379,7 @@ class Api(val session: Session, private val client: HttpClient = httpClient()) {
 
     suspend fun drives(): List<Drive> = call { client.get("$base/drives") { auth() }.body<Envelope<List<Drive>>>().data }
 
-    suspend fun versions(place: Place, id: String): Versions =
-        call { client.get("$base/storage/file/$id/versions") { auth(place) }.body<Envelope<Versions>>().data }
+    suspend fun versions(place: Place, id: String): Versions = call { client.get("$base/storage/file/$id/versions") { auth(place) }.body<Envelope<Versions>>().data }
 
     suspend fun restoreVersion(place: Place, id: String, version: String) {
         call {

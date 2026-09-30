@@ -413,9 +413,12 @@ fun Waveform(peaks: List<Float>, done: Float, onSeek: (Float) -> Unit) {
     // The loudest of each slice; a flat line until the peaks arrive.
     val bars = remember(peaks) {
         List(BARS) { bar ->
-            if (peaks.isEmpty()) 0.12f
-            else peaks.subList(bar * peaks.size / BARS, ((bar + 1) * peaks.size / BARS).coerceAtLeast(bar * peaks.size / BARS + 1).coerceAtMost(peaks.size))
-                .maxOrNull() ?: 0f
+            if (peaks.isEmpty()) {
+                0.12f
+            } else {
+                peaks.subList(bar * peaks.size / BARS, ((bar + 1) * peaks.size / BARS).coerceAtLeast(bar * peaks.size / BARS + 1).coerceAtMost(peaks.size))
+                    .maxOrNull() ?: 0f
+            }
         }
     }
     val tallest = bars.maxOrNull()?.takeIf { it > 0f } ?: 1f

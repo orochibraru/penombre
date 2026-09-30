@@ -30,21 +30,9 @@ import platform.AVFoundation.AVLayerVideoGravityResizeAspectFill
 import platform.AVFoundation.AVMediaTypeVideo
 import platform.AVFoundation.AVMetadataMachineReadableCodeObject
 import platform.AVFoundation.AVMetadataObjectTypeQRCode
-import platform.AVFoundation.AVPlayerItemStatusFailed
-import platform.Foundation.NSHTTPURLResponse
-import platform.Foundation.NSMutableURLRequest
-import platform.Foundation.NSTemporaryDirectory
-import platform.Foundation.NSURLSession
-import platform.Foundation.downloadTaskWithRequest
-import platform.Foundation.setValue
-import platform.UIKit.UIActivityViewController
-import platform.UIKit.UIColor
-import platform.UIKit.popoverPresentationController
-import platform.darwin.dispatch_async
-import platform.darwin.dispatch_get_global_queue
-import platform.darwin.dispatch_get_main_queue
 import platform.AVFoundation.AVPlayer
 import platform.AVFoundation.AVPlayerItem
+import platform.AVFoundation.AVPlayerItemStatusFailed
 import platform.AVFoundation.AVPlayerLayer
 import platform.AVFoundation.AVURLAsset
 import platform.AVFoundation.currentItem
@@ -61,34 +49,42 @@ import platform.AuthenticationServices.ASWebAuthenticationSession
 import platform.CoreCrypto.CC_SHA256
 import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
 import platform.CoreGraphics.CGRectMake
+import platform.CoreGraphics.CGRectZero
 import platform.CoreMedia.CMTime
 import platform.CoreMedia.CMTimeGetSeconds
 import platform.CoreMedia.CMTimeMakeWithSeconds
-import platform.CoreGraphics.CGRectZero
-import platform.QuartzCore.CATransaction
 import platform.Foundation.NSData
-import platform.Foundation.create
-import platform.PDFKit.kPDFDisplaySinglePageContinuous
-import platform.PDFKit.PDFView
-import platform.PDFKit.PDFDocument
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSHTTPCookie
-import platform.Foundation.NSMutableData
 import platform.Foundation.NSHTTPCookieDomain
 import platform.Foundation.NSHTTPCookieName
 import platform.Foundation.NSHTTPCookiePath
 import platform.Foundation.NSHTTPCookieSecure
 import platform.Foundation.NSHTTPCookieValue
+import platform.Foundation.NSHTTPURLResponse
+import platform.Foundation.NSMutableData
+import platform.Foundation.NSMutableURLRequest
+import platform.Foundation.NSNumber
+import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLRequest
+import platform.Foundation.NSURLSession
 import platform.Foundation.NSUserDefaults
-import platform.Foundation.NSNumber
+import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
+import platform.Foundation.downloadTaskWithRequest
+import platform.Foundation.setValue
+import platform.PDFKit.PDFDocument
+import platform.PDFKit.PDFView
+import platform.PDFKit.kPDFDisplaySinglePageContinuous
+import platform.QuartzCore.CATransaction
+import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
+import platform.UIKit.UIColor
 import platform.UIKit.UIDevice
 import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerViewController
@@ -105,6 +101,7 @@ import platform.UIKit.UINavigationControllerDelegateProtocol
 import platform.UIKit.UIView
 import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
+import platform.UIKit.popoverPresentationController
 import platform.UniformTypeIdentifiers.UTTypeItem
 import platform.VisionKit.VNDocumentCameraScan
 import platform.VisionKit.VNDocumentCameraViewController
@@ -113,6 +110,9 @@ import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
 import platform.WebKit.WKWebsiteDataStore
 import platform.darwin.NSObject
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_global_queue
+import platform.darwin.dispatch_get_main_queue
 import platform.posix.memcpy
 
 @OptIn(ExperimentalForeignApi::class)
@@ -129,9 +129,10 @@ actual fun sha256(bytes: ByteArray): ByteArray {
 actual val deviceName: String get() = UIDevice.currentDevice.model
 
 // A class, not an object: Kotlin/Native cannot make a singleton of an Obj-C subclass.
-private class Anchor : NSObject(), ASWebAuthenticationPresentationContextProvidingProtocol {
-    override fun presentationAnchorForWebAuthenticationSession(session: ASWebAuthenticationSession): ASPresentationAnchor =
-        UIApplication.sharedApplication.keyWindow ?: UIWindow()
+private class Anchor :
+    NSObject(),
+    ASWebAuthenticationPresentationContextProvidingProtocol {
+    override fun presentationAnchorForWebAuthenticationSession(session: ASWebAuthenticationSession): ASPresentationAnchor = UIApplication.sharedApplication.keyWindow ?: UIWindow()
 }
 
 // Held so neither is collected while the sheet is up.
@@ -284,12 +285,14 @@ actual fun rememberFilePicker(onPicked: (List<PickedFile>) -> Unit): (Source) ->
                     this.delegate = delegate
                 },
             )
+
             Source.Camera -> present(
                 UIImagePickerController().apply {
                     sourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
                     this.delegate = delegate
                 },
             )
+
             Source.Scan -> present(VNDocumentCameraViewController().apply { this.delegate = delegate })
         }
     }
@@ -330,8 +333,7 @@ actual class MediaEngine actual constructor() {
         player.replaceCurrentItemWithPlayerItem(null)
     }
 
-    private fun seconds(time: CValue<CMTime>?): Double =
-        time?.let { CMTimeGetSeconds(it) }?.takeIf { it.isFinite() && it > 0 } ?: 0.0
+    private fun seconds(time: CValue<CMTime>?): Double = time?.let { CMTimeGetSeconds(it) }?.takeIf { it.isFinite() && it > 0 } ?: 0.0
 
     actual val position: Double get() = seconds(player.currentTime())
     actual val duration: Double get() = seconds(player.currentItem?.duration)
@@ -473,5 +475,4 @@ actual fun PdfPages(bytes: ByteArray, modifier: Modifier) {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private fun ByteArray.toNSData(): NSData =
-    if (isEmpty()) NSData() else usePinned { NSData.create(bytes = it.addressOf(0), length = size.convert()) }
+private fun ByteArray.toNSData(): NSData = if (isEmpty()) NSData() else usePinned { NSData.create(bytes = it.addressOf(0), length = size.convert()) }

@@ -5,31 +5,56 @@ import android.app.Activity
 import android.app.DownloadManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.pdf.PdfRenderer
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.webkit.CookieManager
-import android.webkit.WebView
+import android.os.ParcelFileDescriptor
+import android.provider.OpenableColumns
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.webkit.CookieManager
+import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import android.provider.OpenableColumns
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
@@ -39,31 +64,6 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
-import android.graphics.Bitmap
-import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -170,11 +170,13 @@ actual fun rememberFilePicker(onPicked: (List<PickedFile>) -> Unit): (Source) ->
     return { source ->
         when (source) {
             Source.Files -> files.launch(arrayOf("*/*"))
+
             Source.Camera -> {
                 val file = File(context.cacheDir, "camera/Photo ${stamp()}.jpg").also { it.parentFile?.mkdirs() }
                 photo = file.path
                 camera.launch(FileProvider.getUriForFile(context, "${context.packageName}.files", file))
             }
+
             Source.Scan -> {
                 val options = GmsDocumentScannerOptions.Builder()
                     .setGalleryImportAllowed(true)
@@ -277,8 +279,7 @@ actual fun VideoSurface(engine: MediaEngine, aspect: Float, modifier: Modifier) 
     })
 }
 
-actual fun canScanCodes(): Boolean =
-    AndroidHost.activity.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+actual fun canScanCodes(): Boolean = AndroidHost.activity.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
 
 @Composable
 actual fun rememberCodeScanner(onCode: (String) -> Unit): () -> Unit {

@@ -91,6 +91,15 @@ repos:
           - github.com/suzuki-shunsuke/pinact/v5/cmd/pinact@v5.0.0
         files: ^\.github/(workflows|actions)/.*\.ya?ml$
 
+  # Kotlin and the Gradle scripts: downloads ktlint and runs it on the JDK on
+  # PATH. Style lives in .editorconfig.
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: v2.16.0
+    hooks:
+      - id: pretty-format-kotlin
+        name: Format and lint Kotlin (ktlint)
+        args: [--autofix, --ktlint-version=1.8.0]
+
   - repo: https://github.com/hadolint/hadolint
     rev: v2.15.1
     hooks:

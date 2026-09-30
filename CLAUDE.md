@@ -1835,6 +1835,14 @@ redemptions never both win.
   black: with no picture it showed the screen underneath.
 - `Prompt` gives its field the focus and selects what is there; without the
   focus Maestro's `inputText` typed into nothing.
+- **Kotlin is formatted and linted by ktlint** (`pretty-format-kotlin`, which
+  downloads the jar and runs it on the `java` on `PATH`), `.kt` and `.kts`
+  alike. Its style is `.editorconfig`'s `[*.{kt,kts}]` block: `intellij_idea`,
+  PascalCase allowed on `@Composable`. `MainViewController` suppresses the
+  naming rule because Swift calls it by that name.
+- A bottom-bar tap re-keys the whole tab (`tapped` in `Signed`), so Home always
+  lands on the drive's root: `Browser`'s folder stack otherwise survives a tap
+  on the tab it is already on.
 - CI runs the unit tests only (`test-mobile` hook, the `mobile` job in
   `pull_request.yaml`, whose JDK must match `mise.toml`'s). The Maestro flows
   run locally: they need an emulator, a simulator and a server with an account,

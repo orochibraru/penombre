@@ -11,21 +11,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.CreateNewFolder
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderCopy
-import androidx.compose.material.icons.outlined.Group
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Star
@@ -107,7 +107,10 @@ fun Browser(
             var reason = ""
             files.forEachIndexed { index, file ->
                 status = if (files.size == 1) "Uploading ${file.name}" else "Uploading ${index + 1} of ${files.size}"
-                host.attempt({ failed++; reason = it }) {
+                host.attempt({
+                    failed++
+                    reason = it
+                }) {
                     check(file.size <= MAX_UPLOAD_BYTES) { "${file.name} is over the 200 MB this app can send." }
                     host.api.upload(place, into, file)
                 }
@@ -121,7 +124,10 @@ fun Browser(
         }
     }
     if (choosing) {
-        AddSheet(onDismiss = { choosing = false }, onFolder = { choosing = false; naming = true }) { source ->
+        AddSheet(onDismiss = { choosing = false }, onFolder = {
+            choosing = false
+            naming = true
+        }) { source ->
             choosing = false
             pick(source)
         }
@@ -150,17 +156,24 @@ fun Browser(
             selected = null
             when (action) {
                 ItemAction.Versions -> host.push(VersionsScreen(place, item))
+
                 ItemAction.Rename -> renaming = item
+
                 ItemAction.Move -> sending = item to true
+
                 ItemAction.Copy -> sending = item to false
+
                 ItemAction.Download -> saveToDevice(
                     rawUrl(host.server, place, item.metadata.id),
                     host.api.session.token,
                     item.title,
                 ) { status = it.ifEmpty { null } }
+
                 // A copy into the folder it is already in.
                 ItemAction.Duplicate -> change { host.api.transfer(place, item, path, place, folder.path, move = false) }
+
                 ItemAction.Star -> change { host.api.setStarred(place, item, path, !item.metadata.isStarred) }
+
                 ItemAction.Trash -> change { host.api.setTrashed(place, item, path, true) }
             }
         }

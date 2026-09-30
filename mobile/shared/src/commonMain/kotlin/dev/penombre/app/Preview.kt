@@ -3,8 +3,8 @@ package dev.penombre.app
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -104,6 +104,7 @@ fun PreviewSheet(preview: Preview, host: Host, onDismiss: () -> Unit) {
             val stage = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
             when {
                 preview.isVideo -> VideoStage(host, stage.aspectRatio(host.screening.aspect.takeIf { it > 0 } ?: (16f / 9f)), pinned = true)
+
                 preview.isImage -> Picture(
                     lookUrl(host.server, preview.place, item),
                     host,
@@ -114,6 +115,7 @@ fun PreviewSheet(preview: Preview, host: Host, onDismiss: () -> Unit) {
                     placeholder = thumbnailUrl(host.server, preview.place, item.metadata.id, "small"),
                     fallback = rawUrl(host.server, preview.place, item.metadata.id),
                 )
+
                 else -> Box(stage.height(200.dp).background(tint.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
                     Icon(icon, null, Modifier.size(72.dp), tint = tint)
                     // Over the icon: a file with no render leaves it showing.
@@ -127,12 +129,16 @@ fun PreviewSheet(preview: Preview, host: Host, onDismiss: () -> Unit) {
                 host.push(
                     when {
                         preview.isVideo -> VideoScreen(preview.place, item)
+
                         preview.isImage -> preview.siblings.filter { it.metadata.category == "IMAGES" }
                             .let { PhotoScreen(preview.place, it, it.indexOf(item).coerceAtLeast(0)) }
+
                         // A WebView shows no PDF on Android: a black page. Native instead.
                         preview.isPdf -> PdfScreen(preview.place, item)
+
                         // The web app edits these; the WebView is signed in.
                         preview.isEditable -> WebScreen(editUrl(host.server, preview.place, item.metadata.id))
+
                         else -> WebScreen(rawUrl(host.server, preview.place, item.metadata.id))
                     },
                 )
@@ -206,10 +212,16 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
                 top()
                 if (!screening.loading && !screening.blocked) {
                     Row(Modifier.align(Alignment.Center), horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { touched++; screening.skip(-10.0) }) { Icon(Icons.Default.Replay10, "Back 10 seconds", Modifier.size(30.dp), tint = Color.White) }
+                        IconButton(onClick = {
+                            touched++
+                            screening.skip(-10.0)
+                        }) { Icon(Icons.Default.Replay10, "Back 10 seconds", Modifier.size(30.dp), tint = Color.White) }
                         Box(
                             Modifier.size(64.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.5f))
-                                .clickable { touched++; screening.toggle() },
+                                .clickable {
+                                    touched++
+                                    screening.toggle()
+                                },
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
@@ -219,7 +231,10 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
                                 tint = Color.White,
                             )
                         }
-                        IconButton(onClick = { touched++; screening.skip(10.0) }) { Icon(Icons.Default.Forward10, "Forward 10 seconds", Modifier.size(30.dp), tint = Color.White) }
+                        IconButton(onClick = {
+                            touched++
+                            screening.skip(10.0)
+                        }) { Icon(Icons.Default.Forward10, "Forward 10 seconds", Modifier.size(30.dp), tint = Color.White) }
                     }
                 }
                 if (!screening.blocked) {
@@ -231,11 +246,17 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(clock(screening.position), color = Color.White, style = MaterialTheme.typography.labelMedium)
-                        Scrubber(screening.done, Modifier.weight(1f).padding(horizontal = 12.dp)) { touched++; screening.seek(it) }
+                        Scrubber(screening.done, Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                            touched++
+                            screening.seek(it)
+                        }
                         Text(clock(screening.duration), color = Color.White, style = MaterialTheme.typography.labelMedium)
                         if (!screening.unavailable) {
                             Box {
-                                TextButton(onClick = { touched++; picking = true }) {
+                                TextButton(onClick = {
+                                    touched++
+                                    picking = true
+                                }) {
                                     val now = screening.preparing?.let { "${it}p…" } ?: screening.quality?.let { "${it}p" } ?: "Original"
                                     Text(now, Modifier.semantics { contentDescription = "Quality: $now" }, color = Color.White, style = MaterialTheme.typography.labelMedium)
                                 }
