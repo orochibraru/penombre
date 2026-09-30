@@ -1,30 +1,47 @@
 package dev.penombre.app
 
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.ByteArrayContent
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.ktor.http.encodeURLPathPart
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
-fun httpClient() = HttpClient {
+private val configure: HttpClientConfig<*>.() -> Unit = {
     expectSuccess = true
     install(ContentNegotiation) { json(json) }
 }
 
+/** The platform's engine, or the one a test hands in. */
+fun httpClient(engine: HttpClientEngine? = null) = if (engine == null) HttpClient(configure) else HttpClient(engine, configure)
+
 @Serializable
-data class Meta(val id: String, val name: String? = null, val category: String? = null)
+data class Meta(val id: String, val name: String? = null, val category: String? = null, val isStarred: Boolean = false)
 
 @Serializable
 data class Item(val key: String, val type: String, val size: Long? = null, val metadata: Meta) {
@@ -32,10 +49,63 @@ data class Item(val key: String, val type: String, val size: Long? = null, val m
     val title get() = metadata.name ?: key
 }
 
+/** `totalSize` comes with the trash only: what emptying it frees. */
 @Serializable
-data class Page(val list: List<Item>, val nextCursor: String? = null)
+data class Page(val list: List<Item>, val nextCursor: String? = null, val totalSize: Long? = null)
+
+@Serializable
+data class Drive(val id: String, val name: String, val role: String = "viewer") {
+    val canWrite get() = role != "viewer"
+}
+
+@Serializable
+data class Version(
+    val id: String,
+    val seq: Int,
+    val size: Long,
+    val name: String? = null,
+    val authorName: String? = null,
+    val createdAt: String,
+)
+
+@Serializable
+data class Versions(val current: Current, val versions: List<Version>) {
+    /** The current bytes are `v{nextSeq}`. */
+    @Serializable
+    data class Current(val size: Long, val updatedAt: String, val nextSeq: Int)
+}
+
+/** `ready`, `preparing`, `failed`, or `unavailable` where nothing is rendered. */
+@Serializable
+data class Rendition(val status: String, val error: String? = null)
+
+@Serializable
+private class Transferred(val failCount: Int = 0, val results: List<Result> = emptyList()) {
+    @Serializable
+    class Result(val success: Boolean = true, val error: String? = null)
+}
+
+@Serializable
+data class Preferences(val accent: String = "bordeaux")
+
+/** Every API answer is `{ "data": … }` (`Http.Ok` on the server). */
+@Serializable
+internal class Envelope<T>(val data: T)
 
 class Unauthorized : Exception("Signed out")
+
+/** The server said no, and why. */
+class Refused(message: String) : Exception(message)
+
+@Serializable
+private class Refusal(val message: String? = null, val error: String? = null)
+
+/** What an error answer says: `{ "message": … }`, sometimes `{ "error": … }`. */
+internal fun refusal(body: String): String? =
+    runCatching { json.decodeFromString<Refusal>(body) }.getOrNull()?.let { it.message ?: it.error }
+
+/** Whose tree a request acts on: the account's own drive, or a shared one. */
+data class Place(val drive: String? = null)
 
 /** `path` is the folder's path chain, "" for the drive's root. */
 internal fun listingUrl(server: String, path: String): String {
@@ -43,34 +113,287 @@ internal fun listingUrl(server: String, path: String): String {
     return "$server/api/v1/storage/list$route"
 }
 
-/** A folder's path is its parent's plus its own key, the last segment. */
-internal fun childPath(parent: String, key: String): String = if (parent.isEmpty()) key else "$parent/$key"
+/** The folder routes take the whole path as one segment, slashes escaped. */
+internal fun folderUrl(server: String, path: String): String =
+    "$server/api/v1/storage/folder/${path.encodeURLParameter()}"
 
-private val VIEWABLE = setOf("IMAGES", "VIDEO", "MUSIC")
+/**
+ * A folder's path is its parent's plus its own key, the last segment. A
+ * folder's key ends in a slash, which a path must not carry: nested, it made
+ * `a//b/`, a folder the server has never heard of.
+ */
+internal fun childPath(parent: String, key: String): String =
+    key.trimEnd('/').let { if (parent.isEmpty()) it else "$parent/$it" }
 
-/** Where a file opens in the web UI: the viewer for media, the raw bytes otherwise. */
-internal fun fileUrl(server: String, item: Item): String =
-    if (item.metadata.category in VIEWABLE) {
-        "$server/view/${item.metadata.id}"
-    } else {
-        "$server/api/v1/storage/file/${item.metadata.id}?raw=true"
-    }
+private fun drive(place: Place) = place.drive?.let { "&drive=${it.encodeURLParameter()}" } ?: ""
+
+/** A file's own bytes, or those of a video's rendition of this height. */
+internal fun rawUrl(server: String, place: Place, id: String, rendition: Int? = null) =
+    "$server/api/v1/storage/file/$id?raw=true${drive(place)}${rendition?.let { "&rendition=$it" } ?: ""}"
+
+/** The heights a video can be asked for below its original. */
+val RENDITIONS = listOf(720, 480)
+
+/** Its thumbnail, in one of the server's named sizes; `preview` is one to look at. */
+internal fun thumbnailUrl(server: String, place: Place, id: String, size: String) =
+    "$server/api/v1/storage/file/$id?thumbnail=true&size=$size${drive(place)}"
 
 internal val json = Json { ignoreUnknownKeys = true }
 
-class Api(private val session: Session) {
-    private val client = httpClient()
+@Serializable
+private class NewFile(val name: String, val size: Long)
 
-    suspend fun list(path: String, cursor: String?): Page = call {
+@Serializable
+private class Created(val metadata: Meta)
+
+/**
+ * One `file` part. Written here because Ktor's form writer sends the field as
+ * `name=file`, unquoted, which the server's parser does not read as a field:
+ * every upload answered "No file provided".
+ */
+internal fun multipart(boundary: String, name: String, bytes: ByteArray): ByteArray {
+    val safe = name.replace("\"", "").replace("\r", "").replace("\n", "")
+    val head = "--$boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"$safe\"\r\n" +
+        "Content-Type: application/octet-stream\r\n\r\n"
+    return head.encodeToByteArray() + bytes + "\r\n--$boundary--\r\n".encodeToByteArray()
+}
+
+// ponytail: the file is read whole into memory, so it is capped. Stream it
+// from a background queue (the spec's upload queue) when real uploads matter.
+const val MAX_UPLOAD_BYTES = 200L * 1024 * 1024
+
+class Api(val session: Session, private val client: HttpClient = httpClient()) {
+    private val base = "${session.server}/api/v1"
+
+    private fun HttpRequestBuilder.auth(place: Place = Place()) {
+        bearerAuth(session.token)
+        place.drive?.let { parameter("drive", it) }
+    }
+
+    private fun HttpRequestBuilder.fields(vararg fields: Pair<String, Boolean>) {
+        contentType(ContentType.Application.Json)
+        setBody(JsonObject(fields.associate { (name, value) -> name to JsonPrimitive(value) }))
+    }
+
+    private fun HttpRequestBuilder.text(vararg fields: Pair<String, String?>) {
+        contentType(ContentType.Application.Json)
+        setBody(JsonObject(fields.filter { it.second != null }.associate { (name, value) -> name to JsonPrimitive(value) }))
+    }
+
+    suspend fun list(place: Place, path: String, cursor: String?): Page = call {
         client.get(listingUrl(session.server, path)) {
-            bearerAuth(session.token)
+            auth(place)
             cursor?.let { parameter("cursor", it) }
+        }.body<Envelope<Page>>().data
+    }
+
+    /** The most recent files; one page, the server sends no cursor. */
+    suspend fun recent(): Page = call { client.get("$base/storage/list/recent") { auth() }.body<Envelope<Page>>().data }
+
+    suspend fun starred(cursor: String?): Page = call {
+        client.get("$base/storage/file/starred") {
+            auth()
+            cursor?.let { parameter("cursor", it) }
+        }.body<Envelope<Page>>().data
+    }
+
+    /** Top-level trashed items; their keys are full paths. */
+    suspend fun trash(place: Place, cursor: String?): Page = call {
+        client.get("$base/storage/file/trash") {
+            auth(place)
+            cursor?.let { parameter("cursor", it) }
+        }.body<Envelope<Page>>().data
+    }
+
+    suspend fun emptyTrash(place: Place) {
+        call { client.delete("$base/storage/trash") { auth(place) } }
+    }
+
+    /** `path` is the folder's own full path; a file is addressed by its id. */
+    suspend fun setTrashed(place: Place, item: Item, path: String, trashed: Boolean) {
+        call {
+            if (item.isFolder) {
+                client.post("${folderUrl(session.server, path)}/${if (trashed) "trash" else "restore"}") {
+                    auth(place)
+                    fields()
+                }
+            } else {
+                client.put("$base/storage/file/${item.metadata.id}") {
+                    auth(place)
+                    fields("isTrashed" to trashed)
+                }
+            }
+        }
+    }
+
+    suspend fun setStarred(place: Place, item: Item, path: String, starred: Boolean) {
+        call {
+            val url = if (item.isFolder) folderUrl(session.server, path) else "$base/storage/file/${item.metadata.id}"
+            client.put(url) {
+                auth(place)
+                fields("isStarred" to starred)
+            }
+        }
+    }
+
+    /** For good: the bytes go too. */
+    suspend fun delete(place: Place, item: Item, path: String) {
+        call {
+            val url = if (item.isFolder) folderUrl(session.server, path) else "$base/storage/file/${item.metadata.id}"
+            client.delete(url) {
+                auth(place)
+                fields()
+            }
+        }
+    }
+
+    /** A file is renamed by id, a folder by its path. */
+    suspend fun rename(place: Place, item: Item, path: String, name: String) {
+        call {
+            if (item.isFolder) {
+                client.put(folderUrl(session.server, path)) {
+                    auth(place)
+                    text("name" to name)
+                }
+            } else {
+                client.put("$base/storage/file/${item.metadata.id}") {
+                    auth(place)
+                    text("key" to name)
+                }
+            }
+        }
+    }
+
+    /** `parent` is the folder's path, "" for the root. */
+    suspend fun createFolder(place: Place, parent: String, name: String) {
+        call {
+            client.post("$base/storage/folder") {
+                auth(place)
+                text("name" to name, "parent" to parent.ifEmpty { null })
+            }
+        }
+    }
+
+    /**
+     * Copies or moves one item to `folder` of `to`, which may be another
+     * drive. A copy into the folder it is already in is a duplicate.
+     */
+    suspend fun transfer(from: Place, item: Item, path: String, to: Place, folder: String, move: Boolean) {
+        call {
+            val done = client.post("$base/storage/transfer") {
+                auth(from)
+                contentType(ContentType.Application.Json)
+                setBody(
+                    JsonObject(
+                        mapOf(
+                            "items" to JsonArray(
+                                listOf(JsonObject(mapOf("path" to JsonPrimitive(path), "type" to JsonPrimitive(item.type)))),
+                            ),
+                            "destination" to JsonObject(
+                                buildMap {
+                                    to.drive?.let { put("drive", JsonPrimitive(it)) }
+                                    put("folder", JsonPrimitive(folder))
+                                },
+                            ),
+                            "mode" to JsonPrimitive(if (move) "move" else "copy"),
+                        ),
+                    ),
+                )
+            }.body<Envelope<Transferred>>().data
+            check(done.failCount == 0) { done.results.firstNotNullOfOrNull { it.error } ?: "It could not be done." }
+        }
+    }
+
+    /** Files and folders by name, across the whole drive. */
+    suspend fun search(place: Place, query: String): Page = call {
+        client.get("$base/storage/file/search") {
+            auth(place)
+            parameter("q", query)
+        }.body<Envelope<Page>>().data
+    }
+
+    /**
+     * Asks for a video's rendition; the server waits up to 20 seconds for it,
+     * so calling again while it says `preparing` is the whole protocol.
+     */
+    suspend fun ensureRendition(place: Place, id: String, height: Int): Rendition = call {
+        client.post("$base/storage/file/$id/renditions/$height") {
+            auth(place)
+            fields()
+        }.body<Envelope<Rendition>>().data
+    }
+
+    suspend fun drives(): List<Drive> = call { client.get("$base/drives") { auth() }.body<Envelope<List<Drive>>>().data }
+
+    suspend fun versions(place: Place, id: String): Versions =
+        call { client.get("$base/storage/file/$id/versions") { auth(place) }.body<Envelope<Versions>>().data }
+
+    suspend fun restoreVersion(place: Place, id: String, version: String) {
+        call {
+            client.post("$base/storage/file/$id/versions/$version/restore") {
+                auth(place)
+                fields()
+            }
+        }
+    }
+
+    /** A track's waveform, up to 400 values in 0..1. Not wrapped in `data`. */
+    suspend fun peaks(place: Place, id: String): List<Float> = call {
+        client.get("$base/storage/file/$id") {
+            auth(place)
+            parameter("thumbnail", "true")
         }.body()
+    }
+
+    suspend fun preferences(): Preferences = call { client.get("$base/preferences") { auth() }.body<Envelope<Preferences>>().data }
+
+    suspend fun setAccent(accent: String) {
+        call {
+            client.put("$base/preferences") {
+                auth()
+                contentType(ContentType.Application.Json)
+                // Spelled out: a `Preferences` would drop the default accent
+                // from its JSON, and choosing bordeaux would save nothing.
+                setBody(JsonObject(mapOf("accent" to JsonPrimitive(accent))))
+            }
+        }
+    }
+
+    /** The web uploader's two calls: the file's entry, then its bytes. */
+    suspend fun upload(place: Place, folder: String, file: PickedFile) {
+        call {
+            val created = client.post("$base/storage/file") {
+                auth(place)
+                if (folder.isNotEmpty()) parameter("folder", folder)
+                contentType(ContentType.Application.Json)
+                setBody(NewFile(file.name, file.size))
+            }.body<Envelope<Created>>().data
+            val id = created.metadata.id
+            try {
+                val bytes = withContext(Dispatchers.Default) { file.read() }
+                val boundary = "penombre-$id"
+                client.post("$base/storage/file/$id/upload") {
+                    auth(place)
+                    setBody(
+                        ByteArrayContent(
+                            multipart(boundary, file.name, bytes),
+                            ContentType.MultiPart.FormData.withParameter("boundary", boundary),
+                        ),
+                    )
+                }
+            } catch (e: Throwable) {
+                // The entry without its bytes is a file that opens as nothing.
+                withContext(NonCancellable) {
+                    runCatching { client.delete("$base/storage/file/$id") { auth(place) } }
+                }
+                throw e
+            }
+        }
     }
 
     suspend fun signOut() {
         runCatching {
-            client.post("${session.server}/api/v1/auth/sign-out") {
+            client.post("$base/auth/sign-out") {
                 bearerAuth(session.token)
                 header("Origin", session.server)
                 contentType(ContentType.Application.Json)
@@ -82,6 +405,8 @@ class Api(private val session: Session) {
     private suspend fun <T> call(block: suspend () -> T): T = try {
         block()
     } catch (e: ClientRequestException) {
-        if (e.response.status == HttpStatusCode.Unauthorized) throw Unauthorized() else throw e
+        if (e.response.status == HttpStatusCode.Unauthorized) throw Unauthorized()
+        // The server's own words, not Ktor's dump of the request.
+        throw Refused(refusal(e.response.bodyAsText()) ?: "The server refused (${e.response.status.value}).")
     }
 }

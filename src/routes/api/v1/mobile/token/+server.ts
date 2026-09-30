@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import {
 	createMobileSession,
 	redeemMobileCode,
+	redeemPairCode,
 } from "#lib/server/auth/mobile.js";
 import { db } from "#lib/server/db/index.js";
 import { user } from "#lib/server/db/schema.js";
@@ -18,7 +19,13 @@ export const POST = mobileToken.handler(async ({ body, event }) => {
 	) {
 		return Http.TooManyRequests();
 	}
-	const redeemed = await redeemMobileCode(body.code, body.code_verifier);
+	// With a verifier, a code from the browser sign-in; without, one a
+	// signed-in browser showed as a QR code.
+	const redeemed = body.code_verifier
+		? await redeemMobileCode(body.code, body.code_verifier)
+		: await redeemPairCode(body.code).then(
+				(userId) => userId && { userId, device: body.device ?? "phone" },
+			);
 	if (!redeemed) {
 		return Http.Unauthorized();
 	}

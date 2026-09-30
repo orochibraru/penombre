@@ -431,7 +431,7 @@
                                     disabled={act.disabled}
                                     variant={act.variant}
                                 >
-                                    <Icon class={act.iconClass} />
+                                    <Icon class={act.iconClass ?? "text-primary"} />
                                     {title}
                                 </ContextMenu.Item>
                             {/if}
@@ -476,7 +476,7 @@
                                     disabled={act.disabled}
                                     variant={act.variant}
                                 >
-                                    <Icon class={act.iconClass} />
+                                    <Icon class={act.iconClass ?? "text-primary"} />
                                     {title}
                                 </DropdownMenu.Item>
                             {/if}

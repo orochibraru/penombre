@@ -6692,6 +6692,86 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/mobile/pair": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create a mobile pairing code
+		 * @description For a signed-in browser: a single-use link, valid two minutes, to show as a QR code. The app that scans it is signed in to this account. Refused for an API key.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								expiresAt: string;
+								url: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/mobile/token": {
 		parameters: {
 			query?: never;
@@ -6703,7 +6783,7 @@ export interface paths {
 		put?: never;
 		/**
 		 * Exchange a mobile sign-in code
-		 * @description Redeems the single-use code from /auth/mobile/authorize with its PKCE verifier and returns a new session: its token for `Authorization: Bearer`, and its signed cookie for the app's embedded browser.
+		 * @description Redeems a single-use code and returns a new session: its token for `Authorization: Bearer`, and its signed cookie for the app's embedded browser. A code from /auth/mobile/authorize comes with its PKCE `code_verifier`; one read from a pairing QR code comes with the `device` name instead.
 		 */
 		post: {
 			parameters: {
@@ -6716,7 +6796,8 @@ export interface paths {
 				content: {
 					"application/json": {
 						code: string;
-						code_verifier: string;
+						code_verifier?: string;
+						device?: string;
 					};
 				};
 			};
@@ -9359,7 +9440,8 @@ export interface paths {
 					share?: string;
 					raw?: string;
 					thumbnail?: string;
-					size?: "small" | "medium" | "large";
+					size?: "small" | "medium" | "large" | "preview";
+					rendition?: "480" | "720";
 				};
 				header?: never;
 				path: {
@@ -10039,6 +10121,85 @@ export interface paths {
 				};
 				/** @description Unprocessable Entity */
 				422: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/renditions/{height}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Prepare a video rendition
+		 * @description Starts rendering the video as an H.264 MP4 no taller than `height` if nothing has yet, and waits up to 20 seconds for it. Call again while it answers `preparing`; once `ready`, read it with raw=true&rendition=<height>. `unavailable` for a file that is not a video, or on a drive whose files are sealed.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+					height: "480" | "720";
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								error?: string;
+								/** @enum {string} */
+								status: "ready" | "preparing" | "failed" | "unavailable";
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
 					headers: {
 						[name: string]: unknown;
 					};
@@ -10840,7 +11001,7 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
-					size?: "small" | "medium" | "large";
+					size?: "small" | "medium" | "large" | "preview";
 				};
 				header?: never;
 				path: {

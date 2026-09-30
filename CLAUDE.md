@@ -917,11 +917,12 @@ isolated from page CSS so it could never inherit one either. Only inline SVG
 re-colours when the accent changes.
 
 For the same reason, anything representing a Penombre object — folder icons
-above all — uses `text-primary`, never a fixed palette colour. Fixed colours are
-fine for the _context-menu_ action icons, which are a deliberate multi-colour
-set rather than object identity, and for the three editable document kinds (blue
-/ green / orange, from `DOCUMENT_KINDS[kind].color`), which identify a kind
-rather than an object.
+above all — uses `text-primary`, never a fixed palette colour. The action icons
+of the context and row menus take the accent too
+(`act.iconClass ?? "text-primary"`; only a destructive one is red). Fixed
+colours are for file kinds in a listing and the three editable document kinds
+(blue / green / orange, from `DOCUMENT_KINDS[kind].color`), which identify a
+kind rather than an object.
 
 ### Thumbnails
 
@@ -945,6 +946,47 @@ waveforms, `pdftoppm` for PDFs — runs in the Go worker
 (`internal/jobs/thumbnail`), not in the app process; `sharp` is gone. Both
 binaries are installed in the Dockerfile's `app` stage, and the image build
 fails if ffmpeg's build lacks the `libwebp` encoder.
+
+### A video's other qualities are rendered on request
+
+`RenditionService` (`services/storage/renditions.ts`) has the Go worker's
+`transcode` job write an H.264/AAC MP4 no taller than 720 or 480 into
+`.thumbnails/<key>_<height>p.mp4`, where `deleteThumbnails` already removes a
+file's renders with it. It is what plays when the original's format (AVI) or
+bitrate (a phone's 4K over a home uplink) will not. The raw route already
+streams with `Range`, measured: a 60 MB file with its index at the end starts in
+2s on 5 Mbit/s, so a slow start is bitrate or a proxy, never "the whole file".
+
+- **Two calls.** `POST …/file/{id}/renditions/{height}` starts the job if
+  nothing has and long-polls it for 20s (`ready`, `preparing`, `failed`,
+  `unavailable`); the job is deduped on its output path and outlives the
+  request. The bytes are `?raw=true&rendition=<height>`, a 404 until then.
+  Clients loop on the first (`prepareRendition` in `#lib/renditions.ts`,
+  `Screening.choose` in the app).
+- **A fixed ladder**, like thumbnail sizes, so the cache is bounded. The picture
+  is never enlarged; both sides are forced even, which x264 requires.
+- **Nothing is rendered where files are sealed.** An MP4 with its index first
+  needs a seekable output, so ffmpeg writes plaintext to disk, which must never
+  sit beside sealed files. `ensure` answers `unavailable` and the Go job refuses
+  a sealed source. Lifting it needs a seekable sealed writer, or HLS.
+- **A new job type needs a new worker.** The dev server builds its worker once,
+  at start: after adding one, `pkill -TERM -f penombre-worker-dev` and the
+  supervisor rebuilds it. Until then the job fails as an unknown type.
+- Wasm in the browser (ffmpeg.wasm) was weighed and dropped: it fetches the
+  whole file into memory first and decodes in software, single-digit frames a
+  second for 1080p.
+
+The player swaps sources through `VideoSource` (`#lib/video-source.svelte.ts`):
+`unplayable` is set from the element's `MEDIA_ERR_SRC_NOT_SUPPORTED`/`DECODE`
+and replaces the player with `video-unplayable.svelte` rather than a toast over
+a dead element. In `/view` the `<video>` is in the server's HTML and can fail
+before hydration: an effect reads `player.error` once mounted, or the panel
+never shows. `/view` builds its media URLs with the link's `?drive=`/`?volume=`
+(`locationFrom`): without it a file outside the personal drive was a 404 there.
+
+Pictures open on the `preview` thumbnail size (1600px, `THUMBNAIL_PIXELS` in
+`proxy.ts`) through `progressive-image.svelte`; the original is fetched off
+screen and swapped in, so the preview never blanks.
 
 ### The waveform is also the scrubber
 
@@ -1103,6 +1145,19 @@ may register: without a session the plugin still refuses (no `resolveUser` is
 configured) and the challenge is bound to the user who requested it. What it
 drops is better-auth's `freshSessionMiddleware`, which 403s a session older than
 24h — on a drive people stay signed into for weeks that rejected everyone.
+
+### better-auth's `listSessions` wants a fresh session
+
+`auth.api.listSessions` runs `freshSessionMiddleware`, the same one passkey
+registration had to drop: a session older than a day gets `SESSION_NOT_FRESH`,
+so **Account → Sessions** was a 500 for anyone signed in since yesterday. The
+page reads `activeSessions()` (`auth/sessions.ts`) instead. Revoking only needs
+a valid session and still goes through better-auth. `freshAge` stays on: it is
+also what account deletion accepts in place of a password.
+
+An invite no email carried (no SMTP, or a failed send) is shown in a dialog on
+**Admin → Users**, not dropped into the clipboard: that link is the only way
+into the account, and it is how a test account gets its password.
 
 ### The library scan needs an owner
 
@@ -1593,20 +1648,29 @@ must stay quit.
 percentage. Drop the patch once `crmne/fastframe` releases it; until then a
 fastframe bump must move the fork too.
 
-The app's update check (`desktop/src/update.rs`) reads GitHub's releases list
-and counts a release only once it carries this platform's asset: the desktop
-builds land minutes after the release itself. It treats the unstamped `0.1.0` as
-a source build and never checks. The formula names and the brew-service plist
-names in `login.rs` must follow the tap's. Homebrew 7 writes new service files
-as `sh.brew.<formula>`; older installs keep `homebrew.mxcl.<formula>`, so
-`login.rs` checks both.
+The app's update check (`desktop/src/update.rs`) never calls `api.github.com`:
+the API allows an address 60 anonymous requests an hour, shared with everything
+behind it, and the check answered "403 rate limit exceeded". Stable reads where
+`/releases/latest` redirects, canary reads `releases.atom` (the ten newest, of
+both kinds), and a release counts only once a `HEAD` finds this platform's
+asset: a desktop build can fail while the release still publishes. It treats the
+unstamped `0.1.0` as a source build and never checks. The formula names and the
+brew-service plist names in `login.rs` must follow the tap's. Homebrew 7 writes
+new service files as `sh.brew.<formula>`; older installs keep
+`homebrew.mxcl.<formula>`, so `login.rs` checks both.
 
 A bare binary has no bundle for the Dock to take an icon from, so the app
-renders `assets/logo-light.svg` at startup and hands it to eframe
-(`ui::app_icon`). On macOS the default app menu is off (`with_default_menu`):
-its Quit is `terminate:`, which exits the process outright, tray and sync
-included. ⌘Q closes the window like its close button; only the tray's Quit ends
-the app.
+renders one at startup and hands it to eframe (`ui::app_icon`): the moon on a
+tile, `assets/icon-light.svg` or `icon-dark.svg` by the system's appearance at
+launch. The bare logo on a transparent ground vanished into whatever the Dock
+was over. Every app icon (those two, the bundle's `icon.png`, the iOS asset
+catalog, Android's adaptive foregrounds) is rendered from the logo by
+`mise run icons` (`scripts/app-icons.sh`); never edit one by hand. iOS takes the
+dark one only when the home screen's icon style is Dark or Automatic, Android
+through `-night` resources. The iOS images carry no alpha channel, which the App
+Store refuses. On macOS the default app menu is off (`with_default_menu`): its
+Quit is `terminate:`, which exits the process outright, tray and sync included.
+⌘Q closes the window like its close button; only the tray's Quit ends the app.
 
 **Install and restart** swaps the binary by `rename` (Windows moves the running
 `.exe` aside to `.old` first: it cannot be overwritten), staged in a dot-folder
@@ -1617,6 +1681,15 @@ quitting instance and exit. Homebrew installs are refused: replacing a Cellar
 binary under brew's feet breaks `brew upgrade`. An AppImage runs from a
 read-only mount, so with `$APPIMAGE` set the updater downloads the `.AppImage`
 itself and renames it over that file instead.
+
+### `play()` goes through `playMedia`
+
+`HTMLMediaElement.play()` rejects whenever a new source or a pause gets there
+first (`AbortError`) or autoplay is refused, and an unhandled rejection is an
+error in the console of every browser. `playMedia()` (`#lib/play.ts`) answers
+whether playback started and toasts only a file the browser cannot play. The
+video player compares `player.src` against the **resolved** source, like the
+music player: compared raw, a relative one reloaded under a pending play.
 
 ### The mobile app signs in to a real session
 
@@ -1645,11 +1718,38 @@ redemptions never both win.
   dependency optimizer can re-bundle mid-session and answer 504 for the stale
   `?v=` hash: the page renders and never hydrates, so nothing is clickable.
   Restart with `bun run dev -- --force`.
+- **The whole toolchain is mise's; there is no Android Studio.** `mise install`
+  brings the JDK, xcodegen, Maestro and the Android command-line tools;
+  `mise run mobile:setup` installs the SDK packages and creates the `penombre`
+  emulator. The SDK lives in `~/.local/share/android-sdk` (`ANDROID_HOME` in
+  `mise.toml`), not the plugin's own versioned folder, which a tools bump would
+  empty. `avdmanager` ignores `ANDROID_HOME` and takes the SDK to be two folders
+  above itself, so setup runs the copy it installed into the SDK. After moving
+  an SDK, `./gradlew --stop` and delete `mobile/.gradle/configuration-cache`:
+  both remember the old path.
+- Xcode 27 has no `Simulator.app`: the simulator's window is Device Hub
+  (`com.apple.dt.Devices`), which `mobile:ios` opens. `mise run mobile:e2e ios`
+  runs the flows on one platform.
 - `mise run mobile:android` / `mobile:ios` build, install and launch;
-  `mobile:doctor` checks the SDK and simulator. Xcode ships the iOS _SDK_ but
-  not the simulator _runtime_ (`xcodebuild -downloadPlatform iOS`, ~8 GB), and
-  an SDK cleanup can leave an emulator image with no `system.img` ("No initial
-  system image for this configuration"); the doctor catches both.
+  `mobile:emulator` boots the emulator; `mobile:doctor` checks the lot. Xcode
+  ships the iOS _SDK_ but not the simulator _runtime_
+  (`xcodebuild -downloadPlatform iOS`, ~8 GB), and an emulator image can lose
+  its `system.img` ("No initial system image for this configuration"); the
+  doctor catches both.
+- **Tests:** `mise run mobile:test` runs `commonTest` on the JVM
+  (`withHostTest`) and the iOS simulator; its PKCE vector is the server's own
+  (`auth/mobile.test.ts`). `mise run mobile:e2e` (`mobile/e2e/run.sh`) runs the
+  Maestro flows on both devices against a server **already running**, and the
+  signed-in flow only when `PENOMBRE_E2E_EMAIL`/`PASSWORD` name an account with
+  a password. What a fresh device throws in the way, each handled where noted:
+  Gboard's stylus tutorial over the first text field (turned off by
+  `mobile:emulator`), Chrome's first-run screens and iOS's "wants to use … to
+  sign in" alert, which a tap sent while it animates in misses (the flow). A
+  Maestro flow is two YAML documents, hence `--allow-multiple-documents` on
+  `check-yaml`.
+- A screen draws its own `Surface`: without one the window's background shows
+  through, dark under a light scheme. Only the emulator showed it; the phone was
+  in dark mode.
 - The iOS host project is generated: `iosApp/project.yml` is the source,
   `xcodegen` writes the gitignored `.xcodeproj`. Its Gradle build phase loads
   `mise env` itself, since Xcode runs without the shell's JDK.
@@ -1657,7 +1757,147 @@ redemptions never both win.
   (`NSObject`): `compileKotlin` passes and the framework link crashes ("should
   have been lowered"). Use a class and hold an instance.
 - Only `iosSimulatorArm64` is built, so the simulator build excludes `x86_64`.
-- Nothing in CI or prek builds `mobile/` yet.
+- **Every API answer is `{ "data": … }`** (`Http.Ok`); the app decodes
+  `Envelope<T>`. The first unit test fed the decoder the bare payload and passed
+  while no sign-in could complete: a fixture is the shape the server sends,
+  checked against it, not the shape the client hopes for.
+- **Never key a `LaunchedEffect` on a value it resets.** The sign-in effect was
+  keyed on the callback and cleared it first, which restarted the effect and
+  cancelled its own token request ("The coroutine scope left the composition").
+  It collects the flow once instead. The file listing had the same bug, keyed on
+  its own `loading` flag, and the flow missed it by asserting only the screen's
+  title: `seed.ts` now puts a folder in the test account and the flow must see
+  it listed and open it.
+- **The look is the web app's bordeaux theme, not Material's** (`Theme.kt`): its
+  ground, its two aurora fields behind every screen, the moon drawn from the
+  logo's SVG, its gradient on the primary button. A file kind keeps the web's
+  colour (`file/prefix.svelte`), a folder takes the accent. Wallpaper colours
+  (Material You) were tried and dropped: they put a cream bar over a bordeaux
+  web page.
+- **Uploads build their own multipart body** (`multipart()` in `Api.kt`). Ktor's
+  form writer sends `name=file` unquoted, which the server's parser does not
+  read as a field, so every upload answered "No file provided". A failed upload
+  deletes the entry it created, or the listing shows a file that opens as
+  nothing. The file is read whole into memory, hence `MAX_UPLOAD_BYTES`.
+- The **+** sheet offers only what the device has (`availableSources()`): no
+  camera or scanner on a simulator. Scanning is VisionKit on iOS and Google Play
+  services' document scanner on Android; the camera on Android writes into a
+  `FileProvider` file declared in the app's manifest.
+- The bottom bar mirrors the web app's (Home, Recent, Starred, Menu). A folder
+  tapped in Recent or Starred opens `/go/folder/<id>` in the embedded web app:
+  those lists give its id, and the native listing needs its path. `Listing`
+  takes what it lists as `source` and keys all its state on it.
+- Sign-in attempts are kept by `state`, not in one slot: a second tap on Sign in
+  replaced the first attempt while its browser sheet was still the one on
+  screen, and its answer was refused ("did not match the request"). A `state`
+  the app never issued is still refused.
+- `UIKitView` needs `isNativeAccessibilityEnabled = true` or the embedded web
+  page is invisible to VoiceOver, and to Maestro: an `assertNotVisible` on it
+  passes on anything, so assert something the page shows.
+- What the signed-in flow meets, all handled in `signed-in.yaml`: a browser
+  already signed in goes straight to **Approve**; the iOS keyboard covers the
+  page's buttons (submit with Enter); a tap on a field's label focuses it on iOS
+  without a keyboard; iOS offers to save the password over the page. `run.sh`
+  reads the account from `.env` by line, not by sourcing it: a password with `$`
+  or `#` sourced to an empty string.
+- **Pushed screens stay composed under the top one** (`Layer` in `App.kt`,
+  measured but not placed). Swapping the top screen in with a `when` dropped the
+  browser's folder stack, so Back from the photo or video viewer landed at the
+  drive's root. A screen underneath reads `LocalShown` before answering Back.
+- One `MediaEngine` per kind of playback (`Playback` for the track queue,
+  `Screening` for the one video), both `Transport`s polled four times a second.
+  After a seek the end is not looked for during four samples: the engine still
+  reads as at the end it was sent away from, and replaying a finished video
+  paused it again. The preview drawer and the full screen draw the same
+  `Screening`, which is what makes **Full screen** carry on instead of reload;
+  the video in play is derived in `Signed` from the drawer and the top screen.
+- `VideoSurface` is the picture only, the controls are Compose over it. On iOS
+  the view takes no touches (`interactionMode = null`) and its `AVPlayerLayer`
+  fits the picture itself; on Android a `SurfaceView` stretches, so it takes the
+  video's aspect, and a destroyed surface clears the engine's display only if it
+  is still its own (the full screen's may have taken over).
+- Maestro waits for the screen to settle before each step, and a playing video
+  never settles: a step takes longer than the controls' 3s fade, and a 3s clip
+  is over before it is looked at. The flow uses the 45s `mobile-video.mp4` and
+  leaves full screen while paused, where the controls stay.
+- **A folder's key ends in a slash.** `childPath` trims it: joined as it came, a
+  nested folder's path was `a//b/`, which listed (the list route is lenient) and
+  then 404'd on rename and move. Errors show the server's `message` (`Refused`),
+  not Ktor's dump of the request.
+- **iOS plays an AVI's sound and nothing else**: AVPlayer reports a duration, no
+  error and no picture. `Screening` counts samples with a length and no aspect,
+  and after 1.5s treats the original as refused, like Android's error listener
+  does, which is what offers **Convert and play**. The video view is opaque
+  black: with no picture it showed the screen underneath.
+- `Prompt` gives its field the focus and selects what is there; without the
+  focus Maestro's `inputText` typed into nothing.
+- CI runs the unit tests only (`test-mobile` hook, the `mobile` job in
+  `pull_request.yaml`, whose JDK must match `mise.toml`'s). The Maestro flows
+  run locally: they need an emulator, a simulator and a server with an account,
+  and a CI run would create its own throwaway account as Playwright's setup
+  does, never a stored password.
+
+### The mobile apps ship with every release too
+
+`publish.yaml`'s `mobile` job calls `mobile.yaml` beside `desktop`, and both
+attach to the draft before `publish-release`. A pull request touching `mobile/`
+calls the same workflow without `upload`, as a build check: a Kotlin/Native link
+error only shows when the iOS framework is linked.
+
+- **Android needs a signing key in the repository's secrets**, or nothing is
+  attached (an unsigned APK installs nowhere, and a key that changes between
+  releases refuses to install over the last one). Once, and kept somewhere safe,
+  since losing it means every phone must uninstall to update:
+  `keytool -genkeypair` a 4096-bit RSA key valid 10000 days into `penombre.jks`,
+  then `ANDROID_KEYSTORE` (that file through `base64`),
+  `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`
+  with `gh secret set`. The Play Store re-signs with its own key and takes this
+  one as the upload key.
+- **The iOS build is unsigned** (`CODE_SIGNING_ALLOWED=NO`, zipped under
+  `Payload/` as `penombre-ios-unsigned.ipa`): signing needs an Apple developer
+  account. It is for sideloading tools; TestFlight and the App Store will need a
+  signed archive and their own job.
+- **The build number** (`versionCode`, `CFBundleVersion`) comes from the version
+  by `mobile/version-code.sh`: two digits each for minor, patch and canary, with
+  a release taking slot 99 so it outranks its canaries. `androidApp` reads
+  `-Ppenombre.version`/`-Ppenombre.code`; the placeholders stay for local
+  builds.
+- The asset names are fixed (`penombre-android.apk`,
+  `penombre-ios-unsigned.ipa`) because **Get the apps** (`components/apps/`)
+  links them by release version, the way it links the desktop builds.
+  `#lib/release.ts` holds what the browser and the server both need to pick that
+  version.
+- The app marks its embedded browser's user agent `PenombreApp`
+  (`APP_USER_AGENT`): the phone banner (`app-banner.svelte`, once a session in
+  `sessionStorage`) must not advertise the app inside the app.
+- `mise run graphics` renders the README's and the guides' feature graphics and
+  the Play Store's (`mobile/store/feature-graphic.jpg`, 1024x500, no alpha) from
+  the screenshots in `docs/images/graphics/src`, which it does not retake.
+
+### A pairing code signs a phone in with no browser
+
+**Connect the mobile app**, under **Get the apps** in the account menu, shows
+`penombre://pair?server=… &code=…` as a QR code (`uqr`, the one QR encoder in
+the repo). `POST /api/v1/mobile/pair` mints the code; `/api/v1/mobile/token`
+redeems it when the body carries no `code_verifier`. There is no PKCE: the phone
+never spoke to the server before, so the code alone is the proof. What bounds
+that:
+
+- single use and two minutes, stored hashed under its own prefix
+  (`mobile-pair:`), so neither kind of code redeems as the other;
+- a session only: an `x-api-key` request is refused, or a key could mint itself
+  a full session;
+- **the app asks before using one** (`Sign in to <host>?`). A link can be opened
+  by any web page; signing in silently would let one put the phone on an
+  attacker's server. A link that arrives while signed in is ignored.
+
+The link reaches the app three ways that all end in `Auth.callbacks`: its own
+scanner (`rememberCodeScanner`: Play services' on Android, an
+`AVCaptureMetadataOutput` controller on iOS), the phone's camera (Android's
+intent filter host `pair`; iOS's `CFBundleURLTypes` plus `.onOpenURL`), and
+Maestro's `openLink`, which is how a simulator with no camera tests it. iOS asks
+"Open in Penombre?" the first time, and a run that stopped there leaves that
+alert over the next launch; `paired.yaml` dismisses it.
 
 ### TypeScript is held at 6 on purpose
 

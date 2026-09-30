@@ -52,13 +52,18 @@ import type {
 } from "./listings";
 import { ListingOperations } from "./listings";
 import { probeMissingDurations } from "./media";
-import { type FileProxyRequest, ProxyService } from "./proxy";
+import {
+	type FileProxyRequest,
+	ProxyService,
+	type ThumbnailSize,
+} from "./proxy";
 import {
 	type CopyResult,
 	type DeleteResult,
 	reconcileCopy,
 	reconcileDelete,
 } from "./reconcile";
+import { RenditionService } from "./renditions";
 import { ScanOperations, type ScanReporter, type ScanResult } from "./scan";
 import { ThumbnailService } from "./thumbnails";
 import {
@@ -111,6 +116,7 @@ export class StorageService {
 	private readonly thumbnails: ThumbnailService;
 	private readonly zip: ZipService;
 	private readonly proxy: ProxyService;
+	readonly renditions: RenditionService;
 	private readonly fileOperations: FileOperations;
 	private readonly versionOperations: VersionOperations;
 	private readonly folderOperations: FolderOperations;
@@ -182,8 +188,12 @@ export class StorageService {
 			this.folderOperations,
 			this.thumbnails,
 		);
-		this.proxy = new ProxyService(this.ctx, this.thumbnails, (path) =>
-			this.getFile(path),
+		this.renditions = new RenditionService(this.ctx);
+		this.proxy = new ProxyService(
+			this.ctx,
+			this.thumbnails,
+			this.renditions,
+			(path) => this.getFile(path),
 		);
 	}
 
@@ -717,7 +727,7 @@ export class StorageService {
 
 	public handleThumbnailRequest(
 		itemName: string,
-		size?: "small" | "medium" | "large",
+		size?: ThumbnailSize,
 		ifNoneMatch?: string,
 	): Promise<Response | null> {
 		return this.proxy.handleThumbnailRequest(itemName, size, ifNoneMatch);

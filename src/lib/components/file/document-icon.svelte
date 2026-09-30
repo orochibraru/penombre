@@ -74,6 +74,4 @@
 	});
 </script>
 
-<div class={className} style="color: {color}">
-    <Icon class={className} />
-</div>
+<Icon class={className} style="color: {color}" />

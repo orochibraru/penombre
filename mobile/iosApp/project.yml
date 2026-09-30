@@ -13,14 +13,27 @@ targets:
       path: Penombre/Info.plist
       properties:
         CFBundleDisplayName: Penombre
+        # Stamped by a release build (`.github/workflows/mobile.yaml`).
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # penombre://pair, from the web app's QR code read by the camera.
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.penombre.app
+            CFBundleURLSchemes: [penombre]
         UILaunchScreen: {}
         CADisableMinimumFrameDurationOnPhone: true
+        # A track keeps playing with the screen off or the app behind another.
+        UIBackgroundModes: [audio]
+        NSCameraUsageDescription: Scan the code that signs you in, take a photo or scan a document to upload.
         # Self-hosted instances are often plain HTTP on a LAN.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.penombre.app
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
         OTHER_LDFLAGS: $(inherited) -framework Shared
         # The framework is built for Apple silicon simulators only.

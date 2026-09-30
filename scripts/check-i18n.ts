@@ -31,7 +31,9 @@ function variables(message: Message): string[] {
 		declarations.flatMap((d) => d.match(/^local (\w+)/)?.[1] ?? []),
 	);
 	const found = new Set([
-		...texts.flatMap((t) => [...t.matchAll(/\{(\w+)\}/g)].map((m) => m[1])),
+		...texts.flatMap((t) =>
+			[...t.matchAll(/\{(\w+)\}/g)].flatMap((m) => m[1] ?? []),
+		),
 		...declarations.flatMap((d) => d.match(/^input (\w+)/)?.[1] ?? []),
 	]);
 	return [...found].filter((name) => !locals.has(name)).sort();
@@ -42,13 +44,14 @@ const problems: string[] = [];
 
 for (const locale of locales.filter((l) => l !== baseLocale)) {
 	const messages = await load(locale);
-	for (const key of Object.keys(base)) {
-		if (!(key in messages)) {
+	for (const [key, source] of Object.entries(base)) {
+		const message = messages[key];
+		if (message === undefined) {
 			problems.push(`${locale}: missing ${key}`);
 			continue;
 		}
-		const expected = variables(base[key]).join(",");
-		const actual = variables(messages[key]).join(",");
+		const expected = variables(source).join(",");
+		const actual = variables(message).join(",");
 		if (expected !== actual) {
 			problems.push(`${locale}: ${key} uses {${actual}}, not {${expected}}`);
 		}

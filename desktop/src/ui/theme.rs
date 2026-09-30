@@ -72,24 +72,40 @@ pub(super) fn palette(ui: &Ui) -> &'static Palette {
 
 pub(super) const RADIUS: u8 = 8;
 
-/// Once per egui context: fonts, icons, and both themes, following the system.
 /// The Dock and taskbar icon. A bare binary has no bundle for macOS to take
-/// one from, so without it the Dock shows a generic executable.
+/// one from, so without it the Dock shows a generic executable. The moon sits
+/// on a tile, white in light mode and black in dark: bare on a transparent
+/// ground, it vanished into whatever the Dock was over.
 pub fn app_icon() -> Option<egui::IconData> {
+    app_icon_for(system_is_dark())
+}
+
+// ponytail: read once at launch, so a theme switch shows at the next start.
+fn system_is_dark() -> bool {
+    // Absent in light mode, where the command fails.
+    #[cfg(target_os = "macos")]
+    return std::process::Command::new("defaults")
+        .args(["read", "-g", "AppleInterfaceStyle"])
+        .output()
+        .is_ok_and(|out| String::from_utf8_lossy(&out.stdout).contains("Dark"));
+    #[cfg(not(target_os = "macos"))]
+    true
+}
+
+fn app_icon_for(dark: bool) -> Option<egui::IconData> {
     const SIZE: u32 = 512;
-    // macOS draws its own icons inside a margin; the logo's viewBox has none.
-    const ART: f32 = 0.82;
-    let tree = resvg::usvg::Tree::from_data(
-        include_bytes!("../../assets/logo-light.svg"),
-        &resvg::usvg::Options::default(),
-    )
-    .ok()?;
+    // Rendered by `mise run icons`; the tile carries its own margin.
+    let svg: &[u8] = if dark {
+        include_bytes!("../../assets/icon-dark.svg")
+    } else {
+        include_bytes!("../../assets/icon-light.svg")
+    };
+    let tree = resvg::usvg::Tree::from_data(svg, &resvg::usvg::Options::default()).ok()?;
     let mut pixmap = resvg::tiny_skia::Pixmap::new(SIZE, SIZE)?;
-    let scale = SIZE as f32 * ART / tree.size().width();
-    let offset = SIZE as f32 * (1.0 - ART) / 2.0;
+    let scale = SIZE as f32 / tree.size().width();
     resvg::render(
         &tree,
-        resvg::tiny_skia::Transform::from_row(scale, 0.0, 0.0, scale, offset, offset),
+        resvg::tiny_skia::Transform::from_scale(scale, scale),
         &mut pixmap.as_mut(),
     );
     // tiny-skia keeps alpha premultiplied; IconData wants it straight.
@@ -108,6 +124,7 @@ pub fn app_icon() -> Option<egui::IconData> {
     })
 }
 
+/// Once per egui context: fonts, icons, and both themes, following the system.
 pub fn install(ctx: &egui::Context) {
     egui_extras::install_image_loaders(ctx);
     fastframe_icons::install::<Icon>(ctx);
@@ -176,22 +193,30 @@ fn visuals(theme: Theme, p: &Palette) -> egui::Visuals {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn the_app_icon_is_the_logo_with_a_margin() {
-        let icon = super::app_icon().expect("the logo renders");
-        assert_eq!((icon.width, icon.height), (512, 512));
-        assert_eq!(icon.rgba.len(), 512 * 512 * 4);
-        let at = |x: usize, y: usize| &icon.rgba[(y * 512 + x) * 4..][..4];
-        assert_eq!(at(4, 4)[3], 0, "the margin is transparent");
-        let lit = at(160, 360);
-        assert!(
-            lit[3] > 200 && lit[0] > lit[2],
-            "bordeaux in the crescent: {lit:?}"
-        );
-        if let Some(dir) = std::env::var_os("PENOMBRE_SYNC_SNAPSHOTS") {
-            image::RgbaImage::from_raw(512, 512, icon.rgba)
-                .unwrap()
-                .save(std::path::Path::new(&dir).join("app-icon.png"))
-                .unwrap();
+    fn the_app_icon_is_the_moon_on_a_tile() {
+        for (dark, ground) in [(false, 255), (true, 0)] {
+            let icon = super::app_icon_for(dark).expect("the icon renders");
+            assert_eq!((icon.width, icon.height), (512, 512));
+            assert_eq!(icon.rgba.len(), 512 * 512 * 4);
+            let at = |x: usize, y: usize| &icon.rgba[(y * 512 + x) * 4..][..4];
+            assert_eq!(at(4, 4)[3], 0, "the margin is transparent");
+            assert_eq!(at(256, 70), [ground, ground, ground, 255], "the tile");
+            let lit = at(180, 340);
+            assert!(
+                lit[3] > 200 && lit[0] > lit[2] && lit[0] > lit[1],
+                "bordeaux in the crescent: {lit:?}"
+            );
+            if let Some(dir) = std::env::var_os("PENOMBRE_SYNC_SNAPSHOTS") {
+                let name = if dark {
+                    "app-icon-dark.png"
+                } else {
+                    "app-icon-light.png"
+                };
+                image::RgbaImage::from_raw(512, 512, icon.rgba)
+                    .unwrap()
+                    .save(std::path::Path::new(&dir).join(name))
+                    .unwrap();
+            }
         }
     }
 }

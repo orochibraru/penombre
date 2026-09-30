@@ -6,12 +6,13 @@ export const mobileToken = defineRoute({
 	path: "/api/v1/mobile/token",
 	summary: "Exchange a mobile sign-in code",
 	description:
-		"Redeems the single-use code from /auth/mobile/authorize with its PKCE verifier and returns a new session: its token for `Authorization: Bearer`, and its signed cookie for the app's embedded browser.",
+		"Redeems a single-use code and returns a new session: its token for `Authorization: Bearer`, and its signed cookie for the app's embedded browser. A code from /auth/mobile/authorize comes with its PKCE `code_verifier`; one read from a pairing QR code comes with the `device` name instead.",
 	tags: ["Auth"],
 	requireAuth: false,
 	body: z.object({
 		code: z.string().max(128),
-		code_verifier: z.string().min(43).max(128),
+		code_verifier: z.string().min(43).max(128).optional(),
+		device: z.string().max(100).optional(),
 	}),
 	response: z.object({
 		token: z.string(),
@@ -20,4 +21,15 @@ export const mobileToken = defineRoute({
 		user: z.object({ id: z.string(), name: z.string(), email: z.string() }),
 	}),
 	errors: [400, 401, 429],
+});
+
+export const mobilePair = defineRoute({
+	method: "post",
+	path: "/api/v1/mobile/pair",
+	summary: "Create a mobile pairing code",
+	description:
+		"For a signed-in browser: a single-use link, valid two minutes, to show as a QR code. The app that scans it is signed in to this account. Refused for an API key.",
+	tags: ["Auth"],
+	response: z.object({ url: z.string(), expiresAt: z.string() }),
+	errors: [401, 403, 429],
 });

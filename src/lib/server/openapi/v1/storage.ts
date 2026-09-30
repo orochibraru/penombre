@@ -239,9 +239,32 @@ export const getFile = defineRoute({
 		...driveQuery,
 		raw: z.string().optional(),
 		thumbnail: z.string().optional(),
-		size: z.enum(["small", "medium", "large"]).optional(),
+		size: z.enum(["small", "medium", "large", "preview"]).optional(),
+		rendition: z
+			.enum(["720", "480"])
+			.optional()
+			.describe(
+				"With raw=true: a video's rendition of this height instead of the original. 404 until it has been prepared.",
+			),
 	}),
 	response: objectItemSchema,
+	errors: [404, 500],
+	service: storageServiceFor,
+});
+
+export const ensureRendition = defineRoute({
+	method: "post",
+	path: "/api/v1/storage/file/{id}/renditions/{height}",
+	summary: "Prepare a video rendition",
+	description:
+		"Starts rendering the video as an H.264 MP4 no taller than `height` if nothing has yet, and waits up to 20 seconds for it. Call again while it answers `preparing`; once `ready`, read it with raw=true&rendition=<height>. `unavailable` for a file that is not a video, or on a drive whose files are sealed.",
+	tags: ["Storage - Files"],
+	params: z.object({ id: z.string(), height: z.enum(["720", "480"]) }),
+	query: z.object(driveQuery),
+	response: z.object({
+		status: z.enum(["ready", "preparing", "failed", "unavailable"]),
+		error: z.string().optional(),
+	}),
 	errors: [404, 500],
 	service: storageServiceFor,
 });

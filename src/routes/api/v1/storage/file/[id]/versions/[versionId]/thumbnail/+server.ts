@@ -1,14 +1,13 @@
 import { Http } from "#lib/server/http.js";
 import { getFileVersionThumbnail } from "#lib/server/openapi/v1/versions.js";
-
-const PIXELS = { small: 100, medium: 200, large: 300 } as const;
+import { THUMBNAIL_PIXELS } from "#lib/server/services/storage/proxy.js";
 
 export const GET = getFileVersionThumbnail.handler(
 	async ({ params, query, event, service }) => {
 		const thumb = await service.versionThumbnail(
 			params.id,
 			params.versionId,
-			PIXELS[query.size ?? "medium"],
+			THUMBNAIL_PIXELS[query.size ?? "medium"],
 			event.request.headers.get("if-none-match") ?? undefined,
 		);
 		if (!thumb) {

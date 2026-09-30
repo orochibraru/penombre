@@ -18,6 +18,7 @@ import {
 	isActiveContentType,
 	rawFileSecurityHeaders,
 } from "./mappers";
+import type { RenditionHeight, RenditionService } from "./renditions";
 import { ownedFiles } from "./scope";
 import type { ThumbnailService } from "./thumbnails";
 
@@ -36,29 +37,43 @@ export interface FileProxyRequest {
 	itemName: string;
 	raw?: boolean;
 	thumbnail?: boolean;
-	size?: "small" | "medium" | "large";
+	size?: ThumbnailSize;
 	ifNoneMatch?: string;
 	rangeHeader?: string;
+	/** With `raw`: the bytes of this rendition instead of the original's. */
+	rendition?: RenditionHeight;
 }
+
+/**
+ * Named, not pixels: a fixed set keeps the render cache bounded. `preview` is
+ * what a viewer shows before (or instead of) a many-megabyte original.
+ */
+export type ThumbnailSize = "small" | "medium" | "large" | "preview";
+export const THUMBNAIL_PIXELS: Record<ThumbnailSize, number> = {
+	small: 100,
+	medium: 200,
+	large: 300,
+	preview: 1600,
+};
 
 export class ProxyService {
 	constructor(
 		private readonly ctx: StorageContext,
 		private readonly thumbnails: ThumbnailService,
+		private readonly renditions: RenditionService,
 		/** Passed in by StorageService so the proxy stays independent of file operations */
 		private readonly getFileItem: (path: string) => Promise<ObjectItem>,
 	) {}
 
 	async handleThumbnailRequest(
 		itemName: string,
-		size: "small" | "medium" | "large" = "medium",
+		size: ThumbnailSize = "medium",
 		ifNoneMatch?: string,
 	): Promise<Response | null> {
 		proxyLogger.debug(`Fetching thumbnail for: ${itemName}`);
-		const thumbSize = size === "small" ? 100 : size === "medium" ? 200 : 300;
 		const thumbData = await this.thumbnails.getThumbnail(
 			itemName,
-			thumbSize,
+			THUMBNAIL_PIXELS[size],
 			ifNoneMatch,
 		);
 
@@ -89,17 +104,24 @@ export class ProxyService {
 		itemName: string,
 		ifNoneMatch?: string,
 		rangeHeader?: string,
+		rendition?: RenditionHeight,
 	): Promise<Response> {
 		proxyLogger.debug(`Fetching raw file data for: ${itemName}`);
 
-		const [file] = await this.ctx.db
+		const [row] = await this.ctx.db
 			.select()
 			.from(files)
 			.where(and(eq(files.path, itemName), ownedFiles(this.ctx)));
 
-		if (!file) {
+		if (!row) {
 			throw new FileOrFolderNotFoundError(`File not found: ${itemName}`);
 		}
+		if (rendition && !this.renditions.exists(itemName, rendition)) {
+			throw new FileOrFolderNotFoundError(`No ${rendition}p of: ${itemName}`);
+		}
+		// A rendition is another file's bytes under the same row and access.
+		const key = rendition ? this.renditions.key(itemName, rendition) : itemName;
+		const file = rendition ? { ...row, contentType: "video/mp4" } : row;
 
 		// Frame the response from the bytes, never from the row. The row's size is
 		// client-declared on create and only corrected once the body lands, so a
@@ -107,7 +129,7 @@ export class ProxyService {
 		// disagreeing — and a Content-Length that overshoots the stream is served
 		// as a silently truncated file: an 80MB track that plays for 19 seconds.
 		const size = await this.ctx.driver
-			.getObjectSize(itemName)
+			.getObjectSize(key)
 			.catch(() => file.size);
 
 		const etag = generateETag({
@@ -125,21 +147,19 @@ export class ProxyService {
 
 		if (rangeHeader) {
 			proxyLogger.debug("Generating range headers for partial content");
-			const parts = rangeHeader.replace(/bytes=/, "").split("-");
-			const start = Number(parts[0]);
+			const [from, to] = rangeHeader.replace(/bytes=/, "").split("-");
+			// `-N` is the last N bytes, not the first N.
+			const suffix = from === "";
+			const start = suffix ? Math.max(size - Number(to), 0) : Number(from);
 			// Players routinely ask for an open or over-long tail; clamp so the
 			// advertised length can never exceed what the stream will deliver.
-			const end = Math.min(parts[1] ? Number(parts[1]) : size - 1, size - 1);
+			const end = suffix || !to ? size - 1 : Math.min(Number(to), size - 1);
 
 			if (Number.isNaN(start)) {
 				throw new Error("Invalid range");
 			}
 
-			const stream = await this.ctx.driver.getObjectStream(
-				itemName,
-				start,
-				end,
-			);
+			const stream = await this.ctx.driver.getObjectStream(key, start, end);
 
 			return new Response(stream, {
 				status: 206,
@@ -156,7 +176,7 @@ export class ProxyService {
 		}
 
 		proxyLogger.debug("Returning full file response");
-		const stream = await this.ctx.driver.getObjectStream(itemName);
+		const stream = await this.ctx.driver.getObjectStream(key);
 		const encodedName = encodeURIComponent(file.name);
 		// Active types are always downloaded, never rendered inline; the
 		// sandboxed CSP is defence in depth, this is the actual stop.
@@ -213,7 +233,12 @@ export class ProxyService {
 		}
 
 		if (raw) {
-			return this.handleRawFile(itemName, ifNoneMatch, rangeHeader);
+			return this.handleRawFile(
+				itemName,
+				ifNoneMatch,
+				rangeHeader,
+				req.rendition,
+			);
 		}
 
 		return this.handleMetadata(itemName);

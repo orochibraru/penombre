@@ -572,6 +572,8 @@ mod tests {
                 });
                 let mut harness = egui_kittest::Harness::builder()
                     .with_size(Vec2::new(440.0, 720.0))
+                    // As a Retina screen shows it: these end up in the docs.
+                    .with_pixels_per_point(2.0)
                     .build_ui(move |ui| {
                         // Fonts land on the frame after `set_fonts`.
                         if !std::mem::replace(&mut installed, true) {

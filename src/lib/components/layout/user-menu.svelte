@@ -1,12 +1,15 @@
 <script lang="ts">
-	import { CircleUserIcon, LogOutIcon } from "@lucide/svelte";
+	import { CircleUserIcon, DownloadIcon, LogOutIcon } from "@lucide/svelte";
 	import { type User } from "#lib/api/index.js";
 	import { handleSignOut } from "#lib/auth-helpers.js";
+	import AppsDialog from "#lib/components/apps/apps-dialog.svelte";
+	import ConnectMobileDialog from "#lib/components/layout/dialogs/connect-mobile-dialog.svelte";
 	import * as Avatar from "#lib/components/ui/avatar/index.js";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
 	import * as m from "#lib/paraglide/messages.js";
+	import { appsDialogOpen, connectMobileOpen } from "#lib/store/apps.js";
 	import { resolve } from "$app/paths";
 
 	interface Props {
@@ -88,6 +91,10 @@
                             <a href={resolve('account')} {...props}><CircleUserIcon /><span>{m.account()}</span></a>
                         {/snippet}
                     </DropdownMenu.Item>
+                    <DropdownMenu.Item onclick={() => appsDialogOpen.set(true)}>
+                        <DownloadIcon />
+                        {m.apps_get()}
+                    </DropdownMenu.Item>
                 </DropdownMenu.Group>
                 <DropdownMenu.Item onclick={() => handleSignOut()}>
                     <LogOutIcon />
@@ -97,3 +104,6 @@
         </DropdownMenu.Root>
     </Sidebar.MenuItem>
 </Sidebar.Menu>
+
+<AppsDialog />
+<ConnectMobileDialog bind:open={$connectMobileOpen} />

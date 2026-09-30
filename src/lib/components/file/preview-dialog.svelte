@@ -3,6 +3,7 @@
 	import { untrack } from "svelte";
 	import type { ObjectItem } from "#lib/api/index.js";
 	import NotesPanel from "#lib/components/file/notes-panel.svelte";
+	import ProgressiveImage from "#lib/components/file/progressive-image.svelte";
 	import Waveform from "#lib/components/file/waveform.svelte";
 	import VideoPlayer from "#lib/components/layout/video-player.svelte";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
@@ -20,7 +21,7 @@
 	import { cn, readableFileSize } from "#lib/utils.js";
 	import { versionOf } from "#lib/versions.js";
 	import type { ResolvedPathname } from "$app/types";
-	import { fullscreenUrl, rawUrl } from "./file-links";
+	import { fullscreenUrl, rawUrl, thumbnailUrl } from "./file-links";
 	import VersionSelect from "./version-select.svelte";
 	import type { FileToView } from "./wrapper.svelte.js";
 
@@ -158,10 +159,13 @@
                 )}
             >
                 {#if fileToView.type === "image"}
-                    <img
-                        src={fileToView.src}
+                    <ProgressiveImage
+                        thumb={thumbnailUrl(fileToView.item, "large")}
+                        preview={thumbnailUrl(fileToView.item, "preview")}
+                        original={fileToView.src}
                         alt={fileToView.item.metadata.name ?? fileToView.item.key}
-                        class="max-h-[62vh] max-w-full rounded-md object-contain"
+                        size={fileToView.item.size ?? undefined}
+                        class="h-[62vh] w-full"
                     />
                 {:else if fileToView.type === "video"}
                     <VideoPlayer

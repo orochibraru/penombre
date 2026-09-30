@@ -4,25 +4,42 @@ appId: dev.penombre.app
 - launchApp:
     clearState: true
 - assertVisible: "Penombre"
+# A device with a camera leads with the QR code; typing is behind a link.
+- tapOn:
+    text: "Enter the server address instead"
+    optional: true
 - assertVisible: "Server address"
 - tapOn: "Server address"
 - inputText: ${SERVER}
 - tapOn: "Sign in"
-# iOS asks before handing the sign-in to the browser.
-- tapOn:
-    text: "Continue"
-    optional: true
+# iOS asks before handing the sign-in to the browser. The alert animates in:
+# a tap sent too early lands on nothing.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - extendedWaitUntil:
+          visible: "Continue"
+          timeout: 10000
+      - tapOn:
+          text: "Continue"
+          retryTapIfNoChange: true
 # A fresh Android emulator shows Chrome's first-run screens once.
-- tapOn:
-    text: "Use without an account"
-    optional: true
-- tapOn:
-    text: "No thanks"
-    optional: true
-- tapOn:
-    text: "Got it"
-    optional: true
-# The instance's own sign-in page, in the browser.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn:
+          text: "Use without an account"
+          optional: true
+      - tapOn:
+          text: "No thanks"
+          optional: true
+      - tapOn:
+          text: "Got it"
+          optional: true
+# The instance, in the browser: its sign-in page, or straight to the approval
+# when that browser is already signed in.
 - extendedWaitUntil:
-    visible: "Sign in to your account"
+    visible: "Sign in to your account|Approve"
     timeout: 30000

@@ -1,0 +1,221 @@
+# Signs in through the browser, then uses the app: the native listing, the
+# bottom bar's tabs, the embedded web app on the same session, and sign-out.
+appId: dev.penombre.app
+---
+- runFlow: sign-in-screen.yaml
+- runFlow:
+    when:
+      visible: "Sign in to your account"
+    commands:
+      # Enter, not the buttons: the iOS keyboard covers them.
+      - tapOn: "Email"
+      - inputText: ${EMAIL}
+      - pressKey: Enter
+      - extendedWaitUntil:
+          visible: "Password"
+          timeout: 15000
+      # The field, not its label: on iOS a label tap focuses the input
+      # without raising the keyboard, and the typed text goes nowhere.
+      - tapOn:
+          below: "Password"
+          above: "Sign in with a passkey"
+          index: 0
+      - inputText: ${PASSWORD}
+      - pressKey: Enter
+      # iOS offers to save the password, over the page.
+      - tapOn:
+          text: "Not Now"
+          optional: true
+- extendedWaitUntil:
+    visible: "Approve"
+    timeout: 30000
+# The page may still be settling: a tap that changes nothing is sent again.
+- tapOn:
+    text: "Approve"
+    retryTapIfNoChange: true
+# Back in the app, on the account's drive: the folder run.sh seeded is
+# listed natively, and opens.
+- extendedWaitUntil:
+    visible: "My Drive"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "Maestro"
+    timeout: 30000
+- assertVisible: "Tour budget.csv"
+- tapOn: "Maestro"
+- extendedWaitUntil:
+    visible: "Empty folder"
+    timeout: 30000
+# A folder is made, renamed and trashed without leaving the app; the folder
+# is left empty for the next run.
+- tapOn: "Add files"
+- tapOn: "New folder"
+# The field takes the keyboard a moment after it appears.
+- waitForAnimationToEnd
+- inputText: "Takes"
+- tapOn: "Create"
+- extendedWaitUntil:
+    visible: "Takes"
+    timeout: 30000
+- tapOn: "Options for Takes"
+- tapOn: "Rename"
+- waitForAnimationToEnd
+# The old name is selected: typing replaces it.
+- inputText: "Takes of May"
+- tapOn:
+    text: "Rename"
+    index: 1
+- extendedWaitUntil:
+    visible: "Takes of May"
+    timeout: 30000
+- tapOn: "Options for Takes of May"
+- tapOn: "Move to trash"
+- extendedWaitUntil:
+    visible: "Empty folder"
+    timeout: 30000
+- tapOn: "Back"
+- assertVisible: "My Drive"
+# Search finds a file by part of its name.
+- tapOn: "Search"
+- waitForAnimationToEnd
+- inputText: "budg"
+- extendedWaitUntil:
+    visible: "Tour budget.csv"
+    timeout: 30000
+- assertNotVisible: "Poster.jpg"
+- tapOn: "Back"
+- assertVisible: "My Drive"
+# A file's earlier copies.
+- tapOn: "Options for Setlist.md"
+- tapOn: "Versions"
+- extendedWaitUntil:
+    visible: "v2, current"
+    timeout: 30000
+- assertVisible: "Restore v1"
+- tapOn: "Back"
+# Pulled down, the list loads again and is still there.
+- swipe:
+    start: "50%, 30%"
+    end: "50%, 80%"
+- extendedWaitUntil:
+    visible: "Tour budget.csv"
+    timeout: 30000
+# A photo opens as a preview in a drawer, then over the whole screen.
+- tapOn: "Poster.jpg"
+- extendedWaitUntil:
+    visible: "Full screen"
+    timeout: 15000
+- tapOn: "Full screen"
+- extendedWaitUntil:
+    notVisible: "My Drive"
+    timeout: 15000
+- assertVisible: "Poster.jpg"
+- tapOn: "Back"
+# A track plays in the app: the mini player appears and answers.
+- tapOn: "Live sets"
+- tapOn: "Soundcheck.wav"
+- extendedWaitUntil:
+    visible: "Pause"
+    timeout: 30000
+- tapOn: "Pause"
+- assertVisible: "Play"
+- tapOn: "Stop playback"
+- assertNotVisible: "Stop playback"
+# A video plays in the drawer under the app's own controls, and keeps its
+# place when it takes the whole screen.
+- tapOn: "Olympia, encore.mp4"
+- extendedWaitUntil:
+    visible: "Pause video"
+    timeout: 30000
+- assertVisible: "Forward 10 seconds"
+- tapOn: "Pause video"
+- assertVisible: "Play video"
+# A lower quality is rendered by the server, then played in its place.
+- tapOn: "Quality: Original"
+- tapOn: "480p"
+- extendedWaitUntil:
+    visible: "Quality: 480p"
+    timeout: 120000
+- tapOn: "Full screen"
+- extendedWaitUntil:
+    notVisible: "Live sets"
+    timeout: 15000
+# Still paused, and the same video: the controls stay while it is. Playing
+# there is left out: they fade in less time than a step takes to find them.
+- assertVisible: "Play video"
+- assertVisible: "Olympia, encore.mp4"
+- tapOn: "Back"
+# Back in the folder it was opened from, not at the drive's root.
+- assertVisible: "Soundcheck.wav"
+# A format the phone cannot play says so, and plays once converted.
+- tapOn: "Rehearsal.avi"
+- extendedWaitUntil:
+    visible: "Convert and play"
+    timeout: 30000
+- tapOn: "Convert and play"
+- extendedWaitUntil:
+    visible: "Quality: 720p"
+    timeout: 120000
+- swipe:
+    start: "50%, 55%"
+    end: "50%, 95%"
+- assertVisible: "Soundcheck.wav"
+- tapOn: "Back"
+- assertVisible: "My Drive"
+# The bottom bar: each tab loads its own list.
+- tapOn: "Starred"
+- extendedWaitUntil:
+    visible: "Maestro"
+    timeout: 30000
+- tapOn: "Recent"
+- extendedWaitUntil:
+    visible: "Soundcheck.wav|Rider.docx|Contract.pdf"
+    timeout: 30000
+# Shared drives browse like the account's own.
+- tapOn: "Menu"
+- tapOn: "Shared drives"
+- extendedWaitUntil:
+    visible: "The band"
+    timeout: 30000
+- tapOn: "The band"
+- extendedWaitUntil:
+    visible: "Stage plot.pdf"
+    timeout: 30000
+# The tab bar is still there inside a drive.
+- assertVisible: "Starred"
+- tapOn: "Back"
+- tapOn: "Back"
+# The trash lists what was removed.
+- tapOn: "Trash"
+- extendedWaitUntil:
+    visible: "Old flyer.jpg"
+    timeout: 30000
+- assertVisible: "Empty"
+- tapOn: "Back"
+# The accent is the account's: changing it here is saved, then put back.
+- tapOn: "Settings"
+# `.*`: the accent in use reads "…, selected".
+- tapOn: "blue accent.*"
+- extendedWaitUntil:
+    visible: "blue accent, selected"
+    timeout: 15000
+- tapOn: "bordeaux accent.*"
+- extendedWaitUntil:
+    visible: "bordeaux accent, selected"
+    timeout: 15000
+- tapOn: "Back"
+# The web app opens signed in, on the session cookie the app planted: its own
+# bottom bar (the native one is hidden behind it), never its sign-in page.
+- tapOn: "Open web app"
+- extendedWaitUntil:
+    visible: "Upload Files|New Folder|Search.*"
+    timeout: 30000
+- assertVisible: "Recent"
+- assertNotVisible: "Sign in to your account"
+- tapOn: "Back"
+- tapOn: "Sign out"
+# A device with a camera leads with the QR code; typing is behind a link.
+- tapOn:
+    text: "Enter the server address instead"
+    optional: true
+- assertVisible: "Server address"

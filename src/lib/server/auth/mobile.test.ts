@@ -2,9 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { verification } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 
-const { createMobileCode, redeemMobileCode, verifierMatches } = await import(
-	"./mobile"
-);
+const {
+	createMobileCode,
+	createPairCode,
+	pairingUrl,
+	redeemMobileCode,
+	redeemPairCode,
+	verifierMatches,
+} = await import("./mobile");
 
 // Challenge computed with `openssl dgst -sha256 -binary | base64url`.
 const VERIFIER = "dBjftJeZ4CVP-mJ92K27uhbUJU1p1r_wW1gFWFOEjXk";
@@ -46,5 +51,42 @@ describe("mobile sign-in codes", () => {
 			.set({ expiresAt: new Date(Date.now() - 1000) });
 
 		expect(await redeemMobileCode(code, VERIFIER, database)).toBeNull();
+	});
+});
+
+describe("mobile pairing codes", () => {
+	test("a code signs in the account that showed it, once", async () => {
+		const database = migratedSqlite();
+		const { code, expiresAt } = await createPairCode("u1", database);
+
+		expect(expiresAt.getTime()).toBeGreaterThan(Date.now());
+		expect(await redeemPairCode(code, database)).toBe("u1");
+		expect(await redeemPairCode(code, database)).toBeNull();
+	});
+
+	test("an expired code is refused", async () => {
+		const database = migratedSqlite();
+		const { code } = await createPairCode("u1", database);
+		await database
+			.update(verification)
+			.set({ expiresAt: new Date(Date.now() - 1000) });
+
+		expect(await redeemPairCode(code, database)).toBeNull();
+	});
+
+	test("neither kind of code redeems as the other", async () => {
+		const database = migratedSqlite();
+		const pending = { userId: "u1", challenge: CHALLENGE, device: "Pixel" };
+		const signIn = await createMobileCode(pending, database);
+		const { code: pair } = await createPairCode("u1", database);
+
+		expect(await redeemPairCode(signIn, database)).toBeNull();
+		expect(await redeemMobileCode(pair, VERIFIER, database)).toBeNull();
+	});
+
+	test("the link carries the server, escaped, and the code", () => {
+		expect(pairingUrl("https://files.example.com:8443", "abc")).toBe(
+			"penombre://pair?server=https%3A%2F%2Ffiles.example.com%3A8443&code=abc",
+		);
 	});
 });

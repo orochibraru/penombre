@@ -1,0 +1,39 @@
+# Signing in from the web app's QR code. A simulator has no camera, so the
+# code arrives the other way a phone gets it: as a link the system opens.
+appId: dev.penombre.app
+---
+- launchApp:
+    clearState: true
+# An earlier run that stopped at iOS's "Open in…?" leaves that alert up.
+- tapOn:
+    text: "Cancel"
+    optional: true
+- assertVisible: "Penombre"
+- openLink: ${LINK}
+# iOS asks before a link opens an app, the first time.
+- tapOn:
+    text: "Open"
+    optional: true
+# The app asks first: a link alone must not sign it in anywhere.
+- extendedWaitUntil:
+    visible: "Sign in to .*"
+    timeout: 30000
+- tapOn: "Connect"
+- extendedWaitUntil:
+    visible: "My Drive"
+    timeout: 30000
+# A code works once: the same link again is refused, and says so.
+- tapOn: "Menu"
+- tapOn: "Sign out"
+- openLink: ${LINK}
+# iOS asks before a link opens an app, the first time.
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Sign in to .*"
+    timeout: 30000
+- tapOn: "Connect"
+- extendedWaitUntil:
+    visible: "That code no longer works.*"
+    timeout: 30000

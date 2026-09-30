@@ -14,17 +14,25 @@
 		VolumeXIcon,
 		XIcon,
 	} from "@lucide/svelte";
+	import { untrack } from "svelte";
+	import { toast } from "svelte-sonner";
 	import NotesPanel from "#lib/components/file/notes-panel.svelte";
 	import { pendingPreview } from "#lib/components/file/preview-handover.js";
+	import ProgressiveImage from "#lib/components/file/progressive-image.svelte";
+	import VideoQuality from "#lib/components/file/video-quality.svelte";
+	import VideoUnplayable from "#lib/components/file/video-unplayable.svelte";
 	import Waveform from "#lib/components/file/waveform.svelte";
 	import { Button } from "#lib/components/ui/button/index.js";
 	import { Progress } from "#lib/components/ui/progress/index.js";
 	import { Slider } from "#lib/components/ui/slider/index.js";
 	import { m } from "#lib/paraglide/messages.js";
+	import { playMedia } from "#lib/play.js";
+	import { locationFrom, locationQuery } from "#lib/storage-location.js";
 	import { playableMusic } from "#lib/store/music.js";
 	import { fileNotes, loadFileNotes, noteMarkers } from "#lib/store/notes.js";
 	import { title } from "#lib/store/title.js";
 	import { cn, readableFileSize, toggleFullscreen } from "#lib/utils.js";
+	import { VideoSource } from "#lib/video-source.svelte.js";
 	import { beforeNavigate, goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
@@ -35,8 +43,15 @@
 	const base = $derived(
 		`/api/v1/storage/file/${encodeURIComponent(data.path)}`,
 	);
-	const src = $derived(`${base}?raw=true`);
-	const peaks = $derived(`${base}?thumbnail=true&size=large`);
+	// A media `src` carries no header: a file on a drive or a volume was asked
+	// of the personal drive, and answered 404.
+	const where = $derived(locationQuery(locationFrom(page.params, page.url)));
+	const url = (query: string) =>
+		`${base}?${[query, where].filter(Boolean).join("&")}`;
+	const src = $derived(url("raw=true"));
+	const peaks = $derived(url("thumbnail=true&size=large"));
+	const source = new VideoSource(() => src);
+	const blocked = $derived(source.quality === "original" && source.unplayable);
 
 	const isVideo = $derived(data.contentType.startsWith("video/"));
 	const isAudio = $derived(data.contentType.startsWith("audio/"));
@@ -72,6 +87,14 @@
 
 	/** Once per load: `loadedmetadata` is the first point a seek sticks. */
 	function resume() {
+		if (resumeAt !== undefined) {
+			currentTime = resumeAt;
+			resumeAt = undefined;
+			if (resumePlaying) {
+				void playMedia(player);
+			}
+			return;
+		}
 		if (resumed) {
 			return;
 		}
@@ -82,9 +105,39 @@
 		if (startPlaying) {
 			// Autoplay can still be refused — the page has no user activation
 			// of its own. The playhead is preserved either way.
-			void player?.play().catch(() => undefined);
+			void playMedia(player);
 		}
 	}
+	/** A change of quality is the same moment of the same video. */
+	let resumeAt: number | undefined;
+	let resumePlaying = false;
+	function keepPlayhead() {
+		resumeAt = currentTime;
+		resumePlaying = !paused;
+	}
+
+	function refused(error: MediaError | null) {
+		const format =
+			error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ||
+			error?.code === MediaError.MEDIA_ERR_DECODE;
+		if (format && source.quality === "original") {
+			source.unplayable = true;
+			return;
+		}
+		toast.error(m.player_unplayable());
+		if (source.quality !== "original") {
+			void source.choose("original");
+		}
+	}
+
+	// The element is in the server's HTML and starts loading before this
+	// script runs: an error raised by then never reaches `onerror`.
+	$effect(() => {
+		if (isVideo && player?.error) {
+			untrack(() => refused(player?.error ?? null));
+		}
+	});
+
 	let paused = $state(true);
 	let currentTime = $state(0);
 	let duration = $state(0);
@@ -158,7 +211,7 @@
 			return;
 		}
 		if (player.paused) {
-			void player.play();
+			void playMedia(player);
 		} else {
 			player.pause();
 		}
@@ -260,12 +313,20 @@
             )}
         >
             {#if isImage}
-                <img
-                    src={src}
+                <ProgressiveImage
+                    thumb={url("thumbnail=true&size=large")}
+                    preview={url("thumbnail=true&size=preview")}
+                    original={src}
                     alt={data.name}
-                    class="max-h-full max-w-full rounded-lg object-contain"
+                    size={data.size}
+                    class="h-full w-full"
                 />
             {:else if isVideo}
+                {#if blocked}
+                    <div class="w-full max-w-3xl">
+                        <VideoUnplayable {source} href={src} name={data.name} />
+                    </div>
+                {/if}
                 <!-- svelte-ignore a11y_media_has_caption -->
                 <video
                     bind:this={player}
@@ -273,10 +334,14 @@
                     bind:currentTime
                     bind:duration
                     bind:volume
-                    src={src}
+                    src={source.src}
                     playsinline
                     onloadedmetadata={resume}
-                    class="max-h-[calc(100%-4rem)] w-full rounded-lg bg-black object-contain"
+                    onerror={() => refused(player?.error ?? null)}
+                    class={cn(
+                        "max-h-[calc(100%-4rem)] w-full rounded-lg bg-black object-contain",
+                        blocked && "hidden",
+                    )}
                 ></video>
             {:else if isAudio}
                 <!-- A now-playing screen, not a strip: a track has no picture
@@ -327,7 +392,7 @@
                 <embed src={src} title={data.name} class="h-full w-full" />
             {/if}
 
-            {#if isVideo || isAudio}
+            {#if (isVideo && !blocked) || isAudio}
                 <div
                     class={cn(
                         "flex w-full shrink-0 items-center gap-3",
@@ -374,6 +439,7 @@
                                 <ExpandIcon />
                             {/if}
                         </Button>
+                        <VideoQuality {source} onswitch={keepPlayhead} />
                     {/if}
                     <div class="flex w-32 items-center gap-2">
                         {#if volume === 0}

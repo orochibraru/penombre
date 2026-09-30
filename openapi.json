@@ -17500,9 +17500,93 @@
 				]
 			}
 		},
+		"/api/v1/mobile/pair": {
+			"post": {
+				"description": "For a signed-in browser: a single-use link, valid two minutes, to show as a QR code. The app that scans it is signed in to this account. Refused for an API key.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"expiresAt": {
+													"type": "string"
+												},
+												"url": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"url",
+												"expiresAt"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Too Many Requests"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Create a mobile pairing code",
+				"tags": [
+					"Auth"
+				]
+			}
+		},
 		"/api/v1/mobile/token": {
 			"post": {
-				"description": "Redeems the single-use code from /auth/mobile/authorize with its PKCE verifier and returns a new session: its token for `Authorization: Bearer`, and its signed cookie for the app's embedded browser.",
+				"description": "Redeems a single-use code and returns a new session: its token for `Authorization: Bearer`, and its signed cookie for the app's embedded browser. A code from /auth/mobile/authorize comes with its PKCE `code_verifier`; one read from a pairing QR code comes with the `device` name instead.",
 				"requestBody": {
 					"content": {
 						"application/json": {
@@ -17517,11 +17601,14 @@
 										"maxLength": 128,
 										"minLength": 43,
 										"type": "string"
+									},
+									"device": {
+										"maxLength": 100,
+										"type": "string"
 									}
 								},
 								"required": [
-									"code",
-									"code_verifier"
+									"code"
 								],
 								"type": "object"
 							}
@@ -21898,7 +21985,21 @@
 							"enum": [
 								"small",
 								"medium",
-								"large"
+								"large",
+								"preview"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "rendition",
+						"required": false,
+						"schema": {
+							"description": "With raw=true: a video's rendition of this height instead of the original. 404 until it has been prepared.",
+							"enum": [
+								"480",
+								"720"
 							],
 							"type": "string"
 						}
@@ -22877,6 +22978,131 @@
 					}
 				],
 				"summary": "Save an Office document",
+				"tags": [
+					"Storage - Files"
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/renditions/{height}": {
+			"post": {
+				"description": "Starts rendering the video as an H.264 MP4 no taller than `height` if nothing has yet, and waits up to 20 seconds for it. Call again while it answers `preparing`; once `ready`, read it with raw=true&rendition=<height>. `unavailable` for a file that is not a video, or on a drive whose files are sealed.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "height",
+						"required": true,
+						"schema": {
+							"enum": [
+								"480",
+								"720"
+							],
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"error": {
+													"type": "string"
+												},
+												"status": {
+													"enum": [
+														"ready",
+														"preparing",
+														"failed",
+														"unavailable"
+													],
+													"type": "string"
+												}
+											},
+											"required": [
+												"status"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Prepare a video rendition",
 				"tags": [
 					"Storage - Files"
 				]
@@ -24143,7 +24369,8 @@
 							"enum": [
 								"small",
 								"medium",
-								"large"
+								"large",
+								"preview"
 							],
 							"type": "string"
 						}

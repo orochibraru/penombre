@@ -80,6 +80,55 @@ export async function redeemMobileCode(
 	return { userId: pending.userId, device: pending.device };
 }
 
+const PAIR_TTL_MS = 2 * 60_000;
+const PAIR_PREFIX = "mobile-pair:";
+
+/** What the QR code says: the app opens it as a link, or reads it itself. */
+export function pairingUrl(server: string, code: string): string {
+	return `penombre://pair?server=${encodeURIComponent(server)}&code=${code}`;
+}
+
+/**
+ * A single-use code a signed-in browser shows as a QR code: whoever scans it
+ * within two minutes is signed in as that account. No PKCE here, the phone
+ * has never spoken to this server, so the code alone is the proof; it lives
+ * under its own prefix so neither kind of code redeems as the other.
+ */
+export async function createPairCode(
+	userId: string,
+	database: Database = db,
+): Promise<{ code: string; expiresAt: Date }> {
+	const code = base64url(crypto.getRandomValues(new Uint8Array(32)));
+	const expiresAt = new Date(Date.now() + PAIR_TTL_MS);
+	await database.insert(verification).values({
+		id: crypto.randomUUID(),
+		identifier: PAIR_PREFIX + base64url(await sha256(code)),
+		value: userId,
+		expiresAt,
+	});
+	return { code, expiresAt };
+}
+
+/** The account the code was shown by; consumed like a sign-in code. */
+export async function redeemPairCode(
+	code: string,
+	database: Database = db,
+): Promise<string | null> {
+	const [row] = await database
+		.delete(verification)
+		.where(
+			and(
+				eq(
+					verification.identifier,
+					PAIR_PREFIX + base64url(await sha256(code)),
+				),
+				gt(verification.expiresAt, new Date()),
+			),
+		)
+		.returning();
+	return row?.value ?? null;
+}
+
 /** A new session plus the signed cookie the app plants in its WebView. */
 export async function createMobileSession(userId: string, device: string) {
 	const ctx = await auth.$context;

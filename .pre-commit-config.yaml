@@ -13,6 +13,8 @@ repos:
 
       - id: check-yaml
         name: Validate Yaml
+        # A Maestro flow is two documents: its config, then its commands.
+        args: [--allow-multiple-documents]
 
       - id: check-added-large-files
         name: Look for large files
@@ -147,6 +149,17 @@ repos:
         pass_filenames: false
         stages: [pre-push]
         files: ^desktop/
+
+      # The shared mobile code on the JVM: no device. Through mise where there
+      # is one, for its JDK and Android SDK: a push from an IDE has neither on
+      # its PATH. CI installs its own.
+      - id: test-mobile
+        name: Tests (Mobile)
+        entry: sh -c 'cd mobile && $(command -v mise >/dev/null && echo "mise exec --") ./gradlew -q :shared:testAndroidHostTest'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: ^mobile/
 
       - id: i18n
         name: Locale parity

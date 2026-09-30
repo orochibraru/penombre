@@ -6,6 +6,8 @@ struct PenombreApp: App {
     var body: some Scene {
         WindowGroup {
             ComposeView().ignoresSafeArea()
+                // The pairing QR code, read by the system camera.
+                .onOpenURL { url in MainViewControllerKt.openLink(url: url.absoluteString) }
         }
     }
 }

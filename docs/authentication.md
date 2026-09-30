@@ -197,15 +197,21 @@ credential is what marks it as an invitation — the sign-in flow sees it and
 routes the person to onboarding. Tick **Email invite** (available once SMTP is
 configured) to have Penombre mail them the sign-in link.
 
+With no mail server, or when the email could not be sent, the link exists
+nowhere else: the page shows it in a dialog to copy and pass on yourself. It is
+also how you finish an account on someone's behalf, a test account for instance:
+open the link in a private window and choose its password.
+
 The invite link leads to `/auth/onboarding`, where the person chooses a
 password. While password sign-in is off, it offers no password: it sends them to
 sign in with an emailed link or code instead.
 
 Invite links expire after 7 days. An account that never finished onboarding (the
 link expired, or was lost before it reached anyone) still shows in the list with
-no password set; its row menu offers **Resend invite**, which mints a fresh link
-and invalidates any older, still-unused one for that account, so only one link
-is ever live at a time.
+no password set; its row menu offers **Resend invite** (**Get invite link** when
+no mail server is configured), which mints a fresh link and invalidates any
+older, still-unused one for that account, so only one link is ever live at a
+time.
 
 There is deliberately **no way for an admin to set someone's password**. A
 password a second person has chosen and passed along is a password that lives in

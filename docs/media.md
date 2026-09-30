@@ -67,6 +67,46 @@ the thread open there, clicking the waveform behaves as it does everywhere else
 Notes are per-instance, not per-share: they are visible to accounts that can see
 the file, and they are never included in a share link.
 
+## Pictures load in steps
+
+A photo from a phone is several megabytes; what a screen needs to show it is a
+fraction of that. Opening a picture shows the listing's thumbnail at once,
+blurred, then a preview rendered by the server (1600 pixels on its long side),
+and **Show original** fetches the file itself, with its size on the button. A
+picture under 400 KB, a GIF or an SVG is simply shown as it is.
+
+## Video quality
+
+A video plays straight from its file, and only the part being watched is
+fetched: opening one does not download it. What decides how long it takes to
+start, and whether it stutters, is its bitrate against your connection. A
+phone's 4K clip is 40 to 50 Mbit/s, more than most home connections can send.
+
+The **Quality** button in the player offers **720p** and **480p** beside
+**Original**. The first time one is chosen for a video the server renders it (an
+H.264 MP4, capped at about 2.5 and 1.7 Mbit/s), which takes from a few seconds
+to a few minutes depending on the video's length and the machine; the player
+keeps playing meanwhile and switches at the same moment of the video once it is
+ready. It is rendered once: the next viewer gets it at once.
+
+Renditions are stored beside thumbnails, in the storage root's `.thumbnails`
+folder, and are removed with the file or when its bytes change. Each is roughly
+the video's length times its bitrate: about 19 MB a minute at 720p.
+
+### Formats a browser cannot play
+
+Browsers play MP4, WebM and little else. For an AVI, WMV, FLV or an MKV with a
+codec the browser lacks, the player is replaced by a message saying so, with two
+buttons: **Convert and play**, which renders the 720p version described above
+and plays that, and **Download**.
+
+Converting in the browser itself was considered and rejected: it means fetching
+the whole file first and decoding it in software, which a phone cannot do for a
+full-length video.
+
+On a drive whose files are [sealed](encryption.md), nothing is rendered: the
+quality button is absent and an unplayable format can only be downloaded.
+
 ## Opening media full screen
 
 **Open full screen** on an image, a video or a track navigates to Penombre's own

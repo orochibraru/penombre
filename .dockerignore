@@ -32,6 +32,12 @@ LICENSE
 # Local runtime state: the dev drive's real files and SQLite database.
 /data/
 
+# The other apps: nothing in the image is built from them, and their build
+# output is gigabytes of context.
+/desktop/
+/mobile/
+/specs/
+
 # Node
 **/node_modules/
 **/dist/

@@ -31,6 +31,7 @@
 	import { Slider } from "#lib/components/ui/slider/index.js";
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import * as m from "#lib/paraglide/messages.js";
+	import { playMedia } from "#lib/play.js";
 	import { tune } from "#lib/playback-tuning.js";
 	import {
 		type PlaybackCommand,
@@ -107,7 +108,7 @@
 	function restart() {
 		currentTime = 0;
 		if (paused) {
-			void player?.play().then(() => setPlaying(true));
+			void playMedia(player).then(setPlaying);
 		}
 	}
 	let loading: boolean = $state(true);
@@ -229,12 +230,7 @@
 			setPlaying(false);
 		}
 		if (command.play) {
-			player
-				.play()
-				.then(() => setPlaying(true))
-				.catch(() => {
-					paused = true;
-				});
+			void playMedia(player).then(setPlaying);
 		}
 	}
 
@@ -356,8 +352,7 @@
 			{:else if paused}
 				<Button
 					onclick={() => {
-						player?.play();
-						setPlaying(true);
+						void playMedia(player).then(setPlaying);
 					}}
 					title={m.play()}
                 >
@@ -517,14 +512,7 @@
 				return;
 			}
 			autoplayPending = false;
-            player
-                ?.play()
-                .then(() => setPlaying(true))
-                .catch(() => {
-				// Autoplay refused: show the paused state instead.
-				paused = true;
-				setPlaying(false);
-			});
+			void playMedia(player).then(setPlaying);
 		}}
 		bind:this={player}
 		bind:paused

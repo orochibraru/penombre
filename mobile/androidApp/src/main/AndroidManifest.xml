@@ -6,6 +6,8 @@
     <!-- Self-hosted instances are often plain HTTP on a LAN. -->
     <application
         android:label="Penombre"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
@@ -22,7 +24,19 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="penombre" android:host="auth" />
+                <!-- The web app's "Connect the mobile app" QR code, read by any camera. -->
+                <data android:scheme="penombre" android:host="pair" />
             </intent-filter>
         </activity>
+        <!-- Hands the camera app a file of ours to write the photo into. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 </manifest>

@@ -194,7 +194,7 @@ export const getFileVersionThumbnail = defineRoute({
 	params: fileVersionParams,
 	query: z.object({
 		...driveQuery,
-		size: z.enum(["small", "medium", "large"]).optional(),
+		size: z.enum(["small", "medium", "large", "preview"]).optional(),
 	}),
 	response: z.any(),
 	errors: [404, 500],

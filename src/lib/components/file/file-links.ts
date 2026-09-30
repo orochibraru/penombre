@@ -9,7 +9,7 @@ import { get } from "svelte/store";
 import type { ObjectItem } from "#lib/api/index.js";
 import { locationOf, locationQuery } from "#lib/storage-location.js";
 import { playableMusic, playbackPosition } from "#lib/store/music.js";
-import { getObjectUrl } from "#lib/url.js";
+import { getObjectUrl, type ThumbnailSize } from "#lib/url.js";
 import { type VersionRef, versionOf } from "#lib/versions.js";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
@@ -66,7 +66,7 @@ export function downloadUrl(item: ObjectItem): string {
 /** A thumbnail; for audio the same URL answers with waveform peaks. */
 export function thumbnailUrl(
 	item: ObjectItem,
-	size: "small" | "medium" | "large" = "large",
+	size: ThumbnailSize = "large",
 ): string {
 	const version = versionOf(item);
 	if (version) {

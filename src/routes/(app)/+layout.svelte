@@ -30,6 +30,7 @@
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import AppBanner from "#lib/components/apps/app-banner.svelte";
 	import { withLocation } from "#lib/components/file/file-links.js";
 	import NewFolderDialog from "#lib/components/layout/dialogs/new-folder-dialog.svelte";
 	import NewTextFileDialog from "#lib/components/layout/dialogs/new-text-file-dialog.svelte";
@@ -587,7 +588,10 @@
 		>
 			<div
 				class="main-container @container/main flex flex-1 flex-col gap-5 p-5"
-			>{@render children()}</div>
+			>
+				<AppBanner />
+				{@render children()}
+			</div>
 		</div>
 
 		<MusicPlayer />

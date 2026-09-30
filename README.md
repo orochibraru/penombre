@@ -12,15 +12,11 @@ with a bill of exactly zero.
 [Docker Hub](https://hub.docker.com/r/orochibraru/penombre) ·
 [Project page](https://orochibraru.com/penombre)
 
-<!-- Regenerate with `bun run screenshots`; do not edit by hand. -->
+<!-- Regenerate with `mise run graphics`; do not edit by hand. -->
 <!-- markdownlint-disable MD033 -->
 
 <a href="https://orochibraru.com/penombre/docs/showcase">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/hero-dark.webp">
-    <source media="(prefers-color-scheme: light)" srcset="docs/images/hero.webp">
-    <img alt="Penombre, browsing a drive" src="docs/images/hero.webp">
-  </picture>
+  <img alt="Penombre: your files, on your own server" src="docs/images/graphics/feature-web.webp">
 </a>
 
 <!-- markdownlint-enable MD033 -->

@@ -223,9 +223,9 @@
     >
         {#if !isDesktop.current && indeterminate}
             {#if isSelected}
-                <CircleCheckIcon class="text-primary" />
+                <CircleCheckIcon class={cn(iconSize, "text-primary bg-transparent")} />
             {:else}
-                <CircleIcon class="text-muted-foreground" />
+                <CircleIcon class={cn(iconSize, "text-muted-foreground bg-transparent")} />
             {/if}
         {:else}
             <FolderIcon class={cn(iconSize, "text-primary")} fill="currentColor" />
@@ -392,9 +392,9 @@
     >
         {#if !isDesktop.current && indeterminate}
             {#if isSelected}
-                <CircleCheckIcon class="text-primary" />
+                <CircleCheckIcon class={cn(iconSize, "text-primary bg-transparent")} />
             {:else}
-                <CircleIcon class="text-muted-foreground" />
+                <CircleIcon class={cn(iconSize, "text-muted-foreground bg-transparent")} />
             {/if}
         {:else if getItemStatus() === ItemStatus.UPLOADING}
             <div>
@@ -423,7 +423,9 @@
                 {:else if item.metadata.category === FileCategoryEnum.MUSIC}
                     {#if $playableMusic && $playableMusic.title === playTitle}
                         {#if $playableMusic.isPlaying}
-                            <NowPlaying />
+                            <span class={cn(iconSize, "flex items-center justify-center text-pink-400")}>
+                                <NowPlaying />
+                            </span>
                         {:else}
                             <PauseIcon class={cn(iconSize, "text-pink-400")} />
                         {/if}

@@ -5,6 +5,7 @@ import {
 	getFile,
 	updateFile,
 } from "#lib/server/openapi/v1/storage.js";
+import type { RenditionHeight } from "#lib/server/services/storage/renditions.js";
 
 export const GET = getFile.handler(
 	async ({ params, query, event, service }) => {
@@ -23,6 +24,9 @@ export const GET = getFile.handler(
 				raw: query.raw === "true",
 				thumbnail: query.thumbnail === "true",
 				size: query.size,
+				rendition: query.rendition
+					? (Number(query.rendition) as RenditionHeight)
+					: undefined,
 				ifNoneMatch: event.request.headers.get("If-None-Match") ?? undefined,
 				rangeHeader:
 					event.request.headers.get("range") ??

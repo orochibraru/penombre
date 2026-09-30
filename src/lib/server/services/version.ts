@@ -174,22 +174,7 @@ async function fetchNewestCanary(): Promise<GithubRelease | null> {
 	return newest;
 }
 
-/**
- * The release whose desktop build to offer: the server's own, unless the
- * instance follows the other channel (a server built from source reports a
- * plain version while following canary), then that channel's newest.
- */
-export function channelOf(version: string): "stable" | "canary" {
-	return version.includes("-canary.") ? "canary" : "stable";
-}
-
-export function desktopReleaseVersion(
-	own: string,
-	channel: "stable" | "canary",
-	newest: string | null,
-): string {
-	return channel === channelOf(own) ? own : (newest ?? own);
-}
+export { channelOf, desktopReleaseVersion } from "#lib/release.js";
 
 export async function checkForUpdate(): Promise<VersionCheckResult> {
 	const config = getConfig();

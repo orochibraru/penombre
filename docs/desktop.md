@@ -1,5 +1,7 @@
 # Desktop sync
 
+![Penombre Sync, syncing two folders](images/graphics/feature-desktop.webp)
+
 Penombre Sync is a small tray app for macOS, Linux and Windows that keeps
 folders on your computer in two-way sync with Penombre. It is built on
 [WebDAV and rclone](webdav.md): it does the setup that page describes for you,
@@ -102,8 +104,8 @@ Notifications**. Its notifications are shown by Script Editor; allow those.
 
 ## Get it from your server
 
-**Settings → Desktop app** in Penombre offers the build that matches the
-server's own version (a canary server offers the canary build), picks your
+**Get the apps** in your profile menu (top right) offers the build that matches
+the server's own version (a canary server offers the canary build), picks your
 system, shows the Homebrew command, and has the server address to paste into the
 app.
 

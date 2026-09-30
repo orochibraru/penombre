@@ -6,6 +6,7 @@
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import Badge from "#lib/components/ui/badge/badge.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Card from "#lib/components/ui/card/index.js";
@@ -15,7 +16,7 @@
 	import { enhance } from "#lib/forms.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { cn } from "#lib/utils.js";
+	import { cn, copyText } from "#lib/utils.js";
 
 	onMount(() => {
 		title.set(m.title_admin_users());
@@ -25,21 +26,32 @@
 
 	let pendingForm: HTMLFormElement | null = $state(null);
 
+	// An invite no mail carried: the link exists nowhere else, so it is shown
+	// until dismissed rather than dropped into the clipboard behind a toast.
+	let inviteLink = $state<{ email: string; url: string; reason?: string }>();
+	let inviteLinkOpen = $state(false);
+
 	$effect(() => {
 		if (form?.error) {
 			toast.error(form.error);
 		} else if (form?.invited) {
 			toast.success(m.toast_user_invited({ email: form.invited }));
 			if (form.onboardingUrl) {
-				// No mail was sent for this invite, so the link only exists here;
-				// hand it to the admin the one place they can still get it.
-				navigator.clipboard
-					.writeText(form.onboardingUrl)
-					.then(() => toast.info(m.toast_invite_link_copied()))
-					.catch(() => {});
+				inviteLink = {
+					email: form.invited,
+					url: form.onboardingUrl,
+					reason: form.mailFailed ?? undefined,
+				};
+				inviteLinkOpen = true;
 			}
 		}
 	});
+
+	async function copyInviteLink() {
+		if (inviteLink && (await copyText(inviteLink.url))) {
+			toast.success(m.toast_invite_link_copied());
+		}
+	}
 
 	// Drive-only accounts mean nothing when everyone shares one drive.
 	const simpleMode = $derived(data.config?.simpleMode ?? false);
@@ -264,7 +276,9 @@
                                             pendingForm,
                                         )}
                                 >
-                                    {m.admin_resend_invite()}
+                                    {data.smtpEnabled
+                                        ? m.admin_resend_invite()
+                                        : m.admin_get_invite_link()}
                                 </DropdownMenu.Item>
                                 <DropdownMenu.Separator />
                             {/if}
@@ -339,3 +353,26 @@
         {/each}
     </div>
 </div>
+
+<ResponsiveDialog
+    bind:open={inviteLinkOpen}
+    size="sm"
+    title={m.admin_invite_link_title({ email: inviteLink?.email ?? "" })}
+    description={m.admin_invite_link_description()}
+    submitLabel={m.copy_link()}
+    cancelLabel={m.done()}
+    onsubmit={copyInviteLink}
+>
+    {#if inviteLink?.reason}
+        <p class="text-destructive text-sm">
+            {m.admin_invite_mail_failed({ reason: inviteLink.reason })}
+        </p>
+    {/if}
+    <Input
+        readonly
+        value={inviteLink?.url ?? ""}
+        aria-label={m.copy_link()}
+        class="font-mono text-xs"
+        onfocus={(event) => event.currentTarget.select()}
+    />
+</ResponsiveDialog>

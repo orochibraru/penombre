@@ -10,11 +10,11 @@ import { page, type ReadonlyURL } from "$app/state";
 const FILE_PATH_TEMPLATE: keyof paths = "/api/v1/storage/file/{id}";
 
 /**
- * The API takes named thumbnail sizes, not pixels: three discrete values keep
+ * The API takes named thumbnail sizes, not pixels: a few discrete values keep
  * the on-disk thumbnail cache bounded, where an arbitrary pixel count would
  * let any caller generate unlimited variants.
  */
-export type ThumbnailSize = "small" | "medium" | "large";
+export type ThumbnailSize = "small" | "medium" | "large" | "preview";
 
 interface ObjectUrlProps {
 	baseUrl: ReadonlyURL;
@@ -28,6 +28,8 @@ interface ObjectUrlProps {
 	raw?: boolean;
 	thumbnail?: boolean;
 	size?: ThumbnailSize;
+	/** With `raw`: a video's rendition of this height. */
+	rendition?: 720 | 480;
 }
 
 export function getObjectUrl({
@@ -37,6 +39,7 @@ export function getObjectUrl({
 	raw,
 	thumbnail,
 	size,
+	rendition,
 }: ObjectUrlProps): string {
 	const fullPath =
 		fileId ?? (page.params.path ? `${page.params.path}/${itemPath}` : itemPath);
@@ -67,6 +70,9 @@ export function getObjectUrl({
 	}
 	if (size) {
 		params.set("size", size);
+	}
+	if (rendition) {
+		params.set("rendition", String(rendition));
 	}
 
 	const queryString = params.toString();

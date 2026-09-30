@@ -21,6 +21,7 @@ import (
 	"github.com/orochibraru/penombre/internal/jobs/mediaprobe"
 	"github.com/orochibraru/penombre/internal/jobs/scanlist"
 	"github.com/orochibraru/penombre/internal/jobs/thumbnail"
+	"github.com/orochibraru/penombre/internal/jobs/transcode"
 	"github.com/orochibraru/penombre/internal/jobs/ziparchive"
 	"github.com/orochibraru/penombre/internal/worker"
 )
@@ -31,6 +32,7 @@ var version = "dev"
 func registry() worker.Registry {
 	return worker.Registry{
 		"thumbnail":   thumbnail.Run,
+		"transcode":   transcode.Run,
 		"scan-list":   scanlist.Run,
 		"media-probe": mediaprobe.Run,
 		"zip":         ziparchive.Run,

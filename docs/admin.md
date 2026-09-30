@@ -22,8 +22,10 @@ one at first sign-in. An admin cannot set it for them. Tick **Shared drives
 only** when inviting someone who should see nothing but the drives you add them
 to. The row menu can:
 
-- **Resend invite**: only on an account with no password set. Mints a fresh
-  invite link and invalidates any older, unused one for it. See
+- **Resend invite** (**Get invite link** with no mail server): only on an
+  account with no password set. Mints a fresh invite link and invalidates any
+  older, unused one for it. A link that no email carried is shown in a dialog to
+  copy and pass on. See
   [Authentication](authentication.md#adding-people-to-an-instance).
 - **Make admin / Remove admin** — grant or revoke the `admin` role.
 - **Ban / Unban** — a banned user's sessions stop working immediately.

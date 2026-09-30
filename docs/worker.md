@@ -5,13 +5,14 @@ doing it inline in the app's request handlers.
 
 ## What it does
 
-The worker generates image, video and PDF thumbnails and audio waveforms, walks
-a storage root during a library scan, probes media duration, builds zip archives
-for downloads, and copies or deletes bytes for cross-drive transfers and
-emptying the trash. The app decides _what_ to do — which rows exist, which files
-belong in a zip, which bytes survive a delete — and hands the worker a job with
-everything it needs as absolute paths; the worker only touches the filesystem
-and reports back.
+The worker generates image, video and PDF thumbnails and audio waveforms,
+renders [lower-quality versions of videos](media.md#video-quality) on request,
+walks a storage root during a library scan, probes media duration, builds zip
+archives for downloads, and copies or deletes bytes for cross-drive transfers
+and emptying the trash. The app decides _what_ to do — which rows exist, which
+files belong in a zip, which bytes survive a delete — and hands the worker a job
+with everything it needs as absolute paths; the worker only touches the
+filesystem and reports back.
 
 ## Embedded by default
 

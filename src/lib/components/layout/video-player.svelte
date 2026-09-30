@@ -9,14 +9,20 @@
 		Volume2Icon,
 		VolumeXIcon,
 	} from "@lucide/svelte";
+	import { untrack } from "svelte";
+	import { toast } from "svelte-sonner";
 	import { withResume } from "#lib/components/file/file-links.js";
+	import VideoQuality from "#lib/components/file/video-quality.svelte";
+	import VideoUnplayable from "#lib/components/file/video-unplayable.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Popover from "#lib/components/ui/popover/index.js";
 	import { Progress } from "#lib/components/ui/progress/index.js";
 	import { Slider } from "#lib/components/ui/slider/index.js";
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import * as m from "#lib/paraglide/messages.js";
-	import { toggleFullscreen } from "#lib/utils.js";
+	import { playMedia } from "#lib/play.js";
+	import { cn, toggleFullscreen } from "#lib/utils.js";
+	import { VideoSource } from "#lib/video-source.svelte.js";
 	import { dev } from "$app/env";
 	import type { ResolvedPathname } from "$app/types";
 
@@ -39,9 +45,35 @@
 		currentTime = $bindable(0),
 	}: Props = $props();
 
+	const source = new VideoSource(() => src);
+	/** The original will not play: the panel stands in for the player. */
+	const blocked = $derived(source.quality === "original" && source.unplayable);
+
+	// Another file starts from its own original.
+	$effect(() => {
+		void src;
+		untrack(() => source.reset());
+	});
+
+	/** A change of quality is the same moment of the same video. */
+	let resumeAt: number | undefined;
+	let resumePlaying = false;
+	function keepPlayhead() {
+		resumeAt = currentTime;
+		resumePlaying = !paused;
+	}
+
 	/** `loadedmetadata` is the first point a seek sticks, and only once. */
 	let resumed = false;
 	function resume() {
+		if (resumeAt !== undefined) {
+			currentTime = resumeAt;
+			resumeAt = undefined;
+			if (resumePlaying) {
+				void playMedia(player);
+			}
+			return;
+		}
 		if (resumed || !startAt) {
 			return;
 		}
@@ -57,6 +89,7 @@
 	let duration = $state(0);
 	let volume = $state(1);
 	let loading: boolean = $state(true);
+	let autoplayed = false;
 
 	/** Only the viewer understands a playhead; the raw file is just bytes. */
 	const viewerHref = $derived(
@@ -67,12 +100,14 @@
 
 	$effect(() => {
 		// Make sure the player element has been created before we try to use it.
-		if (player && src) {
-			// Only update the source if it's different from the current one.
-			// This prevents unnecessary reloads if the effect is re-triggered.
-			if (player.src !== src) {
-				player.src = src;
-				// `load()` tells the audio element to fetch the new source.
+		const next = source.src;
+		if (player && next) {
+			// `player.src` is always resolved: compared raw, a relative source
+			// never matched and every re-run reloaded it under a pending play.
+			if (player.src !== new URL(next, window.location.href).href) {
+				player.src = next;
+				autoplayed = false;
+				loading = true;
 				player.load();
 			}
 		} else if (player) {
@@ -123,20 +158,44 @@
 ></svelte:document>
 
 <div bind:this={shell} class="flex flex-col w-full h-full bg-background">
+	{#if blocked}
+		<VideoUnplayable {source} href={src} name={title} />
+	{/if}
 	<video
 		id="music-player"
-		class="w-full rounded-xl mb-2"
+		class={cn(
+			// Capped so the controls under it stay inside the dialog's box: a
+			// 16:9 video at full width was taller than the box and hid them.
+			"mb-2 max-h-[calc(62vh-3.5rem)] w-full rounded-xl bg-black object-contain",
+			blocked && "hidden",
+		)}
 		title={title}
 		playsinline
 		onloadedmetadata={resume}
 		oncanplay={() => {
 			loading = false;
-			if (!dev) {
-				player.play().catch((error) => {
-					console.error("Autoplay was prevented:", error);
-					// If autoplay fails, update the UI to show the paused state.
-					paused = true;
-				});
+			// Once: `canplay` fires again after every seek and stall.
+			if (!dev && !autoplayed) {
+				autoplayed = true;
+				void playMedia(player);
+			}
+		}}
+		onerror={() => {
+			// No source is not a failure: the effect clears it on the way out.
+			if (!player.getAttribute("src")) {
+				return;
+			}
+			loading = false;
+			const refused =
+				player.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ||
+				player.error?.code === MediaError.MEDIA_ERR_DECODE;
+			if (refused && source.quality === "original") {
+				source.unplayable = true;
+				return;
+			}
+			toast.error(m.player_unplayable());
+			if (source.quality !== "original") {
+				void source.choose("original");
 			}
 		}}
 		bind:this={player}
@@ -148,7 +207,7 @@
         <track kind="captions" />
     </video>
 
-	<div class="flex w-full items-center gap-2">
+	<div class={cn("flex w-full items-center gap-2", blocked && "hidden")}>
 		<div class="flex items-center justify-between gap-2">
 			{#if loading}
                 <Button disabled title={m.loading()}>
@@ -156,9 +215,7 @@
                 </Button>
 			{:else if paused}
                 <Button
-                    onclick={() => {
-					player?.play();
-                    }}
+                    onclick={() => void playMedia(player)}
                     title={m.play()}
                 >
                     <PlayIcon />
@@ -199,6 +256,8 @@
 			title={m.open_fullscreen()}
 			href={viewerHref as ResolvedPathname}
 		><MaximizeIcon /></Button>
+
+		<VideoQuality {source} onswitch={keepPlayhead} />
 
 		<Popover.Root>
 			<Popover.Trigger>

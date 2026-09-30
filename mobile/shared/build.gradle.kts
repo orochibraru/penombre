@@ -9,7 +9,7 @@ plugins {
 kotlin {
     android {
         namespace = "dev.penombre.shared"
-        compileSdk = 36
+        compileSdk = 37
         minSdk = 29
         // commonTest on the JVM: fast, no device.
         withHostTest {}
@@ -33,14 +33,21 @@ kotlin {
             implementation(libs.ktor.negotiation)
             implementation(libs.ktor.json)
             implementation(libs.serialization.json)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.ktor.mock)
+            implementation(libs.coroutines.test)
         }
         androidMain.dependencies {
             implementation(libs.ktor.okhttp)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.browser)
+            implementation(libs.androidx.core)
+            implementation(libs.mlkit.scanner)
+            implementation(libs.mlkit.codes)
         }
         iosMain.dependencies {
             implementation(libs.ktor.darwin)

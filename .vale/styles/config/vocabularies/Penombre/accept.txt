@@ -64,3 +64,5 @@ rustup
 toolchain
 Xcode
 Brevo
+bitrate
+codec

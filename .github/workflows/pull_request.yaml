@@ -27,6 +27,7 @@ jobs:
     outputs:
       build: ${{ steps.diff.outputs.build }}
       desktop: ${{ steps.desktop.outputs.desktop }}
+      mobile: ${{ steps.mobile.outputs.mobile }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -61,6 +62,14 @@ jobs:
           set -euo pipefail
           if [ -n "$(git diff --name-only "$(git merge-base HEAD origin/main)" HEAD -- desktop)" ]; then
             echo "desktop=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check whether the mobile app changed
+        id: mobile
+        run: |
+          set -euo pipefail
+          if [ -n "$(git diff --name-only "$(git merge-base HEAD origin/main)" HEAD -- mobile)" ]; then
+            echo "mobile=true" >> "$GITHUB_OUTPUT"
           fi
 
   code_quality:
@@ -112,6 +121,58 @@ jobs:
           prek-version: ${{ steps.prek.outputs.version }}
           extra-args: --all-files --hook-stage pre-push clippy test-rust
 
+  # The shared code's unit tests on the JVM. The Maestro flows need an emulator,
+  # a simulator and a server: they run locally (`mise run mobile:e2e`).
+  mobile:
+    name: Mobile (tests)
+    needs: [changes]
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The JDK mise.toml pins for local builds.
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Resolve prek version
+        id: prek
+        run: echo "version=$(jq -r .version node_modules/@j178/prek/package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Tests
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          prek-version: ${{ steps.prek.outputs.version }}
+          extra-args: --all-files --hook-stage pre-push test-mobile
+
+  # Both apps, built as a release builds them and attached nowhere: a Kotlin/
+  # Native link error only shows when the iOS framework is linked.
+  mobile-build:
+    name: Mobile (build)
+    needs: [changes]
+    if: needs.changes.outputs.mobile == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/mobile.yaml
+    with:
+      version: 0.0.0-canary.0
+
   build-app:
     name: Docker Build (App)
     needs: [code_quality]
@@ -162,7 +223,17 @@ jobs:
   gate:
     name: CI Gate
     if: always()
-    needs: [changes, code_quality, desktop, build-app, e2e, publish]
+    needs:
+      [
+        changes,
+        code_quality,
+        desktop,
+        mobile,
+        mobile-build,
+        build-app,
+        e2e,
+        publish,
+      ]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
@@ -171,6 +242,8 @@ jobs:
             "${{ needs.changes.result }}"
             "${{ needs.code_quality.result }}"
             "${{ needs.desktop.result }}"
+            "${{ needs.mobile.result }}"
+            "${{ needs.mobile-build.result }}"
             "${{ needs.build-app.result }}"
             "${{ needs.e2e.result }}"
             "${{ needs.publish.result }}"

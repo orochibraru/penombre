@@ -73,7 +73,9 @@
 		onDropOnFolder,
 	}: SharedFileDisplayProps = $props();
 
-	const iconSize = "h-5 w-5";
+	// The icon on a tile tinted with its own colour. `box-content`: the
+	// padding grows the tile, not shrinks the glyph. Must fit the row height.
+	const iconSize = "h-5 w-5 box-content shrink-0 rounded-md bg-current/15 p-2";
 	const loadingAmount = 20;
 	/** Set on every row, so the virtualizer's arithmetic is the layout. */
 	const ROW_HEIGHT = 57;
@@ -457,7 +459,7 @@
                                         disabled={act.disabled}
                                         variant={act.variant}
                                     >
-                                        <Icon class={act.iconClass} />
+                                        <Icon class={act.iconClass ?? "text-primary"} />
                                         {title}
                                     </ContextMenu.Item>
                                 {/if}
@@ -530,7 +532,7 @@
                                             disabled={act.disabled}
                                             variant={act.variant}
                                         >
-                                            <Icon class={act.iconClass} />
+                                            <Icon class={act.iconClass ?? "text-primary"} />
                                             {title}
                                         </DropdownMenu.Item>
                                     {/if}

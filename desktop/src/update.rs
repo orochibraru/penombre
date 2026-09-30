@@ -12,7 +12,14 @@ use sha2::{Digest, Sha256};
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// `desktop/Cargo.toml`'s version until a release build stamps the real one.
 const UNSTAMPED: &str = "0.1.0";
-const RELEASES: &str = "https://api.github.com/repos/orochibraru/penombre/releases?per_page=30";
+// github.com's own pages, never api.github.com: the API allows an address 60
+// anonymous requests an hour, shared with everything else behind it, and then
+// answers 403. These are what a browser reads, and have no such budget.
+/// Redirects to the newest stable release's page.
+const LATEST: &str = "https://github.com/orochibraru/penombre/releases/latest";
+/// The ten newest releases of any kind.
+const FEED: &str = "https://github.com/orochibraru/penombre/releases.atom";
+const PAGES: &str = "https://github.com/orochibraru/penombre/releases/tag";
 const EVERY: Duration = Duration::from_secs(6 * 60 * 60);
 const DOWNLOADS: &str = "https://github.com/orochibraru/penombre/releases/download";
 /// Passed to the new binary, which then waits for this one to let go.
@@ -57,20 +64,6 @@ pub enum Found {
     Current,
     Newer(Release),
     Failed(String),
-}
-
-#[derive(Deserialize)]
-struct GitHubRelease {
-    tag_name: String,
-    html_url: String,
-    draft: bool,
-    prerelease: bool,
-    assets: Vec<Asset>,
-}
-
-#[derive(Deserialize)]
-struct Asset {
-    name: String,
 }
 
 const APPIMAGE: &str = "penombre-sync-x86_64.AppImage";
@@ -121,48 +114,94 @@ fn check(channel: Channel) -> Found {
     let Some(asset) = asset().filter(|_| VERSION != UNSTAMPED) else {
         return Found::Off;
     };
-    match fetch() {
-        Ok(releases) => newest(&releases, channel, asset)
-            .filter(|r| rank(&r.version) > rank(VERSION))
-            .map_or(Found::Current, Found::Newer),
+    let listed = match listed(channel) {
+        Ok(listed) => listed,
         Err(error) => {
             log::warn!("update check failed: {error}");
-            Found::Failed(error)
+            return Found::Failed(error);
         }
-    }
+    };
+    // A release counts once its build for this platform is attached; one
+    // whose build failed is passed over for the next newest.
+    newer(&listed, channel, VERSION)
+        .into_iter()
+        .find(|version| built(version, asset))
+        .map_or(Found::Current, |version| {
+            Found::Newer(Release {
+                url: format!("{PAGES}/v{version}"),
+                version,
+            })
+        })
 }
 
-fn fetch() -> Result<Vec<GitHubRelease>, String> {
-    reqwest::blocking::Client::new()
-        .get(RELEASES)
-        .header(
-            reqwest::header::USER_AGENT,
-            concat!("penombre-sync/", env!("CARGO_PKG_VERSION")),
-        )
-        .header(reqwest::header::ACCEPT, "application/vnd.github+json")
+fn client(redirects: reqwest::redirect::Policy) -> Result<reqwest::blocking::Client, String> {
+    reqwest::blocking::Client::builder()
+        .user_agent(concat!("penombre-sync/", env!("CARGO_PKG_VERSION")))
         .timeout(Duration::from_secs(15))
-        .send()
-        .and_then(reqwest::blocking::Response::error_for_status)
-        .and_then(reqwest::blocking::Response::json)
+        .redirect(redirects)
+        .build()
         .map_err(|e| e.to_string())
 }
 
-/// Canary follows stable releases too: 1.9.0 is newer than 1.9.0-canary.4.
-/// A release counts once its desktop builds are attached, minutes after it.
-fn newest(releases: &[GitHubRelease], channel: Channel, asset: &str) -> Option<Release> {
-    releases
-        .iter()
-        .filter(|r| !r.draft && (channel == Channel::Canary || !r.prerelease))
-        .filter(|r| r.assets.iter().any(|a| a.name == asset))
-        .filter_map(|r| {
-            let version = r.tag_name.strip_prefix('v')?;
-            rank(version)?;
-            Some(Release {
-                version: version.to_owned(),
-                url: r.html_url.clone(),
-            })
+/// The text naming the releases a channel follows: the stable channel's is
+/// where `LATEST` redirects, the canary's is the feed.
+fn listed(channel: Channel) -> Result<String, String> {
+    match channel {
+        Channel::Stable => {
+            let response = client(reqwest::redirect::Policy::none())?
+                .get(LATEST)
+                .send()
+                .map_err(|e| e.to_string())?;
+            response
+                .headers()
+                .get(reqwest::header::LOCATION)
+                .and_then(|to| to.to_str().ok())
+                .map(str::to_owned)
+                .ok_or_else(|| format!("no release to follow ({})", response.status()))
+        }
+        Channel::Canary => client(reqwest::redirect::Policy::default())?
+            .get(FEED)
+            .send()
+            .and_then(reqwest::blocking::Response::error_for_status)
+            .and_then(reqwest::blocking::Response::text)
+            .map_err(|e| e.to_string()),
+    }
+}
+
+fn built(version: &str, asset: &str) -> bool {
+    client(reqwest::redirect::Policy::default())
+        .and_then(|client| {
+            client
+                .head(format!("{DOWNLOADS}/v{version}/{asset}"))
+                .send()
+                .map_err(|e| e.to_string())
         })
-        .max_by_key(|r| rank(&r.version))
+        .is_ok_and(|response| response.status().is_success())
+}
+
+/// Every version a release page or feed names, as `…/releases/tag/v<version>`.
+fn versions_in(text: &str) -> Vec<String> {
+    text.split("/releases/tag/v")
+        .skip(1)
+        .map(|rest| {
+            rest.chars()
+                .take_while(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-'))
+                .collect::<String>()
+        })
+        .filter(|version| rank(version).is_some())
+        .collect()
+}
+
+/// The versions in `listed` above `current`, newest first. Canary follows
+/// stable releases too: 1.9.0 is newer than 1.9.0-canary.4.
+fn newer(listed: &str, channel: Channel, current: &str) -> Vec<String> {
+    let mut versions = versions_in(listed);
+    versions.retain(|v| {
+        (channel == Channel::Canary || Channel::of(v) == Channel::Stable) && rank(v) > rank(current)
+    });
+    versions.sort_by_key(|v| std::cmp::Reverse(rank(v)));
+    versions.dedup();
+    versions
 }
 
 /// `X.Y.Z` or `X.Y.Z-canary.N`; a release outranks its canaries.
@@ -332,21 +371,6 @@ pub fn brew_command(installed: &str, channel: Channel) -> String {
 mod tests {
     use super::*;
 
-    fn release(tag: &str, prerelease: bool, built: bool) -> GitHubRelease {
-        GitHubRelease {
-            tag_name: tag.into(),
-            html_url: format!("https://example.com/{tag}"),
-            draft: false,
-            prerelease,
-            assets: built
-                .then(|| Asset {
-                    name: "a.tar.gz".into(),
-                })
-                .into_iter()
-                .collect(),
-        }
-    }
-
     #[test]
     fn a_release_outranks_its_canaries_and_numbers_compare_as_numbers() {
         assert!(rank("1.9.0") > rank("1.9.0-canary.4"));
@@ -358,22 +382,29 @@ mod tests {
     }
 
     #[test]
-    fn each_channel_picks_its_newest_built_release() {
-        let releases = [
-            release("v1.9.1-canary.2", true, false),
-            release("v1.9.1-canary.1", true, true),
-            release("v1.9.0", false, true),
-            release("v1.9.0-canary.3", true, true),
-        ];
-        let version = |c| newest(&releases, c, "a.tar.gz").map(|r| r.version);
-        assert_eq!(version(Channel::Stable).as_deref(), Some("1.9.0"));
+    fn each_channel_lists_what_is_newer_newest_first() {
+        // As the feed has them: an entry names its tag twice, id and link.
+        let feed = r#"<id>tag:github.com,2008:Repository/1/v1.9.1-canary.2</id>
+            <link href="https://github.com/o/p/releases/tag/v1.9.1-canary.2"/>
+            <link href="https://github.com/o/p/releases/tag/v1.9.0"/>
+            <link href="https://github.com/o/p/releases/tag/v1.9.1-canary.1"/>
+            <link href="https://github.com/o/p/releases/tag/v1.9.0-canary.3"/>
+            <link href="https://github.com/o/p/releases/tag/vnext"/>"#;
         assert_eq!(
-            version(Channel::Canary).as_deref(),
-            Some("1.9.1-canary.1"),
-            "canary.2 has no desktop build yet"
+            newer(feed, Channel::Canary, "1.9.0-canary.3"),
+            ["1.9.1-canary.2", "1.9.1-canary.1", "1.9.0"]
         );
+        assert_eq!(newer(feed, Channel::Stable, "1.8.0"), ["1.9.0"]);
+        assert!(newer(feed, Channel::Canary, "1.9.1-canary.2").is_empty());
         assert_eq!(Channel::of("1.9.1-canary.1"), Channel::Canary);
         assert_eq!(Channel::of("1.9.0"), Channel::Stable);
+    }
+
+    #[test]
+    fn the_stable_channel_reads_where_latest_redirects() {
+        let location = "https://github.com/orochibraru/penombre/releases/tag/v1.8.59";
+        assert_eq!(newer(location, Channel::Stable, "1.8.58"), ["1.8.59"]);
+        assert!(newer(location, Channel::Stable, "1.8.59").is_empty());
     }
 
     #[test]

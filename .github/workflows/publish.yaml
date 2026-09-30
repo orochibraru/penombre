@@ -348,11 +348,27 @@ jobs:
     with:
       version: ${{ needs.version.outputs.version }}
 
-  # Published even when a desktop build failed: the server release must not
-  # wait on it, and a draft is invisible to everyone else.
+  mobile:
+    name: Mobile ${{ needs.version.outputs.version }}
+    needs: [version, release]
+    if: ${{ !cancelled() && needs.release.result == 'success' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/mobile.yaml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      upload: true
+    secrets:
+      ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+  # Published even when a desktop or mobile build failed: the server release
+  # must not wait on it, and a draft is invisible to everyone else.
   publish-release:
     name: Publish Release ${{ needs.version.outputs.version }}
-    needs: [version, release, desktop]
+    needs: [version, release, desktop, mobile]
     if: ${{ !cancelled() && needs.release.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:

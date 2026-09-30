@@ -1,11 +1,9 @@
 import { error } from "@sveltejs/kit";
-import { auth } from "#lib/server/auth/index.js";
+import { activeSessions } from "#lib/server/auth/sessions.js";
 
-export const load = async ({ request }) => {
-	try {
-		const sessions = await auth.api.listSessions({ headers: request.headers });
-		return { sessions };
-	} catch {
-		return error(500, "Failed to load sessions");
+export const load = async ({ locals }) => {
+	if (!locals.user) {
+		error(401, "Unauthorized");
 	}
+	return { sessions: await activeSessions(locals.user.id) };
 };

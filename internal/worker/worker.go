@@ -37,6 +37,7 @@ var callerBound = map[string]bool{"copy": true, "delete": true}
 // than holding a settle-mode caller forever. Generous on purpose.
 var timeouts = map[string]time.Duration{
 	"thumbnail":   10 * time.Minute,
+	"transcode":   6 * time.Hour,
 	"media-probe": time.Hour,
 	"scan-list":   time.Hour,
 	"zip":         2 * time.Hour,

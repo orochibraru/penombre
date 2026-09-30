@@ -1,10 +1,5 @@
 <script lang="ts">
-	import {
-		CogIcon,
-		HardDriveIcon,
-		MonitorDownIcon,
-		PaletteIcon,
-	} from "@lucide/svelte";
+	import { CogIcon, HardDriveIcon, PaletteIcon } from "@lucide/svelte";
 	import SectionTabs, {
 		type SectionTab,
 	} from "#lib/components/layout/section-tabs.svelte";
@@ -33,11 +28,6 @@
 						icon: HardDriveIcon,
 					},
 				] satisfies SectionTab[])),
-		{
-			title: m.settings_nav_desktop(),
-			url: "/settings/desktop",
-			icon: MonitorDownIcon,
-		},
 	]);
 
 	const { children } = $props();

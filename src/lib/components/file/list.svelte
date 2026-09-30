@@ -57,7 +57,9 @@
 		onDropOnFolder,
 	}: SharedFileDisplayProps = $props();
 
-	const iconSize = "h-6 w-6";
+	// The icon on a tile tinted with its own colour. `box-content`: the
+	// padding grows the tile, not shrinks the glyph. Must fit the row height.
+	const iconSize = "h-6 w-6 box-content shrink-0 rounded-md bg-current/15 p-2";
 	const loadingAmount = 20;
 	/** A row's pitch: the height set on each `li` plus the list's `gap-1`. */
 	const ROW_HEIGHT = 64;
@@ -490,7 +492,7 @@
                                             : "",
                                     )}
                                 >
-                                    <Icon class={act.iconClass} />
+                                    <Icon class={act.iconClass ?? "text-primary"} />
                                     {title}
                                 </button>
                             {/if}
