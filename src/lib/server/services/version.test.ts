@@ -8,7 +8,11 @@ import {
 	test,
 } from "bun:test";
 import { getConfig } from "#lib/server/config.js";
-import { isNewerVersion, normalizeVersion } from "./version";
+import {
+	desktopReleaseVersion,
+	isNewerVersion,
+	normalizeVersion,
+} from "./version";
 
 const mockGetConfig = getConfig as Mock<typeof getConfig>;
 
@@ -358,5 +362,27 @@ describe("isNewerVersion", () => {
 
 	test("equal canary builds are not an update", () => {
 		expect(isNewerVersion("1.8.51-canary.3", "1.8.51-canary.3")).toBe(false);
+	});
+});
+
+describe("desktopReleaseVersion", () => {
+	test("offers the server's own build on its own channel", () => {
+		expect(desktopReleaseVersion("1.8.58", "stable", "1.9.0")).toBe("1.8.58");
+		expect(
+			desktopReleaseVersion("1.8.59-canary.4", "canary", "1.8.59-canary.9"),
+		).toBe("1.8.59-canary.4");
+	});
+
+	test("follows the instance's channel when the server reports the other", () => {
+		expect(desktopReleaseVersion("1.8.58", "canary", "1.8.59-canary.4")).toBe(
+			"1.8.59-canary.4",
+		);
+		expect(desktopReleaseVersion("1.8.59-canary.4", "stable", "1.8.58")).toBe(
+			"1.8.58",
+		);
+	});
+
+	test("falls back to its own build when the channel's newest is unknown", () => {
+		expect(desktopReleaseVersion("1.8.58", "canary", null)).toBe("1.8.58");
 	});
 });
