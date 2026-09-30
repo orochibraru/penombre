@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.60](https://github.com/orochibraru/penombre/compare/v1.8.59...v1.8.60) (2026-09-30)
+
+### Features
+
+* **mobile:** Home tab returns to the drive root; chore: ktlint prek hook for Kotlin and Gradle scripts ([d00a308](https://github.com/orochibraru/penombre/commit/d00a30876e45c4fb48eddc8b1f685367b4e88816))
+* mobile app goes native (bottom bar, trash, shared drives, settings, versions, photo viewer, music and video players with preview drawer, pull to refresh, rename/move/copy/duplicate/download/new folder/search, camera and document scan uploads, QR code sign-in), video renditions with a quality picker and convert-and-play for unplayable formats, progressive picture previews, "Get the apps" dialog with QR pairing replacing the desktop settings tab, phone banner, app icons for light and dark, feature graphics, mobile release builds in CI, invite link dialog without SMTP, accent-coloured context menu, thin sidebar scrollbar, icon tiles in listings; fix: /account/sessions 500 on sessions older than a day, desktop update check hitting GitHub's API rate limit, unhandled play() rejections in the web players, suffix byte ranges served from the wrong end, /view 404 for media outside the personal drive, nested folder paths in the mobile app; chore: Maestro flows with seeded data, uqr dependency ([395521d](https://github.com/orochibraru/penombre/commit/395521d7dc0c0ec6c2ab0506481bb843ea2da0cd))
+* mobile toolchain through mise (Android SDK, emulator, iOS simulator, Maestro) with mobile:setup/doctor/android/ios tasks, iOS host project, Material You on Android, shared unit tests and a first Maestro flow; fix: sign-in screen drew no background and lost the typed address on recreation; chore: pin dependencies to exact versions ([8eadd5c](https://github.com/orochibraru/penombre/commit/8eadd5c284c1b42b2c8057a1176102a8c71b1e18))
+
+### Bug Fixes
+
+* search & versions ([59a7127](https://github.com/orochibraru/penombre/commit/59a7127de59c1e312d7e29fce051ba932e15cfba))
+* desktop app download followed the server's version instead of the instance's release channel ([568dadc](https://github.com/orochibraru/penombre/commit/568dadc56b277a7ce23bb1c4bcae4389e9a4e189))
+
 ## [1.8.59](https://github.com/orochibraru/penombre/compare/v1.8.58...v1.8.59) (2026-09-29)
 
 ### Features
