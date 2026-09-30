@@ -70,10 +70,16 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/** What the web app opens in one of its editors (`documents.ts`, Office files). */
+private val EDITABLE = setOf("docx", "xlsx", "pptx", "html", "htm", "csv", "md", "markdown")
+
 /** A file opened from a list, and the list it came from. */
 data class Preview(val place: Place, val siblings: List<Item>, val item: Item) {
     val isVideo get() = item.metadata.category == "VIDEO"
     val isImage get() = item.metadata.category == "IMAGES"
+    val isPdf get() = extension == "pdf"
+    val isEditable get() = extension in EDITABLE
+    private val extension get() = item.title.substringAfterLast('.', "").lowercase()
 }
 
 /** A file's first stop: a look at it in a drawer, and the way to the full screen. */
@@ -123,6 +129,10 @@ fun PreviewSheet(preview: Preview, host: Host, onDismiss: () -> Unit) {
                         preview.isVideo -> VideoScreen(preview.place, item)
                         preview.isImage -> preview.siblings.filter { it.metadata.category == "IMAGES" }
                             .let { PhotoScreen(preview.place, it, it.indexOf(item).coerceAtLeast(0)) }
+                        // A WebView shows no PDF on Android: a black page. Native instead.
+                        preview.isPdf -> PdfScreen(preview.place, item)
+                        // The web app edits these; the WebView is signed in.
+                        preview.isEditable -> WebScreen(editUrl(host.server, preview.place, item.metadata.id))
                         else -> WebScreen(rawUrl(host.server, preview.place, item.metadata.id))
                     },
                 )

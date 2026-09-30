@@ -121,6 +121,18 @@ appId: dev.penombre.app
 - assertVisible: "Play"
 - tapOn: "Stop playback"
 - assertNotVisible: "Stop playback"
+# A track with an earlier take shows its version beside it; the earlier one
+# plays from the list of versions.
+- tapOn: "Versions of Soundcheck.wav"
+- extendedWaitUntil:
+    visible: "v2, current"
+    timeout: 30000
+- tapOn: "v1"
+- extendedWaitUntil:
+    visible: "Soundcheck.wav · v1"
+    timeout: 30000
+- tapOn: "Stop playback"
+- tapOn: "Back"
 # A video plays in the drawer under the app's own controls, and keeps its
 # place when it takes the whole screen.
 - tapOn: "Olympia, encore.mp4"

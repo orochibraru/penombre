@@ -46,8 +46,6 @@
 		indeterminate,
 		loading = $bindable(false),
 		checkedItems = $bindable(),
-		searchValue,
-		searchResults,
 		itemActions,
 		onDrop,
 		onUpload,
@@ -257,29 +255,8 @@
 		return [...files.list].sort(compareItems);
 	});
 
-	let sortedSearchResults = $derived.by(() => {
-		if (!searchResults) {
-			return searchResults;
-		}
-		if (!sortColumn) {
-			return sortFoldersFirst(searchResults);
-		}
-		return [...searchResults].sort(compareItems);
-	});
-
-	/**
-	 * Whatever is on screen right now, so a shift-range matches the eye.
-	 *
-	 * Mirrors the render condition exactly. Testing `searchResults` for truth
-	 * is not the same thing: an empty array is truthy, so a drive with no
-	 * search active resolved to an empty list and every selection was written
-	 * against nothing.
-	 */
-	const displayed = $derived(
-		sortedSearchResults && sortedSearchResults.length > 0
-			? sortedSearchResults
-			: (sortedFiles ?? []),
-	);
+	/** Whatever is on screen right now, so a shift-range matches the eye. */
+	const displayed = $derived(sortedFiles ?? []);
 
 	/** Any selection at all pins every tile's checkbox open. */
 	const anySelected = $derived(selectedCount(displayed, checkedItems) > 0);
@@ -606,12 +583,6 @@
     >
         {#if loading}
             {@render loadingRows()}
-        {:else if searchValue}
-            {#if sortedSearchResults && sortedSearchResults.length > 0}
-                {@render virtualTiles()}
-            {:else}
-                {@render emptyListItem()}
-            {/if}
         {:else}
             {#if parentPath !== undefined}
                 {@render parentGridItem(parentPath)}

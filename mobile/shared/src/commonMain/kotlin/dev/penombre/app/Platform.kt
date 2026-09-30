@@ -74,3 +74,7 @@ expect fun rememberCodeScanner(onCode: (String) -> Unit): () -> Unit
  * sheet (Save to Files, AirDrop) on iOS. `done` says how it went, in words.
  */
 expect fun saveToDevice(url: String, token: String, name: String, done: (String) -> Unit)
+
+/** A PDF's pages, scrollable and zoomable, drawn by the platform's own renderer. */
+@Composable
+expect fun PdfPages(bytes: ByteArray, modifier: Modifier)

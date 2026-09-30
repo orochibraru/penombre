@@ -170,7 +170,8 @@ async function upload(
 	return data.metadata.id;
 }
 
-// An earlier version: the same name uploaded again keeps the old bytes.
+// Earlier versions: the same name uploaded again keeps the old bytes. A track's
+// can be played from its versions.
 const setlist = named(await list(""), "file", "Setlist.md");
 if (setlist) {
 	const { data } = await call(
@@ -184,6 +185,29 @@ if (setlist) {
 			"Setlist.md",
 		);
 		await call(`/api/v1/storage/file/${setlist.metadata.id}/upload`, {
+			method: "POST",
+			body,
+		});
+		created++;
+	}
+}
+
+const live = named(await list(""), "folder", "Live sets");
+const soundcheck =
+	live &&
+	named(await list(live.key.replace(/\/$/, "")), "file", "Soundcheck.wav");
+if (soundcheck) {
+	const { data } = await call(
+		`/api/v1/storage/file/${soundcheck.metadata.id}/versions`,
+	);
+	if (data.versions.length === 0) {
+		const body = new FormData();
+		body.append(
+			"file",
+			Bun.file(join(fixtures, "test-audio.wav")),
+			"Soundcheck.wav",
+		);
+		await call(`/api/v1/storage/file/${soundcheck.metadata.id}/upload`, {
 			method: "POST",
 			body,
 		});

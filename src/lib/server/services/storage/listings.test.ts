@@ -538,3 +538,23 @@ describe("tree entries", () => {
 		expect(await ops.treeEntryById("folder", "1")).toBeNull();
 	});
 });
+
+describe("search", () => {
+	test("a result says which folder it sits in", async () => {
+		await addFolder("live", "Live sets");
+		await addFile("f1", "soundcheck.wav", {
+			path: "live/soundcheck.wav",
+			folderId: "live",
+		});
+		await addFile("f2", "sound design.wav");
+		const ops = new ListingOperations(ctx());
+
+		const found = await ops.searchFiles("sound");
+
+		const byId = new Map(found.list.map((item) => [item.metadata.id, item]));
+		expect(byId.get("f1")?.parentKey).toBe("live");
+		expect(byId.get("f1")?.parent).toBe("Live sets");
+		// At the root: nowhere to go but the drive itself.
+		expect(byId.get("f2")?.parentKey).toBeUndefined();
+	});
+});

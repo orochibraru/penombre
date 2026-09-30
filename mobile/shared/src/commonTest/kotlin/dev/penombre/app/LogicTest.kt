@@ -241,6 +241,23 @@ class LogicTest {
         assertEquals(listOf(0.011f, 0.5f, 1f), peaks)
     }
 
+    // Search is one call across every place; each hit says where it lives.
+    @Test
+    fun searchAsksEverywhereAndKnowsWhereEachHitLives() = runTest {
+        val calls = mutableListOf<String>()
+        val found = Api(ada, httpClient(recording(calls, """{"data":{"list":[{"key":"a.wav","type":"file","metadata":{"id":"f1","name":"a.wav","category":"MUSIC"},"parent":"Live","parentKey":"Live","place":{"kind":"volume","id":"music","name":"Music"}},{"key":"b.wav","type":"file","metadata":{"id":"f2","name":"b.wav","category":"MUSIC"},"place":{"kind":"drive","id":"d1","name":"The band"}}],"total":2}}""")))
+            .search("wav")
+        assertEquals(listOf("GET /api/v1/search?q=wav"), calls)
+        assertEquals(listOf(Place(volume = "music"), Place("d1")), found.list.map { it.place?.place })
+        assertEquals("Live", found.list[0].parent)
+    }
+
+    @Test
+    fun aDocumentOpensInTheWebEditorWhereItLives() {
+        assertEquals("https://x.test/edit/f1", editUrl("https://x.test", Place(), "f1"))
+        assertEquals("https://x.test/edit/f1?volume=music", editUrl("https://x.test", Place(volume = "music"), "f1"))
+    }
+
     // Bordeaux is the default, and the default must still be sent: leaving it
     // out saved nothing and the account kept its previous accent.
     @Test
@@ -381,5 +398,35 @@ class LogicTest {
         assertEquals("Folder not found", refusal("""{"message":"Folder not found"}"""))
         assertEquals("Rate limit exceeded", refusal("""{"error":"Rate limit exceeded"}"""))
         assertNull(refusal("<html>502</html>"))
+    }
+
+    // A version in a list is `<file>:v:<version>`; its bytes and waveform come
+    // from the versions routes, with the drive as a query of its own.
+    @Test
+    fun aVersionIsServedByTheVersionsRoutes() {
+        val id = versionId("f1", "v9")
+        assertEquals("https://x.test/api/v1/storage/file/f1/versions/v9/raw", rawUrl("https://x.test", Place(), id))
+        assertEquals(
+            "https://x.test/api/v1/storage/file/f1/versions/v9/thumbnail?size=medium&drive=d1",
+            thumbnailUrl("https://x.test", Place("d1"), id, "medium"),
+        )
+        assertEquals("https://x.test/api/v1/storage/file/f1?raw=true&drive=d1", rawUrl("https://x.test", Place("d1"), "f1"))
+    }
+
+    @Test
+    fun aRowKnowsItsDurationAndItsVersion() {
+        val item = json.decodeFromString<Item>(
+            """{"key":"a.wav","type":"file","metadata":{"id":"f1","music":{"duration":271.4},"versionSeq":14}}""",
+        )
+        assertEquals(271.4, item.metadata.duration)
+        assertEquals(14, item.metadata.versionSeq)
+        assertNull(json.decodeFromString<Item>("""{"key":"a.wav","type":"file","metadata":{"id":"f1","music":{"duration":0}}}""").metadata.duration)
+    }
+
+    @Test
+    fun aVersionsWaveformIsAskedOfItsOwnRoute() = runTest {
+        val calls = mutableListOf<String>()
+        Api(ada, httpClient(recording(calls, "[0.5,1.0]"))).peaks(Place("d1"), versionId("f1", "v9"))
+        assertEquals(listOf("GET /api/v1/storage/file/f1/versions/v9/thumbnail?size=medium&drive=d1"), calls)
     }
 }

@@ -648,6 +648,7 @@
 	"apps_mobile_note": "尚未上架应用商店。Android 在你允许后即可安装 APK；iPhone 版未签名，需要使用侧载工具安装。",
 	"app_banner_text": "Penombre 在专属应用中体验更佳。",
 	"app_banner_action": "获取应用",
+	"search_nothing": "你的所有云盘中都没有这个名称的内容。",
 	"mobile_connect_open": "在此设备的应用中打开",
 	"player_tuning": "速度和音高",
 	"back": "返回",

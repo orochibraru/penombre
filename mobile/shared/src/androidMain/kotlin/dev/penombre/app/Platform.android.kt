@@ -39,6 +39,35 @@ import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
+import android.graphics.Bitmap
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
@@ -271,4 +300,61 @@ actual fun saveToDevice(url: String, token: String, name: String, done: (String)
     val manager = AndroidHost.activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     manager.enqueue(request)
     done("Downloading $name to Downloads")
+}
+
+@Composable
+actual fun PdfPages(bytes: ByteArray, modifier: Modifier) {
+    val context = LocalContext.current
+    // PdfRenderer reads a file, and renders one page at a time.
+    val renderer = remember(bytes) {
+        val file = File.createTempFile("view", ".pdf", context.cacheDir).apply { writeBytes(bytes) }
+        file.deleteOnExit()
+        PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY))
+    }
+    val lock = remember(renderer) { Mutex() }
+    DisposableEffect(renderer) { onDispose { renderer.close() } }
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    val zoom = rememberTransformableState { change, pan, _ ->
+        scale = (scale * change).coerceIn(1f, 4f)
+        offset = if (scale == 1f) Offset.Zero else offset + pan
+    }
+    BoxWithConstraints(modifier.background(Color(0xFF2A2830)).transformable(zoom, canPan = { scale > 1f })) {
+        val width = constraints.maxWidth.coerceAtLeast(1)
+        LazyColumn(
+            Modifier.fillMaxSize().graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                translationX = offset.x
+                translationY = offset.y
+            },
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 8.dp),
+        ) {
+            items(renderer.pageCount) { index ->
+                var page by remember(index) { mutableStateOf<ImageBitmap?>(null) }
+                LaunchedEffect(renderer, index) {
+                    page = withContext(Dispatchers.Default) {
+                        lock.withLock {
+                            renderer.openPage(index).use { pdf ->
+                                // Twice the screen's width: sharp once zoomed in a little.
+                                val w = width * 2
+                                val h = (w.toFloat() * pdf.height / pdf.width).toInt().coerceAtLeast(1)
+                                val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                                bitmap.eraseColor(android.graphics.Color.WHITE)
+                                pdf.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                bitmap.asImageBitmap()
+                            }
+                        }
+                    }
+                }
+                val shown = page
+                if (shown == null) {
+                    Box(Modifier.fillMaxWidth().aspectRatio(0.707f).background(Color.White.copy(alpha = 0.06f)))
+                } else {
+                    Image(shown, "Page ${index + 1}", Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
+                }
+            }
+        }
+    }
 }

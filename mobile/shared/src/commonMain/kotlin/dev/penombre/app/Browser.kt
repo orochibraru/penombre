@@ -174,7 +174,7 @@ fun Browser(
                 onBack = if (nested) up else onExit,
                 moon = !nested && onExit == null,
                 actions = {
-                    IconButton(onClick = { host.push(SearchScreen(place)) }) {
+                    IconButton(onClick = { host.push(SearchScreen) }) {
                         Icon(Icons.Default.Search, "Search", tint = brand.ink)
                     }
                     actions()

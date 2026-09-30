@@ -877,6 +877,7 @@
 	"apps_mobile_note": "Pas encore sur les boutiques d'applications. Android installe l'APK une fois autorisé ; la version iPhone n'est pas signée et nécessite un outil d'installation.",
 	"app_banner_text": "Penombre fonctionne mieux dans son application.",
 	"app_banner_action": "Obtenir l'application",
+	"search_nothing": "Rien de ce nom, dans aucun de vos espaces.",
 	"mobile_connect_open": "Ouvrir dans l'application sur cet appareil",
 	"player_tuning": "Vitesse et hauteur",
 	"back": "Retour",

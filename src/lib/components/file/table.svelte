@@ -57,8 +57,6 @@
 		indeterminate = $bindable(false),
 		loading = $bindable(false),
 		checkedItems = $bindable(),
-		searchValue,
-		searchResults,
 		itemActions,
 		onDrop,
 		onUpload,
@@ -265,16 +263,6 @@
 		return [...files.list].sort(compareItems);
 	});
 
-	let sortedSearchResults = $derived.by(() => {
-		if (!searchResults) {
-			return searchResults;
-		}
-		if (!sortColumn) {
-			return sortFoldersFirst(searchResults);
-		}
-		return [...searchResults].sort(compareItems);
-	});
-
 	function toggleSelectAll(checked: boolean) {
 		isSingleItemAction = false;
 		if (files.list) {
@@ -320,19 +308,8 @@
 		return !!checkedItems[item.key];
 	}
 
-	/**
-	 * Whatever is on screen right now, so a shift-range matches the eye.
-	 *
-	 * Mirrors the render condition exactly. Testing `searchResults` for truth
-	 * is not the same thing: an empty array is truthy, so a drive with no
-	 * search active resolved to an empty list and every selection was written
-	 * against nothing.
-	 */
-	const displayed = $derived(
-		sortedSearchResults && sortedSearchResults.length > 0
-			? sortedSearchResults
-			: (sortedFiles ?? []),
-	);
+	/** Whatever is on screen right now, so a shift-range matches the eye. */
+	const displayed = $derived(sortedFiles ?? []);
 
 	/** What renders: `displayed` plus any unfolded versions, as rows. */
 	const rows = $derived(withVersions(displayed, $expandedVersions));
@@ -721,12 +698,6 @@
         <Table.Body>
             {#if loading}
                 {@render loadingRows()}
-            {:else if searchValue}
-                {#if displayed.length > 0}
-                    {@render virtualRows()}
-                {:else}
-                    {@render emptyRow()}
-                {/if}
             {:else}
                 {#if parentPath !== undefined}
                     {@render parentRow(parentPath)}

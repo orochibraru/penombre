@@ -41,10 +41,44 @@ private val configure: HttpClientConfig<*>.() -> Unit = {
 fun httpClient(engine: HttpClientEngine? = null) = if (engine == null) HttpClient(configure) else HttpClient(engine, configure)
 
 @Serializable
-data class Meta(val id: String, val name: String? = null, val category: String? = null, val isStarred: Boolean = false)
+data class Meta(
+    val id: String,
+    val name: String? = null,
+    val category: String? = null,
+    val isStarred: Boolean = false,
+    /** The highest kept version; the current bytes are one more. */
+    val versionSeq: Int? = null,
+    val music: Media? = null,
+    val video: Media? = null,
+) {
+    /** Seconds, once the server has probed the file. */
+    val duration get() = (music ?: video)?.duration?.takeIf { it > 0 }
+}
 
 @Serializable
-data class Item(val key: String, val type: String, val size: Long? = null, val metadata: Meta) {
+data class Media(val duration: Double? = null)
+
+/** Where a search result was found: the account's drive, a shared drive or a mount. */
+@Serializable
+data class Found(val kind: String, val id: String? = null, val name: String) {
+    val place get() = when (kind) {
+        "drive" -> Place(drive = id)
+        "volume" -> Place(volume = id)
+        else -> Place()
+    }
+}
+
+@Serializable
+data class Item(
+    val key: String,
+    val type: String,
+    val size: Long? = null,
+    val metadata: Meta,
+    /** The folder it sits in: its name and path. Search results carry them. */
+    val parent: String? = null,
+    val parentKey: String? = null,
+    val place: Found? = null,
+) {
     val isFolder get() = type == "folder"
     val title get() = metadata.name ?: key
 }
@@ -104,8 +138,8 @@ private class Refusal(val message: String? = null, val error: String? = null)
 internal fun refusal(body: String): String? =
     runCatching { json.decodeFromString<Refusal>(body) }.getOrNull()?.let { it.message ?: it.error }
 
-/** Whose tree a request acts on: the account's own drive, or a shared one. */
-data class Place(val drive: String? = null)
+/** Whose tree a request acts on: the account's own drive, a shared one, or a mount. */
+data class Place(val drive: String? = null, val volume: String? = null)
 
 /** `path` is the folder's path chain, "" for the drive's root. */
 internal fun listingUrl(server: String, path: String): String {
@@ -125,18 +159,39 @@ internal fun folderUrl(server: String, path: String): String =
 internal fun childPath(parent: String, key: String): String =
     key.trimEnd('/').let { if (parent.isEmpty()) it else "$parent/$it" }
 
-private fun drive(place: Place) = place.drive?.let { "&drive=${it.encodeURLParameter()}" } ?: ""
+private fun drive(place: Place) =
+    place.drive?.let { "&drive=${it.encodeURLParameter()}" }
+        ?: place.volume?.let { "&volume=${it.encodeURLParameter()}" }
+        ?: ""
+
+/**
+ * An earlier version stands in a list as `<file id>:v:<version id>`, as on the
+ * web: its bytes and renders come from the versions routes.
+ */
+internal fun versionId(file: String, version: String) = "$file:v:$version"
+
+private fun versionUrl(server: String, place: Place, id: String, endpoint: String, query: String = ""): String? {
+    val parts = id.split(":v:").takeIf { it.size == 2 } ?: return null
+    val params = listOf(query, drive(place).removePrefix("&")).filter { it.isNotEmpty() }.joinToString("&")
+    return "$server/api/v1/storage/file/${parts[0]}/versions/${parts[1]}/$endpoint" + if (params.isEmpty()) "" else "?$params"
+}
 
 /** A file's own bytes, or those of a video's rendition of this height. */
 internal fun rawUrl(server: String, place: Place, id: String, rendition: Int? = null) =
-    "$server/api/v1/storage/file/$id?raw=true${drive(place)}${rendition?.let { "&rendition=$it" } ?: ""}"
+    versionUrl(server, place, id, "raw")
+        ?: "$server/api/v1/storage/file/$id?raw=true${drive(place)}${rendition?.let { "&rendition=$it" } ?: ""}"
+
+/** The web app's editor for a document, where the file lives. */
+internal fun editUrl(server: String, place: Place, id: String) =
+    "$server/edit/$id" + drive(place).replaceFirst("&", "?")
 
 /** The heights a video can be asked for below its original. */
 val RENDITIONS = listOf(720, 480)
 
 /** Its thumbnail, in one of the server's named sizes; `preview` is one to look at. */
 internal fun thumbnailUrl(server: String, place: Place, id: String, size: String) =
-    "$server/api/v1/storage/file/$id?thumbnail=true&size=$size${drive(place)}"
+    versionUrl(server, place, id, "thumbnail", "size=$size")
+        ?: "$server/api/v1/storage/file/$id?thumbnail=true&size=$size${drive(place)}"
 
 internal val json = Json { ignoreUnknownKeys = true }
 
@@ -168,6 +223,7 @@ class Api(val session: Session, private val client: HttpClient = httpClient()) {
     private fun HttpRequestBuilder.auth(place: Place = Place()) {
         bearerAuth(session.token)
         place.drive?.let { parameter("drive", it) }
+        place.volume?.let { parameter("volume", it) }
     }
 
     private fun HttpRequestBuilder.fields(vararg fields: Pair<String, Boolean>) {
@@ -304,10 +360,10 @@ class Api(val session: Session, private val client: HttpClient = httpClient()) {
         }
     }
 
-    /** Files and folders by name, across the whole drive. */
-    suspend fun search(place: Place, query: String): Page = call {
-        client.get("$base/storage/file/search") {
-            auth(place)
+    /** Files and folders by name, in every drive and mount the account can open. */
+    suspend fun search(query: String): Page = call {
+        client.get("$base/search") {
+            auth()
             parameter("q", query)
         }.body<Envelope<Page>>().data
     }
@@ -321,6 +377,11 @@ class Api(val session: Session, private val client: HttpClient = httpClient()) {
             auth(place)
             fields()
         }.body<Envelope<Rendition>>().data
+    }
+
+    /** A file's bytes, whole: for a viewer that needs all of it, like a PDF's. */
+    suspend fun bytes(url: String): ByteArray = call {
+        client.get(url) { bearerAuth(session.token) }.body()
     }
 
     suspend fun drives(): List<Drive> = call { client.get("$base/drives") { auth() }.body<Envelope<List<Drive>>>().data }
@@ -339,10 +400,8 @@ class Api(val session: Session, private val client: HttpClient = httpClient()) {
 
     /** A track's waveform, up to 400 values in 0..1. Not wrapped in `data`. */
     suspend fun peaks(place: Place, id: String): List<Float> = call {
-        client.get("$base/storage/file/$id") {
-            auth(place)
-            parameter("thumbnail", "true")
-        }.body()
+        // The URL names the drive already; `auth` would add it twice.
+        client.get(thumbnailUrl(session.server, place, id, "medium")) { bearerAuth(session.token) }.body()
     }
 
     suspend fun preferences(): Preferences = call { client.get("$base/preferences") { auth() }.body<Envelope<Preferences>>().data }

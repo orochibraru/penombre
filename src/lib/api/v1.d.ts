@@ -7210,6 +7210,209 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/search": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Search everywhere
+		 * @description Searches files and folders by name across every place the caller can browse: their own drive, the shared drives they belong to and the mounted volumes. Each result names its `place` and, in `parentKey`, the folder it sits in.
+		 */
+		get: {
+			parameters: {
+				query: {
+					q: string;
+					limit?: number;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								list: {
+									key: string;
+									metadata: {
+										/** @enum {string} */
+										category:
+											| "MUSIC"
+											| "DOCUMENTS"
+											| "IMAGES"
+											| "3D"
+											| "VIDEO"
+											| "RECENT"
+											| "CODE"
+											| "ARCHIVES"
+											| "UNKNOWN";
+										/** @enum {string} */
+										contentType:
+											| "application/pdf"
+											| "application/msword"
+											| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+											| "application/vnd.ms-excel"
+											| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+											| "application/vnd.ms-powerpoint"
+											| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+											| "application/vnd.oasis.opendocument.text"
+											| "application/rtf"
+											| "application/epub+zip"
+											| "application/vnd.google-apps.document"
+											| "application/vnd.google-apps.spreadsheet"
+											| "application/vnd.google-apps.presentation"
+											| "text/plain"
+											| "text/csv"
+											| "text/html"
+											| "text/css"
+											| "text/yaml"
+											| "image/jpeg"
+											| "image/png"
+											| "image/gif"
+											| "image/webp"
+											| "image/svg+xml"
+											| "image/bmp"
+											| "image/x-icon"
+											| "image/tiff"
+											| "image/heic"
+											| "video/mp4"
+											| "video/webm"
+											| "video/x-msvideo"
+											| "video/x-matroska"
+											| "video/quicktime"
+											| "video/x-ms-wmv"
+											| "video/x-flv"
+											| "video/mpeg"
+											| "video/3gpp"
+											| "video/ogg"
+											| "audio/mpeg"
+											| "audio/wav"
+											| "audio/flac"
+											| "audio/aac"
+											| "audio/ogg"
+											| "audio/mp4"
+											| "audio/x-ms-wma"
+											| "audio/aiff"
+											| "application/json"
+											| "application/xml"
+											| "application/javascript"
+											| "application/vnd.google-apps.form"
+											| "application/zip"
+											| "application/vnd.rar"
+											| "application/x-7z-compressed"
+											| "application/x-tar"
+											| "application/gzip"
+											| "application/x-bzip2"
+											| "application/x-xz"
+											| "application/vnd.ms-cab-compressed"
+											| "application/x-iso9660-image"
+											| "application/x-apple-diskimage"
+											| "application/x-xar"
+											| "application/vnd.debian.binary-package"
+											| "application/x-rpm"
+											| "application/vnd.android.package-archive"
+											| "application/java-archive"
+											| "application/x-webarchive"
+											| "application/x-stuffit"
+											| "application/x-stuffitx"
+											| "application/x-lzip"
+											| "application/x-lzma"
+											| "application/x-lzop"
+											| "application/x-compress"
+											| "application/zstd"
+											| "application/x-brotli"
+											| "model/stl"
+											| "model/obj"
+											| "model/gltf+json"
+											| "model/gltf-binary"
+											| "model/fbx"
+											| "model/3mf"
+											| "model/x3d+xml"
+											| "model/vnd.collada+xml"
+											| "application/x-blender"
+											| "application/x-tgif"
+											| "application/octet-stream";
+										createdAt: string;
+										id: string;
+										/** @default false */
+										isStarred: boolean;
+										/** @default false */
+										isTrashed: boolean;
+										music?: {
+											duration?: number;
+										};
+										name?: string;
+										owner: string;
+										tags?: string[];
+										versionSeq?: number;
+										video?: {
+											duration?: number;
+										};
+									};
+									parent?: string;
+									parentKey?: string;
+									place: {
+										id?: string;
+										/** @enum {string} */
+										kind: "personal" | "drive" | "volume";
+										name: string;
+									};
+									size?: number;
+									/** @enum {string} */
+									type: "file" | "folder";
+									updatedAt?: string;
+								}[];
+								total: number;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/shares": {
 		parameters: {
 			query?: never;

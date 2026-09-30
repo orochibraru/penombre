@@ -648,6 +648,7 @@
 	"apps_mobile_note": "아직 앱 스토어에 없습니다. Android는 허용하면 APK를 설치합니다. iPhone 빌드는 서명되지 않아 사이드로딩 도구가 필요합니다.",
 	"app_banner_text": "Penombre는 전용 앱에서 더 잘 작동합니다.",
 	"app_banner_action": "앱 받기",
+	"search_nothing": "어느 드라이브에도 그 이름의 항목이 없습니다.",
 	"mobile_connect_open": "이 기기의 앱에서 열기",
 	"player_tuning": "속도와 음높이",
 	"back": "뒤로",

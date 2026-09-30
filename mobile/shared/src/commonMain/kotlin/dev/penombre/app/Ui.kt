@@ -3,6 +3,7 @@ package dev.penombre.app
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -106,7 +108,9 @@ data class VersionsScreen(val place: Place, val item: Item) : Screen
 
 data object SettingsScreen : Screen
 
-data class SearchScreen(val place: Place) : Screen
+data object SearchScreen : Screen
+
+data class PdfScreen(val place: Place, val item: Item) : Screen
 
 /** What a screen can ask of the app around it. */
 class Host(
@@ -268,6 +272,8 @@ fun Entry(
     detail: String? = null,
     tint: Color = brand.accent,
     picture: (@Composable () -> Unit)? = null,
+    /** Beside the detail: the version chip on a file that has earlier ones. */
+    badge: (@Composable () -> Unit)? = null,
     trailing: @Composable RowScope.() -> Unit = {},
     onClick: (() -> Unit)? = null,
 ) {
@@ -294,7 +300,14 @@ fun Entry(
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
             )
-            detail?.let { Text(it, color = brand.muted, style = MaterialTheme.typography.bodySmall) }
+            if (badge == null) {
+                detail?.let { Text(it, color = brand.muted, style = MaterialTheme.typography.bodySmall) }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    badge()
+                    detail?.let { Text(it, color = brand.muted, style = MaterialTheme.typography.bodySmall) }
+                }
+            }
         }
         trailing()
         Spacer(Modifier.width(12.dp))
@@ -306,10 +319,28 @@ fun Entry(
 fun ItemEntry(item: Item, place: Place, host: Host, trailing: @Composable RowScope.() -> Unit = {}, onClick: () -> Unit) {
     val (icon, colour) = iconFor(item)
     val pictured = !item.isFolder && item.metadata.category in setOf("IMAGES", "VIDEO")
+    val seq = item.metadata.versionSeq?.takeIf { !item.isFolder && it > 0 }
     Entry(
         icon = icon,
         title = item.title,
-        detail = item.size?.takeIf { !item.isFolder }?.let(::formatSize),
+        detail = listOfNotNull(
+            item.metadata.duration?.let(::clock),
+            item.size?.takeIf { !item.isFolder }?.let(::formatSize),
+        ).joinToString(" · ").ifEmpty { null },
+        // The current bytes' number; a tap lists the earlier ones.
+        badge = seq?.let {
+            {
+                Text(
+                    "v${it + 1}",
+                    Modifier.clip(RoundedCornerShape(50)).background(brand.accent.copy(alpha = 0.16f))
+                        .clickable(onClickLabel = "Versions of ${item.title}") { host.push(VersionsScreen(place, item)) }
+                        .padding(horizontal = 8.dp, vertical = 1.dp),
+                    color = brand.accent,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        },
         tint = colour ?: if (item.isFolder) brand.accent else brand.muted,
         picture = if (pictured) {
             { Remote(thumbnailUrl(host.server, place, item.metadata.id, "small"), host, null, Modifier.fillMaxSize()) }

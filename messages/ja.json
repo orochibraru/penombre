@@ -648,6 +648,7 @@
 	"apps_mobile_note": "まだアプリストアにはありません。Android は許可すると APK をインストールします。iPhone 版は未署名のため、サイドロード用ツールが必要です。",
 	"app_banner_text": "Penombre は専用アプリでより快適に使えます。",
 	"app_banner_action": "アプリを入手",
+	"search_nothing": "どのドライブにもその名前のものはありません。",
 	"mobile_connect_open": "このデバイスのアプリで開く",
 	"player_tuning": "速度とピッチ",
 	"back": "戻る",

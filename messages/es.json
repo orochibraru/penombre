@@ -877,6 +877,7 @@
 	"apps_mobile_note": "Aún no está en las tiendas. Android instala el APK cuando lo permites; la versión para iPhone no está firmada y necesita una herramienta de instalación.",
 	"app_banner_text": "Penombre funciona mejor en su propia aplicación.",
 	"app_banner_action": "Obtener la aplicación",
+	"search_nothing": "Nada con ese nombre en ninguna de tus unidades.",
 	"mobile_connect_open": "Abrir en la aplicación de este dispositivo",
 	"player_tuning": "Velocidad y tono",
 	"back": "Atrás",

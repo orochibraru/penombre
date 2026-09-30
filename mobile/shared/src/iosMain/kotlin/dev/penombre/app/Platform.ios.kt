@@ -67,6 +67,10 @@ import platform.CoreMedia.CMTimeMakeWithSeconds
 import platform.CoreGraphics.CGRectZero
 import platform.QuartzCore.CATransaction
 import platform.Foundation.NSData
+import platform.Foundation.create
+import platform.PDFKit.kPDFDisplaySinglePageContinuous
+import platform.PDFKit.PDFView
+import platform.PDFKit.PDFDocument
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSError
@@ -452,3 +456,22 @@ actual fun saveToDevice(url: String, token: String, name: String, done: (String)
         }
     }.resume()
 }
+
+@OptIn(ExperimentalForeignApi::class)
+@Composable
+actual fun PdfPages(bytes: ByteArray, modifier: Modifier) {
+    UIKitView(
+        factory = {
+            PDFView(frame = CGRectZero.readValue()).apply {
+                autoScales = true
+                displayMode = kPDFDisplaySinglePageContinuous
+                document = PDFDocument(data = bytes.toNSData())
+            }
+        },
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun ByteArray.toNSData(): NSData =
+    if (isEmpty()) NSData() else usePinned { NSData.create(bytes = it.addressOf(0), length = size.convert()) }

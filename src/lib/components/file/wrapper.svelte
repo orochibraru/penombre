@@ -51,6 +51,7 @@
 		pendingPreview,
 		takePendingPreview,
 	} from "./preview-handover";
+	import SearchResults from "./search-results.svelte";
 	import { SORT_GROUPS } from "./sort-options";
 	import {
 		clickDownload,
@@ -82,7 +83,7 @@
 	} from "./wrapper-bulk.svelte.js";
 	import { duplicateItem, isDuplicateShortcut } from "./wrapper-duplicate";
 	import { mergeHandler } from "./wrapper-merge";
-	import { isSearchShortcut, searchFiles } from "./wrapper-search";
+	import { isSearchShortcut } from "./wrapper-search";
 	import { offerFolderDrag } from "./wrapper-shortcut";
 
 	interface UserPreferences {
@@ -141,8 +142,6 @@
 	/** True only while the "Empty Trash" button drives the delete dialog. */
 	let emptyingTrash: boolean = $state(false);
 	let searchValue: string = $state("");
-	let searchResults: ObjectItem[] = $state([]);
-	let searchTimeout: ReturnType<typeof setTimeout> | undefined = $state();
 	let actionsContextOpen: boolean = $state(false);
 	let actionableItem: ObjectItem | undefined = $state();
 	let viewFileOpen: boolean = $state(false);
@@ -327,12 +326,14 @@
 
 	$effect(() => {
 		const pending = $pendingPreview;
-		const view =
+		const found =
 			pending &&
 			untrack(() => takePendingPreview(pending, displayData.list ?? []));
-		if (view) {
-			fileToView = view;
+		if (found?.resume) {
+			fileToView = found.resume;
 			viewFileOpen = true;
+		} else if (found) {
+			untrack(() => void handleOpenItemWrapper(found.item));
 		}
 	});
 
@@ -404,22 +405,6 @@
 	// Search
 	// ================================
 	let searchInputRef: HTMLInputElement | null = $state(null);
-
-	async function performSearch() {
-		searchResults = await searchFiles(searchValue);
-		loading = false;
-	}
-
-	const debounce = () => {
-		if (searchValue === "") {
-			searchResults = [];
-			loading = false;
-			return;
-		}
-		loading = true;
-		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => performSearch(), 300);
-	};
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (isSearchShortcut(e)) {
@@ -830,9 +815,6 @@
     type="search"
     placeholder={m.search_placeholder()}
     class="md:hidden mb-3"
-    onkeyup={() => {
-        debounce();
-    }}
 />
 <div class="w-full pb-5 flex justify-between items-center gap-3">
 	<Input
@@ -841,9 +823,6 @@
 		type="search"
 		placeholder={m.search_placeholder()}
 		class="hidden md:block "
-		onkeyup={() => {
-			debounce();
-		}}
 	/>
 	<ButtonGroup.Root>
 		<DropdownMenu.Root>
@@ -927,14 +906,14 @@
 </div>
 
 <!-- Table -->
-{#if layout === "list"}
+{#if searchValue.trim()}
+	<SearchResults query={searchValue.trim()} />
+{:else if layout === "list"}
 	<div class="hidden md:block">
 		<FileTable
 			handleOpenItem={handleOpenItemWrapper}
 			files={displayData}
 			itemActions={itemActions}
-			searchValue={searchValue}
-			searchResults={searchResults}
 			indeterminate={indeterminate}
 			bind:sortColumn
 			bind:sortDirection
@@ -959,8 +938,6 @@
 			handleOpenItem={handleOpenItemWrapper}
 			files={displayData}
 			itemActions={itemActions}
-			searchValue={searchValue}
-			searchResults={searchResults}
 			indeterminate={indeterminate}
 			sortColumn={sortColumn}
 			sortDirection={sortDirection}
@@ -985,8 +962,6 @@
 		handleOpenItem={handleOpenItemWrapper}
 		files={displayData}
 		itemActions={itemActions}
-		searchValue={searchValue}
-		searchResults={searchResults}
 		indeterminate={indeterminate}
 		sortColumn={sortColumn}
 		sortDirection={sortDirection}

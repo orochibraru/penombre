@@ -877,6 +877,7 @@
 	"apps_mobile_note": "Not in the app stores yet. Android installs the APK once you allow it; the iPhone build is unsigned and needs a sideloading tool.",
 	"app_banner_text": "Penombre works better in its own app.",
 	"app_banner_action": "Get the app",
+	"search_nothing": "Nothing by that name, in any of your drives.",
 	"mobile_connect_open": "Open in the app on this device",
 	"player_tuning": "Speed and pitch",
 	"back": "Back",

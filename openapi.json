@@ -18345,6 +18345,323 @@
 				]
 			}
 		},
+		"/api/v1/search": {
+			"get": {
+				"description": "Searches files and folders by name across every place the caller can browse: their own drive, the shared drives they belong to and the mounted volumes. Each result names its `place` and, in `parentKey`, the folder it sits in.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "q",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"maximum": 200,
+							"minimum": 1,
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"list": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"key": {
+																"type": "string"
+															},
+															"metadata": {
+																"additionalProperties": false,
+																"properties": {
+																	"category": {
+																		"enum": [
+																			"MUSIC",
+																			"DOCUMENTS",
+																			"IMAGES",
+																			"3D",
+																			"VIDEO",
+																			"RECENT",
+																			"CODE",
+																			"ARCHIVES",
+																			"UNKNOWN"
+																		],
+																		"type": "string"
+																	},
+																	"contentType": {
+																		"enum": [
+																			"application/pdf",
+																			"application/msword",
+																			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																			"application/vnd.ms-excel",
+																			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																			"application/vnd.ms-powerpoint",
+																			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																			"application/vnd.oasis.opendocument.text",
+																			"application/rtf",
+																			"application/epub+zip",
+																			"application/vnd.google-apps.document",
+																			"application/vnd.google-apps.spreadsheet",
+																			"application/vnd.google-apps.presentation",
+																			"text/plain",
+																			"text/csv",
+																			"text/html",
+																			"text/css",
+																			"text/yaml",
+																			"image/jpeg",
+																			"image/png",
+																			"image/gif",
+																			"image/webp",
+																			"image/svg+xml",
+																			"image/bmp",
+																			"image/x-icon",
+																			"image/tiff",
+																			"image/heic",
+																			"video/mp4",
+																			"video/webm",
+																			"video/x-msvideo",
+																			"video/x-matroska",
+																			"video/quicktime",
+																			"video/x-ms-wmv",
+																			"video/x-flv",
+																			"video/mpeg",
+																			"video/3gpp",
+																			"video/ogg",
+																			"audio/mpeg",
+																			"audio/wav",
+																			"audio/flac",
+																			"audio/aac",
+																			"audio/ogg",
+																			"audio/mp4",
+																			"audio/x-ms-wma",
+																			"audio/aiff",
+																			"application/json",
+																			"application/xml",
+																			"application/javascript",
+																			"application/vnd.google-apps.form",
+																			"application/zip",
+																			"application/vnd.rar",
+																			"application/x-7z-compressed",
+																			"application/x-tar",
+																			"application/gzip",
+																			"application/x-bzip2",
+																			"application/x-xz",
+																			"application/vnd.ms-cab-compressed",
+																			"application/x-iso9660-image",
+																			"application/x-apple-diskimage",
+																			"application/x-xar",
+																			"application/vnd.debian.binary-package",
+																			"application/x-rpm",
+																			"application/vnd.android.package-archive",
+																			"application/java-archive",
+																			"application/x-webarchive",
+																			"application/x-stuffit",
+																			"application/x-stuffitx",
+																			"application/x-lzip",
+																			"application/x-lzma",
+																			"application/x-lzop",
+																			"application/x-compress",
+																			"application/zstd",
+																			"application/x-brotli",
+																			"model/stl",
+																			"model/obj",
+																			"model/gltf+json",
+																			"model/gltf-binary",
+																			"model/fbx",
+																			"model/3mf",
+																			"model/x3d+xml",
+																			"model/vnd.collada+xml",
+																			"application/x-blender",
+																			"application/x-tgif",
+																			"application/octet-stream"
+																		],
+																		"type": "string"
+																	},
+																	"createdAt": {
+																		"type": "string"
+																	},
+																	"id": {
+																		"type": "string"
+																	},
+																	"isStarred": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"isTrashed": {
+																		"default": false,
+																		"type": "boolean"
+																	},
+																	"music": {
+																		"additionalProperties": false,
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"type": "object"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"owner": {
+																		"type": "string"
+																	},
+																	"tags": {
+																		"items": {
+																			"type": "string"
+																		},
+																		"type": "array"
+																	},
+																	"versionSeq": {
+																		"type": "number"
+																	},
+																	"video": {
+																		"additionalProperties": false,
+																		"properties": {
+																			"duration": {
+																				"type": "number"
+																			}
+																		},
+																		"type": "object"
+																	}
+																},
+																"required": [
+																	"id",
+																	"category",
+																	"contentType",
+																	"createdAt",
+																	"owner",
+																	"isTrashed",
+																	"isStarred"
+																],
+																"type": "object"
+															},
+															"parent": {
+																"type": "string"
+															},
+															"parentKey": {
+																"type": "string"
+															},
+															"place": {
+																"additionalProperties": false,
+																"properties": {
+																	"id": {
+																		"type": "string"
+																	},
+																	"kind": {
+																		"enum": [
+																			"personal",
+																			"drive",
+																			"volume"
+																		],
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	}
+																},
+																"required": [
+																	"kind",
+																	"name"
+																],
+																"type": "object"
+															},
+															"size": {
+																"type": "number"
+															},
+															"type": {
+																"enum": [
+																	"file",
+																	"folder"
+																],
+																"type": "string"
+															},
+															"updatedAt": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"key",
+															"metadata",
+															"type",
+															"place"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"total": {
+													"type": "number"
+												}
+											},
+											"required": [
+												"list",
+												"total"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Search everywhere",
+				"tags": [
+					"Storage - Files"
+				]
+			}
+		},
 		"/api/v1/shares": {
 			"get": {
 				"description": "Returns every share link owned by the current user",

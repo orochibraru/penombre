@@ -841,6 +841,7 @@
 	"apps_mobile_note": "Noch nicht in den App-Stores. Android installiert die APK nach Ihrer Erlaubnis; die iPhone-Version ist unsigniert und braucht ein Sideloading-Werkzeug.",
 	"app_banner_text": "Penombre läuft besser in der eigenen App.",
 	"app_banner_action": "App holen",
+	"search_nothing": "Nichts mit diesem Namen, in keinem Ihrer Laufwerke.",
 	"mobile_connect_open": "In der App auf diesem Gerät öffnen",
 	"player_tuning": "Tempo und Tonhöhe",
 	"back": "Zurück",

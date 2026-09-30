@@ -5,29 +5,36 @@ import { fullscreenUrl, peaksUrl, rawUrl } from "./file-links";
 import type { FileToView } from "./wrapper.svelte.js";
 
 /**
- * A video the full-screen viewer handed back, and where its playhead was.
+ * A file to open once its folder is on screen: a video the full-screen viewer
+ * handed back (with where its playhead was), or a search result from another
+ * folder or drive.
  *
  * The preview dialog is the small player and only the browse pages own one,
- * so the viewer cannot open one itself: it leaves the request here and
- * navigates back.
+ * so neither the viewer nor a search can open one itself: they leave the
+ * request here and navigate.
  */
-export const pendingPreview: Writable<{ fileId: string; at: number } | null> =
+export const pendingPreview: Writable<{ fileId: string; at?: number } | null> =
 	writable(null);
 
 /**
- * Consume that request, returning what to show. A file that is not in the
- * listing yields null — the user went somewhere else on the way back.
+ * Consume that request. A file that is not in the listing yields null: the
+ * user went somewhere else on the way back, or it sits past the first page.
  */
 export function takePendingPreview(
-	pending: { fileId: string; at: number },
+	pending: { fileId: string; at?: number },
 	list: ObjectItem[],
-): FileToView {
+): { item: ObjectItem; resume?: FileToView } | null {
 	pendingPreview.set(null);
 	const item = list.find((entry) => entry.metadata.id === pending.fileId);
 	if (!item) {
 		return null;
 	}
-	return { item, src: rawUrl(item), type: "video", startAt: pending.at };
+	return pending.at === undefined
+		? { item }
+		: {
+				item,
+				resume: { item, src: rawUrl(item), type: "video", startAt: pending.at },
+			};
 }
 
 /**

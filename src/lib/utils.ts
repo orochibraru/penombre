@@ -219,8 +219,6 @@ export interface SharedFileDisplayProps {
 	indeterminate: boolean;
 	itemActions: ItemActionGroup[];
 	loading: boolean;
-	searchValue: string;
-	searchResults: ObjectItem[];
 	onDrop?: (files: File[]) => void;
 	onUpload?: () => void;
 	onCreateFolder?: () => void;

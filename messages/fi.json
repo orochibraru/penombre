@@ -805,6 +805,7 @@
 	"apps_mobile_note": "Ei vielä sovelluskaupoissa. Android asentaa APK:n, kun sallit sen; iPhone-versio on allekirjoittamaton ja vaatii sivulatausohjelman.",
 	"app_banner_text": "Penombre toimii paremmin omassa sovelluksessaan.",
 	"app_banner_action": "Hanki sovellus",
+	"search_nothing": "Ei mitään sillä nimellä millään asemallasi.",
 	"mobile_connect_open": "Avaa tämän laitteen sovelluksessa",
 	"player_tuning": "Nopeus ja sävelkorkeus",
 	"back": "Takaisin",

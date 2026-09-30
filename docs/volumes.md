@@ -52,10 +52,10 @@ For a drive that a _group_ owns rather than a directory you mounted, see
 ## Browsing one
 
 A volume browses like My Drive: folders open, files preview and download,
-uploads land in the folder on screen, and search covers it. It has its own
-trash, reached from the **Trash** button on the volume header — trashing a file
-on a mount puts it there, not in your personal trash, so anyone with access can
-restore it.
+uploads land in the folder on screen, and search covers it from anywhere in the
+app. It has its own trash, reached from the **Trash** button on the volume
+header — trashing a file on a mount puts it there, not in your personal trash,
+so anyone with access can restore it.
 
 Through the API, every `/api/v1/storage/**` endpoint takes an optional `volume`
 query parameter naming the volume's id, exactly as `drive` names a shared drive:

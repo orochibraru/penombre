@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.RestoreFromTrash
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -236,21 +238,39 @@ fun VersionsView(host: Host, place: Place, item: Item) {
                 if (status == null) Box(Modifier.fillMaxSize()) { CircularProgressIndicator(Modifier.align(Alignment.Center), color = brand.accent) }
                 return@Column
             }
+            val earlier = loaded.versions.sortedByDescending { it.seq }
+            // A track's versions play, newest first, as one queue: comparing
+            // takes is what they are kept for.
+            val audio = item.metadata.category == "MUSIC"
+            val takes = remember(loaded) {
+                listOf(item.copy(metadata = item.metadata.copy(name = "${item.title} · v${loaded.current.nextSeq}"))) +
+                    earlier.map { version ->
+                        Item(
+                            version.id,
+                            "file",
+                            version.size,
+                            Meta(versionId(item.metadata.id, version.id), "${item.title} · v${version.seq}", "MUSIC"),
+                        )
+                    }
+            }
+            val play = { index: Int -> if (audio) host.play(place, takes, index) }
             LazyColumn(Modifier.fillMaxSize()) {
                 item {
                     Entry(
-                        Icons.Outlined.CheckCircle,
+                        if (audio) Icons.Outlined.PlayCircle else Icons.Outlined.CheckCircle,
                         "v${loaded.current.nextSeq}, current",
                         "${shortDate(loaded.current.updatedAt)}, ${formatSize(loaded.current.size)}",
+                        onClick = if (audio) ({ play(0) }) else null,
                     )
                 }
-                if (loaded.versions.isEmpty()) item { Note("No earlier version is kept for this file.") }
-                items(loaded.versions.sortedByDescending { it.seq }, key = { it.id }) { version ->
+                if (earlier.isEmpty()) item { Note("No earlier version is kept for this file.") }
+                itemsIndexed(earlier, key = { _, version -> version.id }) { index, version ->
                     Entry(
-                        Icons.Outlined.History,
+                        if (audio) Icons.Outlined.PlayCircle else Icons.Outlined.History,
                         "v${version.seq}",
                         listOfNotNull(shortDate(version.createdAt), formatSize(version.size), version.authorName).joinToString(", "),
                         tint = brand.muted,
+                        onClick = if (audio) ({ play(index + 1) }) else null,
                         trailing = {
                             TextButton(
                                 onClick = {
@@ -398,9 +418,9 @@ fun PhotoView(host: Host, place: Place, photos: List<Item>, start: Int) {
     }
 }
 
-/** Files and folders by name, across the drive: typed, then listed. */
+/** Files and folders by name, in every drive and mount: typed, then listed. */
 @Composable
-fun SearchView(host: Host, place: Place) {
+fun SearchView(host: Host) {
     var typed by remember { mutableStateOf("") }
     // What is searched: the text, once typing has paused.
     var query by remember { mutableStateOf("") }
@@ -421,7 +441,7 @@ fun SearchView(host: Host, place: Place) {
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it },
-                    placeholder = { Text("Search this drive") },
+                    placeholder = { Text("Search everywhere") },
                     singleLine = true,
                     shape = Corner,
                     modifier = Modifier.weight(1f).focusRequester(focus),
@@ -433,15 +453,58 @@ fun SearchView(host: Host, place: Place) {
         if (query.length < 2) {
             Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { Note("Type a name, or part of one.") }
         } else {
-            Listing(query, "Nothing by that name", Modifier.padding(padding), host, { host.api.search(place, query) }) { item, all ->
-                ItemEntry(item, place, host) {
+            Listing(query, "Nothing by that name, in any of your drives", Modifier.padding(padding), host, { host.api.search(query) }) { item, all ->
+                val place = item.place?.place ?: Place()
+                SearchEntry(item, place, host) {
                     // A result carries its folder's id, not the path a listing needs.
                     if (item.isFolder) {
                         host.push(WebScreen("${host.server}/go/folder/${item.metadata.id}"))
                     } else {
-                        host.open(place, all, item)
+                        // What it is opened among: the results from the same place.
+                        host.open(place, all.filter { it.place == item.place }, item)
                     }
                 }
+            }
+        }
+    }
+}
+
+/** A result, and where it is: its drive or mount, then its folder. */
+@Composable
+private fun SearchEntry(item: Item, place: Place, host: Host, onClick: () -> Unit) {
+    val (icon, colour) = iconFor(item)
+    Entry(
+        icon = icon,
+        title = item.title,
+        detail = listOfNotNull(item.place?.name, item.parent).joinToString(" / ").ifEmpty { null },
+        tint = colour ?: if (item.isFolder) brand.accent else brand.muted,
+        picture = if (!item.isFolder && item.metadata.category in setOf("IMAGES", "VIDEO")) {
+            { Remote(thumbnailUrl(host.server, place, item.metadata.id, "small"), host, null, Modifier.fillMaxSize()) }
+        } else {
+            null
+        },
+        onClick = onClick,
+    )
+}
+
+/** A PDF, every page, scrolled; the platform draws it (`PdfPages`). */
+@Composable
+fun PdfView(host: Host, place: Place, item: Item) {
+    var bytes by remember { mutableStateOf<ByteArray?>(null) }
+    var failed by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(item.metadata.id) {
+        host.attempt({ failed = it }) { bytes = host.api.bytes(rawUrl(host.server, place, item.metadata.id)) }
+    }
+    Scaffold(
+        containerColor = brand.ground,
+        topBar = { Header(item.title, onBack = host.back, compact = true) },
+    ) { padding ->
+        Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
+            val loaded = bytes
+            when {
+                failed != null -> Note(failed!!, colour = MaterialTheme.colorScheme.error)
+                loaded == null -> CircularProgressIndicator(color = brand.accent)
+                else -> PdfPages(loaded, Modifier.fillMaxSize())
             }
         }
     }

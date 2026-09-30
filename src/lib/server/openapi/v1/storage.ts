@@ -157,6 +157,32 @@ export const searchFiles = defineRoute({
 	service: storageServiceFor,
 });
 
+export const searchEverywhere = defineRoute({
+	method: "get",
+	path: "/api/v1/search",
+	summary: "Search everywhere",
+	description:
+		"Searches files and folders by name across every place the caller can browse: their own drive, the shared drives they belong to and the mounted volumes. Each result names its `place` and, in `parentKey`, the folder it sits in.",
+	tags: ["Storage - Files"],
+	query: z.object({
+		q: z.string(),
+		limit: z.coerce.number().int().min(1).max(200).optional(),
+	}),
+	response: z.object({
+		list: z.array(
+			objectItemSchema.extend({
+				place: z.object({
+					kind: z.enum(["personal", "drive", "volume"]),
+					id: z.string().optional(),
+					name: z.string(),
+				}),
+			}),
+		),
+		total: z.number(),
+	}),
+	errors: [400, 500],
+});
+
 export const listTrashFiles = defineRoute({
 	method: "get",
 	path: "/api/v1/storage/file/trash",

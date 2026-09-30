@@ -326,7 +326,8 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
                     is VideoScreen -> VideoView(host)
                     is VersionsScreen -> VersionsView(host, screen.place, screen.item)
                     SettingsScreen -> SettingsView(host, accent, onAccent)
-                    is SearchScreen -> SearchView(host, screen.place)
+                    SearchScreen -> SearchView(host)
+                    is PdfScreen -> PdfView(host, screen.place, screen.item)
                 }
             }
         }

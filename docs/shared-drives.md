@@ -24,6 +24,12 @@ sidebar lists the first five alphabetically and a **N more** link to the rest;
 the drive you have open is always listed. The management page lives at
 `/drives/shared`.
 
+Search is not limited to the page you are on: from any drive it looks through
+your own drive, every shared drive you are a member of and every
+[mounted volume](volumes.md), and each result names where it is. Opening one
+takes you there: a folder opens, a file opens in its own folder with its preview
+showing. `GET /api/v1/search?q=` answers the same list to API clients.
+
 ## Roles
 
 Members are added by name or email, the same search the Share dialog uses, and

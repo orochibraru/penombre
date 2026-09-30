@@ -41,8 +41,6 @@
 		indeterminate,
 		loading = $bindable(false),
 		checkedItems = $bindable(),
-		searchValue,
-		searchResults,
 		itemActions,
 		onDrop,
 		onUpload,
@@ -241,22 +239,9 @@
 		return [...files.list].sort(compareItems);
 	});
 
-	let sortedSearchResults = $derived.by(() => {
-		if (!searchResults) {
-			return searchResults;
-		}
-		if (!sortColumn) {
-			return sortFoldersFirst(searchResults);
-		}
-		return [...searchResults].sort(compareItems);
-	});
-
 	/** Only the rows near the viewport are in the DOM; see virtual-window.svelte.ts. */
 	const displayedItems = $derived(
-		withVersions(
-			searchValue ? (sortedSearchResults ?? []) : (sortedFiles ?? []),
-			$expandedVersions,
-		),
+		withVersions(sortedFiles ?? [], $expandedVersions),
 	);
 	const virtualizer = createWindowVirtualizer({
 		count: () => displayedItems.length,
@@ -418,20 +403,6 @@
     <ul class="flex flex-col gap-1" bind:this={listEl}>
         {#if loading}
             {@render loadingRows()}
-        {:else if searchValue}
-            {#if displayedItems.length > 0}
-                {#if virtualizer.padTop > 0}
-                    <li aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
-                {/if}
-                {#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.metadata.id)}
-                    {@render listItem(objectItem)}
-                {/each}
-                {#if virtualizer.padBottom > 0}
-                    <li aria-hidden="true" style="height: {virtualizer.padBottom}px"></li>
-                {/if}
-            {:else}
-                {@render emptyListItem()}
-            {/if}
         {:else}
             {#if parentPath !== undefined}
                 {@render parentListItem(parentPath)}

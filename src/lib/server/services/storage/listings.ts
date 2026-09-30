@@ -42,6 +42,7 @@ import {
 	type ListingCursor,
 	paginateItems,
 } from "./mappers";
+import { nameParents, withParentKey } from "./parents";
 import { ownedFiles, ownedFolders } from "./scope";
 import { latestSeqs } from "./versions";
 
@@ -771,13 +772,16 @@ export class ListingOperations {
 		]);
 
 		const allMatches: ObjectItem[] = [
-			...matchedFolders.map((f) => folderDbToObjectItem(f)),
-			...matchedFiles.map((f) => fileDbToObjectItem(f)),
+			...matchedFolders.map((f) =>
+				withParentKey(folderDbToObjectItem(f), f.path),
+			),
+			...matchedFiles.map((f) => withParentKey(fileDbToObjectItem(f), f.path)),
 		];
 
 		allMatches.sort((a, b) => compareSearchRelevance(a, b, searchTerm));
 
 		const limited = allMatches.slice(0, limit);
+		await nameParents(this.ctx, limited);
 		return { list: limited, count: limited.length, total: allMatches.length };
 	}
 

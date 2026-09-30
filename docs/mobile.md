@@ -68,13 +68,15 @@ offered files only, and scanning on Android needs Google Play services. Files
 over 200 MB are refused for now.
 
 **New folder** is in the same menu, and the magnifying glass in the header
-searches the drive by name.
+searches by name everywhere you have access: your drive, every shared drive and
+every mounted volume. Each result names the place and folder it is in.
 
 The three dots on a row offer what the web interface's right-click does:
 **Download** (into Downloads on Android, through the share sheet on iOS),
-**Versions** (and restoring one), **Star**, **Rename**, **Move to…**,
-**Duplicate**, **Copy to…** another folder or a shared drive, and **Move to
-trash**. On a drive you can only read, the ones that change it are absent.
+**Versions** (playing, downloading or restoring one), **Star**, **Rename**,
+**Move to…**, **Duplicate**, **Copy to…** another folder or a shared drive, and
+**Move to trash**. On a drive you can only read, the ones that change it are
+absent.
 
 ### Opening a file
 
@@ -93,8 +95,16 @@ Tapping a file opens a preview in a drawer at the bottom of the screen:
 - **A video the phone cannot play** (an AVI, for one) says so instead of showing
   a black screen, and **Convert and play** has the server render a version that
   does.
-- **Any other file** shows its thumbnail when the server has one (the first page
-  of a PDF), and **Open** shows the raw file.
+- **A PDF** shows its first page; **Open** shows every page, scrolling, with
+  pinch to zoom.
+- **A document, sheet, deck or Office file** opens in the web app's
+  [editor](documents.md).
+- **Any other file** shows its thumbnail when the server has one, and **Open**
+  shows the raw file.
+
+A track with earlier versions shows its version number beside its duration,
+**v3** for the third. Tap it for the list, where each version plays like any
+track.
 
 A track does not open a drawer: it starts playing in the mini player above the
 bottom bar, along with the folder's other tracks. Tap the mini player, or slide

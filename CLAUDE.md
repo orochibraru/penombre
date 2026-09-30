@@ -1757,6 +1757,10 @@ redemptions never both win.
   (`NSObject`): `compileKotlin` passes and the framework link crashes ("should
   have been lowered"). Use a class and hold an instance.
 - Only `iosSimulatorArm64` is built, so the simulator build excludes `x86_64`.
+- **A version is `<fileId>:v:<versionId>`**, as on the web: `rawUrl` and
+  `thumbnailUrl` route such an id to the versions endpoints, so a version plays
+  through the same queue as any track. A PDF is drawn natively (`PdfPages`:
+  `PdfRenderer`, PDFKit): Android's WebView renders none and showed black.
 - **Every API answer is `{ "data": … }`** (`Http.Ok`); the app decodes
   `Envelope<T>`. The first unit test fed the decoder the bare payload and passed
   while no sign-in could complete: a fixture is the shape the server sends,
@@ -1998,6 +2002,14 @@ separate failures:
 - `@prosekit/svelte` ships uncompiled `.svelte` sources, which Vite externalises
   for SSR and hands to Node as JavaScript; the parse error names the library's
   own file. Avoiding the package avoids needing `ssr.noExternal`.
+
+**Exactly one `@prosekit/core` in `node_modules`.** `prosekit` pins its
+subpackages exactly, and an install that re-resolved them left the root on
+`@prosekit/core` 0.13.2 while `@prosekit/basic` brought its own 0.13.3: every
+editor died on "[prosekit] Assertion failed" at creation (extensions from one
+copy fail the other's checks), which the E2E sees as a 500. Bump `prosekit`
+itself, never a subpackage, and check
+`find node_modules -path "*@prosekit/core/package.json"` finds one.
 
 The `{#if browser}` guard in the edit route stays regardless: `createEditor`
 parses its initial HTML with `DOMParser` at construction, so it throws "Unable
@@ -2562,6 +2574,18 @@ inode. Never add a writer that opens the key itself.
   `.versions` into folder rows. It now skips every dot-directory, like the
   scan's `isScannable`; a new app-owned dot-directory needs nothing more, but a
   walker that does not skip them will list the app's internals as folders.
+
+### Search is everywhere, one request
+
+`GET /api/v1/search` (`services/search.ts`) runs `searchFiles` in every place
+the caller can open: their drive (none when drive-only), each drive from
+`listForUser`, each volume from `getVolumes()`. Every hit carries `place`
+(`kind`, `id`, `name`) plus `parent`/`parentKey`, since a row's `key` is one
+segment and a search result has no folder on screen to rebuild it from. Places
+run under `allSettled`: one unreadable mount must not blank the results. The web
+opens a file by navigating to its folder and then setting `pendingPreview`
+(`{ fileId, at? }`), the same handover the viewer's **Minimize** uses; set it
+after `goto` resolves, or the page you are leaving consumes it.
 
 ### A backslash in a `sql` template is an escape first
 
