@@ -1645,6 +1645,18 @@ redemptions never both win.
   dependency optimizer can re-bundle mid-session and answer 504 for the stale
   `?v=` hash: the page renders and never hydrates, so nothing is clickable.
   Restart with `bun run dev -- --force`.
+- `mise run mobile:android` / `mobile:ios` build, install and launch;
+  `mobile:doctor` checks the SDK and simulator. Xcode ships the iOS _SDK_ but
+  not the simulator _runtime_ (`xcodebuild -downloadPlatform iOS`, ~8 GB), and
+  an SDK cleanup can leave an emulator image with no `system.img` ("No initial
+  system image for this configuration"); the doctor catches both.
+- The iOS host project is generated: `iosApp/project.yml` is the source,
+  `xcodegen` writes the gitignored `.xcodeproj`. Its Gradle build phase loads
+  `mise env` itself, since Xcode runs without the shell's JDK.
+- Kotlin/Native cannot make an `object` that subclasses an Obj-C class
+  (`NSObject`): `compileKotlin` passes and the framework link crashes ("should
+  have been lowered"). Use a class and hold an instance.
+- Only `iosSimulatorArm64` is built, so the simulator build excludes `x86_64`.
 - Nothing in CI or prek builds `mobile/` yet.
 
 ### TypeScript is held at 6 on purpose

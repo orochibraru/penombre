@@ -1,5 +1,6 @@
 package dev.penombre.app
 
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitView
@@ -44,20 +45,22 @@ actual fun sha256(bytes: ByteArray): ByteArray {
 
 actual val deviceName: String get() = UIDevice.currentDevice.model
 
-private object Anchor : NSObject(), ASWebAuthenticationPresentationContextProvidingProtocol {
+// A class, not an object: Kotlin/Native cannot make a singleton of an Obj-C subclass.
+private class Anchor : NSObject(), ASWebAuthenticationPresentationContextProvidingProtocol {
     override fun presentationAnchorForWebAuthenticationSession(session: ASWebAuthenticationSession): ASPresentationAnchor =
         UIApplication.sharedApplication.keyWindow ?: UIWindow()
 }
 
-// Held so the session is not collected while the sheet is up.
+// Held so neither is collected while the sheet is up.
 private var authSession: ASWebAuthenticationSession? = null
+private val anchor = Anchor()
 
 actual fun openAuthBrowser(url: String) {
     val session = ASWebAuthenticationSession(NSURL(string = url), "penombre") { callback, _ ->
         callback?.absoluteString?.let { Auth.callbacks.value = it }
         authSession = null
     }
-    session.presentationContextProvider = Anchor
+    session.presentationContextProvider = anchor
     authSession = session
     session.start()
 }
@@ -97,3 +100,6 @@ actual fun WebPage(url: String, session: Session, modifier: Modifier) {
 
 @Composable
 actual fun PlatformBack(enabled: Boolean, onBack: () -> Unit) = Unit
+
+@Composable
+actual fun systemColorScheme(dark: Boolean): ColorScheme? = null

@@ -4,4 +4,6 @@ build/
 local.properties
 *.xcuserstate
 xcuserdata/
-iosApp/build/
+# Written by xcodegen from iosApp/project.yml.
+iosApp/Penombre.xcodeproj/
+iosApp/Penombre/Info.plist

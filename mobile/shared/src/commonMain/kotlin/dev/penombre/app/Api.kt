@@ -20,7 +20,7 @@ import kotlinx.serialization.json.Json
 
 fun httpClient() = HttpClient {
     expectSuccess = true
-    install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
+    install(ContentNegotiation) { json(json) }
 }
 
 @Serializable
@@ -37,13 +37,32 @@ data class Page(val list: List<Item>, val nextCursor: String? = null)
 
 class Unauthorized : Exception("Signed out")
 
+/** `path` is the folder's path chain, "" for the drive's root. */
+internal fun listingUrl(server: String, path: String): String {
+    val route = if (path.isEmpty()) "" else "/" + path.split('/').joinToString("/") { it.encodeURLPathPart() }
+    return "$server/api/v1/storage/list$route"
+}
+
+/** A folder's path is its parent's plus its own key, the last segment. */
+internal fun childPath(parent: String, key: String): String = if (parent.isEmpty()) key else "$parent/$key"
+
+private val VIEWABLE = setOf("IMAGES", "VIDEO", "MUSIC")
+
+/** Where a file opens in the web UI: the viewer for media, the raw bytes otherwise. */
+internal fun fileUrl(server: String, item: Item): String =
+    if (item.metadata.category in VIEWABLE) {
+        "$server/view/${item.metadata.id}"
+    } else {
+        "$server/api/v1/storage/file/${item.metadata.id}?raw=true"
+    }
+
+internal val json = Json { ignoreUnknownKeys = true }
+
 class Api(private val session: Session) {
     private val client = httpClient()
 
-    /** `path` is the folder's path chain, "" for the drive's root. */
     suspend fun list(path: String, cursor: String?): Page = call {
-        val route = if (path.isEmpty()) "" else "/" + path.split('/').joinToString("/") { it.encodeURLPathPart() }
-        client.get("${session.server}/api/v1/storage/list$route") {
+        client.get(listingUrl(session.server, path)) {
             bearerAuth(session.token)
             cursor?.let { parameter("cursor", it) }
         }.body()

@@ -1,5 +1,6 @@
 package dev.penombre.app
 
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
@@ -22,3 +23,7 @@ expect fun WebPage(url: String, session: Session, modifier: Modifier)
 
 @Composable
 expect fun PlatformBack(enabled: Boolean, onBack: () -> Unit)
+
+/** The system's own palette (Material You), or null where there is none. */
+@Composable
+expect fun systemColorScheme(dark: Boolean): ColorScheme?

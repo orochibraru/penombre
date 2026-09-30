@@ -17,6 +17,7 @@ The backlog, and the only one. Filled by the `devex`, `ui-ux`, `privacy` and
       rate limiter held a closed client). Either run `test:docker` in the
       pre-push hook when the cache changes, or start a throwaway Redis in the
       unit-test script.
+- [ ] Setup prek tooling for gradle, kotlin
 
 ## Features
 

@@ -11,6 +11,8 @@ kotlin {
         namespace = "dev.penombre.shared"
         compileSdk = 36
         minSdk = 29
+        // commonTest on the JVM: fast, no device.
+        withHostTest {}
     }
 
     listOf(iosArm64(), iosSimulatorArm64()).forEach {
@@ -31,6 +33,9 @@ kotlin {
             implementation(libs.ktor.negotiation)
             implementation(libs.ktor.json)
             implementation(libs.serialization.json)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
         androidMain.dependencies {
             implementation(libs.ktor.okhttp)

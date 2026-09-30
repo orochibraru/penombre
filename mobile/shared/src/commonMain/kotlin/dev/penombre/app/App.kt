@@ -26,6 +26,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.darkColorScheme
@@ -39,6 +40,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,15 +49,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-// Bordeaux, the web app's default accent (app.css).
+// Bordeaux, the web app's default accent (app.css): where the system has no palette.
 private val light = lightColorScheme(primary = Color(0xFF911F43))
 private val dark = darkColorScheme(primary = Color(0xFFD8516A))
 
-private val VIEWABLE = setOf("IMAGES", "VIDEO", "MUSIC")
-
 @Composable
 fun App() {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) dark else light) {
+    val isDark = isSystemInDarkTheme()
+    MaterialTheme(colorScheme = systemColorScheme(isDark) ?: if (isDark) dark else light) {
         var session by remember { mutableStateOf(SessionStore.load()) }
         var error by remember { mutableStateOf<String?>(null) }
         val callback by Auth.callbacks.collectAsState()
@@ -79,7 +80,11 @@ fun App() {
 
 @Composable
 private fun SignIn(error: String?, onSubmit: (String) -> Unit) {
-    var server by remember { mutableStateOf(Prefs.get("server") ?: "") }
+    // Saveable: a recreated activity must not wipe a half-typed address.
+    var server by rememberSaveable { mutableStateOf(Prefs.get("server") ?: "") }
+    // Its own surface: without one the window's background shows through,
+    // which is dark under a light scheme.
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
     Column(
         Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
@@ -99,6 +104,7 @@ private fun SignIn(error: String?, onSubmit: (String) -> Unit) {
             enabled = server.isNotBlank(),
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Sign in") }
+    }
     }
 }
 
@@ -136,15 +142,9 @@ private fun Signed(session: Session, onSignedOut: () -> Unit) {
     ) { padding ->
         Listing(api, folder, Modifier.padding(padding), onUnauthorized = onSignedOut) { item ->
             if (item.isFolder) {
-                val child = if (folder.path.isEmpty()) item.key else "${folder.path}/${item.key}"
-                stack.add(Folder(child, item.title))
+                stack.add(Folder(childPath(folder.path, item.key), item.title))
             } else {
-                val id = item.metadata.id
-                web = if (item.metadata.category in VIEWABLE) {
-                    "${session.server}/view/$id"
-                } else {
-                    "${session.server}/api/v1/storage/file/$id?raw=true"
-                }
+                web = fileUrl(session.server, item)
             }
         }
     }
@@ -231,7 +231,7 @@ private fun Listing(
     }
 }
 
-private fun formatSize(bytes: Long): String {
+internal fun formatSize(bytes: Long): String {
     val units = listOf("B", "KB", "MB", "GB", "TB")
     var value = bytes.toDouble()
     var unit = 0

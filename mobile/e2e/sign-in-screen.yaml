@@ -1,0 +1,28 @@
+# The first screen, and the hand-off to the system browser.
+appId: dev.penombre.app
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Penombre"
+- assertVisible: "Server address"
+- tapOn: "Server address"
+- inputText: ${SERVER}
+- tapOn: "Sign in"
+# iOS asks before handing the sign-in to the browser.
+- tapOn:
+    text: "Continue"
+    optional: true
+# A fresh Android emulator shows Chrome's first-run screens once.
+- tapOn:
+    text: "Use without an account"
+    optional: true
+- tapOn:
+    text: "No thanks"
+    optional: true
+- tapOn:
+    text: "Got it"
+    optional: true
+# The instance's own sign-in page, in the browser.
+- extendedWaitUntil:
+    visible: "Sign in to your account"
+    timeout: 30000
