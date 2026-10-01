@@ -1,6 +1,6 @@
 # Mobile app
 
-![Penombre on a phone: the drive and the music player](images/graphics/feature-mobile.webp)
+![Penombre on a phone: the drive and the music player](images/feature-mobile.webp)
 
 The Penombre app for Android and iOS is at an early stage: it signs in, browses
 your drive and shared drives, shows pictures, plays music and video, and opens

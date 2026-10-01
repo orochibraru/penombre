@@ -2155,7 +2155,7 @@ error only shows when the iOS framework is linked.
   `sessionStorage`) must not advertise the app inside the app.
 - `mise run graphics` renders the README's and the guides' feature graphics and
   the Play Store's (`mobile/store/feature-graphic.jpg`, 1024x500, no alpha) from
-  the screenshots in `docs/images/graphics/src`, which it does not retake.
+  the screenshots in `docs/images/src`, which it does not retake.
 
 ### A pairing code signs a phone in with no browser
 

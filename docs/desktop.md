@@ -1,6 +1,6 @@
 # Desktop sync
 
-![Penombre Sync, syncing two folders](images/graphics/feature-desktop.webp)
+![Penombre Sync, syncing two folders](images/feature-desktop.webp)
 
 Penombre Sync is a small tray app for macOS, Linux and Windows that keeps
 folders on your computer in two-way sync with Penombre. It is built on

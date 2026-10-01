@@ -16,7 +16,7 @@ with a bill of exactly zero.
 <!-- markdownlint-disable MD033 -->
 
 <a href="https://orochibraru.com/penombre/docs/showcase">
-  <img alt="Penombre: your files, on your own server" src="docs/images/graphics/feature-web.webp">
+  <img alt="Penombre: your files, on your own server" src="docs/images/feature-web.webp">
 </a>
 
 <!-- markdownlint-enable MD033 -->

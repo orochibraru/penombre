@@ -3,12 +3,12 @@
 # graphics around them. Run it as `mise run media`; name parts to run only
 # those: `mise run media mobile graphics`.
 #
-#   web       docs/images/*.webp (both themes) and graphics/src/web.webp,
+#   web       docs/images/*.webp (both themes) and src/web.webp,
 #             from the E2E stack, rebuilt from this tree first
-#   desktop   graphics/src/desktop.webp, the sync app's own snapshot test
-#   mobile    graphics/src/mobile-*.webp, the iOS simulator against the same
+#   desktop   src/desktop.webp, the sync app's own snapshot test
+#   mobile    src/mobile-*.webp, the iOS simulator against the same
 #             stack (a Mac with a simulator runtime)
-#   graphics  graphics/*.webp and the Play Store's feature graphic
+#   graphics  feature-*.webp and the Play Store's feature graphic
 #
 # Everything runs against the E2E stack's throwaway admin, never a real
 # account: E2E_EMAIL / E2E_PASSWORD, as the E2E suite reads them.
@@ -20,7 +20,7 @@ parts="${*:-web desktop mobile graphics}"
 server="http://localhost:3001"
 email="${E2E_EMAIL:-admin@example.com}"
 password="${E2E_PASSWORD:-Admin1234!}"
-src="$root/docs/images/graphics/src"
+src="$root/docs/images/src"
 work="$(mktemp -d)"
 
 stack() {
