@@ -11,8 +11,11 @@ own uploads, renames and deletions never ring it. Those are in
 | -------------------------------- | ------------------------------------------ |
 | **A note is left on a file**     | Its owner, and everyone else in the thread |
 | **Something is shared with you** | Each person newly given access             |
+| **Everyone signed a document**   | Whoever asked for the signatures           |
+| **Someone declined to sign**     | Whoever asked for the signatures           |
 
-Two rules apply to both:
+The last two come from [signature requests](signatures.md). Two rules apply to
+all of them:
 
 - **You are never told about your own action.** Leaving a note on your own file
   rings nobody's bell, including yours.
@@ -32,17 +35,31 @@ live push channel, so a notification can be up to a minute old when it appears �
 a deliberate trade, since pushing would mean running a pub/sub that a
 single-container install does not otherwise need.
 
-## Emailed copies
+## Choosing where they reach you
 
-Something shared with you is always emailed as well, since it is addressed to
-you by name. For everything else, each person can opt in under **Settings →
-General → Notifications** to also receive it by email. That is **off by
-default**.
+**Settings → General → Notifications** has one row per kind of notification and
+one column per place it can reach you:
 
-The toggle is disabled, with a note saying so, unless an administrator has
+| Place         | What it means                                          |
+| ------------- | ------------------------------------------------------ |
+| In the app    | The bell, on the web and in the mobile app             |
+| By email      | A copy by mail, when the server can send mail          |
+| On your phone | The mobile app's own notifications, while it is closed |
+
+The same grid is in the mobile app, under **Settings → General**, and a change
+in one shows in the other.
+
+Out of the box every kind rings the bell and reaches your phone. Something
+shared with you, and the outcome of a signature request you made, are emailed
+too, since they are addressed to you by name; comments and notes are not emailed
+unless you turn that on. Turning **In the app** off for a kind also stops it
+reaching your phone: the app finds new notifications by asking the server for
+the ones the bell keeps.
+
+**By email** is disabled, with a note saying so, unless an administrator has
 configured outgoing mail — see the SMTP section of [Environment](env.md). If
-mail is removed afterwards the preference stays set but nothing is sent, rather
-than failing quietly in a way that looks like lost notifications.
+mail is removed afterwards the choices stay set but nothing is sent, rather than
+failing quietly in a way that looks like lost notifications.
 
 A failed email never affects the action that caused it: the notification is
 recorded, the bell still rings, and the mail failure is logged.

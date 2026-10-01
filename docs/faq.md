@@ -1,5 +1,17 @@
 # FAQ
 
+## How do I change the language?
+
+**Settings → General** on the web, or **Settings → General → Language** in the
+[mobile app](mobile.md#language). Penombre speaks English, French, German,
+Spanish, Italian, Dutch, Swedish, Finnish, Polish, Russian, Japanese, Korean and
+Chinese, each listed in its own name.
+
+The language is saved to your account: the web interface and the app follow it
+on every device you sign in to. **Automatic** follows each browser's (or each
+phone's) own language instead. On the sign-in page, before any account is known,
+the picker changes that browser only. Your files are never translated.
+
 ## Is a file overwritten by Syncthing or rsync kept as a version?
 
 Yes, when [file versioning](versioning.md) is on for its folder, on simple

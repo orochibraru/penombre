@@ -17,10 +17,9 @@ A version is the file's bytes as they were just before something replaced them:
   count. A folder that does not version keeps the old behaviour.
 - **Upload new version**, in a file's menu, replaces the file with whatever you
   pick, whatever its name.
-- **Editing a document, sheet, deck or Office file.** The first save of each
-  editing session keeps what the file held before you opened it. Autosave does
-  not add a version every two seconds.
-- **Save as version**, in the editor, keeps what is on screen right now.
+- **Save as version**, in the editor of a document, sheet, deck or Office file,
+  keeps what is on screen right now. Editing alone never makes a version:
+  autosave only saves.
 - **Restore** keeps the current bytes as a version before bringing an old one
   back, so a restore never loses anything. The restored version stays listed.
 
@@ -186,8 +185,8 @@ Every route takes the usual `drive`, `volume` or `share` query parameter.
 `{path}` is the folder's id or its path. An upload replaces a file with the same
 name only when it creates its rows with `mode: "upload"` in
 `POST /api/v1/storage/file/batch`; without it, it still gets `name (1)`. The
-upload and Office save routes take `snapshot=0` to write without keeping a
-version, which is how the editor's autosave avoids one every two seconds.
+upload route takes `snapshot=0` to write without keeping a version, which is how
+the editor's autosave saves a text file; the Office save route never keeps one.
 
 ## What does not carry versions
 

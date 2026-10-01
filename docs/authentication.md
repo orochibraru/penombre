@@ -44,6 +44,16 @@ skipped.
 Set `SMTP_SECURE=true` for port 465 (implicit TLS) and `false` for port 587
 (STARTTLS).
 
+### Changing or verifying an address
+
+**Account → Account details** shows whether the address is verified. **Verify**
+mails a code to it; entering the code marks it verified. **Change** takes two
+codes: one sent to the current address, then one sent to the new address. The
+account moves only once both are entered, so a session alone cannot move an
+account to another mailbox. The mobile app runs the same steps.
+
+Both need SMTP: without it the buttons are off and the address stays as it is.
+
 ### Forgot password
 
 **Forgot your password?** on the sign-in page mails a link to set a new one,
@@ -295,6 +305,12 @@ entered back, so a secret that never made it into an app cannot lock anyone out.
 Signing in afterwards asks for a code at `/auth/two-factor`, which also accepts
 a backup code. **Don't ask again on this device** remembers the browser so the
 prompt is not repeated on every sign-in.
+
+It is asked after a password, an emailed sign-in code and an emailed sign-in
+link alike, so a mailbox alone never opens an account that has it; a link opens
+the two-factor page and continues where it was going once answered. A passkey or
+an OAuth provider is not followed by it: a passkey is already a second factor on
+its own, and a provider runs its own.
 
 ### Requiring it for everyone
 

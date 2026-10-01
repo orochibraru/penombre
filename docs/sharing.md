@@ -35,11 +35,16 @@ shared item changes — a share link is an extra door, not a move.
 The **People** tab searches accounts on this instance by name or email, and adds
 the ones you pick at a permission:
 
-| Permission  | Meaning                     |
-| ----------- | --------------------------- |
-| Can view    | Read and download           |
-| Can edit    | Read, download and change   |
-| Full access | Everything, including share |
+| Permission  | Meaning                            |
+| ----------- | ---------------------------------- |
+| Can view    | Read, download and comment         |
+| Can edit    | Read, download, comment and change |
+| Full access | Everything, including share        |
+
+A document, sheet or presentation shared at **Can view** opens in its editor in
+view mode: the recipient reads it, downloads it, prints it and comments on it,
+and cannot change it. The **Share** dialog says so when it offers **Can view**
+for one of these.
 
 Searching requires a query: the user directory is not enumerable by typing
 nothing, so one account holder cannot list everyone on the instance. You never
@@ -94,6 +99,12 @@ A share URL looks like `https://your-instance/s/<token>`.
 - **A shared folder** lists its files, each downloadable on its own, plus a
   "Download as ZIP" button for the whole folder. Playable files get a preview
   button that expands in place.
+- **A shared document, sheet or presentation** is shown on the page, read-only,
+  the way its editor draws it: a document formatted, a sheet as a grid with its
+  tabs, a presentation as its slides, without the speaker notes. **Download as
+  PDF** sits beside **Download**, except for a Markdown deck. A file over 20 MB
+  is downloaded rather than shown. Links in a document open in a new tab, and
+  only web and mail links open at all.
 - **A password-protected link** asks for the password first. A correct answer
   sets a cookie scoped to that one link, valid for 12 hours, so the visitor is
   not asked again on every download.

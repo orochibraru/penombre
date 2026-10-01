@@ -33,7 +33,7 @@ both the frontend UI and the backend REST API.
 | Styling   | TailwindCSS 4, shadcn-svelte (bits-ui)                  |
 | ORM       | Drizzle ORM on SQLite (PostgreSQL optional)             |
 | Auth      | Better Auth (email/password, OAuth, passkeys, API keys) |
-| i18n      | Paraglide-JS (English + French)                         |
+| i18n      | Paraglide-JS (13 languages, `project.inlang`)           |
 | Forms     | sveltekit-superforms + Valibot                          |
 | API       | OpenAPI-first with Zod schemas                          |
 
@@ -130,7 +130,7 @@ src/lib/
 │   ├── title.ts      # Page title
 │   └── upload.ts     # Upload progress tracking
 ├── schemas/          # Form validation (sveltekit-superforms)
-├── paraglide/        # Generated i18n (en/fr)
+├── paraglide/        # Generated i18n
 └── hooks/            # Client-side hooks
 ```
 

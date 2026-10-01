@@ -426,6 +426,11 @@ The logo is inline SVG (`components/logo.svelte`) filled with `--primary`; an
 `<img src="/logo.svg">` cannot read page CSS and stayed purple under every
 accent. The static `favicon.svg`/`logo.*` carry the default's colour.
 
+### The PWA manifest needs an absolute base
+
+Kit's relative base made vite-pwa write `./manifest.webmanifest`, a 404 on every
+nested route. `SvelteKitPWA({ base: "/" })` in `vite.config.ts` fixes it.
+
 ### Shiki output is not styled by its wrapper
 
 `Code.Root` renders highlighted HTML through `{@html}`, so Shiki's own `<pre>`
@@ -634,6 +639,21 @@ Drizzle adapter, so renaming one breaks enrolment silently.
 or `totpURI`/`backupCodes` are not on the type.
 
 Note `requirePasskey` in app settings is stored but **not enforced anywhere**.
+
+### An emailed code or link still meets two-factor
+
+better-auth's `twoFactor` challenges `/sign-in/email` (and username, phone)
+only, so an account with two-factor signed in with an emailed code or link and
+its mailbox alone. `challengeCodeSignIn()` (`auth/two-factor.ts`) widens the
+plugin's own matcher to `/sign-in/email-otp` and `/magic-link/verify`, reusing
+its handler: it drops the session and sets the challenge cookie.
+
+The link is a GET that redirects, and the plugin answers JSON, which a browser
+would show as a page. `magicLinkChallenge`, listed right after `twoFactor`
+(plugin hooks run in list order, after the user's own `hooks.after`), turns that
+answer into a redirect to `/auth/two-factor?next=…`. The endpoint's 302 status
+survives the hooks and `Location` is `set`, not appended, so the last redirect
+wins. A trusted device gets no challenge and keeps the original redirect.
 
 ### A passwordless send failure is reported two different wrong ways
 
@@ -1293,6 +1313,9 @@ folder (`query.folder`), which is why every mutation in `wrapper.svelte.ts`
 carries `currentFolder`. Views that list across folders (starred, recent,
 search, the editor) have no such folder, so `PUT /api/v1/storage/file/{id}`
 falls back to `findFileById` when the path misses. Prefer passing `metadata.id`.
+Download once passed `metadata.name` as the path: every single-file download
+from a full-mode personal drive, whose keys are `<uuid>.<ext>`, was a 404. Build
+byte URLs through `file-links.ts` (`rawUrl`, `downloadUrl`), which send the id.
 
 ### On disk, a name is claimed
 
@@ -1330,18 +1353,177 @@ claim. Shared drives are not scanned, so theirs stay UUIDs.
 
 ### Documents are ordinary files
 
-`#lib/documents.ts` owns the three editable kinds and their formats: HTML for a
-document, CSV for a sheet, Markdown (`---` separated) for a deck. **No private
-format** — creating and saving go through the existing `createFile` +
-`uploadFile` endpoints, so a document is a file like any other and inherits
-trash, sharing, search and thumbnails for free. Adding a kind means adding it to
-`DOCUMENT_KINDS`, `kindForName` and the editor route's branch.
+`#lib/documents.ts` owns the three editable kinds. **New files are Office
+files**: `.docx`, `.xlsx`, `.pptx`, built server-side (`POST /api/v1/documents`,
+`office/blank.ts`) and edited in place; `.html`, `.csv` and Markdown decks are
+legacy and still open. **No private format**: a branded extension was asked for
+and refused, since nothing else would open it. A document is a file like any
+other and inherits trash, sharing, search and thumbnails for free. Adding a kind
+means adding it to `DOCUMENT_KINDS`, `kindForName` and the editor route's
+branch.
+
+**Autosave never makes a version.** `saveDocument` sends `snapshot=0` and the
+`/office` route never snapshots; only **Save as version** (`POST …/versions`)
+does. A version per editing session was dropped as noise.
+
+**Exports go through `office/export/model.ts`**, a small block model each format
+renders (pdf via pdfmake, docx, html, md, txt, csv, xlsx); a new block type is
+added there once. pdfmake finds Roboto with `createRequire`, but pdfkit reads
+its Times/Courier metrics from a `__dirname` Bun's bundler freezes to the build
+path (`/app/node_modules/pdfkit/js`), so the image must build and run under
+`/app` with `pdfmake` a production dependency. No CJK font is bundled: Chinese,
+Japanese and Korean text is blank in a PDF.
 
 `handleOpenItem` routes an editable file to `/edit/[fileId]` before anything
 else, so extensions handled there never reach the preview dialog. Any other file
 reaching `/edit` (the **Edit** context action, `wrapper-edit.ts`) gets the plain
 textarea; the load refuses one with a NUL byte in its first 8 KiB, since saving
 a binary back as text destroys it.
+
+### A sheet stores formulas as typed
+
+A cell starting with `=` is a formula (`#lib/formula.ts` plus `#lib/sheet/`, our
+own engine: HyperFormula is GPL and Penombre is MIT). A CSV keeps the text,
+since Excel, LibreOffice and Sheets evaluate `=…` in a CSV they open. The
+evaluator is lazy and caches per cell, so it is rebuilt after every edit, never
+patched. Precedence is Excel's, not maths': `-2^2` is 4. `IF`, `IFS`, `SWITCH`,
+`CHOOSE`, `IFERROR` and `IFNA` are lazy (`LAZY`): the eager `IF` answered
+`#DIV/0!` for `=IF(B1=0,0,A1/B1)`. A reference argument arrives as a `Range`
+even for one cell, so `SUM` can skip text and `ISBLANK` can tell a blank from
+`""`.
+
+References are rewritten token by token (`#lib/sheet/references.ts`): pasting
+and filling shift relative ones (`$` honoured), inserting or deleting rows and
+columns adjusts every formula on every sheet, a reference into deleted cells
+becomes `#REF!`. Sorting moves formulas as written, like Excel.
+
+**An `.xlsx` travels to the editor as JSON**
+(`{nextId, sheets: [{id, name, rows, cached}]}`), sheets matched by `sheetId`; a
+new sheet takes `nextId`, since chartsheets hold ids too. It opens its formulas
+as `=…` (shared formulas expanded from their master; array and data-table cells
+show their value). The file's cached value is shown only when the engine answers
+`#NAME?`/`#ERROR!` on an unchanged formula; any structural change drops it, the
+cache being keyed by position. Writing: newer functions go out as `_xlfn.X` or
+Excel shows `#NAME?`; every write drops `calcChain.xml` and sets
+`fullCalcOnLoad`, since typed formulas carry no `<v>`; a cell sharing a formula
+whose master was overwritten is written in full (`detachOrphans`); an unchanged
+sheet is never reserialised.
+
+The grid has one editor, a one-row textarea in the active cell (an `<input>`
+strips a cell's line breaks); every other cell is text, rows virtualised. Copy
+and paste move focus to an off-screen textarea during the keydown: Safari fires
+no clipboard event on a non-editable element. On iOS the editor must mount and
+focus inside the tap (`flushSync`) or the keyboard stays shut, and editor inputs
+are `text-base md:text-sm` or iOS zooms. Enter after a run of Tabs goes back to
+the column the run began in (`advance`), as Excel does. `state.test.ts` compiles
+`state.svelte.ts` with `svelte/compiler` to unit-test a runes class under
+`bun test`; copy that for another one.
+
+### Document editor
+
+Toolbar and menubar share one set of tool objects; the buttons `preventDefault`
+on mousedown so the editor keeps its selection, and each menu's
+`onCloseAutoFocus` hands focus back to the editor rather than the trigger. A
+menu entry that opens something taking focus (popover, find bar, dialog) must
+wait until the menu is gone (`later()`), or the closing menu hands focus back to
+the text. A snippet declared _inside_ `<Menubar.Root>` becomes a prop of it and
+fails the type check; declare them at the top level. Alignment is ProseKit's
+text-align commands over our own `defineNodeAttr` with a null default
+(`defineTextAlign` stamps `text-align:left` on every paragraph). `insertTable`
+leaves the caret after the table, so `insertTableHere` moves it into the first
+cell. Pictures are embedded, scaled to 1600px.
+
+- **An empty mark step clears the stored marks.** `addMark`/`removeMark` over an
+  empty range still adds a step, which resets `storedMarks`; a caret-only
+  command touches stored marks only (`setMark` in `document-extension.ts`).
+  ProseKit's `addTextColor`/`addFontFamily` do nothing on a caret.
+- **One span carries several marks** only because every valued-mark parse rule
+  is `consuming: false`; a new valued mark must be too. ProseKit's `textColor`
+  rule matches `[style*="color:"]`, which also matches `background-color:`.
+- **Mark nesting follows schema order**, which ProseKit's `addToStart` reverses;
+  the dark-text-on-highlight CSS handles both nestings.
+- **Word checks the order of `w:rPr`/`w:pPr` children**, not just their names:
+  use `insertOrdered`/`PARAGRAPH_ORDER` (`docx-package.ts`); editor-owned
+  properties merge through `applyProperties`, never a second `w:pPr`.
+- **The docx reader takes `000000` as automatic**: Google Docs writes it on
+  every run, and literal black vanishes on the dark theme.
+- **Printing goes through an iframe** (`#lib/editor/print.ts`): the editor
+  scrolls in a fixed-height box, so printing the page cut everything after the
+  first screen.
+- `htmlFromNode(doc)` wraps the document in a `<div>`;
+  `findElements(table, "tr")` also returns nested tables' rows, so use `rowsOf`.
+
+### The editor shell: comments, presence, view mode
+
+- **Comments are notes with an `anchor`** (JSON text). `parent_id` has no
+  foreign key; `NoteService.remove` deletes the replies. A timestamped note is a
+  media note and never appears in the comments panel.
+- **A text anchor is quote + 32 characters of context + offset over
+  `flatten(docRuns(doc))`** (paragraphs joined by `\n`). Build and look up
+  anchors over that same flattened text, or offsets drift. The plugin maps
+  ranges through edits; a collapsed range means the text is gone.
+- **Presence is a table, not the cache**: the in-memory cache is per process.
+  Each heartbeat prunes every stale row.
+- **Notification links are resolved per recipient** (`fileHref`). A `/go/...`
+  `+server.ts` redirect cannot be one: notifications `goto()` their link, and
+  Kit 3's `goto` refuses non-page routes.
+- **The shell is keyed on `data.fileId`, the editors inside on `generation`**,
+  bumped after a version restore, because each editor reads its content once.
+- **A read-only ProseMirror view makes links live.** `defineSafeLinks` opens
+  only http(s)/mailto, in a new tab: a shared document can carry `javascript:`
+  hrefs.
+- **View or edit is read from `localStorage` after mount**; the server always
+  renders edit. A read-only refusal a route's `catch` swallows is still a 403:
+  `Http.ServerError` maps `ReadOnlyVolumeError`. View-only saves used to come
+  back as 500.
+
+### A deck is JSON; the `.pptx` is patched, not regenerated
+
+`officeToText` hands the slide editor the `#lib/slides` model as JSON. Each
+element's `origin` (`slide.xml#id`) names the XML it came from, and
+`slides/write.ts` rewrites only the changed properties; an element with no
+origin is generated. Never drop an unknown `spTree` child: `readUnknown` keeps
+it raw, which is how charts, SmartArt and video survive.
+
+- **Run formatting is explicit only; `TextBody.levels` is inherited and never
+  written.** Baking inheritance into runs stops a theme switch from restyling.
+- **A slide placeholder adopts its layout's exact `ph` type**, and an `xfrm` is
+  omitted only when type and box both match: `title` and `ctrTitle` match in
+  PowerPoint, not in LibreOffice.
+- **Symbol-font bullets are the font's own code point** (Symbol's is U+F0B7):
+  use `bulletGlyph`, or they draw as boxes.
+- **A new slide's part name comes from the editor** (`source`, also its `id`),
+  so the next autosave reuses the part instead of making another.
+- **Never `structuredClone` a `$state` proxy**: it throws. Snapshot first.
+- **Colours are `rgb(r, g, b)`/`rgba(…)`, never the space syntax.** The PDF
+  export feeds the same SVG to pdfmake's svg-to-pdfkit, which reads no other:
+  `rgb(255 255 255)` painted every slide black. Unknown fonts fall back to
+  Roboto there.
+- A public link's deck has its speaker notes stripped (`publicDeck` in
+  `s/[token]/+page.server.ts`).
+
+### Address codes are not a sign-in method
+
+`METHOD_GATES` refused the whole `/email-otp/` prefix while emailed-code sign-in
+was off, which also refused verifying and changing an address. `isAddressCode()`
+(`auth/address-codes.ts`) exempts those: `verify-email` only makes a session
+with `autoSignInAfterVerification`, which stays off, and `change-email` needs
+one. `request-email-change` consumes the current address's code, so the dialog
+sends a refused one back to that step.
+
+### Markdown decks are rendered on the app origin
+
+Legacy `.md` decks follow Marp's conventions (`#lib/deck/`): front matter,
+rulers, HTML comments as speaker notes or directives. `render.ts` is a security
+boundary, since slides go through `{@html}`: text is escaped first, URLs only
+through `safeUrl`, slide classes through an allowlist in `slide-view.svelte`
+(without it `_class: fixed inset-0` reached Tailwind); the XSS tests check
+output with Bun's HTMLRewriter. No regex lookbehind in client code: older iOS
+WebViews throw at parse time. A `.deck-frame` is a CSS size container and needs
+a definite size or collapses to zero. `deck.css` stays loaded once imported, so
+its print rules are scoped by `body:has(> .deck-print)` and a named
+`@page deck`. Toolbar edits use `execCommand("insertText")`: assigning
+`textarea.value` wipes undo.
 
 ### Office files are edited in place, not imported
 
@@ -1391,9 +1573,23 @@ Three traps that cost real time:
   `isPlaceholder()`. Getting this wrong made every slide added by cloning lose
   its body placeholder and grow a stray text box.
 
-`kindForName` stays "is this one of ours" — the listing icon and the kind colour
-hang off it, and an Office file must keep its Word/Excel/PowerPoint icon.
-`editorKindForName` is the "does this open in an editor" question.
+`kindForName` includes `.docx`/`.xlsx`/`.pptx`: a Word upload and a document
+made here are the same thing, same colour and icon. `officeKindForName` means
+"stored as a package, saved through `/office`".
+
+- **New pictures in a `.docx`** go to `word/media/penombre-N.*`, sized from the
+  image header; only those parts are pruned when unused, since a part Word wrote
+  may be drawn from a header we never read. PNG, JPEG and GIF only; the editor
+  converts anything else to PNG on insert.
+- **A code block in a `.docx`** is one `w:sdt` tagged `penombre-code:<lang>`
+  holding a `Code`-style paragraph per line: the control's edges keep two
+  adjacent blocks apart. `bodyBlocks()` opens other content controls. A table
+  cell must end in a `w:p`.
+- **Check lists** are ☐/☒ plus a space leading the item, read back as
+  `ul>li>input`; a **divider** is an empty paragraph with a bottom border.
+- **The Shiki highlighter**: while it loads, every code block must return the
+  same loading promise (a block that returns `[]` is cached and never coloured),
+  and a failed load must set `failed` or it refreshes forever.
 
 ### A cell per row is a page that never loads
 
@@ -1843,11 +2039,78 @@ redemptions never both win.
 - A bottom-bar tap re-keys the whole tab (`tapped` in `Signed`), so Home always
   lands on the drive's root: `Browser`'s folder stack otherwise survives a tap
   on the tab it is already on.
+- **`maestro test` without `--device <simulator id>` may pick a phone plugged
+  into the Mac**, with a real account on it. Always pass the simulator's id
+  (`xcrun simctl list devices booted`).
+- **The tabs are Home, Search, Starred and Shared.** Home's title is the place
+  selector (`Home.kt`: drive, recent, starred, trash, shared drives, volumes,
+  shared with me, categories in the web sidebar's colours), fed by
+  `GET /api/v1/places`, the web sidebar's lists as one call. The avatar opens
+  the Account page: **My profile** and **Settings** hubs, one screen per web tab
+  (`ProfileSection`, `SettingsSection`), then sign out and the version.
+- **Account settings go through `/api/v1/account/*`**, which share
+  `services/account.ts` with the web's form actions (one set of password and
+  sign-in-method rules). Two-factor, passkeys, API keys and account deletion
+  call better-auth's own endpoints with the Bearer token: `csrf.ts` exempts
+  Bearer requests, and better-auth only checks the origin of cookie requests. A
+  passkey cannot be added from the app (it belongs to the server's web address,
+  which the app cannot claim), so that one entry opens the browser.
+- **The look is split:** accent, font and corners are the account's preferences
+  (synced both ways); light or dark is this device's own (`Look.mode`). `Corner`
+  is read from the theme, so it only exists inside a composable.
+- **Notifications while closed are polled, not pushed** (`NoticeWatch`):
+  WorkManager every 15 minutes on Android, `BGAppRefreshTask` on iOS, whose
+  handler must be registered from the Swift app's `init()`
+  (`registerNoticeChecks`). Shown ids live in `Prefs` so nothing shows twice.
+  Push would need Google's or Apple's credentials on every self-hosted server. A
+  background job has no activity: `Prefs` reads through `AndroidHost.context`,
+  never `activity`.
 - CI runs the unit tests only (`test-mobile` hook, the `mobile` job in
   `pull_request.yaml`, whose JDK must match `mise.toml`'s). The Maestro flows
   run locally: they need an emulator, a simulator and a server with an account,
   and a CI run would create its own throwaway account as Playwright's setup
   does, never a stored password.
+
+### The app speaks the account's language
+
+Every string is a Compose Multiplatform resource
+(`composeResources/values*/strings.xml`), the language an account preference
+(`language`, `null` for automatic) shared with the web.
+
+- **Switching is a static `LocalLanguage` plus `speak()`** (`Locale.setDefault`
+  and the activity's configuration on Android, `AppleLanguages` on iOS). Never
+  wrap the app in `key(locale)`, the documented recipe: it drops every screen's
+  state. Never `remember` a resolved string either; the root crumb kept "My
+  Drive" in the old language.
+- **Outside composition `getString` reads the platform's default locale**, so
+  background work (`NoticeWatch`) calls `speak(savedLanguage())` first. Errors
+  the app writes throw `Failure(Words)`, resolved where shown.
+- **iOS's `NSLocale.preferredLanguages` returns the app's own override**; the
+  phone's list is in `persistentDomainForName(NSGlobalDomain)`.
+- Compose resources do not unescape `\'` or `\"`: write quotes raw. `%1$s`
+  works, a bare `%s` does not. With the AGP KMP library plugin they also need
+  `androidResources { enable = true }`, or Android packages no strings.
+- On the web the account's language wins through `applyLanguage` in
+  `(app)/+layout.svelte`; inside the app with none set, the `PARAGLIDE_LOCALE`
+  cookie the app plants beats `localStorage`.
+
+### The app can sign in with an emailed code
+
+Beside the browser and the QR code, the sign-in screen sends an emailed code
+itself (`send-verification-otp` type `sign-in`, then `sign-in/email-otp`); a 403
+means the instance has that method off, which both previews do by default
+(`app_settings.emailOtpEnabled` and SMTP are both needed).
+
+- **Darwin merges every `Set-Cookie` into one comma-joined header**: reading
+  `getAll(SetCookie)` saw the first cookie only and missed the two-factor
+  challenge on iOS. Use `cookiesOf()` (`Auth.kt`).
+- **A challenged sign-in also sets an empty `session_token`** (`Max-Age=0`);
+  take only a non-empty one. `verify-totp` carries the challenge cookie, so
+  better-auth checks its origin: send `Origin: <server>`.
+- **OkHttp refuses non-ASCII header values**, so a user agent cannot read
+  `Penombre mobile · …`. The app names such a session afterwards through
+  `PUT /api/v1/mobile/session` (the caller's own session only, never an API
+  key).
 
 ### The mobile apps ship with every release too
 
@@ -2731,3 +2994,25 @@ form's own `form?.error` handling is untouched.
   (`trustedOrigins: ["*"]`) and `#lib/server/csrf.ts` applies the same rule
   minus requests carrying an API key. Playwright's `request` sends no `Origin`
   either — pass `headers: sameOrigin()` (`e2e/helpers.ts`) on a bodiless call.
+
+### A signing link is shown once
+
+Signature links (`services/signatures/`, `docs/signatures.md`) are stored as
+SHA-256 only, so "show the link again" always means issuing a new one
+(`rotate`), which kills the old. The completing signer keeps theirs (`keep` in
+`announce`): they are on the page when the signed PDF appears. What they sign is
+the PDF frozen at send time, under `STORAGE_PATH/.signatures/<id>/` through
+`createUserStorageDriver(".signatures")`, sealed and swept like any file. The
+signed PDF lands under its own hash (`signed-<sha>.pdf`) and only the first
+`finalize` to record its hash announces anything, so two racing last signatures
+never pair a hash with the other's bytes; a failed build is rebuilt by the
+requester's download. `assertSignatureImage` renders the PNG once at sign time:
+one pdfkit cannot draw would otherwise fail completion after everyone signed.
+
+A notification type is a TypeScript enum on a text column: no migration, but
+both schema files, `NotificationType` and its email line, the OpenAPI enum and
+`notifications.svelte` must all learn it (the Kotlin inbox too).
+
+`test.setup.ts` mocks `services/storage/index.js` down to `StorageService`:
+import `createUserStorageDriver` from `storage/driver.js`, or every test that
+loads the module fails to link.

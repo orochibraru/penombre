@@ -1,3 +1,5 @@
+<!-- vale off -->
+
 # TODO
 
 The backlog, and the only one. Filled by the `devex`, `ui-ux`, `privacy` and
@@ -17,6 +19,13 @@ The backlog, and the only one. Filled by the `devex`, `ui-ux`, `privacy` and
       rate limiter held a closed client). Either run `test:docker` in the
       pre-push hook when the cache changes, or start a throwaway Redis in the
       unit-test script.
+- [ ] [L] Editors, what is still missing next to Google's: formula references
+      that follow row/column inserts, deletes and sorts; cell formatting and
+      number formats (xlsx only, CSV cannot hold them); several sheets per
+      `.xlsx`; comments and suggestions in documents; font, size and colour;
+      images in `.docx`; a WYSIWYG slide editor instead of Markdown.
+- [ ] [S] Check the three editors inside the mobile app's WebView on a real
+      phone (verified at 390px in a desktop browser only).
 
 ## Features
 
