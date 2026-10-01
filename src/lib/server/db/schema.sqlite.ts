@@ -657,7 +657,9 @@ export const notifications = sqliteTable(
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		type: text("type", { enum: ["note", "share"] }).notNull(),
+		type: text("type", {
+			enum: ["note", "share", "signature_completed", "signature_declined"],
+		}).notNull(),
 		actorName: text("actor_name"),
 		resourceName: text("resource_name"),
 		link: text("link"),
@@ -795,5 +797,110 @@ export const sidebarShortcuts = sqliteTable(
 			table.ownerId,
 			table.folderId,
 		),
+	],
+);
+
+// =========================================================================
+// SIGNATURES
+// =========================================================================
+
+export const signatureRequests = sqliteTable(
+	"signature_requests",
+	{
+		id: text("id").primaryKey(),
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		fileId: text("file_id").references(() => files.id, {
+			onDelete: "set null",
+		}),
+		documentName: text("document_name").notNull(),
+		message: text("message"),
+		sequential: integer("sequential", { mode: "boolean" })
+			.default(false)
+			.notNull(),
+		status: text("status", {
+			enum: ["pending", "completed", "declined", "cancelled"],
+		})
+			.default("pending")
+			.notNull(),
+		documentHash: text("document_hash").notNull(),
+		pageCount: integer("page_count").notNull(),
+		signedHash: text("signed_hash"),
+		expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+		completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("signature_requests_owner_idx").on(table.ownerId, table.createdAt),
+		index("signature_requests_file_idx").on(table.fileId),
+	],
+);
+
+export const signatureSigners = sqliteTable(
+	"signature_signers",
+	{
+		id: text("id").primaryKey(),
+		requestId: text("request_id")
+			.references(() => signatureRequests.id, { onDelete: "cascade" })
+			.notNull(),
+		position: integer("position").notNull(),
+		name: text("name").notNull(),
+		email: text("email").notNull(),
+		userId: text("user_id").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		tokenHash: text("token_hash").notNull().unique(),
+		status: text("status", { enum: ["pending", "signed", "declined"] })
+			.default("pending")
+			.notNull(),
+		signature: text("signature"),
+		declineReason: text("decline_reason"),
+		ipAddress: text("ip_address"),
+		userAgent: text("user_agent"),
+		timeZone: text("time_zone"),
+		viewedAt: integer("viewed_at", { mode: "timestamp_ms" }),
+		respondedAt: integer("responded_at", { mode: "timestamp_ms" }),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("signature_signers_request_idx").on(table.requestId),
+		index("signature_signers_user_idx").on(table.userId),
+	],
+);
+
+export const signatureEvents = sqliteTable(
+	"signature_events",
+	{
+		id: text("id").primaryKey(),
+		requestId: text("request_id")
+			.references(() => signatureRequests.id, { onDelete: "cascade" })
+			.notNull(),
+		signerId: text("signer_id"),
+		type: text("type", {
+			enum: [
+				"created",
+				"sent",
+				"viewed",
+				"signed",
+				"declined",
+				"completed",
+				"cancelled",
+			],
+		}).notNull(),
+		actor: text("actor"),
+		detail: text("detail"),
+		ipAddress: text("ip_address"),
+		userAgent: text("user_agent"),
+		createdAt: integer("created_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("signature_events_request_idx").on(table.requestId, table.createdAt),
 	],
 );

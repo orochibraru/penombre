@@ -8,7 +8,7 @@ import { defineRoute } from "#lib/server/openapi/index.js";
 
 export const notificationSchema = z.object({
 	id: z.string(),
-	type: z.enum(["note", "share"]),
+	type: z.enum(["note", "share", "signature_completed", "signature_declined"]),
 	/** Who did it, as their name read when it happened. */
 	actorName: z.string().nullable(),
 	/** The file or folder involved. */

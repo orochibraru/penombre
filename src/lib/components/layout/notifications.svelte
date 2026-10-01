@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { BellIcon, MessageSquareIcon, Share2Icon } from "@lucide/svelte";
+	import {
+		BellIcon,
+		CircleXIcon,
+		MessageSquareIcon,
+		Share2Icon,
+		SignatureIcon,
+	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { api } from "#lib/api/index.js";
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
@@ -18,7 +24,7 @@
 	 */
 	interface Item {
 		id: string;
-		type: "note" | "share";
+		type: "note" | "share" | "signature_completed" | "signature_declined";
 		actorName: string | null;
 		resourceName: string | null;
 		link: string | null;
@@ -32,7 +38,12 @@
 	let unread = $state(0);
 	let open = $state(false);
 
-	const icon = { note: MessageSquareIcon, share: Share2Icon };
+	const icon = {
+		note: MessageSquareIcon,
+		share: Share2Icon,
+		signature_completed: SignatureIcon,
+		signature_declined: CircleXIcon,
+	};
 
 	/**
 	 * Rendered here rather than stored as a sentence, so the row reads in the
@@ -41,6 +52,15 @@
 	 */
 	function label(item: Item): string {
 		const other = item.resourceName ?? "";
+		if (item.type === "signature_completed") {
+			return m.sign_notification_completed({ item: other });
+		}
+		if (item.type === "signature_declined") {
+			return m.sign_notification_declined({
+				actor: item.actorName ?? "",
+				item: other,
+			});
+		}
 		if (item.type === "note") {
 			return item.actorName
 				? m.notification_note({ actor: item.actorName, item: other })

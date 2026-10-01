@@ -98,6 +98,15 @@ export const appInstances = (
 export const sidebarShortcuts = (
 	sqliteActive ? sqlite.sidebarShortcuts : pg.sidebarShortcuts
 ) as typeof pg.sidebarShortcuts;
+export const signatureRequests = (
+	sqliteActive ? sqlite.signatureRequests : pg.signatureRequests
+) as typeof pg.signatureRequests;
+export const signatureSigners = (
+	sqliteActive ? sqlite.signatureSigners : pg.signatureSigners
+) as typeof pg.signatureSigners;
+export const signatureEvents = (
+	sqliteActive ? sqlite.signatureEvents : pg.signatureEvents
+) as typeof pg.signatureEvents;
 
 export type {
 	AppSettingsData,
@@ -133,3 +142,6 @@ export type Drive = typeof pg.drives.$inferSelect;
 export type DriveMember = typeof pg.driveMembers.$inferSelect;
 export type Job = typeof pg.jobs.$inferSelect;
 export type NewJob = typeof pg.jobs.$inferInsert;
+export type SignatureRequest = typeof pg.signatureRequests.$inferSelect;
+export type SignatureSigner = typeof pg.signatureSigners.$inferSelect;
+export type SignatureEvent = typeof pg.signatureEvents.$inferSelect;

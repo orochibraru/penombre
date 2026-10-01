@@ -37,6 +37,7 @@
 				{ "slug": "mobile", "title": "Mobile app", "icon": "smartphone" },
 				{ "slug": "media", "icon": "music" },
 				{ "slug": "documents", "icon": "file-text" },
+				{ "slug": "signatures", "icon": "signature" },
 				{ "slug": "versioning", "title": "File versioning", "icon": "history" },
 				{ "slug": "sharing", "icon": "share-2" },
 				{ "slug": "shared-drives", "icon": "users" },

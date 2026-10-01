@@ -934,7 +934,9 @@ export const notifications = pgTable(
 		userId: text("user_id")
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		type: text("type", { enum: ["note", "share"] }).notNull(),
+		type: text("type", {
+			enum: ["note", "share", "signature_completed", "signature_declined"],
+		}).notNull(),
 		/** Who did it, snapshotted: the row survives the actor being deleted. */
 		actorName: text("actor_name"),
 		/** The file or folder it happened to. */
@@ -1093,5 +1095,125 @@ export const sidebarShortcuts = pgTable(
 			table.ownerId,
 			table.folderId,
 		),
+	],
+);
+
+// =========================================================================
+// SIGNATURES
+// =========================================================================
+
+/**
+ * Someone asked people to sign a document. What they sign is the PDF frozen
+ * when the request was sent (`STORAGE_PATH/.signatures/<id>/original.pdf`,
+ * hashed in `documentHash`), never the document as it is now.
+ */
+export const signatureRequests = pgTable(
+	"signature_requests",
+	{
+		id: text("id").primaryKey(),
+		/** Who asked. */
+		ownerId: text("owner_id")
+			.references(() => user.id, { onDelete: "cascade" })
+			.notNull(),
+		fileId: text("file_id").references(() => files.id, {
+			onDelete: "set null",
+		}),
+		documentName: text("document_name").notNull(),
+		message: text("message"),
+		/** Signers sign in `position` order, each emailed on their turn. */
+		sequential: boolean("sequential").default(false).notNull(),
+		status: text("status", {
+			enum: ["pending", "completed", "declined", "cancelled"],
+		})
+			.default("pending")
+			.notNull(),
+		/** SHA-256 of the frozen PDF, hex. */
+		documentHash: text("document_hash").notNull(),
+		pageCount: integer("page_count").notNull(),
+		/** SHA-256 of the signed PDF; null until it is built. */
+		signedHash: text("signed_hash"),
+		expiresAt: timestamp("expires_at").notNull(),
+		completedAt: timestamp("completed_at"),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("signature_requests_owner_idx").on(table.ownerId, table.createdAt),
+		index("signature_requests_file_idx").on(table.fileId),
+	],
+);
+
+/** One person asked to sign, with or without an account. */
+export const signatureSigners = pgTable(
+	"signature_signers",
+	{
+		id: text("id").primaryKey(),
+		requestId: text("request_id")
+			.references(() => signatureRequests.id, { onDelete: "cascade" })
+			.notNull(),
+		position: integer("position").notNull(),
+		name: text("name").notNull(),
+		email: text("email").notNull(),
+		/** Picked as an account, or signed while signed in as one. */
+		userId: text("user_id").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		/** SHA-256 of the link's token; the token itself is never stored. */
+		tokenHash: text("token_hash").notNull().unique(),
+		status: text("status", { enum: ["pending", "signed", "declined"] })
+			.default("pending")
+			.notNull(),
+		/** The signature as a PNG data URL. */
+		signature: text("signature"),
+		declineReason: text("decline_reason"),
+		ipAddress: text("ip_address"),
+		userAgent: text("user_agent"),
+		/** The signer's IANA time zone, as their browser reported it. */
+		timeZone: text("time_zone"),
+		viewedAt: timestamp("viewed_at"),
+		respondedAt: timestamp("responded_at"),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("signature_signers_request_idx").on(table.requestId),
+		index("signature_signers_user_idx").on(table.userId),
+	],
+);
+
+/** The audit trail printed on the certificate. */
+export const signatureEvents = pgTable(
+	"signature_events",
+	{
+		/** UUIDv7, so events in the same millisecond keep their order. */
+		id: text("id").primaryKey(),
+		requestId: text("request_id")
+			.references(() => signatureRequests.id, { onDelete: "cascade" })
+			.notNull(),
+		signerId: text("signer_id"),
+		type: text("type", {
+			enum: [
+				"created",
+				"sent",
+				"viewed",
+				"signed",
+				"declined",
+				"completed",
+				"cancelled",
+			],
+		}).notNull(),
+		/** Who, snapshotted: a name and address. */
+		actor: text("actor"),
+		detail: text("detail"),
+		ipAddress: text("ip_address"),
+		userAgent: text("user_agent"),
+		createdAt: timestamp("created_at")
+			.$defaultFn(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("signature_events_request_idx").on(table.requestId, table.createdAt),
 	],
 );

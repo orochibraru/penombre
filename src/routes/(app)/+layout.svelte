@@ -21,6 +21,7 @@
 		Rotate3dIcon,
 		SettingsIcon,
 		ShieldIcon,
+		SignatureIcon,
 		SquarePlusIcon,
 		StarIcon,
 		TableIcon,
@@ -245,6 +246,12 @@
 									icon: Link2Icon,
 									// Or it would light up on /shared-with-me too.
 									isRoot: true,
+								},
+								{
+									title: m.sign_page_list_title(),
+									url: "/signatures",
+									icon: SignatureIcon,
+									hideOnMobile: true,
 								},
 							] satisfies NavItem[])),
 					{

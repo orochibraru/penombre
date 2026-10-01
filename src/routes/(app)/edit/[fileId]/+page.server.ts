@@ -3,6 +3,7 @@ import { officeKindForName } from "#lib/documents.js";
 import { Logger } from "#lib/logger.js";
 import { DriveAccessError } from "#lib/server/errors.js";
 import { officeToText } from "#lib/server/office/index.js";
+import { editorAccess } from "#lib/server/services/editor-access.js";
 import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
 const logger = new Logger("Editor");
@@ -35,6 +36,14 @@ export const load = async ({ params, url, locals }) => {
 
 	const name = raw.meta.metadata.name ?? params.fileId;
 	const kind = officeKindForName(name);
+	// A view-only share, a drive viewer or a read-only mount opens in view
+	// mode, whatever the page's switch says.
+	const file = {
+		fileId: params.fileId,
+		path,
+		name,
+		...editorAccess(service, url),
+	};
 
 	if (kind) {
 		// A Word, Excel or PowerPoint file: converted for the editor, and
@@ -42,8 +51,7 @@ export const load = async ({ params, url, locals }) => {
 		// file on disk stays the format it was.
 		try {
 			return {
-				fileId: params.fileId,
-				name,
+				...file,
 				contentType:
 					raw.meta.metadata.contentType ?? "application/octet-stream",
 				content: officeToText(name, raw.buffer),
@@ -61,8 +69,7 @@ export const load = async ({ params, url, locals }) => {
 	}
 
 	return {
-		fileId: params.fileId,
-		name,
+		...file,
 		contentType: raw.meta.metadata.contentType ?? "text/plain",
 		content: new TextDecoder().decode(raw.buffer),
 		office: false as const,
