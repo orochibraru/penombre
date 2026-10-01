@@ -107,7 +107,7 @@ repos:
     hooks:
       - id: gen
         name: Regenerate OpenAPI, typed client and .example.env
-        entry: sh -c 'bun run gen:env && bun run gen:api'
+        entry: sh -c 'bunx svelte-kit sync && bun run gen:env && bun run gen:api'
         language: system
         pass_filenames: false
         files: ^(src/lib/server/openapi/|src/lib/server/config\.defaults\.ts$|scripts/gen)
