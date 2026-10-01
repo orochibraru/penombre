@@ -66,3 +66,10 @@ Xcode
 Brevo
 bitrate
 codec
+Arial
+Calibri
+[Cc]allouts
+Noir
+Palatino
+ungroups
+Verdana

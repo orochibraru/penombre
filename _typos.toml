@@ -8,10 +8,15 @@ extend-exclude = [
     "src/lib/api/v1.d.ts",
     # Machine-translated UI strings in a dozen locales, none of them English.
     "messages/",
+    # The mobile app's strings in those same locales.
+    "mobile/shared/src/commonMain/composeResources/values-*/",
+    "mobile/iosApp/Penombre/*.lproj/",
     # Expected renders of those strings, French and Russian among them.
     "src/lib/i18n-plurals.test.ts",
 ]
 
 [default.extend-words]
+# Excel's AVERAGEIFS: typos reads it as a misspelt "averages".
+AVERAGEIFS = "AVERAGEIFS"
 # Go's compress/flate package.
 flate = "flate"
