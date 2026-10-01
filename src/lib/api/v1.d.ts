@@ -159,6 +159,590 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/account/overview": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Your account and what it can change
+		 * @description The profile, the sign-in methods the account can use and the instance rules a settings screen needs, in one call.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								driveOnly: boolean;
+								emailSignInEnabled: boolean;
+								hasPassword: boolean;
+								passkeySignInEnabled: boolean;
+								passwordRules: {
+									minLength: number;
+									requireStrong: boolean;
+								};
+								preferredSignInMethod:
+									| ("password" | "passkey" | "magicLink" | "emailOtp")
+									| null;
+								requirements: ("twoFactor" | "passkey")[];
+								signInMethods: (
+									| "password"
+									| "passkey"
+									| "magicLink"
+									| "emailOtp"
+								)[];
+								simpleMode: boolean;
+								smtpAvailable: boolean;
+								twoFactorRequired: boolean;
+								user: {
+									createdAt: string;
+									email: string;
+									emailVerified: boolean;
+									id: string;
+									image: string | null;
+									name: string;
+									role: string;
+									twoFactorEnabled: boolean;
+								};
+								versioning: boolean;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/account/password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Set or change your password
+		 * @description Sets a first password when the account has none, otherwise changes it and needs `currentPassword`. Checked against the instance's password rules.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						confirm: string;
+						currentPassword?: string;
+						newPassword: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								saved: boolean;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/account/profile": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		/**
+		 * Change your name
+		 * @description The address changes with emailed codes instead: `POST /api/v1/auth/email-otp/send-verification-otp` (type `email-verification`) to the current address, then `email-otp/request-email-change` with that code and the new address, then `email-otp/change-email` with the code sent there.
+		 */
+		patch: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						name?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								driveOnly: boolean;
+								emailSignInEnabled: boolean;
+								hasPassword: boolean;
+								passkeySignInEnabled: boolean;
+								passwordRules: {
+									minLength: number;
+									requireStrong: boolean;
+								};
+								preferredSignInMethod:
+									| ("password" | "passkey" | "magicLink" | "emailOtp")
+									| null;
+								requirements: ("twoFactor" | "passkey")[];
+								signInMethods: (
+									| "password"
+									| "passkey"
+									| "magicLink"
+									| "emailOtp"
+								)[];
+								simpleMode: boolean;
+								smtpAvailable: boolean;
+								twoFactorRequired: boolean;
+								user: {
+									createdAt: string;
+									email: string;
+									emailVerified: boolean;
+									id: string;
+									image: string | null;
+									name: string;
+									role: string;
+									twoFactorEnabled: boolean;
+								};
+								versioning: boolean;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		trace?: never;
+	};
+	"/api/v1/account/sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List your sessions
+		 * @description Every device signed in to the account, most recently active first. Tokens are never returned.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								createdAt: string;
+								current: boolean;
+								expiresAt: string;
+								id: string;
+								ipAddress: string | null;
+								updatedAt: string;
+								userAgent: string | null;
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/account/sessions/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Sign a device out
+		 * @description Ends one of your own sessions.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								revoked: boolean;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/account/sign-in-method": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		/**
+		 * Choose your preferred sign-in method
+		 * @description The method the sign-in page offers first. `null` clears it; a method the account cannot use is refused.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						method: ("password" | "passkey" | "magicLink" | "emailOtp") | null;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								method:
+									| ("password" | "passkey" | "magicLink" | "emailOtp")
+									| null;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/account/storage": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Your storage usage
+		 * @description What the drive holds, by category, what the trash and earlier versions take, and the disk behind it. In simple mode, the shared drive's.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								byCategory: {
+									bytes: number;
+									category: string;
+									count: number;
+								}[];
+								disk: {
+									available: number;
+									total: number;
+								};
+								fileCount: number;
+								largestFiles: {
+									id: string;
+									name: string;
+									size: number;
+									updatedAt: string;
+								}[];
+								trashedBytes: number;
+								trashedCount: number;
+								used: number;
+								versionBytes: number;
+								versionCount: number;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/activity": {
 		parameters: {
 			query?: never;
@@ -5663,6 +6247,404 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/documents": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create a document or spreadsheet
+		 * @description Creates an empty Word document (`.docx`, A4) or Excel workbook (`.xlsx`, one sheet) in `folder`, built on the server. `name` is given without its extension; a name already taken gets a ` (1)` suffix, as any new file does.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+					folder?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @enum {string} */
+						kind: "document" | "sheet";
+						name?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								finalName: string;
+								id?: string;
+								metadata: {
+									/** @enum {string} */
+									category:
+										| "MUSIC"
+										| "DOCUMENTS"
+										| "IMAGES"
+										| "3D"
+										| "VIDEO"
+										| "RECENT"
+										| "CODE"
+										| "ARCHIVES"
+										| "UNKNOWN";
+									/** @enum {string} */
+									contentType:
+										| "application/pdf"
+										| "application/msword"
+										| "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+										| "application/vnd.ms-excel"
+										| "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+										| "application/vnd.ms-powerpoint"
+										| "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+										| "application/vnd.oasis.opendocument.text"
+										| "application/rtf"
+										| "application/epub+zip"
+										| "application/vnd.google-apps.document"
+										| "application/vnd.google-apps.spreadsheet"
+										| "application/vnd.google-apps.presentation"
+										| "text/plain"
+										| "text/csv"
+										| "text/html"
+										| "text/css"
+										| "text/yaml"
+										| "image/jpeg"
+										| "image/png"
+										| "image/gif"
+										| "image/webp"
+										| "image/svg+xml"
+										| "image/bmp"
+										| "image/x-icon"
+										| "image/tiff"
+										| "image/heic"
+										| "video/mp4"
+										| "video/webm"
+										| "video/x-msvideo"
+										| "video/x-matroska"
+										| "video/quicktime"
+										| "video/x-ms-wmv"
+										| "video/x-flv"
+										| "video/mpeg"
+										| "video/3gpp"
+										| "video/ogg"
+										| "audio/mpeg"
+										| "audio/wav"
+										| "audio/flac"
+										| "audio/aac"
+										| "audio/ogg"
+										| "audio/mp4"
+										| "audio/x-ms-wma"
+										| "audio/aiff"
+										| "application/json"
+										| "application/xml"
+										| "application/javascript"
+										| "application/vnd.google-apps.form"
+										| "application/zip"
+										| "application/vnd.rar"
+										| "application/x-7z-compressed"
+										| "application/x-tar"
+										| "application/gzip"
+										| "application/x-bzip2"
+										| "application/x-xz"
+										| "application/vnd.ms-cab-compressed"
+										| "application/x-iso9660-image"
+										| "application/x-apple-diskimage"
+										| "application/x-xar"
+										| "application/vnd.debian.binary-package"
+										| "application/x-rpm"
+										| "application/vnd.android.package-archive"
+										| "application/java-archive"
+										| "application/x-webarchive"
+										| "application/x-stuffit"
+										| "application/x-stuffitx"
+										| "application/x-lzip"
+										| "application/x-lzma"
+										| "application/x-lzop"
+										| "application/x-compress"
+										| "application/zstd"
+										| "application/x-brotli"
+										| "model/stl"
+										| "model/obj"
+										| "model/gltf+json"
+										| "model/gltf-binary"
+										| "model/fbx"
+										| "model/3mf"
+										| "model/x3d+xml"
+										| "model/vnd.collada+xml"
+										| "application/x-blender"
+										| "application/x-tgif"
+										| "application/octet-stream";
+									createdAt: string;
+									id: string;
+									/** @default false */
+									isStarred: boolean;
+									/** @default false */
+									isTrashed: boolean;
+									music?: {
+										duration?: number;
+									};
+									name?: string;
+									owner: string;
+									tags?: string[];
+									versionSeq?: number;
+									video?: {
+										duration?: number;
+									};
+								};
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/documents/presentation": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create a presentation from a template
+		 * @description Writes a new .pptx built on one of the slide editor's templates — its theme, master and eleven layouts — with a title slide carrying the name, and answers with the new file's id.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @description Folder path; the root when absent */
+						folder?: string;
+						/** @description Without the extension */
+						name: string;
+						/** @enum {string} */
+						template:
+							| "midnight"
+							| "paper"
+							| "bold"
+							| "aurora"
+							| "swiss"
+							| "forest"
+							| "sunset"
+							| "blueprint"
+							| "pastel"
+							| "noir";
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								id: string;
+								name: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/documents/presentation/{id}/media": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * A picture inside a presentation
+		 * @description Serves one media part of a .pptx (`ppt/media/…`), so the slide editor can show the pictures a deck carries without downloading all of it.
+		 */
+		get: {
+			parameters: {
+				query: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+					part: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description The picture's bytes */
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/drives": {
 		parameters: {
 			query?: never;
@@ -6232,12 +7214,39 @@ export interface paths {
 					content: {
 						"application/json": {
 							data?: {
+								anchor:
+									| (
+											| {
+													/** @constant */
+													kind: "text";
+													offset: number;
+													prefix: string;
+													quote: string;
+													suffix: string;
+											  }
+											| {
+													cell: string;
+													/** @constant */
+													kind: "cell";
+													sheet: string;
+											  }
+											| {
+													id?: string;
+													index: number;
+													/** @constant */
+													kind: "slide";
+											  }
+									  )
+									| null;
 								authorName: string | null;
 								body: string;
 								/** Format: date-time */
 								createdAt: string;
 								fileId: string;
 								id: string;
+								parentId: string | null;
+								resolvedAt: string | null;
+								resolvedByName: string | null;
 								timestampSeconds: number | null;
 								/** Format: date-time */
 								updatedAt: string;
@@ -6278,7 +7287,7 @@ export interface paths {
 		put?: never;
 		/**
 		 * Attach a note to a file
-		 * @description A timestamp marks the note as a comment on a moment in an audio or video file.
+		 * @description A timestamp marks the note as a comment on a moment in an audio or video file; an anchor, on a passage, cell or slide of an office file. `parentId` replies to a thread. Anyone who can open the file may comment, read-only shares included.
 		 */
 		post: {
 			parameters: {
@@ -6296,7 +7305,32 @@ export interface paths {
 			requestBody: {
 				content: {
 					"application/json": {
+						anchor?:
+							| (
+									| {
+											/** @constant */
+											kind: "text";
+											offset: number;
+											prefix: string;
+											quote: string;
+											suffix: string;
+									  }
+									| {
+											cell: string;
+											/** @constant */
+											kind: "cell";
+											sheet: string;
+									  }
+									| {
+											id?: string;
+											index: number;
+											/** @constant */
+											kind: "slide";
+									  }
+							  )
+							| null;
 						body: string;
+						parentId?: string | null;
 						timestampSeconds?: number | null;
 					};
 				};
@@ -6310,12 +7344,39 @@ export interface paths {
 					content: {
 						"application/json": {
 							data?: {
+								anchor:
+									| (
+											| {
+													/** @constant */
+													kind: "text";
+													offset: number;
+													prefix: string;
+													quote: string;
+													suffix: string;
+											  }
+											| {
+													cell: string;
+													/** @constant */
+													kind: "cell";
+													sheet: string;
+											  }
+											| {
+													id?: string;
+													index: number;
+													/** @constant */
+													kind: "slide";
+											  }
+									  )
+									| null;
 								authorName: string | null;
 								body: string;
 								/** Format: date-time */
 								createdAt: string;
 								fileId: string;
 								id: string;
+								parentId: string | null;
+								resolvedAt: string | null;
+								resolvedByName: string | null;
 								timestampSeconds: number | null;
 								/** Format: date-time */
 								updatedAt: string;
@@ -6444,10 +7505,17 @@ export interface paths {
 		};
 		options?: never;
 		head?: never;
-		/** Edit your own note */
+		/**
+		 * Edit your own note, or resolve a thread
+		 * @description `body` changes your own note. `resolved` closes or reopens a thread, which anyone who can open the file may do.
+		 */
 		patch: {
 			parameters: {
-				query?: never;
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
 				header?: never;
 				path: {
 					fileId: string;
@@ -6458,7 +7526,8 @@ export interface paths {
 			requestBody: {
 				content: {
 					"application/json": {
-						body: string;
+						body?: string;
+						resolved?: boolean;
 					};
 				};
 			};
@@ -6471,12 +7540,39 @@ export interface paths {
 					content: {
 						"application/json": {
 							data?: {
+								anchor:
+									| (
+											| {
+													/** @constant */
+													kind: "text";
+													offset: number;
+													prefix: string;
+													quote: string;
+													suffix: string;
+											  }
+											| {
+													cell: string;
+													/** @constant */
+													kind: "cell";
+													sheet: string;
+											  }
+											| {
+													id?: string;
+													index: number;
+													/** @constant */
+													kind: "slide";
+											  }
+									  )
+									| null;
 								authorName: string | null;
 								body: string;
 								/** Format: date-time */
 								createdAt: string;
 								fileId: string;
 								id: string;
+								parentId: string | null;
+								resolvedAt: string | null;
+								resolvedByName: string | null;
 								timestampSeconds: number | null;
 								/** Format: date-time */
 								updatedAt: string;
@@ -6532,6 +7628,136 @@ export interface paths {
 				};
 			};
 		};
+		trace?: never;
+	};
+	"/api/v1/files/{fileId}/presence": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Say you have a file open
+		 * @description Call every 15 seconds while the file is on screen. Answers everyone else seen on it in the last 40 seconds.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					fileId: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @enum {string} */
+						mode: "viewing" | "editing";
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								/** @enum {string} */
+								mode: "viewing" | "editing";
+								name: string;
+								userId: string;
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/** Say you closed a file */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					fileId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								left: boolean;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
 		trace?: never;
 	};
 	"/api/v1/library/scan": {
@@ -6772,6 +7998,91 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/mobile/session": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		/**
+		 * Name the app's session
+		 * @description For the app, once it signed itself in with an emailed code: labels the calling session `Penombre mobile · <device>`, as a pairing or browser sign-in would have. Refused for an API key.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						device: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								userAgent: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/mobile/token": {
 		parameters: {
 			query?: never;
@@ -6908,7 +8219,11 @@ export interface paths {
 									read: boolean;
 									resourceName: string | null;
 									/** @enum {string} */
-									type: "note" | "share";
+									type:
+										| "note"
+										| "share"
+										| "signature_completed"
+										| "signature_declined";
 								}[];
 								unread: number;
 							};
@@ -7011,6 +8326,94 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/places": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Everywhere you can browse
+		 * @description Shared drives, mounted volumes and what others shared with you, plus the trash and starred counts: what the web sidebar lists, for clients without it.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								counts: {
+									starred: number;
+									trash: number;
+								};
+								driveOnly: boolean;
+								drives: {
+									id: string;
+									name: string;
+									role: string;
+								}[];
+								sharedWithMe: {
+									category: string;
+									id: string;
+									name: string;
+									ownerName: string;
+									/** @enum {string} */
+									permission: "read" | "write" | "admin";
+									resourceId: string;
+									/** @enum {string} */
+									resourceType: "file" | "folder";
+									root: string;
+								}[];
+								simpleMode: boolean;
+								volumes: {
+									label: string;
+									name: string;
+									readOnly: boolean;
+								}[];
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/preferences": {
 		parameters: {
 			query?: never;
@@ -7053,10 +8456,34 @@ export interface paths {
 								emailNotifications?: boolean;
 								/** @enum {string} */
 								fontFamily?: "mono" | "sans";
+								language?:
+									| (
+											| "en"
+											| "fr"
+											| "es"
+											| "de"
+											| "it"
+											| "nl"
+											| "sv"
+											| "fi"
+											| "pl"
+											| "ru"
+											| "ja"
+											| "ko"
+											| "zh"
+									  )
+									| null;
 								/** @enum {string} */
 								layout?: "grid" | "list";
 								/** @enum {string} */
 								listingLoadMode?: "scroll" | "pages";
+								notifications?: {
+									[key: string]: {
+										email?: boolean;
+										inApp?: boolean;
+										phone?: boolean;
+									};
+								};
 								onboarded?: boolean;
 								preferredSignInMethod?:
 									| ("password" | "passkey" | "magicLink" | "emailOtp")
@@ -7118,10 +8545,34 @@ export interface paths {
 						emailNotifications?: boolean;
 						/** @enum {string} */
 						fontFamily?: "mono" | "sans";
+						language?:
+							| (
+									| "en"
+									| "fr"
+									| "es"
+									| "de"
+									| "it"
+									| "nl"
+									| "sv"
+									| "fi"
+									| "pl"
+									| "ru"
+									| "ja"
+									| "ko"
+									| "zh"
+							  )
+							| null;
 						/** @enum {string} */
 						layout?: "grid" | "list";
 						/** @enum {string} */
 						listingLoadMode?: "scroll" | "pages";
+						notifications?: {
+							[key: string]: {
+								email?: boolean;
+								inApp?: boolean;
+								phone?: boolean;
+							};
+						};
 						onboarded?: boolean;
 						preferredSignInMethod?:
 							| ("password" | "passkey" | "magicLink" | "emailOtp")
@@ -7157,10 +8608,34 @@ export interface paths {
 								emailNotifications?: boolean;
 								/** @enum {string} */
 								fontFamily?: "mono" | "sans";
+								language?:
+									| (
+											| "en"
+											| "fr"
+											| "es"
+											| "de"
+											| "it"
+											| "nl"
+											| "sv"
+											| "fi"
+											| "pl"
+											| "ru"
+											| "ja"
+											| "ko"
+											| "zh"
+									  )
+									| null;
 								/** @enum {string} */
 								layout?: "grid" | "list";
 								/** @enum {string} */
 								listingLoadMode?: "scroll" | "pages";
+								notifications?: {
+									[key: string]: {
+										email?: boolean;
+										inApp?: boolean;
+										phone?: boolean;
+									};
+								};
 								onboarded?: boolean;
 								preferredSignInMethod?:
 									| ("password" | "passkey" | "magicLink" | "emailOtp")
@@ -8133,6 +9608,533 @@ export interface paths {
 				};
 			};
 		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/signatures": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List your signature requests
+		 * @description Newest first; `fileId` narrows to one document's requests.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					fileId?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								completedAt: string | null;
+								/** Format: date-time */
+								createdAt: string;
+								documentHash: string;
+								documentName: string;
+								/** Format: date-time */
+								expiresAt: string;
+								fileId: string | null;
+								id: string;
+								message: string | null;
+								pageCount: number;
+								sequential: boolean;
+								signedAvailable: boolean;
+								signers: {
+									declineReason: string | null;
+									email: string;
+									hasAccount: boolean;
+									id: string;
+									name: string;
+									position: number;
+									respondedAt: string | null;
+									/** @enum {string} */
+									status: "pending" | "signed" | "declined";
+									viewedAt: string | null;
+								}[];
+								/** @enum {string} */
+								status:
+									| "pending"
+									| "completed"
+									| "declined"
+									| "cancelled"
+									| "expired";
+							}[];
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Ask people to sign a document
+		 * @description Freezes the document as a PDF (a `.pdf` as it is, a document exported) and issues one link per signer, emailed when SMTP is set up. Each signer is an account (`userId`) or a name and an address. With `sequential`, signers sign in the given order and each is emailed on their turn. Needs write access to the document.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @default 30 */
+						expiresInDays: number;
+						fileId: string;
+						message?: string;
+						/** @default false */
+						sequential: boolean;
+						signers: (
+							| {
+									userId: string;
+							  }
+							| {
+									/** Format: email */
+									email: string;
+									name: string;
+							  }
+						)[];
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								links: {
+									email: string;
+									emailed: boolean;
+									name: string;
+									signerId: string;
+									url: string;
+								}[];
+								request: {
+									completedAt: string | null;
+									/** Format: date-time */
+									createdAt: string;
+									documentHash: string;
+									documentName: string;
+									/** Format: date-time */
+									expiresAt: string;
+									fileId: string | null;
+									id: string;
+									message: string | null;
+									pageCount: number;
+									sequential: boolean;
+									signedAvailable: boolean;
+									signers: {
+										declineReason: string | null;
+										email: string;
+										hasAccount: boolean;
+										id: string;
+										name: string;
+										position: number;
+										respondedAt: string | null;
+										/** @enum {string} */
+										status: "pending" | "signed" | "declined";
+										viewedAt: string | null;
+									}[];
+									/** @enum {string} */
+									status:
+										| "pending"
+										| "completed"
+										| "declined"
+										| "cancelled"
+										| "expired";
+								};
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unprocessable Entity */
+				422: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/signatures/{id}/cancel": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Cancel a pending signature request
+		 * @description Every link stops working; what was signed stays on record.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								completedAt: string | null;
+								/** Format: date-time */
+								createdAt: string;
+								documentHash: string;
+								documentName: string;
+								/** Format: date-time */
+								expiresAt: string;
+								fileId: string | null;
+								id: string;
+								message: string | null;
+								pageCount: number;
+								sequential: boolean;
+								signedAvailable: boolean;
+								signers: {
+									declineReason: string | null;
+									email: string;
+									hasAccount: boolean;
+									id: string;
+									name: string;
+									position: number;
+									respondedAt: string | null;
+									/** @enum {string} */
+									status: "pending" | "signed" | "declined";
+									viewedAt: string | null;
+								}[];
+								/** @enum {string} */
+								status:
+									| "pending"
+									| "completed"
+									| "declined"
+									| "cancelled"
+									| "expired";
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Conflict */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/signatures/{id}/pdf": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Download a signature request's PDF
+		 * @description `original` is the PDF the signers were shown; `signed` is it with every page stamped and the signature certificate appended.
+		 */
+		get: {
+			parameters: {
+				query: {
+					kind: "original" | "signed";
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description The PDF */
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/signatures/{id}/signers/{signerId}/link": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Issue a new link for a signer
+		 * @description Replaces the signer's link (the old one stops working) and returns it; with `send` it is also emailed when SMTP is set up. On a completed request the link downloads the signed PDF.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					id: string;
+					signerId: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @default false */
+						send: boolean;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								email: string;
+								emailed: boolean;
+								name: string;
+								signerId: string;
+								url: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Conflict */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Error 410 */
+				410: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
 		options?: never;
 		head?: never;
 		patch?: never;
@@ -10164,6 +12166,117 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/v1/storage/file/{id}/export": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Export a document, sheet or presentation
+		 * @description The file's saved bytes in another format, as an attachment. A document (`.docx`, `.html`) exports as `pdf`, `docx`, `html`, `md` or `txt`; a sheet (`.xlsx`, `.csv`) as `xlsx`, `csv` (its first sheet, as shown) or `pdf` (every sheet); a presentation as `pptx` or `pdf`. The file's own format is its bytes unchanged. 501 for an export this server cannot produce yet.
+		 */
+		get: {
+			parameters: {
+				query: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+					format:
+						| "pdf"
+						| "docx"
+						| "html"
+						| "md"
+						| "txt"
+						| "xlsx"
+						| "csv"
+						| "pptx";
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description The exported file */
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unprocessable Entity */
+				422: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Error 501 */
+				501: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/v1/storage/file/{id}/move": {
 		parameters: {
 			query?: never;
@@ -10257,7 +12370,7 @@ export interface paths {
 		put?: never;
 		/**
 		 * Save an Office document
-		 * @description Applies edited text to a .docx, .xlsx or .pptx file, rewriting only the part of the archive that holds it so the rest of the document survives unchanged. The body is HTML for a document, CSV for a spreadsheet and Markdown for a presentation.
+		 * @description Applies edited text to a .docx, .xlsx or .pptx file, rewriting only the parts of the archive that hold it so the rest of the document survives unchanged. The body is HTML for a document, Markdown for a presentation, and for a spreadsheet the workbook as JSON: `{ "sheets": [{ "id", "name", "rows" }] }`, `id` being the sheet's `sheetId` (a new one adds a sheet, a missing one deletes it). A CSV is still accepted and replaces the first sheet. A save never keeps the previous bytes as a version; `POST …/versions` does that on request.
 		 */
 		post: {
 			parameters: {
@@ -10265,7 +12378,6 @@ export interface paths {
 					drive?: string;
 					volume?: string;
 					share?: string;
-					snapshot?: "0" | "1";
 				};
 				header?: never;
 				path: {

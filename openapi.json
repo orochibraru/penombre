@@ -1690,6 +1690,960 @@
 				]
 			}
 		},
+		"/api/v1/account/overview": {
+			"get": {
+				"description": "The profile, the sign-in methods the account can use and the instance rules a settings screen needs, in one call.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"driveOnly": {
+													"type": "boolean"
+												},
+												"emailSignInEnabled": {
+													"type": "boolean"
+												},
+												"hasPassword": {
+													"type": "boolean"
+												},
+												"passkeySignInEnabled": {
+													"type": "boolean"
+												},
+												"passwordRules": {
+													"additionalProperties": false,
+													"properties": {
+														"minLength": {
+															"type": "number"
+														},
+														"requireStrong": {
+															"type": "boolean"
+														}
+													},
+													"required": [
+														"minLength",
+														"requireStrong"
+													],
+													"type": "object"
+												},
+												"preferredSignInMethod": {
+													"anyOf": [
+														{
+															"enum": [
+																"password",
+																"passkey",
+																"magicLink",
+																"emailOtp"
+															],
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"requirements": {
+													"items": {
+														"enum": [
+															"twoFactor",
+															"passkey"
+														],
+														"type": "string"
+													},
+													"type": "array"
+												},
+												"signInMethods": {
+													"items": {
+														"enum": [
+															"password",
+															"passkey",
+															"magicLink",
+															"emailOtp"
+														],
+														"type": "string"
+													},
+													"type": "array"
+												},
+												"simpleMode": {
+													"type": "boolean"
+												},
+												"smtpAvailable": {
+													"type": "boolean"
+												},
+												"twoFactorRequired": {
+													"type": "boolean"
+												},
+												"user": {
+													"additionalProperties": false,
+													"properties": {
+														"createdAt": {
+															"type": "string"
+														},
+														"email": {
+															"type": "string"
+														},
+														"emailVerified": {
+															"type": "boolean"
+														},
+														"id": {
+															"type": "string"
+														},
+														"image": {
+															"type": [
+																"string",
+																"null"
+															]
+														},
+														"name": {
+															"type": "string"
+														},
+														"role": {
+															"type": "string"
+														},
+														"twoFactorEnabled": {
+															"type": "boolean"
+														}
+													},
+													"required": [
+														"id",
+														"name",
+														"email",
+														"image",
+														"role",
+														"emailVerified",
+														"twoFactorEnabled",
+														"createdAt"
+													],
+													"type": "object"
+												},
+												"versioning": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"user",
+												"hasPassword",
+												"passwordRules",
+												"signInMethods",
+												"preferredSignInMethod",
+												"passkeySignInEnabled",
+												"emailSignInEnabled",
+												"twoFactorRequired",
+												"requirements",
+												"smtpAvailable",
+												"simpleMode",
+												"driveOnly",
+												"versioning"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Your account and what it can change",
+				"tags": [
+					"Account"
+				]
+			}
+		},
+		"/api/v1/account/password": {
+			"post": {
+				"description": "Sets a first password when the account has none, otherwise changes it and needs `currentPassword`. Checked against the instance's password rules.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"confirm": {
+										"minLength": 1,
+										"type": "string"
+									},
+									"currentPassword": {
+										"type": "string"
+									},
+									"newPassword": {
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"required": [
+									"newPassword",
+									"confirm"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"saved": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"saved"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Set or change your password",
+				"tags": [
+					"Account"
+				]
+			}
+		},
+		"/api/v1/account/profile": {
+			"patch": {
+				"description": "The address changes with emailed codes instead: `POST /api/v1/auth/email-otp/send-verification-otp` (type `email-verification`) to the current address, then `email-otp/request-email-change` with that code and the new address, then `email-otp/change-email` with the code sent there.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"name": {
+										"maxLength": 200,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"driveOnly": {
+													"type": "boolean"
+												},
+												"emailSignInEnabled": {
+													"type": "boolean"
+												},
+												"hasPassword": {
+													"type": "boolean"
+												},
+												"passkeySignInEnabled": {
+													"type": "boolean"
+												},
+												"passwordRules": {
+													"additionalProperties": false,
+													"properties": {
+														"minLength": {
+															"type": "number"
+														},
+														"requireStrong": {
+															"type": "boolean"
+														}
+													},
+													"required": [
+														"minLength",
+														"requireStrong"
+													],
+													"type": "object"
+												},
+												"preferredSignInMethod": {
+													"anyOf": [
+														{
+															"enum": [
+																"password",
+																"passkey",
+																"magicLink",
+																"emailOtp"
+															],
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"requirements": {
+													"items": {
+														"enum": [
+															"twoFactor",
+															"passkey"
+														],
+														"type": "string"
+													},
+													"type": "array"
+												},
+												"signInMethods": {
+													"items": {
+														"enum": [
+															"password",
+															"passkey",
+															"magicLink",
+															"emailOtp"
+														],
+														"type": "string"
+													},
+													"type": "array"
+												},
+												"simpleMode": {
+													"type": "boolean"
+												},
+												"smtpAvailable": {
+													"type": "boolean"
+												},
+												"twoFactorRequired": {
+													"type": "boolean"
+												},
+												"user": {
+													"additionalProperties": false,
+													"properties": {
+														"createdAt": {
+															"type": "string"
+														},
+														"email": {
+															"type": "string"
+														},
+														"emailVerified": {
+															"type": "boolean"
+														},
+														"id": {
+															"type": "string"
+														},
+														"image": {
+															"type": [
+																"string",
+																"null"
+															]
+														},
+														"name": {
+															"type": "string"
+														},
+														"role": {
+															"type": "string"
+														},
+														"twoFactorEnabled": {
+															"type": "boolean"
+														}
+													},
+													"required": [
+														"id",
+														"name",
+														"email",
+														"image",
+														"role",
+														"emailVerified",
+														"twoFactorEnabled",
+														"createdAt"
+													],
+													"type": "object"
+												},
+												"versioning": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"user",
+												"hasPassword",
+												"passwordRules",
+												"signInMethods",
+												"preferredSignInMethod",
+												"passkeySignInEnabled",
+												"emailSignInEnabled",
+												"twoFactorRequired",
+												"requirements",
+												"smtpAvailable",
+												"simpleMode",
+												"driveOnly",
+												"versioning"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Change your name",
+				"tags": [
+					"Account"
+				]
+			}
+		},
+		"/api/v1/account/sessions": {
+			"get": {
+				"description": "Every device signed in to the account, most recently active first. Tokens are never returned.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"createdAt": {
+														"type": "string"
+													},
+													"current": {
+														"type": "boolean"
+													},
+													"expiresAt": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													},
+													"ipAddress": {
+														"type": [
+															"string",
+															"null"
+														]
+													},
+													"updatedAt": {
+														"type": "string"
+													},
+													"userAgent": {
+														"type": [
+															"string",
+															"null"
+														]
+													}
+												},
+												"required": [
+													"id",
+													"current",
+													"userAgent",
+													"ipAddress",
+													"createdAt",
+													"updatedAt",
+													"expiresAt"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List your sessions",
+				"tags": [
+					"Account"
+				]
+			}
+		},
+		"/api/v1/account/sessions/{id}": {
+			"delete": {
+				"description": "Ends one of your own sessions.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"minLength": 1,
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"revoked": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"revoked"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Sign a device out",
+				"tags": [
+					"Account"
+				]
+			}
+		},
+		"/api/v1/account/sign-in-method": {
+			"put": {
+				"description": "The method the sign-in page offers first. `null` clears it; a method the account cannot use is refused.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"method": {
+										"anyOf": [
+											{
+												"enum": [
+													"password",
+													"passkey",
+													"magicLink",
+													"emailOtp"
+												],
+												"type": "string"
+											},
+											{
+												"type": "null"
+											}
+										]
+									}
+								},
+								"required": [
+									"method"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"method": {
+													"anyOf": [
+														{
+															"enum": [
+																"password",
+																"passkey",
+																"magicLink",
+																"emailOtp"
+															],
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												}
+											},
+											"required": [
+												"method"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Choose your preferred sign-in method",
+				"tags": [
+					"Account"
+				]
+			}
+		},
+		"/api/v1/account/storage": {
+			"get": {
+				"description": "What the drive holds, by category, what the trash and earlier versions take, and the disk behind it. In simple mode, the shared drive's.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"byCategory": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"bytes": {
+																"type": "number"
+															},
+															"category": {
+																"type": "string"
+															},
+															"count": {
+																"type": "number"
+															}
+														},
+														"required": [
+															"category",
+															"bytes",
+															"count"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"disk": {
+													"additionalProperties": false,
+													"properties": {
+														"available": {
+															"type": "number"
+														},
+														"total": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"total",
+														"available"
+													],
+													"type": "object"
+												},
+												"fileCount": {
+													"type": "number"
+												},
+												"largestFiles": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"id": {
+																"type": "string"
+															},
+															"name": {
+																"type": "string"
+															},
+															"size": {
+																"type": "number"
+															},
+															"updatedAt": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"id",
+															"name",
+															"size",
+															"updatedAt"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"trashedBytes": {
+													"type": "number"
+												},
+												"trashedCount": {
+													"type": "number"
+												},
+												"used": {
+													"type": "number"
+												},
+												"versionBytes": {
+													"type": "number"
+												},
+												"versionCount": {
+													"type": "number"
+												}
+											},
+											"required": [
+												"used",
+												"fileCount",
+												"trashedBytes",
+												"trashedCount",
+												"versionBytes",
+												"versionCount",
+												"byCategory",
+												"largestFiles",
+												"disk"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Your storage usage",
+				"tags": [
+					"Account"
+				]
+			}
+		},
 		"/api/v1/activity": {
 			"get": {
 				"description": "Returns a list of recent activities for the current user",
@@ -15970,6 +16924,582 @@
 				]
 			}
 		},
+		"/api/v1/documents": {
+			"post": {
+				"description": "Creates an empty Word document (`.docx`, A4) or Excel workbook (`.xlsx`, one sheet) in `folder`, built on the server. `name` is given without its extension; a name already taken gets a ` (1)` suffix, as any new file does.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "folder",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"kind": {
+										"enum": [
+											"document",
+											"sheet"
+										],
+										"type": "string"
+									},
+									"name": {
+										"maxLength": 200,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"required": [
+									"kind"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"finalName": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												},
+												"metadata": {
+													"additionalProperties": false,
+													"properties": {
+														"category": {
+															"enum": [
+																"MUSIC",
+																"DOCUMENTS",
+																"IMAGES",
+																"3D",
+																"VIDEO",
+																"RECENT",
+																"CODE",
+																"ARCHIVES",
+																"UNKNOWN"
+															],
+															"type": "string"
+														},
+														"contentType": {
+															"enum": [
+																"application/pdf",
+																"application/msword",
+																"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+																"application/vnd.ms-excel",
+																"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+																"application/vnd.ms-powerpoint",
+																"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+																"application/vnd.oasis.opendocument.text",
+																"application/rtf",
+																"application/epub+zip",
+																"application/vnd.google-apps.document",
+																"application/vnd.google-apps.spreadsheet",
+																"application/vnd.google-apps.presentation",
+																"text/plain",
+																"text/csv",
+																"text/html",
+																"text/css",
+																"text/yaml",
+																"image/jpeg",
+																"image/png",
+																"image/gif",
+																"image/webp",
+																"image/svg+xml",
+																"image/bmp",
+																"image/x-icon",
+																"image/tiff",
+																"image/heic",
+																"video/mp4",
+																"video/webm",
+																"video/x-msvideo",
+																"video/x-matroska",
+																"video/quicktime",
+																"video/x-ms-wmv",
+																"video/x-flv",
+																"video/mpeg",
+																"video/3gpp",
+																"video/ogg",
+																"audio/mpeg",
+																"audio/wav",
+																"audio/flac",
+																"audio/aac",
+																"audio/ogg",
+																"audio/mp4",
+																"audio/x-ms-wma",
+																"audio/aiff",
+																"application/json",
+																"application/xml",
+																"application/javascript",
+																"application/vnd.google-apps.form",
+																"application/zip",
+																"application/vnd.rar",
+																"application/x-7z-compressed",
+																"application/x-tar",
+																"application/gzip",
+																"application/x-bzip2",
+																"application/x-xz",
+																"application/vnd.ms-cab-compressed",
+																"application/x-iso9660-image",
+																"application/x-apple-diskimage",
+																"application/x-xar",
+																"application/vnd.debian.binary-package",
+																"application/x-rpm",
+																"application/vnd.android.package-archive",
+																"application/java-archive",
+																"application/x-webarchive",
+																"application/x-stuffit",
+																"application/x-stuffitx",
+																"application/x-lzip",
+																"application/x-lzma",
+																"application/x-lzop",
+																"application/x-compress",
+																"application/zstd",
+																"application/x-brotli",
+																"model/stl",
+																"model/obj",
+																"model/gltf+json",
+																"model/gltf-binary",
+																"model/fbx",
+																"model/3mf",
+																"model/x3d+xml",
+																"model/vnd.collada+xml",
+																"application/x-blender",
+																"application/x-tgif",
+																"application/octet-stream"
+															],
+															"type": "string"
+														},
+														"createdAt": {
+															"type": "string"
+														},
+														"id": {
+															"type": "string"
+														},
+														"isStarred": {
+															"default": false,
+															"type": "boolean"
+														},
+														"isTrashed": {
+															"default": false,
+															"type": "boolean"
+														},
+														"music": {
+															"additionalProperties": false,
+															"properties": {
+																"duration": {
+																	"type": "number"
+																}
+															},
+															"type": "object"
+														},
+														"name": {
+															"type": "string"
+														},
+														"owner": {
+															"type": "string"
+														},
+														"tags": {
+															"items": {
+																"type": "string"
+															},
+															"type": "array"
+														},
+														"versionSeq": {
+															"type": "number"
+														},
+														"video": {
+															"additionalProperties": false,
+															"properties": {
+																"duration": {
+																	"type": "number"
+																}
+															},
+															"type": "object"
+														}
+													},
+													"required": [
+														"id",
+														"category",
+														"contentType",
+														"createdAt",
+														"owner",
+														"isTrashed",
+														"isStarred"
+													],
+													"type": "object"
+												}
+											},
+											"required": [
+												"finalName",
+												"metadata"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Create a document or spreadsheet",
+				"tags": [
+					"Documents"
+				]
+			}
+		},
+		"/api/v1/documents/presentation": {
+			"post": {
+				"description": "Writes a new .pptx built on one of the slide editor's templates — its theme, master and eleven layouts — with a title slide carrying the name, and answers with the new file's id.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"folder": {
+										"description": "Folder path; the root when absent",
+										"type": "string"
+									},
+									"name": {
+										"description": "Without the extension",
+										"maxLength": 200,
+										"minLength": 1,
+										"type": "string"
+									},
+									"template": {
+										"enum": [
+											"midnight",
+											"paper",
+											"bold",
+											"aurora",
+											"swiss",
+											"forest",
+											"sunset",
+											"blueprint",
+											"pastel",
+											"noir"
+										],
+										"type": "string"
+									}
+								},
+								"required": [
+									"template",
+									"name"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"id": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"name"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Create a presentation from a template",
+				"tags": [
+					"Documents"
+				]
+			}
+		},
+		"/api/v1/documents/presentation/{id}/media": {
+			"get": {
+				"description": "Serves one media part of a .pptx (`ppt/media/…`), so the slide editor can show the pictures a deck carries without downloading all of it.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "part",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"description": "The picture's bytes"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "A picture inside a presentation",
+				"tags": [
+					"Documents"
+				]
+			}
+		},
 		"/api/v1/drives": {
 			"get": {
 				"description": "Every drive the caller owns or is a member of",
@@ -16763,6 +18293,99 @@
 											"items": {
 												"additionalProperties": false,
 												"properties": {
+													"anchor": {
+														"anyOf": [
+															{
+																"oneOf": [
+																	{
+																		"additionalProperties": false,
+																		"properties": {
+																			"kind": {
+																				"const": "text",
+																				"type": "string"
+																			},
+																			"offset": {
+																				"maximum": 9007199254740991,
+																				"minimum": 0,
+																				"type": "integer"
+																			},
+																			"prefix": {
+																				"maxLength": 64,
+																				"type": "string"
+																			},
+																			"quote": {
+																				"maxLength": 2000,
+																				"minLength": 1,
+																				"type": "string"
+																			},
+																			"suffix": {
+																				"maxLength": 64,
+																				"type": "string"
+																			}
+																		},
+																		"required": [
+																			"kind",
+																			"quote",
+																			"prefix",
+																			"suffix",
+																			"offset"
+																		],
+																		"type": "object"
+																	},
+																	{
+																		"additionalProperties": false,
+																		"properties": {
+																			"cell": {
+																				"pattern": "^[A-Za-z]{1,3}[1-9]\\d{0,6}$",
+																				"type": "string"
+																			},
+																			"kind": {
+																				"const": "cell",
+																				"type": "string"
+																			},
+																			"sheet": {
+																				"maxLength": 64,
+																				"minLength": 1,
+																				"type": "string"
+																			}
+																		},
+																		"required": [
+																			"kind",
+																			"sheet",
+																			"cell"
+																		],
+																		"type": "object"
+																	},
+																	{
+																		"additionalProperties": false,
+																		"properties": {
+																			"id": {
+																				"maxLength": 128,
+																				"type": "string"
+																			},
+																			"index": {
+																				"maximum": 9007199254740991,
+																				"minimum": 0,
+																				"type": "integer"
+																			},
+																			"kind": {
+																				"const": "slide",
+																				"type": "string"
+																			}
+																		},
+																		"required": [
+																			"kind",
+																			"index"
+																		],
+																		"type": "object"
+																	}
+																]
+															},
+															{
+																"type": "null"
+															}
+														]
+													},
 													"authorName": {
 														"type": [
 															"string",
@@ -16782,6 +18405,30 @@
 													},
 													"id": {
 														"type": "string"
+													},
+													"parentId": {
+														"type": [
+															"string",
+															"null"
+														]
+													},
+													"resolvedAt": {
+														"anyOf": [
+															{
+																"format": "date-time",
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																"type": "string"
+															},
+															{
+																"type": "null"
+															}
+														]
+													},
+													"resolvedByName": {
+														"type": [
+															"string",
+															"null"
+														]
 													},
 													"timestampSeconds": {
 														"type": [
@@ -16805,6 +18452,10 @@
 													"authorName",
 													"body",
 													"timestampSeconds",
+													"anchor",
+													"parentId",
+													"resolvedAt",
+													"resolvedByName",
 													"createdAt",
 													"updatedAt"
 												],
@@ -16861,7 +18512,7 @@
 				]
 			},
 			"post": {
-				"description": "A timestamp marks the note as a comment on a moment in an audio or video file.",
+				"description": "A timestamp marks the note as a comment on a moment in an audio or video file; an anchor, on a passage, cell or slide of an office file. `parentId` replies to a thread. Anyone who can open the file may comment, read-only shares included.",
 				"parameters": [
 					{
 						"in": "path",
@@ -16902,10 +18553,109 @@
 							"schema": {
 								"additionalProperties": false,
 								"properties": {
+									"anchor": {
+										"anyOf": [
+											{
+												"oneOf": [
+													{
+														"additionalProperties": false,
+														"properties": {
+															"kind": {
+																"const": "text",
+																"type": "string"
+															},
+															"offset": {
+																"maximum": 9007199254740991,
+																"minimum": 0,
+																"type": "integer"
+															},
+															"prefix": {
+																"maxLength": 64,
+																"type": "string"
+															},
+															"quote": {
+																"maxLength": 2000,
+																"minLength": 1,
+																"type": "string"
+															},
+															"suffix": {
+																"maxLength": 64,
+																"type": "string"
+															}
+														},
+														"required": [
+															"kind",
+															"quote",
+															"prefix",
+															"suffix",
+															"offset"
+														],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"cell": {
+																"pattern": "^[A-Za-z]{1,3}[1-9]\\d{0,6}$",
+																"type": "string"
+															},
+															"kind": {
+																"const": "cell",
+																"type": "string"
+															},
+															"sheet": {
+																"maxLength": 64,
+																"minLength": 1,
+																"type": "string"
+															}
+														},
+														"required": [
+															"kind",
+															"sheet",
+															"cell"
+														],
+														"type": "object"
+													},
+													{
+														"additionalProperties": false,
+														"properties": {
+															"id": {
+																"maxLength": 128,
+																"type": "string"
+															},
+															"index": {
+																"maximum": 9007199254740991,
+																"minimum": 0,
+																"type": "integer"
+															},
+															"kind": {
+																"const": "slide",
+																"type": "string"
+															}
+														},
+														"required": [
+															"kind",
+															"index"
+														],
+														"type": "object"
+													}
+												]
+											},
+											{
+												"type": "null"
+											}
+										]
+									},
 									"body": {
 										"maxLength": 4000,
 										"minLength": 1,
 										"type": "string"
+									},
+									"parentId": {
+										"type": [
+											"string",
+											"null"
+										]
 									},
 									"timestampSeconds": {
 										"anyOf": [
@@ -16937,6 +18687,99 @@
 										"data": {
 											"additionalProperties": false,
 											"properties": {
+												"anchor": {
+													"anyOf": [
+														{
+															"oneOf": [
+																{
+																	"additionalProperties": false,
+																	"properties": {
+																		"kind": {
+																			"const": "text",
+																			"type": "string"
+																		},
+																		"offset": {
+																			"maximum": 9007199254740991,
+																			"minimum": 0,
+																			"type": "integer"
+																		},
+																		"prefix": {
+																			"maxLength": 64,
+																			"type": "string"
+																		},
+																		"quote": {
+																			"maxLength": 2000,
+																			"minLength": 1,
+																			"type": "string"
+																		},
+																		"suffix": {
+																			"maxLength": 64,
+																			"type": "string"
+																		}
+																	},
+																	"required": [
+																		"kind",
+																		"quote",
+																		"prefix",
+																		"suffix",
+																		"offset"
+																	],
+																	"type": "object"
+																},
+																{
+																	"additionalProperties": false,
+																	"properties": {
+																		"cell": {
+																			"pattern": "^[A-Za-z]{1,3}[1-9]\\d{0,6}$",
+																			"type": "string"
+																		},
+																		"kind": {
+																			"const": "cell",
+																			"type": "string"
+																		},
+																		"sheet": {
+																			"maxLength": 64,
+																			"minLength": 1,
+																			"type": "string"
+																		}
+																	},
+																	"required": [
+																		"kind",
+																		"sheet",
+																		"cell"
+																	],
+																	"type": "object"
+																},
+																{
+																	"additionalProperties": false,
+																	"properties": {
+																		"id": {
+																			"maxLength": 128,
+																			"type": "string"
+																		},
+																		"index": {
+																			"maximum": 9007199254740991,
+																			"minimum": 0,
+																			"type": "integer"
+																		},
+																		"kind": {
+																			"const": "slide",
+																			"type": "string"
+																		}
+																	},
+																	"required": [
+																		"kind",
+																		"index"
+																	],
+																	"type": "object"
+																}
+															]
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
 												"authorName": {
 													"type": [
 														"string",
@@ -16956,6 +18799,30 @@
 												},
 												"id": {
 													"type": "string"
+												},
+												"parentId": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"resolvedAt": {
+													"anyOf": [
+														{
+															"format": "date-time",
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"resolvedByName": {
+													"type": [
+														"string",
+														"null"
+													]
 												},
 												"timestampSeconds": {
 													"type": [
@@ -16979,6 +18846,10 @@
 												"authorName",
 												"body",
 												"timestampSeconds",
+												"anchor",
+												"parentId",
+												"resolvedAt",
+												"resolvedByName",
 												"createdAt",
 												"updatedAt"
 											],
@@ -17140,6 +19011,7 @@
 				]
 			},
 			"patch": {
+				"description": "`body` changes your own note. `resolved` closes or reopens a thread, which anyone who can open the file may do.",
 				"parameters": [
 					{
 						"in": "path",
@@ -17156,6 +19028,30 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -17168,11 +19064,11 @@
 										"maxLength": 4000,
 										"minLength": 1,
 										"type": "string"
+									},
+									"resolved": {
+										"type": "boolean"
 									}
 								},
-								"required": [
-									"body"
-								],
 								"type": "object"
 							}
 						}
@@ -17188,6 +19084,99 @@
 										"data": {
 											"additionalProperties": false,
 											"properties": {
+												"anchor": {
+													"anyOf": [
+														{
+															"oneOf": [
+																{
+																	"additionalProperties": false,
+																	"properties": {
+																		"kind": {
+																			"const": "text",
+																			"type": "string"
+																		},
+																		"offset": {
+																			"maximum": 9007199254740991,
+																			"minimum": 0,
+																			"type": "integer"
+																		},
+																		"prefix": {
+																			"maxLength": 64,
+																			"type": "string"
+																		},
+																		"quote": {
+																			"maxLength": 2000,
+																			"minLength": 1,
+																			"type": "string"
+																		},
+																		"suffix": {
+																			"maxLength": 64,
+																			"type": "string"
+																		}
+																	},
+																	"required": [
+																		"kind",
+																		"quote",
+																		"prefix",
+																		"suffix",
+																		"offset"
+																	],
+																	"type": "object"
+																},
+																{
+																	"additionalProperties": false,
+																	"properties": {
+																		"cell": {
+																			"pattern": "^[A-Za-z]{1,3}[1-9]\\d{0,6}$",
+																			"type": "string"
+																		},
+																		"kind": {
+																			"const": "cell",
+																			"type": "string"
+																		},
+																		"sheet": {
+																			"maxLength": 64,
+																			"minLength": 1,
+																			"type": "string"
+																		}
+																	},
+																	"required": [
+																		"kind",
+																		"sheet",
+																		"cell"
+																	],
+																	"type": "object"
+																},
+																{
+																	"additionalProperties": false,
+																	"properties": {
+																		"id": {
+																			"maxLength": 128,
+																			"type": "string"
+																		},
+																		"index": {
+																			"maximum": 9007199254740991,
+																			"minimum": 0,
+																			"type": "integer"
+																		},
+																		"kind": {
+																			"const": "slide",
+																			"type": "string"
+																		}
+																	},
+																	"required": [
+																		"kind",
+																		"index"
+																	],
+																	"type": "object"
+																}
+															]
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
 												"authorName": {
 													"type": [
 														"string",
@@ -17207,6 +19196,30 @@
 												},
 												"id": {
 													"type": "string"
+												},
+												"parentId": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"resolvedAt": {
+													"anyOf": [
+														{
+															"format": "date-time",
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"resolvedByName": {
+													"type": [
+														"string",
+														"null"
+													]
 												},
 												"timestampSeconds": {
 													"type": [
@@ -17230,6 +19243,10 @@
 												"authorName",
 												"body",
 												"timestampSeconds",
+												"anchor",
+												"parentId",
+												"resolvedAt",
+												"resolvedByName",
 												"createdAt",
 												"updatedAt"
 											],
@@ -17298,7 +19315,216 @@
 						"cookieAuth": []
 					}
 				],
-				"summary": "Edit your own note",
+				"summary": "Edit your own note, or resolve a thread",
+				"tags": [
+					"Notes"
+				]
+			}
+		},
+		"/api/v1/files/{fileId}/presence": {
+			"delete": {
+				"parameters": [
+					{
+						"in": "path",
+						"name": "fileId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"left": {
+													"type": "boolean"
+												}
+											},
+											"required": [
+												"left"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Say you closed a file",
+				"tags": [
+					"Notes"
+				]
+			},
+			"post": {
+				"description": "Call every 15 seconds while the file is on screen. Answers everyone else seen on it in the last 40 seconds.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "fileId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"mode": {
+										"enum": [
+											"viewing",
+											"editing"
+										],
+										"type": "string"
+									}
+								},
+								"required": [
+									"mode"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"mode": {
+														"enum": [
+															"viewing",
+															"editing"
+														],
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"userId": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"userId",
+													"name",
+													"mode"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Say you have a file open",
 				"tags": [
 					"Notes"
 				]
@@ -17584,6 +19810,107 @@
 				]
 			}
 		},
+		"/api/v1/mobile/session": {
+			"put": {
+				"description": "For the app, once it signed itself in with an emailed code: labels the calling session `Penombre mobile · <device>`, as a pairing or browser sign-in would have. Refused for an API key.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"device": {
+										"maxLength": 100,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"required": [
+									"device"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"userAgent": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"userAgent"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Name the app's session",
+				"tags": [
+					"Auth"
+				]
+			}
+		},
 		"/api/v1/mobile/token": {
 			"post": {
 				"description": "Redeems a single-use code and returns a new session: its token for `Authorization: Bearer`, and its signed cookie for the app's embedded browser. A code from /auth/mobile/authorize comes with its PKCE `code_verifier`; one read from a pairing QR code comes with the `device` name instead.",
@@ -17790,7 +20117,9 @@
 															"type": {
 																"enum": [
 																	"note",
-																	"share"
+																	"share",
+																	"signature_completed",
+																	"signature_declined"
 																],
 																"type": "string"
 															}
@@ -17940,6 +20269,188 @@
 				]
 			}
 		},
+		"/api/v1/places": {
+			"get": {
+				"description": "Shared drives, mounted volumes and what others shared with you, plus the trash and starred counts: what the web sidebar lists, for clients without it.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"counts": {
+													"additionalProperties": false,
+													"properties": {
+														"starred": {
+															"type": "number"
+														},
+														"trash": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"trash",
+														"starred"
+													],
+													"type": "object"
+												},
+												"driveOnly": {
+													"type": "boolean"
+												},
+												"drives": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"id": {
+																"type": "string"
+															},
+															"name": {
+																"type": "string"
+															},
+															"role": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"id",
+															"name",
+															"role"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"sharedWithMe": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"category": {
+																"type": "string"
+															},
+															"id": {
+																"type": "string"
+															},
+															"name": {
+																"type": "string"
+															},
+															"ownerName": {
+																"type": "string"
+															},
+															"permission": {
+																"enum": [
+																	"read",
+																	"write",
+																	"admin"
+																],
+																"type": "string"
+															},
+															"resourceId": {
+																"type": "string"
+															},
+															"resourceType": {
+																"enum": [
+																	"file",
+																	"folder"
+																],
+																"type": "string"
+															},
+															"root": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"id",
+															"resourceType",
+															"resourceId",
+															"name",
+															"category",
+															"root",
+															"ownerName",
+															"permission"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"simpleMode": {
+													"type": "boolean"
+												},
+												"volumes": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"label": {
+																"type": "string"
+															},
+															"name": {
+																"type": "string"
+															},
+															"readOnly": {
+																"type": "boolean"
+															}
+														},
+														"required": [
+															"name",
+															"label",
+															"readOnly"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												}
+											},
+											"required": [
+												"drives",
+												"volumes",
+												"sharedWithMe",
+												"counts",
+												"simpleMode",
+												"driveOnly"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Everywhere you can browse",
+				"tags": [
+					"Storage"
+				]
+			}
+		},
 		"/api/v1/preferences": {
 			"get": {
 				"description": "Returns the current user's layout and sort preferences",
@@ -17981,6 +20492,31 @@
 													],
 													"type": "string"
 												},
+												"language": {
+													"anyOf": [
+														{
+															"enum": [
+																"en",
+																"fr",
+																"es",
+																"de",
+																"it",
+																"nl",
+																"sv",
+																"fi",
+																"pl",
+																"ru",
+																"ja",
+																"ko",
+																"zh"
+															],
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
 												"layout": {
 													"enum": [
 														"grid",
@@ -17994,6 +20530,33 @@
 														"pages"
 													],
 													"type": "string"
+												},
+												"notifications": {
+													"additionalProperties": {
+														"additionalProperties": false,
+														"properties": {
+															"email": {
+																"type": "boolean"
+															},
+															"inApp": {
+																"type": "boolean"
+															},
+															"phone": {
+																"type": "boolean"
+															}
+														},
+														"type": "object"
+													},
+													"propertyNames": {
+														"enum": [
+															"note",
+															"share",
+															"signature_completed",
+															"signature_declined"
+														],
+														"type": "string"
+													},
+													"type": "object"
 												},
 												"onboarded": {
 													"type": "boolean"
@@ -18122,6 +20685,31 @@
 										],
 										"type": "string"
 									},
+									"language": {
+										"anyOf": [
+											{
+												"enum": [
+													"en",
+													"fr",
+													"es",
+													"de",
+													"it",
+													"nl",
+													"sv",
+													"fi",
+													"pl",
+													"ru",
+													"ja",
+													"ko",
+													"zh"
+												],
+												"type": "string"
+											},
+											{
+												"type": "null"
+											}
+										]
+									},
 									"layout": {
 										"enum": [
 											"grid",
@@ -18135,6 +20723,33 @@
 											"pages"
 										],
 										"type": "string"
+									},
+									"notifications": {
+										"additionalProperties": {
+											"additionalProperties": false,
+											"properties": {
+												"email": {
+													"type": "boolean"
+												},
+												"inApp": {
+													"type": "boolean"
+												},
+												"phone": {
+													"type": "boolean"
+												}
+											},
+											"type": "object"
+										},
+										"propertyNames": {
+											"enum": [
+												"note",
+												"share",
+												"signature_completed",
+												"signature_declined"
+											],
+											"type": "string"
+										},
+										"type": "object"
 									},
 									"onboarded": {
 										"type": "boolean"
@@ -18230,6 +20845,31 @@
 													],
 													"type": "string"
 												},
+												"language": {
+													"anyOf": [
+														{
+															"enum": [
+																"en",
+																"fr",
+																"es",
+																"de",
+																"it",
+																"nl",
+																"sv",
+																"fi",
+																"pl",
+																"ru",
+																"ja",
+																"ko",
+																"zh"
+															],
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
 												"layout": {
 													"enum": [
 														"grid",
@@ -18243,6 +20883,33 @@
 														"pages"
 													],
 													"type": "string"
+												},
+												"notifications": {
+													"additionalProperties": {
+														"additionalProperties": false,
+														"properties": {
+															"email": {
+																"type": "boolean"
+															},
+															"inApp": {
+																"type": "boolean"
+															},
+															"phone": {
+																"type": "boolean"
+															}
+														},
+														"type": "object"
+													},
+													"propertyNames": {
+														"enum": [
+															"note",
+															"share",
+															"signature_completed",
+															"signature_declined"
+														],
+														"type": "string"
+													},
+													"type": "object"
 												},
 												"onboarded": {
 													"type": "boolean"
@@ -19746,6 +22413,1074 @@
 				"summary": "Unpin a folder from the sidebar",
 				"tags": [
 					"Shortcuts"
+				]
+			}
+		},
+		"/api/v1/signatures": {
+			"get": {
+				"description": "Newest first; `fileId` narrows to one document's requests.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "fileId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"additionalProperties": false,
+												"properties": {
+													"completedAt": {
+														"anyOf": [
+															{
+																"format": "date-time",
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																"type": "string"
+															},
+															{
+																"type": "null"
+															}
+														]
+													},
+													"createdAt": {
+														"format": "date-time",
+														"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+														"type": "string"
+													},
+													"documentHash": {
+														"type": "string"
+													},
+													"documentName": {
+														"type": "string"
+													},
+													"expiresAt": {
+														"format": "date-time",
+														"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+														"type": "string"
+													},
+													"fileId": {
+														"type": [
+															"string",
+															"null"
+														]
+													},
+													"id": {
+														"type": "string"
+													},
+													"message": {
+														"type": [
+															"string",
+															"null"
+														]
+													},
+													"pageCount": {
+														"type": "number"
+													},
+													"sequential": {
+														"type": "boolean"
+													},
+													"signedAvailable": {
+														"type": "boolean"
+													},
+													"signers": {
+														"items": {
+															"additionalProperties": false,
+															"properties": {
+																"declineReason": {
+																	"type": [
+																		"string",
+																		"null"
+																	]
+																},
+																"email": {
+																	"type": "string"
+																},
+																"hasAccount": {
+																	"type": "boolean"
+																},
+																"id": {
+																	"type": "string"
+																},
+																"name": {
+																	"type": "string"
+																},
+																"position": {
+																	"type": "number"
+																},
+																"respondedAt": {
+																	"anyOf": [
+																		{
+																			"format": "date-time",
+																			"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																			"type": "string"
+																		},
+																		{
+																			"type": "null"
+																		}
+																	]
+																},
+																"status": {
+																	"enum": [
+																		"pending",
+																		"signed",
+																		"declined"
+																	],
+																	"type": "string"
+																},
+																"viewedAt": {
+																	"anyOf": [
+																		{
+																			"format": "date-time",
+																			"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																			"type": "string"
+																		},
+																		{
+																			"type": "null"
+																		}
+																	]
+																}
+															},
+															"required": [
+																"id",
+																"name",
+																"email",
+																"position",
+																"status",
+																"hasAccount",
+																"viewedAt",
+																"respondedAt",
+																"declineReason"
+															],
+															"type": "object"
+														},
+														"type": "array"
+													},
+													"status": {
+														"enum": [
+															"pending",
+															"completed",
+															"declined",
+															"cancelled",
+															"expired"
+														],
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"fileId",
+													"documentName",
+													"message",
+													"sequential",
+													"status",
+													"documentHash",
+													"pageCount",
+													"signedAvailable",
+													"createdAt",
+													"expiresAt",
+													"completedAt",
+													"signers"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "List your signature requests",
+				"tags": [
+					"Signatures"
+				]
+			},
+			"post": {
+				"description": "Freezes the document as a PDF (a `.pdf` as it is, a document exported) and issues one link per signer, emailed when SMTP is set up. Each signer is an account (`userId`) or a name and an address. With `sequential`, signers sign in the given order and each is emailed on their turn. Needs write access to the document.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"expiresInDays": {
+										"default": 30,
+										"maximum": 365,
+										"minimum": 1,
+										"type": "integer"
+									},
+									"fileId": {
+										"minLength": 1,
+										"type": "string"
+									},
+									"message": {
+										"maxLength": 2000,
+										"type": "string"
+									},
+									"sequential": {
+										"default": false,
+										"type": "boolean"
+									},
+									"signers": {
+										"items": {
+											"anyOf": [
+												{
+													"additionalProperties": false,
+													"properties": {
+														"userId": {
+															"minLength": 1,
+															"type": "string"
+														}
+													},
+													"required": [
+														"userId"
+													],
+													"type": "object"
+												},
+												{
+													"additionalProperties": false,
+													"properties": {
+														"email": {
+															"format": "email",
+															"maxLength": 320,
+															"pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+															"type": "string"
+														},
+														"name": {
+															"maxLength": 200,
+															"minLength": 1,
+															"type": "string"
+														}
+													},
+													"required": [
+														"name",
+														"email"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"maxItems": 20,
+										"minItems": 1,
+										"type": "array"
+									}
+								},
+								"required": [
+									"fileId",
+									"signers",
+									"sequential",
+									"expiresInDays"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"links": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"email": {
+																"type": "string"
+															},
+															"emailed": {
+																"type": "boolean"
+															},
+															"name": {
+																"type": "string"
+															},
+															"signerId": {
+																"type": "string"
+															},
+															"url": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"signerId",
+															"name",
+															"email",
+															"url",
+															"emailed"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"request": {
+													"additionalProperties": false,
+													"properties": {
+														"completedAt": {
+															"anyOf": [
+																{
+																	"format": "date-time",
+																	"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																	"type": "string"
+																},
+																{
+																	"type": "null"
+																}
+															]
+														},
+														"createdAt": {
+															"format": "date-time",
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+															"type": "string"
+														},
+														"documentHash": {
+															"type": "string"
+														},
+														"documentName": {
+															"type": "string"
+														},
+														"expiresAt": {
+															"format": "date-time",
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+															"type": "string"
+														},
+														"fileId": {
+															"type": [
+																"string",
+																"null"
+															]
+														},
+														"id": {
+															"type": "string"
+														},
+														"message": {
+															"type": [
+																"string",
+																"null"
+															]
+														},
+														"pageCount": {
+															"type": "number"
+														},
+														"sequential": {
+															"type": "boolean"
+														},
+														"signedAvailable": {
+															"type": "boolean"
+														},
+														"signers": {
+															"items": {
+																"additionalProperties": false,
+																"properties": {
+																	"declineReason": {
+																		"type": [
+																			"string",
+																			"null"
+																		]
+																	},
+																	"email": {
+																		"type": "string"
+																	},
+																	"hasAccount": {
+																		"type": "boolean"
+																	},
+																	"id": {
+																		"type": "string"
+																	},
+																	"name": {
+																		"type": "string"
+																	},
+																	"position": {
+																		"type": "number"
+																	},
+																	"respondedAt": {
+																		"anyOf": [
+																			{
+																				"format": "date-time",
+																				"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																				"type": "string"
+																			},
+																			{
+																				"type": "null"
+																			}
+																		]
+																	},
+																	"status": {
+																		"enum": [
+																			"pending",
+																			"signed",
+																			"declined"
+																		],
+																		"type": "string"
+																	},
+																	"viewedAt": {
+																		"anyOf": [
+																			{
+																				"format": "date-time",
+																				"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																				"type": "string"
+																			},
+																			{
+																				"type": "null"
+																			}
+																		]
+																	}
+																},
+																"required": [
+																	"id",
+																	"name",
+																	"email",
+																	"position",
+																	"status",
+																	"hasAccount",
+																	"viewedAt",
+																	"respondedAt",
+																	"declineReason"
+																],
+																"type": "object"
+															},
+															"type": "array"
+														},
+														"status": {
+															"enum": [
+																"pending",
+																"completed",
+																"declined",
+																"cancelled",
+																"expired"
+															],
+															"type": "string"
+														}
+													},
+													"required": [
+														"id",
+														"fileId",
+														"documentName",
+														"message",
+														"sequential",
+														"status",
+														"documentHash",
+														"pageCount",
+														"signedAvailable",
+														"createdAt",
+														"expiresAt",
+														"completedAt",
+														"signers"
+													],
+													"type": "object"
+												}
+											},
+											"required": [
+												"request",
+												"links"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unprocessable Entity"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Ask people to sign a document",
+				"tags": [
+					"Signatures"
+				]
+			}
+		},
+		"/api/v1/signatures/{id}/cancel": {
+			"post": {
+				"description": "Every link stops working; what was signed stays on record.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"completedAt": {
+													"anyOf": [
+														{
+															"format": "date-time",
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+															"type": "string"
+														},
+														{
+															"type": "null"
+														}
+													]
+												},
+												"createdAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"documentHash": {
+													"type": "string"
+												},
+												"documentName": {
+													"type": "string"
+												},
+												"expiresAt": {
+													"format": "date-time",
+													"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+													"type": "string"
+												},
+												"fileId": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"id": {
+													"type": "string"
+												},
+												"message": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"pageCount": {
+													"type": "number"
+												},
+												"sequential": {
+													"type": "boolean"
+												},
+												"signedAvailable": {
+													"type": "boolean"
+												},
+												"signers": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"declineReason": {
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
+															"email": {
+																"type": "string"
+															},
+															"hasAccount": {
+																"type": "boolean"
+															},
+															"id": {
+																"type": "string"
+															},
+															"name": {
+																"type": "string"
+															},
+															"position": {
+																"type": "number"
+															},
+															"respondedAt": {
+																"anyOf": [
+																	{
+																		"format": "date-time",
+																		"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																		"type": "string"
+																	},
+																	{
+																		"type": "null"
+																	}
+																]
+															},
+															"status": {
+																"enum": [
+																	"pending",
+																	"signed",
+																	"declined"
+																],
+																"type": "string"
+															},
+															"viewedAt": {
+																"anyOf": [
+																	{
+																		"format": "date-time",
+																		"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+																		"type": "string"
+																	},
+																	{
+																		"type": "null"
+																	}
+																]
+															}
+														},
+														"required": [
+															"id",
+															"name",
+															"email",
+															"position",
+															"status",
+															"hasAccount",
+															"viewedAt",
+															"respondedAt",
+															"declineReason"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"status": {
+													"enum": [
+														"pending",
+														"completed",
+														"declined",
+														"cancelled",
+														"expired"
+													],
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"fileId",
+												"documentName",
+												"message",
+												"sequential",
+												"status",
+												"documentHash",
+												"pageCount",
+												"signedAvailable",
+												"createdAt",
+												"expiresAt",
+												"completedAt",
+												"signers"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Conflict"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Cancel a pending signature request",
+				"tags": [
+					"Signatures"
+				]
+			}
+		},
+		"/api/v1/signatures/{id}/pdf": {
+			"get": {
+				"description": "`original` is the PDF the signers were shown; `signed` is it with every page stamped and the signature certificate appended.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "kind",
+						"required": true,
+						"schema": {
+							"default": "signed",
+							"enum": [
+								"original",
+								"signed"
+							],
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"description": "The PDF"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Download a signature request's PDF",
+				"tags": [
+					"Signatures"
+				]
+			}
+		},
+		"/api/v1/signatures/{id}/signers/{signerId}/link": {
+			"post": {
+				"description": "Replaces the signer's link (the old one stops working) and returns it; with `send` it is also emailed when SMTP is set up. On a completed request the link downloads the signed PDF.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "signerId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"send": {
+										"default": false,
+										"type": "boolean"
+									}
+								},
+								"required": [
+									"send"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"email": {
+													"type": "string"
+												},
+												"emailed": {
+													"type": "boolean"
+												},
+												"name": {
+													"type": "string"
+												},
+												"signerId": {
+													"type": "string"
+												},
+												"url": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"signerId",
+												"name",
+												"email",
+												"url",
+												"emailed"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Conflict"
+					},
+					"410": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Error 410"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Issue a new link for a signer",
+				"tags": [
+					"Signatures"
 				]
 			}
 		},
@@ -23020,6 +26755,149 @@
 				]
 			}
 		},
+		"/api/v1/storage/file/{id}/export": {
+			"get": {
+				"description": "The file's saved bytes in another format, as an attachment. A document (`.docx`, `.html`) exports as `pdf`, `docx`, `html`, `md` or `txt`; a sheet (`.xlsx`, `.csv`) as `xlsx`, `csv` (its first sheet, as shown) or `pdf` (every sheet); a presentation as `pptx` or `pdf`. The file's own format is its bytes unchanged. 501 for an export this server cannot produce yet.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "format",
+						"required": true,
+						"schema": {
+							"enum": [
+								"pdf",
+								"docx",
+								"html",
+								"md",
+								"txt",
+								"xlsx",
+								"csv",
+								"pptx"
+							],
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"description": "The exported file"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unprocessable Entity"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					},
+					"501": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Error 501"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Export a document, sheet or presentation",
+				"tags": [
+					"Documents"
+				]
+			}
+		},
 		"/api/v1/storage/file/{id}/move": {
 			"post": {
 				"description": "Moves a file to a different folder",
@@ -23145,7 +27023,7 @@
 		},
 		"/api/v1/storage/file/{id}/office": {
 			"post": {
-				"description": "Applies edited text to a .docx, .xlsx or .pptx file, rewriting only the part of the archive that holds it so the rest of the document survives unchanged. The body is HTML for a document, CSV for a spreadsheet and Markdown for a presentation.",
+				"description": "Applies edited text to a .docx, .xlsx or .pptx file, rewriting only the parts of the archive that hold it so the rest of the document survives unchanged. The body is HTML for a document, Markdown for a presentation, and for a spreadsheet the workbook as JSON: `{ \"sheets\": [{ \"id\", \"name\", \"rows\" }] }`, `id` being the sheet's `sheetId` (a new one adds a sheet, a missing one deletes it). A CSV is still accepted and replaces the first sheet. A save never keeps the previous bytes as a version; `POST …/versions` does that on request.",
 				"parameters": [
 					{
 						"in": "path",
@@ -23176,19 +27054,6 @@
 						"name": "share",
 						"required": false,
 						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "snapshot",
-						"required": false,
-						"schema": {
-							"description": "0 skips keeping the old bytes as a version",
-							"enum": [
-								"0",
-								"1"
-							],
 							"type": "string"
 						}
 					}
