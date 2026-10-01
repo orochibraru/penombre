@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.InsertDriveFile
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Folder
@@ -38,7 +39,6 @@ import androidx.compose.material.icons.outlined.Slideshow
 import androidx.compose.material.icons.outlined.TableChart
 import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,6 +85,7 @@ import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
+import org.jetbrains.compose.resources.stringResource
 
 /** False in a screen that lies under another: it must not answer Back. */
 val LocalShown = compositionLocalOf { true }
@@ -96,19 +97,36 @@ data class WebScreen(val url: String) : Screen
 
 data class TrashScreen(val place: Place) : Screen
 
-data object DrivesScreen : Screen
-
-data class DriveScreen(val drive: Drive) : Screen
-
 data class PhotoScreen(val place: Place, val photos: List<Item>, val index: Int) : Screen
 
 data class VideoScreen(val place: Place, val item: Item) : Screen
 
 data class VersionsScreen(val place: Place, val item: Item) : Screen
 
-data object SettingsScreen : Screen
+/** What the avatar opens: profile, settings, sign out. */
+data object AccountScreen : Screen
 
-data object SearchScreen : Screen
+data object ProfileHubScreen : Screen
+
+data class ProfileScreen(val section: ProfileSection) : Screen
+
+data object SettingsHubScreen : Screen
+
+data class SettingsScreen(val section: SettingsSection) : Screen
+
+data object GrantsScreen : Screen
+
+data class GrantScreen(val grant: Grant) : Screen
+
+data class DriveScreen(val drive: Drive) : Screen
+
+data class SearchResultsScreen(val query: String) : Screen
+
+data object LinksScreen : Screen
+
+data object NotificationsScreen : Screen
+
+data object ActivityScreen : Screen
 
 data class PdfScreen(val place: Place, val item: Item) : Screen
 
@@ -124,6 +142,14 @@ class Host(
     val signedOut: () -> Unit,
     /** The bottom of every screen: the mini player over the tab bar. */
     val bar: @Composable () -> Unit,
+    /** The top right of a tab: notifications and the profile menu. */
+    val top: @Composable RowScope.() -> Unit = {},
+    /** Opens a place on the Home tab: a notification's shared item, say. */
+    val goHome: (Home) -> Unit = {},
+    /** The account's listing order. */
+    val sort: Sort? = null,
+    /** Takes over a session the server issued in place of this one. */
+    val renew: (Session) -> Unit = {},
 ) {
     val server get() = api.session.server
 
@@ -135,8 +161,10 @@ class Host(
             throw e
         } catch (e: Unauthorized) {
             signedOut()
+        } catch (e: Failure) {
+            failed(e.words.load())
         } catch (e: Exception) {
-            failed(e.message ?: "Something went wrong.")
+            failed(e.message ?: Words(Res.string.error_generic).load())
         }
     }
 
@@ -166,7 +194,7 @@ fun Remote(url: String, host: Host, description: String?, modifier: Modifier, sc
 
 /**
  * The same, for an image shown large. Until it is in, `placeholder` (a
- * thumbnail the list already fetched) stands blurred under a loader; if it
+ * thumbnail the list already fetched) stands blurred under the breathing moon; if it
  * cannot be had at all, `fallback` is tried before giving up.
  */
 @Composable
@@ -190,14 +218,14 @@ fun Picture(
         loading = {
             Box(contentAlignment = Alignment.Center) {
                 placeholder?.let { Remote(it, host, null, Modifier.fillMaxSize().blur(12.dp), scale) }
-                CircularProgressIndicator(color = brand.accent)
+                BreathingMoon()
             }
         },
         error = {
             if (fallback != null) {
                 Picture(fallback, host, description, Modifier.fillMaxSize(), scale, placeholder)
             } else {
-                Box(contentAlignment = Alignment.Center) { Note("This image could not be loaded.") }
+                Box(contentAlignment = Alignment.Center) { Note(stringResource(Res.string.image_failed)) }
             }
         },
     )
@@ -223,6 +251,8 @@ fun Header(
     onBack: (() -> Unit)?,
     moon: Boolean = false,
     compact: Boolean = false,
+    /** Makes the title a menu: the place selector on Home. */
+    onTitle: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -230,23 +260,32 @@ fun Header(
             .padding(start = if (onBack == null) 20.dp else 4.dp, end = 8.dp, top = if (compact) 0.dp else 12.dp, bottom = if (compact) 0.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        onBack?.let { IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = brand.ink) } }
+        onBack?.let { IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.back), tint = brand.ink) } }
         if (moon) {
             Moon(30.dp)
             Spacer(Modifier.width(12.dp))
         }
-        Text(
-            title,
-            Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = brand.ink,
-            style = if (compact) {
-                MaterialTheme.typography.titleMedium
-            } else {
-                TextStyle(fontSize = 30.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.6).sp)
-            },
-        )
+        val choose = stringResource(Res.string.choose_place)
+        Row(
+            Modifier.weight(1f).then(
+                if (onTitle != null) Modifier.clip(Corner).clickable(onClickLabel = choose, onClick = onTitle) else Modifier,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                title,
+                Modifier.weight(1f, fill = false),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = brand.ink,
+                style = if (compact) {
+                    MaterialTheme.typography.titleMedium
+                } else {
+                    TextStyle(fontSize = 30.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.6).sp, fontFamily = MaterialTheme.typography.titleLarge.fontFamily)
+                },
+            )
+            if (onTitle != null) Icon(Icons.Default.ExpandMore, null, Modifier.padding(start = 2.dp), tint = brand.muted)
+        }
         actions()
     }
 }
@@ -320,6 +359,7 @@ fun ItemEntry(item: Item, place: Place, host: Host, trailing: @Composable RowSco
     val (icon, colour) = iconFor(item)
     val pictured = !item.isFolder && item.metadata.category in setOf("IMAGES", "VIDEO")
     val seq = item.metadata.versionSeq?.takeIf { !item.isFolder && it > 0 }
+    val versions = stringResource(Res.string.versions_of, item.title)
     Entry(
         icon = icon,
         title = item.title,
@@ -333,7 +373,7 @@ fun ItemEntry(item: Item, place: Place, host: Host, trailing: @Composable RowSco
                 Text(
                     "v${it + 1}",
                     Modifier.clip(RoundedCornerShape(50)).background(brand.accent.copy(alpha = 0.16f))
-                        .clickable(onClickLabel = "Versions of ${item.title}") { host.push(VersionsScreen(place, item)) }
+                        .clickable(onClickLabel = versions) { host.push(VersionsScreen(place, item)) }
                         .padding(horizontal = 8.dp, vertical = 1.dp),
                     color = brand.accent,
                     style = MaterialTheme.typography.labelSmall,
@@ -412,7 +452,8 @@ fun Listing(
     val items = remember(source) { mutableStateListOf<Item>() }
     var cursor by remember(source) { mutableStateOf<String?>(null) }
     var done by remember(source) { mutableStateOf(false) }
-    var loading by remember(source) { mutableStateOf(false) }
+    // Loading from the first frame: no blank one before the skeleton.
+    var loading by remember(source) { mutableStateOf(true) }
     var error by remember(source) { mutableStateOf<String?>(null) }
     var pulls by remember(source) { mutableIntStateOf(0) }
     var refreshing by remember(source) { mutableStateOf(false) }
@@ -465,7 +506,7 @@ fun Listing(
             items(items, key = { it.metadata.id }) { item -> row(item, items) }
         }
         when {
-            loading && items.isEmpty() && !refreshing -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = brand.accent)
+            loading && items.isEmpty() && !refreshing -> SkeletonList(modifier = Modifier.padding(top = 4.dp))
             error != null -> Note(error!!, Modifier.align(Alignment.Center), MaterialTheme.colorScheme.error)
             done && items.isEmpty() -> Note(empty, Modifier.align(Alignment.Center), brand.muted)
         }
@@ -486,7 +527,7 @@ fun Confirm(title: String, text: String, action: String, onDismiss: () -> Unit, 
         title = { Text(title) },
         text = { Text(text) },
         confirmButton = { TextButton(onClick = onConfirm) { Text(action, color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = brand.muted) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel), color = brand.muted) } },
     )
 }
 
@@ -509,7 +550,7 @@ fun Prompt(title: String, initial: String, action: String, onDismiss: () -> Unit
                 onValueChange = { field = it },
                 singleLine = true,
                 shape = Corner,
-                label = { Text("Name") },
+                label = { Text(stringResource(Res.string.name)) },
                 modifier = Modifier.focusRequester(focus),
             )
             // In here: asked before the field exists, the focus goes nowhere.
@@ -520,7 +561,7 @@ fun Prompt(title: String, initial: String, action: String, onDismiss: () -> Unit
                 Text(action, color = brand.accent)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = brand.muted) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel), color = brand.muted) } },
     )
 }
 

@@ -15,7 +15,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.CreateNewFolder
 import androidx.compose.material.icons.outlined.Delete
@@ -54,6 +53,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 private data class Crumb(val path: String, val title: String)
 
@@ -67,12 +67,16 @@ fun Browser(
     place: Place,
     root: String,
     canWrite: Boolean = true,
+    /** Where it starts: a shared folder is browsed from its own path. */
+    rootPath: String = "",
     onExit: (() -> Unit)? = null,
+    /** At the root, the title opens this: Home's place selector. */
+    onTitle: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     bottomBar: @Composable () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val stack = remember(place) { mutableStateListOf(Crumb("", root)) }
+    val stack = remember(place, rootPath) { mutableStateListOf(Crumb(rootPath, root)) }
     val folder = stack.last()
     val nested = stack.size > 1
     // Bumped after a change: the listing is keyed on it and starts over.
@@ -106,19 +110,23 @@ fun Browser(
             var failed = 0
             var reason = ""
             files.forEachIndexed { index, file ->
-                status = if (files.size == 1) "Uploading ${file.name}" else "Uploading ${index + 1} of ${files.size}"
+                status = if (files.size == 1) {
+                    Words(Res.string.uploading_one, file.name).load()
+                } else {
+                    Words(Res.string.uploading_many, index + 1, files.size).load()
+                }
                 host.attempt({
                     failed++
                     reason = it
                 }) {
-                    check(file.size <= MAX_UPLOAD_BYTES) { "${file.name} is over the 200 MB this app can send." }
+                    if (file.size > MAX_UPLOAD_BYTES) throw Failure(Words(Res.string.upload_too_big, file.name))
                     host.api.upload(place, into, file)
                 }
             }
             status = when {
                 failed == 0 -> null
-                files.size == 1 -> "${files.first().name} could not be uploaded: $reason"
-                else -> "$failed of ${files.size} files could not be uploaded. Last error: $reason"
+                files.size == 1 -> Words(Res.string.upload_failed_one, files.first().name, reason).load()
+                else -> Words(Res.string.upload_failed_many, failed, files.size, reason).load()
             }
             refresh++
         }
@@ -133,19 +141,24 @@ fun Browser(
         }
     }
     if (naming) {
-        Prompt("New folder", "", "Create", onDismiss = { naming = false }) { name ->
+        Prompt(stringResource(Res.string.new_folder), "", stringResource(Res.string.create), onDismiss = { naming = false }) { name ->
             naming = false
             change { host.api.createFolder(place, folder.path, name) }
         }
     }
     renaming?.let { item ->
-        Prompt("Rename", item.title, "Rename", onDismiss = { renaming = null }) { name ->
+        Prompt(stringResource(Res.string.rename), item.title, stringResource(Res.string.rename), onDismiss = { renaming = null }) { name ->
             renaming = null
             change { host.api.rename(place, item, childPath(folder.path, item.key), name) }
         }
     }
     sending?.let { (item, move) ->
-        DestinationSheet(host, if (move) "Move ${item.title}" else "Copy ${item.title}", if (move) "Move here" else "Copy here", { sending = null }) { to, into ->
+        DestinationSheet(
+            host,
+            stringResource(if (move) Res.string.move_title else Res.string.copy_title, item.title),
+            stringResource(if (move) Res.string.move_here else Res.string.copy_here),
+            { sending = null },
+        ) { to, into ->
             sending = null
             change { host.api.transfer(place, item, childPath(folder.path, item.key), to, into, move) }
         }
@@ -167,7 +180,7 @@ fun Browser(
                     rawUrl(host.server, place, item.metadata.id),
                     host.api.session.token,
                     item.title,
-                ) { status = it.ifEmpty { null } }
+                ) { done -> scope.launch { status = done?.load() } }
 
                 // A copy into the folder it is already in.
                 ItemAction.Duplicate -> change { host.api.transfer(place, item, path, place, folder.path, move = false) }
@@ -183,15 +196,12 @@ fun Browser(
         containerColor = Color.Transparent,
         topBar = {
             Header(
-                title = folder.title,
+                // The root's own name, not the crumb's: it follows the language.
+                title = if (nested) folder.title else root,
                 onBack = if (nested) up else onExit,
                 moon = !nested && onExit == null,
-                actions = {
-                    IconButton(onClick = { host.push(SearchScreen) }) {
-                        Icon(Icons.Default.Search, "Search", tint = brand.ink)
-                    }
-                    actions()
-                },
+                onTitle = onTitle.takeIf { !nested },
+                actions = actions,
             )
         },
         floatingActionButton = {
@@ -200,9 +210,9 @@ fun Browser(
                 Box(
                     Modifier.size(58.dp).shadow(14.dp, shape, ambientColor = brand.glow, spotColor = brand.glow)
                         .clip(shape).background(brand.gradient)
-                        .clickable(role = Role.Button, onClickLabel = "Add files") { choosing = true },
+                        .clickable(role = Role.Button, onClickLabel = stringResource(Res.string.add_files)) { choosing = true },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Default.Add, "Add files", tint = Color.White) }
+                ) { Icon(Icons.Default.Add, stringResource(Res.string.add_files), tint = Color.White) }
             }
         },
         bottomBar = bottomBar,
@@ -210,10 +220,10 @@ fun Browser(
         Box(Modifier.padding(padding)) {
             Listing(
                 source = Triple(place, folder, refresh),
-                empty = "Empty folder",
+                empty = stringResource(Res.string.empty_folder),
                 modifier = Modifier,
                 host = host,
-                load = { host.api.list(place, folder.path, it) },
+                load = { host.api.list(place, folder.path, it, host.sort) },
             ) { item, all ->
                 ItemEntry(
                     item,
@@ -221,7 +231,7 @@ fun Browser(
                     host,
                     trailing = {
                         IconButton(onClick = { selected = item }) {
-                            Icon(Icons.Default.MoreVert, "Options for ${item.title}", tint = brand.muted)
+                            Icon(Icons.Default.MoreVert, stringResource(Res.string.options_for, item.title), tint = brand.muted)
                         }
                     },
                 ) {
@@ -262,15 +272,15 @@ fun SheetTitle(text: String) {
 @Composable
 private fun AddSheet(onDismiss: () -> Unit, onFolder: () -> Unit, onChoose: (Source) -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = brand.panel) {
-        SheetTitle("Add to this folder")
+        SheetTitle(stringResource(Res.string.add_title))
         availableSources().forEach { source ->
             when (source) {
-                Source.Files -> Entry(Icons.Outlined.FolderOpen, "Choose files", "From this device or another app") { onChoose(source) }
-                Source.Camera -> Entry(Icons.Outlined.PhotoCamera, "Take a photo", "Uploads it as a JPEG") { onChoose(source) }
-                Source.Scan -> Entry(Icons.Outlined.DocumentScanner, "Scan a document", "Uploads the pages as one PDF") { onChoose(source) }
+                Source.Files -> Entry(Icons.Outlined.FolderOpen, stringResource(Res.string.add_choose), stringResource(Res.string.add_choose_hint)) { onChoose(source) }
+                Source.Camera -> Entry(Icons.Outlined.PhotoCamera, stringResource(Res.string.add_photo), stringResource(Res.string.add_photo_hint)) { onChoose(source) }
+                Source.Scan -> Entry(Icons.Outlined.DocumentScanner, stringResource(Res.string.add_scan), stringResource(Res.string.add_scan_hint)) { onChoose(source) }
             }
         }
-        Entry(Icons.Outlined.CreateNewFolder, "New folder", onClick = onFolder)
+        Entry(Icons.Outlined.CreateNewFolder, stringResource(Res.string.new_folder), onClick = onFolder)
         Spacer(Modifier.height(24.dp))
     }
 }
@@ -286,22 +296,22 @@ private fun ItemSheet(item: Item, canWrite: Boolean, onDismiss: () -> Unit, onCh
             item {
                 SheetTitle(item.title)
                 if (!item.isFolder) {
-                    Entry(Icons.Outlined.Download, "Download", "Keeps a copy on this device") { onChoose(ItemAction.Download) }
-                    Entry(Icons.Outlined.History, "Versions", "Earlier copies of this file") { onChoose(ItemAction.Versions) }
+                    Entry(Icons.Outlined.Download, stringResource(Res.string.download), stringResource(Res.string.download_hint)) { onChoose(ItemAction.Download) }
+                    Entry(Icons.Outlined.History, stringResource(Res.string.versions), stringResource(Res.string.versions_hint)) { onChoose(ItemAction.Versions) }
                 }
                 if (item.metadata.isStarred) {
-                    Entry(Icons.Outlined.Star, "Remove from Starred") { onChoose(ItemAction.Star) }
+                    Entry(Icons.Outlined.Star, stringResource(Res.string.unstar)) { onChoose(ItemAction.Star) }
                 } else {
-                    Entry(Icons.Outlined.StarBorder, "Add to Starred") { onChoose(ItemAction.Star) }
+                    Entry(Icons.Outlined.StarBorder, stringResource(Res.string.star)) { onChoose(ItemAction.Star) }
                 }
                 if (canWrite) {
-                    Entry(Icons.Outlined.Edit, "Rename") { onChoose(ItemAction.Rename) }
-                    Entry(Icons.AutoMirrored.Outlined.DriveFileMove, "Move to…") { onChoose(ItemAction.Move) }
-                    Entry(Icons.Outlined.ContentCopy, "Duplicate") { onChoose(ItemAction.Duplicate) }
+                    Entry(Icons.Outlined.Edit, stringResource(Res.string.rename)) { onChoose(ItemAction.Rename) }
+                    Entry(Icons.AutoMirrored.Outlined.DriveFileMove, stringResource(Res.string.move_to)) { onChoose(ItemAction.Move) }
+                    Entry(Icons.Outlined.ContentCopy, stringResource(Res.string.duplicate)) { onChoose(ItemAction.Duplicate) }
                 }
-                Entry(Icons.Outlined.FolderCopy, "Copy to…", "Another folder or a shared drive") { onChoose(ItemAction.Copy) }
+                Entry(Icons.Outlined.FolderCopy, stringResource(Res.string.copy_to), stringResource(Res.string.copy_to_hint)) { onChoose(ItemAction.Copy) }
                 if (canWrite) {
-                    Entry(Icons.Outlined.Delete, "Move to trash", tint = MaterialTheme.colorScheme.error) { onChoose(ItemAction.Trash) }
+                    Entry(Icons.Outlined.Delete, stringResource(Res.string.move_to_trash), tint = MaterialTheme.colorScheme.error) { onChoose(ItemAction.Trash) }
                 }
                 Spacer(Modifier.height(24.dp))
             }
@@ -316,19 +326,22 @@ private fun DestinationSheet(host: Host, title: String, action: String, onDismis
     // Null until a drive is picked; then the folders opened, innermost last.
     var place by remember { mutableStateOf<Place?>(null) }
     val stack = remember { mutableStateListOf<Crumb>() }
-    var drives by remember { mutableStateOf<List<Drive>>(emptyList()) }
-    LaunchedEffect(Unit) { host.attempt { drives = host.api.drives().filter { it.canWrite } } }
+    // Null until known: skeleton rows stand for them meanwhile.
+    var drives by remember { mutableStateOf<List<Drive>?>(null) }
+    LaunchedEffect(Unit) { host.attempt({ drives = emptyList() }) { drives = host.api.drives().filter { it.canWrite } } }
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = brand.panel) {
         SheetTitle(title)
         val chosen = place
         if (chosen == null) {
-            Entry(Icons.Outlined.Folder, "My Drive") {
+            val mine = stringResource(Res.string.my_drive)
+            Entry(Icons.Outlined.Folder, mine) {
                 place = Place()
-                stack.add(Crumb("", "My Drive"))
+                stack.add(Crumb("", mine))
             }
-            drives.forEach { drive ->
-                Entry(Icons.Outlined.Group, drive.name, "Shared drive") {
+            if (drives == null) SkeletonRow()
+            drives.orEmpty().forEach { drive ->
+                Entry(Icons.Outlined.Group, drive.name, stringResource(Res.string.shared_drive)) {
                     place = Place(drive.id)
                     stack.add(Crumb("", drive.name))
                 }
@@ -336,13 +349,13 @@ private fun DestinationSheet(host: Host, title: String, action: String, onDismis
             Spacer(Modifier.height(24.dp))
         } else {
             val folder = stack.last()
-            Entry(Icons.AutoMirrored.Filled.ArrowBack, folder.title, "Back", tint = brand.muted) {
+            Entry(Icons.AutoMirrored.Filled.ArrowBack, folder.title, stringResource(Res.string.back), tint = brand.muted) {
                 stack.removeAt(stack.lastIndex)
                 if (stack.isEmpty()) place = null
             }
             Listing(
                 source = chosen to folder,
-                empty = "No folders in here",
+                empty = stringResource(Res.string.no_folders),
                 modifier = Modifier.height(280.dp),
                 host = host,
                 // Folders only: a file is not somewhere to put things.

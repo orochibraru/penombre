@@ -34,7 +34,6 @@ import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,9 +68,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 /** What the web app opens in one of its editors (`documents.ts`, Office files). */
-private val EDITABLE = setOf("docx", "xlsx", "pptx", "html", "htm", "csv", "md", "markdown")
+internal val EDITABLE = setOf("docx", "xlsx", "pptx", "html", "htm", "csv", "md", "markdown")
 
 /** A file opened from a list, and the list it came from. */
 data class Preview(val place: Place, val siblings: List<Item>, val item: Item) {
@@ -125,7 +125,7 @@ fun PreviewSheet(preview: Preview, host: Host, onDismiss: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             // Nothing to fill the screen with while the video cannot play.
             val ready = !preview.isVideo || !host.screening.blocked
-            GradientButton(if (preview.isVideo || preview.isImage) "Full screen" else "Open", enabled = ready) {
+            GradientButton(stringResource(if (preview.isVideo || preview.isImage) Res.string.full_screen else Res.string.open), enabled = ready) {
                 host.push(
                     when {
                         preview.isVideo -> VideoScreen(preview.place, item)
@@ -166,7 +166,7 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
     val choose: (Int?) -> Unit = { height ->
         picking = false
         note = null
-        scope.launch { host.attempt({ note = it }) { note = screening.choose(host.api, height) } }
+        scope.launch { host.attempt({ note = it }) { note = screening.choose(host.api, height)?.let { Words(it).load() } } }
     }
     LaunchedEffect(shown, touched, screening.playing, pinned, picking) {
         if (shown && screening.playing && !pinned && !picking) {
@@ -177,35 +177,35 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
     val visible = shown || pinned || !screening.playing || screening.blocked
     Box(
         modifier.background(Color.Black)
-            .clickable(remember { MutableInteractionSource() }, indication = null, onClickLabel = "Show or hide the controls") { shown = !shown },
+            .clickable(remember { MutableInteractionSource() }, indication = null, onClickLabel = stringResource(Res.string.video_controls)) { shown = !shown },
         contentAlignment = Alignment.Center,
     ) {
         if (screening.blocked) {
             Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (screening.preparing != null) {
-                    CircularProgressIndicator(color = Color.White)
+                    BreathingMoon()
                     Spacer(Modifier.height(12.dp))
-                    Text("Converting the video…", color = Color.White, fontWeight = FontWeight.Medium)
+                    Text(stringResource(Res.string.video_converting), color = Color.White, fontWeight = FontWeight.Medium)
                     Text(
-                        "A long one can take a few minutes. It only happens once.",
+                        stringResource(Res.string.video_converting_hint),
                         color = Color.White.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
                     )
                 } else {
-                    Text("This video's format does not play on this device", color = Color.White, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+                    Text(stringResource(Res.string.video_unplayable), color = Color.White, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(12.dp))
                     if (screening.unavailable) {
-                        Text("Download it to watch it in another app.", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(Res.string.video_download_instead), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     } else {
-                        Box(Modifier.width(220.dp)) { GradientButton("Convert and play", enabled = true) { choose(RENDITIONS.first()) } }
+                        Box(Modifier.width(220.dp)) { GradientButton(stringResource(Res.string.video_convert), enabled = true) { choose(RENDITIONS.first()) } }
                     }
                     note?.let { Text(it, Modifier.padding(top = 10.dp), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 }
             }
         } else {
             VideoSurface(screening.engine, screening.aspect, Modifier.fillMaxSize())
-            if (screening.loading) CircularProgressIndicator(color = Color.White)
+            if (screening.loading) BreathingMoon()
         }
         AnimatedVisibility(visible, Modifier.matchParentSize(), enter = fadeIn(), exit = fadeOut()) {
             Box(Modifier.fillMaxSize()) {
@@ -215,7 +215,7 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
                         IconButton(onClick = {
                             touched++
                             screening.skip(-10.0)
-                        }) { Icon(Icons.Default.Replay10, "Back 10 seconds", Modifier.size(30.dp), tint = Color.White) }
+                        }) { Icon(Icons.Default.Replay10, stringResource(Res.string.video_back10), Modifier.size(30.dp), tint = Color.White) }
                         Box(
                             Modifier.size(64.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.5f))
                                 .clickable {
@@ -226,7 +226,7 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
                         ) {
                             Icon(
                                 if (screening.playing) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                if (screening.playing) "Pause video" else "Play video",
+                                stringResource(if (screening.playing) Res.string.video_pause else Res.string.video_play),
                                 Modifier.size(36.dp),
                                 tint = Color.White,
                             )
@@ -234,7 +234,7 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
                         IconButton(onClick = {
                             touched++
                             screening.skip(10.0)
-                        }) { Icon(Icons.Default.Forward10, "Forward 10 seconds", Modifier.size(30.dp), tint = Color.White) }
+                        }) { Icon(Icons.Default.Forward10, stringResource(Res.string.video_forward10), Modifier.size(30.dp), tint = Color.White) }
                     }
                 }
                 if (!screening.blocked) {
@@ -257,15 +257,21 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
                                     touched++
                                     picking = true
                                 }) {
-                                    val now = screening.preparing?.let { "${it}p…" } ?: screening.quality?.let { "${it}p" } ?: "Original"
-                                    Text(now, Modifier.semantics { contentDescription = "Quality: $now" }, color = Color.White, style = MaterialTheme.typography.labelMedium)
+                                    val now = screening.preparing?.let { "${it}p…" } ?: screening.quality?.let { "${it}p" } ?: stringResource(Res.string.original)
+                                    val said = stringResource(Res.string.video_quality, now)
+                                    Text(now, Modifier.semantics { contentDescription = said }, color = Color.White, style = MaterialTheme.typography.labelMedium)
                                 }
                                 DropdownMenu(picking, onDismissRequest = { picking = false }, containerColor = brand.panel) {
                                     (listOf<Int?>(null) + RENDITIONS).forEach { height ->
                                         // The original is not offered once it has failed to play.
                                         if (height != null || !screening.refused) {
                                             DropdownMenuItem(
-                                                text = { Text(height?.let { "${it}p" } ?: "Original", color = if (height == screening.quality) brand.accent else brand.ink) },
+                                                text = {
+                                                    Text(
+                                                        height?.let { "${it}p" } ?: stringResource(Res.string.original),
+                                                        color = if (height == screening.quality) brand.accent else brand.ink,
+                                                    )
+                                                },
                                                 onClick = { choose(height) },
                                             )
                                         }
@@ -291,9 +297,10 @@ fun VideoStage(host: Host, modifier: Modifier, pinned: Boolean = false, top: @Co
 @Composable
 private fun Scrubber(done: Float, modifier: Modifier, onSeek: (Float) -> Unit) {
     val accent = brand.accent
+    val position = stringResource(Res.string.video_position)
     Canvas(
         modifier.height(44.dp)
-            .semantics { contentDescription = "Position in the video" }
+            .semantics { contentDescription = position }
             .pointerInput(Unit) { detectTapGestures { onSeek(it.x / size.width) } }
             .pointerInput(Unit) { detectHorizontalDragGestures { change, _ -> onSeek(change.position.x / size.width) } },
     ) {
@@ -316,7 +323,7 @@ fun VideoView(host: Host) {
                 .windowInsetsPadding(WindowInsets.statusBars).padding(end = 20.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = host.back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) }
+            IconButton(onClick = host.back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.back), tint = Color.White) }
             Spacer(Modifier.width(4.dp))
             Text(
                 screening.item?.title ?: "",

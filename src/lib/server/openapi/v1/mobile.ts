@@ -33,3 +33,15 @@ export const mobilePair = defineRoute({
 	response: z.object({ url: z.string(), expiresAt: z.string() }),
 	errors: [401, 403, 429],
 });
+
+export const mobileSession = defineRoute({
+	method: "put",
+	path: "/api/v1/mobile/session",
+	summary: "Name the app's session",
+	description:
+		"For the app, once it signed itself in with an emailed code: labels the calling session `Penombre mobile · <device>`, as a pairing or browser sign-in would have. Refused for an API key.",
+	tags: ["Auth"],
+	body: z.object({ device: z.string().min(1).max(100) }),
+	response: z.object({ userAgent: z.string() }),
+	errors: [400, 401, 403],
+});

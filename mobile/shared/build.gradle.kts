@@ -13,6 +13,8 @@ kotlin {
         minSdk = 29
         // commonTest on the JVM: fast, no device.
         withHostTest {}
+        // Compose resources (the app's strings) travel as Android assets.
+        androidResources { enable = true }
     }
 
     listOf(iosArm64(), iosSimulatorArm64()).forEach {
@@ -29,6 +31,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.materialIconsExtended)
             implementation(compose.ui)
+            implementation(libs.compose.resources)
             implementation(libs.ktor.core)
             implementation(libs.ktor.negotiation)
             implementation(libs.ktor.json)
@@ -46,6 +49,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.browser)
             implementation(libs.androidx.core)
+            implementation(libs.androidx.work)
             implementation(libs.mlkit.scanner)
             implementation(libs.mlkit.codes)
         }
@@ -53,4 +57,9 @@ kotlin {
             implementation(libs.ktor.darwin)
         }
     }
+}
+
+// `Res` beside the code that reads it: no import for a string.
+compose.resources {
+    packageOfResClass = "dev.penombre.app"
 }

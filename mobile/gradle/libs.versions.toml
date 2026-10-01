@@ -14,6 +14,7 @@ ktor-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = 
 ktor-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+compose-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose" }
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.10.2" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version = "3.6.3" }
 coil-network = { module = "io.coil-kt.coil3:coil-network-ktor3", version = "3.6.3" }
@@ -21,6 +22,7 @@ serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-jso
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
 androidx-core = { module = "androidx.core:core-ktx", version = "1.16.0" }
+androidx-work = { module = "androidx.work:work-runtime-ktx", version = "2.12.0" }
 mlkit-codes = { module = "com.google.android.gms:play-services-code-scanner", version = "16.1.0" }
 mlkit-scanner = { module = "com.google.android.gms:play-services-mlkit-document-scanner", version = "16.0.0" }
 

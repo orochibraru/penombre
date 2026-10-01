@@ -27,13 +27,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderShared
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -50,6 +49,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,93 +71,126 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.contentOrNull
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun App() {
-    // The account's accent, remembered so the first frame is already in it.
-    var accent by remember { mutableStateOf(Prefs.get("accent") ?: "bordeaux") }
-    val setAccent: (String) -> Unit = {
-        accent = it
-        Prefs.set("accent", it)
+    // Remembered, so the first frame is already in the account's look.
+    var look by remember { mutableStateOf(Look.saved()) }
+    val setLook: (Look) -> Unit = {
+        look = it
+        it.save()
     }
-    PenombreTheme(accent) {
-        var session by remember { mutableStateOf(SessionStore.load()) }
-        var error by remember { mutableStateOf<String?>(null) }
-        // A scanned code waits for a yes: a link alone must not sign the app in.
-        var pairing by remember { mutableStateOf<Pairing?>(null) }
-        val scope = rememberCoroutineScope()
-        val signedIn: (Session) -> Unit = {
-            SessionStore.save(it)
-            Prefs.set("server", it.server)
-            session = it
-            error = null
+    // The same for its language, spoken before anything reads a string.
+    var language by remember { mutableStateOf(savedLanguage().also(::speak)) }
+    val setLanguage: (String?) -> Unit = {
+        if (it != language) {
+            speak(it)
+            Prefs.set("language", it)
+            language = it
         }
-        // One collector for the app's life. Keyed on the callback itself, the
-        // effect restarted when it cleared the value and cancelled its own
-        // token request.
-        LaunchedEffect(Unit) {
-            Auth.callbacks.filterNotNull().collect { url ->
-                Auth.callbacks.value = null
-                val scanned = Auth.pairing(url)
-                if (scanned != null) {
-                    // Already signed in: the code is for a phone that is not.
-                    if (session == null) pairing = scanned
-                    return@collect
-                }
-                try {
-                    signedIn(Auth.complete(url))
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    error = e.message ?: "Sign-in failed."
-                }
-            }
-        }
+    }
+    CompositionLocalProvider(LocalLanguage provides language) {
+        PenombreTheme(look) { Root(look, setLook, setLanguage) }
+    }
+}
 
-        val current = session
-        if (current == null) {
-            SignIn(
-                error,
-                onCode = { text ->
-                    pairing = Auth.pairing(text)
-                    error = if (pairing == null) "That is not a Penombre sign-in code." else null
-                },
-            ) {
-                error = null
-                Prefs.set("server", it.trim())
-                Auth.start(it)
+@Composable
+private fun Root(look: Look, setLook: (Look) -> Unit, setLanguage: (String?) -> Unit) {
+    var session by remember { mutableStateOf(SessionStore.load()) }
+    var error by remember { mutableStateOf<String?>(null) }
+    // A sign-in on its way: the moon breathes until it lands.
+    var busy by remember { mutableStateOf(false) }
+    // A scanned code waits for a yes: a link alone must not sign the app in.
+    var pairing by remember { mutableStateOf<Pairing?>(null) }
+    val scope = rememberCoroutineScope()
+    val signedIn: (Session) -> Unit = {
+        SessionStore.save(it)
+        Prefs.set("server", it.server)
+        session = it
+        error = null
+    }
+    // One collector for the app's life. Keyed on the callback itself, the
+    // effect restarted when it cleared the value and cancelled its own
+    // token request.
+    LaunchedEffect(Unit) {
+        Auth.callbacks.filterNotNull().collect { url ->
+            Auth.callbacks.value = null
+            val scanned = Auth.pairing(url)
+            if (scanned != null) {
+                // Already signed in: the code is for a phone that is not.
+                if (session == null) pairing = scanned
+                return@collect
             }
-            pairing?.let { asked ->
-                AlertDialog(
-                    onDismissRequest = { pairing = null },
-                    containerColor = brand.panel,
-                    title = { Text("Sign in to ${asked.host}?") },
-                    text = { Text("This phone will use the account that showed the code.") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            pairing = null
-                            scope.launch {
-                                try {
-                                    signedIn(Auth.pair(asked))
-                                } catch (e: CancellationException) {
-                                    throw e
-                                } catch (e: Exception) {
-                                    // A code is refused once used or two minutes old.
-                                    error = "That code no longer works. Show a new one and scan it again."
-                                }
+            busy = true
+            try {
+                signedIn(Auth.complete(url))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Failure) {
+                error = e.words.load()
+            } catch (e: Exception) {
+                error = e.message ?: Words(Res.string.signin_failed).load()
+            } finally {
+                busy = false
+            }
+        }
+    }
+
+    val current = session
+    if (current == null) {
+        SignIn(
+            error,
+            busy,
+            onSignedIn = signedIn,
+            onCode = { text ->
+                pairing = Auth.pairing(text)
+                scope.launch { error = if (pairing == null) Words(Res.string.signin_not_a_code).load() else null }
+            },
+        ) {
+            error = null
+            Prefs.set("server", it.trim())
+            Auth.start(it)
+        }
+        pairing?.let { asked ->
+            AlertDialog(
+                onDismissRequest = { pairing = null },
+                containerColor = brand.panel,
+                title = { Text(stringResource(Res.string.pair_title, asked.host)) },
+                text = { Text(stringResource(Res.string.pair_text)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        pairing = null
+                        scope.launch {
+                            busy = true
+                            try {
+                                signedIn(Auth.pair(asked))
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                // A code is refused once used or two minutes old.
+                                error = Words(Res.string.pair_expired).load()
+                            } finally {
+                                busy = false
                             }
-                        }) { Text("Connect", color = brand.accent) }
-                    },
-                    dismissButton = { TextButton(onClick = { pairing = null }) { Text("Cancel", color = brand.muted) } },
-                )
-            }
-        } else {
-            Signed(current, accent, setAccent) {
-                SessionStore.save(null)
-                session = null
-            }
+                        }
+                    }) { Text(stringResource(Res.string.pair_connect), color = brand.accent) }
+                },
+                dismissButton = { TextButton(onClick = { pairing = null }) { Text(stringResource(Res.string.cancel), color = brand.muted) } },
+            )
+        }
+    } else {
+        Signed(current, look, setLook, setLanguage, onRenew = signedIn) {
+            SessionStore.save(null)
+            session = null
         }
     }
 }
@@ -168,35 +201,37 @@ fun App() {
  * camera or a server reached some other way.
  */
 @Composable
-private fun SignIn(error: String?, onCode: (String) -> Unit, onSubmit: (String) -> Unit) {
+private fun SignIn(error: String?, busy: Boolean, onSignedIn: (Session) -> Unit, onCode: (String) -> Unit, onSubmit: (String) -> Unit) {
     val scans = remember { canScanCodes() }
     val scan = rememberCodeScanner(onCode)
     // Saveable: a recreated activity must not wipe a half-typed address.
     var server by rememberSaveable { mutableStateOf(Prefs.get("server") ?: "") }
     var typing by rememberSaveable { mutableStateOf(!scans) }
+    var byCode by rememberSaveable { mutableStateOf(false) }
+    var mailing by remember { mutableStateOf(false) }
     val submit = { if (server.isNotBlank()) onSubmit(server) }
     Column(
         // Above the keyboard: centred on the whole screen, the button sat under it.
         Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).imePadding().padding(horizontal = 28.dp),
         verticalArrangement = Arrangement.Center,
     ) {
-        Moon(72.dp)
+        if (busy || mailing) BreathingMoon(72.dp) else Moon(72.dp)
         Spacer(Modifier.height(20.dp))
         Text(
             "Penombre",
             style = TextStyle(brush = brand.gradient, fontSize = 40.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-1).sp),
         )
         Text(
-            "Your files, on your own server.",
+            stringResource(Res.string.signin_tagline),
             style = MaterialTheme.typography.bodyLarge,
             color = brand.muted,
         )
         Spacer(Modifier.height(36.dp))
         if (scans) {
-            GradientButton("Scan the code", enabled = true, onClick = scan)
+            GradientButton(stringResource(Res.string.signin_scan), enabled = !busy, onClick = scan)
             Spacer(Modifier.height(12.dp))
             Text(
-                "On your server's web page, open the profile menu, choose Get the apps, then Connect the mobile app.",
+                stringResource(Res.string.signin_scan_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = brand.muted,
             )
@@ -210,7 +245,7 @@ private fun SignIn(error: String?, onCode: (String) -> Unit, onSubmit: (String) 
             OutlinedTextField(
                 value = server,
                 onValueChange = { server = it },
-                label = { Text("Server address") },
+                label = { Text(stringResource(Res.string.signin_server)) },
                 placeholder = { Text("https://files.example.com") },
                 singleLine = true,
                 // The keyboard's own key signs in too.
@@ -224,40 +259,225 @@ private fun SignIn(error: String?, onCode: (String) -> Unit, onSubmit: (String) 
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(16.dp))
-            if (scans) {
-                TextButton(enabled = server.isNotBlank(), onClick = submit, modifier = Modifier.fillMaxWidth()) {
-                    Text("Sign in", color = brand.accent)
+            if (byCode) {
+                EmailCode(server.trim(), mailing, { mailing = it }, onSignedIn)
+                TextButton(onClick = { byCode = false }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(Res.string.signin_browser_instead), color = brand.muted)
                 }
             } else {
-                GradientButton("Sign in", enabled = server.isNotBlank(), onClick = submit)
+                if (scans) {
+                    TextButton(enabled = server.isNotBlank() && !busy, onClick = submit, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(Res.string.signin), color = brand.accent)
+                    }
+                } else {
+                    GradientButton(stringResource(Res.string.signin), enabled = server.isNotBlank() && !busy, onClick = submit)
+                }
+                TextButton(enabled = server.isNotBlank() && !busy, onClick = { byCode = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(Res.string.signin_email_code), color = brand.muted)
+                }
             }
         } else {
             Spacer(Modifier.height(20.dp))
             TextButton(onClick = { typing = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Enter the server address instead", color = brand.muted)
+                Text(stringResource(Res.string.signin_type_address), color = brand.muted)
             }
         }
     }
 }
 
-// The web app's own bar: the same four, in the same order.
-private enum class Tab(val label: String, val icon: ImageVector) {
-    Home("Home", Icons.Outlined.Folder),
-    Recent("Recent", Icons.Outlined.History),
-    Starred("Starred", Icons.Outlined.StarBorder),
-    Menu("Menu", Icons.Default.Menu),
+/**
+ * Signing in with a code mailed to the address, with no browser: for a
+ * server that allows it (a 403 says it does not). A two-factor account is
+ * then asked for its authenticator's code, or a backup code.
+ */
+@Composable
+private fun EmailCode(server: String, working: Boolean, onWorking: (Boolean) -> Unit, onSignedIn: (Session) -> Unit) {
+    val scope = rememberCoroutineScope()
+    var email by rememberSaveable { mutableStateOf("") }
+    var code by rememberSaveable { mutableStateOf("") }
+    var sent by rememberSaveable { mutableStateOf(false) }
+    var note by remember { mutableStateOf<String?>(null) }
+    var challenge by remember { mutableStateOf<CodeSignIn.TwoFactor?>(null) }
+    var backup by remember { mutableStateOf(false) }
+    var refusal by remember { mutableStateOf<String?>(null) }
+
+    /** Runs one call; `refused` words what the server refused, or leaves its own words. */
+    fun run(onNote: (String) -> Unit, refused: (Refused) -> StringResource?, block: suspend () -> Unit) {
+        scope.launch {
+            onWorking(true)
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Refused) {
+                onNote(refused(e)?.let { Words(it).load() } ?: e.message.orEmpty())
+            } catch (e: Failure) {
+                onNote(e.words.load())
+            } catch (e: Exception) {
+                onNote(e.message ?: Words(Res.string.signin_failed).load())
+            } finally {
+                onWorking(false)
+            }
+        }
+    }
+    val refused = { e: Refused ->
+        when {
+            e.status == 403 -> Res.string.signin_code_off
+            e.isCodeError -> Res.string.email_code_error
+            else -> null
+        }
+    }
+    val done: suspend (Session) -> Unit = { session ->
+        // Named like the app's other sessions; a server without the route keeps the client's name.
+        try {
+            Api(session).labelSession(deviceName)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+        }
+        onSignedIn(session)
+    }
+    val send = {
+        note = null
+        run({ note = it }, refused) {
+            Auth.sendCode(server, email.trim())
+            code = ""
+            sent = true
+        }
+    }
+    val signIn = {
+        note = null
+        run({ note = it }, refused) {
+            when (val answer = Auth.signInWithCode(server, email.trim(), code.trim())) {
+                is CodeSignIn.Done -> done(answer.session)
+
+                is CodeSignIn.TwoFactor -> {
+                    refusal = null
+                    backup = false
+                    challenge = answer
+                }
+            }
+        }
+    }
+    val field = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = brand.panel.copy(alpha = 0.6f),
+        unfocusedContainerColor = brand.panel.copy(alpha = 0.6f),
+    )
+    if (!sent) {
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text(stringResource(Res.string.signin_email)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(onSend = { if ("@" in email && !working) send() }),
+            shape = Corner,
+            colors = field,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(12.dp))
+        GradientButton(stringResource(Res.string.email_send_code), enabled = "@" in email && !working, onClick = send)
+    } else {
+        OutlinedTextField(
+            value = code,
+            onValueChange = { code = it },
+            label = { Text(stringResource(Res.string.signin_code)) },
+            supportingText = { Text(stringResource(Res.string.signin_code_hint, email.trim())) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Go),
+            keyboardActions = KeyboardActions(onGo = { if (code.isNotBlank() && !working) signIn() }),
+            shape = Corner,
+            colors = field,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(12.dp))
+        GradientButton(stringResource(Res.string.signin), enabled = code.isNotBlank() && !working, onClick = signIn)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            TextButton(enabled = !working, onClick = send) { Text(stringResource(Res.string.email_resend), color = brand.accent) }
+            TextButton(onClick = {
+                sent = false
+                note = null
+            }) { Text(stringResource(Res.string.signin_other_address), color = brand.muted) }
+        }
+    }
+    note?.let { Text(it, Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
+    challenge?.let { asked ->
+        // A dialog per kind of code: the field starts empty.
+        key(backup) {
+            Ask(
+                stringResource(Res.string.tf_title),
+                listOf(Field(stringResource(if (backup) Res.string.tf_backup_code else Res.string.tf_code), number = !backup)),
+                stringResource(Res.string.tf_verify),
+                refusal ?: stringResource(if (backup) Res.string.tf_backup_description else Res.string.tf_description),
+                onDismiss = { challenge = null },
+                footer = {
+                    TextButton(onClick = {
+                        refusal = null
+                        backup = !backup
+                    }) { Text(stringResource(if (backup) Res.string.tf_use_app else Res.string.tf_use_backup), color = brand.accent) }
+                },
+            ) { (answer) ->
+                run({ refusal = it }, { Res.string.tf_invalid }) {
+                    done(Auth.answerTwoFactor(asked, answer.trim(), backup))
+                    challenge = null
+                }
+            }
+        }
+    }
 }
 
+private enum class Tab(val label: StringResource, val icon: ImageVector) {
+    Home(Res.string.tab_home, Icons.Outlined.Folder),
+    Search(Res.string.tab_search, Icons.Default.Search),
+    Starred(Res.string.starred, Icons.Outlined.StarBorder),
+    Shared(Res.string.tab_shared, Icons.Outlined.FolderShared),
+}
+
+/** A preference changed by name, as the API takes it. */
+private fun Preferences.with(name: String, value: JsonPrimitive): Preferences = when (name) {
+    "accent" -> copy(accent = value.content)
+    "layout" -> copy(layout = value.content)
+    "sortColumn" -> copy(sortColumn = value.content)
+    "sortDirection" -> copy(sortDirection = value.content)
+    "fontFamily" -> copy(fontFamily = value.content)
+    "corners" -> copy(corners = value.content)
+    "emailNotifications" -> copy(emailNotifications = value.boolean)
+    "listingLoadMode" -> copy(listingLoadMode = value.content)
+    "versionNaming" -> copy(versionNaming = value.content)
+    "language" -> copy(language = value.contentOrNull)
+    else -> this
+}
+
+private fun Look.following(prefs: Preferences) = copy(accent = prefs.accent, font = prefs.fontFamily, corners = prefs.corners)
+
 @Composable
-private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit, onSignedOut: () -> Unit) {
+private fun Signed(
+    session: Session,
+    look: Look,
+    onLook: (Look) -> Unit,
+    onLanguage: (String?) -> Unit,
+    onRenew: (Session) -> Unit,
+    onSignedOut: () -> Unit,
+) {
     val api = remember(session) { Api(session) }
     val scope = rememberCoroutineScope()
     val playback = remember(session) { Playback(session) }
     // What is pushed over the tabs; the last one shows.
     val screens = remember { mutableStateListOf<Screen>() }
     var tab by rememberSaveable { mutableStateOf(Tab.Home) }
+    var home by remember { mutableStateOf<Home>(Home.Mine) }
     // Bumped on every tab tap: the tab starts over, so Home is the drive's root.
-    var tapped by remember { mutableStateOf(0) }
+    var tapped by remember { mutableIntStateOf(0) }
+    // Bumped by a second tap on Search: the field takes the keyboard.
+    var findFocus by remember { mutableIntStateOf(0) }
+    var prefs by remember { mutableStateOf<Preferences?>(null) }
+    var unread by remember { mutableIntStateOf(0) }
+    var alerts by remember { mutableStateOf(Prefs.get("alerts") == "on") }
+    // What the administrator requires and the account lacks, once known.
+    var gate by remember { mutableStateOf<Overview?>(null) }
+    var gateKnown by remember { mutableStateOf(false) }
+    var recheck by remember { mutableIntStateOf(0) }
+    var asked by remember { mutableStateOf(false) }
 
     val screening = remember(session) { Screening(session) }
     var preview by remember { mutableStateOf<Preview?>(null) }
@@ -265,6 +485,7 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
     val leave: () -> Unit = {
         playback.stop()
         screening.close()
+        NoticeWatch.enable(false)
         onSignedOut()
     }
     lateinit var host: Host
@@ -281,11 +502,89 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
                 MiniPlayer(playback, host)
                 // From inside a pushed screen too: a tab is always one tap away.
                 BottomBar(tab) {
+                    val again = it == tab
+                    // Search again, on Search itself: the keyboard, as on Android.
+                    if (again && it == Tab.Search && screens.isEmpty()) {
+                        findFocus++
+                        return@BottomBar
+                    }
                     screens.clear()
+                    // Home again from Home: back to the account's own drive.
+                    if (again && it == Tab.Home) home = Home.Mine
+                    // Back on Search from a screen over it keeps what was typed.
+                    if (!(again && it == Tab.Search)) {
+                        findFocus = 0
+                        tapped++
+                    }
                     tab = it
-                    tapped++
                 }
             }
+        },
+        top = {
+            AccountButtons(
+                this,
+                session.userName,
+                unread,
+                onBell = { screens.add(NotificationsScreen) },
+                onAccount = { screens.add(AccountScreen) },
+            )
+        },
+        goHome = {
+            screens.clear()
+            home = it
+            tab = Tab.Home
+            tapped++
+        },
+        sort = prefs?.sort,
+        renew = onRenew,
+    )
+
+    /** Shows the change at once; the server's refusal puts it back. */
+    val setPreference: (String, JsonPrimitive) -> Unit = { name, value ->
+        val before = prefs
+        val after = (before ?: Preferences()).with(name, value)
+        prefs = after
+        onLook(look.following(after))
+        if (name == "language") onLanguage(after.language)
+        scope.launch {
+            host.attempt({
+                prefs = before
+                before?.let {
+                    onLook(look.following(it))
+                    if (name == "language") onLanguage(it.language)
+                }
+            }) { prefs = api.setPreference(name, value) }
+        }
+    }
+
+    val settings = SettingsState(
+        look = look,
+        onMode = { onLook(look.copy(mode = it)) },
+        language = LocalLanguage.current,
+        prefs = prefs,
+        onPreference = setPreference,
+        onChannel = { type, channel, on ->
+            val before = prefs
+            val chosen = (before ?: Preferences()).choosing(type, channel, on)
+            // Older clients read the single switch: it stays truthful.
+            val mailed = chosen.values.any { it["email"] == true }
+            prefs = (before ?: Preferences()).copy(notifications = chosen, emailNotifications = mailed)
+            scope.launch {
+                host.attempt({ prefs = before }) {
+                    prefs = api.setPreferences(
+                        mapOf(
+                            "notifications" to JsonObject(chosen.mapValues { (_, channels) -> JsonObject(channels.mapValues { JsonPrimitive(it.value) }) }),
+                            "emailNotifications" to JsonPrimitive(mailed),
+                        ),
+                    )
+                }
+            }
+        },
+        phoneAlerts = alerts,
+        onPhoneAlerts = {
+            alerts = it
+            Prefs.set("alerts", if (it) "on" else null)
+            NoticeWatch.enable(it)
         },
     )
 
@@ -306,22 +605,73 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
     DisposableEffect(screening) { onDispose { screening.close() } }
     LaunchedEffect(playback) { playback.follow() }
     DisposableEffect(playback) { onDispose { playback.stop() } }
-    // The account's accent, which the web interface may have changed since.
-    LaunchedEffect(api) { host.attempt { onAccent(api.preferences().accent) } }
+    // The account's look, which the web interface may have changed since.
+    LaunchedEffect(api) {
+        host.attempt {
+            val loaded = api.preferences()
+            prefs = loaded
+            onLook(look.following(loaded))
+            // The account's language, which the web may have changed since.
+            onLanguage(loaded.language?.takeIf { it in LANGUAGES })
+        }
+    }
+    // The bell's count, while the app is open; the phone's own notifications
+    // come from `NoticeWatch` when it is not. While the account is held at the
+    // gate, the same beat asks again: a passkey added in the browser shows up.
+    LaunchedEffect(api) {
+        while (true) {
+            host.attempt { unread = api.notices(1).unread }
+            delay(60_000)
+            if (gate != null) recheck++
+        }
+    }
+    // The web interface's enrolment gate, for the app: what the administrator
+    // requires comes before anything else. Unknown (offline) lets the app open.
+    LaunchedEffect(api, recheck) {
+        host.attempt({ gateKnown = true }) {
+            gate = api.overview().takeIf { it.requirements.isNotEmpty() }
+            gateKnown = true
+        }
+    }
+    if (!gateKnown) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { BreathingMoon(72.dp) }
+        return
+    }
+    gate?.let { account ->
+        RequirementsView(
+            host,
+            account,
+            checked = asked,
+            onCheck = {
+                asked = true
+                recheck++
+            },
+        ) {
+            scope.launch {
+                api.signOut()
+                leave()
+            }
+        }
+        return
+    }
 
-    PlatformBack(enabled = screens.isNotEmpty() || tab != Tab.Home) {
-        if (screens.isNotEmpty()) host.back() else tab = Tab.Home
+    PlatformBack(enabled = screens.isNotEmpty() || tab != Tab.Home || home != Home.Mine) {
+        when {
+            screens.isNotEmpty() -> host.back()
+            tab != Tab.Home -> tab = Tab.Home
+            else -> home = Home.Mine
+        }
     }
 
     // Every screen under the top one stays alive, unseen: coming back from a
     // viewer must find the folder, the list and the scroll as they were left.
     Layer(screens.isEmpty()) {
         key(tapped) {
-            Tabs(host, tab) {
-                scope.launch {
-                    api.signOut()
-                    leave()
-                }
+            when (tab) {
+                Tab.Home -> HomeView(host, home) { home = it }
+                Tab.Search -> SearchView(host, findFocus)
+                Tab.Starred -> FlatList(host, Home.Starred, null, stringResource(Res.string.empty_starred)) { api.starred(it) }
+                Tab.Shared -> SharedTab(host)
             }
         }
     }
@@ -337,21 +687,42 @@ private fun Signed(session: Session, accent: String, onAccent: (String) -> Unit,
 
                     is TrashScreen -> TrashView(host, screen.place)
 
-                    DrivesScreen -> DrivesView(host)
-
-                    is DriveScreen -> DriveView(host, screen.drive)
-
                     is PhotoScreen -> PhotoView(host, screen.place, screen.photos, screen.index)
 
                     is VideoScreen -> VideoView(host)
 
                     is VersionsScreen -> VersionsView(host, screen.place, screen.item)
 
-                    SettingsScreen -> SettingsView(host, accent, onAccent)
-
-                    SearchScreen -> SearchView(host)
-
                     is PdfScreen -> PdfView(host, screen.place, screen.item)
+
+                    AccountScreen -> AccountView(host) {
+                        scope.launch {
+                            api.signOut()
+                            leave()
+                        }
+                    }
+
+                    ProfileHubScreen -> ProfileHubView(host)
+
+                    is ProfileScreen -> ProfileView(host, screen.section)
+
+                    SettingsHubScreen -> SettingsHubView(host)
+
+                    is SettingsScreen -> SettingsView(host, screen.section, settings)
+
+                    GrantsScreen -> GrantsView(host, { Header(stringResource(Res.string.shared_with_me), onBack = host.back) }) { host.push(GrantScreen(it)) }
+
+                    is GrantScreen -> GrantView(host, screen.grant)
+
+                    is DriveScreen -> DriveView(host, screen.drive)
+
+                    is SearchResultsScreen -> SearchResultsView(host, screen.query)
+
+                    LinksScreen -> LinksView(host)
+
+                    NotificationsScreen -> NotificationsView(host) { unread = it }
+
+                    ActivityScreen -> ActivityView(host)
                 }
             }
         }
@@ -369,35 +740,6 @@ private fun Layer(shown: Boolean, content: @Composable () -> Unit) {
                 layout(placeable.width, placeable.height) { if (shown) placeable.place(0, 0) }
             },
         ) { content() }
-    }
-}
-
-@Composable
-private fun Tabs(host: Host, tab: Tab, onSignOut: () -> Unit) {
-    val bar = host.bar
-    val personal = Place()
-    // Outside Home a folder opens on the web: those lists carry its id, not
-    // the path the native listing needs.
-    val row: @Composable (Item, List<Item>) -> Unit = { item, all ->
-        ItemEntry(item, personal, host) {
-            if (item.isFolder) host.push(WebScreen("${host.server}/go/folder/${item.metadata.id}")) else host.open(personal, all, item)
-        }
-    }
-    when (tab) {
-        Tab.Home -> Browser(host, personal, "My Drive", bottomBar = bar)
-
-        else -> Scaffold(
-            containerColor = Color.Transparent,
-            topBar = { Header(tab.label, onBack = null) },
-            bottomBar = bar,
-        ) { padding ->
-            val modifier = Modifier.padding(padding)
-            when (tab) {
-                Tab.Recent -> Listing(Tab.Recent, "Nothing recent", modifier, host, { host.api.recent() }, row = row)
-                Tab.Starred -> Listing(Tab.Starred, "Nothing starred", modifier, host, { host.api.starred(it) }, row = row)
-                else -> Menu(host, modifier, onSignOut)
-            }
-        }
     }
 }
 
@@ -428,51 +770,12 @@ private fun BottomBar(current: Tab, onSelect: (Tab) -> Unit) {
                         .padding(horizontal = 18.dp, vertical = 4.dp),
                 ) { Icon(entry.icon, null, tint = tint) }
                 Text(
-                    entry.label,
+                    stringResource(entry.label),
                     color = tint,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun Menu(host: Host, modifier: Modifier, onSignOut: () -> Unit) {
-    val session = host.api.session
-    LazyColumn(modifier.fillMaxSize()) {
-        item {
-            Row(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.size(52.dp).clip(CircleShape).background(brand.gradient),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        initials(session.userName),
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-                Spacer(Modifier.width(14.dp))
-                Column {
-                    Text(session.userName, color = brand.ink, style = MaterialTheme.typography.titleMedium)
-                    Text(session.server, color = brand.muted, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            HorizontalDivider(Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-            Entry(Icons.Outlined.Group, "Shared drives") { host.push(DrivesScreen) }
-            Entry(Icons.Outlined.Delete, "Trash") { host.push(TrashScreen(Place())) }
-            Entry(Icons.Outlined.Settings, "Settings") { host.push(SettingsScreen) }
-            HorizontalDivider(Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-            // No native screen yet: these open in the web interface.
-            Entry(Icons.Outlined.FolderShared, "Shared with me", "On the web interface", tint = brand.muted) {
-                host.push(WebScreen("${host.server}/shared-with-me"))
-            }
-            Entry(Icons.Default.Language, "Open web app", tint = brand.muted) { host.push(WebScreen("${host.server}/")) }
-            HorizontalDivider(Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-            Entry(Icons.AutoMirrored.Filled.Logout, "Sign out", tint = brand.muted, onClick = onSignOut)
         }
     }
 }

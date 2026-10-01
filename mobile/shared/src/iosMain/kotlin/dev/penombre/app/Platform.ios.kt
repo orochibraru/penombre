@@ -15,6 +15,9 @@ import kotlinx.cinterop.convert
 import kotlinx.cinterop.readValue
 import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionCategoryPlayback
 import platform.AVFAudio.setActive
@@ -46,6 +49,9 @@ import platform.AVFoundation.seekToTime
 import platform.AuthenticationServices.ASPresentationAnchor
 import platform.AuthenticationServices.ASWebAuthenticationPresentationContextProvidingProtocol
 import platform.AuthenticationServices.ASWebAuthenticationSession
+import platform.BackgroundTasks.BGAppRefreshTask
+import platform.BackgroundTasks.BGAppRefreshTaskRequest
+import platform.BackgroundTasks.BGTaskScheduler
 import platform.CoreCrypto.CC_SHA256
 import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
 import platform.CoreGraphics.CGRectMake
@@ -53,12 +59,14 @@ import platform.CoreGraphics.CGRectZero
 import platform.CoreMedia.CMTime
 import platform.CoreMedia.CMTimeGetSeconds
 import platform.CoreMedia.CMTimeMakeWithSeconds
+import platform.Foundation.NSBundle
 import platform.Foundation.NSData
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSize
+import platform.Foundation.NSGlobalDomain
 import platform.Foundation.NSHTTPCookie
 import platform.Foundation.NSHTTPCookieDomain
 import platform.Foundation.NSHTTPCookieName
@@ -66,6 +74,7 @@ import platform.Foundation.NSHTTPCookiePath
 import platform.Foundation.NSHTTPCookieSecure
 import platform.Foundation.NSHTTPCookieValue
 import platform.Foundation.NSHTTPURLResponse
+import platform.Foundation.NSLocale
 import platform.Foundation.NSMutableData
 import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSNumber
@@ -76,12 +85,15 @@ import platform.Foundation.NSURLSession
 import platform.Foundation.NSUserDefaults
 import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
+import platform.Foundation.dateWithTimeIntervalSinceNow
 import platform.Foundation.downloadTaskWithRequest
+import platform.Foundation.preferredLanguages
 import platform.Foundation.setValue
 import platform.PDFKit.PDFDocument
 import platform.PDFKit.PDFView
 import platform.PDFKit.kPDFDisplaySinglePageContinuous
 import platform.QuartzCore.CATransaction
+import platform.UIKit.UIAccessibilityIsReduceMotionEnabled
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIColor
@@ -103,6 +115,12 @@ import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
 import platform.UIKit.popoverPresentationController
 import platform.UniformTypeIdentifiers.UTTypeItem
+import platform.UserNotifications.UNAuthorizationOptionAlert
+import platform.UserNotifications.UNAuthorizationOptionBadge
+import platform.UserNotifications.UNAuthorizationOptionSound
+import platform.UserNotifications.UNMutableNotificationContent
+import platform.UserNotifications.UNNotificationRequest
+import platform.UserNotifications.UNUserNotificationCenter
 import platform.VisionKit.VNDocumentCameraScan
 import platform.VisionKit.VNDocumentCameraViewController
 import platform.VisionKit.VNDocumentCameraViewControllerDelegateProtocol
@@ -162,6 +180,7 @@ actual object Prefs {
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun WebPage(url: String, session: Session, modifier: Modifier) {
+    val language = spoken(LocalLanguage.current)
     UIKitView(
         modifier = modifier,
         // Off by default: the page would be invisible to VoiceOver.
@@ -173,16 +192,22 @@ actual fun WebPage(url: String, session: Session, modifier: Modifier) {
                 applicationNameForUserAgent = "PenombreApp"
             }
             val view = WKWebView(frame = CGRectZero.readValue(), configuration = config)
-            val properties = mutableMapOf<Any?, Any?>(
-                NSHTTPCookieName to session.cookieName,
-                NSHTTPCookieValue to session.cookieValue,
-                NSHTTPCookieDomain to NSURL(string = session.server).host,
-                NSHTTPCookiePath to "/",
-            )
-            if (session.server.startsWith("https://")) properties[NSHTTPCookieSecure] = "TRUE"
-            val cookie = NSHTTPCookie.cookieWithProperties(properties)
+            fun cookie(name: String, value: String): NSHTTPCookie? {
+                val properties = mutableMapOf<Any?, Any?>(
+                    NSHTTPCookieName to name,
+                    NSHTTPCookieValue to value,
+                    NSHTTPCookieDomain to NSURL(string = session.server).host,
+                    NSHTTPCookiePath to "/",
+                )
+                if (session.server.startsWith("https://")) properties[NSHTTPCookieSecure] = "TRUE"
+                return NSHTTPCookie.cookieWithProperties(properties)
+            }
+            val store = config.websiteDataStore.httpCookieStore
             val load = { view.loadRequest(NSURLRequest(uRL = NSURL(string = url))) }
-            if (cookie == null) load() else config.websiteDataStore.httpCookieStore.setCookie(cookie) { load() }
+            // The web's own language cookie (paraglide's): its pages open in the app's.
+            cookie(LANGUAGE_COOKIE, language)?.let { store.setCookie(it) {} }
+            val signedIn = cookie(session.cookieName, session.cookieValue)
+            if (signedIn == null) load() else store.setCookie(signedIn) { load() }
             view
         },
     )
@@ -226,7 +251,7 @@ private class PickerDelegate(val onPicked: (List<PickedFile>) -> Unit) :
                     ?.let { NSFileManager.defaultManager.attributesOfItemAtPath(it, null)?.get(NSFileSize) as? NSNumber }
                     ?.longLongValue ?: 0L
                 PickedFile(url.lastPathComponent ?: "file", size) {
-                    (NSData.dataWithContentsOfURL(url) ?: error("Could not read ${url.lastPathComponent}.")).toBytes()
+                    (NSData.dataWithContentsOfURL(url) ?: throw Failure(Words(Res.string.upload_unreadable, url.lastPathComponent ?: ""))).toBytes()
                 }
             },
         )
@@ -433,7 +458,7 @@ actual fun rememberCodeScanner(onCode: (String) -> Unit): () -> Unit {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-actual fun saveToDevice(url: String, token: String, name: String, done: (String) -> Unit) {
+actual fun saveToDevice(url: String, token: String, name: String, done: (Words?) -> Unit) {
     val request = NSMutableURLRequest(uRL = NSURL(string = url)).apply {
         setValue("Bearer $token", forHTTPHeaderField = "Authorization")
     }
@@ -446,14 +471,14 @@ actual fun saveToDevice(url: String, token: String, name: String, done: (String)
             NSFileManager.defaultManager.moveItemAtURL(location, kept, null)
         dispatch_async(dispatch_get_main_queue()) {
             if (!moved) {
-                done("$name could not be downloaded.")
+                done(Words(Res.string.download_failed, name))
             } else {
                 val root = UIApplication.sharedApplication.keyWindow?.rootViewController
                 val sheet = UIActivityViewController(activityItems = listOf(kept), applicationActivities = null)
                 // An iPad shows it as a popover, which needs somewhere to point.
                 sheet.popoverPresentationController?.sourceView = root?.view
                 root?.presentViewController(sheet, true, null)
-                done("")
+                done(null)
             }
         }
     }.resume()
@@ -476,3 +501,88 @@ actual fun PdfPages(bytes: ByteArray, modifier: Modifier) {
 
 @OptIn(ExperimentalForeignApi::class)
 private fun ByteArray.toNSData(): NSData = if (isEmpty()) NSData() else usePinned { NSData.create(bytes = it.addressOf(0), length = size.convert()) }
+
+actual fun openExternal(url: String) {
+    val target = NSURL.URLWithString(url) ?: return
+    UIApplication.sharedApplication.openURL(target, emptyMap<Any?, Any>(), null)
+}
+
+private const val REFRESH = "dev.penombre.notices"
+
+actual object NoticeWatch {
+    actual fun enable(on: Boolean) {
+        if (!on) {
+            BGTaskScheduler.sharedScheduler.cancelTaskRequestWithIdentifier(REFRESH)
+            return
+        }
+        UNUserNotificationCenter.currentNotificationCenter().requestAuthorizationWithOptions(
+            UNAuthorizationOptionAlert or UNAuthorizationOptionSound or UNAuthorizationOptionBadge,
+        ) { _, _ -> }
+        scheduleRefresh()
+    }
+}
+
+/** One background refresh, not before fifteen minutes; iOS decides when. */
+@OptIn(ExperimentalForeignApi::class)
+private fun scheduleRefresh() {
+    val request = BGAppRefreshTaskRequest(REFRESH)
+    request.earliestBeginDate = NSDate.dateWithTimeIntervalSinceNow(15.0 * 60)
+    BGTaskScheduler.sharedScheduler.submitTaskRequest(request, null)
+}
+
+/** The refresh's handler: iOS refuses one registered after launch has finished. */
+internal fun registerChecks() {
+    BGTaskScheduler.sharedScheduler.registerForTaskWithIdentifier(REFRESH, null) { task ->
+        val refresh = task as? BGAppRefreshTask ?: return@registerForTaskWithIdentifier
+        // Each run books the next one: a request is good for one run only.
+        scheduleRefresh()
+        val job = MainScope().launch {
+            val fresh = try {
+                freshNotices()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                emptyList()
+            }
+            fresh.forEach { post(it) }
+            refresh.setTaskCompletedWithSuccess(true)
+        }
+        refresh.expirationHandler = {
+            job.cancel()
+            refresh.setTaskCompletedWithSuccess(false)
+        }
+    }
+    if (Prefs.get("alerts") == "on") scheduleRefresh()
+}
+
+private suspend fun post(notice: Notice) {
+    val content = UNMutableNotificationContent()
+    content.setTitle("Penombre")
+    // In the app's language: its AppleLanguages hold even in the background.
+    content.setBody(notice.words.load())
+    UNUserNotificationCenter.currentNotificationCenter().addNotificationRequest(
+        UNNotificationRequest.requestWithIdentifier(notice.id, content, null),
+        null,
+    )
+}
+
+actual val appVersion: String
+    get() = NSBundle.mainBundle.infoDictionary?.get("CFBundleShortVersionString") as? String ?: "?"
+
+actual fun phoneLanguage(): String {
+    // The phone's own list: the app's `AppleLanguages` (`speak`) shadows it in NSLocale.
+    val phone = NSUserDefaults.standardUserDefaults.persistentDomainForName(NSGlobalDomain)?.get("AppleLanguages") as? List<*>
+    return ((phone?.firstOrNull() ?: NSLocale.preferredLanguages.firstOrNull()) as? String)?.substringBefore('-') ?: "en"
+}
+
+/**
+ * The app's own `AppleLanguages`: NSLocale answers with it at once (what
+ * Compose resources read), and the system's sheets and alerts follow it.
+ * Removed, the phone's languages are back.
+ */
+actual fun speak(tag: String?) {
+    val defaults = NSUserDefaults.standardUserDefaults
+    if (tag == null) defaults.removeObjectForKey("AppleLanguages") else defaults.setObject(listOf(tag), "AppleLanguages")
+}
+
+actual fun reducedMotion(): Boolean = UIAccessibilityIsReduceMotionEnabled()

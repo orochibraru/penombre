@@ -57,6 +57,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 /** One engine and where it is in its file: what a track and a video share. */
 open class Transport(protected val session: Session) {
@@ -240,7 +242,7 @@ class Screening(session: Session) : Transport(session) {
      * Switches to `height` (null for the original) at the same moment of the
      * video, once the server has it. Returns why not, or null when it did.
      */
-    suspend fun choose(api: Api, height: Int?): String? {
+    suspend fun choose(api: Api, height: Int?): StringResource? {
         val video = item ?: return null
         if (height != null) {
             preparing = height
@@ -250,7 +252,7 @@ class Screening(session: Session) : Transport(session) {
                     if (state.status == "ready") break
                     if (state.status == "unavailable") unavailable = true
                     if (state.status != "preparing") {
-                        return if (unavailable) "Lower qualities are not available on this drive." else "The video could not be converted."
+                        return if (unavailable) Res.string.rendition_unavailable else Res.string.rendition_failed
                     }
                     // The server already waited; this only spares one that did not.
                     delay(1500)
@@ -309,7 +311,7 @@ fun MiniPlayer(playback: Playback, host: Host) {
     val shape = RoundedCornerShape(20.dp)
     Column(
         Modifier.padding(horizontal = 16.dp, vertical = 6.dp).fillMaxWidth().clip(shape)
-            .background(brand.panel.copy(alpha = 0.94f)).clickable(onClickLabel = "Open the player") { open = true }
+            .background(brand.panel.copy(alpha = 0.94f)).clickable(onClickLabel = stringResource(Res.string.player_open)) { open = true }
             // Slid upwards, it opens too.
             .pointerInput(Unit) { detectVerticalDragGestures { _, drag -> if (drag < -6f) open = true } },
     ) {
@@ -326,9 +328,13 @@ fun MiniPlayer(playback: Playback, host: Host) {
                 fontWeight = FontWeight.Medium,
             )
             IconButton(onClick = playback::toggle) {
-                Icon(if (playback.playing) Icons.Default.Pause else Icons.Default.PlayArrow, if (playback.playing) "Pause" else "Play", tint = brand.ink)
+                Icon(
+                    if (playback.playing) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    stringResource(if (playback.playing) Res.string.pause else Res.string.play),
+                    tint = brand.ink,
+                )
             }
-            IconButton(onClick = playback::stop) { Icon(Icons.Default.Close, "Stop playback", tint = brand.muted) }
+            IconButton(onClick = playback::stop) { Icon(Icons.Default.Close, stringResource(Res.string.player_stop), tint = brand.muted) }
         }
         Box(Modifier.fillMaxWidth().height(2.dp).background(brand.muted.copy(alpha = 0.2f))) {
             Box(Modifier.fillMaxWidth(done.coerceIn(0f, 1f)).height(2.dp).background(brand.accent))
@@ -359,7 +365,7 @@ fun MiniPlayer(playback: Playback, host: Host) {
                 )
                 if (playback.queue.size > 1) {
                     Text(
-                        "Track ${playback.index + 1} of ${playback.queue.size}",
+                        stringResource(Res.string.player_track_of, playback.index + 1, playback.queue.size),
                         color = brand.muted,
                         style = MaterialTheme.typography.bodySmall,
                     )
@@ -372,19 +378,23 @@ fun MiniPlayer(playback: Playback, host: Host) {
                 }
                 Spacer(Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    IconButton(onClick = playback::previous) { Icon(Icons.Default.SkipPrevious, "Previous track", Modifier.size(32.dp), tint = brand.ink) }
+                    IconButton(onClick = playback::previous) {
+                        Icon(Icons.Default.SkipPrevious, stringResource(Res.string.player_previous), Modifier.size(32.dp), tint = brand.ink)
+                    }
                     Box(
                         Modifier.size(76.dp).clip(RoundedCornerShape(28.dp)).background(brand.gradient).clickable(onClick = playback::toggle),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             if (playback.playing) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            if (playback.playing) "Pause playback" else "Resume playback",
+                            stringResource(if (playback.playing) Res.string.player_pause else Res.string.player_resume),
                             Modifier.size(38.dp),
                             tint = Color.White,
                         )
                     }
-                    IconButton(onClick = playback::next) { Icon(Icons.Default.SkipNext, "Next track", Modifier.size(32.dp), tint = brand.ink) }
+                    IconButton(onClick = playback::next) {
+                        Icon(Icons.Default.SkipNext, stringResource(Res.string.player_next), Modifier.size(32.dp), tint = brand.ink)
+                    }
                 }
                 if (playback.queue.size > 1) {
                     Spacer(Modifier.height(20.dp))
@@ -422,9 +432,10 @@ fun Waveform(peaks: List<Float>, done: Float, onSeek: (Float) -> Unit) {
         }
     }
     val tallest = bars.maxOrNull()?.takeIf { it > 0f } ?: 1f
+    val position = stringResource(Res.string.player_position)
     Canvas(
         Modifier.fillMaxWidth().height(72.dp)
-            .semantics { contentDescription = "Position in the track" }
+            .semantics { contentDescription = position }
             .pointerInput(Unit) { detectTapGestures { onSeek(it.x / size.width) } }
             .pointerInput(Unit) { detectHorizontalDragGestures { change, _ -> onSeek(change.position.x / size.width) } },
     ) {

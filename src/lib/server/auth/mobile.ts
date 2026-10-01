@@ -8,7 +8,7 @@ import { makeSignature } from "better-auth/crypto";
 import { and, eq, gt } from "drizzle-orm";
 import { auth } from "#lib/server/auth/index.js";
 import { type Database, db } from "#lib/server/db/index.js";
-import { verification } from "#lib/server/db/schema.js";
+import { session, verification } from "#lib/server/db/schema.js";
 
 export const MOBILE_REDIRECT = "penombre://auth";
 const CODE_TTL_MS = 60_000;
@@ -129,19 +129,42 @@ export async function redeemPairCode(
 	return row?.value ?? null;
 }
 
+/** How the app's sessions read under Account → Sessions. */
+export function mobileLabel(device: string): string {
+	return `Penombre mobile · ${device}`.slice(0, 200);
+}
+
 /** A new session plus the signed cookie the app plants in its WebView. */
 export async function createMobileSession(userId: string, device: string) {
 	const ctx = await auth.$context;
-	const session = await ctx.internalAdapter.createSession(userId, false, {
-		userAgent: `Penombre mobile · ${device}`.slice(0, 200),
+	const created = await ctx.internalAdapter.createSession(userId, false, {
+		userAgent: mobileLabel(device),
 	});
-	const signed = `${session.token}.${await makeSignature(session.token, ctx.secret)}`;
+	const signed = `${created.token}.${await makeSignature(created.token, ctx.secret)}`;
 	return {
-		token: session.token,
-		expiresAt: session.expiresAt,
+		token: created.token,
+		expiresAt: created.expiresAt,
 		cookie: {
 			name: ctx.authCookies.sessionToken.name,
 			value: encodeURIComponent(signed),
 		},
 	};
+}
+
+/**
+ * Names a session the app made itself, with an emailed code: better-auth
+ * labelled it with the HTTP client's user agent, and a phone's HTTP stack
+ * refuses the `·` in a header. Only the caller's own session.
+ */
+export async function labelMobileSession(
+	sessionId: string,
+	device: string,
+	database: Database = db,
+): Promise<string> {
+	const userAgent = mobileLabel(device);
+	await database
+		.update(session)
+		.set({ userAgent })
+		.where(eq(session.id, sessionId));
+	return userAgent;
 }

@@ -23,8 +23,10 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,13 +87,54 @@ val brand: Brand
     @Composable @ReadOnlyComposable
     get() = LocalBrand.current
 
-/** The web's `--radius`. */
-val Corner = RoundedCornerShape(12.dp)
+/**
+ * How the app looks: the account's accent, font and corners (synced with the
+ * web), and light or dark, which is this device's own choice.
+ */
+data class Look(
+    val accent: String = "bordeaux",
+    /** `system`, `light` or `dark`. */
+    val mode: String = "system",
+    /** `sans` or `mono`. */
+    val font: String = "sans",
+    /** `rounded` or `boxy`. */
+    val corners: String = "rounded",
+) {
+    companion object {
+        /** What this device last showed, so the first frame is already in it. */
+        fun saved() = Look(
+            accent = Prefs.get("accent") ?: "bordeaux",
+            mode = Prefs.get("mode") ?: "system",
+            font = Prefs.get("font") ?: "sans",
+            corners = Prefs.get("corners") ?: "rounded",
+        )
+    }
+
+    fun save() {
+        Prefs.set("accent", accent)
+        Prefs.set("mode", mode)
+        Prefs.set("font", font)
+        Prefs.set("corners", corners)
+    }
+}
+
+private val LocalCorner = staticCompositionLocalOf<Shape> { RoundedCornerShape(12.dp) }
+
+/** The web's `--radius`: rounded, or nearly square when the account chose boxy. */
+val Corner: Shape
+    @Composable @ReadOnlyComposable
+    get() = LocalCorner.current
 
 @Composable
-fun PenombreTheme(accent: String, content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
-    val colors = brandFor(accent, dark)
+fun PenombreTheme(look: Look, content: @Composable () -> Unit) {
+    val dark = when (look.mode) {
+        "light" -> false
+        "dark" -> true
+        else -> isSystemInDarkTheme()
+    }
+    val colors = brandFor(look.accent, dark)
+    val corner = RoundedCornerShape(if (look.corners == "boxy") 3.dp else 12.dp)
+    val family = if (look.font == "mono") FontFamily.Monospace else FontFamily.Default
     val scheme = (if (dark) darkColorScheme() else lightColorScheme()).copy(
         primary = colors.accent,
         onPrimary = Color.White,
@@ -105,18 +148,24 @@ fun PenombreTheme(accent: String, content: @Composable () -> Unit) {
         outline = colors.muted.copy(alpha = 0.5f),
         outlineVariant = colors.muted.copy(alpha = 0.22f),
     )
-    CompositionLocalProvider(LocalBrand provides colors) {
+    CompositionLocalProvider(LocalBrand provides colors, LocalCorner provides corner) {
         // Material tracks its body text out; the web's type is set tight.
         val type = Typography().run {
             copy(
-                bodyLarge = bodyLarge.copy(letterSpacing = 0.sp),
-                bodyMedium = bodyMedium.copy(letterSpacing = 0.sp),
-                bodySmall = bodySmall.copy(letterSpacing = 0.sp),
-                titleMedium = titleMedium.copy(letterSpacing = 0.sp),
-                labelMedium = labelMedium.copy(letterSpacing = 0.sp),
+                displayLarge = displayLarge.copy(fontFamily = family),
+                headlineMedium = headlineMedium.copy(fontFamily = family),
+                titleLarge = titleLarge.copy(fontFamily = family),
+                titleMedium = titleMedium.copy(letterSpacing = 0.sp, fontFamily = family),
+                titleSmall = titleSmall.copy(fontFamily = family),
+                bodyLarge = bodyLarge.copy(letterSpacing = 0.sp, fontFamily = family),
+                bodyMedium = bodyMedium.copy(letterSpacing = 0.sp, fontFamily = family),
+                bodySmall = bodySmall.copy(letterSpacing = 0.sp, fontFamily = family),
+                labelLarge = labelLarge.copy(fontFamily = family),
+                labelMedium = labelMedium.copy(letterSpacing = 0.sp, fontFamily = family),
+                labelSmall = labelSmall.copy(fontFamily = family),
             )
         }
-        MaterialTheme(colorScheme = scheme, typography = type, shapes = Shapes(small = Corner, medium = Corner, large = Corner)) {
+        MaterialTheme(colorScheme = scheme, typography = type, shapes = Shapes(small = corner, medium = corner, large = corner)) {
             Aurora(content)
         }
     }

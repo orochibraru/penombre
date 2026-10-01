@@ -1,10 +1,19 @@
 package dev.penombre.app
 
+import android.Manifest
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.DownloadManager
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.media.AudioAttributes
@@ -58,25 +67,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.work.Constraints
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 /** Set by the host activity before the first composition. */
 object AndroidHost {
     lateinit var activity: Activity
+
+    /** The application's: a background job has no activity. */
+    lateinit var context: Context
 }
 
 actual fun sha256(bytes: ByteArray): ByteArray = MessageDigest.getInstance("SHA-256").digest(bytes)
@@ -88,7 +111,7 @@ actual fun openAuthBrowser(url: String) {
 }
 
 actual object Prefs {
-    private val prefs get() = AndroidHost.activity.getSharedPreferences("penombre", Context.MODE_PRIVATE)
+    private val prefs get() = AndroidHost.context.getSharedPreferences("penombre", Context.MODE_PRIVATE)
 
     actual fun get(key: String): String? = prefs.getString(key, null)
 
@@ -100,6 +123,7 @@ actual object Prefs {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 actual fun WebPage(url: String, session: Session, modifier: Modifier) {
+    val language = spoken(LocalLanguage.current)
     AndroidView(modifier = modifier, factory = { context ->
         WebView(context).apply {
             settings.javaScriptEnabled = true
@@ -109,6 +133,8 @@ actual fun WebPage(url: String, session: Session, modifier: Modifier) {
             webViewClient = WebViewClient()
             val secure = if (session.server.startsWith("https://")) "; Secure" else ""
             val cookies = CookieManager.getInstance()
+            // The web's own language cookie (paraglide's): its pages open in the app's.
+            cookies.setCookie(session.server, "$LANGUAGE_COOKIE=$language; Path=/$secure")
             cookies.setCookie(session.server, "${session.cookieName}=${session.cookieValue}; Path=/; HttpOnly$secure") {
                 cookies.flush()
                 loadUrl(url)
@@ -292,7 +318,7 @@ actual fun rememberCodeScanner(onCode: (String) -> Unit): () -> Unit {
     }
 }
 
-actual fun saveToDevice(url: String, token: String, name: String, done: (String) -> Unit) {
+actual fun saveToDevice(url: String, token: String, name: String, done: (Words?) -> Unit) {
     val request = DownloadManager.Request(url.toUri())
         .addRequestHeader("Authorization", "Bearer $token")
         .setTitle(name)
@@ -300,7 +326,7 @@ actual fun saveToDevice(url: String, token: String, name: String, done: (String)
         .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
     val manager = AndroidHost.activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     manager.enqueue(request)
-    done("Downloading $name to Downloads")
+    done(Words(Res.string.download_started, name))
 }
 
 @Composable
@@ -353,9 +379,89 @@ actual fun PdfPages(bytes: ByteArray, modifier: Modifier) {
                 if (shown == null) {
                     Box(Modifier.fillMaxWidth().aspectRatio(0.707f).background(Color.White.copy(alpha = 0.06f)))
                 } else {
-                    Image(shown, "Page ${index + 1}", Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
+                    Image(shown, stringResource(Res.string.pdf_page, index + 1), Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
                 }
             }
         }
     }
 }
+
+actual fun openExternal(url: String) {
+    runCatching {
+        AndroidHost.activity.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    }
+}
+
+private const val NOTICES = "notices"
+
+actual object NoticeWatch {
+    actual fun enable(on: Boolean) {
+        val work = WorkManager.getInstance(AndroidHost.context)
+        if (!on) {
+            work.cancelUniqueWork(NOTICES)
+            return
+        }
+        if (Build.VERSION.SDK_INT >= 33 &&
+            AndroidHost.context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            AndroidHost.activity.requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+        }
+        // Fifteen minutes is the shortest Android allows for a periodic job.
+        val request = PeriodicWorkRequestBuilder<NoticeWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .build()
+        work.enqueueUniquePeriodicWork(NOTICES, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+}
+
+/** Fetches what is new and posts one system notification each. */
+class NoticeWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
+        AndroidHost.context = applicationContext
+        // No activity here: the words come in the app's language all the same.
+        speak(savedLanguage())
+        val fresh = try {
+            freshNotices()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return Result.retry()
+        }
+        val manager = applicationContext.getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(NotificationChannel(NOTICES, getString(Res.string.notice_channel), NotificationManager.IMPORTANCE_DEFAULT))
+        val open = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)
+        val tap = PendingIntent.getActivity(applicationContext, 0, open, PendingIntent.FLAG_IMMUTABLE)
+        val icon = applicationContext.resources.getIdentifier("ic_notify", "drawable", applicationContext.packageName)
+        fresh.forEach { notice ->
+            val notification = Notification.Builder(applicationContext, NOTICES)
+                .setSmallIcon(icon.takeIf { it != 0 } ?: applicationContext.applicationInfo.icon)
+                .setContentTitle("Penombre")
+                .setContentText(notice.words.load())
+                .setContentIntent(tap)
+                .setAutoCancel(true)
+                .build()
+            manager.notify(notice.id.hashCode(), notification)
+        }
+        return Result.success()
+    }
+}
+
+actual val appVersion: String
+    get() = runCatching {
+        AndroidHost.context.packageManager.getPackageInfo(AndroidHost.context.packageName, 0).versionName
+    }.getOrNull() ?: "?"
+
+actual fun phoneLanguage(): String = Resources.getSystem().configuration.locales[0].language
+
+actual fun speak(tag: String?) {
+    val locale = tag?.let(Locale::forLanguageTag) ?: Resources.getSystem().configuration.locales[0]
+    Locale.setDefault(locale)
+    // Material's own words (a sheet's "Dismiss") come from the activity's resources.
+    runCatching {
+        val resources = AndroidHost.activity.resources
+        @Suppress("DEPRECATION")
+        resources.updateConfiguration(Configuration(resources.configuration).apply { setLocale(locale) }, resources.displayMetrics)
+    }
+}
+
+actual fun reducedMotion(): Boolean = !ValueAnimator.areAnimatorsEnabled()

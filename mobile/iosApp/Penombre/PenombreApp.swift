@@ -3,6 +3,11 @@ import SwiftUI
 
 @main
 struct PenombreApp: App {
+    init() {
+        // Before launch finishes, or iOS refuses the background refresh handler.
+        MainViewControllerKt.registerNoticeChecks()
+    }
+
     var body: some Scene {
         WindowGroup {
             ComposeView().ignoresSafeArea()

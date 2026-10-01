@@ -71,10 +71,26 @@ expect fun rememberCodeScanner(onCode: (String) -> Unit): () -> Unit
 
 /**
  * Hands a file's bytes to the device: into Downloads on Android, to the share
- * sheet (Save to Files, AirDrop) on iOS. `done` says how it went, in words.
+ * sheet (Save to Files, AirDrop) on iOS. `done` says how it went, or nothing
+ * when the sheet on screen already does.
  */
-expect fun saveToDevice(url: String, token: String, name: String, done: (String) -> Unit)
+expect fun saveToDevice(url: String, token: String, name: String, done: (Words?) -> Unit)
 
 /** A PDF's pages, scrollable and zoomable, drawn by the platform's own renderer. */
 @Composable
 expect fun PdfPages(bytes: ByteArray, modifier: Modifier)
+
+/** Opens a link in whatever handles it on the device: an authenticator for `otpauth:`. */
+expect fun openExternal(url: String)
+
+/**
+ * Checks for notifications while the app is closed and shows them as the
+ * phone's own: a periodic job on Android, background refresh on iOS. Push
+ * would need Google's or Apple's credentials on every self-hosted server.
+ */
+expect object NoticeWatch {
+    fun enable(on: Boolean)
+}
+
+/** The app's own version, as the store and the release named it. */
+expect val appVersion: String

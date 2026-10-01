@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -106,15 +107,15 @@ class LogicTest {
         assertEquals(Url(first).parameters["code_challenge"], pkceChallenge(claim.verifier))
 
         // Once only, and the second attempt is still its own.
-        assertFailsWith<IllegalStateException> { Auth.claim("penombre://auth?code=c1&state=${stateOf(first)}") }
+        assertFailsWith<Failure> { Auth.claim("penombre://auth?code=c1&state=${stateOf(first)}") }
         assertEquals("c2", Auth.claim("penombre://auth?code=c2&state=${stateOf(second)}").code)
     }
 
     @Test
     fun aRedirectTheAppNeverAskedForIsRefused() {
         Auth.begin("https://x.test", "Pixel")
-        assertFailsWith<IllegalStateException> { Auth.claim("penombre://auth?code=c&state=forged") }
-        assertFailsWith<IllegalStateException> { Auth.claim("penombre://auth?code=c") }
+        assertFailsWith<Failure> { Auth.claim("penombre://auth?code=c&state=forged") }
+        assertFailsWith<Failure> { Auth.claim("penombre://auth?code=c") }
     }
 
     // The web uploader's two calls, in its order: the entry, then the bytes.
@@ -376,7 +377,7 @@ class LogicTest {
     fun aTransferTheServerRefusedIsAnError() = runTest {
         val refused = """{"data":{"failCount":1,"successCount":0,"results":[{"path":"a","success":false,"error":"This drive is read-only"}]}}"""
         val api = Api(ada, httpClient(bodies(mutableListOf(), refused)))
-        val error = assertFailsWith<IllegalStateException> {
+        val error = assertFailsWith<Refused> {
             api.transfer(Place(), Item("a", "file", 1, Meta("f1")), "a", Place("d2"), "", move = true)
         }
         assertEquals("This drive is read-only", error.message)
@@ -428,5 +429,150 @@ class LogicTest {
         val calls = mutableListOf<String>()
         Api(ada, httpClient(recording(calls, "[0.5,1.0]"))).peaks(Place("d1"), versionId("f1", "v9"))
         assertEquals(listOf("GET /api/v1/storage/file/f1/versions/v9/thumbnail?size=medium&drive=d1"), calls)
+    }
+
+    @Test
+    fun aSearchIsRememberedFirstOnceAndCapped() {
+        val past = (1..10).map { "query $it" }
+        assertEquals(listOf("Query 3") + past.filter { it != "query 3" }, rememberSearch(past, " Query 3 "))
+        assertEquals(10, rememberSearch(past, "new one").size)
+        assertEquals("new one", rememberSearch(past, "new one").first())
+        // One letter searches nothing, so it is not worth keeping.
+        assertEquals(past, rememberSearch(past, "a"))
+    }
+
+    // Measured on a real server: switching two-factor on ends the session at
+    // once, and the next call with the old token signed the app out.
+    @Test
+    fun twoFactorHandsOverTheNewSession() = runTest {
+        val engine = MockEngine {
+            respond(
+                """{"token":"raw","user":{}}""",
+                headers = headersOf(
+                    HttpHeaders.ContentType to listOf(ContentType.Application.Json.toString()),
+                    "set-auth-token" to listOf("new.sig"),
+                    HttpHeaders.SetCookie to listOf("other=x; Path=/", "better-auth.session_token=new.sig%3D; Max-Age=604800; Path=/; HttpOnly"),
+                ),
+            )
+        }
+        val old = Session("https://x.test", "old", "better-auth.session_token", "old.c", "Ada")
+        val renewed = Api(old, httpClient(engine)).verifyTwoFactor("123456")
+        assertEquals(old.copy(token = "new.sig", cookieValue = "new.sig%3D"), renewed)
+    }
+
+    @Test
+    fun noNewSessionWhenTheServerKeepsIt() = runTest {
+        val engine = MockEngine { respond("{}", headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())) }
+        assertNull(Api(Session("https://x.test", "t", "c", "v", "Ada"), httpClient(engine)).disableTwoFactor("pw"))
+    }
+
+    // The web's sentence for each kind; a note on a document the web edits is a comment.
+    @Test
+    fun aNotificationIsWordedByItsKind() {
+        fun notice(type: String, item: String = "Rider.docx", actor: String? = "Ada") = Notice("n", type, actor, item, createdAt = "2026-10-01T00:00:00Z")
+        assertEquals(Res.string.notice_comment, notice("note").words.res)
+        assertEquals(Res.string.notice_note, notice("note", "Take.wav").words.res)
+        assertEquals(Res.string.notice_note_generic, notice("note", "Take.wav", actor = null).words.res)
+        assertEquals(Res.string.notice_share, notice("share").words.res)
+        assertEquals(Res.string.notice_signed, notice("signature_completed").words.res)
+        assertEquals(Res.string.notice_declined, notice("signature_declined").words.res)
+        assertEquals(listOf("Ada", "Take.wav"), notice("note", "Take.wav").words.args.toList())
+    }
+
+    // The web's own cases (`notification-prefs.test.ts`): both sides must agree.
+    @Test
+    fun aNotificationKeepsTodaysChannelsUntilOneIsChosen() {
+        assertEquals(Channels(inApp = true, email = false, phone = true), Preferences().channels("note"))
+        assertTrue(Preferences(emailNotifications = true).channels("note").email)
+        // A share was always mailed, whatever the old switch said.
+        assertTrue(Preferences().channels("share").email)
+        val chosen = Preferences(
+            emailNotifications = true,
+            notifications = mapOf("note" to mapOf("email" to false), "share" to mapOf("email" to false)),
+        )
+        assertEquals(false, chosen.channels("note").email)
+        assertEquals(false, chosen.channels("share").email)
+        // Never to the phone what the bell does not keep.
+        val muted = Preferences(notifications = mapOf("share" to mapOf("inApp" to false, "phone" to true)))
+        assertEquals(Channels(inApp = false, email = true, phone = false), muted.channels("share"))
+        // A kind this app does not know reaches the phone.
+        assertTrue(Preferences().channels("something_new").phone)
+    }
+
+    // Saved whole: a partial object would reset every other choice.
+    @Test
+    fun aNotificationChoiceSavesEveryKind() {
+        val saved = Preferences().choosing("note", "email", true)
+        assertEquals(NOTIFICATION_TYPES, saved.keys.toList())
+        assertEquals(mapOf("inApp" to true, "email" to true, "phone" to true), saved["note"])
+        assertEquals(mapOf("inApp" to true, "email" to true, "phone" to true), saved["share"])
+    }
+
+    private fun answering(calls: MutableList<HttpRequestData>, status: HttpStatusCode, body: String, vararg headers: Pair<String, List<String>>) = MockEngine { request ->
+        calls += request
+        respond(body, status, headersOf(HttpHeaders.ContentType to listOf(ContentType.Application.Json.toString()), *headers))
+    }
+
+    @Test
+    fun aRefusedCodeIsToldApartFromOtherRefusals() = runTest {
+        val calls = mutableListOf<HttpRequestData>()
+        val api = Api(ada, httpClient(answering(calls, HttpStatusCode.BadRequest, """{"message":"Invalid OTP","code":"INVALID_OTP"}""")))
+        val refused = assertFailsWith<Refused> { api.verifyAddress("ada@x.test", "123456") }
+        assertTrue(refused.isCodeError)
+        assertEquals("/api/v1/auth/email-otp/verify-email", calls.single().url.encodedPath)
+        val other = Refused("Too many requests", "TOO_MANY_REQUESTS", 429)
+        assertEquals(false, other.isCodeError)
+    }
+
+    // An emailed code signs in with no browser; its session comes in a header.
+    @Test
+    fun anEmailedCodeSignsIn() = runTest {
+        val calls = mutableListOf<HttpRequestData>()
+        val engine = answering(
+            calls,
+            HttpStatusCode.OK,
+            """{"token":"raw","user":{"name":"Ada","email":"ada@x.test"}}""",
+            "set-auth-token" to listOf("raw.sig"),
+            HttpHeaders.SetCookie to listOf("better-auth.session_token=raw.sig%3D; Max-Age=604800; Path=/; HttpOnly"),
+        )
+        val answer = Auth.signInWithCode("x.test/", "ada@x.test", "123456", httpClient(engine))
+        val session = assertIs<CodeSignIn.Done>(answer).session
+        assertEquals(Session("https://x.test", "raw.sig", "better-auth.session_token", "raw.sig%3D", "Ada"), session)
+        assertEquals("/api/v1/auth/sign-in/email-otp", calls.single().url.encodedPath)
+    }
+
+    // A two-factor account gets a challenge cookie, which goes back with the authenticator's code.
+    @Test
+    fun aTwoFactorAccountIsAskedForItsSecondCode() = runTest {
+        val calls = mutableListOf<HttpRequestData>()
+        val challenge = Auth.signInWithCode(
+            "https://x.test",
+            "ada@x.test",
+            "123456",
+            httpClient(
+                answering(
+                    calls,
+                    HttpStatusCode.OK,
+                    """{"twoFactorRedirect":true}""",
+                    // As Darwin hands it over: every Set-Cookie in one header.
+                    HttpHeaders.SetCookie to listOf(
+                        "better-auth.session_token=; Max-Age=0; Path=/; HttpOnly, better-auth.two_factor=chal.lenge; Max-Age=600; Path=/; HttpOnly",
+                    ),
+                ),
+            ),
+        )
+        val asked = assertIs<CodeSignIn.TwoFactor>(challenge)
+        val session = Auth.answerTwoFactor(
+            asked,
+            "654321",
+            backup = false,
+            httpClient(answering(calls, HttpStatusCode.OK, """{"token":"t","user":{"name":"Ada"}}""", "set-auth-token" to listOf("t.sig"))),
+        )
+        val verify = calls.last()
+        assertEquals("/api/v1/auth/two-factor/verify-totp", verify.url.encodedPath)
+        assertEquals("better-auth.two_factor=chal.lenge", verify.headers[HttpHeaders.Cookie])
+        assertEquals("https://x.test", verify.headers["Origin"])
+        assertEquals("t.sig", session.token)
+        assertEquals("t.sig", session.cookieValue)
     }
 }

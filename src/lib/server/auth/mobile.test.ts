@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { verification } from "#lib/server/db/schema.js";
+import { session, verification } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 
 const {
 	createMobileCode,
 	createPairCode,
+	labelMobileSession,
 	pairingUrl,
 	redeemMobileCode,
 	redeemPairCode,
@@ -88,5 +89,32 @@ describe("mobile pairing codes", () => {
 		expect(pairingUrl("https://files.example.com:8443", "abc")).toBe(
 			"penombre://pair?server=https%3A%2F%2Ffiles.example.com%3A8443&code=abc",
 		);
+	});
+});
+
+describe("mobile session labels", () => {
+	test("names the calling session as the app's, and no other", async () => {
+		const database = migratedSqlite();
+		const row = (id: string) => ({
+			id,
+			token: `t-${id}`,
+			userId: "u1",
+			userAgent: "Ktor client",
+			expiresAt: new Date(Date.now() + 60_000),
+			updatedAt: new Date(),
+		});
+		await database.insert(session).values([row("s1"), row("s2")]);
+
+		expect(await labelMobileSession("s1", "Pixel 9", database)).toBe(
+			"Penombre mobile · Pixel 9",
+		);
+		const labels = await database
+			.select({ id: session.id, userAgent: session.userAgent })
+			.from(session)
+			.orderBy(session.id);
+		expect(labels).toEqual([
+			{ id: "s1", userAgent: "Penombre mobile · Pixel 9" },
+			{ id: "s2", userAgent: "Ktor client" },
+		]);
 	});
 });

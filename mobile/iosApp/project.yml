@@ -21,9 +21,14 @@ targets:
           - CFBundleURLName: dev.penombre.app
             CFBundleURLSchemes: [penombre]
         UILaunchScreen: {}
+        # The app's languages: the system's own sheets and prompts speak the
+        # one it uses (its `AppleLanguages`, set by the app).
+        CFBundleLocalizations: [en, fr, de, es, it, nl, sv, fi, pl, ru, ja, ko, zh-Hans]
         CADisableMinimumFrameDurationOnPhone: true
-        # A track keeps playing with the screen off or the app behind another.
-        UIBackgroundModes: [audio]
+        # A track keeps playing with the screen off or the app behind another;
+        # `fetch` lets the app check for notifications now and then.
+        UIBackgroundModes: [audio, fetch]
+        BGTaskSchedulerPermittedIdentifiers: [dev.penombre.notices]
         NSCameraUsageDescription: Scan the code that signs you in, take a photo or scan a document to upload.
         # Self-hosted instances are often plain HTTP on a LAN.
         NSAppTransportSecurity:

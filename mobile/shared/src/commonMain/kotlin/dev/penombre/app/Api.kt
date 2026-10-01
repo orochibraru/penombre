@@ -29,6 +29,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -119,8 +120,28 @@ private class Transferred(val failCount: Int = 0, val results: List<Result> = em
     class Result(val success: Boolean = true, val error: String? = null)
 }
 
+/** The account's preferences, as the web keeps them; the app applies what it can. */
 @Serializable
-data class Preferences(val accent: String = "bordeaux")
+data class Preferences(
+    val accent: String = "bordeaux",
+    val layout: String = "list",
+    val sortColumn: String? = "updatedAt",
+    val sortDirection: String = "desc",
+    val fontFamily: String = "sans",
+    val corners: String = "rounded",
+    val emailNotifications: Boolean = false,
+    val listingLoadMode: String = "scroll",
+    val versionNaming: String = "sequential",
+    /** One of `LANGUAGES`, or null to follow the phone's (the browser's, on the web). */
+    val language: String? = null,
+    /** Each notification type on each channel, as chosen; `channels` fills in the rest. */
+    val notifications: Map<String, Map<String, Boolean>> = emptyMap(),
+) {
+    val sort get() = Sort(sortColumn ?: "updatedAt", sortDirection)
+}
+
+/** A listing's order: `name`, `size`, `updatedAt` or `type`, then `asc` or `desc`. */
+data class Sort(val column: String, val direction: String)
 
 /** Every API answer is `{ "data": … }` (`Http.Ok` on the server). */
 @Serializable
@@ -128,17 +149,35 @@ internal class Envelope<T>(val data: T)
 
 class Unauthorized : Exception("Signed out")
 
-/** The server said no, and why. */
-class Refused(message: String) : Exception(message)
+/** The server said no, and why; better-auth adds a `code` (`INVALID_OTP`). */
+class Refused(message: String, val code: String? = null, val status: Int = 0) : Exception(message)
 
 @Serializable
-private class Refusal(val message: String? = null, val error: String? = null)
+private class Refusal(val message: String? = null, val error: String? = null, val code: String? = null)
+
+private fun parseRefusal(body: String) = runCatching { json.decodeFromString<Refusal>(body) }.getOrNull()
 
 /** What an error answer says: `{ "message": … }`, sometimes `{ "error": … }`. */
-internal fun refusal(body: String): String? = runCatching { json.decodeFromString<Refusal>(body) }.getOrNull()?.let { it.message ?: it.error }
+internal fun refusal(body: String): String? = parseRefusal(body)?.let { it.message ?: it.error }
 
-/** Whose tree a request acts on: the account's own drive, a shared one, or a mount. */
-data class Place(val drive: String? = null, val volume: String? = null)
+/**
+ * Runs a request; a refusal comes out as the server's own words, not Ktor's
+ * dump of the request. `signedOut` turns a 401 into `Unauthorized`.
+ */
+internal suspend fun <T> answered(signedOut: Boolean = true, block: suspend () -> T): T = try {
+    block()
+} catch (e: ClientRequestException) {
+    if (signedOut && e.response.status == HttpStatusCode.Unauthorized) throw Unauthorized()
+    val body = e.response.bodyAsText()
+    val status = e.response.status.value
+    throw refusal(body)?.let { Refused(it, parseRefusal(body)?.code, status) } ?: Failure(Words(Res.string.server_refused, status))
+}
+
+/**
+ * Whose tree a request acts on: the account's own drive, a shared one, a
+ * mount, or something another account shared (`share`, the grant's id).
+ */
+data class Place(val drive: String? = null, val volume: String? = null, val share: String? = null)
 
 /** `path` is the folder's path chain, "" for the drive's root. */
 internal fun listingUrl(server: String, path: String): String {
@@ -158,6 +197,7 @@ internal fun childPath(parent: String, key: String): String = key.trimEnd('/').l
 
 private fun drive(place: Place) = place.drive?.let { "&drive=${it.encodeURLParameter()}" }
     ?: place.volume?.let { "&volume=${it.encodeURLParameter()}" }
+    ?: place.share?.let { "&share=${it.encodeURLParameter()}" }
     ?: ""
 
 /**
@@ -210,29 +250,46 @@ internal fun multipart(boundary: String, name: String, bytes: ByteArray): ByteAr
 // from a background queue (the spec's upload queue) when real uploads matter.
 const val MAX_UPLOAD_BYTES = 200L * 1024 * 1024
 
-class Api(val session: Session, private val client: HttpClient = httpClient()) {
-    private val base = "${session.server}/api/v1"
+class Api(val session: Session, internal val client: HttpClient = httpClient()) {
+    internal val base = "${session.server}/api/v1"
 
-    private fun HttpRequestBuilder.auth(place: Place = Place()) {
+    internal fun HttpRequestBuilder.auth(place: Place = Place()) {
         bearerAuth(session.token)
         place.drive?.let { parameter("drive", it) }
         place.volume?.let { parameter("volume", it) }
+        place.share?.let { parameter("share", it) }
     }
 
-    private fun HttpRequestBuilder.fields(vararg fields: Pair<String, Boolean>) {
+    internal fun HttpRequestBuilder.fields(vararg fields: Pair<String, Boolean>) {
         contentType(ContentType.Application.Json)
         setBody(JsonObject(fields.associate { (name, value) -> name to JsonPrimitive(value) }))
     }
 
-    private fun HttpRequestBuilder.text(vararg fields: Pair<String, String?>) {
+    internal fun HttpRequestBuilder.text(vararg fields: Pair<String, String?>) {
         contentType(ContentType.Application.Json)
         setBody(JsonObject(fields.filter { it.second != null }.associate { (name, value) -> name to JsonPrimitive(value) }))
     }
 
-    suspend fun list(place: Place, path: String, cursor: String?): Page = call {
+    suspend fun list(place: Place, path: String, cursor: String?, sort: Sort? = null): Page = call {
         client.get(listingUrl(session.server, path)) {
             auth(place)
             cursor?.let { parameter("cursor", it) }
+            sort?.let {
+                parameter("sort", it.column)
+                parameter("dir", it.direction)
+            }
+        }.body<Envelope<Page>>().data
+    }
+
+    /** One of the server's categories, every drive the account owns. */
+    suspend fun category(name: String, cursor: String?, sort: Sort? = null): Page = call {
+        client.get("$base/storage/file/category/${name.encodeURLPathPart()}") {
+            auth()
+            cursor?.let { parameter("cursor", it) }
+            sort?.let {
+                parameter("sort", it.column)
+                parameter("dir", it.direction)
+            }
         }.body<Envelope<Page>>().data
     }
 
@@ -349,7 +406,9 @@ class Api(val session: Session, private val client: HttpClient = httpClient()) {
                     ),
                 )
             }.body<Envelope<Transferred>>().data
-            check(done.failCount == 0) { done.results.firstNotNullOfOrNull { it.error } ?: "It could not be done." }
+            if (done.failCount > 0) {
+                throw done.results.firstNotNullOfOrNull { it.error }?.let(::Refused) ?: Failure(Words(Res.string.transfer_failed))
+            }
         }
     }
 
@@ -398,17 +457,21 @@ class Api(val session: Session, private val client: HttpClient = httpClient()) {
 
     suspend fun preferences(): Preferences = call { client.get("$base/preferences") { auth() }.body<Envelope<Preferences>>().data }
 
-    suspend fun setAccent(accent: String) {
-        call {
-            client.put("$base/preferences") {
-                auth()
-                contentType(ContentType.Application.Json)
-                // Spelled out: a `Preferences` would drop the default accent
-                // from its JSON, and choosing bordeaux would save nothing.
-                setBody(JsonObject(mapOf("accent" to JsonPrimitive(accent))))
-            }
-        }
+    suspend fun setAccent(accent: String) = setPreference("accent", JsonPrimitive(accent))
+
+    /**
+     * Preferences by name, spelled out: a whole `Preferences` would drop its
+     * defaults from the JSON, and choosing a default would save nothing.
+     */
+    suspend fun setPreferences(fields: Map<String, JsonElement>): Preferences = call {
+        client.put("$base/preferences") {
+            auth()
+            contentType(ContentType.Application.Json)
+            setBody(JsonObject(fields))
+        }.body<Envelope<Preferences>>().data
     }
+
+    suspend fun setPreference(name: String, value: JsonPrimitive): Preferences = setPreferences(mapOf(name to value))
 
     /** The web uploader's two calls: the file's entry, then its bytes. */
     suspend fun upload(place: Place, folder: String, file: PickedFile) {
@@ -453,11 +516,5 @@ class Api(val session: Session, private val client: HttpClient = httpClient()) {
         }
     }
 
-    private suspend fun <T> call(block: suspend () -> T): T = try {
-        block()
-    } catch (e: ClientRequestException) {
-        if (e.response.status == HttpStatusCode.Unauthorized) throw Unauthorized()
-        // The server's own words, not Ktor's dump of the request.
-        throw Refused(refusal(e.response.bodyAsText()) ?: "The server refused (${e.response.status.value}).")
-    }
+    internal suspend fun <T> call(block: suspend () -> T): T = answered(block = block)
 }

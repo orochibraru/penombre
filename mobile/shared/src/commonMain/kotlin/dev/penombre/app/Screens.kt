@@ -25,9 +25,13 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
@@ -36,7 +40,6 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.RestoreFromTrash
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,18 +70,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 /** A place's trash: what was removed, to put back or to delete for good. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrashView(host: Host, place: Place) {
+fun TrashView(host: Host, place: Place, onTitle: (() -> Unit)? = null) {
     val scope = rememberCoroutineScope()
     var refresh by remember { mutableIntStateOf(0) }
     var size by remember { mutableStateOf<Long?>(null) }
@@ -100,12 +108,12 @@ fun TrashView(host: Host, place: Place) {
     selected?.let { item ->
         ModalBottomSheet(onDismissRequest = { selected = null }, containerColor = brand.panel) {
             SheetTitle(item.title)
-            Entry(Icons.Outlined.RestoreFromTrash, "Restore", "Puts it back where it was") {
+            Entry(Icons.Outlined.RestoreFromTrash, stringResource(Res.string.trash_restore), stringResource(Res.string.trash_restore_hint)) {
                 selected = null
                 // A trashed item's key is its full path.
                 act { host.api.setTrashed(place, item, item.key, false) }
             }
-            Entry(Icons.Outlined.DeleteForever, "Delete forever", tint = MaterialTheme.colorScheme.error) {
+            Entry(Icons.Outlined.DeleteForever, stringResource(Res.string.delete_forever), tint = MaterialTheme.colorScheme.error) {
                 selected = null
                 deleting = item
             }
@@ -113,16 +121,21 @@ fun TrashView(host: Host, place: Place) {
         }
     }
     deleting?.let { item ->
-        Confirm("Delete ${item.title} forever?", "This cannot be undone.", "Delete forever", { deleting = null }) {
+        Confirm(
+            stringResource(Res.string.delete_forever_title, item.title),
+            stringResource(Res.string.cannot_undo),
+            stringResource(Res.string.delete_forever),
+            { deleting = null },
+        ) {
             deleting = null
             act { host.api.delete(place, item, item.key) }
         }
     }
     if (emptying) {
         Confirm(
-            "Empty the trash?",
-            "Everything in it is deleted forever${size?.let { ", freeing ${formatSize(it)}" } ?: ""}.",
-            "Empty trash",
+            stringResource(Res.string.empty_trash_title),
+            size?.let { stringResource(Res.string.empty_trash_freeing, formatSize(it)) } ?: stringResource(Res.string.empty_trash_text),
+            stringResource(Res.string.empty_trash),
             { emptying = false },
         ) {
             emptying = false
@@ -133,9 +146,11 @@ fun TrashView(host: Host, place: Place) {
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            Header("Trash", onBack = host.back) {
+            // On Home it is a place like any other: no way back, the selector instead.
+            Header(stringResource(Res.string.trash), onBack = if (onTitle == null) host.back else null, onTitle = onTitle) {
                 // Nothing to empty until a page says there is something.
-                if ((size ?: 0) > 0) TextButton(onClick = { emptying = true }) { Text("Empty", color = brand.accent) }
+                if ((size ?: 0) > 0) TextButton(onClick = { emptying = true }) { Text(stringResource(Res.string.trash_empty_action), color = brand.accent) }
+                if (onTitle != null) host.top(this)
             }
         },
         bottomBar = host.bar,
@@ -144,7 +159,7 @@ fun TrashView(host: Host, place: Place) {
             status?.let { Note(it, colour = MaterialTheme.colorScheme.error) }
             Listing(
                 source = place to refresh,
-                empty = "The trash is empty",
+                empty = stringResource(Res.string.trash_is_empty),
                 modifier = Modifier,
                 host = host,
                 load = { host.api.trash(place, it) },
@@ -154,63 +169,11 @@ fun TrashView(host: Host, place: Place) {
                     item,
                     place,
                     host,
-                    trailing = { Icon(Icons.Default.MoreVert, "Options for ${item.title}", tint = brand.muted) },
+                    trailing = { Icon(Icons.Default.MoreVert, stringResource(Res.string.options_for, item.title), tint = brand.muted) },
                 ) { selected = item }
             }
         }
     }
-}
-
-/** The shared drives the account is on. */
-@Composable
-fun DrivesView(host: Host) {
-    var drives by remember { mutableStateOf<List<Drive>?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(Unit) { host.attempt({ error = it }) { drives = host.api.drives() } }
-
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = { Header("Shared drives", onBack = host.back) },
-        bottomBar = host.bar,
-    ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
-            val list = drives
-            when {
-                error != null -> Note(error!!, Modifier.align(Alignment.Center), MaterialTheme.colorScheme.error)
-
-                list == null -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = brand.accent)
-
-                list.isEmpty() -> Note("You are not on any shared drive yet.", Modifier.align(Alignment.Center))
-
-                else -> LazyColumn(Modifier.fillMaxSize()) {
-                    items(list, key = { it.id }) { drive ->
-                        Entry(Icons.Outlined.Group, drive.name, drive.role.replaceFirstChar { it.uppercase() }) {
-                            host.push(DriveScreen(drive))
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/** One shared drive: the same browser as the account's own, with its own trash. */
-@Composable
-fun DriveView(host: Host, drive: Drive) {
-    val place = Place(drive.id)
-    Browser(
-        host = host,
-        place = place,
-        root = drive.name,
-        canWrite = drive.canWrite,
-        onExit = host.back,
-        actions = {
-            IconButton(onClick = { host.push(TrashScreen(place)) }) {
-                Icon(Icons.Outlined.Delete, "Trash of ${drive.name}", tint = brand.ink)
-            }
-        },
-        bottomBar = host.bar,
-    )
 }
 
 /** A file's earlier copies, newest first, each one a tap from current again. */
@@ -224,7 +187,7 @@ fun VersionsView(host: Host, place: Place, item: Item) {
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { Header("Versions", onBack = host.back) },
+        topBar = { Header(stringResource(Res.string.versions), onBack = host.back) },
         bottomBar = host.bar,
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
@@ -238,21 +201,23 @@ fun VersionsView(host: Host, place: Place, item: Item) {
             status?.let { Note(it, colour = MaterialTheme.colorScheme.error) }
             val loaded = versions
             if (loaded == null) {
-                if (status == null) Box(Modifier.fillMaxSize()) { CircularProgressIndicator(Modifier.align(Alignment.Center), color = brand.accent) }
+                if (status == null) SkeletonList(4)
                 return@Column
             }
             val earlier = loaded.versions.sortedByDescending { it.seq }
             // A track's versions play, newest first, as one queue: comparing
             // takes is what they are kept for.
             val audio = item.metadata.category == "MUSIC"
-            val takes = remember(loaded) {
-                listOf(item.copy(metadata = item.metadata.copy(name = "${item.title} · v${loaded.current.nextSeq}"))) +
-                    earlier.map { version ->
+            val current = stringResource(Res.string.version_label, loaded.current.nextSeq)
+            val labels = earlier.map { stringResource(Res.string.version_label, it.seq) }
+            val takes = remember(loaded, current) {
+                listOf(item.copy(metadata = item.metadata.copy(name = "${item.title} · $current"))) +
+                    earlier.mapIndexed { index, version ->
                         Item(
                             version.id,
                             "file",
                             version.size,
-                            Meta(versionId(item.metadata.id, version.id), "${item.title} · v${version.seq}", "MUSIC"),
+                            Meta(versionId(item.metadata.id, version.id), "${item.title} · ${labels[index]}", "MUSIC"),
                         )
                     }
             }
@@ -261,16 +226,16 @@ fun VersionsView(host: Host, place: Place, item: Item) {
                 item {
                     Entry(
                         if (audio) Icons.Outlined.PlayCircle else Icons.Outlined.CheckCircle,
-                        "v${loaded.current.nextSeq}, current",
+                        stringResource(Res.string.version_current, current),
                         "${shortDate(loaded.current.updatedAt)}, ${formatSize(loaded.current.size)}",
                         onClick = if (audio) ({ play(0) }) else null,
                     )
                 }
-                if (earlier.isEmpty()) item { Note("No earlier version is kept for this file.") }
+                if (earlier.isEmpty()) item { Note(stringResource(Res.string.versions_none)) }
                 itemsIndexed(earlier, key = { _, version -> version.id }) { index, version ->
                     Entry(
                         if (audio) Icons.Outlined.PlayCircle else Icons.Outlined.History,
-                        "v${version.seq}",
+                        labels[index],
                         listOfNotNull(shortDate(version.createdAt), formatSize(version.size), version.authorName).joinToString(", "),
                         tint = brand.muted,
                         onClick = if (audio) ({ play(index + 1) }) else null,
@@ -285,65 +250,10 @@ fun VersionsView(host: Host, place: Place, item: Item) {
                                         }
                                     }
                                 },
-                            ) { Text("Restore v${version.seq}", color = brand.accent) }
+                            ) { Text(stringResource(Res.string.version_restore, labels[index]), color = brand.accent) }
                         },
                     )
                 }
-            }
-        }
-    }
-}
-
-/** What this app can set itself; the account's accent follows it everywhere. */
-@Composable
-fun SettingsView(host: Host, accent: String, onAccent: (String) -> Unit) {
-    val scope = rememberCoroutineScope()
-    var status by remember { mutableStateOf<String?>(null) }
-    Scaffold(
-        containerColor = Color.Transparent,
-        topBar = { Header("Settings", onBack = host.back) },
-        bottomBar = host.bar,
-    ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            SheetTitle("Accent")
-            Text(
-                "Colours the app and the web interface, on every device you use.",
-                Modifier.padding(horizontal = 20.dp),
-                color = brand.muted,
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                ACCENTS.forEach { (name, colours) ->
-                    val chosen = name == accent
-                    Box(
-                        Modifier.size(40.dp).clip(CircleShape)
-                            .background(Brush.linearGradient(listOf(Color(colours.light), Color(colours.glow))))
-                            .then(if (chosen) Modifier.border(3.dp, brand.ink, CircleShape) else Modifier)
-                            .semantics { contentDescription = "$name accent${if (chosen) ", selected" else ""}" }
-                            .clickable(role = Role.RadioButton) {
-                                val before = accent
-                                onAccent(name)
-                                scope.launch {
-                                    host.attempt({
-                                        status = it
-                                        onAccent(before)
-                                    }) {
-                                        host.api.setAccent(name)
-                                        status = null
-                                    }
-                                }
-                            },
-                    )
-                }
-            }
-            status?.let { Note(it, colour = MaterialTheme.colorScheme.error) }
-            SheetTitle("Account")
-            Entry(Icons.Outlined.CheckCircle, host.api.session.userName, host.server, tint = brand.muted)
-            Entry(Icons.Outlined.Language, "Language and other settings", "On the web interface") {
-                host.push(WebScreen("${host.server}/settings"))
             }
         }
     }
@@ -401,7 +311,7 @@ fun PhotoView(host: Host, place: Place, photos: List<Item>, start: Int) {
                 .windowInsetsPadding(WindowInsets.statusBars).padding(end = 8.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = host.back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) }
+            IconButton(onClick = host.back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.back), tint = Color.White) }
             Column(Modifier.weight(1f)) {
                 Text(
                     photos[current].title,
@@ -411,78 +321,234 @@ fun PhotoView(host: Host, place: Place, photos: List<Item>, start: Int) {
                     style = MaterialTheme.typography.titleMedium,
                 )
                 if (photos.size > 1) {
-                    Text("${current + 1} of ${photos.size}", color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.count_of, current + 1, photos.size), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
                 }
             }
             // Nothing to offer where the first look already was the file.
             if (originals[current] != true && look(current) != raw(current)) {
                 TextButton(onClick = { originals[current] = true }) {
-                    Text("Original" + (photos[current].size?.let { " · ${formatSize(it)}" } ?: ""), color = Color.White)
+                    val size = photos[current].size
+                    Text(
+                        if (size == null) stringResource(Res.string.original) else stringResource(Res.string.original_size, formatSize(size)),
+                        color = Color.White,
+                    )
                 }
             }
         }
     }
 }
 
-/** Files and folders by name, in every drive and mount: typed, then listed. */
+/** How many past searches the Search tab offers. */
+private const val REMEMBERED_SEARCHES = 10
+
+/** `query` first among the past searches: no duplicate, whatever its case. */
+fun rememberSearch(past: List<String>, query: String): List<String> {
+    val text = query.trim()
+    if (text.length < 2) return past
+    return (listOf(text) + past.filterNot { it.equals(text, ignoreCase = true) }).take(REMEMBERED_SEARCHES)
+}
+
+/** Past searches, newest first, on this phone only. */
+private object Searches {
+    private const val KEY = "recent-searches"
+
+    fun load(): List<String> = Prefs.get(KEY)?.split('\n')?.filter { it.isNotBlank() }.orEmpty()
+
+    fun save(list: List<String>) = Prefs.set(KEY, list.joinToString("\n").ifEmpty { null })
+}
+
+/** Results for what was typed; they stay on screen while the next ones come. */
+private class Live(val query: String, val items: List<Item>)
+
+/**
+ * The Search tab: the field, then the recent searches, or, from two letters
+ * on, live results for what is typed. Submitted, a search runs on its own
+ * page (`SearchResultsScreen`), so going back finds the field as it was.
+ * `focus` changes when the tab is tapped again, which is when the keyboard
+ * comes up, as on Android.
+ */
 @Composable
-fun SearchView(host: Host) {
+fun SearchView(host: Host, focus: Int) {
     var typed by remember { mutableStateOf("") }
-    // What is searched: the text, once typing has paused.
-    var query by remember { mutableStateOf("") }
-    LaunchedEffect(typed) {
-        delay(350)
-        query = typed.trim()
+    var recent by remember { mutableStateOf(Searches.load()) }
+    val field = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(focus) {
+        if (focus > 0) {
+            field.requestFocus()
+            keyboard?.show()
+        }
     }
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    // Under a pushed screen, the field lets go: its keyboard stayed over the next one.
+    val shown = LocalShown.current
+    LaunchedEffect(shown) { if (!shown) focusManager.clearFocus() }
+    val keep = { text: String ->
+        recent = rememberSearch(recent, text)
+        Searches.save(recent)
+    }
+    val search = { text: String ->
+        val query = text.trim()
+        if (query.length >= 2) {
+            keep(query)
+            focusManager.clearFocus()
+            host.push(SearchResultsScreen(query))
+        }
+    }
+    val query = typed.trim()
+    var live by remember { mutableStateOf<Live?>(null) }
+    var searching by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf<String?>(null) }
+    // Keyed on the query: the next key cancels this wait or this request, so
+    // only the latest query's results ever land.
+    LaunchedEffect(query) {
+        if (query.length < 2) {
+            live = null
+            failed = null
+            searching = false
+            return@LaunchedEffect
+        }
+        searching = true
+        delay(300)
+        host.attempt({ failed = it }) {
+            live = Live(query, host.api.search(query).list)
+            failed = null
+        }
+        searching = false
+    }
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = {
-            Row(
-                Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = 4.dp, end = 16.dp, top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = host.back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = brand.ink) }
-                OutlinedTextField(
-                    value = typed,
-                    onValueChange = { typed = it },
-                    placeholder = { Text("Search everywhere") },
-                    singleLine = true,
-                    shape = Corner,
-                    modifier = Modifier.weight(1f).focusRequester(focus),
-                )
-            }
-        },
+        topBar = { Header(stringResource(Res.string.tab_search), onBack = null, actions = host.top) },
         bottomBar = host.bar,
     ) { padding ->
-        if (query.length < 2) {
-            Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) { Note("Type a name, or part of one.") }
-        } else {
-            Listing(query, "Nothing by that name, in any of your drives", Modifier.padding(padding), host, { host.api.search(query) }) { item, all ->
-                val place = item.place?.place ?: Place()
-                SearchEntry(item, place, host) {
-                    // A result carries its folder's id, not the path a listing needs.
-                    if (item.isFolder) {
-                        host.push(WebScreen("${host.server}/go/folder/${item.metadata.id}"))
-                    } else {
-                        // What it is opened among: the results from the same place.
-                        host.open(place, all.filter { it.place == item.place }, item)
+        Column(Modifier.padding(padding).fillMaxSize()) {
+            OutlinedTextField(
+                value = typed,
+                onValueChange = { typed = it },
+                placeholder = { Text(stringResource(Res.string.search_placeholder)) },
+                leadingIcon = { Icon(Icons.Default.Search, null, tint = brand.muted) },
+                trailingIcon = {
+                    if (typed.isNotEmpty()) {
+                        IconButton(onClick = { typed = "" }) { Icon(Icons.Default.Close, stringResource(Res.string.clear), tint = brand.muted) }
                     }
+                },
+                singleLine = true,
+                shape = Corner,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { search(typed) }),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).focusRequester(field),
+            )
+            val results = live
+            when {
+                query.length < 2 -> RecentSearches(
+                    recent,
+                    Modifier.weight(1f),
+                    onPick = {
+                        typed = it
+                        search(it)
+                    },
+                    onForget = { text ->
+                        recent = recent - text
+                        Searches.save(recent)
+                    },
+                ) {
+                    recent = emptyList()
+                    Searches.save(recent)
+                }
+
+                results == null && failed != null -> Note(failed.orEmpty(), colour = MaterialTheme.colorScheme.error)
+
+                results == null -> SkeletonList(6)
+
+                else -> Box(Modifier.weight(1f)) {
+                    when {
+                        results.items.isEmpty() -> Note(failed ?: stringResource(Res.string.search_nothing), Modifier.align(Alignment.Center))
+
+                        else -> LazyColumn(Modifier.fillMaxSize()) {
+                            items(results.items, key = { it.metadata.id }) { item ->
+                                SearchEntry(item, host) {
+                                    keep(results.query)
+                                    openFound(host, item, results.items)
+                                }
+                            }
+                        }
+                    }
+                    if (searching) SkeletonHint(Modifier.align(Alignment.TopCenter).padding(horizontal = 16.dp))
                 }
             }
+        }
+    }
+}
+
+/** One search's results, on a page of their own. */
+@Composable
+fun SearchResultsView(host: Host, query: String) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = { Header(stringResource(Res.string.search_quoted, query), onBack = host.back) },
+        bottomBar = host.bar,
+    ) { padding ->
+        Listing(query, stringResource(Res.string.search_nothing), Modifier.padding(padding), host, { host.api.search(query) }) { item, all ->
+            SearchEntry(item, host) { openFound(host, item, all) }
+        }
+    }
+}
+
+/** Opens a search result among those from the same place. */
+private fun openFound(host: Host, item: Item, all: List<Item>) {
+    // A result carries its folder's id, not the path a listing needs.
+    if (item.isFolder) {
+        host.push(WebScreen("${host.server}/go/folder/${item.metadata.id}"))
+    } else {
+        host.open(item.place?.place ?: Place(), all.filter { it.place == item.place }, item)
+    }
+}
+
+@Composable
+private fun RecentSearches(recent: List<String>, modifier: Modifier, onPick: (String) -> Unit, onForget: (String) -> Unit, onClear: () -> Unit) {
+    if (recent.isEmpty()) {
+        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Note(stringResource(Res.string.search_hint)) }
+        return
+    }
+    LazyColumn(modifier.fillMaxSize()) {
+        item {
+            Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(Res.string.search_recent),
+                    Modifier.weight(1f),
+                    color = brand.accent,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                TextButton(onClick = onClear) { Text(stringResource(Res.string.clear), color = brand.accent) }
+            }
+        }
+        items(recent, key = { it }) { text ->
+            Entry(
+                Icons.Outlined.History,
+                text,
+                tint = brand.muted,
+                trailing = {
+                    IconButton(onClick = { onForget(text) }) { Icon(Icons.Default.Close, stringResource(Res.string.search_forget, text), tint = brand.muted) }
+                },
+            ) { onPick(text) }
         }
     }
 }
 
 /** A result, and where it is: its drive or mount, then its folder. */
 @Composable
-private fun SearchEntry(item: Item, place: Place, host: Host, onClick: () -> Unit) {
+private fun SearchEntry(item: Item, host: Host, onClick: () -> Unit) {
+    val place = item.place?.place ?: Place()
     val (icon, colour) = iconFor(item)
     Entry(
         icon = icon,
         title = item.title,
-        detail = listOfNotNull(item.place?.name, item.parent).joinToString(" / ").ifEmpty { null },
+        detail = listOfNotNull(
+            // The server names the account's own drive in English.
+            item.place?.let { if (it.kind == "drive" || it.kind == "volume") it.name else stringResource(Res.string.my_drive) },
+            item.parent,
+        ).joinToString(" / ").ifEmpty { null },
         tint = colour ?: if (item.isFolder) brand.accent else brand.muted,
         picture = if (!item.isFolder && item.metadata.category in setOf("IMAGES", "VIDEO")) {
             { Remote(thumbnailUrl(host.server, place, item.metadata.id, "small"), host, null, Modifier.fillMaxSize()) }
@@ -509,7 +575,7 @@ fun PdfView(host: Host, place: Place, item: Item) {
             val loaded = bytes
             when {
                 failed != null -> Note(failed!!, colour = MaterialTheme.colorScheme.error)
-                loaded == null -> CircularProgressIndicator(color = brand.accent)
+                loaded == null -> BreathingMoon()
                 else -> PdfPages(loaded, Modifier.fillMaxSize())
             }
         }
