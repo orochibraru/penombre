@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.62](https://github.com/orochibraru/penombre/compare/v1.8.61...v1.8.62) (2026-10-01)
+
+### Bug Fixes
+
+* code quality ([c6bee73](https://github.com/orochibraru/penombre/commit/c6bee73124cd8a4afa7d63657424be6bbc6718f2))
+* prek ([d6a001c](https://github.com/orochibraru/penombre/commit/d6a001c3235d2a53a469aa40d184d3ad8a624351))
+* showcasing ([9ca23b4](https://github.com/orochibraru/penombre/commit/9ca23b47182cbcae1569345cb7aba87e4af53b7b))
+* showcase ([3f7d2c8](https://github.com/orochibraru/penombre/commit/3f7d2c8ba42aa9fd0b21ec4ec50b93b8bc103356))
+
 ## [1.8.61](https://github.com/orochibraru/penombre/compare/v1.8.60...v1.8.61) (2026-10-01)
 
 ### Features
