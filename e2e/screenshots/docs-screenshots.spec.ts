@@ -16,9 +16,16 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import process from "node:process";
 import { expect, type Page, test } from "@playwright/test";
-import { AUTH_STORAGE_STATE, goToBrowse, openUploadDialog } from "../helpers";
+import {
+	AUTH_STORAGE_STATE,
+	goToBrowse,
+	openUploadDialog,
+	sameOrigin,
+} from "../helpers";
 
 const OUT_DIR = join(process.cwd(), "docs", "images");
+/** What the feature graphics are laid out around (`mise run graphics`). */
+const GRAPHICS_DIR = join(OUT_DIR, "graphics", "src");
 const FIXTURES = join(process.cwd(), "e2e", "fixtures");
 
 /** Wide enough to show the sidebar and a full grid row. */
@@ -51,6 +58,8 @@ const SEEDS = [
 	"showcase-budget.csv",
 	"showcase-model.obj",
 	"showcase-backup.zip",
+	"office-report.docx",
+	"office-report.xlsx",
 	"test-image.png",
 	"test-upload.txt",
 ];
@@ -112,6 +121,32 @@ test("seeds one file of every supported kind", async ({ page }) => {
 	}
 });
 
+/** Files the editor shots open, by id: the seeded ones and a templated deck. */
+const opened: Record<"document" | "sheet" | "deck", string> = {
+	document: "",
+	sheet: "",
+	deck: "",
+};
+
+test("makes a presentation from a template", async ({ page }) => {
+	await goToBrowse(page);
+	const made = await page.request.post("/api/v1/documents/presentation", {
+		headers: sameOrigin(),
+		data: { template: "aurora", name: "Quarterly review" },
+	});
+	expect(made.ok()).toBeTruthy();
+	opened.deck = (await made.json()).data.id;
+
+	const listed = await (await page.request.get("/api/v1/storage/list")).json();
+	const idOf = (name: string) =>
+		(listed.data.list as { metadata: { id: string; name?: string } }[]).find(
+			(item) => item.metadata.name === name,
+		)?.metadata.id ?? "";
+	opened.document = idOf("office-report.docx");
+	opened.sheet = idOf("office-report.xlsx");
+	expect(opened.document && opened.sheet).toBeTruthy();
+});
+
 /** Let the aurora, thumbnails and any transition settle before capturing. */
 async function settle(page: Page) {
 	await page.waitForLoadState("networkidle");
@@ -120,7 +155,8 @@ async function settle(page: Page) {
 
 interface Shot {
 	name: string;
-	path: string;
+	/** A function when the page is a file only known once seeded. */
+	path: string | (() => string);
 	expect: RegExp;
 	/** Anything to do on the page before the shutter, e.g. open a dialog. */
 	prepare?: (page: Page) => Promise<void>;
@@ -179,10 +215,57 @@ const SHOTS: Shot[] = [
 			});
 		},
 	},
+	{
+		name: "document",
+		path: () => `/edit/${opened.document}`,
+		expect: /office-report\.docx/,
+		prepare: async (page) => {
+			await expect(page.locator(".ProseMirror")).toBeVisible({
+				timeout: 20_000,
+			});
+		},
+	},
+	{
+		name: "sheet",
+		path: () => `/edit/${opened.sheet}`,
+		expect: /office-report\.xlsx/,
+		prepare: async (page) => {
+			await expect(page.getByRole("gridcell").first()).toBeVisible({
+				timeout: 20_000,
+			});
+		},
+	},
+	{
+		name: "slides",
+		path: () => `/edit/${opened.deck}`,
+		expect: /Quarterly review\.pptx/,
+		prepare: async (page) => {
+			await expect(page.locator("[data-el]").first()).toBeVisible({
+				timeout: 20_000,
+			});
+		},
+	},
+	{
+		name: "slides-templates",
+		path: "/browse",
+		expect: /my drive/i,
+		prepare: async (page) => {
+			await page.getByRole("button", { name: "New", exact: true }).click();
+			await page
+				.getByRole("menuitem", { name: "Presentation", exact: true })
+				.click();
+			await expect(page.getByRole("dialog")).toBeVisible();
+		},
+	},
 	{ name: "categories", path: "/categories/IMAGES", expect: /images/i },
 	{ name: "recent", path: "/recent", expect: /recent/i },
 	{ name: "shared", path: "/shared", expect: /links/i },
 	{ name: "trash", path: "/trash", expect: /trash/i },
+	{
+		name: "settings-notifications",
+		path: "/settings",
+		expect: /notifications/i,
+	},
 	{ name: "settings-appearance", path: "/settings/display", expect: /theme/i },
 	{ name: "settings-storage", path: "/settings/storage", expect: /storage/i },
 	{ name: "admin", path: "/admin", expect: /dashboard/i },
@@ -192,8 +275,9 @@ const SHOTS: Shot[] = [
 for (const shot of SHOTS) {
 	for (const theme of ["light", "dark"] as const) {
 		test(`captures ${shot.name} (${theme})`, async ({ page }) => {
+			const path = typeof shot.path === "function" ? shot.path() : shot.path;
 			await page.emulateMedia({ colorScheme: theme });
-			await page.goto(shot.path);
+			await page.goto(path);
 			await page.waitForLoadState("networkidle");
 
 			// mode-watcher toggles `.dark` on <html> from the emulated
@@ -209,7 +293,7 @@ for (const shot of SHOTS) {
 			// Fail rather than publish a redirected, blank or errored page.
 			// The URL check catches an auth redirect, which would otherwise
 			// publish the drive under an "admin" filename.
-			expect(new URL(page.url()).pathname).toBe(shot.path);
+			expect(new URL(page.url()).pathname).toBe(path);
 			await expect(page.getByText(shot.expect).first()).toBeVisible({
 				timeout: 15_000,
 			});
@@ -227,10 +311,42 @@ for (const shot of SHOTS) {
 	}
 }
 
+test("captures the drive for the web feature graphic", async ({ browser }) => {
+	// The window in the graphic is 760px wide at double density: a 1280x800
+	// page at 1.25 fills it without a resample worth seeing.
+	const context = await browser.newContext({
+		storageState: AUTH_STORAGE_STATE,
+		viewport: { width: 1280, height: 800 },
+		deviceScaleFactor: 1.25,
+		colorScheme: "dark",
+	});
+	const page = await context.newPage();
+	await page.goto("/browse");
+	await expect(page.getByText(/my drive/i).first()).toBeVisible({
+		timeout: 15_000,
+	});
+	await page.waitForFunction(() =>
+		document.documentElement.classList.contains("dark"),
+	);
+	// The thumbnails sell it: the grid, as the hero shot has it.
+	const toGrid = page.getByRole("button", { name: "List", exact: true });
+	if (await toGrid.isVisible().catch(() => false)) {
+		await toGrid.click();
+	}
+	await settle(page);
+	await mkdir(GRAPHICS_DIR, { recursive: true });
+	await Bun.write(
+		join(GRAPHICS_DIR, "web.webp"),
+		await new Bun.Image(await page.screenshot()).webp({ quality: 90 }).bytes(),
+	);
+	await context.close();
+});
+
 test("writes an index of what was captured", async () => {
 	const lines = SHOTS.flatMap((shot) =>
 		["", "-dark"].map(
-			(suffix) => `- \`${shot.name}${suffix}.png\` — ${shot.path}`,
+			(suffix) =>
+				`- \`${shot.name}${suffix}.webp\` — ${typeof shot.path === "string" ? shot.path : "a seeded file's editor"}`,
 		),
 	);
 	await writeFile(

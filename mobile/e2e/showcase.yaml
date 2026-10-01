@@ -1,0 +1,43 @@
+# The app's screenshots for the feature graphics, taken by `mise run media`
+# on a seeded account (seed.ts), into maestro's --test-output-dir. LINK is a
+# fresh pairing link (pair.ts): the quickest way in, with no browser.
+appId: dev.penombre.app
+---
+- launchApp:
+    clearState: true
+# An earlier run that stopped at iOS's "Open in…?" leaves that alert up.
+- tapOn:
+    text: "Cancel"
+    optional: true
+- openLink: ${LINK}
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Sign in to .*"
+    timeout: 30000
+- tapOn: "Connect"
+- extendedWaitUntil:
+    visible: "Live sets"
+    timeout: 30000
+# Thumbnails load after the rows.
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: mobile-drive
+- tapOn: "Live sets"
+- tapOn: "Olympia, opening.mp3"
+- extendedWaitUntil:
+    visible: "Pause"
+    timeout: 30000
+# Paused: a playing track never lets the screen settle.
+- tapOn: "Pause"
+# The title again, now in the mini player under the listing.
+- tapOn:
+    text: "Olympia, opening.mp3"
+    index: 1
+- extendedWaitUntil:
+    visible: "Track .* of .*"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: mobile-player

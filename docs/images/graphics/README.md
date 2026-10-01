@@ -10,10 +10,9 @@ hand.
   graphic.
 
 The script lays each out around a screenshot in `src/`, which it does not
-retake. When the interface changes, replace them:
+retake. `mise run media` retakes them all, then runs it:
 
-- `src/web.webp`: the drive in the web app, dark, 1280x800 at double density.
-- `src/desktop.webp`: `syncing-dark.png` from
-  `PENOMBRE_SYNC_SNAPSHOTS=<dir> cargo test snapshots` in `desktop/`.
+- `src/web.webp`: the drive in the web app, dark, from `bun run screenshots`.
+- `src/desktop.webp`: `syncing-dark.png` from the sync app's snapshot test.
 - `src/mobile-drive.webp` and `src/mobile-player.webp`: the iOS simulator, on
-  the drive and on the full music player.
+  the drive and on the full music player (`mobile/e2e/showcase.yaml`).

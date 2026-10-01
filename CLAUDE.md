@@ -2348,6 +2348,14 @@ anything under test that imports `#lib/paraglide/messages.js` needs that step.
 
 ### Screenshots for docs
 
+`mise run media` (`scripts/media.sh`) retakes every picture with no hand step:
+the web shots below, the sync app's snapshot test, the iOS simulator through
+`mobile/e2e/showcase.yaml` (paired by link, never a real account, dark
+appearance and a 9:41 status bar, Maestro pinned to the simulator), then the
+feature graphics around them (`scripts/feature-graphics.ts`). Everything runs
+against the E2E stack's throwaway admin. Name parts to run only those
+(`mise run media mobile graphics`).
+
 `bun run screenshots` drives the app with Playwright and writes to
 `docs/images/`. It asserts each page renders before capturing, so a broken
 screen cannot be published as marketing.

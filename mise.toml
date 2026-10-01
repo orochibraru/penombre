@@ -47,6 +47,10 @@ run = "sh scripts/app-icons.sh"
 description = "Render the feature graphics for the README, the docs and the Play Store"
 run = "bun scripts/feature-graphics.ts"
 
+[tasks.media]
+description = "Retake every screenshot that shows Penombre off (web, desktop, mobile) and lay out the feature graphics"
+run = "sh scripts/media.sh"
+
 [tasks."mobile:doctor"]
 description = "Check what the mobile app needs to build and run: Android SDK and emulator images, iOS simulator runtime"
 run = '''

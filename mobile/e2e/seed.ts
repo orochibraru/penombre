@@ -39,6 +39,16 @@ const DRIVE: Record<string, Record<string, string>> = {
 };
 const STARRED_FILES = new Set(["Poster.jpg"]);
 
+/**
+ * `mise run media`: the drive holds the band's files and nothing else, so
+ * the screenshots show neither an earlier suite's leftovers nor the test
+ * flow's folder.
+ */
+const SHOWCASE = !!process.env.PENOMBRE_SEED_SHOWCASE;
+if (SHOWCASE) {
+	delete DRIVE[EMPTY_STARRED];
+}
+
 interface Entry {
 	key: string;
 	type: string;
@@ -86,6 +96,19 @@ const named = (entries: Entry[], type: string, name: string) =>
 		password: process.env.PENOMBRE_E2E_PASSWORD,
 	}),
 }));
+
+if (SHOWCASE) {
+	for (const left of await list("")) {
+		const key = encodeURIComponent(left.key.replace(/\/$/, ""));
+		await call(
+			`/api/v1/storage/${left.type === "folder" ? "folder" : "file"}/${key}`,
+			{
+				method: "DELETE",
+				body: "{}",
+			},
+		);
+	}
+}
 
 let created = 0;
 const root = await list("");
