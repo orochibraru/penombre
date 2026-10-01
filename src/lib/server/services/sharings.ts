@@ -374,13 +374,14 @@ export class SharingService {
 							name: files.name,
 							size: files.size,
 							category: files.category,
+							path: files.path,
 						})
 						.from(files)
 						.where(and(inArray(files.id, fileIds), eq(files.isTrashed, false)))
 				: Promise.resolve([]),
 			folderIds.length
 				? this.db
-						.select({ id: folders.id, name: folders.name })
+						.select({ id: folders.id, name: folders.name, path: folders.path })
 						.from(folders)
 						.where(
 							and(inArray(folders.id, folderIds), eq(folders.isTrashed, false)),
@@ -390,17 +391,26 @@ export class SharingService {
 
 		const names = new Map<
 			string,
-			{ name: string; size: number; category: string }
+			{ name: string; size: number; category: string; path: string | null }
 		>();
 		for (const f of fileRows) {
 			names.set(f.id, {
 				name: f.name,
 				size: Number(f.size),
 				category: f.category,
+				// Its folder: a file share is browsed from there.
+				path: f.path.includes("/")
+					? f.path.slice(0, f.path.lastIndexOf("/"))
+					: "",
 			});
 		}
 		for (const f of folderRows) {
-			names.set(f.id, { name: f.name, size: 0, category: "FOLDER" });
+			names.set(f.id, {
+				name: f.name,
+				size: 0,
+				category: "FOLDER",
+				path: f.path,
+			});
 		}
 
 		return rows
@@ -416,6 +426,8 @@ export class SharingService {
 					name: meta.name,
 					size: meta.size,
 					category: meta.category,
+					/** Where browsing it starts, in its owner's tree: the folder, or a file's parent. */
+					path: meta.path,
 					sharedAt: row.createdAt.toISOString(),
 					owner: { name: row.ownerName, email: row.ownerEmail },
 				};

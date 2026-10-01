@@ -588,6 +588,12 @@ export const fileNotes = pgTable(
 			.references(() => user.id, { onDelete: "cascade" }),
 		body: text("body").notNull(),
 		timestampSeconds: real("timestamp_seconds"),
+		/** JSON: where in an office file a comment points (`CommentAnchor`). */
+		anchor: text("anchor"),
+		/** The thread's first comment, for a reply. Deleted with it by the service. */
+		parentId: text("parent_id"),
+		resolvedAt: timestamp("resolved_at"),
+		resolvedBy: text("resolved_by"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
@@ -597,6 +603,30 @@ export const fileNotes = pgTable(
 	(table) => [
 		index("file_notes_fileId_idx").on(table.fileId),
 		index("file_notes_userId_idx").on(table.userId),
+	],
+);
+
+/**
+ * Who has a file open, refreshed by a heartbeat. A table rather than the
+ * in-memory cache so every app process sees the same people.
+ */
+export const filePresence = pgTable(
+	"file_presence",
+	{
+		/** `<fileId>:<userId>`, so a heartbeat is one upsert. */
+		id: text("id").primaryKey(),
+		fileId: text("file_id")
+			.notNull()
+			.references(() => files.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		mode: text("mode").$type<"viewing" | "editing">().notNull(),
+		seenAt: timestamp("seen_at").notNull(),
+	},
+	(table) => [
+		index("file_presence_file_idx").on(table.fileId, table.seenAt),
+		index("file_presence_seen_idx").on(table.seenAt),
 	],
 );
 

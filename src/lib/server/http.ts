@@ -1,5 +1,5 @@
 import { Logger } from "#lib/logger.js";
-import { isUniqueViolation } from "#lib/server/errors.js";
+import { isUniqueViolation, ReadOnlyVolumeError } from "#lib/server/errors.js";
 
 const logger = new Logger("HTTP_ERROR");
 
@@ -39,6 +39,11 @@ export class Http {
 		// restored over one that appeared since), which is the caller's to fix.
 		if (isUniqueViolation(error)) {
 			return Http.Conflict("Something with that name already exists here.");
+		}
+		// A write the caller may not make (a view-only share, a drive viewer,
+		// a read-only mount) that a handler's catch swallowed.
+		if (error instanceof ReadOnlyVolumeError) {
+			return Http.Forbidden(error.message);
 		}
 		// Never `error.message` in the response: a Drizzle error carries the
 		// failed SQL and its bound params, a driver error an absolute path.

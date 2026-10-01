@@ -15,6 +15,7 @@
 	import { Label } from "#lib/components/ui/label/index.js";
 	import * as Select from "#lib/components/ui/select/index.js";
 	import * as Tabs from "#lib/components/ui/tabs/index.js";
+	import { kindForName } from "#lib/documents.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { isFolderItem } from "#lib/utils.js";
 
@@ -82,6 +83,9 @@
 		{ value: "write", label: m.permission_write() },
 		{ value: "admin", label: m.permission_admin() },
 	];
+
+	/** A document, sheet or presentation: "Can view" opens it read-only. */
+	const office = $derived(!!kindForName(item?.metadata.name ?? ""));
 
 	const expiryLabel = $derived(
 		expiryOptions.find((o) => o.value === expiresInDays)?.label ??
@@ -369,6 +373,11 @@
                         </Select.Content>
                     </Select.Root>
                 </div>
+                {#if office && permission === "read"}
+                    <p class="text-muted-foreground text-xs">
+                        {m.shell_share_view_hint()}
+                    </p>
+                {/if}
             </div>
 
             {#if query.trim().length >= 3}

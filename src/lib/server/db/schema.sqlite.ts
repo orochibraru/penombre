@@ -394,6 +394,10 @@ export const fileNotes = sqliteTable(
 			.references(() => user.id, { onDelete: "cascade" }),
 		body: text("body").notNull(),
 		timestampSeconds: real("timestamp_seconds"),
+		anchor: text("anchor"),
+		parentId: text("parent_id"),
+		resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }),
+		resolvedBy: text("resolved_by"),
 		createdAt: integer("created_at", { mode: "timestamp_ms" })
 			.$defaultFn(() => new Date())
 			.notNull(),
@@ -405,6 +409,25 @@ export const fileNotes = sqliteTable(
 	(table) => [
 		index("file_notes_fileId_idx").on(table.fileId),
 		index("file_notes_userId_idx").on(table.userId),
+	],
+);
+
+export const filePresence = sqliteTable(
+	"file_presence",
+	{
+		id: text("id").primaryKey(),
+		fileId: text("file_id")
+			.notNull()
+			.references(() => files.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		mode: text("mode").$type<"viewing" | "editing">().notNull(),
+		seenAt: integer("seen_at", { mode: "timestamp_ms" }).notNull(),
+	},
+	(table) => [
+		index("file_presence_file_idx").on(table.fileId, table.seenAt),
+		index("file_presence_seen_idx").on(table.seenAt),
 	],
 );
 

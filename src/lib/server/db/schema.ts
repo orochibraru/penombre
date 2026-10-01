@@ -70,6 +70,9 @@ export const fileNotes = (
 export const fileVersions = (
 	sqliteActive ? sqlite.fileVersions : pg.fileVersions
 ) as typeof pg.fileVersions;
+export const filePresence = (
+	sqliteActive ? sqlite.filePresence : pg.filePresence
+) as typeof pg.filePresence;
 export const folders = (
 	sqliteActive ? sqlite.folders : pg.folders
 ) as typeof pg.folders;
