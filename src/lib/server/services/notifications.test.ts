@@ -55,6 +55,37 @@ function serviceWith(answers: unknown[][] = []) {
 	return { svc, inserted, emailed, db };
 }
 
+/** The recipient's notification choices, as `getUserPreferences` answers them. */
+function choosing(svc: object, prefs: Record<string, unknown>) {
+	Object.defineProperty(svc, "preferences", {
+		value: () => Promise.resolve(prefs),
+		configurable: true,
+	});
+}
+
+describe("notification choices", () => {
+	test("a type kept off the bell writes no row, and can still be mailed", async () => {
+		const { svc, inserted, emailed } = serviceWith();
+		choosing(svc, { notifications: { note: { inApp: false, email: true } } });
+		await svc.notify({ userId: "u2", type: "note" });
+		expect(inserted).toHaveLength(0);
+		expect(emailed).toHaveLength(1);
+	});
+
+	test("a share is mailed unless the person turned that off", async () => {
+		const { svc, emailed } = serviceWith();
+		choosing(svc, {});
+		await svc.notify({ userId: "u2", type: "share" });
+		expect(emailed).toHaveLength(1);
+
+		const off = serviceWith();
+		choosing(off.svc, { notifications: { share: { email: false } } });
+		await off.svc.notify({ userId: "u2", type: "share" });
+		expect(off.emailed).toHaveLength(0);
+		expect(off.inserted).toHaveLength(1);
+	});
+});
+
 describe("notify", () => {
 	test("writes one row addressed to the recipient", async () => {
 		const { svc, inserted } = serviceWith();

@@ -6,13 +6,18 @@
  * freeze it in whatever locale the *writer* happened to be using, which is the
  * wrong person entirely.
  *
- * Emailing is opt-in per user (`emailNotifications`), except for a share,
- * and always requires SMTP, so an instance with no mail configured simply
- * never sends and nothing has to be turned off.
+ * Each person chooses, per type, whether it rings the bell (and so the phone)
+ * and whether it is mailed (`#lib/notification-prefs.ts`). Mail always
+ * requires SMTP, so an instance with no mail configured simply never sends
+ * and nothing has to be turned off.
  */
 
 import { and, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
+import {
+	type NotificationType,
+	resolveChannels,
+} from "#lib/notification-prefs.js";
 import { getDb } from "#lib/server/db/index.js";
 import { fileNotes, notifications, user } from "#lib/server/db/schema.js";
 import { Email } from "#lib/server/email.js";
@@ -22,7 +27,7 @@ import { getUserPreferences } from "#lib/server/services/preferences.js";
 
 const logger = new Logger("NotificationService");
 
-export type NotificationType = "note" | "share";
+export type { NotificationType } from "#lib/notification-prefs.js";
 
 export interface NotificationInput {
 	/** Who to tell. */
@@ -47,26 +52,33 @@ export interface NotificationRow {
 const emailSubject: Record<NotificationType, string> = {
 	note: "New note on one of your files",
 	share: "Something was shared with you",
+	signature_completed: "A document is signed",
+	signature_declined: "A signature was declined",
+};
+
+const emailLine: Record<
+	NotificationType,
+	(who: string, what: string) => string
+> = {
+	note: (who, what) => `${who} left a note on ${what}.`,
+	share: (who, what) => `${who} shared ${what} with you.`,
+	signature_completed: (_who, what) =>
+		`Everyone signed ${what}. The signed PDF is ready.`,
+	signature_declined: (who, what) => `${who} declined to sign ${what}.`,
 };
 
 function emailContent(input: NotificationInput, origin: string): EmailContent {
 	const who = input.actorName ?? "Someone";
 	const what = input.resourceName ?? "an item";
-	const line =
-		input.type === "note"
-			? `${who} left a note on ${what}.`
-			: `${who} shared ${what} with you.`;
 	return {
 		subject: emailSubject[input.type],
 		heading: emailSubject[input.type],
-		lines: [line],
+		lines: [emailLine[input.type](who, what)],
 		...(input.link
 			? { action: { label: "Open it", url: `${origin}${input.link}` } }
 			: {}),
 		footnote:
-			input.type === "share"
-				? undefined
-				: "You get these because email notifications are on in your settings.",
+			"You can choose which notifications are emailed to you in your settings.",
 	};
 }
 
@@ -105,6 +117,9 @@ export class NotificationService {
 		return getDb();
 	}
 
+	/** Whose choices decide the channels; tests stub it on the instance. */
+	private readonly preferences = getUserPreferences;
+
 	/**
 	 * Record one notification, and email it when the recipient asked for that.
 	 *
@@ -113,6 +128,27 @@ export class NotificationService {
 	 * could not be rung would be the wrong trade. Failures are logged.
 	 */
 	async notify(input: NotificationInput, origin?: string): Promise<void> {
+		let channels: { inApp: boolean; email: boolean };
+		try {
+			channels = resolveChannels(
+				await this.preferences(input.userId),
+				input.type,
+			);
+		} catch (error) {
+			logger.error("Could not read notification preferences", error);
+			return;
+		}
+		if (channels.inApp) {
+			await this.record(input);
+		}
+		if (channels.email) {
+			await this.email(input, origin).catch((error) => {
+				logger.warn("Could not email notification", error);
+			});
+		}
+	}
+
+	private async record(input: NotificationInput): Promise<void> {
 		try {
 			await this.db.insert(notifications).values({
 				id: crypto.randomUUID(),
@@ -124,12 +160,7 @@ export class NotificationService {
 			});
 		} catch (error) {
 			logger.error("Could not record notification", error);
-			return;
 		}
-
-		await this.email(input, origin).catch((error) => {
-			logger.warn("Could not email notification", error);
-		});
 	}
 
 	/** Fan one notification out to several recipients. */
@@ -149,14 +180,6 @@ export class NotificationService {
 		input: NotificationInput,
 		origin?: string,
 	): Promise<void> {
-		// A share is addressed to one person by another, so it is always mailed;
-		// the preference governs the rest.
-		if (input.type !== "share") {
-			const prefs = await getUserPreferences(input.userId);
-			if (!prefs.emailNotifications) {
-				return;
-			}
-		}
 		// Checked before reading the address so an instance without mail does
 		// no work at all per notification.
 		if (!(await getSmtpSettings())) {

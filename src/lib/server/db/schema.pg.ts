@@ -11,6 +11,7 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { NotificationChoices } from "#lib/notification-prefs.js";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -426,6 +427,12 @@ export interface UserPreferencesData {
 	 * primary channel, and an instance with no SMTP never sends regardless.
 	 */
 	emailNotifications?: boolean;
+	/**
+	 * Each notification type on each channel (`#lib/notification-prefs.ts`).
+	 * Absent entries fall back to the defaults there, so older accounts keep
+	 * what `emailNotifications` gave them.
+	 */
+	notifications?: NotificationChoices;
 	/**
 	 * What the sign-in page offers first. Treated as null wherever the method
 	 * is not currently available to the account (`effectivePreferred`).

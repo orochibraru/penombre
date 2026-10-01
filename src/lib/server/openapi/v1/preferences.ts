@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NOTIFICATION_TYPES } from "#lib/notification-prefs.js";
 import { defineRoute } from "#lib/server/openapi/index.js";
 
 /**
@@ -20,6 +21,18 @@ const userPreferencesSchema = z.object({
 		.optional(),
 	onboarded: z.boolean().optional(),
 	emailNotifications: z.boolean().optional(),
+	notifications: z
+		.partialRecord(
+			z.enum(NOTIFICATION_TYPES),
+			z
+				.object({
+					inApp: z.boolean(),
+					email: z.boolean(),
+					phone: z.boolean(),
+				})
+				.partial(),
+		)
+		.optional(),
 	preferredSignInMethod: z
 		.enum(["password", "passkey", "magicLink", "emailOtp"])
 		.nullable()
