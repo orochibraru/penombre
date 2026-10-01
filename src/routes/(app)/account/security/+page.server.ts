@@ -3,16 +3,17 @@ import { Logger } from "#lib/logger.js";
 import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
 import { getConfig } from "#lib/server/config.js";
 import type { SignInMethod } from "#lib/server/db/schema.js";
+import {
+	savePassword,
+	setPreferredSignInMethod,
+	unmetRequirements,
+} from "#lib/server/services/account.js";
 import { isTwoFactorRequired } from "#lib/server/services/app-settings.js";
 import {
-	accountCredentials,
 	effectivePreferred,
 	methodsFor,
 } from "#lib/server/services/auth-methods.js";
-import {
-	getUserPreferences,
-	updateUserPreferences,
-} from "#lib/server/services/preferences.js";
+import { getUserPreferences } from "#lib/server/services/preferences.js";
 
 const logger = new Logger("account/security");
 
@@ -49,6 +50,7 @@ export const load = async ({ request, locals }) => {
 		emailSignInEnabled: getConfig().auth.enableEmailSignIn,
 		twoFactorEnabled: !!locals.user?.twoFactorEnabled,
 		twoFactorRequired: await isTwoFactorRequired(),
+		requirements: locals.user ? await unmetRequirements(locals.user) : [],
 	};
 };
 
@@ -58,17 +60,13 @@ export const actions = {
 			return fail(401, { error: "UNAUTHORIZED" });
 		}
 		const value = String((await request.formData()).get("method") ?? "");
-		const available = methodsFor(
-			await instanceSignInMethods(),
-			await accountCredentials(locals.user.id),
+		const refused = await setPreferredSignInMethod(
+			locals.user.id,
+			(value || null) as SignInMethod | null,
 		);
-		const method = effectivePreferred(value as SignInMethod, available);
-		if (value && !method) {
-			return fail(400, { error: "SIGN_IN_METHOD_UNAVAILABLE" });
+		if (refused) {
+			return fail(400, { error: refused.error });
 		}
-		await updateUserPreferences(locals.user.id, {
-			preferredSignInMethod: method,
-		});
 		return { preferredSaved: true };
 	},
 	createApiKey: async ({ request }) => {
@@ -90,82 +88,39 @@ export const actions = {
 			return { success: false, error: "API_KEY_CREATE_FAILED" };
 		}
 	},
-	setPassword: async ({ request }) => {
-		const formData = await request.formData();
-		const newPassword = formData.get("newPassword");
-		const newPasswordConfirm = formData.get("newPasswordConfirm");
-
-		if (
-			typeof newPassword !== "string" ||
-			typeof newPasswordConfirm !== "string"
-		) {
-			return { success: false, error: "INVALID_FORM" };
-		}
-
-		if (newPassword !== newPasswordConfirm) {
-			return { success: false, error: "PASSWORD_MISMATCH" };
-		}
-
-		const { auth: authConfig } = getConfig();
-		if (!authConfig.enableEmailSignIn) {
-			return { success: false, error: "EMAIL_SIGNIN_DISABLED" };
-		}
-
-		if (newPassword.length < authConfig.minPasswordLength) {
-			return {
-				success: false,
-				error: "PASSWORD_TOO_SHORT",
-				errorParams: { count: String(authConfig.minPasswordLength) },
-			};
-		}
-
-		try {
-			// Only succeeds when the account has no credential row yet —
-			// better-auth rejects it otherwise, so this can't overwrite an
-			// existing password without knowing the current one.
-			await auth.api.setPassword({
-				headers: request.headers,
-				body: { newPassword },
-			});
-			return { success: true, passwordSet: true };
-		} catch (error) {
-			logger.error("Failed to set a password:", error);
-			return { success: false, error: "SET_PASSWORD_FAILED" };
-		}
-	},
-	changePassword: async ({ request }) => {
-		const formData = await request.formData();
-		const currentPassword = formData.get("currentPassword");
-		const newPassword = formData.get("newPassword");
-		const newPasswordConfirm = formData.get("newPasswordConfirm");
-
-		if (
-			typeof currentPassword !== "string" ||
-			typeof newPassword !== "string" ||
-			typeof newPasswordConfirm !== "string"
-		) {
-			return { success: false, error: "INVALID_FORM" };
-		}
-
-		if (newPassword !== newPasswordConfirm) {
-			return { success: false, error: "PASSWORD_MISMATCH" };
-		}
-
-		try {
-			await auth.api.changePassword({
-				headers: request.headers,
-				body: {
-					currentPassword,
-					newPassword,
-				},
-			});
-			return { success: true };
-		} catch (error) {
-			logger.error("Failed to change a password:", error);
-			return {
-				success: false,
-				error: "CHANGE_PASSWORD_FAILED",
-			};
-		}
-	},
+	setPassword: ({ request }) => savePasswordFrom(request, "set"),
+	changePassword: ({ request }) => savePasswordFrom(request, "change"),
 };
+
+async function savePasswordFrom(request: Request, mode: "set" | "change") {
+	const formData = await request.formData();
+	const current = formData.get("currentPassword");
+	const newPassword = formData.get("newPassword");
+	const confirm = formData.get("newPasswordConfirm");
+	if (
+		typeof newPassword !== "string" ||
+		typeof confirm !== "string" ||
+		(mode === "change" && typeof current !== "string")
+	) {
+		return { success: false, error: "INVALID_FORM" };
+	}
+	const refused = await savePassword(
+		request.headers,
+		{
+			currentPassword: typeof current === "string" ? current : undefined,
+			newPassword,
+			confirm,
+		},
+		mode,
+	);
+	if (refused) {
+		return {
+			success: false,
+			error: refused.error,
+			...(refused.errorParams ? { errorParams: refused.errorParams } : {}),
+		};
+	}
+	return mode === "set"
+		? { success: true, passwordSet: true }
+		: { success: true };
+}

@@ -3,10 +3,8 @@ import { api } from "#lib/api/index.js";
 import { signInReturningTo } from "#lib/next.js";
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getConfig, getVolumes, isSimpleMode } from "#lib/server/config.js";
-import {
-	getAppSettings,
-	isTwoFactorRequired,
-} from "#lib/server/services/app-settings.js";
+import { unmetRequirements } from "#lib/server/services/account.js";
+import { getAppSettings } from "#lib/server/services/app-settings.js";
 import { drivesService } from "#lib/server/services/drives.js";
 import { SharingService } from "#lib/server/services/sharings.js";
 import { listShortcuts } from "#lib/server/services/shortcuts.js";
@@ -21,6 +19,7 @@ const DRIVE_ONLY_PATHS = [
 	"/settings",
 	"/account",
 	"/api-docs",
+	"/signatures",
 ];
 const within = (path: string, prefix: string) =>
 	path === prefix || path.startsWith(`${prefix}/`);
@@ -41,14 +40,12 @@ export const load = async ({ fetch, url, locals, depends }) => {
 		return redirect(302, signInReturningTo(url));
 	}
 
-	// Enrolment gate. The security page is exempt or the redirect would loop —
-	// it is where the enrolment card lives, so that is where people are sent.
+	// Enrolment gate: two-factor or a passkey, when the administrator requires
+	// them. The security page is exempt or the redirect would loop — it is
+	// where both are set up, so that is where people are sent.
 	if (
-		!(
-			locals.user.twoFactorEnabled ||
-			url.pathname.startsWith("/account/security")
-		) &&
-		(await isTwoFactorRequired())
+		!url.pathname.startsWith("/account/security") &&
+		(await unmetRequirements(locals.user)).length > 0
 	) {
 		return redirect(302, resolve("account/security"));
 	}

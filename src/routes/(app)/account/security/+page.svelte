@@ -3,6 +3,7 @@
 		CircleCheckIcon,
 		EllipsisVerticalIcon,
 		KeyRoundIcon,
+		ShieldAlertIcon,
 	} from "@lucide/svelte";
 	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -200,6 +201,25 @@
 </script>
 
 <div class="flex w-full flex-col gap-4">
+{#if data.requirements.length > 0}
+    <!-- Why the rest of the app sent them here: the layout's enrolment gate. -->
+    <Alert.Root class="border-primary bg-primary/10">
+        <ShieldAlertIcon class="text-primary" />
+        <Alert.Title class="text-primary">{m.auth_requirements_title()}</Alert.Title>
+        <Alert.Description>
+            <p>{m.auth_requirements_body()}</p>
+            <ul class="mt-1 list-disc ps-5">
+                {#each data.requirements as requirement (requirement)}
+                    <li>
+                        {requirement === "twoFactor"
+                            ? m.auth_requirement_two_factor()
+                            : m.auth_requirement_passkey()}
+                    </li>
+                {/each}
+            </ul>
+        </Alert.Description>
+    </Alert.Root>
+{/if}
 <!-- Password Management -->
 {#if data.emailSignInEnabled}
     <Card.Root>

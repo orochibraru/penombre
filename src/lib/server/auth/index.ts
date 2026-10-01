@@ -16,6 +16,7 @@ import {
 } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
 import { Logger } from "#lib/logger.js";
+import { isAddressCode } from "#lib/server/auth/address-codes.js";
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getConfig, isSmtpEnabled } from "#lib/server/config.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
@@ -62,11 +63,19 @@ export async function instanceSignInMethods(): Promise<InstanceMethods> {
 	return { password, passkey, ...passwordless };
 }
 
-/** Endpoints refused while their method is off; the plugins stay loaded. */
+/** What each emailed code is for, as its subject says. */
+const OTP_SUBJECTS: Record<string, string> = {
+	"sign-in": "Your sign-in code",
+	"email-verification": "Your verification code",
+	"change-email": "Confirm your new address",
+	"forget-password": "Your password reset code",
+};
+
 export const SYNC_CLIENT_ID = "penombre-sync";
 
+/** Endpoints refused while their method is off; the plugins stay loaded. */
 const METHOD_GATES: {
-	matches: (path: string) => boolean;
+	matches: (path: string, body: unknown) => boolean;
 	enabled: () => Promise<boolean>;
 	name: string;
 }[] = [
@@ -95,10 +104,11 @@ const METHOD_GATES: {
 	},
 	{
 		name: "Email code sign-in",
-		matches: (path) =>
-			path === "/sign-in/email-otp" ||
-			path === "/forget-password/email-otp" ||
-			path.startsWith("/email-otp/"),
+		matches: (path, body) =>
+			(path === "/sign-in/email-otp" ||
+				path === "/forget-password/email-otp" ||
+				path.startsWith("/email-otp/")) &&
+			!isAddressCode(path, body),
 		enabled: async () => (await getPasswordlessSettings()).emailOtp,
 	},
 	{
@@ -236,9 +246,12 @@ function authPlugins(oauthProviders: OAuthProvider[]) {
 		}),
 		emailOTP({
 			disableSignUp: true,
+			// An address changes only with a code from the current address and
+			// one from the new: a stolen session alone cannot move the account
+			// to a mailbox that would then receive its password resets.
+			changeEmail: { enabled: true, verifyCurrentEmail: true },
 			sendVerificationOTP: async ({ email, otp, type }) => {
-				const subject =
-					type === "sign-in" ? "Your sign-in code" : "Your verification code";
+				const subject = OTP_SUBJECTS[type] ?? "Your verification code";
 				await sendSignInEmail(email, {
 					subject,
 					heading: subject,
@@ -316,7 +329,7 @@ function buildAuth(oauthProviders: OAuthProvider[]) {
 		}),
 		hooks: {
 			before: createAuthMiddleware(async (ctx) => {
-				const gate = METHOD_GATES.find((g) => g.matches(ctx.path));
+				const gate = METHOD_GATES.find((g) => g.matches(ctx.path, ctx.body));
 				if (gate && !(await gate.enabled())) {
 					throw new APIError("FORBIDDEN", {
 						message: `${gate.name} is disabled on this instance.`,

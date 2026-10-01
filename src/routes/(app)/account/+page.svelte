@@ -2,7 +2,9 @@
 	import { DownloadIcon, SaveIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import EmailDialog from "#lib/components/account/email-dialog.svelte";
 	import { clickDownload } from "#lib/components/file/wrapper.svelte.js";
+	import Badge from "#lib/components/ui/badge/badge.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Card from "#lib/components/ui/card/index.js";
 	import Input from "#lib/components/ui/input/input.svelte";
@@ -19,7 +21,12 @@
 
 	const { data, form } = $props();
 
-	let email = $derived(data.user.email);
+	let emailMode = $state<"change" | "verify">("change");
+	let emailOpen = $state(false);
+	function openEmail(mode: "change" | "verify") {
+		emailMode = mode;
+		emailOpen = true;
+	}
 	let name = $derived(data.user.name);
 	let hasChanged = $state(false);
 	let loading = $state(false);
@@ -27,7 +34,7 @@
 	// Depends only on the fields, so it re-runs on every keystroke without
 	// caring whether a previous submit's `form` result is still around.
 	$effect(() => {
-		hasChanged = email !== data.user.email || name !== data.user.name;
+		hasChanged = name !== data.user.name;
 	});
 
 	// Depends only on `form`, which changes once per submission and never on
@@ -81,13 +88,41 @@
                     {/if}
                     <div class="flex w-full flex-col gap-1.5">
                         <Label for="account-email">{m.email()}</Label>
-                        <Input
-                            id="account-email"
-                            type="email"
-                            autocomplete="email"
-                            name="email"
-                            bind:value={email}
-                        />
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span id="account-email" class="text-sm font-medium">
+                                {data.user.email}
+                            </span>
+                            <Badge variant={data.user.emailVerified ? "secondary" : "outline"}>
+                                {data.user.emailVerified
+                                    ? m.email_verified()
+                                    : m.email_unverified()}
+                            </Badge>
+                            <div class="ms-auto flex gap-2">
+                                {#if !data.user.emailVerified}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={!data.smtpAvailable}
+                                        onclick={() => openEmail("verify")}
+                                    >
+                                        {m.email_verify()}
+                                    </Button>
+                                {/if}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={!data.smtpAvailable}
+                                    onclick={() => openEmail("change")}
+                                >
+                                    {m.email_change()}
+                                </Button>
+                            </div>
+                        </div>
+                        {#if !data.smtpAvailable}
+                            <p class="text-muted-foreground text-xs">
+                                {m.email_no_smtp()}
+                            </p>
+                        {/if}
                     </div>
                     <div class="flex w-full flex-col gap-1.5">
                         <Label for="account-name">{m.name()}</Label>
@@ -146,3 +181,5 @@
         </Card.Content>
     </Card.Root>
 </div>
+
+<EmailDialog bind:open={emailOpen} mode={emailMode} email={data.user.email} />

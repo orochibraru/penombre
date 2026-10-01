@@ -2,7 +2,6 @@ import type { Mock } from "bun:test";
 import { describe, expect, test } from "bun:test";
 import { fail } from "@sveltejs/kit";
 import { auth } from "#lib/server/auth/index.js";
-import { getConfig } from "#lib/server/config.js";
 import type { UserWithSession } from "#lib/server/db/schema.js";
 
 const mockGetSession = auth.api.getSession as unknown as Mock<
@@ -14,7 +13,6 @@ const mockUpdateUser = auth.api.updateUser as unknown as Mock<
 const mockAdminUpdateUser = auth.api.adminUpdateUser as unknown as Mock<
 	typeof auth.api.adminUpdateUser
 >;
-const mockGetConfig = getConfig as Mock<typeof getConfig>;
 
 const { actions } = await import("./+page.server");
 
@@ -71,13 +69,6 @@ describe("updateAccount", () => {
 		expect(result).toEqual(fail(400, { error: "MISSING_FIELDS" }));
 	});
 
-	test("returns 400 when email is missing", async () => {
-		const result = await actions.updateAccount(
-			createRequest({ name: "John" }) as never,
-		);
-		expect(result).toEqual(fail(400, { error: "MISSING_FIELDS" }));
-	});
-
 	test("returns 401 when no session exists", async () => {
 		mockGetSession.mockResolvedValueOnce(null);
 
@@ -94,6 +85,21 @@ describe("updateAccount", () => {
 			createRequest({ name: "John", email: "john@example.com" }) as never,
 		);
 		expect(result).toEqual(fail(401, { error: "UNAUTHORIZED" }));
+	});
+
+	test("ignores an address in the form: it changes through emailed codes", async () => {
+		mockGetSession.mockResolvedValueOnce(sessionUser as never);
+		mockUpdateUser.mockResolvedValueOnce({ status: true } as never);
+		mockAdminUpdateUser.mockClear();
+
+		const result = await actions.updateAccount(
+			createRequest({
+				name: "Jane Doe",
+				email: "attacker@example.com",
+			}) as never,
+		);
+		expect(result).toEqual({ success: true });
+		expect(mockAdminUpdateUser).not.toHaveBeenCalled();
 	});
 
 	test("returns success when only name changes", async () => {
@@ -116,68 +122,6 @@ describe("updateAccount", () => {
 			createRequest({ name: "John Doe", email: "john@example.com" }) as never,
 		);
 		expect(result).toEqual({ success: true });
-	});
-
-	test("returns 400 when email changes but SMTP is disabled", async () => {
-		mockGetSession.mockResolvedValueOnce(sessionUser as never);
-		mockGetConfig.mockReturnValueOnce({ smtp: undefined } as never);
-
-		const result = await actions.updateAccount(
-			createRequest({ name: "John Doe", email: "new@example.com" }) as never,
-		);
-		expect(result).toEqual(fail(400, { error: "EMAIL_CHANGE_REQUIRES_SMTP" }));
-	});
-
-	test("updates email when SMTP is enabled", async () => {
-		mockGetSession.mockResolvedValueOnce(sessionUser as never);
-		mockGetConfig.mockReturnValueOnce({
-			smtp: { enabled: true },
-		} as never);
-
-		const result = await actions.updateAccount(
-			createRequest({ name: "John Doe", email: "new@example.com" }) as never,
-		);
-		expect(result).toEqual({ success: true });
-		expect(mockAdminUpdateUser).toHaveBeenLastCalledWith(
-			expect.objectContaining({
-				body: {
-					userId: "user-1",
-					data: { email: "new@example.com", emailVerified: false },
-				},
-			}),
-		);
-	});
-
-	test("returns 500 when email update fails", async () => {
-		mockGetSession.mockResolvedValueOnce(sessionUser as never);
-		mockGetConfig.mockReturnValueOnce({
-			smtp: { enabled: true },
-		} as never);
-		mockAdminUpdateUser.mockRejectedValueOnce(new Error("DB error"));
-
-		const result = await actions.updateAccount(
-			createRequest({ name: "John Doe", email: "new@example.com" }) as never,
-		);
-		expect(result).toEqual(
-			fail(500, {
-				error: "EMAIL_UPDATE_FAILED",
-			}),
-		);
-	});
-
-	test("updates both name and email when SMTP is enabled", async () => {
-		mockGetSession.mockResolvedValueOnce(sessionUser as never);
-		mockGetConfig.mockReturnValueOnce({
-			smtp: { enabled: true },
-		} as never);
-		mockUpdateUser.mockResolvedValueOnce({ status: true } as never);
-
-		const result = await actions.updateAccount(
-			createRequest({ name: "Jane Doe", email: "new@example.com" }) as never,
-		);
-		expect(result).toEqual({ success: true });
-		expect(mockAdminUpdateUser).toHaveBeenCalled();
-		expect(mockUpdateUser).toHaveBeenCalled();
 	});
 
 	test("returns 500 when name update fails", async () => {

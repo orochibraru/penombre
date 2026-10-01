@@ -240,8 +240,8 @@ describe("changePassword", () => {
 		const result = await actions.changePassword(
 			createRequest({
 				currentPassword: "old123",
-				newPassword: "new123",
-				newPasswordConfirm: "new123",
+				newPassword: "new-password-123",
+				newPasswordConfirm: "new-password-123",
 			}) as never,
 		);
 		expect(result).toEqual({ success: true });
@@ -249,10 +249,26 @@ describe("changePassword", () => {
 			expect.objectContaining({
 				body: {
 					currentPassword: "old123",
-					newPassword: "new123",
+					newPassword: "new-password-123",
 				},
 			}),
 		);
+	});
+
+	test("refuses a new password below the instance minimum", async () => {
+		mockChangePassword.mockClear();
+		const result = await actions.changePassword(
+			createRequest({
+				currentPassword: "old123",
+				newPassword: "new123",
+				newPasswordConfirm: "new123",
+			}) as never,
+		);
+		expect(result).toMatchObject({
+			success: false,
+			error: "PASSWORD_TOO_SHORT",
+		});
+		expect(mockChangePassword).not.toHaveBeenCalled();
 	});
 
 	test("returns a generic error when changePassword throws, never the raw message", async () => {
@@ -263,8 +279,8 @@ describe("changePassword", () => {
 		const result = await actions.changePassword(
 			createRequest({
 				currentPassword: "wrong",
-				newPassword: "new123",
-				newPasswordConfirm: "new123",
+				newPassword: "new-password-123",
+				newPasswordConfirm: "new-password-123",
 			}) as never,
 		);
 		expect(result).toEqual({
