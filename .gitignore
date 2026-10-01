@@ -42,3 +42,4 @@ vite.config.ts.timestamp-*
 /.pnpm-store/
 
 **/*.log
+.playwright-mcp/
