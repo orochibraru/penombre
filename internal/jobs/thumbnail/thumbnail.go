@@ -96,23 +96,25 @@ func webpFrom(ctx context.Context, keys envelope.Keyring, src string, size int, 
 		return nil, err
 	}
 	defer stop()
-	return webp(ctx, input, nil, size, seek)
+	return webp(ctx, input, nil, size, size, seek)
 }
 
-// webp fits the input inside size×size without enlarging it; seek skips a
+// webp fits the input inside width×height without enlarging it; seek skips a
 // video's usually-black first frame.
-func webp(ctx context.Context, input string, stdin io.Reader, size int, seek bool) ([]byte, error) {
+func webp(ctx context.Context, input string, stdin io.Reader, width, height int, seek bool) ([]byte, error) {
 	args := []string{"-v", "error", "-y"}
 	if seek {
 		args = append(args, "-ss", "1")
 	}
-	scale := fmt.Sprintf("scale=w=min(%d\\,iw):h=min(%d\\,ih):force_original_aspect_ratio=decrease", size, size)
+	scale := fmt.Sprintf("scale=w=min(%d\\,iw):h=min(%d\\,ih):force_original_aspect_ratio=decrease", width, height)
 	args = append(args, "-i", input, "-frames:v", "1", "-vf", scale, "-c:v", "libwebp", "-quality", "80", "-f", "webp", "pipe:1")
 	return output(ctx, stdin, "ffmpeg", args...)
 }
 
-// pdf passes a plain source by path, so poppler can seek; a sealed one goes on
-// stdin, which pdftoppm buffers whole since it cannot take a URL.
+// pdf renders the first page size wide, not inside a size box: a tile shows a
+// portrait page's top across its full width. A plain source goes by path, so
+// poppler can seek; a sealed one goes on stdin, which pdftoppm buffers whole
+// since it cannot take a URL.
 func pdf(ctx context.Context, keys envelope.Keyring, spec Spec) ([]byte, error) {
 	sealed, err := envelope.SniffFile(spec.Source)
 	if err != nil {
@@ -128,11 +130,11 @@ func pdf(ctx context.Context, keys envelope.Keyring, spec Spec) ([]byte, error) 
 		defer src.Close()
 		input, stdin = "-", src
 	}
-	png, err := output(ctx, stdin, "pdftoppm", "-png", "-f", "1", "-l", "1", "-scale-to", fmt.Sprint(spec.Size), "-singlefile", input)
+	png, err := output(ctx, stdin, "pdftoppm", "-png", "-f", "1", "-l", "1", "-scale-to-x", fmt.Sprint(spec.Size), "-scale-to-y", "-1", "-singlefile", input)
 	if err != nil {
 		return nil, err
 	}
-	return webp(ctx, "pipe:0", bytes.NewReader(png), spec.Size, false)
+	return webp(ctx, "pipe:0", bytes.NewReader(png), spec.Size, 3*spec.Size, false)
 }
 
 func peaks(ctx context.Context, keys envelope.Keyring, spec Spec) ([]byte, error) {

@@ -967,6 +967,14 @@ waveforms, `pdftoppm` for PDFs — runs in the Go worker
 binaries are installed in the Dockerfile's `app` stage, and the image build
 fails if ffmpeg's build lacks the `libwebp` encoder.
 
+A document, sheet or deck (`PAGE_PREVIEW_TYPES` in `#lib/documents.ts`) tiles as
+its first page. Only TypeScript reads those formats, so the app lays the page
+out itself (`firstPagePdf`, the export code) into `.thumbnails/<key>_page.pdf`,
+sealed like the file, and the worker rasterises it as an ordinary `pdf` job.
+They are never warmed: an editor autosaves every few seconds and each save drops
+the renders. The worker renders a PDF page `size` **wide**, not inside a `size`
+box, or a portrait page came out 212px wide and blurred across a 265px tile.
+
 ### A video's other qualities are rendered on request
 
 `RenditionService` (`services/storage/renditions.ts`) has the Go worker's
@@ -2364,10 +2372,14 @@ Shots are WebP (q90), encoded with Bun's built-in `Bun.Image` — no `sharp`. pn
 were ~7 MB of repo per run for the same pixels; this is ~0.9 MB. That only works
 because Playwright runs on Bun (`[run] bun = true`).
 
-It first seeds one dummy of every supported kind from `e2e/fixtures/showcase-*`
-(image, video, track, PDF, sheet, deck, code, 3D model, archive), so the shots
-exercise every preview path rather than showing an empty drive. That seeding
-runs once, not per theme.
+It first seeds a band's drive from `e2e/fixtures/showcase-*`: real, freely
+licensed photos, a clip and three takes of one track (sources and licences in
+`e2e/fixtures/CREDITS.md`; never share-alike, non-commercial or no-derivatives),
+uploaded under band names, plus a document, sheet and deck written through the
+API and one file of every other kind. Synthetic media (a gradient, a test card,
+a sine wave) made every shot look fake. The takes need versioning on, which is
+instance-wide and off for every other spec, so an `afterAll` turns it back off.
+That seeding runs once, not per theme.
 
 Every shot is captured twice, light then dark, via
 `page.emulateMedia({ colorScheme })`: the app follows system theme by default

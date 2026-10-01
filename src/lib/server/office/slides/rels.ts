@@ -115,7 +115,7 @@ export class Rels {
 			(node) =>
 				!isElement(node) ||
 				!types.has(node.attrs.Type ?? "") ||
-				used.has(node.attrs.Id),
+				used.has(node.attrs.Id ?? ""),
 		);
 	}
 

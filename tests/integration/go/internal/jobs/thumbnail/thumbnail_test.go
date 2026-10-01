@@ -112,13 +112,13 @@ func TestFailureLeavesNoFile(t *testing.T) {
 	}
 }
 
-// minimalPDF is one blank 200x100pt page, xref offsets computed so pdftoppm
+// minimalPDF is one blank 100x200pt page, xref offsets computed so pdftoppm
 // reads it without repair.
 func minimalPDF() []byte {
 	objects := []string{
 		"<< /Type /Catalog /Pages 2 0 R >>",
 		"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-		"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 100] >>",
+		"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 200] >>",
 	}
 	var b strings.Builder
 	b.WriteString("%PDF-1.4\n")
@@ -154,6 +154,14 @@ func TestPDFFirstPageBecomesWebp(t *testing.T) {
 	b, _ := os.ReadFile(out)
 	if len(b) < 12 || string(b[8:12]) != "WEBP" {
 		t.Fatal("output is not a webp")
+	}
+	// A portrait page fills the width, not a 300px box.
+	probe, err := exec.Command("ffprobe", "-v", "error", "-show_entries", "stream=width,height", "-of", "csv=p=0", out).Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.TrimSpace(string(probe)); got != "300,600" {
+		t.Fatalf("page rendered %s, want 300,600", got)
 	}
 	if left, _ := filepath.Glob(filepath.Join(dir, "*.png")); len(left) != 0 {
 		t.Fatalf("intermediate page left behind: %v", left)

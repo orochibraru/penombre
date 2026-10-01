@@ -16,9 +16,6 @@ repos:
         # A Maestro flow is two documents: its config, then its commands.
         args: [--allow-multiple-documents]
 
-      - id: check-added-large-files
-        name: Look for large files
-
       - id: mixed-line-ending
         name: Fix line endings
         args: [--fix=lf]

@@ -166,6 +166,27 @@ export async function openUploadDialog(page: Page) {
 	await page.getByRole("menuitem", { name: "File Upload" }).click();
 }
 
+/** Instance-wide: every other spec expects a same-name upload to be `name (1)`. */
+export async function setVersioning(page: Page, on: boolean) {
+	await page.goto("/admin/settings");
+	const toggle = page.getByRole("checkbox", { name: /keep file versions/i });
+	await expect(toggle).toBeVisible();
+	if ((await toggle.isChecked()) !== on) {
+		await toggle.click();
+	}
+	await page.getByRole("button", { name: /save changes/i }).click();
+	await expect(page.getByText("Settings saved").first()).toBeVisible();
+}
+
+/** The pill on a file with versions is what unfolds them under it. */
+export async function unfold(page: Page, name: string) {
+	await page
+		.getByRole("row")
+		.filter({ hasText: name })
+		.getByTitle("Show versions")
+		.click();
+}
+
 /** Open the new-folder dialog via the "New" sidebar button → "Folder". */
 export async function openNewFolderDialog(page: Page) {
 	await page.getByRole("button", { name: "New", exact: true }).click();

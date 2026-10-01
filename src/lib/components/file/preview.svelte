@@ -15,7 +15,7 @@
 	import Waveform from "#lib/components/file/waveform.svelte";
 	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.js";
-	import { kindForName } from "#lib/documents.js";
+	import { kindForName, PAGE_PREVIEW_TYPES } from "#lib/documents.js";
 	import { isCodeItem } from "#lib/file-utils.js";
 	import { getFileIconType } from "#lib/utils.js";
 
@@ -43,6 +43,11 @@
 	// Check if this is a PDF
 	const isPdf = $derived(item.metadata.contentType === "application/pdf");
 
+	/** Shown as its first page: a PDF, or a document the server lays out. */
+	const isPaged = $derived(
+		isPdf || !!PAGE_PREVIEW_TYPES[item.metadata.contentType ?? ""],
+	);
+
 	const isArchive = $derived(item.metadata.category === "ARCHIVES");
 
 	// Check if this is an audio file
@@ -65,7 +70,7 @@
 	$effect(() => {
 		objectUrl = rawUrl(item);
 
-		if (isImage || isVideo || isPdf || isAudio) {
+		if (isImage || isVideo || isPaged || isAudio) {
 			thumbnailUrl = thumbUrlFor(item, "large");
 			thumbnailError = false;
 			thumbnailLoading = true;
@@ -78,31 +83,30 @@
         <!-- Covers the fetch so a tile never flashes broken-image alt text. -->
         <Skeleton class="absolute inset-0 size-full rounded-none" />
     {/if}
-    {#if editable}
+    {#if isPaged && thumbnailUrl && !thumbnailError}
+        <!-- The top of the first page, where the title is. -->
+        <img
+            src={thumbnailUrl}
+            alt={item.metadata.name ?? item.key}
+            class="absolute inset-0 size-full object-cover object-top"
+            loading="lazy"
+            onload={() => (thumbnailLoading = false)}
+            onerror={() => {
+                thumbnailError = true;
+                thumbnailLoading = false;
+            }}
+        />
+    {:else if editable}
         <DocumentKindIcon kind={editable} class="size-10" />
     {:else if isPdf}
-        {#if thumbnailError || !thumbnailUrl}
-            <!-- Fallback to embed if thumbnail fails -->
-            <embed
-                src={objectUrl}
-                title={item.metadata.name ?? item.key}
-                class="overflow-hidden"
-                width="100%"
-                height="200px"
-            />
-        {:else}
-            <img
-                src={thumbnailUrl}
-                alt={item.metadata.name ?? item.key}
-                class="absolute inset-0 size-full object-cover"
-                loading="lazy"
-                onload={() => (thumbnailLoading = false)}
-                onerror={() => {
-                    thumbnailError = true;
-                    thumbnailLoading = false;
-                }}
-            />
-        {/if}
+        <!-- Fallback to embed if thumbnail fails -->
+        <embed
+            src={objectUrl}
+            title={item.metadata.name ?? item.key}
+            class="overflow-hidden"
+            width="100%"
+            height="200px"
+        />
     {:else if isArchive}
         <FileArchiveIcon class="size-10 text-muted-foreground" />
     {:else if isDocument}

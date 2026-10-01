@@ -15,6 +15,7 @@ mock.module("#lib/server/services/jobs.js", () => ({
 }));
 
 const { ThumbnailService } = await import("./thumbnails");
+const { LocalStorageDriver } = await import("./drivers/local");
 const { seal } = await import("#lib/server/crypto/envelope.js");
 
 describe("ThumbnailService", () => {
@@ -145,6 +146,27 @@ describe("ThumbnailService", () => {
 			await service().generateThumbnail("x.zip", "application/zip", 100),
 		).toBeNull();
 		expect(enqueueJob).not.toHaveBeenCalled();
+	});
+
+	test("a document is laid out as a one-page PDF for the worker", async () => {
+		const docx = `${import.meta.dir}/../../../../../e2e/fixtures/office-report.docx`;
+		await writeFile(join(root, "r.docx"), await Bun.file(docx).bytes());
+		const paged = new ThumbnailService({
+			storagePath: root,
+			driver: new LocalStorageDriver(root),
+		} as never);
+		const type =
+			"application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+		await paged.warm("r.docx", type);
+		expect(enqueueJob).not.toHaveBeenCalled();
+
+		await paged.generateThumbnail("r.docx", type, 300);
+		const page = join(root, ".thumbnails", "r.docx_page.pdf");
+		expect(enqueueJob.mock.calls[0]?.[0]).toMatchObject({
+			spec: { kind: "pdf", source: page },
+		});
+		expect(await Bun.file(page).text()).toStartWith("%PDF");
 	});
 
 	test("warm enqueues without waiting", async () => {

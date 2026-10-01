@@ -12,13 +12,14 @@ import { blankWorkbook } from "../blank";
 import { blankDocument } from "../docx-package";
 import { docxToHtml } from "../docx-read";
 import { htmlToDocx } from "../docx-write";
+import { slidesPdfPages } from "../slides";
 import { readWorkbook, workbookFromText } from "../xlsx";
 import { readZip, writeZip } from "../zip";
 import { readHtml } from "./model";
 import { renderPdf } from "./pdf";
 import { documentPdf } from "./pdf-document";
-import { sheetsPdf, shownValues } from "./sheet-pdf";
-import { exportSlides } from "./slides";
+import { sheetPreviewPdf, sheetsPdf, shownValues } from "./sheet-pdf";
+import { exportSlides, slidesPdf } from "./slides";
 import { toHtmlPage, toMarkdown, toText } from "./text";
 
 export { SheetTooLargeError } from "./sheet-pdf";
@@ -53,14 +54,24 @@ export interface Exported {
 const encode = (text: string) => new TextEncoder().encode(text);
 const extensionOf = (name: string) => name.split(".").pop()?.toLowerCase();
 
+function documentHtml(name: string, bytes: ArrayBuffer): string {
+	return officeKindForName(name)
+		? docxToHtml(readZip(bytes))
+		: new TextDecoder().decode(bytes);
+}
+
+function readSheets(name: string, bytes: ArrayBuffer): SheetSource[] {
+	return officeKindForName(name)
+		? readWorkbook(readZip(bytes))
+		: [{ name: "Sheet1", rows: parseCsv(new TextDecoder().decode(bytes)) }];
+}
+
 function exportDocument(
 	name: string,
 	bytes: ArrayBuffer,
 	format: ExportFormat,
 ): Uint8Array | Promise<Uint8Array> {
-	const html = officeKindForName(name)
-		? docxToHtml(readZip(bytes))
-		: new TextDecoder().decode(bytes);
+	const html = documentHtml(name, bytes);
 	if (format === "docx") {
 		const entries = blankDocument();
 		htmlToDocx(entries, html);
@@ -85,16 +96,13 @@ function exportSheet(
 	bytes: ArrayBuffer,
 	format: ExportFormat,
 ): Uint8Array | Promise<Uint8Array> {
-	const office = officeKindForName(name) !== null;
-	const text = office ? "" : new TextDecoder().decode(bytes);
+	// An `.xlsx` asked as `.xlsx` is its own bytes: this is a CSV.
 	if (format === "xlsx") {
 		const entries = blankWorkbook();
-		workbookFromText(entries, text);
+		workbookFromText(entries, new TextDecoder().decode(bytes));
 		return writeZip(entries);
 	}
-	const sheets: SheetSource[] = office
-		? readWorkbook(readZip(bytes))
-		: [{ name: "Sheet1", rows: parseCsv(text) }];
+	const sheets = readSheets(name, bytes);
 	if (format === "csv") {
 		return encode(toCsv(shownValues(sheets, 1)[0] ?? []));
 	}
@@ -127,4 +135,31 @@ export async function exportFile(
 		contentType: EXPORT_TYPES[format],
 		filename: `${baseName(name)}.${format}`,
 	};
+}
+
+/** About what one page holds; the rest is never laid out. */
+const PAGE_BLOCKS = 40;
+
+/**
+ * The first page of a document, sheet or presentation as a PDF, for its
+ * thumbnail. Null when there is nothing to draw: a Markdown deck has no
+ * renderer here, and a deck may hide every slide.
+ */
+export function firstPagePdf(
+	name: string,
+	bytes: ArrayBuffer,
+): Promise<Uint8Array | null> {
+	const kind = kindForName(name);
+	if (kind === "document") {
+		const blocks = readHtml(documentHtml(name, bytes)).slice(0, PAGE_BLOCKS);
+		return renderPdf(documentPdf(blocks, baseName(name)));
+	}
+	if (kind === "sheet") {
+		return renderPdf(sheetPreviewPdf(readSheets(name, bytes)));
+	}
+	const pages =
+		kind === "presentation" && officeKindForName(name)
+			? slidesPdfPages(bytes, 1)
+			: [];
+	return pages.length > 0 ? slidesPdf(pages) : Promise.resolve(null);
 }

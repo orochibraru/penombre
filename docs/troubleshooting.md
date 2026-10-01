@@ -216,9 +216,9 @@ Clean up trashed files or move the storage volume to a larger disk.
 
 ### Video or PDF thumbnails not generating
 
-Thumbnail generation requires `ffmpeg` (video) and `poppler-utils` (PDF), both
-included in the official Docker image. If you're running outside Docker, install
-them:
+Thumbnail generation requires `ffmpeg` (video) and `poppler-utils` (PDF, and the
+first page of a document, sheet or presentation), both included in the official
+Docker image. If you're running outside Docker, install them:
 
 ```bash
 # Debian/Ubuntu

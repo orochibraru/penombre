@@ -66,6 +66,20 @@ export function officeKindForName(name: string): DocumentKind | null {
 	return OFFICE_KINDS[extensionOf(name)] ?? null;
 }
 
+const OOXML = "application/vnd.openxmlformats-officedocument";
+
+/**
+ * The types whose tile is their first page, laid out by the server, by the
+ * extension it reads them as. Legacy `.html` documents and Markdown decks
+ * keep their icon.
+ */
+export const PAGE_PREVIEW_TYPES: Record<string, string> = {
+	[`${OOXML}.wordprocessingml.document`]: "docx",
+	[`${OOXML}.spreadsheetml.sheet`]: "xlsx",
+	[`${OOXML}.presentationml.presentation`]: "pptx",
+	"text/csv": "csv",
+};
+
 /** Whether a file opens in an editor at all: every kind does. */
 export function editorKindForName(name: string): DocumentKind | null {
 	return kindForName(name);

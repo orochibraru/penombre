@@ -4,6 +4,8 @@
  * Rendering happens off-process: `generateThumbnail` enqueues a `"thumbnail"`
  * job for the Go worker (ffmpeg, pdftoppm, libwebp) and reads back whatever it
  * wrote under `.thumbnails/`, even when the storage backend itself is remote.
+ * Documents, sheets and decks are the exception: only TypeScript reads them,
+ * so their first page is laid out here as a PDF, which the worker rasterises.
  */
 
 import * as fs from "node:fs";
@@ -11,6 +13,7 @@ import { existsSync } from "node:fs";
 import { link, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { and, eq } from "drizzle-orm";
+import { PAGE_PREVIEW_TYPES } from "#lib/documents.js";
 import { Logger } from "#lib/logger.js";
 import {
 	isSealed,
@@ -19,6 +22,7 @@ import {
 } from "#lib/server/crypto/envelope.js";
 import { keyring } from "#lib/server/crypto/keyring.js";
 import { files } from "#lib/server/db/schema.js";
+import { firstPagePdf } from "#lib/server/office/export/index.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
 import type { StorageContext } from "./context";
 import { generateETag } from "./mappers";
@@ -70,7 +74,8 @@ const AUDIO_TYPES = [
 	"audio/webm",
 ] as const;
 
-type Kind = "image" | "video" | "pdf" | "audio";
+/** `page`: a document, sheet or deck, laid out here as a one-page PDF. */
+type Kind = "image" | "video" | "pdf" | "audio" | "page";
 
 function kindOf(contentType: string): Kind | undefined {
 	const is = (list: readonly string[]) => list.includes(contentType);
@@ -85,6 +90,9 @@ function kindOf(contentType: string): Kind | undefined {
 	}
 	if (is(AUDIO_TYPES)) {
 		return "audio";
+	}
+	if (PAGE_PREVIEW_TYPES[contentType]) {
+		return "page";
 	}
 	return undefined;
 }
@@ -157,15 +165,21 @@ export class ThumbnailService {
 			".thumbnails",
 			kind === "audio" ? `${safeKey}_peaks.json` : `${safeKey}_${size}.webp`,
 		);
+		// Beside the renders, so deleting or adopting them covers it too.
+		const page =
+			kind === "page"
+				? { key: `.thumbnails/${safeKey}_page.pdf`, contentType }
+				: undefined;
 		return {
 			output,
 			outputType: kind === "audio" ? "application/json" : "image/webp",
+			page,
 			job: {
 				type: "thumbnail",
 				dedupeKey: output,
 				spec: {
-					kind,
-					source: join(this.ctx.storagePath, key),
+					kind: page ? "pdf" : kind,
+					source: join(this.ctx.storagePath, page?.key ?? key),
 					output,
 					size,
 					buckets: ThumbnailService.PEAK_BUCKETS,
@@ -178,13 +192,41 @@ export class ThumbnailService {
 	/** Never throws: a failed enqueue must not fail an upload or a scan. */
 	async warm(key: string, contentType: string): Promise<void> {
 		const plan = this.plan(key, contentType, ThumbnailService.WARM_SIZE);
-		if (!plan || existsSync(plan.output)) {
+		// A page is laid out in this process, so on view: an editor's
+		// autosave every few seconds would otherwise lay it out each time.
+		if (!plan || plan.page || existsSync(plan.output)) {
 			return;
 		}
 		try {
 			await enqueueJob({ ...plan.job, priority: "background" });
 		} catch (error) {
 			logger.warn(`[thumbnail] Warm failed for ${key}:`, error);
+		}
+	}
+
+	/**
+	 * Writes the first page of `key` as a PDF for the worker to rasterise,
+	 * sealed like the file. False when there is nothing to draw.
+	 */
+	private async layOut(
+		key: string,
+		page: { key: string; contentType: string },
+	): Promise<boolean> {
+		if (existsSync(join(this.ctx.storagePath, page.key))) {
+			return true;
+		}
+		try {
+			const pdf = await firstPagePdf(
+				`page.${PAGE_PREVIEW_TYPES[page.contentType]}`,
+				await this.ctx.driver.readObject(key),
+			);
+			if (pdf) {
+				await this.ctx.driver.writeObject(page.key, pdf);
+			}
+			return pdf !== null;
+		} catch (error) {
+			logger.warn(`[thumbnail] Could not lay out ${key}:`, error);
+			return false;
 		}
 	}
 
@@ -215,6 +257,9 @@ export class ThumbnailService {
 		}
 		try {
 			if (!existsSync(plan.output)) {
+				if (plan.page && !(await this.layOut(key, plan.page))) {
+					return null;
+				}
 				// The job may be a warm-up or another tab's request: leave it
 				// for them rather than cancel it at this tile's deadline.
 				const job = await awaitJob(

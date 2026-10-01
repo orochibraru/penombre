@@ -7,21 +7,11 @@ import {
 	goToBrowse,
 	openUploadDialog,
 	sameOrigin,
+	setVersioning,
+	unfold,
 } from "../helpers";
 
 test.use({ storageState: AUTH_STORAGE_STATE });
-
-/** Instance-wide: every other spec expects a same-name upload to be `name (1)`. */
-async function setVersioning(page: Page, on: boolean) {
-	await page.goto("/admin/settings");
-	const toggle = page.getByRole("checkbox", { name: /keep file versions/i });
-	await expect(toggle).toBeVisible();
-	if ((await toggle.isChecked()) !== on) {
-		await toggle.click();
-	}
-	await page.getByRole("button", { name: /save changes/i }).click();
-	await expect(page.getByText("Settings saved").first()).toBeVisible();
-}
 
 async function upload(page: Page, name: string, body: string) {
 	await uploadBytes(page, name, "text/plain", Buffer.from(body));
@@ -50,15 +40,6 @@ async function setLayout(page: Page, layout: "grid" | "list") {
 		headers: sameOrigin(),
 	});
 	expect(response.ok()).toBeTruthy();
-}
-
-/** The pill on a file with versions is what unfolds them under it. */
-async function unfold(page: Page, name: string) {
-	await page
-		.getByRole("row")
-		.filter({ hasText: name })
-		.getByTitle("Show versions")
-		.click();
 }
 
 /** A version's row leads with its label and never repeats the file name. */

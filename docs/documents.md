@@ -14,6 +14,13 @@ list, the grid tiles — so a folder of mixed documents can be read without
 squinting at extensions. It is the one place a fixed colour is used rather than
 your accent, because it identifies the kind, not the object.
 
+In grid layout, a tile shows the file's first page instead of its icon: a
+document's opening paragraphs, a sheet's top-left corner with formulas worked
+out, a deck's first slide. That covers `.docx`, `.xlsx`, `.pptx` and `.csv`
+files, wherever they came from; `.html` documents and Markdown decks keep their
+icon. The page is drawn the first time a tile asks for it rather than at upload,
+and again after each save, since an editor saves every few seconds.
+
 ## Why those formats
 
 A document is a Word file, a sheet an Excel file and a presentation a PowerPoint

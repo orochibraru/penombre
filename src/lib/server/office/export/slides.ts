@@ -21,7 +21,10 @@ export function exportSlides(
 			),
 		);
 	}
-	const pages = slidesPdfPages(bytes);
+	return slidesPdf(slidesPdfPages(bytes));
+}
+
+export function slidesPdf(pages: string[]): Promise<Uint8Array> {
 	return renderPdf({
 		pageSize: PAGE,
 		pageMargins: 0,

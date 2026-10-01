@@ -53,12 +53,16 @@ export function mediaDataUrl(entries: ZipEntry[], src: string): string | null {
 	return `data:${type};base64,${Buffer.from(entry.data).toString("base64")}`;
 }
 
-/** Every slide shown in a presentation as an SVG document, in order. */
-export function slidesPdfPages(bytes: ArrayBuffer | Uint8Array): string[] {
+/** The first `count` slides shown in a presentation as SVG documents. */
+export function slidesPdfPages(
+	bytes: ArrayBuffer | Uint8Array,
+	count = Number.POSITIVE_INFINITY,
+): string[] {
 	const entries = readZip(bytes);
 	const deck: Deck = readDeck(entries);
 	return deck.slides
 		.filter((slide) => !slide.hidden)
+		.slice(0, count)
 		.map((slide) =>
 			renderSlideSvg(deck, slide, {
 				width: 1280,

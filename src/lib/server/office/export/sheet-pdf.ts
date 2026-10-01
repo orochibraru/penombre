@@ -1,5 +1,6 @@
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import { createWorkbook, type SheetSource } from "#lib/formula.js";
+import { columnName } from "#lib/sheet/references.js";
 
 /**
  * A workbook as a PDF: every sheet on landscape A4, one table each, showing
@@ -33,16 +34,20 @@ export function usedArea(rows: string[][]): { height: number; width: number } {
 }
 
 /**
- * What each cell shows, over the used area of the first `count` sheets. The
- * whole book is loaded all the same: a formula may read another sheet.
+ * What each cell shows, over the used area of the first `count` sheets, cut
+ * to `limit`. The whole book is loaded all the same: a formula may read
+ * another sheet, and only the cells shown are evaluated.
  */
 export function shownValues(
 	sheets: SheetSource[],
 	count = sheets.length,
+	limit = { height: Number.POSITIVE_INFINITY, width: Number.POSITIVE_INFINITY },
 ): string[][][] {
 	const book = createWorkbook(sheets);
 	return sheets.slice(0, count).map((sheet, index) => {
-		const { height, width } = usedArea(sheet.rows);
+		const used = usedArea(sheet.rows);
+		const height = Math.min(used.height, limit.height);
+		const width = Math.min(used.width, limit.width);
 		return Array.from({ length: height }, (_, row) =>
 			Array.from({ length: width }, (_, col) => book.shown(index, row, col)),
 		);
@@ -107,5 +112,57 @@ export function sheetsPdf(
 		pageMargins: MARGIN,
 		content,
 		defaultStyle: { font: "Roboto", fontSize: 8 },
+	};
+}
+
+/** A tile's worth of grid, on a 16:10 page: what the editor opens on. */
+const PREVIEW = { width: 480, height: 300, rows: 16, columns: 7 };
+const HEADER = {
+	fillColor: "#f1f3f4",
+	color: "#5f6368",
+	alignment: "center",
+} as const;
+
+/** The first sheet's top-left corner, headed and lined like the editor. */
+export function sheetPreviewPdf(sheets: SheetSource[]): TDocumentDefinitions {
+	const values = shownValues(sheets, 1, {
+		height: PREVIEW.rows,
+		width: PREVIEW.columns,
+	})[0];
+	const cell = (row: number, col: number) => {
+		const text = values?.[row]?.[col] ?? "";
+		const number = text !== "" && Number.isFinite(Number(text));
+		return {
+			text,
+			noWrap: true,
+			alignment: number ? ("right" as const) : ("left" as const),
+		};
+	};
+	const columns = Array.from({ length: PREVIEW.columns }, (_, col) => col);
+	return {
+		pageSize: { width: PREVIEW.width, height: PREVIEW.height },
+		pageMargins: 0,
+		content: {
+			table: {
+				widths: [20, ...columns.map(() => "*")],
+				body: [
+					[
+						{ text: "", ...HEADER },
+						...columns.map((col) => ({ text: columnName(col), ...HEADER })),
+					],
+					...Array.from({ length: PREVIEW.rows }, (_, row) => [
+						{ text: String(row + 1), ...HEADER },
+						...columns.map((col) => cell(row, col)),
+					]),
+				],
+			},
+			layout: {
+				hLineWidth: () => 0.5,
+				vLineWidth: () => 0.5,
+				hLineColor: () => "#dadce0",
+				vLineColor: () => "#dadce0",
+			},
+		},
+		defaultStyle: { font: "Roboto", fontSize: 9 },
 	};
 }
