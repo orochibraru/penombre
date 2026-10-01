@@ -462,29 +462,29 @@
 		},
 	});
 
+	/** A file's bytes, or a folder as a zip. */
+	function downloadItem(item: ObjectItem) {
+		const itemName = item.metadata.name ?? item.key;
+		if (isFolderItem(item)) {
+			// Folder: a plain link, so the browser streams the zip straight
+			// to disk instead of a fetch buffering it whole in JS memory.
+			const folderId = item.key.endsWith("/")
+				? item.key.slice(0, -1)
+				: item.key;
+			clickDownload(
+				folderZipDownloadUrl(folderId, currentFolder),
+				`${itemName}.zip`,
+			);
+			toast.info(m.toast_downloaded({ name: itemName }));
+		} else {
+			handleDownloadItem(item);
+		}
+	}
+
 	const mainActions = createMainActions({
 		onDownload: (item) => {
 			actionsContextOpen = false;
-			const isFolder = isFolderItem(item);
-			const itemName = item.metadata.name ?? item.key;
-
-			if (isFolder) {
-				// Folder: a plain link, so the browser streams the zip straight
-				// to disk instead of a fetch buffering it whole in JS memory.
-				const folderId = item.key.endsWith("/")
-					? item.key.slice(0, -1)
-					: item.key;
-				clickDownload(
-					folderZipDownloadUrl(folderId, currentFolder),
-					`${itemName}.zip`,
-				);
-				toast.info(m.toast_downloaded({ name: itemName }));
-			} else {
-				// File: regular download
-				handleDownloadItem(itemName, () => {
-					// no progress reporting needed for a single-file download
-				});
-			}
+			downloadItem(item);
 		},
 		onOpenFullscreen: handleOpenItemFullscreen,
 		onRename: (item) =>
@@ -630,8 +630,13 @@
 						return;
 					}
 
-					if (keys.length === 1 && keys[0]) {
-						handleDownloadItem(keys[0], () => (actionsContextOpen = false));
+					const only =
+						keys.length === 1
+							? (displayData.list ?? []).find((item) => item.key === keys[0])
+							: undefined;
+					if (only) {
+						actionsContextOpen = false;
+						downloadItem(only);
 					} else {
 						actionsContextOpen = false;
 						downloadSelected(keys, currentFolder);

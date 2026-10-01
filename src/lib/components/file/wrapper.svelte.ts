@@ -26,7 +26,6 @@ import { determineCodeFileLanguage } from "#lib/file-utils.js";
 import * as m from "#lib/paraglide/messages.js";
 import { itemAction } from "#lib/store/actions.js";
 import { playableMusic } from "#lib/store/music.js";
-import { getObjectUrl } from "#lib/url.js";
 import {
 	copyText,
 	type ItemAction,
@@ -41,7 +40,13 @@ import { dev } from "$app/env";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { page } from "$app/state";
-import { clickDownload, peaksUrl, rawUrl, withLocation } from "./file-links";
+import {
+	clickDownload,
+	downloadUrl,
+	peaksUrl,
+	rawUrl,
+	withLocation,
+} from "./file-links";
 import { fileHistoryActions } from "./version-actions";
 import { editAsText } from "./wrapper-edit";
 import { mergeVersionsAction } from "./wrapper-merge";
@@ -547,17 +552,15 @@ export { clickDownload } from "./file-links";
  * only say the download started; not that it finished.
  */
 export function handleDownloadItem(
-	itemPath: string,
+	item: ObjectItem,
 	onComplete?: () => void,
 ): void {
-	const finalUrl = getObjectUrl({
-		baseUrl: page.url,
-		itemPath,
-		raw: true,
-	});
-	clickDownload(finalUrl, itemPath);
+	// By id: a key is one segment, and in full mode a personal file's key is
+	// `<uuid>.<ext>`, not its name. Addressing it by name 404'd every download.
+	const name = item.metadata.name ?? item.key;
+	clickDownload(downloadUrl(item), name);
 	onComplete?.();
-	toast.info(m.toast_downloaded_item({ name: itemPath }));
+	toast.info(m.toast_downloaded_item({ name }));
 }
 
 export async function handleOpenItem(
