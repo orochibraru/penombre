@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LANGUAGES } from "#lib/languages.js";
 import { NOTIFICATION_TYPES } from "#lib/notification-prefs.js";
 import { defineRoute } from "#lib/server/openapi/index.js";
 
@@ -39,6 +40,8 @@ const userPreferencesSchema = z.object({
 		.optional(),
 	listingLoadMode: z.enum(["scroll", "pages"]).optional(),
 	versionNaming: z.enum(["sequential", "date"]).optional(),
+	/** Null follows the browser's (or the phone's) own language. */
+	language: z.enum(LANGUAGES).nullable().optional(),
 });
 
 export const getPreferences = defineRoute({

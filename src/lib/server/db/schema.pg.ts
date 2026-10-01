@@ -11,6 +11,7 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { Language } from "#lib/languages.js";
 import type { NotificationChoices } from "#lib/notification-prefs.js";
 
 export const user = pgTable("user", {
@@ -445,6 +446,11 @@ export interface UserPreferencesData {
 	listingLoadMode?: "scroll" | "pages";
 	/** How a file version is labelled: `v3`, or the date it was kept. */
 	versionNaming?: "sequential" | "date";
+	/**
+	 * The account's interface language, on the web and in the mobile app.
+	 * Null follows each browser's or phone's own.
+	 */
+	language?: Language | null;
 }
 
 export type SignInMethod = "password" | "passkey" | "magicLink" | "emailOtp";

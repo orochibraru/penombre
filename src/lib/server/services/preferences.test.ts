@@ -28,6 +28,7 @@ describe("getUserPreferences", () => {
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
 			versionNaming: "sequential",
+			language: null,
 		});
 	});
 
@@ -55,6 +56,7 @@ describe("getUserPreferences", () => {
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
 			versionNaming: "sequential",
+			language: null,
 		});
 	});
 
@@ -82,6 +84,7 @@ describe("getUserPreferences", () => {
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
 			versionNaming: "sequential",
+			language: null,
 		});
 	});
 });
@@ -115,6 +118,7 @@ describe("updateUserPreferences", () => {
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
 			versionNaming: "sequential",
+			language: null,
 		});
 		expect(mockValues).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -131,6 +135,7 @@ describe("updateUserPreferences", () => {
 					preferredSignInMethod: null,
 					listingLoadMode: "scroll",
 					versionNaming: "sequential",
+					language: null,
 				},
 			}),
 		);
@@ -169,6 +174,7 @@ describe("updateUserPreferences", () => {
 			preferredSignInMethod: null,
 			listingLoadMode: "scroll",
 			versionNaming: "sequential",
+			language: null,
 		});
 	});
 });

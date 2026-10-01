@@ -34,6 +34,7 @@
 	import AppBanner from "#lib/components/apps/app-banner.svelte";
 	import NewPresentationDialog from "#lib/components/editor/slides/new-presentation-dialog.svelte";
 	import { withLocation } from "#lib/components/file/file-links.js";
+	import { applyLanguage } from "#lib/components/language-dropdown.svelte";
 	import NewFolderDialog from "#lib/components/layout/dialogs/new-folder-dialog.svelte";
 	import NewTextFileDialog from "#lib/components/layout/dialogs/new-text-file-dialog.svelte";
 	import UploadDialog from "#lib/components/layout/dialogs/upload-dialog.svelte";
@@ -105,6 +106,7 @@
 	// session's preferences have loaded.
 	$effect(() => {
 		applyTheme(data.preferences);
+		applyLanguage(data.preferences?.language);
 	});
 
 	// Close all dialogs when navigation starts
