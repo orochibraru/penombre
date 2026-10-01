@@ -1,5 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { Share } from "#lib/server/db/schema.js";
+import { exportFile } from "#lib/server/office/export/index.js";
 import { ShareService, unlockCookieName } from "#lib/server/services/shares.js";
 import type { StorageService } from "#lib/server/services/storage/index.js";
 import {
@@ -88,6 +89,38 @@ async function fileBody(
 	});
 }
 
+/**
+ * The file converted, as its editor's Download as does: a document, sheet
+ * or presentation as a PDF. Null when it cannot be.
+ */
+async function converted(
+	service: StorageService,
+	fileId: string,
+	format: string,
+): Promise<Response | null> {
+	const path = await service.findFileById(fileId);
+	const raw = path ? await service.getRawFileData(path) : null;
+	if (!raw || raw.meta.metadata.isTrashed || format !== "pdf") {
+		return null;
+	}
+	const exported = await exportFile(
+		raw.meta.metadata.name ?? "download",
+		raw.buffer,
+		"pdf",
+	).catch(() => null);
+	if (!exported) {
+		return null;
+	}
+	return new Response(new Uint8Array(exported.data), {
+		headers: {
+			"Content-Type": exported.contentType,
+			"Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(exported.filename)}`,
+			"Cache-Control": "no-store",
+			...rawFileSecurityHeaders(exported.contentType),
+		},
+	});
+}
+
 /** Whether this share may serve `fileId`. */
 function mayServe(share: Share, fileId: string): Promise<boolean> {
 	if (share.resourceType === "folder") {
@@ -137,10 +170,13 @@ export const GET = async ({ params, url, locals, cookies, request }) => {
 		return error(403, "No access.");
 	}
 
-	const body = await fileBody(service, share, fileId, {
-		inline,
-		range: request.headers.get("range"),
-	});
+	const format = url.searchParams.get("format");
+	const body = format
+		? await converted(service, fileId, format)
+		: await fileBody(service, share, fileId, {
+				inline,
+				range: request.headers.get("range"),
+			});
 	if (!body) {
 		return error(404, "File not found.");
 	}

@@ -1,52 +1,27 @@
 import { api } from "#lib/api/index.js";
+import { readSlide, SLIDE_SEPARATOR, slideTexts } from "#lib/deck/format.js";
+
+export { SLIDE_SEPARATOR };
 
 /** Editable document types. Each stores a portable format, not a private one. */
 export type DocumentKind = "document" | "sheet" | "presentation";
 
 interface KindSpec {
+	/** The format **New** creates. */
 	extension: string;
-	contentType: string;
 	/**
 	 * Identity colour, as a Tailwind text utility. The three editable kinds are
 	 * told apart by colour everywhere they appear — icon, menu, editor — so the
 	 * mapping lives here rather than being re-picked per component.
 	 */
 	color: string;
-	/** What a brand-new file of this kind contains. */
-	initial: (title: string) => string;
 }
-
-/** The separator every Markdown deck tool uses. */
-export const SLIDE_SEPARATOR = "\n\n---\n\n";
 
 export const DOCUMENT_KINDS: Record<DocumentKind, KindSpec> = {
-	document: {
-		extension: "html",
-		contentType: "text/html",
-		color: "text-blue-500",
-		initial: (title) => `<h1>${escapeHtml(title)}</h1>\n<p></p>\n`,
-	},
-	sheet: {
-		extension: "csv",
-		contentType: "text/csv",
-		color: "text-green-500",
-		// Three empty columns so the grid opens with something to click.
-		initial: () => ",,\n,,\n,,\n",
-	},
-	presentation: {
-		extension: "md",
-		contentType: "text/markdown",
-		color: "text-orange-500",
-		initial: (title) => `# ${title}${SLIDE_SEPARATOR}## Next slide\n`,
-	},
+	document: { extension: "docx", color: "text-blue-500" },
+	sheet: { extension: "xlsx", color: "text-green-500" },
+	presentation: { extension: "pptx", color: "text-orange-500" },
 };
-
-function escapeHtml(value: string): string {
-	return value
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;");
-}
 
 /** The extension of a file name, lowercased, or "" when it has none. */
 function extensionOf(name: string): string {
@@ -54,31 +29,32 @@ function extensionOf(name: string): string {
 	return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 }
 
+const KINDS: Record<string, DocumentKind> = {
+	docx: "document",
+	html: "document",
+	htm: "document",
+	xlsx: "sheet",
+	csv: "sheet",
+	pptx: "presentation",
+	md: "presentation",
+	markdown: "presentation",
+};
+
 /**
- * Which editor a file opens in, or null when it is not one of the three
- * kinds Penombre stores natively. This is the "is it one of ours" question —
- * the icon and the colour follow from it — not "can it be edited".
+ * Which of the three kinds a file is, or null. A `.docx` Penombre made and
+ * one uploaded from Word are the same thing, so both carry the document's
+ * colour and icon; `.html`, `.csv` and `.md` are the older native formats,
+ * still opened as they always were.
  */
 export function kindForName(name: string): DocumentKind | null {
-	switch (extensionOf(name)) {
-		case "html":
-		case "htm":
-			return "document";
-		case "csv":
-			return "sheet";
-		case "md":
-		case "markdown":
-			return "presentation";
-		default:
-			return null;
-	}
+	return KINDS[extensionOf(name)] ?? null;
 }
 
 /**
- * Office formats that open in the same three editors. They are converted on
- * the way in and written back into the original file on the way out — see
- * `#lib/server/office/index.js` — so they stay Word, Excel and PowerPoint files and
- * keep their own icons in a listing.
+ * The kinds stored as Office packages. They are converted on the way in and
+ * written back into the original file on the way out — see
+ * `#lib/server/office/index.js` — so they stay Word, Excel and PowerPoint
+ * files.
  */
 export const OFFICE_KINDS: Record<string, DocumentKind> = {
 	docx: "document",
@@ -90,9 +66,9 @@ export function officeKindForName(name: string): DocumentKind | null {
 	return OFFICE_KINDS[extensionOf(name)] ?? null;
 }
 
-/** Whether a file opens in an editor at all, native or converted. */
+/** Whether a file opens in an editor at all: every kind does. */
 export function editorKindForName(name: string): DocumentKind | null {
-	return kindForName(name) ?? officeKindForName(name);
+	return kindForName(name);
 }
 
 /** Identity colour of the document a file is, or null when it is not one. */
@@ -101,19 +77,22 @@ export function documentColor(name: string): string | null {
 	return kind ? DOCUMENT_KINDS[kind].color : null;
 }
 
-/** Create an empty document, returning its file id. */
-export function createDocument(
-	kind: DocumentKind,
+/**
+ * Create an empty document, returning its file id. A document or a sheet is
+ * built by the server as a `.docx` or `.xlsx`, so its bytes never make the
+ * round trip through the browser.
+ */
+/** A presentation starts from a template instead: `new-presentation-dialog`. */
+export async function createDocument(
+	kind: Exclude<DocumentKind, "presentation">,
 	title: string,
 	folder?: string,
 ): Promise<string | null> {
-	const spec = DOCUMENT_KINDS[kind];
-	return createTextFile(
-		`${title}.${spec.extension}`,
-		spec.initial(title),
-		spec.contentType,
-		folder,
-	);
+	const { data, error } = await api.POST("/api/v1/documents", {
+		params: { query: folder ? { folder } : {} },
+		body: { kind, name: title },
+	});
+	return error ? null : (data?.data?.id ?? null);
 }
 
 /** Create a file holding `content`, returning its id. */
@@ -222,7 +201,8 @@ export async function renameDocument(
 }
 
 /**
- * Replace a document's contents with `content`.
+ * Replace a document's contents with `content`. Never a version: an editor
+ * saves every few seconds, and a version is kept only when asked for.
  *
  * A native document is uploaded whole, because the text *is* the file. An
  * Office file is not: the server has to splice the text into the archive it
@@ -232,15 +212,11 @@ export async function renameDocument(
 export async function saveDocument(
 	file: { id: string; name: string; contentType: string },
 	content: string,
-	snapshot = false,
 ): Promise<boolean> {
 	const { id: fileId, name: filename, contentType } = file;
-	// Only a session's first save keeps the bytes it replaces as a version;
-	// autosave every two seconds would otherwise fill the history.
-	const query = { snapshot: snapshot ? ("1" as const) : ("0" as const) };
 	if (officeKindForName(filename)) {
 		const { error } = await api.POST("/api/v1/storage/file/{id}/office", {
-			params: { path: { id: fileId }, query },
+			params: { path: { id: fileId } },
 			body: { content },
 		});
 		return !error;
@@ -249,10 +225,28 @@ export async function saveDocument(
 	const form = new FormData();
 	form.set("file", new File([content], filename, { type: contentType }));
 	const { error } = await api.POST("/api/v1/storage/file/{id}/upload", {
-		params: { path: { id: fileId }, query },
+		params: { path: { id: fileId }, query: { snapshot: "0" } },
 		body: form as never,
 	});
 	return !error;
+}
+
+/** What each kind exports as, in menu order. The server reads this too. */
+export const EXPORT_FORMATS = {
+	document: ["pdf", "docx", "html", "md", "txt"],
+	sheet: ["xlsx", "csv", "pdf"],
+	presentation: ["pptx", "pdf"],
+} as const;
+
+export type ExportFormat = (typeof EXPORT_FORMATS)[DocumentKind][number];
+
+/** What a file can be exported as: a Markdown deck has no slide renderer. */
+export function exportFormatsFor(name: string): readonly ExportFormat[] {
+	const kind = kindForName(name);
+	if (!kind || (kind === "presentation" && !officeKindForName(name))) {
+		return [];
+	}
+	return EXPORT_FORMATS[kind];
 }
 
 // =========================================================================
@@ -334,13 +328,12 @@ export function toCsv(rows: string[][]): string {
 // Slides
 // =========================================================================
 
-/** Split a Markdown deck into slides. */
+/**
+ * Each slide's Markdown, without its notes and directives. Front matter is
+ * not a slide, and a ruler inside fenced code does not split one.
+ */
 export function parseSlides(text: string): string[] {
-	const slides = text
-		.split(/^\s*---\s*$/m)
-		.map((slide) => slide.trim())
-		.filter((slide, _index, all) => slide !== "" || all.length === 1);
-	return slides.length > 0 ? slides : [""];
+	return slideTexts(text).map((slide) => readSlide(slide).body);
 }
 
 export function toDeck(slides: string[]): string {

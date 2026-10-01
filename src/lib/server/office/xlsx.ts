@@ -1,6 +1,16 @@
+import { parseCsv } from "#lib/documents.js";
+import { renameSheetRefs } from "#lib/formula.js";
+import {
+	type Base,
+	dateStyles,
+	NotASpreadsheetError,
+	readPart,
+	sharedStrings,
+	type WorkbookSheet,
+	writePart,
+} from "./xlsx-cells";
 import {
 	childNamed,
-	childrenNamed,
 	element,
 	findElement,
 	findElements,
@@ -9,397 +19,430 @@ import {
 	serializeXml,
 	text,
 	textContent,
+	type XmlDocument,
 	type XmlElement,
 } from "./xml";
 import { partText, setPartText, type ZipEntry } from "./zip";
 
+export {
+	columnIndex,
+	columnRef,
+	NotASpreadsheetError,
+	type WorkbookSheet,
+} from "./xlsx-cells";
+
 /**
- * A workbook's first sheet, as a grid, and back again.
+ * A workbook's worksheets, as grids, and back again; the cells themselves are
+ * `xlsx-cells.ts`. Sheets are matched by their `sheetId`, so a renamed sheet
+ * is still the same part; a sheet added in the editor gets a new part, and
+ * one deleted there loses its own. Charts, drawings, the theme and every part
+ * not named here are never parsed.
  *
- * Writing is surgical: a cell whose text the user did not change keeps its
- * original XML, so its formula, number format, shared-string reference and
- * style survive untouched. Only cells that actually changed are rewritten,
- * and every other part of the package — other sheets, charts, drawings,
- * defined names, the theme — is never even parsed.
- *
- * Sheets after the first are preserved but not shown: the editor is one grid,
- * and inventing a sheet switcher for it is a different feature.
+ * The editor speaks JSON for a workbook: `{ nextId, sheets: [{ id, name,
+ * rows, cached }] }`, `cached` holding the values the file recorded for its
+ * formulas, for the ones the editor's engine cannot compute.
  */
 
-/** Built-in number formats that mean a date or a time. */
-const DATE_FORMAT_IDS = new Set([
-	14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 30, 36, 45, 46, 47, 50, 57,
-]);
+const WORKBOOK = "xl/workbook.xml";
+const WORKBOOK_RELS = "xl/_rels/workbook.xml.rels";
+const CONTENT_TYPES = "[Content_Types].xml";
+const REL_NS =
+	"http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+const WORKSHEET_CONTENT =
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml";
+const EMPTY_WORKSHEET =
+	'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+	'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+	`xmlns:r="${REL_NS}"><dimension ref="A1"/><sheetData/></worksheet>`;
 
-/** Excel's epoch is 1899-12-30: day 1 is 1900-01-01, with the 1900 leap bug. */
-const EXCEL_EPOCH_MS = Date.UTC(1899, 11, 30);
-const MS_PER_DAY = 86_400_000;
+// =========================================================================
+// The workbook part: which sheets there are, and where
+// =========================================================================
 
-export interface SheetGrid {
-	rows: string[][];
-	/** Cell references that hold a date, so an edit can be written back as one. */
-	dateCells: Set<string>;
+interface SheetEntry {
+	/** The `<sheet>` element in workbook.xml. */
+	element: XmlElement;
+	id: number;
+	name: string;
+	/** The worksheet part, or null for a chartsheet or anything else. */
+	path: string | null;
+	relationship: XmlElement | undefined;
 }
 
-export function columnIndex(ref: string): number {
-	let index = 0;
-	for (const char of ref) {
-		index = index * 26 + (char.charCodeAt(0) - 64);
-	}
-	return index - 1;
+interface Package {
+	workbook: XmlDocument;
+	rels: XmlDocument;
+	sheets: SheetEntry[];
 }
 
-export function columnRef(index: number): string {
-	let ref = "";
-	let n = index;
-	do {
-		ref = String.fromCharCode(65 + (n % 26)) + ref;
-		n = Math.floor(n / 26) - 1;
-	} while (n >= 0);
-	return ref;
-}
+/** Targets are relative to the part's own folder, `xl/`. */
+const partPath = (target: string) =>
+	`xl/${target.replace(/^\/?xl\//, "").replace(/^\//, "")}`;
 
-/** Split `B12` into its column index and 1-based row number. */
-function splitRef(ref: string): { column: number; row: number } {
-	const match = /^([A-Z]+)(\d+)$/.exec(ref);
-	if (!match) {
-		return { column: 0, row: 0 };
-	}
-	return {
-		column: columnIndex(match[1] as string),
-		row: Number(match[2]),
-	};
-}
-
-/** The worksheet part the workbook's first sheet points at. */
-function firstSheetPath(entries: ZipEntry[]): string {
-	const workbook = partText(entries, "xl/workbook.xml");
-	const rels = partText(entries, "xl/_rels/workbook.xml.rels");
-	if (!(workbook && rels)) {
+function openPackage(entries: ZipEntry[]): Package {
+	const workbookText = partText(entries, WORKBOOK);
+	const relsText = partText(entries, WORKBOOK_RELS);
+	if (!(workbookText && relsText)) {
 		throw new NotASpreadsheetError("Workbook part is missing");
 	}
-	const sheet = findElement(parseXml(workbook).root, "sheet");
-	const id = sheet?.attrs["r:id"];
-	if (!id) {
-		throw new NotASpreadsheetError("Workbook declares no sheet");
+	const workbook = parseXml(workbookText);
+	const rels = parseXml(relsText);
+	const relationships = findElements(rels.root, "Relationship");
+	const sheets = findElements(workbook.root, "sheet").map((sheet) => {
+		const relationship = relationships.find(
+			(r) => r.attrs.Id === sheet.attrs["r:id"],
+		);
+		const target = relationship?.attrs.Target;
+		const isWorksheet = relationship?.attrs.Type === `${REL_NS}/worksheet`;
+		return {
+			element: sheet,
+			id: Number(sheet.attrs.sheetId),
+			name: sheet.attrs.name ?? "",
+			path: target && isWorksheet ? partPath(target) : null,
+			relationship,
+		};
+	});
+	if (!sheets.some((sheet) => sheet.path)) {
+		throw new NotASpreadsheetError("Workbook declares no worksheet");
 	}
-	const target = findElements(parseXml(rels).root, "Relationship").find(
-		(relationship) => relationship.attrs.Id === id,
-	)?.attrs.Target;
-	if (!target) {
-		throw new NotASpreadsheetError(`No relationship for ${id}`);
-	}
-	// Targets are relative to the part's own folder, `xl/`.
-	return `xl/${target.replace(/^\/?xl\//, "").replace(/^\//, "")}`;
+	return { workbook, rels, sheets };
 }
 
-export class NotASpreadsheetError extends Error {}
-
-/** Shared strings, in index order; rich-text runs are flattened. */
-function sharedStrings(entries: ZipEntry[]): string[] {
-	const source = partText(entries, "xl/sharedStrings.xml");
-	if (!source) {
-		return [];
-	}
-	return childrenNamed(parseXml(source).root, "si").map((item) =>
-		findElements(item, "t")
-			.map((node) => textContent(node))
-			.join(""),
-	);
-}
-
-/** Style index → true when that style formats its number as a date. */
-function dateStyles(entries: ZipEntry[]): boolean[] {
-	const source = partText(entries, "xl/styles.xml");
-	if (!source) {
-		return [];
-	}
-	const root = parseXml(source).root;
-
-	const custom = new Map<number, string>();
-	for (const format of findElements(root, "numFmt")) {
-		const id = Number(format.attrs.numFmtId);
-		if (Number.isFinite(id)) {
-			custom.set(id, format.attrs.formatCode ?? "");
+/** Every worksheet, in workbook order. Chartsheets are left out. */
+export function readWorkbook(entries: ZipEntry[]): WorkbookSheet[] {
+	const { sheets } = openPackage(entries);
+	const base = { strings: sharedStrings(entries), styles: dateStyles(entries) };
+	return sheets.flatMap((sheet) => {
+		const source = sheet.path ? partText(entries, sheet.path) : null;
+		if (!source) {
+			return [];
 		}
-	}
-
-	const cellXfs = childNamed(root, "cellXfs");
-	if (!cellXfs) {
-		return [];
-	}
-	return childrenNamed(cellXfs, "xf").map((xf) => {
-		const id = Number(xf.attrs.numFmtId ?? 0);
-		if (DATE_FORMAT_IDS.has(id)) {
-			return true;
-		}
-		const code = custom.get(id);
-		// A date code is one with y/m/d/h/s outside the quoted literals.
-		return code ? /[ymdhs]/i.test(code.replace(/"[^"]*"/g, "")) : false;
+		return [{ id: sheet.id, name: sheet.name, ...readPart(source, base) }];
 	});
 }
 
-function serialToText(serial: number, withTime: boolean): string {
-	const date = new Date(EXCEL_EPOCH_MS + serial * MS_PER_DAY);
-	const iso = date.toISOString();
-	return withTime ? iso.slice(0, 19).replace("T", " ") : iso.slice(0, 10);
+/** The workbook as the sheet editor's JSON. */
+export function workbookToText(entries: ZipEntry[]): string {
+	const { sheets } = openPackage(entries);
+	// Chartsheets hold ids too, and a sheet added in the editor must not
+	// take one of theirs.
+	const nextId =
+		sheets.reduce(
+			(highest, sheet) =>
+				Math.max(highest, Number.isFinite(sheet.id) ? sheet.id : 0),
+			0,
+		) + 1;
+	return JSON.stringify({ nextId, sheets: readWorkbook(entries) });
 }
 
-/** `2026-01-31` or `2026-01-31 14:05` back to a serial, or null. */
-function textToSerial(value: string): number | null {
-	const match =
-		/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(
-			value.trim(),
-		);
-	if (!match) {
+// =========================================================================
+// Writing the workbook: sheets renamed, added and deleted
+// =========================================================================
+
+/** What the editor sends back for one sheet. */
+export interface SheetInput {
+	id: number;
+	name: string;
+	rows: string[][];
+}
+
+const isGrid = (rows: unknown): rows is string[][] =>
+	Array.isArray(rows) &&
+	rows.every(
+		(row) =>
+			Array.isArray(row) && row.every((cell) => typeof cell === "string"),
+	);
+
+/** The editor's JSON, checked: it crossed the network. */
+function parseSheets(content: string): SheetInput[] | null {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(content);
+	} catch {
 		return null;
 	}
-	const ms = Date.UTC(
-		Number(match[1]),
-		Number(match[2]) - 1,
-		Number(match[3]),
-		Number(match[4] ?? 0),
-		Number(match[5] ?? 0),
-		Number(match[6] ?? 0),
-	);
-	return (ms - EXCEL_EPOCH_MS) / MS_PER_DAY;
+	const sheets = (parsed as { sheets?: unknown } | null)?.sheets;
+	if (!Array.isArray(sheets)) {
+		return null;
+	}
+	return sheets.map((sheet: Partial<SheetInput>) => {
+		if (
+			!(Number.isSafeInteger(sheet.id) && (sheet.id ?? 0) > 0) ||
+			typeof sheet.name !== "string" ||
+			!isGrid(sheet.rows)
+		) {
+			throw new NotASpreadsheetError("Malformed sheet");
+		}
+		return { id: sheet.id ?? 0, name: sheet.name, rows: sheet.rows };
+	});
 }
 
-/** The text a cell displays, given the workbook's strings and styles. */
-function cellText(
-	cell: XmlElement,
-	strings: string[],
-	isDate: boolean,
-): string {
-	const type = cell.attrs.t;
-	if (type === "inlineStr") {
-		return findElements(cell, "t")
-			.map((node) => textContent(node))
-			.join("");
+/** Excel's rules for sheet names and ids; a file breaking them will not open. */
+function checkSheets(sheets: SheetInput[]): void {
+	if (sheets.length === 0) {
+		throw new NotASpreadsheetError("A workbook needs a sheet");
 	}
-	const value = childNamed(cell, "v");
-	if (!value) {
-		return "";
+	const names = new Set<string>();
+	const ids = new Set<number>();
+	for (const { id, name } of sheets) {
+		const lower = name.toLowerCase();
+		if (
+			!/^[^[\]:*?/\\]{1,31}$/.test(name) ||
+			name.trim() === "" ||
+			name.startsWith("'") ||
+			name.endsWith("'") ||
+			names.has(lower) ||
+			ids.has(id)
+		) {
+			throw new NotASpreadsheetError(`Invalid sheet name or id: ${name}`);
+		}
+		names.add(lower);
+		ids.add(id);
 	}
-	const raw = textContent(value);
-	if (type === "s") {
-		return strings[Number(raw)] ?? "";
-	}
-	if (type === "b") {
-		return raw === "1" ? "TRUE" : "FALSE";
-	}
-	if (type === "e" || type === "str") {
-		return raw;
-	}
-	if (isDate) {
-		const serial = Number(raw);
-		return Number.isFinite(serial)
-			? serialToText(serial, !Number.isInteger(serial))
-			: raw;
-	}
-	return raw;
 }
 
-/** One `<row>` as its values, noting any cell that carries a date format. */
-function rowValues(
-	row: XmlElement,
-	strings: string[],
-	styles: boolean[],
-	dateCells: Set<string>,
-): string[] {
-	const values: string[] = [];
-	for (const cell of childrenNamed(row, "c")) {
-		const ref = cell.attrs.r ?? "";
-		const column = ref ? splitRef(ref).column : values.length;
-		const isDate = styles[Number(cell.attrs.s ?? 0)] === true;
-		if (isDate) {
-			dateCells.add(ref);
-		}
-		while (values.length < column) {
-			values.push("");
-		}
-		values[column] = cellText(cell, strings, isDate);
+/** Rewrites every defined name's formula; a null result drops the name. */
+function rewriteDefinedNames(
+	workbook: XmlDocument,
+	rewrite: (formula: string, local: number | null) => string | null,
+): void {
+	const holder = findElement(workbook.root, "definedNames");
+	if (!holder) {
+		return;
 	}
-	return values;
+	holder.children = holder.children.filter((child) => {
+		if (!(isElement(child) && child.name === "definedName")) {
+			return true;
+		}
+		const local = child.attrs.localSheetId;
+		const next = rewrite(
+			`=${textContent(child)}`,
+			local === undefined ? null : Number(local),
+		);
+		if (next === null) {
+			return false;
+		}
+		child.children = [text(next.slice(1))];
+		return true;
+	});
 }
 
-export function readSheet(entries: ZipEntry[]): SheetGrid {
-	const path = firstSheetPath(entries);
-	const source = partText(entries, path);
-	if (!source) {
-		throw new NotASpreadsheetError(`Missing worksheet part ${path}`);
-	}
-	const strings = sharedStrings(entries);
-	const styles = dateStyles(entries);
-	const sheetData = findElement(parseXml(source).root, "sheetData");
-
-	const rows: string[][] = [];
-	const dateCells = new Set<string>();
-
-	for (const row of sheetData ? childrenNamed(sheetData, "row") : []) {
-		const number = Number(row.attrs.r);
-		// A row carries its own number, and a sheet may skip rows entirely.
-		const index = (Number.isFinite(number) ? number : rows.length + 1) - 1;
-		while (rows.length < index) {
-			rows.push([]);
-		}
-		rows[index] = rowValues(row, strings, styles, dateCells);
-	}
-
-	// A rectangle: the grid editor pads short rows anyway, and doing it here
-	// keeps the write side comparing like with like.
-	const width = rows.reduce((widest, row) => Math.max(widest, row.length), 1);
-	for (const row of rows) {
-		while (row.length < width) {
-			row.push("");
-		}
-	}
-
-	return { rows: rows.length > 0 ? rows : [[""]], dateCells };
-}
-
-/** `<v>` plus the type attribute for a value the user typed. */
-function writeValue(cell: XmlElement, value: string, isDate: boolean): void {
-	// A formula's cached result is meaningless once the value is overwritten,
-	// and leaving it would have the next reader recompute over the old inputs.
-	cell.children = cell.children.filter(
+function removeOverride(types: XmlDocument, path: string): void {
+	types.root.children = types.root.children.filter(
 		(child) =>
-			!(isElement(child) && (child.name === "f" || child.name === "v")),
-	);
-	cell.children = cell.children.filter(
-		(child) => !(isElement(child) && child.name === "is"),
-	);
-	cell.attrs.t = undefined;
-
-	if (value === "") {
-		return;
-	}
-
-	const serial = isDate ? textToSerial(value) : null;
-	if (serial !== null) {
-		cell.children.push(element("v", {}, [text(String(serial))]));
-		return;
-	}
-	if (/^-?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(value)) {
-		cell.children.push(element("v", {}, [text(value)]));
-		return;
-	}
-	// Inline rather than a new shared string: it keeps the edit inside the
-	// worksheet part, so sharedStrings.xml and its counts are never touched.
-	cell.attrs.t = "inlineStr";
-	cell.children.push(
-		element("is", {}, [
-			element("t", { "xml:space": "preserve" }, [text(value)]),
-		]),
+			!(
+				isElement(child) &&
+				child.name === "Override" &&
+				child.attrs.PartName === `/${path}`
+			),
 	);
 }
 
-interface WriteOptions {
-	strings: string[];
-	styles: boolean[];
-	width: number;
+function removeEntry(entries: ZipEntry[], name: string): void {
+	const at = entries.findIndex((entry) => entry.name === name);
+	if (at >= 0) {
+		entries.splice(at, 1);
+	}
+}
+
+interface Edit {
+	entries: ZipEntry[];
+	pkg: Package;
+	types: XmlDocument;
+}
+
+function dropSheets(edit: Edit, removed: SheetEntry[]): void {
+	if (removed.length === 0) {
+		return;
+	}
+	const { entries, pkg, types } = edit;
+	const positions = removed.map((sheet) => pkg.sheets.indexOf(sheet));
+	rewriteDefinedNames(pkg.workbook, (formula, local) => {
+		if (local !== null && positions.includes(local)) {
+			return null;
+		}
+		return removed.reduce(
+			(text, sheet) => renameSheetRefs(text, sheet.name, null),
+			formula,
+		);
+	});
+	for (const name of findElements(pkg.workbook.root, "definedName")) {
+		const local = name.attrs.localSheetId;
+		if (local !== undefined) {
+			const shift = positions.filter((p) => p < Number(local)).length;
+			name.attrs.localSheetId = String(Number(local) - shift);
+		}
+	}
+	for (const sheet of removed) {
+		const holder = findElement(pkg.workbook.root, "sheets");
+		if (holder) {
+			holder.children = holder.children.filter(
+				(child) => child !== sheet.element,
+			);
+		}
+		pkg.rels.root.children = pkg.rels.root.children.filter(
+			(child) => child !== sheet.relationship,
+		);
+		if (sheet.path) {
+			removeEntry(entries, sheet.path);
+			removeEntry(entries, sheet.path.replace(/([^/]+)$/, "_rels/$1.rels"));
+			removeOverride(types, sheet.path);
+		}
+	}
+	const remaining = pkg.sheets.length - removed.length;
+	for (const view of findElements(pkg.workbook.root, "workbookView")) {
+		for (const attr of ["activeTab", "firstSheet"]) {
+			if (Number(view.attrs[attr] ?? 0) >= remaining) {
+				view.attrs[attr] = "0";
+			}
+		}
+	}
+}
+
+function renameEntry(pkg: Package, sheet: SheetEntry, name: string): void {
+	sheet.element.attrs.name = name;
+	rewriteDefinedNames(pkg.workbook, (formula) =>
+		renameSheetRefs(formula, sheet.name, name),
+	);
+}
+
+/** The first name `make(n)` gives that `taken` does not hold. */
+function unused(taken: (name: string) => boolean, make: (n: number) => string) {
+	for (let n = 1; ; n++) {
+		if (!taken(make(n))) {
+			return make(n);
+		}
+	}
+}
+
+function addSheetPart(edit: Edit, input: SheetInput, base: Base): void {
+	const { entries, pkg, types } = edit;
+	const path = unused(
+		(name) => entries.some((entry) => entry.name === name),
+		(n) => `xl/worksheets/sheet${n}.xml`,
+	);
+	const relId = unused(
+		(id) =>
+			findElements(pkg.rels.root, "Relationship").some(
+				(r) => r.attrs.Id === id,
+			),
+		(n) => `rId${n}`,
+	);
+	setPartText(entries, path, EMPTY_WORKSHEET);
+	writePart(entries, path, input.rows, base);
+	pkg.rels.root.children.push(
+		element("Relationship", {
+			Id: relId,
+			Type: `${REL_NS}/worksheet`,
+			Target: path.replace(/^xl\//, ""),
+		}),
+	);
+	types.root.children.push(
+		element("Override", {
+			PartName: `/${path}`,
+			ContentType: WORKSHEET_CONTENT,
+		}),
+	);
+	const holder = findElement(pkg.workbook.root, "sheets");
+	holder?.children.push(
+		element("sheet", {
+			name: input.name,
+			sheetId: String(input.id),
+			// openpyxl declares the prefix on each `<sheet>` rather than the root.
+			"xmlns:r": pkg.workbook.root.attrs["xmlns:r"] ? undefined : REL_NS,
+			"r:id": relId,
+		}),
+	);
 }
 
 /**
- * One cell of the new grid: the original element when its text is unchanged,
- * a rewritten one when it is not, or null when there is nothing to store.
+ * Cached results are gone from every cell we rewrote, so the calculation
+ * chain (a cache of its own, which Excel "repairs" when it names a cell that
+ * no longer holds a formula) goes, and Excel is told to recalculate on open.
  */
-function writeCell(
-	existing: XmlElement | undefined,
-	ref: string,
-	value: string,
-	options: WriteOptions,
-): XmlElement | null {
-	const isDate = existing
-		? options.styles[Number(existing.attrs.s ?? 0)] === true
-		: false;
-	if (existing && cellText(existing, options.strings, isDate) === value) {
-		// Untouched: keep the cell exactly as the writer left it — formula,
-		// number format, shared-string reference and all.
-		return existing;
+function recalculateOnOpen(edit: Edit): void {
+	const { entries, pkg, types } = edit;
+	const chain = findElements(pkg.rels.root, "Relationship").find((r) =>
+		r.attrs.Type?.endsWith("/calcChain"),
+	);
+	if (chain) {
+		const path = partPath(chain.attrs.Target ?? "");
+		pkg.rels.root.children = pkg.rels.root.children.filter((c) => c !== chain);
+		removeEntry(entries, path);
+		removeOverride(types, path);
 	}
-	if (!existing && value === "") {
-		return null;
+	let calcPr = findElement(pkg.workbook.root, "calcPr");
+	if (!calcPr) {
+		calcPr = element("calcPr", {});
+		// Schema order: calcPr follows these, whichever are present.
+		const before = [
+			"definedNames",
+			"externalReferences",
+			"functionGroups",
+			"sheets",
+		]
+			.map((name) => childNamed(pkg.workbook.root, name))
+			.find(Boolean);
+		const at = before ? pkg.workbook.root.children.indexOf(before) + 1 : 0;
+		pkg.workbook.root.children.splice(at, 0, calcPr);
 	}
-	const cell = existing ?? element("c", {});
-	cell.attrs.r = ref;
-	writeValue(cell, value, isDate);
-	// An emptied cell with no style left on it is just noise.
-	return cell.children.length > 0 || cell.attrs.s ? cell : null;
+	calcPr.attrs.fullCalcOnLoad = "1";
 }
 
-/** One grid row applied to its `<row>`, reusing every cell that is unchanged. */
-function writeRow(
-	row: XmlElement,
-	number: number,
-	values: string[],
-	options: WriteOptions,
-): XmlElement {
-	row.attrs.r = String(number);
-
-	const existingCells = new Map<number, XmlElement>();
-	for (const cell of childrenNamed(row, "c")) {
-		existingCells.set(splitRef(cell.attrs.r ?? "").column, cell);
+/** The editor's sheets applied to the workbook, in place. */
+export function writeWorkbook(entries: ZipEntry[], sheets: SheetInput[]): void {
+	checkSheets(sheets);
+	const pkg = openPackage(entries);
+	const typesText = partText(entries, CONTENT_TYPES);
+	if (!typesText) {
+		throw new NotASpreadsheetError("Package has no content types");
 	}
+	const edit: Edit = { entries, pkg, types: parseXml(typesText) };
+	const base = { strings: sharedStrings(entries), styles: dateStyles(entries) };
+	const wanted = new Map(sheets.map((sheet) => [sheet.id, sheet]));
 
-	const cells: XmlElement[] = [];
-	for (let column = 0; column < options.width; column++) {
-		const cell = writeCell(
-			existingCells.get(column),
-			`${columnRef(column)}${number}`,
-			values[column] ?? "",
-			options,
-		);
-		if (cell) {
-			cells.push(cell);
+	dropSheets(
+		edit,
+		pkg.sheets.filter((sheet) => sheet.path && !wanted.has(sheet.id)),
+	);
+	for (const sheet of pkg.sheets) {
+		const input = wanted.get(sheet.id);
+		if (!(sheet.path && input)) {
+			continue;
+		}
+		if (input.name !== sheet.name) {
+			renameEntry(pkg, sheet, input.name);
+		}
+		writePart(entries, sheet.path, input.rows, base);
+	}
+	const byId = new Map(pkg.sheets.map((sheet) => [sheet.id, sheet]));
+	for (const input of sheets) {
+		const existing = byId.get(input.id);
+		if (existing && !existing.path) {
+			throw new NotASpreadsheetError(`Sheet ${input.id} is not a worksheet`);
+		}
+		if (!existing) {
+			addSheetPart(edit, input, base);
 		}
 	}
+	recalculateOnOpen(edit);
 
-	row.children = cells;
-	// `spans` describes the old extent and is only a hint; a stale one has
-	// Excel offer to repair the file.
-	row.attrs.spans = cells.length > 0 ? `1:${options.width}` : undefined;
-	return row;
+	setPartText(entries, WORKBOOK, serializeXml(pkg.workbook));
+	setPartText(entries, WORKBOOK_RELS, serializeXml(pkg.rels));
+	setPartText(entries, CONTENT_TYPES, serializeXml(edit.types));
 }
 
-/** Apply an edited grid to the workbook's first sheet, in place. */
-export function writeSheet(entries: ZipEntry[], grid: string[][]): void {
-	const path = firstSheetPath(entries);
-	const source = partText(entries, path);
-	if (!source) {
-		throw new NotASpreadsheetError(`Missing worksheet part ${path}`);
-	}
-	const document = parseXml(source);
-	const sheetData = findElement(document.root, "sheetData");
-	if (!sheetData) {
-		throw new NotASpreadsheetError("Worksheet has no sheetData");
-	}
-
-	const existingRows = new Map<number, XmlElement>();
-	for (const row of childrenNamed(sheetData, "row")) {
-		existingRows.set(Number(row.attrs.r), row);
-	}
-
-	const options: WriteOptions = {
-		strings: sharedStrings(entries),
-		styles: dateStyles(entries),
-		width: grid.reduce((widest, row) => Math.max(widest, row.length), 1),
-	};
-
-	sheetData.children = grid.map((values, index) =>
-		writeRow(
-			existingRows.get(index + 1) ?? element("row", {}),
-			index + 1,
-			values,
-			options,
-		),
-	);
-
-	const dimension = findElement(document.root, "dimension");
-	if (dimension) {
-		const last = `${columnRef(options.width - 1)}${Math.max(grid.length, 1)}`;
-		dimension.attrs.ref = `A1:${last}`;
-	}
-
-	setPartText(entries, path, serializeXml(document));
+/**
+ * The editor's text applied to the workbook. A CSV (what the editor sent
+ * before it knew about sheets) replaces the first sheet and keeps the rest.
+ */
+export function workbookFromText(entries: ZipEntry[], content: string): void {
+	const sheets =
+		parseSheets(content) ??
+		readWorkbook(entries).map(({ id, name, rows }, index) => ({
+			id,
+			name,
+			rows: index === 0 ? parseCsv(content) : rows,
+		}));
+	writeWorkbook(entries, sheets);
 }

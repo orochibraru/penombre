@@ -157,11 +157,11 @@ describe("kind for a file name", () => {
 		expect(kindForName("a.markdown")).toBe("presentation");
 	});
 
-	test("does not call an Office file one of ours", () => {
-		// The listing icon hangs off this: a .docx keeps the Word icon.
-		expect(kindForName("a.docx")).toBeNull();
-		expect(kindForName("a.xlsx")).toBeNull();
-		expect(kindForName("a.pptx")).toBeNull();
+	test("an Office file is the same kind as the one Penombre makes", () => {
+		// New creates .docx and .xlsx: one uploaded from Word must look the same.
+		expect(kindForName("a.docx")).toBe("document");
+		expect(kindForName("a.XLSX")).toBe("sheet");
+		expect(kindForName("a.pptx")).toBe("presentation");
 	});
 
 	test("maps each Office format to the editor that opens it", () => {

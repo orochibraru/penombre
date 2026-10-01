@@ -1,4 +1,5 @@
 import { Http } from "#lib/server/http.js";
+import { UnsupportedPictureError } from "#lib/server/office/docx-media.js";
 import { isOfficeFile, textToOffice } from "#lib/server/office/index.js";
 import { saveOfficeDocument } from "#lib/server/openapi/v1/storage.js";
 
@@ -9,7 +10,7 @@ import { saveOfficeDocument } from "#lib/server/openapi/v1/storage.js";
  * honest — the client never holds a `.docx` it could mangle.
  */
 export const POST = saveOfficeDocument.handler(
-	async ({ params, query, body, service }) => {
+	async ({ params, body, service }) => {
 		const path = await service.findFileById(params.id);
 		if (!path) {
 			return Http.NotFound(`File ${params.id} not found`);
@@ -33,15 +34,16 @@ export const POST = saveOfficeDocument.handler(
 			// back, so a failure here is a document we cannot rewrite safely.
 			// Answering 422 leaves the file on disk exactly as it was.
 			return Http.UnprocessableEntity(
-				`Could not write ${name} back as an Office document`,
+				err instanceof UnsupportedPictureError
+					? err.message
+					: `Could not write ${name} back as an Office document`,
 				err,
 			);
 		}
 
 		try {
-			await service.uploadFileBody(params.id, bytes, {
-				snapshot: query.snapshot !== "0",
-			});
+			// An editor saves every few seconds; versions are kept on request.
+			await service.uploadFileBody(params.id, bytes, { snapshot: false });
 			return Http.Ok({ message: "Document saved." });
 		} catch (err) {
 			return Http.ServerError("Save error", err);

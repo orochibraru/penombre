@@ -1,13 +1,8 @@
-import {
-	type DocumentKind,
-	officeKindForName,
-	parseCsv,
-	toCsv,
-} from "#lib/documents.js";
+import { type DocumentKind, officeKindForName } from "#lib/documents.js";
 import { docxToHtml } from "./docx-read";
 import { htmlToDocx } from "./docx-write";
-import { markdownToPptx, pptxToMarkdown } from "./pptx";
-import { readSheet, writeSheet } from "./xlsx";
+import { pptxToText, textToPptx } from "./pptx";
+import { workbookFromText, workbookToText } from "./xlsx";
 import { readZip, writeZip } from "./zip";
 
 /**
@@ -37,16 +32,19 @@ function kindOf(name: string): DocumentKind {
 	return kind;
 }
 
-/** The file's text, in the format the editor for its kind reads. */
+/**
+ * The file's text, in the format the editor for its kind reads: HTML, the
+ * workbook as JSON (every sheet), the deck as JSON (`#lib/slides`).
+ */
 export function officeToText(name: string, bytes: ArrayBuffer): string {
 	const entries = readZip(bytes);
 	switch (kindOf(name)) {
 		case "document":
 			return docxToHtml(entries);
 		case "sheet":
-			return toCsv(readSheet(entries).rows);
+			return workbookToText(entries);
 		case "presentation":
-			return pptxToMarkdown(entries);
+			return pptxToText(entries);
 		default:
 			throw new UnsupportedOfficeFileError(`No reader for ${name}`);
 	}
@@ -64,10 +62,10 @@ export function textToOffice(
 			htmlToDocx(entries, content);
 			break;
 		case "sheet":
-			writeSheet(entries, parseCsv(content));
+			workbookFromText(entries, content);
 			break;
 		case "presentation":
-			markdownToPptx(entries, content);
+			textToPptx(entries, content);
 			break;
 		default:
 			throw new UnsupportedOfficeFileError(`No writer for ${name}`);

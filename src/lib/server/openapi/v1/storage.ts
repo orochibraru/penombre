@@ -22,7 +22,7 @@ import { storageServiceFor } from "#lib/server/services/storage-for.js";
  * `storageServiceFor` is the one place that resolves them — so a route added
  * later inherits the membership check and the volume lookup for free.
  */
-const driveQuery = {
+export const driveQuery = {
 	drive: z.string().optional(),
 	volume: z.string().optional(),
 	share: z.string().optional(),
@@ -333,21 +333,19 @@ export const saveOfficeDocument = defineRoute({
 	summary: "Save an Office document",
 	description:
 		"Applies edited text to a .docx, .xlsx or .pptx file, rewriting only " +
-		"the part of the archive that holds it so the rest of the document " +
-		"survives unchanged. The body is HTML for a document, CSV for a " +
-		"spreadsheet and Markdown for a presentation.",
+		"the parts of the archive that hold it so the rest of the document " +
+		"survives unchanged. The body is HTML for a document, Markdown for a " +
+		'presentation, and for a spreadsheet the workbook as JSON: `{ "sheets": ' +
+		'[{ "id", "name", "rows" }] }`, `id` being the sheet\'s `sheetId` (a new ' +
+		"one adds a sheet, a missing one deletes it). A CSV is still accepted " +
+		"and replaces the first sheet. A save never keeps the previous bytes " +
+		"as a version; `POST …/versions` does that on request.",
 	tags: ["Storage - Files"],
 	params: z.object({ id: z.string() }),
 	body: z.object({
 		content: z.string().describe("The edited text, in the format for its kind"),
 	}),
-	query: z.object({
-		...driveQuery,
-		snapshot: z
-			.enum(["0", "1"])
-			.optional()
-			.describe("0 skips keeping the old bytes as a version"),
-	}),
+	query: z.object(driveQuery),
 	response: z.object({ message: z.string() }),
 	errors: [400, 404, 422, 500],
 	service: storageServiceFor,
