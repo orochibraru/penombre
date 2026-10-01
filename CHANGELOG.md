@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.8.61](https://github.com/orochibraru/penombre/compare/v1.8.60...v1.8.61) (2026-10-01)
+
+### Features
+
+* **mobile:** native account and settings, notifications, Shared tab, place selector, search as you type and skeleton loaders, in 13 languages with an in-app picker; address change and verification, notification settings and sign-in with an emailed code ([265034e](https://github.com/orochibraru/penombre/commit/265034e5170f5c4b530c48dd811aa3d1fe1e3b95))
+* **i18n:** the interface language is an account preference, shared by the web and the app ([133a2fa](https://github.com/orochibraru/penombre/commit/133a2faff4151c48b130b2ac133aaba33c7e506b))
+* **account:** change and verify the address with emailed codes, an account API for the app, and the gate for administrator-required strong authentication; fix: password rules apply to a changed password ([610082b](https://github.com/orochibraru/penombre/commit/610082b90d2ea1b922b0cea59240ebb07237fe9b))
+* **notifications:** choose for each kind whether a notification reaches the app, email or the phone ([4d47e40](https://github.com/orochibraru/penombre/commit/4d47e40ea2e20a967b0bce78d494719ee72341bd))
+* **signatures:** request signatures on a document, sign through one-time links, a signed PDF with its certificate, and notifications when it completes or is declined ([3efcfcd](https://github.com/orochibraru/penombre/commit/3efcfcdd06a8191e47348b51ea935cc1dd7b8fbb))
+* **slides:** WYSIWYG PowerPoint editor with ten templates, shapes, pictures, freehand drawing, themes, presenter view, PDF export and public link preview ([3450733](https://github.com/orochibraru/penombre/commit/345073319b019dee275e1b051dbebe99fb2863e9))
+* **editor:** one File menu across editors, view and edit modes with view-only sharing, comment threads and who else has the file open ([339d011](https://github.com/orochibraru/penombre/commit/339d011c441e26e32581ab2b327cfffba6f310b1))
+* **decks:** Markdown decks follow Marp, with speaker notes, presenter view, audience window and printing ([9dc140a](https://github.com/orochibraru/penombre/commit/9dc140a2a827f98ec18f23f792cbad9dc413cb16))
+* **sheets:** own formula engine with Excel's functions, workbooks with sheet tabs, ranges, fill, clipboard, undo and references that follow inserts and deletes ([83f8ab9](https://github.com/orochibraru/penombre/commit/83f8ab901b66551b9c65f3142215a49e2ebd589b))
+* **editor:** document editor with menus, fonts, sizes, colours, highlighting, code blocks, find and replace, pictures, word count and shortcuts ([b25371c](https://github.com/orochibraru/penombre/commit/b25371c8b6fbd9510ab3aadf47d1c571bec51fe9))
+* **documents:** new documents and sheets are Word and Excel files edited in place, with Download as PDF, Word, web page, Markdown, text and CSV ([2a4e593](https://github.com/orochibraru/penombre/commit/2a4e593cc861356ecd3222503a49c188761aae31))
+* **i18n:** strings for the editors, slides, signatures, account, notifications and language in all 13 languages ([f33f7ff](https://github.com/orochibraru/penombre/commit/f33f7ff59454f6a113082d048ef05625ab8abfa4))
+
+### Bug Fixes
+
+* **auth:** an emailed sign-in code or link no longer skips two-factor ([84c9da4](https://github.com/orochibraru/penombre/commit/84c9da443217774b1d8a3ec556b92eccb9e1a1b2))
+* **files:** single-file downloads 404'd on a full-mode personal drive ([040032c](https://github.com/orochibraru/penombre/commit/040032c6749232a717ed88b271718da458788cc3))
+* **pwa:** the manifest link 404'd on every nested route ([0ddf78b](https://github.com/orochibraru/penombre/commit/0ddf78b08a1952334439804e0ff15cdb25f7c69d))
+
+### Documentation
+
+* documents, sheets, presentations, sharing, notifications, two-factor and the mobile app; CLAUDE.md gotchas ([8149ee9](https://github.com/orochibraru/penombre/commit/8149ee9208dec703ab34be009a9b6240ce9574bd))
+
 ## [1.8.60](https://github.com/orochibraru/penombre/compare/v1.8.59...v1.8.60) (2026-09-30)
 
 ### Features
