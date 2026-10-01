@@ -1,0 +1,378 @@
+/*
+ * Slides, after Marp's default, gaia and uncover themes. A slide is laid out
+ * as 1280x720 and scaled to its frame by `--deck-unit`: every size inside is
+ * in `em`, so a thumbnail, the preview and present mode are the same slide.
+ * Slide colours are content, not chrome, so they are fixed here.
+ */
+.deck-frame {
+	container-type: size;
+	display: grid;
+	place-items: center;
+	overflow: hidden;
+}
+
+.deck-slide {
+	--deck-unit: calc(min(100cqw, 100cqh * 16 / 9) / 1280);
+	--deck-bg: #fff;
+	--deck-fg: #1f2328;
+	--deck-heading: #224466;
+	--deck-link: #0969da;
+	--deck-code: #f0f2f4;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	box-sizing: border-box;
+	width: calc(var(--deck-unit) * 1280);
+	height: calc(var(--deck-unit) * 720);
+	padding: 2.2em 2.6em;
+	overflow: hidden;
+	background: var(--deck-bg);
+	color: var(--deck-fg);
+	font-family: var(--app-font, system-ui, sans-serif);
+	font-size: calc(var(--deck-unit) * 30);
+	line-height: 1.4;
+	text-align: start;
+	overflow-wrap: anywhere;
+	-webkit-print-color-adjust: exact;
+	print-color-adjust: exact;
+}
+
+.deck-slide.deck-invert {
+	--deck-bg: #0d1117;
+	--deck-fg: #e6edf3;
+	--deck-heading: #9ec5ff;
+	--deck-link: #58a6ff;
+	--deck-code: #1f2630;
+}
+
+.deck-content {
+	position: relative;
+	z-index: 1;
+	min-width: 0;
+}
+
+.deck-content > :first-child {
+	margin-top: 0;
+}
+
+.deck-content > :last-child {
+	margin-bottom: 0;
+}
+
+.deck-slide h1,
+.deck-slide h2,
+.deck-slide h3,
+.deck-slide h4,
+.deck-slide h5,
+.deck-slide h6 {
+	margin: 0 0 0.4em;
+	color: var(--deck-heading);
+	font-weight: 700;
+	line-height: 1.15;
+}
+
+.deck-slide h1 {
+	font-size: 1.8em;
+}
+
+.deck-slide h2 {
+	font-size: 1.45em;
+}
+
+.deck-slide h3 {
+	font-size: 1.2em;
+}
+
+.deck-slide h4,
+.deck-slide h5,
+.deck-slide h6 {
+	font-size: 1em;
+}
+
+.deck-slide p {
+	margin: 0.5em 0;
+}
+
+.deck-slide ul,
+.deck-slide ol {
+	margin: 0.4em 0;
+	padding-inline-start: 1.3em;
+}
+
+.deck-slide ul {
+	list-style: disc;
+}
+
+.deck-slide ul ul {
+	list-style: circle;
+}
+
+.deck-slide ol {
+	list-style: decimal;
+}
+
+.deck-slide li {
+	margin: 0.15em 0;
+}
+
+.deck-slide li > ul,
+.deck-slide li > ol {
+	margin: 0.1em 0;
+	font-size: 0.9em;
+}
+
+.deck-slide a {
+	color: var(--deck-link);
+	text-decoration: underline;
+}
+
+.deck-slide strong {
+	font-weight: 700;
+}
+
+.deck-slide em {
+	font-style: italic;
+}
+
+.deck-slide code {
+	padding: 0.1em 0.3em;
+	border-radius: 0.2em;
+	background: var(--deck-code);
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.85em;
+}
+
+.deck-slide pre {
+	margin: 0.5em 0;
+	padding: 0.6em 0.8em;
+	border-radius: 0.3em;
+	background: var(--deck-code);
+	font-size: 0.7em;
+	line-height: 1.35;
+	text-align: start;
+	white-space: pre-wrap;
+}
+
+.deck-slide pre code {
+	padding: 0;
+	background: none;
+	font-size: 1em;
+}
+
+.deck-slide blockquote {
+	margin: 0.5em 0;
+	padding-inline-start: 0.8em;
+	border-inline-start: 0.15em solid
+		color-mix(in srgb, currentColor 40%, transparent);
+	color: color-mix(in srgb, currentColor 80%, transparent);
+}
+
+.deck-slide table {
+	margin: 0.5em 0;
+	border-collapse: collapse;
+	font-size: 0.8em;
+}
+
+.deck-slide th,
+.deck-slide td {
+	padding: 0.25em 0.6em;
+	border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+	text-align: start;
+}
+
+.deck-slide th {
+	background: var(--deck-code);
+	font-weight: 700;
+}
+
+.deck-slide .deck-align-center {
+	text-align: center;
+}
+
+.deck-slide .deck-align-right {
+	text-align: end;
+}
+
+.deck-slide img {
+	display: inline-block;
+	max-width: 100%;
+	max-height: 18em;
+	vertical-align: middle;
+}
+
+.deck-backgrounds {
+	position: absolute;
+	inset: 0;
+	display: flex;
+}
+
+.deck-slide .deck-backgrounds img {
+	flex: 1 1 0;
+	min-width: 0;
+	width: 100%;
+	height: 100%;
+	max-height: none;
+	object-fit: cover;
+}
+
+.deck-slide .deck-backgrounds img.deck-contain {
+	object-fit: contain;
+}
+
+/* Half the slide is 640 units, 21.333em at the 30-unit base size. */
+.deck-split-left .deck-backgrounds {
+	right: 50%;
+}
+
+.deck-split-right .deck-backgrounds {
+	left: 50%;
+}
+
+.deck-slide.deck-split-left {
+	padding-left: 23.933em;
+}
+
+.deck-slide.deck-split-right {
+	padding-right: 23.933em;
+}
+
+.deck-header,
+.deck-footer,
+.deck-page {
+	position: absolute;
+	z-index: 1;
+	font-size: 0.6em;
+	opacity: 0.7;
+}
+
+.deck-header,
+.deck-footer {
+	left: 4.3em;
+	right: 4.3em;
+}
+
+.deck-header {
+	top: 1.6em;
+}
+
+.deck-footer {
+	bottom: 1.6em;
+}
+
+.deck-page {
+	right: 2.5em;
+	bottom: 1.6em;
+}
+
+.deck-slide.deck-lead {
+	justify-content: center;
+	text-align: center;
+}
+
+.deck-slide.deck-lead h1 {
+	font-size: 2.2em;
+}
+
+/* Gaia: warm paper, content from the top. */
+.deck-slide.deck-theme-gaia {
+	--deck-bg: #fff8e1;
+	--deck-fg: #455a64;
+	--deck-heading: #455a64;
+	--deck-link: #0288d1;
+	--deck-code: #f3e9c6;
+	justify-content: flex-start;
+}
+
+.deck-slide.deck-theme-gaia.deck-invert {
+	--deck-bg: #455a64;
+	--deck-fg: #fff8e1;
+	--deck-heading: #fff8e1;
+	--deck-link: #81d4fa;
+	--deck-code: #3a4b53;
+}
+
+.deck-slide.deck-theme-gaia.deck-gaia {
+	--deck-bg: #0288d1;
+	--deck-fg: #fff8e1;
+	--deck-heading: #fff8e1;
+	--deck-link: #fff8e1;
+	--deck-code: #0277bd;
+}
+
+.deck-slide.deck-theme-gaia h1 {
+	font-size: 2em;
+}
+
+.deck-slide.deck-theme-gaia.deck-lead {
+	justify-content: center;
+}
+
+/* Uncover: everything centred, lists included. */
+.deck-slide.deck-theme-uncover {
+	--deck-bg: #fdfcff;
+	--deck-fg: #202228;
+	--deck-heading: #202228;
+	--deck-link: #009dd5;
+	--deck-code: #eceef3;
+	justify-content: center;
+	text-align: center;
+}
+
+.deck-slide.deck-theme-uncover.deck-invert {
+	--deck-bg: #202228;
+	--deck-fg: #fdfcff;
+	--deck-heading: #fdfcff;
+	--deck-link: #48c0f0;
+	--deck-code: #2e3039;
+}
+
+.deck-slide.deck-theme-uncover h1 {
+	font-size: 2.1em;
+	font-weight: 800;
+}
+
+/* Centred slides centre their lists and tables as blocks, not their lines. */
+.deck-slide.deck-theme-uncover ul,
+.deck-slide.deck-theme-uncover ol,
+.deck-slide.deck-theme-uncover table,
+.deck-slide.deck-theme-uncover pre,
+.deck-slide.deck-lead ul,
+.deck-slide.deck-lead ol,
+.deck-slide.deck-lead table,
+.deck-slide.deck-lead pre {
+	width: fit-content;
+	margin-inline: auto;
+	text-align: start;
+}
+
+/* One slide per page. Scoped by `:has` so no other page's printing changes. */
+.deck-print {
+	display: none;
+}
+
+@page deck {
+	size: 1280px 720px;
+	margin: 0;
+}
+
+@media print {
+	body:has(> .deck-print) > :not(.deck-print) {
+		display: none !important;
+	}
+
+	.deck-print {
+		display: block;
+	}
+
+	.deck-print .deck-frame {
+		width: 1280px;
+		height: 720px;
+		page: deck;
+		break-inside: avoid;
+	}
+
+	.deck-print .deck-frame + .deck-frame {
+		break-before: page;
+	}
+}
