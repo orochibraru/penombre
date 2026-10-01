@@ -1370,6 +1370,11 @@ other and inherits trash, sharing, search and thumbnails for free. Adding a kind
 means adding it to `DOCUMENT_KINDS`, `kindForName` and the editor route's
 branch.
 
+**`documents.ts` never imports `#lib/api` as a value.** Server code (thumbnails,
+office, signatures) imports it, and through `auth` so does the OpenAPI
+generator, which runs on plain Bun with no `$app/state`: the `gen` hook failed
+on every push. Requests from the browser live in `document-requests.ts`.
+
 **Autosave never makes a version.** `saveDocument` sends `snapshot=0` and the
 `/office` route never snapshots; only **Save as version** (`POST …/versions`)
 does. A version per editing session was dropped as noise.
@@ -2330,15 +2335,17 @@ successful click — a menu also closes on a stray pointer move, and that shortc
 made a test assert against a navigation that never happened. After an upload,
 wait for `networkidle` before touching the row at all.
 
-`rightClickItem` dispatches a `contextmenu` event at the row's centre instead of
-right-clicking. Linux Chromium opens the menu on mousedown, and a row low on the
-screen opens it shifted up under the pointer: the button's release then selected
-the entry there, so Notes also opened Share (CI only; macOS never reproduced
-it). Moving the mouse away after opening was too late. It surfaced when uploads
-started keeping the file's own date: a fresh upload no longer sorts to the top
-of a date listing. A spec that only needs rows to exist seeds them through the
-API and then loads the page, as `bulk-actions.spec.ts` does. Seeding by upload
-let the post-upload refresh swap the rows out from under its checkbox clicks.
+`rightClickItem` dispatches a `contextmenu` event on the row's own trigger
+instead of right-clicking. Linux Chromium opens the menu on mousedown, and a row
+low on the screen opens it shifted up under the pointer: the button's release
+then selected the entry there, so Notes also opened Share (CI only; macOS never
+reproduced it). Moving the mouse away after opening was too late. It is not sent
+to `elementFromPoint` either: a row under the docked music player gave the event
+to the player, and the menu never opened. It surfaced when uploads started
+keeping the file's own date: a fresh upload no longer sorts to the top of a date
+listing. A spec that only needs rows to exist seeds them through the API and
+then loads the page, as `bulk-actions.spec.ts` does. Seeding by upload let the
+post-upload refresh swap the rows out from under its checkbox clicks.
 
 ### E2E runs against a container, not your working tree
 

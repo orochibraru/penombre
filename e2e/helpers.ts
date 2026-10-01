@@ -36,7 +36,7 @@ export async function rightClickItem(page: Page, name: string) {
 	// A single right-click can silently fail if the element isn't fully stable.
 	const menu = page.locator('[role="menu"]');
 	for (let i = 0; i < 3; i++) {
-		await openContextMenu(page, target);
+		await openContextMenu(target);
 		// waitFor, not isVisible: the latter resolves immediately, so a menu
 		// still animating in reads as absent and the click is retried in vain.
 		const appeared = await menu
@@ -55,27 +55,27 @@ export async function rightClickItem(page: Page, name: string) {
  * The event, not a right-click. Linux Chromium opens the menu on mousedown,
  * and a row low on the screen opens it shifted up under the pointer: the
  * button's release then selected the entry there, so Notes also opened Share.
+ * Sent to the row's own trigger, not `elementFromPoint`: a row under the
+ * docked music player sent it to the player, and no menu ever opened.
  */
-async function openContextMenu(page: Page, target: Locator) {
+async function openContextMenu(target: Locator) {
 	await target.waitFor({ state: "visible" });
-	const box = await target.boundingBox();
-	if (!box) {
-		throw new Error("context menu target has no box");
-	}
-	await page.evaluate(
-		({ x, y }) => {
-			document.elementFromPoint(x, y)?.dispatchEvent(
-				new MouseEvent("contextmenu", {
-					bubbles: true,
-					cancelable: true,
-					button: 2,
-					clientX: x,
-					clientY: y,
-				}),
-			);
-		},
-		{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
-	);
+	await target.evaluate((element) => {
+		const trigger = element.querySelector('[data-slot="context-menu-trigger"]');
+		if (!trigger) {
+			throw new Error("context menu target has no trigger");
+		}
+		const box = trigger.getBoundingClientRect();
+		trigger.dispatchEvent(
+			new MouseEvent("contextmenu", {
+				bubbles: true,
+				cancelable: true,
+				button: 2,
+				clientX: box.x + box.width / 2,
+				clientY: box.y + box.height / 2,
+			}),
+		);
+	});
 }
 
 /**

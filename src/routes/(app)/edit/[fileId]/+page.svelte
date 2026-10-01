@@ -11,12 +11,11 @@
 	import SignaturesPanel from "#lib/components/signatures/signatures-panel.svelte";
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
 	import { Textarea } from "#lib/components/ui/textarea/index.js";
+	import { renameDocument, saveDocument } from "#lib/document-requests.js";
 	import {
 		baseName,
 		editorKindForName,
 		kindForName,
-		renameDocument,
-		saveDocument,
 		titleFromContent,
 	} from "#lib/documents.js";
 	import { m } from "#lib/paraglide/messages.js";

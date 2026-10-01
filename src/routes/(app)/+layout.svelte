@@ -55,11 +55,8 @@
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
 	import Spinner from "#lib/components/ui/spinner.svelte";
-	import {
-		createDocument,
-		DOCUMENT_KINDS,
-		type DocumentKind,
-	} from "#lib/documents.js";
+	import { createDocument } from "#lib/document-requests.js";
+	import { DOCUMENT_KINDS, type DocumentKind } from "#lib/documents.js";
 	import { FileCategoryEnum } from "#lib/file-helpers.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { sidebarItems } from "#lib/sidebar.js";

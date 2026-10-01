@@ -3,7 +3,7 @@
 	import { withLocation } from "#lib/components/file/file-links.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Input } from "#lib/components/ui/input/index.js";
-	import { createTextFile } from "#lib/documents.js";
+	import { createTextFile } from "#lib/document-requests.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
