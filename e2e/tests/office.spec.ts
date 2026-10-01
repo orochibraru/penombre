@@ -70,21 +70,29 @@ test.describe("Office documents", () => {
 		const id = await uploadFixture(page, "office-report.xlsx");
 		await page.goto(`/edit/${id}`);
 
-		const cells = page.locator("tbody input");
-		await expect(cells.first()).toHaveValue("Item", { timeout: 20_000 });
-		await expect(cells.nth(4)).toHaveValue("Widget");
+		const cell = (row: string, col: string) =>
+			page.locator(`td[data-row="${row}"][data-col="${col}"]`);
+		await expect(cell("0", "0")).toHaveText("Item", { timeout: 20_000 });
+		const widget = page.getByRole("gridcell", { name: "Widget", exact: true });
+		await expect(widget).toBeVisible();
+		const row = (await widget.getAttribute("data-row")) ?? "";
+		const col = (await widget.getAttribute("data-col")) ?? "";
 
-		await editUntilSaved(page, () => cells.nth(4).fill("Widget MK II"));
+		// Typing on a selected cell replaces what it holds.
+		await editUntilSaved(page, async () => {
+			await cell(row, col).click();
+			await page.keyboard.type("Widget MK II");
+			await page.keyboard.press("Enter");
+		});
 
 		// Reloading reads the file back off disk, so this only passes if what
 		// was written is still a workbook we can open.
 		await page.reload();
-		await expect(page.locator("tbody input").nth(4)).toHaveValue(
-			"Widget MK II",
-			{ timeout: 20_000 },
-		);
+		await expect(cell(row, col)).toHaveText("Widget MK II", {
+			timeout: 20_000,
+		});
 		// The header row was never touched and must have come back untouched.
-		await expect(page.locator("tbody input").first()).toHaveValue("Item");
+		await expect(cell("0", "0")).toHaveText("Item");
 	});
 
 	test("a Word document opens in the rich text editor with its formatting", async ({
@@ -130,20 +138,24 @@ test.describe("Office documents", () => {
 		const id = await uploadFixture(page, "office-report.pptx");
 		await page.goto(`/edit/${id}`);
 
-		const source = page.locator("textarea").first();
-		await expect(source).toHaveValue(/# Penombre/, { timeout: 20_000 });
-		await expect(source).toHaveValue(/- Own your files/);
+		// `data-el` marks the slide on the canvas, not the rail's thumbnails.
+		const body = page
+			.locator("[data-el]")
+			.filter({ hasText: "No private formats" });
+		await expect(body).toBeVisible({ timeout: 20_000 });
 
-		await editUntilSaved(page, () =>
-			source.fill("# Penombre\n- Own your files\n- Edited in the browser\n"),
-		);
+		await editUntilSaved(page, async () => {
+			await body.dblclick();
+			await page.keyboard.press("ControlOrMeta+End");
+			await page.keyboard.type(" today");
+			await page.keyboard.press("Escape");
+		});
 
 		await page.reload();
-		await expect(page.locator("textarea").first()).toHaveValue(
-			/- Edited in the browser/,
-			{ timeout: 20_000 },
-		);
+		await expect(
+			page.locator("[data-el]").filter({ hasText: "No private formats today" }),
+		).toBeVisible({ timeout: 20_000 });
 		// Slide two was never opened, let alone edited.
-		await expect(page.getByText("Second slide")).toBeVisible();
+		await expect(page.getByLabel("Slide 2", { exact: true })).toBeVisible();
 	});
 });

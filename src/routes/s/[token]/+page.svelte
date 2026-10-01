@@ -2,11 +2,16 @@
 	import {
 		ClockAlertIcon,
 		DownloadIcon,
+		FileTextIcon,
 		FolderIcon,
 		LockIcon,
 		LogInIcon,
 		PlayIcon,
 	} from "@lucide/svelte";
+	import DeckEditor from "#lib/components/editor/deck-editor.svelte";
+	import DocumentEditor from "#lib/components/editor/document-editor.svelte";
+	import SheetEditor from "#lib/components/editor/sheet-editor.svelte";
+	import SlidesEditor from "#lib/components/editor/slides-editor.svelte";
 	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import ShareMedia from "#lib/components/share-media.svelte";
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
@@ -16,6 +21,7 @@
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
 	import { cn, readableFileSize } from "#lib/utils.js";
+	import { browser } from "$app/env";
 	import { resolve } from "$app/paths";
 
 	const { data, form } = $props();
@@ -44,6 +50,17 @@
 	const totalSize = $derived(
 		files.reduce((sum, file) => sum + (file.size ?? 0), 0),
 	);
+
+	/** A document, sheet or presentation, drawn read-only in the page. */
+	const rendition = $derived(
+		data.state === "ok" && data.resourceType === "file" ? data.rendition : null,
+	);
+	const pdf = $derived(
+		data.state === "ok" && data.resourceType === "file" && data.pdf,
+	);
+	/** An office file with no rendition here: say so, rather than show nothing. */
+	const unshown = $derived(pdf && !rendition);
+	const ignore = () => undefined;
 </script>
 
 <!--
@@ -53,7 +70,7 @@
 <div
     class="from-background to-muted/40 flex min-h-screen flex-col items-center bg-linear-to-b px-4 py-10 sm:py-16"
 >
-  <div class="w-full max-w-2xl">
+  <div class={cn("w-full", rendition ? "max-w-6xl" : "max-w-2xl")}>
     <p
       class="text-muted-foreground mb-6 text-center text-sm font-medium tracking-wide"
         >
@@ -175,22 +192,67 @@
             </div>
           </div>
 
-          <a
-                        class={cn(
-                            buttonVariants({ variant: "default" }),
-                            "shrink-0",
-                        )}
-            href={resolve("/s/[token]/download", { token: data.token })}
-            download
-          >
-            <DownloadIcon />
-                        {data.resourceType === "folder"
-                            ? m.download_as_zip()
-                            : m.download()}
-          </a>
+          <div class="flex shrink-0 flex-wrap gap-2">
+            {#if pdf}
+              <a
+                class={buttonVariants({ variant: "outline" })}
+                href="{resolve('/s/[token]/download', { token: data.token })}?format=pdf"
+                download
+              >
+                <FileTextIcon />
+                {m.shell_download_pdf()}
+              </a>
+            {/if}
+            <a
+              class={buttonVariants({ variant: "default" })}
+              href={resolve("/s/[token]/download", { token: data.token })}
+              download
+            >
+              <DownloadIcon />
+              {data.resourceType === "folder"
+                ? m.download_as_zip()
+                : m.download()}
+            </a>
+          </div>
         </Card.Header>
 
-        {#if data.resourceType === "file" && files[0]}
+        {#if rendition}
+          <!-- The same editors, with editing off: what the owner sees. -->
+          <Card.Content class="flex h-[75dvh] min-h-0 flex-col px-2 sm:px-6">
+            {#if rendition.kind === "document"}
+              {#if browser}
+                <DocumentEditor content={rendition.content} onChange={ignore} readOnly />
+              {/if}
+            {:else if rendition.kind === "sheet"}
+              <SheetEditor
+                content={rendition.content}
+                onChange={ignore}
+                workbook={rendition.office}
+                readOnly
+              />
+            {:else if rendition.office}
+              <SlidesEditor
+                content={rendition.content}
+                onChange={ignore}
+                fileId={files[0]?.metadata.id ?? ""}
+                readOnly
+              />
+            {:else}
+              <DeckEditor
+                content={rendition.content}
+                onChange={ignore}
+                office={false}
+                readOnly
+              />
+            {/if}
+          </Card.Content>
+        {:else if unshown}
+          <Card.Content>
+            <p class="text-muted-foreground text-sm">{m.shell_no_preview()}</p>
+          </Card.Content>
+        {/if}
+
+        {#if data.resourceType === "file" && files[0] && !pdf}
           <ShareMedia
                         src="{resolve('/s/[token]/download', {
                             token: data.token,

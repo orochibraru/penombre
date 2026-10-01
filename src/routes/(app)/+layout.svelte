@@ -31,6 +31,7 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import AppBanner from "#lib/components/apps/app-banner.svelte";
+	import NewPresentationDialog from "#lib/components/editor/slides/new-presentation-dialog.svelte";
 	import { withLocation } from "#lib/components/file/file-links.js";
 	import NewFolderDialog from "#lib/components/layout/dialogs/new-folder-dialog.svelte";
 	import NewTextFileDialog from "#lib/components/layout/dialogs/new-text-file-dialog.svelte";
@@ -151,12 +152,17 @@
 	let creatingDocument = $state(false);
 	let newMenuOpen = $state(false);
 	let newTextFileOpen = $state(false);
+	let newPresentationOpen = $state(false);
 
 	async function newDocument(kind: DocumentKind) {
 		const entry = newDocumentKinds.find((item) => item.kind === kind);
 		// Closed explicitly: the item navigates rather than opening a dialog,
 		// and the menu would otherwise stay up over the editor it just opened.
 		newMenuOpen = false;
+		if (kind === "presentation") {
+			newPresentationOpen = true;
+			return;
+		}
 		creatingDocument = true;
 		// `page.params.path` is the whole folder path, not one segment: folder
 		// paths are uuid chains, so a truncated one matches nothing and the
@@ -661,6 +667,10 @@
 
 <NewFolderDialog bind:open={$newFolderDialogOpen} />
 <NewTextFileDialog bind:open={newTextFileOpen} />
+<NewPresentationDialog
+    bind:open={newPresentationOpen}
+    folder={page.params.path || undefined}
+/>
 <UploadDialog bind:open={$uploadDialogOpen} bind:loading={uploadLoading} />
 <UploadProgressIndicator />
 

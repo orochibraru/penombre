@@ -21,9 +21,9 @@ function watchForErrors(page: import("@playwright/test").Page): string[] {
 
 /** Covers New menu → create → redirect → the editor actually mounting. */
 const KINDS = [
-	{ label: "Document", extension: ".html" },
-	{ label: "Sheet", extension: ".csv" },
-	{ label: "Presentation", extension: ".md" },
+	{ label: "Document", extension: ".docx", gallery: false },
+	{ label: "Sheet", extension: ".xlsx", gallery: false },
+	{ label: "Presentation", extension: ".pptx", gallery: true },
 ];
 
 test.describe("Documents", () => {
@@ -37,6 +37,13 @@ test.describe("Documents", () => {
 			await page
 				.getByRole("menuitem", { name: kind.label, exact: true })
 				.click();
+			if (kind.gallery) {
+				// A presentation starts from the template gallery.
+				await page
+					.getByRole("dialog")
+					.getByRole("button", { name: "Create", exact: true })
+					.click();
+			}
 
 			await page.waitForURL("**/edit/**", { timeout: 20_000 });
 			await expect(
@@ -78,7 +85,7 @@ test.describe("Documents", () => {
 		).toBeVisible({
 			timeout: 15_000,
 		});
-		await expect(page.getByRole("button", { name: "Add row" })).toBeVisible();
+		await expect(page.getByRole("gridcell").first()).toBeVisible();
 	});
 });
 
@@ -164,7 +171,7 @@ test.describe("Smart rename", () => {
 
 		// The page heading carries the extension; the document's own does not.
 		await expect(
-			page.getByRole("heading", { name: `${newTitle}.html` }),
+			page.getByRole("heading", { name: `${newTitle}.docx` }),
 		).toBeVisible({ timeout: 20_000 });
 	});
 });

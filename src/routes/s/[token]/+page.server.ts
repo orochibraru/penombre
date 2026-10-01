@@ -1,5 +1,14 @@
 import { error, fail } from "@sveltejs/kit";
+import {
+	type DocumentKind,
+	editorKindForName,
+	exportFormatsFor,
+	officeKindForName,
+} from "#lib/documents.js";
+import { Logger } from "#lib/logger.js";
 import { getConfig } from "#lib/server/config.js";
+import { officeToText } from "#lib/server/office/index.js";
+import { viewerDeck } from "#lib/server/office/slides/index.js";
 import { isRateLimited } from "#lib/server/rate-limit.js";
 import type { ObjectItem } from "#lib/server/schema.js";
 import {
@@ -7,9 +16,67 @@ import {
 	unlockCookieName,
 	unlockToken,
 } from "#lib/server/services/shares.js";
+import type { StorageService } from "#lib/server/services/storage/index.js";
 import { shareLinkStorage } from "#lib/server/services/storage-for.js";
 
 const shares = new ShareService();
+const logger = new Logger("Share page");
+
+/** Past this, a document is downloaded rather than drawn into the page. */
+const RENDITION_MAX_BYTES = 20 * 1024 * 1024;
+
+interface Rendition {
+	kind: DocumentKind;
+	/** What the editor reads: HTML, CSV, a workbook or a deck as JSON, or Markdown. */
+	content: string;
+	office: boolean;
+}
+
+/**
+ * A document, sheet or presentation as the page shows it, read-only: the
+ * same text the editor opens, drawn by the same editors with editing off.
+ * Null when there is nothing to draw: a file too big, or one that cannot be
+ * read.
+ */
+async function rendition(
+	service: StorageService,
+	path: string,
+	item: ObjectItem,
+): Promise<Rendition | null> {
+	const name = item.metadata.name ?? "";
+	const kind = editorKindForName(name);
+	const office = officeKindForName(name) !== null;
+	if (!kind || (item.size ?? 0) > RENDITION_MAX_BYTES) {
+		return null;
+	}
+	const raw = await service.getRawFileData(path);
+	if (!raw) {
+		return null;
+	}
+	try {
+		const content = !office
+			? new TextDecoder().decode(raw.buffer)
+			: kind === "presentation"
+				? publicDeck(raw.buffer)
+				: officeToText(name, raw.buffer);
+		return { kind, content, office };
+	} catch (cause) {
+		logger.warn(`Could not render ${item.metadata.id} for its link`, cause);
+		return null;
+	}
+}
+
+/**
+ * A deck a visitor can draw with no media route: pictures inline, and no
+ * speaker notes, which are the presenter's, not the audience's.
+ */
+function publicDeck(bytes: ArrayBuffer): string {
+	const deck = viewerDeck(bytes);
+	return JSON.stringify({
+		...deck,
+		slides: deck.slides.map((slide) => ({ ...slide, notes: "" })),
+	});
+}
 
 /**
  * Only what an anonymous visitor needs to see or download a file: no owner
@@ -74,6 +141,9 @@ export const load = async ({ params, locals, cookies }) => {
 			name: share.resourceName,
 			expiresAt: share.expiresAt?.toISOString() ?? null,
 			files: [toPublicDto(meta)],
+			rendition: await rendition(service, path, meta),
+			// Anything the editor opens also exports as a PDF.
+			pdf: exportFormatsFor(meta.metadata.name ?? "").includes("pdf"),
 		};
 	}
 

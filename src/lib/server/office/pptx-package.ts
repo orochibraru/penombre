@@ -24,7 +24,12 @@ const SLIDE_TYPE =
 	"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide";
 const SLIDE_CONTENT_TYPE =
 	"application/vnd.openxmlformats-officedocument.presentationml.slide+xml";
-
+const RELATIONSHIPS =
+	"http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+const NOTES_TYPE = `${RELATIONSHIPS}/notesSlide`;
+const NOTES_MASTER_TYPE = `${RELATIONSHIPS}/notesMaster`;
+const NOTES_CONTENT_TYPE =
+	"application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml";
 export class NotAPresentationError extends Error {}
 
 export interface SlideRef {
@@ -82,7 +87,7 @@ export function slideRefs(entries: ZipEntry[]): SlideRef[] {
 }
 
 /** The next free `slideN.xml` number and the next free relationship id. */
-function freeNames(entries: ZipEntry[]): {
+export function freeNames(entries: ZipEntry[]): {
 	slide: number;
 	relationship: string;
 } {
@@ -102,7 +107,7 @@ function freeNames(entries: ZipEntry[]): {
 	return { slide: slide + 1, relationship: `rId${highest + 1}` };
 }
 
-function appendRelationship(
+export function appendRelationship(
 	entries: ZipEntry[],
 	id: string,
 	target: string,
@@ -120,7 +125,11 @@ function appendRelationship(
 	setPartText(entries, PRESENTATION_RELS, serializeXml(document));
 }
 
-function declareContentType(entries: ZipEntry[], part: string): void {
+export function declareContentType(
+	entries: ZipEntry[],
+	part: string,
+	contentType = SLIDE_CONTENT_TYPE,
+): void {
 	const source = partText(entries, CONTENT_TYPES);
 	if (!source) {
 		throw new NotAPresentationError("Package has no content types");
@@ -132,14 +141,14 @@ function declareContentType(entries: ZipEntry[], part: string): void {
 	);
 	if (!declared) {
 		document.root.children.push(
-			element("Override", { PartName: name, ContentType: SLIDE_CONTENT_TYPE }),
+			element("Override", { PartName: name, ContentType: contentType }),
 		);
 		setPartText(entries, CONTENT_TYPES, serializeXml(document));
 	}
 }
 
 /** Put the slide id list back in the order given, keeping each entry's id. */
-function rewriteSlideList(entries: ZipEntry[], order: string[]): void {
+export function rewriteSlideList(entries: ZipEntry[], order: string[]): void {
 	const document = parseXml(presentationXml(entries));
 	const list = findElement(document.root, "p:sldIdLst");
 	if (!list) {
@@ -165,82 +174,37 @@ function rewriteSlideList(entries: ZipEntry[], order: string[]): void {
 	setPartText(entries, PRESENTATION_PART, serializeXml(document));
 }
 
-/**
- * The slide's own content stripped out, leaving its placeholders.
- *
- * A new slide is a copy of an existing one so that it inherits the deck's
- * layout rather than PowerPoint's defaults — but a copy that also inherited
- * the original's picture put last slide's photograph on every slide the user
- * added after it.
- */
-function blankCopy(source: string): string {
-	const document = parseXml(source);
-	const tree = findElement(document.root, "p:spTree");
-	if (tree) {
-		tree.children = tree.children.filter((child) => {
-			if (child.type !== "element") {
-				return true;
-			}
-			// Pictures, charts, tables and free-standing text boxes are the
-			// old slide's content. A placeholder is its layout.
-			if (child.name === "p:sp") {
-				return isPlaceholder(child);
-			}
-			return !["p:pic", "p:graphicFrame", "p:grpSp"].includes(child.name);
-		});
-	}
-	return serializeXml(document);
-}
-
-/**
- * Copy a slide's layout as a new last slide. The copy shares the original's
- * relationships file, so it keeps the same slide layout without any part
- * having to be created for it.
- */
-export function addSlide(entries: ZipEntry[], template: SlideRef): SlideRef {
-	const source = entries.find((entry) => entry.name === template.part);
-	if (!source) {
-		throw new NotAPresentationError(`Missing slide part ${template.part}`);
-	}
-	const { slide, relationship } = freeNames(entries);
-	const part = `ppt/slides/slide${slide}.xml`;
-
-	entries.push({
-		name: part,
-		data: new TextEncoder().encode(
-			blankCopy(new TextDecoder().decode(source.data)),
-		),
-		stored: false,
-	});
-	const templateRels = entries.find(
-		(entry) => entry.name === relsPartFor(template.part),
-	);
-	if (templateRels) {
-		entries.push({
-			name: relsPartFor(part),
-			data: new Uint8Array(templateRels.data),
-			stored: false,
-		});
-	}
-
-	appendRelationship(entries, relationship, `slides/slide${slide}.xml`);
-	declareContentType(entries, part);
-	return { part, relationship };
-}
-
 /** The `_rels` sidecar of a part. */
 export function relsPartFor(part: string): string {
 	const cut = part.lastIndexOf("/");
 	return `${part.slice(0, cut)}/_rels/${part.slice(cut + 1)}.rels`;
 }
 
-/** Drop a slide from the deck and remove its parts from the package. */
-export function removeSlide(entries: ZipEntry[], slide: SlideRef): void {
-	for (const name of [slide.part, relsPartFor(slide.part)]) {
+/** Remove a part, its relationships and its content-type override. */
+export function removePart(entries: ZipEntry[], part: string): void {
+	for (const name of [part, relsPartFor(part)]) {
 		const at = entries.findIndex((entry) => entry.name === name);
 		if (at !== -1) {
 			entries.splice(at, 1);
 		}
+	}
+	const typesSource = partText(entries, CONTENT_TYPES);
+	if (typesSource) {
+		const document = parseXml(typesSource);
+		document.root.children = document.root.children.filter(
+			(child) =>
+				child.type !== "element" || child.attrs.PartName !== `/${part}`,
+		);
+		setPartText(entries, CONTENT_TYPES, serializeXml(document));
+	}
+}
+
+/** Drop a slide from the deck and remove its parts, notes included. */
+export function removeSlide(entries: ZipEntry[], slide: SlideRef): void {
+	const notes = notesPartFor(entries, slide.part);
+	removePart(entries, slide.part);
+	if (notes) {
+		removePart(entries, notes);
 	}
 
 	const relsSource = partText(entries, PRESENTATION_RELS);
@@ -252,49 +216,6 @@ export function removeSlide(entries: ZipEntry[], slide: SlideRef): void {
 		);
 		setPartText(entries, PRESENTATION_RELS, serializeXml(document));
 	}
-
-	const typesSource = partText(entries, CONTENT_TYPES);
-	if (typesSource) {
-		const document = parseXml(typesSource);
-		document.root.children = document.root.children.filter(
-			(child) =>
-				child.type !== "element" || child.attrs.PartName !== `/${slide.part}`,
-		);
-		setPartText(entries, CONTENT_TYPES, serializeXml(document));
-	}
-}
-
-/** Match the deck's slide count to `wanted`, cloning or dropping at the end. */
-export function resizeDeck(entries: ZipEntry[], wanted: number): SlideRef[] {
-	const slides = slideRefs(entries);
-	if (slides.length === 0) {
-		throw new NotAPresentationError("Presentation has no slides");
-	}
-	while (slides.length > wanted && slides.length > 1) {
-		const last = slides.pop() as SlideRef;
-		removeSlide(entries, last);
-	}
-	while (slides.length < wanted) {
-		slides.push(addSlide(entries, slides.at(-1) as SlideRef));
-	}
-	rewriteSlideList(
-		entries,
-		slides.map((slide) => slide.relationship),
-	);
-	return slides;
-}
-
-/** The shape tree of a slide part. */
-export function shapeTree(entries: ZipEntry[], part: string): XmlElement {
-	const source = partText(entries, part);
-	if (!source) {
-		throw new NotAPresentationError(`Missing slide part ${part}`);
-	}
-	const tree = findElement(parseXml(source).root, "p:spTree");
-	if (!tree) {
-		throw new NotAPresentationError(`Slide ${part} has no shape tree`);
-	}
-	return tree;
 }
 
 function placeholder(shape: XmlElement): XmlElement | undefined {
@@ -303,26 +224,9 @@ function placeholder(shape: XmlElement): XmlElement | undefined {
 	return nvPr && childNamed(nvPr, "p:ph");
 }
 
-/**
- * Whether a shape is one of the layout's placeholders.
- *
- * Not the same question as having a placeholder *type*: a content
- * placeholder is usually written `<p:ph idx="1"/>` with no type at all, and
- * treating that as content meant every slide copied for a new one lost its
- * body and got a free-floating text box instead.
- */
-export function isPlaceholder(shape: XmlElement): boolean {
-	return placeholder(shape) !== undefined;
-}
-
 /** The placeholder type of a shape — `title`, `subTitle`, `body`, or none. */
 export function placeholderType(shape: XmlElement): string | undefined {
 	return placeholder(shape)?.attrs.type;
-}
-
-export function isTitle(shape: XmlElement): boolean {
-	const type = placeholderType(shape);
-	return type === "title" || type === "ctrTitle";
 }
 
 /** Shapes with text in them, in the order they appear on the slide. */
@@ -330,4 +234,113 @@ export function textShapes(tree: XmlElement): XmlElement[] {
 	return findElements(tree, "p:sp").filter(
 		(shape) => childNamed(shape, "p:txBody") !== undefined,
 	);
+}
+
+// =========================================================================
+// Speaker notes
+// =========================================================================
+
+/** A relationship target, resolved against the folder of the part it is from. */
+function resolveFrom(part: string, target: string): string {
+	if (target.startsWith("/")) {
+		return target.slice(1);
+	}
+	const path = part.split("/").slice(0, -1);
+	for (const segment of target.split("/")) {
+		if (segment === "..") {
+			path.pop();
+		} else if (segment !== ".") {
+			path.push(segment);
+		}
+	}
+	return path.join("/");
+}
+
+function relationshipOfType(
+	entries: ZipEntry[],
+	part: string,
+	type: string,
+): string | null {
+	const source = partText(entries, relsPartFor(part));
+	const found =
+		source &&
+		findElements(parseXml(source).root, "Relationship").find(
+			(relationship) => relationship.attrs.Type === type,
+		);
+	return found ? resolveFrom(part, found.attrs.Target ?? "") : null;
+}
+
+/** The notes page of a slide, when it has one. */
+export function notesPartFor(
+	entries: ZipEntry[],
+	slide: string,
+): string | null {
+	const part = relationshipOfType(entries, slide, NOTES_TYPE);
+	return part && partText(entries, part) !== null ? part : null;
+}
+
+/** Relative path from one part's folder to another part. */
+function relativeTarget(from: string, to: string): string {
+	const up = from.split("/").length - 2;
+	return `${"../".repeat(up)}${to.split("/").slice(1).join("/")}`;
+}
+
+function appendPartRelationship(
+	entries: ZipEntry[],
+	part: string,
+	type: string,
+	target: string,
+): void {
+	const name = relsPartFor(part);
+	const document = parseXml(
+		partText(entries, name) ??
+			'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>',
+	);
+	let highest = 0;
+	for (const relationship of childrenNamed(document.root, "Relationship")) {
+		highest = Math.max(
+			highest,
+			Number(/^rId(\d+)$/.exec(relationship.attrs.Id ?? "")?.[1] ?? 0),
+		);
+	}
+	document.root.children.push(
+		element("Relationship", {
+			Id: `rId${highest + 1}`,
+			Type: type,
+			Target: relativeTarget(part, target),
+		}),
+	);
+	setPartText(entries, name, serializeXml(document));
+}
+
+const NOTES_XML = (body: string) =>
+	`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="${RELATIONSHIPS}" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/><p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/><p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp><p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/>${body}</p:txBody></p:sp></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>`;
+
+/**
+ * Give a slide an empty notes page. A notes page needs the deck's notes
+ * master, so a deck without one gets nothing and the caller drops the notes.
+ */
+export function addNotes(entries: ZipEntry[], slide: string): string | null {
+	const master = relationshipOfType(
+		entries,
+		PRESENTATION_PART,
+		NOTES_MASTER_TYPE,
+	);
+	if (!master || partText(entries, master) === null) {
+		return null;
+	}
+	let highest = 0;
+	for (const entry of entries) {
+		const number = Number(
+			/^ppt\/notesSlides\/notesSlide(\d+)\.xml$/.exec(entry.name)?.[1] ?? 0,
+		);
+		highest = Math.max(highest, number);
+	}
+	const part = `ppt/notesSlides/notesSlide${highest + 1}.xml`;
+	setPartText(entries, part, NOTES_XML("<a:p/>"));
+	appendPartRelationship(entries, part, NOTES_MASTER_TYPE, master);
+	appendPartRelationship(entries, part, `${RELATIONSHIPS}/slide`, slide);
+	appendPartRelationship(entries, slide, NOTES_TYPE, part);
+	declareContentType(entries, part, NOTES_CONTENT_TYPE);
+	return part;
 }
