@@ -18,6 +18,10 @@ import { sveltekitCookies } from "better-auth/svelte-kit";
 import { Logger } from "#lib/logger.js";
 import { isAddressCode } from "#lib/server/auth/address-codes.js";
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
+import {
+	challengeCodeSignIn,
+	magicLinkChallenge,
+} from "#lib/server/auth/two-factor.js";
 import { getConfig, isSmtpEnabled } from "#lib/server/config.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb } from "#lib/server/db/index.js";
@@ -227,7 +231,8 @@ function authPlugins(oauthProviders: OAuthProvider[]) {
 		// Always loaded, never gated: an account must be able to enrol and to
 		// answer a challenge even when the admin has not made 2FA mandatory.
 		// The `requireTwoFactor` setting only decides who is forced to enrol.
-		twoFactor({ issuer: "Penombre" }),
+		challengeCodeSignIn(twoFactor({ issuer: "Penombre" })),
+		magicLinkChallenge,
 
 		magicLink({
 			// Only ever sent to an address that already has an account:
