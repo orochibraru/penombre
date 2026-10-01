@@ -61,6 +61,8 @@ export default defineConfig({
 			// Checked by `csrfHandler` in hooks.server.ts instead.
 			csrf: { trustedOrigins: ["*"] },
 		}),
-		SvelteKitPWA(),
+		// Kit's relative base made the manifest link `./manifest.webmanifest`,
+		// a 404 on every nested route (`/auth/…`, `/edit/…`).
+		SvelteKitPWA({ base: "/" }),
 	],
 }) satisfies UserConfig;
