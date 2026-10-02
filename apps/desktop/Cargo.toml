@@ -6,6 +6,9 @@ rust-version = "1.98"
 license = "MIT"
 description = "Keeps a local folder in two-way sync with a Penombre drive"
 publish = false
+# tests/ mirrors src/ and holds unit tests that src/ pulls in by #[path], not
+# integration test crates.
+autotests = false
 
 [dependencies]
 directories = "6"

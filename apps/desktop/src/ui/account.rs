@@ -119,13 +119,5 @@ fn host(server: &str) -> &str {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn codes_are_split_for_reading() {
-        assert_eq!(spaced("ABCDEFGH"), "ABCD-EFGH");
-        assert_eq!(spaced("ABC"), "ABC");
-        assert_eq!(host("https://files.example.com/"), "files.example.com");
-    }
-}
+#[path = "../../tests/ui/account.rs"]
+mod tests;

@@ -84,7 +84,15 @@ fn folder(pair: &Pair) -> Check {
 
 #[cfg(target_os = "macos")]
 fn notifications() -> Check {
-    if !crate::notify::bundled() {
+    let bundled = crate::notify::bundled();
+    notification_check(bundled, bundled.then(crate::notify::allowed).flatten())
+}
+
+/// Only the `.app` has a permission to read: elsewhere Script Editor shows
+/// them, and `allowed` is `None` while the person has not decided.
+#[cfg(target_os = "macos")]
+fn notification_check(bundled: bool, allowed: Option<bool>) -> Check {
+    if !bundled {
         return check(
             "Notifications",
             "Shown through Script Editor: only the app from the .dmg shows its own.".into(),
@@ -95,7 +103,7 @@ fn notifications() -> Check {
             )),
         );
     }
-    let (level, detail) = match crate::notify::allowed() {
+    let (level, detail) = match allowed {
         Some(true) => (Level::Ok, "Allowed."),
         Some(false) => (
             Level::Problem,
@@ -137,3 +145,7 @@ fn notifications() -> Check {
         None,
     )
 }
+
+#[cfg(test)]
+#[path = "../../tests/app/permissions.rs"]
+mod tests;

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Have Google Play validate the store listing in apps/mobile/store, committing nothing"
+set -euo pipefail
+# The upload account CI uses, through your gcloud login: it needs
+# roles/iam.serviceAccountTokenCreator on that account.
+TOKEN="$(gcloud auth print-access-token \
+  --impersonate-service-account=penombre-play@penombre-app.iam.gserviceaccount.com \
+  --scopes=https://www.googleapis.com/auth/androidpublisher)"
+export TOKEN
+exec bash apps/mobile/store/play.sh --dry-run

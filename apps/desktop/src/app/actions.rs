@@ -1,10 +1,11 @@
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::channel;
 
 use super::{AddState, App, Excluding, GRACE, SignIn};
 use crate::auth::{self, AuthEvent};
-use crate::places;
+use crate::places::{self, Place};
 use crate::store::{self, Pair};
 use crate::sync::{self, Cmd};
 use crate::update::{self, Channel, Found};
@@ -60,22 +61,7 @@ impl App {
         let Some(place) = places.get(add.choice) else {
             return;
         };
-        let sub = add.subfolder.trim().trim_matches('/');
-        let pair = if sub.is_empty() {
-            Pair {
-                local: add.local.clone(),
-                remote: place.path.clone(),
-                label: place.name.clone(),
-                ignored: Vec::new(),
-            }
-        } else {
-            Pair {
-                local: add.local.clone(),
-                remote: format!("{}/{sub}", place.path),
-                label: format!("{} / {sub}", place.name),
-                ignored: Vec::new(),
-            }
-        };
+        let pair = new_pair(add.local.clone(), place, &add.subfolder);
         let mut pairs = self.config.pairs();
         if let Some(error) = store::conflict(&pairs, &pair) {
             add.error = Some(error.into());
@@ -271,18 +257,13 @@ impl App {
         else {
             return;
         };
-        let inside = folder
-            .strip_prefix(&pair.local)
-            .ok()
-            .filter(|rest| !rest.as_os_str().is_empty());
-        let Some(rest) = inside else {
+        let Some(pattern) = folder_pattern(&pair.local, &folder) else {
             open.error = Some(format!(
                 "Pick a folder inside {}.",
                 crate::ui::home_relative(&pair.local)
             ));
             return;
         };
-        let pattern = format!("/{}/", rest.to_string_lossy().replace('\\', "/"));
         open.error = None;
         let index = open.index;
         self.exclude(index, pattern);
@@ -312,3 +293,36 @@ impl App {
         }
     }
 }
+
+/// A folder synced with `place`, or with a subfolder of it when one is named.
+fn new_pair(local: PathBuf, place: &Place, subfolder: &str) -> Pair {
+    let sub = subfolder.trim().trim_matches('/');
+    let (remote, label) = if sub.is_empty() {
+        (place.path.clone(), place.name.clone())
+    } else {
+        (
+            format!("{}/{sub}", place.path),
+            format!("{} / {sub}", place.name),
+        )
+    };
+    Pair {
+        local,
+        remote,
+        label,
+        ignored: Vec::new(),
+    }
+}
+
+/// The pattern that keeps `picked` out of the pair synced from `root`: only a
+/// folder strictly inside it has one.
+fn folder_pattern(root: &Path, picked: &Path) -> Option<String> {
+    let rest = picked
+        .strip_prefix(root)
+        .ok()
+        .filter(|rest| !rest.as_os_str().is_empty())?;
+    Some(format!("/{}/", rest.to_string_lossy().replace('\\', "/")))
+}
+
+#[cfg(test)]
+#[path = "../../tests/app/actions.rs"]
+mod tests;

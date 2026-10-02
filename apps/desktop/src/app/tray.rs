@@ -112,3 +112,7 @@ fn icon(size: usize, rgb: [u8; 3]) -> Vec<u8> {
     }
     pixels
 }
+
+#[cfg(test)]
+#[path = "../../tests/app/tray.rs"]
+mod tests;

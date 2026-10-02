@@ -63,15 +63,18 @@ mod macos {
     const WAIT: Duration = Duration::from_secs(2);
 
     pub fn bundled() -> bool {
-        std::env::current_exe().is_ok_and(|exe| {
-            exe.parent()
-                .is_some_and(|dir| dir.ends_with("Contents/MacOS"))
-                && exe
-                    .ancestors()
-                    .nth(3)
-                    .and_then(|app| app.extension())
-                    .is_some_and(|ext| ext == "app")
-        })
+        std::env::current_exe().is_ok_and(|exe| in_app_bundle(&exe))
+    }
+
+    /// `<name>.app/Contents/MacOS/<binary>`, and nothing looser.
+    pub(super) fn in_app_bundle(exe: &std::path::Path) -> bool {
+        exe.parent()
+            .is_some_and(|dir| dir.ends_with("Contents/MacOS"))
+            && exe
+                .ancestors()
+                .nth(3)
+                .and_then(|app| app.extension())
+                .is_some_and(|ext| ext == "app")
     }
 
     fn center() -> Option<Retained<UNUserNotificationCenter>> {
@@ -134,3 +137,7 @@ mod macos {
         }
     }
 }
+
+#[cfg(all(test, target_os = "macos"))]
+#[path = "../tests/notify.rs"]
+mod tests;

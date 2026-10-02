@@ -1306,6 +1306,17 @@ test needing the raw DB (seeding rows, reading internal state) opens a second
 `*sql.DB` on the same SQLite file rather than reaching into `Store`'s private
 field. No `export_test.go` shims in `internal/`.
 
+### Desktop tests live under `apps/desktop/tests/`
+
+A module's unit tests sit in `apps/desktop/tests/<same path>.rs`, pulled into
+the module they test by `#[cfg(test)] #[path = "…"] mod tests;` at the end of
+its file, so `use super::*` still reaches private items. `autotests = false` in
+`Cargo.toml` stops Cargo compiling that folder as integration test crates, which
+could import nothing: the app is a binary, with no `lib.rs`. A `#[path]` inside
+an inline module resolves against a folder named after it, so `notify.rs`
+declares its macOS-only tests at the top level (`pub(super)` on what they test).
+Fixtures move with their tests: `include_str!` is relative to the file it is in.
+
 ### Card layout conventions
 
 Cards carry their heading through `Card.Header` + `Card.Title` +
@@ -2221,15 +2232,10 @@ Kotlin/Native link error only shows when the iOS framework is linked.
   a language Play has and the folder lacks is deleted, so never edit the listing
   in the Console. Images go to the default language only, which every other
   falls back to, and are replaced only when their sha256 differ, so a release
-  does not resend them. This has Play validate it and commits nothing
-  (impersonating needs `roles/iam.serviceAccountTokenCreator` on the account):
-
-  ```bash
-  TOKEN=$(gcloud auth print-access-token \
-    --impersonate-service-account=penombre-play@penombre-app.iam.gserviceaccount.com \
-    --scopes=https://www.googleapis.com/auth/androidpublisher) \
-    bash apps/mobile/store/play.sh --dry-run
-  ```
+  does not resend them. `mise run mobile:store:check` has Play validate it and
+  commits nothing; it acts as the upload account through your gcloud login,
+  which needs `roles/iam.serviceAccountTokenCreator` on that account. There is
+  no local publish: merging publishes.
 
 - **`PrivacyInfo.xcprivacy` declares every API Apple wants a reason for**, and
   the App Store scans the binary for them: the app's `NSUserDefaults`, plus

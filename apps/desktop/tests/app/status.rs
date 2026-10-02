@@ -1,0 +1,47 @@
+use std::time::Duration;
+
+use super::*;
+
+#[test]
+fn the_status_line_follows_the_last_sync() {
+    let now = SystemTime::now();
+    let ok = (now - Duration::from_secs(150), Ok(()));
+    let failed = (now, Err("boom".to_owned()));
+    assert_eq!(
+        status_line(false, false, false, false, None, None, now),
+        "Not signed in"
+    );
+    assert_eq!(
+        status_line(true, false, false, true, None, Some(&ok), now),
+        "Syncing…"
+    );
+    assert_eq!(
+        status_line(true, false, false, true, Some(23), Some(&ok), now),
+        "Syncing… 23%"
+    );
+    assert_eq!(
+        status_line(true, false, false, false, None, Some(&ok), now),
+        "Synced 2 min ago"
+    );
+    assert_eq!(
+        status_line(true, false, false, false, None, Some(&failed), now),
+        "Error — open Penombre Sync"
+    );
+    assert_eq!(
+        status_line(true, false, false, false, None, None, now),
+        "Waiting to sync"
+    );
+    assert_eq!(
+        status_line(true, true, false, true, None, Some(&failed), now),
+        "Paused"
+    );
+    assert_eq!(
+        status_line(true, false, true, true, None, Some(&ok), now),
+        "Can't reach server"
+    );
+    assert_eq!(
+        status_line(true, true, true, false, None, Some(&ok), now),
+        "Paused",
+        "a pause outranks an outage"
+    );
+}
