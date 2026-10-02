@@ -205,3 +205,16 @@ Built with these open-source technologies:
 - [SQLite](https://sqlite.org/) - Database
 - [oxlint](https://oxc.rs/) - Linter
 - [Biome](https://biomejs.dev/) - Formatter
+
+## Star History
+
+<!-- markdownlint-disable MD033 -->
+
+<a href="https://www.star-history.com/#orochibraru/penombre&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=orochibraru/penombre&type=Date&theme=dark">
+    <img alt="Penombre's GitHub stars over time" src="https://api.star-history.com/svg?repos=orochibraru/penombre&type=Date">
+  </picture>
+</a>
+
+<!-- markdownlint-enable MD033 -->
