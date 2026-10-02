@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Build the iOS app for devices, unsigned as CI does: signing needs the Apple account"
+set -e
+[ "$(uname)" = Darwin ] || { echo "The iOS app builds on a Mac only"; exit 0; }
+cd apps/mobile/iosApp
+xcodegen generate -q
+xcodebuild -quiet -project Penombre.xcodeproj -scheme Penombre -configuration Release \
+  -sdk iphoneos -derivedDataPath build \
+  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+echo apps/mobile/iosApp/build/Build/Products/Release-iphoneos/Penombre.app

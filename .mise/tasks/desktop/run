@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+#MISE description="Run the desktop app from source (its arguments pass through)"
+cd apps/desktop
+exec cargo run -- "$@"

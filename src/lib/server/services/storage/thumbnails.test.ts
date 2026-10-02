@@ -149,7 +149,7 @@ describe("ThumbnailService", () => {
 	});
 
 	test("a document is laid out as a one-page PDF for the worker", async () => {
-		const docx = `${import.meta.dir}/../../../../../e2e/fixtures/office-report.docx`;
+		const docx = `${import.meta.dir}/../../../../../tests/e2e/fixtures/office-report.docx`;
 		await writeFile(join(root, "r.docx"), await Bun.file(docx).bytes());
 		const paged = new ThumbnailService({
 			storagePath: root,

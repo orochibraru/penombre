@@ -51,10 +51,10 @@ jobs:
         include:
           - dialect: SQLite
             script: test:e2e
-            report: playwright-report
+            report: tests/e2e/playwright-report
           - dialect: PostgreSQL
             script: test:e2e:pg
-            report: playwright-report-pg
+            report: tests/e2e/playwright-report-pg
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

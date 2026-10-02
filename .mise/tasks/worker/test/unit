@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="The worker's unit tests: no database, no external binary"
+exec go -C apps/worker test -race ./cmd/... ./internal/... ./tests/unit/...

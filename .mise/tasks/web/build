@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Build the web app for production into build/"
+bun run build

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Regenerate .example.env, openapi.json and the typed API client"
+bun run gen

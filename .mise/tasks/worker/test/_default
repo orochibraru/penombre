@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="The worker's Go tests, unit and integration, with the race detector"
+exec go -C apps/worker test -race ./...

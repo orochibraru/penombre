@@ -12,7 +12,7 @@ with a bill of exactly zero.
 [Docker Hub](https://hub.docker.com/r/orochibraru/penombre) ·
 [Project page](https://orochibraru.com/penombre)
 
-<!-- Regenerate with `mise run graphics`; do not edit by hand. -->
+<!-- Regenerate with `mise run media:graphics`; do not edit by hand. -->
 <!-- markdownlint-disable MD033 -->
 
 <a href="https://orochibraru.com/penombre/docs/showcase">

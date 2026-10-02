@@ -1,5 +1,5 @@
 /**
- * Penombre's sealed file format, v1. Mirrors `internal/envelope` in Go, and
+ * Penombre's sealed file format, v1. Mirrors `apps/worker/internal/envelope` in Go, and
  * `tests/fixtures/envelope-v1.json` holds vectors both must reproduce.
  *
  * 76-byte header (magic + version, key id, wrap nonce, file key wrapped by the

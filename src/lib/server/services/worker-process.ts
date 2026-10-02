@@ -16,7 +16,11 @@ export function workerCommand(isDev: boolean): string[] {
 		return ["/usr/local/bin/penombre-worker"];
 	}
 	const bin = join(tmpdir(), "penombre-worker-dev");
-	return ["sh", "-c", `go build -o '${bin}' ./cmd/worker && exec '${bin}'`];
+	return [
+		"sh",
+		"-c",
+		`go -C apps/worker build -o '${bin}' ./cmd/worker && exec '${bin}'`,
+	];
 }
 
 export function nextDelay(previous: number, uptimeMs: number): number {

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Unit tests of the shared mobile code on the iOS simulator (a Mac only)"
+set -e
+[ "$(uname)" = Darwin ] || { echo "The iOS tests run on a Mac only"; exit 0; }
+cd apps/mobile
+./gradlew :shared:iosSimulatorArm64Test

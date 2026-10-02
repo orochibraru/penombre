@@ -1,10 +1,10 @@
 FROM --platform=$BUILDPLATFORM golang:1.27.1-alpine AS go-builder
 ARG TARGETOS TARGETARCH APP_VERSION=""
 WORKDIR /src
-COPY go.mod go.sum ./
+COPY apps/worker/go.mod apps/worker/go.sum ./
 RUN go mod download
-COPY cmd ./cmd
-COPY internal ./internal
+COPY apps/worker/cmd ./cmd
+COPY apps/worker/internal ./internal
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags "-s -w -X main.version=${APP_VERSION:-dev}" \
     -o /out/penombre-worker ./cmd/worker

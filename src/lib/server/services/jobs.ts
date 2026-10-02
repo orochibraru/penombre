@@ -195,7 +195,7 @@ async function abandon(
 /**
  * Job types whose caller writes rows from the outcome. Run with nobody
  * awaiting, they leave bytes no row points at (copy) or rows whose bytes are
- * gone (delete). Mirrors `callerBound` in `internal/worker/worker.go`.
+ * gone (delete). Mirrors `callerBound` in `apps/worker/internal/worker/worker.go`.
  */
 const CALLER_BOUND = ["copy", "delete"];
 

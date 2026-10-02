@@ -17,12 +17,12 @@ Runtime is **Bun**; use `bun`/`bunx`, not `npm`/`node` (`preinstall` enforces
 this). `mise.toml` pins Bun and Go, and `mise run doctor` checks the worker's
 ffmpeg/ffprobe/pdftoppm. Those versions live in four places that must agree:
 `mise.toml`, `package.json`'s `packageManager` (CI's `setup-bun` reads it),
-`go.mod` (CI's `setup-go` reads it) and the Dockerfile's `FROM` lines. The
-golang image sets `GOTOOLCHAIN=local`, so a `go.mod` newer than its `FROM` fails
-the image build instead of downloading a toolchain. It also pins Rust and rclone
-for the desktop app; Rust must match `desktop/Cargo.toml`'s `rust-version`,
-which is what CI and the release builds install. CI does not use mise: its jobs
-install their own toolchains.
+`apps/worker/go.mod` (CI's `setup-go` reads it) and the Dockerfile's `FROM`
+lines. The golang image sets `GOTOOLCHAIN=local`, so a `go.mod` newer than its
+`FROM` fails the image build instead of downloading a toolchain. It also pins
+Rust and rclone for the desktop app; Rust must match `apps/desktop/Cargo.toml`'s
+`rust-version`, which is what CI and the release builds install. CI does not use
+mise: its jobs install their own toolchains.
 
 Every script lives in `.mise/tasks/` as a mise task (`mobile/setup` is
 `mobile:setup`), metadata in `#MISE`/`//MISE` comments; there is no `scripts/`
@@ -32,11 +32,18 @@ task file must be executable, or mise skips it without a word. `mise bootstrap`
 (built into mise) installs the tools, runs the `postinstall` hook, then the
 `bootstrap` task, which is therefore the one place a fresh clone's setup lives.
 
+Tasks are named `<app>:<verb>` (`web:`, `worker:`, `desktop:`, `mobile:`, plus
+`media:` for screenshots, graphics and icons); a bare verb acts on the whole
+repo (`test`, `build`, `dev`, `bootstrap`, `doctor`, `verify`). A task file is a
+plain script run from the repo root: it `cd`s itself rather than using
+`#MISE dir`, because the prek hooks call the same files, and CI runs those hooks
+without mise.
+
 ```bash
 bun run dev              # Vite dev server (SQLite by default, no services needed)
 bun run build            # svelte-kit sync && vite build
 bun run preview          # preview the production build
-bun run check            # check:app && check:scripts && check:go, sequentially
+bun run check            # check:app && check:scripts, sequentially
 
 bun run lint             # every pre-commit hook over the whole repo, fixing what it can
 bun run circular         # madge circular-import check (src/, .ts only)
@@ -61,11 +68,22 @@ bun run gen:env           # regenerate .example.env from config.defaults.ts
 bun run gen:openapi       # regenerate openapi.json + the typed client types
 bun run gen:paraglide     # compile messages/*.json into src/lib/paraglide
 bun run machine-translate # inlang machine translation for messages/*.json
+```
 
-bun run check:go            # go vet, cmd/ + internal/ + tests/{unit,integration}/go (also part of `bun run check`)
-bun run test:go             # go test -race, unit + integration together
-bun run test:go:unit        # go test -race, tests/unit/go only (no DB, no external binary)
-bun run test:go:integration # go test -race, tests/integration/go only (SQLite/Postgres or ffmpeg/pdftoppm)
+Across the apps, `mise tasks` lists everything:
+
+```bash
+mise run test                     # every app's unit tests, as CI runs them on a push
+mise run build                    # every app: web, worker, desktop, mobile (iOS on a Mac)
+mise run web:test                 # bun test (arguments pass through)
+mise run web:e2e                  # Playwright on SQLite; web:e2e:pg on Postgres
+mise run worker:test              # go test -race, unit + integration; worker:test:unit, worker:test:integration
+mise run worker:vet               # go vet over apps/worker
+mise run desktop:test             # cargo test; desktop:lint is clippy, desktop:run runs it
+mise run desktop:build            # release binary in apps/desktop/target/release
+mise run mobile:test              # shared code on the JVM; mobile:test:ios on the simulator
+mise run mobile:build             # Android APK + bundle and the unsigned iOS app
+mise run mobile:run:android       # build, install and launch; mobile:run:ios likewise
 ```
 
 The Go worker needs `ffmpeg` built **with the `libwebp` encoder** — the plain
@@ -78,8 +96,8 @@ Ubuntu/CI's `apt-get install ffmpeg` already includes it.
 `dev` and `preview` run `bunx --bun vite`: the database driver is `bun:sqlite`,
 which Node cannot load. `[run] bun = true` in `bunfig.toml` is not enough on its
 own — Bun reads `bunfig.toml` from the current directory only, so `bun run dev`
-from a subdirectory (`desktop/`) found the root `package.json` but ran Vite on
-Node, and every page was a 500.
+from a subdirectory (`apps/desktop/`) found the root `package.json` but ran Vite
+on Node, and every page was a 500.
 
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks
 `$app/*`/`#lib/server/*` modules and the Drizzle `db` object — tests don't need
@@ -89,10 +107,10 @@ runs 3x to catch flakiness) and coverage thresholds.
 Git hooks run via [prek](https://github.com/j178/prek)
 (`.pre-commit-config.yaml`, wired by `bun install`'s `prepare` script; the
 installed hook types come from `default_install_hook_types`). Commits run the
-fast linters on staged files; **pushes** run `bun run check`, `bun test`,
-`bun run circular` and, when a `.go` file changed, `go test -race` over unit
-**and** integration tests (so ffmpeg and pdftoppm must be installed). CI runs
-the pre-commit stage with `--all-files`:
+fast linters on staged files; **pushes** run the type checks, `circular` and
+each app's tests when its files changed: when a `.go` file did, `go vet` and
+`go test -race` over unit **and** integration tests (so ffmpeg and pdftoppm must
+be installed). CI runs the pre-commit stage with `--all-files`:
 
 ```bash
 mise run verify                             # both stages below, whole repo: what CI checks
@@ -107,15 +125,15 @@ SKIP=test-unit git push ...                 # skip one hook
 so `git add -N` it before trusting a green `bun run lint`.
 
 **Rule: every linter, formatter, type check and test suite is a prek hook, and
-runs only through prek, locally and in CI.** Its command lives in
-`.pre-commit-config.yaml` and nowhere else: there are no per-linter scripts,
-`bun run lint` is just `prek run --all-files`, and CI calls hooks by id
-(`prek run --all-files --hook-stage pre-push check circular`), never the tool
-itself. A new tool gets a hook first; a workflow step running `cargo clippy` or
-`bun run check` directly is a second source of truth and a bug. Where a script
-already exists (`check`, `circular`, `test:go`), the hook calls it instead of
-repeating its command. The desktop app's hooks (`format-rust`, `clippy`,
-`test-rust`) `cd desktop` first: it is its own Cargo project.
+CI runs it only through prek.** Its command has one home: the mise task file
+when there is one (`.mise/tasks/desktop/lint`,
+`.mise/tasks/worker/test/_default`), which the hook's `entry` calls, otherwise
+the hook's own entry. `bun run lint` is just `prek run --all-files`, and CI
+calls hooks by id
+(`prek run --all-files --hook-stage pre-push check circular vet-go`), never the
+tool itself. A new tool gets a hook first; a workflow step running
+`cargo clippy` or `bun run check` directly is a second source of truth and a
+bug. `package.json` holds the web app's scripts only.
 
 ## Architecture
 
@@ -170,10 +188,12 @@ DB that route handlers use; it's lazily instantiated per-request onto
 Thumbnails, waveforms, library-scan directory walks, media-duration probing, zip
 archives, and the byte-copying/byte-deleting halves of transfer and trash all
 run in a separate Go process (`cmd/worker`, executors under
-`internal/jobs/<name>`), not inline in the request handler. TypeScript still
-decides everything about **rows** — which files exist, what belongs in a zip,
-which bytes survive a delete; it only hands the worker a job spec with absolute
-paths and reads back the result.
+`internal/jobs/<name>`), not inline in the request handler. The worker is its
+own Go module in `apps/worker`, beside the desktop and mobile apps, and the Go
+paths in this file are relative to it; the SvelteKit app is the repo root.
+TypeScript still decides everything about **rows** — which files exist, what
+belongs in a zip, which bytes survive a delete; it only hands the worker a job
+spec with absolute paths and reads back the result.
 
 The contract is the `jobs` table (`db/schema.ts`): the app
 `enqueueJob({type, spec, dedupeKey?, priority})`
@@ -1221,7 +1241,7 @@ Every key must exist in **every** locale listed in
 ru, ja, ko, zh), so a new key ships with a real translation in each; the
 language picker lists whatever that file declares. Paraglide itself never
 complains: a key missing from a locale silently falls back to `en`, and
-`bun run check` passes. The `i18n` prek hook (`.mise/tasks/check/i18n.ts`, on
+`bun run check` passes. The `i18n` prek hook (`.mise/tasks/web/i18n.ts`, on
 `messages/`) is what fails on a missing or extra key, or on a message whose
 placeholders differ from `en`'s.
 
@@ -1268,11 +1288,13 @@ later test. A test that needs a job to be waited on seeds a live worker row
 itself (`workerSeen()` in `jobs.test.ts`) or passes its own `bootedAt` to
 `awaitJob`; leaning on the default grace failed only under `rerunEach`.
 
-### Go tests live under `tests/`, split unit vs integration
+### Go tests live under `apps/worker/tests/`, split unit vs integration
 
 Every `*_test.go` for `cmd/` and `internal/` lives under
-`tests/unit/go/<same path>` or `tests/integration/go/<same path>` — never beside
-the source. Unit needs neither a database nor an external binary (a temp dir is
+`apps/worker/tests/unit/<same path>` or
+`apps/worker/tests/integration/<same path>`, never beside the source. The
+envelope vectors stay in the root `tests/fixtures`, which the TypeScript tests
+read too. Unit needs neither a database nor an external binary (a temp dir is
 fine); integration is anything that opens SQLite/Postgres or execs
 `ffmpeg`/`ffprobe`/`pdftoppm` (a file mixing both gets split in two). Tests are
 external packages (`package worker_test`, importing
@@ -1654,9 +1676,9 @@ file and clicks it, which used to race the old in-process write every time.
 
 ### A flaky test is a failed test in CI
 
-`failOnFlakyTests` is on whenever `CI` is set, in `playwright.config.ts` (the
-Postgres config spreads it). Retries stay — a flake should be _reported_ as one
-rather than just red — but the run fails.
+`failOnFlakyTests` is on whenever `CI` is set, in
+`tests/e2e/playwright.config.ts` (the Postgres config spreads it). Retries stay
+— a flake should be _reported_ as one rather than just red — but the run fails.
 
 Without it, a test that passes on retry is green, and the PR merges; the same
 non-determinism then lands on `main`, where the release pipeline runs the very
@@ -1666,10 +1688,10 @@ pipelines call `e2e.yaml` with the same inputs, and the `main` ruleset already
 sets `strict_required_status_checks_policy`, so a PR cannot merge stale.
 
 So a flake is now a bug to fix where it appears, not noise to re-run.
-`chooseMenuItem` in `e2e/helpers.ts` takes a `confirm` callback for this reason:
-a dispatched click reports success as soon as it is sent, but a menu being torn
-down by a settling listing never runs its handler, so "the click worked" and
-"the thing happened" are different questions.
+`chooseMenuItem` in `tests/e2e/helpers.ts` takes a `confirm` callback for this
+reason: a dispatched click reports success as soon as it is sent, but a menu
+being torn down by a settling listing never runs its handler, so "the click
+worked" and "the thing happened" are different questions.
 
 ### E2E has a five-minute budget
 
@@ -1682,7 +1704,7 @@ moves, the budget does not grow. The same split works locally:
 A container left from an earlier run keeps its drive, and `up --build` does not
 reset its volumes: after a few local runs `test-audio.wav` is
 `test-audio (10).wav` and specs fail on each other's leftovers. Reset with
-`mise run e2e:reset` before trusting a local failure.
+`mise run web:e2e:reset` before trusting a local failure.
 
 `workers: 1` is not a choice about speed: every spec shares one instance and one
 drive, so several upload the same fixture names and only the shard split keeps
@@ -1702,10 +1724,10 @@ nothing to switch on.
 
 ### A type-only import can still look circular
 
-`bun run circular` (`.mise/tasks/circular.ts`, madge) reported a cycle between
-`storage/driver.ts` and `storage/drivers/local.ts` that wasn't one: `local.ts`
-only imports `StorageDriver` as `import type`, but madge's TypeScript detective
-counts a type-only import as a real edge unless told otherwise
+`bun run circular` (`.mise/tasks/web/circular.ts`, madge) reported a cycle
+between `storage/driver.ts` and `storage/drivers/local.ts` that wasn't one:
+`local.ts` only imports `StorageDriver` as `import type`, but madge's TypeScript
+detective counts a type-only import as a real edge unless told otherwise
 (`detectiveOptions: { ts: { skipTypeImports: true } }`). madge also has no
 `.svelte` support at all (no svelte detective in `precinct`), so the check only
 ever covers `src/**/*.ts`.
@@ -1843,7 +1865,7 @@ refuses an ad-hoc signature (`UNErrorDomain` 1) and accepts this one. It does
 **not** stop the keychain asking for the API key after each update: whatever the
 signature, code without an Apple Team ID lands in the item's partition list as
 `cdhash:…`, a new one per build. Only a Developer ID would end that. Without the
-secret the binary keeps the linker's ad-hoc signature. `desktop/Cargo.toml`
+secret the binary keeps the linker's ad-hoc signature. `apps/desktop/Cargo.toml`
 stays at `0.1.0`: the build stamps the release version into it **and** into
 `Cargo.lock`, whose own `penombre-sync` entry otherwise makes `--locked` refuse.
 Stable binaries are rebuilt from the release commit, not promoted from the
@@ -1853,33 +1875,33 @@ tray, keyring and file dialog speak D-Bus in Rust) — do not add one without a
 link error that asks for it. The toolchain is `rust-version`, read from
 `Cargo.toml`.
 
-`homebrew` renders `packaging/homebrew/penombre-sync.rb.tmpl` from the release's
-checksums, as `penombre-sync` for a stable release and `penombre-sync-canary`
-for a canary (`conflicts_with` each other; `foo@canary` is not usable, Homebrew
-only turns `@<digit>` into a class name), and pushes it with
-`packaging/homebrew/README.md` to `orochibraru/homebrew-tap` `main`, over the
-`HOMEBREW_TAP_DEPLOY_KEY` secret (a write deploy key on the tap; a PAT would
-reach every repo its owner can). Never edit the tap by hand. It is a
-**formula**, not a cask: a cask cannot declare `service`, and `brew services` is
-how it starts at login, with `std_service_path_env` so launchd finds Homebrew's
-rclone. `keep_alive crashed: true`, because quitting from the tray exits 0 and
-must stay quit.
+`homebrew` renders `apps/desktop/packaging/homebrew/penombre-sync.rb.tmpl` from
+the release's checksums, as `penombre-sync` for a stable release and
+`penombre-sync-canary` for a canary (`conflicts_with` each other; `foo@canary`
+is not usable, Homebrew only turns `@<digit>` into a class name), and pushes it
+with `apps/desktop/packaging/homebrew/README.md` to `orochibraru/homebrew-tap`
+`main`, over the `HOMEBREW_TAP_DEPLOY_KEY` secret (a write deploy key on the
+tap; a PAT would reach every repo its owner can). Never edit the tap by hand. It
+is a **formula**, not a cask: a cask cannot declare `service`, and
+`brew services` is how it starts at login, with `std_service_path_env` so
+launchd finds Homebrew's rclone. `keep_alive crashed: true`, because quitting
+from the tray exits 0 and must stay quit.
 
 `fastframe-tray` comes from our fork (`orochibraru/fastframe`, pinned by rev in
-`desktop/Cargo.toml`'s `[patch]`) for `Tray::set_status`, the menu-bar
+`apps/desktop/Cargo.toml`'s `[patch]`) for `Tray::set_status`, the menu-bar
 percentage. Drop the patch once `crmne/fastframe` releases it; until then a
 fastframe bump must move the fork too.
 
-The app's update check (`desktop/src/update.rs`) never calls `api.github.com`:
-the API allows an address 60 anonymous requests an hour, shared with everything
-behind it, and the check answered "403 rate limit exceeded". Stable reads where
-`/releases/latest` redirects, canary reads `releases.atom` (the ten newest, of
-both kinds), and a release counts only once a `HEAD` finds this platform's
-asset: a desktop build can fail while the release still publishes. It treats the
-unstamped `0.1.0` as a source build and never checks. The formula names and the
-brew-service plist names in `login.rs` must follow the tap's. Homebrew 7 writes
-new service files as `sh.brew.<formula>`; older installs keep
-`homebrew.mxcl.<formula>`, so `login.rs` checks both.
+The app's update check (`apps/desktop/src/update.rs`) never calls
+`api.github.com`: the API allows an address 60 anonymous requests an hour,
+shared with everything behind it, and the check answered "403 rate limit
+exceeded". Stable reads where `/releases/latest` redirects, canary reads
+`releases.atom` (the ten newest, of both kinds), and a release counts only once
+a `HEAD` finds this platform's asset: a desktop build can fail while the release
+still publishes. It treats the unstamped `0.1.0` as a source build and never
+checks. The formula names and the brew-service plist names in `login.rs` must
+follow the tap's. Homebrew 7 writes new service files as `sh.brew.<formula>`;
+older installs keep `homebrew.mxcl.<formula>`, so `login.rs` checks both.
 
 A bare binary has no bundle for the Dock to take an icon from, so the app
 renders one at startup and hands it to eframe (`ui::app_icon`): the moon on a
@@ -1887,12 +1909,13 @@ tile, `assets/icon-light.svg` or `icon-dark.svg` by the system's appearance at
 launch. The bare logo on a transparent ground vanished into whatever the Dock
 was over. Every app icon (those two, the bundle's `icon.png`, the iOS asset
 catalog, Android's adaptive foregrounds) is rendered from the logo by
-`mise run icons` (`.mise/tasks/icons`); never edit one by hand. iOS takes the
-dark one only when the home screen's icon style is Dark or Automatic, Android
-through `-night` resources. The iOS images carry no alpha channel, which the App
-Store refuses. On macOS the default app menu is off (`with_default_menu`): its
-Quit is `terminate:`, which exits the process outright, tray and sync included.
-⌘Q closes the window like its close button; only the tray's Quit ends the app.
+`mise run media:icons` (`.mise/tasks/media/icons`); never edit one by hand. iOS
+takes the dark one only when the home screen's icon style is Dark or Automatic,
+Android through `-night` resources. The iOS images carry no alpha channel, which
+the App Store refuses. On macOS the default app menu is off
+(`with_default_menu`): its Quit is `terminate:`, which exits the process
+outright, tray and sync included. ⌘Q closes the window like its close button;
+only the tray's Quit ends the app.
 
 **Install and restart** swaps the binary by `rename` (Windows moves the running
 `.exe` aside to `.old` first: it cannot be overwritten), staged in a dot-folder
@@ -1937,7 +1960,7 @@ music player: compared raw, a relative one reloaded under a pending play.
 
 ### The mobile app signs in to a real session
 
-`mobile/` is a Kotlin Multiplatform project (Compose Multiplatform UI for
+`apps/mobile/` is a Kotlin Multiplatform project (Compose Multiplatform UI for
 Android and iOS); the design is `specs/2026-09-29-mobile-app-design.md`. Sign-in
 is an authorization code grant with PKCE (`auth/mobile.ts`): the system browser
 opens `/auth/mobile/authorize`, which redirects to `penombre://auth?code=…`, and
@@ -1969,12 +1992,12 @@ redemptions never both win.
   `mise.toml`), not the plugin's own versioned folder, which a tools bump would
   empty. `avdmanager` ignores `ANDROID_HOME` and takes the SDK to be two folders
   above itself, so setup runs the copy it installed into the SDK. After moving
-  an SDK, `./gradlew --stop` and delete `mobile/.gradle/configuration-cache`:
-  both remember the old path.
+  an SDK, `./gradlew --stop` and delete
+  `apps/mobile/.gradle/configuration-cache`: both remember the old path.
 - Xcode 27 has no `Simulator.app`: the simulator's window is Device Hub
-  (`com.apple.dt.Devices`), which `mobile:ios` opens. `mise run mobile:e2e ios`
-  runs the flows on one platform.
-- `mise run mobile:android` / `mobile:ios` build, install and launch;
+  (`com.apple.dt.Devices`), which `mobile:run:ios` opens.
+  `mise run mobile:e2e ios` runs the flows on one platform.
+- `mise run mobile:run:android` / `mobile:run:ios` build, install and launch;
   `mobile:emulator` boots the emulator; `mobile:doctor` checks the lot. Xcode
   ships the iOS _SDK_ but not the simulator _runtime_
   (`xcodebuild -downloadPlatform iOS`, ~8 GB), and an emulator image can lose
@@ -1982,11 +2005,11 @@ redemptions never both win.
   doctor catches both.
 - **Tests:** `mise run mobile:test` runs `commonTest` on the JVM
   (`withHostTest`) and the iOS simulator; its PKCE vector is the server's own
-  (`auth/mobile.test.ts`). `mise run mobile:e2e` (`mobile/e2e/run.sh`) runs the
-  Maestro flows on both devices against a server **already running**, and the
-  signed-in flow only when `PENOMBRE_E2E_EMAIL`/`PASSWORD` name an account with
-  a password. What a fresh device throws in the way, each handled where noted:
-  Gboard's stylus tutorial over the first text field (turned off by
+  (`auth/mobile.test.ts`). `mise run mobile:e2e` (`apps/mobile/e2e/run.sh`) runs
+  the Maestro flows on both devices against a server **already running**, and
+  the signed-in flow only when `PENOMBRE_E2E_EMAIL`/`PASSWORD` name an account
+  with a password. What a fresh device throws in the way, each handled where
+  noted: Gboard's stylus tutorial over the first text field (turned off by
   `mobile:emulator`), Chrome's first-run screens and iOS's "wants to use … to
   sign in" alert, which a tap sent while it animates in misses (the flow). A
   Maestro flow is two YAML documents, hence `--allow-multiple-documents` on
@@ -2163,9 +2186,9 @@ means the instance has that method off, which both previews do by default
 ### The mobile apps ship with every release too
 
 `publish.yaml`'s `mobile` job calls `mobile.yaml` beside `desktop`, and both
-attach to the draft before `publish-release`. A pull request touching `mobile/`
-calls the same workflow without `upload`, as a build check: a Kotlin/Native link
-error only shows when the iOS framework is linked.
+attach to the draft before `publish-release`. A pull request touching
+`apps/mobile/` calls the same workflow without `upload`, as a build check: a
+Kotlin/Native link error only shows when the iOS framework is linked.
 
 - **The Play identity is `com.orochibraru.penombre`** (`applicationId`, and the
   iOS bundle id, since the Maestro flows share one `appId`), while the Kotlin
@@ -2191,9 +2214,9 @@ error only shows when the iOS framework is linked.
   `production`. The API cannot make an app's first release, and an app with no
   rolled-out release accepts only `draft` ones: the first bundle was uploaded by
   hand in the Console.
-- **The store listing is code** (`mobile/store/`), pushed by `play.sh` in the
-  same edit as every bundle. `listings/<Play language>/` is the whole truth: a
-  language Play has and the folder lacks is deleted, so never edit the listing
+- **The store listing is code** (`apps/mobile/store/`), pushed by `play.sh` in
+  the same edit as every bundle. `listings/<Play language>/` is the whole truth:
+  a language Play has and the folder lacks is deleted, so never edit the listing
   in the Console. Images go to the default language only, which every other
   falls back to, and are replaced only when their sha256 differ, so a release
   does not resend them. This has Play validate it and commits nothing
@@ -2203,7 +2226,7 @@ error only shows when the iOS framework is linked.
   TOKEN=$(gcloud auth print-access-token \
     --impersonate-service-account=penombre-play@penombre-app.iam.gserviceaccount.com \
     --scopes=https://www.googleapis.com/auth/androidpublisher) \
-    bash mobile/store/play.sh --dry-run
+    bash apps/mobile/store/play.sh --dry-run
   ```
 
 - **`PrivacyInfo.xcprivacy` declares every API Apple wants a reason for**, and
@@ -2216,8 +2239,8 @@ error only shows when the iOS framework is linked.
   account. It is for sideloading tools; TestFlight and the App Store will need a
   signed archive and their own job.
 - **The build number** (`versionCode`, `CFBundleVersion`) comes from the version
-  by `mobile/version-code.sh`: two digits each for minor, patch and canary, with
-  a release taking slot 99 so it outranks its canaries. `androidApp` reads
+  by `apps/mobile/version-code.sh`: two digits each for minor, patch and canary,
+  with a release taking slot 99 so it outranks its canaries. `androidApp` reads
   `-Ppenombre.version`/`-Ppenombre.code`; the placeholders stay for local
   builds.
 - The asset names are fixed (`penombre-android.apk`,
@@ -2228,12 +2251,13 @@ error only shows when the iOS framework is linked.
 - The app marks its embedded browser's user agent `PenombreApp`
   (`APP_USER_AGENT`): the phone banner (`app-banner.svelte`, once a session in
   `sessionStorage`) must not advertise the app inside the app.
-- `mise run graphics` renders the README's and the guides' feature graphics and
-  the Play Store's (`mobile/store/feature-graphic.jpg`, 1024x500, no alpha) from
-  the screenshots in `docs/images/src`, which it does not retake, plus the Play
-  phone screenshots, framed at 9:16 because Play refuses a long side over twice
-  the short one, which the raw shots are. `mise run icons` renders the Play icon
-  (`mobile/store/icon.png`, 512px, 32-bit).
+- `mise run media:graphics` renders the README's and the guides' feature
+  graphics and the Play Store's (`apps/mobile/store/feature-graphic.jpg`,
+  1024x500, no alpha) from the screenshots in `docs/images/src`, which it does
+  not retake, plus the Play phone screenshots, framed at 9:16 because Play
+  refuses a long side over twice the short one, which the raw shots are.
+  `mise run media:icons` renders the Play icon (`apps/mobile/store/icon.png`,
+  512px, 32-bit).
 
 ### A pairing code signs a phone in with no browser
 
@@ -2264,7 +2288,7 @@ alert over the next launch; `paired.yaml` dismisses it.
 
 `svelte-check` refuses TypeScript 7 outright — it wants _both_ TS 6 and TS 7
 installed plus a `--tsgo` flag, and dies before checking a single file. A
-`renovate.json` rule caps `typescript` at `<7` so the bump stops being
+`.github/renovate.json` rule caps `typescript` at `<7` so the bump stops being
 reproposed. Lift it when svelte-check ships tsgo support, not before.
 
 `nodemailer` 10 cut `Transporter`'s second type argument (the options type); it
@@ -2334,12 +2358,13 @@ independent gates worth knowing about before "fixing" one by editing the other.
 
 ### Every E2E spec must declare its own auth
 
-The `chromium` project in `playwright.config.ts` sets **no** `storageState` —
-each spec file opts in with `test.use({ storageState: AUTH_STORAGE_STATE })`. A
-file that forgets it runs signed out, and every test in it fails by landing on
-the sign-in page, which reads like a broken session rather than a missing line.
-The `setup` project still runs (its job is writing that file), so the failure
-looks unrelated to authentication.
+The `chromium` project in `tests/e2e/playwright.config.ts` sets **no**
+`storageState` — each spec file opts in with
+`test.use({ storageState: AUTH_STORAGE_STATE })`. A file that forgets it runs
+signed out, and every test in it fails by landing on the sign-in page, which
+reads like a broken session rather than a missing line. The `setup` project
+still runs (its job is writing that file), so the failure looks unrelated to
+authentication.
 
 The reverse bites too: `playwright.request.newContext()` inside a test inherits
 that `storageState`, so a context meant to be anonymous carries the session.
@@ -2399,14 +2424,15 @@ resolves and then loses: the listing refresh detaches it mid-click, and the
 click waits 30s for an element that no longer exists. On a loaded CI runner that
 is every run, not one in ten.
 
-`chooseMenuItem` in `e2e/helpers.ts` is the way in: it dispatches `click` on the
-entry itself and reopens the menu on failure. Never `click({ force: true })` a
-menu entry: force skips the stability check but still clicks by coordinates, and
-a menu animating in slides a neighbour under them — a CI run duplicated a file
-instead of opening it. It deliberately does **not** treat a vanished menu as a
-successful click — a menu also closes on a stray pointer move, and that shortcut
-made a test assert against a navigation that never happened. After an upload,
-wait for `networkidle` before touching the row at all.
+`chooseMenuItem` in `tests/e2e/helpers.ts` is the way in: it dispatches `click`
+on the entry itself and reopens the menu on failure. Never
+`click({ force: true })` a menu entry: force skips the stability check but still
+clicks by coordinates, and a menu animating in slides a neighbour under them — a
+CI run duplicated a file instead of opening it. It deliberately does **not**
+treat a vanished menu as a successful click — a menu also closes on a stray
+pointer move, and that shortcut made a test assert against a navigation that
+never happened. After an upload, wait for `networkidle` before touching the row
+at all.
 
 `rightClickItem` dispatches a `contextmenu` event on the row's own trigger
 instead of right-clicking. Linux Chromium opens the menu on mousedown, and a row
@@ -2436,12 +2462,12 @@ anything under test that imports `#lib/paraglide/messages.js` needs that step.
 
 ### Screenshots for docs
 
-`mise run media` (`.mise/tasks/media`) retakes every picture with no hand step:
-the web shots below, the sync app's snapshot test, the iOS simulator through
-`mobile/e2e/showcase.yaml` (paired by link, never a real account, dark
-appearance and a 9:41 status bar, Maestro pinned to the simulator), then the
-feature graphics around them (`.mise/tasks/graphics.ts`). Everything runs
-against the E2E stack's throwaway admin. Name parts to run only those
+`mise run media` (`.mise/tasks/media/_default`) retakes every picture with no
+hand step: the web shots below, the sync app's snapshot test, the iOS simulator
+through `apps/mobile/e2e/showcase.yaml` (paired by link, never a real account,
+dark appearance and a 9:41 status bar, Maestro pinned to the simulator), then
+the feature graphics around them (`.mise/tasks/media/graphics.ts`). Everything
+runs against the E2E stack's throwaway admin. Name parts to run only those
 (`mise run media mobile graphics`).
 
 `bun run screenshots` drives the app with Playwright and writes to
@@ -2452,14 +2478,14 @@ Shots are WebP (q90), encoded with Bun's built-in `Bun.Image` — no `sharp`. pn
 were ~7 MB of repo per run for the same pixels; this is ~0.9 MB. That only works
 because Playwright runs on Bun (`[run] bun = true`).
 
-It first seeds a band's drive from `e2e/fixtures/showcase-*`: real, freely
+It first seeds a band's drive from `tests/e2e/fixtures/showcase-*`: real, freely
 licensed photos, a clip and three takes of one track (sources and licences in
-`e2e/fixtures/CREDITS.md`; never share-alike, non-commercial or no-derivatives),
-uploaded under band names, plus a document, sheet and deck written through the
-API and one file of every other kind. Synthetic media (a gradient, a test card,
-a sine wave) made every shot look fake. The takes need versioning on, which is
-instance-wide and off for every other spec, so an `afterAll` turns it back off.
-That seeding runs once, not per theme.
+`tests/e2e/fixtures/CREDITS.md`; never share-alike, non-commercial or
+no-derivatives), uploaded under band names, plus a document, sheet and deck
+written through the API and one file of every other kind. Synthetic media (a
+gradient, a test card, a sine wave) made every shot look fake. The takes need
+versioning on, which is instance-wide and off for every other spec, so an
+`afterAll` turns it back off. That seeding runs once, not per theme.
 
 Every shot is captured twice, light then dark, via
 `page.emulateMedia({ colorScheme })`: the app follows system theme by default
@@ -2478,11 +2504,11 @@ linted out); there is no demo instance. Markdown carries plain relative
 `docs/images/…` srcs so GitHub renders them directly; the docs repo rewrites
 them for the site.
 
-It runs from `e2e/screenshots`, which `playwright test` with no path **also**
-runs — so a bare full-suite run rewrites `docs/images/` with whatever state the
-test instance happens to be in. Anything a spec leaves on that instance ends up
-in the sidebar of every shot; that is why `drives.spec.ts` names its drives
-`e2e-drive …` and deletes them in an `afterEach`.
+It runs from `tests/e2e/screenshots`, which `playwright test` with no path
+**also** runs — so a bare full-suite run rewrites `docs/images/` with whatever
+state the test instance happens to be in. Anything a spec leaves on that
+instance ends up in the sidebar of every shot; that is why `drives.spec.ts`
+names its drives `e2e-drive …` and deletes them in an `afterEach`.
 
 ### A shared drive is a volume the app owns
 
@@ -3093,7 +3119,8 @@ form's own `form?.error` handling is untouched.
   from an API-key client was a 403. `vite.config.ts` turns Kit's check off
   (`trustedOrigins: ["*"]`) and `#lib/server/csrf.ts` applies the same rule
   minus requests carrying an API key. Playwright's `request` sends no `Origin`
-  either — pass `headers: sameOrigin()` (`e2e/helpers.ts`) on a bodiless call.
+  either — pass `headers: sameOrigin()` (`tests/e2e/helpers.ts`) on a bodiless
+  call.
 
 ### A signing link is shown once
 

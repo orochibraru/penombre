@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Build the Go worker into apps/worker/bin"
+set -e
+go -C apps/worker build -o bin/penombre-worker ./cmd/worker
+echo apps/worker/bin/penombre-worker

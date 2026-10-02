@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Playwright on the PostgreSQL stack in Docker (Playwright arguments pass through)"
+exec bun run test:e2e:pg "$@"

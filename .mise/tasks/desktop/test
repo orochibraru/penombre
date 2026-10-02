@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+#MISE description="The desktop app's tests"
+cd apps/desktop
+exec cargo test --locked

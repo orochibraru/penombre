@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-#MISE description="Build the WebApp"
-bun run build
+#MISE description="Build every app: web, worker, desktop, mobile"
+#MISE depends=["web:build", "worker:build", "desktop:build", "mobile:build"]

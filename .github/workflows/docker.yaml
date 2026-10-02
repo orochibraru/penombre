@@ -24,7 +24,7 @@ on:
         type: string
       bake_target:
         required: true
-        description: "Target to build from the root docker-bake.hcl, e.g. image"
+        description: "Target to build from tools/docker/docker-bake.hcl, e.g. image"
         type: string
       extra_tag:
         required: false
@@ -151,7 +151,7 @@ jobs:
         uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
         with:
           files: |
-            ./docker-bake.hcl
+            ./tools/docker/docker-bake.hcl
             cwd://${{ runner.temp }}/bake-meta.json
           targets: ${{ inputs.bake_target }}
           set: |

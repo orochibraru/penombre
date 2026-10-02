@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Unit tests of the shared mobile code on the JVM, as CI runs them"
+set -e
+cd apps/mobile
+# Through mise where there is one, for its JDK and Android SDK: a push from an
+# IDE has neither on its PATH. CI installs its own.
+$(command -v mise >/dev/null && echo "mise exec --") ./gradlew -q :shared:testAndroidHostTest

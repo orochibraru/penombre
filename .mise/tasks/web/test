@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Unit tests of the web app, fully mocked (bun test arguments pass through)"
+exec bun test "$@"

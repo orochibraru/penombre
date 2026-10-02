@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Every app's tests, as CI runs them on a push (E2E and device tests are their own tasks)"
+#MISE depends=["web:test", "worker:test", "desktop:test", "mobile:test"]

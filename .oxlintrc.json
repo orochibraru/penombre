@@ -88,7 +88,7 @@
 		},
 		{
 			"files": [
-				"e2e/**",
+				"tests/e2e/**",
 				".mise/tasks/**",
 				"test.setup.ts",
 				"**/*.test.ts",

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Type check the web app and the task scripts"
+bun run check

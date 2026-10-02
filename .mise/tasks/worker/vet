@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="go vet over the worker"
+exec go -C apps/worker vet ./...

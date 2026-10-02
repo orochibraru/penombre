@@ -110,7 +110,7 @@ repos:
         entry: sh -c 'bunx svelte-kit sync && bun run gen:env && bun run gen:api'
         language: system
         pass_filenames: false
-        files: ^(src/lib/server/openapi/|src/lib/server/config\.defaults\.ts$|\.mise/tasks/gen/)
+        files: ^(src/lib/server/openapi/|src/lib/server/config\.defaults\.ts$|\.mise/tasks/web/gen/)
 
       - id: oxlint
         name: Lint (oxlint)
@@ -127,49 +127,55 @@ repos:
 
       - id: test-go
         name: Tests (Go)
-        entry: bun run test:go
+        entry: .mise/tasks/worker/test/_default
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: (\.go$|^go\.(mod|sum)$)
+        files: (\.go$|^apps/worker/go\.(mod|sum)$)
+
+      - id: vet-go
+        name: Vet (Go)
+        entry: .mise/tasks/worker/vet
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        files: (\.go$|^apps/worker/go\.(mod|sum)$)
 
       - id: format-rust
         name: Formatting (Rust)
-        entry: sh -c 'cd desktop && cargo fmt'
+        entry: .mise/tasks/desktop/fmt
         language: system
         pass_filenames: false
-        files: ^desktop/.*\.rs$
+        files: ^apps/desktop/.*\.rs$
 
       - id: clippy
         name: Linting (Rust)
-        entry: sh -c 'cd desktop && cargo clippy --all-targets --locked -- -D warnings'
+        entry: .mise/tasks/desktop/lint
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^desktop/
+        files: ^apps/desktop/
 
       - id: test-rust
         name: Tests (Rust)
-        entry: sh -c 'cd desktop && cargo test --locked'
+        entry: .mise/tasks/desktop/test
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^desktop/
+        files: ^apps/desktop/
 
-      # The shared mobile code on the JVM: no device. Through mise where there
-      # is one, for its JDK and Android SDK: a push from an IDE has neither on
-      # its PATH. CI installs its own.
+      # The shared mobile code on the JVM: no device.
       - id: test-mobile
         name: Tests (Mobile)
-        entry: sh -c 'cd mobile && $(command -v mise >/dev/null && echo "mise exec --") ./gradlew -q :shared:testAndroidHostTest'
+        entry: .mise/tasks/mobile/test/_default
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^mobile/
+        files: ^apps/mobile/
 
       - id: i18n
         name: Locale parity
-        entry: bun .mise/tasks/check/i18n.ts
+        entry: bun .mise/tasks/web/i18n.ts
         language: system
         pass_filenames: false
         files: ^(messages/.*\.json|project\.inlang/settings\.json)$
@@ -213,7 +219,7 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^(src/|\.mise/tasks/|e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$|.*\.go$|go\.(mod|sum)$|package\.json$|bun\.lock$)
+        files: ^(src/|\.mise/tasks/|tests/e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$|package\.json$|bun\.lock$)
 
       - id: circular
         name: Circular imports
@@ -225,7 +231,7 @@ repos:
 
       - id: test-unit
         name: Unit Tests
-        entry: bun test
+        entry: .mise/tasks/web/test
         language: system
         pass_filenames: false
         stages: [pre-push]

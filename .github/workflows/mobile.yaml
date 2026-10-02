@@ -1,7 +1,7 @@
 name: Mobile
 # Builds the Android and iOS apps. Called by a release with `upload`, which
 # attaches them to `v<version>` (it must already exist), and by a pull request
-# that touches `mobile/` without it, as a build check.
+# that touches `apps/mobile/` without it, as a build check.
 
 on:
   workflow_call:
@@ -43,7 +43,7 @@ jobs:
       contents: write
     defaults:
       run:
-        working-directory: mobile
+        working-directory: apps/mobile
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -111,7 +111,7 @@ jobs:
       contents: write
     defaults:
       run:
-        working-directory: mobile
+        working-directory: apps/mobile
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

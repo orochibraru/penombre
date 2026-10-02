@@ -367,7 +367,7 @@ jobs:
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-  # The store listing from mobile/store, and the bundle: canaries to internal
+  # The store listing from apps/mobile/store, and the bundle: canaries to internal
   # testing, releases to closed testing until the personal account is granted
   # production access.
   play:
@@ -404,7 +404,7 @@ jobs:
           track=internal
           [ "$MODE" = stable ] && track=alpha
           gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern penombre-android.aab --dir "$RUNNER_TEMP"
-          bash mobile/store/play.sh "$track" "$VERSION" "$RUNNER_TEMP/penombre-android.aab"
+          bash apps/mobile/store/play.sh "$track" "$VERSION" "$RUNNER_TEMP/penombre-android.aab"
 
   # Published even when a desktop or mobile build failed: the server release
   # must not wait on it, and a draft is invisible to everyone else.
@@ -461,8 +461,8 @@ jobs:
             args+=(-e "s/@SHA256_$target@/$(cut -d' ' -f1 "$sums/penombre-sync-$target.tar.gz.sha256")/")
           done
           mkdir -p "$RUNNER_TEMP/tap/Formula"
-          sed "${args[@]}" packaging/homebrew/penombre-sync.rb.tmpl > "$RUNNER_TEMP/tap/Formula/$formula.rb"
-          cp packaging/homebrew/README.md "$RUNNER_TEMP/tap/README.md"
+          sed "${args[@]}" apps/desktop/packaging/homebrew/penombre-sync.rb.tmpl > "$RUNNER_TEMP/tap/Formula/$formula.rb"
+          cp apps/desktop/packaging/homebrew/README.md "$RUNNER_TEMP/tap/README.md"
           if grep -n '@[A-Za-z0-9_-]*@' "$RUNNER_TEMP/tap/Formula/$formula.rb"; then
             echo "::error::Unrendered placeholder in the formula."
             exit 1

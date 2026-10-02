@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#MISE description="Build the iOS app and run it in a simulator"
+set -e
+cd apps/mobile/iosApp
+xcodegen generate -q
+xcodebuild -quiet -project Penombre.xcodeproj -scheme Penombre -configuration Debug \
+  -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+device=$(xcrun simctl list devices booted | grep -m1 -oE '[0-9A-F-]{36}' || true)
+if [ -z "$device" ]; then
+  device=$(xcrun simctl list devices available | grep -m1 iPhone | grep -oE '[0-9A-F-]{36}')
+  xcrun simctl boot "$device"
+fi
+xcrun simctl install "$device" build/Build/Products/Debug-iphonesimulator/Penombre.app
+xcrun simctl launch "$device" com.orochibraru.penombre
+# The simulator's window: Simulator.app, or Device Hub from Xcode 27.
+open -a Simulator 2>/dev/null || open -b com.apple.dt.Devices 2>/dev/null || true

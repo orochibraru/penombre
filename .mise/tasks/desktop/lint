@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+#MISE description="Clippy over the desktop app, warnings as errors"
+cd apps/desktop
+exec cargo clippy --all-targets --locked -- -D warnings

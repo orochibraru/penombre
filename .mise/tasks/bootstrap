@@ -5,4 +5,4 @@ bun install
 # Gitignored and otherwise only written by the Vite plugin: `bun test` needs it.
 bun run gen:paraglide
 # The dev server builds the worker at start, and a cold build takes minutes.
-go build -o /dev/null ./cmd/worker
+go -C apps/worker build -o /dev/null ./cmd/worker

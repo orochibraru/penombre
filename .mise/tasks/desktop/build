@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Build the desktop app for this machine, in release"
+set -e
+cd apps/desktop
+cargo build --release --locked
+echo apps/desktop/target/release/penombre-sync

@@ -1,7 +1,7 @@
 [tools]
 bun = "1.4.2"
 go = "1.27.1"
-# The desktop app: desktop/Cargo.toml's `rust-version`, and the rclone it drives.
+# The desktop app: apps/desktop/Cargo.toml's `rust-version`, and the rclone it drives.
 rust = { version = "1.98", components = "rustfmt,clippy" }
 rclone = "1.75.1"
 # The mobile app: Gradle runs on this JDK (AGP 9 needs 17+; Android Studio

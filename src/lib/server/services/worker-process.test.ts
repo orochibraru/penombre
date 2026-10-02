@@ -6,7 +6,9 @@ describe("workerCommand", () => {
 	test("dev builds the Go source and execs the binary", () => {
 		const [shell, flag, script] = workerCommand(true);
 		expect([shell, flag]).toEqual(["sh", "-c"]);
-		expect(script).toMatch(/^go build -o '(.+)' \.\/cmd\/worker && exec '\1'$/);
+		expect(script).toMatch(
+			/^go -C apps\/worker build -o '(.+)' \.\/cmd\/worker && exec '\1'$/,
+		);
 	});
 	test("production runs the installed binary", () => {
 		expect(workerCommand(false)).toEqual(["/usr/local/bin/penombre-worker"]);

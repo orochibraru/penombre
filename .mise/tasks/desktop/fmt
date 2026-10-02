@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+#MISE description="Format the desktop app's Rust"
+cd apps/desktop
+exec cargo fmt

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="The worker's integration tests: SQLite/Postgres, ffmpeg, pdftoppm"
+exec go -C apps/worker test -race ./tests/integration/...

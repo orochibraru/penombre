@@ -60,7 +60,7 @@ jobs:
         id: desktop
         run: |
           set -euo pipefail
-          if [ -n "$(git diff --name-only "$(git merge-base HEAD origin/main)" HEAD -- desktop)" ]; then
+          if [ -n "$(git diff --name-only "$(git merge-base HEAD origin/main)" HEAD -- apps/desktop)" ]; then
             echo "desktop=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -68,7 +68,7 @@ jobs:
         id: mobile
         run: |
           set -euo pipefail
-          if [ -n "$(git diff --name-only "$(git merge-base HEAD origin/main)" HEAD -- mobile)" ]; then
+          if [ -n "$(git diff --name-only "$(git merge-base HEAD origin/main)" HEAD -- apps/mobile)" ]; then
             echo "mobile=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -93,13 +93,13 @@ jobs:
 
       - name: Install the Rust toolchain
         run: |
-          toolchain="$(sed -n 's/^rust-version = "\([^"]*\)".*/\1/p' desktop/Cargo.toml)"
+          toolchain="$(sed -n 's/^rust-version = "\([^"]*\)".*/\1/p' apps/desktop/Cargo.toml)"
           rustup toolchain install "$toolchain" --profile minimal --component rustfmt,clippy
           rustup default "$toolchain"
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          workspaces: desktop
+          workspaces: apps/desktop
 
       - name: Setup bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0

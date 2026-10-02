@@ -45,7 +45,7 @@ bun run db:studio    # Open Drizzle Studio
 # Quality
 mise run verify      # Every hook, commit and push stages: what CI checks, short of E2E
 bun run lint         # Every pre-commit hook over the whole repo, fixing what it can
-bun run check        # check:app && check:scripts && check:go, sequentially
+bun run check        # check:app && check:scripts, sequentially
 bun run check:app    # svelte-check on the app alone
 bun run circular     # Report circular imports
 
@@ -61,6 +61,11 @@ bun run test:e2e:ui     # Playwright UI mode
 # Codegen
 bun run gen:api      # OpenAPI spec + typed API client
 bun run gen:env      # Regenerate .example.env
+
+# Every app (mise tasks lists the rest)
+mise run test        # Each app's unit tests: web, worker, desktop, mobile
+mise run build       # Each app's build
+mise run worker:test # One app's tests, any language: web:, worker:, desktop:, mobile:
 ```
 
 Unit tests preload `test.setup.ts` (see `bunfig.toml`), which mocks

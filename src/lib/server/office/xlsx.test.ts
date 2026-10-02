@@ -377,7 +377,7 @@ describe("writing sheets", () => {
 	it("declares the relationships prefix on a new sheet when the root does not", () => {
 		// openpyxl declares it on each <sheet> instead of the root.
 		const entries = readZip(
-			readFileSync(path.resolve("e2e/fixtures/office-report.xlsx")),
+			readFileSync(path.resolve("tests/e2e/fixtures/office-report.xlsx")),
 		);
 		expect(partText(entries, "xl/workbook.xml")).not.toContain(
 			"<workbook xmlns:r=",

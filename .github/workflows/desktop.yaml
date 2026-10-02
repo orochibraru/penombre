@@ -51,7 +51,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: desktop
+        working-directory: apps/desktop
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -67,7 +67,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          workspaces: desktop
+          workspaces: apps/desktop
           key: ${{ matrix.target }}
 
       # Cargo.lock records the package's own version too, so both change or
@@ -123,7 +123,7 @@ jobs:
           out="$PWD/dist"
           mkdir -p "$out"
           bin="target/$TARGET/release"
-          cp ../LICENSE "$bin/"
+          cp ../../LICENSE "$bin/"
           if [ "$RUNNER_OS" = "Windows" ]; then
             (cd "$bin" && 7z a -tzip "$out/penombre-sync-$TARGET.zip" penombre-sync.exe LICENSE)
             cp "$bin/penombre-sync.exe" "$out/penombre-sync-$TARGET.exe"

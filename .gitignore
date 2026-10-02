@@ -9,7 +9,7 @@ node_modules
 /.svelte-kit
 /build
 /dist/
-/test-results/
+test-results/
 src/lib/ROUTES.ts
 src/lib/paraglide
 
@@ -28,11 +28,9 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 # Playwright
-/playwright-report/
-/playwright-report*
-/playwright-report-local/
+playwright-report*/
 /blob-report/
-/e2e/.auth/
+/tests/e2e/.auth/
 
 # Local runtime data
 /data/
@@ -43,3 +41,6 @@ vite.config.ts.timestamp-*
 
 **/*.log
 .playwright-mcp/
+
+# `mise run worker:build`
+/apps/worker/bin/

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Check the binaries the Go worker execs: ffmpeg with libwebp, ffprobe, pdftoppm"
+#MISE description="Check what the dev stack needs outside mise: ffmpeg with libwebp, ffprobe, pdftoppm (and Docker, rclone)"
 set -e
 ok=0
 for bin in ffmpeg ffprobe pdftoppm; do

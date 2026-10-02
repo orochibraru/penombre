@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Build both mobile apps for release (iOS on a Mac only)"
+#MISE depends=["mobile:build:android", "mobile:build:ios"]

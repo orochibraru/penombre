@@ -9,11 +9,11 @@ extend-exclude = [
     # Machine-translated UI strings in a dozen locales, none of them English.
     "messages/",
     # The mobile app's strings in those same locales.
-    "mobile/shared/src/commonMain/composeResources/values-*/",
-    "mobile/iosApp/Penombre/*.lproj/",
+    "apps/mobile/shared/src/commonMain/composeResources/values-*/",
+    "apps/mobile/iosApp/Penombre/*.lproj/",
     # The Play Store listing, translated.
-    "mobile/store/listings/*/",
-    "!mobile/store/listings/en-US/",
+    "apps/mobile/store/listings/*/",
+    "!apps/mobile/store/listings/en-US/",
     # Expected renders of those strings, French and Russian among them.
     "src/lib/i18n-plurals.test.ts",
 ]
