@@ -1,7 +1,7 @@
 # The app's screenshots for the feature graphics, taken by `mise run media`
 # on a seeded account (seed.ts), into maestro's --test-output-dir. LINK is a
 # fresh pairing link (pair.ts): the quickest way in, with no browser.
-appId: dev.penombre.app
+appId: com.orochibraru.penombre
 ---
 - launchApp:
     clearState: true

@@ -400,9 +400,8 @@ mod tests {
         };
         let notifications = Check {
             label: "Notifications".into(),
-            detail: "Shown through Script Editor: macOS asks no permission outside an app bundle."
-                .into(),
-            level: Level::Neutral,
+            detail: "Allowed.".into(),
+            level: Level::Ok,
             action: Some(("Open settings", String::new())),
         };
         let fine = vec![

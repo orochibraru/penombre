@@ -9,6 +9,14 @@ on:
         required: true
         description: "Release version without the v, e.g. 1.8.57 or 1.8.57-canary.3"
         type: string
+    secrets:
+      # A self-signed code-signing certificate (base64 of a .p12) and its
+      # password. Without it the macOS binary keeps the linker's ad-hoc
+      # signature, and the keychain asks for the API key after every update.
+      MACOS_SIGNING_CERT:
+        required: false
+      MACOS_SIGNING_PASSWORD:
+        required: false
 
 permissions:
   contents: read
@@ -77,6 +85,33 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
         run: cargo build --release --locked --target "$TARGET"
+
+      # An ad-hoc signature is a hash of the binary, so each update is a new
+      # app to the keychain and to privacy settings. A certificate's is not.
+      - name: Sign the macOS binary
+        if: runner.os == 'macOS'
+        env:
+          TARGET: ${{ matrix.target }}
+          CERT: ${{ secrets.MACOS_SIGNING_CERT }}
+          CERT_PASSWORD: ${{ secrets.MACOS_SIGNING_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CERT" ]; then
+            echo "::warning::No MACOS_SIGNING_CERT secret: the binary keeps its ad-hoc signature."
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password="$(openssl rand -hex 16)"
+          security create-keychain -p "$password" "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          printf '%s' "$CERT" | base64 -d > "$RUNNER_TEMP/signing.p12"
+          security import "$RUNNER_TEMP/signing.p12" -k "$keychain" -P "$CERT_PASSWORD" -T /usr/bin/codesign >/dev/null
+          rm "$RUNNER_TEMP/signing.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" >/dev/null
+          binary="target/$TARGET/release/penombre-sync"
+          codesign --force --keychain "$keychain" -s "Penombre Sync" --identifier dev.penombre.sync "$binary"
+          codesign -d -r- "$binary"
+          security delete-keychain "$keychain"
 
       # The archive is what the updater and the Homebrew formula read; the
       # .dmg, .exe and .AppImage are what people download.

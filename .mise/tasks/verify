@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Every prek hook over the whole repo, commit and push stages: what CI checks, short of E2E"
+set -e
+bunx prek run --all-files
+bunx prek run --all-files --hook-stage pre-push

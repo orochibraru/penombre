@@ -5,5 +5,5 @@
 		"types": ["bun", "$app/types"]
 	},
 	"extends": "$app/tsconfig",
-	"include": ["scripts/**/*.ts", "src/app.d.ts"]
+	"include": [".mise/tasks/**/*.ts", "src/app.d.ts"]
 }

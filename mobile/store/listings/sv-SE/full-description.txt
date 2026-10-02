@@ -1,0 +1,32 @@
+Penombre är en egen molnlagring som du själv står värd för: dina filer, foton, musik, videor och dokument på din egen server, utan att någon hyr ut disken till dig. Det här är appen.
+
+Du behöver en Penombre-server för att använda den. Penombre är gratis och öppen källkod: en container på en hemserver, en NAS eller en VPS. På orochibraru.com/penombre står det hur du sätter upp en.
+
+LOGGA IN PÅ NÅGRA SEKUNDER
+• Skanna QR-koden som din server visar under "Hämta apparna", så är du inne. Ingen adress att skriva.
+• Eller ange serverns adress och logga in i webbläsaren, med ett lösenord, en nyckel eller din vanliga inloggningsleverantör.
+• Eller logga in med en kod via e-post. Tvåfaktorsautentisering stöds.
+
+HELA DIN ENHET
+• Min enhet, delade enheter och monterade volymer, smidigt även i mappar med tusentals filer.
+• Senaste, Stjärnmärkta, Papperskorg och kategorier (Musik, Bilder, Dokument…) ett tryck bort.
+• Sök överallt där du har åtkomst, med resultat medan du skriver.
+• Ladda upp filer, ta ett foto eller skanna ett dokument direkt till PDF.
+• Byt namn, flytta, kopiera, duplicera, stjärnmärk, ladda ner, flytta till papperskorgen och återställ.
+• Spela upp, ladda ner eller återställ tidigare versioner av en fil.
+
+BILDER, MUSIK OCH VIDEO
+• En bildvisare där du sveper och nyper för att zooma: först en förhandsvisning, originalet när du vill.
+• En musikspelare med en kö som fortsätter spela medan du bläddrar.
+• Videor på plats eller i helskärm. Ett format som telefonen inte kan spela upp, eller en fil som är för tung för din anslutning, konverteras av servern till 720p eller 480p.
+
+DELNING OCH AVISERINGAR
+• Dina offentliga länkar, det som delats med dig och dina delade enheter, var och en med egen papperskorg.
+• Aviseringar om kommentarer, delningar och begäranden om underskrift, som appen hämtar direkt från din server i stället för att de skickas via en tredje part.
+
+DITT KONTO, DINA INSTÄLLNINGAR
+• Profil, lösenord, tvåfaktorsautentisering, sessioner, API-nycklar och aktivitet, precis som på webben.
+• Accentfärg, typsnitt och hörn följer ditt konto, på webben och i telefonen.
+• Tretton språk.
+
+Ingen reklam, ingen analys, inget konto hos oss: appen arbetar med din server, och dina filer stannar där du lägger dem.

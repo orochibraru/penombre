@@ -1,0 +1,32 @@
+Penombre to dysk, który hostujesz samodzielnie: Twoje pliki, zdjęcia, muzyka, filmy i dokumenty na Twoim własnym serwerze, bez wynajmowania od nikogo miejsca na dysku. Oto jego aplikacja.
+
+Do korzystania z niej potrzebujesz serwera Penombre. Penombre jest darmowy i ma otwarty kod źródłowy: jeden kontener na domowym serwerze, NAS-ie lub VPS-ie. Na orochibraru.com/penombre dowiesz się, jak go uruchomić.
+
+LOGOWANIE W KILKA SEKUND
+• Zeskanuj kod QR, który Twój serwer pokazuje w sekcji „Pobierz aplikacje”, i gotowe. Bez wpisywania adresu.
+• Albo wpisz adres serwera i zaloguj się w przeglądarce: hasłem, kluczem dostępu lub przez swojego zwykłego dostawcę logowania.
+• Albo zaloguj się kodem wysłanym e-mailem. Obsługiwane jest uwierzytelnianie dwuskładnikowe.
+
+CAŁY TWÓJ DYSK
+• Mój dysk, dyski współdzielone i zamontowane woluminy, płynnie nawet w folderach z tysiącami plików.
+• Ostatnie, Oznaczone gwiazdką, Kosz i kategorie (Muzyka, Obrazy, Dokumenty…) na jedno dotknięcie.
+• Szukaj wszędzie, gdzie masz dostęp, z wynikami już podczas pisania.
+• Przesyłaj pliki, zrób zdjęcie lub zeskanuj dokument od razu do PDF.
+• Zmieniaj nazwy, przenoś, kopiuj, duplikuj, oznaczaj gwiazdką, pobieraj, przenoś do kosza i przywracaj.
+• Odtwarzaj, pobieraj lub przywracaj wcześniejsze wersje pliku.
+
+ZDJĘCIA, MUZYKA I WIDEO
+• Przeglądarka zdjęć z przesuwaniem i powiększaniem gestem szczypania: najpierw podgląd, oryginał na życzenie.
+• Odtwarzacz muzyki z kolejką, która gra dalej, gdy przeglądasz pliki.
+• Filmy w miejscu lub na pełnym ekranie. Format, którego telefon nie odtworzy, albo plik zbyt ciężki dla Twojego łącza serwer przekonwertuje do 720p lub 480p.
+
+UDOSTĘPNIANIE I POWIADOMIENIA
+• Twoje linki publiczne, to, co Ci udostępniono, i Twoje dyski współdzielone, każdy z własnym koszem.
+• Powiadomienia o komentarzach, udostępnieniach i prośbach o podpis, sprawdzane przez aplikację bezpośrednio na Twoim serwerze, a nie wysyłane przez firmę trzecią.
+
+TWOJE KONTO, TWOJE USTAWIENIA
+• Profil, hasło, uwierzytelnianie dwuskładnikowe, sesje, klucze API i aktywność, tak jak w wersji webowej.
+• Kolor akcentu, czcionka i narożniki podążają za Twoim kontem w przeglądarce i na telefonie.
+• Trzynaście języków.
+
+Bez reklam, bez analityki, bez konta u nas: aplikacja działa z Twoim serwerem, a Twoje pliki zostają tam, gdzie je umieścisz.

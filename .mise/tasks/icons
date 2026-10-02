@@ -1,13 +1,14 @@
 #!/bin/sh
+#MISE description="Render the desktop and mobile app icons from the logo"
 # Renders every app icon from the logo: the moon on a white tile for light
 # mode, on a black one for dark. Run it after the logo or its colours change:
 #
 #   mise run icons
 #
-# Needs rsvg-convert (brew install librsvg) and ffmpeg.
+# Needs resvg (mise install) and ffmpeg.
 set -eu
-root="$(cd "$(dirname "$0")/.." && pwd)"
-command -v rsvg-convert >/dev/null || { echo "rsvg-convert is missing: brew install librsvg" >&2; exit 1; }
+root="$(cd "$(dirname "$0")/../.." && pwd)"
+command -v resvg >/dev/null || { echo "resvg is missing: mise install" >&2; exit 1; }
 
 # The logo's drawing, from desktop/assets/logo-{light,dark}.svg: only the
 # gradient's first stop differs between the two.
@@ -41,12 +42,15 @@ for mode in light dark; do
   icon "$mode" "$tile" 224 12 > "$desktop/icon-$mode.svg"
   # No alpha channel: the App Store refuses an icon that has one.
   icon "$mode" "$bleed" 176 14 > "$tmp/ios-$mode.svg"
-  rsvg-convert -w 1024 "$tmp/ios-$mode.svg" -o "$tmp/ios-$mode.png"
+  resvg -w 1024 "$tmp/ios-$mode.svg" "$tmp/ios-$mode.png"
   ffmpeg -v error -y -i "$tmp/ios-$mode.png" -pix_fmt rgb24 "$ios/$mode.png"
   # Android's foreground: the moon alone, inside the adaptive icon's safe zone.
   icon "$mode" "" 272 10 > "$tmp/android-$mode.svg"
 done
-rsvg-convert -w 432 "$tmp/android-light.svg" -o "$android/drawable-nodpi/ic_launcher_foreground.png"
-rsvg-convert -w 432 "$tmp/android-dark.svg" -o "$android/drawable-night-nodpi/ic_launcher_foreground.png"
+resvg -w 432 "$tmp/android-light.svg" "$android/drawable-nodpi/ic_launcher_foreground.png"
+resvg -w 432 "$tmp/android-dark.svg" "$android/drawable-night-nodpi/ic_launcher_foreground.png"
 # What the .app, the AppImage and the docs carry: one file, so the dark one.
-rsvg-convert -w 1024 "$desktop/icon-dark.svg" -o "$desktop/icon.png"
+resvg -w 1024 "$desktop/icon-dark.svg" "$desktop/icon.png"
+# The Play Store's listing icon, square (Play rounds the corners), and 32-bit.
+resvg -w 512 "$tmp/ios-dark.svg" "$tmp/play.png"
+ffmpeg -v error -y -i "$tmp/play.png" -pix_fmt rgba "$root/mobile/store/icon.png"

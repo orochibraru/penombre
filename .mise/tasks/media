@@ -1,4 +1,5 @@
 #!/bin/sh
+#MISE description="Retake every screenshot that shows Penombre off (web, desktop, mobile) and lay out the feature graphics"
 # Retakes every picture that shows Penombre off, then lays out the feature
 # graphics around them. Run it as `mise run media`; name parts to run only
 # those: `mise run media mobile graphics`.
@@ -14,7 +15,7 @@
 # account: E2E_EMAIL / E2E_PASSWORD, as the E2E suite reads them.
 set -eu
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
+root="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$root"
 parts="${*:-web desktop mobile graphics}"
 server="http://localhost:3001"
@@ -85,7 +86,7 @@ for part in $parts; do
       trap - EXIT
       ;;
     graphics)
-      bun scripts/feature-graphics.ts
+      mise run graphics
       ;;
     *)
       echo "Unknown part $part (web, desktop, mobile, graphics)" >&2

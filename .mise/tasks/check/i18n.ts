@@ -1,3 +1,5 @@
+#!/usr/bin/env bun
+//MISE description="Check that every locale has exactly the English keys and placeholders"
 import process from "node:process";
 
 interface Variant {

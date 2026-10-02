@@ -799,6 +799,9 @@
 	"app_banner_action": "Hämta appen",
 	"search_nothing": "Inget med det namnet, på någon av dina enheter.",
 	"mobile_connect_open": "Öppna i appen på den här enheten",
+	"mobile_connect_get": "Har du inte appen än?",
+	"apps_google_play": "Ladda ned på Google Play",
+	"apps_github": "Hämta från GitHub",
 	"player_tuning": "Hastighet och tonhöjd",
 	"back": "Tillbaka",
 	"upload_action": [

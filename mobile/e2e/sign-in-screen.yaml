@@ -1,5 +1,5 @@
 # The first screen, and the hand-off to the system browser.
-appId: dev.penombre.app
+appId: com.orochibraru.penombre
 ---
 - launchApp:
     clearState: true

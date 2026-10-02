@@ -2,9 +2,9 @@
 
 ## Prerequisites
 
-- [mise](https://mise.jdx.dev), then `mise install` in the repo: it installs the
-  Bun and Go versions pinned in `mise.toml` (`preinstall` blocks npm/yarn/pnpm).
-  prek comes from `node_modules`, nothing to install.
+- [mise](https://mise.jdx.dev), which installs the Bun and Go versions pinned in
+  `mise.toml` (`preinstall` blocks npm/yarn/pnpm). prek comes from
+  `node_modules`, nothing to install.
 - **ffmpeg built with the `libwebp` encoder**, **ffprobe** and **pdftoppm**
   (poppler), which the Go worker execs. mise can't install those; its
   postinstall hook runs `mise run doctor`, which checks them and prints the
@@ -16,9 +16,16 @@
 ```bash
 git clone https://github.com/orochibraru/penombre.git
 cd penombre
-bun install
+mise bootstrap
 bun run dev
 ```
+
+`mise bootstrap` installs the pinned tools, then runs the `bootstrap` task:
+`bun install` (which wires the git hooks), the generated i18n messages that
+`bun test` needs, and a first build of the Go worker so the dev server does not
+wait on it. On a mise without `bootstrap`, run `mise install` then
+`mise run bootstrap`. Every task is a script in `.mise/tasks/`; `mise tasks`
+lists them.
 
 `bun run dev` starts the Vite dev server on <http://localhost:5173>. It runs on
 SQLite by default (`./data/penombre.sqlite`), so no database server is needed;
@@ -36,6 +43,7 @@ bun run db:generate  # Generate Drizzle migrations (Postgres + SQLite)
 bun run db:studio    # Open Drizzle Studio
 
 # Quality
+mise run verify      # Every hook, commit and push stages: what CI checks, short of E2E
 bun run lint         # Every pre-commit hook over the whole repo, fixing what it can
 bun run check        # check:app && check:scripts && check:go, sequentially
 bun run check:app    # svelte-check on the app alone

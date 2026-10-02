@@ -874,6 +874,9 @@
 	"app_banner_action": "Pobierz aplikację",
 	"search_nothing": "Nic o tej nazwie na żadnym z Twoich dysków.",
 	"mobile_connect_open": "Otwórz w aplikacji na tym urządzeniu",
+	"mobile_connect_get": "Nie masz jeszcze aplikacji?",
+	"apps_google_play": "Pobierz z Google Play",
+	"apps_github": "Pobierz z GitHuba",
 	"player_tuning": "Prędkość i wysokość",
 	"back": "Wstecz",
 	"upload_action": [

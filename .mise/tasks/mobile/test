@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Unit tests of the shared mobile code, on the JVM and (on a Mac) the iOS simulator"
+#MISE dir="mobile"
+set -e
+./gradlew :shared:testAndroidHostTest
+[ "$(uname)" != Darwin ] || ./gradlew :shared:iosSimulatorArm64Test

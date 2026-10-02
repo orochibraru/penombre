@@ -100,6 +100,12 @@ pub struct App {
 }
 
 impl App {
+    /// Signed in with a tray to come back through: the window opens unseen,
+    /// just long enough for macOS to make the tray item, and closes.
+    pub fn starts_hidden(&self) -> bool {
+        self.hide_on_first_frame
+    }
+
     pub fn new(waker: &Waker, dirs: Dirs, instance: Instance) -> Self {
         let config = Config::load(&dirs);
         let key = store::read_key(&config.server);

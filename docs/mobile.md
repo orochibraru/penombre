@@ -4,7 +4,8 @@
 
 The Penombre app for Android and iOS is at an early stage: it signs in, browses
 your drive and shared drives, shows pictures, plays music and video, and opens
-the rest in the instance's own web interface. It is not in the app stores yet.
+the rest in the instance's own web interface. Google Play lists it for testers
+only for now; everyone else installs it from GitHub.
 
 ## Getting the app
 
@@ -22,6 +23,10 @@ every [release](https://github.com/orochibraru/penombre/releases):
 
 `penombre-android.aab` is the same app as the bundle the Play Store takes.
 
+**Connect the mobile app** (below) links the same places for a phone that does
+not have the app yet: **Get it on Google Play** (hidden on an iPhone) and **Get
+it from GitHub**, which opens the release matching your server.
+
 ## Signing in
 
 **Scan the code.** In the web interface, open your profile menu (top right),
@@ -30,6 +35,10 @@ the app, tap **Scan the code** and point the phone at it, or scan it with the
 phone's own camera, which opens the app. The app asks **Sign in to
 `<your server>`?**; tap **Connect** and you are in, as the account that showed
 the code. There is no address to type and nothing to sign in to again.
+
+Opened on the phone itself, which cannot scan its own screen, the dialog also
+shows **Open in the app on this device**: it opens the app with the code already
+in it, and the app asks the same question.
 
 The code works once and is replaced every two minutes. Anyone who scans it while
 it is on screen is signed in as you, so show it only to your own phone.

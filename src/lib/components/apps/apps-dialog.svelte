@@ -5,34 +5,13 @@
 	import * as Dialog from "#lib/components/ui/dialog/index.js";
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import * as m from "#lib/paraglide/messages.js";
-	import { desktopReleaseVersion, phoneSystem } from "#lib/release.js";
+	import { offeredRelease, phoneSystem } from "#lib/release.js";
 	import { appsDialogOpen } from "#lib/store/apps.js";
 	import { page } from "$app/state";
 
-	/**
-	 * The layout already asks the server which release it runs and follows;
-	 * that streamed answer is all this needs, so opening it costs no request.
-	 */
-	const version = $derived(
-		Promise.resolve(page.data.versionCheck).then(
-			(
-				check:
-					| {
-							currentVersion: string;
-							channel: "stable" | "canary";
-							latestVersion: string | null;
-					  }
-					| undefined,
-			) =>
-				check
-					? desktopReleaseVersion(
-							check.currentVersion,
-							check.channel,
-							check.latestVersion,
-						)
-					: (page.data.config?.appVersion as string | undefined),
-		),
-	);
+	// The layout already asked the server which release it runs and follows, so
+	// opening this costs no request.
+	const version = $derived(offeredRelease(page.data));
 
 	// On a phone the phone's app comes first.
 	const phone = $derived(

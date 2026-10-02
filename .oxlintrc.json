@@ -89,7 +89,7 @@
 		{
 			"files": [
 				"e2e/**",
-				"scripts/**",
+				".mise/tasks/**",
 				"test.setup.ts",
 				"**/*.test.ts",
 				"**/*.spec.ts",

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#MISE description="Install the Android SDK packages and the emulator the mobile app builds and runs on"
+set -e
+case "$(uname -m)" in arm64|aarch64) abi=arm64-v8a ;; *) abi=x86_64 ;; esac
+image="system-images;android-36;google_apis_playstore;$abi"
+sdkmanager --sdk_root="$ANDROID_HOME" "cmdline-tools;23.0" "platform-tools" \
+  "platforms;android-37.0" "build-tools;36.0.0" "emulator" "$image"
+# avdmanager takes the SDK to be two folders above itself, so mise's copy
+# finds no images: use the one just installed into the SDK.
+avd="$ANDROID_HOME/cmdline-tools/23.0/bin/avdmanager"
+if ! "$avd" list avd -c | grep -qx penombre; then
+  echo no | "$avd" create avd -n penombre -k "$image" -d pixel_9
+  # The profile asks for 12 GB of user data; a test device needs far less.
+  config="${ANDROID_AVD_HOME:-$HOME/.android/avd}/penombre.avd/config.ini"
+  sed -i.bak 's/^disk.dataPartition.size=.*/disk.dataPartition.size=6G/' "$config" && rm "$config.bak"
+fi

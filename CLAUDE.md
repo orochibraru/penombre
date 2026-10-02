@@ -24,6 +24,14 @@ for the desktop app; Rust must match `desktop/Cargo.toml`'s `rust-version`,
 which is what CI and the release builds install. CI does not use mise: its jobs
 install their own toolchains.
 
+Every script lives in `.mise/tasks/` as a mise task (`mobile/setup` is
+`mobile:setup`), metadata in `#MISE`/`//MISE` comments; there is no `scripts/`
+and `mise.toml` holds no `[tasks]`. TypeScript keeps its `.ts`, which mise drops
+from the name, so bun, `package.json` and prek call it by path without mise. A
+task file must be executable, or mise skips it without a word. `mise bootstrap`
+(built into mise) installs the tools, runs the `postinstall` hook, then the
+`bootstrap` task, which is therefore the one place a fresh clone's setup lives.
+
 ```bash
 bun run dev              # Vite dev server (SQLite by default, no services needed)
 bun run build            # svelte-kit sync && vite build
@@ -46,7 +54,6 @@ bun run db:generate         # generate Drizzle migrations for both dialects
 bun run db:generate:pg      # ...Postgres only
 bun run db:generate:sqlite  # ...SQLite only
 bun run db:studio           # Drizzle Studio
-bun run migrate:storage     # one-off: migrate legacy storage metadata
 
 bun run gen              # gen:env && gen:api && format
 bun run gen:api           # alias of gen:openapi
@@ -88,6 +95,7 @@ fast linters on staged files; **pushes** run `bun run check`, `bun test`,
 the pre-commit stage with `--all-files`:
 
 ```bash
+mise run verify                             # both stages below, whole repo: what CI checks
 prek run --all-files                        # every pre-commit hook, whole repo
 prek run --all-files --hook-stage pre-push  # type check + unit tests
 prek run oxlint                             # a single hook
@@ -998,8 +1006,8 @@ streams with `Range`, measured: a 60 MB file with its index at the end starts in
   sit beside sealed files. `ensure` answers `unavailable` and the Go job refuses
   a sealed source. Lifting it needs a seekable sealed writer, or HLS.
 - **A new job type needs a new worker.** The dev server builds its worker once,
-  at start: after adding one, `pkill -TERM -f penombre-worker-dev` and the
-  supervisor rebuilds it. Until then the job fails as an unknown type.
+  at start: after adding one, `mise run worker:restart` and the supervisor
+  rebuilds it. Until then the job fails as an unknown type.
 - Wasm in the browser (ffmpeg.wasm) was weighed and dropped: it fetches the
   whole file into memory first and decodes in software, single-digit frames a
   second for 1080p.
@@ -1213,7 +1221,7 @@ Every key must exist in **every** locale listed in
 ru, ja, ko, zh), so a new key ships with a real translation in each; the
 language picker lists whatever that file declares. Paraglide itself never
 complains: a key missing from a locale silently falls back to `en`, and
-`bun run check` passes. The `i18n` prek hook (`scripts/check-i18n.ts`, on
+`bun run check` passes. The `i18n` prek hook (`.mise/tasks/check/i18n.ts`, on
 `messages/`) is what fails on a missing or extra key, or on a message whose
 placeholders differ from `en`'s.
 
@@ -1674,8 +1682,7 @@ moves, the budget does not grow. The same split works locally:
 A container left from an earlier run keeps its drive, and `up --build` does not
 reset its volumes: after a few local runs `test-audio.wav` is
 `test-audio (10).wav` and specs fail on each other's leftovers. Reset with
-`docker compose -f compose.e2e.yaml -p penombre-e2e down -v` before trusting a
-local failure.
+`mise run e2e:reset` before trusting a local failure.
 
 `workers: 1` is not a choice about speed: every spec shares one instance and one
 drive, so several upload the same fixture names and only the shard split keeps
@@ -1695,7 +1702,7 @@ nothing to switch on.
 
 ### A type-only import can still look circular
 
-`bun run circular` (`scripts/circular.ts`, madge) reported a cycle between
+`bun run circular` (`.mise/tasks/circular.ts`, madge) reported a cycle between
 `storage/driver.ts` and `storage/drivers/local.ts` that wasn't one: `local.ts`
 only imports `StorageDriver` as `import type`, but madge's TypeScript detective
 counts a type-only import as a real edge unless told otherwise
@@ -1828,10 +1835,16 @@ Windows), which the updater and the formula read, plus what people download: a
 no runner has an SVG rasterizer), the bare `.exe`, and
 `penombre-sync-x86_64.AppImage` (appimagetool and its runtime pinned by
 checksum; the floating `continuous` runtime is never fetched). Every file gets a
-`.sha256`. The `.app` bundle is not codesigned as a whole: the linker's ad-hoc
-signature on the binary is enough to launch, and a bundle seal would break the
-first time the updater renames a new binary into it. `desktop/Cargo.toml` stays
-at `0.1.0`: the build stamps the release version into it **and** into
+`.sha256`. The `.app` bundle is not codesigned as a whole: a bundle seal would
+break the first time the updater renames a new binary into it. The binary alone
+is signed with a self-signed certificate (`MACOS_SIGNING_CERT`,
+`MACOS_SIGNING_PASSWORD`, step **Sign the macOS binary**): UserNotifications
+refuses an ad-hoc signature (`UNErrorDomain` 1) and accepts this one. It does
+**not** stop the keychain asking for the API key after each update: whatever the
+signature, code without an Apple Team ID lands in the item's partition list as
+`cdhash:…`, a new one per build. Only a Developer ID would end that. Without the
+secret the binary keeps the linker's ad-hoc signature. `desktop/Cargo.toml`
+stays at `0.1.0`: the build stamps the release version into it **and** into
 `Cargo.lock`, whose own `penombre-sync` entry otherwise makes `--locked` refuse.
 Stable binaries are rebuilt from the release commit, not promoted from the
 canary, because the version is baked in. Linux builds on `ubuntu-22.04` for an
@@ -1874,7 +1887,7 @@ tile, `assets/icon-light.svg` or `icon-dark.svg` by the system's appearance at
 launch. The bare logo on a transparent ground vanished into whatever the Dock
 was over. Every app icon (those two, the bundle's `icon.png`, the iOS asset
 catalog, Android's adaptive foregrounds) is rendered from the logo by
-`mise run icons` (`scripts/app-icons.sh`); never edit one by hand. iOS takes the
+`mise run icons` (`.mise/tasks/icons`); never edit one by hand. iOS takes the
 dark one only when the home screen's icon style is Dark or Automatic, Android
 through `-night` resources. The iOS images carry no alpha channel, which the App
 Store refuses. On macOS the default app menu is off (`with_default_menu`): its
@@ -1890,6 +1903,28 @@ quitting instance and exit. Homebrew installs are refused: replacing a Cellar
 binary under brew's feet breaks `brew upgrade`. An AppImage runs from a
 read-only mount, so with `$APPIMAGE` set the updater downloads the `.AppImage`
 itself and renames it over that file instead.
+
+**On macOS the app lives in the menu bar.** It is an accessory (no Dock icon)
+without a window and a regular app while Settings is open (`in_dock` in
+`main.rs`). Nothing may touch `NSApplication` before the first window: winit
+installs its own subclass and panics on one made earlier, so the launch policy
+comes from winit's event-loop builder, which only the first window's options
+reach. A hidden start opens that first window invisible and closes it: the tray
+item can only be made with a window.
+
+On macOS 27 any click on the item opens the menu, and `Event::Toggle` never
+arrives: tray-icon 0.24 attaches the menu to the status item, and the system
+shows it before the click reaches a view. A dropdown window on left click was
+tried and dropped: tray-icon 0.25.1 detaches the menu, but then its click view
+received nothing, and the button's own target/action only intermittently.
+
+**Notifications are the app's own only as the signed `.app`** (`notify.rs`):
+UserNotifications aborts a process outside a bundle and refuses an ad-hoc
+signature. It asks for permission at launch, and **Permissions** reads the
+answer. Anything else, a refusal included, goes through `osascript`, shown as
+Script Editor's. notify-rust's macOS backend is not used: NSUserNotification has
+no permission to read, and it impersonates Finder unless `set_application` names
+a registered bundle id.
 
 ### `play()` goes through `playMedia`
 
@@ -2132,6 +2167,11 @@ attach to the draft before `publish-release`. A pull request touching `mobile/`
 calls the same workflow without `upload`, as a build check: a Kotlin/Native link
 error only shows when the iOS framework is linked.
 
+- **The Play identity is `com.orochibraru.penombre`** (`applicationId`, and the
+  iOS bundle id, since the Maestro flows share one `appId`), while the Kotlin
+  `namespace` stays `dev.penombre.app`. A component name's `.MainActivity`
+  shorthand resolves against the applicationId, so `am start` spells the class
+  out.
 - **Android needs a signing key in the repository's secrets**, or nothing is
   attached (an unsigned APK installs nowhere, and a key that changes between
   releases refuses to install over the last one). Once, and kept somewhere safe,
@@ -2141,6 +2181,36 @@ error only shows when the iOS framework is linked.
   `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`
   with `gh secret set`. The Play Store re-signs with its own key and takes this
   one as the upload key.
+- **The Play upload is keyless** (`play` in `publish.yaml`): GitHub's OIDC
+  token, through the `github` pool's `penombre` provider in GCP project
+  `penombre-app`, impersonates `penombre-play@`, a user of the Play Console app.
+  The provider accepts only this repository's id on `refs/heads/main`, so the
+  job cannot run from a pull request. Canaries go to `internal`, releases to
+  `alpha` (closed testing): a personal developer account gets production only
+  after 12 testers have stayed opted in for 14 days, and then that line says
+  `production`. The API cannot make an app's first release, and an app with no
+  rolled-out release accepts only `draft` ones: the first bundle was uploaded by
+  hand in the Console.
+- **The store listing is code** (`mobile/store/`), pushed by `play.sh` in the
+  same edit as every bundle. `listings/<Play language>/` is the whole truth: a
+  language Play has and the folder lacks is deleted, so never edit the listing
+  in the Console. Images go to the default language only, which every other
+  falls back to, and are replaced only when their sha256 differ, so a release
+  does not resend them. This has Play validate it and commits nothing
+  (impersonating needs `roles/iam.serviceAccountTokenCreator` on the account):
+
+  ```bash
+  TOKEN=$(gcloud auth print-access-token \
+    --impersonate-service-account=penombre-play@penombre-app.iam.gserviceaccount.com \
+    --scopes=https://www.googleapis.com/auth/androidpublisher) \
+    bash mobile/store/play.sh --dry-run
+  ```
+
+- **`PrivacyInfo.xcprivacy` declares every API Apple wants a reason for**, and
+  the App Store scans the binary for them: the app's `NSUserDefaults`, plus
+  `stat`/`fstat`/`lstat` and `mach_absolute_time` that the Kotlin runtime calls
+  on its own (`nm -u` on `Shared.framework` lists them). A new one in the
+  framework without its entry gets the upload rejected.
 - **The iOS build is unsigned** (`CODE_SIGNING_ALLOWED=NO`, zipped under
   `Payload/` as `penombre-ios-unsigned.ipa`): signing needs an Apple developer
   account. It is for sideloading tools; TestFlight and the App Store will need a
@@ -2160,7 +2230,10 @@ error only shows when the iOS framework is linked.
   `sessionStorage`) must not advertise the app inside the app.
 - `mise run graphics` renders the README's and the guides' feature graphics and
   the Play Store's (`mobile/store/feature-graphic.jpg`, 1024x500, no alpha) from
-  the screenshots in `docs/images/src`, which it does not retake.
+  the screenshots in `docs/images/src`, which it does not retake, plus the Play
+  phone screenshots, framed at 9:16 because Play refuses a long side over twice
+  the short one, which the raw shots are. `mise run icons` renders the Play icon
+  (`mobile/store/icon.png`, 512px, 32-bit).
 
 ### A pairing code signs a phone in with no browser
 
@@ -2363,11 +2436,11 @@ anything under test that imports `#lib/paraglide/messages.js` needs that step.
 
 ### Screenshots for docs
 
-`mise run media` (`scripts/media.sh`) retakes every picture with no hand step:
+`mise run media` (`.mise/tasks/media`) retakes every picture with no hand step:
 the web shots below, the sync app's snapshot test, the iOS simulator through
 `mobile/e2e/showcase.yaml` (paired by link, never a real account, dark
 appearance and a 9:41 status bar, Maestro pinned to the simulator), then the
-feature graphics around them (`scripts/feature-graphics.ts`). Everything runs
+feature graphics around them (`.mise/tasks/graphics.ts`). Everything runs
 against the E2E stack's throwaway admin. Name parts to run only those
 (`mise run media mobile graphics`).
 

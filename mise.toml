@@ -12,148 +12,17 @@ xcodegen = "2.46.0"
 android-sdk = "23.0"
 # Drives the app on the emulator and the simulator for `mobile:e2e`.
 maestro = "cli-2.10.0"
+# Rasterizes the logo for `mise run icons`.
+resvg = "0.48.1"
 
 [env]
 # Not the plugin's own versioned folder, which a tools bump would empty.
 ANDROID_HOME = "{{env.HOME}}/.local/share/android-sdk"
 ANDROID_SDK_ROOT = "{{env.HOME}}/.local/share/android-sdk"
 _.path = [
-  "{{env.HOME}}/.local/share/android-sdk/platform-tools",
-  "{{env.HOME}}/.local/share/android-sdk/emulator",
+    "{{env.HOME}}/.local/share/android-sdk/platform-tools",
+    "{{env.HOME}}/.local/share/android-sdk/emulator",
 ]
-
-[tasks.doctor]
-description = "Check the binaries the Go worker execs: ffmpeg with libwebp, ffprobe, pdftoppm"
-run = '''
-ok=0
-for bin in ffmpeg ffprobe pdftoppm; do
-  command -v "$bin" >/dev/null || { echo "$bin missing (macOS: brew install poppler for pdftoppm; Debian: apt install ffmpeg poppler-utils)" >&2; ok=1; }
-done
-if command -v ffmpeg >/dev/null && ! ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libwebp; then
-  echo "ffmpeg lacks the libwebp encoder, thumbnails come out empty. macOS: brew uninstall ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-webp" >&2
-  ok=1
-fi
-command -v docker >/dev/null || echo "docker not found: only needed for test:e2e and test:docker"
-command -v rclone >/dev/null || echo "rclone not found: only needed by the desktop app (mise install)"
-[ "$ok" = 0 ] && echo "ffmpeg (libwebp), ffprobe and pdftoppm ok"
-exit "$ok"
-'''
-
-[tasks.icons]
-description = "Render the desktop and mobile app icons from the logo"
-run = "sh scripts/app-icons.sh"
-
-[tasks.graphics]
-description = "Render the feature graphics for the README, the docs and the Play Store"
-run = "bun scripts/feature-graphics.ts"
-
-[tasks.media]
-description = "Retake every screenshot that shows Penombre off (web, desktop, mobile) and lay out the feature graphics"
-run = "sh scripts/media.sh"
-
-[tasks."mobile:doctor"]
-description = "Check what the mobile app needs to build and run: Android SDK and emulator images, iOS simulator runtime"
-run = '''
-ok=0
-sdk="$ANDROID_HOME"
-if [ ! -d "$sdk/platform-tools" ]; then
-  echo "No Android SDK at $sdk: mise run mobile:setup" >&2; ok=1
-else
-  # An SDK cleanup can leave an image's folder without its disk images; the
-  # emulator then fails with "No initial system image for this configuration".
-  for image in "$sdk"/system-images/*/*/*/; do
-    [ -d "$image" ] || continue
-    [ -f "$image/system.img" ] || { echo "Broken emulator image $image (no system.img): delete it and run mise run mobile:setup" >&2; ok=1; }
-  done
-fi
-if [ "$(uname)" = Darwin ]; then
-  xcrun simctl list runtimes 2>/dev/null | grep -q "^iOS" \
-    || { echo "No iOS Simulator runtime: xcodebuild -downloadPlatform iOS (about 8 GB)" >&2; ok=1; }
-fi
-[ "$ok" = 0 ] && echo "Android SDK, emulator images and iOS runtime ok"
-exit "$ok"
-'''
-
-[tasks."mobile:setup"]
-description = "Install the Android SDK packages and the emulator the mobile app builds and runs on"
-run = '''
-set -e
-case "$(uname -m)" in arm64|aarch64) abi=arm64-v8a ;; *) abi=x86_64 ;; esac
-image="system-images;android-36;google_apis_playstore;$abi"
-sdkmanager --sdk_root="$ANDROID_HOME" "cmdline-tools;23.0" "platform-tools" \
-  "platforms;android-37.0" "build-tools;36.0.0" "emulator" "$image"
-# avdmanager takes the SDK to be two folders above itself, so mise's copy
-# finds no images: use the one just installed into the SDK.
-avd="$ANDROID_HOME/cmdline-tools/23.0/bin/avdmanager"
-if ! "$avd" list avd -c | grep -qx penombre; then
-  echo no | "$avd" create avd -n penombre -k "$image" -d pixel_9
-  # The profile asks for 12 GB of user data; a test device needs far less.
-  config="${ANDROID_AVD_HOME:-$HOME/.android/avd}/penombre.avd/config.ini"
-  sed -i.bak 's/^disk.dataPartition.size=.*/disk.dataPartition.size=6G/' "$config" && rm "$config.bak"
-fi
-'''
-
-[tasks."mobile:emulator"]
-description = "Start the Android emulator made by mobile:setup"
-run = '''
-nohup emulator -avd penombre -no-audio -no-boot-anim >/dev/null 2>&1 &
-adb wait-for-device
-until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do sleep 2; done
-# A fresh device opens Gboard's handwriting tutorial over the first text
-# field a test taps.
-adb shell settings put secure stylus_handwriting_enabled 0
-echo "Emulator ready"
-'''
-
-[tasks."mobile:android"]
-description = "Build the Android app and run it on the connected phone or emulator"
-dir = "mobile"
-run = '''
-set -e
-./gradlew -q :androidApp:assembleDebug
-adb wait-for-device
-# The device's localhost reaches `bun run dev` on this machine.
-adb reverse tcp:5173 tcp:5173
-adb install -r androidApp/build/outputs/apk/debug/androidApp-debug.apk
-adb shell am start -n dev.penombre.app/.MainActivity
-'''
-
-[tasks."mobile:ios"]
-description = "Build the iOS app and run it in a simulator"
-dir = "mobile/iosApp"
-run = '''
-set -e
-xcodegen generate -q
-xcodebuild -quiet -project Penombre.xcodeproj -scheme Penombre -configuration Debug \
-  -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
-device=$(xcrun simctl list devices booted | grep -m1 -oE '[0-9A-F-]{36}' || true)
-if [ -z "$device" ]; then
-  device=$(xcrun simctl list devices available | grep -m1 iPhone | grep -oE '[0-9A-F-]{36}')
-  xcrun simctl boot "$device"
-fi
-xcrun simctl install "$device" build/Build/Products/Debug-iphonesimulator/Penombre.app
-xcrun simctl launch "$device" dev.penombre.app
-# The simulator's window: Simulator.app, or Device Hub from Xcode 27.
-open -a Simulator 2>/dev/null || open -b com.apple.dt.Devices 2>/dev/null || true
-'''
-
-[tasks."mobile:test"]
-description = "Unit tests of the shared mobile code, on the JVM and (on a Mac) the iOS simulator"
-dir = "mobile"
-run = '''
-set -e
-./gradlew :shared:testAndroidHostTest
-[ "$(uname)" != Darwin ] || ./gradlew :shared:iosSimulatorArm64Test
-'''
-
-[tasks."mobile:seed"]
-description = "Fill the test account's drive with folders and files of every kind (PENOMBRE_E2E_EMAIL/PASSWORD)"
-run = "mobile/e2e/run.sh seed"
-
-[tasks."mobile:e2e"]
-description = "Maestro flows on the emulator and the simulator, or the platforms named, against a running server (see mobile/e2e/run.sh)"
-run = "mobile/e2e/run.sh"
 
 [hooks]
 postinstall = "mise run doctor || true"

@@ -28,11 +28,6 @@ impl App {
                     let _ = self.sync.send(Cmd::SyncNow);
                 }
                 Event::Menu(PAUSE) => self.set_paused(!self.config.paused),
-                Event::Menu("open-folder") => {
-                    if let Some(pair) = self.config.pairs().first() {
-                        open_logged(pair.local.clone());
-                    }
-                }
                 Event::Menu("open-web") if !self.config.server.is_empty() => {
                     open_logged(PathBuf::from(&self.config.server));
                 }
@@ -91,7 +86,6 @@ pub(super) fn config() -> fastframe_tray::Config {
             MenuItem::Separator,
             MenuItem::action("sync", "Sync now"),
             MenuItem::action(PAUSE, "Pause syncing"),
-            MenuItem::action("open-folder", "Open folder"),
             MenuItem::action("open-web", "Open Penombre in browser"),
             MenuItem::action("settings", "Settings…"),
             MenuItem::Separator,

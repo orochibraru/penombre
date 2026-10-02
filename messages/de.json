@@ -898,6 +898,9 @@
 	"app_banner_action": "App holen",
 	"search_nothing": "Nichts mit diesem Namen, in keinem Ihrer Laufwerke.",
 	"mobile_connect_open": "In der App auf diesem Gerät öffnen",
+	"mobile_connect_get": "Noch keine App?",
+	"apps_google_play": "Jetzt bei Google Play",
+	"apps_github": "Von GitHub herunterladen",
 	"player_tuning": "Tempo und Tonhöhe",
 	"back": "Zurück",
 	"upload_action": [

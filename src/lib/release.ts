@@ -20,7 +20,33 @@ export function desktopReleaseVersion(
 	return channel === channelOf(own) ? own : (newest ?? own);
 }
 
+/**
+ * Which release's builds to offer, from what the layout already streamed: the
+ * version check, or the server's own version when that did not answer.
+ */
+export async function offeredRelease(data: {
+	versionCheck?: unknown;
+	config?: { appVersion?: string };
+}): Promise<string | undefined> {
+	const check = (await data.versionCheck) as
+		| {
+				currentVersion: string;
+				channel: "stable" | "canary";
+				latestVersion: string | null;
+		  }
+		| undefined;
+	return check
+		? desktopReleaseVersion(
+				check.currentVersion,
+				check.channel,
+				check.latestVersion,
+			)
+		: data.config?.appVersion;
+}
+
 export const RELEASES = "https://github.com/orochibraru/penombre/releases";
+export const PLAY_STORE =
+	"https://play.google.com/store/apps/details?id=com.orochibraru.penombre";
 
 /** A release asset's download link. */
 export function assetUrl(version: string, file: string): string {

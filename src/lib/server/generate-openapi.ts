@@ -23,7 +23,7 @@ function sortKeysDeep(value: unknown): unknown {
 
 /**
  * The one OpenAPI document: served by GET /api/v1/openapi.json and written to
- * disk by scripts/generate-openapi.ts, so the served spec and the committed
+ * disk by .mise/tasks/gen/openapi-spec.ts, so the served spec and the committed
  * one can't drift. Keys are sorted to keep regenerations diff-stable.
  */
 export async function genOpenApiSpec(): Promise<Record<string, unknown>> {

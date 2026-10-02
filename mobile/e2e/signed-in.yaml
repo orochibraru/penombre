@@ -1,6 +1,6 @@
 # Signs in through the browser, then uses the app: the native listing, the
 # bottom bar's tabs, the embedded web app on the same session, and sign-out.
-appId: dev.penombre.app
+appId: com.orochibraru.penombre
 ---
 - runFlow: sign-in-screen.yaml
 - runFlow:

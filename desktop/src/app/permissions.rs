@@ -84,13 +84,33 @@ fn folder(pair: &Pair) -> Check {
 
 #[cfg(target_os = "macos")]
 fn notifications() -> Check {
+    if !crate::notify::bundled() {
+        return check(
+            "Notifications",
+            "Shown through Script Editor: only the app from the .dmg shows its own.".into(),
+            Level::Neutral,
+            Some((
+                "Open settings",
+                "x-apple.systempreferences:com.apple.preference.notifications".into(),
+            )),
+        );
+    }
+    let (level, detail) = match crate::notify::allowed() {
+        Some(true) => (Level::Ok, "Allowed."),
+        Some(false) => (
+            Level::Problem,
+            "Turned off in System Settings: a sync that keeps failing goes unnoticed.",
+        ),
+        None => (Level::Neutral, "Not decided yet in System Settings."),
+    };
     check(
         "Notifications",
-        "Shown through Script Editor: macOS asks no permission outside an app bundle.".into(),
-        Level::Neutral,
+        detail.into(),
+        level,
         Some((
             "Open settings",
-            "x-apple.systempreferences:com.apple.preference.notifications".into(),
+            "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=dev.penombre.sync"
+                .into(),
         )),
     )
 }

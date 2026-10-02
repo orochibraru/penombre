@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+//MISE description="Write openapi.json from the routes' contracts (bun run gen:api also types the client)"
 
 /**
  * Writes the OpenAPI spec to disk from the same genOpenApiSpec() the live

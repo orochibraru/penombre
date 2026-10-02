@@ -1,6 +1,6 @@
 # Signing in from the web app's QR code. A simulator has no camera, so the
 # code arrives the other way a phone gets it: as a link the system opens.
-appId: dev.penombre.app
+appId: com.orochibraru.penombre
 ---
 - launchApp:
     clearState: true

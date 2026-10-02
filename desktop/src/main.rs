@@ -3,6 +3,7 @@
 mod app;
 mod auth;
 mod instance;
+mod notify;
 mod places;
 mod store;
 mod sync;
@@ -44,39 +45,82 @@ fn main() -> eframe::Result<()> {
         }
     };
     store::init_keyring();
+    #[cfg(target_os = "macos")]
+    notify::ask();
 
     let waker = Waker::default();
     let app = App::new(&waker, dirs, instance);
     Shell::new(app, &waker)
         .idle(fastframe_tray::idle)
         .run(|lease| {
-            let mut viewport = egui::ViewportBuilder::default().with_title("Penombre Sync");
+            let hidden = lease.peek(App::starts_hidden);
+            let mut viewport = egui::ViewportBuilder::default()
+                .with_title("Penombre Sync")
+                .with_visible(!hidden);
             if let Some(icon) = ui::app_icon() {
                 viewport = viewport.with_icon(icon);
             }
             let options = eframe::NativeOptions {
                 viewport: viewport
-                    .with_inner_size([440.0, 520.0])
+                    .with_inner_size([520.0, 680.0])
                     .with_min_inner_size([380.0, 420.0]),
                 // The default app menu's Quit is `terminate:`, which exits the
                 // process on the spot: tray and sync included. ⌘Q only closes
                 // the window instead (`Window::ui`); the tray's Quit quits.
+                // Only the first window's options make the event loop, so
+                // only a hidden start begins out of the Dock and unfocused.
                 #[cfg(target_os = "macos")]
-                event_loop_builder: Some(Box::new(|builder| {
-                    use winit::platform::macos::EventLoopBuilderExtMacOS;
-                    builder.with_default_menu(false);
+                event_loop_builder: Some(Box::new(move |builder| {
+                    use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
+                    builder
+                        .with_default_menu(false)
+                        .with_activation_policy(if hidden {
+                            ActivationPolicy::Accessory
+                        } else {
+                            ActivationPolicy::Regular
+                        })
+                        .with_activate_ignoring_other_apps(!hidden);
                 })),
                 ..Default::default()
             };
-            eframe::run_native(
+            let result = eframe::run_native(
                 "Penombre Sync",
                 options,
                 Box::new(move |cc| {
                     ui::install(&cc.egui_ctx);
+                    if !hidden {
+                        in_dock(true);
+                    }
                     let mut app = lease.take(&cc.egui_ctx);
                     app.attach_tray();
                     Ok(Box::new(Window::new(app)))
                 }),
-            )
+            );
+            in_dock(false);
+            result
         })
 }
+
+/// In the Dock and the app switcher only while the window is open; the tray
+/// is the way back. Never before the first window: winit makes the
+/// application object itself and refuses one made earlier.
+#[cfg(target_os = "macos")]
+fn in_dock(shown: bool) {
+    use objc2_app_kit::{NSApplication, NSApplicationActivationPolicy};
+    let Some(main) = objc2::MainThreadMarker::new() else {
+        return;
+    };
+    let app = NSApplication::sharedApplication(main);
+    app.setActivationPolicy(if shown {
+        NSApplicationActivationPolicy::Regular
+    } else {
+        NSApplicationActivationPolicy::Accessory
+    });
+    if shown {
+        #[allow(deprecated)]
+        app.activateIgnoringOtherApps(true);
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn in_dock(_shown: bool) {}

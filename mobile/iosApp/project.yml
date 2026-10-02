@@ -18,7 +18,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # penombre://pair, from the web app's QR code read by the camera.
         CFBundleURLTypes:
-          - CFBundleURLName: dev.penombre.app
+          - CFBundleURLName: com.orochibraru.penombre
             CFBundleURLSchemes: [penombre]
         UILaunchScreen: {}
         # The app's languages: the system's own sheets and prompts speak the
@@ -33,9 +33,11 @@ targets:
         # Self-hosted instances are often plain HTTP on a LAN.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
+        # Only the system's HTTPS: no export compliance question per upload.
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.penombre.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.orochibraru.penombre
         MARKETING_VERSION: 0.1.0
         CURRENT_PROJECT_VERSION: 1
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

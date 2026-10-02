@@ -15,7 +15,7 @@ pub use progress::{Change, Progress};
 pub use rclone::{Control, find_rclone};
 pub use reach::Down;
 pub use retries::Failure;
-pub use worker::{host, show, worker};
+pub use worker::{host, worker};
 
 #[derive(Clone)]
 pub struct Target {

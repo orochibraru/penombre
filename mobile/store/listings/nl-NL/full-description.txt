@@ -1,0 +1,32 @@
+Penombre is een drive die je zelf host: je bestanden, foto's, muziek, video's en documenten op je eigen server, zonder dat iemand je de schijfruimte verhuurt. Dit is de app ervan.
+
+Je hebt een Penombre-server nodig om de app te gebruiken. Penombre is gratis en open source: één container op een thuisserver, een NAS of een VPS. Op orochibraru.com/penombre lees je hoe je er een opzet.
+
+IN ENKELE SECONDEN INGELOGD
+• Scan de QR-code die je server toont onder "De apps downloaden", en je bent binnen. Geen adres om te typen.
+• Of voer het adres van je server in en log in via je browser, met een wachtwoord, een toegangssleutel of je gebruikelijke provider.
+• Of log in met een code per e-mail. Tweefactorauthenticatie wordt ondersteund.
+
+JE HELE DRIVE
+• Mijn Drive, gedeelde drives en gekoppelde volumes, soepel, zelfs in mappen met duizenden bestanden.
+• Recent, Favorieten, Prullenbak en categorieën (Muziek, Afbeeldingen, Documenten…) met één tik bereikbaar.
+• Zoek overal waar je toegang hebt, met resultaten terwijl je typt.
+• Upload bestanden, maak een foto of scan een document meteen naar PDF.
+• Hernoemen, verplaatsen, kopiëren, dupliceren, aan favorieten toevoegen, downloaden, naar de prullenbak verplaatsen en herstellen.
+• Speel eerdere versies van een bestand af, download ze of herstel ze.
+
+FOTO'S, MUZIEK EN VIDEO
+• Een fotoviewer waarin je veegt en met twee vingers zoomt: eerst een voorbeeld, het origineel als je erom vraagt.
+• Een muziekspeler met een wachtrij die blijft spelen terwijl je verder bladert.
+• Video's ter plekke of op volledig scherm. Een formaat dat je telefoon niet kan afspelen, of een bestand dat te zwaar is voor je verbinding, zet je server om naar 720p of 480p.
+
+DELEN EN MELDINGEN
+• Je openbare links, wat met je gedeeld is en je gedeelde drives, elk met een eigen prullenbak.
+• Meldingen voor opmerkingen, gedeelde bestanden en ondertekenverzoeken, die de app rechtstreeks bij je server ophaalt in plaats van ze via een derde partij te laten pushen.
+
+JE ACCOUNT, JE INSTELLINGEN
+• Profiel, wachtwoord, tweefactorauthenticatie, sessies, API-sleutels en activiteit, net als op het web.
+• Accentkleur, lettertype en hoeken volgen je account, op het web en op je telefoon.
+• Dertien talen.
+
+Geen advertenties, geen analytics, geen account bij ons: de app werkt met jouw server, en je bestanden blijven waar je ze neerzet.

@@ -1,0 +1,32 @@
+Penombre est un drive que vous hébergez vous-même : vos fichiers, photos, musique, vidéos et documents sur votre propre serveur, sans personne pour vous louer le disque. Voici son application.
+
+Il vous faut un serveur Penombre pour l'utiliser. Penombre est libre et gratuit : un seul conteneur sur un serveur à la maison, un NAS ou un VPS. orochibraru.com/penombre explique comment l'installer.
+
+CONNECTÉ EN QUELQUES SECONDES
+• Scannez le code QR que votre serveur affiche sous Obtenir les applications, et c'est fait. Aucune adresse à taper.
+• Ou saisissez l'adresse de votre serveur et connectez-vous depuis votre navigateur, avec un mot de passe, une clé d'accès ou votre fournisseur habituel.
+• Ou connectez-vous avec un code reçu par e-mail. L'authentification à deux facteurs est prise en charge.
+
+TOUT VOTRE DRIVE
+• Mon Drive, les disques partagés et les volumes montés, fluides même dans des dossiers de plusieurs milliers de fichiers.
+• Récent, Favoris, Corbeille et les catégories (Musique, Images, Documents…) à portée de doigt.
+• Une recherche partout où vous avez accès, avec des résultats dès la saisie.
+• Téléversez des fichiers, prenez une photo ou numérisez un document directement en PDF.
+• Renommez, déplacez, copiez, dupliquez, ajoutez aux favoris, téléchargez, mettez à la corbeille et restaurez.
+• Lisez, téléchargez ou restaurez les versions précédentes d'un fichier.
+
+PHOTOS, MUSIQUE ET VIDÉOS
+• Une visionneuse photo où l'on glisse d'une image à l'autre et pince pour zoomer : un aperçu d'abord, l'original à la demande.
+• Un lecteur de musique avec une file d'attente qui continue de jouer pendant que vous naviguez.
+• Les vidéos dans l'aperçu ou en plein écran. Un format que votre téléphone ne sait pas lire, ou un fichier trop lourd pour votre connexion, est converti par votre serveur en 720p ou 480p.
+
+PARTAGE ET NOTIFICATIONS
+• Vos liens publics, ce qui est partagé avec vous et vos disques partagés, chacun avec sa propre corbeille.
+• Des notifications pour les commentaires, les partages et les demandes de signature, que l'application vérifie directement auprès de votre serveur au lieu de passer par un service tiers.
+
+VOTRE COMPTE, VOS PARAMÈTRES
+• Profil, mot de passe, authentification à deux facteurs, sessions, clés API et activité, comme sur le web.
+• La couleur d'accent, la police et les coins suivent votre compte, du web au téléphone.
+• Treize langues.
+
+Ni publicité, ni mesure d'audience, ni compte chez nous : l'application travaille avec votre serveur, et vos fichiers restent là où vous les avez mis.

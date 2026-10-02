@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#MISE description="Check what the mobile app needs to build and run: Android SDK and emulator images, iOS simulator runtime"
+set -e
+ok=0
+sdk="$ANDROID_HOME"
+if [ ! -d "$sdk/platform-tools" ]; then
+  echo "No Android SDK at $sdk: mise run mobile:setup" >&2; ok=1
+else
+  # An SDK cleanup can leave an image's folder without its disk images; the
+  # emulator then fails with "No initial system image for this configuration".
+  for image in "$sdk"/system-images/*/*/*/; do
+    [ -d "$image" ] || continue
+    [ -f "$image/system.img" ] || { echo "Broken emulator image $image (no system.img): delete it and run mise run mobile:setup" >&2; ok=1; }
+  done
+fi
+if [ "$(uname)" = Darwin ]; then
+  xcrun simctl list runtimes 2>/dev/null | grep -q "^iOS" \
+    || { echo "No iOS Simulator runtime: xcodebuild -downloadPlatform iOS (about 8 GB)" >&2; ok=1; }
+fi
+[ "$ok" = 0 ] && echo "Android SDK, emulator images and iOS runtime ok"
+exit "$ok"

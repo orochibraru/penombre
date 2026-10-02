@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+#MISE description="Stop the dev server's Go worker; its supervisor rebuilds and restarts it"
+# The dev server builds the worker once: a new job type fails as unknown until then.
+pkill -TERM -f penombre-worker-dev || echo "No dev worker running"

@@ -195,7 +195,7 @@ impl App {
             ),
             None => "Install it from Settings.".into(),
         };
-        sync::show(&format!("Penombre Sync {} is out. {how}", release.version));
+        crate::notify::show(&format!("Penombre Sync {} is out. {how}", release.version));
         self.config.announced = Some(release.version.clone());
         self.config.save(&self.dirs);
     }

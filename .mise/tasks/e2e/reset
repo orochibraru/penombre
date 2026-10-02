@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Remove both E2E stacks and their volumes, so a run starts from an empty drive"
+set -e
+# `up --build` keeps volumes: specs then fail on earlier runs' leftovers.
+docker compose -f compose.e2e.yaml -p penombre-e2e down -v
+docker compose -f compose.e2e.yaml --profile pg -p penombre-e2e-pg down -v

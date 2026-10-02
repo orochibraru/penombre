@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Start the Android emulator made by mobile:setup"
+set -e
+nohup emulator -avd penombre -no-audio -no-boot-anim >/dev/null 2>&1 &
+adb wait-for-device
+until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do sleep 2; done
+# A fresh device opens Gboard's handwriting tutorial over the first text
+# field a test taps.
+adb shell settings put secure stylus_handwriting_enabled 0
+echo "Emulator ready"

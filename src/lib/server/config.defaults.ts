@@ -4,7 +4,7 @@ import packageJson from "../../../package.json" with { type: "json" };
  * Default configuration values for Penombre.
  * Extracted to a separate file so it can be used by both:
  * - The runtime config loader (config.ts)
- * - The .example.env generator script (scripts/generate-env-example.ts)
+ * - The .example.env generator script (.mise/tasks/gen/env.ts)
  */
 
 /** Everything the app writes lives under one directory. */

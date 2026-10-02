@@ -49,8 +49,10 @@ then runs the sync on its own.
   and interrupts a sync in progress. The app remembers it across restarts;
   **Resume syncing** catches up at once with what changed meanwhile.
 
-Closing the window keeps the app in the tray; quit from the tray menu. Only one
-copy runs at a time: opening it again brings the running one forward.
+Closing the window keeps the app running in the tray; quit from its menu. On
+macOS the app sits in the menu bar only: it leaves the Dock with its window, and
+started at login it opens no window at all. Only one copy runs at a time:
+opening it again brings the running one forward.
 
 ## Settings
 
@@ -78,9 +80,10 @@ The **Settings** view, beside **Sync** at the top of the window, holds:
   access under **Privacy & Security → Files and Folders** or **Full Disk
   Access**.
 
-On macOS the app is a plain program, not an `.app`, so it cannot ask for
-notification permission or have its own entry in **System Settings →
-Notifications**. Its notifications are shown by Script Editor; allow those.
+On macOS the app from the `.dmg` asks once whether it may notify you, has its
+own entry in **System Settings → Notifications**, and **Permissions** shows your
+answer. A Homebrew install is a bare program, which macOS lets show
+notifications only through Script Editor; allow those.
 
 ## Good to know
 
@@ -156,9 +159,12 @@ before it ships. On macOS, open the `.dmg` and drag **Penombre Sync** to
 The same releases also carry plain archives (`.tar.gz`, `.zip` on Windows)
 holding the bare binary, which is what the in-app updater and Homebrew use.
 
-The builds are not signed. On macOS, the first launch is refused: open **System
-Settings → Privacy & Security** and choose **Open Anyway**, or clear the
-quarantine flag:
+The builds are not signed by Apple or Microsoft. The macOS one carries the
+project's own signature, which its notifications need. Apple does not know that
+signature, so after each update macOS asks once more for the keychain entry
+holding the key (choose **Always Allow**), and the first launch is refused: open
+**System Settings → Privacy & Security** and choose **Open Anyway**, or clear
+the quarantine flag:
 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/Penombre Sync.app"

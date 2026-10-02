@@ -110,7 +110,7 @@ repos:
         entry: sh -c 'bunx svelte-kit sync && bun run gen:env && bun run gen:api'
         language: system
         pass_filenames: false
-        files: ^(src/lib/server/openapi/|src/lib/server/config\.defaults\.ts$|scripts/gen)
+        files: ^(src/lib/server/openapi/|src/lib/server/config\.defaults\.ts$|\.mise/tasks/gen/)
 
       - id: oxlint
         name: Lint (oxlint)
@@ -169,7 +169,7 @@ repos:
 
       - id: i18n
         name: Locale parity
-        entry: bun scripts/check-i18n.ts
+        entry: bun .mise/tasks/check/i18n.ts
         language: system
         pass_filenames: false
         files: ^(messages/.*\.json|project\.inlang/settings\.json)$
@@ -202,7 +202,7 @@ repos:
 
       - id: lint-tailwind
         name: Lint (Tailwind)
-        entry: node_modules/.bin/tailwint --fix
+        entry: node_modules/.bin/tailwint --fix --timeout 120000
         language: system
         require_serial: true
         files: ^src/.*\.(svelte|css|html|ts)$
@@ -213,7 +213,7 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^(src/|scripts/|e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$|.*\.go$|go\.(mod|sum)$|package\.json$|bun\.lock$)
+        files: ^(src/|\.mise/tasks/|e2e/|messages/|vite\.config\.ts$|svelte\.config\.js$|tsconfig.*\.json$|.*\.go$|go\.(mod|sum)$|package\.json$|bun\.lock$)
 
       - id: circular
         name: Circular imports
@@ -229,7 +229,7 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-push]
-        files: ^(src/|scripts/|test\.setup\.ts$|bunfig\.toml$|package\.json$|bun\.lock$)
+        files: ^(src/|\.mise/tasks/|test\.setup\.ts$|bunfig\.toml$|package\.json$|bun\.lock$)
 
       - id: bun-install
         name: Sync dependencies after checkout

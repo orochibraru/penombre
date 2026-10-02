@@ -171,7 +171,7 @@ pub fn worker(
         wake.now();
         if !halted {
             for text in stuck.iter().cloned().chain(notice(&twice)) {
-                show(&text);
+                crate::notify::show(&text);
             }
         }
         if lost {
@@ -197,7 +197,7 @@ fn reachable<F: Fn()>(
         wake.now();
     }
     match change {
-        reach::Change::Notify => show(&format!(
+        reach::Change::Notify => crate::notify::show(&format!(
             "Can't reach {} — syncing resumes when it's back.",
             host(server)
         )),
@@ -234,35 +234,6 @@ impl<F: Fn()> Throttled<F> {
         {
             self.now();
         }
-    }
-}
-
-pub fn show(text: &str) {
-    log::warn!("{text}");
-    #[cfg(target_os = "macos")]
-    let shown = std::process::Command::new("osascript")
-        .args([
-            "-e",
-            "on run argv",
-            "-e",
-            "display notification (item 2 of argv) with title (item 1 of argv)",
-            "-e",
-            "end run",
-            "Penombre Sync",
-            text,
-        ])
-        .status()
-        .map_err(|e| e.to_string())
-        .and_then(|s| s.success().then_some(()).ok_or(s.to_string()));
-    #[cfg(not(target_os = "macos"))]
-    let shown = notify_rust::Notification::new()
-        .summary("Penombre Sync")
-        .body(text)
-        .show()
-        .map(drop)
-        .map_err(|e| e.to_string());
-    if let Err(error) = shown {
-        log::warn!("could not show a notification: {error}");
     }
 }
 

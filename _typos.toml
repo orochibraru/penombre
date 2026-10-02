@@ -11,6 +11,9 @@ extend-exclude = [
     # The mobile app's strings in those same locales.
     "mobile/shared/src/commonMain/composeResources/values-*/",
     "mobile/iosApp/Penombre/*.lproj/",
+    # The Play Store listing, translated.
+    "mobile/store/listings/*/",
+    "!mobile/store/listings/en-US/",
     # Expected renders of those strings, French and Russian among them.
     "src/lib/i18n-plurals.test.ts",
 ]

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#MISE description="Check the binaries the Go worker execs: ffmpeg with libwebp, ffprobe, pdftoppm"
+set -e
+ok=0
+for bin in ffmpeg ffprobe pdftoppm; do
+  command -v "$bin" >/dev/null || { echo "$bin missing (macOS: brew install poppler for pdftoppm; Debian: apt install ffmpeg poppler-utils)" >&2; ok=1; }
+done
+if command -v ffmpeg >/dev/null && ! ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libwebp; then
+  echo "ffmpeg lacks the libwebp encoder, thumbnails come out empty. macOS: brew uninstall ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg --with-webp" >&2
+  ok=1
+fi
+command -v docker >/dev/null || echo "docker not found: only needed for test:e2e and test:docker"
+command -v rclone >/dev/null || echo "rclone not found: only needed by the desktop app (mise install)"
+[ "$ok" = 0 ] && echo "ffmpeg (libwebp), ffprobe and pdftoppm ok"
+exit "$ok"

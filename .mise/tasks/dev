@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Run the WebApp's vite dev server"
+bun run dev

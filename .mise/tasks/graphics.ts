@@ -1,5 +1,8 @@
+#!/usr/bin/env bun
+//MISE description="Render the feature graphics for the README, the docs and the Play Store"
 // Renders the feature graphics: one each for the web app, the desktop app and
-// the mobile app, plus the mobile one at the Play Store's 1024x500.
+// the mobile app, plus the mobile one at the Play Store's 1024x500 and its
+// phone screenshots.
 //
 //   mise run graphics
 //
@@ -11,7 +14,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { chromium } from "@playwright/test";
 
-const root = join(import.meta.dir, "..");
+const root = join(import.meta.dir, "..", "..");
 const src = join(root, "docs/images/src");
 const out = join(root, "docs/images");
 // Inlined: a page set from a string may not read files.
@@ -29,6 +32,7 @@ const MUTED = "#a99fb2";
 const ACCENT = "#d8516a";
 const GLOW = "#b94082";
 const EMBER = "#d67d5e";
+const FONT = `ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
 
 /** The logo's moon, drawn large: what sits behind every device. */
 const moon = (id: string) => `
@@ -99,7 +103,7 @@ const page = (graphic: Graphic) => `<!doctype html>
       radial-gradient(520px 380px at 4% 108%, ${EMBER}40, transparent 70%),
       ${GROUND};
     color: ${INK};
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: ${FONT};
     -webkit-font-smoothing: antialiased;
   }
   /* The one loud thing: the logo's crescent, behind what it lights. */
@@ -160,5 +164,52 @@ if (mobile) {
 	await mkdir(join(root, "mobile/store"), { recursive: true });
 	await listing.screenshot({ path: target, type: "jpeg", quality: 95 });
 	process.stdout.write("mobile/store/feature-graphic.jpg\n");
+}
+
+// The Play Store's phone screenshots. Play refuses a long side more than twice
+// the short one, which the shots themselves are, so each stands in a 9:16 frame.
+const screenshot = (shot: string, line: string) => `<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; }
+  body {
+    position: relative;
+    background:
+      radial-gradient(900px 700px at 100% 0%, ${GLOW}66, transparent 70%),
+      radial-gradient(800px 600px at 0% 100%, ${EMBER}40, transparent 70%),
+      ${GROUND};
+    color: ${INK};
+    font-family: ${FONT};
+    -webkit-font-smoothing: antialiased;
+  }
+  .moon { position: absolute; left: 240px; top: 560px; width: 1100px; opacity: 0.5; }
+  .brand { position: absolute; inset: 120px 0 auto; display: flex; justify-content: center; align-items: center; gap: 18px; font-size: 40px; font-weight: 600; }
+  .brand svg { width: 60px; }
+  h1 { position: absolute; inset: 210px 90px auto; text-align: center; font-size: 76px; line-height: 1.05; font-weight: 650; letter-spacing: -2px; text-wrap: balance; }
+  .phone { position: absolute; left: 210px; top: 480px; width: 660px; overflow: hidden; border-radius: 96px; border: 12px solid #1b1922; background: ${GROUND}; box-shadow: 0 40px 120px -30px #000c, 0 0 0 2px #ffffff1f; }
+  .phone img { display: block; width: 100%; }
+</style></head><body>
+  <div class="moon">${moon("b")}</div>
+  <div class="brand">${moon("a")}Penombre</div>
+  <h1>${line}</h1>
+  <div class="phone"><img src="${shot}" alt=""></div>
+</body></html>`;
+const SCREENSHOTS = [
+	{ shot: drive, line: "Your whole drive, in your pocket." },
+	{ shot: player, line: "Music and video, from your own server." },
+];
+const phones = await browser.newContext({
+	viewport: { width: 1080, height: 1920 },
+});
+const phoneTab = await phones.newPage();
+for (const [index, { shot, line }] of SCREENSHOTS.entries()) {
+	const name = `mobile/store/phone-${index + 1}.jpg`;
+	await phoneTab.setContent(screenshot(shot, line), { waitUntil: "load" });
+	await phoneTab.screenshot({
+		path: join(root, name),
+		type: "jpeg",
+		quality: 92,
+	});
+	process.stdout.write(`${name}\n`);
 }
 await browser.close();

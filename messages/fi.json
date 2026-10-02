@@ -862,6 +862,9 @@
 	"app_banner_action": "Hanki sovellus",
 	"search_nothing": "Ei mitään sillä nimellä millään asemallasi.",
 	"mobile_connect_open": "Avaa tämän laitteen sovelluksessa",
+	"mobile_connect_get": "Eikö sinulla ole vielä sovellusta?",
+	"apps_google_play": "Saatavana Google Playssa",
+	"apps_github": "Lataa GitHubista",
 	"player_tuning": "Nopeus ja sävelkorkeus",
 	"back": "Takaisin",
 	"upload_action": [

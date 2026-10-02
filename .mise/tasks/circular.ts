@@ -1,3 +1,5 @@
+#!/usr/bin/env bun
+//MISE description="Report circular imports in src/"
 import madge from "madge";
 
 const packages = ["./src"];

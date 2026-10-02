@@ -1,0 +1,32 @@
+Penombre è un cloud che ospiti tu stesso: i tuoi file, foto, musica, video e documenti sul tuo server, senza nessuno che ti affitti il disco. Questa è la sua app.
+
+Per usarla ti serve un server Penombre. Penombre è gratuito e open source: un solo container su un server di casa, un NAS o un VPS. Su orochibraru.com/penombre trovi come installarlo.
+
+ACCEDI IN POCHI SECONDI
+• Scansiona il codice QR che il tuo server mostra in Scarica le app, e sei dentro. Nessun indirizzo da digitare.
+• Oppure digita l'indirizzo del tuo server e accedi dal browser, con una password, una passkey o il tuo provider abituale.
+• Oppure accedi con un codice ricevuto via email. L'autenticazione a due fattori è supportata.
+
+TUTTO IL TUO DRIVE
+• Il mio Drive, i drive condivisi e i volumi montati, fluidi anche in cartelle con migliaia di file.
+• Recenti, Preferiti, Cestino e le categorie (Musica, Immagini, Documenti…) a portata di tocco.
+• Cerca ovunque tu abbia accesso, con i risultati già mentre digiti.
+• Carica file, scatta una foto o scansiona un documento direttamente in PDF.
+• Rinomina, sposta, copia, duplica, aggiungi ai preferiti, scarica, sposta nel cestino e ripristina.
+• Riproduci, scarica o ripristina le versioni precedenti di un file.
+
+FOTO, MUSICA E VIDEO
+• Un visualizzatore di foto con scorrimento tra le immagini e zoom con due dita: prima un'anteprima, l'originale su richiesta.
+• Un lettore musicale con una coda che continua a suonare mentre navighi.
+• Video nell'anteprima o a schermo intero. Un formato che il telefono non riesce a riprodurre, o un file troppo pesante per la tua connessione, viene convertito dal tuo server in 720p o 480p.
+
+CONDIVISIONE E NOTIFICHE
+• I tuoi link pubblici, ciò che è condiviso con te e i tuoi drive condivisi, ognuno con il proprio cestino.
+• Notifiche per commenti, condivisioni e richieste di firma, che l'app controlla direttamente con il tuo server invece di riceverle tramite terzi.
+
+IL TUO ACCOUNT, LE TUE IMPOSTAZIONI
+• Profilo, password, autenticazione a due fattori, sessioni, chiavi API e attività, come sul web.
+• Colore d'accento, carattere e angoli seguono il tuo account, sul web come sul telefono.
+• Tredici lingue.
+
+Niente pubblicità, niente statistiche d'uso, nessun account presso di noi: l'app lavora con il tuo server, e i tuoi file restano dove li hai messi.

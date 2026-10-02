@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+#MISE description="Maestro flows on the emulator and the simulator, or the platforms named, against a running server (see mobile/e2e/run.sh)"
+exec mobile/e2e/run.sh "$@"

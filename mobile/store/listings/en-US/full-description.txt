@@ -1,0 +1,32 @@
+Penombre is a drive you host yourself: your files, photos, music, videos and documents on your own server, with nobody renting you the disk. This is its app.
+
+You need a Penombre server to use it. Penombre is free and open source: one container on a home server, a NAS or a VPS. orochibraru.com/penombre says how to set one up.
+
+SIGN IN IN SECONDS
+• Scan the QR code your server shows under Get the apps, and you are in. No address to type.
+• Or type your server's address and sign in through your browser, with a password, a passkey or your usual provider.
+• Or sign in with a code sent by email. Two-factor authentication is supported.
+
+YOUR WHOLE DRIVE
+• Your drive, shared drives and mounted volumes, smooth even in folders of thousands of files.
+• Recent, Starred, Trash and categories (Music, Images, Documents…) one tap away.
+• Search everywhere you have access, with results as you type.
+• Upload files, take a photo, or scan a document straight to PDF.
+• Rename, move, copy, duplicate, star, download, trash and restore.
+• Play, download or restore earlier versions of a file.
+
+PICTURES, MUSIC AND VIDEO
+• A photo viewer with swipe and pinch to zoom: a preview first, the original on request.
+• A music player with a queue that keeps playing while you browse.
+• Videos in place or full screen. A format your phone cannot play, or a file too heavy for your connection, is converted by your server to 720p or 480p.
+
+SHARING AND NOTIFICATIONS
+• Your public links, what is shared with you, and your shared drives, each with its own trash.
+• Notifications for comments, shares and signature requests, checked by the app with your server directly rather than pushed through a third party.
+
+YOUR ACCOUNT, YOUR SETTINGS
+• Profile, password, two-factor authentication, sessions, API keys and activity, as on the web.
+• Accent colour, font and corners follow your account across the web and the phone.
+• Thirteen languages.
+
+No ads, no analytics, no account with us: the app works with your server, and your files stay where you put them.

@@ -1,0 +1,32 @@
+Penombre ist ein Cloud-Speicher, den Sie selbst betreiben: Ihre Dateien, Fotos, Musik, Videos und Dokumente auf Ihrem eigenen Server, ohne dass Ihnen jemand die Festplatte vermietet. Das hier ist die App dazu.
+
+Zur Nutzung brauchen Sie einen Penombre-Server. Penombre ist kostenlos und Open Source: ein einziger Container auf einem Heimserver, einem NAS oder einem VPS. Wie Sie ihn einrichten, steht auf orochibraru.com/penombre.
+
+IN SEKUNDEN ANGEMELDET
+• Scannen Sie den QR-Code, den Ihr Server unter „Apps herunterladen“ anzeigt, und schon sind Sie drin. Keine Adresse eintippen.
+• Oder geben Sie die Adresse Ihres Servers ein und melden Sie sich im Browser an, mit Passwort, Passkey oder Ihrem gewohnten Anbieter.
+• Oder melden Sie sich mit einem Code per E-Mail an. Zwei-Faktor-Authentifizierung wird unterstützt.
+
+IHR GANZER SPEICHER
+• Mein Speicher, gemeinsame Laufwerke und eingebundene Volumes, flüssig selbst in Ordnern mit Tausenden von Dateien.
+• Zuletzt, Favoriten, Papierkorb und Kategorien (Musik, Bilder, Dokumente…) nur einen Tipp entfernt.
+• Überall suchen, wo Sie Zugriff haben, mit Ergebnissen schon beim Tippen.
+• Dateien hochladen, ein Foto aufnehmen oder ein Dokument direkt als PDF scannen.
+• Umbenennen, verschieben, kopieren, duplizieren, zu Favoriten hinzufügen, herunterladen, in den Papierkorb legen und wiederherstellen.
+• Frühere Versionen einer Datei abspielen, herunterladen oder wiederherstellen.
+
+FOTOS, MUSIK UND VIDEOS
+• Ein Fotobetrachter mit Wischgesten und Zoom per Fingerspreizen: zuerst eine Vorschau, auf Wunsch das Original.
+• Ein Musikplayer mit Warteschlange, der weiterspielt, während Sie durch Ihre Dateien stöbern.
+• Videos direkt in der Vorschau oder im Vollbild. Ein Format, das Ihr Telefon nicht abspielen kann, oder eine Datei, die für Ihre Verbindung zu groß ist, wandelt Ihr Server in 720p oder 480p um.
+
+TEILEN UND BENACHRICHTIGUNGEN
+• Ihre öffentlichen Links, was mit Ihnen geteilt wurde, und Ihre gemeinsamen Laufwerke, jeweils mit eigenem Papierkorb.
+• Benachrichtigungen zu Kommentaren, Freigaben und Unterschriftsanfragen, die die App direkt bei Ihrem Server abfragt, statt sie über einen Drittanbieter zustellen zu lassen.
+
+IHR KONTO, IHRE EINSTELLUNGEN
+• Profil, Passwort, Zwei-Faktor-Authentifizierung, Sitzungen, API-Schlüssel und Aktivität, wie im Web.
+• Akzentfarbe, Schriftart und Ecken folgen Ihrem Konto, im Web wie auf dem Telefon.
+• Dreizehn Sprachen.
+
+Keine Werbung, keine Nutzungsanalyse, kein Konto bei uns: Die App arbeitet mit Ihrem Server, und Ihre Dateien bleiben dort, wo Sie sie abgelegt haben.

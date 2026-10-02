@@ -934,6 +934,9 @@
 	"app_banner_action": "App downloaden",
 	"search_nothing": "Niets met die naam, op geen van je schijven.",
 	"mobile_connect_open": "Openen in de app op dit apparaat",
+	"mobile_connect_get": "Heb je de app nog niet?",
+	"apps_google_play": "Ontdek het op Google Play",
+	"apps_github": "Downloaden van GitHub",
 	"player_tuning": "Snelheid en toonhoogte",
 	"back": "Terug",
 	"upload_action": [

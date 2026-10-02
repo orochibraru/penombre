@@ -1,0 +1,32 @@
+Penombre es una nube que alojas tú mismo: tus archivos, fotos, música, vídeos y documentos en tu propio servidor, sin que nadie te alquile el disco. Esta es su aplicación.
+
+Necesitas un servidor Penombre para usarla. Penombre es gratuito y de código abierto: un solo contenedor en un servidor doméstico, un NAS o un VPS. En orochibraru.com/penombre se explica cómo instalarlo.
+
+INICIA SESIÓN EN SEGUNDOS
+• Escanea el código QR que tu servidor muestra en Obtener las aplicaciones, y listo. Sin escribir ninguna dirección.
+• O escribe la dirección de tu servidor e inicia sesión desde el navegador, con una contraseña, una clave de acceso o tu proveedor habitual.
+• O inicia sesión con un código enviado por correo. Compatible con la autenticación en dos pasos.
+
+TODA TU UNIDAD
+• Mi unidad, las unidades compartidas y los volúmenes montados, con fluidez incluso en carpetas con miles de archivos.
+• Reciente, Favoritos, Papelera y las categorías (Música, Imágenes, Documentos…) a un toque.
+• Busca en todo lo que tienes a tu alcance, con resultados mientras escribes.
+• Sube archivos, haz una foto o escanea un documento directamente a PDF.
+• Renombra, mueve, copia, duplica, añade a favoritos, descarga, envía a la papelera y restaura.
+• Reproduce, descarga o restaura versiones anteriores de un archivo.
+
+FOTOS, MÚSICA Y VÍDEOS
+• Un visor de fotos para deslizar entre imágenes y pellizcar para ampliar: primero una vista previa, el original cuando lo pidas.
+• Un reproductor de música con cola que sigue sonando mientras navegas.
+• Vídeos en la vista previa o a pantalla completa. Si tu teléfono no puede reproducir un formato, o un archivo pesa demasiado para tu conexión, tu servidor lo convierte a 720p o 480p.
+
+COMPARTIR Y NOTIFICACIONES
+• Tus enlaces públicos, lo que se ha compartido contigo y tus unidades compartidas, cada una con su propia papelera.
+• Notificaciones de comentarios, archivos compartidos y solicitudes de firma, que la aplicación consulta directamente a tu servidor en lugar de recibirlas a través de un tercero.
+
+TU CUENTA, TU CONFIGURACIÓN
+• Perfil, contraseña, autenticación en dos pasos, sesiones, claves API y actividad, igual que en la web.
+• El color de acento, la fuente y las esquinas siguen a tu cuenta, en la web y en el teléfono.
+• Trece idiomas.
+
+Sin anuncios, sin analíticas, sin cuenta con nosotros: la aplicación trabaja con tu servidor y tus archivos se quedan donde los pusiste.

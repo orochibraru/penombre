@@ -14,7 +14,6 @@ penombre/
 ├── packages/
 │   ├── web/       # SvelteKit — frontend + REST API + database
 │   └── docs/      # SvelteKit — documentation
-├── scripts/       # Shared tooling (API codegen, circular checks)
 ├── Dockerfile     # Multi-stage production build
 └── compose.yaml   # Docker Compose (single app container)
 ```

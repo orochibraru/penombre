@@ -1,0 +1,32 @@
+Penombre on itse ylläpitämäsi asema: tiedostosi, valokuvasi, musiikkisi, videosi ja asiakirjasi omalla palvelimellasi, ilman että kukaan vuokraa sinulle levytilaa. Tämä on sen sovellus.
+
+Sovelluksen käyttöön tarvitset Penombre-palvelimen. Penombre on ilmainen ja avointa lähdekoodia: yksi kontti kotipalvelimella, NAS-laitteella tai VPS:llä. Osoitteessa orochibraru.com/penombre kerrotaan, miten sellainen otetaan käyttöön.
+
+KIRJAUDU SISÄÄN SEKUNNEISSA
+• Skannaa QR-koodi, jonka palvelimesi näyttää kohdassa "Hanki sovellukset", ja olet sisällä. Osoitetta ei tarvitse kirjoittaa.
+• Tai kirjoita palvelimesi osoite ja kirjaudu selaimessa salasanalla, kulkuavaimella tai tavallisella kirjautumispalvelullasi.
+• Tai kirjaudu sähköpostiin lähetetyllä koodilla. Kaksivaiheinen tunnistautuminen on tuettu.
+
+KOKO ASEMASI
+• Oma asema, jaetut asemat ja liitetyt volyymit, sujuvasti myös kansioissa, joissa on tuhansia tiedostoja.
+• Viimeisimmät, Tähdelliset, Roskakori ja kategoriat (Musiikki, Kuvat, Asiakirjat…) yhden napautuksen päässä.
+• Hae kaikkialta, mihin sinulla on pääsy, ja näe tulokset jo kirjoittaessasi.
+• Lähetä tiedostoja, ota valokuva tai skannaa asiakirja suoraan PDF:ksi.
+• Nimeä uudelleen, siirrä, kopioi, monista, lisää tähdellisiin, lataa, siirrä roskakoriin ja palauta.
+• Toista, lataa tai palauta tiedoston aiempia versioita.
+
+KUVAT, MUSIIKKI JA VIDEO
+• Kuvakatselin, jossa pyyhkäiset ja zoomaat nipistämällä: ensin esikatselu, alkuperäinen pyynnöstä.
+• Musiikkisoitin, jonka jono soi edelleen, kun selaat.
+• Videot paikallaan tai koko näytöllä. Jos puhelimesi ei pysty toistamaan muotoa tai tiedosto on liian raskas yhteydellesi, palvelimesi muuntaa sen 720p- tai 480p-laatuun.
+
+JAKAMINEN JA ILMOITUKSET
+• Julkiset linkkisi, kanssasi jaetut kohteet ja jaetut asemasi, jokaisella oma roskakorinsa.
+• Ilmoitukset kommenteista, jaoista ja allekirjoituspyynnöistä: sovellus tarkistaa ne suoraan palvelimeltasi, eikä niitä välitetä kolmannen osapuolen kautta.
+
+TILISI, ASETUKSESI
+• Profiili, salasana, kaksivaiheinen tunnistautuminen, istunnot, API-avaimet ja toiminta, kuten verkossa.
+• Korostusväri, fontti ja kulmat seuraavat tiliäsi verkossa ja puhelimessa.
+• Kolmetoista kieltä.
+
+Ei mainoksia, ei analytiikkaa, ei tiliä meillä: sovellus toimii palvelimesi kanssa, ja tiedostosi pysyvät siellä, minne ne laitoit.

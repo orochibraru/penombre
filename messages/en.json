@@ -1030,6 +1030,9 @@
 	"app_banner_action": "Get the app",
 	"search_nothing": "Nothing by that name, in any of your drives.",
 	"mobile_connect_open": "Open in the app on this device",
+	"mobile_connect_get": "Don't have the app yet?",
+	"apps_google_play": "Get it on Google Play",
+	"apps_github": "Get it from GitHub",
 	"player_tuning": "Speed and pitch",
 	"back": "Back",
 	"upload_action": [
