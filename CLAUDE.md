@@ -1865,15 +1865,17 @@ refuses an ad-hoc signature (`UNErrorDomain` 1) and accepts this one. It does
 **not** stop the keychain asking for the API key after each update: whatever the
 signature, code without an Apple Team ID lands in the item's partition list as
 `cdhash:…`, a new one per build. Only a Developer ID would end that. Without the
-secret the binary keeps the linker's ad-hoc signature. `apps/desktop/Cargo.toml`
-stays at `0.1.0`: the build stamps the release version into it **and** into
-`Cargo.lock`, whose own `penombre-sync` entry otherwise makes `--locked` refuse.
-Stable binaries are rebuilt from the release commit, not promoted from the
-canary, because the version is baked in. Linux builds on `ubuntu-22.04` for an
-older glibc floor and needs no `-dev` package (X11, Wayland and GL are dlopened;
-tray, keyring and file dialog speak D-Bus in Rust) — do not add one without a
-link error that asks for it. The toolchain is `rust-version`, read from
-`Cargo.toml`.
+secret the binary keeps the linker's ad-hoc signature. On the runner `codesign`
+finds a self-signed identity by its SHA-1 only, not its name ("no identity
+found"), and only once its keychain is in the search list; the step does both.
+`apps/desktop/Cargo.toml` stays at `0.1.0`: the build stamps the release version
+into it **and** into `Cargo.lock`, whose own `penombre-sync` entry otherwise
+makes `--locked` refuse. Stable binaries are rebuilt from the release commit,
+not promoted from the canary, because the version is baked in. Linux builds on
+`ubuntu-22.04` for an older glibc floor and needs no `-dev` package (X11,
+Wayland and GL are dlopened; tray, keyring and file dialog speak D-Bus in Rust)
+— do not add one without a link error that asks for it. The toolchain is
+`rust-version`, read from `Cargo.toml`.
 
 `homebrew` renders `apps/desktop/packaging/homebrew/penombre-sync.rb.tmpl` from
 the release's checksums, as `penombre-sync` for a stable release and
