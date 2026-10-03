@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.63](https://github.com/orochibraru/penombre/compare/v1.8.62...v1.8.63) (2026-10-02)
+
+### Features
+
+* Google Play publishing (keyless upload, store listing in 13 languages, icon and screenshots), app id com.orochibraru.penombre, iOS privacy manifest, Play and GitHub links in the connect dialog, desktop menu-bar-only mode with its own notifications and permission status, signed macOS binary, bigger settings window; chore: scripts as mise file tasks, resvg through mise ([acf8dd3](https://github.com/orochibraru/penombre/commit/acf8dd3a0425a0ea524ed3f8615b5beaadda4bc0))
+
+### Bug Fixes
+
+* **ci:** sign the macOS binary by certificate hash, with its keychain in the search list ([50d6eda](https://github.com/orochibraru/penombre/commit/50d6eda1b4398ed177dba069ba38ea9cb26d7957))
+
+### Code Refactoring
+
+* apps under apps/ (mobile, desktop, worker as its own Go module), Playwright into tests/e2e, Docker files into tools/docker, Homebrew formula with the desktop app, Renovate config into .github; chore: mise tasks per app with test and build across all apps, hooks call the task files, go vet as its own hook ([389d82d](https://github.com/orochibraru/penombre/commit/389d82dad64d645f7440dee2ad774f43fcbaeaae))
+
 ## [1.8.62](https://github.com/orochibraru/penombre/compare/v1.8.61...v1.8.62) (2026-10-01)
 
 ### Bug Fixes
