@@ -23,7 +23,7 @@
 	import { locationFrom } from "#lib/storage-location.js";
 	import { title } from "#lib/store/title.js";
 	import { browser } from "$app/env";
-	import { beforeNavigate, invalidateAll } from "$app/navigation";
+	import { beforeNavigate, refreshAll } from "$app/navigation";
 	import { page } from "$app/state";
 
 	const { data } = $props();
@@ -157,7 +157,7 @@
 
 	async function reread() {
 		pending = null;
-		await invalidateAll();
+		await refreshAll();
 		generation++;
 	}
 

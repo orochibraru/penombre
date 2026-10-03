@@ -1,4 +1,5 @@
 import { createPairCode, pairingUrl } from "#lib/server/auth/mobile.js";
+import { getConfig } from "#lib/server/config.js";
 import { Http } from "#lib/server/http.js";
 import { mobilePair } from "#lib/server/openapi/v1/mobile.js";
 import { isRateLimited } from "#lib/server/rate-limit.js";
@@ -18,7 +19,7 @@ export const POST = mobilePair.handler(async ({ user, event }) => {
 	}
 	const { code, expiresAt } = await createPairCode(user.id);
 	return Http.Ok({
-		url: pairingUrl(event.url.origin, code),
+		url: pairingUrl(getConfig().origin, code),
 		expiresAt: expiresAt.toISOString(),
 	});
 });

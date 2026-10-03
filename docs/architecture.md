@@ -28,7 +28,7 @@ both the frontend UI and the backend REST API.
 | Layer     | Technology                                              |
 | --------- | ------------------------------------------------------- |
 | Framework | SvelteKit + Svelte 5                                    |
-| Runtime   | Bun (via `svelte-adapter-bun`)                          |
+| Runtime   | Bun (via `@sveltejs/adapter-bun`)                       |
 | Styling   | TailwindCSS 4, shadcn-svelte (bits-ui)                  |
 | ORM       | Drizzle ORM on SQLite (PostgreSQL optional)             |
 | Auth      | Better Auth (email/password, OAuth, passkeys, API keys) |

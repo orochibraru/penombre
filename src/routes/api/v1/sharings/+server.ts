@@ -1,3 +1,4 @@
+import { getConfig } from "#lib/server/config.js";
 import { Http } from "#lib/server/http.js";
 import {
 	createSharing,
@@ -23,7 +24,7 @@ export const GET = listResourceSharings.handler(async ({ query, user }) => {
 	}
 });
 
-export const POST = createSharing.handler(async ({ body, user, event }) => {
+export const POST = createSharing.handler(async ({ body, user }) => {
 	try {
 		const shared = await sharings.share({
 			ownerId: user.id,
@@ -39,7 +40,7 @@ export const POST = createSharing.handler(async ({ body, user, event }) => {
 						resourceName,
 						link: "/shared-with-me",
 					},
-					event.url.origin,
+					getConfig().origin,
 				),
 		});
 		if (!shared) {

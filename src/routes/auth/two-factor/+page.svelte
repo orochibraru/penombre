@@ -38,10 +38,13 @@
 			errorMessage = error.message || m.two_factor_invalid();
 			return;
 		}
-		await goto(nextPath(page.url, resolve("/(app)")), {
-			replace: true,
-			refreshAll: true,
-		});
+		const target = nextPath(page.url, resolve("/(app)"));
+		try {
+			await goto(target, { replace: true, refreshAll: true });
+		} catch {
+			// `goto` refuses a non-page `next` (`/go/folder/<id>`).
+			window.location.replace(target);
+		}
 	}
 </script>
 

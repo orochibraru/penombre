@@ -6,7 +6,7 @@
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { Label } from "#lib/components/ui/label/index.js";
 	import * as m from "#lib/paraglide/messages.js";
-	import { invalidateAll } from "$app/navigation";
+	import { refreshAll } from "$app/navigation";
 
 	/**
 	 * Changing or verifying the account's address with emailed codes.
@@ -88,7 +88,7 @@
 			if (done === null) {
 				toast.success(m.email_done_verified());
 				open = false;
-				await invalidateAll();
+				await refreshAll();
 			}
 			return;
 		}
@@ -125,7 +125,7 @@
 		if (done === null) {
 			toast.success(m.email_done_changed({ email: newEmail.trim() }));
 			open = false;
-			await invalidateAll();
+			await refreshAll();
 		}
 	}
 </script>
