@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.64](https://github.com/orochibraru/penombre/compare/v1.8.63...v1.8.64) (2026-10-03)
+
+### Features
+
+* kit three stable (#127) ([6bbe5a7](https://github.com/orochibraru/penombre/commit/6bbe5a72947f39a491932cbb3cd67bfff51e9550))
+
 ## [1.8.63](https://github.com/orochibraru/penombre/compare/v1.8.62...v1.8.63) (2026-10-02)
 
 ### Features
