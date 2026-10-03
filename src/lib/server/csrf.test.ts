@@ -37,6 +37,22 @@ describe("csrfHandler", () => {
 		expect(await status("DELETE", { authorization: "Bearer k" })).toBe(200);
 	});
 
+	test("allows the configured ORIGIN when the request was read as https", async () => {
+		const request = new Request("https://localhost:5173/auth/setup", {
+			method: "POST",
+			headers: {
+				"content-type": "application/x-www-form-urlencoded",
+				origin: "http://localhost:5173",
+			},
+		});
+		const event = { request, url: new URL(request.url) } as RequestEvent;
+		const res = await csrfHandler({
+			event,
+			resolve: () => new Response(null, { status: 200 }),
+		});
+		expect(res.status).toBe(200);
+	});
+
 	test("leaves /dav/ to its own auth", async () => {
 		const request = new Request(`${APP}/dav/me/a.txt`, {
 			method: "PUT",

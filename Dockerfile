@@ -61,7 +61,9 @@ RUN apk add --no-cache ffmpeg poppler-utils \
 
 COPY --from=go-builder /out/penombre-worker /usr/local/bin/penombre-worker
 
-# Copy with --chown to avoid a separate chown layer that duplicates all files
+# Copy with --chown to avoid a separate chown layer that duplicates all files.
+# The server is one binary, but pdfmake and pdfkit still read their fonts from
+# node_modules at runtime.
 COPY --from=app-builder --chown=bun:bun /prod/node_modules ./node_modules
 COPY --from=app-builder --chown=bun:bun /app/build ./build
 # hooks.server.ts resolves migrations from `process.cwd()/drizzle/<dialect>`.
@@ -77,10 +79,9 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-# Compiled by the svelte-smol adapter; probes GET /_health over 127.0.0.1.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD ["/app/build/healthcheck"]
+    CMD ["wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
 
 USER bun
 
-CMD ["bun", "run", "/app/build/index.js"]
+CMD ["/app/build/server"]

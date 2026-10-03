@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
-import adapter from "@orochibraru/svelte-smol";
+import adapter from "@sveltejs/adapter-bun";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
@@ -8,23 +8,22 @@ import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 import { defineConfig, loadEnv, type UserConfig } from "vite";
 
 // SvelteKit's own unsupported-plugin warning (vite-plugin-pwa's
-// transformIndexHtml hook, which svelte-smol's adapter output doesn't call)
-// goes straight to console.log from its internal logger, bypassing Vite's
+// transformIndexHtml hook, which adapter-bun's output doesn't call)
+// goes straight to console.warn from its internal logger, bypassing Vite's
 // `customLogger`; so it has to be filtered here instead. The plugin itself
 // still works (see the webmanifest link tag in +layout.svelte).
-// ponytail: patches console.log for the process; fine for a short-lived CLI
+// ponytail: patches console.warn for the process; fine for a short-lived CLI
 // invocation (dev/build/sync), revisit if SvelteKit ever exposes a real hook.
-const unsupportedPluginWarning =
-	"transformIndexHtml` hook which is not supported";
-const rawLog = console.log;
-console.log = (...args) => {
+const unsupportedPluginWarning = "transform_index_html_unsupported";
+const rawWarn = console.warn;
+console.warn = (...args) => {
 	if (
 		typeof args[0] === "string" &&
 		args[0].includes(unsupportedPluginWarning)
 	) {
 		return;
 	}
-	rawLog(...args);
+	rawWarn(...args);
 };
 
 // `config.ts` reads `process.env`, and `bun run dev` hands vite neither
@@ -50,12 +49,9 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes("node_modules") ? undefined : true,
 			},
-			// compile: false → plain build/index.js bundle instead of a single
-			// binary, because sharp ships a native (.node) addon that
-			// `bun build --compile` can't embed.
 			adapter: adapter({
 				buildOptions: {
-					compile: false,
+					compile: true,
 				},
 			}),
 			// Checked by `csrfHandler` in hooks.server.ts instead.

@@ -7,7 +7,6 @@
       "dependencies": {
         "@better-auth/api-key": "1.7.5",
         "@better-auth/passkey": "1.7.5",
-        "@fontsource-variable/jetbrains-mono": "5.3.0",
         "@kitql/helpers": "0.8.15",
         "@lucide/svelte": "1.47.0",
         "@soundtouchjs/audio-worklet": "2.1.1",
@@ -26,7 +25,6 @@
         "reflect-metadata": "0.2.2",
         "svelte-sonner": "1.2.1",
         "swagger-ui-dist": "5.33.0",
-        "tw-animate-css": "1.4.0",
         "uqr": "0.1.3",
         "uuid": "14.0.2",
         "vaul-svelte": "1.0.0-next.7",
@@ -34,14 +32,15 @@
       },
       "devDependencies": {
         "@biomejs/biome": "2.5.13",
+        "@fontsource-variable/jetbrains-mono": "5.3.0",
         "@inlang/cli": "3.3.7",
         "@inlang/paraglide-js": "2.25.4",
         "@j178/prek": "0.5.3",
-        "@orochibraru/svelte-smol": "1.8.3",
         "@playwright/test": "1.63.0",
         "@shikijs/langs": "4.4.3",
         "@shikijs/themes": "4.4.3",
-        "@sveltejs/kit": "3.0.0-next.27",
+        "@sveltejs/adapter-bun": "1.0.0",
+        "@sveltejs/kit": "3.0.0",
         "@sveltejs/vite-plugin-svelte": "7.3.0",
         "@tailwindcss/language-server": "0.16.0",
         "@tailwindcss/typography": "0.5.20",
@@ -71,6 +70,7 @@
         "tailwind-variants": "3.3.1",
         "tailwindcss": "4.3.3",
         "tailwint": "1.1.16",
+        "tw-animate-css": "1.4.0",
         "typescript": "6.0.3",
         "vite": "8.3.0",
       },
@@ -494,8 +494,6 @@
 
     "@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.43.0", "", {}, "sha512-eSYWTm620tTk45EKSedaUL8MFYI8hW164hIXsgIHyxu3VobUB3fFCu5t0hQby6OoWRPsG1KkKUG2M5UadiLiVg=="],
 
-    "@orochibraru/svelte-smol": ["@orochibraru/svelte-smol@1.8.3", "", { "peerDependencies": { "@sveltejs/kit": "^2.0.0 || ^3.0.0-next.0" } }, "sha512-Yr//x++oawFQ8vBHsZ8eRmI1CDYboMVMmNNHhRcuLMOaF+QU1rWOOr+AKpBU7Ltl1aDRaeD2YoIrkKLDTqC8fw=="],
-
     "@oxc-minify/binding-android-arm-eabi": ["@oxc-minify/binding-android-arm-eabi@0.136.0", "", { "os": "android", "cpu": "arm" }, "sha512-gk1jzky1vLeOcK7w9Ib2RT/UooZ7O21s8YSeXCsy4tzsmguKb3Cbsv/Ra2fKhMp4mKeKCzvC1Xa41OfSBWfWdQ=="],
 
     "@oxc-minify/binding-android-arm64": ["@oxc-minify/binding-android-arm64@0.136.0", "", { "os": "android", "cpu": "arm64" }, "sha512-5GIYanqud/ohXEcg2dsdn0+eSKXqclw5qlRUkvSM1sKEa4ZQ7hqOk8XPJBNPh3LXXw+Qw85B6jkmOFLKsCHp5w=="],
@@ -794,7 +792,9 @@
 
     "@sveltejs/acorn-typescript": ["@sveltejs/acorn-typescript@1.0.13", "", { "peerDependencies": { "acorn": "^8.9.0" } }, "sha512-wgKggnhZVL9Bfx1OaKKTrYY9BFRk6C8UAkQNUcIv1+llzYrIqy+RZm5HPKzn0NpEBvTVhTqB4kQyllZywsRBRQ=="],
 
-    "@sveltejs/kit": ["@sveltejs/kit@3.0.0-next.27", "", { "dependencies": { "@rolldown/pluginutils": "^1.0.1", "@standard-schema/spec": "^1.1.0", "cookie": "^2.0.1", "devalue": "^5.9.0", "esm-env": "^1.2.2", "magic-string": "^1.1.0", "mrmime": "^2.0.1", "sirv": "^3.0.2" }, "peerDependencies": { "@opentelemetry/api": "^1.0.0", "@sveltejs/vite-plugin-svelte": "^7.0.0", "svelte": "^5.56.4", "typescript": "^6.0.0", "vite": "^8.0.12" }, "optionalPeers": ["@opentelemetry/api", "typescript"], "bin": { "svelte-kit": "svelte-kit.js" } }, "sha512-m2R6GvcMhiAbYVKhzRf5mzLSvcXEuy/H0Va72XvxfEl1ZglrSC/321GKYa6idDHPojuRzkyh9EB0jBZmAwf6+Q=="],
+    "@sveltejs/adapter-bun": ["@sveltejs/adapter-bun@1.0.0", "", { "dependencies": { "bun-types": "^1.3.14" }, "peerDependencies": { "@sveltejs/kit": "^3.0.0-next.0" } }, "sha512-CUfFNxrWrKk/0VqSM1DrXCAwpY3tWocaFwBohuBeyxKx07859shLqPdT9oo00lDti9PvVwhQMDS6bKQylTyv0g=="],
+
+    "@sveltejs/kit": ["@sveltejs/kit@3.0.0", "", { "dependencies": { "@rolldown/pluginutils": "^1.0.1", "@standard-schema/spec": "^1.1.0", "cookie": "^2.0.1", "devalue": "^5.9.4", "esm-env": "^1.2.2", "magic-string": "^1.2.3", "mrmime": "^2.0.1", "sirv": "^3.0.2" }, "peerDependencies": { "@opentelemetry/api": "^1.0.0", "@sveltejs/vite-plugin-svelte": "^7.0.0", "svelte": "^5.57.1", "typescript": "^6.0.0", "vite": "^8.0.12" }, "optionalPeers": ["@opentelemetry/api", "typescript"], "bin": { "svelte-kit": "svelte-kit.js" } }, "sha512-dmP6gjz41DAT7erONGW8FdTWjmsmOJ/SaWVEsuEc1MXDcpH6YV+Pt98biZFPuinH4LldJPmScxDqiHwCDLRCrg=="],
 
     "@sveltejs/load-config": ["@sveltejs/load-config@0.2.3", "", {}, "sha512-VT3qmUb8pRV2QrZjd8iAmtg8lf4W0TIjZbvXtz5MKei/q96teWZgGJyyidJzOjzZzvdq616eSRVeMYIQChUTAQ=="],
 

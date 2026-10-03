@@ -110,14 +110,12 @@
 	async function enterApp(address: string | undefined) {
 		remember(address);
 		progress = m.signed_in_success();
+		const target = nextPath(page.url, resolve("/(app)"));
 		try {
-			await goto(nextPath(page.url, resolve("/(app)")), {
-				replace: true,
-				refreshAll: true,
-			});
+			await goto(target, { replace: true, refreshAll: true });
 		} catch {
-			progress = null;
-			toast.error(defaultErrorMessage);
+			// `goto` refuses a non-page `next` (`/go/folder/<id>`).
+			window.location.replace(target);
 		}
 	}
 

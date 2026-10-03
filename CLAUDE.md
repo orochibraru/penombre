@@ -549,7 +549,7 @@ like `sweepStaleZips`.
 
 `#lib/server/rate-limit.ts` keys on `getClientAddress()`, which behind a reverse
 proxy is the proxy's IP unless `ADDRESS_HEADER` (and `XFF_DEPTH`) are set, which
-svelte-smol reads like adapter-node. Without them the sign-in `lookup` limit is
+adapter-bun reads like adapter-node. Without them the sign-in `lookup` limit is
 one bucket for the whole instance and 30 requests lock everyone out. See
 `docs/reverse-proxy.md`. A limiter keyed on caller-chosen values (share tokens)
 counts only once the value is known to exist, or each fake one is a cache entry
@@ -1748,9 +1748,9 @@ ever covers `src/**/*.ts`.
 The "plugins ... use the `transformIndexHtml` hook which is not supported"
 warning (vite-plugin-pwa, printed by every `svelte-kit sync`) comes from
 SvelteKit's own internal `logger()` util (`@sveltejs/kit/src/core/utils.js`),
-which calls `console.log` directly; setting Vite's `customLogger` in
+which calls `console.warn` directly; setting Vite's `customLogger` in
 `vite.config.ts` does nothing for it. Silencing just that one message means
-patching `console.log` in `vite.config.ts` itself (scoped to the exact
+patching `console.warn` in `vite.config.ts` itself (scoped to the exact
 substring); the plugin is still live (see the webmanifest link tag in
 `+layout.svelte`), only the noise is gone.
 
@@ -3129,6 +3129,31 @@ form's own `form?.error` handling is untouched.
   minus requests carrying an API key. Playwright's `request` sends no `Origin`
   either — pass `headers: sameOrigin()` (`tests/e2e/helpers.ts`) on a bodiless
   call.
+
+### The server is `@sveltejs/adapter-bun`, compiled
+
+`buildOptions.compile` makes `build/server` one executable, which the image
+runs. Three things hold it together:
+
+- **`event.url` is not the public origin; `ORIGIN` is.** Kit 3 dropped the
+  adapter's runtime `ORIGIN` by design: `paths.origin` is fixed at build time,
+  and otherwise the origin comes from the request with the protocol defaulting
+  to `https` unless `PROTOCOL_HEADER` names a proxy header. On a plain-HTTP
+  instance `event.url` says `https://`, which made `csrf.ts` refuse every form
+  POST, setup included. `ORIGIN` stays as the app's own setting
+  (`getConfig().origin`): `csrf.ts` accepts it beside `event.url.origin`, and
+  anything that leaves the request (emails, notifications, the pairing link)
+  builds its URL from it, never from `event.url.origin`.
+- **Every production dependency is SSR-external** to the Vite build, which
+  resolves it as JavaScript. A CSS-only package (`tw-animate-css`, fontsource)
+  in `dependencies` fails the build with `"." is not exported`; they are
+  `devDependencies`.
+- **The image still ships production `node_modules`**: pdfmake resolves its
+  fonts through `createRequire`, and pdfkit reads its metrics from a `__dirname`
+  frozen to the build path, neither of which `--compile` embeds.
+
+There is no `/_health` any more (svelte-smol served it): the image's
+`HEALTHCHECK` is busybox `wget` on `/api/health`.
 
 ### A signing link is shown once
 

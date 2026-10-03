@@ -1,3 +1,4 @@
+import { getConfig } from "#lib/server/config.js";
 import { Http } from "#lib/server/http.js";
 import { createNote, listNotes } from "#lib/server/openapi/v1/notes.js";
 import { NotesApi } from "#lib/server/services/notes-api.js";
@@ -17,14 +18,14 @@ export const GET = listNotes.handler(async ({ params, user, service }) => {
 });
 
 export const POST = createNote.handler(
-	async ({ params, body, user, event, service }) => {
+	async ({ params, body, user, service }) => {
 		try {
 			return await notes.create(
 				{
 					fileId: params.fileId,
 					user,
 					reach: () => Promise.resolve(service),
-					origin: event.url.origin,
+					origin: getConfig().origin,
 				},
 				body,
 			);
