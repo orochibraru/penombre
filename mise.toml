@@ -6,7 +6,7 @@ rust = { version = "1.98", components = "rustfmt,clippy" }
 rclone = "1.75.1"
 # The mobile app: Gradle runs on this JDK (AGP 9 needs 17+; Android Studio
 # bundles 21), and xcodegen writes the iOS host project from its project.yml.
-java = "temurin-21.0.12+8.0.LTS"
+java = "temurin-21.0.12+101.0.LTS"
 xcodegen = "2.46.0"
 # Only sdkmanager/avdmanager: `mobile:setup` installs the SDK packages.
 android-sdk = "23.0"
