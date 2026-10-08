@@ -2,6 +2,7 @@ import { and, inArray } from "drizzle-orm";
 import { folders } from "#lib/server/db/schema.js";
 import type { ObjectItem } from "#lib/server/schema.js";
 import type { StorageContext } from "./context";
+import { ancestorFolders } from "./mappers";
 import { ownedFolders } from "./scope";
 
 /** A search hit's folder, by path; none at the root. */
@@ -29,4 +30,22 @@ export async function nameParents(ctx: StorageContext, items: ObjectItem[]) {
 	for (const item of items) {
 		item.parent = item.parentKey ? nameOf.get(item.parentKey) : undefined;
 	}
+}
+
+/** Display names of these folder paths and all their ancestors. */
+export async function folderNames(
+	ctx: StorageContext,
+	paths: string[],
+): Promise<Map<string, string>> {
+	const wanted = [
+		...new Set(paths.flatMap((path) => ancestorFolders(`${path}/`))),
+	];
+	if (wanted.length === 0) {
+		return new Map();
+	}
+	const named = await ctx.db
+		.select({ name: folders.name, path: folders.path })
+		.from(folders)
+		.where(and(ownedFolders(ctx), inArray(folders.path, wanted)));
+	return new Map(named.map((folder) => [folder.path, folder.name]));
 }

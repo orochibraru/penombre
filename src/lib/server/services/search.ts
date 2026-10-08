@@ -26,7 +26,8 @@ export type Found = ObjectItem & { place: Place };
 
 type User = NonNullable<App.Locals["user"]>;
 
-async function places(
+/** Every place the caller can browse, each opened as its own service. */
+export async function places(
 	user: User,
 	owner: User,
 ): Promise<{ place: Place; open: () => Promise<StorageService> }[]> {

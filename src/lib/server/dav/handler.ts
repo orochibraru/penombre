@@ -54,8 +54,9 @@ function status(code: number, headers?: Record<string, string>): Response {
 	return new Response(null, { status: code, headers });
 }
 
-async function resolve(
-	service: DavService,
+/** A path of display names to its row; `[]` is the root. */
+export async function resolve(
+	service: Pick<DavService, "treeEntry">,
 	segments: string[],
 ): Promise<TreeEntry | null> {
 	let entry = ROOT;
@@ -159,7 +160,7 @@ const OS_JUNK = new Set([".DS_Store", "Thumbs.db", "desktop.ini"]);
 const APP_DIRS = new Set([".versions", ".thumbnails", ".tmp"]);
 
 /** Accepted and never stored: Finder and Explorer litter, and app internals. */
-function dropped(segments: string[]): boolean {
+export function dropped(segments: string[]): boolean {
 	const name = segments.at(-1);
 	return (
 		(!!name && (OS_JUNK.has(name) || name.startsWith("._"))) ||
@@ -171,7 +172,10 @@ function split(segments: string[]): [string[], string] {
 	return [segments.slice(0, -1), segments.at(-1) ?? ""];
 }
 
-async function trash(service: DavService, entry: TreeEntry): Promise<void> {
+export async function trash(
+	service: DavService,
+	entry: TreeEntry,
+): Promise<void> {
 	await (entry.type === "file"
 		? service.updateFile(entry.path, { isTrashed: true })
 		: service.trashFolder(entry.path));
@@ -184,38 +188,32 @@ function mtimeOf(request: Request): Date | undefined {
 		: undefined;
 }
 
-async function put(
-	request: Request,
+/**
+ * Creates or overwrites the file at `segments`: 201 created,
+ * 204 overwritten (the old bytes kept as a version), 405 a folder is there,
+ * 409 no such folder or the name would not be kept as given.
+ */
+export async function writeNamed(
 	service: DavService,
-	loc: DavLocation,
-): Promise<Response> {
-	const [parentSegments, name] = split(loc.segments);
-	if (!name) {
-		return status(405, { allow: ALLOW });
-	}
-	if (dropped(loc.segments)) {
-		await request.body?.cancel();
-		return status(201);
-	}
+	segments: string[],
+	bytes: Uint8Array,
+	modifiedAt?: Date,
+): Promise<201 | 204 | 405 | 409> {
+	const [parentSegments, name] = split(segments);
 	const parent = await resolve(service, parentSegments);
 	if (parent?.type !== "folder") {
-		return status(409);
+		return 409;
 	}
-	// ponytail: whole body in memory, as the upload route does; stream when a multi-GB PUT matters
-	const bytes = new Uint8Array(await request.arrayBuffer());
-	const modifiedAt = mtimeOf(request);
-	const accepted = { "x-oc-mtime": "accepted" };
-
 	const existing = await service.treeEntry(parent.path, name);
 	if (existing?.type === "folder") {
-		return status(405, { allow: ALLOW });
+		return 405;
 	}
 	if (existing) {
 		await service.uploadFileBody(existing.id, bytes, {
 			snapshot: true,
 			modifiedAt,
 		});
-		return status(204, accepted);
+		return 204;
 	}
 
 	const created = await service.createFile(
@@ -225,13 +223,55 @@ async function put(
 	// SQLite's lower() is ASCII-only; the JS dedupe is not.
 	if (created.metadata.name !== name || !created.id) {
 		await service.deleteFile(created.finalName);
-		return status(409);
+		return 409;
 	}
 	await service.uploadFileBody(created.id, bytes, {
 		snapshot: false,
 		modifiedAt,
 	});
-	return status(201, accepted);
+	return 201;
+}
+
+async function put(
+	request: Request,
+	service: DavService,
+	loc: DavLocation,
+): Promise<Response> {
+	if (loc.segments.length === 0) {
+		return status(405, { allow: ALLOW });
+	}
+	if (dropped(loc.segments)) {
+		await request.body?.cancel();
+		return status(201);
+	}
+	// ponytail: whole body in memory, as the upload route does; stream when a multi-GB PUT matters
+	const bytes = new Uint8Array(await request.arrayBuffer());
+	const code = await writeNamed(service, loc.segments, bytes, mtimeOf(request));
+	if (code === 405) {
+		return status(405, { allow: ALLOW });
+	}
+	return status(code, code === 409 ? undefined : { "x-oc-mtime": "accepted" });
+}
+
+/** 201 created, 405 something is there, 409 no such parent or name not kept. */
+export async function makeFolderNamed(
+	service: DavService,
+	segments: string[],
+): Promise<201 | 405 | 409> {
+	const [parentSegments, name] = split(segments);
+	const parent = await resolve(service, parentSegments);
+	if (parent?.type !== "folder") {
+		return 409;
+	}
+	if (await service.treeEntry(parent.path, name)) {
+		return 405;
+	}
+	const created = await service.createFolder(name, parent.path || undefined);
+	if (created.name !== name) {
+		await service.deleteFolder(created.path);
+		return 409;
+	}
+	return 201;
 }
 
 async function mkcol(
@@ -242,26 +282,14 @@ async function mkcol(
 	if ((await request.text()).length > 0) {
 		return status(415);
 	}
-	const [parentSegments, name] = split(loc.segments);
-	if (!name) {
+	if (loc.segments.length === 0) {
 		return status(405, { allow: ALLOW });
 	}
 	if (dropped(loc.segments)) {
 		return status(201);
 	}
-	const parent = await resolve(service, parentSegments);
-	if (parent?.type !== "folder") {
-		return status(409);
-	}
-	if (await service.treeEntry(parent.path, name)) {
-		return status(405, { allow: ALLOW });
-	}
-	const created = await service.createFolder(name, parent.path || undefined);
-	if (created.name !== name) {
-		await service.deleteFolder(created.path);
-		return status(409);
-	}
-	return status(201);
+	const code = await makeFolderNamed(service, loc.segments);
+	return code === 405 ? status(405, { allow: ALLOW }) : status(code);
 }
 
 const SAVE_WINDOW_MS = 60_000;
@@ -304,7 +332,8 @@ function remember(
 	memo.arrived.set(id, until);
 }
 
-async function relocate(
+/** Moves and renames in place, so notes, versions and shares stay. */
+export async function relocate(
 	service: DavService,
 	entry: TreeEntry,
 	parent: string,
@@ -382,7 +411,7 @@ function parentPath(path: string): string {
 	return path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : "";
 }
 
-function within(inner: string[], outer: string[]): boolean {
+export function within(inner: string[], outer: string[]): boolean {
 	return (
 		inner.length > outer.length &&
 		outer.every((s, i) => s.toLowerCase() === inner[i]?.toLowerCase())

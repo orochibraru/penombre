@@ -358,9 +358,11 @@ async function apiKeyAuth(
 
 	let sessionUser: User | null;
 	try {
-		sessionUser = dav
-			? await cachedKeyUser(rawKey, keyUser)
-			: await keyUser(rawKey);
+		// An agent's tool calls come in bursts too.
+		sessionUser =
+			dav || event.url.pathname === "/mcp"
+				? await cachedKeyUser(rawKey, keyUser)
+				: await keyUser(rawKey);
 	} catch (error) {
 		if (!(error instanceof KeyRateLimited)) {
 			throw error;

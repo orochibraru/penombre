@@ -2844,6 +2844,31 @@ folder may be called `drives`.
   and DAV requests at debug, 5xx aside: rclone sends an MKCOL for every uploaded
   file's parent, which is a routine 405 once the folder exists.
 
+### MCP is WebDAV's tree behind JSON-RPC
+
+`POST /mcp` (`#lib/server/mcp/`) is a hand-rolled, stateless Streamable HTTP
+server: one JSON-RPC message per POST, answered with JSON, no session, no SSE.
+Tools are all it offers, so nothing needs a stream; the SDK would bring express
+for that. Auth is the ordinary Bearer API key, cached like DAV's
+(`cachedKeyUser`). Tool paths are DAV's grammar without `/dav` (`/me/…`,
+`/drives/<id>/…`, `/volumes/<name>/…`) and its writes are DAV's own
+(`writeNamed`, `makeFolderNamed`, `relocate`, `trash` in `dav/handler.ts`), so
+both protocols save, version and dedupe names alike. A storage refusal is a tool
+result with `isError`, never a JSON-RPC error: the model can read it and
+recover.
+
+Bytes too big for the context (video, archives) go through
+`/mcp/transfer?token=…`: an HMAC over `AUTH_SECRET`, one file, one method, 15
+minutes, re-checked against the account and `storageServiceFor` on use. The
+token rides in the query because `generalHandler` logs only the pathname; it is
+exempt from `csrf.ts`, which would refuse `curl -T` (no content type).
+
+**Under `vite dev`/`preview` a body with no `Content-Type` arrives empty**:
+Kit's Node request shim (`@sveltejs/kit/node`, `get_raw_body`) returns `null`
+without one, and the PUT stores a 0-byte file with a 201. The compiled server is
+`Bun.serve` and keeps it. Test `curl -T` uploads (DAV and transfer links) on
+`./build/server`, not preview.
+
 ### Bytes may be sealed; the disk says so
 
 With `ENCRYPTION_KEY` set, file bytes are sealed in the envelope v1 format

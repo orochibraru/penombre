@@ -52,6 +52,7 @@ import type {
 } from "./listings";
 import { ListingOperations } from "./listings";
 import { probeMissingDurations } from "./media";
+import { folderNames } from "./parents";
 import {
 	type FileProxyRequest,
 	ProxyService,
@@ -610,6 +611,10 @@ export class StorageService {
 
 	treeEntry(parentPath: string, name: string): Promise<TreeEntry | null> {
 		return this.listingOperations.treeEntry(parentPath, name);
+	}
+
+	folderNames(paths: string[]): Promise<Map<string, string>> {
+		return folderNames(this.ctx, paths);
 	}
 
 	treeEntryById(
