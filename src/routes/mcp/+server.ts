@@ -1,4 +1,5 @@
 import { getConfig } from "#lib/server/config.js";
+import { resourceMetadataUrl } from "#lib/server/mcp/oauth.js";
 import { handleMcp } from "#lib/server/mcp/protocol.js";
 
 export const POST = (event) => {
@@ -15,7 +16,9 @@ export const POST = (event) => {
 	if (!user) {
 		return new Response("Unauthorized", {
 			status: 401,
-			headers: { "www-authenticate": 'Bearer realm="Penombre"' },
+			headers: {
+				"www-authenticate": `Bearer realm="Penombre", resource_metadata="${resourceMetadataUrl(event.url)}"`,
+			},
 		});
 	}
 	return handleMcp(event.request, {

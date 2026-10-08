@@ -7,20 +7,37 @@ there is nothing to install or turn on.
 
 ## Connecting
 
-The address is `https://files.example.com/mcp`. Create an API key under
-**Settings → API keys** and send it as a bearer token. The assistant acts as the
-key's account and sees exactly what that account sees.
+The address is `https://files.example.com/mcp`. Add it to your assistant as a
+custom connector; it signs in with OAuth:
 
-With Claude Code:
+1. The assistant opens Penombre's **Connect … to Penombre?** page, after the
+   sign-in page if you are signed out.
+2. You check the client's name and where it sends you back, then approve.
+3. Penombre gives the assistant a key of its own, named after it
+   (`Claude (MCP)`) and listed under **Settings → API keys**. Revoke it there to
+   disconnect.
+
+The assistant acts as your account and sees exactly what you see.
+
+In Claude, choose **Sign in now** and **Use Claude's published identity**: the
+client identifies itself by a metadata document at an HTTPS address (CIMD),
+which Penombre reads on the spot, so there is nothing to register. Penombre
+refuses a client whose document is not on a public HTTPS address, and a return
+address the document does not list. Clients that only register themselves
+dynamically (DCR) are not supported; give them an API key instead.
+
+`ORIGIN` must be the address people reach Penombre at: it is the issuer and the
+resource the assistant is told about.
+
+### With an API key
+
+Any client that lets you set a header can skip OAuth. Create an API key under
+**Settings → API keys** and send it as a bearer token. With Claude Code:
 
 ```bash
 claude mcp add --transport http penombre https://files.example.com/mcp \
   --header "Authorization: Bearer <key>"
 ```
-
-Any client that connects to a remote MCP server over HTTP and lets you set a
-header works the same way. Penombre does not offer OAuth sign-in, so clients
-that only connect through OAuth cannot use it yet.
 
 ## Paths
 
@@ -90,5 +107,8 @@ through `write_file` with `encoding: "base64"`, up to 10 MB.
 - Moving between two places is not supported: download and upload instead.
 - An upload is held in memory while it is written, so a very large file needs
   that much free memory on the server.
-- Your reverse proxy must pass `POST /mcp` with its `Authorization` header, and
-  `GET` and `PUT` on `/mcp/transfer`. See [Reverse proxy](reverse-proxy.md).
+- A connection does not expire and has no refresh token: it lasts until you
+  revoke its key.
+- Your reverse proxy must pass `POST /mcp` with its `Authorization` header,
+  everything under `/mcp/`, `/auth/mcp/` and `/.well-known/oauth-*`. See
+  [Reverse proxy](reverse-proxy.md).

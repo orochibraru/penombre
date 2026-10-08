@@ -2857,6 +2857,21 @@ both protocols save, version and dedupe names alike. A storage refusal is a tool
 result with `isError`, never a JSON-RPC error: the model can read it and
 recover.
 
+**Sign-in is OAuth with CIMD** (`mcp/oauth.ts`): the client's `client_id` is an
+HTTPS URL to its own metadata (Claude's is
+`https://claude.ai/oauth/mcp-oauth-client-metadata`), fetched at authorize time,
+so there is no client table and no DCR. The fetch is caller-chosen, hence public
+HTTPS names only (no IP literals, no private or loopback resolution, no
+redirects, 64 KiB). A bad request is shown, never redirected: the `redirect_uri`
+is only trusted once matched against the document (loopback may change port, RFC
+8252). Codes reuse the mobile flow's hashed `verification` rows (prefix
+`mcp-code:`). **The access token is an API key** minted at redemption, named
+`<client> (MCP)` (the plugin refuses names over 32 characters), so `/mcp` auth,
+the key cache and revocation are the existing ones; no refresh token. `csrf.ts`
+exempts `/mcp/`: the token endpoint is a form POST with no `Origin`, proven by
+its PKCE code. Testing an action with `curl` needs `accept: text/html`, or Kit
+answers a JSON action result instead of the 303.
+
 Bytes too big for the context (video, archives) go through
 `/mcp/transfer?token=…`: an HMAC over `AUTH_SECRET`, one file, one method, 15
 minutes, re-checked against the account and `storageServiceFor` on use. The
