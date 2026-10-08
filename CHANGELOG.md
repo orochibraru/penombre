@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.65](https://github.com/orochibraru/penombre/compare/v1.8.64...v1.8.65) (2026-10-08)
+
+### Features
+
+* **mcp:** MCP server with file tools, transfer links and OAuth sign-in via CIMDfeat(mcp): MCP server with file tools, transfer links and OAuth sign-in via CIMD ([eca229d](https://github.com/orochibraru/penombre/commit/eca229db5686604565882dd7142dcd472bf4caee))
+* **mcp:** MCP server with file tools and signed transfer links for media ([052de4c](https://github.com/orochibraru/penombre/commit/052de4cca7fd9b695dae36c5d70f07522392d816))
+
 ## [1.8.64](https://github.com/orochibraru/penombre/compare/v1.8.63...v1.8.64) (2026-10-05)
 
 ### Features
