@@ -4,7 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asSkiaBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
 import androidx.compose.ui.viewinterop.UIKitViewController
@@ -16,8 +21,18 @@ import kotlinx.cinterop.readValue
 import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import org.jetbrains.skia.ColorAlphaType
+import org.jetbrains.skia.ColorType
+import org.jetbrains.skia.EncodedImageFormat
+import org.jetbrains.skia.Image
+import org.jetbrains.skia.ImageInfo
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionCategoryPlayback
 import platform.AVFAudio.setActive
@@ -54,8 +69,17 @@ import platform.BackgroundTasks.BGAppRefreshTaskRequest
 import platform.BackgroundTasks.BGTaskScheduler
 import platform.CoreCrypto.CC_SHA256
 import platform.CoreCrypto.CC_SHA256_DIGEST_LENGTH
+import platform.CoreGraphics.CGBitmapContextCreate
+import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
+import platform.CoreGraphics.CGColorSpaceRelease
+import platform.CoreGraphics.CGContextFillRect
+import platform.CoreGraphics.CGContextRelease
+import platform.CoreGraphics.CGContextScaleCTM
+import platform.CoreGraphics.CGContextSetRGBFillColor
+import platform.CoreGraphics.CGImageAlphaInfo
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGRectZero
+import platform.CoreGraphics.kCGBitmapByteOrder32Big
 import platform.CoreMedia.CMTime
 import platform.CoreMedia.CMTimeGetSeconds
 import platform.CoreMedia.CMTimeMakeWithSeconds
@@ -79,6 +103,7 @@ import platform.Foundation.NSMutableData
 import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSNumber
 import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.NSTimeZone
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLRequest
 import platform.Foundation.NSURLSession
@@ -87,11 +112,11 @@ import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.dateWithTimeIntervalSinceNow
 import platform.Foundation.downloadTaskWithRequest
+import platform.Foundation.localTimeZone
 import platform.Foundation.preferredLanguages
 import platform.Foundation.setValue
 import platform.PDFKit.PDFDocument
-import platform.PDFKit.PDFView
-import platform.PDFKit.kPDFDisplaySinglePageContinuous
+import platform.PDFKit.kPDFDisplayBoxCropBox
 import platform.QuartzCore.CATransaction
 import platform.UIKit.UIAccessibilityIsReduceMotionEnabled
 import platform.UIKit.UIActivityViewController
@@ -124,6 +149,7 @@ import platform.UserNotifications.UNUserNotificationCenter
 import platform.VisionKit.VNDocumentCameraScan
 import platform.VisionKit.VNDocumentCameraViewController
 import platform.VisionKit.VNDocumentCameraViewControllerDelegateProtocol
+import platform.WebKit.WKContentWorld
 import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
 import platform.WebKit.WKWebsiteDataStore
@@ -132,6 +158,8 @@ import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
 import platform.posix.memcpy
+import kotlin.coroutines.resume
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalForeignApi::class)
 actual fun sha256(bytes: ByteArray): ByteArray {
@@ -177,14 +205,15 @@ actual object Prefs {
     }
 }
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, ExperimentalComposeUiApi::class)
 @Composable
-actual fun WebPage(url: String, session: Session, modifier: Modifier) {
+actual fun WebPage(url: String, session: Session, modifier: Modifier, transparent: Boolean, controller: WebController?) {
     val language = spoken(LocalLanguage.current)
     UIKitView(
         modifier = modifier,
         // Off by default: the page would be invisible to VoiceOver.
-        properties = UIKitInteropProperties(isNativeAccessibilityEnabled = true),
+        // Over the app's canvas when transparent: under it, the window shows through, not the sky.
+        properties = UIKitInteropProperties(isNativeAccessibilityEnabled = true, placedAsOverlay = transparent),
         factory = {
             val config = WKWebViewConfiguration().apply {
                 websiteDataStore = WKWebsiteDataStore.defaultDataStore()
@@ -192,6 +221,23 @@ actual fun WebPage(url: String, session: Session, modifier: Modifier) {
                 applicationNameForUserAgent = "PenombreApp"
             }
             val view = WKWebView(frame = CGRectZero.readValue(), configuration = config)
+            if (transparent) {
+                view.opaque = false
+                view.backgroundColor = UIColor.clearColor
+                view.scrollView.backgroundColor = UIColor.clearColor
+            }
+            controller?.settle = {
+                suspendCancellableCoroutine { done ->
+                    view.callAsyncJavaScript(
+                        "return window.penombreSettle ? await window.penombreSettle() : null",
+                        arguments = emptyMap<Any?, Any>(),
+                        inFrame = null,
+                        inContentWorld = WKContentWorld.pageWorld,
+                    ) { result, error ->
+                        done.resume(if (error != null) false else (result as? NSNumber)?.boolValue)
+                    }
+                }
+            }
             fun cookie(name: String, value: String): NSHTTPCookie? {
                 val properties = mutableMapOf<Any?, Any?>(
                     NSHTTPCookieName to name,
@@ -485,19 +531,50 @@ actual fun saveToDevice(url: String, token: String, name: String, done: (Words?)
 }
 
 @OptIn(ExperimentalForeignApi::class)
-@Composable
-actual fun PdfPages(bytes: ByteArray, modifier: Modifier) {
-    UIKitView(
-        factory = {
-            PDFView(frame = CGRectZero.readValue()).apply {
-                autoScales = true
-                displayMode = kPDFDisplaySinglePageContinuous
-                document = PDFDocument(data = bytes.toNSData())
+actual class PdfSource actual constructor(bytes: ByteArray) {
+    private val document = PDFDocument(data = bytes.toNSData())
+    private val lock = Mutex()
+
+    actual val pageCount: Int get() = document.pageCount.toInt()
+
+    actual fun pageSize(index: Int): Size {
+        val page = document.pageAtIndex(index.toULong()) ?: return Size(612f, 792f)
+        val (width, height) = page.boundsForBox(kPDFDisplayBoxCropBox).useContents { size.width.toFloat() to size.height.toFloat() }
+        return if (page.rotation % 180L != 0L) Size(height, width) else Size(width, height)
+    }
+
+    actual suspend fun render(index: Int, width: Int): ImageBitmap = lock.withLock {
+        withContext(Dispatchers.Default) {
+            val shown = pageSize(index)
+            val height = (width * shown.height / shown.width).roundToInt().coerceAtLeast(1)
+            val pixels = ByteArray(width * height * 4)
+            pixels.usePinned { pinned ->
+                val space = CGColorSpaceCreateDeviceRGB()
+                val context = CGBitmapContextCreate(
+                    pinned.addressOf(0),
+                    width.convert(),
+                    height.convert(),
+                    8u,
+                    (width * 4).convert(),
+                    space,
+                    CGImageAlphaInfo.kCGImageAlphaPremultipliedLast.value or kCGBitmapByteOrder32Big,
+                )
+                CGColorSpaceRelease(space)
+                CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0)
+                CGContextFillRect(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()))
+                CGContextScaleCTM(context, width / shown.width.toDouble(), height / shown.height.toDouble())
+                // Turns the page itself and draws its annotations.
+                document.pageAtIndex(index.toULong())?.drawWithBox(kPDFDisplayBoxCropBox, toContext = context)
+                CGContextRelease(context)
             }
-        },
-        modifier = modifier,
-    )
+            Image.makeRaster(ImageInfo(width, height, ColorType.RGBA_8888, ColorAlphaType.PREMUL), pixels, width * 4).toComposeImageBitmap()
+        }
+    }
+
+    actual fun close() = Unit
 }
+
+actual fun pngOf(picture: ImageBitmap): ByteArray = Image.makeFromBitmap(picture.asSkiaBitmap()).encodeToData(EncodedImageFormat.PNG)?.bytes ?: ByteArray(0)
 
 @OptIn(ExperimentalForeignApi::class)
 private fun ByteArray.toNSData(): NSData = if (isEmpty()) NSData() else usePinned { NSData.create(bytes = it.addressOf(0), length = size.convert()) }
@@ -565,6 +642,8 @@ private suspend fun post(notice: Notice) {
         null,
     )
 }
+
+actual fun timeZone(): String? = NSTimeZone.localTimeZone.name
 
 actual val appVersion: String
     get() = NSBundle.mainBundle.infoDictionary?.get("CFBundleShortVersionString") as? String ?: "?"

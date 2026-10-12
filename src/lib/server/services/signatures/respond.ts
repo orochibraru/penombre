@@ -1,6 +1,11 @@
+import type { RequestEvent } from "@sveltejs/kit";
 import { Http } from "#lib/server/http.js";
 import { rawFileSecurityHeaders } from "#lib/server/services/storage/mappers.js";
-import { SignatureError, UnsignableDocumentError } from "./service";
+import {
+	type RequestMeta,
+	SignatureError,
+	UnsignableDocumentError,
+} from "./service";
 
 /** A refusal as the status that says why; anything else is logged as a 500. */
 export function signatureFailure(error: unknown, what: string): Response {
@@ -28,4 +33,14 @@ export function pdfResponse(
 			...rawFileSecurityHeaders("application/pdf"),
 		},
 	});
+}
+
+/** Who is answering a link: where from, with what, signed in as whom. */
+export function signingMeta(event: RequestEvent): RequestMeta {
+	const account = event.locals.user;
+	return {
+		ipAddress: event.getClientAddress(),
+		userAgent: event.request.headers.get("user-agent"),
+		account: account ? { id: account.id, email: account.email } : null,
+	};
 }

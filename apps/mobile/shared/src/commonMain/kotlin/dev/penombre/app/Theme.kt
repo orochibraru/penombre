@@ -47,6 +47,7 @@ class Brand(
     val ember: Color,
     /** How strongly the aurora shows: the night carries more of it. */
     val sky: Float,
+    val dark: Boolean,
 ) {
     /** The logo's and the primary button's gradient. */
     val gradient get() = Brush.linearGradient(listOf(deep, glow))
@@ -78,6 +79,7 @@ private fun brandFor(accent: String, dark: Boolean): Brand {
         glow = Color(colours.glow),
         ember = Color(colours.ember),
         sky = if (dark) 0.42f else 0.3f,
+        dark = dark,
     )
 }
 
@@ -133,7 +135,7 @@ fun PenombreTheme(look: Look, content: @Composable () -> Unit) {
         else -> isSystemInDarkTheme()
     }
     val colors = brandFor(look.accent, dark)
-    val corner = RoundedCornerShape(if (look.corners == "boxy") 3.dp else 12.dp)
+    val corner = RoundedCornerShape(if (look.corners == "boxy") 2.dp else 12.dp)
     val family = if (look.font == "mono") FontFamily.Monospace else FontFamily.Default
     val scheme = (if (dark) darkColorScheme() else lightColorScheme()).copy(
         primary = colors.accent,

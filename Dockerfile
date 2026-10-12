@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags "-s -w -X main.version=${APP_VERSION:-dev}" \
     -o /out/penombre-worker ./cmd/worker
 
-FROM oven/bun:1.4.2-alpine AS base
+FROM oven/bun:1.4.3-alpine AS base
 
 ENV BUN_FEATURE_FLAG_EXPERIMENTAL_HTTP2_CLIENT=1
 

@@ -92,6 +92,7 @@ fun NotificationsView(host: Host, onUnread: (Int) -> Unit) {
                                 "share" -> Icons.Outlined.Share
                                 "signature_completed" -> Icons.Outlined.Draw
                                 "signature_declined" -> Icons.Outlined.Cancel
+                                "signature_requested" -> Icons.Outlined.Draw
                                 else -> Icons.Outlined.ChatBubbleOutline
                             },
                             notice.words.text(),
@@ -110,7 +111,10 @@ fun NotificationsView(host: Host, onUnread: (Int) -> Unit) {
 /** Where a notification's link leads: natively where the app has the place. */
 private suspend fun follow(host: Host, link: String) {
     val drive = link.removePrefix("/drives/").takeIf { it != link }?.substringBefore('/')
+    val signing = signingLinkOf(host.server, link)
     when {
+        signing != null -> host.push(SignScreen(signing))
+
         link.startsWith("/shared-with-me") -> host.goHome(Home.Shared)
 
         drive != null -> host.api.places().drives.find { it.id == drive }?.let { host.goHome(Home.Team(it)) }

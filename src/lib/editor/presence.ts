@@ -16,12 +16,32 @@ const COLOURS = [
 	"bg-orange-500",
 ];
 
-export function colourFor(userId: string): string {
+/** The same colours as text, for what each person suggested. */
+const INKS = [
+	"text-rose-600 dark:text-rose-400",
+	"text-amber-600 dark:text-amber-400",
+	"text-emerald-600 dark:text-emerald-400",
+	"text-sky-600 dark:text-sky-400",
+	"text-violet-600 dark:text-violet-400",
+	"text-fuchsia-600 dark:text-fuchsia-400",
+	"text-teal-600 dark:text-teal-400",
+	"text-orange-600 dark:text-orange-400",
+];
+
+function hashOf(userId: string): number {
 	let hash = 0;
 	for (const char of userId) {
 		hash = (hash * 31 + (char.codePointAt(0) ?? 0)) >>> 0;
 	}
-	return COLOURS[hash % COLOURS.length] ?? "bg-sky-500";
+	return hash;
+}
+
+export function colourFor(userId: string): string {
+	return COLOURS[hashOf(userId) % COLOURS.length] ?? "bg-sky-500";
+}
+
+export function inkFor(userId: string): string {
+	return INKS[hashOf(userId) % INKS.length] ?? "text-sky-600";
 }
 
 export function initials(name: string): string {

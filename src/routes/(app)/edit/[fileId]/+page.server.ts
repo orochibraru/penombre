@@ -2,8 +2,12 @@ import { error } from "@sveltejs/kit";
 import { officeKindForName } from "#lib/documents.js";
 import { Logger } from "#lib/logger.js";
 import { DriveAccessError } from "#lib/server/errors.js";
-import { officeToText } from "#lib/server/office/index.js";
+import {
+	hasUnsupportedChanges,
+	officeToText,
+} from "#lib/server/office/index.js";
 import { editorAccess } from "#lib/server/services/editor-access.js";
+import { revisionOf } from "#lib/server/services/storage/revision.js";
 import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
 const logger = new Logger("Editor");
@@ -42,6 +46,7 @@ export const load = async ({ params, url, locals }) => {
 		fileId: params.fileId,
 		path,
 		name,
+		revision: revisionOf(raw.buffer),
 		...editorAccess(service, url),
 	};
 
@@ -50,8 +55,11 @@ export const load = async ({ params, url, locals }) => {
 		// written back into the original archive when it is saved, so the
 		// file on disk stays the format it was.
 		try {
+			const trackedChanges = hasUnsupportedChanges(name, raw.buffer);
 			return {
 				...file,
+				canWrite: file.canWrite && !trackedChanges,
+				trackedChanges,
 				contentType:
 					raw.meta.metadata.contentType ?? "application/octet-stream",
 				content: officeToText(name, raw.buffer),
@@ -73,5 +81,6 @@ export const load = async ({ params, url, locals }) => {
 		contentType: raw.meta.metadata.contentType ?? "text/plain",
 		content: new TextDecoder().decode(raw.buffer),
 		office: false as const,
+		trackedChanges: false,
 	};
 };

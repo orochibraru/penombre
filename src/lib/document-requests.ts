@@ -77,25 +77,42 @@ export async function renameDocument(
  * Office file is not: the server has to splice the text into the archive it
  * already has, so only the text is sent and the browser never assembles a
  * `.docx` it could get wrong.
+ *
+ * `base` is the revision the text was edited from: the server refuses the save
+ * when the file changed since, naming the revision now on disk (`theirs`).
+ * Answers the revision written, or null when the save failed.
  */
 export async function saveDocument(
 	file: { id: string; name: string; contentType: string },
 	content: string,
-): Promise<boolean> {
+	base: string,
+): Promise<{ revision: string } | { theirs: string } | null> {
 	const { id: fileId, name: filename, contentType } = file;
 	if (officeKindForName(filename)) {
-		const { error } = await api.POST("/api/v1/storage/file/{id}/office", {
-			params: { path: { id: fileId } },
-			body: { content },
-		});
-		return !error;
+		const { data, error, response } = await api.POST(
+			"/api/v1/storage/file/{id}/office",
+			{ params: { path: { id: fileId } }, body: { content, base } },
+		);
+		return answer(response.status, data?.data?.revision, error);
 	}
 
 	const form = new FormData();
 	form.set("file", new File([content], filename, { type: contentType }));
-	const { error } = await api.POST("/api/v1/storage/file/{id}/upload", {
-		params: { path: { id: fileId }, query: { snapshot: "0" } },
-		body: form as never,
-	});
-	return !error;
+	const { data, error, response } = await api.POST(
+		"/api/v1/storage/file/{id}/upload",
+		{
+			params: { path: { id: fileId }, query: { snapshot: "0", base } },
+			body: form as never,
+		},
+	);
+	return answer(response.status, data?.data?.revision, error);
+}
+
+function answer(status: number, revision?: string, error?: unknown) {
+	const theirs = (error as { context?: { revision?: unknown } } | undefined)
+		?.context?.revision;
+	if (status === 409 && typeof theirs === "string") {
+		return { theirs };
+	}
+	return revision ? { revision } : null;
 }

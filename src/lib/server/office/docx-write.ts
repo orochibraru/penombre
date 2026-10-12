@@ -1,3 +1,4 @@
+import { PARAGRAPH_CHANGE, parseParagraphChange } from "#lib/editor/changes.js";
 import {
 	addMediaPart,
 	declareMediaTypes,
@@ -27,13 +28,17 @@ import {
 	styleNumbering,
 } from "./docx-package";
 import {
+	changeElement,
 	codeBlock,
+	highestChangeId,
 	horizontalRule,
 	type Marks,
 	markFor,
 	NO_MARKS,
+	numberChanges,
 	paragraph,
 	textRun,
+	tracked,
 } from "./docx-runs";
 import {
 	childNamed,
@@ -112,7 +117,10 @@ function hyperlink(
 	runs: XmlElement[],
 	context: WriteContext,
 ): XmlElement {
-	for (const run of runs) {
+	const plain = runs.flatMap((run) =>
+		run.name === "w:r" ? [run] : findElements(run, "w:r"),
+	);
+	for (const run of plain) {
 		if (!context.styles.has("Hyperlink")) {
 			continue;
 		}
@@ -168,7 +176,7 @@ function inlineChildRuns(
 		return [];
 	}
 	if (child.name === "br") {
-		return [element("w:r", {}, [element("w:br")])];
+		return [tracked(element("w:r", {}, [element("w:br")]), marks)];
 	}
 	if (child.name === "img") {
 		// A link to a picture elsewhere is dropped: nothing on the server
@@ -225,8 +233,19 @@ function ownProperties(node: XmlElement): XmlElement[] {
 	if (jc) {
 		children.push(element("w:jc", { "w:val": jc }));
 	}
+	const change = parseParagraphChange(node.attrs[PARAGRAPH_CHANGE]);
+	if (change) {
+		const name = change.kind === "insert" ? "w:ins" : "w:del";
+		children.push(element("w:rPr", {}, [changeElement(name, change)]));
+	}
 	return children;
 }
+
+/** A paragraph mark's own tracked change, which a copied mark must not bring. */
+const MARK_CHANGES = new Set(["w:ins", "w:del", "w:moveFrom", "w:moveTo"]);
+
+const withoutMarkChanges = (nodes: XmlNode[]): XmlNode[] =>
+	nodes.filter((node) => !(isElement(node) && MARK_CHANGES.has(node.name)));
 
 /** The editor decides these even on a paragraph whose other properties it copied. */
 const EDITOR_OWNED = new Set(["w:jc", "w:spacing"]);
@@ -247,6 +266,12 @@ function mergeProperties(
 			insertOrdered(properties.children, node);
 		} else if (EDITOR_OWNED.has(node.name)) {
 			Object.assign(existing.attrs, node.attrs);
+		} else if (node.name === "w:rPr") {
+			// The mark's formatting is the copy's; whether it is suggested is ours.
+			existing.children = [
+				...node.children,
+				...withoutMarkChanges(existing.children),
+			];
 		}
 	}
 	return properties.children.length > 0 ? properties : null;
@@ -643,7 +668,15 @@ function listExemplars(
 		}
 		const key = `${list.ordered}:${list.level}`;
 		if (!exemplars.has(key)) {
-			exemplars.set(key, properties);
+			const clean = structuredClone(properties);
+			clean.children = clean.children.filter(
+				(child) => !(isElement(child) && child.name === "w:pPrChange"),
+			);
+			const mark = childNamed(clean, "w:rPr");
+			if (mark) {
+				mark.children = withoutMarkChanges(mark.children);
+			}
+			exemplars.set(key, clean);
 		}
 	}
 	return exemplars;
@@ -724,6 +757,7 @@ export function htmlToDocx(entries: ZipEntry[], html: string): void {
 	// them resets the document to Word's defaults.
 	const section = childrenNamed(body, "w:sectPr");
 	body.children = [...blocks, ...section];
+	numberChanges(body, highestChangeId(documentXml(entries)));
 
 	setPartText(entries, DOCUMENT_PART, serializeXml(document));
 	writeRelationships(entries, context.added, body);

@@ -1,3 +1,4 @@
+import type { Chart } from "#lib/chart/model.js";
 import {
 	baseName,
 	EXPORT_FORMATS,
@@ -13,7 +14,7 @@ import { blankDocument } from "../docx-package";
 import { docxToHtml } from "../docx-read";
 import { htmlToDocx } from "../docx-write";
 import { slidesPdfPages } from "../slides";
-import { readWorkbook, workbookFromText } from "../xlsx";
+import { readWorkbookCharts, workbookFromText } from "../xlsx";
 import { readZip, writeZip } from "../zip";
 import { readHtml } from "./model";
 import { renderPdf } from "./pdf";
@@ -60,9 +61,12 @@ function documentHtml(name: string, bytes: ArrayBuffer): string {
 		: new TextDecoder().decode(bytes);
 }
 
-function readSheets(name: string, bytes: ArrayBuffer): SheetSource[] {
+function readSheets(
+	name: string,
+	bytes: ArrayBuffer,
+): (SheetSource & { charts?: Chart[] })[] {
 	return officeKindForName(name)
-		? readWorkbook(readZip(bytes))
+		? readWorkbookCharts(readZip(bytes))
 		: [{ name: "Sheet1", rows: parseCsv(new TextDecoder().decode(bytes)) }];
 }
 

@@ -1,14 +1,32 @@
+import { sourceOf } from "#lib/chart/data.js";
+import { type Chart, checkCharts } from "#lib/chart/model.js";
 import { parseCsv } from "#lib/documents.js";
-import { renameSheetRefs } from "#lib/formula.js";
+import { createWorkbook, renameSheetRefs } from "#lib/formula.js";
+import { checkDropdowns, type Dropdown } from "#lib/sheet/dropdowns.js";
+import type { Freeze } from "#lib/sheet/layout.js";
+import { isMergeList } from "#lib/sheet/merges.js";
+import { type CellStyle, isStyleGrid } from "#lib/sheet/styles.js";
 import {
 	type Base,
 	dateStyles,
 	NotASpreadsheetError,
 	readPart,
+	type SheetFormats,
 	sharedStrings,
 	type WorkbookSheet,
 	writePart,
 } from "./xlsx-cells";
+import {
+	readSheetCharts,
+	workbookPalette,
+	writeSheetCharts,
+} from "./xlsx-charts/index";
+import { readSheetPictures } from "./xlsx-pictures";
+import { rulesContext } from "./xlsx-rules";
+import { mappedFormats, styleTable, styleWriterFor } from "./xlsx-style-writer";
+import { readStyles, Stylesheet } from "./xlsx-styles";
+import { checkTables, readSheetTables, writeSheetTables } from "./xlsx-tables";
+import { checkView } from "./xlsx-view";
 import {
 	childNamed,
 	element,
@@ -35,11 +53,11 @@ export {
  * A workbook's worksheets, as grids, and back again; the cells themselves are
  * `xlsx-cells.ts`. Sheets are matched by their `sheetId`, so a renamed sheet
  * is still the same part; a sheet added in the editor gets a new part, and
- * one deleted there loses its own. Charts, drawings, the theme and every part
- * not named here are never parsed.
+ * one deleted there loses its own. Charts are `xlsx-charts/`; the theme
+ * and every other part are never parsed.
  *
  * The editor speaks JSON for a workbook: `{ nextId, sheets: [{ id, name,
- * rows, cached }] }`, `cached` holding the values the file recorded for its
+ * rows, cached, charts }] }`, `cached` holding the values the file recorded for its
  * formulas, for the ones the editor's engine cannot compute.
  */
 
@@ -111,13 +129,32 @@ function openPackage(entries: ZipEntry[]): Package {
 /** Every worksheet, in workbook order. Chartsheets are left out. */
 export function readWorkbook(entries: ZipEntry[]): WorkbookSheet[] {
 	const { sheets } = openPackage(entries);
-	const base = { strings: sharedStrings(entries), styles: dateStyles(entries) };
+	const base = {
+		strings: sharedStrings(entries),
+		styles: dateStyles(entries),
+		rules: rulesContext(entries),
+	};
 	return sheets.flatMap((sheet) => {
 		const source = sheet.path ? partText(entries, sheet.path) : null;
 		if (!source) {
 			return [];
 		}
 		return [{ id: sheet.id, name: sheet.name, ...readPart(source, base) }];
+	});
+}
+
+/** Every worksheet, with the charts that float over it. */
+export function readWorkbookCharts(
+	entries: ZipEntry[],
+): (WorkbookSheet & { charts?: Chart[] })[] {
+	const palette = workbookPalette(entries);
+	const paths = new Map(
+		openPackage(entries).sheets.map((sheet) => [sheet.id, sheet.path]),
+	);
+	return readWorkbook(entries).map((sheet) => {
+		const path = paths.get(sheet.id);
+		const charts = path ? readSheetCharts(entries, path, palette) : [];
+		return charts.length > 0 ? { ...sheet, charts } : sheet;
 	});
 }
 
@@ -132,7 +169,25 @@ export function workbookToText(entries: ZipEntry[]): string {
 				Math.max(highest, Number.isFinite(sheet.id) ? sheet.id : 0),
 			0,
 		) + 1;
-	return JSON.stringify({ nextId, sheets: readWorkbook(entries) });
+	const paths = new Map(sheets.map((sheet) => [sheet.id, sheet.path]));
+	const stylesheet = new Stylesheet(entries);
+	return JSON.stringify({
+		nextId,
+		sheets: readWorkbookCharts(entries).map((sheet) => {
+			const path = paths.get(sheet.id);
+			if (!path) {
+				return sheet;
+			}
+			const pictures = readSheetPictures(entries, path);
+			const tables = readSheetTables(entries, path, stylesheet);
+			return {
+				...sheet,
+				...(pictures.length > 0 ? { pictures } : {}),
+				...(tables.length > 0 ? { tables } : {}),
+			};
+		}),
+		styles: readStyles(entries),
+	});
 }
 
 // =========================================================================
@@ -144,6 +199,28 @@ export interface SheetInput {
 	id: number;
 	name: string;
 	rows: string[][];
+	/** Absent: the sheet's charts are left as they are. */
+	charts?: Chart[];
+	/** Indices into the editor's style table; absent keeps the file's. */
+	styleIds?: number[][];
+	/** Merged ranges; absent keeps the file's. */
+	merges?: string[];
+	/** List validations; absent keeps the file's. */
+	dropdowns?: Dropdown[];
+	/** Column widths in pixels; absent or 0 keeps the file's. */
+	widths?: number[];
+	freeze?: Freeze;
+	/** Each table's part and range; absent keeps the file's tables. */
+	tables?: { part: string; ref: string }[];
+}
+
+function checkLayout(sheet: Partial<SheetInput>): Partial<SheetInput> {
+	const view = checkView(sheet);
+	if (!view) {
+		throw new NotASpreadsheetError("Malformed sheet view");
+	}
+	const tables = checkTables(sheet.tables);
+	return { ...view, ...(tables ? { tables } : {}) };
 }
 
 const isGrid = (rows: unknown): rows is string[][] =>
@@ -152,6 +229,24 @@ const isGrid = (rows: unknown): rows is string[][] =>
 		(row) =>
 			Array.isArray(row) && row.every((cell) => typeof cell === "string"),
 	);
+
+function checkFormats(sheet: Partial<SheetInput>): Partial<SheetInput> {
+	const { styleIds, merges } = sheet;
+	const dropdowns =
+		sheet.dropdowns === undefined ? undefined : checkDropdowns(sheet.dropdowns);
+	if (
+		(styleIds !== undefined && !isStyleGrid(styleIds)) ||
+		(merges !== undefined && !isMergeList(merges)) ||
+		(sheet.dropdowns !== undefined && !dropdowns)
+	) {
+		throw new NotASpreadsheetError("Malformed formatting");
+	}
+	return {
+		...(styleIds ? { styleIds } : {}),
+		...(merges ? { merges } : {}),
+		...(dropdowns ? { dropdowns } : {}),
+	};
+}
 
 /** The editor's JSON, checked: it crossed the network. */
 function parseSheets(content: string): SheetInput[] | null {
@@ -173,7 +268,14 @@ function parseSheets(content: string): SheetInput[] | null {
 		) {
 			throw new NotASpreadsheetError("Malformed sheet");
 		}
-		return { id: sheet.id ?? 0, name: sheet.name, rows: sheet.rows };
+		return {
+			id: sheet.id ?? 0,
+			name: sheet.name,
+			rows: sheet.rows,
+			charts: checkCharts(sheet.charts),
+			...checkFormats(sheet),
+			...checkLayout(sheet),
+		};
 	});
 }
 
@@ -315,7 +417,12 @@ function unused(taken: (name: string) => boolean, make: (n: number) => string) {
 	}
 }
 
-function addSheetPart(edit: Edit, input: SheetInput, base: Base): void {
+function addSheetPart(
+	edit: Edit,
+	input: SheetInput,
+	base: Base,
+	formats?: SheetFormats,
+): string {
 	const { entries, pkg, types } = edit;
 	const path = unused(
 		(name) => entries.some((entry) => entry.name === name),
@@ -329,7 +436,7 @@ function addSheetPart(edit: Edit, input: SheetInput, base: Base): void {
 		(n) => `rId${n}`,
 	);
 	setPartText(entries, path, EMPTY_WORKSHEET);
-	writePart(entries, path, input.rows, base);
+	writePart(entries, path, { rows: input.rows, ...formats }, base);
 	pkg.rels.root.children.push(
 		element("Relationship", {
 			Id: relId,
@@ -353,6 +460,7 @@ function addSheetPart(edit: Edit, input: SheetInput, base: Base): void {
 			"r:id": relId,
 		}),
 	);
+	return path;
 }
 
 /**
@@ -390,7 +498,11 @@ function recalculateOnOpen(edit: Edit): void {
 }
 
 /** The editor's sheets applied to the workbook, in place. */
-export function writeWorkbook(entries: ZipEntry[], sheets: SheetInput[]): void {
+export function writeWorkbook(
+	entries: ZipEntry[],
+	sheets: SheetInput[],
+	styles: CellStyle[] = [],
+): void {
 	checkSheets(sheets);
 	const pkg = openPackage(entries);
 	const typesText = partText(entries, CONTENT_TYPES);
@@ -398,7 +510,28 @@ export function writeWorkbook(entries: ZipEntry[], sheets: SheetInput[]): void {
 		throw new NotASpreadsheetError("Package has no content types");
 	}
 	const edit: Edit = { entries, pkg, types: parseXml(typesText) };
-	const base = { strings: sharedStrings(entries), styles: dateStyles(entries) };
+	// Styles first: a new combination is appended before a cell points at it.
+	const writer = styleWriterFor(entries, styles, sheets, {
+		rels: pkg.rels,
+		types: edit.types,
+	});
+	const formats = new Map(
+		sheets.map((sheet) => [
+			sheet.id,
+			{
+				...mappedFormats(writer, sheet),
+				dropdowns: sheet.dropdowns,
+				widths: sheet.widths,
+				freeze: sheet.freeze,
+			},
+		]),
+	);
+	writer.save();
+	const base = {
+		strings: sharedStrings(entries),
+		styles: dateStyles(entries),
+		rules: { ...rulesContext(entries), dxf: writer.dxf },
+	};
 	const wanted = new Map(sheets.map((sheet) => [sheet.id, sheet]));
 
 	dropSheets(
@@ -413,19 +546,48 @@ export function writeWorkbook(entries: ZipEntry[], sheets: SheetInput[]): void {
 		if (input.name !== sheet.name) {
 			renameEntry(pkg, sheet, input.name);
 		}
-		writePart(entries, sheet.path, input.rows, base);
+		writePart(
+			entries,
+			sheet.path,
+			{ rows: input.rows, ...formats.get(input.id) },
+			base,
+		);
 	}
 	const byId = new Map(pkg.sheets.map((sheet) => [sheet.id, sheet]));
+	const paths = new Map<number, string>();
 	for (const input of sheets) {
 		const existing = byId.get(input.id);
 		if (existing && !existing.path) {
 			throw new NotASpreadsheetError(`Sheet ${input.id} is not a worksheet`);
 		}
-		if (!existing) {
-			addSheetPart(edit, input, base);
+		paths.set(
+			input.id,
+			existing?.path ?? addSheetPart(edit, input, base, formats.get(input.id)),
+		);
+	}
+	if (sheets.some((sheet) => sheet.charts !== undefined)) {
+		const source = sourceOf(createWorkbook(sheets), sheets);
+		const palette = workbookPalette(entries);
+		sheets.forEach((input, index) => {
+			const path = paths.get(input.id);
+			if (path) {
+				writeSheetCharts(
+					edit,
+					{ path, index, charts: input.charts },
+					{ source, palette },
+				);
+			}
+		});
+	}
+	for (const input of sheets) {
+		const path = paths.get(input.id);
+		if (path) {
+			writeSheetTables(edit, path, input.tables, input.rows);
 		}
 	}
 	recalculateOnOpen(edit);
+	// Chip colours append their formats while the sheets are written.
+	writer.save();
 
 	setPartText(entries, WORKBOOK, serializeXml(pkg.workbook));
 	setPartText(entries, WORKBOOK_RELS, serializeXml(pkg.rels));
@@ -444,5 +606,13 @@ export function workbookFromText(entries: ZipEntry[], content: string): void {
 			name,
 			rows: index === 0 ? parseCsv(content) : rows,
 		}));
-	writeWorkbook(entries, sheets);
+	writeWorkbook(entries, sheets, styleTableOf(content));
+}
+
+function styleTableOf(content: string): CellStyle[] {
+	try {
+		return styleTable(JSON.parse(content));
+	} catch {
+		return [];
+	}
 }

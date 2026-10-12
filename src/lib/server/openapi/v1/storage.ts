@@ -295,6 +295,12 @@ export const ensureRendition = defineRoute({
 	service: storageServiceFor,
 });
 
+/** What an editor's save was edited from (`revisionOf`). */
+const editedFrom = z
+	.string()
+	.optional()
+	.describe("The revision edited from; 409 when the file changed since");
+
 export const uploadFile = defineRoute({
 	method: "post",
 	path: "/api/v1/storage/file/{id}/upload",
@@ -321,9 +327,16 @@ export const uploadFile = defineRoute({
 			.describe(
 				"The file's own last-modified time, epoch ms; kept on the row and the bytes",
 			),
+		base: editedFrom,
 	}),
-	response: z.object({ message: z.string() }),
-	errors: [400, 500],
+	response: z.object({
+		message: z.string(),
+		revision: z
+			.string()
+			.optional()
+			.describe("The revision just written, when `base` was sent"),
+	}),
+	errors: [400, 409, 500],
 	service: storageServiceFor,
 });
 
@@ -344,10 +357,14 @@ export const saveOfficeDocument = defineRoute({
 	params: z.object({ id: z.string() }),
 	body: z.object({
 		content: z.string().describe("The edited text, in the format for its kind"),
+		base: editedFrom,
 	}),
 	query: z.object(driveQuery),
-	response: z.object({ message: z.string() }),
-	errors: [400, 404, 422, 500],
+	response: z.object({
+		message: z.string(),
+		revision: z.string().describe("The revision just written"),
+	}),
+	errors: [400, 404, 409, 422, 500],
 	service: storageServiceFor,
 });
 

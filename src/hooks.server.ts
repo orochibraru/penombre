@@ -500,9 +500,14 @@ const themeHandler: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	// The mobile app's editor sits over its own ground, in its own light or
+	// dark: the first paint must already match it.
+	const embed = event.url.searchParams.has("embed")
+		? ` data-embed${event.url.searchParams.get("theme") === "dark" ? ' class="dark"' : ""}`
+		: "";
 	const attributes =
 		` data-font="${theme.font}" data-corners="${theme.corners}"` +
-		` data-accent="${theme.accent}"`;
+		` data-accent="${theme.accent}"${embed}`;
 
 	// Resolved once per request rather than per chunk.
 	let locale = baseLocale as string;

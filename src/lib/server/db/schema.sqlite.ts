@@ -658,7 +658,13 @@ export const notifications = sqliteTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		type: text("type", {
-			enum: ["note", "share", "signature_completed", "signature_declined"],
+			enum: [
+				"note",
+				"share",
+				"signature_completed",
+				"signature_declined",
+				"signature_requested",
+			],
 		}).notNull(),
 		actorName: text("actor_name"),
 		resourceName: text("resource_name"),

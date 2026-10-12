@@ -3,6 +3,7 @@
 		BellIcon,
 		CircleXIcon,
 		MessageSquareIcon,
+		PenLineIcon,
 		Share2Icon,
 		SignatureIcon,
 	} from "@lucide/svelte";
@@ -24,7 +25,12 @@
 	 */
 	interface Item {
 		id: string;
-		type: "note" | "share" | "signature_completed" | "signature_declined";
+		type:
+			| "note"
+			| "share"
+			| "signature_completed"
+			| "signature_declined"
+			| "signature_requested";
 		actorName: string | null;
 		resourceName: string | null;
 		link: string | null;
@@ -43,6 +49,7 @@
 		share: Share2Icon,
 		signature_completed: SignatureIcon,
 		signature_declined: CircleXIcon,
+		signature_requested: PenLineIcon,
 	};
 
 	/**
@@ -54,6 +61,12 @@
 		const other = item.resourceName ?? "";
 		if (item.type === "signature_completed") {
 			return m.sign_notification_completed({ item: other });
+		}
+		if (item.type === "signature_requested") {
+			return m.sign_notification_requested({
+				actor: item.actorName ?? "",
+				item: other,
+			});
 		}
 		if (item.type === "signature_declined") {
 			return m.sign_notification_declined({

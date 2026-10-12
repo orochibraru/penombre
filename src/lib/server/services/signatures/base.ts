@@ -12,7 +12,7 @@
  */
 
 import { createHash, randomBytes } from "node:crypto";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { v7 as uuidv7 } from "uuid";
 import type { Database } from "#lib/server/db/index.js";
 import {
@@ -149,6 +149,13 @@ export interface RequestMeta {
 	account?: { id: string; email: string } | null;
 }
 
+/**
+ * How a signer is known: their link's token, or, signed in, their own account
+ * and their row's id. The second is what a notification carries, so no
+ * credential is ever stored outside its hash.
+ */
+export type SignerKey = string | { signerId: string; userId: string };
+
 export interface Found {
 	signer: SignatureSigner;
 	request: SignatureRequest;
@@ -248,6 +255,27 @@ export class SignatureBase {
 
 	protected link(token: string): string {
 		return `${this.deps.origin()}/sign/${token}`;
+	}
+
+	/**
+	 * A signer with an account finds the request in their notifications too.
+	 * Its link names the signer, not a token: it opens only for that account
+	 * signed in. Nobody is asked by their own notification.
+	 */
+	protected async tellSigner(
+		request: SignatureRequest,
+		signer: { id: string; userId: string | null },
+	): Promise<void> {
+		if (!signer.userId || signer.userId === request.ownerId) {
+			return;
+		}
+		await this.deps.notify({
+			userId: signer.userId,
+			type: "signature_requested",
+			actorName: (await this.person(request.ownerId)).name,
+			resourceName: request.documentName,
+			link: `/sign/signer/${signer.id}`,
+		});
 	}
 
 	protected async log(
@@ -357,6 +385,32 @@ export class SignatureBase {
 			.set({ tokenHash: hashToken(token) })
 			.where(eq(signatureSigners.id, signerId));
 		return token;
+	}
+
+	/** The signer and request a key opens; an account opens only its own row. */
+	protected async found(key: SignerKey): Promise<Found | null> {
+		if (typeof key === "string") {
+			return await this.byToken(key);
+		}
+		const [signer] = await this.db
+			.select()
+			.from(signatureSigners)
+			.where(
+				and(
+					eq(signatureSigners.id, key.signerId),
+					eq(signatureSigners.userId, key.userId),
+				),
+			)
+			.limit(1);
+		if (!signer) {
+			return null;
+		}
+		const [request] = await this.db
+			.select()
+			.from(signatureRequests)
+			.where(eq(signatureRequests.id, signer.requestId))
+			.limit(1);
+		return request ? { signer, request } : null;
 	}
 
 	protected async byToken(token: string): Promise<Found | null> {

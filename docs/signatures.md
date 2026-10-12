@@ -70,6 +70,20 @@ signer's turn.
 Someone who opens their link while signed in to Penombre with an account at the
 same address is recorded as that account.
 
+### In the mobile app
+
+A signer with an account on the instance also finds the request in their
+notifications, and the [mobile app](mobile.md#signature-requests) opens it
+natively: the frozen PDF, the consent, a pad to sign on with a finger. On a
+phone's browser, the link's page offers **Sign in the Penombre app**, which
+opens the same screen, signed in to the app or not. Either way it is the same
+request and the same audit trail as the page.
+
+The notification carries no link a stranger could use: it opens the request only
+for the account it was addressed to, signed in, so it keeps working when the
+emailed link is renewed, and anyone else who follows it gets a page that does
+not exist.
+
 ## The signed PDF
 
 When the last person signs, Penombre:
@@ -115,4 +129,7 @@ API docs: `POST /api/v1/signatures` (with `drive`, `volume` or `share` for a
 document outside your own drive), `GET /api/v1/signatures`,
 `POST /api/v1/signatures/{id}/cancel`,
 `POST /api/v1/signatures/{id}/signers/{signerId}/link` and
-`GET /api/v1/signatures/{id}/pdf`. Signers answer through the page only.
+`GET /api/v1/signatures/{id}/pdf`. Signers answer through the page, or through
+`POST /api/v1/signing/view`, `/document`, `/sign` and `/decline`, which take the
+link's `token` in the body, or `signer` (the signer's id) from a session signed
+in as that signer.

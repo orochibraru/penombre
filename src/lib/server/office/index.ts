@@ -1,8 +1,10 @@
 import { type DocumentKind, officeKindForName } from "#lib/documents.js";
+import { documentXml } from "./docx-package";
 import { docxToHtml } from "./docx-read";
 import { htmlToDocx } from "./docx-write";
 import { pptxToText, textToPptx } from "./pptx";
 import { workbookFromText, workbookToText } from "./xlsx";
+import { isElement, parseXml, type XmlElement } from "./xml";
 import { readZip, writeZip } from "./zip";
 
 /**
@@ -48,6 +50,72 @@ export function officeToText(name: string, bytes: ArrayBuffer): string {
 		default:
 			throw new UnsupportedOfficeFileError(`No reader for ${name}`);
 	}
+}
+
+const UNSUPPORTED_CHANGES = new Set([
+	"w:moveFrom",
+	"w:moveTo",
+	"w:rPrChange",
+	"w:pPrChange",
+	"w:sectPrChange",
+	"w:tblPrChange",
+	"w:tblPrExChange",
+	"w:tblGridChange",
+	"w:trPrChange",
+	"w:tcPrChange",
+	"w:numberingChange",
+	"w:cellIns",
+	"w:cellDel",
+	"w:cellMerge",
+]);
+
+/** Where the editor reads a `w:ins` or `w:del` as a suggestion. */
+const SUGGESTION_PARENTS = new Set([
+	"w:p",
+	"w:hyperlink",
+	"w:smartTag",
+	"w:ins",
+	"w:del",
+]);
+
+function unsupportedIn(node: XmlElement, parent: XmlElement | null): boolean {
+	if (UNSUPPORTED_CHANGES.has(node.name)) {
+		return true;
+	}
+	if (node.name === "w:ins" || node.name === "w:del") {
+		const paragraphMark = parent?.name === "w:rPr";
+		if (!(paragraphMark || SUGGESTION_PARENTS.has(parent?.name ?? ""))) {
+			return true;
+		}
+	}
+	return node.children.some(
+		(child) => isElement(child) && unsupportedIn(child, node),
+	);
+}
+
+/**
+ * Whether a `.docx` holds tracked changes the editor cannot keep: moves,
+ * formatting changes, table row and cell changes. Its first save would
+ * accept them all, so such a file opens read-only. Insertions and
+ * deletions of text and of paragraph marks are suggestions the editor reads
+ * and writes back.
+ */
+export function hasUnsupportedChanges(
+	name: string,
+	bytes: ArrayBuffer,
+): boolean {
+	if (officeKindForName(name) !== "document") {
+		return false;
+	}
+	const xml = documentXml(readZip(bytes));
+	if (
+		!/<w:(ins|del|moveFrom|moveTo|cellIns|cellDel|cellMerge|\w+Change)[\s>/]/.test(
+			xml,
+		)
+	) {
+		return false;
+	}
+	return unsupportedIn(parseXml(xml).root, null);
 }
 
 /** The edited text applied to the original file, as its new bytes. */

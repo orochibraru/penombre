@@ -46,6 +46,10 @@ flows() {
   maestro --platform "$1" test \
     -e LINK="$(PENOMBRE_E2E_SERVER="$server" bun "$root/apps/mobile/e2e/pair.ts")" \
     "$root/apps/mobile/e2e/paired.yaml"
+  # Editors and PDFs, signed in by another fresh code.
+  maestro --platform "$1" test \
+    -e LINK="$(PENOMBRE_E2E_SERVER="$server" bun "$root/apps/mobile/e2e/pair.ts")" \
+    "$root/apps/mobile/e2e/documents.yaml"
 }
 
 [ -z "$signed_in" ] || PENOMBRE_E2E_SERVER="$server" bun "$root/apps/mobile/e2e/seed.ts"

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MessageSquarePlusIcon } from "@lucide/svelte";
+	import { ListIcon, MessageSquarePlusIcon } from "@lucide/svelte";
 	import type { Snippet } from "svelte";
 	import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
 	import { m } from "#lib/paraglide/messages.js";
@@ -10,6 +10,7 @@
 		insertActions,
 		type SheetAction,
 	} from "./actions.js";
+	import { dropdownsOf } from "./dropdowns.svelte.js";
 	import type { SheetState } from "./state.svelte.js";
 
 	/** The right-click (long-press) menu over the grid. */
@@ -51,6 +52,16 @@
             <ContextMenu.Separator />
             {@render items(deleteActions(sheet))}
             {@render items(fillActions(sheet).slice(2))}
+            {#if sheet.workbook}
+                <ContextMenu.Separator />
+                {@render items([
+                    {
+                        label: m.sheet_dropdown(),
+                        icon: ListIcon,
+                        run: dropdownsOf(sheet).edit,
+                    },
+                ])}
+            {/if}
         {/if}
         {#if sheet.onComment}
             <ContextMenu.Separator />

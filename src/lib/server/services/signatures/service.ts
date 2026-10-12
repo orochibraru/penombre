@@ -169,6 +169,7 @@ export class SignatureService extends SignatureSigning {
 			const turn = !request.sequential || signer.position === 0;
 			const emailed =
 				!!send && turn && (await this.invite(send, request, signer, token));
+			await this.tellSigner(request, signer);
 			await this.log(id, [
 				{
 					type: "sent",

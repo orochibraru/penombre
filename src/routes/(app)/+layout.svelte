@@ -29,7 +29,8 @@
 		UsersIcon,
 		VideoIcon,
 	} from "@lucide/svelte";
-	import { onMount } from "svelte";
+	import { setMode } from "mode-watcher";
+	import { onMount, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import AppBanner from "#lib/components/apps/app-banner.svelte";
 	import NewPresentationDialog from "#lib/components/editor/slides/new-presentation-dialog.svelte";
@@ -93,7 +94,30 @@
 	// still records it as done, so it never reappears uninvited.
 	let onboardingOpen = $state(false);
 
+	/**
+	 * The mobile app's editor screen: the editor alone, inside a native screen
+	 * that brings its own header, ground and light or dark.
+	 */
+	const embedded = $derived(
+		page.route.id === "/(app)/edit/[fileId]" &&
+			page.url.searchParams.has("embed"),
+	);
+
 	$effect(() => {
+		if (!embedded) {
+			return;
+		}
+		const theme = page.url.searchParams.get("theme");
+		if (theme === "dark" || theme === "light") {
+			// mode-watcher reads its own state while writing it.
+			untrack(() => setMode(theme));
+		}
+	});
+
+	$effect(() => {
+		if (embedded) {
+			return;
+		}
 		if (data.preferences && data.preferences.onboarded === false) {
 			onboardingOpen = true;
 		}
@@ -449,8 +473,16 @@
 		lastScrollY = y;
 	}
 
-	const bottomNavItemClass = "flex flex-col gap-1 items-center text-xs";
+	const bottomNavItemClass =
+		"flex flex-1 flex-col gap-0.5 items-center text-xs";
 	const bottomNavItemIconClass = "w-5.5 h-5.5";
+
+	/** The mobile app's tab bar: the tab you are on sits on a pill of the accent. */
+	const tabIconClass = (active: boolean) =>
+		cn(
+			"box-content h-5.5 w-5.5 rounded-[14px] px-4.5 py-1",
+			active && "bg-primary/15",
+		);
 
 	function isActive(itemUrl: string) {
 		if (page.url.pathname === "/" && itemUrl === "/") {
@@ -484,6 +516,9 @@
 <svelte:window onscroll={onWindowScroll}></svelte:window>
 <svelte:head><title>{data.config.appName} - {$title ?? m.home()}</title></svelte:head>
 
+{#if embedded}
+    <main class="flex min-h-dvh flex-col px-2 pt-2">{@render children()}</main>
+{:else}
 <Sidebar.Provider
     style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
 >
@@ -609,16 +644,18 @@
 		<MusicPlayer />
 		<div
             class={cn(
-                "bg-background fixed bottom-0 left-0 w-full rounded-t-xl border-t px-8 py-2 transition-transform duration-300 md:hidden",
-                bottomBarHidden && "translate-y-full",
+                "bg-surface-base fixed inset-x-4 bottom-[max(0.75rem,env(safe-area-inset-bottom))] rounded-[28px] border px-2 py-1.5 shadow-lg transition-transform duration-300 md:hidden",
+                bottomBarHidden && "translate-y-[calc(100%+2rem)]",
             )}
 		>
-			<div class="flex items-center justify-between gap-5">
+			<div class="flex items-center justify-between">
 				<a
 					href={driveOnly ? resolve("/(app)/drives/shared") : resolve('browse')}
 					class={cn(bottomNavItemClass, isActive(driveOnly ? "/drives" : "/browse") ? "text-primary" : "")}
 				>
-					<FolderIcon class={bottomNavItemIconClass} />
+					<FolderIcon
+                        class={tabIconClass(isActive(driveOnly ? "/drives" : "/browse"))}
+                    />
 					{m.home()}
 				</a>
 				{#if !simpleMode && !driveOnly}
@@ -626,7 +663,7 @@
 						href={resolve('recent')}
 						class={cn(bottomNavItemClass, isActive("/recent") ? "text-primary" : "")}
 					>
-						<ClockFadingIcon class={bottomNavItemIconClass} />
+						<ClockFadingIcon class={tabIconClass(isActive("/recent"))} />
 						{m.nav_recent()}
 					</a>
 				{/if}
@@ -637,7 +674,7 @@
 						href={resolve('starred')}
 						class={cn(bottomNavItemClass, isActive("/starred") ? "text-primary" : "")}
 					>
-						<StarIcon class={bottomNavItemIconClass} />
+						<StarIcon class={tabIconClass(isActive("/starred"))} />
 						{m.nav_starred()}
 					</a>
 				{/if}
@@ -660,7 +697,7 @@
 					{:else if uploadLoading}
 						<Spinner class={bottomNavItemIconClass} />
 					{:else}
-						<MenuIcon class={bottomNavItemIconClass} />
+						<MenuIcon class={tabIconClass(false)} />
 					{/if}
 					{m.menu()}
 				</button>
@@ -668,6 +705,7 @@
 		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>
+{/if}
 
 <Onboarding bind:open={onboardingOpen} preferences={data.preferences} />
 

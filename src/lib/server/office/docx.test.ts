@@ -3,6 +3,7 @@ import { pixelSize, UnsupportedPictureError } from "./docx-media";
 import { blankDocument } from "./docx-package";
 import { docxToHtml } from "./docx-read";
 import { htmlToDocx } from "./docx-write";
+import { hasUnsupportedChanges } from "./index";
 import { DRAWING_RUN, PIXEL_PNG, wordDocument } from "./test-utils";
 import { partText, readZip, writeZip } from "./zip";
 
@@ -646,6 +647,190 @@ describe("what else the editor offers", () => {
 		);
 		expect(documentXml(entries)).toContain(
 			'<w:tblGrid><w:gridCol w:w="3008"/><w:gridCol w:w="3008"/><w:gridCol w:w="3008"/></w:tblGrid>',
+		);
+	});
+});
+
+describe("tracked changes", () => {
+	const change = (kind: "ins" | "del", id: string, inner: string) =>
+		`<w:${kind} w:id="${id}" w:author="Ann" w:date="2026-01-02T03:04:05Z">${inner}</w:${kind}>`;
+	const deleted = (value: string) =>
+		`<w:r><w:delText>${value}</w:delText></w:r>`;
+	const attrs = (id: string) =>
+		`data-suggestion="${id}" data-author="Ann" data-author-id="" data-date="2026-01-02T03:04:05Z"`;
+
+	it("reads insertions and deletions as suggestions, a replacement as one", () => {
+		const html = docxToHtml(
+			open(
+				paragraph(
+					run("keep ") +
+						change("del", "7", deleted("old")) +
+						change("ins", "8", run("new", "<w:rPr><w:b/></w:rPr>")),
+				),
+			),
+		);
+		expect(html).toBe(
+			`<p>keep <del ${attrs("7")}>old</del><ins ${attrs("7")}><strong>new</strong></ins></p>`,
+		);
+	});
+
+	it("keeps changes apart when untracked text or another author is between", () => {
+		const html = docxToHtml(
+			open(
+				paragraph(
+					change("ins", "1", run("a")) +
+						run(" ") +
+						change("ins", "2", run("b")) +
+						'<w:ins w:id="3" w:author="Bob" w:date="2026-01-02T03:04:05Z"><w:r><w:t>c</w:t></w:r></w:ins>',
+				),
+			),
+		);
+		expect(html).toContain('<ins data-suggestion="1"');
+		expect(html).toContain('<ins data-suggestion="2"');
+		expect(html).toContain('data-suggestion="3" data-author="Bob"');
+	});
+
+	it("writes them back as Word's own, ids and authors kept", () => {
+		const entries = open(paragraph(run("x")));
+		htmlToDocx(
+			entries,
+			`<p>keep <del ${attrs("7")}>old</del><ins ${attrs("7")}><strong>new</strong></ins></p>`,
+		);
+		const xml = documentXml(entries);
+		expect(xml).toContain(
+			'<w:del w:id="7" w:author="Ann" w:date="2026-01-02T03:04:05Z"><w:r><w:delText xml:space="preserve">old</w:delText></w:r></w:del>',
+		);
+		expect(xml).toMatch(
+			/<w:ins w:id="(\d+)" w:author="Ann" w:date="2026-01-02T03:04:05Z"><w:r><w:rPr><w:b\/><\/w:rPr><w:t xml:space="preserve">new<\/w:t><\/w:r><\/w:ins>/,
+		);
+		expect(xml).not.toContain('<w:ins w:id="7"');
+		// Read again, the replacement is still one suggestion under its id.
+		expect(docxToHtml(entries)).toBe(
+			`<p>keep <del ${attrs("7")}>old</del><ins ${attrs("7")}><strong>new</strong></ins></p>`,
+		);
+	});
+
+	it("numbers a suggestion made in the editor, one element per change", () => {
+		const entries = open(paragraph(run("x")));
+		const mine =
+			'data-suggestion="c0ffee" data-author="Zoé" data-author-id="u1" data-date="2026-05-06T07:08:09.123Z"';
+		htmlToDocx(
+			entries,
+			`<p><ins ${mine}>one</ins><ins ${mine}><em>two</em></ins><br></p>`,
+		);
+		const xml = documentXml(entries);
+		expect(xml.match(/<w:ins /g)).toHaveLength(1);
+		expect(xml).toContain('w:author="Zoé" w:date="2026-05-06T07:08:09Z"');
+		expect(xml).not.toContain("c0ffee");
+	});
+
+	it("reads and writes a suggested paragraph break", () => {
+		const mark = (kind: "ins" | "del") =>
+			`<w:pPr><w:rPr><w:${kind} w:id="4" w:author="Ann" w:date="2026-01-02T03:04:05Z"/></w:rPr></w:pPr>`;
+		const entries = open(
+			paragraph(run("first"), mark("del")) + paragraph(run("second")),
+		);
+		const html = docxToHtml(entries);
+		expect(html).toContain(
+			'data-paragraph-change="{&quot;kind&quot;:&quot;delete&quot;',
+		);
+		htmlToDocx(entries, html);
+		const xml = documentXml(entries);
+		expect(xml).toContain(
+			'<w:pPr><w:rPr><w:del w:id="4" w:author="Ann" w:date="2026-01-02T03:04:05Z"/></w:rPr></w:pPr>',
+		);
+		expect(docxToHtml(entries)).toBe(html);
+	});
+
+	it("reads a deletion of someone else's insertion as both", () => {
+		const html = docxToHtml(
+			open(
+				paragraph(
+					`<w:ins w:id="1" w:author="Ann" w:date="2026-01-02T03:04:05Z"><w:del w:id="2" w:author="Bob" w:date="2026-01-03T00:00:00Z">${deleted("gone")}</w:del></w:ins>`,
+				),
+			),
+		);
+		expect(html).toContain('<ins data-suggestion="1"');
+		expect(html).toContain('<del data-suggestion="2" data-author="Bob"');
+		const entries = open(paragraph(run("x")));
+		htmlToDocx(entries, html);
+		expect(documentXml(entries)).toContain(
+			'<w:ins w:id="1" w:author="Ann" w:date="2026-01-02T03:04:05Z"><w:del w:id="2" w:author="Bob" w:date="2026-01-03T00:00:00Z"><w:r><w:delText xml:space="preserve">gone</w:delText>',
+		);
+	});
+
+	it("does not copy a list item's suggested break onto new items", () => {
+		const entries = open(
+			paragraph(
+				run("one"),
+				'<w:pPr><w:pStyle w:val="ListBullet"/><w:rPr><w:ins w:id="1" w:author="Ann"/><w:b/></w:rPr></w:pPr>',
+			),
+		);
+		htmlToDocx(entries, "<ul><li><p>a</p></li><li><p>b</p></li></ul>");
+		const xml = documentXml(entries);
+		expect(xml).not.toContain("<w:ins");
+		expect(xml).toContain("<w:rPr><w:b/></w:rPr>");
+	});
+
+	it("leaves an untracked document untracked", () => {
+		const entries = open(paragraph(run("x")));
+		htmlToDocx(entries, "<p>plain <del>struck</del></p>");
+		const xml = documentXml(entries);
+		expect(xml).not.toContain("<w:del");
+		expect(xml).toContain("<w:strike/>");
+	});
+});
+
+describe("hasUnsupportedChanges", () => {
+	const bytes = (body: string) => {
+		const buffer = wordDocument({ body });
+		return buffer.buffer.slice(
+			buffer.byteOffset,
+			buffer.byteOffset + buffer.byteLength,
+		) as ArrayBuffer;
+	};
+
+	it("lets insertions and deletions through: they are suggestions", () => {
+		expect(
+			hasUnsupportedChanges(
+				"a.docx",
+				bytes(
+					paragraph(
+						`<w:ins w:id="1" w:author="A">${run("new")}</w:ins><w:del w:id="2"><w:r><w:delText>old</w:delText></w:r></w:del>`,
+						'<w:pPr><w:rPr><w:ins w:id="3" w:author="A"/></w:rPr></w:pPr>',
+					),
+				),
+			),
+		).toBe(false);
+	});
+
+	it("finds moves, formatting changes and table row changes", () => {
+		const unsupported = [
+			paragraph(`<w:moveFrom w:id="1" w:author="A">${run("x")}</w:moveFrom>`),
+			paragraph(
+				run(
+					"x",
+					'<w:rPr><w:b/><w:rPrChange w:id="1" w:author="A"><w:rPr/></w:rPrChange></w:rPr>',
+				),
+			),
+			`<w:tbl><w:tr><w:trPr><w:ins w:id="1" w:author="A"/></w:trPr><w:tc>${paragraph(run("x"))}</w:tc></w:tr></w:tbl>`,
+		];
+		for (const body of unsupported) {
+			expect(hasUnsupportedChanges("a.docx", bytes(body))).toBe(true);
+		}
+	});
+
+	it("is not fooled by table borders or a plain document", () => {
+		expect(
+			hasUnsupportedChanges(
+				"a.docx",
+				bytes(
+					`<w:tbl><w:tblPr><w:tblBorders><w:insideH w:val="single"/></w:tblBorders></w:tblPr></w:tbl>${paragraph(run("x"))}`,
+				),
+			),
+		).toBe(false);
+		expect(hasUnsupportedChanges("a.xlsx", bytes(paragraph(run("x"))))).toBe(
+			false,
 		);
 	});
 });

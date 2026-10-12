@@ -558,26 +558,3 @@ private fun SearchEntry(item: Item, host: Host, onClick: () -> Unit) {
         onClick = onClick,
     )
 }
-
-/** A PDF, every page, scrolled; the platform draws it (`PdfPages`). */
-@Composable
-fun PdfView(host: Host, place: Place, item: Item) {
-    var bytes by remember { mutableStateOf<ByteArray?>(null) }
-    var failed by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(item.metadata.id) {
-        host.attempt({ failed = it }) { bytes = host.api.bytes(rawUrl(host.server, place, item.metadata.id)) }
-    }
-    Scaffold(
-        containerColor = brand.ground,
-        topBar = { Header(item.title, onBack = host.back, compact = true) },
-    ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize(), contentAlignment = Alignment.Center) {
-            val loaded = bytes
-            when {
-                failed != null -> Note(failed!!, colour = MaterialTheme.colorScheme.error)
-                loaded == null -> BreathingMoon()
-                else -> PdfPages(loaded, Modifier.fillMaxSize())
-            }
-        }
-    }
-}

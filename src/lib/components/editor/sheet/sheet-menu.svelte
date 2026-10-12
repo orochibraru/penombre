@@ -2,6 +2,8 @@
 	import {
 		ArrowDownAZIcon,
 		ArrowUpZAIcon,
+		ChartColumnIcon,
+		ListIcon,
 		MessageSquarePlusIcon,
 		PlusIcon,
 		Redo2Icon,
@@ -22,7 +24,10 @@
 		insertActions,
 		MOD,
 		type SheetAction,
+		sortColumn,
 	} from "./actions.js";
+	import { dropdownsOf } from "./dropdowns.svelte.js";
+	import FormatMenu from "./format-menu.svelte";
 	import type { SheetState } from "./state.svelte.js";
 
 	/** The menu bar over the grid, and Find. */
@@ -120,6 +125,10 @@
                 {/if}
                 {#if sheet.workbook}
                     <Menubar.Separator />
+                    <Menubar.Item onSelect={sheet.insertChart}>
+                        <ChartColumnIcon class="size-4" />
+                        {m.chart_insert()}
+                    </Menubar.Item>
                     <Menubar.Item onSelect={sheet.addSheet}>
                         <PlusIcon class="size-4" />
                         {m.sheet_add_sheet()}
@@ -127,23 +136,31 @@
                 {/if}
             </Menubar.Content>
         </Menubar.Menu>
+        <FormatMenu {sheet} onCloseAutoFocus={toGrid} />
         <Menubar.Menu>
             <Menubar.Trigger>{m.menu_data()}</Menubar.Trigger>
             <Menubar.Content onCloseAutoFocus={toGrid}>
-                <Menubar.Item onSelect={() => sheet.sort(false)}>
+                <Menubar.Item onSelect={() => sortColumn(sheet, false)}>
                     <ArrowDownAZIcon class="size-4" />
                     {m.sheet_sort_ascending()}
                     <Menubar.Shortcut>
                         {columnName(sheet.selection.anchor.col)}
                     </Menubar.Shortcut>
                 </Menubar.Item>
-                <Menubar.Item onSelect={() => sheet.sort(true)}>
+                <Menubar.Item onSelect={() => sortColumn(sheet, true)}>
                     <ArrowUpZAIcon class="size-4" />
                     {m.sheet_sort_descending()}
                     <Menubar.Shortcut>
                         {columnName(sheet.selection.anchor.col)}
                     </Menubar.Shortcut>
                 </Menubar.Item>
+                {#if sheet.workbook}
+                    <Menubar.Separator />
+                    <Menubar.Item onSelect={dropdownsOf(sheet).edit}>
+                        <ListIcon class="size-4" />
+                        {m.sheet_dropdown()}
+                    </Menubar.Item>
+                {/if}
                 <Menubar.Separator />
                 <Menubar.CheckboxItem bind:checked={sheet.header}>
                     {m.sheet_header_row()}

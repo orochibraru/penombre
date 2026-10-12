@@ -132,6 +132,50 @@ test.describe("Office documents", () => {
 		expect(errors).toEqual([]);
 	});
 
+	test("suggestions in a Word document survive a save and can be accepted", async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("pageerror", (error) => errors.push(error.message));
+
+		const id = await uploadFixture(page, "office-report.docx");
+		await page.goto(`/edit/${id}`);
+		const heading = page.locator(".ProseMirror h1");
+		await expect(heading).toHaveText("Quarterly report", { timeout: 20_000 });
+		await page.getByRole("button", { name: /^Mode:/ }).click();
+		await page.getByRole("menuitem", { name: /^Suggesting/ }).click();
+
+		await editUntilSaved(page, async () => {
+			await heading.click();
+			await page.keyboard.press("End");
+			await page.keyboard.type(" 2026");
+		});
+		await expect(heading.locator("ins.suggestion")).toContainText("2026");
+
+		// Read back from the .docx: the insertion is still a suggestion.
+		await page.reload();
+		await expect(page.locator(".ProseMirror h1 ins.suggestion")).toContainText(
+			"2026",
+			{ timeout: 20_000 },
+		);
+
+		// Delete strikes rather than removes.
+		await page.locator(".ProseMirror h1").click();
+		await page.keyboard.press("Home");
+		await page.keyboard.press("Delete");
+		await expect(page.locator(".ProseMirror h1 del.suggestion")).toHaveText(
+			"Q",
+		);
+
+		await page.getByRole("menuitem", { name: "Suggestions" }).click();
+		await page.getByRole("menuitem", { name: "Accept all" }).click();
+		await expect(page.locator(".ProseMirror h1")).toHaveText(
+			"uarterly report 2026",
+		);
+		await expect(page.locator(".ProseMirror .suggestion")).toHaveCount(0);
+		expect(errors).toEqual([]);
+	});
+
 	test("a presentation opens in the slide editor and keeps its other slides", async ({
 		page,
 	}) => {

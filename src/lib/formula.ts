@@ -308,6 +308,8 @@ export interface Workbook {
 	kind(sheet: number, row: number, col: number): Kind;
 	/** What the grid shows for a cell. */
 	shown(sheet: number, row: number, col: number): string;
+	/** A formula, without `=`, that sits in no cell, as if typed on `sheet`. */
+	compute(sheet: number, formula: string): Value;
 }
 
 /**
@@ -437,6 +439,16 @@ class Evaluator implements Workbook {
 			}
 		}
 		return display(value);
+	};
+
+	compute = (sheet: number, formula: string): Value => {
+		const outer = this.current;
+		this.current = sheet;
+		try {
+			return this.evaluate(formula);
+		} finally {
+			this.current = outer;
+		}
 	};
 
 	/**

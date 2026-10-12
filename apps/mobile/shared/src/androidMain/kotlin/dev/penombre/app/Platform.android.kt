@@ -57,8 +57,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -81,12 +83,15 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
@@ -122,7 +127,7 @@ actual object Prefs {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-actual fun WebPage(url: String, session: Session, modifier: Modifier) {
+actual fun WebPage(url: String, session: Session, modifier: Modifier, transparent: Boolean, controller: WebController?) {
     val language = spoken(LocalLanguage.current)
     AndroidView(modifier = modifier, factory = { context ->
         WebView(context).apply {
@@ -131,6 +136,29 @@ actual fun WebPage(url: String, session: Session, modifier: Modifier) {
             // The site knows its own app by this: no "get the app" banner in here.
             settings.userAgentString = "${settings.userAgentString} PenombreApp"
             webViewClient = WebViewClient()
+            if (transparent) setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            val view = this
+            // evaluateJavascript does not wait for a promise: its answer is polled for.
+            controller?.settle = {
+                val asked = CompletableDeferred<String?>()
+                view.evaluateJavascript(
+                    "window.__penombreSettled = undefined;" +
+                        "window.penombreSettle ? (window.penombreSettle().then(v => window.__penombreSettled = String(v)," +
+                        " () => window.__penombreSettled = 'false'), 'waiting') : 'none'",
+                ) { asked.complete(it) }
+                if (asked.await()?.contains("none") == true) {
+                    null
+                } else {
+                    var answer: String? = null
+                    while (answer == null) {
+                        delay(100)
+                        val read = CompletableDeferred<String?>()
+                        view.evaluateJavascript("window.__penombreSettled || ''") { read.complete(it) }
+                        answer = read.await()?.trim('"')?.takeIf { it.isNotEmpty() }
+                    }
+                    answer == "true"
+                }
+            }
             val secure = if (session.server.startsWith("https://")) "; Secure" else ""
             val cookies = CookieManager.getInstance()
             // The web's own language cookie (paraglide's): its pages open in the app's.
@@ -329,62 +357,60 @@ actual fun saveToDevice(url: String, token: String, name: String, done: (Words?)
     done(Words(Res.string.download_started, name))
 }
 
-@Composable
-actual fun PdfPages(bytes: ByteArray, modifier: Modifier) {
-    val context = LocalContext.current
+actual class PdfSource actual constructor(bytes: ByteArray) {
     // PdfRenderer reads a file, and renders one page at a time.
-    val renderer = remember(bytes) {
-        val file = File.createTempFile("view", ".pdf", context.cacheDir).apply { writeBytes(bytes) }
-        file.deleteOnExit()
-        PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY))
-    }
-    val lock = remember(renderer) { Mutex() }
-    DisposableEffect(renderer) { onDispose { renderer.close() } }
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    val zoom = rememberTransformableState { change, pan, _ ->
-        scale = (scale * change).coerceIn(1f, 4f)
-        offset = if (scale == 1f) Offset.Zero else offset + pan
-    }
-    BoxWithConstraints(modifier.background(Color(0xFF2A2830)).transformable(zoom, canPan = { scale > 1f })) {
-        val width = constraints.maxWidth.coerceAtLeast(1)
-        LazyColumn(
-            Modifier.fillMaxSize().graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationX = offset.x
-                translationY = offset.y
-            },
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 8.dp),
-        ) {
-            items(renderer.pageCount) { index ->
-                var page by remember(index) { mutableStateOf<ImageBitmap?>(null) }
-                LaunchedEffect(renderer, index) {
-                    page = withContext(Dispatchers.Default) {
-                        lock.withLock {
-                            renderer.openPage(index).use { pdf ->
-                                // Twice the screen's width: sharp once zoomed in a little.
-                                val w = width * 2
-                                val h = (w.toFloat() * pdf.height / pdf.width).toInt().coerceAtLeast(1)
-                                val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-                                bitmap.eraseColor(android.graphics.Color.WHITE)
-                                pdf.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                                bitmap.asImageBitmap()
-                            }
-                        }
-                    }
+    private val file = File.createTempFile("view", ".pdf", AndroidHost.context.cacheDir).apply { writeBytes(bytes) }
+    private val renderer = PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY))
+    private val lock = Mutex()
+    private var closed = false
+
+    @Volatile private var closing = false
+
+    // Turned already: pdfium swaps a rotated page's sides.
+    private val sizes = (0 until renderer.pageCount).map { index -> renderer.openPage(index).use { Size(it.width.toFloat(), it.height.toFloat()) } }
+
+    actual val pageCount: Int get() = sizes.size
+
+    actual fun pageSize(index: Int): Size = sizes[index]
+
+    actual suspend fun render(index: Int, width: Int): ImageBitmap = withContext(Dispatchers.Default) {
+        lock.withLock {
+            check(!closed) { "closed" }
+            try {
+                renderer.openPage(index).use { page ->
+                    val height = (width.toFloat() * page.height / page.width).toInt().coerceAtLeast(1)
+                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    bitmap.eraseColor(android.graphics.Color.WHITE)
+                    page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                    bitmap.asImageBitmap()
                 }
-                val shown = page
-                if (shown == null) {
-                    Box(Modifier.fillMaxWidth().aspectRatio(0.707f).background(Color.White.copy(alpha = 0.06f)))
-                } else {
-                    Image(shown, stringResource(Res.string.pdf_page, index + 1), Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
-                }
+            } finally {
+                // Closed while this page rendered: the last one out shuts it.
+                if (closing) shut()
+            }
+        }
+    }
+
+    private fun shut() {
+        if (closed) return
+        closed = true
+        renderer.close()
+        file.delete()
+    }
+
+    actual fun close() {
+        closing = true
+        if (lock.tryLock()) {
+            try {
+                shut()
+            } finally {
+                lock.unlock()
             }
         }
     }
 }
+
+actual fun pngOf(picture: ImageBitmap): ByteArray = ByteArrayOutputStream().also { picture.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
 
 actual fun openExternal(url: String) {
     runCatching {
@@ -445,6 +471,8 @@ class NoticeWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         return Result.success()
     }
 }
+
+actual fun timeZone(): String? = java.util.TimeZone.getDefault().id
 
 actual val appVersion: String
     get() = runCatching {

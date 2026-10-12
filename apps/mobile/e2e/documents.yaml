@@ -1,0 +1,60 @@
+# The native shells around documents and PDFs: a docx typed into in the web
+# editor survives Back, a PDF marked up and saved shows its mark when reopened.
+appId: com.orochibraru.penombre
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    text: "Cancel"
+    optional: true
+- openLink: ${LINK}
+- tapOn:
+    text: "Open"
+    optional: true
+- extendedWaitUntil:
+    visible: "Sign in to .*"
+    timeout: 30000
+- tapOn: "Connect"
+- extendedWaitUntil:
+    visible: "My Drive"
+    timeout: 30000
+- tapOn: "Documents"
+- tapOn: "Rider.docx"
+- tapOn: "Open"
+- extendedWaitUntil:
+    visible: ".*Quarterly report.*"
+    timeout: 30000
+- tapOn: "Revenue grew.*"
+- inputText: " Maestro was here."
+# Back, straight away: the editor screen has the page save before it closes.
+- tapOn: "Back"
+- tapOn: "Rider.docx"
+- tapOn: "Open"
+- extendedWaitUntil:
+    visible: ".*Maestro was here.*"
+    timeout: 30000
+- tapOn: "Back"
+- tapOn: "Back"
+- scrollUntilVisible:
+    element: "Contract.pdf"
+- tapOn: "Contract.pdf"
+- tapOn: "Open"
+- extendedWaitUntil:
+    visible: "Note"
+    timeout: 30000
+- tapOn: "Note"
+- tapOn:
+    point: 70%, 40%
+- inputText: "Maestro note"
+- tapOn: "Add"
+- tapOn: "Pen"
+- swipe:
+    start: 20%, 50%
+    end: 70%, 55%
+    duration: 800
+- tapOn: "Save"
+# Saved and reloaded: nothing left to save.
+- extendedWaitUntil:
+    notVisible: "Save"
+    timeout: 30000
+- tapOn: "Back"

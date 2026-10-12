@@ -1,6 +1,8 @@
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
+import type { Chart } from "#lib/chart/model.js";
 import { createWorkbook, type SheetSource } from "#lib/formula.js";
 import { columnName } from "#lib/sheet/references.js";
+import { chartBlocks } from "./sheet-charts";
 
 /**
  * A workbook as a PDF: every sheet on landscape A4, one table each, showing
@@ -79,7 +81,7 @@ function sheetTable(values: string[][]): Content {
 }
 
 export function sheetsPdf(
-	sheets: SheetSource[],
+	sheets: (SheetSource & { charts?: Chart[] })[],
 	title: string,
 ): TDocumentDefinitions {
 	const cells = sheets.reduce((sum, sheet) => {
@@ -92,6 +94,7 @@ export function sheetsPdf(
 		);
 	}
 	const values = shownValues(sheets);
+	const charts = chartBlocks(sheets);
 	const content = sheets.flatMap((sheet, index): Content[] => {
 		const rows = values[index] ?? [];
 		return [
@@ -103,6 +106,7 @@ export function sheetsPdf(
 				...(index > 0 ? { pageBreak: "before" as const } : {}),
 			},
 			rows.length > 0 ? sheetTable(rows) : { text: "", margin: [0, 0, 0, 0] },
+			...(charts[index] ?? []),
 		];
 	});
 	return {

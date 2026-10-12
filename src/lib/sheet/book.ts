@@ -1,3 +1,5 @@
+import { moveCharts, renameChartRefs } from "../chart/edit";
+import type { Chart } from "../chart/model";
 import { parseCsv, toCsv } from "../documents";
 import {
 	adjustFormula,
@@ -6,7 +8,20 @@ import {
 	renameSheetRefs,
 	shiftFormula,
 } from "../formula";
+import type { ConditionalFormat } from "./conditional";
+import {
+	type Dropdown,
+	moveDropdowns,
+	renameDropdownSources,
+} from "./dropdowns";
+import { moveLayout, type SheetLayout, savedLayout } from "./layout";
 import type { Rect } from "./selection";
+import {
+	type CellStyle,
+	compactStyles,
+	moveFormats,
+	type StyleGrid,
+} from "./styles";
 
 /**
  * The workbook the sheet editor edits, and every change it can make to one.
@@ -20,13 +35,23 @@ import type { Rect } from "./selection";
  * after a rename, and new sheets a fresh one.
  */
 
-export interface SheetData {
+export interface SheetData extends SheetLayout {
 	/** The workbook's `sheetId`; a sheet added here takes the next free one. */
 	id: number;
 	name: string;
 	rows: string[][];
 	/** Values the file recorded for its formulas; see `SheetSource.cached`. */
 	cached?: Record<string, [string, string]>;
+	/** Charts floating over the sheet; see `#lib/chart`. */
+	charts?: Chart[];
+	/** Indices into the workbook's style table; see `./styles`. */
+	styleIds?: StyleGrid;
+	/** Merged ranges, `A1:C2`. */
+	merges?: string[];
+	/** List validations, drawn as chips; see `./dropdowns`. */
+	dropdowns?: Dropdown[];
+	/** The file's conditional formats, drawn only; see `./conditional`. */
+	conditional?: ConditionalFormat[];
 }
 
 export interface BookData {
@@ -65,10 +90,40 @@ function trimmed(rows: string[][]): string[][] {
 	);
 }
 
-export function serializeBook(book: BookData, workbook: boolean): string {
+export function serializeBook(
+	book: BookData,
+	workbook: boolean,
+	styles?: CellStyle[],
+): string {
 	if (workbook) {
 		return JSON.stringify({
-			sheets: book.sheets.map(({ id, name, rows }) => ({ id, name, rows })),
+			sheets: book.sheets.map(
+				({
+					id,
+					name,
+					rows,
+					charts,
+					styleIds,
+					merges,
+					dropdowns,
+					...layout
+				}) => ({
+					id,
+					name,
+					rows,
+					// Absent tells the server to leave the sheet's drawing alone.
+					...(charts ? { charts } : {}),
+					...savedLayout(layout),
+					...(styles
+						? {
+								styleIds: compactStyles(styleIds ?? []),
+								merges: merges ?? [],
+								dropdowns: dropdowns ?? [],
+							}
+						: {}),
+				}),
+			),
+			...(styles ? { styles } : {}),
 		});
 	}
 	return toCsv(trimmed(book.sheets[0]?.rows ?? [[""]]));
@@ -273,16 +328,28 @@ export function restructure(
 		adjustFormula(text, change, target.name, sheet.name),
 	);
 	return {
-		sheets: rewritten.sheets.map((sheet, i) =>
-			i === index
+		sheets: rewritten.sheets.map((sheet, i) => {
+			const charts = moveCharts(sheet.charts, change, target.name, sheet.name);
+			const dropdowns = moveDropdowns(sheet.dropdowns, change, {
+				target: target.name,
+				own: sheet.name,
+			});
+			return i === index
 				? // The file's recorded values are by position, which just moved.
 					{
 						id: sheet.id,
 						name: sheet.name,
 						rows: moveLines(sheet.rows, change),
+						...(charts ? { charts } : {}),
+						...moveFormats(sheet, change),
+						...moveLayout(sheet, change),
+						...(dropdowns ? { dropdowns } : {}),
+						...(sheet.conditional ? { conditional: sheet.conditional } : {}),
 					}
-				: sheet,
-		),
+				: charts === sheet.charts && dropdowns === sheet.dropdowns
+					? sheet
+					: { ...sheet, charts, dropdowns };
+		}),
 	};
 }
 
@@ -384,14 +451,20 @@ export function renameSheet(
 	if (old === undefined) {
 		return book;
 	}
-	const rewritten = rewriteFormulas(book, (text) =>
-		renameSheetRefs(text, old, name),
+	const rewritten = renameChartRefs(
+		rewriteFormulas(book, (text) => renameSheetRefs(text, old, name)),
+		old,
+		name,
 	);
-	return {
-		sheets: rewritten.sheets.map((sheet, i) =>
-			i === index ? { ...sheet, name } : sheet,
-		),
-	};
+	return renameDropdownSources(
+		{
+			sheets: rewritten.sheets.map((sheet, i) =>
+				i === index ? { ...sheet, name } : sheet,
+			),
+		},
+		old,
+		name,
+	);
 }
 
 /** Deletes a sheet; formulas that named it now read `#REF!`. */
@@ -401,5 +474,13 @@ export function removeSheet(book: BookData, index: number): BookData {
 		return book;
 	}
 	const kept = { sheets: book.sheets.filter((_, i) => i !== index) };
-	return rewriteFormulas(kept, (text) => renameSheetRefs(text, old, null));
+	return renameDropdownSources(
+		renameChartRefs(
+			rewriteFormulas(kept, (text) => renameSheetRefs(text, old, null)),
+			old,
+			null,
+		),
+		old,
+		null,
+	);
 }

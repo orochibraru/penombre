@@ -25,7 +25,13 @@ beforeAll(async () => {
 	const runtime = fileURLToPath(import.meta.resolve("svelte/internal/client"));
 	const absolute = code
 		.replaceAll("'svelte/internal/client'", JSON.stringify(runtime))
-		.replaceAll('"#lib/', `"${lib}/`);
+		.replaceAll('"#lib/', `"${lib}/`)
+		// Sibling modules (`./clip.js`) resolve from here, not the temp dir.
+		.replace(
+			/(["'])\.\/([^"']+)\1/g,
+			(_, quote: string, name: string) =>
+				`${quote}${path.join(here, name)}${quote}`,
+		);
 	const file = path.join(
 		mkdtempSync(path.join(tmpdir(), "sheet-state-")),
 		"state.js",
@@ -319,7 +325,7 @@ describe("SheetState over a workbook", () => {
 		const { sheet, last } = openBook();
 		sheet.addSheet();
 		expect(sheet.active).toBe(2);
-		expect(last().sheets.at(-1)).toEqual({
+		expect(last().sheets.at(-1)).toMatchObject({
 			id: 5,
 			name: "Sheet3",
 			rows: [[""]],
@@ -487,5 +493,184 @@ describe("the sheet's keyboard", () => {
 		sheet.comments = new Set([`${name}!B2`]);
 		expect(sheet.commented(1, 1)).toBe(true);
 		expect(sheet.commented(0, 0)).toBe(false);
+	});
+});
+
+describe("SheetState formatting", () => {
+	const content = JSON.stringify({
+		nextId: 2,
+		styles: [{}, { bold: true }, { format: "0.0%" }],
+		sheets: [
+			{
+				id: 1,
+				name: "Data",
+				rows: [
+					["name", "share"],
+					["b", "0.25"],
+					["a", "0.5"],
+				],
+				styleIds: [
+					[1, 1],
+					[0, 2],
+					[0, 2],
+				],
+				merges: ["A5:B5"],
+				freeze: { rows: 1, cols: 0 },
+			},
+		],
+	});
+
+	interface Saved {
+		styles: unknown[];
+		sheets: { rows: string[][]; styleIds: number[][]; merges: string[] }[];
+	}
+
+	function openStyled() {
+		const saved: string[] = [];
+		const sheet = new SheetState(content, true, (text) => saved.push(text));
+		return {
+			sheet,
+			last: () => JSON.parse(saved.at(-1) ?? "{}") as Saved,
+		};
+	}
+
+	it("shows numbers through their format and draws each style once", () => {
+		const { sheet } = openStyled();
+		expect(sheet.shown(1, 1)).toBe("25.0%");
+		expect(sheet.look(0, 0).cell).toBe("font-weight: 700");
+		expect(sheet.look(0, 0)).toBe(sheet.look(0, 1));
+		expect(sheet.merged.get(4 * 16_384 + 1)?.anchor).toBe(false);
+	});
+
+	it("carries formats with a copy, a fill and a sort", () => {
+		const { sheet, last } = openStyled();
+		sheet.selectCell({ row: 1, col: 1 });
+		const text = sheet.copy(false);
+		sheet.selectCell({ row: 3, col: 0 });
+		sheet.paste(text);
+		expect(last().sheets[0]?.styleIds[3]).toEqual([2]);
+
+		sheet.select({ anchor: { row: 0, col: 0 }, focus: { row: 1, col: 0 } });
+		sheet.fill("down");
+		expect(last().sheets[0]?.styleIds[1]).toEqual([1, 2]);
+
+		// A merge in the rows that would move refuses the sort, as in Sheets.
+		const before = last();
+		expect(sheet.sort(false, 0)).toBe(false);
+		expect(last()).toEqual(before);
+		sheet.selectCell({ row: 4, col: 0 });
+		sheet.apply({
+			...sheet.book,
+			sheets: sheet.book.sheets.map((s) => ({ ...s, merges: ["A1:B1"] })),
+		});
+		expect(sheet.sort(false, 0)).toBe(true);
+		const sorted = last().sheets[0];
+		expect(sorted?.merges).toEqual(["A1:B1"]);
+		expect(sorted?.rows.slice(1, 4)).toEqual([
+			["0.25"],
+			["a", "0.5"],
+			["name", "0.25"],
+		]);
+		expect(sorted?.styleIds.slice(1, 4)).toEqual([[2], [0, 2], [1, 2]]);
+		expect(last().styles).toHaveLength(3);
+	});
+
+	it("moves formats and merges with inserted rows, and undoes it", () => {
+		const { sheet, last } = openStyled();
+		sheet.selectCell({ row: 0, col: 0 });
+		sheet.insertRows(false);
+		expect(last().sheets[0]?.styleIds.slice(0, 2)).toEqual([[], [1, 1]]);
+		expect(last().sheets[0]?.merges).toEqual(["A6:B6"]);
+		sheet.undo();
+		expect(last().sheets[0]?.styleIds[0]).toEqual([1, 1]);
+		expect(last().sheets[0]?.merges).toEqual(["A5:B5"]);
+	});
+});
+
+describe("SheetState layout", () => {
+	const content = JSON.stringify({
+		nextId: 2,
+		sheets: [
+			{
+				id: 1,
+				name: "Data",
+				rows: [
+					["a", "b"],
+					["1", "2"],
+				],
+				widths: [201],
+				defaultWidth: 88,
+				freeze: { rows: 1, cols: 0 },
+				tables: [
+					{
+						part: "xl/tables/table1.xml",
+						ref: "A1:B2",
+						headerRows: 1,
+						totalRows: 0,
+						style: { headerRow: { fill: "#356854" } },
+					},
+				],
+				pictures: [
+					{
+						id: "p",
+						anchor: { row: 0, col: 3, x: 0, y: 0, width: 10, height: 10 },
+						src: "data:image/png;base64,",
+					},
+				],
+			},
+		],
+	});
+
+	interface Saved {
+		sheets: Record<string, unknown>[];
+	}
+
+	function open() {
+		const saved: string[] = [];
+		const sheet = new SheetState(content, true, (text) => saved.push(text));
+		return {
+			sheet,
+			saved,
+			last: () => JSON.parse(saved.at(-1) ?? "{}") as Saved,
+		};
+	}
+
+	it("reads the file's widths and pane, and saves a resize on the drop", () => {
+		const { sheet, saved, last } = open();
+		expect([sheet.widthOf(0), sheet.widthOf(1)]).toEqual([201, 88]);
+		expect(sheet.header).toBe(true);
+		sheet.setWidth(1, 150, false);
+		expect(sheet.widthOf(1)).toBe(150);
+		expect(saved).toHaveLength(0);
+		sheet.setWidth(1, 150);
+		expect(last().sheets[0]?.widths).toEqual([201, 150]);
+		sheet.undo();
+		expect(sheet.widthOf(1)).toBe(88);
+	});
+
+	it("saves the pane when the header or column is frozen, never the pictures", () => {
+		const { sheet, last } = open();
+		sheet.header = false;
+		sheet.frozen = true;
+		const saved = last().sheets[0];
+		expect(saved?.freeze).toEqual({ rows: 0, cols: 1 });
+		expect(saved?.tables).toEqual([
+			{ part: "xl/tables/table1.xml", ref: "A1:B2" },
+		]);
+		expect(saved?.pictures).toBeUndefined();
+		expect(sheet.pictures).toHaveLength(1);
+	});
+
+	it("draws the table under the cells and moves it with inserted rows", () => {
+		const { sheet, last } = open();
+		expect(sheet.look(0, 0).cell).toContain(
+			"background-color: #356854; color: #FFFFFF",
+		);
+		sheet.selectCell({ row: 1, col: 0 });
+		sheet.insertRows(false);
+		expect(last().sheets[0]?.tables).toEqual([
+			{ part: "xl/tables/table1.xml", ref: "A1:B3" },
+		]);
+		expect(last().sheets[0]?.widths).toEqual([201]);
 	});
 });

@@ -10,11 +10,22 @@
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { columnName } from "#lib/formula.js";
 	import { m } from "#lib/paraglide/messages.js";
+	import { colorOf } from "#lib/sheet/dropdowns.js";
+	import type { MergeSpot } from "#lib/sheet/merges.js";
 	import { type Cell, inRect, type Rect } from "#lib/sheet/selection.js";
+	import type { Look } from "#lib/sheet/styles.js";
 	import { cn } from "#lib/utils.js";
+	import { sortColumn } from "./actions.js";
 	import CellMenu from "./cell-menu.svelte";
+	import ChartLayer from "./chart-layer.svelte";
 	import Completion from "./completion.svelte";
+	import DropdownChip from "./dropdown-chip.svelte";
+	import DropdownOffer from "./dropdown-offer.svelte";
+	import DropdownPicker from "./dropdown-picker.svelte";
+	import { dropdownsOf } from "./dropdowns.svelte.js";
+	import { finishPaint, formatKey } from "./formatting.js";
 	import { editorKey, gridKey } from "./keys.js";
+	import PictureLayer from "./picture-layer.svelte";
 	import type { SheetState } from "./state.svelte.js";
 
 	/**
@@ -25,6 +36,7 @@
 	 * only input.
 	 */
 	const { sheet }: { sheet: SheetState } = $props();
+	const drops = untrack(() => dropdownsOf(sheet));
 
 	const ROW_HEIGHT = 33;
 	const OVERSCAN = 6;
@@ -35,6 +47,7 @@
 	let clipboardArea = $state<HTMLTextAreaElement>();
 	let editor = $state<HTMLTextAreaElement | null>(null);
 	let completion = $state<ReturnType<typeof Completion>>();
+	let typing = $state<ReturnType<typeof DropdownPicker>>();
 	let scrollTop = $state(0);
 	let viewportHeight = $state(0);
 	/** Whether the cell editor, not the formula bar, has the focus. */
@@ -60,7 +73,15 @@
 	const padBottom = $derived((bodyCount - lastRow) * ROW_HEIGHT);
 
 	$effect(() => {
-		sheet.focusGrid = () => scroller?.focus({ preventScroll: true });
+		sheet.focusGrid = () => {
+			// A picked chart keeps the keys: Delete must not clear the cells under it.
+			const chart = sheet.chartId
+				? scroller?.querySelector<HTMLElement>(
+						`[data-chart="${CSS.escape(sheet.chartId)}"]`,
+					)
+				: null;
+			(chart ?? scroller)?.focus({ preventScroll: true });
+		};
 	});
 
 	/** Scrolls a cell into the part of the grid the headers do not cover. */
@@ -110,9 +131,13 @@
 			target instanceof Element
 				? target.closest<HTMLElement>("td[data-col]")
 				: null;
-		return td
-			? { row: Number(td.dataset.row), col: Number(td.dataset.col) }
-			: null;
+		if (!td) {
+			return null;
+		}
+		const cell = { row: Number(td.dataset.row), col: Number(td.dataset.col) };
+		// A covered cell of a merge answers as the merge.
+		const spot = sheet.merged.get(cell.row * 16_384 + cell.col);
+		return spot ? { row: spot.rect.top, col: spot.rect.left } : cell;
 	}
 
 	function onpointerdown(event: PointerEvent) {
@@ -188,6 +213,7 @@
 			flushSync();
 		} else {
 			sheet.selectCell(cell);
+			finishPaint(sheet);
 		}
 	}
 
@@ -231,10 +257,15 @@
 		if (event.target !== event.currentTarget) {
 			return;
 		}
+		if (event.altKey && event.key === "ArrowDown" && drops.open()) {
+			event.preventDefault();
+			return;
+		}
 		const result = gridKey(sheet, event, {
 			clipboard,
 			page: Math.max(1, Math.floor(windowHeight / ROW_HEIGHT) - 2),
 			typeInto: () => flushSync(),
+			format: (e) => formatKey(sheet, e),
 		});
 		if (result === "prevent") {
 			event.preventDefault();
@@ -246,7 +277,11 @@
 	}
 
 	function onEditorKey(event: KeyboardEvent) {
-		if (completion?.key(event) || editorKey(sheet, event, true)) {
+		if (
+			completion?.key(event) ||
+			typing?.key(event) ||
+			editorKey(sheet, event, true)
+		) {
 			event.preventDefault();
 		}
 		event.stopPropagation();
@@ -278,8 +313,9 @@
 		const startX = event.clientX;
 		const startWidth = sheet.widthOf(col);
 		const move = (e: PointerEvent) =>
+			sheet.setWidth(col, startWidth + e.clientX - startX, false);
+		const stop = (e: PointerEvent) => {
 			sheet.setWidth(col, startWidth + e.clientX - startX);
-		const stop = () => {
 			handle.removeEventListener("pointermove", move);
 			handle.removeEventListener("pointerup", stop);
 		};
@@ -305,6 +341,83 @@
 		sheet.setWidth(col, Math.min(widest + 24, 640));
 	}
 
+	/** A merge's size in pixels, less the grid line it ends on. */
+	function spanOf(rect: Rect, grow = 0): string {
+		let width = grow - 1;
+		for (let c = rect.left; c <= rect.right; c++) {
+			width += sheet.widthOf(c);
+		}
+		const height = (rect.bottom - rect.top + 1) * ROW_HEIGHT - 1 + grow;
+		return `width: ${width}px; height: ${height}px`;
+	}
+
+	const FLEX: Record<string, string> = {
+		left: "flex-start",
+		center: "center",
+		right: "flex-end",
+		justify: "flex-start",
+		top: "flex-start",
+		middle: "center",
+		bottom: "flex-end",
+	};
+
+	/**
+	 * A cell's inline style: its look, and the grid lines a merge hides. A
+	 * covered cell draws nothing of its own. Text is clipped at the cell's
+	 * edge, never run on over its neighbours.
+	 */
+	function cellCss(
+		row: number,
+		col: number,
+		look: Look,
+		spot: MergeSpot | undefined,
+	): string {
+		const css = spot?.anchor || !spot ? [look.cell] : [];
+		if (spot && drawsMerge(row, col, spot)) {
+			// The merge's text and frame reach past this cell.
+			css.push("overflow: visible");
+		}
+		if (spot) {
+			if (col < spot.rect.right) {
+				css.push("border-right-color: transparent");
+			}
+			if (row < spot.rect.bottom) {
+				css.push("border-bottom-color: transparent");
+			}
+		}
+		return css.filter(Boolean).join("; ");
+	}
+
+	/** Text laid out inside a merge's whole area. */
+	/**
+	 * The cell that draws a merge: its first cell, or the merge's first row on
+	 * screen once that cell has scrolled out of the rendered window.
+	 */
+	function drawsMerge(row: number, col: number, spot: MergeSpot): boolean {
+		const { top, left } = spot.rect;
+		const first = top >= sheet.bodyStart ? sheet.bodyStart + firstRow : top;
+		return col === left && row === Math.max(top, first);
+	}
+
+	/** A merge's text box, raised to the merge's top when drawn lower down. */
+	function mergeCss(spot: MergeSpot, row: number, grow = 0): string {
+		const { top, left } = spot.rect;
+		const look = sheet.look(top, left);
+		const style = sheet.styleAt(top, left);
+		const align = style.align ?? (sheet.numeric(top, left) ? "right" : "left");
+		return [
+			`top: ${-(row - top) * ROW_HEIGHT - grow / 2}px`,
+			spanOf(spot.rect, grow),
+			grow ? look.frame : look.text,
+			!grow && style.fill ? `background-color: ${style.fill}` : "",
+			`justify-content: ${FLEX[align]}`,
+			`align-items: ${FLEX[style.valign ?? "middle"]}`,
+			`white-space: ${look.wrap ? "pre-wrap" : "nowrap"}`,
+		]
+			.filter(Boolean)
+			.join("; ");
+	}
+
 	/** The sides of `rect` that `row`, `col` sits on, for drawing its outline. */
 	function edges(rect: Rect, row: number, col: number): string {
 		return [
@@ -322,13 +435,17 @@
     {@const selected = sheet.selected(row, col)}
     {@const editing =
         sheet.editing?.row === row && sheet.editing.col === col ? sheet.editing : null}
+    {@const look = sheet.look(row, col)}
+    {@const spot = sheet.merged.get(row * 16_384 + col)}
+    {@const chip = drops.chip(row, col)}
     <td
         data-row={row}
         data-col={col}
         role="gridcell"
         aria-selected={selected}
+        style={[cellCss(row, col, look, spot), drops.css(row, col)].filter(Boolean).join("; ")}
         class={cn(
-            "relative truncate border-e border-b px-2 whitespace-nowrap",
+            "relative overflow-hidden border-e border-b px-2 whitespace-nowrap",
             col === 0 && sheet.frozen && "bg-surface-base sticky left-10 z-5",
             sheet.numeric(row, col) && "text-end tabular-nums",
             sheet.failed(row, col) && "text-destructive",
@@ -367,12 +484,49 @@
             ></textarea>
         {:else if editing}
             {editing.draft}
+        {:else if spot && drawsMerge(row, col, spot)}
+            <div
+                class="pointer-events-none absolute left-0 z-1 flex overflow-hidden px-2"
+                style={mergeCss(spot, row)}
+            >
+                <span class={cn(!sheet.look(spot.rect.top, spot.rect.left).wrap && "overflow-hidden whitespace-nowrap")}>
+                    {sheet.shown(spot.rect.top, spot.rect.left)}
+                </span>
+            </div>
+            {#if sheet.look(spot.rect.top, spot.rect.left).frame}
+                <span
+                    class="pointer-events-none absolute -left-px z-1"
+                    style={mergeCss(spot, row, 2)}
+                ></span>
+            {/if}
+        {:else if spot}
+            <!-- Covered: the merge is drawn by its first cell on screen. -->
+        {:else if chip}
+            <DropdownChip
+                text={chip.text}
+                color={chip.color}
+                arrow={chip.arrow}
+                {active}
+                onopen={() =>
+                    drops.picker?.row === row && drops.picker.col === col
+                        ? drops.close()
+                        : drops.open(row, col)}
+            />
+        {:else if look.boxed}
+            <!-- Fixed rows: wrapped or large text is cut at the row's height. -->
+            <div
+                class={cn("overflow-hidden", look.wrap ? "leading-tight wrap-break-word whitespace-pre-wrap" : "whitespace-nowrap")}
+                style="max-height: {ROW_HEIGHT - 1}px"
+            >
+                {sheet.shown(row, col)}
+            </div>
         {:else}
             {sheet.shown(row, col)}
         {/if}
         {#if active}
             <span
                 class="ring-primary pointer-events-none absolute inset-0 z-3 ring-2 ring-inset"
+                style={spot?.anchor ? spanOf(spot.rect) : undefined}
             ></span>
         {:else if selected && !sheet.singleCell}
             <!-- A tint of its own, over an opaque cell: a frozen column's
@@ -393,6 +547,15 @@
             <span
                 class="border-t-primary pointer-events-none absolute inset-e-0 top-0 z-4 border-t-8 border-s-8 border-s-transparent"
             ></span>
+        {/if}
+        {#if chip?.invalid}
+            <!-- A value outside the list: a flag in the other corner. -->
+            <span
+                class="border-t-destructive pointer-events-none absolute inset-s-0 top-0 z-4 border-t-6 border-e-6 border-e-transparent"
+            ><span class="sr-only">{m.sheet_dropdown_invalid()}</span></span>
+        {/if}
+        {#if drops.offersAt(row, col)}
+            <DropdownOffer {drops} />
         {/if}
         {#if sheet.isCopied(row, col) && sheet.copied}
             <span
@@ -433,7 +596,7 @@
         aria-multiselectable="true"
         aria-label={m.sheet_grid()}
         tabindex="0"
-        class="focus-visible:ring-ring/50 min-h-0 flex-1 touch-manipulation overflow-auto rounded-lg border outline-none select-none focus-visible:ring-2"
+        class="focus-visible:ring-ring/50 relative min-h-0 flex-1 touch-manipulation overflow-auto rounded-lg border outline-none select-none focus-visible:ring-2"
         onscroll={(e) => (scrollTop = e.currentTarget.scrollTop)}
         {onkeydown}
         {onpointerdown}
@@ -496,11 +659,11 @@
                                     <ChevronDownIcon class="size-3" />
                                 </DropdownMenu.Trigger>
                                 <DropdownMenu.Content align="start">
-                                    <DropdownMenu.Item onclick={() => sheet.sort(false, col)}>
+                                    <DropdownMenu.Item onclick={() => sortColumn(sheet, false, col)}>
                                         <ArrowDownAZIcon class="size-4" />
                                         {m.sheet_sort_ascending()}
                                     </DropdownMenu.Item>
-                                    <DropdownMenu.Item onclick={() => sheet.sort(true, col)}>
+                                    <DropdownMenu.Item onclick={() => sortColumn(sheet, true, col)}>
                                         <ArrowUpZAIcon class="size-4" />
                                         {m.sheet_sort_descending()}
                                     </DropdownMenu.Item>
@@ -572,6 +735,8 @@
                 {/if}
             </tbody>
         </table>
+        <PictureLayer {sheet} gutter={GUTTER} rowHeight={ROW_HEIGHT} />
+        <ChartLayer {sheet} gutter={GUTTER} rowHeight={ROW_HEIGHT} />
     </div>
 </CellMenu>
 
@@ -597,10 +762,58 @@
 
 <svelte:window
     onpointerup={() => {
+        if (dragging) {
+            finishPaint(sheet);
+        }
         dragging = false;
         picking = false;
     }}
 />
+
+{#if drops.picker}
+    {@const { row, col } = drops.picker}
+    {@const placed = drops.at(row, col)}
+    {#if placed}
+        <DropdownPicker
+            items={drops.items(placed.dropdown)}
+            colorOf={(item) => colorOf(placed.dropdown, item)}
+            anchor={scroller?.querySelector<HTMLElement>(`td[data-row="${row}"][data-col="${col}"]`)}
+            current={sheet.shown(row, col)}
+            onpick={(item) => drops.choose(row, col, item)}
+            onclose={() => {
+                drops.close();
+                sheet.focusGrid();
+            }}
+            onedit={() => {
+                drops.close();
+                drops.edit();
+            }}
+        />
+    {/if}
+{/if}
+
+{#if sheet.editing && editorFocused && !sheet.editing.bar}
+    {@const placed = drops.at(sheet.editing.row, sheet.editing.col)}
+    {@const list = drops.typed()}
+    {#if placed && list}
+        <DropdownPicker
+            bind:this={typing}
+            items={list}
+            search={false}
+            colorOf={(item) => colorOf(placed.dropdown, item)}
+            anchor={editor}
+            onpick={(item) => {
+                sheet.setDraft(item);
+                sheet.commit(1, 0);
+                sheet.focusGrid();
+            }}
+            onclose={() => {
+                sheet.cancel();
+                sheet.focusGrid();
+            }}
+        />
+    {/if}
+{/if}
 
 {#if sheet.editing && editorFocused}
     <Completion

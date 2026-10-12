@@ -29,6 +29,7 @@
 		share: m.notif_type_share,
 		signature_completed: m.notif_type_signature_completed,
 		signature_declined: m.notif_type_signature_declined,
+		signature_requested: m.notif_type_signature_requested,
 	};
 	const channelLabel: Record<NotificationChannel, () => string> = {
 		inApp: m.notif_channel_in_app,

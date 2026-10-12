@@ -1,4 +1,20 @@
 import { fromFileFormula, shiftFormula, toFileFormula } from "#lib/formula.js";
+import type { ConditionalFormat } from "#lib/sheet/conditional.js";
+import type { Dropdown } from "#lib/sheet/dropdowns.js";
+import { compactStyles } from "#lib/sheet/styles.js";
+import {
+	holdVerbatim,
+	type RulesContext,
+	readRules,
+	writeRules,
+} from "./xlsx-rules";
+import {
+	columnStyles,
+	inheritedStyle,
+	readMerges,
+	writeMerges,
+} from "./xlsx-styles";
+import { readView, type SheetView, writeView } from "./xlsx-view";
 import {
 	childNamed,
 	childrenNamed,
@@ -35,12 +51,30 @@ const EXCEL_EPOCH_MS = Date.UTC(1899, 11, 30);
 const MS_PER_DAY = 86_400_000;
 
 /** One worksheet as the editor sees it. */
-export interface WorkbookSheet {
+export interface WorkbookSheet extends SheetView {
 	id: number;
 	name: string;
 	rows: string[][];
 	/** `"row:col"` → [formula, value the file recorded for it]. */
 	cached?: Record<string, [string, string]>;
+	/** Each cell's `cellXfs` index, row by row; see `#lib/sheet/styles`. */
+	styleIds?: number[][];
+	/** Merged ranges, `A1:C2`. */
+	merges?: string[];
+	/** List validations; see `xlsx-rules.ts`. */
+	dropdowns?: Dropdown[];
+	/** Conditional formats the grid draws; never sent back. */
+	conditional?: ConditionalFormat[];
+}
+
+/** Formatting the editor sent for one sheet; absent leaves the file's. */
+export interface SheetFormats {
+	/** `cellXfs` indices, already mapped from the editor's table. */
+	styleIds?: number[][];
+	merges?: string[];
+	dropdowns?: Dropdown[];
+	widths?: number[];
+	freeze?: SheetView["freeze"];
 }
 
 export class NotASpreadsheetError extends Error {}
@@ -155,6 +189,8 @@ interface Context {
 	styles: boolean[];
 	/** A shared formula's master cell, by its `si`. */
 	shared: Map<string, { formula: string; row: number; col: number }>;
+	/** Validations and conditional formats: read, and written when given. */
+	rules?: RulesContext;
 }
 
 /** Masters of the sheet's shared formulas: the one cell holding the text. */
@@ -248,16 +284,31 @@ export function readPart(
 	source: string,
 	base: Base,
 ): Omit<WorkbookSheet, "id" | "name"> {
-	return readSheetData(sheetDataOf(parseXml(source)), base);
+	const document = parseXml(source);
+	const sheet = readSheetData(
+		sheetDataOf(document),
+		base,
+		columnStyles(document),
+	);
+	const merges = readMerges(document);
+	return {
+		...sheet,
+		...(merges.length > 0 ? { merges } : {}),
+		...(base.rules ? readRules(document, base.rules) : {}),
+		...readView(document),
+	};
 }
 
 function readSheetData(
 	sheetData: XmlElement,
 	base: Base,
+	columns: number[] = [],
 ): Omit<WorkbookSheet, "id" | "name"> {
 	const context = { ...base, shared: sharedFormulas(sheetData) };
 	const rows: string[][] = [];
 	const cached: Record<string, [string, string]> = {};
+	const styles: number[][] = [];
+	const rowElements: XmlElement[] = [];
 
 	for (const row of childrenNamed(sheetData, "row")) {
 		const number = Number(row.attrs.r);
@@ -267,12 +318,15 @@ function readSheetData(
 			rows.push([]);
 		}
 		const values: string[] = [];
+		const rowStyles: number[] = [];
 		for (const cell of childrenNamed(row, "c")) {
 			const ref = cell.attrs.r ?? "";
 			const column = ref ? splitRef(ref).column : values.length;
 			while (values.length < column) {
+				rowStyles[values.length] = inheritedStyle(row, columns, values.length);
 				values.push("");
 			}
+			rowStyles[column] = Number(cell.attrs.s ?? 0) || 0;
 			const formula = formulaOf(cell, context);
 			const value = valueText(cell, context);
 			values[column] = formula ?? value;
@@ -281,19 +335,28 @@ function readSheetData(
 			}
 		}
 		rows[index] = values;
+		styles[index] = rowStyles;
+		rowElements[index] = row;
 	}
 
 	// A rectangle: the grid editor pads short rows anyway, and doing it here
 	// keeps the write side comparing like with like.
 	const width = rows.reduce((widest, row) => Math.max(widest, row.length), 1);
-	for (const row of rows) {
+	rows.forEach((row, index) => {
 		while (row.length < width) {
 			row.push("");
 		}
-	}
+		const rowStyles = styles[index] ?? [];
+		for (let c = 0; c < width; c++) {
+			rowStyles[c] ??= inheritedStyle(rowElements[index], columns, c);
+		}
+		styles[index] = rowStyles;
+	});
+	const styleIds = compactStyles(styles);
 	return {
 		rows: rows.length > 0 ? rows : [[""]],
 		...(Object.keys(cached).length > 0 ? { cached } : {}),
+		...(styleIds.length > 0 ? { styleIds } : {}),
 	};
 }
 
@@ -314,6 +377,11 @@ function writeValue(cell: XmlElement, value: string, isDate: boolean): void {
 		return;
 	}
 
+	if (/^(TRUE|FALSE)$/i.test(value)) {
+		cell.attrs.t = "b";
+		cell.children.push(element("v", {}, [text(/^t/i.test(value) ? "1" : "0")]));
+		return;
+	}
 	if (value.length > 1 && value.startsWith("=")) {
 		// No cached `<v>`: the workbook is marked for a full recalculation.
 		cell.children.push(element("f", {}, [text(toFileFormula(value.slice(1)))]));
@@ -341,6 +409,17 @@ function writeValue(cell: XmlElement, value: string, isDate: boolean): void {
 interface WriteOptions {
 	context: Context;
 	width: number;
+	/** Each cell's `cellXfs` index; absent keeps the file's. */
+	styles?: number[][];
+	columns: number[];
+}
+
+/**
+ * `s="0"` is spelled out under a styled row or column: readers disagree on
+ * what an absent `s` inherits there.
+ */
+function setStyle(cell: XmlElement, xf: number, inherited: number): void {
+	cell.attrs.s = xf === 0 && inherited === 0 ? undefined : String(xf);
 }
 
 /**
@@ -350,22 +429,33 @@ interface WriteOptions {
 function writeCell(
 	existing: XmlElement | undefined,
 	ref: string,
-	value: string,
+	{
+		value,
+		style,
+	}: { value: string; style?: { xf: number; inherited: number } },
 	options: WriteOptions,
 ): XmlElement | null {
 	if (existing && cellText(existing, options.context) === value) {
 		// Untouched: keep the cell exactly as the writer left it — formula,
 		// number format, shared-string reference and all.
+		if (style && Number(existing.attrs.s ?? 0) !== style.xf) {
+			setStyle(existing, style.xf, style.inherited);
+			if (existing.children.length === 0 && !existing.attrs.s) {
+				return null;
+			}
+		}
 		return existing;
 	}
-	if (!existing && value === "") {
+	if (!existing && value === "" && (!style || style.xf === style.inherited)) {
 		return null;
 	}
-	const isDate = existing
-		? options.context.styles[Number(existing.attrs.s ?? 0)] === true
-		: false;
+	const xf = style?.xf ?? (existing ? Number(existing.attrs.s ?? 0) : null);
+	const isDate = xf !== null && options.context.styles[xf] === true;
 	const cell = existing ?? element("c", {});
 	cell.attrs.r = ref;
+	if (style) {
+		setStyle(cell, style.xf, style.inherited);
+	}
 	writeValue(cell, value, isDate);
 	// An emptied cell with no style left on it is just noise.
 	return cell.children.length > 0 || cell.attrs.s ? cell : null;
@@ -386,11 +476,20 @@ function writeRow(
 	}
 
 	const cells: XmlElement[] = [];
+	const styles = options.styles ? (options.styles[number - 1] ?? []) : null;
 	for (let column = 0; column < options.width; column++) {
 		const cell = writeCell(
 			existingCells.get(column),
 			`${columnRef(column)}${number}`,
-			values[column] ?? "",
+			{
+				value: values[column] ?? "",
+				style: styles
+					? {
+							xf: styles[column] ?? 0,
+							inherited: inheritedStyle(row, options.columns, column),
+						}
+					: undefined,
+			},
 			options,
 		);
 		if (cell) {
@@ -450,11 +549,17 @@ function sameGrid(a: string[][], b: string[][]): boolean {
 	return a.length === b.length;
 }
 
+const sameStyles = (a: number[][], b: number[][]) =>
+	JSON.stringify(compactStyles(a)) === JSON.stringify(compactStyles(b));
+
+const sameList = (a: string[], b: string[]) =>
+	a.length === b.length && a.every((item, i) => item === b[i]);
+
 /** An edited grid applied to one worksheet part, in place. */
 export function writePart(
 	entries: ZipEntry[],
 	path: string,
-	grid: string[][],
+	{ rows: edited, ...formats }: SheetFormats & { rows: string[][] },
 	base: Base,
 ): void {
 	const source = partText(entries, path);
@@ -462,11 +567,39 @@ export function writePart(
 		throw new NotASpreadsheetError(`Missing worksheet part ${path}`);
 	}
 	const document = parseXml(source);
+	const verbatim = holdVerbatim(document, source);
+	const rulesChanged =
+		formats.dropdowns !== undefined &&
+		base.rules !== undefined &&
+		writeRules(document, formats.dropdowns, base.rules);
+	const viewChanged = writeView(document, formats);
 	const sheetData = sheetDataOf(document);
+	const columns = columnStyles(document);
+	const current = readSheetData(sheetData, base, columns);
+	const merges = readMerges(document);
+	const stylesChanged =
+		formats.styleIds !== undefined &&
+		!sameStyles(current.styleIds ?? [], formats.styleIds);
+	const mergesChanged =
+		formats.merges !== undefined && !sameList(merges, formats.merges);
 	// A sheet the user never changed is left byte for byte as it was.
-	if (sameGrid(readSheetData(sheetData, base).rows, grid)) {
+	if (
+		sameGrid(current.rows, edited) &&
+		!stylesChanged &&
+		!mergesChanged &&
+		!rulesChanged &&
+		!viewChanged
+	) {
 		return;
 	}
+	if (mergesChanged && formats.merges) {
+		writeMerges(document, formats.merges);
+	}
+	// Formatted empty cells below or beside the text are cells too.
+	const grid = Array.from(
+		{ length: Math.max(edited.length, formats.styleIds?.length ?? 0) },
+		(_, i) => edited[i] ?? [],
+	);
 
 	const existingRows = new Map<number, XmlElement>();
 	for (const row of childrenNamed(sheetData, "row")) {
@@ -475,7 +608,12 @@ export function writePart(
 
 	const options: WriteOptions = {
 		context: { ...base, shared: sharedFormulas(sheetData) },
-		width: grid.reduce((widest, row) => Math.max(widest, row.length), 1),
+		width: [...grid, ...(formats.styleIds ?? [])].reduce(
+			(widest, row) => Math.max(widest, row.length),
+			1,
+		),
+		styles: formats.styleIds,
+		columns,
 	};
 
 	const rows = grid.map((values, index) =>
@@ -495,5 +633,6 @@ export function writePart(
 		dimension.attrs.ref = `A1:${last}`;
 	}
 
+	verbatim();
 	setPartText(entries, path, serializeXml(document));
 }

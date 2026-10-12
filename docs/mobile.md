@@ -172,9 +172,12 @@ Tapping a file opens a preview in a drawer at the bottom of the screen:
   a black screen, and **Convert and play** has the server render a version that
   does.
 - **A PDF** shows its first page; **Open** shows every page, scrolling, with
-  pinch to zoom.
+  pinch to zoom. Where you can edit the file, you can also mark it up, fill it
+  in and sign it: see [PDFs](#pdfs).
 - **A document, sheet, deck or Office file** opens in the web app's
-  [editor](documents.md).
+  [editor](documents.md), inside a screen of the app's own: its header and
+  **Back**, its colours, light or dark as the app is. **Back** saves what you
+  typed first, and asks before leaving if it could not.
 - **Any other file** shows its thumbnail when the server has one, and **Open**
   shows the raw file.
 
@@ -190,6 +193,41 @@ Playback continues while you browse. A video takes over from a track.
 A folder opened from **Recent**, **Starred** or a category opens in the web
 interface. Everything the web interface shows inside the app is already signed
 in.
+
+### PDFs
+
+A PDF you can edit has tools along the bottom of its screen. Nothing changes the
+file until you tap **Save**; leaving with something unsaved asks first.
+
+- **Scroll** moves through the pages and leaves the fields free to fill in. With
+  any other tool, one finger draws and two fingers still zoom.
+- **Highlight** marks a rectangle you drag over, in yellow, green or pink.
+- **Pen** draws freehand in four colours and three thicknesses. **Eraser**
+  removes strokes not saved yet, **Undo** the last thing added.
+- **Note** drops a sticky note where you tap, with the text you type.
+- **Signature** opens a pad: sign with a finger, then drag the signature into
+  place and its corner to size it. Tapping a form's signature field puts it in
+  that field's box.
+
+Form fields (text, checkboxes, radio buttons, drop-down lists) show as inputs
+over the page. Highlights, ink and notes are saved as real PDF annotations, so
+other PDF readers show and edit them; form values go into the form itself;
+signatures are drawn into the page. Where versioning is on, the PDF as it was
+before each save is kept as a version. If someone else saved the PDF while you
+had it open, saving refuses and offers to reload it.
+
+A PDF on a read-only share or mounted volume opens without the tools. A
+password-protected or damaged PDF opens read-only too.
+
+### Signature requests
+
+When someone asks you to [sign a document](signatures.md) and your account is
+the address they asked, the request is in your notifications. Tapping it opens
+the document in the app: read it, tick the consent, tap **Sign** and sign with a
+finger. **Decline to sign** closes the request.
+
+A signing link opened in a phone's browser offers **Sign in the Penombre app**,
+which does the same in the app, signed in or not.
 
 ## Plain HTTP
 

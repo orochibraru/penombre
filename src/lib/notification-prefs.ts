@@ -9,6 +9,7 @@ export const NOTIFICATION_TYPES = [
 	"share",
 	"signature_completed",
 	"signature_declined",
+	"signature_requested",
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
