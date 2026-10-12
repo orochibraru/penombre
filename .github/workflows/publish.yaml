@@ -369,11 +369,12 @@ jobs:
 
   # The store listing from apps/mobile/store, and the bundle: canaries to internal
   # testing, releases to closed testing until the personal account is granted
-  # production access.
+  # production access. After publish-release: a draft is invisible to this job's
+  # read-only token, and the download failed with "release not found".
   play:
     name: Play Store ${{ needs.version.outputs.version }}
-    needs: [version, mobile]
-    if: ${{ !cancelled() && needs.mobile.result == 'success' }}
+    needs: [version, mobile, publish-release]
+    if: ${{ !cancelled() && needs.mobile.result == 'success' && needs.publish-release.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
