@@ -1,3 +1,4 @@
+import { type Change, changeOf } from "#lib/editor/changes.js";
 import {
 	CODE_TAG,
 	declarations,
@@ -9,6 +10,7 @@ import {
 import {
 	childrenNamed,
 	element,
+	isElement,
 	text,
 	textContent,
 	type XmlElement,
@@ -33,6 +35,8 @@ export interface Marks {
 	/** Six hex digits, as `w:color` stores them. */
 	color?: string;
 	fill?: string;
+	insertion?: Change;
+	deletion?: Change;
 }
 
 export const NO_MARKS: Marks = {
@@ -86,7 +90,42 @@ function styleMarks(node: XmlElement): Partial<Marks> {
 }
 
 export function markFor(node: XmlElement, marks: Marks): Marks {
+	const change = changeOf(node.attrs);
+	if (change && (node.name === "ins" || node.name === "del")) {
+		const key = node.name === "ins" ? "insertion" : "deletion";
+		return { ...marks, ...styleMarks(node), [key]: change };
+	}
 	return { ...marks, ...MARK_TAGS[node.name], ...styleMarks(node) };
+}
+
+/**
+ * A tracked change's element. `w:id` holds the editor's id for now:
+ * `numberChanges` turns it into the number Word wants once the body is built.
+ */
+export function changeElement(
+	name: "w:ins" | "w:del",
+	change: Change,
+	children: XmlNode[] = [],
+): XmlElement {
+	return element(
+		name,
+		{
+			"w:id": change.id,
+			"w:author": change.author || "Penombre",
+			"w:date": change.date ? change.date.replace(/\.\d+Z$/, "Z") : undefined,
+		},
+		children,
+	);
+}
+
+/** A run inside the `w:del` and `w:ins` its marks call for. */
+export function tracked(run: XmlElement, marks: Marks): XmlElement {
+	const deleted = marks.deletion
+		? changeElement("w:del", marks.deletion, [run])
+		: run;
+	return marks.insertion
+		? changeElement("w:ins", marks.insertion, [deleted])
+		: deleted;
 }
 
 const HIGHLIGHT_NAMES = new Map(
@@ -179,8 +218,15 @@ export function textRun(
 	const properties = runProperties(marks, styles);
 	// Without xml:space a run's leading and trailing spaces are dropped, and
 	// a sentence split across runs is mostly leading and trailing spaces.
-	const node = element("w:t", { "xml:space": "preserve" }, [text(value)]);
-	return element("w:r", {}, properties ? [properties, node] : [node]);
+	const node = element(
+		marks.deletion ? "w:delText" : "w:t",
+		{ "xml:space": "preserve" },
+		[text(value)],
+	);
+	return tracked(
+		element("w:r", {}, properties ? [properties, node] : [node]),
+		marks,
+	);
 }
 
 export function paragraph(
@@ -271,4 +317,79 @@ export function horizontalRule(): XmlElement {
 		]),
 		[],
 	);
+}
+
+const isChange = (node: XmlNode): node is XmlElement =>
+	isElement(node) && (node.name === "w:ins" || node.name === "w:del");
+
+const sameChange = (a: XmlElement, b: XmlElement): boolean =>
+	a.name === b.name &&
+	a.attrs["w:id"] === b.attrs["w:id"] &&
+	a.attrs["w:author"] === b.attrs["w:author"] &&
+	a.attrs["w:date"] === b.attrs["w:date"];
+
+/** Neighbouring runs of one change become one element. */
+function mergeChanges(parent: XmlElement): void {
+	const merged: XmlNode[] = [];
+	for (const child of parent.children) {
+		const last = merged.at(-1);
+		if (last && isChange(last) && isChange(child) && sameChange(last, child)) {
+			last.children.push(...child.children);
+		} else {
+			merged.push(child);
+		}
+	}
+	parent.children = merged;
+	for (const child of merged) {
+		if (isElement(child)) {
+			mergeChanges(child);
+		}
+	}
+}
+
+export function highestChangeId(xml: string): number {
+	let highest = 0;
+	for (const [, id] of xml.matchAll(/\bw:id="(\d+)"/g)) {
+		highest = Math.max(highest, Number(id));
+	}
+	return highest;
+}
+
+/**
+ * Word wants a distinct number on every change. A suggestion's first
+ * element keeps the id it was read with, when that is a free number; the
+ * rest are numbered past every id the document already used. Numbered in
+ * the order `docx-read` meets them, so the id survives a round trip.
+ */
+export function numberChanges(body: XmlElement, highest: number): void {
+	mergeChanges(body);
+	const used = new Set<string>();
+	const seen = new Set<string>();
+	let next = highest + 1;
+	const visit = (node: XmlElement) => {
+		if (isChange(node)) {
+			const id = node.attrs["w:id"] ?? "";
+			const keep = !seen.has(id) && /^\d+$/.test(id) && !used.has(id);
+			seen.add(id);
+			let number = id;
+			if (!keep) {
+				while (used.has(String(next))) {
+					next++;
+				}
+				number = String(next++);
+			}
+			used.add(number);
+			node.attrs["w:id"] = number;
+		}
+		// In reading order: a paragraph's mark is read after its runs.
+		const children = node.children.filter(isElement);
+		const mark = children.filter((child) => child.name === "w:pPr");
+		for (const child of [
+			...children.filter((child) => child.name !== "w:pPr"),
+			...mark,
+		]) {
+			visit(child);
+		}
+	};
+	visit(body);
 }

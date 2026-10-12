@@ -28,8 +28,13 @@ import {
 import { defineTextColor } from "prosekit/extensions/text-color";
 import type { Attrs, Mark, ProseMirrorNode } from "prosekit/pm/model";
 import type { Command, EditorState } from "prosekit/pm/state";
-import { defineCodeBlockExtras } from "./code-block";
+import { defineCodeBlockExtras, type LanguagePicker } from "./code-block";
 import { nextIndent, points } from "./document-format";
+import { defineMarkdown } from "./markdown";
+import {
+	defineSuggestionSchema,
+	defineSuggestionTracking,
+} from "./suggestions";
 
 /**
  * The document editor's schema and commands, on top of ProseKit's basics.
@@ -125,18 +130,21 @@ export function setMark(type: string, attrs: Attrs | null): Command {
 	};
 }
 
-/** Every mark but links: clearing formatting should not unlink text. */
+/** Marks that are not formatting: a link, a suggestion. */
+const KEPT_MARKS = new Set(["link", "insertion", "deletion"]);
+
+/** Every mark but links and suggestions: clearing formatting unlinks nothing. */
 export function clearFormatting(): Command {
 	return (state, dispatch) => {
 		if (dispatch) {
 			const { tr } = state;
-			const kept = (mark: Mark) => mark.type.name === "link";
+			const kept = (mark: Mark) => KEPT_MARKS.has(mark.type.name);
 			if (state.selection.empty) {
 				tr.setStoredMarks(state.selection.$from.marks().filter(kept));
 			}
 			for (const type of Object.values(state.schema.marks)) {
 				for (const { $from, $to } of state.selection.ranges) {
-					if (type.name !== "link" && $from.pos < $to.pos) {
+					if (!KEPT_MARKS.has(type.name) && $from.pos < $to.pos) {
 						tr.removeMark($from.pos, $to.pos, type);
 					}
 				}
@@ -255,6 +263,7 @@ export interface DocumentHandlers {
 	onUpdate: () => void;
 	/** Keys the page answers itself: find, link, print. */
 	keys: Record<string, () => void>;
+	languagePicker?: LanguagePicker;
 }
 
 function defineFormatting() {
@@ -296,8 +305,11 @@ function defineFormatting() {
 export function defineDocumentExtension(handlers: DocumentHandlers) {
 	return union([
 		defineBasicExtension(),
-		defineCodeBlockExtras(),
+		defineCodeBlockExtras(handlers.languagePicker),
 		defineFormatting(),
+		defineMarkdown(),
+		defineSuggestionSchema(),
+		defineSuggestionTracking(),
 		defineKeymap(
 			Object.fromEntries(
 				Object.entries(handlers.keys)

@@ -8223,7 +8223,8 @@ export interface paths {
 										| "note"
 										| "share"
 										| "signature_completed"
-										| "signature_declined";
+										| "signature_declined"
+										| "signature_requested";
 								}[];
 								unread: number;
 							};
@@ -10116,6 +10117,494 @@ export interface paths {
 				};
 				/** @description Error 410 */
 				410: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/signing/decline": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Decline through a signing link
+		 * @description Closes the whole request and tells whoever asked.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						reason?: string;
+						signer?: string;
+						token?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								documentHash: string;
+								documentName: string;
+								downloadUntil: string | null;
+								expiresAt: string;
+								message: string | null;
+								pageCount: number;
+								requestId: string;
+								requesterName: string;
+								signer: {
+									email: string;
+									name: string;
+									/** @enum {string} */
+									status: "pending" | "signed" | "declined";
+								};
+								signers: {
+									name: string;
+									/** @enum {string} */
+									status: "pending" | "signed" | "declined";
+									you: boolean;
+								}[];
+								/** @enum {string} */
+								status:
+									| "pending"
+									| "completed"
+									| "declined"
+									| "cancelled"
+									| "expired";
+								waitingFor: string | null;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Conflict */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Error 410 */
+				410: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/signing/document": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * The PDF a signing link asks to sign
+		 * @description `signed` is the signed PDF, once everyone has signed.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/**
+						 * @default original
+						 * @enum {string}
+						 */
+						kind: "original" | "signed";
+						signer?: string;
+						token?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							/** @description The PDF */
+							data?: unknown;
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/signing/sign": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Sign through a signing link
+		 * @description `signature` is a small PNG data URL. A link signs once; signed in with the account at the signer's address, the signature is recorded as that account's.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @constant */
+						consent: true;
+						signature: string;
+						signer?: string;
+						timeZone?: string;
+						token?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								documentHash: string;
+								documentName: string;
+								downloadUntil: string | null;
+								expiresAt: string;
+								message: string | null;
+								pageCount: number;
+								requestId: string;
+								requesterName: string;
+								signer: {
+									email: string;
+									name: string;
+									/** @enum {string} */
+									status: "pending" | "signed" | "declined";
+								};
+								signers: {
+									name: string;
+									/** @enum {string} */
+									status: "pending" | "signed" | "declined";
+									you: boolean;
+								}[];
+								/** @enum {string} */
+								status:
+									| "pending"
+									| "completed"
+									| "declined"
+									| "cancelled"
+									| "expired";
+								waitingFor: string | null;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Conflict */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Error 410 */
+				410: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/signing/view": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Open a signing link
+		 * @description What the link's page shows: the document, who asked, who signs. Records the first view in the audit trail.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						signer?: string;
+						token?: string;
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								documentHash: string;
+								documentName: string;
+								downloadUntil: string | null;
+								expiresAt: string;
+								message: string | null;
+								pageCount: number;
+								requestId: string;
+								requesterName: string;
+								signer: {
+									email: string;
+									name: string;
+									/** @enum {string} */
+									status: "pending" | "signed" | "declined";
+								};
+								signers: {
+									name: string;
+									/** @enum {string} */
+									status: "pending" | "signed" | "declined";
+									you: boolean;
+								}[];
+								/** @enum {string} */
+								status:
+									| "pending"
+									| "completed"
+									| "declined"
+									| "cancelled"
+									| "expired";
+								waitingFor: string | null;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Error 410 */
+				410: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Too Many Requests */
+				429: {
 					headers: {
 						[name: string]: unknown;
 					};
@@ -12388,6 +12877,8 @@ export interface paths {
 			requestBody: {
 				content: {
 					"application/json": {
+						/** @description The revision edited from; 409 when the file changed since */
+						base?: string;
 						/** @description The edited text, in the format for its kind */
 						content: string;
 					};
@@ -12403,6 +12894,8 @@ export interface paths {
 						"application/json": {
 							data?: {
 								message: string;
+								/** @description The revision just written */
+								revision: string;
 							};
 						};
 					};
@@ -12427,6 +12920,279 @@ export interface paths {
 				};
 				/** @description Not Found */
 				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Conflict */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unprocessable Entity */
+				422: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/api/v1/storage/file/{id}/pdf": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * A PDF's pages and form fields
+		 * @description Each page's crop box and rotation, and every AcroForm field with where its widgets sit. `revision` goes back with an edit.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								canWrite: boolean;
+								fields: {
+									/** @enum {string} */
+									kind:
+										| "text"
+										| "checkbox"
+										| "radio"
+										| "dropdown"
+										| "list"
+										| "button"
+										| "signature";
+									multiline: boolean;
+									name: string;
+									options: string[];
+									readOnly: boolean;
+									/** @description Text, the chosen option, or "true"/"false" for a checkbox */
+									value: string | null;
+									widgets: {
+										/** @description A radio button's own value */
+										option: string | null;
+										page: number;
+										/** @description x, y, width, height */
+										rect: [number, number, number, number];
+									}[];
+								}[];
+								pages: {
+									height: number;
+									rotation: 0 | 90 | 180 | 270;
+									width: number;
+									x: number;
+									y: number;
+								}[];
+								revision: string;
+							};
+						};
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unprocessable Entity */
+				422: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Internal Server Error */
+				500: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Annotate, fill in or sign a PDF
+		 * @description Writes highlight, ink and note annotations as PDF annotations, sets form fields, and draws signature images into the page. With `base`, refused with 409 when the file changed since it was read.
+		 */
+		post: {
+			parameters: {
+				query?: {
+					drive?: string;
+					volume?: string;
+					share?: string;
+				};
+				header?: never;
+				path: {
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						/** @default [] */
+						annotations: (
+							| {
+									/** @description red, green, blue in 0..1 */
+									color: [number, number, number];
+									page: number;
+									rects: [number, number, number, number][];
+									/** @constant */
+									type: "highlight";
+							  }
+							| {
+									/** @description red, green, blue in 0..1 */
+									color: [number, number, number];
+									page: number;
+									/** @description Each stroke as flat x, y pairs */
+									strokes: number[][];
+									/** @constant */
+									type: "ink";
+									width: number;
+							  }
+							| {
+									/** @description red, green, blue in 0..1 */
+									color: [number, number, number];
+									page: number;
+									text: string;
+									/** @constant */
+									type: "note";
+									x: number;
+									y: number;
+							  }
+						)[];
+						/** @description The revision edited from; 409 when the file changed since */
+						base?: string;
+						/** @default {} */
+						fields: {
+							[key: string]: string;
+						};
+						/** @default [] */
+						signatures: {
+							/** @description data:image/png;base64,… */
+							image: string;
+							page: number;
+							/** @description x, y, width, height */
+							rect: [number, number, number, number];
+						}[];
+					};
+				};
+			};
+			responses: {
+				/** @description Successful response */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							data?: {
+								message: string;
+								revision: string;
+							};
+						};
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Conflict */
+				409: {
 					headers: {
 						[name: string]: unknown;
 					};
@@ -12560,6 +13326,7 @@ export interface paths {
 					share?: string;
 					snapshot?: "0" | "1";
 					mtime?: number;
+					base?: string;
 				};
 				header?: never;
 				path: {
@@ -12585,6 +13352,8 @@ export interface paths {
 						"application/json": {
 							data?: {
 								message: string;
+								/** @description The revision just written, when `base` was sent */
+								revision?: string;
 							};
 						};
 					};
@@ -12600,6 +13369,15 @@ export interface paths {
 				};
 				/** @description Unauthorized */
 				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Conflict */
+				409: {
 					headers: {
 						[name: string]: unknown;
 					};

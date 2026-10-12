@@ -1,7 +1,10 @@
+import { regionAround, sourceOf } from "#lib/chart/data.js";
+import { chartFor, copyOf } from "#lib/chart/edit.js";
+import { type Chart, isEditable } from "#lib/chart/model.js";
+import { chartPalette } from "#lib/components/editor/sheet/chart-defaults.js";
 import { cellKey } from "#lib/editor/comments.js";
 import {
 	createWorkbook,
-	display,
 	FormulaError,
 	isFormula,
 	normalizeFormula,
@@ -16,18 +19,16 @@ import {
 	parseBook,
 	removeSheet,
 	renameSheet,
-	restructure,
 	serializeBook,
 	sheetNameProblem,
-	shiftBlock,
-	sortRows,
-	tile,
 	widthOf,
 	withRows,
 	writeBlock,
 } from "#lib/sheet/book.js";
-import { parseTsv, toTsv } from "#lib/sheet/clipboard.js";
 import { History } from "#lib/sheet/history.js";
+import { CellLooks } from "#lib/sheet/layers.js";
+import { mergeIndex } from "#lib/sheet/merges.js";
+import { formatted } from "#lib/sheet/number-formats.js";
 import {
 	type Bounds,
 	type Cell,
@@ -47,7 +48,19 @@ import {
 	single,
 	step,
 } from "#lib/sheet/selection.js";
+import {
+	type CellStyle,
+	fillStyles,
+	type Look,
+	lookOf,
+	patchSheet,
+	type StyleGrid,
+	styleTableFrom,
+} from "#lib/sheet/styles.js";
 import { literal } from "#lib/sheet/values.js";
+import { type Clip, copyCells, pasteCells } from "./clip.js";
+import { deleteLines, findNext, insertLines, sortSheet } from "./lines.js";
+import { columnWidth, freezeOf, resizeColumn, setFreeze } from "./view.js";
 
 /** How a cell is being edited: typed over (`enter`) or opened in place. */
 export type EditMode = "enter" | "edit";
@@ -67,17 +80,6 @@ interface Snapshot {
 	selection: Selection;
 }
 
-/** What was last copied here, so a paste back in keeps its formulas. */
-interface Clip {
-	text: string;
-	block: string[][];
-	origin: Cell;
-	/** Set for a cut: the cells a paste moves away from. */
-	cut: { sheet: number; rect: Rect } | null;
-}
-
-export const DEFAULT_WIDTH = 112;
-
 /** An empty sheet still looks like one: at least this much grid. */
 const MIN_ROWS = 60;
 const MIN_COLS = 12;
@@ -93,16 +95,26 @@ export class SheetState {
 	active = $state(0);
 	selection = $state.raw<Selection>(single(0, 0));
 	editing = $state.raw<Editing | null>(null);
-	/** The first row as a sticky header, left out of sorting. */
-	header = $state(true);
-	/** Column widths by sheet id; view only, never saved. */
-	widths = $state<Record<number, number[]>>({});
+	/** The first row as a sticky header, left out of sorting: a frozen row. */
+	get header(): boolean {
+		return freezeOf(this).rows > 0;
+	}
+	set header(on: boolean) {
+		setFreeze(this, "rows", on);
+	}
+	/** The column being dragged wider, until the drop saves it. */
+	resizing = $state.raw<{ col: number; width: number } | null>(null);
 	/** The copied range, drawn dashed until the next edit. */
 	copied = $state.raw<{ sheet: number; rect: Rect } | null>(null);
 	canUndo = $state(false);
 	canRedo = $state(false);
 	/** Column A stays on screen while scrolling across. */
-	frozen = $state(false);
+	get frozen(): boolean {
+		return freezeOf(this).cols > 0;
+	}
+	set frozen(on: boolean) {
+		setFreeze(this, "cols", on);
+	}
 	/** Where the caret is in whichever input holds the draft. */
 	caret = $state(0);
 	/** Bumped when the caret is placed from here, for the input to follow. */
@@ -113,11 +125,17 @@ export class SheetState {
 	readOnly = $state(false);
 	/** Cells with an open comment, as `cellKey`s. */
 	comments = $state.raw<ReadonlySet<string>>(new Set());
+	/** The chart picked on the sheet, by id. */
+	chartId = $state<string | null>(null);
+	/** The chart editor panel is open on `chartId`. */
+	chartPanel = $state(false);
 
 	/** Set by the grid: hands keyboard focus back to it. */
 	focusGrid: () => void = () => undefined;
 	/** Set by the editor: starts a comment on the active cell. */
 	onComment: (() => void) | null = null;
+	/** Set by the dropdowns: a typed value as stored, null when refused. */
+	vet = (_row: number, _col: number, text: string): string | null => text;
 
 	readonly engine = $derived(createWorkbook(this.book.sheets));
 	readonly sheet = $derived(
@@ -132,9 +150,35 @@ export class SheetState {
 		cols: Math.max(this.width + 1, MIN_COLS),
 	});
 	readonly rect = $derived(rectOf(this.selection));
+	/**
+	 * The workbook's styles, appended to and never changed, so undo needs
+	 * none of it; see `#lib/sheet/styles`.
+	 */
+	styles = $state.raw<CellStyle[]>([{}]);
+	/** How each style draws, worked out once per style. */
+	readonly looks = $derived(this.styles.map(lookOf));
+	/** Looks with the sheet's tables and links under them. */
+	readonly cellLooks = $derived(
+		new CellLooks(this.styles, this.looks, this.sheet),
+	);
+	readonly pictures = $derived(this.sheet?.pictures ?? []);
+	readonly styleIds = $derived<StyleGrid>(this.sheet?.styleIds ?? []);
+	readonly merged = $derived(mergeIndex(this.sheet?.merges));
+	/** Formats copied by the paint-format button, waiting for a target. */
+	painter = $state.raw<StyleGrid | null>(null);
+	/** The custom number format dialog is open. */
+	formatDialog = $state(false);
+	readonly charts = $derived(this.sheet?.charts ?? []);
+	readonly chart = $derived(
+		this.charts.find((chart) => chart.id === this.chartId) ?? null,
+	);
+	/** The cells as charts read them. */
+	readonly source = $derived(sourceOf(this.engine, this.book.sheets));
 
 	private readonly history = new History<Snapshot>(100);
-	private clip: Clip | null = null;
+	/** What was last copied here; see `clip.ts`. */
+	clip: Clip | null = null;
+	private chartClip: Chart | null = null;
 	/** Where the picked reference sits in the draft, and the cell it began on. */
 	private pick: { start: number; end: number; from: Cell } | null = null;
 	private nextId: number;
@@ -145,6 +189,9 @@ export class SheetState {
 		private readonly onChange: (content: string) => void,
 	) {
 		this.book = parseBook(content, workbook);
+		if (workbook) {
+			this.styles = styleTableFrom(content);
+		}
 		const declared = workbook
 			? Number((JSON.parse(content) as { nextId?: number }).nextId ?? 0)
 			: 0;
@@ -160,8 +207,22 @@ export class SheetState {
 
 	raw = (row: number, col: number): string => this.rows[row]?.[col] ?? "";
 
-	shown = (row: number, col: number): string =>
-		this.engine.shown(this.active, row, col);
+	shown = (row: number, col: number): string => {
+		const format = this.styleAt(row, col).format;
+		const text = format
+			? formatted(this.engine.value(this.active, row, col), format)
+			: null;
+		return text ?? this.engine.shown(this.active, row, col);
+	};
+
+	styleId = (row: number, col: number): number =>
+		this.styleIds[row]?.[col] ?? 0;
+
+	styleAt = (row: number, col: number): CellStyle =>
+		this.styles[this.styleId(row, col)] ?? {};
+
+	look = (row: number, col: number): Look =>
+		this.cellLooks.look(this.styleId(row, col), row, col);
 
 	/** Whether a cell reads as a number, so it aligns right. */
 	numeric = (row: number, col: number): boolean => {
@@ -198,17 +259,27 @@ export class SheetState {
 		this.active = Math.min(snapshot.active, snapshot.book.sheets.length - 1);
 		this.selection = snapshot.selection;
 		this.editing = null;
+		if (!this.chart) {
+			this.chartId = null;
+			this.chartPanel = false;
+		}
 		this.settled();
 	}
 
 	private settled(): void {
 		this.canUndo = this.history.canUndo;
 		this.canRedo = this.history.canRedo;
-		this.onChange(serializeBook(this.book, this.workbook));
+		this.onChange(
+			serializeBook(
+				this.book,
+				this.workbook,
+				this.workbook ? this.styles : undefined,
+			),
+		);
 	}
 
 	/** Every edit goes through here: one undo step, one save. */
-	private apply(book: BookData, selection?: Selection): void {
+	apply(book: BookData, selection?: Selection): void {
 		if (book === this.book || this.readOnly) {
 			return;
 		}
@@ -250,6 +321,8 @@ export class SheetState {
 
 	select = (selection: Selection): void => {
 		this.tabStart = null;
+		this.chartId = null;
+		this.chartPanel = false;
 		this.selection = {
 			anchor: clamp(selection.anchor, this.bounds),
 			focus: clamp(selection.focus, this.bounds),
@@ -341,8 +414,12 @@ export class SheetState {
 			this.editing = null;
 			const target = single(editing.row, editing.col);
 			// `=sum(a1)` is kept as `=SUM(A1)`, as spreadsheets do.
-			const text = normalizeFormula(editing.draft);
-			if (text !== this.raw(editing.row, editing.col)) {
+			const text = this.vet(
+				editing.row,
+				editing.col,
+				normalizeFormula(editing.draft),
+			);
+			if (text !== null && text !== this.raw(editing.row, editing.col)) {
 				this.setRows(
 					writeBlock(this.rows, editing.row, editing.col, [[text]]),
 					target,
@@ -427,175 +504,49 @@ export class SheetState {
 
 	fill = (direction: "down" | "right"): void => {
 		this.commit();
-		this.setRows(fill(this.rows, this.rect, direction));
-	};
-
-	// =====================================================================
-	// Clipboard
-	// =====================================================================
-
-	/** The selection as text for the clipboard: values, as Excel copies. */
-	copy = (cut: boolean): string => {
-		const rect = this.rect;
-		const values: string[][] = [];
-		for (let r = rect.top; r <= rect.bottom; r++) {
-			const line: string[] = [];
-			for (let c = rect.left; c <= rect.right; c++) {
-				line.push(this.shown(r, c));
-			}
-			values.push(line);
-		}
-		const text = toTsv(values);
-		this.clip = {
-			text,
-			block: blockAt(this.rows, rect),
-			origin: { row: rect.top, col: rect.left },
-			cut: cut ? { sheet: this.active, rect } : null,
-		};
-		this.copied = { sheet: this.active, rect };
-		return text;
-	};
-
-	/**
-	 * Pastes at the selection. Our own copy brings its formulas, references
-	 * shifted (a cut moves them as they are); anything else is values. One
-	 * copied cell over a larger selection fills all of it.
-	 */
-	paste = (text: string): void => {
-		this.commit();
-		const clip = this.clip?.text === text ? this.clip : null;
-		const rect = this.rect;
-		let book = this.book;
-		let block = clip ? clip.block : parseTsv(text);
-		if (clip?.cut) {
-			const source = book.sheets[clip.cut.sheet]?.rows ?? [];
-			book = withRows(
-				book,
-				clip.cut.sheet,
-				fillWith(source, clip.cut.rect, ""),
-			);
-			this.clip = null;
-		} else if (clip) {
-			block = shiftBlock(
-				block,
-				rect.top - clip.origin.row,
-				rect.left - clip.origin.col,
-			);
-		}
-		block = tile(block, rect, clip !== null && !clip.cut);
-		const rows = book.sheets[this.active]?.rows ?? [];
-		const next = withRows(
-			book,
+		const book = withRows(
+			this.book,
 			this.active,
-			writeBlock(rows, rect.top, rect.left, block),
+			fill(this.rows, this.rect, direction),
 		);
-		const pasted = {
-			anchor: { row: rect.top, col: rect.left },
-			focus: {
-				row: rect.top + block.length - 1,
-				col: rect.left + (block[0]?.length ?? 1) - 1,
-			},
-		};
-		this.apply(next, pasted);
+		this.apply(
+			patchSheet(book, this.active, {
+				styleIds: fillStyles(this.styleIds, this.rect, direction),
+			}),
+		);
 	};
 
 	// =====================================================================
-	// Rows, columns, sorting
+	// Clipboard, lines, sorting, Find: `clip.ts` and `lines.ts`
 	// =====================================================================
 
-	private lines(axis: "row" | "col", at: number, count: number): void {
-		this.commit();
-		this.apply(restructure(this.book, this.active, { axis, at, count }));
-	}
+	copy = (cut: boolean): string => copyCells(this, cut);
 
-	insertRows = (after: boolean): void => {
-		const { top, bottom } = this.rect;
-		this.lines("row", after ? bottom + 1 : top, bottom - top + 1);
-	};
+	paste = (text: string): void => pasteCells(this, text);
 
-	insertCols = (after: boolean): void => {
-		const { left, right } = this.rect;
-		this.lines("col", after ? right + 1 : left, right - left + 1);
-	};
+	insertRows = (after: boolean): void => insertLines(this, "row", after);
 
-	deleteRows = (): void => {
-		const { top, bottom } = this.rect;
-		if (top >= this.rows.length) {
-			return;
-		}
-		this.lines("row", top, -(Math.min(bottom, this.rows.length - 1) - top + 1));
-		this.select(single(top, this.selection.anchor.col));
-	};
+	insertCols = (after: boolean): void => insertLines(this, "col", after);
 
-	deleteCols = (): void => {
-		const { left, right } = this.rect;
-		if (left >= this.width) {
-			return;
-		}
-		this.lines("col", left, -(Math.min(right, this.width - 1) - left + 1));
-		this.select(single(this.selection.anchor.row, left));
-	};
+	deleteRows = (): void => deleteLines(this, "row");
 
-	/** Sorts the rows below the header by the active column. */
-	sort = (descending: boolean, col = this.selection.anchor.col): void => {
-		this.commit();
-		const key = (row: number) => {
-			const value = isFormula(this.raw(row, col))
-				? this.engine.value(this.active, row, col)
-				: literal(this.raw(row, col));
-			return typeof value === "number" ? value : display(value);
-		};
-		const rows = sortRows(this.rows, this.bodyStart, descending, key);
-		const sheet = this.sheet;
-		this.apply({
-			sheets: this.book.sheets.map((s) =>
-				// The file's recorded values are by position, which just moved.
-				s === sheet ? { id: s.id, name: s.name, rows } : s,
-			),
-		});
-	};
+	deleteCols = (): void => deleteLines(this, "col");
 
-	/** The next cell after the active one whose text or value holds `query`. */
-	find = (query: string): boolean => {
-		const needle = query.trim().toLowerCase();
-		if (!needle) {
-			return true;
-		}
-		const width = this.width;
-		const total = this.rows.length * width;
-		const { row, col } = this.selection.anchor;
-		for (let step = 1; step <= total; step++) {
-			const at = (row * width + col + step) % total;
-			const r = Math.floor(at / width);
-			const c = at % width;
-			const raw = this.raw(r, c);
-			if (
-				raw.toLowerCase().includes(needle) ||
-				(isFormula(raw) && this.shown(r, c).toLowerCase().includes(needle))
-			) {
-				this.select(single(r, c));
-				return true;
-			}
-		}
-		return false;
-	};
+	/** False, with nothing moved, when a merge is in the way. */
+	sort = (descending: boolean, col = this.selection.anchor.col): boolean =>
+		sortSheet(this, descending, col);
+
+	find = (query: string): boolean => findNext(this, query);
 
 	// =====================================================================
 	// Column widths
 	// =====================================================================
 
-	widthOf = (col: number): number =>
-		this.widths[this.sheet?.id ?? 0]?.[col] ?? DEFAULT_WIDTH;
+	widthOf = (col: number): number => columnWidth(this, col);
 
-	setWidth = (col: number, width: number): void => {
-		const id = this.sheet?.id ?? 0;
-		const list = this.widths[id] ?? [];
-		while (list.length <= col) {
-			list.push(DEFAULT_WIDTH);
-		}
-		list[col] = Math.max(40, Math.round(width));
-		this.widths[id] = list;
-	};
+	/** `done` false while dragging: drawn, not yet saved. */
+	setWidth = (col: number, width: number, done = true): void =>
+		resizeColumn(this, col, width, done);
 
 	// =====================================================================
 	// Sheets
@@ -609,6 +560,8 @@ export class SheetState {
 		this.active = index;
 		this.selection = single(0, 0);
 		this.copied = null;
+		this.chartId = null;
+		this.chartPanel = false;
 	};
 
 	addSheet = (): void => {
@@ -645,6 +598,80 @@ export class SheetState {
 		const active = index < this.active ? this.active - 1 : this.active;
 		this.apply(book, single(0, 0));
 		this.active = Math.min(active, book.sheets.length - 1);
+	};
+
+	// =====================================================================
+	// Charts
+	// =====================================================================
+
+	private setCharts(
+		charts: Chart[],
+		picked: string | null = this.chartId,
+	): void {
+		const index = this.active;
+		this.apply({
+			sheets: this.book.sheets.map((sheet, i) =>
+				i === index ? { ...sheet, charts } : sheet,
+			),
+		});
+		this.chartId = picked;
+		this.chartPanel &&= picked !== null;
+	}
+
+	/** Insert → Chart: over the selection, placed beside it, editor open. */
+	insertChart = (): void => {
+		if (this.readOnly || !this.workbook) {
+			return;
+		}
+		this.commit();
+		const { top, left, bottom, right } = this.rect;
+		const area = this.singleCell
+			? regionAround(this.source, this.active, top, left)
+			: { sheet: this.active, top, left, bottom, right };
+		// Below the frozen header row, which is drawn over charts.
+		const chart = chartFor(this.source, area, chartPalette(), {
+			row: Math.max(area.top, this.bodyStart),
+			col: area.right + 2,
+			x: 0,
+			y: 0,
+			width: 480,
+			height: 300,
+		});
+		this.setCharts([...this.charts, chart], chart.id);
+		this.chartPanel = true;
+	};
+
+	selectChart = (id: string | null): void => {
+		this.commit();
+		this.chartId = id;
+		this.chartPanel &&= id !== null;
+	};
+
+	updateChart = (chart: Chart): void => {
+		if (!this.readOnly) {
+			this.setCharts(this.charts.map((c) => (c.id === chart.id ? chart : c)));
+		}
+	};
+
+	deleteChart = (id = this.chartId): void => {
+		if (id && !this.readOnly) {
+			this.setCharts(
+				this.charts.filter((chart) => chart.id !== id),
+				null,
+			);
+		}
+	};
+
+	copyChart = (): void => {
+		this.chartClip = this.chart;
+	};
+
+	/** A copy one cell down and right of the original, or of the copied one. */
+	pasteChart = (from = this.chartClip): void => {
+		if (from && !this.readOnly && this.workbook && isEditable(from)) {
+			const copy = copyOf(from);
+			this.setCharts([...this.charts, copy], copy.id);
+		}
 	};
 
 	get singleCell(): boolean {

@@ -38,6 +38,7 @@ describe("resolveChannels", () => {
 			"share",
 			"signature_completed",
 			"signature_declined",
+			"signature_requested",
 		]);
 	});
 });

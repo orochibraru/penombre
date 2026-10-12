@@ -1178,10 +1178,13 @@ item, the one thing in the bar that is not a link.
 
 It is opaque, not frosted: the bar sits over a grid of thumbnails, and blurring
 whatever happened to be beneath it read as a smear rather than a surface. It
-also hides on scroll down and returns on scroll up, from `<svelte:window>` —
-nothing between the header and the bar scrolls, so `window.scrollY` is the
-page's position. The 8px threshold is not cosmetic: momentum scrolling reverses
-by a pixel constantly and the bar flickered on every reversal.
+floats inset with round ends and puts the current tab on an accent pill, like
+the mobile app's tab bar, so the two read as one product. Anything stacked above
+it (`selection-bar`, the upload panel) assumes it is about 5rem tall. It also
+hides on scroll down and returns on scroll up, from `<svelte:window>` — nothing
+between the header and the bar scrolls, so `window.scrollY` is the page's
+position. The 8px threshold is not cosmetic: momentum scrolling reverses by a
+pixel constantly and the bar flickered on every reversal.
 
 The header carries the logo below `md`. The sidebar is what brands the app, and
 it is not rendered on a phone.
@@ -1452,16 +1455,16 @@ columns adjusts every formula on every sheet, a reference into deleted cells
 becomes `#REF!`. Sorting moves formulas as written, like Excel.
 
 **An `.xlsx` travels to the editor as JSON**
-(`{nextId, sheets: [{id, name, rows, cached}]}`), sheets matched by `sheetId`; a
-new sheet takes `nextId`, since chartsheets hold ids too. It opens its formulas
-as `=…` (shared formulas expanded from their master; array and data-table cells
-show their value). The file's cached value is shown only when the engine answers
-`#NAME?`/`#ERROR!` on an unchanged formula; any structural change drops it, the
-cache being keyed by position. Writing: newer functions go out as `_xlfn.X` or
-Excel shows `#NAME?`; every write drops `calcChain.xml` and sets
-`fullCalcOnLoad`, since typed formulas carry no `<v>`; a cell sharing a formula
-whose master was overwritten is written in full (`detachOrphans`); an unchanged
-sheet is never reserialised.
+(`{nextId, styles, sheets: [{id, name, rows, cached, styleIds, merges}]}`),
+sheets matched by `sheetId`; a new sheet takes `nextId`, since chartsheets hold
+ids too. It opens its formulas as `=…` (shared formulas expanded from their
+master; array and data-table cells show their value). The file's cached value is
+shown only when the engine answers `#NAME?`/`#ERROR!` on an unchanged formula;
+any structural change drops it, the cache being keyed by position. Writing:
+newer functions go out as `_xlfn.X` or Excel shows `#NAME?`; every write drops
+`calcChain.xml` and sets `fullCalcOnLoad`, since typed formulas carry no `<v>`;
+a cell sharing a formula whose master was overwritten is written in full
+(`detachOrphans`); an unchanged sheet is never reserialised.
 
 The grid has one editor, a one-row textarea in the active cell (an `<input>`
 strips a cell's line breaks); every other cell is text, rows virtualised. Copy
@@ -1471,7 +1474,163 @@ focus inside the tap (`flushSync`) or the keyboard stays shut, and editor inputs
 are `text-base md:text-sm` or iOS zooms. Enter after a run of Tabs goes back to
 the column the run began in (`advance`), as Excel does. `state.test.ts` compiles
 `state.svelte.ts` with `svelte/compiler` to unit-test a runes class under
-`bun test`; copy that for another one.
+`bun test`; copy that for another one. Nothing it or `keys.ts` imports may load
+`svelte-sonner` (its `runed` dependency does not resolve under `bun test`): the
+formatting keys reach `gridKey` as `context.format` for that reason.
+
+### Sheet formatting is a style table plus a grid of indices
+
+The workbook JSON carries `styles` (`CellStyle[]`, `#lib/sheet/styles.ts`), and
+each sheet `styleIds` (indices, parallel to `rows`, trailing zeros trimmed) and
+`merges` (`A1:C2`). Index `i` below the file's count **is** its `cellXfs` entry
+`i`; the editor only appends, so undo snapshots never copy the table. A new
+style records `base`, the entry it came from.
+
+- **Absent means "keep the file's"**, present means authoritative: the editor
+  always sends `styleIds`/`merges` (even empty) for a workbook, while an old
+  client or a CSV body leaves every `s=` and `<mergeCells>` alone.
+- **The save maps by look, not by index** (`StyleWriter.xfFor`): an index whose
+  file entry still resolves to the same `styleKey` stays; otherwise an equal
+  existing entry is reused, else one is appended, cloned from `base` with only
+  the changed parts rewritten (fonts/fills/borders deduped by their XML). So
+  autosaving twice never appends twice, and theme colours, protection and
+  `scheme` survive. Both sides normalise identically (`normalizeStyle` with the
+  workbook's default font): black text, the default font and size, `General` all
+  read as absent. A mismatch there would append a style on every save.
+- `styles.xml` is written only when something was appended, before the sheets,
+  and `dateStyles` is re-read afterwards so a cell typed into a new date style
+  is written as a serial. A package with no styles part gets one
+  (`addStylesPart`) only when a cell needs a style.
+- **Cell borders never change layout**: right and bottom replace the grid lines
+  (`border-right`/`border-bottom` on the `td`), top and left are box-shadows
+  over the neighbour's grid line. A border on all four sides of the `td` made
+  rows taller and broke the fixed-height virtualisation. Wrapped or resized text
+  sits in a `max-height` box for the same reason.
+- A merge is drawn by its top-left `td` as an absolute box sized from the column
+  widths; that `td` needs `overflow: visible`, which its `overflow-hidden` would
+  otherwise clip. Covered cells draw nothing and answer clicks as the anchor.
+- Text clips at the cell's edge; the wrap menu is clip or wrap. Run-on text was
+  the default and drew a sheet unlike Google's; Excel has no flag for either, so
+  nothing about it is saved.
+- Automatic text on a fill takes black or white by the fill's luminance
+  (`inkOn`), as Google does: a table header's dark green with Excel's black text
+  was unreadable.
+
+### Sheet layout: widths, panes, tables, pictures
+
+Each sheet may also carry `widths` (pixels by column, `0` = `defaultWidth`,
+which is omitted at Excel's 64), `freeze` (`{rows, cols}`, omitted when none),
+`tables`, `links` and `pictures` (`#lib/sheet/layout.ts`). `serializeBook` sends
+back only `widths`, `freeze` and each table's `{part, ref}` (`savedLayout`);
+links and pictures are shown only and the file keeps its own.
+
+- **`restructure` rebuilds the active sheet field by field**, so a new per-sheet
+  field must be listed in `moveLayout` (or `moveFormats`) or it vanishes on the
+  first row insert.
+- **Widths are written per changed column only** (`xlsx-view.ts`): the save
+  compares each sent width with the file's, in pixels, and splits the `<col>`
+  range around a changed one. Pixels ↔ characters is Excel's formula at a 7px
+  digit; `widthToPx(pxToWidth(px)) === px` is what keeps an untouched save from
+  rewriting `<cols>`.
+- **`header`/`frozen` are getters over `freeze`**, not flags: an `.xlsx` with no
+  pane opens without a header row (it used to default to one). A layout change
+  in a CSV or a read-only view sets `book` directly, with no undo step and no
+  save (`view.ts`). Column drags preview through `resizing` and save once, on
+  the drop.
+- **Table looks are a layer, resolved per cell** by `CellLooks`
+  (`#lib/sheet/layers.ts`): the table's elements in ECMA order, then the cell's
+  own style over it, cached per style id and region key. The server resolves the
+  style (`xlsx-table-styles.ts`: custom `tableStyle` through `dxfs`, whose solid
+  fill colour is `bgColor`, or a built-in approximated from the theme) and the
+  client computes regions, so banding follows inserted rows. A table's
+  `tableColumn` names must equal its header cells or Excel repairs the file:
+  every save resyncs them (`updateTable`), and an emptied table keeps one body
+  row.
+- **Pictures are data URIs made in `workbookToText` only**, never in
+  `readWorkbookCharts` (the PDF export uses that), and never in a save. They are
+  `pointer-events-none` and do not move with inserted rows, because their
+  anchors in the file do not either.
+
+### An editor's save names what it was edited from
+
+Autosave uploads the whole file, so two editors used to overwrite each other
+silently, last save winning. The edit load sends `revision` (`revisionOf`, a
+sha256 of the plaintext, not the row's date, which a scan re-dates); every save
+sends it back as `base`, and the office and upload routes answer 409 with the
+revision on disk when it differs. **Keep mine** retries with that revision, so a
+third save in between is still refused. Check and write run in `oneSaveAtATime`
+per file, in-process only. The upload route hashes only when `base` is sent:
+hashing every upload would read a whole video into memory.
+
+### Sheet charts are DrawingML, kept unless edited
+
+Each sheet in the workbook JSON may carry `charts` (`#lib/chart/model.ts`);
+`office/xlsx-charts/` reads and writes them, `#lib/chart/render.ts` draws them
+as an SVG string (the PDF export reuses it). **Absent `charts` means "leave the
+drawing alone", `[]` means "delete them all"**: `serializeBook` only sends the
+field when the sheet has it, and a drawing the server cannot read is never
+written to. A chart is matched to its part by `origin` (the part path); the save
+compares canonical JSON of the read model with the editor's: equal keeps the
+bytes, anchor-only rewrites the anchor as `oneCellAnchor` around the same
+`graphicFrame`, references-only patches the `c:f` texts in document order, and
+anything else is patched node by node (`chart-patch.ts`, inserted where the
+schema puts it, `nodes.ts`); only a type change outside column/bar regenerates,
+and never for a chart with `unsupported` set. Copying a chart must drop
+`origin`. New series get explicit colours (`withColors`, the accent resolved to
+hex through a canvas since `--primary` may be oklch), or other apps show theirs.
+`state.test.ts` compiles the state into a temp folder: import from it by
+`#lib/…`, never `./`.
+
+- Elements are matched by **local name** (`package.ts`): producers differ on
+  prefixes. Colours are resolved to `#rrggbb` at read time through the theme; a
+  series with no `spPr` takes `accentN` by its `c:idx`, as Excel does.
+- A cell anchor becomes pixels with Excel's own sizes (column width in
+  characters × 7 + 5, row height in points × 4/3), read from the worksheet.
+- `removeDrawing` looks the sheet's `<drawing>` up **before** deleting the part:
+  `sheetDrawingPart` checks the part exists, and returned nothing, so the sheet
+  kept a dangling `<drawing>` and rels entry.
+- In the grid, charts are absolutely placed children of the scroller (now
+  `relative`), so row virtualisation never unmounts them; their z-index sits
+  under the sticky headers. `focusGrid` focuses the picked chart instead, or
+  `Delete` would clear the cells under it.
+- SVG colours go in `style`, never presentation attributes: `var(--…)` is only
+  reliable there. The categorical slots are CSS variables on `.chart-palette`
+  (`chart-view.svelte`), stepped per mode; the accent is slot zero.
+
+### Dropdowns are matched by content, never by position
+
+Each sheet carries `dropdowns` (`#lib/sheet/dropdowns.ts`, list validations,
+inline or from a range, plus chip colours) and, read only, `conditional`
+(`#lib/sheet/conditional.ts`, drawn by `ConditionalStyles`). `xlsx-rules.ts`
+reads and writes both. The editor never re-reads the file after a save, so an
+index into the file's validations goes stale the moment a save appends or drops
+one, and the next autosave appended the same new dropdown again. `writeRules`
+matches the editor's list to the file's by content: identical keeps the bytes,
+same range or same list updates in place, the rest is removed or appended. An
+autosave sending the same list is therefore a no-op; keep it that way.
+
+- **Chip colours are conditional formatting** on the dropdown's exact range:
+  `cellIs equal` per value, a dxf appended through `StyleWriter.dxf` (identical
+  ones reused, never renumbered). Our blocks carry an `extLst` ext
+  (`CHIPS_URI`); a block on the same range made only of plain-colour `equal`
+  rules on list values is read as chips too, since Excel drops unknown
+  extensions on save. Only those blocks are ever rewritten. In a dxf the solid
+  fill's colour is `bgColor`, not `fgColor`.
+- **Untouched validations and blocks are swapped back for their source text**
+  (`holdVerbatim`, by order of appearance) just before the part is serialised:
+  the parser decodes `&quot;` and a reserialised `formula1` changed bytes. x14
+  validations (in `extLst`) are kept semantically only.
+- `showDropDown="1"` hides the arrow (Excel's naming is inverted).
+  `showErrorMessage` with `errorStyle` stop (the default) is what `strict`
+  means.
+- `TRUE`/`FALSE` typed into a cell are written `t="b"`; before, they became
+  inline strings and a Google checkbox column stopped being boolean.
+- The client side is `Dropdowns` (`dropdowns.svelte.ts`, one per `SheetState`
+  through `dropdownsOf`): it sets `sheet.vet`, the hook `commit` runs a typed
+  value through (canonical spelling, or null to refuse). Keep dropdown logic out
+  of `state.svelte.ts`, which sits at the line limit.
+- Conditional formats are not moved by row or column inserts: the client does
+  not send them back, so they stay where the file has them, drawn there too.
 
 ### Document editor
 
@@ -1530,6 +1689,46 @@ cell. Pictures are embedded, scaled to 1600px.
   renders edit. A read-only refusal a route's `catch` swallows is still a 403:
   `Http.ServerError` maps `ReadOnlyVolumeError`. View-only saves used to come
   back as 500.
+
+### Suggestions are rewritten after the fact
+
+Suggesting mode (`#lib/editor/suggestions.ts`) never intercepts input: an
+`appendTransaction` rewrites every `ReplaceStep` of a user transaction. Typed
+text gets an `insertion` mark; the removed slice is put back with `tr.replace`
+and a `deletion` mark, except the suggester's own pending insertions, which
+really go. It skips `history$` (undo), `appendedTransaction` and its own meta,
+or undo would be re-suggested. A paragraph break is the `paragraphChange` attr
+of the paragraph it **ends** (Word's paragraph mark), `splittable` so a split
+leaves the original break on the second half.
+
+- **Both marks are `inclusive: false`, and an edit outside suggesting strips
+  them from what it inserted**: without that, typing inside a suggestion in
+  Editing mode joined it, and a paste carried someone else's authorship.
+- **`del[data-suggestion]` is a suggestion, a plain `del` is strikethrough**, in
+  the parse rule (priority 60, above ProseKit's strike), in `docx-runs`'
+  `markFor` and in the export model. Exports other than `.docx` read suggestions
+  as accepted.
+- **One suggestion is several Word elements.** Word writes an element per run
+  and a replacement as `w:del` + `w:ins`, each with its own `w:id`, which must
+  stay unique. The reader groups consecutive ones by author and date under the
+  first `w:id`; `numberChanges` gives every element its own number and the
+  group's first element the group's id, **in reading order** (a paragraph's mark
+  after its runs), or the id changes on every round trip.
+- **Never mark text mid-composition.** Rewrapping the composed node breaks the
+  IME. Transactions with the `composition` meta are only recorded in the plugin
+  state (inserted ranges, plus slices of document text they replaced, mapped
+  through every change) and `settleComposition` suggests them once
+  `view.composing` is false: from the plugin view's `update`, and 50ms after
+  `compositionend`, since the last composed text may land after that event.
+- **A deletion never really deletes text it could not mark.** The removed slice
+  comes back whole: text that can carry the mark is struck, and a picture,
+  divider, code-block text or table structure in it is simply left in place.
+  Only a deletion with no markable text (a lone picture, code) goes through.
+- A list item's paragraph properties are copied onto new items, so the copy
+  drops `w:rPr`'s `w:ins`/`w:del` and `w:pPrChange` (`listExemplars`).
+- `hasUnsupportedChanges` keeps a `.docx` read-only for what is not modelled:
+  moves, `*PrChange` formatting changes, table row and cell changes, and a
+  `w:ins`/`w:del` anywhere but in a paragraph, link or paragraph mark.
 
 ### A deck is JSON; the `.pptx` is patched, not regenerated
 
@@ -2006,7 +2205,10 @@ redemptions never both win.
   empty. `avdmanager` ignores `ANDROID_HOME` and takes the SDK to be two folders
   above itself, so setup runs the copy it installed into the SDK. After moving
   an SDK, `./gradlew --stop` and delete
-  `apps/mobile/.gradle/configuration-cache`: both remember the old path.
+  `apps/mobile/.gradle/configuration-cache`: both remember the old path. A
+  checkout from before the app moved to `apps/mobile` keeps the old path in
+  `shared/build/.transforms` too, and Android dexing fails with "located outside
+  the root directory": delete that folder.
 - Xcode 27 has no `Simulator.app`: the simulator's window is Device Hub
   (`com.apple.dt.Devices`), which `mobile:run:ios` opens.
   `mise run mobile:e2e ios` runs the flows on one platform.
@@ -2291,6 +2493,55 @@ intent filter host `pair`; iOS's `CFBundleURLTypes` plus `.onOpenURL`), and
 Maestro's `openLink`, which is how a simulator with no camera tests it. iOS asks
 "Open in Penombre?" the first time, and a run that stopped there leaves that
 alert over the next launch; `paired.yaml` dismisses it.
+
+### The app's editor and PDF screens are native shells
+
+Documents, sheets and decks open in `EditorScreen` (`Editor.kt`): the app's
+header over the web editor at `/edit/<id>?embed=1&theme=dark|light`. Under
+`embed` the `(app)` layout renders the page alone, `themeHandler` stamps
+`data-embed` (and `dark`) so the first paint matches, and `app.css` makes the
+page transparent with no aurora of its own, so the app's sky shows through.
+
+- **On iOS a transparent web view must be `placedAsOverlay`.** A `UIKitView`
+  sits under the Compose canvas, which punches a hole to it: under a transparent
+  page you see the UIKit window (white), not the sky Compose drew. As an overlay
+  it covers Compose content, so nothing of the app may draw over that view.
+- **Back waits for `window.penombreSettle()`** (the edit page's: saves, waits
+  out a save in flight, says whether anything is left). A web view torn down
+  with the screen never runs `pagehide`. WKWebView's `callAsyncJavaScript`
+  awaits the promise; Android's `evaluateJavascript` does not, so the app polls
+  a flag the promise sets.
+- **`setMode` in an `$effect` loops** (`effect_update_depth_exceeded`):
+  mode-watcher reads its own state while writing it. `untrack` it.
+
+PDFs are `PdfView` (`PdfEditor.kt`): the platform only renders pages to bitmaps
+(`PdfSource`: PdfRenderer, PDFKit's `drawWithBox`, which draws annotations and
+applies `/Rotate`; `CGContextDrawPDFPage` draws neither) and reports their shown
+size. Marks, form inputs and signatures are common Compose drawn over each page
+in **0..1 of the page as shown**, so zoom (one `graphicsLayer` over pages and
+marks) cannot misalign them; `PageBox.toPdf` maps to user space for
+`POST …/file/{id}/pdf`, which `pdf-edit.ts` writes with pdf-lib: highlight, ink
+and note as real annotations with appearance streams, form values through the
+AcroForm, signatures drawn into the page content. The page geometry comes from
+the server (`GET …/pdf`): pdfium reports a rotated page's sides already swapped,
+PDFKit does not.
+
+- JVM host tests cannot make an `ImageBitmap` (`Bitmap.createBitmap` is not
+  mocked): keep the maths (`signatureFrame`, `signatureBody`) out of anything
+  that draws.
+
+**Signing natively** goes through
+`POST /api/v1/signing/{view,document,sign, decline}`, the `/sign/<token>` page's
+service calls with the token in the body (paths are logged). **A notification
+never carries a token**: a raw one in the `notifications` table would sign for
+anyone who reads the database. A signer with an account gets a
+`signature_requested` notification linking `/sign/signer/<signer id>`, which
+opens only for a session whose user is that signer's `userId` (anyone else gets
+the same 404 as a wrong token; signed out, sign-in). The service takes either
+key (`SignerKey`: a token, or `{ signerId, userId }`), and so do the
+`/api/v1/signing/*` routes (`token` or `signer` in the body); both pages share
+`signatures/page.ts`. The link's page offers `penombre://sign?…&token=…` (or
+`&signer=…`) on a phone's browser.
 
 ### TypeScript is held at 6 on purpose
 

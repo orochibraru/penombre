@@ -1,3 +1,8 @@
+import {
+	changeOf,
+	PARAGRAPH_CHANGE,
+	parseParagraphChange,
+} from "#lib/editor/changes.js";
 import { linkTarget } from "#lib/editor/document-format.js";
 import {
 	declarations,
@@ -19,6 +24,10 @@ import {
  * into the same HTML) reduced to the blocks and marks every export format
  * can express. Each format then renders this, rather than each walking the
  * HTML with its own idea of what a list is.
+ *
+ * Suggestions are read as if every one were accepted: suggested text is
+ * plain text, text suggested for deletion is gone, and a paragraph whose
+ * break is suggested for deletion runs into the next.
  */
 
 export interface Marks {
@@ -197,6 +206,8 @@ function inlines(node: XmlNode, marks: Marks, out: Inline[]): Inline[] {
 				const width = Number(node.attrs.width);
 				out.push({ image: src, ...(width > 0 ? { width } : {}) });
 			}
+		} else if (node.name === "del" && changeOf(node.attrs)) {
+			return out;
 		} else if (node.name !== "input") {
 			const inner = markFor(node, marks);
 			for (const child of node.children) {
@@ -342,8 +353,50 @@ function htmlList(node: XmlElement): List {
 const isBlockElement = (node: XmlNode): boolean =>
 	isElement(node) && (BLOCK_TAGS.has(node.name) || hasClass(node, LIST_CLASS));
 
+/** Paragraphs whose break is suggested for deletion. */
+const joined = new WeakSet<Block>();
+
+/** A deleted break, accepted: the paragraph and the next one become one. */
+function joinBreaks(out: Block[]): Block[] {
+	const merged: Block[] = [];
+	for (const each of out) {
+		const last = merged.at(-1);
+		if (
+			last &&
+			joined.has(last) &&
+			(last.type === "paragraph" || last.type === "heading") &&
+			(each.type === "paragraph" || each.type === "heading")
+		) {
+			for (const run of each.runs) {
+				const end = last.runs.at(-1);
+				if (end && sameMarks(end.marks, run.marks)) {
+					end.text += run.text;
+				} else {
+					last.runs.push(run);
+				}
+			}
+			if (!joined.has(each)) {
+				joined.delete(last);
+			}
+		} else {
+			merged.push(each);
+		}
+	}
+	return merged;
+}
+
 /** One block element, appended to `out`. */
 function block(node: XmlElement, out: Block[]): void {
+	const from = out.length;
+	blockOf(node, out);
+	const change = parseParagraphChange(node.attrs[PARAGRAPH_CHANGE]);
+	const last = out.at(-1);
+	if (change?.kind === "delete" && last && out.length > from) {
+		joined.add(last);
+	}
+}
+
+function blockOf(node: XmlElement, out: Block[]): void {
 	const heading = HEADINGS.exec(node.name)?.[1];
 	if (heading) {
 		const [first] = paragraphBlocks(node.children, {});
@@ -399,7 +452,7 @@ export function blocks(parent: XmlElement): Block[] {
 		}
 	}
 	settle();
-	return out;
+	return joinBreaks(out);
 }
 
 /** The editor's HTML as blocks. */

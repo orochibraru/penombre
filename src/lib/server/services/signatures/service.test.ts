@@ -22,6 +22,7 @@ import {
 	type RequestMeta,
 	SignatureError,
 	SignatureService,
+	type SignerKey,
 } from "./service";
 import { pngDataUrl } from "./test-utils";
 
@@ -107,7 +108,10 @@ async function ask(
 	});
 }
 
-const sign = (h: Harness, token: string, meta: RequestMeta = META) =>
+/** What the requester is told, as opposed to a signer being asked. */
+const told = (input: NotificationInput) => input.type !== "signature_requested";
+
+const sign = (h: Harness, token: SignerKey, meta: RequestMeta = META) =>
 	h.service.sign(
 		token,
 		{ signature: SIGNATURE, timeZone: "Europe/Paris", consent: true },
@@ -315,6 +319,47 @@ describe("signing", () => {
 		).toBeNull();
 	});
 
+	test("a signer with an account is asked in-app, by a link that is no credential", async () => {
+		const h = harness();
+		const { links } = await ask(h);
+		const asked = h.notified.filter((n) => !told(n));
+		expect(asked).toEqual([
+			expect.objectContaining({
+				userId: "ada",
+				type: "signature_requested",
+				actorName: "Olive Owner",
+				resourceName: "NDA.html",
+			}),
+		]);
+		const link = asked[0]?.link ?? "";
+		expect(link).toMatch(/^\/sign\/signer\/[^/]+$/);
+		// No token in the row: it names the signer, nothing more.
+		for (const issued of links) {
+			expect(link).not.toContain(tokenOf(issued.url));
+		}
+		const signerId = link.replace("/sign/signer/", "");
+
+		// Only Ada, signed in, opens it; anyone else finds nothing.
+		const mine = { signerId, userId: "ada" };
+		expect((await h.service.open(mine, META))?.signer.email).toBe(
+			"ada@example.com",
+		);
+		expect(
+			await h.service.open({ signerId, userId: "stranger" }, META),
+		).toBeNull();
+		expect(
+			await h.service.signerPdf({ signerId, userId: "stranger" }, "original"),
+		).toBeNull();
+		expect(await refused(sign(h, { signerId, userId: "stranger" }))).toBe(404);
+
+		// The same signing as through the link, and the emailed link still works.
+		expect((await sign(h, mine)).signer.status).toBe("signed");
+		expect(await refused(sign(h, tokenOf(links[1]?.url ?? "")))).toBe(409);
+		expect((await sign(h, tokenOf(links[0]?.url ?? ""))).status).toBe(
+			"completed",
+		);
+	});
+
 	test("a decline closes the request and tells the requester", async () => {
 		const h = harness();
 		const { links } = await ask(h);
@@ -324,7 +369,7 @@ describe("signing", () => {
 			META,
 		);
 		expect(view.status).toBe("declined");
-		expect(h.notified).toEqual([
+		expect(h.notified.filter(told)).toEqual([
 			expect.objectContaining({
 				userId: "owner",
 				type: "signature_declined",
@@ -382,7 +427,7 @@ describe("completion", () => {
 		const signed = h.saved[0]?.bytes ?? new Uint8Array();
 		expect(sha256(signed)).toBe(row?.signedHash ?? "");
 		expect((await PDFDocument.load(signed)).getPageCount()).toBeGreaterThan(1);
-		expect(h.notified).toEqual([
+		expect(h.notified.filter(told)).toEqual([
 			expect.objectContaining({
 				type: "signature_completed",
 				resourceName: "NDA.html",
@@ -416,7 +461,7 @@ describe("completion", () => {
 		// Again: nothing rebuilt, nobody told twice.
 		await h.service.finalize(request.id);
 		expect(h.saved).toHaveLength(1);
-		expect(h.notified).toHaveLength(1);
+		expect(h.notified.filter(told)).toHaveLength(1);
 	});
 
 	test("the requester's download rebuilds a PDF that failed to build", async () => {

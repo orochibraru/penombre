@@ -28,6 +28,8 @@
                 <data android:scheme="penombre" android:host="auth" />
                 <!-- The web app's "Connect the mobile app" QR code, read by any camera. -->
                 <data android:scheme="penombre" android:host="pair" />
+                <!-- A signing link's page offers to sign here instead. -->
+                <data android:scheme="penombre" android:host="sign" />
             </intent-filter>
         </activity>
         <!-- Hands the camera app a file of ours to write the photo into. -->

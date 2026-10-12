@@ -20119,7 +20119,8 @@
 																	"note",
 																	"share",
 																	"signature_completed",
-																	"signature_declined"
+																	"signature_declined",
+																	"signature_requested"
 																],
 																"type": "string"
 															}
@@ -20552,7 +20553,8 @@
 															"note",
 															"share",
 															"signature_completed",
-															"signature_declined"
+															"signature_declined",
+															"signature_requested"
 														],
 														"type": "string"
 													},
@@ -20745,7 +20747,8 @@
 												"note",
 												"share",
 												"signature_completed",
-												"signature_declined"
+												"signature_declined",
+												"signature_requested"
 											],
 											"type": "string"
 										},
@@ -20905,7 +20908,8 @@
 															"note",
 															"share",
 															"signature_completed",
-															"signature_declined"
+															"signature_declined",
+															"signature_requested"
 														],
 														"type": "string"
 													},
@@ -23479,6 +23483,801 @@
 					}
 				],
 				"summary": "Issue a new link for a signer",
+				"tags": [
+					"Signatures"
+				]
+			}
+		},
+		"/api/v1/signing/decline": {
+			"post": {
+				"description": "Closes the whole request and tells whoever asked.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"reason": {
+										"maxLength": 500,
+										"type": "string"
+									},
+									"signer": {
+										"maxLength": 64,
+										"minLength": 1,
+										"type": "string"
+									},
+									"token": {
+										"maxLength": 128,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"documentHash": {
+													"type": "string"
+												},
+												"documentName": {
+													"type": "string"
+												},
+												"downloadUntil": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"expiresAt": {
+													"type": "string"
+												},
+												"message": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"pageCount": {
+													"type": "number"
+												},
+												"requestId": {
+													"type": "string"
+												},
+												"requesterName": {
+													"type": "string"
+												},
+												"signer": {
+													"additionalProperties": false,
+													"properties": {
+														"email": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"status": {
+															"enum": [
+																"pending",
+																"signed",
+																"declined"
+															],
+															"type": "string"
+														}
+													},
+													"required": [
+														"name",
+														"email",
+														"status"
+													],
+													"type": "object"
+												},
+												"signers": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"name": {
+																"type": "string"
+															},
+															"status": {
+																"enum": [
+																	"pending",
+																	"signed",
+																	"declined"
+																],
+																"type": "string"
+															},
+															"you": {
+																"type": "boolean"
+															}
+														},
+														"required": [
+															"name",
+															"status",
+															"you"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"status": {
+													"enum": [
+														"pending",
+														"completed",
+														"declined",
+														"cancelled",
+														"expired"
+													],
+													"type": "string"
+												},
+												"waitingFor": {
+													"type": [
+														"string",
+														"null"
+													]
+												}
+											},
+											"required": [
+												"requestId",
+												"documentName",
+												"message",
+												"requesterName",
+												"status",
+												"pageCount",
+												"documentHash",
+												"expiresAt",
+												"signer",
+												"waitingFor",
+												"signers",
+												"downloadUntil"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Conflict"
+					},
+					"410": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Error 410"
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Too Many Requests"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"summary": "Decline through a signing link",
+				"tags": [
+					"Signatures"
+				]
+			}
+		},
+		"/api/v1/signing/document": {
+			"post": {
+				"description": "`signed` is the signed PDF, once everyone has signed.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"kind": {
+										"default": "original",
+										"enum": [
+											"original",
+											"signed"
+										],
+										"type": "string"
+									},
+									"signer": {
+										"maxLength": 64,
+										"minLength": 1,
+										"type": "string"
+									},
+									"token": {
+										"maxLength": 128,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"required": [
+									"kind"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"description": "The PDF"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Too Many Requests"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"summary": "The PDF a signing link asks to sign",
+				"tags": [
+					"Signatures"
+				]
+			}
+		},
+		"/api/v1/signing/sign": {
+			"post": {
+				"description": "`signature` is a small PNG data URL. A link signs once; signed in with the account at the signer's address, the signature is recorded as that account's.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"consent": {
+										"const": true,
+										"type": "boolean"
+									},
+									"signature": {
+										"maxLength": 300000,
+										"type": "string"
+									},
+									"signer": {
+										"maxLength": 64,
+										"minLength": 1,
+										"type": "string"
+									},
+									"timeZone": {
+										"maxLength": 64,
+										"type": "string"
+									},
+									"token": {
+										"maxLength": 128,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"required": [
+									"signature",
+									"consent"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"documentHash": {
+													"type": "string"
+												},
+												"documentName": {
+													"type": "string"
+												},
+												"downloadUntil": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"expiresAt": {
+													"type": "string"
+												},
+												"message": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"pageCount": {
+													"type": "number"
+												},
+												"requestId": {
+													"type": "string"
+												},
+												"requesterName": {
+													"type": "string"
+												},
+												"signer": {
+													"additionalProperties": false,
+													"properties": {
+														"email": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"status": {
+															"enum": [
+																"pending",
+																"signed",
+																"declined"
+															],
+															"type": "string"
+														}
+													},
+													"required": [
+														"name",
+														"email",
+														"status"
+													],
+													"type": "object"
+												},
+												"signers": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"name": {
+																"type": "string"
+															},
+															"status": {
+																"enum": [
+																	"pending",
+																	"signed",
+																	"declined"
+																],
+																"type": "string"
+															},
+															"you": {
+																"type": "boolean"
+															}
+														},
+														"required": [
+															"name",
+															"status",
+															"you"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"status": {
+													"enum": [
+														"pending",
+														"completed",
+														"declined",
+														"cancelled",
+														"expired"
+													],
+													"type": "string"
+												},
+												"waitingFor": {
+													"type": [
+														"string",
+														"null"
+													]
+												}
+											},
+											"required": [
+												"requestId",
+												"documentName",
+												"message",
+												"requesterName",
+												"status",
+												"pageCount",
+												"documentHash",
+												"expiresAt",
+												"signer",
+												"waitingFor",
+												"signers",
+												"downloadUntil"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Conflict"
+					},
+					"410": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Error 410"
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Too Many Requests"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"summary": "Sign through a signing link",
+				"tags": [
+					"Signatures"
+				]
+			}
+		},
+		"/api/v1/signing/view": {
+			"post": {
+				"description": "What the link's page shows: the document, who asked, who signs. Records the first view in the audit trail.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"signer": {
+										"maxLength": 64,
+										"minLength": 1,
+										"type": "string"
+									},
+									"token": {
+										"maxLength": 128,
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"documentHash": {
+													"type": "string"
+												},
+												"documentName": {
+													"type": "string"
+												},
+												"downloadUntil": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"expiresAt": {
+													"type": "string"
+												},
+												"message": {
+													"type": [
+														"string",
+														"null"
+													]
+												},
+												"pageCount": {
+													"type": "number"
+												},
+												"requestId": {
+													"type": "string"
+												},
+												"requesterName": {
+													"type": "string"
+												},
+												"signer": {
+													"additionalProperties": false,
+													"properties": {
+														"email": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"status": {
+															"enum": [
+																"pending",
+																"signed",
+																"declined"
+															],
+															"type": "string"
+														}
+													},
+													"required": [
+														"name",
+														"email",
+														"status"
+													],
+													"type": "object"
+												},
+												"signers": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"name": {
+																"type": "string"
+															},
+															"status": {
+																"enum": [
+																	"pending",
+																	"signed",
+																	"declined"
+																],
+																"type": "string"
+															},
+															"you": {
+																"type": "boolean"
+															}
+														},
+														"required": [
+															"name",
+															"status",
+															"you"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"status": {
+													"enum": [
+														"pending",
+														"completed",
+														"declined",
+														"cancelled",
+														"expired"
+													],
+													"type": "string"
+												},
+												"waitingFor": {
+													"type": [
+														"string",
+														"null"
+													]
+												}
+											},
+											"required": [
+												"requestId",
+												"documentName",
+												"message",
+												"requesterName",
+												"status",
+												"pageCount",
+												"documentHash",
+												"expiresAt",
+												"signer",
+												"waitingFor",
+												"signers",
+												"downloadUntil"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"410": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Error 410"
+					},
+					"429": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Too Many Requests"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"summary": "Open a signing link",
 				"tags": [
 					"Signatures"
 				]
@@ -27064,6 +27863,10 @@
 							"schema": {
 								"additionalProperties": false,
 								"properties": {
+									"base": {
+										"description": "The revision edited from; 409 when the file changed since",
+										"type": "string"
+									},
 									"content": {
 										"description": "The edited text, in the format for its kind",
 										"type": "string"
@@ -27089,10 +27892,15 @@
 											"properties": {
 												"message": {
 													"type": "string"
+												},
+												"revision": {
+													"description": "The revision just written",
+													"type": "string"
 												}
 											},
 											"required": [
-												"message"
+												"message",
+												"revision"
 											],
 											"type": "object"
 										}
@@ -27112,6 +27920,281 @@
 							}
 						},
 						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Conflict"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unprocessable Entity"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Save an Office document",
+				"tags": [
+					"Storage - Files"
+				]
+			}
+		},
+		"/api/v1/storage/file/{id}/pdf": {
+			"get": {
+				"description": "Each page's crop box and rotation, and every AcroForm field with where its widgets sit. `revision` goes back with an edit.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"canWrite": {
+													"type": "boolean"
+												},
+												"fields": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"kind": {
+																"enum": [
+																	"text",
+																	"checkbox",
+																	"radio",
+																	"dropdown",
+																	"list",
+																	"button",
+																	"signature"
+																],
+																"type": "string"
+															},
+															"multiline": {
+																"type": "boolean"
+															},
+															"name": {
+																"type": "string"
+															},
+															"options": {
+																"items": {
+																	"type": "string"
+																},
+																"type": "array"
+															},
+															"readOnly": {
+																"type": "boolean"
+															},
+															"value": {
+																"description": "Text, the chosen option, or \"true\"/\"false\" for a checkbox",
+																"type": [
+																	"string",
+																	"null"
+																]
+															},
+															"widgets": {
+																"items": {
+																	"additionalProperties": false,
+																	"properties": {
+																		"option": {
+																			"description": "A radio button's own value",
+																			"type": [
+																				"string",
+																				"null"
+																			]
+																		},
+																		"page": {
+																			"type": "number"
+																		},
+																		"rect": {
+																			"description": "x, y, width, height",
+																			"items": false,
+																			"maxItems": 4,
+																			"minItems": 4,
+																			"prefixItems": [
+																				{
+																					"type": "number"
+																				},
+																				{
+																					"type": "number"
+																				},
+																				{
+																					"type": "number"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			],
+																			"type": "array"
+																		}
+																	},
+																	"required": [
+																		"page",
+																		"rect",
+																		"option"
+																	],
+																	"type": "object"
+																},
+																"type": "array"
+															}
+														},
+														"required": [
+															"name",
+															"kind",
+															"value",
+															"options",
+															"readOnly",
+															"multiline",
+															"widgets"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"pages": {
+													"items": {
+														"additionalProperties": false,
+														"properties": {
+															"height": {
+																"type": "number"
+															},
+															"rotation": {
+																"anyOf": [
+																	{
+																		"const": 0,
+																		"type": "number"
+																	},
+																	{
+																		"const": 90,
+																		"type": "number"
+																	},
+																	{
+																		"const": 180,
+																		"type": "number"
+																	},
+																	{
+																		"const": 270,
+																		"type": "number"
+																	}
+																]
+															},
+															"width": {
+																"type": "number"
+															},
+															"x": {
+																"type": "number"
+															},
+															"y": {
+																"type": "number"
+															}
+														},
+														"required": [
+															"x",
+															"y",
+															"width",
+															"height",
+															"rotation"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												},
+												"revision": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"revision",
+												"canWrite",
+												"pages",
+												"fields"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
 					},
 					"401": {
 						"content": {
@@ -27159,9 +28242,418 @@
 						"cookieAuth": []
 					}
 				],
-				"summary": "Save an Office document",
+				"summary": "A PDF's pages and form fields",
 				"tags": [
-					"Storage - Files"
+					"Storage"
+				]
+			},
+			"post": {
+				"description": "Writes highlight, ink and note annotations as PDF annotations, sets form fields, and draws signature images into the page. With `base`, refused with 409 when the file changed since it was read.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "drive",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "volume",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "share",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"annotations": {
+										"default": [],
+										"items": {
+											"oneOf": [
+												{
+													"additionalProperties": false,
+													"properties": {
+														"color": {
+															"description": "red, green, blue in 0..1",
+															"items": false,
+															"maxItems": 3,
+															"minItems": 3,
+															"prefixItems": [
+																{
+																	"type": "number"
+																},
+																{
+																	"type": "number"
+																},
+																{
+																	"type": "number"
+																}
+															],
+															"type": "array"
+														},
+														"page": {
+															"maximum": 9007199254740991,
+															"minimum": 0,
+															"type": "integer"
+														},
+														"rects": {
+															"items": {
+																"description": "x, y, width, height",
+																"items": false,
+																"maxItems": 4,
+																"minItems": 4,
+																"prefixItems": [
+																	{
+																		"type": "number"
+																	},
+																	{
+																		"type": "number"
+																	},
+																	{
+																		"type": "number"
+																	},
+																	{
+																		"type": "number"
+																	}
+																],
+																"type": "array"
+															},
+															"maxItems": 200,
+															"minItems": 1,
+															"type": "array"
+														},
+														"type": {
+															"const": "highlight",
+															"type": "string"
+														}
+													},
+													"required": [
+														"type",
+														"page",
+														"rects",
+														"color"
+													],
+													"type": "object"
+												},
+												{
+													"additionalProperties": false,
+													"properties": {
+														"color": {
+															"description": "red, green, blue in 0..1",
+															"items": false,
+															"maxItems": 3,
+															"minItems": 3,
+															"prefixItems": [
+																{
+																	"type": "number"
+																},
+																{
+																	"type": "number"
+																},
+																{
+																	"type": "number"
+																}
+															],
+															"type": "array"
+														},
+														"page": {
+															"maximum": 9007199254740991,
+															"minimum": 0,
+															"type": "integer"
+														},
+														"strokes": {
+															"description": "Each stroke as flat x, y pairs",
+															"items": {
+																"items": {
+																	"type": "number"
+																},
+																"maxItems": 20000,
+																"minItems": 2,
+																"type": "array"
+															},
+															"maxItems": 500,
+															"minItems": 1,
+															"type": "array"
+														},
+														"type": {
+															"const": "ink",
+															"type": "string"
+														},
+														"width": {
+															"exclusiveMinimum": 0,
+															"maximum": 48,
+															"type": "number"
+														}
+													},
+													"required": [
+														"type",
+														"page",
+														"strokes",
+														"color",
+														"width"
+													],
+													"type": "object"
+												},
+												{
+													"additionalProperties": false,
+													"properties": {
+														"color": {
+															"description": "red, green, blue in 0..1",
+															"items": false,
+															"maxItems": 3,
+															"minItems": 3,
+															"prefixItems": [
+																{
+																	"type": "number"
+																},
+																{
+																	"type": "number"
+																},
+																{
+																	"type": "number"
+																}
+															],
+															"type": "array"
+														},
+														"page": {
+															"maximum": 9007199254740991,
+															"minimum": 0,
+															"type": "integer"
+														},
+														"text": {
+															"maxLength": 5000,
+															"type": "string"
+														},
+														"type": {
+															"const": "note",
+															"type": "string"
+														},
+														"x": {
+															"type": "number"
+														},
+														"y": {
+															"type": "number"
+														}
+													},
+													"required": [
+														"type",
+														"page",
+														"x",
+														"y",
+														"text",
+														"color"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"maxItems": 500,
+										"type": "array"
+									},
+									"base": {
+										"description": "The revision edited from; 409 when the file changed since",
+										"type": "string"
+									},
+									"fields": {
+										"additionalProperties": {
+											"maxLength": 10000,
+											"type": "string"
+										},
+										"default": {},
+										"propertyNames": {
+											"type": "string"
+										},
+										"type": "object"
+									},
+									"signatures": {
+										"default": [],
+										"items": {
+											"additionalProperties": false,
+											"properties": {
+												"image": {
+													"description": "data:image/png;base64,…",
+													"type": "string"
+												},
+												"page": {
+													"maximum": 9007199254740991,
+													"minimum": 0,
+													"type": "integer"
+												},
+												"rect": {
+													"description": "x, y, width, height",
+													"items": false,
+													"maxItems": 4,
+													"minItems": 4,
+													"prefixItems": [
+														{
+															"type": "number"
+														},
+														{
+															"type": "number"
+														},
+														{
+															"type": "number"
+														},
+														{
+															"type": "number"
+														}
+													],
+													"type": "array"
+												}
+											},
+											"required": [
+												"page",
+												"rect",
+												"image"
+											],
+											"type": "object"
+										},
+										"maxItems": 20,
+										"type": "array"
+									}
+								},
+								"required": [
+									"annotations",
+									"fields",
+									"signatures"
+								],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"data": {
+											"additionalProperties": false,
+											"properties": {
+												"message": {
+													"type": "string"
+												},
+												"revision": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"message",
+												"revision"
+											],
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+							}
+						},
+						"description": "Successful response"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Bad Request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Not Found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Conflict"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Unprocessable Entity"
+					},
+					"500": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Internal Server Error"
+					}
+				},
+				"security": [
+					{
+						"cookieAuth": []
+					}
+				],
+				"summary": "Annotate, fill in or sign a PDF",
+				"tags": [
+					"Storage"
 				]
 			}
 		},
@@ -27349,6 +28841,15 @@
 							"maximum": 9007199254740991,
 							"type": "integer"
 						}
+					},
+					{
+						"in": "query",
+						"name": "base",
+						"required": false,
+						"schema": {
+							"description": "The revision edited from; 409 when the file changed since",
+							"type": "string"
+						}
 					}
 				],
 				"requestBody": {
@@ -27380,6 +28881,10 @@
 											"additionalProperties": false,
 											"properties": {
 												"message": {
+													"type": "string"
+												},
+												"revision": {
+													"description": "The revision just written, when `base` was sent",
 													"type": "string"
 												}
 											},
@@ -27414,6 +28919,16 @@
 							}
 						},
 						"description": "Unauthorized"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						},
+						"description": "Conflict"
 					},
 					"500": {
 						"content": {

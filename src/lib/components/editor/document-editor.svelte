@@ -7,10 +7,12 @@
 		ImageIcon,
 		KeyboardIcon,
 		LinkIcon,
+		MessageSquareDiffIcon,
 		MessageSquarePlusIcon,
 		ReplaceIcon,
 		SearchIcon,
 		TableIcon,
+		XIcon,
 	} from "@lucide/svelte";
 	import "prosekit/basic/style.css";
 	import "prosekit/basic/typography.css";
@@ -18,10 +20,17 @@
 	import { defineReadonly } from "prosekit/extensions/readonly";
 	import type { ProseMirrorNode } from "prosekit/pm/model";
 	import { TextSelection } from "prosekit/pm/state";
-	import { type Snippet, untrack } from "svelte";
+	import {
+		mount as mountComponent,
+		type Snippet,
+		unmount,
+		untrack,
+	} from "svelte";
 	import { toast } from "svelte-sonner";
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
+	import * as Popover from "#lib/components/ui/popover/index.js";
 	import { toggleVariants } from "#lib/components/ui/toggle/toggle.svelte";
+	import type { LanguagePicker } from "#lib/editor/code-block.js";
 	import {
 		commentRanges,
 		defineComments,
@@ -43,15 +52,26 @@
 	import { embedPicture } from "#lib/editor/picture.js";
 	import { printElement } from "#lib/editor/print.js";
 	import { defineSafeLinks } from "#lib/editor/safe-links.js";
+	import {
+		type Author,
+		defineSuggestionClicks,
+		reviewSuggestions,
+		type Suggestion,
+		suggestAs,
+		suggestionsOf,
+	} from "#lib/editor/suggestions.js";
 	import { countCharacters, countWords } from "#lib/editor/word-count.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { APP_USER_AGENT } from "#lib/release.js";
 	import { cn } from "#lib/utils.js";
 	import ChoiceMenu from "./document/choice-menu.svelte";
+	import CodeLanguage from "./document/code-language.svelte";
 	import ColourMenu from "./document/colour-menu.svelte";
 	import FindBar from "./document/find-bar.svelte";
 	import LinkPopover from "./document/link-popover.svelte";
+	import SelectionBar from "./document/selection-bar.svelte";
 	import ShortcutsDialog from "./document/shortcuts-dialog.svelte";
+	import SuggestionCard from "./document/suggestion-card.svelte";
 	import { documentTools, type Tool } from "./document/tools.js";
 	import type { Comments } from "./shell/comments.svelte.js";
 	import type { EditorMenuContext } from "./shell/file-actions.js";
@@ -74,6 +94,8 @@
 		content,
 		onChange,
 		readOnly = false,
+		suggesting = false,
+		author,
 		menu,
 		comments,
 	}: {
@@ -81,6 +103,9 @@
 		onChange: (html: string) => void;
 		/** Reading only: no toolbar, no editing menus, live (safe) links. */
 		readOnly?: boolean;
+		/** Edits become suggestions by `author`. */
+		suggesting?: boolean;
+		author?: Author;
 		/** The shared File menu, first in the menu bar. */
 		menu?: Snippet<[EditorMenuContext]>;
 		/** Threads to mark in the text, and where new ones start. */
@@ -100,8 +125,11 @@
 			const text = doc.textBetween(0, doc.content.size, "\n", " ");
 			words = countWords(text);
 			characters = countCharacters(text);
+			suggestions = suggestionsOf(doc);
 		}, delay);
 	}
+
+	let suggestions = $state.raw<Suggestion[]>([]);
 
 	let linkOpen = $state(false);
 	let findOpen = $state(false);
@@ -125,8 +153,20 @@
 		afterMenu = open;
 	};
 
+	const languagePicker: LanguagePicker = (target, value, onPick) => {
+		const props = $state({ value, onPick });
+		const picker = mountComponent(CodeLanguage, { target, props });
+		return {
+			update: (language) => {
+				props.value = language;
+			},
+			destroy: () => void unmount(picker),
+		};
+	};
+
 	const editor = createEditor({
 		extension: defineDocumentExtension({
+			languagePicker,
 			// Serialising on every keystroke would rebuild the whole document;
 			// the parent debounces the actual save, this only reports the text.
 			onDocChange: (doc) => {
@@ -315,6 +355,71 @@
 			element?.scrollIntoView({ block: "center", behavior: "smooth" });
 		});
 	});
+
+	// =====================================================================
+	// Suggestions
+	// =====================================================================
+
+	$effect(() => {
+		const as = suggesting && !readOnly && author ? author : null;
+		untrack(() => editor.exec(suggestAs(as)));
+	});
+
+	editor.use(defineSuggestionClicks((id, pos) => openSuggestion(id, pos)));
+
+	/** The suggestion whose card is open, and where it points. */
+	let reviewing = $state<{ id: string; pos: number } | null>(null);
+	const reviewIndex = $derived(
+		reviewing ? suggestions.findIndex((s) => s.id === reviewing?.id) : -1,
+	);
+	const reviewed = $derived(suggestions[reviewIndex]);
+
+	/** Follows the text as the page scrolls; floating-ui asks again. */
+	const anchor = {
+		getBoundingClientRect: (): DOMRect => {
+			if (!(reviewing && editor.mounted)) {
+				return new DOMRect();
+			}
+			const pos = Math.min(reviewing.pos, editor.state.doc.content.size);
+			const { left, right, top, bottom } = editor.view.coordsAtPos(pos);
+			return new DOMRect(left, top, Math.max(1, right - left), bottom - top);
+		},
+	};
+
+	function openSuggestion(id: string, pos?: number) {
+		suggestions = suggestionsOf(editor.state.doc);
+		const found = suggestions.find((s) => s.id === id);
+		if (!(found && editor.mounted)) {
+			reviewing = null;
+			return;
+		}
+		if (pos === undefined) {
+			const { node } = editor.view.domAtPos(found.from);
+			const element = node instanceof Element ? node : node.parentElement;
+			element?.scrollIntoView({ block: "center" });
+		}
+		reviewing = { id, pos: pos ?? found.from };
+	}
+
+	function stepSuggestion(by: 1 | -1) {
+		const count = suggestions.length;
+		const next = suggestions[(reviewIndex + by + count) % count];
+		if (next) {
+			openSuggestion(next.id);
+		}
+	}
+
+	function review(accept: boolean, id?: string) {
+		const at = reviewIndex;
+		editor.exec(reviewSuggestions(accept, id ? new Set([id]) : undefined));
+		suggestions = suggestionsOf(editor.state.doc);
+		const next = id ? suggestions[Math.min(at, suggestions.length - 1)] : null;
+		if (next) {
+			openSuggestion(next.id);
+		} else {
+			reviewing = null;
+		}
+	}
 
 	/** Rebuilt on every transaction, so what is active is read again. */
 	const tools = $derived.by(() => {
@@ -538,6 +643,41 @@
 	{/each}
 {/snippet}
 
+{#snippet suggestionsMenu()}
+	{@render action(
+		m.doc_suggestions_review(),
+		MessageSquareDiffIcon,
+		later(() => suggestions[0] && openSuggestion(suggestions[0].id)),
+	)}
+	<Menubar.Item
+		disabled={readOnly || suggestions.length === 0}
+		onSelect={() => review(true)}
+	>
+		<CheckIcon class="size-4" />
+		{m.doc_suggestions_accept_all()}
+	</Menubar.Item>
+	<Menubar.Item
+		disabled={readOnly || suggestions.length === 0}
+		onSelect={() => review(false)}
+	>
+		<XIcon class="size-4" />
+		{m.doc_suggestions_reject_all()}
+	</Menubar.Item>
+	<Menubar.Separator />
+	{#each suggestions.slice(0, 20) as suggestion (suggestion.id)}
+		<Menubar.Item onSelect={later(() => openSuggestion(suggestion.id))}>
+			<span class="max-w-64 truncate">
+				<span class="font-medium">{suggestion.author || m.unknown()}</span>
+				<span class="text-muted-foreground">
+					{(suggestion.inserted || suggestion.deleted).trim() || "¶"}
+				</span>
+			</span>
+		</Menubar.Item>
+	{:else}
+		<Menubar.Item disabled>{m.doc_suggestions_none()}</Menubar.Item>
+	{/each}
+{/snippet}
+
 {#snippet helpMenu()}
 	{@render action(
 		m.doc_shortcuts(),
@@ -555,6 +695,9 @@
 				{@render section(m.menu_insert(), insertMenu)}
 				{@render section(m.menu_format(), formatMenu)}
 				{@render section(m.menu_table(), tableMenu)}
+			{/if}
+			{#if suggesting || suggestions.length > 0}
+				{@render section(m.doc_menu_suggestions(), suggestionsMenu)}
 			{/if}
 			{@render section(m.doc_menu_help(), helpMenu)}
 		</Menubar.Root>
@@ -732,6 +875,43 @@
 
 <ShortcutsDialog bind:open={shortcutsOpen} />
 
+<SelectionBar
+	{editor}
+	{revision}
+	{tools}
+	{current}
+	{linkActive}
+	paused={readOnly || reviewed !== undefined}
+	onComment={comments ? requestComment : undefined}
+/>
+
+<!-- The card keeps the caret in the text: no focus taken, none trapped. -->
+<Popover.Root
+	bind:open={() => reviewed !== undefined, (open) => !open && (reviewing = null)}
+>
+	<Popover.Content
+		customAnchor={anchor}
+		side="bottom"
+		align="start"
+		trapFocus={false}
+		onOpenAutoFocus={(e: Event) => e.preventDefault()}
+		onCloseAutoFocus={(e: Event) => e.preventDefault()}
+		class="w-72 p-3"
+	>
+		{#if reviewed}
+			<SuggestionCard
+				suggestion={reviewed}
+				index={reviewIndex}
+				total={suggestions.length}
+				canReview={!readOnly}
+				onaccept={() => review(true, reviewed.id)}
+				onreject={() => review(false, reviewed.id)}
+				onstep={stepSuggestion}
+			/>
+		{/if}
+	</Popover.Content>
+</Popover.Root>
+
 <style>
 	/* A comment's text, tinted; the thread in focus, more so. */
 	.comment-host :global(.comment-mark) {
@@ -758,6 +938,26 @@
 		.comment-host :global(.comment-marker) {
 			right: 1.5rem;
 		}
+	}
+
+	/* Suggestions, in their author's colour (`inkFor`). */
+	.comment-host :global(ins.suggestion) {
+		text-decoration: underline 2px;
+		text-underline-offset: 2px;
+		cursor: pointer;
+	}
+	.comment-host :global(del.suggestion) {
+		text-decoration: line-through 2px;
+		cursor: pointer;
+	}
+	/* A suggested paragraph break, as Word's pilcrow. */
+	.comment-host :global([data-paragraph-change])::after {
+		content: "¶";
+		margin-inline-start: 0.15em;
+		color: var(--primary);
+	}
+	.comment-host :global([data-paragraph-change*='"kind":"delete"'])::after {
+		text-decoration: line-through;
 	}
 
 	/* Shiki's dark theme rides along in `--shiki-dark` on every token. */

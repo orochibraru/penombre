@@ -2,6 +2,10 @@
 	import { type Snippet, untrack } from "svelte";
 	import { cellKey } from "#lib/editor/comments.js";
 	import { cellName, parseName } from "#lib/sheet/selection.js";
+	import ChartPanel from "./sheet/chart-panel.svelte";
+	import DropdownPanel from "./sheet/dropdown-panel.svelte";
+	import { dropdownsOf } from "./sheet/dropdowns.svelte.js";
+	import FormatToolbar from "./sheet/format-toolbar.svelte";
 	import FormulaBar from "./sheet/formula-bar.svelte";
 	import SheetGrid from "./sheet/sheet-grid.svelte";
 	import SheetMenu from "./sheet/sheet-menu.svelte";
@@ -38,6 +42,7 @@
 	} = $props();
 
 	const sheet = untrack(() => new SheetState(content, workbook, onChange));
+	const drops = dropdownsOf(sheet);
 
 	$effect(() => {
 		// A cell still being typed in is written before editing stops.
@@ -109,8 +114,20 @@
 
 <div class="flex min-h-0 flex-1 flex-col gap-2">
     <SheetMenu {sheet} {menu} />
+    {#if !sheet.readOnly}
+        <FormatToolbar {sheet} />
+    {/if}
     <FormulaBar {sheet} />
-    <SheetGrid {sheet} />
+    <div class="flex min-h-0 flex-1 gap-2">
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+            <SheetGrid {sheet} />
+        </div>
+        {#if sheet.chartPanel && sheet.chart && !sheet.readOnly}
+            <ChartPanel {sheet} chart={sheet.chart} />
+        {:else if drops.editing && !sheet.readOnly}
+            <DropdownPanel {drops} dropdown={drops.editing} />
+        {/if}
+    </div>
     {#if sheet.workbook}
         <SheetTabs {sheet} />
     {/if}

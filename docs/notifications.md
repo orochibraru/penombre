@@ -13,8 +13,9 @@ own uploads, renames and deletions never ring it. Those are in
 | **Something is shared with you** | Each person newly given access             |
 | **Everyone signed a document**   | Whoever asked for the signatures           |
 | **Someone declined to sign**     | Whoever asked for the signatures           |
+| **You are asked to sign**        | A signer whose account was asked           |
 
-The last two come from [signature requests](signatures.md). Two rules apply to
+The last three come from [signature requests](signatures.md). Two rules apply to
 all of them:
 
 - **You are never told about your own action.** Leaving a note on your own file
@@ -52,9 +53,10 @@ in one shows in the other.
 Out of the box every kind rings the bell and reaches your phone. Something
 shared with you, and the outcome of a signature request you made, are emailed
 too, since they are addressed to you by name; comments and notes are not emailed
-unless you turn that on. Turning **In the app** off for a kind also stops it
-reaching your phone: the app finds new notifications by asking the server for
-the ones the bell keeps.
+unless you turn that on, and neither is a request to sign, whose link already
+comes by email. Turning **In the app** off for a kind also stops it reaching
+your phone: the app finds new notifications by asking the server for the ones
+the bell keeps.
 
 **By email** is disabled, with a note saying so, unless an administrator has
 configured outgoing mail — see the SMTP section of [Environment](env.md). If

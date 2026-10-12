@@ -11,7 +11,6 @@ import type { ProseMirrorNode } from "prosekit/pm/model";
 import type { Command, EditorState } from "prosekit/pm/state";
 import { Decoration, type EditorView } from "prosekit/pm/view";
 import type { HighlighterCore } from "shiki/core";
-import { m } from "#lib/paraglide/messages.js";
 
 /**
  * Code blocks: highlighting, a language picker on the block and a way out.
@@ -141,85 +140,74 @@ function onTrailingCodeLine(state: EditorState): boolean {
 export const leaveCodeDown: Command = (state, dispatch) =>
 	onTrailingCodeLine(state) && exitCode(state, dispatch);
 
-function languageSelect(
-	node: ProseMirrorNode,
-	view: EditorView,
-	getPos: () => number | undefined,
-): HTMLSelectElement {
-	const select = document.createElement("select");
-	select.className =
-		"bg-muted text-muted-foreground rounded-sm border-none px-1 py-0.5 text-xs outline-none";
-	select.setAttribute("aria-label", m.office_code_language());
-	const language = String(node.attrs.language ?? "");
-	const choices = [
-		{ value: "", label: m.office_code_plain() },
-		...CODE_LANGUAGES,
-	];
-	if (!choices.some((choice) => choice.value === language)) {
-		choices.push({ value: language, label: language });
-	}
-	for (const choice of choices) {
-		select.append(new Option(choice.label, choice.value));
-	}
-	select.value = language;
-	select.addEventListener("change", () => {
-		const pos = getPos();
-		if (pos !== undefined) {
-			view.dispatch(
-				view.state.tr.setNodeAttribute(pos, "language", select.value),
-			);
-			view.focus();
-		}
-	});
-	return select;
-}
+/**
+ * Draws the block's language picker into `target`. The page supplies it, so
+ * this module stays free of components and loads under `bun test`.
+ */
+export type LanguagePicker = (
+	target: HTMLElement,
+	language: string,
+	pick: (language: string) => void,
+) => { update: (language: string) => void; destroy: () => void };
 
 /** The block as `<pre>`, with the picker above it, outside the text. */
-function codeBlockView(
-	initial: ProseMirrorNode,
-	view: EditorView,
-	getPos: () => number | undefined,
-) {
-	let node = initial;
-	const dom = document.createElement("div");
-	dom.className = "relative";
-	const header = document.createElement("div");
-	header.contentEditable = "false";
-	header.className = "absolute end-2 top-2 z-10";
-	let select = languageSelect(node, view, getPos);
-	header.append(select);
-	const pre = document.createElement("pre");
-	// Room for the picker above the first line.
-	pre.style.paddingTop = "2rem";
-	const code = document.createElement("code");
-	pre.append(code);
-	dom.append(header, pre);
-	return {
-		dom,
-		contentDOM: code,
-		update(next: ProseMirrorNode) {
-			if (next.type !== node.type) {
-				return false;
-			}
-			if (next.attrs.language !== node.attrs.language) {
-				const fresh = languageSelect(next, view, getPos);
-				select.replaceWith(fresh);
-				select = fresh;
-			}
-			node = next;
-			return true;
-		},
-		stopEvent: (event: Event) =>
-			event.target instanceof Node && header.contains(event.target),
-		ignoreMutation: (mutation: { target: Node }) =>
-			header.contains(mutation.target),
+function codeBlockView(picker: LanguagePicker | undefined) {
+	return (
+		initial: ProseMirrorNode,
+		view: EditorView,
+		getPos: () => number | undefined,
+	) => {
+		let node = initial;
+		const dom = document.createElement("div");
+		dom.className = "relative";
+		const header = document.createElement("div");
+		header.contentEditable = "false";
+		header.className = "absolute end-2 top-2 z-10";
+		const drawn = picker?.(
+			header,
+			String(node.attrs.language ?? ""),
+			(language) => {
+				const pos = getPos();
+				if (pos !== undefined) {
+					view.dispatch(
+						view.state.tr.setNodeAttribute(pos, "language", language),
+					);
+					view.focus();
+				}
+			},
+		);
+		const pre = document.createElement("pre");
+		// Room for the picker above the first line.
+		pre.style.paddingTop = "2rem";
+		const code = document.createElement("code");
+		pre.append(code);
+		dom.append(header, pre);
+		return {
+			dom,
+			contentDOM: code,
+			update(next: ProseMirrorNode) {
+				if (next.type !== node.type) {
+					return false;
+				}
+				if (next.attrs.language !== node.attrs.language) {
+					drawn?.update(String(next.attrs.language ?? ""));
+				}
+				node = next;
+				return true;
+			},
+			destroy: () => drawn?.destroy(),
+			stopEvent: (event: Event) =>
+				event.target instanceof Node && header.contains(event.target),
+			ignoreMutation: (mutation: { target: Node }) =>
+				header.contains(mutation.target),
+		};
 	};
 }
 
-export function defineCodeBlockExtras() {
+export function defineCodeBlockExtras(picker?: LanguagePicker) {
 	return union([
 		defineCodeBlockHighlight({ parser, nodeTypes: ["codeBlock"] }),
-		defineNodeView({ name: "codeBlock", constructor: codeBlockView }),
+		defineNodeView({ name: "codeBlock", constructor: codeBlockView(picker) }),
 		withPriority(defineKeymap({ ArrowDown: leaveCodeDown }), Priority.high),
 	]);
 }

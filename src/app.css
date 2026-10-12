@@ -547,3 +547,13 @@ body::after {
 		background: color-mix(in oklab, var(--foreground) 25%, transparent);
 	}
 }
+
+/* Inside the mobile app's editor screen, whose own ground and aurora show
+   through a transparent web view: one sky, no seam under its header. */
+:root[data-embed] {
+	background-color: transparent;
+}
+:root[data-embed] body::before,
+:root[data-embed] body::after {
+	display: none;
+}

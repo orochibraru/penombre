@@ -89,7 +89,7 @@ data class Places(
 @Serializable
 data class Notice(
     val id: String,
-    /** `note`, `share`, `signature_completed` or `signature_declined`. */
+    /** `note`, `share`, `signature_completed`, `signature_declined` or `signature_requested`. */
     val type: String,
     val actorName: String? = null,
     val resourceName: String? = null,
@@ -106,6 +106,7 @@ data class Notice(
         val actor = actorName
         return when {
             type == "signature_completed" -> Words(Res.string.notice_signed, item)
+            type == "signature_requested" -> Words(Res.string.notice_sign_requested, actor.orEmpty(), item)
             type == "signature_declined" -> actor?.let { Words(Res.string.notice_declined, it, item) } ?: Words(Res.string.notice_declined_generic, item)
             isComment -> actor?.let { Words(Res.string.notice_comment, it, item) } ?: Words(Res.string.notice_comment_generic, item)
             type == "note" -> actor?.let { Words(Res.string.notice_note, it, item) } ?: Words(Res.string.notice_note_generic, item)
@@ -405,7 +406,7 @@ val METHOD_NAMES = linkedMapOf(
 )
 
 /** The kinds of notification, in the web's order (`#lib/notification-prefs.ts`). */
-val NOTIFICATION_TYPES = listOf("note", "share", "signature_completed", "signature_declined")
+val NOTIFICATION_TYPES = listOf("note", "share", "signature_completed", "signature_declined", "signature_requested")
 
 /** Addressed by someone to someone, or the outcome of their own request. */
 private val MAILED_BY_DEFAULT = setOf("share", "signature_completed", "signature_declined")

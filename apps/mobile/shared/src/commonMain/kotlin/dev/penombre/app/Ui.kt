@@ -130,6 +130,12 @@ data object ActivityScreen : Screen
 
 data class PdfScreen(val place: Place, val item: Item) : Screen
 
+/** A document, sheet or deck, in the web editor inside the app's own screen. */
+data class EditorScreen(val place: Place, val item: Item) : Screen
+
+/** A signature request, answered natively. */
+data class SignScreen(val link: SigningLink) : Screen
+
 /** What a screen can ask of the app around it. */
 class Host(
     val api: Api,

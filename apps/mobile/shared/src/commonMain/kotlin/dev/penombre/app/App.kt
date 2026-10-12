@@ -111,6 +111,8 @@ private fun Root(look: Look, setLook: (Look) -> Unit, setLanguage: (String?) -> 
     var busy by remember { mutableStateOf(false) }
     // A scanned code waits for a yes: a link alone must not sign the app in.
     var pairing by remember { mutableStateOf<Pairing?>(null) }
+    // A signing link opened from its web page: answered here, signed in or not.
+    var signing by remember { mutableStateOf<SigningLink?>(null) }
     val scope = rememberCoroutineScope()
     val signedIn: (Session) -> Unit = {
         SessionStore.save(it)
@@ -124,6 +126,10 @@ private fun Root(look: Look, setLook: (Look) -> Unit, setLanguage: (String?) -> 
     LaunchedEffect(Unit) {
         Auth.callbacks.filterNotNull().collect { url ->
             Auth.callbacks.value = null
+            signingLink(url)?.let {
+                signing = it
+                return@collect
+            }
             val scanned = Auth.pairing(url)
             if (scanned != null) {
                 // Already signed in: the code is for a phone that is not.
@@ -146,6 +152,12 @@ private fun Root(look: Look, setLook: (Look) -> Unit, setLanguage: (String?) -> 
     }
 
     val current = session
+    val request = signing
+    // Signed in to that server, it opens over the app's screens; otherwise on its own.
+    if (request != null && current?.server != request.server) {
+        SignView(request, null) { signing = null }
+        return
+    }
     if (current == null) {
         SignIn(
             error,
@@ -188,7 +200,7 @@ private fun Root(look: Look, setLook: (Look) -> Unit, setLanguage: (String?) -> 
             )
         }
     } else {
-        Signed(current, look, setLook, setLanguage, onRenew = signedIn) {
+        Signed(current, look, setLook, setLanguage, onRenew = signedIn, signRequest = request, onSignRequest = { signing = null }) {
             SessionStore.save(null)
             session = null
         }
@@ -457,6 +469,8 @@ private fun Signed(
     onLook: (Look) -> Unit,
     onLanguage: (String?) -> Unit,
     onRenew: (Session) -> Unit,
+    signRequest: SigningLink?,
+    onSignRequest: () -> Unit,
     onSignedOut: () -> Unit,
 ) {
     val api = remember(session) { Api(session) }
@@ -655,6 +669,13 @@ private fun Signed(
         return
     }
 
+    LaunchedEffect(signRequest) {
+        signRequest?.let {
+            screens.add(SignScreen(it))
+            onSignRequest()
+        }
+    }
+
     PlatformBack(enabled = screens.isNotEmpty() || tab != Tab.Home || home != Home.Mine) {
         when {
             screens.isNotEmpty() -> host.back()
@@ -694,6 +715,10 @@ private fun Signed(
                     is VersionsScreen -> VersionsView(host, screen.place, screen.item)
 
                     is PdfScreen -> PdfView(host, screen.place, screen.item)
+
+                    is EditorScreen -> EditorView(host, screen.place, screen.item)
+
+                    is SignScreen -> SignView(screen.link, session, host.back)
 
                     AccountScreen -> AccountView(host) {
                         scope.launch {

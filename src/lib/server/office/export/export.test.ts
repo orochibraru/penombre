@@ -96,6 +96,25 @@ describe("readHtml", () => {
 		).toEqual(["paragraph", "image", "paragraph"]);
 	});
 
+	it("reads suggestions as accepted, a plain del as struck", () => {
+		const change = 'data-suggestion="1" data-author="Ann" data-date=""';
+		const removed = `{&quot;kind&quot;:&quot;delete&quot;,&quot;id&quot;:&quot;1&quot;}`;
+		expect(
+			readHtml(
+				`<p data-paragraph-change="${removed}">a<del ${change}>b</del><ins ${change}>c</ins></p><p>d<del>e</del></p><p>f</p>`,
+			),
+		).toEqual([
+			{
+				type: "paragraph",
+				runs: [
+					{ text: "acd", marks: {} },
+					{ text: "e", marks: { strike: true } },
+				],
+			},
+			{ type: "paragraph", runs: [{ text: "f", marks: {} }] },
+		]);
+	});
+
 	it("reads the editor's font, size and colours", () => {
 		const [paragraph] = readHtml(
 			'<p><span style="font-family: Georgia; font-size: 14pt; color: rgb(220, 38, 38);" data-font-family="Georgia">x</span></p>',
@@ -339,6 +358,7 @@ describe("blank files", () => {
 		expect(JSON.parse(workbookToText(readZip(blankFile("sheet"))))).toEqual({
 			nextId: 2,
 			sheets: [{ id: 1, name: "Sheet1", rows: [[""]] }],
+			styles: [{}],
 		});
 	});
 });

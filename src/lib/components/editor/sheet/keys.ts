@@ -21,6 +21,8 @@ export interface GridKeyContext {
 	typeInto: () => void;
 	/** Rows in a screenful, for Page Up and Page Down. */
 	page: number;
+	/** A formatting shortcut (⌘B, ⌘⇧4…), applied; whether it was one. */
+	format?: (event: KeyboardEvent) => boolean;
 }
 
 /**
@@ -87,6 +89,9 @@ export function gridKey(
 	const arrow = ARROWS[event.key];
 	if (arrow) {
 		(mod ? sheet.leap : sheet.move)(arrow[0], arrow[1], event.shiftKey);
+		return "prevent";
+	}
+	if (!sheet.readOnly && context.format?.(event)) {
 		return "prevent";
 	}
 	if (mod) {

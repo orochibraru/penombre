@@ -948,7 +948,13 @@ export const notifications = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		type: text("type", {
-			enum: ["note", "share", "signature_completed", "signature_declined"],
+			enum: [
+				"note",
+				"share",
+				"signature_completed",
+				"signature_declined",
+				"signature_requested",
+			],
 		}).notNull(),
 		/** Who did it, snapshotted: the row survives the actor being deleted. */
 		actorName: text("actor_name"),

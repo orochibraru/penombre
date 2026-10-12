@@ -1,4 +1,10 @@
 import {
+	type Change,
+	changeAttributes,
+	PARAGRAPH_CHANGE,
+	serializeParagraphChange,
+} from "#lib/editor/changes.js";
+import {
 	bodyBlocks,
 	bodyOf,
 	bulletLists,
@@ -125,12 +131,91 @@ interface ReadContext {
 	rels: Map<string, Relationship>;
 	bullets: Map<string, boolean>;
 	numbered: Map<string, NumberingReference>;
+	changes: ChangeReader;
+}
+
+/**
+ * Tracked changes as the editor's suggestions. Word splits one edit into an
+ * element per run, and a replacement into a `w:del` and a `w:ins`, each with
+ * its own `w:id`: consecutive ones by the same author at the same moment are
+ * one suggestion, under the first one's id. Cached per element, since a
+ * paragraph can be read twice (`isRule`).
+ */
+class ChangeReader {
+	private readonly read = new Map<XmlElement, Change>();
+	private readonly used = new Set<string>();
+	private last: Change | null = null;
+	depth = 0;
+
+	take(node: XmlElement): Change {
+		const known = this.read.get(node);
+		if (known) {
+			return known;
+		}
+		const author = node.attrs["w:author"] ?? "";
+		const date = node.attrs["w:date"] ?? "";
+		const last = this.last;
+		let change: Change;
+		if (last && last.author === author && last.date === date) {
+			change = last;
+		} else {
+			const wordId = node.attrs["w:id"] ?? "";
+			let id = wordId || "0";
+			for (let n = 1; this.used.has(id); n++) {
+				id = `${wordId}-${n}`;
+			}
+			this.used.add(id);
+			change = { id, author, authorId: "", date };
+		}
+		this.read.set(node, change);
+		this.last = change;
+		return change;
+	}
+
+	/** Untracked text ends a run of changes. */
+	plain(): void {
+		if (this.depth === 0) {
+			this.last = null;
+		}
+	}
+}
+
+/** `w:ins`/`w:del` around what it holds, as the editor's `ins`/`del`. */
+function trackedHtml(node: XmlElement, context: ReadContext): string {
+	const change = context.changes.take(node);
+	context.changes.depth++;
+	const inner = inlineHtml(node, context);
+	context.changes.depth--;
+	if (inner === "") {
+		return "";
+	}
+	const tag = node.name === "w:ins" ? "ins" : "del";
+	const attrs = Object.entries(changeAttributes(change))
+		.map(([name, value]) => ` ${name}="${attribute(value)}"`)
+		.join("");
+	return `<${tag}${attrs}>${inner}</${tag}>`;
+}
+
+/** A paragraph mark inserted or deleted: the break itself is suggested. */
+function paragraphChange(paragraph: XmlElement, context: ReadContext): string {
+	const properties = childNamed(paragraph, "w:pPr");
+	const mark = properties && childNamed(properties, "w:rPr");
+	const node = mark && (childNamed(mark, "w:ins") ?? childNamed(mark, "w:del"));
+	if (!node) {
+		return "";
+	}
+	const value = serializeParagraphChange({
+		kind: node.name === "w:ins" ? "insert" : "delete",
+		...context.changes.take(node),
+	});
+	return ` ${PARAGRAPH_CHANGE}="${attribute(value)}"`;
 }
 
 /** One child of a run as the HTML it contributes. */
 function runChildHtml(child: XmlElement, images: Map<string, string>): string {
 	switch (child.name) {
 		case "w:t":
+		case "w:delText":
 			return encodeXml(textContent(child));
 		case "w:br":
 			return "<br>";
@@ -170,7 +255,7 @@ function runHtml(run: XmlElement, images: Map<string, string>): string {
 	);
 }
 
-/** Runs, hyperlinks and tracked insertions of a paragraph, as inline HTML. */
+/** Runs, hyperlinks and tracked changes of a paragraph, as inline HTML. */
 function inlineHtml(parent: XmlElement, context: ReadContext): string {
 	let html = "";
 	for (const child of parent.children) {
@@ -178,13 +263,19 @@ function inlineHtml(parent: XmlElement, context: ReadContext): string {
 			continue;
 		}
 		if (child.name === "w:r") {
-			html += runHtml(child, context.images);
+			const run = runHtml(child, context.images);
+			if (run) {
+				context.changes.plain();
+			}
+			html += run;
+		} else if (child.name === "w:ins" || child.name === "w:del") {
+			html += trackedHtml(child, context);
 		} else if (child.name === "w:hyperlink") {
 			const target = context.rels.get(child.attrs["r:id"] ?? "")?.target;
 			const inner = inlineHtml(child, context);
 			const href = encodeXml(target ?? "").replace(/"/g, "&quot;");
 			html += target ? `<a href="${href}">${inner}</a>` : inner;
-		} else if (child.name === "w:ins" || child.name === "w:smartTag") {
+		} else if (child.name === "w:smartTag") {
 			html += inlineHtml(child, context);
 		}
 	}
@@ -309,7 +400,7 @@ function paragraphStyle(paragraph: XmlElement, indent = true): string {
 
 function paragraphHtml(paragraph: XmlElement, context: ReadContext): string {
 	const inner = inlineHtml(paragraph, context);
-	const style = paragraphStyle(paragraph);
+	const style = paragraphStyle(paragraph) + paragraphChange(paragraph, context);
 	const level = headingLevel(paragraph);
 	if (level > 0) {
 		return `<h${level}${style}>${inner}</h${level}>`;
@@ -412,8 +503,8 @@ function blockHtml(
 	}
 	const list = listInfo(node, context.bullets, context.numbered);
 	if (list) {
-		const style = paragraphStyle(node, false);
 		const inline = inlineHtml(node, context);
+		const style = paragraphStyle(node, false) + paragraphChange(node, context);
 		// A check list item, as our writer and Word's users both spell one.
 		const box = /^([☐☒☑]) /.exec(inline)?.[1];
 		if (box) {
@@ -472,6 +563,7 @@ export function docxToHtml(entries: ZipEntry[]): string {
 		rels: relationships(entries),
 		bullets: bulletLists(entries),
 		numbered: styleNumbering(entries),
+		changes: new ChangeReader(),
 	};
 	return blocksHtml(body, context, "<p></p>");
 }

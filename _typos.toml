@@ -23,3 +23,5 @@ extend-exclude = [
 AVERAGEIFS = "AVERAGEIFS"
 # Go's compress/flate package.
 flate = "flate"
+# DrawingML's chart series element, `c:ser`.
+ser = "ser"

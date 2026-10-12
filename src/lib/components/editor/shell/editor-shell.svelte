@@ -23,6 +23,7 @@
 	import EditorHeader from "./editor-header.svelte";
 	import type {
 		EditorMenuContext,
+		EditorMode,
 		FileActions,
 		SaveStatus,
 		ShellContext,
@@ -57,6 +58,8 @@
 			kind: DocumentKind | null;
 			canWrite: boolean;
 			canShare: boolean;
+			/** Read-only: Word changes the editor cannot keep (moves, formatting). */
+			trackedChanges?: boolean;
 		};
 		status: SaveStatus;
 		/** Saves what is on screen now. */
@@ -76,22 +79,29 @@
 	// View or edit
 	// =====================================================================
 
-	let chosen = $state<"view" | "edit">("edit");
-	const mode = $derived(file.canWrite ? chosen : "view");
+	let chosen = $state<EditorMode>("edit");
+	const mode: EditorMode = $derived(
+		!file.canWrite
+			? "view"
+			: chosen === "suggest" && file.kind !== "document"
+				? "edit"
+				: chosen,
+	);
 
 	// Read after mount: the server rendered edit, and a mismatch would
 	// flash the other layout while hydrating.
 	$effect(() => {
 		try {
-			if (localStorage.getItem(MODE_KEY) === "view") {
-				chosen = "view";
+			const saved = localStorage.getItem(MODE_KEY);
+			if (saved === "view" || saved === "suggest") {
+				chosen = saved;
 			}
 		} catch {
 			// Storage refused: the default stands.
 		}
 	});
 
-	function setMode(next: "view" | "edit") {
+	function setMode(next: EditorMode) {
 		chosen = next;
 		try {
 			localStorage.setItem(MODE_KEY, next);
@@ -114,7 +124,7 @@
 		void comments.refresh();
 		const beat = new Presence(
 			fileId,
-			() => (mode === "edit" ? "editing" : "viewing"),
+			() => (mode === "view" ? "viewing" : "editing"),
 			// Someone else is here: their comments may be new.
 			(others) => {
 				if (others.length > 0) {
@@ -127,7 +137,7 @@
 	});
 
 	// Switching mode tells the others at once, not in 15 seconds.
-	let told: "view" | "edit" | null = null;
+	let told: EditorMode | null = null;
 	$effect(() => {
 		const now = mode;
 		if (told !== null && told !== now) {
@@ -137,6 +147,9 @@
 	});
 
 	const desktop = new MediaQuery("(min-width: 768px)");
+
+	/** In the mobile app's editor screen, whose native header names the file. */
+	const embedded = $derived(page.url.searchParams.has("embed"));
 
 	// =====================================================================
 	// The File menu
@@ -162,7 +175,10 @@
 			toast.error(m.shell_copy_error());
 			return;
 		}
-		const query = location();
+		const embed = embedded
+			? `embed=1&theme=${page.url.searchParams.get("theme") ?? ""}`
+			: "";
+		const query = [location(), embed].filter(Boolean).join("&");
 		const href = resolve("/(app)/edit/[fileId]", { fileId: copy });
 		await goto(query ? `${href}?${query}` : href);
 	}
@@ -234,6 +250,9 @@
 		get readOnly() {
 			return mode === "view";
 		},
+		get suggesting() {
+			return mode === "suggest";
+		},
 		comments,
 	};
 </script>
@@ -250,10 +269,18 @@
     />
 {/snippet}
 
-<div class="flex h-[calc(100dvh-8rem)] w-full flex-col gap-3">
+<div
+    class={embedded
+        ? "flex h-[calc(100dvh-0.5rem)] w-full flex-col gap-2"
+        : "flex h-[calc(100dvh-8rem)] w-full flex-col gap-3"}
+>
     <EditorHeader
         name={file.name}
+        showName={!embedded}
+        touch={embedded}
         canWrite={file.canWrite}
+        trackedChanges={file.trackedChanges}
+        suggest={file.kind === "document"}
         {mode}
         onmode={setMode}
         {status}

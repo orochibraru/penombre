@@ -6,6 +6,7 @@
 		ExternalLinkIcon,
 		FileTextIcon,
 		SignatureIcon,
+		SmartphoneIcon,
 		XCircleIcon,
 	} from "@lucide/svelte";
 	import SignaturePad from "#lib/components/signatures/signature-pad.svelte";
@@ -16,17 +17,18 @@
 	import { Textarea } from "#lib/components/ui/textarea/index.js";
 	import { enhance } from "#lib/forms.js";
 	import { m } from "#lib/paraglide/messages.js";
+	import { APP_USER_AGENT, phoneSystem } from "#lib/release.js";
 	import { title } from "#lib/store/title.js";
 	import { cn } from "#lib/utils.js";
-	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 
 	const { data, form } = $props();
 
 	const view = $derived(data.view);
-	const token = $derived(page.params.token ?? "");
-	const documentUrl = $derived(resolve("/sign/[token]/document", { token }));
-	const signedUrl = $derived(resolve("/sign/[token]/signed", { token }));
+	// Also `/sign/signer/<id>`, which renders this page for the signed-in signer.
+	const base = $derived(page.url.pathname.replace(/\/$/, ""));
+	const documentUrl = $derived(`${base}/document`);
+	const signedUrl = $derived(`${base}/signed`);
 	const canSign = $derived(
 		view.status === "pending" &&
 			view.signer.status === "pending" &&
@@ -49,6 +51,16 @@
 		title.set(view.documentName);
 	});
 
+	/** A phone's browser, not the app's own view: the app can sign natively. */
+	let inPhoneBrowser = $state(false);
+	$effect(() => {
+		const agent = navigator.userAgent;
+		inPhoneBrowser = !!phoneSystem(agent) && !agent.includes(APP_USER_AGENT);
+	});
+	const appLink = $derived(
+		`penombre://sign?server=${encodeURIComponent(page.url.origin)}&${data.appKey}`,
+	);
+
 	const submit = () => {
 		busy = true;
 		return async ({ update }: { update: () => Promise<void> }) => {
@@ -70,6 +82,16 @@
         >
             {data.config.appName}
         </p>
+
+        {#if inPhoneBrowser && canSign}
+            <a
+                class={cn(buttonVariants({ variant: "outline" }), "w-full")}
+                href={appLink}
+            >
+                <SmartphoneIcon />
+                {m.sign_page_open_in_app()}
+            </a>
+        {/if}
 
         <Card.Root class="shadow-lg">
             <Card.Header>

@@ -136,8 +136,8 @@ fun PreviewSheet(preview: Preview, host: Host, onDismiss: () -> Unit) {
                         // A WebView shows no PDF on Android: a black page. Native instead.
                         preview.isPdf -> PdfScreen(preview.place, item)
 
-                        // The web app edits these; the WebView is signed in.
-                        preview.isEditable -> WebScreen(editUrl(host.server, preview.place, item.metadata.id))
+                        // The web app edits these, in a screen of the app's own.
+                        preview.isEditable -> EditorScreen(preview.place, item)
 
                         else -> WebScreen(rawUrl(host.server, preview.place, item.metadata.id))
                     },

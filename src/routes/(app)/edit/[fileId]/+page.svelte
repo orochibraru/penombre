@@ -9,6 +9,7 @@
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import RequestSignaturesDialog from "#lib/components/signatures/request-signatures-dialog.svelte";
 	import SignaturesPanel from "#lib/components/signatures/signatures-panel.svelte";
+	import { Button } from "#lib/components/ui/button/index.js";
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
 	import { Textarea } from "#lib/components/ui/textarea/index.js";
 	import { renameDocument, saveDocument } from "#lib/document-requests.js";
@@ -75,6 +76,14 @@
 	/** Bumped when the file is reread (a restored version): editors remount. */
 	let generation = $state(0);
 
+	/** The revision on disk after our last save, keyed like `renamed`. */
+	let saved = $state<{ fileId: string; revision: string } | null>(null);
+	const revision = $derived(
+		saved?.fileId === data.fileId ? saved.revision : data.revision,
+	);
+	/** Someone else saved since this was opened: their revision, until we choose. */
+	let theirs = $state<string | null>(null);
+
 	const RETRY_MS = 5000;
 
 	/**
@@ -91,19 +100,25 @@
 	}
 
 	async function flush() {
-		if (pending === null || saving) {
+		if (pending === null || saving || theirs !== null) {
 			return;
 		}
 		const content = pending;
 		pending = null;
 		saving = true;
 		// Never a version: only **Save as version** keeps one.
-		const ok = await saveDocument(
+		const result = await saveDocument(
 			{ id: data.fileId, name, contentType: data.contentType },
 			content,
+			revision,
 		);
 		saving = false;
-		if (ok) {
+		if (result && "theirs" in result) {
+			pending ??= content;
+			theirs = result.theirs;
+			clearTimeout(timer);
+		} else if (result) {
+			saved = { fileId: data.fileId, revision: result.revision };
 			saveError = false;
 			savedAt = new Date();
 			await syncName(content);
@@ -157,8 +172,17 @@
 
 	async function reread() {
 		pending = null;
+		theirs = null;
+		saved = null;
 		await refreshAll();
 		generation++;
+	}
+
+	/** Our text over theirs, still refused if a third save lands first. */
+	function keepMine(over: string) {
+		saved = { fileId: data.fileId, revision: over };
+		theirs = null;
+		void flush();
 	}
 
 	/**
@@ -194,6 +218,30 @@
 		clearTimeout(timer);
 		void flush();
 	});
+
+	/**
+	 * Saves everything typed, waiting out a save in flight; true once nothing
+	 * is left unsaved. The mobile app calls it before closing its editor
+	 * screen, whose web view may not live long enough to see `pagehide`.
+	 */
+	async function settle(): Promise<boolean> {
+		clearTimeout(timer);
+		for (let wait = 0; wait < 200 && (saving || pending !== null); wait++) {
+			if (saving) {
+				await new Promise((done) => setTimeout(done, 50));
+			} else {
+				await flush();
+				if (theirs !== null || saveError) {
+					break;
+				}
+			}
+		}
+		return pending === null && !saving;
+	}
+
+	onMount(() => {
+		Object.assign(window, { penombreSettle: settle });
+	});
 </script>
 
 <svelte:window
@@ -215,6 +263,7 @@
             name,
             kind,
             canWrite: data.canWrite,
+            trackedChanges: data.trackedChanges,
             canShare: data.canShare,
         }}
         status={{
@@ -241,6 +290,10 @@
                     onChange={queue}
                     menu={shell.menu}
                     readOnly={shell.readOnly}
+                    suggesting={shell.suggesting}
+                    author={page.data.user
+                        ? { id: page.data.user.id, name: page.data.user.name }
+                        : undefined}
                     comments={shell.comments}
                 />
             {/key}
@@ -300,6 +353,23 @@
         {/snippet}
     </EditorShell>
 {/key}
+
+<!-- Dismissed means "later": the next save is refused again and asks again. -->
+<ResponsiveDialog
+    bind:open={() => theirs !== null, (open) => !open && (theirs = null)}
+    title={m.editor_conflict_title()}
+    description={name}
+>
+    {#snippet footer()}
+        <Button variant="outline" onclick={() => void reread()}>
+            {m.editor_conflict_theirs()}
+        </Button>
+        <Button onclick={() => theirs !== null && keepMine(theirs)}>
+            {m.editor_conflict_mine()}
+        </Button>
+    {/snippet}
+    <p class="text-muted-foreground text-sm">{m.editor_conflict_body()}</p>
+</ResponsiveDialog>
 
 {#if kind === "document"}
     <RequestSignaturesDialog

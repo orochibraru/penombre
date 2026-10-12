@@ -45,7 +45,11 @@ everything else back untouched, which covers more than the editor can show:
 
 - **Spreadsheets** — a cell you did not change keeps its formula, number format,
   style and shared-string entry exactly as they were. Editing one cell never
-  disturbs another. Charts, images and named ranges are left alone.
+  disturbs another. Formatting you add is appended to the file's styles; see
+  [Formatting](#formatting). A chart you did not edit is written back exactly as
+  it was; see [Charts](#charts). Data validation and conditional formatting you
+  did not change are kept as written; see [Dropdowns](#dropdowns). Images and
+  named ranges are left alone.
 - **Documents** — headings, list numbering, bold, italic, underline,
   strikethrough, fonts, sizes, colours, highlighting, superscript and subscript,
   links, tables, pictures and code blocks all survive, as do page size, margins,
@@ -58,8 +62,8 @@ everything else back untouched, which covers more than the editor can show:
 
 On the paragraphs and cells you actually edit, expect to lose:
 
-- anything anchored inside text you replaced, such as a Word comment, a footnote
-  reference or a tracked change;
+- anything anchored inside text you replaced, such as a Word comment or a
+  footnote reference;
 - in a spreadsheet, a formula in a cell whose value you typed over — the new
   value replaces it, because a stale cached result is worse than no formula.
 
@@ -87,6 +91,18 @@ preview. Changes **save themselves** two seconds after you stop typing, and
 again when you navigate away; the header shows whether a save is in flight and
 when the last one landed. If a save fails it is retried rather than dropped, and
 leaving the page with unsaved text prompts you first.
+
+A save never overwrites changes it has not seen. If someone else saved the file
+since you opened it (in another editor, through WebDAV or the sync app), your
+save is refused and Penombre asks: **Load their version** drops your unsaved
+edits and reopens the file, **Keep mine** saves yours over theirs. Two people
+can edit the same file, but not at the same time: there is no live merge yet.
+
+Word's tracked insertions and deletions open as suggestions (see
+[Suggesting](#suggesting)). A Word file with tracked moves, formatting changes
+or table row and cell changes still opens in view only, under a **Tracked
+changes** badge: the editor cannot show those, so a save would accept them
+without anyone deciding. Accept or reject them in Word first.
 
 Autosave never makes a version. With [file versioning](versioning.md) on, **File
 → Save as version** keeps what is on screen right now; use it before a change
@@ -126,15 +142,46 @@ presentation, PowerPoint and PDF.
 
 ### Viewing and editing
 
-The switch in the header puts the editor in **Viewing** or **Editing**. Viewing
-hides the toolbar and every menu that changes the file, so nothing is changed by
-accident; searching, copying, printing, downloading and commenting still work.
-The choice is remembered per file, in this browser.
+The mode button in the header puts the editor in **Viewing** or **Editing** (or,
+in a document, [Suggesting](#suggesting)). Viewing hides the toolbar and every
+menu that changes the file, so nothing is changed by accident; searching,
+copying, printing, downloading and commenting still work. The choice is
+remembered per file, in this browser.
 
 Someone who may not change the file gets **View only** instead of the switch: a
 person the file was shared with at **Can view**, a viewer of a
 [shared drive](shared-drives.md), or anyone on a read-only [volume](volumes.md).
 The server refuses their saves whatever the page does.
+
+### Suggesting
+
+In a document, the switch has a third position, **Suggesting**: what you type
+becomes a suggestion instead of a change. Typed text is underlined, deleted text
+is struck through rather than removed, and replacing a word does both, each in
+its author's colour. Deleting text you suggested yourself removes it outright. A
+suggested new or removed paragraph break shows as a ¶. Formatting (bold, fonts,
+colours, alignment), pictures, dividers, code blocks and table rows and columns
+are not tracked: they change the document as they would in **Editing**. A
+deletion never takes text with it, though: deleting text together with a
+picture, a divider or a code block strikes the text and leaves the rest where it
+was. Text typed through an input method (Japanese, Chinese, Korean) becomes a
+suggestion once the composition is done.
+
+Click a suggestion to see who made it and when, then **Accept** it (it becomes
+part of the text) or **Reject** it (it goes away); the arrows step to the next
+one. The **Suggestions** menu lists them, reviews them in order, and accepts or
+rejects all of them at once. Typing inside a suggestion while **Editing** is a
+plain edit, not part of the suggestion.
+
+Anyone who may change the file may suggest and review. Someone with **View
+only** sees the suggestions and who made them, but cannot accept or reject them;
+there is no comment-only access to suggest with.
+
+In a Word file, suggestions are Word's own tracked changes: Word, LibreOffice
+and Google Docs show them as such, with their author and date. An older `.html`
+document keeps them as `<ins>` and `<del>`. Every **Download as** format except
+Word shows the document as if every suggestion were accepted; the Word download
+keeps them as tracked changes.
 
 ### Comments
 
@@ -193,6 +240,19 @@ toolbar also offers adding and removing rows and columns.
 Type ` ``` ` at the start of a line for a code block, or ` ```python ` to name
 its language; the block is highlighted and its language can be changed from the
 block itself. Three `Enter`s at its end, or `↓` on its last line, leave it.
+
+Selecting text brings up a small bar over it, below it on a phone: text style,
+bold, italic, underline, strikethrough, inline code, colours, link, comment and
+clear formatting. It acts on the selection without taking the caret away, and
+`Esc` puts it away until the next selection.
+
+Markdown works as you type it: `#` to `###` and a space for headings, `-`, `1.`
+or `[ ]` for lists, `>` for a quote, `---` for a divider, `**bold**`,
+`*italic*`, `` `code` ``, `~~strikethrough~~` and `[text](address)` for a link.
+Markdown pasted as plain text (a README, notes, an assistant's answer) arrives
+formatted, tables and code blocks included. A page or a document pastes with its
+own formatting as before; paste with `Ctrl`/`⌘` + `Shift` + `V`, or inside a
+code block, to keep the Markdown as typed.
 
 ### Sheets
 
@@ -256,12 +316,13 @@ them, on every sheet, as Excel does; a reference to a deleted cell becomes
 
 **Data** sorts by the selected column, numbers first, then text, blanks last;
 the first row stays put while **Header row** is on, and it stays on screen as
-you scroll. **Freeze first column** keeps column A on screen too. Each column
-letter opens sorting and the column commands; drag its right edge to resize it,
-or double-click the edge to fit its contents. Right-click the grid, or
-long-press it on a phone, for cutting, copying, pasting, inserting and deleting.
-**Find** jumps to the next cell holding the text, results included. **Edit**
-undoes and redoes every change, up to a hundred steps back.
+you scroll. **Freeze first column** keeps column A on screen too. In a workbook
+both are the sheet's frozen panes and are saved with it. Each column letter
+opens sorting and the column commands; drag its right edge to resize it, or
+double-click the edge to fit its contents. Right-click the grid, or long-press
+it on a phone, for cutting, copying, pasting, inserting and deleting. **Find**
+jumps to the next cell holding the text, results included. **Edit** undoes and
+redoes every change, up to a hundred steps back.
 
 | Keys                                   | What they do                      |
 | -------------------------------------- | --------------------------------- |
@@ -284,6 +345,187 @@ undoes and redoes every change, up to a hundred steps back.
 A workbook (`.xlsx`) shows its sheets as tabs under the grid: click one to open
 it, **+** to add one, and the arrow on the open tab to rename or delete it, or
 double-click its name to rename it. A CSV is a single sheet and has no tabs.
+
+#### Formatting
+
+In a workbook, the toolbar over the grid and the **Format** menu style the
+selected cells: bold, italic, underline, strikethrough, text and fill colour,
+font and size, horizontal and vertical alignment, text wrapping, borders (all,
+outer, inner, one side, or none, in a chosen style and colour) and merging
+cells, all at once or row by row, or splitting them again. Merging keeps only
+the top-left value, as Excel does. **Clear formatting** puts the cells back to
+the workbook's default, and the brush copies the selection's formats onto the
+next cells you select.
+
+Number formats change how a number shows, never what the cell holds: automatic,
+plain number, number, thousands separator, currency (the symbol of your
+language, more under **More currencies**), accounting, percent, scientific,
+date, time, date and time, duration and plain text. **Custom format** takes an
+Excel format code (`#,##0.00`, `0.0%`, `[h]:mm`, `"$"#,##0;("$"#,##0)`) and
+previews it on the selected cell. The decimal buttons add or remove a decimal
+place. The formula bar always shows the value as typed.
+
+Formats move with their cells when you copy and paste within the workbook, fill,
+sort, or insert and delete rows and columns, and undo covers them. A paste from
+another application brings values only and keeps the formats already there.
+
+A file from Excel, Google Sheets or LibreOffice opens with its formatting, theme
+colours included, and keeps it through a save: a new combination of formats is
+added to the file's own list rather than renumbering it, so conditional formats
+and charts that refer to those styles are unaffected. A CSV holds values only,
+so the formatting tools are off there.
+
+Rows keep one height: wrapped text, or text larger than the row, is cut at the
+row's edge rather than making the row taller, and a row height set in the file
+is not shown. Text is clipped at its cell's edge rather than running on over
+empty neighbours; **Wrap** in **Text wrapping** wraps it instead, and is what
+Excel and Google Sheets read back. A font the file names is used when the
+browser has it, the app's font otherwise; none is downloaded. Text with no
+colour of its own on a dark fill is drawn white, as Google Sheets does.
+
+#### Column widths, tables and pictures
+
+A workbook opens with its column widths and its frozen panes, and saves them
+back: resizing a column writes that column's width into the file and leaves the
+others as they were, and **Header row** and **Freeze first column** are the
+sheet's frozen row and column. A file that freezes more than one row or column
+shows the first one frozen and keeps the rest until you change it. Widths are
+converted as Excel does with a 7-pixel digit (Calibri 11, close to Arial 10), so
+a workbook whose default font is much larger or smaller comes out narrower or
+wider than in Excel. A CSV has no such settings: widths and the header row last
+as long as the page.
+
+An Excel table draws with its table style under the cells' own formatting:
+header row, banded rows or columns, first and last column, totals row and
+borders. A cell's own fill, colour or border wins where it has one, as in Excel.
+A style defined in the file, which is what Google Sheets exports, draws as
+written; the built-in styles of Excel (Light, Medium and Dark, Medium 2 being
+the default) are not in the file and are approximated from the theme's accent
+colours, so they have the right shape and colour but not every shade. Inserting
+or deleting rows and columns moves or grows the table, and saving keeps its
+range and its column names in line with the header row, which Excel checks;
+deleting all of a table's cells removes the table.
+
+A hyperlinked cell keeps its own font, colour and underline; one without a
+colour of its own is underlined in the app's link colour. The links themselves
+are left in the file as they are.
+
+Pictures in a sheet, including the charts Google Sheets exports as pictures,
+float over the cells where the file puts them. They are shown only: they cannot
+be moved or deleted here, inserting rows does not move them, and saving leaves
+them exactly as they were.
+
+| Keys                              | What they do                    |
+| --------------------------------- | ------------------------------- |
+| `Ctrl`/`⌘`+`B`, `I`, `U`          | Bold, italic, underline         |
+| `Ctrl`/`⌘`+`5`, `Alt`+`Shift`+`5` | Strike through                  |
+| `Ctrl`/`⌘`+`Shift`+`1`            | Number with thousands separator |
+| `Ctrl`/`⌘`+`Shift`+`2`, `3`       | Time, date                      |
+| `Ctrl`/`⌘`+`Shift`+`4`, `5`, `6`  | Currency, percent, scientific   |
+| `Ctrl`/`⌘`+`Shift`+`L`, `E`, `R`  | Align left, centre, right       |
+| `Ctrl`/`⌘`+`Shift`+`7`            | Outer border                    |
+| `Ctrl`/`⌘`+`\`                    | Clear formatting                |
+
+#### Charts
+
+A workbook's charts float over its cells, where Excel, Google Sheets or
+LibreOffice put them, and follow the cells they plot: change a value, or a
+formula's result, and the chart redraws. Column, bar, line, area, pie, doughnut
+and scatter charts are drawn with their title, legend, axis titles, axis limits,
+grid lines, data labels and the series' own colours. Hover a bar, a point or a
+slice, or tap it on a phone, to read its value.
+
+**Insert → Chart** makes one from the selection, or from the block of filled
+cells around the selected cell. As in Google Sheets, a first row of text names
+the series, a first column of text labels the categories, and each column is a
+series unless the block is wider than it is tall. The chart editor opens beside
+the grid (under it on a phone) and changes:
+
+- the type, and for columns, bars, lines and areas whether they stack, side by
+  side, stacked or stacked to 100%;
+- the data range, and whether the series run down the columns or along the rows;
+- the title, the legend's position, data labels and line markers;
+- the axis titles, the value axis' minimum and maximum, and its grid lines;
+- each series' colour (each slice's, for a pie), or **Automatic**.
+
+Click a chart to pick it. Drag it to move it and its corner to resize it; both
+snap to the cell edges when you let go. With a chart picked, the arrow keys move
+it a cell at a time, `Delete` removes it, `Ctrl`/`⌘`+`C` then `V` pastes a copy,
+and the buttons on it edit, duplicate and delete it. On a phone, tap a chart to
+pick it before dragging it, so a swipe over a chart still scrolls the sheet.
+**Edit → Undo** undoes chart changes like any other.
+
+Inserting or deleting rows and columns moves a chart's references as it moves
+formulas, and a chart moves with the cell it is anchored to. Renaming a sheet
+renames it in the references; deleting it breaks them, and the chart shows what
+the file last recorded.
+
+Saving writes charts back into the `.xlsx` as Excel charts:
+
+- a chart you did not touch keeps its part byte for byte, fonts, effects and
+  all; one you only moved or resized keeps it too, under a new anchor;
+- a chart whose references moved with inserted rows keeps everything but the
+  references;
+- a chart you changed in the chart editor has only what you changed rewritten:
+  its fonts, effects and number formats stay. Changing a pie into a line or
+  another type that is not a sibling (column and bar are) writes the chart anew,
+  with default fonts;
+- a new chart, or a new series, is saved with the colours it showed here, so
+  Excel, Google Sheets and LibreOffice show the same ones. **Automatic** gives a
+  series back the palette's colour for its place.
+
+Combined charts, 3-D charts, trend lines, error bars, secondary axes, radar,
+bubble, stock and surface charts, and the types Excel 2016 added (waterfall,
+tree map, funnel and the like) are drawn as closely as the editor can and marked
+as such, or as a placeholder, and saved untouched. They can be moved, resized
+and deleted, not edited. A sheet's PDF export draws its charts under its table.
+
+#### Dropdowns
+
+A workbook's list validations (**Data validation → List** in Excel, Google
+Sheets' dropdowns) show as chips: the value in a rounded pill in its colour,
+with a chevron. Click the chevron, or press Alt+↓, to pick from the list, which
+you can search. Typing into the cell lists the matching items too; ↑, ↓ and
+Enter pick one. A value that is not in the list gets a red flag in the cell's
+corner, or is refused with a message when the dropdown rejects invalid input.
+The list can be written out (`Low,Medium,High`) or read from a range, on the
+same sheet or another (`Lists!A1:A9`), and follows what that range holds.
+
+Select two or more cells of one column holding text and Penombre offers
+**Convert to dropdown** under the selection. It lists every distinct value, the
+most frequent first, the same text in another case counted once, each in a
+colour of its own. **Not now** hides the offer for that range until the file is
+opened again. A column of numbers or formulas is never offered.
+
+**Data → Dropdown**, or the cell's right-click menu, opens the dropdown editor
+on the cell's dropdown, or makes one over the selection. In it you set the range
+it applies to, add, rename and remove items, give each item a colour, and choose
+whether other values are refused. Renaming an item renames the cells that held
+it. Every change is one step of **Edit → Undo**.
+
+Excel limits a written-out list to 255 characters with no commas in its items;
+the editor refuses an item that breaks either rule, and a longer list belongs in
+a range. The **In-cell dropdown** setting of Excel is honoured: a list saved
+without it shows its chips without the chevron.
+
+The colours are saved as conditional formatting on the range of the dropdown,
+one "cell value equals" rule per coloured item, so Excel and LibreOffice colour
+the cells too. Google Sheets does not export its chip colours at all: a sheet
+exported from it opens with neutral chips until you colour them here. Rules
+Penombre wrote are marked as its own, and a block on the same range made only of
+such rules is read as the colours of the dropdown; every other conditional
+format, and every other kind of validation (whole numbers, dates, custom
+formulas), is saved exactly as the file had it.
+
+#### Conditional formatting
+
+A workbook's conditional formatting is drawn: rules comparing a cell's value
+(equal, between, greater than and the rest), on its text (contains, begins with,
+ends with), on blanks and errors, custom formulas the editor can calculate, and
+two- and three-colour scales. Rules apply in the file's order of priority, and
+**Stop if true** is honoured. Data bars, icon sets and the other rule types are
+kept in the file but not drawn. Conditional formats cannot be edited here, and
+they stay where the file put them when you insert or delete rows and columns.
 
 ### Presentations
 

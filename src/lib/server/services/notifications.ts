@@ -54,6 +54,7 @@ const emailSubject: Record<NotificationType, string> = {
 	share: "Something was shared with you",
 	signature_completed: "A document is signed",
 	signature_declined: "A signature was declined",
+	signature_requested: "You are asked to sign a document",
 };
 
 const emailLine: Record<
@@ -65,6 +66,7 @@ const emailLine: Record<
 	signature_completed: (_who, what) =>
 		`Everyone signed ${what}. The signed PDF is ready.`,
 	signature_declined: (who, what) => `${who} declined to sign ${what}.`,
+	signature_requested: (who, what) => `${who} asks you to sign ${what}.`,
 };
 
 function emailContent(input: NotificationInput, origin: string): EmailContent {

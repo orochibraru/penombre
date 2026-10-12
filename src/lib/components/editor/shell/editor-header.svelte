@@ -2,18 +2,21 @@
 	import {
 		AlertCircleIcon,
 		CheckIcon,
+		ChevronDownIcon,
 		EyeIcon,
 		LoaderIcon,
+		MessageSquareDiffIcon,
 		MessageSquareIcon,
 		PencilIcon,
 	} from "@lucide/svelte";
 	import { Badge } from "#lib/components/ui/badge/index.js";
 	import { Button } from "#lib/components/ui/button/index.js";
-	import * as ToggleGroup from "#lib/components/ui/toggle-group/index.js";
+	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import * as Tooltip from "#lib/components/ui/tooltip/index.js";
 	import { baseName } from "#lib/documents.js";
 	import { m } from "#lib/paraglide/messages.js";
-	import type { SaveStatus } from "./file-actions.js";
+	import { cn } from "#lib/utils.js";
+	import type { EditorMode, SaveStatus } from "./file-actions.js";
 	import type { Present } from "./presence.svelte.js";
 	import PresenceFaces from "./presence-faces.svelte";
 
@@ -24,7 +27,11 @@
 	 */
 	const {
 		name,
+		showName = true,
+		touch = false,
 		canWrite,
+		trackedChanges = false,
+		suggest = false,
 		mode,
 		onmode,
 		status,
@@ -33,9 +40,16 @@
 		onrename,
 	}: {
 		name: string;
+		/** False where a native header around the page already shows it. */
+		showName?: boolean;
+		/** Finger-sized buttons: the mobile app's editor screen. */
+		touch?: boolean;
 		canWrite: boolean;
-		mode: "view" | "edit";
-		onmode: (mode: "view" | "edit") => void;
+		trackedChanges?: boolean;
+		/** Offer Suggesting beside Viewing and Editing. */
+		suggest?: boolean;
+		mode: EditorMode;
+		onmode: (mode: EditorMode) => void;
 		status: SaveStatus;
 		people: Present[];
 		/** Open threads and the panel's toggle; no button without it. */
@@ -44,6 +58,35 @@
 	} = $props();
 
 	let renaming = $state(false);
+
+	const viewing = $derived({
+		value: "view" as const,
+		icon: EyeIcon,
+		label: m.shell_viewing(),
+		hint: m.shell_viewing_hint(),
+	});
+	const modes = $derived([
+		viewing,
+		{
+			value: "edit" as const,
+			icon: PencilIcon,
+			label: m.shell_editing(),
+			hint: m.shell_editing_hint(),
+		},
+		...(suggest
+			? [
+					{
+						value: "suggest" as const,
+						icon: MessageSquareDiffIcon,
+						label: m.shell_suggesting(),
+						hint: m.shell_suggesting_hint(),
+					},
+				]
+			: []),
+	]);
+	const current = $derived(
+		modes.find((choice) => choice.value === mode) ?? viewing,
+	);
 
 	async function commitRename(input: HTMLInputElement) {
 		if (!renaming) {
@@ -64,7 +107,7 @@
 
 <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
     <div class="flex min-w-0 flex-1 items-center gap-2">
-        {#if renaming}
+        {#if showName && renaming}
             <input
                 use:focusName
                 class="border-input focus-visible:ring-ring h-8 min-w-0 flex-1 rounded-md border bg-transparent px-2 text-base font-medium outline-none focus-visible:ring-2 md:text-lg"
@@ -79,7 +122,7 @@
                 }}
                 onblur={(e) => void commitRename(e.currentTarget)}
             />
-        {:else if canWrite}
+        {:else if showName && canWrite}
             <h1 class="flex min-w-0 text-base font-medium md:text-lg">
                 <button
                     type="button"
@@ -90,7 +133,7 @@
                     {name}
                 </button>
             </h1>
-        {:else}
+        {:else if showName}
             <h1 class="min-w-0 truncate px-1 text-base font-medium md:text-lg">{name}</h1>
         {/if}
         <span
@@ -120,7 +163,7 @@
             <Button
                 variant={comments.open ? "secondary" : "ghost"}
                 size="sm"
-                class="gap-1.5"
+                class={cn("gap-1.5", touch && "h-10 min-w-10")}
                 aria-label={m.shell_comments()}
                 aria-pressed={comments.open}
                 onclick={comments.toggle}
@@ -132,38 +175,57 @@
             </Button>
         {/if}
         {#if canWrite}
-            <ToggleGroup.Root
-                type="single"
-                variant="outline"
-                size="sm"
-                value={mode}
-                onValueChange={(value) => {
-                    if (value === "view" || value === "edit") {
-                        onmode(value);
-                    }
-                }}
-                aria-label={m.shell_mode()}
-            >
-                <ToggleGroup.Item value="view" aria-label={m.shell_viewing()}>
-                    <EyeIcon class="size-4" />
-                    <span class="hidden sm:inline">{m.shell_viewing()}</span>
-                </ToggleGroup.Item>
-                <ToggleGroup.Item value="edit" aria-label={m.shell_editing()}>
-                    <PencilIcon class="size-4" />
-                    <span class="hidden sm:inline">{m.shell_editing()}</span>
-                </ToggleGroup.Item>
-            </ToggleGroup.Root>
+            <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                    {#snippet child({ props })}
+                        <Button
+                            {...props}
+                            variant="outline"
+                            size="sm"
+                            class={cn("gap-1.5", touch && "h-10 min-w-10")}
+                            aria-label={`${m.shell_mode()}: ${current.label}`}
+                        >
+                            <current.icon class="text-primary size-4" />
+                            <span class="hidden sm:inline">{current.label}</span>
+                            <ChevronDownIcon class="text-muted-foreground size-3.5" />
+                        </Button>
+                    {/snippet}
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content align="end" class="w-72">
+                    {#each modes as choice (choice.value)}
+                        <DropdownMenu.Item
+                            class="items-start gap-3 py-2"
+                            onSelect={() => onmode(choice.value)}
+                        >
+                            <choice.icon class="text-primary mt-0.5 size-4" />
+                            <span class="flex min-w-0 flex-1 flex-col">
+                                <span class="font-medium">{choice.label}</span>
+                                <span class="text-muted-foreground text-xs">{choice.hint}</span>
+                            </span>
+                            {#if choice.value === mode}
+                                <CheckIcon class="text-primary mt-0.5 size-4" />
+                            {/if}
+                        </DropdownMenu.Item>
+                    {/each}
+                </DropdownMenu.Content>
+            </DropdownMenu.Root>
         {:else}
             <Tooltip.Root>
                 <Tooltip.Trigger>
                     {#snippet child({ props })}
                         <Badge {...props} variant="secondary" class="gap-1">
                             <EyeIcon />
-                            {m.shell_view_only()}
+                            {trackedChanges
+                                ? m.shell_tracked_changes()
+                                : m.shell_view_only()}
                         </Badge>
                     {/snippet}
                 </Tooltip.Trigger>
-                <Tooltip.Content>{m.shell_view_only_hint()}</Tooltip.Content>
+                <Tooltip.Content>
+                    {trackedChanges
+                        ? m.shell_tracked_changes_hint()
+                        : m.shell_view_only_hint()}
+                </Tooltip.Content>
             </Tooltip.Root>
         {/if}
     </div>

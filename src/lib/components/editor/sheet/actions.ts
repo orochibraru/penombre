@@ -41,6 +41,17 @@ async function pasteFromMenu(sheet: SheetState): Promise<void> {
 	}
 }
 
+/** Sorts by a column, or says why a merge stops it. */
+export function sortColumn(
+	sheet: SheetState,
+	descending: boolean,
+	col = sheet.selection.anchor.col,
+): void {
+	if (!sheet.sort(descending, col)) {
+		toast.info(m.sheet_sort_merged());
+	}
+}
+
 export const clipboardActions = (sheet: SheetState): SheetAction[] => [
 	{
 		label: m.sheet_cut(),

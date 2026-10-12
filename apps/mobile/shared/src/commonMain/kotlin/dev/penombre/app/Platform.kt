@@ -2,6 +2,9 @@ package dev.penombre.app
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.ImageBitmap
+import kotlinx.coroutines.withTimeoutOrNull
 
 expect fun sha256(bytes: ByteArray): ByteArray
 
@@ -16,9 +19,21 @@ expect object Prefs {
     fun set(key: String, value: String?)
 }
 
-/** The instance's own web UI, signed in with the app's session cookie. */
+/**
+ * The instance's own web UI, signed in with the app's session cookie.
+ * `transparent`, the screen's own ground shows through where the page has none.
+ */
 @Composable
-expect fun WebPage(url: String, session: Session, modifier: Modifier)
+expect fun WebPage(url: String, session: Session, modifier: Modifier, transparent: Boolean = false, controller: WebController? = null)
+
+/** Lets a screen ask its page to save before it closes. */
+class WebController {
+    /** Set by the platform's view: the page's `penombreSettle()`, or null without one. */
+    internal var settle: (suspend () -> Boolean?)? = null
+
+    /** True once the page has nothing unsaved, or has no editor at all. */
+    suspend fun settle(): Boolean = withTimeoutOrNull(20_000) { settle?.invoke() ?: true } ?: false
+}
 
 @Composable
 expect fun PlatformBack(enabled: Boolean, onBack: () -> Unit)
@@ -76,9 +91,24 @@ expect fun rememberCodeScanner(onCode: (String) -> Unit): () -> Unit
  */
 expect fun saveToDevice(url: String, token: String, name: String, done: (Words?) -> Unit)
 
-/** A PDF's pages, scrollable and zoomable, drawn by the platform's own renderer. */
-@Composable
-expect fun PdfPages(bytes: ByteArray, modifier: Modifier)
+/**
+ * A PDF's pages, drawn by the platform (PdfRenderer, PDFKit) with their
+ * annotations. Everything over them is the app's own.
+ */
+expect class PdfSource(bytes: ByteArray) {
+    val pageCount: Int
+
+    /** A page's size in points, as shown: turned when the page is. */
+    fun pageSize(index: Int): Size
+
+    /** The page, `width` pixels wide, on white. One page at a time. */
+    suspend fun render(index: Int, width: Int): ImageBitmap
+
+    fun close()
+}
+
+/** A picture as PNG bytes: a drawn signature, for the server. */
+expect fun pngOf(picture: ImageBitmap): ByteArray
 
 /** Opens a link in whatever handles it on the device: an authenticator for `otpauth:`. */
 expect fun openExternal(url: String)
@@ -91,6 +121,9 @@ expect fun openExternal(url: String)
 expect object NoticeWatch {
     fun enable(on: Boolean)
 }
+
+/** The phone's time zone, as an IANA name: a signature records it. */
+expect fun timeZone(): String?
 
 /** The app's own version, as the store and the release named it. */
 expect val appVersion: String

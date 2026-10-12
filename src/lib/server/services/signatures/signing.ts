@@ -9,6 +9,7 @@ import {
 	type RequestMeta,
 	refusal,
 	SignatureError,
+	type SignerKey,
 	type SigningView,
 	validTimeZone,
 	who,
@@ -19,8 +20,8 @@ import { assertSignatureImage, UnsignableDocumentError } from "./pdf";
 /** What a signer does through their link; nobody here is signed in as the owner. */
 export class SignatureSigning extends SignatureCompletion {
 	/** What `/sign/<token>` shows; null for a link that is not one. */
-	async open(token: string, meta: RequestMeta): Promise<SigningView | null> {
-		const found = await this.byToken(token);
+	async open(key: SignerKey, meta: RequestMeta): Promise<SigningView | null> {
+		const found = await this.found(key);
 		if (!found) {
 			return null;
 		}
@@ -81,8 +82,8 @@ export class SignatureSigning extends SignatureCompletion {
 	}
 
 	/** The same checks for signing and declining; returns what they act on. */
-	private async answerable(token: string): Promise<Found> {
-		const found = await this.byToken(token);
+	private async answerable(key: SignerKey): Promise<Found> {
+		const found = await this.found(key);
 		if (!found) {
 			throw new SignatureError(
 				404,
@@ -101,11 +102,11 @@ export class SignatureSigning extends SignatureCompletion {
 	}
 
 	async sign(
-		token: string,
+		key: SignerKey,
 		input: { signature: string; timeZone?: string | null; consent: boolean },
 		meta: RequestMeta,
 	): Promise<SigningView> {
-		const found = await this.answerable(token);
+		const found = await this.answerable(key);
 		const { signer, request } = found;
 		if (!input.consent) {
 			throw new SignatureError(400, "Agree to sign electronically first.");
@@ -149,7 +150,9 @@ export class SignatureSigning extends SignatureCompletion {
 				and(
 					eq(signatureSigners.id, signer.id),
 					eq(signatureSigners.status, "pending"),
-					eq(signatureSigners.tokenHash, hashToken(token)),
+					typeof key === "string"
+						? eq(signatureSigners.tokenHash, hashToken(key))
+						: eq(signatureSigners.userId, key.userId),
 				),
 			)
 			.returning();
@@ -168,19 +171,23 @@ export class SignatureSigning extends SignatureCompletion {
 		if (request.sequential) {
 			await this.advance(request);
 		}
-		await this.finalize(request.id, { signerId: signer.id, token });
+		// Signing through their link, they keep it; signed in, there is none to keep.
+		await this.finalize(
+			request.id,
+			typeof key === "string" ? { signerId: signer.id, token: key } : undefined,
+		);
 		return await this.view({
 			signer: signed,
-			request: (await this.byToken(token))?.request ?? request,
+			request: (await this.found(key))?.request ?? request,
 		});
 	}
 
 	async decline(
-		token: string,
+		key: SignerKey,
 		reason: string | null,
 		meta: RequestMeta,
 	): Promise<SigningView> {
-		const { signer, request } = await this.answerable(token);
+		const { signer, request } = await this.answerable(key);
 		const why = reason?.trim().slice(0, 500) || null;
 		const [declined] = await this.db
 			.update(signatureSigners)
@@ -238,10 +245,10 @@ export class SignatureSigning extends SignatureCompletion {
 	 * done, the signed one for `DOWNLOAD_DAYS` after completion.
 	 */
 	async signerPdf(
-		token: string,
+		key: SignerKey,
 		kind: "original" | "signed",
 	): Promise<{ bytes: Uint8Array; name: string } | null> {
-		const found = await this.byToken(token);
+		const found = await this.found(key);
 		if (!found) {
 			return null;
 		}

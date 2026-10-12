@@ -52,5 +52,10 @@ export interface SaveStatus {
 export interface ShellContext {
 	menu: Snippet<[EditorMenuContext]>;
 	readOnly: boolean;
+	/** Documents only: edits become suggestions. */
+	suggesting: boolean;
 	comments: Comments;
 }
+
+/** Suggesting exists for documents only. */
+export type EditorMode = "view" | "edit" | "suggest";
