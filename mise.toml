@@ -1,5 +1,5 @@
 [tools]
-bun = "1.4.2"
+bun = "1.4.3"
 go = "1.27.2"
 # The desktop app: apps/desktop/Cargo.toml's `rust-version`, and the rclone it drives.
 rust = { version = "1.98.1", components = "rustfmt,clippy" }
