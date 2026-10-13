@@ -48,19 +48,20 @@
 	let shownKey = $state("");
 	const notesOnly = $derived(fileToView?.type === "notes");
 	const viewKey = $derived(
-		fileToView ? `${fileToView.item.key}:${fileToView.type}` : "",
+		open && fileToView ? `${fileToView.item.key}:${fileToView.type}` : "",
 	);
-	$effect(() => {
+	/** Playhead of the in-dialog video, shared with the notes panel. */
+	let viewerTime: number = $state(0);
+	// Pre, so the next player never mounts bound to the last file's playhead.
+	$effect.pre(() => {
 		// Only on a change of file, or reopening the thread would be undone by
 		// the effect the moment anything else here re-ran.
 		if (viewKey !== untrack(() => shownKey)) {
 			shownKey = viewKey;
 			notesOpen = untrack(() => notesOnly);
+			viewerTime = 0;
 		}
 	});
-
-	/** Playhead of the in-dialog video, shared with the notes panel. */
-	let viewerTime: number = $state(0);
 	/** Hands the caret to the note box when a moment is clicked. */
 	let focusNotes: (() => void) | undefined = $state();
 

@@ -104,6 +104,7 @@ impl App {
                     choice: &mut add.choice,
                     subfolder: &mut add.subfolder,
                     error: add.error.as_deref(),
+                    empty: add.empty,
                 }),
                 rclone_missing: sync::find_rclone().is_none(),
                 status: if state == ui::SyncState::Failed && self.down.is_none() {

@@ -68,6 +68,8 @@ pub struct Adding<'a> {
     pub choice: &'a mut usize,
     pub subfolder: &'a mut String,
     pub error: Option<&'a str>,
+    /// The local folder holds nothing yet.
+    pub empty: bool,
 }
 
 /// A folder's exclusions, open for editing.

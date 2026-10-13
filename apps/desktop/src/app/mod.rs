@@ -52,6 +52,7 @@ struct AddState {
     choice: usize,
     subfolder: String,
     error: Option<String>,
+    empty: bool,
 }
 
 pub struct App {

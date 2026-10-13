@@ -339,6 +339,7 @@ fn snapshots() {
                                         choice: &mut choice,
                                         subfolder: &mut subfolder,
                                         error: None,
+                                        empty: false,
                                     }),
                                     rclone_missing: missing,
                                     status,

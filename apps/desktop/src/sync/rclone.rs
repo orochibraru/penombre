@@ -118,18 +118,30 @@ pub fn bisync(
         )?;
     }
     let mut pid = None;
-    let result = stream(
-        &rclone,
-        &bisync_args(local, &remote, &dirs.workdir(), !target.resynced, &filters),
-        &env,
-        control,
-        &mut pid,
-        on_line,
-    );
+    let mut run_bisync = |resync: bool, pid: &mut Option<u32>| {
+        stream(
+            &rclone,
+            &bisync_args(local, &remote, &dirs.workdir(), resync, &filters),
+            &env,
+            control,
+            pid,
+            on_line,
+        )
+    };
+    let mut result = run_bisync(!target.resynced, &mut pid);
+    // bisync refuses any run after one that saw both sides empty. Nothing was
+    // listed, so nothing can have been deleted: a resync loses nothing.
+    if result.as_ref().is_err_and(|e| empty_prior_listing(e)) && !control.halted() {
+        result = run_bisync(true, &mut pid);
+    }
     if let Some(pid) = pid.filter(|_| control.halted()) {
         release_lock(&dirs.workdir(), pid);
     }
     result
+}
+
+fn empty_prior_listing(error: &str) -> bool {
+    error.to_lowercase().contains("empty prior path")
 }
 
 /// A killed bisync leaves its lock behind, and the next run would refuse to

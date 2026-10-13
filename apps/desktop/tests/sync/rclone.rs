@@ -205,3 +205,13 @@ fn tail_keeps_the_last_lines() {
     assert_eq!(tail("a\nb\nc".lines(), 2), "b\nc");
     assert_eq!(tail("".lines(), 2), "rclone failed without saying why.");
 }
+
+#[test]
+fn an_empty_prior_listing_is_recognised_in_rclones_own_words() {
+    assert!(empty_prior_listing(
+        "ERROR: Empty prior Path1 listing. Cannot sync to an empty directory: /w/x.path1.lst\nERROR: Bisync critical error: empty prior Path1 listing: /w/x.path1.lst"
+    ));
+    assert!(!empty_prior_listing(
+        "ERROR: Bisync critical error: cannot find prior Path1 or Path2 listings"
+    ));
+}

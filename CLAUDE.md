@@ -3083,6 +3083,10 @@ folder may be called `drives`.
   a changed filter without `--resync`. A pair's own exclusions (`Pair::ignored`)
   join those lines through `filters::rule`, which refuses what rclone would read
   as a comment or a rule, and a bare `!`, which clears every rule.
+- **bisync refuses every run after one that saw both sides empty** ("Empty prior
+  Path1 listing"), and `--resilient` keeps those listings, so a new pair of two
+  empty folders was stuck for good. `bisync()` reruns such a failure with
+  `--resync`: nothing was listed, so no delete can be lost.
 - **Another instance's internals are dropped**, at any depth: `.versions`,
   `.thumbnails` and `.tmp` (`APP_DIRS`), accepted and never stored, like OS
   litter. A folder Syncthing mirrored off a simple-mode instance carries them,

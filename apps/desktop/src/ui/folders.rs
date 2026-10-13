@@ -197,6 +197,19 @@ fn adding_form(ui: &mut Ui, p: &Palette, adding: &mut Adding<'_>, action: &mut O
                             .margin(Margin::symmetric(10, 8))
                             .desired_width(f32::INFINITY),
                     );
+                    if adding.empty {
+                        ui.horizontal_wrapped(|ui| {
+                            ui.add(Icon::Down.image(p.primary, 15.0));
+                            ui.label(
+                                RichText::new(
+                                    "This folder is empty, so the first sync downloads \
+                                     the server's files into it. Nothing on the server \
+                                     is deleted.",
+                                )
+                                .color(p.subtle),
+                            );
+                        });
+                    }
                     !places.is_empty()
                 }
             };

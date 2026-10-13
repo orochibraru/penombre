@@ -39,6 +39,7 @@ impl App {
             wake.wake();
         });
         self.adding = Some(AddState {
+            empty: is_empty(&local),
             subfolder: local
                 .file_name()
                 .map(|name| name.to_string_lossy().into_owned())
@@ -321,6 +322,13 @@ fn folder_pattern(root: &Path, picked: &Path) -> Option<String> {
         .ok()
         .filter(|rest| !rest.as_os_str().is_empty())?;
     Some(format!("/{}/", rest.to_string_lossy().replace('\\', "/")))
+}
+
+/// Dot-files aside: Finder drops a `.DS_Store` in every folder it opens.
+fn is_empty(folder: &std::path::Path) -> bool {
+    std::fs::read_dir(folder).is_ok_and(|mut entries| {
+        !entries.any(|entry| entry.is_ok_and(|e| !e.file_name().to_string_lossy().starts_with('.')))
+    })
 }
 
 #[cfg(test)]

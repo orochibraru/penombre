@@ -87,8 +87,10 @@ notifications only through Script Editor; allow those.
 
 ## Good to know
 
-- A folder, or the place it syncs to, must not be completely empty: rclone
-  refuses to sync against an empty side, to protect you from a wipe.
+- Pairing an empty folder is safe: the first sync downloads what the server
+  holds into it and deletes nothing on the server. The app says so before you
+  add it. Emptying a folder that already synced is another matter: rclone
+  refuses a sync that would delete more than half of a side.
 - A file that keeps failing makes each later sync of its folder a full
   comparison until it goes through. Fix the cause, a file too large for your
   reverse proxy for example (see [Reverse proxy](reverse-proxy.md)), and it
