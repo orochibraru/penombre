@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.8.66](https://github.com/orochibraru/penombre/compare/v1.8.65...v1.8.66) (2026-10-15)
+
+### Features
+
+* **editors:** selection bar, markdown, Google Sheets import fidelity, dropdown chips with conditional formatting, mode menu and menu polish ([2b44876](https://github.com/orochibraru/penombre/commit/2b448766c4a0846912f15f5bcf20c51bfce7aee6))
+
+### Bug Fixes
+
+* start each video from zero, resync empty bisync pairs and explain empty folders in the sync app ([6c3766c](https://github.com/orochibraru/penombre/commit/6c3766c59abd70f5adc746220a79e1f02ad67b82))
+
 ## [1.8.65](https://github.com/orochibraru/penombre/compare/v1.8.64...v1.8.65) (2026-10-08)
 
 ### Features
