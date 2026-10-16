@@ -171,7 +171,8 @@ jobs:
       contents: write
     uses: ./.github/workflows/mobile.yaml
     with:
-      version: 0.0.0-canary.0
+      # Not canary.0: its build number is 0, which AGP refuses as a versionCode.
+      version: 0.0.0-canary.1
 
   build-app:
     name: Docker Build (App)

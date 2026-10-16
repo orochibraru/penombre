@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s weigerde %2$s te ondertekenen</string>
     <string name="notice_declined_generic">Een ondertekenaar weigerde %1$s te ondertekenen</string>
     <string name="notice_channel">Delen, notities en handtekeningen</string>
+    <string name="playback_channel">Afspelen</string>
     <string name="method_password">Wachtwoord</string>
     <string name="method_passkey">Toegangssleutel</string>
     <string name="method_link">Link per e-mail</string>

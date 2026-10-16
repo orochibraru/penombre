@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s 拒绝签署 %2$s</string>
     <string name="notice_declined_generic">有签署人拒绝签署 %1$s</string>
     <string name="notice_channel">共享、笔记和签名</string>
+    <string name="playback_channel">播放</string>
     <string name="method_password">密码</string>
     <string name="method_passkey">通行密钥</string>
     <string name="method_link">邮箱登录链接</string>

@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s kieltäytyi allekirjoittamasta kohdetta %2$s</string>
     <string name="notice_declined_generic">Allekirjoittaja kieltäytyi allekirjoittamasta kohdetta %1$s</string>
     <string name="notice_channel">Jaot, muistiinpanot ja allekirjoitukset</string>
+    <string name="playback_channel">Toisto</string>
     <string name="method_password">Salasana</string>
     <string name="method_passkey">Kulkuavain</string>
     <string name="method_link">Linkki sähköpostitse</string>

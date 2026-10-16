@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s님이 %2$s 서명을 거절했습니다</string>
     <string name="notice_declined_generic">서명자가 %1$s 서명을 거절했습니다</string>
     <string name="notice_channel">공유, 메모 및 서명</string>
+    <string name="playback_channel">재생</string>
     <string name="method_password">비밀번호</string>
     <string name="method_passkey">패스키</string>
     <string name="method_link">이메일 링크</string>

@@ -73,7 +73,9 @@ A bottom bar, present on every screen:
   title is a menu: tap **My Drive** to switch to **Recent**, **Starred**,
   **Trash**, a shared drive, a mounted volume, something shared with you, or a
   category (Music, Documents, Images and so on). Tapping **Home** again returns
-  to your own drive's root.
+  to your own drive's root. An account [restricted to shared drives](admin.md)
+  has no drive of its own: it lands on its shared drive instead, or on the list
+  of them when it has several.
 - **Search**: files and folders by name, everywhere you have access. The page
   shows the search field and your recent searches, kept on the phone. From two
   letters on, results come as you type, in place of the recent searches; the
@@ -188,7 +190,11 @@ track.
 A track does not open a drawer: it starts playing in the mini player above the
 bottom bar, along with the folder's other tracks. Tap the mini player, or slide
 it up, for the full player: waveform scrubber, previous and next, and the queue.
-Playback continues while you browse. A video takes over from a track.
+Playback continues while you browse, and with the app in the background or the
+screen locked: the track shows in the notification shade on Android and on the
+lock screen and Control Center on an iPhone, with play, pause, previous, next
+and, where the system offers it, a scrubber. Swiping the app away from the
+recent apps on Android stops it. A video takes over from a track.
 
 A folder opened from **Recent**, **Starred** or a category opens in the web
 interface. Everything the web interface shows inside the app is already signed

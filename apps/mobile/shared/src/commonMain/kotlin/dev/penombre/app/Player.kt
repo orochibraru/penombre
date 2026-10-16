@@ -115,7 +115,12 @@ open class Transport(protected val session: Session) {
         position = duration * fraction.coerceIn(0f, 1f)
         engine.seek(position)
         settling = 4
+        seeks++
     }
+
+    /** Counts seeks, so whatever mirrors the playhead elsewhere knows it jumped. */
+    protected var seeks = 0
+        private set
 
     // Samples left before the end is looked for again: a seek lands late, and
     // until it does the engine still reads as at the end it was sent away from.
@@ -145,7 +150,9 @@ open class Transport(protected val session: Session) {
 }
 
 /** The tracks in play: one queue for the whole signed-in app. */
-class Playback(session: Session) : Transport(session) {
+class Playback(session: Session) :
+    Transport(session),
+    RemoteControls {
     private var place = Place()
 
     var queue by mutableStateOf<List<Item>>(emptyList())
@@ -168,22 +175,56 @@ class Playback(session: Session) : Transport(session) {
         begin(rawUrl(session.server, place, track.metadata.id))
     }
 
-    fun next() = if (index < queue.lastIndex) load(index + 1) else stop()
+    override fun next() = if (index < queue.lastIndex) load(index + 1) else stop()
 
     fun jump(to: Int) = load(to)
 
-    fun previous() = load((index - 1).coerceAtLeast(0))
+    override fun previous() = load((index - 1).coerceAtLeast(0))
 
-    fun stop() {
+    override fun stop() {
         halt()
         queue = emptyList()
+        shown = null
+        NowPlaying.clear()
+    }
+
+    override fun play() {
+        if (!playing) toggle()
+    }
+
+    override fun pause() {
+        if (playing) toggle()
+    }
+
+    override fun seekTo(seconds: Double) {
+        if (duration > 0) seek((seconds / duration).toFloat())
+    }
+
+    private var shown: NowPlayingInfo? = null
+    private var shownSeeks = 0
+
+    // The system runs the clock itself: a new position is only news after a jump.
+    private suspend fun publish() {
+        val track = current ?: return
+        val info = NowPlayingInfo(track.title, "Penombre", playing, position, duration, index < queue.lastIndex)
+        val last = shown
+        if (last != null && seeks == shownSeeks && last.copy(position = 0.0) == info.copy(position = 0.0)) return
+        shown = info
+        shownSeeks = seeks
+        NowPlaying.show(info, this)
     }
 
     /** Follows the engine while a track is loaded; the next starts when one ends. */
     suspend fun follow() {
-        while (true) {
-            if (current != null && sample()) next()
-            delay(250)
+        try {
+            while (true) {
+                if (current != null && sample()) next()
+                publish()
+                delay(250)
+            }
+        } finally {
+            // The app is gone: nothing could pause what kept playing.
+            if (current != null) stop()
         }
     }
 }

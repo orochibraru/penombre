@@ -22,6 +22,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.ParcelFileDescriptor
+import android.os.PowerManager
 import android.provider.OpenableColumns
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -268,6 +269,8 @@ actual class MediaEngine actual constructor() {
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build(),
             )
             setDataSource(AndroidHost.activity, url.toUri(), mapOf("Authorization" to "Bearer $token"))
+            // The screen off must not put the CPU, and the music, to sleep.
+            setWakeMode(AndroidHost.context, PowerManager.PARTIAL_WAKE_LOCK)
             display?.let(::setDisplay)
             setOnVideoSizeChangedListener { _, width, height -> if (height > 0) shape = width.toFloat() / height }
             setOnErrorListener { _, _, _ ->

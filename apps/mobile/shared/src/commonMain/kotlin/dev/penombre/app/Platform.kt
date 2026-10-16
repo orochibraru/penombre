@@ -70,6 +70,37 @@ expect class MediaEngine() {
     val failed: Boolean
 }
 
+/** What the lock screen and the notification shade show of the track in play. */
+data class NowPlayingInfo(
+    val title: String,
+    val subtitle: String,
+    val playing: Boolean,
+    /** Seconds, as of now; the system runs the clock on from here while playing. */
+    val position: Double,
+    val duration: Double,
+    val hasNext: Boolean,
+)
+
+/** What the system's buttons do: the notification's, the lock screen's, headphones'. */
+interface RemoteControls {
+    fun play()
+    fun pause()
+    fun next()
+    fun previous()
+    fun seekTo(seconds: Double)
+    fun stop()
+}
+
+/**
+ * The phone's own media controls for the track queue: a media notification
+ * kept by a foreground service on Android (which is also what keeps the
+ * process alive with the app closed), Now Playing on iOS.
+ */
+expect object NowPlaying {
+    suspend fun show(info: NowPlayingInfo, controls: RemoteControls)
+    fun clear()
+}
+
 /**
  * Where an engine's video shows, fitted whole inside `modifier` at `aspect`
  * (zero until known). No controls: the app draws its own.

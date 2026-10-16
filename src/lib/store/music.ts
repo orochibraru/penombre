@@ -1,5 +1,6 @@
 import { type Writable, writable } from "svelte/store";
 import type { ObjectItem } from "#lib/api/index.js";
+import type { StorageLocation } from "#lib/storage-location.js";
 
 export type PlayableMusic = {
 	title: string;
@@ -13,6 +14,8 @@ export type PlayableMusic = {
 	item?: ObjectItem;
 	/** Which earlier version is playing; absent is the current file. */
 	versionId?: string;
+	/** Where the file lives, when the route it is set from cannot say (`/view`). */
+	location?: StorageLocation;
 	/**
 	 * Seconds the next load should start at. Set when playback moves between
 	 * the global player and the full-screen viewer, which are separate
