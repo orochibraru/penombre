@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s ha rifiutato di firmare %2$s</string>
     <string name="notice_declined_generic">Un firmatario ha rifiutato di firmare %1$s</string>
     <string name="notice_channel">Condivisioni, note e firme</string>
+    <string name="playback_channel">Riproduzione</string>
     <string name="method_password">Password</string>
     <string name="method_passkey">Passkey</string>
     <string name="method_link">Link via email</string>

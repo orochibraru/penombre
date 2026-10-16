@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s declined to sign %2$s</string>
     <string name="notice_declined_generic">A signer declined to sign %1$s</string>
     <string name="notice_channel">Shares, notes and signatures</string>
+    <string name="playback_channel">Playback</string>
     <string name="method_password">Password</string>
     <string name="method_passkey">Passkey</string>
     <string name="method_link">Emailed link</string>

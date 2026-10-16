@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s hat abgelehnt, %2$s zu unterschreiben</string>
     <string name="notice_declined_generic">Eine unterzeichnende Person hat abgelehnt, %1$s zu unterschreiben</string>
     <string name="notice_channel">Freigaben, Notizen und Unterschriften</string>
+    <string name="playback_channel">Wiedergabe</string>
     <string name="method_password">Passwort</string>
     <string name="method_passkey">Passkey</string>
     <string name="method_link">Link per E-Mail</string>

@@ -175,6 +175,7 @@
 				isPlaying: !paused,
 				fileId: data.fileId,
 				startAt: currentTime,
+				location: locationFrom(page.params, page.url),
 			});
 		}
 		if (canGoBack) {

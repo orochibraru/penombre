@@ -34,6 +34,11 @@
 	import { playMedia } from "#lib/play.js";
 	import { tune } from "#lib/playback-tuning.js";
 	import {
+		locationOf,
+		locationQuery,
+		type StorageLocation,
+	} from "#lib/storage-location.js";
+	import {
 		type PlaybackCommand,
 		playableMusic,
 		playbackCommand,
@@ -114,10 +119,28 @@
 	let loading: boolean = $state(true);
 	let seeking: boolean = $state(false);
 
+	// Where the track was opened. The player outlives that page, and `/view`
+	// needs the drive or volume, or a file outside the personal drive 404s.
+	let trackLocation: StorageLocation = $state({});
+	let locatedFor: string | undefined;
+	$effect(() => {
+		const music = $playableMusic;
+		if (music?.fileId === locatedFor) {
+			return;
+		}
+		locatedFor = music?.fileId;
+		trackLocation = music?.location ?? untrack(() => locationOf(page.params));
+	});
+
+	function viewerHref(fileId: string): string {
+		const query = locationQuery(trackLocation);
+		return `/view/${encodeURIComponent(fileId)}${query ? `?${query}` : ""}`;
+	}
+
 	/** Carries the playhead across, so the viewer picks the track up here. */
 	const fullscreenHref = $derived(
 		$playableMusic?.fileId
-			? withResume(`/view/${$playableMusic.fileId}`, {
+			? withResume(viewerHref($playableMusic.fileId), {
 					at: currentTime,
 					playing: !paused,
 				})

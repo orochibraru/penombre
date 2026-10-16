@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s отказался(-ась) подписать %2$s</string>
     <string name="notice_declined_generic">Один из подписантов отказался подписать %1$s</string>
     <string name="notice_channel">Общий доступ, заметки и подписи</string>
+    <string name="playback_channel">Воспроизведение</string>
     <string name="method_password">Пароль</string>
     <string name="method_passkey">Ключ доступа</string>
     <string name="method_link">Ссылка по email</string>

@@ -119,7 +119,11 @@ fun HomeView(host: Host, home: Home, onChoose: (Home) -> Unit) {
     // Read again each time the menu opens: a drive joined on the web shows up.
     var places by remember { mutableStateOf<Places?>(null) }
     var asked by remember { mutableIntStateOf(0) }
-    LaunchedEffect(asked) { host.attempt { places = host.api.places() } }
+    LaunchedEffect(asked) {
+        host.attempt {
+            places = host.api.places().also { Prefs.set(DRIVE_ONLY_KEY, it.driveOnly.toString()) }
+        }
+    }
     val pick = {
         asked++
         choosing = true
@@ -131,15 +135,23 @@ fun HomeView(host: Host, home: Home, onChoose: (Home) -> Unit) {
         }
     }
     when (home) {
-        Home.Mine -> Browser(host, Place(), home.title, onTitle = pick, actions = host.top, bottomBar = host.bar)
+        Home.Mine -> {
+            val known = places
+            // Last launch's answer, so a full account's drive opens without waiting.
+            val driveOnly = known?.driveOnly ?: Prefs.get(DRIVE_ONLY_KEY)?.toBooleanStrictOrNull()
+            when {
+                driveOnly == false -> Browser(host, Place(), home.title, onTitle = pick, actions = host.top, bottomBar = host.bar)
 
-        is Home.Team -> {
-            val place = Place(drive = home.drive.id)
-            Browser(host, place, home.title, canWrite = home.drive.canWrite, onTitle = pick, actions = {
-                TrashButton(host, place, home.title)
-                host.top(this)
-            }, bottomBar = host.bar)
+                // No drive of its own: Home is its shared drive, or the list of them.
+                known == null -> Loading(host, home.title, pick)
+
+                known.drives.size == 1 -> TeamBrowser(host, known.drives.single(), pick)
+
+                else -> DrivesView(host, known.drives, pick) { onChoose(Home.Team(it)) }
+            }
         }
+
+        is Home.Team -> TeamBrowser(host, home.drive, pick)
 
         is Home.Mount -> {
             val place = Place(volume = home.volume.name)
@@ -169,6 +181,48 @@ fun HomeView(host: Host, home: Home, onChoose: (Home) -> Unit) {
         Home.Starred -> FlatList(host, home, pick, stringResource(Res.string.empty_starred)) { host.api.starred(it) }
 
         is Home.Kind -> FlatList(host, home, pick, stringResource(Res.string.empty_category, home.title)) { host.api.category(home.category, it, host.sort) }
+    }
+}
+
+private const val DRIVE_ONLY_KEY = "drive-only"
+
+@Composable
+private fun TeamBrowser(host: Host, drive: Drive, onTitle: () -> Unit) {
+    val place = Place(drive = drive.id)
+    Browser(host, place, drive.name, canWrite = drive.canWrite, onTitle = onTitle, actions = {
+        TrashButton(host, place, drive.name)
+        host.top(this)
+    }, bottomBar = host.bar)
+}
+
+@Composable
+private fun Loading(host: Host, title: String, onTitle: () -> Unit) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = { Header(title, onBack = null, onTitle = onTitle, actions = host.top) },
+        bottomBar = host.bar,
+    ) { padding -> androidx.compose.foundation.layout.Box(Modifier.padding(padding)) { SkeletonList(6) } }
+}
+
+/** Home for an account with no drive of its own and several shared ones. */
+@Composable
+private fun DrivesView(host: Host, drives: List<Drive>, onTitle: () -> Unit, onOpen: (Drive) -> Unit) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = { Header(stringResource(Res.string.shared_drives), onBack = null, onTitle = onTitle, actions = host.top) },
+        bottomBar = host.bar,
+    ) { padding ->
+        androidx.compose.foundation.layout.Box(Modifier.padding(padding).fillMaxSize()) {
+            if (drives.isEmpty()) {
+                Note(stringResource(Res.string.drives_none), Modifier.align(androidx.compose.ui.Alignment.Center))
+            } else {
+                LazyColumn(Modifier.fillMaxSize()) {
+                    items(drives, key = { it.id }) { drive ->
+                        Entry(Icons.Outlined.Group, drive.name, roleName(drive.role)) { onOpen(drive) }
+                    }
+                }
+            }
+        }
     }
 }
 

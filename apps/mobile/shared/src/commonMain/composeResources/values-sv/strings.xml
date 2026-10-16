@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s avböjde att skriva under %2$s</string>
     <string name="notice_declined_generic">En undertecknare avböjde att skriva under %1$s</string>
     <string name="notice_channel">Delningar, anteckningar och underskrifter</string>
+    <string name="playback_channel">Uppspelning</string>
     <string name="method_password">Lösenord</string>
     <string name="method_passkey">Nyckel</string>
     <string name="method_link">Länk via e-post</string>

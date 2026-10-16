@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$s odmówił(a) podpisania %2$s</string>
     <string name="notice_declined_generic">Jeden z podpisujących odmówił podpisania %1$s</string>
     <string name="notice_channel">Udostępnienia, notatki i podpisy</string>
+    <string name="playback_channel">Odtwarzanie</string>
     <string name="method_password">Hasło</string>
     <string name="method_passkey">Klucz dostępu</string>
     <string name="method_link">Link e-mailem</string>

@@ -23,6 +23,7 @@
     <string name="notice_declined">%1$sが%2$sへの署名を辞退しました</string>
     <string name="notice_declined_generic">署名者が%1$sへの署名を辞退しました</string>
     <string name="notice_channel">共有、メモ、署名</string>
+    <string name="playback_channel">再生</string>
     <string name="method_password">パスワード</string>
     <string name="method_passkey">パスキー</string>
     <string name="method_link">メールで送るリンク</string>

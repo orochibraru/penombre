@@ -1154,6 +1154,12 @@ each one: audible stutter, playback dropping, a flickering play button. The
 player resolves the source now, and writers use `rawUrl()`/`getObjectUrl()`,
 which already do.
 
+The bottom player outlives the page a track was opened on, so its **Open full
+screen** link carries the location it captured when the track changed
+(`trackLocation` in `music-player.svelte`), never the current route's: from a
+shared drive it used to be a bare `/view/<id>`, a 404 for anyone without the
+file in their own drive.
+
 Browser full screen is separate and additional — `toggleFullscreen()` in
 `#lib/utils`, given the element wrapping the video _and its controls_, or the
 custom controls vanish with it. iOS Safari implements none of the API outside
@@ -2297,6 +2303,21 @@ redemptions never both win.
   paused it again. The preview drawer and the full screen draw the same
   `Screening`, which is what makes **Full screen** carry on instead of reload;
   the video in play is derived in `Signed` from the drawer and the top screen.
+- **The track queue is mirrored to the system's media controls** through
+  `NowPlaying` (`Playback.publish`, from `follow()`): on Android a
+  `MediaSession` plus a `mediaPlayback` foreground service (`PlaybackService`)
+  holding a `MediaStyle` notification, which is also what keeps the process
+  alive in the background; on iOS Now Playing and `MPRemoteCommandCenter`
+  (`UIBackgroundModes: audio` was already there). It republishes only when
+  something but the position changed, or after a seek (`seeks`): the system runs
+  the clock itself. The service is started once, from the app on screen, and
+  stays in the foreground until `stop()`: starting one again from the background
+  is refused on Android 12+. `follow()` stops the queue when its composition
+  goes, and a swipe from recents stops it too: nothing would be left to drive
+  the queue.
+- A drive-only account's **Home** is its shared drive (or the list of them):
+  `Home.Mine` reads `places.driveOnly`, and the last answer is kept in `Prefs`
+  so a full account's drive opens without waiting on `/places`.
 - `VideoSurface` is the picture only, the controls are Compose over it. On iOS
   the view takes no touches (`interactionMode = null`) and its `AVPlayerLayer`
   fits the picture itself; on Android a `SurfaceView` stretches, so it takes the
