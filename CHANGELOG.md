@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.67](https://github.com/orochibraru/penombre/compare/v1.8.66...v1.8.67) (2026-10-16)
+
+### Bug Fixes
+
+* miniplayer full screen keeps the drive; mobile drive-only home and background playback (#143) ([49cf8df](https://github.com/orochibraru/penombre/commit/49cf8df0fe38e19c7eb474370dbd4c66b56dc01b))
+
 ## [1.8.66](https://github.com/orochibraru/penombre/compare/v1.8.65...v1.8.66) (2026-10-15)
 
 ### Features
