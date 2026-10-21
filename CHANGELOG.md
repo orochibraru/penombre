@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.67](https://github.com/orochibraru/penombre/compare/v1.8.66...v1.8.67) (2026-10-21)
+
+### Bug Fixes
+
+* **deps:** update dependency org.jetbrains.kotlinx:kotlinx-coroutines-test to v1.11.0 (#139) ([d37db11](https://github.com/orochibraru/penombre/commit/d37db11e79dfe3d30a5be4fa5d9fe1a2be722552))
+* **deps:** update ktor monorepo to v3.6.0 (#140) ([34b4a04](https://github.com/orochibraru/penombre/commit/34b4a04e2753b83fff91fec398834421d6b0cd00))
+* miniplayer full screen keeps the drive; mobile drive-only home and background playback (#143) ([49cf8df](https://github.com/orochibraru/penombre/commit/49cf8df0fe38e19c7eb474370dbd4c66b56dc01b))
+
 ## [1.8.66](https://github.com/orochibraru/penombre/compare/v1.8.65...v1.8.66) (2026-10-15)
 
 ### Features
