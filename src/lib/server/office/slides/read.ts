@@ -9,6 +9,7 @@ import type {
 } from "#lib/slides/model.js";
 import { templateOfTheme } from "#lib/slides/templates/index.js";
 import { mergeLevels } from "#lib/slides/text.js";
+
 import {
 	notesPartFor,
 	placeholderType,

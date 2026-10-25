@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { MonitorIcon, SmartphoneIcon } from "@lucide/svelte";
+
 	import DesktopDownloads from "#lib/components/apps/desktop-downloads.svelte";
 	import MobileDownloads from "#lib/components/apps/mobile-downloads.svelte";
 	import * as Dialog from "#lib/components/ui/dialog/index.js";

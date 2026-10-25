@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+
 import settings from "../../project.inlang/settings.json";
 import { LANGUAGES } from "./languages.js";
 

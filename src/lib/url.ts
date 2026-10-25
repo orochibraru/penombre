@@ -1,4 +1,5 @@
 import { page, type ReadonlyURL } from "$app/state";
+
 import type { paths } from "#lib/api/index.js";
 import { locationOf } from "#lib/storage-location.js";
 import { buildOriginUrl } from "#lib/utils.js";

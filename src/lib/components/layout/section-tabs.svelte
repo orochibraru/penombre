@@ -14,6 +14,7 @@
 
 <script lang="ts">
 	import { page } from "$app/state";
+
 	import { customMenu } from "#lib/store/custom-menu.js";
 	import { cn } from "#lib/utils.js";
 

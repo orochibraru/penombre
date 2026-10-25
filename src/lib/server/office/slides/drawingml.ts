@@ -16,6 +16,7 @@ import type {
 	RunStyle,
 	TextBody,
 } from "#lib/slides/model.js";
+
 import {
 	childNamed,
 	childrenNamed,

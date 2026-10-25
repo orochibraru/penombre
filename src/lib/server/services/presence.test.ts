@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+
 import type { Database } from "#lib/server/db/index.js";
 import { filePresence, files, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+
 import { PRESENCE_TTL_MS, PresenceService } from "./presence";
 
 let db: Database;

@@ -7,7 +7,9 @@ import {
 	mock,
 	test,
 } from "bun:test";
+
 import { getConfig } from "#lib/server/config.js";
+
 import {
 	desktopReleaseVersion,
 	isNewerVersion,

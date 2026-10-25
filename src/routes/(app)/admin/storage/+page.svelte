@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+
 	import StorageUsage from "#lib/components/storage-usage.svelte";
 	import * as Card from "#lib/components/ui/card/index.js";
 	import { m } from "#lib/paraglide/messages.js";

@@ -5,6 +5,7 @@
 
 import { dev } from "$app/env";
 import { and, eq } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { files } from "#lib/server/db/schema.js";
 import {
@@ -12,6 +13,7 @@ import {
 	UnauthorizedError,
 } from "#lib/server/errors.js";
 import type { ObjectItem } from "#lib/server/schema.js";
+
 import type { StorageContext } from "./context";
 import {
 	generateETag,

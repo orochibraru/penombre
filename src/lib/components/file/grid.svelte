@@ -8,6 +8,7 @@
 		FolderPlusIcon,
 		UploadIcon,
 	} from "@lucide/svelte";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import FilePrefix from "#lib/components/file/prefix.svelte";
 	import {

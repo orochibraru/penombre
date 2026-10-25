@@ -1,4 +1,5 @@
 import { error } from "@sveltejs/kit";
+
 import { api } from "#lib/api/index.js";
 import { firstPageQuery } from "#lib/pagination.js";
 

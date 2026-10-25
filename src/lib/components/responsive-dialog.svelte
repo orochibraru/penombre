@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	import type { HTMLFormAttributes } from "svelte/elements";
+
 	import type { ButtonVariant } from "#lib/components/ui/button/index.js";
 
 	export type DialogSize = "sm" | "md" | "lg" | "fullscreen";
@@ -49,6 +50,7 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 	import { MediaQuery } from "svelte/reactivity";
+
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
 	import * as Dialog from "#lib/components/ui/dialog/index.js";
 	import * as Drawer from "#lib/components/ui/drawer/index.js";

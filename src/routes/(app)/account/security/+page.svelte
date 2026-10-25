@@ -9,6 +9,7 @@
 	} from "@lucide/svelte";
 	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import { authClient } from "#lib/auth-client.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import TwoFactorCard from "#lib/components/two-factor-card.svelte";

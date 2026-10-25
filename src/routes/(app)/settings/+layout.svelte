@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { CogIcon, HardDriveIcon, PaletteIcon } from "@lucide/svelte";
+
 	import SectionTabs, {
 		type SectionTab,
 	} from "#lib/components/layout/section-tabs.svelte";

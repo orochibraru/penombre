@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+
 import { strokeShape } from "#lib/slides/ink.js";
 import { applyTemplate, slideFromLayout } from "#lib/slides/layouts.js";
 import type {
@@ -10,6 +11,7 @@ import type {
 	SlideElement,
 } from "#lib/slides/model.js";
 import { TEMPLATE_IDS, templateDeck } from "#lib/slides/templates/index.js";
+
 import { partText, readZip, writeZip, type ZipEntry } from "../zip";
 import {
 	readDeck,

@@ -6,6 +6,7 @@
 	import { ModeWatcher } from "mode-watcher";
 	import { onMount } from "svelte";
 	import { pwaInfo } from "virtual:pwa-info";
+
 	import TopLoadingbar from "#lib/components/layout/top-loading-bar.svelte";
 	import { Toaster } from "#lib/components/ui/sonner/index.js";
 	import { title } from "#lib/store/title.js";

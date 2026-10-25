@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import type { RequestEvent } from "@sveltejs/kit";
+
 import { csrfHandler } from "./csrf.js";
 
 const APP = "http://app.test";

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
+
 import { createEditor, type NodeJSON } from "prosekit/core";
+
 import { leaveCodeDown } from "./code-block";
 import {
 	blockValue,

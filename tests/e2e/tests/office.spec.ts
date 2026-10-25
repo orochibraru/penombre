@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+
 import { expect, type Page, test } from "@playwright/test";
+
 import { AUTH_STORAGE_STATE } from "../helpers";
 
 // Required per spec file: the chromium project sets no storageState of its

@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { ChevronDownIcon, PlusIcon } from "@lucide/svelte";
+
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Popover from "#lib/components/ui/popover/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { layoutKind, slideFromLayout } from "#lib/slides/layouts.js";
 	import type { Layout } from "#lib/slides/model.js";
+
 	import { LAYOUT_NAMES, placeholderPrompt } from "./labels.js";
 	import type { RenderContext } from "./render-context.js";
 	import SlideView from "./slide-view.svelte";

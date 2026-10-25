@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { XIcon } from "@lucide/svelte";
+
 	import { areaName, areaOf, chartArea, chartData } from "#lib/chart/data.js";
 	import { withColors, withData } from "#lib/chart/edit.js";
 	import {
@@ -17,6 +18,7 @@
 	import { Label } from "#lib/components/ui/label/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import { chartPalette, seriesLabel } from "./chart-defaults.js";
 	import type { SheetState } from "./state.svelte.js";
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CheckIcon } from "@lucide/svelte";
+
 	import * as Popover from "#lib/components/ui/popover/index.js";
 	import { toggleVariants } from "#lib/components/ui/toggle/toggle.svelte";
 	import { m } from "#lib/paraglide/messages.js";

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { renderInline, renderSlide, safeUrl } from "./render";
 
 const html = (markdown: string) => renderSlide(markdown).html;

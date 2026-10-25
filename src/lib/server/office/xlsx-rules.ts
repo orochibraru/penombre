@@ -17,6 +17,7 @@ import {
 	sameSqref,
 } from "#lib/sheet/dropdowns.js";
 import { SIDES } from "#lib/sheet/styles.js";
+
 import { colourOf, type Palette } from "./xlsx-colours";
 import { insertAfter, SIDE_NAMES, Stylesheet } from "./xlsx-styles";
 import {

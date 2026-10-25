@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+
 import type { Database } from "#lib/server/db/index.js";
 import { activity, jobs, notifications, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+
 import { pruneRetainedData } from "./retention-sweep";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

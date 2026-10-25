@@ -12,7 +12,9 @@ import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { link, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
+
 import { and, eq } from "drizzle-orm";
+
 import { PAGE_PREVIEW_TYPES } from "#lib/documents.js";
 import { Logger } from "#lib/logger.js";
 import {
@@ -24,6 +26,7 @@ import { keyring } from "#lib/server/crypto/keyring.js";
 import { files } from "#lib/server/db/schema.js";
 import { firstPagePdf } from "#lib/server/office/export/index.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
+
 import type { StorageContext } from "./context";
 import { generateETag } from "./mappers";
 import { ownedFiles } from "./scope";

@@ -4,6 +4,7 @@ import {
 	parseParagraphChange,
 } from "#lib/editor/changes.js";
 import { linkTarget } from "#lib/editor/document-format.js";
+
 import {
 	declarations,
 	firstFamily,

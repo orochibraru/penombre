@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { XIcon } from "@lucide/svelte";
 	import { tick } from "svelte";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import * as Tabs from "#lib/components/ui/tabs/index.js";
 	import { m } from "#lib/paraglide/messages.js";
+
 	import CommentBox from "./comment-box.svelte";
 	import CommentThread from "./comment-thread.svelte";
 	import type { Comments } from "./comments.svelte.js";

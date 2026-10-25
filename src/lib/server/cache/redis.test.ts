@@ -1,6 +1,8 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import process from "node:process";
+
 import type Redis from "ioredis";
+
 import { closeRedis, getRedisClient, RedisCacheBackend } from "./redis";
 import { isRedisAvailable } from "./test-helpers";
 

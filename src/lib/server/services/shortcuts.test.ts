@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+
 import { eq, sql } from "drizzle-orm";
+
 import type { Database } from "#lib/server/db/index.js";
 import { folders, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+
 import {
 	addShortcut,
 	listShortcuts,

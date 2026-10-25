@@ -9,6 +9,7 @@
 		MessageSquareIcon,
 		PencilIcon,
 	} from "@lucide/svelte";
+
 	import { Badge } from "#lib/components/ui/badge/index.js";
 	import { Button } from "#lib/components/ui/button/index.js";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
@@ -16,6 +17,7 @@
 	import { baseName } from "#lib/documents.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import type { EditorMode, SaveStatus } from "./file-actions.js";
 	import PresenceFaces from "./presence-faces.svelte";
 	import type { Present } from "./presence.svelte.js";

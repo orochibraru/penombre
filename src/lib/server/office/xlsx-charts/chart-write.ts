@@ -1,5 +1,6 @@
 import type { ChartData } from "#lib/chart/data.js";
 import type { Chart, ChartAxis, ChartSeries } from "#lib/chart/model.js";
+
 import { A_NS, CHART_NS, PROLOG, REL_NS } from "./package";
 
 /**

@@ -7,6 +7,7 @@
 		FolderPlusIcon,
 		UploadIcon,
 	} from "@lucide/svelte";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import FilePrefix from "#lib/components/file/prefix.svelte";
 	import { Button } from "#lib/components/ui/button/index.js";
@@ -29,6 +30,7 @@
 	} from "#lib/utils.js";
 	import { versionOf, withVersions } from "#lib/versions.js";
 	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
+
 	import { actionsFor } from "./version-actions.js";
 	import { itemDrop } from "./version-drop";
 

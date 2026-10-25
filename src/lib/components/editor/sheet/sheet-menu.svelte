@@ -12,10 +12,12 @@
 	} from "@lucide/svelte";
 	import type { Snippet } from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import { Input } from "#lib/components/ui/input/index.js";
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
 	import { columnName } from "#lib/formula.js";
 	import { m } from "#lib/paraglide/messages.js";
+
 	import type { EditorMenuContext } from "../shell/file-actions.js";
 	import {
 		clipboardActions,

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
+
 import type { ConditionalFormat } from "#lib/sheet/conditional.js";
 import type { Dropdown } from "#lib/sheet/dropdowns.js";
+
 import { pack } from "./test-utils";
 import { workbookFromText, workbookToText } from "./xlsx";
 import { partText, readZip, type ZipEntry } from "./zip";

@@ -9,6 +9,7 @@ import {
 	white,
 	yellow,
 } from "@kitql/helpers";
+
 import { getConfig } from "#lib/server/config.js";
 
 export type LogFormats = "console" | "json";

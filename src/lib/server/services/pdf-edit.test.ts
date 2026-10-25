@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import { degrees, PDFDocument } from "pdf-lib";
+
 import {
 	annotationsOn,
 	describePdf,

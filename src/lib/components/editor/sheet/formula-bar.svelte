@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { untrack } from "svelte";
+
 	import { m } from "#lib/paraglide/messages.js";
 	import { parseName, rangeName } from "#lib/sheet/selection.js";
+
 	import Completion from "./completion.svelte";
 	import { editorKey } from "./keys.js";
 	import type { SheetState } from "./state.svelte.js";

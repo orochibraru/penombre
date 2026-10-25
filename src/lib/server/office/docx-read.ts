@@ -4,6 +4,7 @@ import {
 	PARAGRAPH_CHANGE,
 	serializeParagraphChange,
 } from "#lib/editor/changes.js";
+
 import {
 	bodyBlocks,
 	bodyOf,

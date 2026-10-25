@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
+
 	import Logo from "#lib/components/logo.svelte";
 	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
 	import type { AppConfig } from "#lib/server/config.js";

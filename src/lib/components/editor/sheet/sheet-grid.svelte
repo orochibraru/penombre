@@ -7,6 +7,7 @@
 		Trash2Icon,
 	} from "@lucide/svelte";
 	import { flushSync, untrack } from "svelte";
+
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { columnName } from "#lib/formula.js";
 	import { m } from "#lib/paraglide/messages.js";
@@ -15,6 +16,7 @@
 	import { type Cell, inRect, type Rect } from "#lib/sheet/selection.js";
 	import type { Look } from "#lib/sheet/styles.js";
 	import { cn } from "#lib/utils.js";
+
 	import { sortColumn } from "./actions.js";
 	import CellMenu from "./cell-menu.svelte";
 	import ChartLayer from "./chart-layer.svelte";

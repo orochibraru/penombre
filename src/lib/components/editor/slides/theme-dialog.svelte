@@ -2,6 +2,7 @@
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { m } from "#lib/paraglide/messages.js";
 	import { TEMPLATE_IDS } from "#lib/slides/templates/index.js";
+
 	import type { SlidesEditor } from "./state.svelte.js";
 	import TemplateGallery from "./template-gallery.svelte";
 

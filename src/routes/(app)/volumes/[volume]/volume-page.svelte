@@ -7,6 +7,7 @@
 		Trash2Icon,
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
+
 	import { api, type ObjectList } from "#lib/api/index.js";
 	import FileLayout from "#lib/components/file/layout.svelte";
 	import ScanBanner from "#lib/components/scan/scan-banner.svelte";

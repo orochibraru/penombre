@@ -1,4 +1,5 @@
 import { type AppConfig, getConfig } from "#lib/server/config.js";
+
 import type { Keyring } from "./envelope";
 
 export function keyring(): Keyring {

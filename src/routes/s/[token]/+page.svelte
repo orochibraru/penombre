@@ -10,6 +10,7 @@
 		LogInIcon,
 		PlayIcon,
 	} from "@lucide/svelte";
+
 	import DeckEditor from "#lib/components/editor/deck-editor.svelte";
 	import DocumentEditor from "#lib/components/editor/document-editor.svelte";
 	import SheetEditor from "#lib/components/editor/sheet-editor.svelte";

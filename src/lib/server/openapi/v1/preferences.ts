@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { LANGUAGES } from "#lib/languages.js";
 import { NOTIFICATION_TYPES } from "#lib/notification-prefs.js";
 import { defineRoute } from "#lib/server/openapi/index.js";

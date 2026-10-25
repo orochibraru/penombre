@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { FolderPlusIcon, UploadIcon } from "@lucide/svelte";
+
 	import type { ObjectList } from "#lib/api/index.js";
 	import FileWrapper from "#lib/components/file/wrapper.svelte";
 	import RenameDialog from "#lib/components/layout/dialogs/rename-dialog.svelte";

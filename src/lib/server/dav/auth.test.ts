@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { basicPassword, cachedKeyUser, keyHint } from "./auth";
 
 const basic = (value: string) =>

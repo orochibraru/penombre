@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { EllipsisVerticalIcon, HistoryIcon } from "@lucide/svelte";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.js";
@@ -18,6 +19,7 @@
 		versionItem,
 		versionLabel,
 	} from "#lib/versions.js";
+
 	import { actionsFor } from "./version-actions.js";
 
 	/** The grid's view of a file's versions: tiles do not unfold. */

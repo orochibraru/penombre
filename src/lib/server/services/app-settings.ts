@@ -8,6 +8,7 @@
  */
 
 import { eq } from "drizzle-orm";
+
 import { envProvided, getConfig } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
 import type { AppSettingsData } from "#lib/server/db/schema.js";

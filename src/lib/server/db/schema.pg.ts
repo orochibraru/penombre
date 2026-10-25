@@ -11,6 +11,7 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+
 import type { Language } from "#lib/languages.js";
 import type { NotificationChoices } from "#lib/notification-prefs.js";
 

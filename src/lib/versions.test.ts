@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import type { ObjectItem } from "#lib/api/index.js";
+
 import {
 	displayTitle,
 	type ListedVersion,

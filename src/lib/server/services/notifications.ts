@@ -13,6 +13,7 @@
  */
 
 import { and, count, desc, eq, inArray, isNull, ne } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import {
 	type NotificationType,

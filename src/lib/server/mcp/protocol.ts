@@ -1,4 +1,5 @@
 import { getConfig } from "#lib/server/config.js";
+
 import type { Caller } from "./tool";
 import { callTool, describeTools } from "./tools";
 

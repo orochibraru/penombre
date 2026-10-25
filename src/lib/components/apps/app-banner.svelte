@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { SmartphoneIcon, XIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { APP_USER_AGENT, phoneSystem } from "#lib/release.js";

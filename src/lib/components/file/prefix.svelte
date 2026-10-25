@@ -20,6 +20,7 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { MediaQuery } from "svelte/reactivity";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import DocumentIcon from "#lib/components/file/document-icon.svelte";
 	import DocumentKindIcon from "#lib/components/file/document-kind-icon.svelte";

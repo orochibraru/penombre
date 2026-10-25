@@ -5,6 +5,7 @@
 		ChevronRightIcon,
 		XIcon,
 	} from "@lucide/svelte";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import { colourFor, initials } from "#lib/editor/presence.js";
 	import type { Suggestion } from "#lib/editor/suggestions.js";

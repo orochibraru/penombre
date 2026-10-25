@@ -1,5 +1,6 @@
 import { resolve } from "$app/paths";
 import { error, redirect } from "@sveltejs/kit";
+
 import { isAuthBypassed } from "#lib/server/config.js";
 
 export const load = ({ locals }) => {

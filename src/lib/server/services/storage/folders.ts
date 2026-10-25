@@ -8,7 +8,9 @@
 
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
+
 import { and, eq, isNull, like, or, sql } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import type { File as DbFile } from "#lib/server/db/schema.js";
 import { files, folders } from "#lib/server/db/schema.js";
@@ -21,6 +23,7 @@ import type {
 	FileMetadata,
 	FolderItem,
 } from "#lib/server/schema.js";
+
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
 import { diskName, getFolderIdByPath, getUniqueDisplayName } from "./lookups";

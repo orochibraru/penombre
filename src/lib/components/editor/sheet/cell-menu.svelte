@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { ListIcon, MessageSquarePlusIcon } from "@lucide/svelte";
 	import type { Snippet } from "svelte";
+
 	import * as ContextMenu from "#lib/components/ui/context-menu/index.js";
 	import { m } from "#lib/paraglide/messages.js";
+
 	import {
 		clipboardActions,
 		deleteActions,

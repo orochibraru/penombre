@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { safeHref } from "./safe-links";
 
 const base = "https://penombre.test/s/abc";

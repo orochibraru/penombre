@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { refreshAll } from "$app/navigation";
 	import { toast } from "svelte-sonner";
+
 	import { authClient } from "#lib/auth-client.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Button } from "#lib/components/ui/button/index.js";

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+
 import { formatted } from "#lib/sheet/number-formats.js";
 import type { CellStyle } from "#lib/sheet/styles.js";
+
 import { blankWorkbook } from "./blank";
 import { pack } from "./test-utils";
 import { workbookFromText, workbookToText } from "./xlsx";

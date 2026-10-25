@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { passwordProblem } from "./password-rules";
 
 const strict = { minLength: 8, requireStrong: true };

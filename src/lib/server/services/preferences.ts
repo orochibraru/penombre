@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+
 import { db } from "#lib/server/db/index.js";
 import {
 	userPreferences,

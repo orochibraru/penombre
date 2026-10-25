@@ -12,8 +12,10 @@
  */
 
 import { createHash, randomBytes } from "node:crypto";
+
 import { and, asc, eq } from "drizzle-orm";
 import { v7 as uuidv7 } from "uuid";
+
 import type { Database } from "#lib/server/db/index.js";
 import {
 	signatureEvents,
@@ -26,6 +28,7 @@ import {
 import type { EmailContent } from "#lib/server/email-template.js";
 import { isRateLimited } from "#lib/server/rate-limit.js";
 import type { NotificationInput } from "#lib/server/services/notifications.js";
+
 import { requestEmail, signedEmail } from "./mail";
 
 export const DEFAULT_LINK_DAYS = 30;

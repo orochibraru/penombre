@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Portal } from "bits-ui";
+
 	import type { Deck, SlideLook, ThemeName } from "#lib/deck/format.js";
+
 	import SlideView from "./slide-view.svelte";
 
 	/**

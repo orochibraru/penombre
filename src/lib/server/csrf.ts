@@ -1,4 +1,5 @@
 import type { Handle } from "@sveltejs/kit/hooks";
+
 import { getConfig } from "#lib/server/config.js";
 import { DAV_PREFIX } from "#lib/server/dav/location.js";
 

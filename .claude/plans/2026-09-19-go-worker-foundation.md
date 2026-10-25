@@ -246,7 +246,9 @@ indexes. Run: `bun run check` Expected: PASS.
 
 ```ts
 import { describe, expect, test } from "bun:test";
+
 import type { Job } from "#lib/server/db/schema.js";
+
 import { awaitJob, enqueueJob } from "./jobs";
 
 function fakeDb(rows: Partial<Job>[] = []) {
@@ -329,7 +331,9 @@ resolve `./jobs`.
 
 ```ts
 import { randomUUID } from "node:crypto";
+
 import { and, eq, inArray } from "drizzle-orm";
+
 import { type Database, db } from "#lib/server/db/index.js";
 import { type Job, jobs } from "#lib/server/db/schema.js";
 
@@ -1803,6 +1807,7 @@ isolation". Run `bun run gen:env`.
 
 ```ts
 import { describe, expect, test } from "bun:test";
+
 import { nextDelay, workerCommand } from "./worker-process";
 
 describe("workerCommand", () => {
@@ -1831,6 +1836,7 @@ Run: `bun test src/lib/server/services/worker-process.test.ts` Expected: FAIL.
 
 ```ts
 import { dev } from "$app/env";
+
 import { Logger } from "#lib/logger.js";
 import { getConfig } from "#lib/server/config.js";
 import { getDbUrl } from "#lib/server/db/index.js";

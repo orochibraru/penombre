@@ -4,6 +4,7 @@ import {
 	type SheetLayout,
 } from "#lib/sheet/layout.js";
 import { patchSheet } from "#lib/sheet/styles.js";
+
 import type { SheetState } from "./state.svelte.js";
 
 /** Column widths and frozen panes: saved with an `.xlsx`, view only on a CSV. */

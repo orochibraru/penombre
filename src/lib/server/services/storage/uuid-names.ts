@@ -11,9 +11,12 @@
 
 import { lstat, rename, rm, rmdir } from "node:fs/promises";
 import { join } from "node:path";
+
 import { and, eq, or, sql } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
+
 import type { StorageContext } from "./context";
 import { diskName, safeSegment } from "./lookups";
 import { ownedFiles, ownedFolders } from "./scope";

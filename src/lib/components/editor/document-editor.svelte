@@ -27,6 +27,7 @@
 		untrack,
 	} from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
 	import * as Popover from "#lib/components/ui/popover/index.js";
 	import { toggleVariants } from "#lib/components/ui/toggle/toggle.svelte";
@@ -64,6 +65,7 @@
 	import { m } from "#lib/paraglide/messages.js";
 	import { APP_USER_AGENT } from "#lib/release.js";
 	import { cn } from "#lib/utils.js";
+
 	import ChoiceMenu from "./document/choice-menu.svelte";
 	import CodeLanguage from "./document/code-language.svelte";
 	import ColourMenu from "./document/colour-menu.svelte";

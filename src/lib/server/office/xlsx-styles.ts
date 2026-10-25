@@ -8,6 +8,7 @@ import {
 	SIDES,
 	type StyleDefaults,
 } from "#lib/sheet/styles.js";
+
 import {
 	colourOf,
 	type Palette,

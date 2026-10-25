@@ -5,6 +5,7 @@ import type {
 	TableCell,
 	TDocumentDefinitions,
 } from "pdfmake/interfaces";
+
 import { pixelSize } from "../docx-media";
 import type { Block, Cell, List, Run } from "./model";
 

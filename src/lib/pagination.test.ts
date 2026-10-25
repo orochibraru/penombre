@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { fetchWindow, LISTING_MAX_PAGE_SIZE } from "./pagination";
 
 describe("fetchWindow", () => {

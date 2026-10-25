@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+
 import { countCharacters, countWords } from "./word-count";
 
 describe("word count", () => {

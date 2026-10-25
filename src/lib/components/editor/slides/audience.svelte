@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { untrack } from "svelte";
+
 	import type { Deck } from "#lib/slides/model.js";
 	import { toggleFullscreen } from "#lib/utils.js";
+
 	import Present from "./present.svelte";
 	import type { RenderContext } from "./render-context.js";
 	import { readSlidesMessage, send, slidesChannel } from "./shown.js";

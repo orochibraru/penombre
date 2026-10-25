@@ -1,4 +1,5 @@
 import type { z } from "zod";
+
 import { dropped, resolve } from "#lib/server/dav/handler.js";
 import { parseDavPath } from "#lib/server/dav/location.js";
 import type { Place } from "#lib/server/services/search.js";

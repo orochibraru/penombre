@@ -7,7 +7,9 @@
 
 import { readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
+
 import { and, desc, eq, inArray, lt, max, or, sql } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import {
 	type File as DbFile,
@@ -18,6 +20,7 @@ import {
 	user,
 } from "#lib/server/db/schema.js";
 import { getAppSettings } from "#lib/server/services/app-settings.js";
+
 import type { StorageContext } from "./context";
 import { ownedFolders } from "./scope";
 

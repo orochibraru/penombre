@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { ListIcon, XIcon } from "@lucide/svelte";
+
 	import { m } from "#lib/paraglide/messages.js";
+
 	import type { Dropdowns } from "./dropdowns.svelte.js";
 
 	/**

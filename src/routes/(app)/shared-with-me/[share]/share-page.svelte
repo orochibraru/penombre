@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { LockIcon, UsersIcon } from "@lucide/svelte";
+
 	import type { ObjectList } from "#lib/api/index.js";
 	import FileLayout from "#lib/components/file/layout.svelte";
 	import Badge from "#lib/components/ui/badge/badge.svelte";

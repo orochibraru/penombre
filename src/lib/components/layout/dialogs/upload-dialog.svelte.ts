@@ -9,6 +9,7 @@
  */
 
 import { page } from "$app/state";
+
 import { api, type UploadResult } from "#lib/api/index.js";
 
 export type FileWithPath = File & { relativePath?: string };

@@ -1,4 +1,5 @@
 import { error, fail } from "@sveltejs/kit";
+
 import {
 	type DocumentKind,
 	editorKindForName,

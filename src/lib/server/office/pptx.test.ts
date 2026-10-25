@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
+
 import type { Deck, ShapeElement } from "#lib/slides/model.js";
+
 import { officeToText, textToOffice } from "./index";
 import { pptxToText, textToPptx } from "./pptx";
 import { NotAPresentationError, slideRefs } from "./pptx-package";

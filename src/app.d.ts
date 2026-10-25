@@ -1,5 +1,6 @@
 import type { ResolvedPathname } from "$app/types";
 import type { HTMLAnchorAttributes } from "svelte/elements";
+
 import type { Logger } from "#lib/logger.js";
 import type { AuthType } from "#lib/server/auth/index.js";
 import type { StorageService } from "#lib/server/services/storage/index.js";

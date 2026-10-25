@@ -2,6 +2,7 @@ import { fromFileFormula, shiftFormula, toFileFormula } from "#lib/formula.js";
 import type { ConditionalFormat } from "#lib/sheet/conditional.js";
 import type { Dropdown } from "#lib/sheet/dropdowns.js";
 import { compactStyles } from "#lib/sheet/styles.js";
+
 import {
 	holdVerbatim,
 	readRules,

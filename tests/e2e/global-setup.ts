@@ -1,4 +1,5 @@
 import process from "node:process";
+
 import type { FullConfig } from "@playwright/test";
 
 const MAX_ATTEMPTS = 10;

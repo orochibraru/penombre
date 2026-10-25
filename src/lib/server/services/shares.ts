@@ -9,6 +9,7 @@
 
 import type { User } from "better-auth";
 import { and, desc, eq, isNotNull, lte, or, sql } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { getConfig } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";

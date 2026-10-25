@@ -10,6 +10,7 @@
  */
 
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
+
 import type { CommentAnchor } from "#lib/editor/comments.js";
 import { getDb } from "#lib/server/db/index.js";
 import { fileNotes, user } from "#lib/server/db/schema.js";

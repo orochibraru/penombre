@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+
 import type { Database } from "#lib/server/db/index.js";
 import {
 	files,
@@ -8,6 +9,7 @@ import {
 	user,
 } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+
 import { fileHref } from "./file-href";
 
 let db: Database;

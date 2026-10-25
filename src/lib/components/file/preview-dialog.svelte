@@ -2,6 +2,7 @@
 	import type { ResolvedPathname } from "$app/types";
 	import { MaximizeIcon, MessageSquareTextIcon } from "@lucide/svelte";
 	import { untrack } from "svelte";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import NotesPanel from "#lib/components/file/notes-panel.svelte";
 	import ProgressiveImage from "#lib/components/file/progressive-image.svelte";
@@ -21,6 +22,7 @@
 	import { fileNotes, noteMarkers } from "#lib/store/notes.js";
 	import { cn, readableFileSize } from "#lib/utils.js";
 	import { versionOf } from "#lib/versions.js";
+
 	import { fullscreenUrl, rawUrl, thumbnailUrl } from "./file-links";
 	import VersionSelect from "./version-select.svelte";
 	import type { FileToView } from "./wrapper.svelte.js";

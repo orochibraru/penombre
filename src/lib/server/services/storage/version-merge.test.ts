@@ -10,12 +10,15 @@ import {
 import { mkdtemp, readdir, rm, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
 import { eq, sql } from "drizzle-orm";
+
 import type { Database } from "#lib/server/db/index.js";
 import { fileNotes, files, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 import { VersionMergeError } from "#lib/server/errors.js";
 import * as appSettings from "#lib/server/services/app-settings.js";
+
 import type { StorageContext } from "./context";
 import { LocalStorageDriver } from "./drivers/local";
 import type { ThumbnailService } from "./thumbnails";

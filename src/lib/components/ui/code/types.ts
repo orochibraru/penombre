@@ -4,8 +4,10 @@
 
 import type { WithChildren, WithoutChildren } from "bits-ui";
 import type { HTMLAttributes } from "svelte/elements";
+
 import type { CodeVariant } from "#lib/components/ui/code/index.js";
 import type { CopyButtonProps } from "#lib/components/ui/copy-button/index.js";
+
 import type { SupportedLanguage } from "./shiki";
 
 export type CodeRootPropsWithoutHTML = WithChildren<{

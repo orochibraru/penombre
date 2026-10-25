@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { AlertTriangleIcon, HardDriveIcon, Trash2Icon } from "@lucide/svelte";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import * as m from "#lib/paraglide/messages.js";

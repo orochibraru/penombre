@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { PlusIcon, Trash2Icon, XIcon } from "@lucide/svelte";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import { Checkbox } from "#lib/components/ui/checkbox/index.js";
 	import { Input } from "#lib/components/ui/input/index.js";
@@ -16,6 +17,7 @@
 		matchItem,
 	} from "#lib/sheet/dropdowns.js";
 	import { cn } from "#lib/utils.js";
+
 	import type { Dropdowns } from "./dropdowns.svelte.js";
 
 	/**

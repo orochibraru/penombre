@@ -11,9 +11,11 @@
  */
 
 import { and, inArray, lt, notInArray } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { type Database, getDb } from "#lib/server/db/index.js";
 import { activity, jobs, notifications } from "#lib/server/db/schema.js";
+
 import { effectiveRetentionDays } from "./app-settings";
 
 const logger = new Logger("RetentionSweep");

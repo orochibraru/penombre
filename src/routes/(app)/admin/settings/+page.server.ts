@@ -1,4 +1,5 @@
 import { fail } from "@sveltejs/kit";
+
 import { refreshAuth } from "#lib/server/auth/index.js";
 import { requireAdmin } from "#lib/server/auth/require-admin.js";
 import { envProvided, getConfig } from "#lib/server/config.js";

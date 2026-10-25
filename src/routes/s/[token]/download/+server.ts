@@ -1,4 +1,5 @@
 import { error } from "@sveltejs/kit";
+
 import type { Share } from "#lib/server/db/schema.js";
 import { exportFile } from "#lib/server/office/export/index.js";
 import { ShareService, unlockCookieName } from "#lib/server/services/shares.js";

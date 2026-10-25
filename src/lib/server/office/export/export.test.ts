@@ -1,6 +1,9 @@
 import { describe, expect, it } from "bun:test";
+
 import type { ContentTable, ContentText } from "pdfmake/interfaces";
+
 import { TEMPLATE_IDS } from "#lib/slides/templates/index.js";
+
 import { blankFile } from "../blank";
 import { docxToHtml } from "../docx-read";
 import { slidesPdfPages, templatePackage } from "../slides";

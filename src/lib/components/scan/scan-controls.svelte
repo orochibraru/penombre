@@ -2,12 +2,14 @@
 	import { invalidate } from "$app/navigation";
 	import { ChevronDownIcon, RefreshCwIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+
 	import Badge from "#lib/components/ui/badge/badge.svelte";
 	import * as ButtonGroup from "#lib/components/ui/button-group/index.js";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import { m } from "#lib/paraglide/messages.js";
+
 	import type { ScanStatus } from "./scan-status";
 
 	interface Props {

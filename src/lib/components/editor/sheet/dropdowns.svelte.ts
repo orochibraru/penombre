@@ -1,4 +1,5 @@
 import { toast } from "svelte-sonner";
+
 import { display, isFormula, MAX_COL, MAX_ROW } from "#lib/formula.js";
 import { m } from "#lib/paraglide/messages.js";
 import { withRows, writeBlock } from "#lib/sheet/book.js";
@@ -23,6 +24,7 @@ import {
 import { parseParts } from "#lib/sheet/references.js";
 import { type Rect, single } from "#lib/sheet/selection.js";
 import { patchSheet } from "#lib/sheet/styles.js";
+
 import { canFormat } from "./formatting.js";
 import type { SheetState } from "./state.svelte.js";
 

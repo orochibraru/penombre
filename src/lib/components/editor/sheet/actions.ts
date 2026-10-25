@@ -9,8 +9,10 @@ import {
 	Trash2Icon,
 } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
+
 import { m } from "#lib/paraglide/messages.js";
 import { copyText } from "#lib/utils.js";
+
 import type { SheetState } from "./state.svelte.js";
 
 /** One command, as both the menu bar and the right-click menu show it. */

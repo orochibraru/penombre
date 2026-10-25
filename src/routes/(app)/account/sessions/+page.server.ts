@@ -1,4 +1,5 @@
 import { error } from "@sveltejs/kit";
+
 import { activeSessions } from "#lib/server/auth/sessions.js";
 
 export const load = async ({ locals }) => {

@@ -2,6 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { onMount } from "svelte";
+
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import { m } from "#lib/paraglide/messages.js";
 

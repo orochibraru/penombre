@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isApple } from "prosekit/core";
+
 	import * as Dialog from "#lib/components/ui/dialog/index.js";
 	import { keyLabel } from "#lib/editor/document-format.js";
 	import { m } from "#lib/paraglide/messages.js";

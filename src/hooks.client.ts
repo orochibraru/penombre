@@ -1,5 +1,6 @@
 import { dev } from "$app/env";
 import type { HandleClientError } from "@sveltejs/kit/hooks";
+
 import { api } from "#lib/api/index.js";
 
 function makeid(length: number) {

@@ -14,6 +14,7 @@
 	import { onMount, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { MediaQuery } from "svelte/reactivity";
+
 	import { api, type ObjectItem, type ObjectList } from "#lib/api/index.js";
 	import FileGrid from "#lib/components/file/grid.svelte";
 	import FileList from "#lib/components/file/list.svelte";
@@ -45,6 +46,7 @@
 		type SortColumn,
 		type SortDirection,
 	} from "#lib/utils.js";
+
 	import {
 		notesView,
 		pendingPreview,

@@ -1,10 +1,12 @@
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { FileCodeIcon } from "@lucide/svelte";
+
 import type { ObjectItem } from "#lib/api/index.js";
 import { editorKindForName } from "#lib/documents.js";
 import type { ItemAction } from "#lib/utils.js";
 import { versionOf } from "#lib/versions.js";
+
 import { withLocation } from "./file-links";
 
 /**

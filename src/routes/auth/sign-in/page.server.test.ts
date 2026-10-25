@@ -1,5 +1,6 @@
 import type { Mock } from "bun:test";
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+
 import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
 import { getConfig, isAuthBypassed } from "#lib/server/config.js";
 import { db } from "#lib/server/db/index.js";

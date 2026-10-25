@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { RemoveFormattingIcon } from "@lucide/svelte";
+
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
 	import { m } from "#lib/paraglide/messages.js";
+
 	import { MOD } from "./actions.js";
 	import {
 		alignTools,

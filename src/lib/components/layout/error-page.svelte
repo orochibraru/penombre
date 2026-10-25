@@ -2,6 +2,7 @@
 	import { dev } from "$app/env";
 	import { page } from "$app/state";
 	import { onMount } from "svelte";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";

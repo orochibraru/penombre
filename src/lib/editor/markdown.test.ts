@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+
 import { looksLikeMarkdown, markdownToHtml } from "./markdown";
 
 describe("looksLikeMarkdown", () => {

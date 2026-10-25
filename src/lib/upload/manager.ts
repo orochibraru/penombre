@@ -10,6 +10,7 @@ import { browser } from "$app/env";
 import { invalidate } from "$app/navigation";
 import { page } from "$app/state";
 import { toast } from "svelte-sonner";
+
 import { api, type ObjectItem } from "#lib/api/index.js";
 import * as m from "#lib/paraglide/messages.js";
 import { locationQuery } from "#lib/storage-location.js";
@@ -21,6 +22,7 @@ import {
 	uploadStats,
 } from "#lib/store/upload.js";
 import { refreshVersions } from "#lib/store/versions.js";
+
 import {
 	allJobs,
 	deleteJob,

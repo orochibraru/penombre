@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/state";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { loadVersions, versionsChanged } from "#lib/store/versions.js";

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from "$app/state";
+
 	import { api } from "#lib/api/index.js";
+
 	import ScanBanner from "./scan-banner.svelte";
 	import ScanControls from "./scan-controls.svelte";
 	import type { ScanStatus } from "./scan-status";

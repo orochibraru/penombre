@@ -3,6 +3,7 @@
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import { ShieldCheckIcon } from "@lucide/svelte";
+
 	import { authClient } from "#lib/auth-client.js";
 	import * as Alert from "#lib/components/ui/alert/index.js";
 	import Button from "#lib/components/ui/button/button.svelte";

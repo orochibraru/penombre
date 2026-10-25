@@ -1,4 +1,5 @@
 import { fail } from "@sveltejs/kit";
+
 import { auth } from "#lib/server/auth/index.js";
 import {
 	type SessionUser,

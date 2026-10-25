@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
+
 import { chartData, sourceOf } from "#lib/chart/data.js";
 import type { Chart } from "#lib/chart/model.js";
 import { createWorkbook } from "#lib/formula.js";
+
 import { renderPdf } from "./export/pdf";
 import { sheetsPdf } from "./export/sheet-pdf";
 import { pack } from "./test-utils";

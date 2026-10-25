@@ -1,4 +1,5 @@
 import { type Writable, writable } from "svelte/store";
+
 import type { ObjectItem } from "#lib/api/index.js";
 import type { StorageLocation } from "#lib/storage-location.js";
 

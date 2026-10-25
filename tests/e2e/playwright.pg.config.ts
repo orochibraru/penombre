@@ -1,5 +1,7 @@
 import process from "node:process";
+
 import { defineConfig } from "@playwright/test";
+
 import base from "./playwright.config";
 
 // The Postgres shard runs with encryption at rest; SQLite stays plaintext.

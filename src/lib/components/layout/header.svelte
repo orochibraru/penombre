@@ -5,6 +5,7 @@
 	import { EllipsisIcon } from "@lucide/svelte";
 	import type { User } from "better-auth";
 	import { MediaQuery } from "svelte/reactivity";
+
 	import Notifications from "#lib/components/layout/notifications.svelte";
 	import UserMenu from "#lib/components/layout/user-menu.svelte";
 	import Logo from "#lib/components/logo.svelte";

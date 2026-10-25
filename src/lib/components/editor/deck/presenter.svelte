@@ -9,6 +9,7 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+
 	import Button from "#lib/components/ui/button/button.svelte";
 	import {
 		type Deck,
@@ -25,6 +26,7 @@
 	} from "#lib/deck/present.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { randomId } from "#lib/utils.js";
+
 	import SlideView from "./slide-view.svelte";
 
 	/**

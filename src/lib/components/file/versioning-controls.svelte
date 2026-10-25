@@ -3,6 +3,7 @@
 	import { page } from "$app/state";
 	import { FolderCogIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+
 	import { api, type ObjectItem } from "#lib/api/index.js";
 	import FolderSettingsDialog from "#lib/components/file/folder-settings-dialog.svelte";
 	import {

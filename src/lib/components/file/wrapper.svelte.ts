@@ -23,6 +23,7 @@ import {
 } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
 import type { MediaQuery } from "svelte/reactivity";
+
 import { api, type ObjectItem, type ObjectList } from "#lib/api/index.js";
 import type { SupportedLanguage } from "#lib/components/ui/code/shiki.js";
 import { editorKindForName } from "#lib/documents.js";
@@ -40,6 +41,7 @@ import {
 	type SortDirection,
 } from "#lib/utils.js";
 import { displayTitle, versionOf } from "#lib/versions.js";
+
 import {
 	clickDownload,
 	downloadUrl,

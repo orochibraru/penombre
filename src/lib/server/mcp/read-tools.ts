@@ -1,7 +1,9 @@
 import { z } from "zod";
+
 import { Logger } from "#lib/logger.js";
 import { isOfficeFile, officeToText } from "#lib/server/office/index.js";
 import { places } from "#lib/server/services/search.js";
+
 import {
 	defineTool,
 	entryAt,

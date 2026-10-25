@@ -3,6 +3,7 @@
 	import { page } from "$app/state";
 	import { FolderIcon, XIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+
 	import { api } from "#lib/api/index.js";
 	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
 	import * as m from "#lib/paraglide/messages.js";

@@ -16,7 +16,9 @@ import { readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import process from "node:process";
+
 import { expect, type Page, test } from "@playwright/test";
+
 import {
 	AUTH_STORAGE_STATE,
 	goToBrowse,

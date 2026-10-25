@@ -10,9 +10,11 @@
 		SignatureIcon,
 		SquarePlusIcon,
 	} from "@lucide/svelte";
+
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
 	import { exportLabel } from "#lib/editor/export.js";
 	import { m } from "#lib/paraglide/messages.js";
+
 	import type { FileActions } from "./file-actions.js";
 
 	/** The File menu every office editor opens its menu bar with. */

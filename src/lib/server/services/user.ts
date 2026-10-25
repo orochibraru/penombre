@@ -1,5 +1,6 @@
 import type { User } from "better-auth";
 import { eq } from "drizzle-orm";
+
 import { db } from "#lib/server/db/index.js";
 import { user } from "#lib/server/db/schema.js";
 

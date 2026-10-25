@@ -6,6 +6,7 @@
 
 import { makeSignature } from "better-auth/crypto";
 import { and, eq, gt } from "drizzle-orm";
+
 import { auth } from "#lib/server/auth/index.js";
 import { type Database, db } from "#lib/server/db/index.js";
 import { session, verification } from "#lib/server/db/schema.js";

@@ -3,11 +3,13 @@
 	import { ChevronDownIcon, PaletteIcon, StickyNoteIcon } from "@lucide/svelte";
 	import { type Snippet, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import { Textarea } from "#lib/components/ui/textarea/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { type Deck, nextElementId } from "#lib/slides/model.js";
 	import { locationFrom, locationQuery } from "#lib/storage-location.js";
 	import { cn, toggleFullscreen } from "#lib/utils.js";
+
 	import type { Comments } from "./shell/comments.svelte.js";
 	import type { EditorMenuContext } from "./shell/file-actions.js";
 	import Audience from "./slides/audience.svelte";

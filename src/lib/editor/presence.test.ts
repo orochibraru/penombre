@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { colourFor, faces, initials } from "./presence";
 
 describe("presence faces", () => {

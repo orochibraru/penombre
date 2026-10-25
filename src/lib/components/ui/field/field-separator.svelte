@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 	import type { HTMLAttributes } from "svelte/elements";
+
 	import { Separator } from "#lib/components/ui/separator/index.js";
 	import { cn, type WithElementRef } from "#lib/utils.js";
 

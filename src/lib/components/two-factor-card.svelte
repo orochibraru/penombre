@@ -2,6 +2,7 @@
 	import { refreshAll } from "$app/navigation";
 	import { ShieldCheckIcon, ShieldIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+
 	import { authClient } from "#lib/auth-client.js";
 	import Badge from "#lib/components/ui/badge/badge.svelte";
 	import Button from "#lib/components/ui/button/button.svelte";

@@ -7,7 +7,9 @@
  */
 
 import { join } from "node:path";
+
 import { and, eq, inArray } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import {
@@ -17,6 +19,7 @@ import {
 	finishJob,
 	type JobOutcome,
 } from "#lib/server/services/jobs.js";
+
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
 import { ancestorFolders } from "./mappers";

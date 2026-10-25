@@ -36,10 +36,12 @@
 		ZoomOutIcon,
 	} from "@lucide/svelte";
 	import type { Component, Snippet } from "svelte";
+
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
 	import { keyLabel } from "#lib/editor/document-format.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import type { AlignMode, Order } from "#lib/slides/edit.js";
+
 	import type { EditorMenuContext } from "../shell/file-actions.js";
 	import type { SlidesEditor } from "./state.svelte.js";
 

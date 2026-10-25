@@ -4,6 +4,7 @@
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import { m } from "#lib/paraglide/messages.js";
 	import { etaLabel } from "#lib/utils.js";
+
 	import type { ScanStatus } from "./scan-status";
 
 	const { status }: { status: ScanStatus } = $props();

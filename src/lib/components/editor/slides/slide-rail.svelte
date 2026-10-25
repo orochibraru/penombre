@@ -9,9 +9,11 @@
 		GripVerticalIcon,
 		Trash2Icon,
 	} from "@lucide/svelte";
+
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import LayoutPicker from "./layout-picker.svelte";
 	import type { RenderContext } from "./render-context.js";
 	import SlideView from "./slide-view.svelte";

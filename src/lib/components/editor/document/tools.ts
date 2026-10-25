@@ -37,6 +37,7 @@ import {
 	UnderlineIcon,
 	Undo2Icon,
 } from "@lucide/svelte";
+
 import {
 	blockValue,
 	type DocumentEditor,

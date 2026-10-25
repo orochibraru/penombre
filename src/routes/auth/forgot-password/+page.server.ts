@@ -1,4 +1,5 @@
 import { error, fail } from "@sveltejs/kit";
+
 import { instanceSignInMethods } from "#lib/server/auth/index.js";
 import {
 	canMailPasswordLinks,

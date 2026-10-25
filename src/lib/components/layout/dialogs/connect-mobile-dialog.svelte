@@ -2,6 +2,7 @@
 	import { page } from "$app/state";
 	import { RefreshCwIcon, SmartphoneIcon } from "@lucide/svelte";
 	import { renderSVG } from "uqr";
+
 	import { api } from "#lib/api/index.js";
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
 	import * as Dialog from "#lib/components/ui/dialog/index.js";

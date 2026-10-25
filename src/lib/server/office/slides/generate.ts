@@ -16,6 +16,7 @@ import type {
 	ShapeElement,
 	TextBody,
 } from "#lib/slides/model.js";
+
 import {
 	element,
 	isElement,

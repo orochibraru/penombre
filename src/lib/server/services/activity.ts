@@ -1,4 +1,5 @@
 import { desc, eq, sql } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { getDb } from "#lib/server/db/index.js";
 import { activity, user } from "#lib/server/db/schema.js";

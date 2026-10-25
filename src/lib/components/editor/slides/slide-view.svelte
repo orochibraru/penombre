@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
+
 	import { cssBackground, paletteOf } from "#lib/slides/color.js";
 	import {
 		type Deck,
@@ -10,6 +11,7 @@
 		type SlideElement,
 	} from "#lib/slides/model.js";
 	import { cn } from "#lib/utils.js";
+
 	import ElementView from "./element-view.svelte";
 	import type { RenderContext } from "./render-context.js";
 

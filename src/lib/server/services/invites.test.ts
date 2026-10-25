@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+
 import { eq } from "drizzle-orm";
+
 import type { Database } from "#lib/server/db/index.js";
 import { invites, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+
 import { consumeInvite, createInvite, findValidInvite } from "./invites";
 
 let database: Database;

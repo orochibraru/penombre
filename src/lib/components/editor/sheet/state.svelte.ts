@@ -58,6 +58,7 @@ import {
 	styleTableFrom,
 } from "#lib/sheet/styles.js";
 import { literal } from "#lib/sheet/values.js";
+
 import { type Clip, copyCells, pasteCells } from "./clip.js";
 import { deleteLines, findNext, insertLines, sortSheet } from "./lines.js";
 import { columnWidth, freezeOf, resizeColumn, setFreeze } from "./view.js";

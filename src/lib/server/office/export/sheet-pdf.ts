@@ -1,7 +1,9 @@
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
+
 import type { Chart } from "#lib/chart/model.js";
 import { createWorkbook, type SheetSource } from "#lib/formula.js";
 import { columnName } from "#lib/sheet/references.js";
+
 import { chartBlocks } from "./sheet-charts";
 
 /**

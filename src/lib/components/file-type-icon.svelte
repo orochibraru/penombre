@@ -9,6 +9,7 @@
 		Rotate3dIcon,
 		VideoIcon,
 	} from "@lucide/svelte";
+
 	import { FileCategoryEnum } from "#lib/file-helpers.js";
 
 	interface Props {

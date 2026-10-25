@@ -12,6 +12,7 @@ import {
 	updateFileSchema,
 	uploadResultSchema,
 } from "#lib/server/schema.js";
+
 import { registry } from "./registry";
 
 // Register shared Zod schemas as named OpenAPI components.

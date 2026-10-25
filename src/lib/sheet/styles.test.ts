@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+
 import { formatValue } from "./format";
 import { addMerges, moveMerges, removeMerges } from "./merges";
 import {

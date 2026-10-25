@@ -1,5 +1,6 @@
 import { page } from "$app/state";
 import { GitMergeIcon } from "@lucide/svelte";
+
 import type { ObjectItem } from "#lib/api/index.js";
 import { mergeVersionsOf } from "#lib/store/versions.js";
 import { isFolderItem, type MultipleItemsAction } from "#lib/utils.js";

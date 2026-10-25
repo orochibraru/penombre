@@ -9,11 +9,14 @@
  */
 
 import { join } from "node:path";
+
 import { and, eq, isNull, notInArray, or, sql } from "drizzle-orm";
+
 import { FileCategoryEnum } from "#lib/file-helpers.js";
 import { Logger } from "#lib/logger.js";
 import { files } from "#lib/server/db/schema.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
+
 import type { StorageContext } from "./context";
 import { ownedFiles } from "./scope";
 

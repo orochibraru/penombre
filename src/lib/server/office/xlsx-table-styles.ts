@@ -5,6 +5,7 @@ import {
 	type TableElement,
 	type TableLayer,
 } from "#lib/sheet/tables.js";
+
 import { colourOf, type Palette, tint } from "./xlsx-colours";
 import type { Stylesheet } from "./xlsx-styles";
 import { childNamed, childrenNamed, type XmlElement } from "./xml";

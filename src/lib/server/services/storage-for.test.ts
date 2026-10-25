@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
+
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { isSimpleMode } from "#lib/server/config.js";
 import { DriveAccessError } from "#lib/server/errors.js";
+
 import { drivesService } from "./drives";
 import { storageServiceFor } from "./storage-for";
 

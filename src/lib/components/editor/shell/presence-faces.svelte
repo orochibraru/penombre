@@ -3,6 +3,7 @@
 	import { colourFor, faces, initials } from "#lib/editor/presence.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import type { Present } from "./presence.svelte.js";
 
 	/** The other people who have this file open, as overlapping initials. */

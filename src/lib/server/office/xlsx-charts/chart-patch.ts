@@ -1,5 +1,6 @@
 import type { ChartData } from "#lib/chart/data.js";
 import type { Chart, ChartAxis, ChartSeries } from "#lib/chart/model.js";
+
 import { parseXml, serializeXml, text, type XmlElement } from "../xml";
 import { axesOf, GROUPS } from "./chart-read";
 import { dataXml, nameXml, solid, titleXml, v } from "./chart-write";

@@ -1,4 +1,5 @@
 import { tick } from "svelte";
+
 import { paletteOf } from "#lib/slides/color.js";
 import {
 	align,
@@ -46,6 +47,7 @@ import {
 	styleRange,
 } from "#lib/slides/rich-text.js";
 import { effectiveParagraph, effectiveRun } from "#lib/slides/text.js";
+
 import { copyElements, pastedElements, uniqueIds } from "./clipboard.js";
 import { fitScale, readText, selectionIn, selectRange } from "./text-dom.js";
 

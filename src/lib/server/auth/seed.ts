@@ -1,4 +1,5 @@
 import { count, eq } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import type { AuthType } from "#lib/server/auth/index.js";
 import { auth } from "#lib/server/auth/index.js";

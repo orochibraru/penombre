@@ -1,4 +1,5 @@
 import type { Deck, SlideElement } from "#lib/slides/model.js";
+
 import { NotAPresentationError } from "./pptx-package";
 import { readDeck, writeDeck } from "./slides";
 import type { ZipEntry } from "./zip";

@@ -9,9 +9,12 @@
 
 import { lstat } from "node:fs/promises";
 import { isAbsolute, join, relative } from "node:path";
+
 import { and, eq, inArray } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { files, folders } from "#lib/server/db/schema.js";
+
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
 import { ownedFiles, ownedFolders } from "./scope";

@@ -1,4 +1,5 @@
 import { error, fail, type RequestEvent } from "@sveltejs/kit";
+
 import {
 	SignatureError,
 	signatures,

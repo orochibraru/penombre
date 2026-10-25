@@ -1,4 +1,5 @@
 import type { Content } from "pdfmake/interfaces";
+
 import { chartData, sourceOf } from "#lib/chart/data.js";
 import type { Chart } from "#lib/chart/model.js";
 import { PRINT_THEME, renderChart } from "#lib/chart/render.js";

@@ -55,6 +55,7 @@
 	import type { ResolvedPathname } from "$app/types";
 	import { type LucideIcon } from "@lucide/svelte";
 	import type { ComponentProps } from "svelte";
+
 	import { Badge } from "#lib/components/ui/badge/index.js";
 	import * as Sidebar from "#lib/components/ui/sidebar/index.js";
 	import { cn, type WithoutChildren } from "#lib/utils.js";

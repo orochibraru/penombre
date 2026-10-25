@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { rowAtOffset } from "./virtual-window.svelte";
 
 describe("rowAtOffset", () => {

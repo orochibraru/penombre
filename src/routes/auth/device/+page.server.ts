@@ -1,5 +1,6 @@
 import { resolve } from "$app/paths";
 import { fail, redirect } from "@sveltejs/kit";
+
 import { auth } from "#lib/server/auth/index.js";
 
 function signIn(url: URL): string {

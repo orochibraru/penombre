@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import { parseSlides, titleFromContent } from "#lib/documents.js";
+
 import {
 	deckTheme,
 	isInverted,

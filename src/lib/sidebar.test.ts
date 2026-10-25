@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { SIDEBAR_GROUP_LIMIT, sidebarItems } from "./sidebar";
 
 const make = (count: number) =>

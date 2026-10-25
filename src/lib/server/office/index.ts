@@ -1,4 +1,5 @@
 import { type DocumentKind, officeKindForName } from "#lib/documents.js";
+
 import { documentXml } from "./docx-package";
 import { docxToHtml } from "./docx-read";
 import { htmlToDocx } from "./docx-write";

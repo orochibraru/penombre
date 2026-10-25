@@ -6,6 +6,7 @@
 	} from "@lucide/svelte";
 	import { TextSelection } from "prosekit/pm/state";
 	import { MediaQuery } from "svelte/reactivity";
+
 	import * as Popover from "#lib/components/ui/popover/index.js";
 	import { toggleVariants } from "#lib/components/ui/toggle/toggle.svelte";
 	import type { DocumentEditor } from "#lib/editor/document-extension.js";
@@ -15,6 +16,7 @@
 	} from "#lib/editor/document-format.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import ChoiceMenu from "./choice-menu.svelte";
 	import ColourMenu from "./colour-menu.svelte";
 	import LinkPopover from "./link-popover.svelte";

@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import process from "node:process";
+
 import { building } from "$app/env";
 import {
 	type Handle,
@@ -11,6 +12,7 @@ import { svelteKitHandler } from "better-auth/svelte-kit";
 import { sql } from "drizzle-orm";
 import { migrate as migratePg } from "drizzle-orm/bun-sql/migrator";
 import { migrate as migrateSqlite } from "drizzle-orm/bun-sqlite/migrator";
+
 import { Logger } from "#lib/logger.js";
 import { baseLocale, getLocale } from "#lib/paraglide/runtime.js";
 import type { AuthType } from "#lib/server/auth/index.js";

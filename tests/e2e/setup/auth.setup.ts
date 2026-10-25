@@ -1,5 +1,6 @@
 import path from "node:path";
 import process from "node:process";
+
 import { test as setup } from "@playwright/test";
 
 export const AUTH_STORAGE_STATE = path.resolve("tests/e2e/.auth/user.json");

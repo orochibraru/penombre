@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
+
 import { createEditor, type NodeJSON } from "prosekit/core";
 import type { Command } from "prosekit/pm/state";
+
 import { defineDocumentExtension } from "./document-extension";
 import {
 	reviewSuggestions,

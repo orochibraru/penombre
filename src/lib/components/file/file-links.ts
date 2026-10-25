@@ -9,6 +9,7 @@ import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { page } from "$app/state";
 import { get } from "svelte/store";
+
 import type { ObjectItem } from "#lib/api/index.js";
 import { locationOf, locationQuery } from "#lib/storage-location.js";
 import { playableMusic, playbackPosition } from "#lib/store/music.js";

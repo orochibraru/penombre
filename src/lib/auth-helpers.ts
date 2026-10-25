@@ -1,6 +1,7 @@
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { toast } from "svelte-sonner";
+
 import { authClient } from "#lib/auth-client.js";
 import * as m from "#lib/paraglide/messages.js";
 import { clearAll as clearUploadQueue } from "#lib/upload/queue.js";

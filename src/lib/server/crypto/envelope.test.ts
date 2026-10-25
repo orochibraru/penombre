@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
+
 import vectors from "../../../../tests/fixtures/envelope-v1.json" with { type: "json" };
 import {
 	CHUNK_SIZE,

@@ -28,6 +28,7 @@ import {
 import { defineTextColor } from "prosekit/extensions/text-color";
 import type { Attrs, Mark, ProseMirrorNode } from "prosekit/pm/model";
 import type { Command, EditorState } from "prosekit/pm/state";
+
 import { defineCodeBlockExtras, type LanguagePicker } from "./code-block";
 import { nextIndent, points } from "./document-format";
 import { defineMarkdown } from "./markdown";

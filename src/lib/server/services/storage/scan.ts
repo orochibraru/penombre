@@ -1,4 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm";
+
 /**
  * Library scan: reconcile the DB with what's actually in the storage backend.
  *
@@ -15,6 +16,7 @@ import { Logger } from "#lib/logger.js";
 import { sealedSize } from "#lib/server/crypto/envelope.js";
 import { type File as DbFile, files, folders } from "#lib/server/db/schema.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
+
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
 import {

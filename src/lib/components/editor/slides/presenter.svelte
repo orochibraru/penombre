@@ -9,11 +9,13 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+
 	import Button from "#lib/components/ui/button/button.svelte";
 	import { clock, slideKey } from "#lib/deck/present.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import type { Deck } from "#lib/slides/model.js";
 	import { randomId } from "#lib/utils.js";
+
 	import type { RenderContext } from "./render-context.js";
 	import {
 		labelOf,

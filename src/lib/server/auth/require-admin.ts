@@ -1,4 +1,5 @@
 import { error } from "@sveltejs/kit";
+
 import type { AuthType } from "#lib/server/auth/index.js";
 
 /**

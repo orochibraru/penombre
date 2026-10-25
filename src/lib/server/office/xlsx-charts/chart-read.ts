@@ -7,6 +7,7 @@ import type {
 	LegendPosition,
 } from "#lib/chart/model.js";
 import { hexColor, type Palette } from "#lib/slides/color.js";
+
 import { colorChild, readColor } from "../slides/drawingml";
 import { element, parseXml, textContent, type XmlElement } from "../xml";
 import { all, flag, kid, kids, local, val } from "./package";

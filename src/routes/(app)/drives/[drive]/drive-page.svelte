@@ -8,6 +8,7 @@
 		Trash2Icon,
 		UsersIcon,
 	} from "@lucide/svelte";
+
 	import type { ObjectList } from "#lib/api/index.js";
 	import FileLayout from "#lib/components/file/layout.svelte";
 	import DriveMembersDialog from "#lib/components/layout/dialogs/drive-members-dialog.svelte";

@@ -1,4 +1,5 @@
 import type { Deck } from "#lib/slides/model.js";
+
 import { rawLabel } from "./labels.js";
 
 /** The slides a presentation shows: every one not hidden, or all when all are. */

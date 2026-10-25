@@ -1,5 +1,6 @@
 import { error, redirect } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
+
 import { signInReturningTo } from "#lib/next.js";
 import { getDb } from "#lib/server/db/index.js";
 import { folders } from "#lib/server/db/schema.js";

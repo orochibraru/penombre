@@ -1,4 +1,5 @@
 import { PARAGRAPH_CHANGE, parseParagraphChange } from "#lib/editor/changes.js";
+
 import {
 	addMediaPart,
 	declareMediaTypes,

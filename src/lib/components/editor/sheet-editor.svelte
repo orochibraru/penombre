@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { type Snippet, untrack } from "svelte";
+
 	import { cellKey } from "#lib/editor/comments.js";
 	import { cellName, parseName } from "#lib/sheet/selection.js";
+
 	import ChartPanel from "./sheet/chart-panel.svelte";
 	import DropdownPanel from "./sheet/dropdown-panel.svelte";
 	import { dropdownsOf } from "./sheet/dropdowns.svelte.js";

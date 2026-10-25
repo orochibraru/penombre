@@ -33,6 +33,7 @@
 		ZoomOutIcon,
 	} from "@lucide/svelte";
 	import type { Component, Snippet } from "svelte";
+
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import * as Popover from "#lib/components/ui/popover/index.js";
@@ -42,6 +43,7 @@
 	import type { Align, Color } from "#lib/slides/model.js";
 	import { FONT_CHOICES, typeface } from "#lib/slides/text.js";
 	import { cn } from "#lib/utils.js";
+
 	import ColorPicker from "./color-picker.svelte";
 	import { SHAPES } from "./labels.js";
 	import type { SlidesEditor, Tool } from "./state.svelte.js";

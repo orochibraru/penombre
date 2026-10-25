@@ -1,4 +1,5 @@
 import process from "node:process";
+
 import { building, dev } from "$app/env";
 import { getRequestEvent } from "$app/server";
 import { apiKey } from "@better-auth/api-key";
@@ -17,6 +18,7 @@ import {
 	twoFactor,
 } from "better-auth/plugins";
 import { sveltekitCookies } from "better-auth/svelte-kit";
+
 import { Logger } from "#lib/logger.js";
 import { isAddressCode } from "#lib/server/auth/address-codes.js";
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";

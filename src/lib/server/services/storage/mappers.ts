@@ -5,6 +5,7 @@
  */
 
 import { createHash } from "node:crypto";
+
 import { FileCategoryEnum } from "#lib/file-helpers.js";
 import type {
 	File as DbFile,
@@ -17,6 +18,7 @@ import type {
 	ObjectItem,
 	ObjectList,
 } from "#lib/server/schema.js";
+
 import fileTypesData from "./file-types.json" with { type: "json" };
 
 interface FileTypesMapping {

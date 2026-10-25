@@ -8,11 +8,13 @@ import {
 	TrashIcon,
 } from "@lucide/svelte";
 import { toast } from "svelte-sonner";
+
 import { api, type ObjectItem } from "#lib/api/index.js";
 import * as m from "#lib/paraglide/messages.js";
 import { pendingVersionAction, refreshVersions } from "#lib/store/versions.js";
 import type { ItemAction, ItemActionGroup } from "#lib/utils.js";
 import { versionOf } from "#lib/versions.js";
+
 import { clickDownload, downloadUrl, withLocation } from "./file-links";
 
 /** Versions back out as files beside theirs; all of them without `ids`. */

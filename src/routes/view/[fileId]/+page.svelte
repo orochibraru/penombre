@@ -20,6 +20,7 @@
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import NotesPanel from "#lib/components/file/notes-panel.svelte";
 	import { pendingPreview } from "#lib/components/file/preview-handover.js";
 	import ProgressiveImage from "#lib/components/file/progressive-image.svelte";

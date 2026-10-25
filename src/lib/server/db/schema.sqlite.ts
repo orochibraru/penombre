@@ -17,6 +17,7 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+
 import type {
 	AppSettingsData,
 	FolderSettingsData,

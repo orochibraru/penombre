@@ -11,7 +11,9 @@ import { createReadStream } from "node:fs";
 import { link, mkdir, readdir, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
+
 import { and, eq, like } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { getStoragePath } from "#lib/server/config.js";
 import {
@@ -23,6 +25,7 @@ import { encryptionEnabled, keyring } from "#lib/server/crypto/keyring.js";
 import type { Folder as DbFolder } from "#lib/server/db/schema.js";
 import { files, folders } from "#lib/server/db/schema.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
+
 import type { StorageContext } from "./context";
 import { buildDisplayPathForFile } from "./mappers";
 import { ownedFiles, ownedFolders } from "./scope";

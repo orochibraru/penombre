@@ -18,11 +18,14 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
 import { eq } from "drizzle-orm";
+
 import type { Database } from "#lib/server/db/index.js";
 import { files, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 import * as appSettings from "#lib/server/services/app-settings.js";
+
 import type { StorageContext } from "./context";
 import { LocalStorageDriver } from "./drivers/local";
 import { ScanOperations } from "./scan";

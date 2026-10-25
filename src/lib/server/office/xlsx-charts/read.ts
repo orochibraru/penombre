@@ -1,5 +1,6 @@
 import { type Chart, checkChart } from "#lib/chart/model.js";
 import { DEFAULT_COLOR_MAP, type Palette } from "#lib/slides/color.js";
+
 import { readTheme, resolveTarget } from "../slides/parts";
 import {
 	element,

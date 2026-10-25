@@ -16,6 +16,7 @@
 		TableCellsMergeIcon,
 		WrapTextIcon,
 	} from "@lucide/svelte";
+
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { toggleVariants } from "#lib/components/ui/toggle/toggle.svelte";
 	import {
@@ -27,6 +28,7 @@
 	import { m } from "#lib/paraglide/messages.js";
 	import type { BorderEdge } from "#lib/sheet/styles.js";
 	import { cn } from "#lib/utils.js";
+
 	import ColourMenu from "../document/colour-menu.svelte";
 	import { MOD } from "./actions.js";
 	import FormatDialog from "./format-dialog.svelte";

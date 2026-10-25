@@ -25,6 +25,7 @@ import {
 	UnderlineIcon,
 	WrapTextIcon,
 } from "@lucide/svelte";
+
 import {
 	firstFamily,
 	FONT_FAMILIES,
@@ -40,6 +41,7 @@ import {
 	presets,
 } from "#lib/sheet/number-formats.js";
 import type { BorderEdge, CellStyle } from "#lib/sheet/styles.js";
+
 import { MOD } from "./actions.js";
 import {
 	type BorderKind,

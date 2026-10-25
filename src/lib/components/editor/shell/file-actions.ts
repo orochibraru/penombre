@@ -1,5 +1,7 @@
 import type { Snippet } from "svelte";
+
 import type { DocumentKind, ExportFormat } from "#lib/documents.js";
+
 import type { Comments } from "./comments.svelte.js";
 
 /**

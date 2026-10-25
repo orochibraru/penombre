@@ -11,6 +11,7 @@
  */
 
 import process from "node:process";
+
 import type { CacheBackend } from "#lib/server/cache/index.js";
 import {
 	getRedisClient,

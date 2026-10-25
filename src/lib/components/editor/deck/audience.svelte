@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from "svelte";
+
 	import {
 		type Deck,
 		deckTheme,
@@ -8,6 +9,7 @@
 	} from "#lib/deck/format.js";
 	import { deckChannel, post, readMessage } from "#lib/deck/present.js";
 	import { toggleFullscreen } from "#lib/utils.js";
+
 	import Present from "./present.svelte";
 
 	/**

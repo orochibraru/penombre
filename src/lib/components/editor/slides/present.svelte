@@ -6,11 +6,13 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { fade } from "svelte/transition";
+
 	import Button from "#lib/components/ui/button/button.svelte";
 	import { slideKey } from "#lib/deck/present.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { type Deck, EMU_PER_PT } from "#lib/slides/model.js";
 	import { cn } from "#lib/utils.js";
+
 	import type { RenderContext } from "./render-context.js";
 	import { labelOf, shownSlides } from "./shown.js";
 	import SlideView from "./slide-view.svelte";

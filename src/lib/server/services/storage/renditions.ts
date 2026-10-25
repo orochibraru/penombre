@@ -7,9 +7,12 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+
 import { and, eq } from "drizzle-orm";
+
 import { files } from "#lib/server/db/schema.js";
 import { awaitJob, enqueueJob } from "#lib/server/services/jobs.js";
+
 import type { StorageContext } from "./context";
 import { ownedFiles } from "./scope";
 

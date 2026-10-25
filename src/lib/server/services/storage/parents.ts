@@ -1,6 +1,8 @@
 import { and, inArray } from "drizzle-orm";
+
 import { folders } from "#lib/server/db/schema.js";
 import type { ObjectItem } from "#lib/server/schema.js";
+
 import type { StorageContext } from "./context";
 import { ancestorFolders } from "./mappers";
 import { ownedFolders } from "./scope";

@@ -16,6 +16,7 @@
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import {
 		peaksUrl as peaksUrlFor,

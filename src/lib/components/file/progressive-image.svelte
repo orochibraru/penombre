@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from "svelte";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import { m } from "#lib/paraglide/messages.js";

@@ -1,4 +1,5 @@
 import process from "node:process";
+
 import { expect, test } from "@playwright/test";
 
 const EMAIL = process.env.E2E_EMAIL ?? "admin@example.com";

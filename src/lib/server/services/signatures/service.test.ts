@@ -2,8 +2,10 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
 import { eq } from "drizzle-orm";
 import { PDFDocument } from "pdf-lib";
+
 import {
 	signatureEvents,
 	type SignatureRequest,
@@ -14,6 +16,7 @@ import {
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
 import type { EmailContent } from "#lib/server/email-template.js";
 import type { NotificationInput } from "#lib/server/services/notifications.js";
+
 import { sha256 } from "./pdf";
 import {
 	type DocumentSource,

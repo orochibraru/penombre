@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { CheckIcon, ChevronDownIcon } from "@lucide/svelte";
+
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { toggleVariants } from "#lib/components/ui/toggle/toggle.svelte";
 	import { cn } from "#lib/utils.js";
+
 	import type { Tool } from "./tools.js";
 
 	/** A toolbar dropdown of mutually exclusive choices: font, size, style. */

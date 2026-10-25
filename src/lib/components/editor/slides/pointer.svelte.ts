@@ -20,6 +20,7 @@ import {
 	type ShapeElement,
 	type SlideElement,
 } from "#lib/slides/model.js";
+
 import type { SlidesEditor } from "./state.svelte.js";
 
 /**

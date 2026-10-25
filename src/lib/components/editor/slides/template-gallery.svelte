@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { CheckIcon } from "@lucide/svelte";
+
 	import { m } from "#lib/paraglide/messages.js";
 	import { slideFromLayout } from "#lib/slides/layouts.js";
 	import type { Deck, Slide } from "#lib/slides/model.js";
 	import { TEMPLATE_IDS, templateDeck } from "#lib/slides/templates/index.js";
 	import { cn } from "#lib/utils.js";
+
 	import { TEMPLATE_NAMES } from "./labels.js";
 	import SlideView from "./slide-view.svelte";
 

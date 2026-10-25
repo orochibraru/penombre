@@ -1,5 +1,6 @@
 import type { Mock } from "bun:test";
 import { describe, expect, mock, test } from "bun:test";
+
 import { auth } from "#lib/server/auth/index.js";
 import { db } from "#lib/server/db/index.js";
 

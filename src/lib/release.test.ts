@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { assetUrl, phoneSystem } from "#lib/release.js";
 
 describe("release helpers", () => {

@@ -7,7 +7,9 @@
 
 import { utimes } from "node:fs/promises";
 import { join } from "node:path";
+
 import { and, eq } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { type File as DbFile, files } from "#lib/server/db/schema.js";
 import { FileOrFolderNotFoundError } from "#lib/server/errors.js";
@@ -18,6 +20,7 @@ import type {
 	UpdateFile,
 	UploadResult,
 } from "#lib/server/schema.js";
+
 import type { StorageContext } from "./context";
 import { purgeGrantsFor } from "./grants";
 import {

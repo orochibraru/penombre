@@ -5,6 +5,7 @@
  */
 
 import { sep } from "node:path";
+
 import { Logger } from "#lib/logger.js";
 import {
 	type AppConfig,
@@ -14,6 +15,7 @@ import {
 import { keyId, type Keyring } from "#lib/server/crypto/envelope.js";
 import { keyring } from "#lib/server/crypto/keyring.js";
 import type { AppSettingsData } from "#lib/server/db/schema.js";
+
 import { getAppSettings, updateAppSettings } from "./app-settings";
 import { awaitJob, enqueueJob } from "./jobs";
 

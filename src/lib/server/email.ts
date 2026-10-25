@@ -1,5 +1,6 @@
 import { createTransport, type Transporter } from "nodemailer";
 import type SMTPTransport from "nodemailer/lib/smtp-transport";
+
 import { Logger } from "#lib/logger.js";
 import { getConfig } from "#lib/server/config.js";
 import { type EmailContent, renderEmail } from "#lib/server/email-template.js";

@@ -8,6 +8,7 @@
 	} from "@lucide/svelte";
 	import { getSearchStatus } from "prosekit/extensions/search";
 	import { onDestroy } from "svelte";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { toggleVariants } from "#lib/components/ui/toggle/toggle.svelte";

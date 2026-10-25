@@ -6,7 +6,9 @@
 
 import { mkdir, rename, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
+
 import { and, eq, inArray, max as maxOf } from "drizzle-orm";
+
 import { FileCategoryEnum } from "#lib/file-helpers.js";
 import {
 	type File as DbFile,
@@ -19,6 +21,7 @@ import {
 	VersioningDisabledError,
 	VersionMergeError,
 } from "#lib/server/errors.js";
+
 import type { StorageContext } from "./context";
 import type { FileOperations } from "./files";
 import { purgeGrantsFor } from "./grants";

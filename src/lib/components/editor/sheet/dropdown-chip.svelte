@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ChevronDownIcon } from "@lucide/svelte";
+
 	import { m } from "#lib/paraglide/messages.js";
 	import type { ChipColor } from "#lib/sheet/dropdowns.js";
 	import { cn } from "#lib/utils.js";

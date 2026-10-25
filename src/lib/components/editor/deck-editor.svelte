@@ -12,6 +12,7 @@
 		Trash2Icon,
 	} from "@lucide/svelte";
 	import { flushSync, type Snippet, tick, untrack } from "svelte";
+
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Menubar from "#lib/components/ui/menubar/index.js";
 	import { Textarea } from "#lib/components/ui/textarea/index.js";
@@ -33,6 +34,7 @@
 	} from "#lib/deck/format.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn, toggleFullscreen } from "#lib/utils.js";
+
 	import Audience from "./deck/audience.svelte";
 	import DeckPrint from "./deck/deck-print.svelte";
 	import MarkdownToolbar from "./deck/markdown-toolbar.svelte";

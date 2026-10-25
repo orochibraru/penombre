@@ -4,6 +4,7 @@ import { defineInputRule } from "prosekit/extensions/input-rule";
 import { InputRule } from "prosekit/pm/inputrules";
 import { DOMParser as SchemaParser } from "prosekit/pm/model";
 import { Plugin } from "prosekit/pm/state";
+
 import { linkTarget } from "./document-format";
 
 const BLOCK = /^(#{1,6} |[-*+] |\d{1,3}[.)] |> |```|~~~|\|.*\|\s*$)/m;

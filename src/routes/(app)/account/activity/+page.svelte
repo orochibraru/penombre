@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+
 	import ActivityLog from "#lib/components/activity-log.svelte";
 	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";

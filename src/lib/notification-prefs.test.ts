@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+
 import { resolveAll, resolveChannels } from "./notification-prefs";
 
 describe("resolveChannels", () => {

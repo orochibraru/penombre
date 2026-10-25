@@ -16,6 +16,7 @@
 
 import type { User } from "better-auth";
 import { and, eq } from "drizzle-orm";
+
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getVolume, type VolumeConfig } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
@@ -26,6 +27,7 @@ import {
 	SHARE_HEADER,
 	VOLUME_HEADER,
 } from "#lib/storage-location.js";
+
 import { drivesService, driveStorage, driveVolume } from "./drives";
 import { loadSharedOwner } from "./library-scan";
 import { ShareService } from "./shares";

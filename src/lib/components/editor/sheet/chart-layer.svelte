@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CopyIcon, PencilIcon, Trash2Icon } from "@lucide/svelte";
 	import { untrack } from "svelte";
+
 	import { chartData } from "#lib/chart/data.js";
 	import { nearestEdge } from "#lib/chart/edit.js";
 	import {
@@ -11,6 +12,7 @@
 	} from "#lib/chart/model.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import { seriesLabel } from "./chart-defaults.js";
 	import ChartView from "./chart-view.svelte";
 	import type { SheetState } from "./state.svelte.js";

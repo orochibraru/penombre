@@ -2,6 +2,7 @@
 	import { resolve } from "$app/paths";
 	import { HistoryIcon, SparklesIcon, Trash2Icon } from "@lucide/svelte";
 	import { onMount } from "svelte";
+
 	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import StorageUsage from "#lib/components/storage-usage.svelte";
 	import { buttonVariants } from "#lib/components/ui/button/index.js";

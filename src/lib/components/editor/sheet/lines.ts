@@ -3,6 +3,7 @@ import { restructure, sortRows } from "#lib/sheet/book.js";
 import { mergeRects } from "#lib/sheet/merges.js";
 import { single } from "#lib/sheet/selection.js";
 import { literal } from "#lib/sheet/values.js";
+
 import type { SheetState } from "./state.svelte.js";
 
 /** Rows and columns inserted, deleted and sorted, and Find. */

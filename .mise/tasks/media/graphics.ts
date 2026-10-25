@@ -12,6 +12,7 @@
 // made.
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
+
 import { chromium } from "@playwright/test";
 
 const root = join(import.meta.dir, "..", "..", "..");

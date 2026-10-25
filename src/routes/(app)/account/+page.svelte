@@ -3,6 +3,7 @@
 	import { DownloadIcon, SaveIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import EmailDialog from "#lib/components/account/email-dialog.svelte";
 	import { clickDownload } from "#lib/components/file/wrapper.svelte.js";
 	import Badge from "#lib/components/ui/badge/badge.svelte";

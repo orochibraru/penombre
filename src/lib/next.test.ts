@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { nextPath, signInReturningTo } from "./next";
 
 const at = (search: string) => new URL(`http://app.test/auth/sign-in${search}`);

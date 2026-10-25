@@ -1,6 +1,7 @@
 import { type CellSource, type ChartData, chartData } from "#lib/chart/data.js";
 import { canonical, type Chart, isEditable } from "#lib/chart/model.js";
 import type { Palette } from "#lib/slides/color.js";
+
 import { parseXml, serializeXml, text, type XmlElement } from "../xml";
 import { partText, setPartText } from "../zip";
 import {

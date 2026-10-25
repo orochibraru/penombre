@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { TransferRate } from "./rate";
 
 const MB = 1024 * 1024;

@@ -2,6 +2,7 @@ import { definePlugin, union } from "prosekit/core";
 import type { ProseMirrorNode } from "prosekit/pm/model";
 import { type EditorState, Plugin, PluginKey } from "prosekit/pm/state";
 import { Decoration, DecorationSet, type EditorView } from "prosekit/pm/view";
+
 import {
 	flatten,
 	locateQuote,

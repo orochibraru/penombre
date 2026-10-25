@@ -1,4 +1,5 @@
 import { error } from "@sveltejs/kit";
+
 import { isSimpleMode } from "#lib/server/config.js";
 
 export const load = () => {

@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import { sealedSize } from "#lib/server/crypto/envelope.js";
+
 import {
 	ancestorFolders,
 	estimateRemaining,

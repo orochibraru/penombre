@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import { isHttpError } from "@sveltejs/kit";
+
 import { requireAdmin } from "./require-admin";
 
 function refusal(locals: Parameters<typeof requireAdmin>[0]) {

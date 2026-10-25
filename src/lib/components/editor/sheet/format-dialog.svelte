@@ -3,6 +3,7 @@
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { formatted } from "#lib/sheet/number-formats.js";
+
 	import { setFormat } from "./formatting.js";
 	import type { SheetState } from "./state.svelte.js";
 

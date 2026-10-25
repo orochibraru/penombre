@@ -7,6 +7,7 @@
 		XIcon,
 	} from "@lucide/svelte";
 	import { fly, slide } from "svelte/transition";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import {

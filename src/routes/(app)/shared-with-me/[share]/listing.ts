@@ -7,6 +7,7 @@
  */
 
 import { error, redirect } from "@sveltejs/kit";
+
 import { firstPageQuery } from "#lib/pagination.js";
 import { isSimpleMode } from "#lib/server/config.js";
 import { DriveAccessError } from "#lib/server/errors.js";

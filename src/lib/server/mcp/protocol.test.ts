@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { handleMcp } from "./protocol";
 import type { Caller } from "./tool";
 

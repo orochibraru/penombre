@@ -10,6 +10,7 @@
  */
 
 import { asc } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import type { AuthType } from "#lib/server/auth/index.js";
 import { getVolumes, isSimpleMode } from "#lib/server/config.js";

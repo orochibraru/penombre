@@ -1,5 +1,7 @@
 import process from "node:process";
+
 import { defineConfig } from "drizzle-kit";
+
 import {
 	getSqliteFilePath,
 	resolveDbDialect,

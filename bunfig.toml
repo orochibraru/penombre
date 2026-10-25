@@ -25,7 +25,7 @@ coveragePathIgnorePatterns = [
 ]
 pathIgnorePatterns = ["node_modules/**", "**/e2e/**", "fixtures/**"]
 
-coverageThreshold = { line = 0.7, function = 0.8, statement = 0.9 }
+coverageThreshold = { lines = 0.7, functions = 0.8, statements = 0.9 }
 
 [run]
 bun = true
@@ -44,7 +44,7 @@ ignorePatterns = [
 ]
 
 [fmt.sortImports]
-newlinesBetween = false
+newlinesBetween = true
 
 [[fmt.overrides]]
 files = ["*.md"]

@@ -5,6 +5,7 @@
 		ShieldIcon,
 		UserIcon,
 	} from "@lucide/svelte";
+
 	import SectionTabs, {
 		type SectionTab,
 	} from "#lib/components/layout/section-tabs.svelte";

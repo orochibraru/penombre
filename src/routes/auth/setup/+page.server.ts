@@ -1,5 +1,6 @@
 import { resolve } from "$app/paths";
 import { fail, redirect } from "@sveltejs/kit";
+
 import { createFirstAdmin, needsSetup } from "#lib/server/auth/seed.js";
 import { getConfig } from "#lib/server/config.js";
 import { requestLibraryScan } from "#lib/server/services/library-scan.js";

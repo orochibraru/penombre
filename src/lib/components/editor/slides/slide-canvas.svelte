@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { flushSync } from "svelte";
+
 	import { m } from "#lib/paraglide/messages.js";
 	import { cssColor } from "#lib/slides/color.js";
 	import {
@@ -15,6 +16,7 @@
 		rotatePoint,
 	} from "#lib/slides/geometry.js";
 	import { EMU_PER_PT } from "#lib/slides/model.js";
+
 	import { CanvasPointer, type Modifiers } from "./pointer.svelte.js";
 	import type { RenderContext } from "./render-context.js";
 	import SlideView from "./slide-view.svelte";

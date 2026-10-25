@@ -2,7 +2,9 @@ import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
+
 import type { User } from "better-auth";
+
 import { Logger } from "#lib/logger.js";
 import {
 	getStoragePath,
@@ -34,6 +36,7 @@ import type {
 	UploadResult,
 } from "#lib/server/schema.js";
 import { ActivityService } from "#lib/server/services/activity.js";
+
 import type { StorageContext, StorageScope } from "./context";
 import { availableDiskSpace } from "./disk-space";
 import {

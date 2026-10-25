@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { withSenderName } from "./email";
 import { renderEmail } from "./email-template";
 

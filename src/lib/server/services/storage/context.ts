@@ -7,8 +7,10 @@
  */
 
 import type { User } from "better-auth";
+
 import type { getDb } from "#lib/server/db/index.js";
 import type { ActivityService } from "#lib/server/services/activity.js";
+
 import type { StorageDriver } from "./driver";
 
 export interface StorageContext {

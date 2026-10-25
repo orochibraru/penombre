@@ -5,6 +5,7 @@
 		ShieldCheckIcon,
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
+
 	import ActivityLog from "#lib/components/activity-log.svelte";
 	import { buttonVariants } from "#lib/components/ui/button/index.js";
 	import { m } from "#lib/paraglide/messages.js";

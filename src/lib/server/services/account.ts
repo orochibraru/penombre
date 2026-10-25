@@ -4,6 +4,7 @@
  */
 
 import { and, eq } from "drizzle-orm";
+
 import { Logger } from "#lib/logger.js";
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";

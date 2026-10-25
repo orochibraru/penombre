@@ -1,5 +1,6 @@
 import type { Mock } from "bun:test";
 import { describe, expect, test } from "bun:test";
+
 import { instanceSignInMethods } from "#lib/server/auth/index.js";
 
 const mockMethods = instanceSignInMethods as Mock<typeof instanceSignInMethods>;

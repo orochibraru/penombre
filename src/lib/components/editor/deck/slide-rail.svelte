@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { GripVerticalIcon } from "@lucide/svelte";
 	import { flip } from "svelte/animate";
+
 	import type { Deck, SlideLook, ThemeName } from "#lib/deck/format.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import SlideView from "./slide-view.svelte";
 
 	/**

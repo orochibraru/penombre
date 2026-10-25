@@ -1,5 +1,6 @@
 import { resolve } from "$app/paths";
 import { error, fail, redirect } from "@sveltejs/kit";
+
 import { Logger } from "#lib/logger.js";
 import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
 import {

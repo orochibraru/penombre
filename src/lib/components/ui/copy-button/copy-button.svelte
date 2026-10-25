@@ -3,6 +3,7 @@
 	import CopyIcon from "@lucide/svelte/icons/copy";
 	import XIcon from "@lucide/svelte/icons/x";
 	import { scale } from "svelte/transition";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import type { CopyButtonProps } from "#lib/components/ui/copy-button/types.js";
 	import { UseClipboard } from "#lib/hooks/use-clipboard.svelte.js";

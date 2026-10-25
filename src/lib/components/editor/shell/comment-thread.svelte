@@ -6,12 +6,14 @@
 		RotateCcwIcon,
 		Trash2Icon,
 	} from "@lucide/svelte";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import type { CommentNote, Thread } from "#lib/editor/comments.js";
 	import { colourFor, initials } from "#lib/editor/presence.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import CommentBox from "./comment-box.svelte";
 	import type { Comments } from "./comments.svelte.js";
 

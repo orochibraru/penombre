@@ -10,6 +10,7 @@
 		SmartphoneIcon,
 		XCircleIcon,
 	} from "@lucide/svelte";
+
 	import SignaturePad from "#lib/components/signatures/signature-pad.svelte";
 	import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
 	import * as Card from "#lib/components/ui/card/index.js";

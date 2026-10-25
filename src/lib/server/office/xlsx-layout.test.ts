@@ -1,8 +1,10 @@
 import { describe, expect, it } from "bun:test";
+
 import type { Chart } from "#lib/chart/model.js";
 import { restructure, type SheetData } from "#lib/sheet/book.js";
 import { CellLooks } from "#lib/sheet/layers.js";
 import { lookOf, normalizeStyle } from "#lib/sheet/styles.js";
+
 import { pack, PIXEL_PNG } from "./test-utils";
 import { workbookFromText, workbookToText } from "./xlsx";
 import { pxToWidth, widthToPx } from "./xlsx-view";

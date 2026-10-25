@@ -6,9 +6,11 @@
 		Trash2Icon,
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
+
 	import type { SheetState } from "./state.svelte.js";
 
 	/** A workbook's sheets, along the bottom: switch, add, rename, delete. */

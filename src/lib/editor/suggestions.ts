@@ -26,7 +26,9 @@ import {
 	ReplaceStep,
 } from "prosekit/pm/transform";
 import type { EditorView } from "prosekit/pm/view";
+
 import { randomId } from "#lib/utils.js";
+
 import {
 	type Change,
 	changeAttributes,

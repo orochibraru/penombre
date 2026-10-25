@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ImageIcon, TableIcon } from "@lucide/svelte";
+
 	import { cssColor } from "#lib/slides/color.js";
 	import { arrowHead, isLine, outlines } from "#lib/slides/geometry.js";
 	import {
@@ -8,6 +9,7 @@
 		type Line,
 		type SlideElement,
 	} from "#lib/slides/model.js";
+
 	// oxlint-disable-next-line import/no-self-import -- a group draws its members with this same component
 	import ElementView from "./element-view.svelte";
 	import type { RenderContext } from "./render-context.js";

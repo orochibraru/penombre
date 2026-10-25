@@ -5,6 +5,7 @@
 		FileCodeIcon,
 		FileVideoCameraIcon,
 	} from "@lucide/svelte";
+
 	import type { ObjectItem } from "#lib/api/index.js";
 	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import DocumentIcon from "#lib/components/file/document-icon.svelte";

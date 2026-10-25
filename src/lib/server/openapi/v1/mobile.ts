@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { defineRoute } from "#lib/server/openapi/index.js";
 
 export const mobileToken = defineRoute({

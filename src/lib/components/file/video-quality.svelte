@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CheckIcon, Settings2Icon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+
 	import { Button } from "#lib/components/ui/button/index.js";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import Spinner from "#lib/components/ui/spinner.svelte";

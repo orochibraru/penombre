@@ -36,6 +36,7 @@
 	import { setMode } from "mode-watcher";
 	import { onMount, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import AppBanner from "#lib/components/apps/app-banner.svelte";
 	import NewPresentationDialog from "#lib/components/editor/slides/new-presentation-dialog.svelte";
 	import { withLocation } from "#lib/components/file/file-links.js";

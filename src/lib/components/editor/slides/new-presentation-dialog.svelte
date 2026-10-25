@@ -2,12 +2,14 @@
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 	import { toast } from "svelte-sonner";
+
 	import { api } from "#lib/api/index.js";
 	import { withLocation } from "#lib/components/file/file-links.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { TEMPLATE_IDS } from "#lib/slides/templates/index.js";
+
 	import TemplateGallery from "./template-gallery.svelte";
 
 	/**

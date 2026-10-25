@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { FolderIcon, LoaderCircleIcon } from "@lucide/svelte";
+
 	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import * as m from "#lib/paraglide/messages.js";
 	import { listingHref, readableFileSize } from "#lib/utils.js";
+
 	import { pendingPreview } from "./preview-handover";
 	import {
 		folderPathOf,

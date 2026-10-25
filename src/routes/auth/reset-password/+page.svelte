@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import { KeyRoundIcon } from "@lucide/svelte";
+
 	import * as Alert from "#lib/components/ui/alert/index.js";
 	import Button from "#lib/components/ui/button/button.svelte";
 	import * as Field from "#lib/components/ui/field/index.js";

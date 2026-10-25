@@ -1,4 +1,5 @@
 import { fail } from "@sveltejs/kit";
+
 import { Logger } from "#lib/logger.js";
 import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
 import { getConfig } from "#lib/server/config.js";

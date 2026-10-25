@@ -3,6 +3,7 @@
 	import { FilesIcon, FolderIcon, XIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Button } from "#lib/components/ui/button/index.js";
 	import {
@@ -24,6 +25,7 @@
 	import { enqueueUploads } from "#lib/upload/manager.js";
 	import type { UploadJob } from "#lib/upload/queue.js";
 	import { cn, randomId } from "#lib/utils.js";
+
 	import {
 		createFoldersForUpload,
 		createUploadMetadata,

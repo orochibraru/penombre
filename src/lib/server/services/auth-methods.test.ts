@@ -1,5 +1,7 @@
 import { describe, expect, type Mock, test } from "bun:test";
+
 import { db } from "#lib/server/db/index.js";
+
 import {
 	type CurrentMethods,
 	effectivePreferred,

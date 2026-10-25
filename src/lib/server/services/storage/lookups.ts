@@ -7,9 +7,12 @@
 
 import { mkdir, open } from "node:fs/promises";
 import { dirname, join } from "node:path";
+
 import { and, eq, isNull, sql } from "drizzle-orm";
+
 import { type File, files, folders } from "#lib/server/db/schema.js";
 import { rethrowUnreachable } from "#lib/server/errors.js";
+
 import type { StorageContext } from "./context";
 import { ownedFiles, ownedFolders } from "./scope";
 

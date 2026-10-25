@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
+
 	import { api, type paths } from "#lib/api/index.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Input } from "#lib/components/ui/input/index.js";

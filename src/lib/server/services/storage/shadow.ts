@@ -10,7 +10,9 @@
 
 import { link, mkdir, rename, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
+
 import type { File as DbFile } from "#lib/server/db/schema.js";
+
 import type { StorageContext } from "./context";
 import { bytesGone } from "./reconcile";
 import type { ThumbnailService } from "./thumbnails";

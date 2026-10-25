@@ -1,6 +1,7 @@
 import { Context } from "runed";
 import type { HighlighterCore } from "shiki";
 import type { ReadableBoxedValues, WritableBoxedValues } from "svelte-toolbelt";
+
 import { highlighter } from "./shiki";
 import type { CodeRootProps } from "./types";
 

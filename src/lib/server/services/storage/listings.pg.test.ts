@@ -6,9 +6,11 @@
  */
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
+
 import { SQL } from "bun";
 import { drizzle } from "drizzle-orm/bun-sql";
 import { migrate } from "drizzle-orm/bun-sql/migrator";
+
 import { files, folders, user } from "#lib/server/db/schema.js";
 
 const url = process.env.DATABASE_URL ?? "";

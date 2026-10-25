@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import { twoFactor } from "better-auth/plugins";
+
 import { challengeCodeSignIn, challengePage } from "./two-factor";
 
 describe("challengeCodeSignIn", () => {

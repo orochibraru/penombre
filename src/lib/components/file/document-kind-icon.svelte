@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	import { FileTextIcon, PresentationIcon, TableIcon } from "@lucide/svelte";
+
 	import type { DocumentKind } from "#lib/documents.js";
 
 	/** One icon per editable kind, so a deck never renders as a page. */

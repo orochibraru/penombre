@@ -6,6 +6,7 @@
 	import { type Snippet, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { MediaQuery } from "svelte/reactivity";
+
 	import { api, type ObjectItem } from "#lib/api/index.js";
 	import ShareDialog from "#lib/components/layout/dialogs/share-dialog.svelte";
 	import * as Drawer from "#lib/components/ui/drawer/index.js";
@@ -18,6 +19,7 @@
 	import { m } from "#lib/paraglide/messages.js";
 	import { APP_USER_AGENT } from "#lib/release.js";
 	import { locationFrom, locationQuery } from "#lib/storage-location.js";
+
 	import CommentsPanel from "./comments-panel.svelte";
 	import { Comments } from "./comments.svelte.js";
 	import EditorHeader from "./editor-header.svelte";

@@ -1,4 +1,5 @@
 import { Menubar as MenubarPrimitive } from "bits-ui";
+
 import CheckboxItem from "./menubar-checkbox-item.svelte";
 import Content from "./menubar-content.svelte";
 import GroupHeading from "./menubar-group-heading.svelte";

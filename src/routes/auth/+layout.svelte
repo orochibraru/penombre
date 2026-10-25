@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
+
 	import AuthBackdrop from "#lib/components/auth-backdrop.svelte";
 	import LanguageDropdown from "#lib/components/language-dropdown.svelte";
 	import Logo from "#lib/components/logo.svelte";

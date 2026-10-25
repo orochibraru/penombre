@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import process from "node:process";
+
 import { building, dev } from "$app/env";
 import z from "zod";
+
 import {
 	dataPaths,
 	defaultConfigValues,

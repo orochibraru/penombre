@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import { CircleUserIcon, DownloadIcon, LogOutIcon } from "@lucide/svelte";
+
 	import { type User } from "#lib/api/index.js";
 	import { handleSignOut } from "#lib/auth-helpers.js";
 	import AppsDialog from "#lib/components/apps/apps-dialog.svelte";

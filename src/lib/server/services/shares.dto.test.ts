@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import type { Share } from "#lib/server/db/schema.js";
+
 import { toShareDto } from "./shares.dto";
 
 const share = {

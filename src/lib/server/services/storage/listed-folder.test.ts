@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, test } from "bun:test";
+
 import type { Database } from "#lib/server/db/index.js";
 import { folders, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+
 import type { StorageContext } from "./context";
 import { FolderOperations } from "./folders";
 import type { ThumbnailService } from "./thumbnails";

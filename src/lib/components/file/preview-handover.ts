@@ -1,6 +1,8 @@
 import { type Writable, writable } from "svelte/store";
+
 import type { ObjectItem } from "#lib/api/index.js";
 import { playableMusic } from "#lib/store/music.js";
+
 import { fullscreenUrl, peaksUrl, rawUrl } from "./file-links";
 import type { FileToView } from "./wrapper.svelte.js";
 

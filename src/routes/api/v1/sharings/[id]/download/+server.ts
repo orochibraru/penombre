@@ -1,5 +1,6 @@
 import { error } from "@sveltejs/kit";
 import type { User } from "better-auth";
+
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { SharingService } from "#lib/server/services/sharings.js";
 import { StorageService } from "#lib/server/services/storage/index.js";

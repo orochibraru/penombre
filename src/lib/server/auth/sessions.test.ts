@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
+
 import { session, user } from "#lib/server/db/schema.js";
 import { migratedSqlite } from "#lib/server/db/test-utils.js";
+
 import { activeSessions } from "./sessions";
 
 const DAY = 24 * 60 * 60 * 1000;

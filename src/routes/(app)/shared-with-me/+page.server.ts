@@ -1,4 +1,5 @@
 import { error } from "@sveltejs/kit";
+
 import { isSimpleMode } from "#lib/server/config.js";
 import { SharingService } from "#lib/server/services/sharings.js";
 

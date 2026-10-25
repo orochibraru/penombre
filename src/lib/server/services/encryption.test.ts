@@ -1,6 +1,8 @@
 import { describe, expect, mock, test } from "bun:test";
+
 import { keyId } from "#lib/server/crypto/envelope.js";
 import type { AppSettingsData } from "#lib/server/db/schema.js";
+
 import { assertEncryptionKey, sweepOnce } from "./encryption";
 
 const key = (byte: number) => Buffer.alloc(32, byte);
