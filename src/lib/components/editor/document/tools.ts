@@ -44,9 +44,9 @@ import {
 	markValue,
 } from "#lib/editor/document-extension.js";
 import {
+	firstFamily,
 	FONT_FAMILIES,
 	FONT_SIZES,
-	firstFamily,
 	LINE_HEIGHTS,
 } from "#lib/editor/document-format.js";
 import { m } from "#lib/paraglide/messages.js";

@@ -9,4 +9,7 @@
 	const copyButton = useCodeCopyButton();
 </script>
 
-<CopyButton class={cn('absolute top-2 right-2', className)} text={copyButton.code} />
+<CopyButton
+	class={cn("absolute top-2 right-2", className)}
+	text={copyButton.code}
+/>

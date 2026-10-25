@@ -86,7 +86,8 @@
 		style:background-color={cssColor(color, palette)}
 		aria-label={title}
 		{title}
-		aria-pressed={value !== undefined && cssColor(value, palette) === cssColor(color, palette)}
+		aria-pressed={value !== undefined &&
+			cssColor(value, palette) === cssColor(color, palette)}
 		onclick={() => pick(color)}
 	></button>
 {/snippet}
@@ -104,7 +105,10 @@
 			style:background-color={value ? cssColor(value, palette) : undefined}
 		></span>
 	</Popover.Trigger>
-	<Popover.Content class="w-auto p-2" onOpenAutoFocus={(event: Event) => event.preventDefault()}>
+	<Popover.Content
+		class="w-auto p-2"
+		onOpenAutoFocus={(event: Event) => event.preventDefault()}
+	>
 		<p class="text-muted-foreground mb-1 text-xs">{m.slides_theme_colours()}</p>
 		<div class="grid grid-cols-10 gap-1">
 			{#each THEME as name (name)}
@@ -112,11 +116,16 @@
 			{/each}
 			{#each SHADES as mods, row (row)}
 				{#each THEME as name (name)}
-					{@render swatch({ scheme: name, mods }, hexColor({ scheme: name, mods }, palette))}
+					{@render swatch(
+						{ scheme: name, mods },
+						hexColor({ scheme: name, mods }, palette),
+					)}
 				{/each}
 			{/each}
 		</div>
-		<p class="text-muted-foreground mt-2 mb-1 text-xs">{m.slides_standard_colours()}</p>
+		<p class="text-muted-foreground mt-2 mb-1 text-xs">
+			{m.slides_standard_colours()}
+		</p>
 		<div class="grid grid-cols-10 gap-1">
 			{#each FIXED as hex (hex)}
 				{@render swatch(rgbColor(hex), `#${hex}`)}
@@ -124,11 +133,17 @@
 		</div>
 		<div class="mt-2 flex items-center gap-2">
 			{#if none}
-				<button type="button" class="hover:bg-muted rounded-sm px-2 py-1 text-sm" onclick={() => pick(null)}>
+				<button
+					type="button"
+					class="hover:bg-muted rounded-sm px-2 py-1 text-sm"
+					onclick={() => pick(null)}
+				>
 					{none}
 				</button>
 			{/if}
-			<label class="hover:bg-muted ms-auto flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-sm">
+			<label
+				class="hover:bg-muted ms-auto flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-sm"
+			>
 				{m.slides_custom_colour()}
 				<input
 					type="color"

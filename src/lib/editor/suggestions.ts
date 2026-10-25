@@ -534,8 +534,7 @@ export function defineSuggestionTracking() {
 			init: () => ({ author: null, pending: null }),
 			apply(tr, value): State {
 				const meta = tr.getMeta(key) as
-					| { author?: Author | null; settled?: boolean }
-					| undefined;
+					{ author?: Author | null; settled?: boolean } | undefined;
 				const author =
 					meta && "author" in meta ? (meta.author ?? null) : value.author;
 				let pending = value.pending;

@@ -1,13 +1,13 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 	import { toast } from "svelte-sonner";
 	import { withLocation } from "#lib/components/file/file-links.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { createTextFile } from "#lib/document-requests.js";
 	import * as m from "#lib/paraglide/messages.js";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import { page } from "$app/state";
 
 	interface Props {
 		open: boolean;
@@ -46,19 +46,19 @@
 </script>
 
 <ResponsiveDialog
-    bind:open
-    bind:loading
-    title={m.new_text_file_title()}
-    description={m.new_text_file_description()}
-    submitLabel={m.create()}
-    loadingLabel={m.creating()}
-    form={{ onsubmit: handleSubmit }}
+	bind:open
+	bind:loading
+	title={m.new_text_file_title()}
+	description={m.new_text_file_description()}
+	submitLabel={m.create()}
+	loadingLabel={m.creating()}
+	form={{ onsubmit: handleSubmit }}
 >
-    <Input
-        required
-        type="text"
-        bind:value={name}
-        bind:ref={inputRef}
-        class="w-full font-mono"
-    />
+	<Input
+		required
+		type="text"
+		bind:value={name}
+		bind:ref={inputRef}
+		class="w-full font-mono"
+	/>
 </ResponsiveDialog>

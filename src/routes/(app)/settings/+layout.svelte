@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import { CogIcon, HardDriveIcon, PaletteIcon } from "@lucide/svelte";
 	import SectionTabs, {
 		type SectionTab,
 	} from "#lib/components/layout/section-tabs.svelte";
 	import * as m from "#lib/paraglide/messages.js";
-	import { page } from "$app/state";
 
 	// A drive-only account has no drive of its own to measure.
 	const tabs: SectionTab[] = $derived([
@@ -34,6 +34,6 @@
 </script>
 
 <div class="w-full">
-    <SectionTabs title={m.nav_settings()} {tabs} />
-    {@render children()}
+	<SectionTabs title={m.nav_settings()} {tabs} />
+	{@render children()}
 </div>

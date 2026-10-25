@@ -1,3 +1,4 @@
+import { resolve } from "$app/paths";
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import { nextPath } from "#lib/next.js";
@@ -22,7 +23,6 @@ import {
 	methodsFor,
 } from "#lib/server/services/auth-methods.js";
 import { getUserPreferences } from "#lib/server/services/preferences.js";
-import { resolve } from "$app/paths";
 
 export const load = async ({ url, request }) => {
 	const config = getConfig();

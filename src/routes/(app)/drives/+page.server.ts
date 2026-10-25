@@ -1,4 +1,4 @@
-import { redirect } from "@sveltejs/kit";
 import { resolve } from "$app/paths";
+import { redirect } from "@sveltejs/kit";
 
 export const load = () => redirect(308, resolve("/(app)/drives/shared"));

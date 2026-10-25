@@ -1,3 +1,4 @@
+import { resolve } from "$app/paths";
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
@@ -12,7 +13,6 @@ import {
 	consumeInvite,
 	findValidInvite,
 } from "#lib/server/services/invites.js";
-import { resolve } from "$app/paths";
 
 const logger = new Logger("auth/onboarding");
 

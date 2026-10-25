@@ -243,19 +243,19 @@ function setData(
 ): void {
 	const next = chart.series[index] as ChartSeries;
 	const name = data.series[index]?.name ?? "";
-	if (
-		!(before && before.name === next.name && before.nameRef === next.nameRef)
-	) {
+	if (!(
+		before &&
+		before.name === next.name &&
+		before.nameRef === next.nameRef
+	)) {
 		remove(ser, ["tx"]);
 		insertBefore(ser, nodes(nameXml(next, name)), ["spPr", ...AFTER.serSpPr]);
 	}
-	if (
-		!(
-			before &&
-			before.values === next.values &&
-			before.categories === next.categories
-		)
-	) {
+	if (!(
+		before &&
+		before.values === next.values &&
+		before.categories === next.categories
+	)) {
 		remove(ser, ["cat", "val", "xVal", "yVal"]);
 		insertBefore(ser, nodes(dataXml(chart, next, data, index)), AFTER.serData);
 	}

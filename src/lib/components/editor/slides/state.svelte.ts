@@ -1,8 +1,8 @@
 import { tick } from "svelte";
 import { paletteOf } from "#lib/slides/color.js";
 import {
-	type AlignMode,
 	align,
+	type AlignMode,
 	distribute,
 	group,
 	History,
@@ -28,10 +28,10 @@ import {
 	nextElementId,
 	type ParagraphStyle,
 	type RunStyle,
+	sameValue,
 	type ShapeElement,
 	type Slide,
 	type SlideElement,
-	sameValue,
 	type TextBody,
 	withFreshIds,
 } from "#lib/slides/model.js";
@@ -601,8 +601,7 @@ export class SlidesEditor {
 
 	/** The formatting under the caret, or of the first selected box. */
 	currentFormat():
-		| (RunStyle & ParagraphStyle & { size: number; level: number })
-		| null {
+		(RunStyle & ParagraphStyle & { size: number; level: number }) | null {
 		void this.caretTick;
 		const typed = this.editing ? this.typed() : null;
 		const element = typed?.element ?? this.textTargets[0];

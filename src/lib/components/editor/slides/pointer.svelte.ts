@@ -14,8 +14,8 @@ import { bounds, intersects, type Point, union } from "#lib/slides/geometry.js";
 import { isStroke, strokeShape, touchesStroke } from "#lib/slides/ink.js";
 import {
 	type Box,
-	EMU_PER_PT,
 	emptyText,
+	EMU_PER_PT,
 	nextElementId,
 	type ShapeElement,
 	type SlideElement,

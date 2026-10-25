@@ -18,7 +18,7 @@ import {
 	viewerDeck,
 	writeDeck,
 } from "./index";
-import { deckWith, PIXEL, PIXEL_URL, packageProblems, sp } from "./test-utils";
+import { deckWith, packageProblems, PIXEL, PIXEL_URL, sp } from "./test-utils";
 
 const clone = <T>(value: T): T => structuredClone(value);
 

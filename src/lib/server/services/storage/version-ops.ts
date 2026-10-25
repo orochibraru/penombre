@@ -10,9 +10,9 @@ import { and, eq, inArray, max as maxOf } from "drizzle-orm";
 import { FileCategoryEnum } from "#lib/file-helpers.js";
 import {
 	type File as DbFile,
-	type FileVersion,
 	fileNotes,
 	files,
+	type FileVersion,
 	fileVersions,
 } from "#lib/server/db/schema.js";
 import {

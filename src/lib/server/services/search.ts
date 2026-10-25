@@ -8,10 +8,10 @@ import { Logger } from "#lib/logger.js";
 import { isDriveOnly } from "#lib/server/auth/drive-only.js";
 import { getVolumes } from "#lib/server/config.js";
 import type { ObjectItem } from "#lib/server/schema.js";
-import { driveStorage, drivesService } from "#lib/server/services/drives.js";
+import { drivesService, driveStorage } from "#lib/server/services/drives.js";
+import { volumeStorage } from "#lib/server/services/storage-for.js";
 import { compareSearchRelevance } from "#lib/server/services/storage/mappers.js";
 import { StorageService } from "#lib/server/services/storage/service.js";
-import { volumeStorage } from "#lib/server/services/storage-for.js";
 
 const logger = new Logger("Search");
 

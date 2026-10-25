@@ -7,10 +7,10 @@ import { slidesPdfPages, templatePackage } from "../slides";
 import { PIXEL_PNG } from "../test-utils";
 import { readWorkbook, workbookToText } from "../xlsx";
 import { readZip } from "../zip";
-import { ExportFormatError, ExportUnavailableError, exportFile } from "./index";
+import { exportFile, ExportFormatError, ExportUnavailableError } from "./index";
 import { readHtml } from "./model";
-import { documentPdf, pdfFont, TEXT_WIDTH, tableBody } from "./pdf-document";
-import { SheetTooLargeError, sheetsPdf, usedArea } from "./sheet-pdf";
+import { documentPdf, pdfFont, tableBody, TEXT_WIDTH } from "./pdf-document";
+import { sheetsPdf, SheetTooLargeError, usedArea } from "./sheet-pdf";
 import { toHtmlPage, toMarkdown, toText } from "./text";
 
 const PNG = `data:image/png;base64,${PIXEL_PNG.toString("base64")}`;

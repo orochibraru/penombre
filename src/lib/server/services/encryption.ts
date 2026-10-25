@@ -11,7 +11,7 @@ import {
 	getConfig,
 	getStoragePath,
 } from "#lib/server/config.js";
-import { type Keyring, keyId } from "#lib/server/crypto/envelope.js";
+import { keyId, type Keyring } from "#lib/server/crypto/envelope.js";
 import { keyring } from "#lib/server/crypto/keyring.js";
 import type { AppSettingsData } from "#lib/server/db/schema.js";
 import { getAppSettings, updateAppSettings } from "./app-settings";

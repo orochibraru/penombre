@@ -132,7 +132,8 @@ module.exports = {
 ```
 
 ```svelte
-<!-- 3. Use in components. --><div class="bg-warning text-warning-foreground">Warning</div>
+<!-- 3. Use in components. -->
+<div class="bg-warning text-warning-foreground">Warning</div>
 ```
 
 ---

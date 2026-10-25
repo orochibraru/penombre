@@ -10,7 +10,7 @@
 		"build": "svelte-kit sync && vite build",
 		"check": "bun run check:app && bun run check:scripts",
 		"check:app": "bun run gen:paraglide && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:scripts": "tsc --noEmit --project tsconfig.scripts.json",
+		"check:scripts": "bun check --no-script -p tsconfig.scripts.json",
 		"circular": "bun .mise/tasks/web/circular.ts",
 		"db:generate": "bun run db:generate:pg && bun run db:generate:sqlite",
 		"db:generate:pg": "drizzle-kit generate",
@@ -20,7 +20,7 @@
 		"gen": "bun run gen:env && bun run gen:api",
 		"gen:api": "bun run gen:openapi",
 		"gen:env": "bun .mise/tasks/web/gen/env.ts",
-		"gen:openapi": "bun .mise/tasks/web/gen/openapi-spec.ts && openapi-typescript ./openapi.json -o ./src/lib/api/v1.d.ts && bunx biome check --write ./src/lib/api/v1.d.ts",
+		"gen:openapi": "bun .mise/tasks/web/gen/openapi-spec.ts && openapi-typescript ./openapi.json -o ./src/lib/api/v1.d.ts && bun fmt ./src/lib/api/v1.d.ts",
 		"gen:paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide --strategy localStorage cookie baseLocale",
 		"lint": "prek run --all-files",
 		"machine-translate": "inlang machine translate --project project.inlang",
@@ -62,7 +62,6 @@
 		"zod": "4.6.5"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.5.13",
 		"@fontsource-variable/jetbrains-mono": "5.3.0",
 		"@inlang/cli": "3.3.7",
 		"@inlang/paraglide-js": "2.25.4",
@@ -76,7 +75,7 @@
 		"@tailwindcss/language-server": "0.16.0",
 		"@tailwindcss/typography": "0.5.20",
 		"@tailwindcss/vite": "4.3.3",
-		"@types/bun": "1.4.2",
+		"@types/bun": "1.4.4",
 		"@types/madge": "5.0.3",
 		"@types/node": "26.6.1",
 		"@types/nodemailer": "8.0.2",
@@ -91,7 +90,6 @@
 		"openapi-typescript": "7.13.0",
 		"oxlint": "1.83.0",
 		"oxlint-tsgolint": "7.0.2002",
-		"prettier": "3.9.8",
 		"runed": "0.37.1",
 		"shiki": "4.4.3",
 		"svelte": "5.57.0",
@@ -105,7 +103,7 @@
 		"typescript": "6.0.3",
 		"vite": "8.3.3"
 	},
-	"packageManager": "bun@1.4.3",
+	"packageManager": "bun@1.4.4",
 	"imports": {
 		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*"

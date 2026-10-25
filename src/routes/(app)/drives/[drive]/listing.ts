@@ -12,8 +12,8 @@ import { isSimpleMode } from "#lib/server/config.js";
 import { DriveAccessError, isStorageUnavailable } from "#lib/server/errors.js";
 import {
 	type DriveRole,
-	driveStorage,
 	drivesService,
+	driveStorage,
 } from "#lib/server/services/drives.js";
 import { getUserPreferences } from "#lib/server/services/preferences.js";
 import {

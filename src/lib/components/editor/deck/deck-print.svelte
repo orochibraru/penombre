@@ -15,9 +15,9 @@
 </script>
 
 <Portal>
-    <div class="deck-print">
-        {#each deck.slides as slide, index (index)}
-            <SlideView {slide} look={looks[index]} {theme} number={index + 1} />
-        {/each}
-    </div>
+	<div class="deck-print">
+		{#each deck.slides as slide, index (index)}
+			<SlideView {slide} look={looks[index]} {theme} number={index + 1} />
+		{/each}
+	</div>
 </Portal>

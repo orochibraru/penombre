@@ -72,8 +72,7 @@ export interface PathDef {
 }
 
 export type Geometry =
-	| { preset: string; adj?: Record<string, number> }
-	| { paths: PathDef[] };
+	{ preset: string; adj?: Record<string, number> } | { paths: PathDef[] };
 
 export interface Box {
 	x: number;
@@ -202,10 +201,7 @@ export interface RawElement extends Common {
 }
 
 export type SlideElement =
-	| ShapeElement
-	| ImageElement
-	| GroupElement
-	| RawElement;
+	ShapeElement | ImageElement | GroupElement | RawElement;
 
 export interface Slide {
 	/** A key for the editor; the file does not have one. */

@@ -24,12 +24,16 @@
 </script>
 
 {#each sheet.pictures as picture (picture.id)}
-    {@const { anchor } = picture}
-    <img
-        src={picture.src}
-        alt={picture.name ?? ""}
-        draggable="false"
-        class="pointer-events-none absolute z-6 max-w-none object-fill"
-        style="left: {colLeft(anchor.col) + anchor.x}px; top: {anchorTop(sheet, anchor, rowHeight)}px; width: {anchor.width}px; height: {anchor.height}px"
-    />
+	{@const { anchor } = picture}
+	<img
+		src={picture.src}
+		alt={picture.name ?? ""}
+		draggable="false"
+		class="pointer-events-none absolute z-6 max-w-none object-fill"
+		style="left: {colLeft(anchor.col) + anchor.x}px; top: {anchorTop(
+			sheet,
+			anchor,
+			rowHeight,
+		)}px; width: {anchor.width}px; height: {anchor.height}px"
+	/>
 {/each}

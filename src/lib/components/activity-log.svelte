@@ -50,42 +50,37 @@
 </script>
 
 <Card.Root class="gap-0 overflow-hidden py-0">
-    {#if entries.length === 0}
-        <p class="text-muted-foreground py-12 text-center text-sm">{empty}</p>
-    {:else}
-        <ul
-            class="divide-border/60 bg-muted/20 divide-y overflow-x-auto font-mono text-xs"
-        >
-            {#each entries as item (item.id)}
-                <li
-                    class="hover:bg-muted/40 flex items-baseline gap-3 px-3 py-1.5 transition-colors"
-                >
-                    <span class="text-muted-foreground shrink-0 tabular-nums">
-                        {stamp(item.createdAt)}
-                    </span>
-                    {#if showUser}
-                        <span class="w-40 shrink-0 truncate">
-                            {item.userName ?? m.admin_activity_deleted_user()}
-                        </span>
-                    {/if}
-                    <span
-                        class={cn(
-                            "w-14 shrink-0 font-medium uppercase",
-                            actionColour[item.action] ?? "text-muted-foreground",
-                        )}
-                    >
-                        {item.action}
-                    </span>
-                    <span
-                        class={cn(
-                            "min-w-0 flex-1 break-all",
-                            levelColour[item.level],
-                        )}
-                    >
-                        {item.message}
-                    </span>
-                </li>
-            {/each}
-        </ul>
-    {/if}
+	{#if entries.length === 0}
+		<p class="text-muted-foreground py-12 text-center text-sm">{empty}</p>
+	{:else}
+		<ul
+			class="divide-border/60 bg-muted/20 divide-y overflow-x-auto font-mono text-xs"
+		>
+			{#each entries as item (item.id)}
+				<li
+					class="hover:bg-muted/40 flex items-baseline gap-3 px-3 py-1.5 transition-colors"
+				>
+					<span class="text-muted-foreground shrink-0 tabular-nums">
+						{stamp(item.createdAt)}
+					</span>
+					{#if showUser}
+						<span class="w-40 shrink-0 truncate">
+							{item.userName ?? m.admin_activity_deleted_user()}
+						</span>
+					{/if}
+					<span
+						class={cn(
+							"w-14 shrink-0 font-medium uppercase",
+							actionColour[item.action] ?? "text-muted-foreground",
+						)}
+					>
+						{item.action}
+					</span>
+					<span class={cn("min-w-0 flex-1 break-all", levelColour[item.level])}>
+						{item.message}
+					</span>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 </Card.Root>

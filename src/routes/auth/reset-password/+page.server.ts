@@ -1,3 +1,4 @@
+import { resolve } from "$app/paths";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { Logger } from "#lib/logger.js";
 import { auth, instanceSignInMethods } from "#lib/server/auth/index.js";
@@ -5,7 +6,6 @@ import {
 	passwordProblem,
 	passwordRules,
 } from "#lib/server/auth/password-rules.js";
-import { resolve } from "$app/paths";
 
 const logger = new Logger("auth/reset-password");
 

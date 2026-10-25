@@ -2,7 +2,7 @@
 	import type { CheckIcon } from "@lucide/svelte";
 	import * as Popover from "#lib/components/ui/popover/index.js";
 	import { toggleVariants } from "#lib/components/ui/toggle/toggle.svelte";
-	import { HUES, type Hue } from "#lib/editor/document-format.js";
+	import { type Hue, HUES } from "#lib/editor/document-format.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
 

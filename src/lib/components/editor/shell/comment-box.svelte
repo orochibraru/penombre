@@ -46,29 +46,29 @@
 </script>
 
 <div class="flex flex-col gap-2">
-    <Textarea
-        bind:ref={box}
-        bind:value={body}
-        rows={2}
-        {placeholder}
-        aria-label={placeholder}
-        class="min-h-16 text-sm"
-        onkeydown={(e: KeyboardEvent) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void send();
-            } else if (e.key === "Escape" && oncancel) {
-                e.preventDefault();
-                oncancel();
-            }
-        }}
-    />
-    <div class="flex justify-end gap-2">
-        {#if oncancel}
-            <Button variant="ghost" size="sm" onclick={oncancel}>{m.cancel()}</Button>
-        {/if}
-        <Button size="sm" loading={saving} disabled={!body.trim()} onclick={send}>
-            {label}
-        </Button>
-    </div>
+	<Textarea
+		bind:ref={box}
+		bind:value={body}
+		rows={2}
+		{placeholder}
+		aria-label={placeholder}
+		class="min-h-16 text-sm"
+		onkeydown={(e: KeyboardEvent) => {
+			if (e.key === "Enter" && !e.shiftKey) {
+				e.preventDefault();
+				void send();
+			} else if (e.key === "Escape" && oncancel) {
+				e.preventDefault();
+				oncancel();
+			}
+		}}
+	/>
+	<div class="flex justify-end gap-2">
+		{#if oncancel}
+			<Button variant="ghost" size="sm" onclick={oncancel}>{m.cancel()}</Button>
+		{/if}
+		<Button size="sm" loading={saving} disabled={!body.trim()} onclick={send}>
+			{label}
+		</Button>
+	</div>
 </div>

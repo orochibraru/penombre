@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
 	import {
 		ChevronDownIcon,
 		CircleCheckIcon,
@@ -39,16 +41,14 @@
 	import {
 		cn,
 		getDocumentType,
-		ItemStatus,
 		isFolderItem,
+		ItemStatus,
 		listingHref,
 		readableFileSize,
 		secondsToMinutes,
 		stripFolders,
 	} from "#lib/utils.js";
 	import { displayTitle, versionLabel, versionOf } from "#lib/versions.js";
-	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
 
 	interface Props {
 		item: ObjectItem;
@@ -166,351 +166,340 @@
 </script>
 
 {#snippet versionPill()}
-    {#if version}
-        <Badge variant="outline" class="shrink-0 px-1.5 py-0 text-[10px]">
-            {versionLabel(naming, version.seq, baseItem.updatedAt ?? "")}
-        </Badge>
-        {#if version.name || version.authorName}
-            <span class="text-muted-foreground truncate text-xs">
-                {[version.name, version.authorName].filter(Boolean).join(" · ")}
-            </span>
-        {/if}
-    {:else if versionSeq}
-        <!-- Not a <button>: the whole row already is one. Capture handlers,
+	{#if version}
+		<Badge variant="outline" class="shrink-0 px-1.5 py-0 text-[10px]">
+			{versionLabel(naming, version.seq, baseItem.updatedAt ?? "")}
+		</Badge>
+		{#if version.name || version.authorName}
+			<span class="text-muted-foreground truncate text-xs">
+				{[version.name, version.authorName].filter(Boolean).join(" · ")}
+			</span>
+		{/if}
+	{:else if versionSeq}
+		<!-- Not a <button>: the whole row already is one. Capture handlers,
              because the row's tap listener is native while Svelte delegates
              a plain onclick to the root: stopping it there is too late. -->
-        <span
-            role="button"
-            tabindex="0"
-            title={expanded ? m.versions_hide() : m.versions_show()}
-            aria-expanded={expanded}
-            class="shrink-0"
-            onclickcapture={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                showVersions();
-            }}
-            ontouchstartcapture={(e) => e.stopPropagation()}
-            ontouchendcapture={(e) => e.stopPropagation()}
-            onkeydown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    showVersions();
-                }
-            }}
-        >
-            <Badge
-                variant="secondary"
-                class="hover:bg-primary/20 cursor-pointer gap-0.5 px-1.5 py-0 text-[10px]"
-            >
-                {currentVersionLabel}
-                <ChevronDownIcon
-                    class={cn("size-3 transition-transform", expanded && "rotate-180")}
-                />
-            </Badge>
-        </span>
-    {/if}
+		<span
+			role="button"
+			tabindex="0"
+			title={expanded ? m.versions_hide() : m.versions_show()}
+			aria-expanded={expanded}
+			class="shrink-0"
+			onclickcapture={(e) => {
+				e.stopPropagation();
+				e.preventDefault();
+				showVersions();
+			}}
+			ontouchstartcapture={(e) => e.stopPropagation()}
+			ontouchendcapture={(e) => e.stopPropagation()}
+			onkeydown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					e.stopPropagation();
+					showVersions();
+				}
+			}}
+		>
+			<Badge
+				variant="secondary"
+				class="hover:bg-primary/20 cursor-pointer gap-0.5 px-1.5 py-0 text-[10px]"
+			>
+				{currentVersionLabel}
+				<ChevronDownIcon
+					class={cn("size-3 transition-transform", expanded && "rotate-180")}
+				/>
+			</Badge>
+		</span>
+	{/if}
 {/snippet}
 
 {#if isFolder && layout === "list"}
-    <button
-        use:touchAction
-        onclick={handleClick}
-        ontap={handleClick}
-        onlongpress={() => handleLongPress()}
-        class="flex w-full min-w-0 items-center gap-2"
-    >
-        {#if !isDesktop.current && indeterminate}
-            {#if isSelected}
-                <CircleCheckIcon class={cn(iconSize, "text-primary bg-transparent")} />
-            {:else}
-                <CircleIcon class={cn(iconSize, "text-muted-foreground bg-transparent")} />
-            {/if}
-        {:else}
-            <FolderIcon class={cn(iconSize, "text-primary")} fill="currentColor" />
-        {/if}
-        <span class="flex min-w-0 items-center gap-1 text-base lg:text-sm">
-            <span class="truncate">
-                {item.metadata.name ?? item.key.replace("/", "")}
-            </span>
-            {#if item.metadata.isStarred}
-                <StarIcon
-                    class="h-4 w-4 shrink-0 text-yellow-500"
-                    fill="#eab308"
-                />
-            {/if}
-            {@render versionPill()}
-        </span>
-    </button>
+	<button
+		use:touchAction
+		onclick={handleClick}
+		ontap={handleClick}
+		onlongpress={() => handleLongPress()}
+		class="flex w-full min-w-0 items-center gap-2"
+	>
+		{#if !isDesktop.current && indeterminate}
+			{#if isSelected}
+				<CircleCheckIcon class={cn(iconSize, "text-primary bg-transparent")} />
+			{:else}
+				<CircleIcon
+					class={cn(iconSize, "text-muted-foreground bg-transparent")}
+				/>
+			{/if}
+		{:else}
+			<FolderIcon class={cn(iconSize, "text-primary")} fill="currentColor" />
+		{/if}
+		<span class="flex min-w-0 items-center gap-1 text-base lg:text-sm">
+			<span class="truncate">
+				{item.metadata.name ?? item.key.replace("/", "")}
+			</span>
+			{#if item.metadata.isStarred}
+				<StarIcon class="h-4 w-4 shrink-0 text-yellow-500" fill="#eab308" />
+			{/if}
+			{@render versionPill()}
+		</span>
+	</button>
 {:else if layout === "grid"}
-    {@const duration = item.metadata.music?.duration
-        ? secondsToMinutes(item.metadata.music.duration)
-        : item.metadata.video?.duration
-          ? secondsToMinutes(item.metadata.video.duration)
-          : null}
-    <!--
+	{@const duration = item.metadata.music?.duration
+		? secondsToMinutes(item.metadata.music.duration)
+		: item.metadata.video?.duration
+			? secondsToMinutes(item.metadata.video.duration)
+			: null}
+	<!--
       One tile = a square media well with a caption strip under it. Both are
       fixed height so a grid of mixed folders, long names and durations sits on
       a single baseline; the well is edge-to-edge because the border and
       padding belong to the tile, not to each preview.
     -->
-    <button
-        use:touchAction
-        onclick={handleClick}
-        ontap={handleClick}
-        onlongpress={() => handleLongPress()}
-        class="flex w-full flex-col text-left focus-visible:outline-none"
-        disabled={getItemStatus() === ItemStatus.UPLOADING}
-    >
-        <div
-            class="bg-muted/30 relative flex aspect-16/10 w-full items-center justify-center overflow-hidden"
-        >
-            {#if getItemStatus() === ItemStatus.UPLOADING}
-                <span class="text-muted-foreground text-xs tabular-nums">
-                    {#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
-                        {Math.round($uploadingItems[item.key] ?? 0)}%
-                    {:else}
-                        <XIcon class="size-4 text-destructive" />
-                    {/if}
-                </span>
-            {:else if isFolderItem(item)}
-                <FolderIcon
-                    class="text-primary size-10"
-                    fill="currentColor"
-                />
-            {:else if item.metadata.category}
-                <FilePreview {item} />
-            {:else}
-                <FileIcon class="text-muted-foreground/60 size-9" />
-            {/if}
+	<button
+		use:touchAction
+		onclick={handleClick}
+		ontap={handleClick}
+		onlongpress={() => handleLongPress()}
+		class="flex w-full flex-col text-left focus-visible:outline-none"
+		disabled={getItemStatus() === ItemStatus.UPLOADING}
+	>
+		<div
+			class="bg-muted/30 relative flex aspect-16/10 w-full items-center justify-center overflow-hidden"
+		>
+			{#if getItemStatus() === ItemStatus.UPLOADING}
+				<span class="text-muted-foreground text-xs tabular-nums">
+					{#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
+						{Math.round($uploadingItems[item.key] ?? 0)}%
+					{:else}
+						<XIcon class="size-4 text-destructive" />
+					{/if}
+				</span>
+			{:else if isFolderItem(item)}
+				<FolderIcon class="text-primary size-10" fill="currentColor" />
+			{:else if item.metadata.category}
+				<FilePreview {item} />
+			{:else}
+				<FileIcon class="text-muted-foreground/60 size-9" />
+			{/if}
 
-            {#if !isDesktop.current && indeterminate}
-                <span class="absolute top-1.5 left-1.5">
-                    {#if isSelected}
-                        <CircleCheckIcon class="text-primary size-5" />
-                    {:else}
-                        <CircleIcon class="text-muted-foreground size-5" />
-                    {/if}
-                </span>
-            {/if}
+			{#if !isDesktop.current && indeterminate}
+				<span class="absolute top-1.5 left-1.5">
+					{#if isSelected}
+						<CircleCheckIcon class="text-primary size-5" />
+					{:else}
+						<CircleIcon class="text-muted-foreground size-5" />
+					{/if}
+				</span>
+			{/if}
 
-            {#if item.metadata.isStarred}
-                <StarIcon
-                    class="absolute top-1.5 left-1.5 size-3.5 text-yellow-500 drop-shadow"
-                    fill="#eab308"
-                />
-            {/if}
+			{#if item.metadata.isStarred}
+				<StarIcon
+					class="absolute top-1.5 left-1.5 size-3.5 text-yellow-500 drop-shadow"
+					fill="#eab308"
+				/>
+			{/if}
 
-            {#if duration}
-                <span
-                    class="bg-background/75 absolute bottom-1.5 left-1.5 rounded-[calc(var(--radius)-2px)] px-1.5 py-0.5 text-[10px] tabular-nums backdrop-blur-sm"
-                >
-                    {duration}
-                </span>
-            {/if}
-        </div>
+			{#if duration}
+				<span
+					class="bg-background/75 absolute bottom-1.5 left-1.5 rounded-[calc(var(--radius)-2px)] px-1.5 py-0.5 text-[10px] tabular-nums backdrop-blur-sm"
+				>
+					{duration}
+				</span>
+			{/if}
+		</div>
 
-        <div class="flex min-h-11 flex-col justify-center gap-0.5 px-2.5 py-2">
-            <span
-                title={item.metadata.name ?? item.key.replace("/", "")}
-                class={cn(
-                    "truncate text-xs leading-tight",
-                    $playableMusic &&
-                        $playableMusic.title === playTitle
-                        ? "text-primary font-medium"
-                        : "font-medium",
-                )}
-            >
-                {item.metadata.name ??
-                    (isFolderItem(item)
-                        ? item.key.replace("/", "")
-                        : stripFolders(item.key))}
-            </span>
-            <span class="text-muted-foreground truncate text-[10px] leading-tight">
-                {isFolderItem(item)
-                    ? m.folder()
-                    : readableFileSize(item.size ?? 0)}
-                {@render versionPill()}
-            </span>
-        </div>
-    </button>
+		<div class="flex min-h-11 flex-col justify-center gap-0.5 px-2.5 py-2">
+			<span
+				title={item.metadata.name ?? item.key.replace("/", "")}
+				class={cn(
+					"truncate text-xs leading-tight",
+					$playableMusic && $playableMusic.title === playTitle
+						? "text-primary font-medium"
+						: "font-medium",
+				)}
+			>
+				{item.metadata.name ??
+					(isFolderItem(item)
+						? item.key.replace("/", "")
+						: stripFolders(item.key))}
+			</span>
+			<span class="text-muted-foreground truncate text-[10px] leading-tight">
+				{isFolderItem(item) ? m.folder() : readableFileSize(item.size ?? 0)}
+				{@render versionPill()}
+			</span>
+		</div>
+	</button>
 {:else if version && layout === "list"}
-    <!-- A child of the row above: indented on a rail, led by its label, and
+	<!-- A child of the row above: indented on a rail, led by its label, and
          without the file name, which that row already shows. -->
-    <button
-        use:touchAction
-        onclick={handleClick}
-        ontap={handleClick}
-        class="flex h-full w-full min-w-0 flex-row items-center gap-3 pl-3"
-    >
-        <span class="bg-primary/30 h-full w-0.5 shrink-0 self-stretch"></span>
-        {#if $playableMusic && $playableMusic.title === playTitle}
-            {#if $playableMusic.isPlaying}
-                <NowPlaying />
-            {:else}
-                <PauseIcon class="text-primary size-4 shrink-0" />
-            {/if}
-        {:else}
-            <HistoryIcon class="text-muted-foreground size-4 shrink-0" />
-        {/if}
-        <span class="flex min-w-0 flex-1 items-baseline gap-2 text-start">
-            <span
-                class={cn(
-                    "shrink-0 text-sm font-medium tabular-nums",
-                    $playableMusic && $playableMusic.title === playTitle
-                        ? "text-primary"
-                        : "",
-                )}
-            >
-                {versionLabel(naming, version.seq, baseItem.updatedAt ?? "")}
-            </span>
-            <span class="text-muted-foreground truncate text-xs">
-                {#if naming !== "date" && baseItem.updatedAt}
-                    {new Date(baseItem.updatedAt).toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                    })}
-                {/if}
-                {#if version.name}
-                    · {version.name}
-                {/if}
-                {#if version.authorName}
-                    · {version.authorName}
-                {/if}
-            </span>
-        </span>
-    </button>
+	<button
+		use:touchAction
+		onclick={handleClick}
+		ontap={handleClick}
+		class="flex h-full w-full min-w-0 flex-row items-center gap-3 pl-3"
+	>
+		<span class="bg-primary/30 h-full w-0.5 shrink-0 self-stretch"></span>
+		{#if $playableMusic && $playableMusic.title === playTitle}
+			{#if $playableMusic.isPlaying}
+				<NowPlaying />
+			{:else}
+				<PauseIcon class="text-primary size-4 shrink-0" />
+			{/if}
+		{:else}
+			<HistoryIcon class="text-muted-foreground size-4 shrink-0" />
+		{/if}
+		<span class="flex min-w-0 flex-1 items-baseline gap-2 text-start">
+			<span
+				class={cn(
+					"shrink-0 text-sm font-medium tabular-nums",
+					$playableMusic && $playableMusic.title === playTitle
+						? "text-primary"
+						: "",
+				)}
+			>
+				{versionLabel(naming, version.seq, baseItem.updatedAt ?? "")}
+			</span>
+			<span class="text-muted-foreground truncate text-xs">
+				{#if naming !== "date" && baseItem.updatedAt}
+					{new Date(baseItem.updatedAt).toLocaleString(undefined, {
+						dateStyle: "medium",
+						timeStyle: "short",
+					})}
+				{/if}
+				{#if version.name}
+					· {version.name}
+				{/if}
+				{#if version.authorName}
+					· {version.authorName}
+				{/if}
+			</span>
+		</span>
+	</button>
 {:else}
-    <button
-        use:touchAction
-        onclick={handleClick}
-        ontap={handleClick}
-        onlongpress={() => handleLongPress()}
-        class="flex h-full w-full min-w-0 flex-row items-center gap-2"
-        disabled={getItemStatus() === ItemStatus.UPLOADING}
-    >
-        {#if !isDesktop.current && indeterminate}
-            {#if isSelected}
-                <CircleCheckIcon class={cn(iconSize, "text-primary bg-transparent")} />
-            {:else}
-                <CircleIcon class={cn(iconSize, "text-muted-foreground bg-transparent")} />
-            {/if}
-        {:else if getItemStatus() === ItemStatus.UPLOADING}
-            <div>
-                {#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
-                    <span class="text-xs">
-                        {Math.round($uploadingItems[item.key] ?? 0)}%
-                    </span>
-                {:else}
-                    <XIcon class="h-4 w-4 text-destructive" />
-                {/if}
-            </div>
-        {:else if item.metadata.category}
-            {@const editable = kindForName(item.metadata.name ?? item.key)}
-            <div class="flex h-full items-center justify-start">
-                {#if editable}
-                    <DocumentKindIcon kind={editable} class={iconSize} />
-                {:else if item.metadata.category === FileCategoryEnum.DOCUMENTS}
-                    {@const docType = getDocumentType(
-                        item.metadata.contentType,
-                    )}
-                    {#if docType}
-                        <DocumentIcon type={docType} class={iconSize} />
-                    {:else}
-                        <FileTextIcon class={cn(iconSize, "text-blue-600")} />
-                    {/if}
-                {:else if item.metadata.category === FileCategoryEnum.MUSIC}
-                    {#if $playableMusic && $playableMusic.title === playTitle}
-                        {#if $playableMusic.isPlaying}
-                            <span class={cn(iconSize, "flex items-center justify-center text-pink-400")}>
-                                <NowPlaying />
-                            </span>
-                        {:else}
-                            <PauseIcon class={cn(iconSize, "text-pink-400")} />
-                        {/if}
-                    {:else}
-                        <FileMusicIcon class={cn(iconSize, "text-pink-400")} />
-                    {/if}
-                {:else if item.metadata.category === FileCategoryEnum.IMAGES}
-                    <FileImageIcon class={cn(iconSize, "text-orange-400")} />
-                {:else if item.metadata.category === FileCategoryEnum.VIDEO}
-                    <FileVideoCameraIcon
-                        class={cn(iconSize, "text-blue-400")}
-                    />
-                {:else if item.metadata.category === FileCategoryEnum.CODE}
-                    <FileCodeIcon class={cn(iconSize, "text-green-400")} />
-                {:else if item.metadata.category === FileCategoryEnum.ARCHIVES}
-                    <FileArchiveIcon class={cn(iconSize, "text-teal-600")} />
-                {:else if item.metadata.category === FileCategoryEnum.THREE_D}
-                    <Rotate3dIcon class={cn(iconSize, "text-rose-600")} />
-                {:else}
-                    <FileIcon class={iconSize} />
-                {/if}
-            </div>
-        {:else}
-            <FileIcon class={iconSize} />
-        {/if}
-        <div class="text-start min-w-0 flex-1">
-            <p
-                title={item.metadata.name ?? item.key}
-                class={cn(
-                    "flex min-w-0 items-center gap-1 text-base lg:text-sm",
-                    $playableMusic &&
-                        $playableMusic.title === playTitle
-                        ? "text-primary font-medium"
-                        : getItemStatus() === ItemStatus.UPLOADING
-                          ? "text-gray-500 dark:text-gray-300"
-                          : "",
-                )}
-            >
-                <span class="truncate">
-                    {item.metadata.name ??
-                    (isFolderItem(item)
-                        ? item.key.replace("/", "")
-                        : stripFolders(item.key))}
-                </span>
-                {#if item.metadata.isStarred}
-                    <StarIcon
-                        class="h-4 w-4 text-yellow-500 shrink-0"
-                        fill="#eab308"
-                    />
-                {/if}
-                {@render versionPill()}
-            </p>
-            {#if item.metadata.category || item.parent}
-                <p class="truncate text-xs text-muted-foreground">
-                    {#if item.metadata.category}
-                        {item.metadata.category.charAt(0) +
-                            item.metadata.category.slice(1).toLowerCase()}
-                    {/if}
-                    {#if item.parent}
-                        {#if item.metadata.category}
-                            <span class="mx-1">•</span>
-                        {/if}
-                        <a
-                            href={listingHref(
-                                item.parentKey || "",
-                                locationOf(page.params),
-                            )}
-                            class="text-muted-foreground/70 hover:text-primary hover:underline"
-                            onclick={(e) => e.stopPropagation()}
-                        >
-                            {item.parent}
-                        </a>
-                    {/if}
-                </p>
-            {/if}
-        </div>
-        {#if item.metadata.category === "MUSIC"}
-            {#if item.metadata.music?.duration}
-                <Badge
-                    variant="outline"
-                    class="text-muted-foreground shrink-0 px-1.5 text-xs"
-                >
-                    {secondsToMinutes(item.metadata.music.duration)}
-                </Badge>
-            {/if}
-        {/if}
-    </button>
+	<button
+		use:touchAction
+		onclick={handleClick}
+		ontap={handleClick}
+		onlongpress={() => handleLongPress()}
+		class="flex h-full w-full min-w-0 flex-row items-center gap-2"
+		disabled={getItemStatus() === ItemStatus.UPLOADING}
+	>
+		{#if !isDesktop.current && indeterminate}
+			{#if isSelected}
+				<CircleCheckIcon class={cn(iconSize, "text-primary bg-transparent")} />
+			{:else}
+				<CircleIcon
+					class={cn(iconSize, "text-muted-foreground bg-transparent")}
+				/>
+			{/if}
+		{:else if getItemStatus() === ItemStatus.UPLOADING}
+			<div>
+				{#if $uploadingItems[item.key] && !Number.isNaN($uploadingItems[item.key])}
+					<span class="text-xs">
+						{Math.round($uploadingItems[item.key] ?? 0)}%
+					</span>
+				{:else}
+					<XIcon class="h-4 w-4 text-destructive" />
+				{/if}
+			</div>
+		{:else if item.metadata.category}
+			{@const editable = kindForName(item.metadata.name ?? item.key)}
+			<div class="flex h-full items-center justify-start">
+				{#if editable}
+					<DocumentKindIcon kind={editable} class={iconSize} />
+				{:else if item.metadata.category === FileCategoryEnum.DOCUMENTS}
+					{@const docType = getDocumentType(item.metadata.contentType)}
+					{#if docType}
+						<DocumentIcon type={docType} class={iconSize} />
+					{:else}
+						<FileTextIcon class={cn(iconSize, "text-blue-600")} />
+					{/if}
+				{:else if item.metadata.category === FileCategoryEnum.MUSIC}
+					{#if $playableMusic && $playableMusic.title === playTitle}
+						{#if $playableMusic.isPlaying}
+							<span
+								class={cn(
+									iconSize,
+									"flex items-center justify-center text-pink-400",
+								)}
+							>
+								<NowPlaying />
+							</span>
+						{:else}
+							<PauseIcon class={cn(iconSize, "text-pink-400")} />
+						{/if}
+					{:else}
+						<FileMusicIcon class={cn(iconSize, "text-pink-400")} />
+					{/if}
+				{:else if item.metadata.category === FileCategoryEnum.IMAGES}
+					<FileImageIcon class={cn(iconSize, "text-orange-400")} />
+				{:else if item.metadata.category === FileCategoryEnum.VIDEO}
+					<FileVideoCameraIcon class={cn(iconSize, "text-blue-400")} />
+				{:else if item.metadata.category === FileCategoryEnum.CODE}
+					<FileCodeIcon class={cn(iconSize, "text-green-400")} />
+				{:else if item.metadata.category === FileCategoryEnum.ARCHIVES}
+					<FileArchiveIcon class={cn(iconSize, "text-teal-600")} />
+				{:else if item.metadata.category === FileCategoryEnum.THREE_D}
+					<Rotate3dIcon class={cn(iconSize, "text-rose-600")} />
+				{:else}
+					<FileIcon class={iconSize} />
+				{/if}
+			</div>
+		{:else}
+			<FileIcon class={iconSize} />
+		{/if}
+		<div class="text-start min-w-0 flex-1">
+			<p
+				title={item.metadata.name ?? item.key}
+				class={cn(
+					"flex min-w-0 items-center gap-1 text-base lg:text-sm",
+					$playableMusic && $playableMusic.title === playTitle
+						? "text-primary font-medium"
+						: getItemStatus() === ItemStatus.UPLOADING
+							? "text-gray-500 dark:text-gray-300"
+							: "",
+				)}
+			>
+				<span class="truncate">
+					{item.metadata.name ??
+						(isFolderItem(item)
+							? item.key.replace("/", "")
+							: stripFolders(item.key))}
+				</span>
+				{#if item.metadata.isStarred}
+					<StarIcon class="h-4 w-4 text-yellow-500 shrink-0" fill="#eab308" />
+				{/if}
+				{@render versionPill()}
+			</p>
+			{#if item.metadata.category || item.parent}
+				<p class="truncate text-xs text-muted-foreground">
+					{#if item.metadata.category}
+						{item.metadata.category.charAt(0) +
+							item.metadata.category.slice(1).toLowerCase()}
+					{/if}
+					{#if item.parent}
+						{#if item.metadata.category}
+							<span class="mx-1">•</span>
+						{/if}
+						<a
+							href={listingHref(item.parentKey || "", locationOf(page.params))}
+							class="text-muted-foreground/70 hover:text-primary hover:underline"
+							onclick={(e) => e.stopPropagation()}
+						>
+							{item.parent}
+						</a>
+					{/if}
+				</p>
+			{/if}
+		</div>
+		{#if item.metadata.category === "MUSIC"}
+			{#if item.metadata.music?.duration}
+				<Badge
+					variant="outline"
+					class="text-muted-foreground shrink-0 px-1.5 text-xs"
+				>
+					{secondsToMinutes(item.metadata.music.duration)}
+				</Badge>
+			{/if}
+		{/if}
+	</button>
 {/if}

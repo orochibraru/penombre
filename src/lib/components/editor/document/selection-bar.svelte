@@ -132,8 +132,10 @@
 
 <!-- Never takes the focus: the selection it acts on must stay put. -->
 <Popover.Root
-	bind:open={() => key !== null && key !== dismissed,
-	(open) => !open && (dismissed = key)}
+	bind:open={
+		() => key !== null && key !== dismissed,
+		(open) => !open && (dismissed = key)
+	}
 >
 	<Popover.Content
 		customAnchor={anchor}
@@ -167,10 +169,7 @@
 			current={current.colour}
 			none={m.doc_default()}
 			onPick={(colour) =>
-				editor.commands.setMark(
-					"textColor",
-					colour ? { color: colour } : null,
-				)}
+				editor.commands.setMark("textColor", colour ? { color: colour } : null)}
 			onClose={refocus}
 		/>
 		<ColourMenu
@@ -187,7 +186,12 @@
 			onClose={refocus}
 		/>
 		{@render separator()}
-		<LinkPopover {editor} active={linkActive} bind:open={linkOpen} class={button} />
+		<LinkPopover
+			{editor}
+			active={linkActive}
+			bind:open={linkOpen}
+			class={button}
+		/>
 		{#if onComment}
 			<button
 				type="button"

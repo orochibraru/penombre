@@ -45,14 +45,14 @@
 </script>
 
 <div bind:this={root}>
-    <Present
-        {deck}
-        {looks}
-        {theme}
-        {index}
-        quiet
-        onnavigate={navigate}
-        onexit={() => window.close()}
-        onfullscreen={() => toggleFullscreen(root ?? null)}
-    />
+	<Present
+		{deck}
+		{looks}
+		{theme}
+		{index}
+		quiet
+		onnavigate={navigate}
+		onexit={() => window.close()}
+		onfullscreen={() => toggleFullscreen(root ?? null)}
+	/>
 </div>

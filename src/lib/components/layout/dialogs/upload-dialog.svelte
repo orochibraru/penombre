@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import { FilesIcon, FolderIcon, XIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -23,7 +24,6 @@
 	import { enqueueUploads } from "#lib/upload/manager.js";
 	import type { UploadJob } from "#lib/upload/queue.js";
 	import { cn, randomId } from "#lib/utils.js";
-	import { page } from "$app/state";
 	import {
 		createFoldersForUpload,
 		createUploadMetadata,
@@ -248,134 +248,133 @@
 </script>
 
 {#snippet uploadButton()}
-    <Button
-        type="button"
-        {loading}
-        disabled={totalFileCount === 0}
-        onclick={() => handleUpload()}
-    >
-        {m.upload_action({ count: String(totalFileCount) })}
-    </Button>
+	<Button
+		type="button"
+		{loading}
+		disabled={totalFileCount === 0}
+		onclick={() => handleUpload()}
+	>
+		{m.upload_action({ count: String(totalFileCount) })}
+	</Button>
 {/snippet}
 
-{#snippet entry(name: string, size: number, remove: () => void, folder: boolean)}
-    <div
-        class="flex min-w-0 place-items-center justify-between gap-3 rounded-xl border p-3"
-    >
-        <div class="flex min-w-0 flex-col">
-            <div class="flex min-w-0 items-center gap-2">
-                {#if folder}
-                    <FolderIcon class="text-muted-foreground size-4 shrink-0" />
-                {/if}
-                <span class="truncate text-sm" title={name}>{name}</span>
-            </div>
-            <span class="text-muted-foreground text-xs">
-                {displaySize(size)}
-            </span>
-        </div>
-        <Button
-            variant="outline"
-            size="icon"
-            class="shrink-0"
-            aria-label={m.delete()}
-            onclick={remove}
-        >
-            <XIcon />
-        </Button>
-    </div>
+{#snippet entry(
+	name: string,
+	size: number,
+	remove: () => void,
+	folder: boolean,
+)}
+	<div
+		class="flex min-w-0 place-items-center justify-between gap-3 rounded-xl border p-3"
+	>
+		<div class="flex min-w-0 flex-col">
+			<div class="flex min-w-0 items-center gap-2">
+				{#if folder}
+					<FolderIcon class="text-muted-foreground size-4 shrink-0" />
+				{/if}
+				<span class="truncate text-sm" title={name}>{name}</span>
+			</div>
+			<span class="text-muted-foreground text-xs">
+				{displaySize(size)}
+			</span>
+		</div>
+		<Button
+			variant="outline"
+			size="icon"
+			class="shrink-0"
+			aria-label={m.delete()}
+			onclick={remove}
+		>
+			<XIcon />
+		</Button>
+	</div>
 {/snippet}
 
 <ResponsiveDialog
-    bind:open
-    bind:loading
-    size="lg"
-    title={m.upload_title()}
-    description={m.upload_description()}
-    form={{ method: "POST", enctype: "multipart/form-data" }}
-    footer={uploadButton}
+	bind:open
+	bind:loading
+	size="lg"
+	title={m.upload_title()}
+	description={m.upload_description()}
+	form={{ method: "POST", enctype: "multipart/form-data" }}
+	footer={uploadButton}
 >
-    <input type="hidden" name="rootFolder" value={page.params.path} />
+	<input type="hidden" name="rootFolder" value={page.params.path} />
 
-    <!-- Two zones, not one with a link tucked into it: picking files and
+	<!-- Two zones, not one with a link tucked into it: picking files and
          picking a folder do different things to the resulting tree, so they
          are offered as two different choices. -->
-    <div class="mb-5 grid gap-4 md:grid-cols-2">
-        <section class="flex flex-col gap-2">
-            <h3 class="flex items-center gap-2 text-sm font-medium">
-                <FilesIcon class="text-primary size-4" />
-                {m.upload_files_heading()}
-            </h3>
-            <FileDropZone
-                {onUpload}
-                {onFileRejected}
-                fileCount={totalFileCount}
-                class="h-40"
-            />
-            <p class="text-muted-foreground text-xs">
-                {m.upload_files_hint()}
-            </p>
-        </section>
+	<div class="mb-5 grid gap-4 md:grid-cols-2">
+		<section class="flex flex-col gap-2">
+			<h3 class="flex items-center gap-2 text-sm font-medium">
+				<FilesIcon class="text-primary size-4" />
+				{m.upload_files_heading()}
+			</h3>
+			<FileDropZone
+				{onUpload}
+				{onFileRejected}
+				fileCount={totalFileCount}
+				class="h-40"
+			/>
+			<p class="text-muted-foreground text-xs">
+				{m.upload_files_hint()}
+			</p>
+		</section>
 
-        <section class="flex flex-col gap-2">
-            <h3 class="flex items-center gap-2 text-sm font-medium">
-                <FolderIcon class="text-primary size-4" />
-                {m.upload_folder_heading()}
-            </h3>
-            <FileDropZone
-                onUpload={onFolderUpload}
-                {onFolderUpload}
-                {onFileRejected}
-                folderOnly
-                fileCount={totalFileCount}
-                class="h-40"
-            />
-            <p class="text-muted-foreground text-xs">
-                {m.upload_folder_hint()}
-            </p>
-        </section>
-    </div>
+		<section class="flex flex-col gap-2">
+			<h3 class="flex items-center gap-2 text-sm font-medium">
+				<FolderIcon class="text-primary size-4" />
+				{m.upload_folder_heading()}
+			</h3>
+			<FileDropZone
+				onUpload={onFolderUpload}
+				{onFolderUpload}
+				{onFileRejected}
+				folderOnly
+				fileCount={totalFileCount}
+				class="h-40"
+			/>
+			<p class="text-muted-foreground text-xs">
+				{m.upload_folder_hint()}
+			</p>
+		</section>
+	</div>
 
-    {#if folderFiles.length > 0}
-        <div class="mb-5 rounded-xl border p-3">
-            <p class="mb-2 text-sm font-medium">
-                {m.upload_folder_placement_title()}
-            </p>
-            <RadioGroup.Root bind:value={folderPlacement} class="gap-2">
-                <div class="flex items-center gap-2">
-                    <RadioGroup.Item value="keep" id="folder-placement-keep" />
-                    <Label for="folder-placement-keep" class="text-sm font-normal">
-                        {m.upload_folder_placement_keep({
-                            name: droppedFolderName,
-                        })}
-                    </Label>
-                </div>
-                <div class="flex items-center gap-2">
-                    <RadioGroup.Item
-                        value="flatten"
-                        id="folder-placement-flatten"
-                    />
-                    <Label
-                        for="folder-placement-flatten"
-                        class="text-sm font-normal"
-                    >
-                        {m.upload_folder_placement_flatten()}
-                    </Label>
-                </div>
-            </RadioGroup.Root>
-        </div>
-    {/if}
+	{#if folderFiles.length > 0}
+		<div class="mb-5 rounded-xl border p-3">
+			<p class="mb-2 text-sm font-medium">
+				{m.upload_folder_placement_title()}
+			</p>
+			<RadioGroup.Root bind:value={folderPlacement} class="gap-2">
+				<div class="flex items-center gap-2">
+					<RadioGroup.Item value="keep" id="folder-placement-keep" />
+					<Label for="folder-placement-keep" class="text-sm font-normal">
+						{m.upload_folder_placement_keep({
+							name: droppedFolderName,
+						})}
+					</Label>
+				</div>
+				<div class="flex items-center gap-2">
+					<RadioGroup.Item value="flatten" id="folder-placement-flatten" />
+					<Label for="folder-placement-flatten" class="text-sm font-normal">
+						{m.upload_folder_placement_flatten()}
+					</Label>
+				</div>
+			</RadioGroup.Root>
+		</div>
+	{/if}
 
-    <div class={cn("flex flex-col gap-3", totalFileCount > 0 && "mb-5")}>
-        {#each files as file, i}
-            {@render entry(file.name, file.size, () => removeFile(i), false)}
-        {/each}
-        {#each folderFiles as file, i (`folder-${file.relativePath}`)}
-            {@render entry(
-                file.relativePath ?? file.name,
-                file.size,
-                () => removeFolderFile(i),
-                true,
-            )}
-        {/each}
-    </div>
+	<div class={cn("flex flex-col gap-3", totalFileCount > 0 && "mb-5")}>
+		{#each files as file, i}
+			{@render entry(file.name, file.size, () => removeFile(i), false)}
+		{/each}
+		{#each folderFiles as file, i (`folder-${file.relativePath}`)}
+			{@render entry(
+				file.relativePath ?? file.name,
+				file.size,
+				() => removeFolderFile(i),
+				true,
+			)}
+		{/each}
+	</div>
 </ResponsiveDialog>

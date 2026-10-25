@@ -196,14 +196,10 @@ export interface paths {
 									requireStrong: boolean;
 								};
 								preferredSignInMethod:
-									| ("password" | "passkey" | "magicLink" | "emailOtp")
-									| null;
+									("password" | "passkey" | "magicLink" | "emailOtp") | null;
 								requirements: ("twoFactor" | "passkey")[];
 								signInMethods: (
-									| "password"
-									| "passkey"
-									| "magicLink"
-									| "emailOtp"
+									"password" | "passkey" | "magicLink" | "emailOtp"
 								)[];
 								simpleMode: boolean;
 								smtpAvailable: boolean;
@@ -378,14 +374,10 @@ export interface paths {
 									requireStrong: boolean;
 								};
 								preferredSignInMethod:
-									| ("password" | "passkey" | "magicLink" | "emailOtp")
-									| null;
+									("password" | "passkey" | "magicLink" | "emailOtp") | null;
 								requirements: ("twoFactor" | "passkey")[];
 								signInMethods: (
-									| "password"
-									| "passkey"
-									| "magicLink"
-									| "emailOtp"
+									"password" | "passkey" | "magicLink" | "emailOtp"
 								)[];
 								simpleMode: boolean;
 								smtpAvailable: boolean;
@@ -611,8 +603,7 @@ export interface paths {
 						"application/json": {
 							data?: {
 								method:
-									| ("password" | "passkey" | "magicLink" | "emailOtp")
-									| null;
+									("password" | "passkey" | "magicLink" | "emailOtp") | null;
 							};
 						};
 					};
@@ -8487,8 +8478,7 @@ export interface paths {
 								};
 								onboarded?: boolean;
 								preferredSignInMethod?:
-									| ("password" | "passkey" | "magicLink" | "emailOtp")
-									| null;
+									("password" | "passkey" | "magicLink" | "emailOtp") | null;
 								sortColumn?: ("name" | "size" | "updatedAt" | "type") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";
@@ -8576,8 +8566,7 @@ export interface paths {
 						};
 						onboarded?: boolean;
 						preferredSignInMethod?:
-							| ("password" | "passkey" | "magicLink" | "emailOtp")
-							| null;
+							("password" | "passkey" | "magicLink" | "emailOtp") | null;
 						sortColumn?: ("name" | "size" | "updatedAt" | "type") | null;
 						/** @enum {string} */
 						sortDirection?: "asc" | "desc";
@@ -8639,8 +8628,7 @@ export interface paths {
 								};
 								onboarded?: boolean;
 								preferredSignInMethod?:
-									| ("password" | "passkey" | "magicLink" | "emailOtp")
-									| null;
+									("password" | "passkey" | "magicLink" | "emailOtp") | null;
 								sortColumn?: ("name" | "size" | "updatedAt" | "type") | null;
 								/** @enum {string} */
 								sortDirection?: "asc" | "desc";
@@ -12673,14 +12661,7 @@ export interface paths {
 					volume?: string;
 					share?: string;
 					format:
-						| "pdf"
-						| "docx"
-						| "html"
-						| "md"
-						| "txt"
-						| "xlsx"
-						| "csv"
-						| "pptx";
+						"pdf" | "docx" | "html" | "md" | "txt" | "xlsx" | "csv" | "pptx";
 				};
 				header?: never;
 				path: {

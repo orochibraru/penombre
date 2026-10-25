@@ -3,8 +3,8 @@ import {
 	type Args,
 	cells,
 	num,
-	type SheetFunction,
 	scalar,
+	type SheetFunction,
 	text,
 } from "./functions";
 import {

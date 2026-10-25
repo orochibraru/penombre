@@ -46,25 +46,25 @@
 </script>
 
 <BottomAction
-    bind:ref={panel}
-    compact
-    {open}
-    title={m.selected_count({ count: String(count) })}
-    closeLabel={m.clear_selection()}
-    callback={onclear}
-    class="bottom-[calc(5rem+var(--player-height,0px))] lg:bottom-[calc(1.25rem+var(--player-height,0px))]"
+	bind:ref={panel}
+	compact
+	{open}
+	title={m.selected_count({ count: String(count) })}
+	closeLabel={m.clear_selection()}
+	callback={onclear}
+	class="bottom-[calc(5rem+var(--player-height,0px))] lg:bottom-[calc(1.25rem+var(--player-height,0px))]"
 >
-    {#each actions as action (action.title)}
-        {@const Icon = action.icon}
-        <Button
-            type="button"
-            size="sm"
-            variant={action.variant}
-            onclick={() => action.action()}
-            class="text-xs"
-        >
-            <Icon class="size-3.5" />
-            {action.title}
-        </Button>
-    {/each}
+	{#each actions as action (action.title)}
+		{@const Icon = action.icon}
+		<Button
+			type="button"
+			size="sm"
+			variant={action.variant}
+			onclick={() => action.action()}
+			class="text-xs"
+		>
+			<Icon class="size-3.5" />
+			{action.title}
+		</Button>
+	{/each}
 </BottomAction>

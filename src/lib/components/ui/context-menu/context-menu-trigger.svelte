@@ -7,4 +7,8 @@
 	}: ContextMenuPrimitive.TriggerProps = $props();
 </script>
 
-<ContextMenuPrimitive.Trigger bind:ref data-slot="context-menu-trigger" {...restProps} />
+<ContextMenuPrimitive.Trigger
+	bind:ref
+	data-slot="context-menu-trigger"
+	{...restProps}
+/>

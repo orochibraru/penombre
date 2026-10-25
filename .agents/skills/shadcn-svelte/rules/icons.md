@@ -30,8 +30,8 @@ the icon. No sizing classes on the icon.
 ```svelte
 <script lang="ts">
   import { Button } from "$lib/components/ui/button";
-  import SearchIcon from "@lucide/svelte/icons/search";
   import ArrowRightIcon from "@lucide/svelte/icons/arrow-right";
+  import SearchIcon from "@lucide/svelte/icons/search";
 </script>
 
 <Button>
@@ -102,8 +102,8 @@ Use a component reference, not a string key to a lookup map.
 
 ```svelte
 <script lang="ts">
-  import type { Component } from "svelte";
   import CheckIcon from "@lucide/svelte/icons/check";
+  import type { Component } from "svelte";
 
   let { Icon }: { Icon: Component } = $props();
 </script>

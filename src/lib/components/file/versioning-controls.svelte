@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { invalidate } from "$app/navigation";
+	import { page } from "$app/state";
 	import { FolderCogIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import { api, type ObjectItem } from "#lib/api/index.js";
@@ -20,8 +22,6 @@
 	} from "#lib/store/versions.js";
 	import { isFolderItem, randomId } from "#lib/utils.js";
 	import { displayTitle, versionOf } from "#lib/versions.js";
-	import { invalidate } from "$app/navigation";
-	import { page } from "$app/state";
 
 	/** The folder settings button, the new-version picker and their dialogs. */
 	const {
@@ -135,75 +135,75 @@
 </script>
 
 <input
-    bind:this={picker}
-    type="file"
-    class="hidden"
-    aria-hidden="true"
-    tabindex="-1"
-    onchange={uploadNewVersion}
+	bind:this={picker}
+	type="file"
+	class="hidden"
+	aria-hidden="true"
+	tabindex="-1"
+	onchange={uploadNewVersion}
 />
 
 {#if showButton}
-    <Button
-        variant="outline"
-        title={m.folder_settings_title()}
-        onclick={() =>
-            (folderSettings = { open: true, id: currentFolder, name: "" })}
-    >
-        <FolderCogIcon class="h-4 w-4" />
-        <span class="sr-only">{m.folder_settings_title()}</span>
-    </Button>
+	<Button
+		variant="outline"
+		title={m.folder_settings_title()}
+		onclick={() =>
+			(folderSettings = { open: true, id: currentFolder, name: "" })}
+	>
+		<FolderCogIcon class="h-4 w-4" />
+		<span class="sr-only">{m.folder_settings_title()}</span>
+	</Button>
 {/if}
 
 <VersionHistoryDialog {onopen} />
 <MergeVersionsDialog />
 
 <FolderSettingsDialog
-    bind:open={folderSettings.open}
-    folderId={folderSettings.id}
-    folderName={folderSettings.name}
+	bind:open={folderSettings.open}
+	folderId={folderSettings.id}
+	folderName={folderSettings.name}
 />
 
 <ResponsiveDialog
-    bind:open={confirmOpen}
-    size="sm"
-    loading={busy}
-    title={pending?.action === "delete"
-        ? m.versions_delete()
-        : m.versions_restore()}
-    description={pending
-        ? displayTitle(pending.item, page.data.preferences?.versionNaming)
-        : ""}
-    submitLabel={pending?.action === "delete"
-        ? m.versions_confirm_delete()
-        : m.versions_confirm_restore()}
-    submitVariant={pending?.action === "delete" ? "destructive" : "default"}
-    onsubmit={confirm}
+	bind:open={confirmOpen}
+	size="sm"
+	loading={busy}
+	title={pending?.action === "delete"
+		? m.versions_delete()
+		: m.versions_restore()}
+	description={pending
+		? displayTitle(pending.item, page.data.preferences?.versionNaming)
+		: ""}
+	submitLabel={pending?.action === "delete"
+		? m.versions_confirm_delete()
+		: m.versions_confirm_restore()}
+	submitVariant={pending?.action === "delete" ? "destructive" : "default"}
+	onsubmit={confirm}
 >
-    <p class="text-muted-foreground text-sm">
-        {pending?.action === "delete"
-            ? m.versions_delete_hint()
-            : m.versions_restore_hint()}
-    </p>
+	<p class="text-muted-foreground text-sm">
+		{pending?.action === "delete"
+			? m.versions_delete_hint()
+			: m.versions_restore_hint()}
+	</p>
 </ResponsiveDialog>
 
 <ResponsiveDialog
-    bind:open={() => !!dropped, (value) => !value && pendingVersionDrop.set(null)}
-    size="sm"
-    title={m.versions_drop_title()}
+	bind:open={() => !!dropped, (value) => !value && pendingVersionDrop.set(null)}
+	size="sm"
+	title={m.versions_drop_title()}
 >
-    <p class="text-muted-foreground text-sm">
-        {m.versions_drop_hint({
-            name: dropped?.file.name ?? "",
-            target: dropped?.item.metadata.name ?? dropped?.item.key ?? "",
-        })}
-    </p>
-    {#snippet footer()}
-        <Button onclick={() => resolveDrop(true)}>
-            {m.versions_drop_as_version()}
-        </Button>
-        <Button variant="outline" onclick={() => resolveDrop(false)}>
-            {m.versions_drop_as_file()}
-        </Button>
-    {/snippet}
+	<p class="text-muted-foreground text-sm">
+		{m.versions_drop_hint({
+			name: dropped?.file.name ?? "",
+			target: dropped?.item.metadata.name ?? dropped?.item.key ?? "",
+		})}
+	</p>
+	{#snippet footer()}
+		<Button onclick={() => resolveDrop(true)}>
+			{m.versions_drop_as_version()}
+		</Button>
+		<Button variant="outline" onclick={() => resolveDrop(false)}>
+			{m.versions_drop_as_file()}
+		</Button>
+	{/snippet}
 </ResponsiveDialog>

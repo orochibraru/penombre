@@ -180,18 +180,11 @@ repos:
         pass_filenames: false
         files: ^(messages/.*\.json|project\.inlang/settings\.json)$
 
-      - id: biome
-        name: Format and sort imports (Biome)
-        entry: node_modules/.bin/biome check --write --error-on-warnings --no-errors-on-unmatched --files-ignore-unknown=true
+      - id: format
+        name: Format and sort imports (bun fmt)
+        entry: bun fmt --ignore-unknown --no-error-on-unmatched-pattern --log-level warn
         language: system
         require_serial: true
-        files: \.(ts|tsx|js|jsx|mjs|cjs|json|jsonc|css|svelte|html)$
-
-      - id: format-md
-        name: Formatting (MD)
-        entry: node_modules/.bin/prettier --log-level warn --write
-        language: system
-        types: [markdown]
 
       - id: markdownlint
         name: Markdown Lint

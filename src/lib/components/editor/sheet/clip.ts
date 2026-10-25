@@ -1,6 +1,6 @@
 import {
-	type BookData,
 	blockAt,
+	type BookData,
 	fillWith,
 	shiftBlock,
 	tile,
@@ -11,8 +11,8 @@ import { parseTsv, toTsv } from "#lib/sheet/clipboard.js";
 import type { Cell, Rect } from "#lib/sheet/selection.js";
 import {
 	patchSheet,
-	type StyleGrid,
 	styleBlock,
+	type StyleGrid,
 	tileStyles,
 	writeStyles,
 } from "#lib/sheet/styles.js";

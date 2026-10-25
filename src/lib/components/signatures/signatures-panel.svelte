@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from "$app/paths";
 	import {
 		CheckCircle2Icon,
 		ClockIcon,
@@ -15,7 +16,6 @@
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import { m } from "#lib/paraglide/messages.js";
 	import { copyText } from "#lib/utils.js";
-	import { resolve } from "$app/paths";
 
 	/**
 	 * Signature requests with each signer's status, and what the requester can
@@ -135,123 +135,131 @@
 </script>
 
 {#if !loaded}
-    <div class="flex justify-center py-8"><Spinner /></div>
+	<div class="flex justify-center py-8"><Spinner /></div>
 {:else if requests.length === 0}
-    <p class="text-muted-foreground py-6 text-center text-sm">
-        {m.sign_panel_empty()}
-    </p>
+	<p class="text-muted-foreground py-6 text-center text-sm">
+		{m.sign_panel_empty()}
+	</p>
 {:else}
-    <div class="flex min-w-0 flex-col gap-3">
-        {#each requests as request (request.id)}
-            {@const status = STATUS[request.status]}
-            {@const signed = request.signers.filter((s) => s.status === "signed").length}
-            <Card.Root class="gap-3 py-4">
-                <Card.Header class="px-4">
-                    <Card.Title class="text-sm wrap-anywhere">
-                        {fileId ? m.sign_panel_request({ date: stamp(request.createdAt) }) : request.documentName}
-                    </Card.Title>
-                    <Card.Description class="text-xs">
-                        {m.sign_panel_progress({
-                            signed: String(signed),
-                            total: String(request.signers.length),
-                        })}
-                        ·
-                        {request.completedAt
-                            ? m.sign_panel_completed_on({ date: stamp(request.completedAt) })
-                            : m.sign_panel_expires_on({ date: stamp(request.expiresAt) })}
-                    </Card.Description>
-                    <Card.Action>
-                        <Badge variant={status.variant}>{status.label()}</Badge>
-                    </Card.Action>
-                </Card.Header>
-                <Card.Content class="flex min-w-0 flex-col gap-1 px-4">
-                    {#each request.signers as signer (signer.id)}
-                        <div class="flex min-w-0 items-center gap-2 py-1">
-                            {#if signer.status === "signed"}
-                                <CheckCircle2Icon class="text-primary size-4 shrink-0" />
-                            {:else if signer.status === "declined"}
-                                <XCircleIcon class="text-destructive size-4 shrink-0" />
-                            {:else if signer.viewedAt}
-                                <EyeIcon class="text-muted-foreground size-4 shrink-0" />
-                            {:else}
-                                <ClockIcon class="text-muted-foreground size-4 shrink-0" />
-                            {/if}
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm">
-                                    {signer.name}
-                                    <span class="text-muted-foreground text-xs">
-                                        {signer.email}
-                                    </span>
-                                </p>
-                                <p class="text-muted-foreground truncate text-xs">
-                                    {signerLine(signer)}
-                                </p>
-                            </div>
-                            {#if (request.status === "pending" && signer.status === "pending") || request.status === "completed"}
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    class="size-8 shrink-0"
-                                    aria-label={request.status === "completed"
-                                        ? m.sign_link_send_download()
-                                        : m.sign_link_renew()}
-                                    title={request.status === "completed"
-                                        ? m.sign_link_send_download()
-                                        : m.sign_link_renew()}
-                                    disabled={busy === signer.id}
-                                    onclick={() => renew(request, signer.id)}
-                                >
-                                    <LinkIcon class="size-4" />
-                                </Button>
-                            {/if}
-                        </div>
-                    {/each}
-                </Card.Content>
-                <Card.Footer class="flex flex-wrap gap-2 px-4">
-                    <a
-                        class={buttonVariants({ variant: "outline", size: "sm" })}
-                        href={pdfHref(request.id, "original")}
-                        download
-                    >
-                        <DownloadIcon />
-                        {m.sign_panel_original()}
-                    </a>
-                    {#if request.signedAvailable}
-                        <a
-                            class={buttonVariants({ size: "sm" })}
-                            href={pdfHref(request.id, "signed")}
-                            download
-                        >
-                            <DownloadIcon />
-                            {m.sign_panel_signed()}
-                        </a>
-                    {/if}
-                    {#if request.status === "pending"}
-                        {#if confirming === request.id}
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                disabled={busy === request.id}
-                                onclick={() => cancel(request)}
-                            >
-                                {m.sign_panel_cancel_confirm()}
-                            </Button>
-                            <Button size="sm" variant="ghost" onclick={() => (confirming = null)}>
-                                {m.cancel()}
-                            </Button>
-                        {:else}
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                class="text-muted-foreground"
-                                onclick={() => (confirming = request.id)}
-                            >
-                                {m.sign_panel_cancel()}
-                            </Button>
-                        {/if}
-                    {/if}
-                </Card.Footer>
-            </Card.Root>
-        {/each}
-    </div>
+	<div class="flex min-w-0 flex-col gap-3">
+		{#each requests as request (request.id)}
+			{@const status = STATUS[request.status]}
+			{@const signed = request.signers.filter(
+				(s) => s.status === "signed",
+			).length}
+			<Card.Root class="gap-3 py-4">
+				<Card.Header class="px-4">
+					<Card.Title class="text-sm wrap-anywhere">
+						{fileId
+							? m.sign_panel_request({ date: stamp(request.createdAt) })
+							: request.documentName}
+					</Card.Title>
+					<Card.Description class="text-xs">
+						{m.sign_panel_progress({
+							signed: String(signed),
+							total: String(request.signers.length),
+						})}
+						·
+						{request.completedAt
+							? m.sign_panel_completed_on({ date: stamp(request.completedAt) })
+							: m.sign_panel_expires_on({ date: stamp(request.expiresAt) })}
+					</Card.Description>
+					<Card.Action>
+						<Badge variant={status.variant}>{status.label()}</Badge>
+					</Card.Action>
+				</Card.Header>
+				<Card.Content class="flex min-w-0 flex-col gap-1 px-4">
+					{#each request.signers as signer (signer.id)}
+						<div class="flex min-w-0 items-center gap-2 py-1">
+							{#if signer.status === "signed"}
+								<CheckCircle2Icon class="text-primary size-4 shrink-0" />
+							{:else if signer.status === "declined"}
+								<XCircleIcon class="text-destructive size-4 shrink-0" />
+							{:else if signer.viewedAt}
+								<EyeIcon class="text-muted-foreground size-4 shrink-0" />
+							{:else}
+								<ClockIcon class="text-muted-foreground size-4 shrink-0" />
+							{/if}
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-sm">
+									{signer.name}
+									<span class="text-muted-foreground text-xs">
+										{signer.email}
+									</span>
+								</p>
+								<p class="text-muted-foreground truncate text-xs">
+									{signerLine(signer)}
+								</p>
+							</div>
+							{#if (request.status === "pending" && signer.status === "pending") || request.status === "completed"}
+								<Button
+									variant="ghost"
+									size="icon"
+									class="size-8 shrink-0"
+									aria-label={request.status === "completed"
+										? m.sign_link_send_download()
+										: m.sign_link_renew()}
+									title={request.status === "completed"
+										? m.sign_link_send_download()
+										: m.sign_link_renew()}
+									disabled={busy === signer.id}
+									onclick={() => renew(request, signer.id)}
+								>
+									<LinkIcon class="size-4" />
+								</Button>
+							{/if}
+						</div>
+					{/each}
+				</Card.Content>
+				<Card.Footer class="flex flex-wrap gap-2 px-4">
+					<a
+						class={buttonVariants({ variant: "outline", size: "sm" })}
+						href={pdfHref(request.id, "original")}
+						download
+					>
+						<DownloadIcon />
+						{m.sign_panel_original()}
+					</a>
+					{#if request.signedAvailable}
+						<a
+							class={buttonVariants({ size: "sm" })}
+							href={pdfHref(request.id, "signed")}
+							download
+						>
+							<DownloadIcon />
+							{m.sign_panel_signed()}
+						</a>
+					{/if}
+					{#if request.status === "pending"}
+						{#if confirming === request.id}
+							<Button
+								size="sm"
+								variant="destructive"
+								disabled={busy === request.id}
+								onclick={() => cancel(request)}
+							>
+								{m.sign_panel_cancel_confirm()}
+							</Button>
+							<Button
+								size="sm"
+								variant="ghost"
+								onclick={() => (confirming = null)}
+							>
+								{m.cancel()}
+							</Button>
+						{:else}
+							<Button
+								size="sm"
+								variant="ghost"
+								class="text-muted-foreground"
+								onclick={() => (confirming = request.id)}
+							>
+								{m.sign_panel_cancel()}
+							</Button>
+						{/if}
+					{/if}
+				</Card.Footer>
+			</Card.Root>
+		{/each}
+	</div>
 {/if}

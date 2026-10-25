@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { toast } from "svelte-sonner";
 	import { api } from "#lib/api/index.js";
 	import { withLocation } from "#lib/components/file/file-links.js";
@@ -6,8 +8,6 @@
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { TEMPLATE_IDS } from "#lib/slides/templates/index.js";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
 	import TemplateGallery from "./template-gallery.svelte";
 
 	/**
@@ -58,7 +58,11 @@
 	<div class="flex flex-col gap-4">
 		<label class="flex flex-col gap-1.5">
 			<span class="text-sm font-medium">{m.name()}</span>
-			<Input bind:value={name} placeholder={m.slides_untitled()} maxlength={200} />
+			<Input
+				bind:value={name}
+				placeholder={m.slides_untitled()}
+				maxlength={200}
+			/>
 		</label>
 		<TemplateGallery bind:selected={template} />
 	</div>

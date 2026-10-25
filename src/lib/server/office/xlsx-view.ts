@@ -74,9 +74,9 @@ const paneOf = (root: XmlElement) => {
 
 function readFreeze(root: XmlElement): Freeze {
 	const { pane } = paneOf(root);
-	if (
-		!(pane?.attrs.state === "frozen" || pane?.attrs.state === "frozenSplit")
-	) {
+	if (!(
+		pane?.attrs.state === "frozen" || pane?.attrs.state === "frozenSplit"
+	)) {
 		return { rows: 0, cols: 0 };
 	}
 	const count = (value: string | undefined) =>

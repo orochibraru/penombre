@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { db } from "#lib/server/db/index.js";
 import {
-	type UserPreferencesData,
 	userPreferences,
+	type UserPreferencesData,
 } from "#lib/server/db/schema.js";
 
 const defaultPreferences: UserPreferencesData = {

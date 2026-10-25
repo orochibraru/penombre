@@ -1,9 +1,9 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { dev } from "$app/env";
 import { Logger } from "#lib/logger.js";
 import { getConfig } from "#lib/server/config.js";
 import { getDbUrl } from "#lib/server/db/index.js";
-import { dev } from "$app/env";
 
 const logger = new Logger("Worker");
 

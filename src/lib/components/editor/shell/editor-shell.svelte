@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { browser } from "$app/env";
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 	import { type Snippet, untrack } from "svelte";
-	import { MediaQuery } from "svelte/reactivity";
 	import { toast } from "svelte-sonner";
+	import { MediaQuery } from "svelte/reactivity";
 	import { api, type ObjectItem } from "#lib/api/index.js";
 	import ShareDialog from "#lib/components/layout/dialogs/share-dialog.svelte";
 	import * as Drawer from "#lib/components/ui/drawer/index.js";
@@ -14,12 +18,8 @@
 	import { m } from "#lib/paraglide/messages.js";
 	import { APP_USER_AGENT } from "#lib/release.js";
 	import { locationFrom, locationQuery } from "#lib/storage-location.js";
-	import { browser } from "$app/env";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import { page } from "$app/state";
-	import { Comments } from "./comments.svelte.js";
 	import CommentsPanel from "./comments-panel.svelte";
+	import { Comments } from "./comments.svelte.js";
 	import EditorHeader from "./editor-header.svelte";
 	import type {
 		EditorMenuContext,
@@ -258,68 +258,68 @@
 </script>
 
 {#snippet fileMenu(editorContext: EditorMenuContext)}
-    <FileMenu file={actions} print={editorContext.print} />
+	<FileMenu file={actions} print={editorContext.print} />
 {/snippet}
 
 {#snippet panel()}
-    <CommentsPanel
-        {comments}
-        userId={page.data.user?.id}
-        onclose={() => (comments.panelOpen = false)}
-    />
+	<CommentsPanel
+		{comments}
+		userId={page.data.user?.id}
+		onclose={() => (comments.panelOpen = false)}
+	/>
 {/snippet}
 
 <div
-    class={embedded
-        ? "flex h-[calc(100dvh-0.5rem)] w-full flex-col gap-2"
-        : "flex h-[calc(100dvh-8rem)] w-full flex-col gap-3"}
+	class={embedded
+		? "flex h-[calc(100dvh-0.5rem)] w-full flex-col gap-2"
+		: "flex h-[calc(100dvh-8rem)] w-full flex-col gap-3"}
 >
-    <EditorHeader
-        name={file.name}
-        showName={!embedded}
-        touch={embedded}
-        canWrite={file.canWrite}
-        trackedChanges={file.trackedChanges}
-        suggest={file.kind === "document"}
-        {mode}
-        onmode={setMode}
-        {status}
-        people={presence?.others ?? []}
-        comments={{
-            count: comments.unresolved.length,
-            open: comments.panelOpen,
-            toggle: () => (comments.panelOpen = !comments.panelOpen),
-        }}
-        {onrename}
-    />
+	<EditorHeader
+		name={file.name}
+		showName={!embedded}
+		touch={embedded}
+		canWrite={file.canWrite}
+		trackedChanges={file.trackedChanges}
+		suggest={file.kind === "document"}
+		{mode}
+		onmode={setMode}
+		{status}
+		people={presence?.others ?? []}
+		comments={{
+			count: comments.unresolved.length,
+			open: comments.panelOpen,
+			toggle: () => (comments.panelOpen = !comments.panelOpen),
+		}}
+		{onrename}
+	/>
 
-    <div class="flex min-h-0 flex-1 gap-3">
-        <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-            {@render editor(context)}
-        </div>
-        {#if desktop.current && comments.panelOpen}
-            <aside class="flex min-h-0 w-80 shrink-0 flex-col border-s ps-3">
-                {@render panel()}
-            </aside>
-        {/if}
-    </div>
+	<div class="flex min-h-0 flex-1 gap-3">
+		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
+			{@render editor(context)}
+		</div>
+		{#if desktop.current && comments.panelOpen}
+			<aside class="flex min-h-0 w-80 shrink-0 flex-col border-s ps-3">
+				{@render panel()}
+			</aside>
+		{/if}
+	</div>
 </div>
 
 {#if !desktop.current}
-    <Drawer.Root bind:open={comments.panelOpen}>
-        <Drawer.Content class="h-[80dvh] px-4 pb-4">
-            <Drawer.Title class="sr-only">{m.shell_comments()}</Drawer.Title>
-            {@render panel()}
-        </Drawer.Content>
-    </Drawer.Root>
+	<Drawer.Root bind:open={comments.panelOpen}>
+		<Drawer.Content class="h-[80dvh] px-4 pb-4">
+			<Drawer.Title class="sr-only">{m.shell_comments()}</Drawer.Title>
+			{@render panel()}
+		</Drawer.Content>
+	</Drawer.Root>
 {/if}
 
 <RenameDialog bind:open={renameOpen} name={file.name} {onrename} />
 <ShareDialog bind:open={shareOpen} item={shareItem} />
 <VersionList
-    bind:open={historyOpen}
-    {fileId}
-    name={file.name}
-    canWrite={file.canWrite}
-    onrestore={restore}
+	bind:open={historyOpen}
+	{fileId}
+	name={file.name}
+	canWrite={file.canWrite}
+	onrestore={restore}
 />

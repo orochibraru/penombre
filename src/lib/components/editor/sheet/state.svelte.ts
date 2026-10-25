@@ -11,8 +11,8 @@ import {
 } from "#lib/formula.js";
 import {
 	addSheet,
-	type BookData,
 	blockAt,
+	type BookData,
 	fill,
 	fillWith,
 	freeSheetName,
@@ -39,12 +39,12 @@ import {
 	isSingle,
 	leap,
 	moveTo,
-	type Rect,
 	rangeName,
+	type Rect,
 	rectOf,
 	rowsOf,
-	type Selection,
 	selectAll,
+	type Selection,
 	single,
 	step,
 } from "#lib/sheet/selection.js";

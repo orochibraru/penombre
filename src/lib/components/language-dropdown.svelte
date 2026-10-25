@@ -31,6 +31,8 @@
 </script>
 
 <script lang="ts">
+	import { invalidate } from "$app/navigation";
+	import { page } from "$app/state";
 	import { CheckIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import { api } from "#lib/api/index.js";
@@ -38,8 +40,6 @@
 	import * as Select from "#lib/components/ui/select/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { cn } from "#lib/utils.js";
-	import { invalidate } from "$app/navigation";
-	import { page } from "$app/state";
 
 	interface Props {
 		/**
@@ -105,81 +105,86 @@
 </script>
 
 {#if compact}
-    <Select.Root
-        type="single"
-        value={currentLanguage}
-        onValueChange={(value) => changeLocale(value as Locale)}
-    >
-        <Select.Trigger class="w-full" aria-label={m.select_language()}>
-            {endonym(currentLanguage)}
-        </Select.Trigger>
-        <Select.Content>
-            {#each locales as locale (locale)}
-                <Select.Item value={locale}>
-                    <span class="capitalize">{endonym(locale)}</span>
-                    <span class="text-muted-foreground ml-2 text-xs uppercase">
-                        {locale}
-                    </span>
-                </Select.Item>
-            {/each}
-        </Select.Content>
-    </Select.Root>
+	<Select.Root
+		type="single"
+		value={currentLanguage}
+		onValueChange={(value) => changeLocale(value as Locale)}
+	>
+		<Select.Trigger class="w-full" aria-label={m.select_language()}>
+			{endonym(currentLanguage)}
+		</Select.Trigger>
+		<Select.Content>
+			{#each locales as locale (locale)}
+				<Select.Item value={locale}>
+					<span class="capitalize">{endonym(locale)}</span>
+					<span class="text-muted-foreground ml-2 text-xs uppercase">
+						{locale}
+					</span>
+				</Select.Item>
+			{/each}
+		</Select.Content>
+	</Select.Root>
 {:else}
-<fieldset class="flex flex-col gap-3">
-    <legend class="text-sm font-medium">{m.select_language()}</legend>
-    <p class="text-muted-foreground text-sm">{m.language_description()}</p>
-    {#if account}
-        <p class="text-muted-foreground text-sm">{m.lang_account_hint()}</p>
-    {/if}
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {#if account}
-            {@render option(null, m.lang_automatic(), endonym(currentLanguage), automatic)}
-        {/if}
-        {#each locales as locale (locale)}
-            {@render option(
-                locale,
-                endonym(locale),
-                locale,
-                !automatic && locale === currentLanguage,
-            )}
-        {/each}
-    </div>
-</fieldset>
+	<fieldset class="flex flex-col gap-3">
+		<legend class="text-sm font-medium">{m.select_language()}</legend>
+		<p class="text-muted-foreground text-sm">{m.language_description()}</p>
+		{#if account}
+			<p class="text-muted-foreground text-sm">{m.lang_account_hint()}</p>
+		{/if}
+		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+			{#if account}
+				{@render option(
+					null,
+					m.lang_automatic(),
+					endonym(currentLanguage),
+					automatic,
+				)}
+			{/if}
+			{#each locales as locale (locale)}
+				{@render option(
+					locale,
+					endonym(locale),
+					locale,
+					!automatic && locale === currentLanguage,
+				)}
+			{/each}
+		</div>
+	</fieldset>
 {/if}
 
 {#snippet option(
-    value: Locale | null,
-    name: string,
-    detail: string,
-    active: boolean,
+	value: Locale | null,
+	name: string,
+	detail: string,
+	active: boolean,
 )}
-    <Label
-        class={cn(
-            "hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors",
-            active && "border-ring bg-input/20",
-        )}
-    >
-        <input
-            type="radio"
-            name="locale"
-            value={value ?? "auto"}
-            checked={active}
-            class="sr-only"
-            onchange={() => changeLocale(value)}
-        />
-        <div class="grid gap-1 font-normal">
-            <span class="font-medium capitalize">{name}</span>
-            <span
-                class={cn(
-                    "text-muted-foreground text-xs",
-                    value !== null && "uppercase",
-                )}
-            >
-                {detail}
-            </span>
-        </div>
-        {#if active}
-            <CheckIcon class="text-primary h-4 w-4 shrink-0" />
-        {/if}
-    </Label>
+	<Label
+		class={cn(
+			"hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors",
+			active && "border-ring bg-input/20",
+		)}
+	>
+		<input
+			type="radio"
+			name="locale"
+			value={value ?? "auto"}
+			checked={active}
+			class="sr-only"
+			onchange={() => changeLocale(value)}
+		/>
+		<div class="grid gap-1 font-normal">
+			<span class="font-medium capitalize">{name}</span>
+			<span
+				class={cn(
+					"text-muted-foreground text-xs",
+					value !== null && "uppercase",
+				)}
+			>
+				{detail}
+			</span>
+		</div>
+		{#if active}
+			<CheckIcon class="text-primary h-4 w-4 shrink-0" />
+		{/if}
+	</Label>
 {/snippet}

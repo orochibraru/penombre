@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto, refreshAll } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import {
 		CircleCheckIcon,
 		EllipsisVerticalIcon,
@@ -22,8 +24,6 @@
 	import { enhance } from "#lib/forms.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { goto, refreshAll } from "$app/navigation";
-	import { resolve } from "$app/paths";
 
 	onMount(() => {
 		title.set(m.title_account_security());
@@ -201,407 +201,404 @@
 </script>
 
 <div class="flex w-full flex-col gap-4">
-{#if data.requirements.length > 0}
-    <!-- Why the rest of the app sent them here: the layout's enrolment gate. -->
-    <Alert.Root class="border-primary bg-primary/10">
-        <ShieldAlertIcon class="text-primary" />
-        <Alert.Title class="text-primary">{m.auth_requirements_title()}</Alert.Title>
-        <Alert.Description>
-            <p>{m.auth_requirements_body()}</p>
-            <ul class="mt-1 list-disc ps-5">
-                {#each data.requirements as requirement (requirement)}
-                    <li>
-                        {requirement === "twoFactor"
-                            ? m.auth_requirement_two_factor()
-                            : m.auth_requirement_passkey()}
-                    </li>
-                {/each}
-            </ul>
-        </Alert.Description>
-    </Alert.Root>
-{/if}
-<!-- Password Management -->
-{#if data.emailSignInEnabled}
-    <Card.Root>
-        <Card.Header>
-            <Card.Title class="flex items-center gap-2">
-                {m.password_management()}
-                {#if data.hasPassword}
-                    <Badge variant="secondary">
-                        <KeyRoundIcon class="size-3" />
-                        {m.password_set()}
-                    </Badge>
-                {/if}
-            </Card.Title>
-            <Card.Description>
-                {data.hasPassword
-                    ? m.change_password_description()
-                    : m.set_password_description()}
-            </Card.Description>
-            <Card.Action>
-                {#if data.hasPassword}
-                    <Button
-                        onclick={() => (changePasswordDialogOpen = true)}
-                        variant="outline"
-                    >
-                        {m.change_password()}
-                    </Button>
-                {:else}
-                    <Button
-                        onclick={() => (setPasswordDialogOpen = true)}
-                        variant="outline"
-                    >
-                        {m.set_password()}
-                    </Button>
-                {/if}
-            </Card.Action>
-        </Card.Header>
-    </Card.Root>
-{/if}
+	{#if data.requirements.length > 0}
+		<!-- Why the rest of the app sent them here: the layout's enrolment gate. -->
+		<Alert.Root class="border-primary bg-primary/10">
+			<ShieldAlertIcon class="text-primary" />
+			<Alert.Title class="text-primary"
+				>{m.auth_requirements_title()}</Alert.Title
+			>
+			<Alert.Description>
+				<p>{m.auth_requirements_body()}</p>
+				<ul class="mt-1 list-disc ps-5">
+					{#each data.requirements as requirement (requirement)}
+						<li>
+							{requirement === "twoFactor"
+								? m.auth_requirement_two_factor()
+								: m.auth_requirement_passkey()}
+						</li>
+					{/each}
+				</ul>
+			</Alert.Description>
+		</Alert.Root>
+	{/if}
+	<!-- Password Management -->
+	{#if data.emailSignInEnabled}
+		<Card.Root>
+			<Card.Header>
+				<Card.Title class="flex items-center gap-2">
+					{m.password_management()}
+					{#if data.hasPassword}
+						<Badge variant="secondary">
+							<KeyRoundIcon class="size-3" />
+							{m.password_set()}
+						</Badge>
+					{/if}
+				</Card.Title>
+				<Card.Description>
+					{data.hasPassword
+						? m.change_password_description()
+						: m.set_password_description()}
+				</Card.Description>
+				<Card.Action>
+					{#if data.hasPassword}
+						<Button
+							onclick={() => (changePasswordDialogOpen = true)}
+							variant="outline"
+						>
+							{m.change_password()}
+						</Button>
+					{:else}
+						<Button
+							onclick={() => (setPasswordDialogOpen = true)}
+							variant="outline"
+						>
+							{m.set_password()}
+						</Button>
+					{/if}
+				</Card.Action>
+			</Card.Header>
+		</Card.Root>
+	{/if}
 
-<TwoFactorCard
-    enabled={data.twoFactorEnabled}
-    required={data.twoFactorRequired}
-    hasPassword={data.hasPassword}
-/>
+	<TwoFactorCard
+		enabled={data.twoFactorEnabled}
+		required={data.twoFactorRequired}
+		hasPassword={data.hasPassword}
+	/>
 
-<!-- Passkeys -->
-<Card.Root>
-    <Card.Header>
-        <Card.Title>{m.passkeys()}</Card.Title>
-        <Card.Description>{m.passkeys_description()}</Card.Description>
-        {#if data.passkeySignInEnabled}
-            <Card.Action>
-                <Button variant="outline" onclick={() => handleRegisterPasskey()}>
-                    {m.register_passkey()}
-                </Button>
-            </Card.Action>
-        {/if}
-    </Card.Header>
-    <Card.Content>
-    <div class="flex flex-col gap-2">
-        {#if !data.passkeySignInEnabled}
-            <p class="text-sm text-muted-foreground">{m.passkeys_disabled()}</p>
-        {/if}
-        {#if data.passkeys.length > 0}
-            {#each data.passkeys as passkey}
-                <div
-                    class="border rounded-lg w-full p-3 flex items-center justify-between"
-                >
-                    <div>
-                        <p class="text-sm">{passkey.name}</p>
-                        <p class="text-xs text-muted-foreground">
-                            {m.created_at({
-                                date: new Date(
-                                    passkey.createdAt,
-                                ).toLocaleString(),
-                            })}
-                        </p>
-                    </div>
-                    <Button
-                        variant="destructive"
-                        onclick={() => {
-                            passkeyToDelete = passkey.id;
-                            deletePasskeyDialogOpen = true;
-                        }}>{m.delete()}</Button
-                    >
-                </div>
-            {/each}
-        {:else}
-            <p class="text-sm text-muted-foreground">{m.no_passkeys()}</p>
-        {/if}
-    </div>
-    </Card.Content>
-</Card.Root>
+	<!-- Passkeys -->
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.passkeys()}</Card.Title>
+			<Card.Description>{m.passkeys_description()}</Card.Description>
+			{#if data.passkeySignInEnabled}
+				<Card.Action>
+					<Button variant="outline" onclick={() => handleRegisterPasskey()}>
+						{m.register_passkey()}
+					</Button>
+				</Card.Action>
+			{/if}
+		</Card.Header>
+		<Card.Content>
+			<div class="flex flex-col gap-2">
+				{#if !data.passkeySignInEnabled}
+					<p class="text-sm text-muted-foreground">{m.passkeys_disabled()}</p>
+				{/if}
+				{#if data.passkeys.length > 0}
+					{#each data.passkeys as passkey}
+						<div
+							class="border rounded-lg w-full p-3 flex items-center justify-between"
+						>
+							<div>
+								<p class="text-sm">{passkey.name}</p>
+								<p class="text-xs text-muted-foreground">
+									{m.created_at({
+										date: new Date(passkey.createdAt).toLocaleString(),
+									})}
+								</p>
+							</div>
+							<Button
+								variant="destructive"
+								onclick={() => {
+									passkeyToDelete = passkey.id;
+									deletePasskeyDialogOpen = true;
+								}}>{m.delete()}</Button
+							>
+						</div>
+					{/each}
+				{:else}
+					<p class="text-sm text-muted-foreground">{m.no_passkeys()}</p>
+				{/if}
+			</div>
+		</Card.Content>
+	</Card.Root>
 
-{#if data.signInMethods.length > 0}
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.preferred_sign_in()}</Card.Title>
-            <Card.Description>{m.preferred_sign_in_description()}</Card.Description>
-        </Card.Header>
-        <Card.Content>
-            <form
-                bind:this={preferredForm}
-                method="POST"
-                action="?/setPreferredSignInMethod"
-                use:enhance={() =>
-                    async ({ update }) => update({ reset: false })}
-            >
-                <RadioGroup.Root
-                    name="method"
-                    class="grid gap-2"
-                    value={data.preferredSignInMethod ?? ""}
-                    onValueChange={() =>
-                        // The hidden input takes the new value on the next tick.
-                        void tick().then(() => preferredForm?.requestSubmit())}
-                >
-                    {#each ["", ...data.signInMethods] as method (method)}
-                        <Label
-                            class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center gap-3 rounded-lg border p-3 font-normal transition-colors"
-                        >
-                            <RadioGroup.Item
-                                value={method}
-                                class="data-[state=checked]:border-primary"
-                            />
-                            {method === ""
-                                ? m.preferred_sign_in_none()
-                                : methodLabels[method as keyof typeof methodLabels]()}
-                        </Label>
-                    {/each}
-                </RadioGroup.Root>
-            </form>
-        </Card.Content>
-    </Card.Root>
-{/if}
+	{#if data.signInMethods.length > 0}
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>{m.preferred_sign_in()}</Card.Title>
+				<Card.Description>{m.preferred_sign_in_description()}</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				<form
+					bind:this={preferredForm}
+					method="POST"
+					action="?/setPreferredSignInMethod"
+					use:enhance={() =>
+						async ({ update }) =>
+							update({ reset: false })}
+				>
+					<RadioGroup.Root
+						name="method"
+						class="grid gap-2"
+						value={data.preferredSignInMethod ?? ""}
+						onValueChange={() =>
+							// The hidden input takes the new value on the next tick.
+							void tick().then(() => preferredForm?.requestSubmit())}
+					>
+						{#each ["", ...data.signInMethods] as method (method)}
+							<Label
+								class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center gap-3 rounded-lg border p-3 font-normal transition-colors"
+							>
+								<RadioGroup.Item
+									value={method}
+									class="data-[state=checked]:border-primary"
+								/>
+								{method === ""
+									? m.preferred_sign_in_none()
+									: methodLabels[method as keyof typeof methodLabels]()}
+							</Label>
+						{/each}
+					</RadioGroup.Root>
+				</form>
+			</Card.Content>
+		</Card.Root>
+	{/if}
 
-<!-- API Keys -->
-<Card.Root>
-    <Card.Header>
-        <Card.Title>
-            {m.api_keys_title({ count: String(data.apiKeys.total) })}
-        </Card.Title>
-        <Card.Description>{m.api_keys_description()}</Card.Description>
-    </Card.Header>
-    <Card.Content>
-    {#if form?.success && form?.apiKey}
-        <Alert.Root class="bg-primary/10 border-primary mb-3">
-            <CircleCheckIcon class="text-primary" />
-            <Alert.Title class="text-primary"
-                >{m.api_key_created_success()}</Alert.Title
-            >
-            <Alert.Description class="text-primary">
-                <p>
-                    {m.api_key_copy_warning()}
-                </p>
-                <pre class="mt-2 p-2 bg-muted rounded">{form.apiKey}</pre>
-            </Alert.Description>
-        </Alert.Root>
-    {/if}
-    <div class="mb-3">
-        <form action="?/createApiKey" use:enhance method="POST">
-            <fieldset>
-                <Input
-                    required
-                    name="name"
-                    placeholder={m.api_key_name_placeholder()}
-                    class="w-full"
-                />
-                <Button type="submit" class="mt-2">{m.create_api_key()}</Button>
-            </fieldset>
-        </form>
-    </div>
+	<!-- API Keys -->
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>
+				{m.api_keys_title({ count: String(data.apiKeys.total) })}
+			</Card.Title>
+			<Card.Description>{m.api_keys_description()}</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			{#if form?.success && form?.apiKey}
+				<Alert.Root class="bg-primary/10 border-primary mb-3">
+					<CircleCheckIcon class="text-primary" />
+					<Alert.Title class="text-primary"
+						>{m.api_key_created_success()}</Alert.Title
+					>
+					<Alert.Description class="text-primary">
+						<p>
+							{m.api_key_copy_warning()}
+						</p>
+						<pre class="mt-2 p-2 bg-muted rounded">{form.apiKey}</pre>
+					</Alert.Description>
+				</Alert.Root>
+			{/if}
+			<div class="mb-3">
+				<form action="?/createApiKey" use:enhance method="POST">
+					<fieldset>
+						<Input
+							required
+							name="name"
+							placeholder={m.api_key_name_placeholder()}
+							class="w-full"
+						/>
+						<Button type="submit" class="mt-2">{m.create_api_key()}</Button>
+					</fieldset>
+				</form>
+			</div>
 
-    <div class="flex">
-        {#if data.apiKeys.total > 0}
-            <ul class="w-full flex flex-col gap-2">
-                {#each data.apiKeys.apiKeys as apiKey}
-                    <li
-                        class="border rounded-lg w-full p-1 px-3 flex items-center justify-between"
-                    >
-                        <div>
-                            <p class="text-sm">{apiKey.name}</p>
-                            <p class="text-xs text-muted-foreground">
-                                {m.created_at({
-                                    date: new Date(
-                                        apiKey.createdAt,
-                                    ).toLocaleString(),
-                                })}
-                            </p>
-                            <p class="text-xs text-muted-foreground">
-                                {m.expires_at({
-                                    date: apiKey.expiresAt
-                                        ? new Date(
-                                              apiKey.expiresAt,
-                                          ).toLocaleString()
-                                        : m.never(),
-                                })}
-                            </p>
-                        </div>
+			<div class="flex">
+				{#if data.apiKeys.total > 0}
+					<ul class="w-full flex flex-col gap-2">
+						{#each data.apiKeys.apiKeys as apiKey}
+							<li
+								class="border rounded-lg w-full p-1 px-3 flex items-center justify-between"
+							>
+								<div>
+									<p class="text-sm">{apiKey.name}</p>
+									<p class="text-xs text-muted-foreground">
+										{m.created_at({
+											date: new Date(apiKey.createdAt).toLocaleString(),
+										})}
+									</p>
+									<p class="text-xs text-muted-foreground">
+										{m.expires_at({
+											date: apiKey.expiresAt
+												? new Date(apiKey.expiresAt).toLocaleString()
+												: m.never(),
+										})}
+									</p>
+								</div>
 
-                        <DropdownMenu.Root>
-                            <DropdownMenu.Trigger>
-                                {#snippet child({ props })}
-                                    <Button variant="ghost" {...props} title={m.open_menu()}>
-                                        <EllipsisVerticalIcon />
-                                    </Button>
-                                {/snippet}
-                            </DropdownMenu.Trigger>
-                            <DropdownMenu.Content>
-                                <DropdownMenu.Group>
-                                    <DropdownMenu.Item
-                                        variant="destructive"
-                                        onclick={() => {
-                                            deleteApiKeyDialogOpen = true;
-                                            apiKeyToDelete = apiKey.id;
-                                        }}
-                                    >
-                                        {m.delete()}
-                                    </DropdownMenu.Item>
-                                </DropdownMenu.Group>
-                            </DropdownMenu.Content>
-                        </DropdownMenu.Root>
-                    </li>
-                {/each}
-            </ul>
-        {:else}
-            <p class="text-sm text-muted-foreground">{m.no_api_keys()}</p>
-        {/if}
-    </div>
-    </Card.Content>
-</Card.Root>
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger>
+										{#snippet child({ props })}
+											<Button variant="ghost" {...props} title={m.open_menu()}>
+												<EllipsisVerticalIcon />
+											</Button>
+										{/snippet}
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content>
+										<DropdownMenu.Group>
+											<DropdownMenu.Item
+												variant="destructive"
+												onclick={() => {
+													deleteApiKeyDialogOpen = true;
+													apiKeyToDelete = apiKey.id;
+												}}
+											>
+												{m.delete()}
+											</DropdownMenu.Item>
+										</DropdownMenu.Group>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="text-sm text-muted-foreground">{m.no_api_keys()}</p>
+				{/if}
+			</div>
+		</Card.Content>
+	</Card.Root>
 
-<!-- Danger zone -->
-<Card.Root class="border-destructive/40">
-    <Card.Header>
-        <Card.Title class="text-destructive">{m.account_danger_zone()}</Card.Title>
-        <Card.Description>{m.account_delete_description()}</Card.Description>
-        <Card.Action>
-            <Button
-                variant="destructive"
-                onclick={() => (deleteAccountDialogOpen = true)}
-            >
-                {m.account_delete_button()}
-            </Button>
-        </Card.Action>
-    </Card.Header>
-</Card.Root>
-
+	<!-- Danger zone -->
+	<Card.Root class="border-destructive/40">
+		<Card.Header>
+			<Card.Title class="text-destructive">{m.account_danger_zone()}</Card.Title
+			>
+			<Card.Description>{m.account_delete_description()}</Card.Description>
+			<Card.Action>
+				<Button
+					variant="destructive"
+					onclick={() => (deleteAccountDialogOpen = true)}
+				>
+					{m.account_delete_button()}
+				</Button>
+			</Card.Action>
+		</Card.Header>
+	</Card.Root>
 </div>
 
 <!-- Delete Passkey Dialog -->
 <ResponsiveDialog
-    bind:open={deletePasskeyDialogOpen}
-    bind:loading
-    title={m.confirm_passkey_deletion()}
-    description={m.passkey_deletion_description()}
-    submitLabel={m.delete()}
-    loadingLabel={m.deleting()}
-    submitVariant="destructive"
-    onsubmit={() => handleDeletePasskey(passkeyToDelete)}
+	bind:open={deletePasskeyDialogOpen}
+	bind:loading
+	title={m.confirm_passkey_deletion()}
+	description={m.passkey_deletion_description()}
+	submitLabel={m.delete()}
+	loadingLabel={m.deleting()}
+	submitVariant="destructive"
+	onsubmit={() => handleDeletePasskey(passkeyToDelete)}
 >
-    <p>
-        {m.confirm_passkey_deletion_body()}
-    </p>
+	<p>
+		{m.confirm_passkey_deletion_body()}
+	</p>
 </ResponsiveDialog>
 
 <!-- Delete API Key Dialog -->
 <ResponsiveDialog
-    bind:open={deleteApiKeyDialogOpen}
-    bind:loading
-    title={m.confirm_api_key_deletion()}
-    description={m.api_key_deletion_description()}
-    submitVariant="destructive"
-    submitLabel={m.delete()}
-    loadingLabel={m.deleting()}
-    onsubmit={() => handleDeleteApiKey(apiKeyToDelete)}
+	bind:open={deleteApiKeyDialogOpen}
+	bind:loading
+	title={m.confirm_api_key_deletion()}
+	description={m.api_key_deletion_description()}
+	submitVariant="destructive"
+	submitLabel={m.delete()}
+	loadingLabel={m.deleting()}
+	onsubmit={() => handleDeleteApiKey(apiKeyToDelete)}
 >
-    <p>
-        {m.confirm_api_key_deletion_body()}
-    </p>
+	<p>
+		{m.confirm_api_key_deletion_body()}
+	</p>
 </ResponsiveDialog>
 
 <!-- Change Password Dialog -->
 <ResponsiveDialog
-    bind:open={changePasswordDialogOpen}
-    bind:loading
-    title={m.change_password()}
-    description={m.change_password_description()}
-    submitLabel={m.change()}
-    loadingLabel={m.changing()}
-    form={{ action: "?/changePassword" }}
+	bind:open={changePasswordDialogOpen}
+	bind:loading
+	title={m.change_password()}
+	description={m.change_password_description()}
+	submitLabel={m.change()}
+	loadingLabel={m.changing()}
+	form={{ action: "?/changePassword" }}
 >
-    <div class="flex flex-col gap-3">
-        <Input
-            required
-            type="password"
-            name="currentPassword"
-            autocomplete="current-password"
-            bind:value={currentPassword}
-            placeholder={m.current_password()}
-            class="w-full"
-            aria-invalid={newPasswordError !== ""}
-        />
-        <Input
-            required
-            type="password"
-            name="newPassword"
-            autocomplete="new-password"
-            bind:value={newPassword}
-            placeholder={m.new_password()}
-            class="w-full"
-            aria-invalid={newPasswordError !== ""}
-        />
-        <Input
-            required
-            type="password"
-            name="newPasswordConfirm"
-            autocomplete="new-password"
-            bind:value={newPasswordConfirm}
-            placeholder={m.confirm_new_password()}
-            class="w-full"
-            aria-invalid={newPasswordError !== ""}
-        />
-        {#if newPasswordError}
-            <p class="text-xs text-destructive">
-                {newPasswordError}
-            </p>
-        {/if}
-    </div>
+	<div class="flex flex-col gap-3">
+		<Input
+			required
+			type="password"
+			name="currentPassword"
+			autocomplete="current-password"
+			bind:value={currentPassword}
+			placeholder={m.current_password()}
+			class="w-full"
+			aria-invalid={newPasswordError !== ""}
+		/>
+		<Input
+			required
+			type="password"
+			name="newPassword"
+			autocomplete="new-password"
+			bind:value={newPassword}
+			placeholder={m.new_password()}
+			class="w-full"
+			aria-invalid={newPasswordError !== ""}
+		/>
+		<Input
+			required
+			type="password"
+			name="newPasswordConfirm"
+			autocomplete="new-password"
+			bind:value={newPasswordConfirm}
+			placeholder={m.confirm_new_password()}
+			class="w-full"
+			aria-invalid={newPasswordError !== ""}
+		/>
+		{#if newPasswordError}
+			<p class="text-xs text-destructive">
+				{newPasswordError}
+			</p>
+		{/if}
+	</div>
 </ResponsiveDialog>
 
 <!-- Set Password Dialog (OAuth accounts with no credential yet) -->
 <ResponsiveDialog
-    bind:open={setPasswordDialogOpen}
-    bind:loading
-    title={m.set_password()}
-    description={m.set_password_description()}
-    submitLabel={m.set_password()}
-    loadingLabel={m.saving()}
-    form={{ action: "?/setPassword" }}
+	bind:open={setPasswordDialogOpen}
+	bind:loading
+	title={m.set_password()}
+	description={m.set_password_description()}
+	submitLabel={m.set_password()}
+	loadingLabel={m.saving()}
+	form={{ action: "?/setPassword" }}
 >
-    <div class="flex flex-col gap-3">
-        <Input
-            required
-            type="password"
-            name="newPassword"
-            autocomplete="new-password"
-            placeholder={m.new_password()}
-            class="w-full"
-        />
-        <Input
-            required
-            type="password"
-            name="newPasswordConfirm"
-            autocomplete="new-password"
-            placeholder={m.confirm_new_password()}
-            class="w-full"
-        />
-    </div>
+	<div class="flex flex-col gap-3">
+		<Input
+			required
+			type="password"
+			name="newPassword"
+			autocomplete="new-password"
+			placeholder={m.new_password()}
+			class="w-full"
+		/>
+		<Input
+			required
+			type="password"
+			name="newPasswordConfirm"
+			autocomplete="new-password"
+			placeholder={m.confirm_new_password()}
+			class="w-full"
+		/>
+	</div>
 </ResponsiveDialog>
 
 <!-- Delete Account Dialog -->
 <ResponsiveDialog
-    bind:open={deleteAccountDialogOpen}
-    bind:loading
-    title={m.account_delete_confirm_title()}
-    description={m.account_delete_confirm_body()}
-    submitLabel={m.delete()}
-    loadingLabel={m.deleting()}
-    submitVariant="destructive"
-    onsubmit={() => handleDeleteAccount()}
+	bind:open={deleteAccountDialogOpen}
+	bind:loading
+	title={m.account_delete_confirm_title()}
+	description={m.account_delete_confirm_body()}
+	submitLabel={m.delete()}
+	loadingLabel={m.deleting()}
+	submitVariant="destructive"
+	onsubmit={() => handleDeleteAccount()}
 >
-    {#if data.hasPassword}
-        <Input
-            type="password"
-            autocomplete="current-password"
-            bind:value={deleteAccountPassword}
-            placeholder={m.current_password()}
-            class="w-full"
-        />
-    {:else}
-        <p class="text-muted-foreground text-sm">
-            {m.account_delete_no_password_hint()}
-        </p>
-    {/if}
+	{#if data.hasPassword}
+		<Input
+			type="password"
+			autocomplete="current-password"
+			bind:value={deleteAccountPassword}
+			placeholder={m.current_password()}
+			class="w-full"
+		/>
+	{:else}
+		<p class="text-muted-foreground text-sm">
+			{m.account_delete_no_password_hint()}
+		</p>
+	{/if}
 </ResponsiveDialog>

@@ -17,34 +17,34 @@
 </script>
 
 {#if people.length > 0}
-    <div class="flex items-center -space-x-2">
-        {#each shown.shown as person (person.userId)}
-            <Tooltip.Root>
-                <Tooltip.Trigger
-                    class={cn(
-                        "ring-background flex size-7 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold text-white ring-2",
-                        colourFor(person.userId),
-                    )}
-                    aria-label={status(person)}
-                >
-                    {initials(person.name)}
-                </Tooltip.Trigger>
-                <Tooltip.Content>{status(person)}</Tooltip.Content>
-            </Tooltip.Root>
-        {/each}
-        {#if shown.more > 0}
-            <Tooltip.Root>
-                <Tooltip.Trigger
-                    class="bg-muted text-muted-foreground ring-background flex size-7 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold ring-2"
-                >
-                    +{shown.more}
-                </Tooltip.Trigger>
-                <Tooltip.Content class="flex flex-col">
-                    {#each people.slice(shown.shown.length) as person (person.userId)}
-                        <span>{status(person)}</span>
-                    {/each}
-                </Tooltip.Content>
-            </Tooltip.Root>
-        {/if}
-    </div>
+	<div class="flex items-center -space-x-2">
+		{#each shown.shown as person (person.userId)}
+			<Tooltip.Root>
+				<Tooltip.Trigger
+					class={cn(
+						"ring-background flex size-7 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold text-white ring-2",
+						colourFor(person.userId),
+					)}
+					aria-label={status(person)}
+				>
+					{initials(person.name)}
+				</Tooltip.Trigger>
+				<Tooltip.Content>{status(person)}</Tooltip.Content>
+			</Tooltip.Root>
+		{/each}
+		{#if shown.more > 0}
+			<Tooltip.Root>
+				<Tooltip.Trigger
+					class="bg-muted text-muted-foreground ring-background flex size-7 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold ring-2"
+				>
+					+{shown.more}
+				</Tooltip.Trigger>
+				<Tooltip.Content class="flex flex-col">
+					{#each people.slice(shown.shown.length) as person (person.userId)}
+						<span>{status(person)}</span>
+					{/each}
+				</Tooltip.Content>
+			</Tooltip.Root>
+		{/if}
+	</div>
 {/if}

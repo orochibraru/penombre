@@ -204,7 +204,6 @@ Built with these open-source technologies:
 - [Better Auth](https://www.better-auth.com/) - Authentication library
 - [SQLite](https://sqlite.org/) - Database
 - [oxlint](https://oxc.rs/) - Linter
-- [Biome](https://biomejs.dev/) - Formatter
 
 ## Star History
 

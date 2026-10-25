@@ -26,9 +26,9 @@ import {
 	WrapTextIcon,
 } from "@lucide/svelte";
 import {
+	firstFamily,
 	FONT_FAMILIES,
 	FONT_SIZES,
-	firstFamily,
 } from "#lib/editor/document-format.js";
 import { m } from "#lib/paraglide/messages.js";
 import { getLocale } from "#lib/paraglide/runtime.js";

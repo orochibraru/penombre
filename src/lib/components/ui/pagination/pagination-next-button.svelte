@@ -22,11 +22,11 @@
 	aria-label="Go to next page"
 	class={cn(
 		buttonVariants({
-			size: 'default',
-			variant: 'ghost',
-			class: 'gap-1 px-2.5 sm:pr-2.5'
+			size: "default",
+			variant: "ghost",
+			class: "gap-1 px-2.5 sm:pr-2.5",
 		}),
-		className
+		className,
 	)}
 	{...restProps}
 >

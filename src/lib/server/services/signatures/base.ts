@@ -16,10 +16,10 @@ import { and, asc, eq } from "drizzle-orm";
 import { v7 as uuidv7 } from "uuid";
 import type { Database } from "#lib/server/db/index.js";
 import {
-	type SignatureRequest,
-	type SignatureSigner,
 	signatureEvents,
+	type SignatureRequest,
 	signatureRequests,
+	type SignatureSigner,
 	signatureSigners,
 	user,
 } from "#lib/server/db/schema.js";
@@ -35,11 +35,7 @@ export const MAX_SIGNERS = 20;
 export const DAY_MS = 86_400_000;
 
 export type RequestStatus =
-	| "pending"
-	| "completed"
-	| "declined"
-	| "cancelled"
-	| "expired";
+	"pending" | "completed" | "declined" | "cancelled" | "expired";
 export type EventType = (typeof signatureEvents.$inferInsert)["type"];
 
 /** A refusal with the HTTP status that says why. */

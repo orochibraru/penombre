@@ -3,25 +3,25 @@ preload = ["./test.setup.ts"]
 rerunEach = 3
 coverage = true
 coveragePathIgnorePatterns = [
-    "**/test.setup.ts",
-    "**/paraglide/**",
-    "**/test.setup.ts",
-    "**/*.spec.ts",
-    "**/test-utils.ts",
-    "**/mocks/**",
-    "**/types/**",
-    "**/schema.ts",
-    "**/*.test.ts",
-    "**/*.e2e.ts",
-    "*.config.js",
-    "*.config.ts",
-    "dist/**",
-    "build/**",
-    ".next/**",
-    "generated/**",
-    "vendor/**",
-    "src/utils/constants.ts",
-    "src/types/**",
+	"**/test.setup.ts",
+	"**/paraglide/**",
+	"**/test.setup.ts",
+	"**/*.spec.ts",
+	"**/test-utils.ts",
+	"**/mocks/**",
+	"**/types/**",
+	"**/schema.ts",
+	"**/*.test.ts",
+	"**/*.e2e.ts",
+	"*.config.js",
+	"*.config.ts",
+	"dist/**",
+	"build/**",
+	".next/**",
+	"generated/**",
+	"vendor/**",
+	"src/utils/constants.ts",
+	"src/types/**",
 ]
 pathIgnorePatterns = ["node_modules/**", "**/e2e/**", "fixtures/**"]
 
@@ -29,3 +29,23 @@ coverageThreshold = { line = 0.7, function = 0.8, statement = 0.9 }
 
 [run]
 bun = true
+
+[fmt]
+useTabs = true
+tabWidth = 2
+ignorePatterns = [
+	"CHANGELOG.md",
+	"openapi.json",
+	"drizzle/",
+	"project.inlang/",
+	"static/",
+	".github/",
+	"**/*.svg",
+]
+
+[fmt.sortImports]
+newlinesBetween = false
+
+[[fmt.overrides]]
+files = ["*.md"]
+options = { useTabs = false, proseWrap = "always" }

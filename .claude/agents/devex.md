@@ -37,10 +37,10 @@ Read `CLAUDE.md` and `TODO.md` first. Don't re-add what `TODO.md` already has.
    `.github/workflows/*.yaml`: a CI step with no local equivalent, or a local
    gate CI skips, is a finding. Tool versions (Bun, Go, Playwright, Postgres
    image) agree between CI, Dockerfile and local expectations.
-4. **Tooling isn't fighting itself.** oxlint, biome, markdownlint, prettier (the
-   `.claude/settings.json` hook) and tailwint agree on the files they share.
-   Dependencies nothing imports, scripts nothing calls (grep configs and CI
-   before calling something dead). Untracked build output not ignored.
+4. **Tooling isn't fighting itself.** oxlint, bun fmt (also the
+   `.claude/settings.json` hook), markdownlint and tailwint agree on the files
+   they share. Dependencies nothing imports, scripts nothing calls (grep configs
+   and CI before calling something dead). Untracked build output not ignored.
 5. **Notes are true.** Spot-check backticked paths and symbols in `CLAUDE.md`
    and `docs/*.md` exist. Skills and agents under `.claude/` point at real
    files.

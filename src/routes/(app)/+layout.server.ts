@@ -1,3 +1,4 @@
+import { resolve } from "$app/paths";
 import { redirect } from "@sveltejs/kit";
 import { api } from "#lib/api/index.js";
 import { signInReturningTo } from "#lib/next.js";
@@ -8,7 +9,6 @@ import { getAppSettings } from "#lib/server/services/app-settings.js";
 import { drivesService } from "#lib/server/services/drives.js";
 import { SharingService } from "#lib/server/services/sharings.js";
 import { listShortcuts } from "#lib/server/services/shortcuts.js";
-import { resolve } from "$app/paths";
 
 const sharings = new SharingService();
 

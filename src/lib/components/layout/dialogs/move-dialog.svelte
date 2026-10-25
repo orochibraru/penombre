@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { invalidate } from "$app/navigation";
+	import { page } from "$app/state";
 	import {
 		ChevronRightIcon,
 		FolderIcon,
@@ -14,8 +16,6 @@
 	import * as m from "#lib/paraglide/messages.js";
 	import { locationOf, type StorageLocation } from "#lib/storage-location.js";
 	import { cn } from "#lib/utils.js";
-	import { invalidate } from "$app/navigation";
-	import { page } from "$app/state";
 
 	interface Props {
 		open: boolean;
@@ -463,138 +463,133 @@
 </script>
 
 {#snippet folderItem(node: FolderNode, depth: number = 0)}
-    {@const isExpanded = expandedFolders.has(node.path)}
-    {@const isSelected = selectedFolder === node.path}
-    {@const hasChildren = node.children.length > 0}
+	{@const isExpanded = expandedFolders.has(node.path)}
+	{@const isSelected = selectedFolder === node.path}
+	{@const hasChildren = node.children.length > 0}
 
-    <div class="flex flex-col">
-        <div
-            class={cn(
-                "flex items-center gap-1 px-3 py-2 rounded-lg text-left w-full transition-colors",
-                isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted",
-            )}
-            style="padding-left: {depth * 16 + 12}px"
-        >
-            {#if hasChildren}
-                <button
-                    type="button"
-                    onclick={(e) => {
-                        e.stopPropagation();
-                        toggleExpand(node.path);
-                    }}
-                    class="p-0.5 hover:bg-background/50 rounded"
-                >
-                    <ChevronRightIcon
-                        class={cn(
-                            "h-4 w-4 transition-transform",
-                            isExpanded && "rotate-90",
-                        )}
-                    />
-                </button>
-            {:else}
-                <span class="w-5"></span>
-            {/if}
-            <button
-                type="button"
-                onclick={() => selectFolder(node.path, node.name)}
-                class="flex items-center gap-2 flex-1 min-w-0"
-            >
-                {#if isExpanded}
-                    <FolderOpenIcon class="text-primary h-5 w-5 shrink-0" />
-                {:else}
-                    <FolderIcon class="text-primary h-5 w-5 shrink-0" />
-                {/if}
-                <span class="truncate text-sm">{node.name}</span>
-            </button>
-        </div>
+	<div class="flex flex-col">
+		<div
+			class={cn(
+				"flex items-center gap-1 px-3 py-2 rounded-lg text-left w-full transition-colors",
+				isSelected ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+			)}
+			style="padding-left: {depth * 16 + 12}px"
+		>
+			{#if hasChildren}
+				<button
+					type="button"
+					onclick={(e) => {
+						e.stopPropagation();
+						toggleExpand(node.path);
+					}}
+					class="p-0.5 hover:bg-background/50 rounded"
+				>
+					<ChevronRightIcon
+						class={cn(
+							"h-4 w-4 transition-transform",
+							isExpanded && "rotate-90",
+						)}
+					/>
+				</button>
+			{:else}
+				<span class="w-5"></span>
+			{/if}
+			<button
+				type="button"
+				onclick={() => selectFolder(node.path, node.name)}
+				class="flex items-center gap-2 flex-1 min-w-0"
+			>
+				{#if isExpanded}
+					<FolderOpenIcon class="text-primary h-5 w-5 shrink-0" />
+				{:else}
+					<FolderIcon class="text-primary h-5 w-5 shrink-0" />
+				{/if}
+				<span class="truncate text-sm">{node.name}</span>
+			</button>
+		</div>
 
-        {#if hasChildren && isExpanded}
-            <div class="flex flex-col">
-                {#each node.children as child}
-                    {@render folderItem(child, depth + 1)}
-                {/each}
-            </div>
-        {/if}
-    </div>
+		{#if hasChildren && isExpanded}
+			<div class="flex flex-col">
+				{#each node.children as child}
+					{@render folderItem(child, depth + 1)}
+				{/each}
+			</div>
+		{/if}
+	</div>
 {/snippet}
 
 <ResponsiveDialog
-    bind:open
-    bind:loading
-    title={dialogTitle}
-    description={m.select_destination()}
-    submitLabel={mode === "copy" ? m.copy_here() : m.move_here()}
-    loadingLabel={mode === "copy" ? m.copying() : m.moving()}
-    submitDisabled={!canMove}
-    form={{ onsubmit: handleMove }}
+	bind:open
+	bind:loading
+	title={dialogTitle}
+	description={m.select_destination()}
+	submitLabel={mode === "copy" ? m.copy_here() : m.move_here()}
+	loadingLabel={mode === "copy" ? m.copying() : m.moving()}
+	submitDisabled={!canMove}
+	form={{ onsubmit: handleMove }}
 >
-    <div class="flex min-w-0 flex-col gap-3">
-        {#if destinations.length > 1}
-            <Select.Root type="single" bind:value={destinationKey}>
-                <Select.Trigger
-                    class="w-full"
-                    aria-label={m.transfer_destination()}
-                >
-                    {destination?.label}
-                </Select.Trigger>
-                <Select.Content>
-                    {#each destinations as option (option.key)}
-                        <Select.Item value={option.key}>{option.label}</Select.Item>
-                    {/each}
-                </Select.Content>
-            </Select.Root>
-        {/if}
-        <div
-            class="flex max-h-[50vh] flex-col gap-1 overflow-y-auto rounded-lg border p-1"
-        >
-            <button
-                type="button"
-                onclick={() => selectFolder(destination?.root ?? "", "")}
-                class={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors",
-                    selectedFolder === (destination?.root ?? "")
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted",
-                )}
-            >
-                <span class="w-5"></span>
-                <HomeIcon class="h-5 w-5" />
-                <span class="text-sm font-medium">{destination?.label}</span>
-            </button>
+	<div class="flex min-w-0 flex-col gap-3">
+		{#if destinations.length > 1}
+			<Select.Root type="single" bind:value={destinationKey}>
+				<Select.Trigger class="w-full" aria-label={m.transfer_destination()}>
+					{destination?.label}
+				</Select.Trigger>
+				<Select.Content>
+					{#each destinations as option (option.key)}
+						<Select.Item value={option.key}>{option.label}</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+		{/if}
+		<div
+			class="flex max-h-[50vh] flex-col gap-1 overflow-y-auto rounded-lg border p-1"
+		>
+			<button
+				type="button"
+				onclick={() => selectFolder(destination?.root ?? "", "")}
+				class={cn(
+					"flex items-center gap-2 px-3 py-2 rounded-lg text-left w-full transition-colors",
+					selectedFolder === (destination?.root ?? "")
+						? "bg-primary text-primary-foreground"
+						: "hover:bg-muted",
+				)}
+			>
+				<span class="w-5"></span>
+				<HomeIcon class="h-5 w-5" />
+				<span class="text-sm font-medium">{destination?.label}</span>
+			</button>
 
-            {#if loadingFolders}
-                <div class="flex items-center justify-center py-8">
-                    <span class="text-muted-foreground text-sm">
-                        {m.loading_folders()}
-                        <Spinner />
-                    </span>
-                </div>
-            {:else if folderTree.length === 0}
-                <div class="flex items-center justify-center py-8">
-                    <span class="text-muted-foreground text-sm">
-                        {m.no_folders_available()}
-                    </span>
-                </div>
-            {:else}
-                {#each folderTree as node}
-                    {@render folderItem(node, 0)}
-                {/each}
-            {/if}
-        </div>
+			{#if loadingFolders}
+				<div class="flex items-center justify-center py-8">
+					<span class="text-muted-foreground text-sm">
+						{m.loading_folders()}
+						<Spinner />
+					</span>
+				</div>
+			{:else if folderTree.length === 0}
+				<div class="flex items-center justify-center py-8">
+					<span class="text-muted-foreground text-sm">
+						{m.no_folders_available()}
+					</span>
+				</div>
+			{:else}
+				{#each folderTree as node}
+					{@render folderItem(node, 0)}
+				{/each}
+			{/if}
+		</div>
 
-        {#if isSameLocation}
-            <p class="text-xs text-muted-foreground">
-                {isBulkMode
-                    ? m.items_already_in_location()
-                    : m.item_already_in_location()}
-            </p>
-        {/if}
-        {#if isMovingIntoSelf}
-            <p class="text-xs text-destructive">
-                {m.cannot_move_into_self()}
-            </p>
-        {/if}
-    </div>
+		{#if isSameLocation}
+			<p class="text-xs text-muted-foreground">
+				{isBulkMode
+					? m.items_already_in_location()
+					: m.item_already_in_location()}
+			</p>
+		{/if}
+		{#if isMovingIntoSelf}
+			<p class="text-xs text-destructive">
+				{m.cannot_move_into_self()}
+			</p>
+		{/if}
+	</div>
 </ResponsiveDialog>

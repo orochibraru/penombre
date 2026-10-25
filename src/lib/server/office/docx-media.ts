@@ -179,14 +179,12 @@ export function declareMediaTypes(
 		return;
 	}
 	document.root.children.unshift(
-		...missing.map(
-			([extension, contentType]): XmlElement => ({
-				type: "element",
-				name: "Default",
-				attrs: { Extension: extension, ContentType: contentType },
-				children: [],
-			}),
-		),
+		...missing.map(([extension, contentType]): XmlElement => ({
+			type: "element",
+			name: "Default",
+			attrs: { Extension: extension, ContentType: contentType },
+			children: [],
+		})),
 	);
 	setPartText(entries, "[Content_Types].xml", serializeXml(document));
 }

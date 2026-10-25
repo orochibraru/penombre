@@ -19,8 +19,8 @@ import {
 	local,
 	openRels,
 	REL,
-	type Rels,
 	relList,
+	type Rels,
 	relTarget,
 } from "./package";
 

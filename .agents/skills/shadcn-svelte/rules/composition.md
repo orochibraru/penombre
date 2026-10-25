@@ -81,8 +81,8 @@ This applies to all group-based components:
 
 ```svelte
 <script lang="ts">
-  import * as Empty from "$lib/components/ui/empty";
   import { Button } from "$lib/components/ui/button";
+  import * as Empty from "$lib/components/ui/empty";
   import FolderIcon from "@lucide/svelte/icons/folder";
 </script>
 
@@ -90,7 +90,8 @@ This applies to all group-based components:
   <Empty.Header>
     <Empty.Media variant="icon"><FolderIcon /></Empty.Media>
     <Empty.Title>No projects yet</Empty.Title>
-    <Empty.Description>Get started by creating a new project.</Empty.Description>
+    <Empty.Description>Get started by creating a new project.</Empty.Description
+    >
   </Empty.Header>
   <Empty.Content>
     <Button>Create Project</Button>
@@ -161,8 +162,8 @@ Use full composition — don't dump everything into `Card.Content`:
 
 ```svelte
 <script lang="ts">
-  import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
+  import * as Card from "$lib/components/ui/card";
 </script>
 
 <Card.Root>

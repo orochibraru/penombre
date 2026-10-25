@@ -2,8 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { FUNCTION_NAMES } from "../formula";
 import {
 	addSheet,
-	type BookData,
 	blockAt,
+	type BookData,
 	fill,
 	fillWith,
 	freeSheetName,
@@ -19,7 +19,7 @@ import {
 	widthOf,
 	writeBlock,
 } from "./book";
-import { complete, completionAt, SIGNATURES, signatureAt } from "./catalog";
+import { complete, completionAt, signatureAt, SIGNATURES } from "./catalog";
 import { parseTsv, toTsv } from "./clipboard";
 import { History } from "./history";
 import {

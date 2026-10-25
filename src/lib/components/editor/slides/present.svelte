@@ -104,9 +104,17 @@
 	onpointerdown={(event) => (from = { x: event.clientX, y: event.clientY })}
 	onpointerup={release}
 >
-	<div class="relative grid min-h-0 flex-1 place-items-center" bind:clientWidth={viewWidth} bind:clientHeight={viewHeight}>
+	<div
+		class="relative grid min-h-0 flex-1 place-items-center"
+		bind:clientWidth={viewWidth}
+		bind:clientHeight={viewHeight}
+	>
 		{#key slide?.id}
-			<div class="absolute inset-0 grid place-items-center" in:fade={{ duration: still ? 0 : 350 }} out:fade={{ duration: still ? 0 : 350 }}>
+			<div
+				class="absolute inset-0 grid place-items-center"
+				in:fade={{ duration: still ? 0 : 350 }}
+				out:fade={{ duration: still ? 0 : 350 }}
+			>
 				{#if slide}
 					<SlideView {deck} {slide} {width} {media} label={labelOf} />
 				{/if}
@@ -114,7 +122,10 @@
 		{/key}
 	</div>
 	<div class="h-1 shrink-0 bg-white/10">
-		<div class="bg-primary h-full transition-[width]" style:width="{((position + 1) / Math.max(1, shown.length)) * 100}%"></div>
+		<div
+			class="bg-primary h-full transition-[width]"
+			style:width="{((position + 1) / Math.max(1, shown.length)) * 100}%"
+		></div>
 	</div>
 	<div
 		class={cn(
@@ -122,17 +133,43 @@
 			quiet ? "opacity-0" : "opacity-60",
 		)}
 	>
-		<Button variant="ghost" size="icon" class="hover:bg-white/15 hover:text-white" aria-label={m.previous()} onclick={() => go(position - 1)}>
+		<Button
+			variant="ghost"
+			size="icon"
+			class="hover:bg-white/15 hover:text-white"
+			aria-label={m.previous()}
+			onclick={() => go(position - 1)}
+		>
 			<ChevronLeftIcon />
 		</Button>
-		<span class="min-w-12 text-center text-xs tabular-nums">{position + 1} / {shown.length}</span>
-		<Button variant="ghost" size="icon" class="hover:bg-white/15 hover:text-white" aria-label={m.next()} onclick={() => go(position + 1)}>
+		<span class="min-w-12 text-center text-xs tabular-nums"
+			>{position + 1} / {shown.length}</span
+		>
+		<Button
+			variant="ghost"
+			size="icon"
+			class="hover:bg-white/15 hover:text-white"
+			aria-label={m.next()}
+			onclick={() => go(position + 1)}
+		>
 			<ChevronRightIcon />
 		</Button>
-		<Button variant="ghost" size="icon" class="hover:bg-white/15 hover:text-white" aria-label={m.deck_fullscreen()} onclick={onfullscreen}>
+		<Button
+			variant="ghost"
+			size="icon"
+			class="hover:bg-white/15 hover:text-white"
+			aria-label={m.deck_fullscreen()}
+			onclick={onfullscreen}
+		>
 			<MaximizeIcon />
 		</Button>
-		<Button variant="ghost" size="icon" class="hover:bg-white/15 hover:text-white" aria-label={m.close()} onclick={onexit}>
+		<Button
+			variant="ghost"
+			size="icon"
+			class="hover:bg-white/15 hover:text-white"
+			aria-label={m.close()}
+			onclick={onexit}
+		>
 			<XIcon />
 		</Button>
 	</div>

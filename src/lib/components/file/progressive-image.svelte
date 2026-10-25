@@ -64,50 +64,50 @@
 </script>
 
 <div class={cn("relative min-h-0 min-w-0", className)}>
-    {#if !painted}
-        <img
-            src={thumb}
-            alt=""
-            aria-hidden="true"
-            class="absolute inset-0 size-full scale-105 object-contain blur-md"
-            onerror={(event) => (event.currentTarget as HTMLImageElement).remove()}
-        >
-        <div class="absolute inset-0 flex items-center justify-center">
-            <Spinner class="size-6" />
-        </div>
-    {/if}
-    <img
-        src={shown}
-        alt={alt}
-        class={cn(
-            "relative size-full rounded-md object-scale-down transition-opacity",
-            !painted && "opacity-0",
-        )}
-        onload={() => painted = true}
-        onerror={() => {
-            // No render for this type (HEIC, a broken file): the bytes themselves.
-            if (shown !== original) {
-                shown = original;
-            } else {
-                painted = true;
-            }
-        }}
-    >
-    {#if painted && !isOriginal}
-        <Button
-            variant="secondary"
-            size="sm"
-            class="absolute inset-e-2 bottom-2 shadow"
-            disabled={upgrading}
-            onclick={upgrade}
-        >
-            {#if upgrading}
-                <Spinner />
-            {/if}
-            {m.image_show_original()}
-            {#if size !== undefined}
-                <span class="text-muted-foreground">{readableFileSize(size)}</span>
-            {/if}
-        </Button>
-    {/if}
+	{#if !painted}
+		<img
+			src={thumb}
+			alt=""
+			aria-hidden="true"
+			class="absolute inset-0 size-full scale-105 object-contain blur-md"
+			onerror={(event) => (event.currentTarget as HTMLImageElement).remove()}
+		/>
+		<div class="absolute inset-0 flex items-center justify-center">
+			<Spinner class="size-6" />
+		</div>
+	{/if}
+	<img
+		src={shown}
+		{alt}
+		class={cn(
+			"relative size-full rounded-md object-scale-down transition-opacity",
+			!painted && "opacity-0",
+		)}
+		onload={() => (painted = true)}
+		onerror={() => {
+			// No render for this type (HEIC, a broken file): the bytes themselves.
+			if (shown !== original) {
+				shown = original;
+			} else {
+				painted = true;
+			}
+		}}
+	/>
+	{#if painted && !isOriginal}
+		<Button
+			variant="secondary"
+			size="sm"
+			class="absolute inset-e-2 bottom-2 shadow"
+			disabled={upgrading}
+			onclick={upgrade}
+		>
+			{#if upgrading}
+				<Spinner />
+			{/if}
+			{m.image_show_original()}
+			{#if size !== undefined}
+				<span class="text-muted-foreground">{readableFileSize(size)}</span>
+			{/if}
+		</Button>
+	{/if}
 </div>

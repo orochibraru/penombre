@@ -21,16 +21,16 @@
 </script>
 
 <script lang="ts">
-	import XIcon from '@lucide/svelte/icons/x';
-	import { Dialog as SheetPrimitive } from 'bits-ui';
-	import type { Snippet } from 'svelte';
-	import { cn, type WithoutChildrenOrChild } from '#lib/utils.js';
-	import SheetOverlay from './sheet-overlay.svelte';
+	import XIcon from "@lucide/svelte/icons/x";
+	import { Dialog as SheetPrimitive } from "bits-ui";
+	import type { Snippet } from "svelte";
+	import { cn, type WithoutChildrenOrChild } from "#lib/utils.js";
+	import SheetOverlay from "./sheet-overlay.svelte";
 
 	let {
 		ref = $bindable(null),
 		class: className,
-		side = 'right',
+		side = "right",
 		portalProps,
 		children,
 		...restProps

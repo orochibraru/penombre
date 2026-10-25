@@ -1,4 +1,6 @@
 import process from "node:process";
+import { building, dev } from "$app/env";
+import { getRequestEvent } from "$app/server";
 import { apiKey } from "@better-auth/api-key";
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
@@ -26,8 +28,8 @@ import { getConfig, isSmtpEnabled } from "#lib/server/config.js";
 import { isSqliteDialect } from "#lib/server/db/dialect.js";
 import { getDb } from "#lib/server/db/index.js";
 import * as schema from "#lib/server/db/schema.js";
-import { Email } from "#lib/server/email.js";
 import type { EmailContent } from "#lib/server/email-template.js";
+import { Email } from "#lib/server/email.js";
 import {
 	assertCanDeleteAccount,
 	LastAdminError,
@@ -42,8 +44,6 @@ import {
 } from "#lib/server/services/app-settings.js";
 import type { InstanceMethods } from "#lib/server/services/auth-methods.js";
 import { StorageService } from "#lib/server/services/storage/index.js";
-import { building, dev } from "$app/env";
-import { getRequestEvent } from "$app/server";
 
 const logger = new Logger("Auth");
 

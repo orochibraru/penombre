@@ -51,7 +51,11 @@
 	let cardWidth = $state(280);
 </script>
 
-<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" role="radiogroup" aria-label={m.slides_choose_template()}>
+<div
+	class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
+	role="radiogroup"
+	aria-label={m.slides_choose_template()}
+>
 	{#each templates as template (template.id)}
 		{@const [first, ...rest] = template.slides}
 		<button
@@ -66,15 +70,29 @@
 		>
 			<div class="w-full" bind:clientWidth={cardWidth}>
 				{#if first}
-					<SlideView deck={template.deck} slide={first} width={cardWidth} media={none} class="rounded-md shadow-sm" />
+					<SlideView
+						deck={template.deck}
+						slide={first}
+						width={cardWidth}
+						media={none}
+						class="rounded-md shadow-sm"
+					/>
 				{/if}
 			</div>
 			<div class="grid grid-cols-3 gap-1.5">
 				{#each rest as slide (slide.id)}
-					<SlideView deck={template.deck} {slide} width={(cardWidth - 12) / 3} media={none} class="rounded-sm border" />
+					<SlideView
+						deck={template.deck}
+						{slide}
+						width={(cardWidth - 12) / 3}
+						media={none}
+						class="rounded-sm border"
+					/>
 				{/each}
 			</div>
-			<span class="flex items-center justify-between px-0.5 text-sm font-medium">
+			<span
+				class="flex items-center justify-between px-0.5 text-sm font-medium"
+			>
 				{TEMPLATE_NAMES[template.id]?.() ?? template.id}
 				{#if selected === template.id}
 					<CheckIcon class="text-primary size-4" />

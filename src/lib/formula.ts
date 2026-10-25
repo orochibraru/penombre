@@ -21,11 +21,11 @@ import {
 } from "./sheet/references";
 import {
 	type Arg,
-	CYCLE,
 	compareValues,
-	DIV0,
+	CYCLE,
 	dateKind,
 	display,
+	DIV0,
 	errorFromCode,
 	FormulaError,
 	isoFromSerial,

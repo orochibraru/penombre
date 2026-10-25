@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { m } from "./paraglide/messages.js";
 import { storage_files_count as filesCount } from "./paraglide/messages/storage_files_count.js";
 import { toast_items_moved as itemsMoved } from "./paraglide/messages/toast_items_moved.js";
-import { m } from "./paraglide/messages.js";
 
 /**
  * Proves paraglide's native plural-variant messages resolve through

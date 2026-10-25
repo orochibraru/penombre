@@ -5,4 +5,8 @@
 		$props();
 </script>
 
-<ContextMenuPrimitive.Group bind:ref data-slot="context-menu-group" {...restProps} />
+<ContextMenuPrimitive.Group
+	bind:ref
+	data-slot="context-menu-group"
+	{...restProps}
+/>

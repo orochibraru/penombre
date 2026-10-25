@@ -126,87 +126,87 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col gap-3">
-    <h3 class="text-sm font-medium">{m.notes_title()}</h3>
+	<h3 class="text-sm font-medium">{m.notes_title()}</h3>
 
-    <ul class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
-        {#each notes as note (note.id)}
-            <li class="bg-muted/40 flex flex-col gap-1 rounded-lg border p-2.5">
-                <div class="flex items-center gap-2">
-                    {#if note.timestampSeconds !== null}
-                        <!-- A timestamp is a control, not a label: clicking it
+	<ul class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+		{#each notes as note (note.id)}
+			<li class="bg-muted/40 flex flex-col gap-1 rounded-lg border p-2.5">
+				<div class="flex items-center gap-2">
+					{#if note.timestampSeconds !== null}
+						<!-- A timestamp is a control, not a label: clicking it
                              moves the playhead to that moment. -->
-                        <button
-                            type="button"
-                            class="text-primary hover:bg-primary/10 flex items-center gap-1 rounded px-1 font-mono text-xs tabular-nums transition-colors"
-                            onclick={() => onSeek?.(note.timestampSeconds ?? 0)}
-                            disabled={!onSeek}
-                        >
-                            <ClockIcon class="size-3" />
-                            {stamp(note.timestampSeconds)}
-                        </button>
-                    {/if}
-                    <span class="text-muted-foreground truncate text-xs">
-                        {note.authorName ?? m.unknown()}
-                    </span>
-                    {#if note.userId === currentUserId}
-                        <button
-                            type="button"
-                            class="text-muted-foreground hover:text-destructive ms-auto transition-colors"
-                            aria-label={m.delete()}
-                            onclick={() => remove(note.id)}
-                        >
-                            <Trash2Icon class="size-3.5" />
-                        </button>
-                    {/if}
-                </div>
-                <p class="text-sm wrap-break-word whitespace-pre-wrap">
-                    {note.body}
-                </p>
-            </li>
-        {:else}
-            <li class="text-muted-foreground py-6 text-center text-sm">
-                {loading ? m.loading() : m.notes_empty()}
-            </li>
-        {/each}
-    </ul>
+						<button
+							type="button"
+							class="text-primary hover:bg-primary/10 flex items-center gap-1 rounded px-1 font-mono text-xs tabular-nums transition-colors"
+							onclick={() => onSeek?.(note.timestampSeconds ?? 0)}
+							disabled={!onSeek}
+						>
+							<ClockIcon class="size-3" />
+							{stamp(note.timestampSeconds)}
+						</button>
+					{/if}
+					<span class="text-muted-foreground truncate text-xs">
+						{note.authorName ?? m.unknown()}
+					</span>
+					{#if note.userId === currentUserId}
+						<button
+							type="button"
+							class="text-muted-foreground hover:text-destructive ms-auto transition-colors"
+							aria-label={m.delete()}
+							onclick={() => remove(note.id)}
+						>
+							<Trash2Icon class="size-3.5" />
+						</button>
+					{/if}
+				</div>
+				<p class="text-sm wrap-break-word whitespace-pre-wrap">
+					{note.body}
+				</p>
+			</li>
+		{:else}
+			<li class="text-muted-foreground py-6 text-center text-sm">
+				{loading ? m.loading() : m.notes_empty()}
+			</li>
+		{/each}
+	</ul>
 
-    <div class="flex flex-col gap-2">
-        <Textarea
-            bind:ref={box}
-            bind:value={draft}
-            rows={3}
-            placeholder={m.notes_placeholder()}
-            onkeydown={(e: KeyboardEvent) => {
-                // Enter sends, shift+enter breaks the line — the convention
-                // every comment box has trained people on.
-                if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    void submit();
-                }
-            }}
-        />
-        <div class="flex items-center justify-between gap-2">
-            {#if canStamp}
-                <label
-                    class={cn(
-                        "flex cursor-pointer items-center gap-2 text-xs",
-                        attachTime ? "text-foreground" : "text-muted-foreground",
-                    )}
-                >
-                    <input
-                        type="checkbox"
-                        bind:checked={attachTime}
-                        class="accent-primary size-3.5"
-                    />
-                    {m.notes_at_time({ time: stamp(position ?? 0) })}
-                </label>
-            {:else}
-                <span></span>
-            {/if}
-            <Button size="sm" loading={saving} onclick={submit}>
-                <SendIcon class="size-3.5" />
-                {m.notes_add()}
-            </Button>
-        </div>
-    </div>
+	<div class="flex flex-col gap-2">
+		<Textarea
+			bind:ref={box}
+			bind:value={draft}
+			rows={3}
+			placeholder={m.notes_placeholder()}
+			onkeydown={(e: KeyboardEvent) => {
+				// Enter sends, shift+enter breaks the line — the convention
+				// every comment box has trained people on.
+				if (e.key === "Enter" && !e.shiftKey) {
+					e.preventDefault();
+					void submit();
+				}
+			}}
+		/>
+		<div class="flex items-center justify-between gap-2">
+			{#if canStamp}
+				<label
+					class={cn(
+						"flex cursor-pointer items-center gap-2 text-xs",
+						attachTime ? "text-foreground" : "text-muted-foreground",
+					)}
+				>
+					<input
+						type="checkbox"
+						bind:checked={attachTime}
+						class="accent-primary size-3.5"
+					/>
+					{m.notes_at_time({ time: stamp(position ?? 0) })}
+				</label>
+			{:else}
+				<span></span>
+			{/if}
+			<Button size="sm" loading={saving} onclick={submit}>
+				<SendIcon class="size-3.5" />
+				{m.notes_add()}
+			</Button>
+		</div>
+	</div>
 </div>

@@ -153,8 +153,7 @@ describe("migrateStorageMeta — files", () => {
 		expect(insertCount()).toBeGreaterThanOrEqual(1);
 
 		const fileRow = values.mock.calls[0]?.[0] as
-			| Record<string, unknown>
-			| undefined;
+			Record<string, unknown> | undefined;
 		expect(fileRow).toBeDefined();
 		expect(fileRow?.id).toBe("file-id-1");
 		expect(fileRow?.name).toBe("document.pdf");
@@ -206,8 +205,7 @@ describe("migrateStorageMeta — folders", () => {
 		await migrateStorageMeta(tmpDir);
 
 		const folderRow = values.mock.calls[0]?.[0] as
-			| Record<string, unknown>
-			| undefined;
+			Record<string, unknown> | undefined;
 		expect(folderRow).toBeDefined();
 		expect(folderRow?.id).toBe("folder-id-1");
 		expect(folderRow?.name).toBe("My Documents");
@@ -227,8 +225,7 @@ describe("migrateStorageMeta — folders", () => {
 		await migrateStorageMeta(tmpDir);
 
 		const folderRow = values.mock.calls[0]?.[0] as
-			| Record<string, unknown>
-			| undefined;
+			Record<string, unknown> | undefined;
 		expect(folderRow).toBeDefined();
 		expect(folderRow?.id).toBe("my-dir");
 		expect(folderRow?.name).toBe("my-dir");
@@ -256,8 +253,7 @@ describe("migrateStorageMeta — folders", () => {
 		await migrateStorageMeta(tmpDir);
 
 		const childRow = childSetup.values.mock.calls[0]?.[0] as
-			| { parentId: string | null }
-			| undefined;
+			{ parentId: string | null } | undefined;
 		expect(childRow?.parentId).toBe("parent-id");
 	});
 

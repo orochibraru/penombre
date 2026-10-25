@@ -134,62 +134,62 @@
 </script>
 
 <ul
-    bind:this={list}
-    class="flex shrink-0 gap-2 overflow-x-auto p-1 select-none sm:w-44 sm:flex-col sm:overflow-x-visible sm:overflow-y-auto"
+	bind:this={list}
+	class="flex shrink-0 gap-2 overflow-x-auto p-1 select-none sm:w-44 sm:flex-col sm:overflow-x-visible sm:overflow-y-auto"
 >
-    {#each deck.slides as slide, index (slide)}
-        <li
-            data-slide
-            class={cn(
-                "relative w-32 shrink-0 rounded-lg sm:w-auto",
-                drag?.active && drag.from === index && "opacity-40",
-                dropEdge(index),
-            )}
-            animate:flip={{ duration: 150 }}
-        >
-            <button
-                type="button"
-                aria-label={m.deck_slide_label({ number: String(index + 1) })}
-                aria-current={index === current ? "true" : undefined}
-                class={cn(
-                    "hover:border-primary/60 flex w-full items-start gap-1.5 rounded-lg border p-1.5 text-left transition-colors",
-                    index === current && "border-primary bg-primary/5",
-                )}
-                onpointerdown={(event) => start(event, index)}
-                onpointermove={move}
-                onpointerup={end}
-                onpointercancel={() => (drag = null)}
-                onclick={() => pick(index)}
-            >
-                <span class="flex flex-col items-center gap-1">
-                    <span class="text-muted-foreground text-[10px] tabular-nums">
-                        {index + 1}
-                    </span>
-                    {#if marked?.has(index)}
-                        <span
-                            class="bg-primary size-2 rounded-full rounded-bl-none"
-                            aria-hidden="true"
-                        ></span>
-                    {/if}
-                    {#if reorder}
-                        <span
-                            data-grip
-                            class="text-muted-foreground -mx-1 touch-none px-1 py-1 sm:cursor-grab"
-                            title={m.deck_drag_slide()}
-                        >
-                            <GripVerticalIcon class="size-3" />
-                        </span>
-                    {/if}
-                </span>
-                <SlideView
-                    {slide}
-                    look={looks[index]}
-                    {theme}
-                    number={index + 1}
-                    inert
-                    class="pointer-events-none aspect-video min-w-0 flex-1 rounded-sm border"
-                />
-            </button>
-        </li>
-    {/each}
+	{#each deck.slides as slide, index (slide)}
+		<li
+			data-slide
+			class={cn(
+				"relative w-32 shrink-0 rounded-lg sm:w-auto",
+				drag?.active && drag.from === index && "opacity-40",
+				dropEdge(index),
+			)}
+			animate:flip={{ duration: 150 }}
+		>
+			<button
+				type="button"
+				aria-label={m.deck_slide_label({ number: String(index + 1) })}
+				aria-current={index === current ? "true" : undefined}
+				class={cn(
+					"hover:border-primary/60 flex w-full items-start gap-1.5 rounded-lg border p-1.5 text-left transition-colors",
+					index === current && "border-primary bg-primary/5",
+				)}
+				onpointerdown={(event) => start(event, index)}
+				onpointermove={move}
+				onpointerup={end}
+				onpointercancel={() => (drag = null)}
+				onclick={() => pick(index)}
+			>
+				<span class="flex flex-col items-center gap-1">
+					<span class="text-muted-foreground text-[10px] tabular-nums">
+						{index + 1}
+					</span>
+					{#if marked?.has(index)}
+						<span
+							class="bg-primary size-2 rounded-full rounded-bl-none"
+							aria-hidden="true"
+						></span>
+					{/if}
+					{#if reorder}
+						<span
+							data-grip
+							class="text-muted-foreground -mx-1 touch-none px-1 py-1 sm:cursor-grab"
+							title={m.deck_drag_slide()}
+						>
+							<GripVerticalIcon class="size-3" />
+						</span>
+					{/if}
+				</span>
+				<SlideView
+					{slide}
+					look={looks[index]}
+					{theme}
+					number={index + 1}
+					inert
+					class="pointer-events-none aspect-video min-w-0 flex-1 rounded-sm border"
+				/>
+			</button>
+		</li>
+	{/each}
 </ul>

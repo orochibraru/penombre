@@ -39,24 +39,24 @@
 </script>
 
 <ResponsiveDialog
-    bind:open={sheet.formatDialog}
-    size="sm"
-    title={m.sheet_format_custom_title()}
-    submitLabel={m.sheet_format_apply()}
-    submitDisabled={code.length > 255}
-    onsubmit={submit}
+	bind:open={sheet.formatDialog}
+	size="sm"
+	title={m.sheet_format_custom_title()}
+	submitLabel={m.sheet_format_apply()}
+	submitDisabled={code.length > 255}
+	onsubmit={submit}
 >
-    <div class="flex min-w-0 flex-col gap-2">
-        <Input
-            bind:value={code}
-            aria-label={m.sheet_format_code()}
-            placeholder="#,##0.00"
-            class="font-mono"
-            spellcheck="false"
-            autocomplete="off"
-        />
-        <p class="text-muted-foreground min-w-0 truncate text-sm tabular-nums">
-            {m.sheet_format_preview({ value: preview })}
-        </p>
-    </div>
+	<div class="flex min-w-0 flex-col gap-2">
+		<Input
+			bind:value={code}
+			aria-label={m.sheet_format_code()}
+			placeholder="#,##0.00"
+			class="font-mono"
+			spellcheck="false"
+			autocomplete="off"
+		/>
+		<p class="text-muted-foreground min-w-0 truncate text-sm tabular-nums">
+			{m.sheet_format_preview({ value: preview })}
+		</p>
+	</div>
 </ResponsiveDialog>

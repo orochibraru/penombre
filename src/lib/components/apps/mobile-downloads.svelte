@@ -33,33 +33,33 @@
 </script>
 
 <div class="flex flex-col gap-4">
-    <div class="flex flex-col gap-2">
-        {#each order as system (system)}
-            <a
-                href={assetUrl(version, BUILDS[system].file)}
-                class={system === mine
-                    ? buttonVariants({ class: "self-start" })
-                    : "text-primary flex items-center gap-2 text-sm hover:underline"}
-            >
-                <DownloadIcon class="size-4" />
-                {BUILDS[system].label()}
-            </a>
-        {/each}
-    </div>
-    <p class="text-muted-foreground text-sm">{m.apps_mobile_note()}</p>
-    <div class="flex flex-wrap gap-2">
-        <Button size="sm" onclick={connect}>
-            <QrCodeIcon />
-            {m.mobile_connect()}
-        </Button>
-        <a
-            href={GUIDE}
-            target="_blank"
-            rel="noreferrer"
-            class={buttonVariants({ variant: "outline", size: "sm" })}
-        >
-            <BookOpenIcon />
-            {m.desktop_app_guide()}
-        </a>
-    </div>
+	<div class="flex flex-col gap-2">
+		{#each order as system (system)}
+			<a
+				href={assetUrl(version, BUILDS[system].file)}
+				class={system === mine
+					? buttonVariants({ class: "self-start" })
+					: "text-primary flex items-center gap-2 text-sm hover:underline"}
+			>
+				<DownloadIcon class="size-4" />
+				{BUILDS[system].label()}
+			</a>
+		{/each}
+	</div>
+	<p class="text-muted-foreground text-sm">{m.apps_mobile_note()}</p>
+	<div class="flex flex-wrap gap-2">
+		<Button size="sm" onclick={connect}>
+			<QrCodeIcon />
+			{m.mobile_connect()}
+		</Button>
+		<a
+			href={GUIDE}
+			target="_blank"
+			rel="noreferrer"
+			class={buttonVariants({ variant: "outline", size: "sm" })}
+		>
+			<BookOpenIcon />
+			{m.desktop_app_guide()}
+		</a>
+	</div>
 </div>

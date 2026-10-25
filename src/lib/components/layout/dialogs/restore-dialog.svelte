@@ -28,19 +28,19 @@
 </script>
 
 <ResponsiveDialog
-    bind:open={confirmRestoreOpen}
-    bind:loading={restoringItem}
-    title={m.confirm_restore_title()}
-    description={m.confirm_restore_description()}
-    submitLabel={m.continue()}
-    loadingLabel={m.restoring()}
-    form={{ onsubmit: handleSubmit }}
+	bind:open={confirmRestoreOpen}
+	bind:loading={restoringItem}
+	title={m.confirm_restore_title()}
+	description={m.confirm_restore_description()}
+	submitLabel={m.continue()}
+	loadingLabel={m.restoring()}
+	form={{ onsubmit: handleSubmit }}
 >
-    <div class="prose">
-        <ul>
-            {#each itemNames as name}
-                <li class="text-foreground">{name}</li>
-            {/each}
-        </ul>
-    </div>
+	<div class="prose">
+		<ul>
+			{#each itemNames as name}
+				<li class="text-foreground">{name}</li>
+			{/each}
+		</ul>
+	</div>
 </ResponsiveDialog>

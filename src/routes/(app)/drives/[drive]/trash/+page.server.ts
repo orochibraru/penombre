@@ -2,7 +2,7 @@ import { error } from "@sveltejs/kit";
 import { firstPageQuery } from "#lib/pagination.js";
 import { isSimpleMode } from "#lib/server/config.js";
 import { DriveAccessError } from "#lib/server/errors.js";
-import { driveStorage, drivesService } from "#lib/server/services/drives.js";
+import { drivesService, driveStorage } from "#lib/server/services/drives.js";
 import { getUserPreferences } from "#lib/server/services/preferences.js";
 import { pageOptions } from "#lib/server/services/storage/listings.js";
 

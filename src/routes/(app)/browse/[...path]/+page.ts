@@ -30,12 +30,10 @@ export const load = async ({ params, fetch, url, depends, parent }) => {
 	const ancestorNames = listing.data.data?.ancestorNames ?? [];
 	const crumbs: BreadCrumb[] = [
 		{ title: m.nav_my_drive(), href: "/browse" },
-		...folders.map(
-			(folder, i): BreadCrumb => ({
-				title: ancestorNames[i] ?? folder,
-				href: `/browse/${chain[i]}`,
-			}),
-		),
+		...folders.map((folder, i): BreadCrumb => ({
+			title: ancestorNames[i] ?? folder,
+			href: `/browse/${chain[i]}`,
+		})),
 	];
 
 	return {

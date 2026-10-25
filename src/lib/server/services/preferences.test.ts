@@ -4,9 +4,8 @@ import { db } from "#lib/server/db/index.js";
 const mockSelect = db.select as Mock<typeof db.select>;
 const mockInsert = db.insert as Mock<typeof db.insert>;
 
-const { getUserPreferences, updateUserPreferences } = await import(
-	"./preferences"
-);
+const { getUserPreferences, updateUserPreferences } =
+	await import("./preferences");
 
 describe("getUserPreferences", () => {
 	test("returns default preferences when user has none", async () => {

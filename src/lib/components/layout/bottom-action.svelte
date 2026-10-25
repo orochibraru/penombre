@@ -46,55 +46,55 @@
 </script>
 
 {#if open}
-    <div
-        bind:this={ref}
-        class={cn(
-            "bg-card/80 fixed bottom-20 rounded-lg border backdrop-blur-md lg:bottom-5",
-            // Centred and only as wide as its content. Aside from reading
-            // better, it keeps the bar out of the bottom-right corner, where
-            // the upload progress panel is fixed at z-50 and was swallowing
-            // every click on these buttons.
-            compact
-                ? "left-1/2 z-50 w-auto max-w-[calc(100vw-2rem)] -translate-x-1/2 p-2"
-                : "bottom-drawer lg:bottom-drawer-lg right-5 p-3",
-            className,
-        )}
-        transition:slide
-    >
-        {#if compact}
-            <!-- Wraps rather than scrolls: a hidden action is worse than a
+	<div
+		bind:this={ref}
+		class={cn(
+			"bg-card/80 fixed bottom-20 rounded-lg border backdrop-blur-md lg:bottom-5",
+			// Centred and only as wide as its content. Aside from reading
+			// better, it keeps the bar out of the bottom-right corner, where
+			// the upload progress panel is fixed at z-50 and was swallowing
+			// every click on these buttons.
+			compact
+				? "left-1/2 z-50 w-auto max-w-[calc(100vw-2rem)] -translate-x-1/2 p-2"
+				: "bottom-drawer lg:bottom-drawer-lg right-5 p-3",
+			className,
+		)}
+		transition:slide
+	>
+		{#if compact}
+			<!-- Wraps rather than scrolls: a hidden action is worse than a
                  second row, and the count reads as a label, not a heading. -->
-            <div class="flex flex-wrap items-center justify-center gap-2">
-                <p class="text-muted-foreground me-1 text-xs font-medium">
-                    {title}
-                </p>
-                {@render children()}
-                {#if showCloseButton}
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        class="text-xs"
-                        title={closeLabel ?? m.close()}
-                        onclick={close}
-                    >
-                        <XIcon class="size-3.5" />
-                        {closeLabel ?? ""}
-                    </Button>
-                {/if}
-            </div>
-        {:else}
-            <div class="mb-2 flex items-center justify-between">
-                <p class="font-medium">{title}</p>
-                {#if showCloseButton}
-                    <Button variant="ghost" title={m.close()} onclick={close}>
-                        <XIcon />
-                    </Button>
-                {/if}
-            </div>
+			<div class="flex flex-wrap items-center justify-center gap-2">
+				<p class="text-muted-foreground me-1 text-xs font-medium">
+					{title}
+				</p>
+				{@render children()}
+				{#if showCloseButton}
+					<Button
+						variant="ghost"
+						size="sm"
+						class="text-xs"
+						title={closeLabel ?? m.close()}
+						onclick={close}
+					>
+						<XIcon class="size-3.5" />
+						{closeLabel ?? ""}
+					</Button>
+				{/if}
+			</div>
+		{:else}
+			<div class="mb-2 flex items-center justify-between">
+				<p class="font-medium">{title}</p>
+				{#if showCloseButton}
+					<Button variant="ghost" title={m.close()} onclick={close}>
+						<XIcon />
+					</Button>
+				{/if}
+			</div>
 
-            <div class="overflow-x-auto">
-                {@render children()}
-            </div>
-        {/if}
-    </div>
+			<div class="overflow-x-auto">
+				{@render children()}
+			</div>
+		{/if}
+	</div>
 {/if}

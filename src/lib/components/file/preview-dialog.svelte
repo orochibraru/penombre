@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { ResolvedPathname } from "$app/types";
 	import { MaximizeIcon, MessageSquareTextIcon } from "@lucide/svelte";
 	import { untrack } from "svelte";
 	import type { ObjectItem } from "#lib/api/index.js";
@@ -20,7 +21,6 @@
 	import { fileNotes, noteMarkers } from "#lib/store/notes.js";
 	import { cn, readableFileSize } from "#lib/utils.js";
 	import { versionOf } from "#lib/versions.js";
-	import type { ResolvedPathname } from "$app/types";
 	import { fullscreenUrl, rawUrl, thumbnailUrl } from "./file-links";
 	import VersionSelect from "./version-select.svelte";
 	import type { FileToView } from "./wrapper.svelte.js";
@@ -104,159 +104,156 @@
 </script>
 
 <ResponsiveDialog
-    bind:open
-    title={fileToView
-        ? fileToView.item.metadata.name ?? fileToView.item.key
-        : m.file_preview()}
-    size="lg"
-    bodyClass="max-h-[68svh] md:max-h-[72vh]"
+	bind:open
+	title={fileToView
+		? (fileToView.item.metadata.name ?? fileToView.item.key)
+		: m.file_preview()}
+	size="lg"
+	bodyClass="max-h-[68svh] md:max-h-[72vh]"
 >
-    {#if fileToView}
-        <div class="mb-5 flex flex-col justify-between gap-5 lg:flex-row">
-            <span>
-                {readableFileSize(fileToView.item.size as number) ?? "-"}
-            </span>
-            {#if fileToView.language}
-                <Badge variant="outline" class="text-xs">
-                    {fileToView.language}
-                </Badge>
-            {/if}
-            <div class="flex items-center gap-2 pr-5">
-                {#if baseItem && (fileToView.type === "image" || fileToView.type === "video")}
-                    <VersionSelect
-                        file={baseItem}
-                        selected={versionOf(fileToView.item)?.id ?? null}
-                        onselect={switchTake}
-                    />
-                {/if}
-                {#if fileToView.item.metadata.id && !notesOnly}
-                    <Button
-                        type="button"
-                        variant={notesOpen ? "default" : "outline"}
-                        size="sm"
-                        title={m.notes_title()}
-                        onclick={() => notesOpen = !notesOpen}
-                    ><MessageSquareTextIcon />{m.notes_title()}</Button>
-                {/if}
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    href={fullscreenUrl(fileToView.item) as ResolvedPathname}
-                >{m.open_fullscreen()} <MaximizeIcon /></Button>
-            </div>
-        </div>
-        <!-- Preview and notes sit side by side on a wide screen and stack
+	{#if fileToView}
+		<div class="mb-5 flex flex-col justify-between gap-5 lg:flex-row">
+			<span>
+				{readableFileSize(fileToView.item.size as number) ?? "-"}
+			</span>
+			{#if fileToView.language}
+				<Badge variant="outline" class="text-xs">
+					{fileToView.language}
+				</Badge>
+			{/if}
+			<div class="flex items-center gap-2 pr-5">
+				{#if baseItem && (fileToView.type === "image" || fileToView.type === "video")}
+					<VersionSelect
+						file={baseItem}
+						selected={versionOf(fileToView.item)?.id ?? null}
+						onselect={switchTake}
+					/>
+				{/if}
+				{#if fileToView.item.metadata.id && !notesOnly}
+					<Button
+						type="button"
+						variant={notesOpen ? "default" : "outline"}
+						size="sm"
+						title={m.notes_title()}
+						onclick={() => (notesOpen = !notesOpen)}
+						><MessageSquareTextIcon />{m.notes_title()}</Button
+					>
+				{/if}
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					href={fullscreenUrl(fileToView.item) as ResolvedPathname}
+					>{m.open_fullscreen()} <MaximizeIcon /></Button
+				>
+			</div>
+		</div>
+		<!-- Preview and notes sit side by side on a wide screen and stack
              below it, so the thread never squeezes the file it is about. -->
-        <div class="flex min-h-0 w-full flex-col gap-4 lg:flex-row">
-            <!-- A bounded box, not a scroller: the image is sized to fit what
+		<div class="flex min-h-0 w-full flex-col gap-4 lg:flex-row">
+			<!-- A bounded box, not a scroller: the image is sized to fit what
                  is left of the viewport once the dialog's own chrome is
                  accounted for, so a tall photo shrinks instead of pushing the
                  dialog into a scroll. Code keeps its own scrolling. -->
-            <div
-                class={cn(
-                    "flex max-h-[62vh] w-full min-w-0 flex-1 items-center justify-center overflow-auto",
-                    fileToView.type === "notes" && "hidden",
-                )}
-            >
-                {#if fileToView.type === "image"}
-                    <ProgressiveImage
-                        thumb={thumbnailUrl(fileToView.item, "large")}
-                        preview={thumbnailUrl(fileToView.item, "preview")}
-                        original={fileToView.src}
-                        alt={fileToView.item.metadata.name ?? fileToView.item.key}
-                        size={fileToView.item.size ?? undefined}
-                        class="h-[62vh] w-full"
-                    />
-                {:else if fileToView.type === "video"}
-                    <VideoPlayer
-                        src={fileToView.src}
-                        fullscreenHref={fullscreenUrl(fileToView.item)}
-                        startAt={fileToView.startAt}
-                        title={fileToView.item.metadata.name ??
-                            fileToView.item.key}
-                        bind:currentTime={viewerTime}
-                    />
-                {:else if fileToView.type === "code" && fileToView.language && fileToView.content}
-                    <Code.Root
-                        lang={fileToView.language}
-                        class="h-full w-full min-w-0"
-                        code={fileToView.content}
-                    >
-                        <Code.CopyButton />
-                    </Code.Root>
-                {:else if fileToView.type === "pdf"}
-                    <embed
-                        src={fileToView.src}
-                        title={fileToView.item.metadata.name ?? fileToView.item.key}
-                        class="h-[62vh] w-full"
-                    />
-                {/if}
-            </div>
+			<div
+				class={cn(
+					"flex max-h-[62vh] w-full min-w-0 flex-1 items-center justify-center overflow-auto",
+					fileToView.type === "notes" && "hidden",
+				)}
+			>
+				{#if fileToView.type === "image"}
+					<ProgressiveImage
+						thumb={thumbnailUrl(fileToView.item, "large")}
+						preview={thumbnailUrl(fileToView.item, "preview")}
+						original={fileToView.src}
+						alt={fileToView.item.metadata.name ?? fileToView.item.key}
+						size={fileToView.item.size ?? undefined}
+						class="h-[62vh] w-full"
+					/>
+				{:else if fileToView.type === "video"}
+					<VideoPlayer
+						src={fileToView.src}
+						fullscreenHref={fullscreenUrl(fileToView.item)}
+						startAt={fileToView.startAt}
+						title={fileToView.item.metadata.name ?? fileToView.item.key}
+						bind:currentTime={viewerTime}
+					/>
+				{:else if fileToView.type === "code" && fileToView.language && fileToView.content}
+					<Code.Root
+						lang={fileToView.language}
+						class="h-full w-full min-w-0"
+						code={fileToView.content}
+					>
+						<Code.CopyButton />
+					</Code.Root>
+				{:else if fileToView.type === "pdf"}
+					<embed
+						src={fileToView.src}
+						title={fileToView.item.metadata.name ?? fileToView.item.key}
+						class="h-[62vh] w-full"
+					/>
+				{/if}
+			</div>
 
-            {#if fileToView.item.metadata.id && (notesOnly || notesOpen)}
-                {@const playingThis =
-                    $playableMusic?.fileId === fileToView.item.metadata.id}
-                <aside
-                    class={cn(
-                        "flex max-h-[62vh] min-h-80 w-full min-w-0 flex-col gap-3",
-                        notesOnly
-                            ? "flex-1"
-                            : "lg:w-80 lg:shrink-0 lg:border-s lg:ps-4",
-                    )}
-                >
-                    {#if fileToView.type === "notes" && playingThis && $playableMusic?.peaks}
-                        <!-- The thread is about moments in the track, so the
+			{#if fileToView.item.metadata.id && (notesOnly || notesOpen)}
+				{@const playingThis =
+					$playableMusic?.fileId === fileToView.item.metadata.id}
+				<aside
+					class={cn(
+						"flex max-h-[62vh] min-h-80 w-full min-w-0 flex-col gap-3",
+						notesOnly ? "flex-1" : "lg:w-80 lg:shrink-0 lg:border-s lg:ps-4",
+					)}
+				>
+					{#if fileToView.type === "notes" && playingThis && $playableMusic?.peaks}
+						<!-- The thread is about moments in the track, so the
                              track has to be in front of you. Clicking a moment
                              stops playback and hands the caret to the box: the
                              reason to click one is to write about it. -->
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="text-muted-foreground shrink-0 font-mono text-xs tabular-nums"
-                            >
-                                {stampTime($playbackPosition)} / {stampTime(
-                                    $playbackDuration,
-                                )}
-                            </span>
-                            <Waveform
-                                src={$playableMusic.peaks}
-                                class="h-14 min-w-0 flex-1"
-                                progress={$playbackDuration > 0
-                                    ? $playbackPosition / $playbackDuration
-                                    : 0}
-                                seekLabel={m.seek()}
-                                markers={markers}
-                                onmarker={(marker) => commandPlayback({ seek: marker.seconds })}
-                                onseek={(fraction) => {
-                                    // One command, not two: a second call in
-                                    // the same tick replaces the first before
-                                    // the player ever sees it.
-                                    commandPlayback({
-                                        seek: fraction * $playbackDuration,
-                                        pause: true,
-                                    });
-                                    focusNotes?.();
-                                }}
-                            />
-                        </div>
-                    {/if}
-                    <NotesPanel
-                        fileId={fileToView.item.metadata.id}
-                        position={fileToView.type === "video"
-                            ? viewerTime
-                            : playingThis
-                              ? $playbackPosition
-                              : undefined}
-                        onSeek={fileToView.type === "video"
-                            ? (seconds) => viewerTime = seconds
-                            : playingThis
-                                ? (seconds) => commandPlayback({ seek: seconds })
-                                : undefined}
-                        currentUserId={currentUserId}
-                        bind:focus={focusNotes}
-                    />
-                </aside>
-            {/if}
-        </div>
-    {/if}
+						<div class="flex items-center gap-2">
+							<span
+								class="text-muted-foreground shrink-0 font-mono text-xs tabular-nums"
+							>
+								{stampTime($playbackPosition)} / {stampTime($playbackDuration)}
+							</span>
+							<Waveform
+								src={$playableMusic.peaks}
+								class="h-14 min-w-0 flex-1"
+								progress={$playbackDuration > 0
+									? $playbackPosition / $playbackDuration
+									: 0}
+								seekLabel={m.seek()}
+								{markers}
+								onmarker={(marker) => commandPlayback({ seek: marker.seconds })}
+								onseek={(fraction) => {
+									// One command, not two: a second call in
+									// the same tick replaces the first before
+									// the player ever sees it.
+									commandPlayback({
+										seek: fraction * $playbackDuration,
+										pause: true,
+									});
+									focusNotes?.();
+								}}
+							/>
+						</div>
+					{/if}
+					<NotesPanel
+						fileId={fileToView.item.metadata.id}
+						position={fileToView.type === "video"
+							? viewerTime
+							: playingThis
+								? $playbackPosition
+								: undefined}
+						onSeek={fileToView.type === "video"
+							? (seconds) => (viewerTime = seconds)
+							: playingThis
+								? (seconds) => commandPlayback({ seek: seconds })
+								: undefined}
+						{currentUserId}
+						bind:focus={focusNotes}
+					/>
+				</aside>
+			{/if}
+		</div>
+	{/if}
 </ResponsiveDialog>

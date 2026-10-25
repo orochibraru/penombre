@@ -38,6 +38,6 @@
 </script>
 
 <div class="w-full">
-    <SectionTabs title={m.account()} {tabs} />
-    {@render children()}
+	<SectionTabs title={m.account()} {tabs} />
+	{@render children()}
 </div>

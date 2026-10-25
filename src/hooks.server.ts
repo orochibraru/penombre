@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import process from "node:process";
+import { building } from "$app/env";
 import {
 	type Handle,
 	type HandleServerError,
@@ -50,7 +51,6 @@ import {
 } from "#lib/server/services/storage/index.js";
 import { sweepStaleZips } from "#lib/server/services/storage/zip.js";
 import { startEmbeddedWorker } from "#lib/server/services/worker-process.js";
-import { building } from "$app/env";
 
 const logger = new Logger("Hooks");
 

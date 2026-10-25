@@ -1,3 +1,4 @@
+import { building, dev } from "$app/env";
 import {
 	blue,
 	cyan,
@@ -9,7 +10,6 @@ import {
 	yellow,
 } from "@kitql/helpers";
 import { getConfig } from "#lib/server/config.js";
-import { building, dev } from "$app/env";
 
 export type LogFormats = "console" | "json";
 

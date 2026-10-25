@@ -107,7 +107,7 @@ in CI's own type-check/test job.
 
 ```bash
 prek run --all-files   # run every hook over the whole repo
-prek run biome         # run a single hook
+prek run format        # run a single hook
 SKIP=test-unit git push ...   # skip a hook for one push
 ```
 

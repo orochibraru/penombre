@@ -3,6 +3,7 @@
  * and ETag support) and plain metadata, chosen by the request's flags.
  */
 
+import { dev } from "$app/env";
 import { and, eq } from "drizzle-orm";
 import { Logger } from "#lib/logger.js";
 import { files } from "#lib/server/db/schema.js";
@@ -11,7 +12,6 @@ import {
 	UnauthorizedError,
 } from "#lib/server/errors.js";
 import type { ObjectItem } from "#lib/server/schema.js";
-import { dev } from "$app/env";
 import type { StorageContext } from "./context";
 import {
 	generateETag,

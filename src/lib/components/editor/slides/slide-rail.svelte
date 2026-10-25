@@ -179,15 +179,27 @@
 					onkeydown={(event) => keydown(event, index)}
 				>
 					<span class="flex w-4 flex-col items-center gap-1">
-						<span class="text-muted-foreground text-[10px] tabular-nums">{index + 1}</span>
+						<span class="text-muted-foreground text-[10px] tabular-nums"
+							>{index + 1}</span
+						>
 						{#if marked?.has(index)}
-							<span class="bg-primary size-2 rounded-full rounded-bl-none" aria-hidden="true"></span>
+							<span
+								class="bg-primary size-2 rounded-full rounded-bl-none"
+								aria-hidden="true"
+							></span>
 						{/if}
 						{#if slide.hidden}
-							<EyeOffIcon class="text-muted-foreground size-3" aria-label={m.slides_hidden()} />
+							<EyeOffIcon
+								class="text-muted-foreground size-3"
+								aria-label={m.slides_hidden()}
+							/>
 						{/if}
 						{#if !editor.readOnly}
-							<span data-grip class="text-muted-foreground -mx-1 touch-none px-1 py-1 sm:cursor-grab" title={m.deck_drag_slide()}>
+							<span
+								data-grip
+								class="text-muted-foreground -mx-1 touch-none px-1 py-1 sm:cursor-grab"
+								title={m.deck_drag_slide()}
+							>
 								<GripVerticalIcon class="size-3" />
 							</span>
 						{/if}
@@ -199,7 +211,10 @@
 							width={Math.max(40, width)}
 							{media}
 							{label}
-							class={cn("pointer-events-none rounded-sm border", slide.hidden && "opacity-40")}
+							class={cn(
+								"pointer-events-none rounded-sm border",
+								slide.hidden && "opacity-40",
+							)}
 						/>
 					</span>
 				</button>
@@ -226,7 +241,10 @@
 								{/if}
 							</DropdownMenu.Item>
 							<DropdownMenu.Separator />
-							<DropdownMenu.Item disabled={index === 0} onSelect={() => editor.moveSlide(index, index - 1)}>
+							<DropdownMenu.Item
+								disabled={index === 0}
+								onSelect={() => editor.moveSlide(index, index - 1)}
+							>
 								<ArrowUpIcon class="size-4" />
 								{m.deck_move_up()}
 							</DropdownMenu.Item>

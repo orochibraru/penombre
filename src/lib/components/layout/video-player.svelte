@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { dev } from "$app/env";
+	import type { ResolvedPathname } from "$app/types";
 	import {
 		ExpandIcon,
 		MaximizeIcon,
@@ -23,8 +25,6 @@
 	import { playMedia } from "#lib/play.js";
 	import { cn, toggleFullscreen } from "#lib/utils.js";
 	import { VideoSource } from "#lib/video-source.svelte.js";
-	import { dev } from "$app/env";
-	import type { ResolvedPathname } from "$app/types";
 
 	interface Props {
 		src: string;
@@ -154,7 +154,7 @@
 </script>
 
 <svelte:document
-	onfullscreenchange={() => isFullscreen = !!document.fullscreenElement}
+	onfullscreenchange={() => (isFullscreen = !!document.fullscreenElement)}
 ></svelte:document>
 
 <div bind:this={shell} class="flex flex-col w-full h-full bg-background">
@@ -169,7 +169,7 @@
 			"mb-2 max-h-[calc(62vh-3.5rem)] w-full rounded-xl bg-black object-contain",
 			blocked && "hidden",
 		)}
-		title={title}
+		{title}
 		playsinline
 		onloadedmetadata={resume}
 		oncanplay={() => {
@@ -203,36 +203,33 @@
 		bind:currentTime
 		bind:duration
 		bind:volume
-    >
-        <track kind="captions" />
-    </video>
+	>
+		<track kind="captions" />
+	</video>
 
 	<div class={cn("flex w-full items-center gap-2", blocked && "hidden")}>
 		<div class="flex items-center justify-between gap-2">
 			{#if loading}
-                <Button disabled title={m.loading()}>
-                    <Spinner />
-                </Button>
+				<Button disabled title={m.loading()}>
+					<Spinner />
+				</Button>
 			{:else if paused}
-                <Button
-                    onclick={() => void playMedia(player)}
-                    title={m.play()}
-                >
-                    <PlayIcon />
-                </Button>
+				<Button onclick={() => void playMedia(player)} title={m.play()}>
+					<PlayIcon />
+				</Button>
 			{:else}
 				<Button
 					onclick={() => {
 						player?.pause();
 					}}
 					title={m.pause()}
-                >
-                    <PauseIcon />
-                </Button>
+				>
+					<PauseIcon />
+				</Button>
 			{/if}
-            <p class="text-xs text-nowrap">
-                {formatTime(currentTime)} / {formatTime(duration)}
-            </p>
+			<p class="text-xs text-nowrap">
+				{formatTime(currentTime)} / {formatTime(duration)}
+			</p>
 		</div>
 		<Progress
 			value={currentTime}
@@ -254,8 +251,8 @@
 		<Button
 			variant="outline"
 			title={m.open_fullscreen()}
-			href={viewerHref as ResolvedPathname}
-		><MaximizeIcon /></Button>
+			href={viewerHref as ResolvedPathname}><MaximizeIcon /></Button
+		>
 
 		<VideoQuality {source} onswitch={keepPlayhead} />
 

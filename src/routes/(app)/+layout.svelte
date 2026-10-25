@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { navigating, page } from "$app/state";
+	import type { ResolvedPathname } from "$app/types";
 	import {
 		ClockFadingIcon,
 		CloudUploadIcon,
@@ -73,10 +77,6 @@
 	import { applyTheme } from "#lib/theme.js";
 	import { resumeUploads } from "#lib/upload/manager.js";
 	import { cn } from "#lib/utils.js";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import { navigating, page } from "$app/state";
-	import type { ResolvedPathname } from "$app/types";
 
 	const { children, data } = $props();
 
@@ -344,14 +344,12 @@
 						url: "/drives/shared",
 						icon: UsersIcon,
 					},
-					...sidebarDriveList.shown.map(
-						(drive): NavItem => ({
-							title: drive.name,
-							url: `/drives/${drive.id}`,
-							icon:
-								drive.role === "viewer" ? HardDriveDownloadIcon : HardDriveIcon,
-						}),
-					),
+					...sidebarDriveList.shown.map((drive): NavItem => ({
+						title: drive.name,
+						url: `/drives/${drive.id}`,
+						icon:
+							drive.role === "viewer" ? HardDriveDownloadIcon : HardDriveIcon,
+					})),
 
 					...(sidebarDriveList.hidden > 0
 						? ([
@@ -376,13 +374,11 @@
 							icon: UsersIcon,
 							isRoot: true,
 						},
-						...sidebarShareList.shown.map(
-							(entry): NavItem => ({
-								title: entry.name,
-								url: `/shared-with-me/${entry.id}`,
-								icon: entry.resourceType === "folder" ? FolderIcon : FileIcon,
-							}),
-						),
+						...sidebarShareList.shown.map((entry): NavItem => ({
+							title: entry.name,
+							url: `/shared-with-me/${entry.id}`,
+							icon: entry.resourceType === "folder" ? FolderIcon : FileIcon,
+						})),
 
 						...(sidebarShareList.hidden > 0
 							? ([
@@ -434,13 +430,11 @@
 			{ title: m.nav_general(), items: nav.general },
 			{
 				title: m.nav_shortcuts(),
-				items: (data.shortcuts ?? []).map(
-					(shortcut): NavItem => ({
-						title: shortcut.name,
-						url: shortcut.href as ResolvedPathname,
-						icon: FolderIcon,
-					}),
-				),
+				items: (data.shortcuts ?? []).map((shortcut): NavItem => ({
+					title: shortcut.name,
+					url: shortcut.href as ResolvedPathname,
+					icon: FolderIcon,
+				})),
 			},
 			{ title: m.nav_drives(), items: nav.drives },
 			{ title: m.nav_shared_with_me(), items: nav.sharedWithMe },
@@ -513,198 +507,205 @@
 	);
 </script>
 
-<svelte:window onscroll={onWindowScroll}></svelte:window>
-<svelte:head><title>{data.config.appName} - {$title ?? m.home()}</title></svelte:head>
+<svelte:window onscroll={onWindowScroll} />
+<svelte:head
+	><title>{data.config.appName} - {$title ?? m.home()}</title></svelte:head
+>
 
 {#if embedded}
-    <main class="flex min-h-dvh flex-col px-2 pt-2">{@render children()}</main>
+	<main class="flex min-h-dvh flex-col px-2 pt-2">{@render children()}</main>
 {:else}
-<Sidebar.Provider
-    style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
->
-	<Sidebar.Root collapsible="icon" variant="inset">
-		<Sidebar.Header>
-			<SidebarBranding />
-			{#if showUploadButton}
-				<div class="hidden md:block">
-					<DropdownMenu.Root bind:open={newMenuOpen}>
-						<DropdownMenu.Trigger>
-							{#snippet child({ props })}
-								<Button
-									{...props}
-									loading={uploadLoading}
-									aria-label={m.new()}
-									class="relative w-full overflow-hidden group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
-								>
-									{#if $globalUploadProgress.isUploading}
-										<div
-											class="absolute inset-0 bg-primary/20 transition-all"
-											style="width: {$globalUploadProgress.progress}%"
-										></div>
-										<span
-											class="relative z-10 group-data-[collapsible=icon]:hidden"
-										>
-											{m.uploading_progress({
-                                                progress: String(
-                                                    $globalUploadProgress.progress,
-                                                ),
-                                                count: String(
-                                                    $globalUploadProgress.count,
-                                                ),
-											})}
-										</span>
-									{:else}
-										<!-- Icon only in the collapsed rail: the label does not fit in 2rem. -->
-                                        <span
-                                            class="group-data-[collapsible=icon]:hidden"
-                                        >
-                                            {m.new()}
-                                        </span>
-										<SquarePlusIcon />
-									{/if}
-								</Button>
-							{/snippet}
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content class="w-56" align="start">
-							<DropdownMenu.Group>
-								<DropdownMenu.Item
-									class="font-medium"
-									onclick={() => $newFolderDialogOpen = true}
-								><FolderPlusIcon />{m.folder()}</DropdownMenu.Item>
-
-								<DropdownMenu.Item
-									class="font-medium"
-									onclick={() => $uploadDialogOpen = true}
-								><CloudUploadIcon />{m.file_upload()}</DropdownMenu.Item>
-							</DropdownMenu.Group>
-							<DropdownMenu.Separator />
-							<DropdownMenu.Group>
-								{#each newDocumentKinds as entry (entry.kind)}
-									{@const Icon = entry.icon}
+	<Sidebar.Provider
+		style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
+	>
+		<Sidebar.Root collapsible="icon" variant="inset">
+			<Sidebar.Header>
+				<SidebarBranding />
+				{#if showUploadButton}
+					<div class="hidden md:block">
+						<DropdownMenu.Root bind:open={newMenuOpen}>
+							<DropdownMenu.Trigger>
+								{#snippet child({ props })}
+									<Button
+										{...props}
+										loading={uploadLoading}
+										aria-label={m.new()}
+										class="relative w-full overflow-hidden group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
+									>
+										{#if $globalUploadProgress.isUploading}
+											<div
+												class="absolute inset-0 bg-primary/20 transition-all"
+												style="width: {$globalUploadProgress.progress}%"
+											></div>
+											<span
+												class="relative z-10 group-data-[collapsible=icon]:hidden"
+											>
+												{m.uploading_progress({
+													progress: String($globalUploadProgress.progress),
+													count: String($globalUploadProgress.count),
+												})}
+											</span>
+										{:else}
+											<!-- Icon only in the collapsed rail: the label does not fit in 2rem. -->
+											<span class="group-data-[collapsible=icon]:hidden">
+												{m.new()}
+											</span>
+											<SquarePlusIcon />
+										{/if}
+									</Button>
+								{/snippet}
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content class="w-56" align="start">
+								<DropdownMenu.Group>
 									<DropdownMenu.Item
 										class="font-medium"
-										disabled={creatingDocument}
-										onclick={() => newDocument(entry.kind)}
-                                    >
-                                        <Icon class={entry.color} />
-                                        {entry.label}
-                                    </DropdownMenu.Item>
-								{/each}
-								<DropdownMenu.Item
-									class="font-medium"
-									onclick={() => newTextFileOpen = true}
-								><FileCodeIcon />{m.new_text_file()}</DropdownMenu.Item>
-							</DropdownMenu.Group>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-				</div>
-			{/if}
-		</Sidebar.Header>
-		<Sidebar.Content>
-			{#if (nav.general ?? []).length > 0}
-				<Nav title={m.nav_general()} items={nav.general} />
-			{/if}
-			<ShortcutsNav shortcuts={data.shortcuts ?? []} />
-			{#if (nav.drives ?? []).length > 0}
-				<Nav title={m.nav_drives()} items={nav.drives ?? []} />
-			{/if}
-			{#if (nav.sharedWithMe ?? []).length > 0}
-				<Nav
-					title={m.nav_shared_with_me()}
-					items={nav.sharedWithMe ?? []}
-				/>
-			{/if}
-			{#if (nav.volumes ?? []).length > 0}
-				<Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
-			{/if}
-			{#if (nav.categories ?? []).length > 0}
-				<Nav title={m.nav_categories()} items={nav.categories} />
-			{/if}
-            <Nav title={m.nav_help()} items={nav.help} class="mt-auto" />
-			<VersionCheck config={data.config} version={data.versionCheck} />
-		</Sidebar.Content>
-	</Sidebar.Root>
+										onclick={() => ($newFolderDialogOpen = true)}
+										><FolderPlusIcon />{m.folder()}</DropdownMenu.Item
+									>
 
-	<Sidebar.Inset>
-		<SiteHeader user={data.user} />
-		<div
-            class={cn(
-                "flex flex-1 flex-col pb-46 transition-all ",
-                $playableMusic !== null ? "lg:pb-26" : "lg:pb-5",
-            )}
-		>
+									<DropdownMenu.Item
+										class="font-medium"
+										onclick={() => ($uploadDialogOpen = true)}
+										><CloudUploadIcon />{m.file_upload()}</DropdownMenu.Item
+									>
+								</DropdownMenu.Group>
+								<DropdownMenu.Separator />
+								<DropdownMenu.Group>
+									{#each newDocumentKinds as entry (entry.kind)}
+										{@const Icon = entry.icon}
+										<DropdownMenu.Item
+											class="font-medium"
+											disabled={creatingDocument}
+											onclick={() => newDocument(entry.kind)}
+										>
+											<Icon class={entry.color} />
+											{entry.label}
+										</DropdownMenu.Item>
+									{/each}
+									<DropdownMenu.Item
+										class="font-medium"
+										onclick={() => (newTextFileOpen = true)}
+										><FileCodeIcon />{m.new_text_file()}</DropdownMenu.Item
+									>
+								</DropdownMenu.Group>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+					</div>
+				{/if}
+			</Sidebar.Header>
+			<Sidebar.Content>
+				{#if (nav.general ?? []).length > 0}
+					<Nav title={m.nav_general()} items={nav.general} />
+				{/if}
+				<ShortcutsNav shortcuts={data.shortcuts ?? []} />
+				{#if (nav.drives ?? []).length > 0}
+					<Nav title={m.nav_drives()} items={nav.drives ?? []} />
+				{/if}
+				{#if (nav.sharedWithMe ?? []).length > 0}
+					<Nav title={m.nav_shared_with_me()} items={nav.sharedWithMe ?? []} />
+				{/if}
+				{#if (nav.volumes ?? []).length > 0}
+					<Nav title={m.nav_volumes()} items={nav.volumes ?? []} />
+				{/if}
+				{#if (nav.categories ?? []).length > 0}
+					<Nav title={m.nav_categories()} items={nav.categories} />
+				{/if}
+				<Nav title={m.nav_help()} items={nav.help} class="mt-auto" />
+				<VersionCheck config={data.config} version={data.versionCheck} />
+			</Sidebar.Content>
+		</Sidebar.Root>
+
+		<Sidebar.Inset>
+			<SiteHeader user={data.user} />
 			<div
-				class="main-container @container/main flex flex-1 flex-col gap-5 p-5"
+				class={cn(
+					"flex flex-1 flex-col pb-46 transition-all ",
+					$playableMusic !== null ? "lg:pb-26" : "lg:pb-5",
+				)}
 			>
-				<AppBanner />
-				{@render children()}
-			</div>
-		</div>
-
-		<MusicPlayer />
-		<div
-            class={cn(
-                "bg-surface-base fixed inset-x-4 bottom-[max(0.75rem,env(safe-area-inset-bottom))] rounded-[28px] border px-2 py-1.5 shadow-lg transition-transform duration-300 md:hidden",
-                bottomBarHidden && "translate-y-[calc(100%+2rem)]",
-            )}
-		>
-			<div class="flex items-center justify-between">
-				<a
-					href={driveOnly ? resolve("/(app)/drives/shared") : resolve('browse')}
-					class={cn(bottomNavItemClass, isActive(driveOnly ? "/drives" : "/browse") ? "text-primary" : "")}
+				<div
+					class="main-container @container/main flex flex-1 flex-col gap-5 p-5"
 				>
-					<FolderIcon
-                        class={tabIconClass(isActive(driveOnly ? "/drives" : "/browse"))}
-                    />
-					{m.home()}
-				</a>
-				{#if !simpleMode && !driveOnly}
-					<a
-						href={resolve('recent')}
-						class={cn(bottomNavItemClass, isActive("/recent") ? "text-primary" : "")}
-					>
-						<ClockFadingIcon class={tabIconClass(isActive("/recent"))} />
-						{m.nav_recent()}
-					</a>
-				{/if}
+					<AppBanner />
+					{@render children()}
+				</div>
+			</div>
 
-				<!-- The account lives in the header's avatar menu, as on desktop. -->
-				{#if !simpleMode && !driveOnly}
+			<MusicPlayer />
+			<div
+				class={cn(
+					"bg-surface-base fixed inset-x-4 bottom-[max(0.75rem,env(safe-area-inset-bottom))] rounded-[28px] border px-2 py-1.5 shadow-lg transition-transform duration-300 md:hidden",
+					bottomBarHidden && "translate-y-[calc(100%+2rem)]",
+				)}
+			>
+				<div class="flex items-center justify-between">
 					<a
-						href={resolve('starred')}
-						class={cn(bottomNavItemClass, isActive("/starred") ? "text-primary" : "")}
+						href={driveOnly
+							? resolve("/(app)/drives/shared")
+							: resolve("browse")}
+						class={cn(
+							bottomNavItemClass,
+							isActive(driveOnly ? "/drives" : "/browse") ? "text-primary" : "",
+						)}
 					>
-						<StarIcon class={tabIconClass(isActive("/starred"))} />
-						{m.nav_starred()}
+						<FolderIcon
+							class={tabIconClass(isActive(driveOnly ? "/drives" : "/browse"))}
+						/>
+						{m.home()}
 					</a>
-				{/if}
+					{#if !simpleMode && !driveOnly}
+						<a
+							href={resolve("recent")}
+							class={cn(
+								bottomNavItemClass,
+								isActive("/recent") ? "text-primary" : "",
+							)}
+						>
+							<ClockFadingIcon class={tabIconClass(isActive("/recent"))} />
+							{m.nav_recent()}
+						</a>
+					{/if}
 
-				<!-- One drawer for everything, and the last item rather than a
+					<!-- The account lives in the header's avatar menu, as on desktop. -->
+					{#if !simpleMode && !driveOnly}
+						<a
+							href={resolve("starred")}
+							class={cn(
+								bottomNavItemClass,
+								isActive("/starred") ? "text-primary" : "",
+							)}
+						>
+							<StarIcon class={tabIconClass(isActive("/starred"))} />
+							{m.nav_starred()}
+						</a>
+					{/if}
+
+					<!-- One drawer for everything, and the last item rather than a
                      floating button: simple mode leaves so few entries that a
                      raised circle between two of them read as an accident.
                      Settings lives in it, not in this bar. -->
-				<button
-					onclick={() => mobileMenuDrawerOpen = true}
-					title={m.menu()}
-					class={bottomNavItemClass}
-				>
-					{#if $globalUploadProgress.isUploading}
-						<span
-							class="text-primary {bottomNavItemIconClass} flex items-center justify-center text-[0.65rem] font-bold"
-                        >
-                            {$globalUploadProgress.progress}%
-                        </span>
-					{:else if uploadLoading}
-						<Spinner class={bottomNavItemIconClass} />
-					{:else}
-						<MenuIcon class={tabIconClass(false)} />
-					{/if}
-					{m.menu()}
-				</button>
+					<button
+						onclick={() => (mobileMenuDrawerOpen = true)}
+						title={m.menu()}
+						class={bottomNavItemClass}
+					>
+						{#if $globalUploadProgress.isUploading}
+							<span
+								class="text-primary {bottomNavItemIconClass} flex items-center justify-center text-[0.65rem] font-bold"
+							>
+								{$globalUploadProgress.progress}%
+							</span>
+						{:else if uploadLoading}
+							<Spinner class={bottomNavItemIconClass} />
+						{:else}
+							<MenuIcon class={tabIconClass(false)} />
+						{/if}
+						{m.menu()}
+					</button>
+				</div>
 			</div>
-		</div>
-	</Sidebar.Inset>
-</Sidebar.Provider>
+		</Sidebar.Inset>
+	</Sidebar.Provider>
 {/if}
 
 <Onboarding bind:open={onboardingOpen} preferences={data.preferences} />
@@ -712,8 +713,8 @@
 <NewFolderDialog bind:open={$newFolderDialogOpen} />
 <NewTextFileDialog bind:open={newTextFileOpen} />
 <NewPresentationDialog
-    bind:open={newPresentationOpen}
-    folder={page.params.path || undefined}
+	bind:open={newPresentationOpen}
+	folder={page.params.path || undefined}
 />
 <UploadDialog bind:open={$uploadDialogOpen} bind:loading={uploadLoading} />
 <UploadProgressIndicator />
@@ -725,12 +726,12 @@
 -->
 <Drawer.Root bind:open={mobileMenuDrawerOpen}>
 	<Drawer.Content class="z-50 max-h-[85svh]">
-        <Drawer.Header>
-            <Drawer.Title class="text-lg">
-                {$customMenu?.title ?? m.menu()}
-            </Drawer.Title>
-        </Drawer.Header>
-        <div class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
+		<Drawer.Header>
+			<Drawer.Title class="text-lg">
+				{$customMenu?.title ?? m.menu()}
+			</Drawer.Title>
+		</Drawer.Header>
+		<div class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
 			{#if $customMenu}
 				<div class="flex flex-col gap-2">
 					{#each $customMenu.items as item (item.url)}
@@ -739,14 +740,12 @@
 							href={item.url}
 							class={cn(
 								buttonVariants({
-                                    variant: isItemActive(item)
-                                        ? "default"
-                                        : "outline",
-                                    size: "lg",
+									variant: isItemActive(item) ? "default" : "outline",
+									size: "lg",
 								}),
-                                "w-full justify-start",
+								"w-full justify-start",
 							)}
-							onclick={() => mobileMenuDrawerOpen = false}
+							onclick={() => (mobileMenuDrawerOpen = false)}
 						>
 							<Icon class={cn(mobileIconClass(item), "w-5! h-5!")} />
 							{item.title}
@@ -762,19 +761,21 @@
 					<Button
 						class="w-full"
 						size="lg"
-						onclick={() => mobileNewDrawerOpen = true}
-					><SquarePlusIcon class="w-5! h-5!" />{m.new()}</Button>
+						onclick={() => (mobileNewDrawerOpen = true)}
+						><SquarePlusIcon class="w-5! h-5!" />{m.new()}</Button
+					>
 
 					<Drawer.Content class="z-50 max-h-[85svh]">
-                        <Drawer.Header>
-                            <Drawer.Title class="text-lg">{m.new()}</Drawer.Title>
-                        </Drawer.Header>
+						<Drawer.Header>
+							<Drawer.Title class="text-lg">{m.new()}</Drawer.Title>
+						</Drawer.Header>
 						<div class="flex flex-col gap-2 overflow-y-auto p-4">
 							<Button
 								class="w-full justify-start"
 								size="lg"
 								variant="outline"
-								onclick={() => fromMobileNew(() => $newFolderDialogOpen = true)}
+								onclick={() =>
+									fromMobileNew(() => ($newFolderDialogOpen = true))}
 							>
 								<FolderPlusIcon class="text-primary w-5! h-5!" />
 								{m.folder()}
@@ -783,7 +784,7 @@
 								class="w-full justify-start"
 								variant="outline"
 								size="lg"
-								onclick={() => fromMobileNew(() => $uploadDialogOpen = true)}
+								onclick={() => fromMobileNew(() => ($uploadDialogOpen = true))}
 							>
 								<CloudUploadIcon class="text-primary w-5! h-5!" />
 								{m.file_upload()}
@@ -795,8 +796,7 @@
 									variant="outline"
 									size="lg"
 									disabled={creatingDocument}
-                                    onclick={() =>
-                                        fromMobileNew(() => newDocument(entry.kind))}
+									onclick={() => fromMobileNew(() => newDocument(entry.kind))}
 								>
 									<Icon class={cn(entry.color, "w-5! h-5!")} />
 									{entry.label}
@@ -806,7 +806,7 @@
 								class="w-full justify-start"
 								variant="outline"
 								size="lg"
-								onclick={() => fromMobileNew(() => newTextFileOpen = true)}
+								onclick={() => fromMobileNew(() => (newTextFileOpen = true))}
 							>
 								<FileCodeIcon class="w-5! h-5!" />
 								{m.new_text_file()}
@@ -818,25 +818,21 @@
 
 			{#each mobileNavGroups as group (group.title)}
 				<div class="flex flex-col gap-2">
-					<p
-						class="text-muted-foreground px-1 text-xs font-medium uppercase"
-                    >
-                        {group.title}
-                    </p>
+					<p class="text-muted-foreground px-1 text-xs font-medium uppercase">
+						{group.title}
+					</p>
 					{#each group.items as item (item.url)}
 						{@const Icon = item.icon}
 						<a
 							href={item.url}
 							class={cn(
 								buttonVariants({
-                                    variant: isItemActive(item)
-                                        ? "default"
-                                        : "outline",
-                                    size: "lg",
+									variant: isItemActive(item) ? "default" : "outline",
+									size: "lg",
 								}),
-                                "w-full justify-start",
+								"w-full justify-start",
 							)}
-							onclick={() => mobileMenuDrawerOpen = false}
+							onclick={() => (mobileMenuDrawerOpen = false)}
 						>
 							<Icon class={cn(mobileIconClass(item), "w-5! h-5!")} />
 							{item.title}

@@ -12,6 +12,6 @@
 </script>
 
 <div class="flex flex-col gap-4">
-    <LibraryScan />
-    <FileLayout data={data.files} preferences={data.preferences} />
+	<LibraryScan />
+	<FileLayout data={data.files} preferences={data.preferences} />
 </div>

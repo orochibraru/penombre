@@ -3,8 +3,8 @@ import {
 	CODE_TAG,
 	declarations,
 	firstFamily,
-	HIGHLIGHT_COLORS,
 	halfPoints,
+	HIGHLIGHT_COLORS,
 	wordColor,
 } from "./docx-package";
 import {

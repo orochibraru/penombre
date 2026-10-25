@@ -26,33 +26,33 @@
 </script>
 
 {#if status.scanning}
-    <Alert.Root>
-        <Spinner />
-        <Alert.Title>{m.volume_scanning()}</Alert.Title>
-        <Alert.Description class="w-full min-w-0">
-            <p>{m.volume_scanning_description()}</p>
-            <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1">
-                <span class="font-medium">{phaseLabel}</span>
-                {#if status.etaSeconds !== undefined}
-                    <span class="tabular-nums">
-                        {m.volume_scan_eta({ time: etaLabel(status.etaSeconds) })}
-                    </span>
-                {/if}
-            </div>
-            {#if status.step?.phase === "files" && status.step.total > 0}
-                <Progress
-                    value={(status.step.done / status.step.total) * 100}
-                    class="h-1.5 w-full"
-                />
-            {/if}
-            {#if status.step?.current}
-                <p
-                    class="w-full truncate font-mono text-xs"
-                    title={status.step.current}
-                >
-                    {status.step.current}
-                </p>
-            {/if}
-        </Alert.Description>
-    </Alert.Root>
+	<Alert.Root>
+		<Spinner />
+		<Alert.Title>{m.volume_scanning()}</Alert.Title>
+		<Alert.Description class="w-full min-w-0">
+			<p>{m.volume_scanning_description()}</p>
+			<div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1">
+				<span class="font-medium">{phaseLabel}</span>
+				{#if status.etaSeconds !== undefined}
+					<span class="tabular-nums">
+						{m.volume_scan_eta({ time: etaLabel(status.etaSeconds) })}
+					</span>
+				{/if}
+			</div>
+			{#if status.step?.phase === "files" && status.step.total > 0}
+				<Progress
+					value={(status.step.done / status.step.total) * 100}
+					class="h-1.5 w-full"
+				/>
+			{/if}
+			{#if status.step?.current}
+				<p
+					class="w-full truncate font-mono text-xs"
+					title={status.step.current}
+				>
+					{status.step.current}
+				</p>
+			{/if}
+		</Alert.Description>
+	</Alert.Root>
 {/if}

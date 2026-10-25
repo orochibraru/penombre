@@ -1,5 +1,5 @@
-import { z } from "zod";
 import type { ResolvedPathname } from "$app/types";
+import { z } from "zod";
 
 type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
 
@@ -80,8 +80,7 @@ function buildParameters(route: RouteDefinition): Record<string, unknown>[] {
 	if (route.params) {
 		const paramSchema = toJsonSchema(route.params);
 		const properties = paramSchema.properties as
-			| Record<string, unknown>
-			| undefined;
+			Record<string, unknown> | undefined;
 
 		for (const [name, schema] of Object.entries(properties ?? {})) {
 			parameters.push({ name, in: "path", required: true, schema });
@@ -91,8 +90,7 @@ function buildParameters(route: RouteDefinition): Record<string, unknown>[] {
 	if (route.query) {
 		const querySchema = toJsonSchema(route.query);
 		const properties = querySchema.properties as
-			| Record<string, unknown>
-			| undefined;
+			Record<string, unknown> | undefined;
 		const required = (querySchema.required as string[] | undefined) ?? [];
 
 		for (const [name, schema] of Object.entries(properties ?? {})) {

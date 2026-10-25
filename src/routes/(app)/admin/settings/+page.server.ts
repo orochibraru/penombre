@@ -3,8 +3,8 @@ import { refreshAuth } from "#lib/server/auth/index.js";
 import { requireAdmin } from "#lib/server/auth/require-admin.js";
 import { envProvided, getConfig } from "#lib/server/config.js";
 import type { AppSettingsData } from "#lib/server/db/schema.js";
-import { Email } from "#lib/server/email.js";
 import { renderEmail } from "#lib/server/email-template.js";
+import { Email } from "#lib/server/email.js";
 import {
 	effectiveReleaseChannel,
 	effectiveRetentionDays,

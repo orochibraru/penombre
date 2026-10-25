@@ -3,8 +3,8 @@
 	import { m } from "#lib/paraglide/messages.js";
 	import { cssColor } from "#lib/slides/color.js";
 	import {
-		HANDLES,
 		handleAnchor,
+		HANDLES,
 		isLineElement,
 		lineEnds,
 	} from "#lib/slides/edit.js";
@@ -432,18 +432,38 @@
 				aria-hidden="true"
 			>
 				{#each editor.selection as element (element.id)}
-					<polygon points={outline(element)} class="fill-none stroke-primary" stroke-width="1.5" />
+					<polygon
+						points={outline(element)}
+						class="fill-none stroke-primary"
+						stroke-width="1.5"
+					/>
 				{/each}
 				{#if single && !isLineElement(single) && handles.length > 0}
 					{@const top = handles.find((handle) => handle.id === "n")}
 					{@const knob = handles.find((handle) => handle.id === "rotate")}
 					{#if top && knob}
-						<line x1={top.at[0]} y1={top.at[1]} x2={knob.at[0]} y2={knob.at[1]} class="stroke-primary" stroke-width="1" />
+						<line
+							x1={top.at[0]}
+							y1={top.at[1]}
+							x2={knob.at[0]}
+							y2={knob.at[1]}
+							class="stroke-primary"
+							stroke-width="1"
+						/>
 					{/if}
 				{/if}
 				{#each handles as handle (handle.id)}
-					<g class="pointer-events-auto" style:cursor={handle.cursor} data-handle={handle.id}>
-						<circle cx={handle.at[0]} cy={handle.at[1]} r="14" fill="transparent" />
+					<g
+						class="pointer-events-auto"
+						style:cursor={handle.cursor}
+						data-handle={handle.id}
+					>
+						<circle
+							cx={handle.at[0]}
+							cy={handle.at[1]}
+							r="14"
+							fill="transparent"
+						/>
 						<circle
 							cx={handle.at[0]}
 							cy={handle.at[1]}
@@ -455,9 +475,25 @@
 				{/each}
 				{#each pointer.guides as guide, index (index)}
 					{#if guide.axis === "x"}
-						<line x1={guide.at * k} x2={guide.at * k} y1="0" y2={slideHeight * scale} class="stroke-pink-500" stroke-width="1" stroke-dasharray="4 3" />
+						<line
+							x1={guide.at * k}
+							x2={guide.at * k}
+							y1="0"
+							y2={slideHeight * scale}
+							class="stroke-pink-500"
+							stroke-width="1"
+							stroke-dasharray="4 3"
+						/>
 					{:else}
-						<line y1={guide.at * k} y2={guide.at * k} x1="0" x2={slideWidth * scale} class="stroke-pink-500" stroke-width="1" stroke-dasharray="4 3" />
+						<line
+							y1={guide.at * k}
+							y2={guide.at * k}
+							x1="0"
+							x2={slideWidth * scale}
+							class="stroke-pink-500"
+							stroke-width="1"
+							stroke-dasharray="4 3"
+						/>
 					{/if}
 				{/each}
 				{#if pointer.marquee}

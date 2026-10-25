@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
 	import {
 		ArrowDownIcon,
 		ArrowUpDownIcon,
@@ -38,13 +40,11 @@
 		resolveDropDestination,
 		resolveParentPath,
 		type SharedFileDisplayProps,
-		type SortColumn,
 		shouldDisplayAction,
+		type SortColumn,
 	} from "#lib/utils.js";
 	import { versionOf, withVersions } from "#lib/versions.js";
 	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
-	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
 	import { actionsFor } from "./version-actions.js";
 	import { itemDrop } from "./version-drop";
 
@@ -333,381 +333,361 @@
 	});
 </script>
 
-<svelte:window onscroll={virtualizer.onScroll} onresize={virtualizer.onResize} />
+<svelte:window
+	onscroll={virtualizer.onScroll}
+	onresize={virtualizer.onResize}
+/>
 
 {#snippet tableRow(objectItem: ObjectItem)}
-    {@const isFolder = isFolderItem(objectItem)}
-    {@const isDragTarget = dropTargetKey === objectItem.key}
-    {@const version = versionOf(objectItem)}
-    <Table.Row
-        class={cn(
-            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
-            version ? "bg-muted/30" : "",
-        )}
-        style="height: {version ? VERSION_ROW_HEIGHT : ROW_HEIGHT}px"
-        draggable={onDragStart !== undefined}
-        ondragstart={(e) => handleItemDragStart(e, objectItem)}
-        ondragend={handleItemDragEnd}
-        ondragover={isFolder
-            ? (e) => handleFolderDragOver(e, objectItem.key)
-            : itemDrop(objectItem, dropCtx).ondragover}
-        ondragleave={isFolder
-            ? (e) => handleFolderDragLeave(e, objectItem.key)
-            : itemDrop(objectItem, dropCtx).ondragleave}
-        ondrop={isFolder
-            ? (e) => handleFolderDrop(e, objectItem.key)
-            : itemDrop(objectItem, dropCtx).ondrop}
-    >
-        <!-- The checkbox component reports a boolean, not the event, so the
+	{@const isFolder = isFolderItem(objectItem)}
+	{@const isDragTarget = dropTargetKey === objectItem.key}
+	{@const version = versionOf(objectItem)}
+	<Table.Row
+		class={cn(
+			isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+			version ? "bg-muted/30" : "",
+		)}
+		style="height: {version ? VERSION_ROW_HEIGHT : ROW_HEIGHT}px"
+		draggable={onDragStart !== undefined}
+		ondragstart={(e) => handleItemDragStart(e, objectItem)}
+		ondragend={handleItemDragEnd}
+		ondragover={isFolder
+			? (e) => handleFolderDragOver(e, objectItem.key)
+			: itemDrop(objectItem, dropCtx).ondragover}
+		ondragleave={isFolder
+			? (e) => handleFolderDragLeave(e, objectItem.key)
+			: itemDrop(objectItem, dropCtx).ondragleave}
+		ondrop={isFolder
+			? (e) => handleFolderDrop(e, objectItem.key)
+			: itemDrop(objectItem, dropCtx).ondrop}
+	>
+		<!-- The checkbox component reports a boolean, not the event, so the
              modifier is captured on the way down. -->
-        <Table.Cell
-            class="w-4"
-            onclickcapture={(e: MouseEvent) => setShiftHeld(e.shiftKey)}
-            onkeydowncapture={(e: KeyboardEvent) => setShiftHeld(e.shiftKey)}
-        >
-            <Checkbox
-                class={version ? "invisible" : ""}
-                disabled={!!version}
-                checked={isChecked(objectItem)}
-                onCheckedChange={(checked) => {
-                    applySelection(
-                        displayed,
-                        objectItem.key,
-                        checked,
-                        checkedItems,
-                    );
-                    isSingleItemAction =
-                        selectedCount(displayed, checkedItems) <= 1;
-                    setShiftHeld(false);
-                }}
-            />
-        </Table.Cell>
-        <Table.Cell colspan={7} class="min-w-0">
-            <ContextMenu.Root>
-                <ContextMenu.Trigger class="w-full">
-                    <div
-                        class="flex w-full min-w-0 flex-col items-start gap-2"
-                        role="button"
-                        tabindex={-1}
-                        ontap={() => {
-                            if (isFolder) {
-                                const folder = objectItem.key.replace("/", "");
-                                goto(
-                                    listingHref(
-                                        page.params.path
-                                            ? `${page.params.path}/${folder}`
-                                            : folder,
-                                        locationOf(page.params),
-                                    ),
-                                );
-                                return;
-                            }
+		<Table.Cell
+			class="w-4"
+			onclickcapture={(e: MouseEvent) => setShiftHeld(e.shiftKey)}
+			onkeydowncapture={(e: KeyboardEvent) => setShiftHeld(e.shiftKey)}
+		>
+			<Checkbox
+				class={version ? "invisible" : ""}
+				disabled={!!version}
+				checked={isChecked(objectItem)}
+				onCheckedChange={(checked) => {
+					applySelection(displayed, objectItem.key, checked, checkedItems);
+					isSingleItemAction = selectedCount(displayed, checkedItems) <= 1;
+					setShiftHeld(false);
+				}}
+			/>
+		</Table.Cell>
+		<Table.Cell colspan={7} class="min-w-0">
+			<ContextMenu.Root>
+				<ContextMenu.Trigger class="w-full">
+					<div
+						class="flex w-full min-w-0 flex-col items-start gap-2"
+						role="button"
+						tabindex={-1}
+						ontap={() => {
+							if (isFolder) {
+								const folder = objectItem.key.replace("/", "");
+								goto(
+									listingHref(
+										page.params.path ? `${page.params.path}/${folder}` : folder,
+										locationOf(page.params),
+									),
+								);
+								return;
+							}
 
-                            handleOpenItem(objectItem);
-                        }}
-                    >
-                        <FilePrefix
-                            bind:checkedItems
-                            {indeterminate}
-                            item={objectItem}
-                            {handleOpenItem}
-                            {iconSize}
-                            layout="list"
-                        />
-                    </div>
-                </ContextMenu.Trigger>
-                <ContextMenu.Content>
-                    {#each actionsFor(objectItem, itemActions) as action}
-                        <ContextMenu.Group>
-                            {#each action.actions as act}
-                                {#if shouldDisplayAction( { action: act, item: objectItem }, )}
-                                    {@const Icon = act.dynamic
-                                        ? act.icon(objectItem)
-                                        : act.icon}
-                                    {@const title = act.dynamic
-                                        ? (
-                                              act.title as (
-                                                  item: typeof objectItem,
-                                              ) => string
-                                          )(objectItem)
-                                        : act.title}
-                                    <ContextMenu.Item
-                                        onclick={() => act.action(objectItem)}
-                                        disabled={act.disabled}
-                                        variant={act.variant}
-                                    >
-                                        <Icon class={act.iconClass ?? "text-primary"} />
-                                        {title}
-                                    </ContextMenu.Item>
-                                {/if}
-                            {/each}
-                        </ContextMenu.Group>
-                        {@const isLast =
-                            action === actionsFor(objectItem, itemActions).at(-1)}
-                        {#if !isLast}
-                            <ContextMenu.Separator />
-                        {/if}
-                    {/each}
-                </ContextMenu.Content>
-            </ContextMenu.Root>
-        </Table.Cell>
-        <Table.Cell colspan={1} class="w-32">
-            {#if isFolder}
-                <FolderSize
-                    folderKey={objectItem.key}
-                    parentPath={page.params.path}
-                />
-            {:else}
-                <p class="text-xs">
-                    {readableFileSize(objectItem.size as number) ?? "-"}
-                </p>
-            {/if}
-        </Table.Cell>
-        <Table.Cell colspan={1} class="w-32">
-            <p class="text-xs text-muted-foreground">
-                {#if objectItem.updatedAt}
-                    {new Date(objectItem.updatedAt).toLocaleString(undefined, {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                    })}
-                {:else}
-                    -
-                {/if}
-            </p>
-        </Table.Cell>
-        <Table.Cell colspan={1} class="w-4">
-            <div class="flex w-full items-center justify-end">
-                <DropdownMenu.Root>
-                    <DropdownMenu.Trigger
-                        class="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-                    >
-                        {#snippet child({ props })}
-                            <Button variant="ghost" size="icon" {...props}>
-                                <EllipsisVerticalIcon />
-                                <span class="sr-only">{m.open_menu()}</span>
-                            </Button>
-                        {/snippet}
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content align="end">
-                        {#each actionsFor(objectItem, itemActions) as action}
-                            <DropdownMenu.Group>
-                                {#each action.actions as act}
-                                    {#if shouldDisplayAction( { action: act, item: objectItem }, )}
-                                        {@const Icon = act.dynamic
-                                            ? act.icon(objectItem)
-                                            : act.icon}
-                                        {@const title = act.dynamic
-                                            ? (
-                                                  act.title as (
-                                                      item: typeof objectItem,
-                                                  ) => string
-                                              )(objectItem)
-                                            : act.title}
-                                        <DropdownMenu.Item
-                                            onclick={() =>
-                                                act.action(objectItem)}
-                                            disabled={act.disabled}
-                                            variant={act.variant}
-                                        >
-                                            <Icon class={act.iconClass ?? "text-primary"} />
-                                            {title}
-                                        </DropdownMenu.Item>
-                                    {/if}
-                                {/each}
-                            </DropdownMenu.Group>
-                            {@const isLast =
-                                action === actionsFor(objectItem, itemActions).at(-1)}
-                            {#if !isLast}
-                                <DropdownMenu.Separator />
-                            {/if}
-                        {/each}
-                    </DropdownMenu.Content>
-                </DropdownMenu.Root>
-            </div>
-        </Table.Cell>
-    </Table.Row>
+							handleOpenItem(objectItem);
+						}}
+					>
+						<FilePrefix
+							bind:checkedItems
+							{indeterminate}
+							item={objectItem}
+							{handleOpenItem}
+							{iconSize}
+							layout="list"
+						/>
+					</div>
+				</ContextMenu.Trigger>
+				<ContextMenu.Content>
+					{#each actionsFor(objectItem, itemActions) as action}
+						<ContextMenu.Group>
+							{#each action.actions as act}
+								{#if shouldDisplayAction({ action: act, item: objectItem })}
+									{@const Icon = act.dynamic ? act.icon(objectItem) : act.icon}
+									{@const title = act.dynamic
+										? (act.title as (item: typeof objectItem) => string)(
+												objectItem,
+											)
+										: act.title}
+									<ContextMenu.Item
+										onclick={() => act.action(objectItem)}
+										disabled={act.disabled}
+										variant={act.variant}
+									>
+										<Icon class={act.iconClass ?? "text-primary"} />
+										{title}
+									</ContextMenu.Item>
+								{/if}
+							{/each}
+						</ContextMenu.Group>
+						{@const isLast =
+							action === actionsFor(objectItem, itemActions).at(-1)}
+						{#if !isLast}
+							<ContextMenu.Separator />
+						{/if}
+					{/each}
+				</ContextMenu.Content>
+			</ContextMenu.Root>
+		</Table.Cell>
+		<Table.Cell colspan={1} class="w-32">
+			{#if isFolder}
+				<FolderSize folderKey={objectItem.key} parentPath={page.params.path} />
+			{:else}
+				<p class="text-xs">
+					{readableFileSize(objectItem.size as number) ?? "-"}
+				</p>
+			{/if}
+		</Table.Cell>
+		<Table.Cell colspan={1} class="w-32">
+			<p class="text-xs text-muted-foreground">
+				{#if objectItem.updatedAt}
+					{new Date(objectItem.updatedAt).toLocaleString(undefined, {
+						dateStyle: "short",
+						timeStyle: "short",
+					})}
+				{:else}
+					-
+				{/if}
+			</p>
+		</Table.Cell>
+		<Table.Cell colspan={1} class="w-4">
+			<div class="flex w-full items-center justify-end">
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger
+						class="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+					>
+						{#snippet child({ props })}
+							<Button variant="ghost" size="icon" {...props}>
+								<EllipsisVerticalIcon />
+								<span class="sr-only">{m.open_menu()}</span>
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end">
+						{#each actionsFor(objectItem, itemActions) as action}
+							<DropdownMenu.Group>
+								{#each action.actions as act}
+									{#if shouldDisplayAction({ action: act, item: objectItem })}
+										{@const Icon = act.dynamic
+											? act.icon(objectItem)
+											: act.icon}
+										{@const title = act.dynamic
+											? (act.title as (item: typeof objectItem) => string)(
+													objectItem,
+												)
+											: act.title}
+										<DropdownMenu.Item
+											onclick={() => act.action(objectItem)}
+											disabled={act.disabled}
+											variant={act.variant}
+										>
+											<Icon class={act.iconClass ?? "text-primary"} />
+											{title}
+										</DropdownMenu.Item>
+									{/if}
+								{/each}
+							</DropdownMenu.Group>
+							{@const isLast =
+								action === actionsFor(objectItem, itemActions).at(-1)}
+							{#if !isLast}
+								<DropdownMenu.Separator />
+							{/if}
+						{/each}
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</div>
+		</Table.Cell>
+	</Table.Row>
 {/snippet}
 
 {#snippet parentRow(parent: string)}
-    {@const isDragTarget = dropTargetKey === PARENT_KEY}
-    <Table.Row
-        class={cn(isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "")}
-        ondragover={(e) => handleFolderDragOver(e, PARENT_KEY)}
-        ondragleave={(e) => handleFolderDragLeave(e, PARENT_KEY)}
-        ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
-    >
-        <Table.Cell class="w-4"></Table.Cell>
-        <Table.Cell colspan={11}>
-            <a
-                href={parentHref(parent, locationOf(page.params))}
-                title={m.parent_folder()}
-                class="text-muted-foreground hover:text-foreground flex w-fit items-center gap-2 transition-colors"
-            >
-                <CornerLeftUpIcon class={iconSize} />
-                <span class="font-mono text-sm">..</span>
-            </a>
-        </Table.Cell>
-    </Table.Row>
+	{@const isDragTarget = dropTargetKey === PARENT_KEY}
+	<Table.Row
+		class={cn(isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "")}
+		ondragover={(e) => handleFolderDragOver(e, PARENT_KEY)}
+		ondragleave={(e) => handleFolderDragLeave(e, PARENT_KEY)}
+		ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
+	>
+		<Table.Cell class="w-4"></Table.Cell>
+		<Table.Cell colspan={11}>
+			<a
+				href={parentHref(parent, locationOf(page.params))}
+				title={m.parent_folder()}
+				class="text-muted-foreground hover:text-foreground flex w-fit items-center gap-2 transition-colors"
+			>
+				<CornerLeftUpIcon class={iconSize} />
+				<span class="font-mono text-sm">..</span>
+			</a>
+		</Table.Cell>
+	</Table.Row>
 {/snippet}
 
 {#snippet emptyRow()}
-    <Table.Row>
-        <Table.Cell colspan={12} class="h-48">
-            <div class="flex flex-col items-center justify-center gap-4">
-                <div class="text-muted-foreground text-center">
-                    {#if isTrashListing(page.url.pathname)}
-                        <p class="text-lg font-medium">{m.trash_is_empty()}</p>
-                    {:else if page.url.pathname.includes('/starred')}
-                        <p class="text-lg font-medium">{m.star_files_to_find_here()}</p>
-                    {:else if page.url.pathname.includes('/recent')}
-                        <p class="text-lg font-medium">{m.nothing_opened_recently()}</p>
-                    {:else if isBrowsableListing(page.url.pathname)}
-                        <p class="text-lg font-medium">{m.no_files_yet()}</p>
-                        <p class="text-sm">
-                            {m.no_files_get_started()}
-                        </p>
-                    {:else}
-                        <p class="text-lg font-medium">{m.no_results()}</p>
-                    {/if}
-                </div>
-                {#if isBrowsableListing(page.url.pathname)}
-                    <div class="flex gap-2">
-                        {#if onUpload}
-                            <Button variant="default" onclick={onUpload}>
-                                <CloudUploadIcon class="mr-2 h-4 w-4" />
-                                {m.upload_files()}
-                            </Button>
-                        {/if}
-                        {#if onCreateFolder}
-                            <Button variant="outline" onclick={onCreateFolder}>
-                                <FolderPlusIcon class="mr-2 h-4 w-4" />
-                                {m.new_folder()}
-                            </Button>
-                        {/if}
-                    </div>
-                {/if}
-            </div>
-        </Table.Cell>
-    </Table.Row>
+	<Table.Row>
+		<Table.Cell colspan={12} class="h-48">
+			<div class="flex flex-col items-center justify-center gap-4">
+				<div class="text-muted-foreground text-center">
+					{#if isTrashListing(page.url.pathname)}
+						<p class="text-lg font-medium">{m.trash_is_empty()}</p>
+					{:else if page.url.pathname.includes("/starred")}
+						<p class="text-lg font-medium">{m.star_files_to_find_here()}</p>
+					{:else if page.url.pathname.includes("/recent")}
+						<p class="text-lg font-medium">{m.nothing_opened_recently()}</p>
+					{:else if isBrowsableListing(page.url.pathname)}
+						<p class="text-lg font-medium">{m.no_files_yet()}</p>
+						<p class="text-sm">
+							{m.no_files_get_started()}
+						</p>
+					{:else}
+						<p class="text-lg font-medium">{m.no_results()}</p>
+					{/if}
+				</div>
+				{#if isBrowsableListing(page.url.pathname)}
+					<div class="flex gap-2">
+						{#if onUpload}
+							<Button variant="default" onclick={onUpload}>
+								<CloudUploadIcon class="mr-2 h-4 w-4" />
+								{m.upload_files()}
+							</Button>
+						{/if}
+						{#if onCreateFolder}
+							<Button variant="outline" onclick={onCreateFolder}>
+								<FolderPlusIcon class="mr-2 h-4 w-4" />
+								{m.new_folder()}
+							</Button>
+						{/if}
+					</div>
+				{/if}
+			</div>
+		</Table.Cell>
+	</Table.Row>
 {/snippet}
 
 {#snippet virtualRows()}
-    <!-- Two spacer rows stand in for the rows not rendered, same trick as
+	<!-- Two spacer rows stand in for the rows not rendered, same trick as
          sheet-editor.svelte: a row with no cell in it lays out at zero
          height however tall it's told to be, so each spacer carries a
          spanning td. -->
-    {#if virtualizer.padTop > 0}
-        <Table.Row aria-hidden="true">
-            <Table.Cell colspan={12} style="height: {virtualizer.padTop}px" />
-        </Table.Row>
-    {/if}
-    {#each rows.slice(virtualizer.first, virtualizer.last) as item (item.metadata.id)}
-        {@render tableRow(item)}
-    {/each}
-    {#if virtualizer.padBottom > 0}
-        <Table.Row aria-hidden="true">
-            <Table.Cell colspan={12} style="height: {virtualizer.padBottom}px" />
-        </Table.Row>
-    {/if}
+	{#if virtualizer.padTop > 0}
+		<Table.Row aria-hidden="true">
+			<Table.Cell colspan={12} style="height: {virtualizer.padTop}px" />
+		</Table.Row>
+	{/if}
+	{#each rows.slice(virtualizer.first, virtualizer.last) as item (item.metadata.id)}
+		{@render tableRow(item)}
+	{/each}
+	{#if virtualizer.padBottom > 0}
+		<Table.Row aria-hidden="true">
+			<Table.Cell colspan={12} style="height: {virtualizer.padBottom}px" />
+		</Table.Row>
+	{/if}
 {/snippet}
 
 {#snippet loadingRows()}
-    {#each Array(loadingAmount) as _}
-        <Table.Row>
-            <Table.Cell colspan={1}>
-                <Checkbox disabled />
-            </Table.Cell>
-            <Table.Cell colspan={10} class="text-center">
-                <Skeleton class="h-7.5 w-full rounded-sm" />
-            </Table.Cell>
-            <Table.Cell colspan={1} class="w-4">
-                <div class="flex w-full items-center justify-end">
-                    <Button variant="ghost" size="icon" disabled>
-                        <EllipsisVerticalIcon />
-                        <span class="sr-only">{m.open_menu()}</span>
-                    </Button>
-                </div>
-            </Table.Cell>
-        </Table.Row>
-    {/each}
+	{#each Array(loadingAmount) as _}
+		<Table.Row>
+			<Table.Cell colspan={1}>
+				<Checkbox disabled />
+			</Table.Cell>
+			<Table.Cell colspan={10} class="text-center">
+				<Skeleton class="h-7.5 w-full rounded-sm" />
+			</Table.Cell>
+			<Table.Cell colspan={1} class="w-4">
+				<div class="flex w-full items-center justify-end">
+					<Button variant="ghost" size="icon" disabled>
+						<EllipsisVerticalIcon />
+						<span class="sr-only">{m.open_menu()}</span>
+					</Button>
+				</div>
+			</Table.Cell>
+		</Table.Row>
+	{/each}
 {/snippet}
 
 <div
-    bind:this={tableEl}
-    class={cn(
-        "relative rounded-lg border transition-all",
-        isDragging && "border-primary border-2 bg-primary/5",
-    )}
-    ondragover={handleDragOver}
-    ondragleave={handleDragLeave}
-    ondrop={handleDrop}
-    role="region"
+	bind:this={tableEl}
+	class={cn(
+		"relative rounded-lg border transition-all",
+		isDragging && "border-primary border-2 bg-primary/5",
+	)}
+	ondragover={handleDragOver}
+	ondragleave={handleDragLeave}
+	ondrop={handleDrop}
+	role="region"
 >
-    {#if isDragging}
-        <div
-            class="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/80 backdrop-blur-sm"
-        >
-            <div
-                class="border-primary text-primary flex size-16 items-center justify-center rounded-full border-2 border-dashed"
-            >
-                <UploadIcon class="size-8" />
-            </div>
-            <p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
-        </div>
-    {/if}
-    <Table.Root>
-        <Table.Header class="bg-muted sticky top-0 z-10">
-            <Table.Row>
-                <Table.Head colspan={1} class="w-4">
-                    <Checkbox
-                        onCheckedChange={(e) => toggleSelectAll(e)}
-                        checked={allSelected}
-                        bind:indeterminate
-                    />
-                </Table.Head>
-                {#each columns as headItem}
-                    <Table.Head
-                        colspan={headItem.colSpan}
-                        class={cn(headItem.class)}
-                    >
-                        {#if headItem.sortKey}
-                            <button
-                                class="flex items-center gap-1 hover:text-foreground transition-colors"
-                                onclick={() => toggleSort(headItem.sortKey!)}
-                            >
-                                {headItem.title}
-                                {#if sortColumn === headItem.sortKey}
-                                    {#if sortDirection === "asc"}
-                                        <ArrowUpIcon class="h-4 w-4" />
-                                    {:else}
-                                        <ArrowDownIcon class="h-4 w-4" />
-                                    {/if}
-                                {:else}
-                                    <ArrowUpDownIcon
-                                        class="h-4 w-4 opacity-50"
-                                    />
-                                {/if}
-                            </button>
-                        {:else}
-                            {headItem.title}
-                        {/if}
-                    </Table.Head>
-                {/each}
-            </Table.Row>
-        </Table.Header>
-        <Table.Body>
-            {#if loading}
-                {@render loadingRows()}
-            {:else}
-                {#if parentPath !== undefined}
-                    {@render parentRow(parentPath)}
-                {/if}
-                {#if displayed.length > 0}
-                    {@render virtualRows()}
-                {:else}
-                    {@render emptyRow()}
-                {/if}
-            {/if}
-        </Table.Body>
-    </Table.Root>
+	{#if isDragging}
+		<div
+			class="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/80 backdrop-blur-sm"
+		>
+			<div
+				class="border-primary text-primary flex size-16 items-center justify-center rounded-full border-2 border-dashed"
+			>
+				<UploadIcon class="size-8" />
+			</div>
+			<p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
+		</div>
+	{/if}
+	<Table.Root>
+		<Table.Header class="bg-muted sticky top-0 z-10">
+			<Table.Row>
+				<Table.Head colspan={1} class="w-4">
+					<Checkbox
+						onCheckedChange={(e) => toggleSelectAll(e)}
+						checked={allSelected}
+						bind:indeterminate
+					/>
+				</Table.Head>
+				{#each columns as headItem}
+					<Table.Head colspan={headItem.colSpan} class={cn(headItem.class)}>
+						{#if headItem.sortKey}
+							<button
+								class="flex items-center gap-1 hover:text-foreground transition-colors"
+								onclick={() => toggleSort(headItem.sortKey!)}
+							>
+								{headItem.title}
+								{#if sortColumn === headItem.sortKey}
+									{#if sortDirection === "asc"}
+										<ArrowUpIcon class="h-4 w-4" />
+									{:else}
+										<ArrowDownIcon class="h-4 w-4" />
+									{/if}
+								{:else}
+									<ArrowUpDownIcon class="h-4 w-4 opacity-50" />
+								{/if}
+							</button>
+						{:else}
+							{headItem.title}
+						{/if}
+					</Table.Head>
+				{/each}
+			</Table.Row>
+		</Table.Header>
+		<Table.Body>
+			{#if loading}
+				{@render loadingRows()}
+			{:else}
+				{#if parentPath !== undefined}
+					{@render parentRow(parentPath)}
+				{/if}
+				{#if displayed.length > 0}
+					{@render virtualRows()}
+				{:else}
+					{@render emptyRow()}
+				{/if}
+			{/if}
+		</Table.Body>
+	</Table.Root>
 </div>

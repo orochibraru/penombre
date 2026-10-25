@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import {
 		CloudUploadIcon,
 		CornerLeftUpIcon,
@@ -28,7 +29,6 @@
 	} from "#lib/utils.js";
 	import { versionOf, withVersions } from "#lib/versions.js";
 	import { createWindowVirtualizer } from "#lib/virtual-window.svelte.js";
-	import { page } from "$app/state";
 	import { actionsFor } from "./version-actions.js";
 	import { itemDrop } from "./version-drop";
 
@@ -264,220 +264,217 @@
 	});
 </script>
 
-<svelte:window onscroll={virtualizer.onScroll} onresize={virtualizer.onResize} />
+<svelte:window
+	onscroll={virtualizer.onScroll}
+	onresize={virtualizer.onResize}
+/>
 
 {#snippet listItem(item: ObjectItem)}
-    {@const checked = isChecked(item)}
-    {@const isFolder = isFolderItem(item)}
-    {@const isDragTarget = dropTargetKey === item.key}
-    {@const version = versionOf(item)}
-    <li
-        class={cn(
-            "flex min-w-0 items-center justify-between rounded-xl px-1 py-3 transition-colors",
-            checked ? "bg-primary/5" : "",
-            version ? "bg-muted/30 py-0" : "",
-            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
-        )}
-        style="height: {(version ? VERSION_ROW_HEIGHT : ROW_HEIGHT) - ROW_GAP}px"
-        draggable={onDragStart !== undefined}
-        ondragstart={(e) => handleItemDragStart(e, item)}
-        ondragend={handleItemDragEnd}
-        ondragover={isFolder
-            ? (e) => handleFolderDragOver(e, item.key)
-            : itemDrop(item, dropCtx).ondragover}
-        ondragleave={isFolder
-            ? (e) => handleFolderDragLeave(e, item.key)
-            : itemDrop(item, dropCtx).ondragleave}
-        ondrop={isFolder ? (e) => handleFolderDrop(e, item.key) : itemDrop(item, dropCtx).ondrop}
-    >
-        <FilePrefix
-            layout="list"
-            bind:checkedItems
-            {indeterminate}
-            {item}
-            {handleOpenItem}
-            {iconSize}
-        />
-        <button
-            onclick={() => {
-                actionableItem = item;
-                actionsContextOpen = true;
-            }}
-            aria-label={m.open_menu()}
-            class="shrink-0 py-1 pl-2 pr-3 rounded transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-            <EllipsisVerticalIcon class="h-5 w-5" />
-        </button>
-    </li>
+	{@const checked = isChecked(item)}
+	{@const isFolder = isFolderItem(item)}
+	{@const isDragTarget = dropTargetKey === item.key}
+	{@const version = versionOf(item)}
+	<li
+		class={cn(
+			"flex min-w-0 items-center justify-between rounded-xl px-1 py-3 transition-colors",
+			checked ? "bg-primary/5" : "",
+			version ? "bg-muted/30 py-0" : "",
+			isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+		)}
+		style="height: {(version ? VERSION_ROW_HEIGHT : ROW_HEIGHT) - ROW_GAP}px"
+		draggable={onDragStart !== undefined}
+		ondragstart={(e) => handleItemDragStart(e, item)}
+		ondragend={handleItemDragEnd}
+		ondragover={isFolder
+			? (e) => handleFolderDragOver(e, item.key)
+			: itemDrop(item, dropCtx).ondragover}
+		ondragleave={isFolder
+			? (e) => handleFolderDragLeave(e, item.key)
+			: itemDrop(item, dropCtx).ondragleave}
+		ondrop={isFolder
+			? (e) => handleFolderDrop(e, item.key)
+			: itemDrop(item, dropCtx).ondrop}
+	>
+		<FilePrefix
+			layout="list"
+			bind:checkedItems
+			{indeterminate}
+			{item}
+			{handleOpenItem}
+			{iconSize}
+		/>
+		<button
+			onclick={() => {
+				actionableItem = item;
+				actionsContextOpen = true;
+			}}
+			aria-label={m.open_menu()}
+			class="shrink-0 py-1 pl-2 pr-3 rounded transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+		>
+			<EllipsisVerticalIcon class="h-5 w-5" />
+		</button>
+	</li>
 {/snippet}
 
 {#snippet parentListItem(parent: string)}
-    {@const isDragTarget = dropTargetKey === PARENT_KEY}
-    <li
-        class={cn(
-            "flex min-w-0 items-center rounded-xl px-1 py-3 transition-colors",
-            isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
-        )}
-        ondragover={(e) => handleFolderDragOver(e, PARENT_KEY)}
-        ondragleave={(e) => handleFolderDragLeave(e, PARENT_KEY)}
-        ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
-    >
-        <a
-            href={parentHref(parent, locationOf(page.params))}
-            title={m.parent_folder()}
-            class="text-muted-foreground hover:text-foreground flex items-center gap-3 transition-colors"
-        >
-            <CornerLeftUpIcon class={iconSize} />
-            <span class="font-mono text-sm">..</span>
-        </a>
-    </li>
+	{@const isDragTarget = dropTargetKey === PARENT_KEY}
+	<li
+		class={cn(
+			"flex min-w-0 items-center rounded-xl px-1 py-3 transition-colors",
+			isDragTarget ? "bg-primary/10 ring-2 ring-primary" : "",
+		)}
+		ondragover={(e) => handleFolderDragOver(e, PARENT_KEY)}
+		ondragleave={(e) => handleFolderDragLeave(e, PARENT_KEY)}
+		ondrop={(e) => handleFolderDrop(e, PARENT_KEY)}
+	>
+		<a
+			href={parentHref(parent, locationOf(page.params))}
+			title={m.parent_folder()}
+			class="text-muted-foreground hover:text-foreground flex items-center gap-3 transition-colors"
+		>
+			<CornerLeftUpIcon class={iconSize} />
+			<span class="font-mono text-sm">..</span>
+		</a>
+	</li>
 {/snippet}
 
 {#snippet emptyListItem()}
-    <li class="flex flex-col items-center justify-center gap-4 py-12">
-        <div class="text-muted-foreground text-center">
-            {#if isTrashListing(page.url.pathname)}
-                <p class="text-lg font-medium">{m.trash_is_empty()}</p>
-            {:else if page.url.pathname.includes('/starred')}
-                <p class="text-lg font-medium">{m.star_files_to_find_here()}</p>
-            {:else if page.url.pathname.includes('/recent')}
-                <p class="text-lg font-medium">{m.nothing_opened_recently()}</p>
-            {:else if isBrowsableListing(page.url.pathname)}
-                <p class="text-lg font-medium">{m.no_files_yet()}</p>
-                <p class="text-sm">
-                    {m.no_files_get_started()}
-                </p>
-            {:else}
-                <p class="text-lg font-medium">{m.no_results()}</p>
-            {/if}
-        </div>
-        {#if isBrowsableListing(page.url.pathname)}
-            <div class="flex gap-2">
-                {#if onUpload}
-                    <Button variant="default" onclick={onUpload}>
-                        <CloudUploadIcon class="mr-2 h-4 w-4" />
-                        {m.upload_files()}
-                    </Button>
-                {/if}
-                {#if onCreateFolder}
-                    <Button variant="outline" onclick={onCreateFolder}>
-                        <FolderPlusIcon class="mr-2 h-4 w-4" />
-                        {m.new_folder()}
-                    </Button>
-                {/if}
-            </div>
-        {/if}
-    </li>
+	<li class="flex flex-col items-center justify-center gap-4 py-12">
+		<div class="text-muted-foreground text-center">
+			{#if isTrashListing(page.url.pathname)}
+				<p class="text-lg font-medium">{m.trash_is_empty()}</p>
+			{:else if page.url.pathname.includes("/starred")}
+				<p class="text-lg font-medium">{m.star_files_to_find_here()}</p>
+			{:else if page.url.pathname.includes("/recent")}
+				<p class="text-lg font-medium">{m.nothing_opened_recently()}</p>
+			{:else if isBrowsableListing(page.url.pathname)}
+				<p class="text-lg font-medium">{m.no_files_yet()}</p>
+				<p class="text-sm">
+					{m.no_files_get_started()}
+				</p>
+			{:else}
+				<p class="text-lg font-medium">{m.no_results()}</p>
+			{/if}
+		</div>
+		{#if isBrowsableListing(page.url.pathname)}
+			<div class="flex gap-2">
+				{#if onUpload}
+					<Button variant="default" onclick={onUpload}>
+						<CloudUploadIcon class="mr-2 h-4 w-4" />
+						{m.upload_files()}
+					</Button>
+				{/if}
+				{#if onCreateFolder}
+					<Button variant="outline" onclick={onCreateFolder}>
+						<FolderPlusIcon class="mr-2 h-4 w-4" />
+						{m.new_folder()}
+					</Button>
+				{/if}
+			</div>
+		{/if}
+	</li>
 {/snippet}
 
 {#snippet loadingRows()}
-    {#each Array(loadingAmount) as _}
-        <li class="flex items-center justify-between py-3">
-            <Skeleton class="h-7.5 w-full rounded-sm" />
-        </li>
-    {/each}
+	{#each Array(loadingAmount) as _}
+		<li class="flex items-center justify-between py-3">
+			<Skeleton class="h-7.5 w-full rounded-sm" />
+		</li>
+	{/each}
 {/snippet}
 
 <div
-    class={cn(
-        "relative rounded-lg transition-all p-1",
-        isDragging && "border-primary border-2 border-dashed bg-primary/5",
-    )}
-    ondragover={handleDragOver}
-    ondragleave={handleDragLeave}
-    ondrop={handleDrop}
-    role="region"
+	class={cn(
+		"relative rounded-lg transition-all p-1",
+		isDragging && "border-primary border-2 border-dashed bg-primary/5",
+	)}
+	ondragover={handleDragOver}
+	ondragleave={handleDragLeave}
+	ondrop={handleDrop}
+	role="region"
 >
-    {#if isDragging}
-        <div
-            class="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg"
-        >
-            <div
-                class="border-primary text-primary flex size-16 items-center justify-center rounded-full border-2 border-dashed"
-            >
-                <UploadIcon class="size-8" />
-            </div>
-            <p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
-        </div>
-    {/if}
-    <ul class="flex flex-col gap-1" bind:this={listEl}>
-        {#if loading}
-            {@render loadingRows()}
-        {:else}
-            {#if parentPath !== undefined}
-                {@render parentListItem(parentPath)}
-            {/if}
-            {#if displayedItems.length > 0}
-                {#if virtualizer.padTop > 0}
-                    <li aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
-                {/if}
-                {#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.metadata.id)}
-                    {@render listItem(objectItem)}
-                {/each}
-                {#if virtualizer.padBottom > 0}
-                    <li aria-hidden="true" style="height: {virtualizer.padBottom}px"></li>
-                {/if}
-            {:else}
-                {@render emptyListItem()}
-            {/if}
-        {/if}
-    </ul>
+	{#if isDragging}
+		<div
+			class="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg"
+		>
+			<div
+				class="border-primary text-primary flex size-16 items-center justify-center rounded-full border-2 border-dashed"
+			>
+				<UploadIcon class="size-8" />
+			</div>
+			<p class="text-primary font-medium">{m.drop_files_to_upload()}</p>
+		</div>
+	{/if}
+	<ul class="flex flex-col gap-1" bind:this={listEl}>
+		{#if loading}
+			{@render loadingRows()}
+		{:else}
+			{#if parentPath !== undefined}
+				{@render parentListItem(parentPath)}
+			{/if}
+			{#if displayedItems.length > 0}
+				{#if virtualizer.padTop > 0}
+					<li aria-hidden="true" style="height: {virtualizer.padTop}px"></li>
+				{/if}
+				{#each displayedItems.slice(virtualizer.first, virtualizer.last) as objectItem (objectItem.metadata.id)}
+					{@render listItem(objectItem)}
+				{/each}
+				{#if virtualizer.padBottom > 0}
+					<li aria-hidden="true" style="height: {virtualizer.padBottom}px"></li>
+				{/if}
+			{:else}
+				{@render emptyListItem()}
+			{/if}
+		{/if}
+	</ul>
 </div>
 
 <Drawer.Root bind:open={actionsContextOpen}>
-    <Drawer.Content class="z-50">
-        <Drawer.Header>
-            {#if actionableItem}
-                <Drawer.Title class="border-b pb-3 text-lg">
-                    {actionableItem.metadata.name ??
-                        (actionableItem.key.endsWith("/")
-                            ? actionableItem.key.slice(0, -1)
-                            : actionableItem.key)}
-                </Drawer.Title>
-            {/if}
-        </Drawer.Header>
-        <Drawer.Footer>
-            <div class="mx-auto flex w-full flex-col items-start gap-5 pb-5">
-                {#if actionableItem}
-                    {@const item = actionableItem}
-                    {#each actionsFor(actionableItem, itemActions) as action}
-                        {#each action.actions as act}
-                            {#if shouldDisplayAction({ action: act, item })}
-                                {@const Icon = act.dynamic
-                                    ? act.icon(item)
-                                    : act.icon}
-                                {@const title = act.dynamic
-                                    ? (
-                                          act.title as (
-                                              item: ObjectItem,
-                                          ) => string
-                                      )(item)
-                                    : act.title}
-                                <button
-                                    onclick={() => act.action(item)}
-                                    disabled={act.disabled}
-                                    class={cn(
-                                        "disabled:text-muted-foreground hover:text-primary flex w-full text-md items-center justify-start gap-3 text-balance transition-colors",
-                                        act.variant === "destructive"
-                                            ? "text-destructive hover:text-destructive/80 disabled:text-destructive/50"
-                                            : "",
-                                    )}
-                                >
-                                    <Icon class={act.iconClass ?? "text-primary"} />
-                                    {title}
-                                </button>
-                            {/if}
-                        {/each}
-                        {@const isLast =
-                            action === actionsFor(actionableItem, itemActions).at(-1)}
-                        {#if !isLast}
-                            <hr
-                                class="my-2 w-full border-muted-foreground/30"
-                            />
-                        {/if}
-                    {/each}
-                {/if}
-            </div>
-        </Drawer.Footer>
-    </Drawer.Content>
+	<Drawer.Content class="z-50">
+		<Drawer.Header>
+			{#if actionableItem}
+				<Drawer.Title class="border-b pb-3 text-lg">
+					{actionableItem.metadata.name ??
+						(actionableItem.key.endsWith("/")
+							? actionableItem.key.slice(0, -1)
+							: actionableItem.key)}
+				</Drawer.Title>
+			{/if}
+		</Drawer.Header>
+		<Drawer.Footer>
+			<div class="mx-auto flex w-full flex-col items-start gap-5 pb-5">
+				{#if actionableItem}
+					{@const item = actionableItem}
+					{#each actionsFor(actionableItem, itemActions) as action}
+						{#each action.actions as act}
+							{#if shouldDisplayAction({ action: act, item })}
+								{@const Icon = act.dynamic ? act.icon(item) : act.icon}
+								{@const title = act.dynamic
+									? (act.title as (item: ObjectItem) => string)(item)
+									: act.title}
+								<button
+									onclick={() => act.action(item)}
+									disabled={act.disabled}
+									class={cn(
+										"disabled:text-muted-foreground hover:text-primary flex w-full text-md items-center justify-start gap-3 text-balance transition-colors",
+										act.variant === "destructive"
+											? "text-destructive hover:text-destructive/80 disabled:text-destructive/50"
+											: "",
+									)}
+								>
+									<Icon class={act.iconClass ?? "text-primary"} />
+									{title}
+								</button>
+							{/if}
+						{/each}
+						{@const isLast =
+							action === actionsFor(actionableItem, itemActions).at(-1)}
+						{#if !isLast}
+							<hr class="my-2 w-full border-muted-foreground/30" />
+						{/if}
+					{/each}
+				{/if}
+			</div>
+		</Drawer.Footer>
+	</Drawer.Content>
 </Drawer.Root>

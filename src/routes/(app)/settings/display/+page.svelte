@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidate } from "$app/navigation";
 	import {
 		CalendarIcon,
 		FileStackIcon,
@@ -21,13 +22,12 @@
 	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
 	import {
+		type Accent,
 		ACCENT_SWATCH,
 		ACCENTS,
-		type Accent,
 		applyTheme,
 	} from "#lib/theme.js";
 	import { cn } from "#lib/utils.js";
-	import { invalidate } from "$app/navigation";
 
 	$title = m.settings_display();
 
@@ -198,302 +198,298 @@
 </script>
 
 <div class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.theme()}</Card.Title>
-            <Card.Description>{m.theme_description()}</Card.Description>
-        </Card.Header>
-        <Card.Content>
-            <RadioGroup.Root
-                class="grid gap-2"
-                value={userPrefersMode.current}
-            >
-                {#each themes as theme (theme.id)}
-                    {@const Icon = theme.icon}
-                    <Label
-                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
-                    >
-                        <div class="flex items-center gap-2">
-                            <RadioGroup.Item
-                                value={theme.id}
-                                id={theme.name}
-                                onclick={() => setMode(theme.id)}
-                                class="data-[state=checked]:border-primary"
-                            />
-                            <div class="grid gap-1 font-normal">
-                                <div class="font-medium">{theme.name}</div>
-                                <div
-                                    class="text-muted-foreground text-xs leading-snug text-balance"
-                                >
-                                    {theme.description}
-                                </div>
-                            </div>
-                        </div>
-                        <Icon class="size-5 shrink-0" />
-                    </Label>
-                {/each}
-            </RadioGroup.Root>
-        </Card.Content>
-    </Card.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.theme()}</Card.Title>
+			<Card.Description>{m.theme_description()}</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<RadioGroup.Root class="grid gap-2" value={userPrefersMode.current}>
+				{#each themes as theme (theme.id)}
+					{@const Icon = theme.icon}
+					<Label
+						class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
+					>
+						<div class="flex items-center gap-2">
+							<RadioGroup.Item
+								value={theme.id}
+								id={theme.name}
+								onclick={() => setMode(theme.id)}
+								class="data-[state=checked]:border-primary"
+							/>
+							<div class="grid gap-1 font-normal">
+								<div class="font-medium">{theme.name}</div>
+								<div
+									class="text-muted-foreground text-xs leading-snug text-balance"
+								>
+									{theme.description}
+								</div>
+							</div>
+						</div>
+						<Icon class="size-5 shrink-0" />
+					</Label>
+				{/each}
+			</RadioGroup.Root>
+		</Card.Content>
+	</Card.Root>
 
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.accent_colour()}</Card.Title>
-            <Card.Description>{m.accent_colour_description()}</Card.Description>
-        </Card.Header>
-        <Card.Content class="grid gap-2 sm:grid-cols-2">
-            {#each ACCENTS as option (option)}
-                <button
-                    type="button"
-                    aria-label={option}
-                    aria-pressed={accent === option}
-                    onclick={() => save({ accent: option })}
-                    class={cn(
-                        "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs capitalize transition-colors",
-                        accent === option
-                            ? "border-ring bg-input/20 font-medium"
-                            : "hover:bg-input/20",
-                    )}
-                >
-                    <span
-                        class="size-4 rounded-lg border"
-                        style="background: {ACCENT_SWATCH[option]}"
-                    ></span>
-                    {option}
-                </button>
-            {/each}
-        </Card.Content>
-    </Card.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.accent_colour()}</Card.Title>
+			<Card.Description>{m.accent_colour_description()}</Card.Description>
+		</Card.Header>
+		<Card.Content class="grid gap-2 sm:grid-cols-2">
+			{#each ACCENTS as option (option)}
+				<button
+					type="button"
+					aria-label={option}
+					aria-pressed={accent === option}
+					onclick={() => save({ accent: option })}
+					class={cn(
+						"flex items-center gap-2 rounded-lg border px-3 py-2 text-xs capitalize transition-colors",
+						accent === option
+							? "border-ring bg-input/20 font-medium"
+							: "hover:bg-input/20",
+					)}
+				>
+					<span
+						class="size-4 rounded-lg border"
+						style="background: {ACCENT_SWATCH[option]}"
+					></span>
+					{option}
+				</button>
+			{/each}
+		</Card.Content>
+	</Card.Root>
 
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.font_family()}</Card.Title>
-            <Card.Description>{m.font_family_description()}</Card.Description>
-        </Card.Header>
-        <Card.Content>
-            <RadioGroup.Root class="grid gap-2" value={fontFamily}>
-                {#each fonts as option (option.id)}
-                    <Label
-                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
-                    >
-                        <div class="flex items-center gap-2">
-                            <RadioGroup.Item
-                                value={option.id}
-                                id="font-{option.id}"
-                                onclick={() => save({ fontFamily: option.id })}
-                                class="data-[state=checked]:border-primary"
-                            />
-                            <div class="grid gap-1 font-normal">
-                                <div class="font-medium">{option.name}</div>
-                                <div
-                                    class="text-muted-foreground text-xs leading-snug text-balance"
-                                >
-                                    {option.description}
-                                </div>
-                            </div>
-                        </div>
-                        <span
-                            class="text-muted-foreground shrink-0 text-sm"
-                            style="font-family: {option.css}"
-                        >
-                            {option.sample}
-                        </span>
-                    </Label>
-                {/each}
-            </RadioGroup.Root>
-        </Card.Content>
-    </Card.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.font_family()}</Card.Title>
+			<Card.Description>{m.font_family_description()}</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<RadioGroup.Root class="grid gap-2" value={fontFamily}>
+				{#each fonts as option (option.id)}
+					<Label
+						class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
+					>
+						<div class="flex items-center gap-2">
+							<RadioGroup.Item
+								value={option.id}
+								id="font-{option.id}"
+								onclick={() => save({ fontFamily: option.id })}
+								class="data-[state=checked]:border-primary"
+							/>
+							<div class="grid gap-1 font-normal">
+								<div class="font-medium">{option.name}</div>
+								<div
+									class="text-muted-foreground text-xs leading-snug text-balance"
+								>
+									{option.description}
+								</div>
+							</div>
+						</div>
+						<span
+							class="text-muted-foreground shrink-0 text-sm"
+							style="font-family: {option.css}"
+						>
+							{option.sample}
+						</span>
+					</Label>
+				{/each}
+			</RadioGroup.Root>
+		</Card.Content>
+	</Card.Root>
 
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.corners()}</Card.Title>
-            <Card.Description>{m.corners_description()}</Card.Description>
-        </Card.Header>
-        <Card.Content>
-            <RadioGroup.Root class="grid gap-2" value={corners}>
-                {#each cornerOptions as option (option.id)}
-                    <Label
-                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
-                    >
-                        <div class="flex items-center gap-2">
-                            <RadioGroup.Item
-                                value={option.id}
-                                id="corners-{option.id}"
-                                onclick={() => save({ corners: option.id })}
-                                class="data-[state=checked]:border-primary"
-                            />
-                            <div class="grid gap-1 font-normal">
-                                <div class="font-medium">{option.name}</div>
-                                <div
-                                    class="text-muted-foreground text-xs leading-snug text-balance"
-                                >
-                                    {option.description}
-                                </div>
-                            </div>
-                        </div>
-                        <span
-                            class="border-primary size-6 shrink-0 border-2"
-                            style="border-radius: {option.radius}"
-                        ></span>
-                    </Label>
-                {/each}
-            </RadioGroup.Root>
-        </Card.Content>
-    </Card.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.corners()}</Card.Title>
+			<Card.Description>{m.corners_description()}</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<RadioGroup.Root class="grid gap-2" value={corners}>
+				{#each cornerOptions as option (option.id)}
+					<Label
+						class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
+					>
+						<div class="flex items-center gap-2">
+							<RadioGroup.Item
+								value={option.id}
+								id="corners-{option.id}"
+								onclick={() => save({ corners: option.id })}
+								class="data-[state=checked]:border-primary"
+							/>
+							<div class="grid gap-1 font-normal">
+								<div class="font-medium">{option.name}</div>
+								<div
+									class="text-muted-foreground text-xs leading-snug text-balance"
+								>
+									{option.description}
+								</div>
+							</div>
+						</div>
+						<span
+							class="border-primary size-6 shrink-0 border-2"
+							style="border-radius: {option.radius}"
+						></span>
+					</Label>
+				{/each}
+			</RadioGroup.Root>
+		</Card.Content>
+	</Card.Root>
 
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.default_layout()}</Card.Title>
-            <Card.Description>
-                {m.default_layout_description()}
-            </Card.Description>
-        </Card.Header>
-        <Card.Content>
-            <RadioGroup.Root class="grid gap-2" value={layout}>
-                {#each layouts as option (option.id)}
-                    {@const Icon = option.icon}
-                    <Label
-                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
-                    >
-                        <div class="flex items-center gap-2">
-                            <RadioGroup.Item
-                                value={option.id}
-                                id={option.id}
-                                onclick={() => save({ layout: option.id })}
-                                class="data-[state=checked]:border-primary"
-                            />
-                            <div class="grid gap-1 font-normal">
-                                <div class="font-medium">{option.name}</div>
-                                <div
-                                    class="text-muted-foreground text-xs leading-snug text-balance"
-                                >
-                                    {option.description}
-                                </div>
-                            </div>
-                        </div>
-                        <Icon class="size-5 shrink-0" />
-                    </Label>
-                {/each}
-            </RadioGroup.Root>
-        </Card.Content>
-    </Card.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.default_layout()}</Card.Title>
+			<Card.Description>
+				{m.default_layout_description()}
+			</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<RadioGroup.Root class="grid gap-2" value={layout}>
+				{#each layouts as option (option.id)}
+					{@const Icon = option.icon}
+					<Label
+						class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
+					>
+						<div class="flex items-center gap-2">
+							<RadioGroup.Item
+								value={option.id}
+								id={option.id}
+								onclick={() => save({ layout: option.id })}
+								class="data-[state=checked]:border-primary"
+							/>
+							<div class="grid gap-1 font-normal">
+								<div class="font-medium">{option.name}</div>
+								<div
+									class="text-muted-foreground text-xs leading-snug text-balance"
+								>
+									{option.description}
+								</div>
+							</div>
+						</div>
+						<Icon class="size-5 shrink-0" />
+					</Label>
+				{/each}
+			</RadioGroup.Root>
+		</Card.Content>
+	</Card.Root>
 
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.listing_load_mode()}</Card.Title>
-            <Card.Description>
-                {m.listing_load_mode_description()}
-            </Card.Description>
-        </Card.Header>
-        <Card.Content>
-            <RadioGroup.Root class="grid gap-2" value={listingLoadMode}>
-                {#each loadModes as option (option.id)}
-                    {@const Icon = option.icon}
-                    <Label
-                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
-                    >
-                        <div class="flex items-center gap-2">
-                            <RadioGroup.Item
-                                value={option.id}
-                                id="load-mode-{option.id}"
-                                onclick={() =>
-                                    save({ listingLoadMode: option.id })}
-                                class="data-[state=checked]:border-primary"
-                            />
-                            <div class="grid gap-1 font-normal">
-                                <div class="font-medium">{option.name}</div>
-                                <div
-                                    class="text-muted-foreground text-xs leading-snug text-balance"
-                                >
-                                    {option.description}
-                                </div>
-                            </div>
-                        </div>
-                        <Icon class="size-5 shrink-0" />
-                    </Label>
-                {/each}
-            </RadioGroup.Root>
-        </Card.Content>
-    </Card.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.listing_load_mode()}</Card.Title>
+			<Card.Description>
+				{m.listing_load_mode_description()}
+			</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<RadioGroup.Root class="grid gap-2" value={listingLoadMode}>
+				{#each loadModes as option (option.id)}
+					{@const Icon = option.icon}
+					<Label
+						class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
+					>
+						<div class="flex items-center gap-2">
+							<RadioGroup.Item
+								value={option.id}
+								id="load-mode-{option.id}"
+								onclick={() => save({ listingLoadMode: option.id })}
+								class="data-[state=checked]:border-primary"
+							/>
+							<div class="grid gap-1 font-normal">
+								<div class="font-medium">{option.name}</div>
+								<div
+									class="text-muted-foreground text-xs leading-snug text-balance"
+								>
+									{option.description}
+								</div>
+							</div>
+						</div>
+						<Icon class="size-5 shrink-0" />
+					</Label>
+				{/each}
+			</RadioGroup.Root>
+		</Card.Content>
+	</Card.Root>
 
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.version_naming()}</Card.Title>
-            <Card.Description>{m.version_naming_description()}</Card.Description>
-        </Card.Header>
-        <Card.Content>
-            <RadioGroup.Root class="grid gap-2" value={versionNaming}>
-                {#each namingOptions as option (option.id)}
-                    {@const Icon = option.icon}
-                    <Label
-                        class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
-                    >
-                        <div class="flex items-center gap-2">
-                            <RadioGroup.Item
-                                value={option.id}
-                                id="version-naming-{option.id}"
-                                onclick={() => save({ versionNaming: option.id })}
-                                class="data-[state=checked]:border-primary"
-                            />
-                            <div class="grid gap-1 font-normal">
-                                <div class="font-medium">{option.name}</div>
-                                <div
-                                    class="text-muted-foreground text-xs leading-snug text-balance"
-                                >
-                                    {option.description}
-                                </div>
-                            </div>
-                        </div>
-                        <Icon class="size-5 shrink-0" />
-                    </Label>
-                {/each}
-            </RadioGroup.Root>
-        </Card.Content>
-    </Card.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.version_naming()}</Card.Title>
+			<Card.Description>{m.version_naming_description()}</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<RadioGroup.Root class="grid gap-2" value={versionNaming}>
+				{#each namingOptions as option (option.id)}
+					{@const Icon = option.icon}
+					<Label
+						class="has-data-[state=checked]:border-ring has-data-[state=checked]:bg-input/20 hover:bg-input/20 flex cursor-pointer items-center justify-between gap-3 rounded-lg border p-3 transition-colors"
+					>
+						<div class="flex items-center gap-2">
+							<RadioGroup.Item
+								value={option.id}
+								id="version-naming-{option.id}"
+								onclick={() => save({ versionNaming: option.id })}
+								class="data-[state=checked]:border-primary"
+							/>
+							<div class="grid gap-1 font-normal">
+								<div class="font-medium">{option.name}</div>
+								<div
+									class="text-muted-foreground text-xs leading-snug text-balance"
+								>
+									{option.description}
+								</div>
+							</div>
+						</div>
+						<Icon class="size-5 shrink-0" />
+					</Label>
+				{/each}
+			</RadioGroup.Root>
+		</Card.Content>
+	</Card.Root>
 
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.default_sort()}</Card.Title>
-            <Card.Description>{m.default_sort_description()}</Card.Description>
-        </Card.Header>
-        <Card.Content class="grid gap-2">
-            <Select.Root
-                type="single"
-                value={sortColumn}
-                onValueChange={(value) =>
-                    save({
-                        sortColumn: value as "name" | "size" | "updatedAt" | "type",
-                    })}
-            >
-                <Select.Trigger class="w-full">
-                    {sortColumnLabel}
-                </Select.Trigger>
-                <Select.Content>
-                    {#each sortColumns as option (option.value)}
-                        <Select.Item value={option.value}>
-                            {option.label}
-                        </Select.Item>
-                    {/each}
-                </Select.Content>
-            </Select.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.default_sort()}</Card.Title>
+			<Card.Description>{m.default_sort_description()}</Card.Description>
+		</Card.Header>
+		<Card.Content class="grid gap-2">
+			<Select.Root
+				type="single"
+				value={sortColumn}
+				onValueChange={(value) =>
+					save({
+						sortColumn: value as "name" | "size" | "updatedAt" | "type",
+					})}
+			>
+				<Select.Trigger class="w-full">
+					{sortColumnLabel}
+				</Select.Trigger>
+				<Select.Content>
+					{#each sortColumns as option (option.value)}
+						<Select.Item value={option.value}>
+							{option.label}
+						</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
 
-            <Select.Root
-                type="single"
-                value={sortDirection}
-                onValueChange={(value) =>
-                    save({ sortDirection: value as "asc" | "desc" })}
-            >
-                <Select.Trigger class="w-full">
-                    {sortDirectionLabel}
-                </Select.Trigger>
-                <Select.Content>
-                    {#each sortDirections as option (option.value)}
-                        <Select.Item value={option.value}>
-                            {option.label}
-                        </Select.Item>
-                    {/each}
-                </Select.Content>
-            </Select.Root>
-        </Card.Content>
-    </Card.Root>
+			<Select.Root
+				type="single"
+				value={sortDirection}
+				onValueChange={(value) =>
+					save({ sortDirection: value as "asc" | "desc" })}
+			>
+				<Select.Trigger class="w-full">
+					{sortDirectionLabel}
+				</Select.Trigger>
+				<Select.Content>
+					{#each sortDirections as option (option.value)}
+						<Select.Item value={option.value}>
+							{option.label}
+						</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+		</Card.Content>
+	</Card.Root>
 </div>

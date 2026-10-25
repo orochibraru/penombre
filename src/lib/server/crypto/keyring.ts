@@ -4,8 +4,7 @@ import type { Keyring } from "./envelope";
 export function keyring(): Keyring {
 	// Absent from the unit tests' config mock.
 	const encryption = getConfig().encryption as
-		| AppConfig["encryption"]
-		| undefined;
+		AppConfig["encryption"] | undefined;
 	return { current: encryption?.key, previous: encryption?.previous ?? [] };
 }
 

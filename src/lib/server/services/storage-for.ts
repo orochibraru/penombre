@@ -26,7 +26,7 @@ import {
 	SHARE_HEADER,
 	VOLUME_HEADER,
 } from "#lib/storage-location.js";
-import { driveStorage, drivesService, driveVolume } from "./drives";
+import { drivesService, driveStorage, driveVolume } from "./drives";
 import { loadSharedOwner } from "./library-scan";
 import { ShareService } from "./shares";
 import { SharingService } from "./sharings";

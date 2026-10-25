@@ -78,7 +78,9 @@ a Badge variant or ask the user about adding a custom CSS variable to the theme
   import { Button } from "$lib/components/ui/button";
 </script>
 
-<Button class="border-input hover:bg-accent border bg-transparent">Click me</Button>
+<Button class="border-input hover:bg-accent border bg-transparent"
+  >Click me</Button
+>
 ```
 
 **Correct:**
@@ -139,8 +141,8 @@ Use `gap-*` instead. `space-y-4` → `flex flex-col gap-4`. `space-x-2` →
 
 ```svelte
 <script lang="ts">
-  import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
+  import { Input } from "$lib/components/ui/input";
 </script>
 
 <div class="flex flex-col gap-4">

@@ -3,11 +3,11 @@
 
 tools = ["claude-code"]
 exclude = [
-    "node_modules/**",
-    ".git/**",
-    ".svelte-kit/**",
-    "build/**",
-    "src/lib/paraglide/**",
+	"node_modules/**",
+	".git/**",
+	".svelte-kit/**",
+	"build/**",
+	"src/lib/paraglide/**",
 ]
 
 [rules]
@@ -17,10 +17,10 @@ exclude = [
 # its "never"s describe behaviour ("a handler never sees them"), and
 # splitting it into @imports would load the same tokens anyway.
 disabled_rules = [
-    "CC-MEM-006", # negative instruction without a positive alternative
-    "CC-MEM-008", # critical keyword in the middle of the document
-    "CC-MEM-009", # token limit
-    "CC-MEM-014", # line limit
+	"CC-MEM-006", # negative instruction without a positive alternative
+	"CC-MEM-008", # critical keyword in the middle of the document
+	"CC-MEM-009", # token limit
+	"CC-MEM-014", # line limit
 ]
 
 [tool_versions]

@@ -1,5 +1,5 @@
 [tools]
-bun = "1.4.3"
+bun = "1.4.4"
 go = "1.27.2"
 # The desktop app: apps/desktop/Cargo.toml's `rust-version`, and the rclone it drives.
 rust = { version = "1.98.1", components = "rustfmt,clippy" }
@@ -20,8 +20,8 @@ resvg = "0.48.1"
 ANDROID_HOME = "{{env.HOME}}/.local/share/android-sdk"
 ANDROID_SDK_ROOT = "{{env.HOME}}/.local/share/android-sdk"
 _.path = [
-    "{{env.HOME}}/.local/share/android-sdk/platform-tools",
-    "{{env.HOME}}/.local/share/android-sdk/emulator",
+	"{{env.HOME}}/.local/share/android-sdk/platform-tools",
+	"{{env.HOME}}/.local/share/android-sdk/emulator",
 ]
 
 [hooks]

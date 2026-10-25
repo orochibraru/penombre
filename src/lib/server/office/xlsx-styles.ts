@@ -4,8 +4,8 @@ import {
 	type BorderEdge,
 	type CellStyle,
 	normalizeStyle,
-	SIDES,
 	type Side,
+	SIDES,
 	type StyleDefaults,
 } from "#lib/sheet/styles.js";
 import {

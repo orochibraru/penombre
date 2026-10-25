@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { invalidate } from "$app/navigation";
+	import { page } from "$app/state";
 	import { FolderIcon, XIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import { api } from "#lib/api/index.js";
@@ -6,8 +8,6 @@
 	import * as m from "#lib/paraglide/messages.js";
 	import { draggedFolder } from "#lib/store/shortcuts.js";
 	import { cn } from "#lib/utils.js";
-	import { invalidate } from "$app/navigation";
-	import { page } from "$app/state";
 
 	interface Shortcut {
 		folderId: string;
@@ -99,57 +99,60 @@
 <svelte:window ondragend={() => draggedFolder.set(null)} />
 
 {#if items.length > 0 || $draggedFolder}
-    <Sidebar.Group
-        class={cn("rounded-lg transition-colors", over && "bg-primary/10 ring-2 ring-primary")}
-        ondragover={onGroupDragOver}
-        ondragleave={() => (over = false)}
-        ondrop={onGroupDrop}
-    >
-        <Sidebar.GroupLabel>{m.nav_shortcuts()}</Sidebar.GroupLabel>
-        <Sidebar.GroupContent>
-            <Sidebar.Menu>
-                {#each items as item (item.folderId)}
-                    <Sidebar.MenuItem
-                        draggable="true"
-                        class={cn(moving === item.folderId && "opacity-50")}
-                        ondragstart={(e: DragEvent) => {
-                            moving = item.folderId;
-                            if (e.dataTransfer) {
-                                e.dataTransfer.effectAllowed = "move";
-                            }
-                        }}
-                        ondragend={() => (moving = null)}
-                        ondragover={() => onItemDragOver(item.folderId)}
-                    >
-                        <Sidebar.MenuButton isActive={isActive(item.href)}>
-                            {#snippet child({ props })}
-                                <a
-                                    href={item.href}
-                                    {...props}
-                                    class={cn(props.class as string, "text-sm font-medium")}
-                                    title={item.name}
-                                >
-                                    <FolderIcon class="text-primary md:h-4.5 md:w-4.5" />
-                                    <span>{item.name}</span>
-                                </a>
-                            {/snippet}
-                        </Sidebar.MenuButton>
-                        <Sidebar.MenuAction
-                            showOnHover
-                            aria-label={m.shortcut_remove({ name: item.name })}
-                            title={m.shortcut_remove({ name: item.name })}
-                            onclick={() => remove(item.folderId)}
-                        >
-                            <XIcon />
-                        </Sidebar.MenuAction>
-                    </Sidebar.MenuItem>
-                {/each}
-                {#if items.length === 0}
-                    <li class="px-2 py-1.5 text-xs text-muted-foreground">
-                        {m.shortcuts_drop_hint()}
-                    </li>
-                {/if}
-            </Sidebar.Menu>
-        </Sidebar.GroupContent>
-    </Sidebar.Group>
+	<Sidebar.Group
+		class={cn(
+			"rounded-lg transition-colors",
+			over && "bg-primary/10 ring-2 ring-primary",
+		)}
+		ondragover={onGroupDragOver}
+		ondragleave={() => (over = false)}
+		ondrop={onGroupDrop}
+	>
+		<Sidebar.GroupLabel>{m.nav_shortcuts()}</Sidebar.GroupLabel>
+		<Sidebar.GroupContent>
+			<Sidebar.Menu>
+				{#each items as item (item.folderId)}
+					<Sidebar.MenuItem
+						draggable="true"
+						class={cn(moving === item.folderId && "opacity-50")}
+						ondragstart={(e: DragEvent) => {
+							moving = item.folderId;
+							if (e.dataTransfer) {
+								e.dataTransfer.effectAllowed = "move";
+							}
+						}}
+						ondragend={() => (moving = null)}
+						ondragover={() => onItemDragOver(item.folderId)}
+					>
+						<Sidebar.MenuButton isActive={isActive(item.href)}>
+							{#snippet child({ props })}
+								<a
+									href={item.href}
+									{...props}
+									class={cn(props.class as string, "text-sm font-medium")}
+									title={item.name}
+								>
+									<FolderIcon class="text-primary md:h-4.5 md:w-4.5" />
+									<span>{item.name}</span>
+								</a>
+							{/snippet}
+						</Sidebar.MenuButton>
+						<Sidebar.MenuAction
+							showOnHover
+							aria-label={m.shortcut_remove({ name: item.name })}
+							title={m.shortcut_remove({ name: item.name })}
+							onclick={() => remove(item.folderId)}
+						>
+							<XIcon />
+						</Sidebar.MenuAction>
+					</Sidebar.MenuItem>
+				{/each}
+				{#if items.length === 0}
+					<li class="px-2 py-1.5 text-xs text-muted-foreground">
+						{m.shortcuts_drop_hint()}
+					</li>
+				{/if}
+			</Sidebar.Menu>
+		</Sidebar.GroupContent>
+	</Sidebar.Group>
 {/if}

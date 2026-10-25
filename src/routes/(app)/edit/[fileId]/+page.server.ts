@@ -7,8 +7,8 @@ import {
 	officeToText,
 } from "#lib/server/office/index.js";
 import { editorAccess } from "#lib/server/services/editor-access.js";
-import { revisionOf } from "#lib/server/services/storage/revision.js";
 import { storageServiceFor } from "#lib/server/services/storage-for.js";
+import { revisionOf } from "#lib/server/services/storage/revision.js";
 
 const logger = new Logger("Editor");
 

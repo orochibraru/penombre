@@ -39,17 +39,17 @@
 </script>
 
 <ResponsiveDialog
-    bind:open
-    bind:loading
-    size="sm"
-    title={m.shell_rename_title()}
-    description={name}
-    submitLabel={m.rename()}
-    submitDisabled={!title.trim()}
-    onsubmit={submit}
+	bind:open
+	bind:loading
+	size="sm"
+	title={m.shell_rename_title()}
+	description={name}
+	submitLabel={m.rename()}
+	submitDisabled={!title.trim()}
+	onsubmit={submit}
 >
-    <div class="flex flex-col gap-2">
-        <Label for="shell-rename">{m.shell_rename_label()}</Label>
-        <Input id="shell-rename" bind:value={title} autocomplete="off" />
-    </div>
+	<div class="flex flex-col gap-2">
+		<Label for="shell-rename">{m.shell_rename_label()}</Label>
+		<Input id="shell-rename" bind:value={title} autocomplete="off" />
+	</div>
 </ResponsiveDialog>

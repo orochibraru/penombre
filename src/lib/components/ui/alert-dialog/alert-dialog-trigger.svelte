@@ -7,4 +7,8 @@
 	}: AlertDialogPrimitive.TriggerProps = $props();
 </script>
 
-<AlertDialogPrimitive.Trigger bind:ref data-slot="alert-dialog-trigger" {...restProps} />
+<AlertDialogPrimitive.Trigger
+	bind:ref
+	data-slot="alert-dialog-trigger"
+	{...restProps}
+/>

@@ -12,9 +12,16 @@ autotests = false
 
 [dependencies]
 directories = "=6.0.0"
-eframe = { version = "=0.36.2", default-features = false, features = ["glow", "default_fonts", "wayland", "x11"] }
+eframe = { version = "=0.36.2", default-features = false, features = [
+	"glow",
+	"default_fonts",
+	"wayland",
+	"x11",
+] }
 egui = "=0.36.2"
-egui_extras = { version = "=0.36.2", default-features = false, features = ["svg"] }
+egui_extras = { version = "=0.36.2", default-features = false, features = [
+	"svg",
+] }
 # Same revision spotifast builds with; move them together.
 fastframe-fonts = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7" }
 fastframe-icons = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7" }
@@ -27,7 +34,11 @@ resvg = { version = "=0.45.1", default-features = false }
 log = "=0.4.34"
 notify = "=8.2.0"
 open = "=5.4.4"
-reqwest = { version = "=0.12.28", default-features = false, features = ["blocking", "json", "rustls-tls-native-roots"] }
+reqwest = { version = "=0.12.28", default-features = false, features = [
+	"blocking",
+	"json",
+	"rustls-tls-native-roots",
+] }
 rfd = "=0.17.2"
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
@@ -45,8 +56,15 @@ libc = "=0.2.189"
 winit = { version = "=0.30.13", default-features = false }
 # The Dock icon, shown only while the window is open: the versions eframe uses.
 objc2 = "=0.6.4"
-objc2-app-kit = { version = "=0.3.2", default-features = false, features = ["NSApplication", "NSResponder", "NSRunningApplication"] }
-objc2-foundation = { version = "=0.3.2", default-features = false, features = ["NSError", "NSString"] }
+objc2-app-kit = { version = "=0.3.2", default-features = false, features = [
+	"NSApplication",
+	"NSResponder",
+	"NSRunningApplication",
+] }
+objc2-foundation = { version = "=0.3.2", default-features = false, features = [
+	"NSError",
+	"NSString",
+] }
 # The app's own notifications, and whether System Settings allows them.
 block2 = "=0.6.2"
 objc2-user-notifications = { version = "=0.3.2", default-features = false, features = ["std", "block2", "UNNotificationContent", "UNNotificationRequest", "UNNotificationSettings", "UNNotificationTrigger", "UNUserNotificationCenter"] }
@@ -56,7 +74,9 @@ apple-native-keyring-store = { version = "=1.0.2", features = ["keychain"] }
 windows-native-keyring-store = { version = "=1.1.0", default-features = false }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-zbus-secret-service-keyring-store = { version = "=1.0.1", features = ["rt-async-io-crypto-rust"] }
+zbus-secret-service-keyring-store = { version = "=1.0.1", features = [
+	"rt-async-io-crypto-rust",
+] }
 
 [dev-dependencies]
 egui_kittest = { version = "=0.36.2", features = ["wgpu"] }

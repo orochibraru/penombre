@@ -46,7 +46,12 @@
 <Popover.Root bind:open>
 	<Popover.Trigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="outline" size="sm" class="w-full justify-between">
+			<Button
+				{...props}
+				variant="outline"
+				size="sm"
+				class="w-full justify-between"
+			>
 				<span class="flex items-center gap-1.5">
 					<PlusIcon class="size-4" />
 					{label}
@@ -55,7 +60,10 @@
 			</Button>
 		{/snippet}
 	</Popover.Trigger>
-	<Popover.Content class="max-h-[70vh] w-[min(34rem,calc(100vw-2rem))] overflow-y-auto p-2" align="start">
+	<Popover.Content
+		class="max-h-[70vh] w-[min(34rem,calc(100vw-2rem))] overflow-y-auto p-2"
+		align="start"
+	>
 		<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 			{#each previews as preview (preview.layout.part)}
 				<button
@@ -67,7 +75,14 @@
 						onPick(preview.layout.part);
 					}}
 				>
-					<SlideView deck={editor.deck} slide={preview.slide} width={150} {media} prompt={placeholderPrompt} class="pointer-events-none rounded-sm border" />
+					<SlideView
+						deck={editor.deck}
+						slide={preview.slide}
+						width={150}
+						{media}
+						prompt={placeholderPrompt}
+						class="pointer-events-none rounded-sm border"
+					/>
 					<span class="truncate text-xs">{name(preview.layout)}</span>
 				</button>
 			{/each}

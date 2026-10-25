@@ -122,25 +122,51 @@
 
 <svelte:window onkeydown={onkey} />
 
-<div class="bg-background fixed inset-0 z-100 flex flex-col gap-3 overflow-y-auto p-3 sm:p-4" role="region" aria-label={m.deck_presenter_view()}>
+<div
+	class="bg-background fixed inset-0 z-100 flex flex-col gap-3 overflow-y-auto p-3 sm:p-4"
+	role="region"
+	aria-label={m.deck_presenter_view()}
+>
 	<div class="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[2fr_1fr]">
 		<div bind:clientWidth={mainWidth} class="min-w-0">
 			{#if slide}
-				<SlideView {deck} {slide} width={mainWidth} {media} label={labelOf} class="rounded-lg border" />
+				<SlideView
+					{deck}
+					{slide}
+					width={mainWidth}
+					{media}
+					label={labelOf}
+					class="rounded-lg border"
+				/>
 			{/if}
 		</div>
 		<div class="flex flex-col gap-3 lg:min-h-0">
 			<div bind:clientWidth={nextWidth}>
 				<p class="text-muted-foreground mb-1 text-xs">{m.deck_next_slide()}</p>
 				{#if next}
-					<SlideView {deck} slide={next} width={nextWidth} {media} label={labelOf} class="rounded-lg border" />
+					<SlideView
+						{deck}
+						slide={next}
+						width={nextWidth}
+						{media}
+						label={labelOf}
+						class="rounded-lg border"
+					/>
 				{:else}
-					<div class="text-muted-foreground grid aspect-video place-items-center rounded-lg border text-sm">{m.deck_end()}</div>
+					<div
+						class="text-muted-foreground grid aspect-video place-items-center rounded-lg border text-sm"
+					>
+						{m.deck_end()}
+					</div>
 				{/if}
 			</div>
 			<div class="flex min-h-32 flex-1 flex-col lg:min-h-0">
-				<p class="text-muted-foreground mb-1 text-xs">{m.deck_speaker_notes()}</p>
-				<div class="flex-1 overflow-y-auto rounded-lg border p-3 text-base whitespace-pre-wrap">
+				<p class="text-muted-foreground mb-1 text-xs">
+					{m.deck_speaker_notes()}
+				</p>
+				<div
+					class="flex-1 overflow-y-auto rounded-lg border p-3 text-base whitespace-pre-wrap"
+				>
 					{#if slide?.notes}
 						{slide.notes}
 					{:else}
@@ -151,19 +177,41 @@
 		</div>
 	</div>
 	<div class="flex flex-wrap items-center gap-2">
-		<Button variant="outline" size="icon" aria-label={m.previous()} onclick={() => go(position - 1)}>
+		<Button
+			variant="outline"
+			size="icon"
+			aria-label={m.previous()}
+			onclick={() => go(position - 1)}
+		>
 			<ChevronLeftIcon />
 		</Button>
-		<span class="min-w-12 text-center text-sm tabular-nums">{position + 1} / {shown.length}</span>
-		<Button variant="outline" size="icon" aria-label={m.next()} onclick={() => go(position + 1)}>
+		<span class="min-w-12 text-center text-sm tabular-nums"
+			>{position + 1} / {shown.length}</span
+		>
+		<Button
+			variant="outline"
+			size="icon"
+			aria-label={m.next()}
+			onclick={() => go(position + 1)}
+		>
 			<ChevronRightIcon />
 		</Button>
 		<div class="flex items-center gap-1 rounded-lg border px-2">
 			<span class="font-mono text-sm tabular-nums">{clock(elapsed)}</span>
-			<Button variant="ghost" size="icon" aria-label={running ? m.deck_timer_pause() : m.deck_timer_start()} onclick={() => (running = !running)}>
+			<Button
+				variant="ghost"
+				size="icon"
+				aria-label={running ? m.deck_timer_pause() : m.deck_timer_start()}
+				onclick={() => (running = !running)}
+			>
 				{#if running}<PauseIcon />{:else}<PlayIcon />{/if}
 			</Button>
-			<Button variant="ghost" size="icon" aria-label={m.deck_timer_reset()} onclick={() => (elapsed = 0)}>
+			<Button
+				variant="ghost"
+				size="icon"
+				aria-label={m.deck_timer_reset()}
+				onclick={() => (elapsed = 0)}
+			>
 				<RotateCcwIcon />
 			</Button>
 		</div>
@@ -172,7 +220,12 @@
 				<MonitorUpIcon class="size-4" />
 				{m.deck_open_audience()}
 			</Button>
-			<Button variant="outline" size="icon" aria-label={m.close()} onclick={onexit}>
+			<Button
+				variant="outline"
+				size="icon"
+				aria-label={m.close()}
+				onclick={onexit}
+			>
 				<XIcon />
 			</Button>
 		</div>

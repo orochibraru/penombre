@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
-	type CommentNote,
 	cellKey,
+	type CommentNote,
 	flatten,
 	locateQuote,
 	textAnchor,

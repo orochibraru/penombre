@@ -32,25 +32,25 @@
 </script>
 
 <ContextMenu.Root>
-    <ContextMenu.Trigger class="w-full min-h-full">
-        <section>
-            {#if !res.data}
-                <PageError />
-            {:else}
-                <FileWrapper data={res.data} {preferences} />
-            {/if}
-        </section>
-    </ContextMenu.Trigger>
-    <ContextMenu.Content>
-        <ContextMenu.Item onclick={handleUpload}>
-            <UploadIcon class="h-4 w-4" />
-            {m.upload_files_context()}
-        </ContextMenu.Item>
-        <ContextMenu.Item onclick={handleCreateFolder}>
-            <FolderPlusIcon class="h-4 w-4" />
-            {m.create_folder_context()}
-        </ContextMenu.Item>
-    </ContextMenu.Content>
+	<ContextMenu.Trigger class="w-full min-h-full">
+		<section>
+			{#if !res.data}
+				<PageError />
+			{:else}
+				<FileWrapper data={res.data} {preferences} />
+			{/if}
+		</section>
+	</ContextMenu.Trigger>
+	<ContextMenu.Content>
+		<ContextMenu.Item onclick={handleUpload}>
+			<UploadIcon class="h-4 w-4" />
+			{m.upload_files_context()}
+		</ContextMenu.Item>
+		<ContextMenu.Item onclick={handleCreateFolder}>
+			<FolderPlusIcon class="h-4 w-4" />
+			{m.create_folder_context()}
+		</ContextMenu.Item>
+	</ContextMenu.Content>
 </ContextMenu.Root>
 
 <RenameDialog />

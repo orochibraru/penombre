@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { refreshAll } from "$app/navigation";
 	import {
 		GlobeIcon,
 		type LucideIcon,
@@ -14,7 +15,6 @@
 	import * as Card from "#lib/components/ui/card/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { refreshAll } from "$app/navigation";
 
 	onMount(() => {
 		title.set(m.title_account_sessions());
@@ -100,64 +100,58 @@
 </script>
 
 <div class="flex w-full flex-col gap-4">
-    {#each data.sessions as session (session.token)}
-        {@const device = describe(session.userAgent)}
-        {@const isCurrent = session.token === data.session.token}
-        {@const Icon = device.icon}
-        <Card.Root>
-            <Card.Content
-                class="flex flex-wrap items-center justify-between gap-4"
-            >
-                <div class="flex min-w-0 items-center gap-3">
-                    <div
-                        class="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg"
-                    >
-                        <Icon class="size-4" />
-                    </div>
-                    <div class="min-w-0">
-                        <p class="flex flex-wrap items-center gap-2 text-sm">
-                            <span class="font-medium">{device.label}</span>
-                            {#if isCurrent}
-                                <Badge variant="secondary">
-                                    {m.current_session()}
-                                </Badge>
-                            {/if}
-                        </p>
-                        <p
-                            class="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 text-xs"
-                        >
-                            <span class="tabular-nums">
-                                {session.ipAddress || m.unknown()}
-                            </span>
-                            <span aria-hidden="true">·</span>
-                            <span class="tabular-nums">
-                                {m.last_active({
-                                    date: new Date(
-                                        session.updatedAt,
-                                    ).toLocaleString(),
-                                })}
-                            </span>
-                        </p>
-                        <p class="text-muted-foreground text-xs tabular-nums">
-                            {m.expires({
-                                date: new Date(
-                                    session.expiresAt,
-                                ).toLocaleString(),
-                            })}
-                        </p>
-                    </div>
-                </div>
+	{#each data.sessions as session (session.token)}
+		{@const device = describe(session.userAgent)}
+		{@const isCurrent = session.token === data.session.token}
+		{@const Icon = device.icon}
+		<Card.Root>
+			<Card.Content class="flex flex-wrap items-center justify-between gap-4">
+				<div class="flex min-w-0 items-center gap-3">
+					<div
+						class="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg"
+					>
+						<Icon class="size-4" />
+					</div>
+					<div class="min-w-0">
+						<p class="flex flex-wrap items-center gap-2 text-sm">
+							<span class="font-medium">{device.label}</span>
+							{#if isCurrent}
+								<Badge variant="secondary">
+									{m.current_session()}
+								</Badge>
+							{/if}
+						</p>
+						<p
+							class="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 text-xs"
+						>
+							<span class="tabular-nums">
+								{session.ipAddress || m.unknown()}
+							</span>
+							<span aria-hidden="true">·</span>
+							<span class="tabular-nums">
+								{m.last_active({
+									date: new Date(session.updatedAt).toLocaleString(),
+								})}
+							</span>
+						</p>
+						<p class="text-muted-foreground text-xs tabular-nums">
+							{m.expires({
+								date: new Date(session.expiresAt).toLocaleString(),
+							})}
+						</p>
+					</div>
+				</div>
 
-                <Button
-                    onclick={() => handleRevokeSession(session.token)}
-                    variant="outline"
-                    size="sm"
-                    class="shrink-0"
-                    disabled={isCurrent}
-                >
-                    {m.revoke()}
-                </Button>
-            </Card.Content>
-        </Card.Root>
-    {/each}
+				<Button
+					onclick={() => handleRevokeSession(session.token)}
+					variant="outline"
+					size="sm"
+					class="shrink-0"
+					disabled={isCurrent}
+				>
+					{m.revoke()}
+				</Button>
+			</Card.Content>
+		</Card.Root>
+	{/each}
 </div>

@@ -14,7 +14,7 @@ import {
 import { activeSessions } from "#lib/server/auth/sessions.js";
 import { getConfig, isSimpleMode } from "#lib/server/config.js";
 import { getDb } from "#lib/server/db/index.js";
-import { type SignInMethod, session } from "#lib/server/db/schema.js";
+import { session, type SignInMethod } from "#lib/server/db/schema.js";
 import {
 	getAppSettings,
 	getSmtpSettings,

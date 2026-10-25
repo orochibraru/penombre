@@ -7,8 +7,6 @@
 .vscode
 .example.env
 Makefile
-.prettierrc
-.prettierignore
 .git
 Dockerfile
 **/*.log
@@ -19,7 +17,6 @@ compose.local.yaml
 compose.yaml
 .dockerignore
 *.sh
-biome.json
 LICENSE
 .editorconfig
 /resources/

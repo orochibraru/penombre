@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { browser } from "$app/env";
+	import { invalidate } from "$app/navigation";
+	import { navigating, page } from "$app/state";
+	import type { ResolvedPathname } from "$app/types";
 	import {
 		ArrowUpDownIcon,
 		BrushCleaningIcon,
@@ -8,8 +12,8 @@
 		LayoutListIcon,
 	} from "@lucide/svelte";
 	import { onMount, untrack } from "svelte";
-	import { MediaQuery } from "svelte/reactivity";
 	import { toast } from "svelte-sonner";
+	import { MediaQuery } from "svelte/reactivity";
 	import { api, type ObjectItem, type ObjectList } from "#lib/api/index.js";
 	import FileGrid from "#lib/components/file/grid.svelte";
 	import FileList from "#lib/components/file/list.svelte";
@@ -22,8 +26,8 @@
 	import RestoreDialog from "#lib/components/layout/dialogs/restore-dialog.svelte";
 	import ShareDialog from "#lib/components/layout/dialogs/share-dialog.svelte";
 	import { Badge } from "#lib/components/ui/badge/index.js";
-	import { Button } from "#lib/components/ui/button/index.js";
 	import * as ButtonGroup from "#lib/components/ui/button-group/index.js";
+	import { Button } from "#lib/components/ui/button/index.js";
 	import * as DropdownMenu from "#lib/components/ui/dropdown-menu/index.js";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import { fetchWindow, LISTING_PAGE_SIZE } from "#lib/pagination.js";
@@ -41,11 +45,6 @@
 		type SortColumn,
 		type SortDirection,
 	} from "#lib/utils.js";
-	import { browser } from "$app/env";
-	import { invalidate } from "$app/navigation";
-	import { navigating, page } from "$app/state";
-	import type { ResolvedPathname } from "$app/types";
-
 	import {
 		notesView,
 		pendingPreview,
@@ -53,26 +52,6 @@
 	} from "./preview-handover";
 	import SearchResults from "./search-results.svelte";
 	import { SORT_GROUPS } from "./sort-options";
-	import {
-		clickDownload,
-		computeSelectionState,
-		copyFolderLink,
-		createMainActions,
-		createMainMultipleActions,
-		createTrashActions,
-		createTrashMultipleActions,
-		type FileToView,
-		fetchListingPage,
-		folderZipDownloadUrl,
-		handleDownloadItem,
-		handleOpenItemFullscreen,
-		movesIntoItself,
-		handleOpenItem as openItem,
-		requestMove,
-		resolveItemParent,
-		selectAllForEmptyTrash,
-		triggerRenameAction,
-	} from "./wrapper.svelte.js";
 	import {
 		downloadSelected,
 		executeDeleteOperation,
@@ -85,6 +64,26 @@
 	import { mergeHandler } from "./wrapper-merge";
 	import { isSearchShortcut } from "./wrapper-search";
 	import { offerFolderDrag } from "./wrapper-shortcut";
+	import {
+		clickDownload,
+		computeSelectionState,
+		copyFolderLink,
+		createMainActions,
+		createMainMultipleActions,
+		createTrashActions,
+		createTrashMultipleActions,
+		fetchListingPage,
+		type FileToView,
+		folderZipDownloadUrl,
+		handleDownloadItem,
+		handleOpenItem as openItem,
+		handleOpenItemFullscreen,
+		movesIntoItself,
+		requestMove,
+		resolveItemParent,
+		selectAllForEmptyTrash,
+		triggerRenameAction,
+	} from "./wrapper.svelte.js";
 
 	interface UserPreferences {
 		layout?: "grid" | "list";
@@ -811,15 +810,15 @@
 	});
 </script>
 
-<svelte:window onkeydown={handleKeydown}></svelte:window>
+<svelte:window onkeydown={handleKeydown} />
 
 <!-- Filters -->
 
 <Input
-    bind:value={searchValue}
-    type="search"
-    placeholder={m.search_placeholder()}
-    class="md:hidden mb-3"
+	bind:value={searchValue}
+	type="search"
+	placeholder={m.search_placeholder()}
+	class="md:hidden mb-3"
 />
 <div class="w-full pb-5 flex justify-between items-center gap-3">
 	<Input
@@ -838,7 +837,7 @@
 						<span class="inline">
 							{#if sortColumn}
 								{SORT_GROUPS.find((g) => g.column === sortColumn)?.label()}
-                                    {sortDirection === "asc" ? "↑" : "↓"}
+								{sortDirection === "asc" ? "↑" : "↓"}
 							{:else}
 								{m.sort()}
 							{/if}
@@ -872,9 +871,9 @@
 			variant="outline"
 			title={m.layout()}
 			onclick={async () => {
-                    await api.PUT("/api/v1/preferences", {
-                        body: { layout: layout === "grid" ? "list" : "grid" },
-                    });
+				await api.PUT("/api/v1/preferences", {
+					body: { layout: layout === "grid" ? "list" : "grid" },
+				});
 				await invalidate("app:preferences");
 			}}
 		>
@@ -883,9 +882,9 @@
 			{:else}
 				<LayoutListIcon class="h-4 w-4" />
 			{/if}
-                <span>
-                    {layout === "grid" ? m.layout_grid() : m.layout_list()}
-                </span>
+			<span>
+				{layout === "grid" ? m.layout_grid() : m.layout_list()}
+			</span>
 		</Button>
 		<VersioningControls
 			bind:this={versioning}
@@ -899,13 +898,11 @@
 				variant="destructive"
 				onclick={emptyTrash}
 				disabled={displayData.count === 0}
-                    title={displayData.count === 0
-                        ? m.trash_is_empty()
-                        : m.empty_trash()}
-                >
-                    <BrushCleaningIcon />
-                    {m.empty_trash()}
-                </Button>
+				title={displayData.count === 0 ? m.trash_is_empty() : m.empty_trash()}
+			>
+				<BrushCleaningIcon />
+				{m.empty_trash()}
+			</Button>
 		{/if}
 	</ButtonGroup.Root>
 </div>
@@ -918,8 +915,8 @@
 		<FileTable
 			handleOpenItem={handleOpenItemWrapper}
 			files={displayData}
-			itemActions={itemActions}
-			indeterminate={indeterminate}
+			{itemActions}
+			{indeterminate}
 			bind:sortColumn
 			bind:sortDirection
 			preSorted={paginated}
@@ -931,7 +928,7 @@
 			bind:allSelected
 			bind:actionableItem
 			bind:actionsContextOpen
-			draggedItem={draggedItem}
+			{draggedItem}
 			bind:dropTargetKey
 			onDragStart={handleDragStart}
 			onDragEnd={handleDragEnd}
@@ -942,10 +939,10 @@
 		<FileList
 			handleOpenItem={handleOpenItemWrapper}
 			files={displayData}
-			itemActions={itemActions}
-			indeterminate={indeterminate}
-			sortColumn={sortColumn}
-			sortDirection={sortDirection}
+			{itemActions}
+			{indeterminate}
+			{sortColumn}
+			{sortDirection}
 			preSorted={paginated}
 			onDrop={handleFileDrop}
 			onUpload={handleUpload}
@@ -955,7 +952,7 @@
 			bind:allSelected
 			bind:actionableItem
 			bind:actionsContextOpen
-			draggedItem={draggedItem}
+			{draggedItem}
 			bind:dropTargetKey
 			onDragStart={handleDragStart}
 			onDragEnd={handleDragEnd}
@@ -966,10 +963,10 @@
 	<FileGrid
 		handleOpenItem={handleOpenItemWrapper}
 		files={displayData}
-		itemActions={itemActions}
-		indeterminate={indeterminate}
-		sortColumn={sortColumn}
-		sortDirection={sortDirection}
+		{itemActions}
+		{indeterminate}
+		{sortColumn}
+		{sortDirection}
 		preSorted={paginated}
 		onDrop={handleFileDrop}
 		onUpload={handleUpload}
@@ -979,7 +976,7 @@
 		bind:allSelected
 		bind:actionableItem
 		bind:actionsContextOpen
-		draggedItem={draggedItem}
+		{draggedItem}
 		bind:dropTargetKey
 		onDragStart={handleDragStart}
 		onDragEnd={handleDragEnd}
@@ -1039,103 +1036,103 @@
 <DeleteDialog
 	bind:confirmDeleteOpen
 	bind:deletingItem
-	checkedItems={checkedItems}
-	handleDeleteObject={handleDeleteObject}
+	{checkedItems}
+	{handleDeleteObject}
 	items={displayData.list}
-	emptyingTrash={emptyingTrash}
+	{emptyingTrash}
 	trashTotals={{ count: totalCount, size: data.totalSize ?? 0 }}
 />
 
 <RestoreDialog
 	bind:confirmRestoreOpen
 	bind:restoringItem
-	checkedItems={checkedItems}
-	handleRestoreObject={handleRestoreObject}
+	{checkedItems}
+	{handleRestoreObject}
 />
 
 <SelectionBar
 	open={multiObjectActionsOpen}
 	count={selectedItemCount}
 	actions={multipleItemsActions}
-	onclear={() => checkedItems = {}}
+	onclear={() => (checkedItems = {})}
 />
 
 <ShareDialog bind:open={shareDialogOpen} bind:item={shareItem} />
 
 <MoveDialog
-    bind:open={moveDialogOpen}
-    bind:item={moveItem}
-    bind:items={moveItems}
-    bind:mode={moveMode}
+	bind:open={moveDialogOpen}
+	bind:item={moveItem}
+	bind:items={moveItems}
+	bind:mode={moveMode}
 />
 
 <style lang="postcss">
-    @reference "../../../app.css";
-    :global(.dark) {
-        :global(.shiki),
-        :global(.shiki span) {
-            color: var(--shiki-dark) !important;
-            font-style: var(--shiki-dark-font-style) !important;
-            font-weight: var(--shiki-dark-font-weight) !important;
-            text-decoration: var(--shiki-dark-text-decoration) !important;
-        }
-    }
+	@reference "../../../app.css";
+	:global(.dark) {
+		:global(.shiki),
+		:global(.shiki span) {
+			color: var(--shiki-dark) !important;
+			font-style: var(--shiki-dark-font-style) !important;
+			font-weight: var(--shiki-dark-font-weight) !important;
+			text-decoration: var(--shiki-dark-text-decoration) !important;
+		}
+	}
 
-    /* Shiki see: https://shiki.matsu.io/guide/dual-themes#class-based-dark-mode */
-    :global(html.dark .shiki),
-    :global(html.dark .shiki span) {
-        color: var(--shiki-dark) !important;
-        font-style: var(--shiki-dark-font-style) !important;
-        font-weight: var(--shiki-dark-font-weight) !important;
-        text-decoration: var(--shiki-dark-text-decoration) !important;
-    }
+	/* Shiki see: https://shiki.matsu.io/guide/dual-themes#class-based-dark-mode */
+	:global(html.dark .shiki),
+	:global(html.dark .shiki span) {
+		color: var(--shiki-dark) !important;
+		font-style: var(--shiki-dark-font-style) !important;
+		font-weight: var(--shiki-dark-font-weight) !important;
+		text-decoration: var(--shiki-dark-text-decoration) !important;
+	}
 
-    :global(pre.shiki) {
-        @apply overflow-x-auto rounded-lg bg-inherit py-4 text-sm;
-    }
+	:global(pre.shiki) {
+		@apply overflow-x-auto rounded-lg bg-inherit py-4 text-sm;
+	}
 
-    :global(pre.shiki:not([data-code-overflow] *):not([data-code-overflow])) {
-        @apply overflow-y-auto;
-        max-height: min(100%, 650px);
-    }
+	:global(pre.shiki:not([data-code-overflow] *):not([data-code-overflow])) {
+		@apply overflow-y-auto;
+		max-height: min(100%, 650px);
+	}
 
-    :global(pre.shiki code) {
-        @apply grid min-w-full rounded-none border-0 bg-transparent p-0 wrap-break-word;
-        counter-reset: line;
-        box-decoration-break: clone;
-    }
+	:global(pre.shiki code) {
+		@apply grid min-w-full rounded-none border-0 bg-transparent p-0 wrap-break-word;
+		counter-reset: line;
+		box-decoration-break: clone;
+	}
 
-    :global(pre.line-numbers) {
-        counter-reset: step;
-        counter-increment: step 0;
-    }
+	:global(pre.line-numbers) {
+		counter-reset: step;
+		counter-increment: step 0;
+	}
 
-    :global(pre.line-numbers .line::before) {
-        content: counter(step);
-        counter-increment: step;
-        display: inline-block;
-        width: 1.8rem;
-        margin-right: 1.4rem;
-        text-align: right;
-    }
+	:global(pre.line-numbers .line::before) {
+		content: counter(step);
+		counter-increment: step;
+		display: inline-block;
+		width: 1.8rem;
+		margin-right: 1.4rem;
+		text-align: right;
+	}
 
-    :global(pre.line-numbers .line::before) {
-        @apply text-muted-foreground;
-    }
+	:global(pre.line-numbers .line::before) {
+		@apply text-muted-foreground;
+	}
 
-    :global(pre .line.line--highlighted) {
-        @apply bg-secondary;
-    }
+	:global(pre .line.line--highlighted) {
+		@apply bg-secondary;
+	}
 
-    :global(pre .line.line--highlighted span) {
-        @apply relative;
-    }
+	:global(pre .line.line--highlighted span) {
+		@apply relative;
+	}
 
-    :global(pre .line) {
-        @apply inline-block min-h-4 w-full px-4 py-0.5;
-    }
+	:global(pre .line) {
+		@apply inline-block min-h-4 w-full px-4 py-0.5;
+	}
 
-    :global(pre.line-numbers .line) {
-        @apply px-2;
-    }
+	:global(pre.line-numbers .line) {
+		@apply px-2;
+	}
 </style>

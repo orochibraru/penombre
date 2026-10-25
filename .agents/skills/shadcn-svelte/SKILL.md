@@ -44,8 +44,8 @@ Each component lives in its own folder with an `index.ts` barrel. Match the
   `{ Skeleton }`, etc.
 
 ```ts
-import * as Dialog from "$lib/components/ui/dialog";
 import { Button } from "$lib/components/ui/button";
+import * as Dialog from "$lib/components/ui/dialog";
 import { Separator } from "$lib/components/ui/separator";
 ```
 
@@ -155,12 +155,12 @@ code. For edge cases, see the linked rule files above.
 
 ```svelte
 <script lang="ts">
+  import * as Avatar from "$lib/components/ui/avatar";
+  import { Badge } from "$lib/components/ui/badge";
+  import { Button } from "$lib/components/ui/button";
   import * as Field from "$lib/components/ui/field";
   import { Input } from "$lib/components/ui/input";
-  import { Button } from "$lib/components/ui/button";
   import SearchIcon from "@lucide/svelte/icons/search";
-  import { Badge } from "$lib/components/ui/badge";
-  import * as Avatar from "$lib/components/ui/avatar";
 </script>
 
 <!-- Form layout: Field.FieldGroup + Field.Field, not div + Label. -->

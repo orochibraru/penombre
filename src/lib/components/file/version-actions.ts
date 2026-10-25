@@ -1,3 +1,5 @@
+import { invalidate } from "$app/navigation";
+import { page } from "$app/state";
 import {
 	DownloadIcon,
 	FileArchiveIcon,
@@ -11,8 +13,6 @@ import * as m from "#lib/paraglide/messages.js";
 import { pendingVersionAction, refreshVersions } from "#lib/store/versions.js";
 import type { ItemAction, ItemActionGroup } from "#lib/utils.js";
 import { versionOf } from "#lib/versions.js";
-import { invalidate } from "$app/navigation";
-import { page } from "$app/state";
 import { clickDownload, downloadUrl, withLocation } from "./file-links";
 
 /** Versions back out as files beside theirs; all of them without `ids`. */

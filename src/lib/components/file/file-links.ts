@@ -5,15 +5,15 @@
  * without importing the wrapper's whole action surface.
  */
 
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
+import { page } from "$app/state";
 import { get } from "svelte/store";
 import type { ObjectItem } from "#lib/api/index.js";
 import { locationOf, locationQuery } from "#lib/storage-location.js";
 import { playableMusic, playbackPosition } from "#lib/store/music.js";
 import { getObjectUrl, type ThumbnailSize } from "#lib/url.js";
-import { type VersionRef, versionOf } from "#lib/versions.js";
-import { goto } from "$app/navigation";
-import { resolve } from "$app/paths";
-import { page } from "$app/state";
+import { versionOf, type VersionRef } from "#lib/versions.js";
 
 /**
  * Keep the drive or volume the page is in on a link that leaves it.
@@ -100,8 +100,8 @@ function hasViewer(item: ObjectItem): boolean {
 	// `/view` loads a file by id; it has no way to show an earlier version.
 	return Boolean(
 		item.metadata.id &&
-			!versionOf(item) &&
-			VIEWABLE.has(item.metadata.category ?? ""),
+		!versionOf(item) &&
+		VIEWABLE.has(item.metadata.category ?? ""),
 	);
 }
 

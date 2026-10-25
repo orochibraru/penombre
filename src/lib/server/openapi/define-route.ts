@@ -1,3 +1,4 @@
+import type { ResolvedPathname } from "$app/types";
 import type { RequestEvent } from "@sveltejs/kit";
 import type { z } from "zod";
 import {
@@ -8,7 +9,6 @@ import {
 	VersionMergeError,
 } from "#lib/server/errors.js";
 import { Http } from "#lib/server/http.js";
-import type { ResolvedPathname } from "$app/types";
 import { type HttpMethod, registry } from "./registry";
 
 function formatZodErrors(result: {

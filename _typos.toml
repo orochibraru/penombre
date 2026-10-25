@@ -1,21 +1,21 @@
 [files]
 extend-exclude = [
-    # releaser-generated, full of commit-hash substrings (e.g. the "ba"
-    # inside "2ba0da5") that read as typos with no prose to actually fix.
-    "CHANGELOG.md",
-    # Generated from the Zod/OpenAPI registry, not hand-written prose.
-    "openapi.json",
-    "src/lib/api/v1.d.ts",
-    # Machine-translated UI strings in a dozen locales, none of them English.
-    "messages/",
-    # The mobile app's strings in those same locales.
-    "apps/mobile/shared/src/commonMain/composeResources/values-*/",
-    "apps/mobile/iosApp/Penombre/*.lproj/",
-    # The Play Store listing, translated.
-    "apps/mobile/store/listings/*/",
-    "!apps/mobile/store/listings/en-US/",
-    # Expected renders of those strings, French and Russian among them.
-    "src/lib/i18n-plurals.test.ts",
+	# releaser-generated, full of commit-hash substrings (e.g. the "ba"
+	# inside "2ba0da5") that read as typos with no prose to actually fix.
+	"CHANGELOG.md",
+	# Generated from the Zod/OpenAPI registry, not hand-written prose.
+	"openapi.json",
+	"src/lib/api/v1.d.ts",
+	# Machine-translated UI strings in a dozen locales, none of them English.
+	"messages/",
+	# The mobile app's strings in those same locales.
+	"apps/mobile/shared/src/commonMain/composeResources/values-*/",
+	"apps/mobile/iosApp/Penombre/*.lproj/",
+	# The Play Store listing, translated.
+	"apps/mobile/store/listings/*/",
+	"!apps/mobile/store/listings/en-US/",
+	# Expected renders of those strings, French and Russian among them.
+	"src/lib/i18n-plurals.test.ts",
 ]
 
 [default.extend-words]

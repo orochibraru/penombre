@@ -16,8 +16,8 @@ import {
 	unlockCookieName,
 	unlockToken,
 } from "#lib/server/services/shares.js";
-import type { StorageService } from "#lib/server/services/storage/index.js";
 import { shareLinkStorage } from "#lib/server/services/storage-for.js";
+import type { StorageService } from "#lib/server/services/storage/index.js";
 
 const shares = new ShareService();
 const logger = new Logger("Share page");

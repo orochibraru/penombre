@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { UpdateFile } from "#lib/server/schema.js";
 import type { TreeEntry } from "#lib/server/services/storage/listings.js";
-import { type DavService, davRoot, handleDav, newSaveMemo } from "./handler";
+import { davRoot, type DavService, handleDav, newSaveMemo } from "./handler";
 import { parseDavPath } from "./location";
 
 function entry(

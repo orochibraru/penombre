@@ -1156,8 +1156,7 @@ describe("StorageService", () => {
 			expect(pair?.dest).toBe(join(mount, baseFile.name));
 			await rm(mount, { recursive: true, force: true });
 			const batch = values.mock.calls[0]?.[0] as unknown as
-				| Record<string, unknown>[]
-				| undefined;
+				Record<string, unknown>[] | undefined;
 			const row = batch?.[0];
 			expect(row?.name).toBe(baseFile.name);
 			expect(row?.volumeId).toBe("media");

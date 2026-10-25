@@ -265,12 +265,7 @@ export function rounded(element: SlideElement): SlideElement {
 }
 
 export type AlignMode =
-	| "left"
-	| "center"
-	| "right"
-	| "top"
-	| "middle"
-	| "bottom";
+	"left" | "center" | "right" | "top" | "middle" | "bottom";
 
 /** Align the chosen elements to each other, or to the slide when alone. */
 export function align(

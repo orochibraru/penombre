@@ -30,22 +30,22 @@
 </script>
 
 <div
-    {...rest}
-    bind:this={ref}
-    class={cn(
-        // `max-w-[60vw]` was viewport-relative, so inside a dialog the block
-        // was sized against the window rather than its container and spilled
-        // out of it. Bound by the parent instead; `min-w-0` lets it shrink
-        // when that parent is a flex item.
-        "min-w-0 max-w-full max-h-[50vh] overflow-auto p-3",
-        codeVariants({ variant }),
-        className,
-    )}
+	{...rest}
+	bind:this={ref}
+	class={cn(
+		// `max-w-[60vw]` was viewport-relative, so inside a dialog the block
+		// was sized against the window rather than its container and spilled
+		// out of it. Bound by the parent instead; `min-w-0` lets it shrink
+		// when that parent is a flex item.
+		"min-w-0 max-w-full max-h-[50vh] overflow-auto p-3",
+		codeVariants({ variant }),
+		className,
+	)}
 >
-    <div class="overflow-x-auto">
-        <pre
-            class="bg-transparent! m-0! p-0! whitespace-pre-wrap break-all">{@html codeState.highlighted}</pre>
-    </div>
+	<div class="overflow-x-auto">
+		<pre
+			class="bg-transparent! m-0! p-0! whitespace-pre-wrap break-all">{@html codeState.highlighted}</pre>
+	</div>
 
-    {@render children?.()}
+	{@render children?.()}
 </div>

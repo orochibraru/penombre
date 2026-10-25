@@ -20,8 +20,8 @@ import {
 } from "#lib/notification-prefs.js";
 import { getDb } from "#lib/server/db/index.js";
 import { fileNotes, notifications, user } from "#lib/server/db/schema.js";
-import { Email } from "#lib/server/email.js";
 import type { EmailContent } from "#lib/server/email-template.js";
+import { Email } from "#lib/server/email.js";
 import { getSmtpSettings } from "#lib/server/services/app-settings.js";
 import { getUserPreferences } from "#lib/server/services/preferences.js";
 

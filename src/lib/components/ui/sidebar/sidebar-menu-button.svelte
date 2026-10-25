@@ -30,20 +30,24 @@
 </script>
 
 <script lang="ts">
-	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
-	import { cn, type WithElementRef, type WithoutChildrenOrChild } from '#lib/utils.js';
-	import { mergeProps } from 'bits-ui';
-	import type { ComponentProps, Snippet } from 'svelte';
-	import type { HTMLAttributes } from 'svelte/elements';
-	import { useSidebar } from './context.svelte.js';
+	import { mergeProps } from "bits-ui";
+	import type { ComponentProps, Snippet } from "svelte";
+	import type { HTMLAttributes } from "svelte/elements";
+	import * as Tooltip from "#lib/components/ui/tooltip/index.js";
+	import {
+		cn,
+		type WithElementRef,
+		type WithoutChildrenOrChild,
+	} from "#lib/utils.js";
+	import { useSidebar } from "./context.svelte.js";
 
 	let {
 		ref = $bindable(null),
 		class: className,
 		children,
 		child,
-		variant = 'default',
-		size = 'default',
+		variant = "default",
+		size = "default",
 		isActive = false,
 		tooltipContent,
 		tooltipContentProps,
@@ -53,7 +57,9 @@
 		variant?: SidebarMenuButtonVariant;
 		size?: SidebarMenuButtonSize;
 		tooltipContent?: Snippet | string;
-		tooltipContentProps?: WithoutChildrenOrChild<ComponentProps<typeof Tooltip.Content>>;
+		tooltipContentProps?: WithoutChildrenOrChild<
+			ComponentProps<typeof Tooltip.Content>
+		>;
 		child?: Snippet<[{ props: Record<string, unknown> }]>;
 	} = $props();
 
@@ -61,11 +67,11 @@
 
 	const buttonProps = $derived({
 		class: cn(sidebarMenuButtonVariants({ variant, size }), className),
-		'data-slot': 'sidebar-menu-button',
-		'data-sidebar': 'menu-button',
-		'data-size': size,
-		'data-active': isActive,
-		...restProps
+		"data-slot": "sidebar-menu-button",
+		"data-sidebar": "menu-button",
+		"data-size": size,
+		"data-active": isActive,
+		...restProps,
 	});
 </script>
 
@@ -92,10 +98,10 @@
 		<Tooltip.Content
 			side="right"
 			align="center"
-			hidden={sidebar.state !== 'collapsed' || sidebar.isMobile}
+			hidden={sidebar.state !== "collapsed" || sidebar.isMobile}
 			{...tooltipContentProps}
 		>
-			{#if typeof tooltipContent === 'string'}
+			{#if typeof tooltipContent === "string"}
 				{tooltipContent}
 			{:else if tooltipContent}
 				{@render tooltipContent()}

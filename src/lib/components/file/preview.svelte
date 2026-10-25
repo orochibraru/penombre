@@ -6,6 +6,7 @@
 		FileVideoCameraIcon,
 	} from "@lucide/svelte";
 	import type { ObjectItem } from "#lib/api/index.js";
+	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import DocumentIcon from "#lib/components/file/document-icon.svelte";
 	import DocumentKindIcon from "#lib/components/file/document-kind-icon.svelte";
 	import {
@@ -13,7 +14,6 @@
 		thumbnailUrl as thumbUrlFor,
 	} from "#lib/components/file/file-links.js";
 	import Waveform from "#lib/components/file/waveform.svelte";
-	import FileTypeIcon from "#lib/components/file-type-icon.svelte";
 	import { Skeleton } from "#lib/components/ui/skeleton/index.js";
 	import { kindForName, PAGE_PREVIEW_TYPES } from "#lib/documents.js";
 	import { isCodeItem } from "#lib/file-utils.js";
@@ -79,97 +79,95 @@
 </script>
 
 <div class="relative flex size-full items-center justify-center">
-    {#if thumbnailUrl && !thumbnailError && thumbnailLoading}
-        <!-- Covers the fetch so a tile never flashes broken-image alt text. -->
-        <Skeleton class="absolute inset-0 size-full rounded-none" />
-    {/if}
-    {#if isPaged && thumbnailUrl && !thumbnailError}
-        <!-- The top of the first page, where the title is. -->
-        <img
-            src={thumbnailUrl}
-            alt={item.metadata.name ?? item.key}
-            class="absolute inset-0 size-full object-cover object-top"
-            loading="lazy"
-            onload={() => (thumbnailLoading = false)}
-            onerror={() => {
-                thumbnailError = true;
-                thumbnailLoading = false;
-            }}
-        />
-    {:else if editable}
-        <DocumentKindIcon kind={editable} class="size-10" />
-    {:else if isPdf}
-        <!-- Fallback to embed if thumbnail fails -->
-        <embed
-            src={objectUrl}
-            title={item.metadata.name ?? item.key}
-            class="overflow-hidden"
-            width="100%"
-            height="200px"
-        />
-    {:else if isArchive}
-        <FileArchiveIcon class="size-10 text-muted-foreground" />
-    {:else if isDocument}
-        <DocumentIcon
-            type={getFileIconType(item.metadata.contentType)}
-            class="size-10 text-muted-foreground"
-        />
-    {:else if isCodeItem(item.metadata.name ?? item.key)}
-        <FileCodeIcon class="size-10 text-muted-foreground" />
-    {:else if isVideo}
-        {#if thumbnailError || !thumbnailUrl}
-            <FileVideoCameraIcon
-                class="size-10 text-muted-foreground"
-            />
-        {:else}
-            <img
-                src={thumbnailUrl}
-                alt={item.metadata.name ?? item.key}
-                class="absolute inset-0 size-full object-cover"
-                loading="lazy"
-                onload={() => (thumbnailLoading = false)}
-                onerror={() => {
-                    thumbnailError = true;
-                    thumbnailLoading = false;
-                }}
-            />
-        {/if}
-    {:else if isAudio}
-        {#if thumbnailError || !thumbnailUrl}
-            <FileAudioIcon class="size-10 text-muted-foreground" />
-        {:else}
-            <!-- Drawn from peak data so it follows the accent colour. -->
-            <Waveform
-                src={thumbnailUrl}
-                class="text-primary absolute inset-0 p-2"
-                onload={() => (thumbnailLoading = false)}
-                onfail={() => {
-                    thumbnailError = true;
-                    thumbnailLoading = false;
-                }}
-            />
-        {/if}
-    {:else if isImage && thumbnailUrl && !thumbnailError}
-        <img
-            src={thumbnailUrl}
-            alt={item.metadata.name ?? item.key}
-            class="absolute inset-0 size-full object-cover"
-            loading="lazy"
-            onload={() => (thumbnailLoading = false)}
-                onerror={() => {
-                    thumbnailError = true;
-                    thumbnailLoading = false;
-                }}
-        />
-    {:else}
-        <!--
+	{#if thumbnailUrl && !thumbnailError && thumbnailLoading}
+		<!-- Covers the fetch so a tile never flashes broken-image alt text. -->
+		<Skeleton class="absolute inset-0 size-full rounded-none" />
+	{/if}
+	{#if isPaged && thumbnailUrl && !thumbnailError}
+		<!-- The top of the first page, where the title is. -->
+		<img
+			src={thumbnailUrl}
+			alt={item.metadata.name ?? item.key}
+			class="absolute inset-0 size-full object-cover object-top"
+			loading="lazy"
+			onload={() => (thumbnailLoading = false)}
+			onerror={() => {
+				thumbnailError = true;
+				thumbnailLoading = false;
+			}}
+		/>
+	{:else if editable}
+		<DocumentKindIcon kind={editable} class="size-10" />
+	{:else if isPdf}
+		<!-- Fallback to embed if thumbnail fails -->
+		<embed
+			src={objectUrl}
+			title={item.metadata.name ?? item.key}
+			class="overflow-hidden"
+			width="100%"
+			height="200px"
+		/>
+	{:else if isArchive}
+		<FileArchiveIcon class="size-10 text-muted-foreground" />
+	{:else if isDocument}
+		<DocumentIcon
+			type={getFileIconType(item.metadata.contentType)}
+			class="size-10 text-muted-foreground"
+		/>
+	{:else if isCodeItem(item.metadata.name ?? item.key)}
+		<FileCodeIcon class="size-10 text-muted-foreground" />
+	{:else if isVideo}
+		{#if thumbnailError || !thumbnailUrl}
+			<FileVideoCameraIcon class="size-10 text-muted-foreground" />
+		{:else}
+			<img
+				src={thumbnailUrl}
+				alt={item.metadata.name ?? item.key}
+				class="absolute inset-0 size-full object-cover"
+				loading="lazy"
+				onload={() => (thumbnailLoading = false)}
+				onerror={() => {
+					thumbnailError = true;
+					thumbnailLoading = false;
+				}}
+			/>
+		{/if}
+	{:else if isAudio}
+		{#if thumbnailError || !thumbnailUrl}
+			<FileAudioIcon class="size-10 text-muted-foreground" />
+		{:else}
+			<!-- Drawn from peak data so it follows the accent colour. -->
+			<Waveform
+				src={thumbnailUrl}
+				class="text-primary absolute inset-0 p-2"
+				onload={() => (thumbnailLoading = false)}
+				onfail={() => {
+					thumbnailError = true;
+					thumbnailLoading = false;
+				}}
+			/>
+		{/if}
+	{:else if isImage && thumbnailUrl && !thumbnailError}
+		<img
+			src={thumbnailUrl}
+			alt={item.metadata.name ?? item.key}
+			class="absolute inset-0 size-full object-cover"
+			loading="lazy"
+			onload={() => (thumbnailLoading = false)}
+			onerror={() => {
+				thumbnailError = true;
+				thumbnailLoading = false;
+			}}
+		/>
+	{:else}
+		<!--
           Anything with no preview to show. This used to render the raw file
           in an `<img>`, so a text or unknown type produced a broken image and
           the grid showed bare alt text — an icon is the honest fallback.
         -->
-        <FileTypeIcon
-            category={item.metadata.category}
-            class="text-muted-foreground/60 size-9"
-        />
-    {/if}
+		<FileTypeIcon
+			category={item.metadata.category}
+			class="text-muted-foreground/60 size-9"
+		/>
+	{/if}
 </div>

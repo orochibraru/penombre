@@ -1,9 +1,9 @@
 import { error, fail, type RequestEvent } from "@sveltejs/kit";
 import {
 	SignatureError,
+	signatures,
 	type SignerKey,
 	type SigningView,
-	signatures,
 } from "./index";
 import { signingMeta } from "./respond";
 

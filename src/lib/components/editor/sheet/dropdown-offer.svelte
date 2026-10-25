@@ -14,34 +14,34 @@
 </script>
 
 <div
-    class="bg-popover text-popover-foreground absolute inset-s-0 top-full z-15 mt-1 flex items-center rounded-full border text-xs whitespace-nowrap shadow-md"
+	class="bg-popover text-popover-foreground absolute inset-s-0 top-full z-15 mt-1 flex items-center rounded-full border text-xs whitespace-nowrap shadow-md"
 >
-    <button
-        type="button"
-        tabindex="-1"
-        class="hover:bg-muted flex items-center gap-1.5 rounded-s-full py-1.5 ps-3 pe-2"
-        onpointerdown={stop}
-        ondblclick={stop}
-        onclick={(e) => {
-            stop(e);
-            drops.convert();
-        }}
-    >
-        <ListIcon class="text-primary size-3.5" />
-        {m.sheet_dropdown_convert()}
-    </button>
-    <button
-        type="button"
-        tabindex="-1"
-        class="text-muted-foreground hover:bg-muted hover:text-foreground flex items-center rounded-e-full border-s py-1.5 ps-1.5 pe-2"
-        aria-label={m.sheet_dropdown_dismiss()}
-        onpointerdown={stop}
-        ondblclick={stop}
-        onclick={(e) => {
-            stop(e);
-            drops.dismiss();
-        }}
-    >
-        <XIcon class="size-3.5" />
-    </button>
+	<button
+		type="button"
+		tabindex="-1"
+		class="hover:bg-muted flex items-center gap-1.5 rounded-s-full py-1.5 ps-3 pe-2"
+		onpointerdown={stop}
+		ondblclick={stop}
+		onclick={(e) => {
+			stop(e);
+			drops.convert();
+		}}
+	>
+		<ListIcon class="text-primary size-3.5" />
+		{m.sheet_dropdown_convert()}
+	</button>
+	<button
+		type="button"
+		tabindex="-1"
+		class="text-muted-foreground hover:bg-muted hover:text-foreground flex items-center rounded-e-full border-s py-1.5 ps-1.5 pe-2"
+		aria-label={m.sheet_dropdown_dismiss()}
+		onpointerdown={stop}
+		ondblclick={stop}
+		onclick={(e) => {
+			stop(e);
+			drops.dismiss();
+		}}
+	>
+		<XIcon class="size-3.5" />
+	</button>
 </div>

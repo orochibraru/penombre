@@ -41,35 +41,39 @@
 	);
 </script>
 
-<div class={cn("deck-frame", className)} {inert} aria-hidden={inert || undefined}>
-    <section
-        class={cn(
-            "deck-slide",
-            `deck-theme-${theme}`,
-            classes,
-            rendered.split && `deck-split-${rendered.split}`,
-        )}
-    >
-        {#if rendered.backgrounds.length > 0}
-            <div class="deck-backgrounds">
-                {#each rendered.backgrounds as background, index (index)}
-                    <img
-                        src={background.src}
-                        alt=""
-                        class={background.contain ? "deck-contain" : undefined}
-                    />
-                {/each}
-            </div>
-        {/if}
-        {#if look?.header}
-            <div class="deck-header">{@html renderInline(look.header)}</div>
-        {/if}
-        <div class="deck-content">{@html rendered.html}</div>
-        {#if look?.footer}
-            <div class="deck-footer">{@html renderInline(look.footer)}</div>
-        {/if}
-        {#if look?.paginate}
-            <span class="deck-page">{number}</span>
-        {/if}
-    </section>
+<div
+	class={cn("deck-frame", className)}
+	{inert}
+	aria-hidden={inert || undefined}
+>
+	<section
+		class={cn(
+			"deck-slide",
+			`deck-theme-${theme}`,
+			classes,
+			rendered.split && `deck-split-${rendered.split}`,
+		)}
+	>
+		{#if rendered.backgrounds.length > 0}
+			<div class="deck-backgrounds">
+				{#each rendered.backgrounds as background, index (index)}
+					<img
+						src={background.src}
+						alt=""
+						class={background.contain ? "deck-contain" : undefined}
+					/>
+				{/each}
+			</div>
+		{/if}
+		{#if look?.header}
+			<div class="deck-header">{@html renderInline(look.header)}</div>
+		{/if}
+		<div class="deck-content">{@html rendered.html}</div>
+		{#if look?.footer}
+			<div class="deck-footer">{@html renderInline(look.footer)}</div>
+		{/if}
+		{#if look?.paginate}
+			<span class="deck-page">{number}</span>
+		{/if}
+	</section>
 </div>

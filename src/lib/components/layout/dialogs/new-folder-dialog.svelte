@@ -1,11 +1,11 @@
 <script lang="ts">
+	import { invalidate } from "$app/navigation";
+	import { page } from "$app/state";
 	import { toast } from "svelte-sonner";
 	import { api } from "#lib/api/index.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import * as m from "#lib/paraglide/messages.js";
-	import { invalidate } from "$app/navigation";
-	import { page } from "$app/state";
 
 	interface Props {
 		open: boolean;
@@ -58,28 +58,28 @@
 </script>
 
 <ResponsiveDialog
-    bind:open
-    bind:loading
-    title={m.create_folder_title()}
-    description={m.create_folder_description()}
-    submitLabel={m.create()}
-    loadingLabel={m.creating()}
-    form={{ onsubmit: handleNewFolder }}
+	bind:open
+	bind:loading
+	title={m.create_folder_title()}
+	description={m.create_folder_description()}
+	submitLabel={m.create()}
+	loadingLabel={m.creating()}
+	form={{ onsubmit: handleNewFolder }}
 >
-    <div class="flex flex-col gap-1">
-        <Input
-            required
-            type="text"
-            bind:value={newFolderName}
-            bind:ref={inputRef}
-            placeholder={m.folder_name_placeholder()}
-            class="w-full"
-            aria-invalid={newFolderError !== ""}
-        />
-        {#if newFolderError}
-            <p class="text-xs text-destructive">
-                {newFolderError}
-            </p>
-        {/if}
-    </div>
+	<div class="flex flex-col gap-1">
+		<Input
+			required
+			type="text"
+			bind:value={newFolderName}
+			bind:ref={inputRef}
+			placeholder={m.folder_name_placeholder()}
+			class="w-full"
+			aria-invalid={newFolderError !== ""}
+		/>
+		{#if newFolderError}
+			<p class="text-xs text-destructive">
+				{newFolderError}
+			</p>
+		{/if}
+	</div>
 </ResponsiveDialog>

@@ -1,3 +1,7 @@
+import { dev } from "$app/env";
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
+import { page } from "$app/state";
 import {
 	ArchiveRestoreIcon,
 	CopyIcon,
@@ -17,8 +21,8 @@ import {
 	StarOffIcon,
 	TrashIcon,
 } from "@lucide/svelte";
-import type { MediaQuery } from "svelte/reactivity";
 import { toast } from "svelte-sonner";
+import type { MediaQuery } from "svelte/reactivity";
 import { api, type ObjectItem, type ObjectList } from "#lib/api/index.js";
 import type { SupportedLanguage } from "#lib/components/ui/code/shiki.js";
 import { editorKindForName } from "#lib/documents.js";
@@ -28,18 +32,14 @@ import { itemAction } from "#lib/store/actions.js";
 import { playableMusic } from "#lib/store/music.js";
 import {
 	copyText,
+	isTrashListing,
 	type ItemAction,
 	type ItemActionGroup,
-	isTrashListing,
 	type MultipleItemsAction,
 	type SortColumn,
 	type SortDirection,
 } from "#lib/utils.js";
 import { displayTitle, versionOf } from "#lib/versions.js";
-import { dev } from "$app/env";
-import { goto } from "$app/navigation";
-import { resolve } from "$app/paths";
-import { page } from "$app/state";
 import {
 	clickDownload,
 	downloadUrl,

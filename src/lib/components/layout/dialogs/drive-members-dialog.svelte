@@ -162,147 +162,142 @@
 </script>
 
 <ResponsiveDialog
-    bind:open
-    bind:loading
-    size="sm"
-    title={m.drive_members()}
-    description={drive?.name ?? m.drive_members_description()}
-    cancelLabel={m.done()}
+	bind:open
+	bind:loading
+	size="sm"
+	title={m.drive_members()}
+	description={drive?.name ?? m.drive_members_description()}
+	cancelLabel={m.done()}
 >
-    <div class="flex min-w-0 flex-col gap-4">
-        {#if manages}
-            <div class="flex flex-col gap-2">
-                <Label for="drive-people">{m.share_add_people()}</Label>
-                <div class="flex gap-2">
-                    <div class="relative flex-1">
-                        <SearchIcon
-                            class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
-                        />
-                        <Input
-                            id="drive-people"
-                            autocomplete="off"
-                            class="pl-8"
-                            placeholder={m.share_people_placeholder()}
-                            value={query}
-                            oninput={(e) => onQuery(e.currentTarget.value)}
-                        />
-                    </div>
-                    <Select.Root
-                        type="single"
-                        value={role}
-                        onValueChange={(value) => (role = value as DriveRole)}
-                    >
-                        <Select.Trigger class="w-32 shrink-0">
-                            {roleLabel(role)}
-                        </Select.Trigger>
-                        <Select.Content>
-                            {#each roleOptions as option (option.value)}
-                                <Select.Item value={option.value}>
-                                    {option.label}
-                                </Select.Item>
-                            {/each}
-                        </Select.Content>
-                    </Select.Root>
-                </div>
-            </div>
+	<div class="flex min-w-0 flex-col gap-4">
+		{#if manages}
+			<div class="flex flex-col gap-2">
+				<Label for="drive-people">{m.share_add_people()}</Label>
+				<div class="flex gap-2">
+					<div class="relative flex-1">
+						<SearchIcon
+							class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+						/>
+						<Input
+							id="drive-people"
+							autocomplete="off"
+							class="pl-8"
+							placeholder={m.share_people_placeholder()}
+							value={query}
+							oninput={(e) => onQuery(e.currentTarget.value)}
+						/>
+					</div>
+					<Select.Root
+						type="single"
+						value={role}
+						onValueChange={(value) => (role = value as DriveRole)}
+					>
+						<Select.Trigger class="w-32 shrink-0">
+							{roleLabel(role)}
+						</Select.Trigger>
+						<Select.Content>
+							{#each roleOptions as option (option.value)}
+								<Select.Item value={option.value}>
+									{option.label}
+								</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				</div>
+			</div>
 
-            {#if query.trim().length >= 3}
-                <div class="flex flex-col gap-1">
-                    {#each results as person (person.id)}
-                        <button
-                            type="button"
-                            class="hover:bg-muted/60 flex items-center gap-2.5 rounded-lg p-2 text-left transition-colors"
-                            onclick={() => add(person)}
-                        >
-                            <span
-                                class="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium"
-                                aria-hidden="true"
-                            >
-                                {initials(person.name)}
-                            </span>
-                            <span class="min-w-0">
-                                <span class="block truncate text-sm">
-                                    {person.name}
-                                </span>
-                                <span
-                                    class="text-muted-foreground block truncate text-xs"
-                                >
-                                    {person.email}
-                                </span>
-                            </span>
-                        </button>
-                    {:else}
-                        <p class="text-muted-foreground px-2 py-3 text-sm">
-                            {searching ? m.searching() : m.share_no_matches()}
-                        </p>
-                    {/each}
-                </div>
-            {/if}
-        {/if}
+			{#if query.trim().length >= 3}
+				<div class="flex flex-col gap-1">
+					{#each results as person (person.id)}
+						<button
+							type="button"
+							class="hover:bg-muted/60 flex items-center gap-2.5 rounded-lg p-2 text-left transition-colors"
+							onclick={() => add(person)}
+						>
+							<span
+								class="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium"
+								aria-hidden="true"
+							>
+								{initials(person.name)}
+							</span>
+							<span class="min-w-0">
+								<span class="block truncate text-sm">
+									{person.name}
+								</span>
+								<span class="text-muted-foreground block truncate text-xs">
+									{person.email}
+								</span>
+							</span>
+						</button>
+					{:else}
+						<p class="text-muted-foreground px-2 py-3 text-sm">
+							{searching ? m.searching() : m.share_no_matches()}
+						</p>
+					{/each}
+				</div>
+			{/if}
+		{/if}
 
-        <div class="flex min-w-0 flex-col gap-1">
-            <p class="text-muted-foreground text-xs font-medium">
-                {m.share_people_with_access()}
-            </p>
-            {#each members as member (member.userId)}
-                <div class="flex min-w-0 items-center gap-2.5 rounded-lg p-2">
-                    <span
-                        class="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium"
-                        aria-hidden="true"
-                    >
-                        {initials(member.name)}
-                    </span>
-                    <span class="min-w-0 flex-1">
-                        <span class="block truncate text-sm">{member.name}</span>
-                        <span
-                            class="text-muted-foreground block truncate text-xs"
-                        >
-                            {member.email}
-                        </span>
-                    </span>
-                    {#if member.owner}
-                        <span class="text-muted-foreground shrink-0 text-xs">
-                            {m.drive_role_owner()}
-                        </span>
-                    {:else if manages}
-                        <Select.Root
-                            type="single"
-                            value={member.role}
-                            onValueChange={(value) =>
-                                changeRole(member, value as DriveRole)}
-                        >
-                            <Select.Trigger class="w-28 shrink-0">
-                                {roleLabel(member.role)}
-                            </Select.Trigger>
-                            <Select.Content>
-                                {#each roleOptions as option (option.value)}
-                                    <Select.Item value={option.value}>
-                                        {option.label}
-                                    </Select.Item>
-                                {/each}
-                            </Select.Content>
-                        </Select.Root>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            class="text-muted-foreground hover:text-destructive size-8 shrink-0"
-                            aria-label={m.revoke()}
-                            onclick={() => remove(member)}
-                        >
-                            <XIcon class="size-4" />
-                        </Button>
-                    {:else}
-                        <span class="text-muted-foreground shrink-0 text-xs">
-                            {roleLabel(member.role)}
-                        </span>
-                    {/if}
-                </div>
-            {/each}
-            {#if !manages}
-                <p class="text-muted-foreground px-2 pt-2 text-xs">
-                    {m.drive_manager_only()}
-                </p>
-            {/if}
-        </div>
-    </div>
+		<div class="flex min-w-0 flex-col gap-1">
+			<p class="text-muted-foreground text-xs font-medium">
+				{m.share_people_with_access()}
+			</p>
+			{#each members as member (member.userId)}
+				<div class="flex min-w-0 items-center gap-2.5 rounded-lg p-2">
+					<span
+						class="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium"
+						aria-hidden="true"
+					>
+						{initials(member.name)}
+					</span>
+					<span class="min-w-0 flex-1">
+						<span class="block truncate text-sm">{member.name}</span>
+						<span class="text-muted-foreground block truncate text-xs">
+							{member.email}
+						</span>
+					</span>
+					{#if member.owner}
+						<span class="text-muted-foreground shrink-0 text-xs">
+							{m.drive_role_owner()}
+						</span>
+					{:else if manages}
+						<Select.Root
+							type="single"
+							value={member.role}
+							onValueChange={(value) => changeRole(member, value as DriveRole)}
+						>
+							<Select.Trigger class="w-28 shrink-0">
+								{roleLabel(member.role)}
+							</Select.Trigger>
+							<Select.Content>
+								{#each roleOptions as option (option.value)}
+									<Select.Item value={option.value}>
+										{option.label}
+									</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
+						<Button
+							variant="ghost"
+							size="icon"
+							class="text-muted-foreground hover:text-destructive size-8 shrink-0"
+							aria-label={m.revoke()}
+							onclick={() => remove(member)}
+						>
+							<XIcon class="size-4" />
+						</Button>
+					{:else}
+						<span class="text-muted-foreground shrink-0 text-xs">
+							{roleLabel(member.role)}
+						</span>
+					{/if}
+				</div>
+			{/each}
+			{#if !manages}
+				<p class="text-muted-foreground px-2 pt-2 text-xs">
+					{m.drive_manager_only()}
+				</p>
+			{/if}
+		</div>
+	</div>
 </ResponsiveDialog>

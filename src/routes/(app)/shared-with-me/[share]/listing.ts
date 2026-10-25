@@ -11,11 +11,11 @@ import { firstPageQuery } from "#lib/pagination.js";
 import { isSimpleMode } from "#lib/server/config.js";
 import { DriveAccessError } from "#lib/server/errors.js";
 import { getUserPreferences } from "#lib/server/services/preferences.js";
+import { resolveShare } from "#lib/server/services/storage-for.js";
 import {
 	type ListingPage,
 	pageOptions,
 } from "#lib/server/services/storage/listings.js";
-import { resolveShare } from "#lib/server/services/storage-for.js";
 import { type BreadCrumb, listingHref } from "#lib/utils.js";
 
 export interface ShareListing {

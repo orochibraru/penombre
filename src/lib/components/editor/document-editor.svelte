@@ -56,8 +56,8 @@
 		type Author,
 		defineSuggestionClicks,
 		reviewSuggestions,
-		type Suggestion,
 		suggestAs,
+		type Suggestion,
 		suggestionsOf,
 	} from "#lib/editor/suggestions.js";
 	import { countCharacters, countWords } from "#lib/editor/word-count.js";
@@ -545,7 +545,12 @@
 	</Menubar.Item>
 {/snippet}
 
-{#snippet action(label: string, Icon: typeof LinkIcon, run: () => void, shortcut?: string)}
+{#snippet action(
+	label: string,
+	Icon: typeof LinkIcon,
+	run: () => void,
+	shortcut?: string,
+)}
 	{@render entry({ label, icon: Icon, run, shortcut })}
 {/snippet}
 
@@ -784,14 +789,16 @@
 			current={current.highlight}
 			none={m.doc_colour_none()}
 			onPick={(colour) =>
-				commands.setMark(
-					"backgroundColor",
-					colour ? { color: colour } : null,
-				)}
+				commands.setMark("backgroundColor", colour ? { color: colour } : null)}
 			onClose={refocus}
 		/>
 		{@render separator()}
-		<LinkPopover {editor} active={linkActive} bind:open={linkOpen} class={button} />
+		<LinkPopover
+			{editor}
+			active={linkActive}
+			bind:open={linkOpen}
+			class={button}
+		/>
 		<button
 			type="button"
 			class={button}
@@ -887,7 +894,9 @@
 
 <!-- The card keeps the caret in the text: no focus taken, none trapped. -->
 <Popover.Root
-	bind:open={() => reviewed !== undefined, (open) => !open && (reviewing = null)}
+	bind:open={
+		() => reviewed !== undefined, (open) => !open && (reviewing = null)
+	}
 >
 	<Popover.Content
 		customAnchor={anchor}
@@ -916,7 +925,8 @@
 	/* A comment's text, tinted; the thread in focus, more so. */
 	.comment-host :global(.comment-mark) {
 		background: color-mix(in oklab, var(--primary) 18%, transparent);
-		border-bottom: 2px solid color-mix(in oklab, var(--primary) 55%, transparent);
+		border-bottom: 2px solid
+			color-mix(in oklab, var(--primary) 55%, transparent);
 		cursor: pointer;
 	}
 	.comment-host :global(.comment-mark-active) {

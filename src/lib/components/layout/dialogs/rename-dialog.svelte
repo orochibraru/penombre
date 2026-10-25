@@ -1,12 +1,12 @@
 <script lang="ts">
+	import { invalidate } from "$app/navigation";
+	import { page } from "$app/state";
 	import { toast } from "svelte-sonner";
 	import { api } from "#lib/api/index.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import { Input } from "#lib/components/ui/input/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { itemAction } from "#lib/store/actions.js";
-	import { invalidate } from "$app/navigation";
-	import { page } from "$app/state";
 
 	let error: string = $state("");
 	let newName: string = $state("");
@@ -124,30 +124,30 @@
 </script>
 
 <ResponsiveDialog
-    bind:open
-    bind:loading
-    title={m.rename_title({
-        name: $itemAction?.item?.metadata?.name ?? "this file",
-    })}
-    description={m.rename_description()}
-    submitLabel={m.rename()}
-    loadingLabel={m.renaming()}
-    onsubmit={handleRename}
+	bind:open
+	bind:loading
+	title={m.rename_title({
+		name: $itemAction?.item?.metadata?.name ?? "this file",
+	})}
+	description={m.rename_description()}
+	submitLabel={m.rename()}
+	loadingLabel={m.renaming()}
+	onsubmit={handleRename}
 >
-    <div class="flex flex-col gap-1">
-        <Input
-            required
-            type="text"
-            bind:value={newName}
-            bind:ref={inputRef}
-            placeholder={m.new_name_placeholder()}
-            class="w-full"
-            aria-invalid={error !== ""}
-        />
-        {#if error}
-            <p class="text-xs text-destructive">
-                {error}
-            </p>
-        {/if}
-    </div>
+	<div class="flex flex-col gap-1">
+		<Input
+			required
+			type="text"
+			bind:value={newName}
+			bind:ref={inputRef}
+			placeholder={m.new_name_placeholder()}
+			class="w-full"
+			aria-invalid={error !== ""}
+		/>
+		{#if error}
+			<p class="text-xs text-destructive">
+				{error}
+			</p>
+		{/if}
+	</div>
 </ResponsiveDialog>

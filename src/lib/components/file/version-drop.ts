@@ -1,3 +1,5 @@
+import { invalidate } from "$app/navigation";
+import { page } from "$app/state";
 import { toast } from "svelte-sonner";
 import { api, type ObjectItem } from "#lib/api/index.js";
 import * as m from "#lib/paraglide/messages.js";
@@ -13,8 +15,6 @@ import {
 import { enqueueUploads } from "#lib/upload/manager.js";
 import { isFolderItem, randomId } from "#lib/utils.js";
 import { versionOf } from "#lib/versions.js";
-import { invalidate } from "$app/navigation";
-import { page } from "$app/state";
 
 /** A file's content replaced by `file`, its old bytes kept as a version. */
 export async function uploadVersion(item: ObjectItem, file: File) {

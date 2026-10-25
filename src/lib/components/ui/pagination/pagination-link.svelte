@@ -27,15 +27,15 @@
 <PaginationPrimitive.Page
 	bind:ref
 	{page}
-	aria-current={isActive ? 'page' : undefined}
+	aria-current={isActive ? "page" : undefined}
 	data-slot="pagination-link"
 	data-active={isActive}
 	class={cn(
 		buttonVariants({
-			variant: isActive ? 'outline' : 'ghost',
-			size
+			variant: isActive ? "outline" : "ghost",
+			size,
 		}),
-		className
+		className,
 	)}
 	{...restProps}
 >

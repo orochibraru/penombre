@@ -1,4 +1,4 @@
-import { FileCategoryEnum } from "#lib/file-helpers.js";
+import { and, eq, inArray } from "drizzle-orm";
 /**
  * Library scan: reconcile the DB with what's actually in the storage backend.
  *
@@ -10,8 +10,7 @@ import { FileCategoryEnum } from "#lib/file-helpers.js";
  *
  * Runs on boot and on an interval in simple mode (see `hooks.server.ts`).
  */
-
-import { and, eq, inArray } from "drizzle-orm";
+import { FileCategoryEnum } from "#lib/file-helpers.js";
 import { Logger } from "#lib/logger.js";
 import { sealedSize } from "#lib/server/crypto/envelope.js";
 import { type File as DbFile, files, folders } from "#lib/server/db/schema.js";

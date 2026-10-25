@@ -151,11 +151,12 @@ export async function renameOnDisk(
 		return to;
 	} catch (error) {
 		const claimed = join(ctx.storagePath, to);
-		await (moved
-			? rename(claimed, join(ctx.storagePath, path))
-			: kind === "folder"
-				? rmdir(claimed)
-				: rm(claimed, { force: true })
+		await (
+			moved
+				? rename(claimed, join(ctx.storagePath, path))
+				: kind === "folder"
+					? rmdir(claimed)
+					: rm(claimed, { force: true })
 		).catch(() => undefined);
 		throw error;
 	}

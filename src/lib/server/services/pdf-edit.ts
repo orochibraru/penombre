@@ -37,13 +37,7 @@ export interface PdfPageBox {
 }
 
 export type PdfFieldKind =
-	| "text"
-	| "checkbox"
-	| "radio"
-	| "dropdown"
-	| "list"
-	| "button"
-	| "signature";
+	"text" | "checkbox" | "radio" | "dropdown" | "list" | "button" | "signature";
 
 export interface PdfField {
 	name: string;

@@ -31,8 +31,7 @@ export async function genOpenApiSpec(): Promise<Record<string, unknown>> {
 
 	try {
 		const authSpec = (await auth.api.generateOpenAPISchema()) as unknown as
-			| ExternalOpenAPISpec
-			| undefined;
+			ExternalOpenAPISpec | undefined;
 		if (
 			authSpec &&
 			typeof authSpec === "object" &&

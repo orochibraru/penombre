@@ -2,9 +2,9 @@ import type { z } from "zod";
 import { dropped, resolve } from "#lib/server/dav/handler.js";
 import { parseDavPath } from "#lib/server/dav/location.js";
 import type { Place } from "#lib/server/services/search.js";
+import { storageServiceFor } from "#lib/server/services/storage-for.js";
 import type { StorageService } from "#lib/server/services/storage/index.js";
 import type { TreeEntry } from "#lib/server/services/storage/listings.js";
-import { storageServiceFor } from "#lib/server/services/storage-for.js";
 
 type User = NonNullable<App.Locals["user"]>;
 

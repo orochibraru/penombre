@@ -12,9 +12,9 @@ import { Logger } from "#lib/logger.js";
 import {
 	type File as DbFile,
 	type FileVersion,
-	type FolderSettingsData,
 	fileVersions,
 	folders,
+	type FolderSettingsData,
 	user,
 } from "#lib/server/db/schema.js";
 import { getAppSettings } from "#lib/server/services/app-settings.js";

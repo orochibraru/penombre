@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { navigating } from "$app/state";
 	import { cubicOut } from "svelte/easing";
 	import { Tween } from "svelte/motion";
 	import { fade } from "svelte/transition";
-	import { navigating } from "$app/state";
 
 	let showLoadingBar = $state(false);
 
@@ -43,6 +43,9 @@
 		class="fixed top-0 z-50 h-0.5 w-full bg-primary/20 transition-all will-change-transform"
 		transition:fade
 	>
-		<div class="bg-primary h-full" style="width: {progress.current * 100}%"></div>
+		<div
+			class="bg-primary h-full"
+			style="width: {progress.current * 100}%"
+		></div>
 	</div>
 {/if}

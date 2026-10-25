@@ -23,7 +23,8 @@ targets:
         UILaunchScreen: {}
         # The app's languages: the system's own sheets and prompts speak the
         # one it uses (its `AppleLanguages`, set by the app).
-        CFBundleLocalizations: [en, fr, de, es, it, nl, sv, fi, pl, ru, ja, ko, zh-Hans]
+        CFBundleLocalizations:
+          [en, fr, de, es, it, nl, sv, fi, pl, ru, ja, ko, zh-Hans]
         CADisableMinimumFrameDurationOnPhone: true
         # A track keeps playing with the screen off or the app behind another;
         # `fetch` lets the app check for notifications now and then.

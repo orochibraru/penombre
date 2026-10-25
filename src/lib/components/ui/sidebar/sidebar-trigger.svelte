@@ -21,7 +21,7 @@
 	data-sidebar="trigger"
 	data-slot="sidebar-trigger"
 	size="icon"
-	class={cn('size-5 md:hidden', className)}
+	class={cn("size-5 md:hidden", className)}
 	type="button"
 	onclick={(e) => {
 		onclick?.(e);

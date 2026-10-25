@@ -30,30 +30,34 @@
 </script>
 
 {#if source.convertible}
-    <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-            {#snippet child({ props })}
-                <Button variant="outline" {...props} title={m.video_quality()}>
-                    {#if source.preparing}
-                        <Spinner />
-                        <span class="text-xs">{m.video_quality_preparing({ quality: label(source.preparing) })}</span>
-                    {:else}
-                        <Settings2Icon />
-                        <span class="text-xs">{label(source.quality)}</span>
-                    {/if}
-                </Button>
-            {/snippet}
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="end">
-            {#each ["original", ...RENDITION_HEIGHTS] as const as quality (quality)}
-                <!-- The original is not offered for a format that cannot play. -->
-                {#if !(quality === "original" && source.unplayable)}
-                    <DropdownMenu.Item onclick={() => void pick(quality)}>
-                        <CheckIcon class={source.quality === quality ? "" : "invisible"} />
-                        {label(quality)}
-                    </DropdownMenu.Item>
-                {/if}
-            {/each}
-        </DropdownMenu.Content>
-    </DropdownMenu.Root>
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger>
+			{#snippet child({ props })}
+				<Button variant="outline" {...props} title={m.video_quality()}>
+					{#if source.preparing}
+						<Spinner />
+						<span class="text-xs"
+							>{m.video_quality_preparing({
+								quality: label(source.preparing),
+							})}</span
+						>
+					{:else}
+						<Settings2Icon />
+						<span class="text-xs">{label(source.quality)}</span>
+					{/if}
+				</Button>
+			{/snippet}
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content align="end">
+			{#each ["original", ...RENDITION_HEIGHTS] as const as quality (quality)}
+				<!-- The original is not offered for a format that cannot play. -->
+				{#if !(quality === "original" && source.unplayable)}
+					<DropdownMenu.Item onclick={() => void pick(quality)}>
+						<CheckIcon class={source.quality === quality ? "" : "invisible"} />
+						{label(quality)}
+					</DropdownMenu.Item>
+				{/if}
+			{/each}
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
 {/if}

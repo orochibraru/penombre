@@ -113,22 +113,22 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col gap-2">
-    <SheetMenu {sheet} {menu} />
-    {#if !sheet.readOnly}
-        <FormatToolbar {sheet} />
-    {/if}
-    <FormulaBar {sheet} />
-    <div class="flex min-h-0 flex-1 gap-2">
-        <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-            <SheetGrid {sheet} />
-        </div>
-        {#if sheet.chartPanel && sheet.chart && !sheet.readOnly}
-            <ChartPanel {sheet} chart={sheet.chart} />
-        {:else if drops.editing && !sheet.readOnly}
-            <DropdownPanel {drops} dropdown={drops.editing} />
-        {/if}
-    </div>
-    {#if sheet.workbook}
-        <SheetTabs {sheet} />
-    {/if}
+	<SheetMenu {sheet} {menu} />
+	{#if !sheet.readOnly}
+		<FormatToolbar {sheet} />
+	{/if}
+	<FormulaBar {sheet} />
+	<div class="flex min-h-0 flex-1 gap-2">
+		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
+			<SheetGrid {sheet} />
+		</div>
+		{#if sheet.chartPanel && sheet.chart && !sheet.readOnly}
+			<ChartPanel {sheet} chart={sheet.chart} />
+		{:else if drops.editing && !sheet.readOnly}
+			<DropdownPanel {drops} dropdown={drops.editing} />
+		{/if}
+	</div>
+	{#if sheet.workbook}
+		<SheetTabs {sheet} />
+	{/if}
 </div>

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import {
-		type Completion,
 		complete,
+		type Completion,
 		completionAt,
-		SIGNATURES,
 		signatureAt,
+		SIGNATURES,
 	} from "#lib/sheet/catalog.js";
 	import { cn } from "#lib/utils.js";
 
@@ -77,36 +77,36 @@
 </script>
 
 {#if box && (found || hint)}
-    <div
-        class="bg-popover text-popover-foreground fixed z-50 max-w-[min(28rem,calc(100vw-2rem))] overflow-hidden rounded-md border text-xs shadow-md"
-        style="left: {Math.max(8, box.left)}px; top: {box.bottom + 4}px"
-    >
-        {#if found}
-            <ul role="listbox" class="py-1">
-                {#each found.names as name, i (name)}
-                    <li role="option" aria-selected={i === highlighted}>
-                        <!-- mousedown keeps the focus, and so the caret,
+	<div
+		class="bg-popover text-popover-foreground fixed z-50 max-w-[min(28rem,calc(100vw-2rem))] overflow-hidden rounded-md border text-xs shadow-md"
+		style="left: {Math.max(8, box.left)}px; top: {box.bottom + 4}px"
+	>
+		{#if found}
+			<ul role="listbox" class="py-1">
+				{#each found.names as name, i (name)}
+					<li role="option" aria-selected={i === highlighted}>
+						<!-- mousedown keeps the focus, and so the caret,
                              in the input being typed into. -->
-                        <button
-                            type="button"
-                            tabindex="-1"
-                            class={cn(
-                                "flex w-full items-baseline gap-2 px-2 py-1 text-start",
-                                i === highlighted && "bg-accent text-accent-foreground",
-                            )}
-                            onmousedown={(e) => e.preventDefault()}
-                            onclick={() => pick(name)}
-                        >
-                            <span class="font-mono font-medium">{name}</span>
-                            <span class="text-muted-foreground truncate font-mono">
-                                {SIGNATURES[name] ?? ""}
-                            </span>
-                        </button>
-                    </li>
-                {/each}
-            </ul>
-        {:else if hint}
-            <p class="text-muted-foreground px-2 py-1 font-mono">{hint}</p>
-        {/if}
-    </div>
+						<button
+							type="button"
+							tabindex="-1"
+							class={cn(
+								"flex w-full items-baseline gap-2 px-2 py-1 text-start",
+								i === highlighted && "bg-accent text-accent-foreground",
+							)}
+							onmousedown={(e) => e.preventDefault()}
+							onclick={() => pick(name)}
+						>
+							<span class="font-mono font-medium">{name}</span>
+							<span class="text-muted-foreground truncate font-mono">
+								{SIGNATURES[name] ?? ""}
+							</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{:else if hint}
+			<p class="text-muted-foreground px-2 py-1 font-mono">{hint}</p>
+		{/if}
+	</div>
 {/if}

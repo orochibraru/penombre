@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { onNavigate } from "$app/navigation";
 	import type { HTMLAttributes } from "svelte/elements";
 	import * as Tooltip from "#lib/components/ui/tooltip/index.js";
 	import { cn, type WithElementRef } from "#lib/utils.js";
-	import { onNavigate } from "$app/navigation";
 	import {
 		SIDEBAR_COOKIE_MAX_AGE,
 		SIDEBAR_COOKIE_NAME,
@@ -46,15 +46,15 @@
 	});
 </script>
 
-<svelte:window onkeydown={sidebar.handleShortcutKeydown}></svelte:window>
+<svelte:window onkeydown={sidebar.handleShortcutKeydown} />
 
 <Tooltip.Provider delayDuration={0}>
 	<div
 		data-slot="sidebar-wrapper"
 		style="--sidebar-width: {SIDEBAR_WIDTH}; --sidebar-width-icon: {SIDEBAR_WIDTH_ICON}; {style}"
 		class={cn(
-			'group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full',
-			className
+			"group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
+			className,
 		)}
 		bind:this={ref}
 		{...restProps}

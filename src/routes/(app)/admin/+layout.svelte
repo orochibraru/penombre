@@ -40,6 +40,6 @@
 </script>
 
 <div class="w-full">
-    <SectionTabs title={m.admin()} {tabs} />
-    {@render children()}
+	<SectionTabs title={m.admin()} {tabs} />
+	{@render children()}
 </div>

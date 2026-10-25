@@ -56,51 +56,51 @@
 </script>
 
 <div class="flex flex-col gap-3">
-    <div class="flex items-end justify-between gap-3">
-        <p class="text-2xl font-semibold tracking-tight tabular-nums">
-            {readableFileSize(used)}
-            <span class="text-muted-foreground text-sm font-normal">
-                / {readableFileSize(total)}
-            </span>
-        </p>
-        {#if total > 0}
-            <p class="text-muted-foreground text-xs tabular-nums">
-                {usedPct < 0.1 && used > 0 ? "<0.1" : usedPct.toFixed(1)}%
-            </p>
-        {/if}
-    </div>
+	<div class="flex items-end justify-between gap-3">
+		<p class="text-2xl font-semibold tracking-tight tabular-nums">
+			{readableFileSize(used)}
+			<span class="text-muted-foreground text-sm font-normal">
+				/ {readableFileSize(total)}
+			</span>
+		</p>
+		{#if total > 0}
+			<p class="text-muted-foreground text-xs tabular-nums">
+				{usedPct < 0.1 && used > 0 ? "<0.1" : usedPct.toFixed(1)}%
+			</p>
+		{/if}
+	</div>
 
-    <div
-        class="bg-muted flex h-2.5 w-full overflow-hidden rounded-full"
-        role="img"
-        aria-label={m.storage_used_of({
-            used: readableFileSize(used),
-            total: readableFileSize(total),
-        })}
-    >
-        {#each segments as segment (segment.key)}
-            {#if segment.bar}
-                <div
-                    class="{segment.bar} h-full transition-[width] duration-500 ease-out"
-                    style="width: {segment.width}%"
-                ></div>
-            {/if}
-        {/each}
-    </div>
+	<div
+		class="bg-muted flex h-2.5 w-full overflow-hidden rounded-full"
+		role="img"
+		aria-label={m.storage_used_of({
+			used: readableFileSize(used),
+			total: readableFileSize(total),
+		})}
+	>
+		{#each segments as segment (segment.key)}
+			{#if segment.bar}
+				<div
+					class="{segment.bar} h-full transition-[width] duration-500 ease-out"
+					style="width: {segment.width}%"
+				></div>
+			{/if}
+		{/each}
+	</div>
 
-    {#if !compact}
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-            {#each segments as segment (segment.key)}
-                <div class="flex items-center gap-1.5">
-                    <span class="{segment.dot} size-2 rounded-full"></span>
-                    <span class="text-muted-foreground text-xs">
-                        {segment.label}
-                    </span>
-                    <span class="text-xs font-medium tabular-nums">
-                        {readableFileSize(segment.bytes)}
-                    </span>
-                </div>
-            {/each}
-        </div>
-    {/if}
+	{#if !compact}
+		<div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+			{#each segments as segment (segment.key)}
+				<div class="flex items-center gap-1.5">
+					<span class="{segment.dot} size-2 rounded-full"></span>
+					<span class="text-muted-foreground text-xs">
+						{segment.label}
+					</span>
+					<span class="text-xs font-medium tabular-nums">
+						{readableFileSize(segment.bytes)}
+					</span>
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>

@@ -1,8 +1,8 @@
 import {
 	type Box,
 	cut,
-	type Frame,
 	formatter,
+	type Frame,
 	LABEL_SIZE,
 	r1,
 	type Scale,

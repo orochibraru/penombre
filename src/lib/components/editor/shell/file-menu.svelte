@@ -29,87 +29,87 @@
 </script>
 
 <Menubar.Menu>
-    <Menubar.Trigger>{m.doc_menu_file()}</Menubar.Trigger>
-    <Menubar.Content
-        onCloseAutoFocus={(e: Event) => {
-            const run = after;
-            after = null;
-            if (run) {
-                e.preventDefault();
-                run();
-            }
-        }}
-    >
-        {#if file.canShare}
-            <Menubar.Item onSelect={later(file.share)}>
-                <Share2Icon class="size-4" />
-                {m.shell_share()}
-            </Menubar.Item>
-            <Menubar.Separator />
-        {/if}
-        {#if file.canWrite}
-            <Menubar.Item onSelect={later(file.rename)}>
-                <PencilIcon class="size-4" />
-                {m.rename()}
-            </Menubar.Item>
-            <Menubar.Item onSelect={file.copy}>
-                <CopyIcon class="size-4" />
-                {m.shell_make_copy()}
-            </Menubar.Item>
-            <Menubar.Separator />
-        {/if}
-        {#if file.downloads}
-            <Menubar.Item onSelect={file.download}>
-                <DownloadIcon class="size-4" />
-                {m.shell_download()}
-            </Menubar.Item>
-            {#if file.exports.length > 0}
-                <Menubar.Sub>
-                    <Menubar.SubTrigger>
-                        <DownloadIcon class="size-4" />
-                        {m.office_export()}
-                    </Menubar.SubTrigger>
-                    <Menubar.SubContent>
-                        {#each file.exports as format (format)}
-                            <Menubar.Item onSelect={() => file.exportAs(format)}>
-                                {exportLabel(format)}
-                            </Menubar.Item>
-                        {/each}
-                    </Menubar.SubContent>
-                </Menubar.Sub>
-            {/if}
-            {#if print}
-                <Menubar.Item onSelect={print}>
-                    <PrinterIcon class="size-4" />
-                    {m.doc_print()}
-                </Menubar.Item>
-            {/if}
-        {/if}
-        {#if file.versioning}
-            <Menubar.Separator />
-            {#if file.canWrite}
-                <Menubar.Item onSelect={file.saveVersion}>
-                    <SquarePlusIcon class="size-4" />
-                    {m.versions_save_as()}
-                </Menubar.Item>
-            {/if}
-            <Menubar.Item onSelect={later(file.history)}>
-                <HistoryIcon class="size-4" />
-                {m.shell_version_history()}
-            </Menubar.Item>
-        {/if}
-        {#if file.requestSignatures && file.kind === "document"}
-            <Menubar.Separator />
-            <Menubar.Item onSelect={later(file.requestSignatures)}>
-                <SignatureIcon class="size-4" />
-                {m.shell_request_signatures()}
-            </Menubar.Item>
-        {/if}
-        {#if file.signatures && file.kind === "document"}
-            <Menubar.Item onSelect={later(file.signatures)}>
-                <ListChecksIcon class="size-4" />
-                {m.sign_menu_status()}
-            </Menubar.Item>
-        {/if}
-    </Menubar.Content>
+	<Menubar.Trigger>{m.doc_menu_file()}</Menubar.Trigger>
+	<Menubar.Content
+		onCloseAutoFocus={(e: Event) => {
+			const run = after;
+			after = null;
+			if (run) {
+				e.preventDefault();
+				run();
+			}
+		}}
+	>
+		{#if file.canShare}
+			<Menubar.Item onSelect={later(file.share)}>
+				<Share2Icon class="size-4" />
+				{m.shell_share()}
+			</Menubar.Item>
+			<Menubar.Separator />
+		{/if}
+		{#if file.canWrite}
+			<Menubar.Item onSelect={later(file.rename)}>
+				<PencilIcon class="size-4" />
+				{m.rename()}
+			</Menubar.Item>
+			<Menubar.Item onSelect={file.copy}>
+				<CopyIcon class="size-4" />
+				{m.shell_make_copy()}
+			</Menubar.Item>
+			<Menubar.Separator />
+		{/if}
+		{#if file.downloads}
+			<Menubar.Item onSelect={file.download}>
+				<DownloadIcon class="size-4" />
+				{m.shell_download()}
+			</Menubar.Item>
+			{#if file.exports.length > 0}
+				<Menubar.Sub>
+					<Menubar.SubTrigger>
+						<DownloadIcon class="size-4" />
+						{m.office_export()}
+					</Menubar.SubTrigger>
+					<Menubar.SubContent>
+						{#each file.exports as format (format)}
+							<Menubar.Item onSelect={() => file.exportAs(format)}>
+								{exportLabel(format)}
+							</Menubar.Item>
+						{/each}
+					</Menubar.SubContent>
+				</Menubar.Sub>
+			{/if}
+			{#if print}
+				<Menubar.Item onSelect={print}>
+					<PrinterIcon class="size-4" />
+					{m.doc_print()}
+				</Menubar.Item>
+			{/if}
+		{/if}
+		{#if file.versioning}
+			<Menubar.Separator />
+			{#if file.canWrite}
+				<Menubar.Item onSelect={file.saveVersion}>
+					<SquarePlusIcon class="size-4" />
+					{m.versions_save_as()}
+				</Menubar.Item>
+			{/if}
+			<Menubar.Item onSelect={later(file.history)}>
+				<HistoryIcon class="size-4" />
+				{m.shell_version_history()}
+			</Menubar.Item>
+		{/if}
+		{#if file.requestSignatures && file.kind === "document"}
+			<Menubar.Separator />
+			<Menubar.Item onSelect={later(file.requestSignatures)}>
+				<SignatureIcon class="size-4" />
+				{m.shell_request_signatures()}
+			</Menubar.Item>
+		{/if}
+		{#if file.signatures && file.kind === "document"}
+			<Menubar.Item onSelect={later(file.signatures)}>
+				<ListChecksIcon class="size-4" />
+				{m.sign_menu_status()}
+			</Menubar.Item>
+		{/if}
+	</Menubar.Content>
 </Menubar.Menu>

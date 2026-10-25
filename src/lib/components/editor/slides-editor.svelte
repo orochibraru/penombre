@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import { ChevronDownIcon, PaletteIcon, StickyNoteIcon } from "@lucide/svelte";
 	import { type Snippet, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -7,7 +8,6 @@
 	import { type Deck, nextElementId } from "#lib/slides/model.js";
 	import { locationFrom, locationQuery } from "#lib/storage-location.js";
 	import { cn, toggleFullscreen } from "#lib/utils.js";
-	import { page } from "$app/state";
 	import type { Comments } from "./shell/comments.svelte.js";
 	import type { EditorMenuContext } from "./shell/file-actions.js";
 	import Audience from "./slides/audience.svelte";
@@ -215,10 +215,13 @@
 	<ColorPicker
 		label={m.slides_background()}
 		icon={PaletteIcon}
-		value={editor.slide?.background?.type === "solid" ? editor.slide.background.color : undefined}
+		value={editor.slide?.background?.type === "solid"
+			? editor.slide.background.color
+			: undefined}
 		palette={editor.palette}
 		none={m.slides_background_reset()}
-		onPick={(color) => editor.setBackground(color ? { type: "solid", color } : undefined)}
+		onPick={(color) =>
+			editor.setBackground(color ? { type: "solid", color } : undefined)}
 	/>
 	<div class="w-40 shrink-0">
 		<LayoutPicker
@@ -258,11 +261,21 @@
 			onFullscreen={fullscreen}
 		/>
 		{#if !readOnly}
-			<Toolbar {editor} onImage={() => pickPicture(null)} onPresent={present} {idle} />
+			<Toolbar
+				{editor}
+				onImage={() => pickPicture(null)}
+				onPresent={present}
+				{idle}
+			/>
 		{/if}
 
 		<div class="flex min-h-0 flex-1 flex-col-reverse gap-2 sm:flex-row">
-			<SlideRail {editor} {media} label={rawLabel} marked={new Set(commented.keys())} />
+			<SlideRail
+				{editor}
+				{media}
+				label={rawLabel}
+				marked={new Set(commented.keys())}
+			/>
 			<div class="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
 				<SlideCanvas
 					{editor}
@@ -281,7 +294,12 @@
 					>
 						<StickyNoteIcon class="size-3.5" />
 						{m.deck_speaker_notes()}
-						<ChevronDownIcon class={cn("size-3 transition-transform", notesOpen && "rotate-180")} />
+						<ChevronDownIcon
+							class={cn(
+								"size-3 transition-transform",
+								notesOpen && "rotate-180",
+							)}
+						/>
 					</button>
 					{#if notesOpen && editor.slide}
 						<Textarea
@@ -291,7 +309,10 @@
 							readonly={readOnly}
 							onfocus={() => (notesFresh = true)}
 							oninput={(event: Event) => {
-								editor.setNotes((event.currentTarget as HTMLTextAreaElement).value, notesFresh);
+								editor.setNotes(
+									(event.currentTarget as HTMLTextAreaElement).value,
+									notesFresh,
+								);
 								notesFresh = false;
 							}}
 						/>
@@ -323,7 +344,12 @@
 				onfullscreen={fullscreen}
 			/>
 		{:else if mode === "presenter"}
-			<Presenter deck={editor.deck} bind:index={editor.current} {media} onexit={() => (mode = "edit")} />
+			<Presenter
+				deck={editor.deck}
+				bind:index={editor.current}
+				{media}
+				onexit={() => (mode = "edit")}
+			/>
 		{/if}
 	</div>
 

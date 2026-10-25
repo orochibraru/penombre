@@ -7,13 +7,13 @@
 </script>
 
 <div class="flex flex-col gap-5">
-    <div>
-        <h2 class="text-xl font-semibold tracking-tight">
-            {m.sign_page_list_title()}
-        </h2>
-        <p class="text-muted-foreground text-sm">
-            {m.sign_page_list_description()}
-        </p>
-    </div>
-    <SignaturesPanel />
+	<div>
+		<h2 class="text-xl font-semibold tracking-tight">
+			{m.sign_page_list_title()}
+		</h2>
+		<p class="text-muted-foreground text-sm">
+			{m.sign_page_list_description()}
+		</p>
+	</div>
+	<SignaturesPanel />
 </div>

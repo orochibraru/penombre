@@ -1,3 +1,5 @@
+import { browser } from "$app/env";
+import { page } from "$app/state";
 import createClient from "openapi-fetch";
 import {
 	DRIVE_HEADER,
@@ -5,8 +7,6 @@ import {
 	SHARE_HEADER,
 	VOLUME_HEADER,
 } from "#lib/storage-location.js";
-import { browser } from "$app/env";
-import { page } from "$app/state";
 import type { components, paths } from "./v1";
 
 /**

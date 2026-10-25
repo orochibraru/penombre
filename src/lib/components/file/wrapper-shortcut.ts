@@ -1,10 +1,10 @@
+import { invalidate } from "$app/navigation";
+import { page } from "$app/state";
 import { toast } from "svelte-sonner";
 import { api, type ObjectItem } from "#lib/api/index.js";
 import * as m from "#lib/paraglide/messages.js";
 import { draggedFolder } from "#lib/store/shortcuts.js";
 import { isFolderItem } from "#lib/utils.js";
-import { invalidate } from "$app/navigation";
-import { page } from "$app/state";
 
 const nameOf = (item: ObjectItem) =>
 	item.metadata.name || item.key.replace(/\/$/, "");

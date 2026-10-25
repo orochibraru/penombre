@@ -58,8 +58,8 @@ import {
 	matchLayout,
 	type PackageModel,
 	type PlaceholderInfo,
-	REL,
 	readPackage,
+	REL,
 } from "./read";
 import { MediaStore, pruneMedia, Rels, remapRelationships } from "./rels";
 

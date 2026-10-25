@@ -60,46 +60,49 @@
 </script>
 
 <div
-    bind:this={box}
-    class="chart-palette relative size-full overflow-hidden"
-    role="presentation"
-    onpointermove={show}
-    onpointerdown={show}
-    onpointerleave={() => (tip = null)}
+	bind:this={box}
+	class="chart-palette relative size-full overflow-hidden"
+	role="presentation"
+	onpointermove={show}
+	onpointerdown={show}
+	onpointerleave={() => (tip = null)}
 >
-    {@html svg}
-    {#if tip}
-        <div
-            class="bg-popover text-popover-foreground pointer-events-none absolute z-10 max-w-60 -translate-x-1/2 rounded-md border px-2 py-1 text-xs whitespace-nowrap shadow-md"
-            style="left: {Math.min(Math.max(tip.x, 60), width - 60)}px; top: {Math.max(tip.y - 36, 2)}px"
-        >
-            {tip.text}
-        </div>
-    {/if}
+	{@html svg}
+	{#if tip}
+		<div
+			class="bg-popover text-popover-foreground pointer-events-none absolute z-10 max-w-60 -translate-x-1/2 rounded-md border px-2 py-1 text-xs whitespace-nowrap shadow-md"
+			style="left: {Math.min(
+				Math.max(tip.x, 60),
+				width - 60,
+			)}px; top: {Math.max(tip.y - 36, 2)}px"
+		>
+			{tip.text}
+		</div>
+	{/if}
 </div>
 
 <style>
-    /* The categorical slots after the accent, `CATEGORICAL` in render.ts,
+	/* The categorical slots after the accent, `CATEGORICAL` in render.ts,
        stepped separately for each mode. Global so the chart editor's
        swatches can read them too. */
-    :global(.chart-palette) {
-        --chart-1: #2a78d6;
-        --chart-2: #eb6834;
-        --chart-3: #1baf7a;
-        --chart-4: #eda100;
-        --chart-5: #e87ba4;
-        --chart-6: #008300;
-        --chart-7: #6250d6;
-        --chart-8: #e34948;
-    }
-    :global(.dark .chart-palette) {
-        --chart-1: #3987e5;
-        --chart-2: #d95926;
-        --chart-3: #199e70;
-        --chart-4: #c98500;
-        --chart-5: #d55181;
-        --chart-6: #008300;
-        --chart-7: #9085e9;
-        --chart-8: #e66767;
-    }
+	:global(.chart-palette) {
+		--chart-1: #2a78d6;
+		--chart-2: #eb6834;
+		--chart-3: #1baf7a;
+		--chart-4: #eda100;
+		--chart-5: #e87ba4;
+		--chart-6: #008300;
+		--chart-7: #6250d6;
+		--chart-8: #e34948;
+	}
+	:global(.dark .chart-palette) {
+		--chart-1: #3987e5;
+		--chart-2: #d95926;
+		--chart-3: #199e70;
+		--chart-4: #c98500;
+		--chart-5: #d55181;
+		--chart-6: #008300;
+		--chart-7: #9085e9;
+		--chart-8: #e66767;
+	}
 </style>

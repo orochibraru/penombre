@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import process from "node:process";
-import z from "zod";
 import { building, dev } from "$app/env";
+import z from "zod";
 import {
-	DEV_DATA_DIR,
 	dataPaths,
 	defaultConfigValues,
 	defaultDbUrl,
+	DEV_DATA_DIR,
 	generateExampleDotenvFile,
 } from "./config.defaults";
 

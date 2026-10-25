@@ -207,98 +207,101 @@
 </script>
 
 {#each sheet.charts as chart (chart.id)}
-    {@const box = boxOf(chart)}
-    {@const picked = sheet.chartId === chart.id}
-    {@const editable = isEditable(chart)}
-    <div
-        role="button"
-        tabindex="-1"
-        data-chart={chart.id}
-        aria-label={chart.title || m.chart_untitled()}
-        use:focusPicked={picked}
-        class={cn(
-            "bg-surface-base absolute overflow-visible rounded-md border shadow-sm outline-none",
-            picked ? "ring-primary z-7 ring-2" : "z-6",
-            picked && !sheet.readOnly && "cursor-move touch-none",
-        )}
-        style="left: {box.left}px; top: {box.top}px; width: {box.width}px; height: {box.height}px"
-        onpointerdown={(e) => start(e, chart, "move")}
-        onpointermove={move}
-        onpointerup={() => end(chart)}
-        onpointercancel={() => (drag = null)}
-        ondblclick={() => {
-            if (editable && !sheet.readOnly) {
-                sheet.chartPanel = true;
-            }
-        }}
-        oncontextmenu={(e) => {
-            // The cells' menu does not apply here; the chart's buttons do.
-            e.stopPropagation();
-            e.preventDefault();
-            sheet.selectChart(chart.id);
-        }}
-        onkeydown={(e) => onkeydown(e, chart)}
-    >
-        <ChartView
-            {chart}
-            data={chartData(chart, sheet.source, sheet.active, seriesLabel)}
-            width={box.width}
-            height={box.height}
-            empty={m.chart_empty()}
-            note={editable ? undefined : m.chart_approximate()}
-        />
-        {#if picked && !sheet.readOnly}
-            <div class="bg-popover absolute top-1 right-1 flex gap-0.5 rounded-md border p-0.5 shadow-sm">
-                {#if editable}
-                    <button
-                        type="button"
-                        class="hover:bg-muted text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded"
-                        aria-label={m.chart_edit()}
-                        title={m.chart_edit()}
-                        onpointerdown={(e) => e.stopPropagation()}
-                        onclick={() => (sheet.chartPanel = true)}
-                    >
-                        <PencilIcon class="size-4" />
-                    </button>
-                    <button
-                        type="button"
-                        class="hover:bg-muted text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded"
-                        aria-label={m.chart_duplicate()}
-                        title={m.chart_duplicate()}
-                        onpointerdown={(e) => e.stopPropagation()}
-                        onclick={() => sheet.pasteChart(chart)}
-                    >
-                        <CopyIcon class="size-4" />
-                    </button>
-                {/if}
-                <button
-                    type="button"
-                    class="hover:bg-muted text-destructive flex size-8 items-center justify-center rounded"
-                    aria-label={m.chart_delete()}
-                    title={m.chart_delete()}
-                    onpointerdown={(e) => e.stopPropagation()}
-                    onclick={() => {
-                        sheet.deleteChart(chart.id);
-                        sheet.focusGrid();
-                    }}
-                >
-                    <Trash2Icon class="size-4" />
-                </button>
-            </div>
-            <!-- A corner big enough for a finger, drawn small. -->
-            <div
-                role="separator"
-                aria-label={m.chart_resize()}
-                class="absolute -right-3 -bottom-3 flex size-7 cursor-nwse-resize touch-none items-center justify-center"
-                onpointerdown={(e) => start(e, chart, "resize")}
-                onpointermove={move}
-                onpointerup={(e) => {
-                    e.stopPropagation();
-                    end(chart);
-                }}
-            >
-                <span class="bg-primary border-background size-3 rounded-sm border-2"></span>
-            </div>
-        {/if}
-    </div>
+	{@const box = boxOf(chart)}
+	{@const picked = sheet.chartId === chart.id}
+	{@const editable = isEditable(chart)}
+	<div
+		role="button"
+		tabindex="-1"
+		data-chart={chart.id}
+		aria-label={chart.title || m.chart_untitled()}
+		use:focusPicked={picked}
+		class={cn(
+			"bg-surface-base absolute overflow-visible rounded-md border shadow-sm outline-none",
+			picked ? "ring-primary z-7 ring-2" : "z-6",
+			picked && !sheet.readOnly && "cursor-move touch-none",
+		)}
+		style="left: {box.left}px; top: {box.top}px; width: {box.width}px; height: {box.height}px"
+		onpointerdown={(e) => start(e, chart, "move")}
+		onpointermove={move}
+		onpointerup={() => end(chart)}
+		onpointercancel={() => (drag = null)}
+		ondblclick={() => {
+			if (editable && !sheet.readOnly) {
+				sheet.chartPanel = true;
+			}
+		}}
+		oncontextmenu={(e) => {
+			// The cells' menu does not apply here; the chart's buttons do.
+			e.stopPropagation();
+			e.preventDefault();
+			sheet.selectChart(chart.id);
+		}}
+		onkeydown={(e) => onkeydown(e, chart)}
+	>
+		<ChartView
+			{chart}
+			data={chartData(chart, sheet.source, sheet.active, seriesLabel)}
+			width={box.width}
+			height={box.height}
+			empty={m.chart_empty()}
+			note={editable ? undefined : m.chart_approximate()}
+		/>
+		{#if picked && !sheet.readOnly}
+			<div
+				class="bg-popover absolute top-1 right-1 flex gap-0.5 rounded-md border p-0.5 shadow-sm"
+			>
+				{#if editable}
+					<button
+						type="button"
+						class="hover:bg-muted text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded"
+						aria-label={m.chart_edit()}
+						title={m.chart_edit()}
+						onpointerdown={(e) => e.stopPropagation()}
+						onclick={() => (sheet.chartPanel = true)}
+					>
+						<PencilIcon class="size-4" />
+					</button>
+					<button
+						type="button"
+						class="hover:bg-muted text-muted-foreground hover:text-foreground flex size-8 items-center justify-center rounded"
+						aria-label={m.chart_duplicate()}
+						title={m.chart_duplicate()}
+						onpointerdown={(e) => e.stopPropagation()}
+						onclick={() => sheet.pasteChart(chart)}
+					>
+						<CopyIcon class="size-4" />
+					</button>
+				{/if}
+				<button
+					type="button"
+					class="hover:bg-muted text-destructive flex size-8 items-center justify-center rounded"
+					aria-label={m.chart_delete()}
+					title={m.chart_delete()}
+					onpointerdown={(e) => e.stopPropagation()}
+					onclick={() => {
+						sheet.deleteChart(chart.id);
+						sheet.focusGrid();
+					}}
+				>
+					<Trash2Icon class="size-4" />
+				</button>
+			</div>
+			<!-- A corner big enough for a finger, drawn small. -->
+			<div
+				role="separator"
+				aria-label={m.chart_resize()}
+				class="absolute -right-3 -bottom-3 flex size-7 cursor-nwse-resize touch-none items-center justify-center"
+				onpointerdown={(e) => start(e, chart, "resize")}
+				onpointermove={move}
+				onpointerup={(e) => {
+					e.stopPropagation();
+					end(chart);
+				}}
+			>
+				<span class="bg-primary border-background size-3 rounded-sm border-2"
+				></span>
+			</div>
+		{/if}
+	</div>
 {/each}

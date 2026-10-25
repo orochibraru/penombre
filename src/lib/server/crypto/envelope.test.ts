@@ -1,21 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import vectors from "../../../../tests/fixtures/envelope-v1.json" with {
-	type: "json",
-};
+import vectors from "../../../../tests/fixtures/envelope-v1.json" with { type: "json" };
 import {
 	CHUNK_SIZE,
 	HEADER_SIZE,
 	isSealed,
-	KeyMissingError,
 	keyId,
+	KeyMissingError,
 	openHeader,
 	openRange,
 	openWhole,
 	plainSize,
-	type SealedSource,
 	seal,
 	sealedSize,
+	type SealedSource,
 	sealStream,
 	TAG_SIZE,
 } from "./envelope";

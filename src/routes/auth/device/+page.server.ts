@@ -1,6 +1,6 @@
+import { resolve } from "$app/paths";
 import { fail, redirect } from "@sveltejs/kit";
 import { auth } from "#lib/server/auth/index.js";
-import { resolve } from "$app/paths";
 
 function signIn(url: URL): string {
 	return `${resolve("auth/sign-in")}?next=${encodeURIComponent(url.pathname + url.search)}`;

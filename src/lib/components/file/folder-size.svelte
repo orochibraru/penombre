@@ -39,13 +39,13 @@
 </script>
 
 <p class="text-xs">
-    {#if loading}
-        <span class="text-muted-foreground">-</span>
-    {:else if error}
-        <span class="text-muted-foreground">-</span>
-    {:else if size !== undefined}
-        {readableFileSize(size) ?? "-"}
-    {:else}
-        <span class="text-muted-foreground">-</span>
-    {/if}
+	{#if loading}
+		<span class="text-muted-foreground">-</span>
+	{:else if error}
+		<span class="text-muted-foreground">-</span>
+	{:else if size !== undefined}
+		{readableFileSize(size) ?? "-"}
+	{:else}
+		<span class="text-muted-foreground">-</span>
+	{/if}
 </p>

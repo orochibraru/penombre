@@ -152,55 +152,55 @@
 
 <!-- One scrolling row on a phone, wrapped from `sm` up. -->
 <div
-    role="toolbar"
-    aria-label={m.deck_formatting()}
-    class="flex items-center gap-1 overflow-x-auto rounded-lg border p-1 sm:flex-wrap sm:overflow-visible"
+	role="toolbar"
+	aria-label={m.deck_formatting()}
+	class="flex items-center gap-1 overflow-x-auto rounded-lg border p-1 sm:flex-wrap sm:overflow-visible"
 >
-    {#each groups as group, index (index)}
-        {#if index > 0}
-            <div class="bg-border mx-0.5 h-5 w-px shrink-0"></div>
-        {/if}
-        {#each group as tool (tool.label)}
-            {@const Icon = tool.icon}
-            <button
-                type="button"
-                class={button}
-                aria-label={tool.label}
-                title={tool.label}
-                onmousedown={(event) => event.preventDefault()}
-                onclick={() => apply(tool.run)}
-            >
-                <Icon class="size-4" />
-            </button>
-        {/each}
-    {/each}
-    {#if images}
-        <DropdownMenu.Root>
-            <DropdownMenu.Trigger
-                class={button}
-                aria-label={m.editor_image()}
-                title={m.editor_image()}
-            >
-                <ImageIcon class="size-4" />
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content
-                align="start"
-                onCloseAutoFocus={(event: Event) => event.preventDefault()}
-            >
-                <DropdownMenu.Item onSelect={() => picker?.click()}>
-                    {m.deck_image_upload()}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onSelect={() => apply(image)}>
-                    {m.deck_image_link()}
-                </DropdownMenu.Item>
-            </DropdownMenu.Content>
-        </DropdownMenu.Root>
-        <input
-            bind:this={picker}
-            type="file"
-            accept="image/*"
-            class="hidden"
-            onchange={(event) => void insertPicture(event.currentTarget.files)}
-        />
-    {/if}
+	{#each groups as group, index (index)}
+		{#if index > 0}
+			<div class="bg-border mx-0.5 h-5 w-px shrink-0"></div>
+		{/if}
+		{#each group as tool (tool.label)}
+			{@const Icon = tool.icon}
+			<button
+				type="button"
+				class={button}
+				aria-label={tool.label}
+				title={tool.label}
+				onmousedown={(event) => event.preventDefault()}
+				onclick={() => apply(tool.run)}
+			>
+				<Icon class="size-4" />
+			</button>
+		{/each}
+	{/each}
+	{#if images}
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger
+				class={button}
+				aria-label={m.editor_image()}
+				title={m.editor_image()}
+			>
+				<ImageIcon class="size-4" />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content
+				align="start"
+				onCloseAutoFocus={(event: Event) => event.preventDefault()}
+			>
+				<DropdownMenu.Item onSelect={() => picker?.click()}>
+					{m.deck_image_upload()}
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onSelect={() => apply(image)}>
+					{m.deck_image_link()}
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+		<input
+			bind:this={picker}
+			type="file"
+			accept="image/*"
+			class="hidden"
+			onchange={(event) => void insertPicture(event.currentTarget.files)}
+		/>
+	{/if}
 </div>

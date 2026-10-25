@@ -52,58 +52,65 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col gap-3">
-    <div class="flex items-center gap-2">
-        <h2 class="flex-1 text-sm font-semibold">{m.shell_comments()}</h2>
-        <Button
-            variant="ghost"
-            size="icon"
-            class="size-8"
-            aria-label={m.close()}
-            onclick={onclose}
-        >
-            <XIcon class="size-4" />
-        </Button>
-    </div>
+	<div class="flex items-center gap-2">
+		<h2 class="flex-1 text-sm font-semibold">{m.shell_comments()}</h2>
+		<Button
+			variant="ghost"
+			size="icon"
+			class="size-8"
+			aria-label={m.close()}
+			onclick={onclose}
+		>
+			<XIcon class="size-4" />
+		</Button>
+	</div>
 
-    <Tabs.Root
-        value={comments.showResolved ? "resolved" : "open"}
-        onValueChange={(value) => (comments.showResolved = value === "resolved")}
-    >
-        <Tabs.List class="grid w-full grid-cols-2">
-            <Tabs.Trigger value="open">
-                {m.shell_show_open()} · {comments.unresolved.length}
-            </Tabs.Trigger>
-            <Tabs.Trigger value="resolved">
-                {m.shell_show_resolved()} · {comments.resolved.length}
-            </Tabs.Trigger>
-        </Tabs.List>
-    </Tabs.Root>
+	<Tabs.Root
+		value={comments.showResolved ? "resolved" : "open"}
+		onValueChange={(value) => (comments.showResolved = value === "resolved")}
+	>
+		<Tabs.List class="grid w-full grid-cols-2">
+			<Tabs.Trigger value="open">
+				{m.shell_show_open()} · {comments.unresolved.length}
+			</Tabs.Trigger>
+			<Tabs.Trigger value="resolved">
+				{m.shell_show_resolved()} · {comments.resolved.length}
+			</Tabs.Trigger>
+		</Tabs.List>
+	</Tabs.Root>
 
-    <div bind:this={list} class="-mx-1 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1 pb-2">
-        {#if comments.draft}
-            <div class="bg-card ring-primary flex flex-col gap-2 rounded-lg border p-3 ring-2">
-                <p
-                    class="text-muted-foreground border-primary/60 line-clamp-2 border-s-2 ps-2 text-xs italic wrap-break-word"
-                >
-                    {draftLabel()}
-                </p>
-                <CommentBox
-                    placeholder={m.shell_comment_placeholder()}
-                    label={m.shell_comment()}
-                    autofocus
-                    oncancel={() => (comments.draft = null)}
-                    onsubmit={(body) => comments.submit(body)}
-                />
-            </div>
-        {/if}
-        {#each shown as thread (thread.root.id)}
-            <CommentThread {thread} {comments} {userId} />
-        {:else}
-            {#if !comments.draft}
-                <p class="text-muted-foreground px-2 py-6 text-center text-sm">
-                    {comments.showResolved ? m.shell_no_resolved() : m.shell_no_comments()}
-                </p>
-            {/if}
-        {/each}
-    </div>
+	<div
+		bind:this={list}
+		class="-mx-1 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1 pb-2"
+	>
+		{#if comments.draft}
+			<div
+				class="bg-card ring-primary flex flex-col gap-2 rounded-lg border p-3 ring-2"
+			>
+				<p
+					class="text-muted-foreground border-primary/60 line-clamp-2 border-s-2 ps-2 text-xs italic wrap-break-word"
+				>
+					{draftLabel()}
+				</p>
+				<CommentBox
+					placeholder={m.shell_comment_placeholder()}
+					label={m.shell_comment()}
+					autofocus
+					oncancel={() => (comments.draft = null)}
+					onsubmit={(body) => comments.submit(body)}
+				/>
+			</div>
+		{/if}
+		{#each shown as thread (thread.root.id)}
+			<CommentThread {thread} {comments} {userId} />
+		{:else}
+			{#if !comments.draft}
+				<p class="text-muted-foreground px-2 py-6 text-center text-sm">
+					{comments.showResolved
+						? m.shell_no_resolved()
+						: m.shell_no_comments()}
+				</p>
+			{/if}
+		{/each}
+	</div>
 </div>

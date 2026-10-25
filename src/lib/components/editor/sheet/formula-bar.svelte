@@ -57,56 +57,57 @@
 </script>
 
 <div class="flex items-center gap-2">
-    <input
-        class="border-input bg-muted/40 text-muted-foreground focus:text-foreground focus-visible:ring-ring h-8 w-20 shrink-0 rounded-md border px-2 text-center font-mono text-base outline-none md:text-xs focus-visible:ring-2"
-        aria-label={m.sheet_name_box()}
-        value={rangeName(sheet.selection)}
-        onfocus={(e) => e.currentTarget.select()}
-        onkeydown={jump}
-        onblur={(e) => (e.currentTarget.value = rangeName(sheet.selection))}
-    />
-    <span class="text-muted-foreground font-mono text-xs italic select-none">fx</span>
-    <!-- One line tall, but a textarea: an input drops line breaks. -->
-    <textarea
-        bind:this={input}
-        class="border-input focus-visible:ring-ring h-8 min-w-0 flex-1 resize-none overflow-hidden rounded-md border bg-transparent px-2 py-1.5 font-mono text-base leading-5 outline-none md:text-sm focus-visible:ring-2"
-        rows="1"
-        wrap="off"
-        data-sheet-editor
-        aria-label={m.sheet_formula()}
-        placeholder={sheet.readOnly ? "" : "=SUM(A1:A3)"}
-        readonly={sheet.readOnly}
-        spellcheck="false"
-        autocomplete="off"
-        value={text}
-        onfocus={() => (focused = true)}
-        onblur={(e) => {
-            focused = false;
-            // Leaving for anything but the cell editor writes what was typed.
-            const to = e.relatedTarget as HTMLElement | null;
-            if (sheet.editing && !to?.closest("[data-sheet-editor]")) {
-                sheet.commit();
-            }
-        }}
-        oninput={(e) => {
-            sheet.setDraft(e.currentTarget.value);
-            sheet.caret = e.currentTarget.selectionStart ?? 0;
-        }}
-        onkeyup={(e) => (sheet.caret = e.currentTarget.selectionStart ?? 0)}
-        onclick={(e) => (sheet.caret = e.currentTarget.selectionStart ?? 0)}
-        {onkeydown}
-    ></textarea>
+	<input
+		class="border-input bg-muted/40 text-muted-foreground focus:text-foreground focus-visible:ring-ring h-8 w-20 shrink-0 rounded-md border px-2 text-center font-mono text-base outline-none md:text-xs focus-visible:ring-2"
+		aria-label={m.sheet_name_box()}
+		value={rangeName(sheet.selection)}
+		onfocus={(e) => e.currentTarget.select()}
+		onkeydown={jump}
+		onblur={(e) => (e.currentTarget.value = rangeName(sheet.selection))}
+	/>
+	<span class="text-muted-foreground font-mono text-xs italic select-none"
+		>fx</span
+	>
+	<!-- One line tall, but a textarea: an input drops line breaks. -->
+	<textarea
+		bind:this={input}
+		class="border-input focus-visible:ring-ring h-8 min-w-0 flex-1 resize-none overflow-hidden rounded-md border bg-transparent px-2 py-1.5 font-mono text-base leading-5 outline-none md:text-sm focus-visible:ring-2"
+		rows="1"
+		wrap="off"
+		data-sheet-editor
+		aria-label={m.sheet_formula()}
+		placeholder={sheet.readOnly ? "" : "=SUM(A1:A3)"}
+		readonly={sheet.readOnly}
+		spellcheck="false"
+		autocomplete="off"
+		value={text}
+		onfocus={() => (focused = true)}
+		onblur={(e) => {
+			focused = false;
+			// Leaving for anything but the cell editor writes what was typed.
+			const to = e.relatedTarget as HTMLElement | null;
+			if (sheet.editing && !to?.closest("[data-sheet-editor]")) {
+				sheet.commit();
+			}
+		}}
+		oninput={(e) => {
+			sheet.setDraft(e.currentTarget.value);
+			sheet.caret = e.currentTarget.selectionStart ?? 0;
+		}}
+		onkeyup={(e) => (sheet.caret = e.currentTarget.selectionStart ?? 0)}
+		onclick={(e) => (sheet.caret = e.currentTarget.selectionStart ?? 0)}
+		{onkeydown}></textarea>
 </div>
 
 {#if focused}
-    <Completion
-        bind:this={completion}
-        {text}
-        caret={sheet.caret}
-        anchor={input}
-        onpick={(next) => {
-            sheet.setDraft(next.text);
-            sheet.placeCaret(next.caret);
-        }}
-    />
+	<Completion
+		bind:this={completion}
+		{text}
+		caret={sheet.caret}
+		anchor={input}
+		onpick={(next) => {
+			sheet.setDraft(next.text);
+			sheet.placeCaret(next.caret);
+		}}
+	/>
 {/if}

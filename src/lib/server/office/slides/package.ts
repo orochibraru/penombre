@@ -8,7 +8,7 @@ import { element, parseXml, serializeXml, type XmlElement } from "../xml";
 import { partText, setPartText, type ZipEntry } from "../zip";
 import { fillNode, levelsNode, shapeNode } from "./generate";
 import { REL, type Relationship, relationships } from "./read";
-import { Rels, relativeTarget } from "./rels";
+import { relativeTarget, Rels } from "./rels";
 
 /**
  * A new presentation from a template, and a template laid onto an existing

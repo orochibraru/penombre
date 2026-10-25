@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import { DownloadIcon, SaveIcon } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -13,7 +14,6 @@
 	import { enhance } from "#lib/forms.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { page } from "$app/state";
 
 	onMount(() => {
 		title.set(m.title_account_details());
@@ -61,125 +61,116 @@
 </script>
 
 <div class="flex w-full flex-col gap-4">
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.account_details()}</Card.Title>
-        </Card.Header>
-        <Card.Content>
-            <form
-                method="POST"
-                use:enhance={() => {
-                    loading = true;
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.account_details()}</Card.Title>
+		</Card.Header>
+		<Card.Content>
+			<form
+				method="POST"
+				use:enhance={() => {
+					loading = true;
 
-                    return async ({ update }) => {
-                        await update();
-                        loading = false;
-                    };
-                }}
-                action="?/updateAccount"
-            >
-                <fieldset class="flex flex-col gap-5" disabled={loading}>
-                    {#if data.user.image}
-                        <img
-                            src={data.user.image}
-                            alt={name}
-                            class="max-w-20 rounded-full"
-                        />
-                    {/if}
-                    <div class="flex w-full flex-col gap-1.5">
-                        <Label for="account-email">{m.email()}</Label>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span id="account-email" class="text-sm font-medium">
-                                {data.user.email}
-                            </span>
-                            <Badge variant={data.user.emailVerified ? "secondary" : "outline"}>
-                                {data.user.emailVerified
-                                    ? m.email_verified()
-                                    : m.email_unverified()}
-                            </Badge>
-                            <div class="ms-auto flex gap-2">
-                                {#if !data.user.emailVerified}
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={!data.smtpAvailable}
-                                        onclick={() => openEmail("verify")}
-                                    >
-                                        {m.email_verify()}
-                                    </Button>
-                                {/if}
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={!data.smtpAvailable}
-                                    onclick={() => openEmail("change")}
-                                >
-                                    {m.email_change()}
-                                </Button>
-                            </div>
-                        </div>
-                        {#if !data.smtpAvailable}
-                            <p class="text-muted-foreground text-xs">
-                                {m.email_no_smtp()}
-                            </p>
-                        {/if}
-                    </div>
-                    <div class="flex w-full flex-col gap-1.5">
-                        <Label for="account-name">{m.name()}</Label>
-                        <Input
-                            id="account-name"
-                            type="text"
-                            autocomplete="name"
-                            name="name"
-                            bind:value={name}
-                        />
-                    </div>
-                    <Button
-                        class="w-full"
-                        disabled={!hasChanged}
-                        {loading}
-                        type="submit"
-                    >
-                        {m.save()}
-                        <SaveIcon />
-                    </Button>
-                </fieldset>
-            </form>
-        </Card.Content>
-    </Card.Root>
+					return async ({ update }) => {
+						await update();
+						loading = false;
+					};
+				}}
+				action="?/updateAccount"
+			>
+				<fieldset class="flex flex-col gap-5" disabled={loading}>
+					{#if data.user.image}
+						<img
+							src={data.user.image}
+							alt={name}
+							class="max-w-20 rounded-full"
+						/>
+					{/if}
+					<div class="flex w-full flex-col gap-1.5">
+						<Label for="account-email">{m.email()}</Label>
+						<div class="flex flex-wrap items-center gap-2">
+							<span id="account-email" class="text-sm font-medium">
+								{data.user.email}
+							</span>
+							<Badge
+								variant={data.user.emailVerified ? "secondary" : "outline"}
+							>
+								{data.user.emailVerified
+									? m.email_verified()
+									: m.email_unverified()}
+							</Badge>
+							<div class="ms-auto flex gap-2">
+								{#if !data.user.emailVerified}
+									<Button
+										variant="outline"
+										size="sm"
+										disabled={!data.smtpAvailable}
+										onclick={() => openEmail("verify")}
+									>
+										{m.email_verify()}
+									</Button>
+								{/if}
+								<Button
+									variant="outline"
+									size="sm"
+									disabled={!data.smtpAvailable}
+									onclick={() => openEmail("change")}
+								>
+									{m.email_change()}
+								</Button>
+							</div>
+						</div>
+						{#if !data.smtpAvailable}
+							<p class="text-muted-foreground text-xs">
+								{m.email_no_smtp()}
+							</p>
+						{/if}
+					</div>
+					<div class="flex w-full flex-col gap-1.5">
+						<Label for="account-name">{m.name()}</Label>
+						<Input
+							id="account-name"
+							type="text"
+							autocomplete="name"
+							name="name"
+							bind:value={name}
+						/>
+					</div>
+					<Button class="w-full" disabled={!hasChanged} {loading} type="submit">
+						{m.save()}
+						<SaveIcon />
+					</Button>
+				</fieldset>
+			</form>
+		</Card.Content>
+	</Card.Root>
 
-    <Card.Root>
-        <Card.Header>
-            <Card.Title>{m.account_export_title()}</Card.Title>
-            <Card.Description>{m.account_export_description()}</Card.Description>
-        </Card.Header>
-        <Card.Content class="flex flex-wrap gap-3">
-            {#if !page.data.driveOnly}
-                <Button
-                    variant="outline"
-                    onclick={() =>
-                        downloadExport(
-                            "/api/v1/account/export",
-                            "penombre-export.zip",
-                        )}
-                >
-                    <DownloadIcon />
-                    {m.account_export_files()}
-                </Button>
-            {/if}
-            <Button
-                variant="outline"
-                onclick={() =>
-                    downloadExport(
-                        "/api/v1/account/data",
-                        "penombre-account-data.json",
-                    )}
-            >
-                <DownloadIcon />
-                {m.account_export_data()}
-            </Button>
-        </Card.Content>
-    </Card.Root>
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>{m.account_export_title()}</Card.Title>
+			<Card.Description>{m.account_export_description()}</Card.Description>
+		</Card.Header>
+		<Card.Content class="flex flex-wrap gap-3">
+			{#if !page.data.driveOnly}
+				<Button
+					variant="outline"
+					onclick={() =>
+						downloadExport("/api/v1/account/export", "penombre-export.zip")}
+				>
+					<DownloadIcon />
+					{m.account_export_files()}
+				</Button>
+			{/if}
+			<Button
+				variant="outline"
+				onclick={() =>
+					downloadExport("/api/v1/account/data", "penombre-account-data.json")}
+			>
+				<DownloadIcon />
+				{m.account_export_data()}
+			</Button>
+		</Card.Content>
+	</Card.Root>
 </div>
 
 <EmailDialog bind:open={emailOpen} mode={emailMode} email={data.user.email} />

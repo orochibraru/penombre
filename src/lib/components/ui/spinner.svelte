@@ -37,4 +37,4 @@
 	}
 </script>
 
-<LoaderCircleIcon class={cn('animate-spin', getClasses(), className)} />
+<LoaderCircleIcon class={cn("animate-spin", getClasses(), className)} />

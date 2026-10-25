@@ -1,4 +1,4 @@
-import { FONT_FAMILIES, firstFamily } from "../editor/document-format";
+import { firstFamily, FONT_FAMILIES } from "../editor/document-format";
 import { moveMerges } from "./merges";
 import type { Rect } from "./selection";
 

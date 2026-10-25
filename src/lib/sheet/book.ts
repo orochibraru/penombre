@@ -14,7 +14,7 @@ import {
 	moveDropdowns,
 	renameDropdownSources,
 } from "./dropdowns";
-import { moveLayout, type SheetLayout, savedLayout } from "./layout";
+import { moveLayout, savedLayout, type SheetLayout } from "./layout";
 import type { Rect } from "./selection";
 import {
 	type CellStyle,

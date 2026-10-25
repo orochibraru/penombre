@@ -20,8 +20,7 @@ export interface WorkerJob {
 }
 
 export type WorkerRequest =
-	| { type: "enqueue"; jobs: WorkerJob[] }
-	| { type: "cancel"; id: string };
+	{ type: "enqueue"; jobs: WorkerJob[] } | { type: "cancel"; id: string };
 
 export type WorkerEvent =
 	| { type: "start"; id: string }

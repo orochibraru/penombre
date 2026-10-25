@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { api } from "#lib/api/index.js";
 	import { page } from "$app/state";
+	import { api } from "#lib/api/index.js";
 	import ScanBanner from "./scan-banner.svelte";
 	import ScanControls from "./scan-controls.svelte";
 	import type { ScanStatus } from "./scan-status";
@@ -17,8 +17,12 @@
 </script>
 
 {#if page.data.config?.simpleMode}
-    <div class="flex flex-wrap items-center justify-end gap-2">
-        <ScanControls eventsUrl="/api/v1/library/scan/events" {rescan} bind:status />
-    </div>
-    <ScanBanner {status} />
+	<div class="flex flex-wrap items-center justify-end gap-2">
+		<ScanControls
+			eventsUrl="/api/v1/library/scan/events"
+			{rescan}
+			bind:status
+		/>
+	</div>
+	<ScanBanner {status} />
 {/if}

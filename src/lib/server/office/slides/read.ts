@@ -38,7 +38,7 @@ import {
 	type Scope,
 	stylesFor,
 } from "./elements";
-import { REL, readTheme, relatedPart, relationships, rootOf } from "./parts";
+import { readTheme, REL, relatedPart, relationships, rootOf } from "./parts";
 
 /**
  * A `.pptx` read into the slide editor's model, keeping beside it the XML

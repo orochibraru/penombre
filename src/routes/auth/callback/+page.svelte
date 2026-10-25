@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { onMount } from "svelte";
 	import Spinner from "#lib/components/ui/spinner.svelte";
 	import { m } from "#lib/paraglide/messages.js";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
 
 	// This page exists only to load cookies in the browser
 	// so the sign in flow works properly
@@ -14,8 +14,8 @@
 </script>
 
 <div class="flex h-screen flex-col items-center justify-center gap-2">
-    <p class="text-lg font-medium">
-        {m.authenticating_redirect()}
-    </p>
-    <Spinner size={8} />
+	<p class="text-lg font-medium">
+		{m.authenticating_redirect()}
+	</p>
+	<Spinner size={8} />
 </div>

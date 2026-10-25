@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import { AlertTriangleIcon, HardDriveIcon, Trash2Icon } from "@lucide/svelte";
 	import type { ObjectItem } from "#lib/api/index.js";
 	import ResponsiveDialog from "#lib/components/responsive-dialog.svelte";
 	import * as m from "#lib/paraglide/messages.js";
 	import { isTrashListing, readableFileSize } from "#lib/utils.js";
-	import { page } from "$app/state";
 
 	interface Props {
 		confirmDeleteOpen: boolean;
@@ -61,61 +61,59 @@
 </script>
 
 <ResponsiveDialog
-    bind:open={confirmDeleteOpen}
-    bind:loading={deletingItem}
-    size="sm"
-    title={emptyingTrash ? m.empty_trash_title() : m.confirm_delete_title()}
-    submitLabel={isTrash ? m.delete_permanently() : m.continue()}
-    loadingLabel={m.deleting()}
-    submitVariant="destructive"
-    onsubmit={handleDeleteObject}
+	bind:open={confirmDeleteOpen}
+	bind:loading={deletingItem}
+	size="sm"
+	title={emptyingTrash ? m.empty_trash_title() : m.confirm_delete_title()}
+	submitLabel={isTrash ? m.delete_permanently() : m.continue()}
+	loadingLabel={m.deleting()}
+	submitVariant="destructive"
+	onsubmit={handleDeleteObject}
 >
-    <div class="flex flex-col gap-4">
-        <div class="flex flex-col items-center gap-3 text-center">
-            <div
-                class="bg-destructive/10 text-destructive flex size-11 items-center justify-center rounded-[calc(var(--radius)+2px)]"
-            >
-                {#if isTrash}
-                    <Trash2Icon class="size-5" />
-                {:else}
-                    <AlertTriangleIcon class="size-5" />
-                {/if}
-            </div>
-            <p class="text-sm text-balance">
-                {isTrash
-                    ? m.confirm_delete_permanent()
-                    : m.confirm_delete_trash()}
-            </p>
-        </div>
+	<div class="flex flex-col gap-4">
+		<div class="flex flex-col items-center gap-3 text-center">
+			<div
+				class="bg-destructive/10 text-destructive flex size-11 items-center justify-center rounded-[calc(var(--radius)+2px)]"
+			>
+				{#if isTrash}
+					<Trash2Icon class="size-5" />
+				{:else}
+					<AlertTriangleIcon class="size-5" />
+				{/if}
+			</div>
+			<p class="text-sm text-balance">
+				{isTrash ? m.confirm_delete_permanent() : m.confirm_delete_trash()}
+			</p>
+		</div>
 
-        {#if showReclaim}
-            <div
-                class="bg-muted/50 flex items-center justify-between gap-3 rounded-[calc(var(--radius)-2px)] px-3 py-2.5"
-            >
-                <span class="text-muted-foreground flex items-center gap-2 text-xs">
-                    <HardDriveIcon class="size-3.5 shrink-0" />
-                    {m.space_reclaimed()}
-                </span>
-                <span class="text-sm font-medium tabular-nums">
-                    {readableFileSize(reclaimed)}
-                </span>
-            </div>
-        {/if}
+		{#if showReclaim}
+			<div
+				class="bg-muted/50 flex items-center justify-between gap-3 rounded-[calc(var(--radius)-2px)] px-3 py-2.5"
+			>
+				<span class="text-muted-foreground flex items-center gap-2 text-xs">
+					<HardDriveIcon class="size-3.5 shrink-0" />
+					{m.space_reclaimed()}
+				</span>
+				<span class="text-sm font-medium tabular-nums">
+					{readableFileSize(reclaimed)}
+				</span>
+			</div>
+		{/if}
 
-        <div class="flex flex-col gap-1">
-            <p class="text-muted-foreground text-xs">
-                {m.items_count({ count: String(itemCount) })}
-            </p>
-            <ul
-                class="divide-border max-h-40 divide-y overflow-y-auto rounded-[calc(var(--radius)-2px)] border"
-            >
-                <!-- Keyed by item: names repeat across folders. -->
-                {#each selected as [key, name] (key)}
-                    <li class="truncate px-3 py-1.5 text-xs" title={name}>
-                        {name}
-                    </li>
-                {/each}
-            </ul>
-        </div>
-    </div>
+		<div class="flex flex-col gap-1">
+			<p class="text-muted-foreground text-xs">
+				{m.items_count({ count: String(itemCount) })}
+			</p>
+			<ul
+				class="divide-border max-h-40 divide-y overflow-y-auto rounded-[calc(var(--radius)-2px)] border"
+			>
+				<!-- Keyed by item: names repeat across folders. -->
+				{#each selected as [key, name] (key)}
+					<li class="truncate px-3 py-1.5 text-xs" title={name}>
+						{name}
+					</li>
+				{/each}
+			</ul>
+		</div>
+	</div>
 </ResponsiveDialog>

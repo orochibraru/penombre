@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
-	DEV_DATA_DIR,
 	dataPaths,
 	defaultConfigValues,
 	defaultDbUrl,
+	DEV_DATA_DIR,
 } from "./config.defaults";
 
 describe("data directory layout", () => {

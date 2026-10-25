@@ -230,89 +230,89 @@
 </script>
 
 <label
-    ondragover={(e) => e.preventDefault()}
-    ondrop={drop}
-    for={folderOnly ? folderId : id}
-    aria-disabled={!canUploadFiles}
-    class={cn(
-        "border-border hover:bg-accent/25 flex h-48 w-full place-items-center justify-center rounded-lg border-2 border-dashed md:p-6 transition-all hover:cursor-pointer aria-disabled:opacity-50 aria-disabled:hover:cursor-not-allowed",
-        className,
-    )}
+	ondragover={(e) => e.preventDefault()}
+	ondrop={drop}
+	for={folderOnly ? folderId : id}
+	aria-disabled={!canUploadFiles}
+	class={cn(
+		"border-border hover:bg-accent/25 flex h-48 w-full place-items-center justify-center rounded-lg border-2 border-dashed md:p-6 transition-all hover:cursor-pointer aria-disabled:opacity-50 aria-disabled:hover:cursor-not-allowed",
+		className,
+	)}
 >
-    {#if children}
-        {@render children()}
-    {:else}
-        <div class="flex flex-col place-items-center justify-center gap-2">
-            <div
-                class="border-border text-muted-foreground flex size-14 place-items-center justify-center rounded-full border border-dashed"
-            >
-                {#if folderOnly}
-                    <FolderUpIcon class="size-7" />
-                {:else}
-                    <UploadIcon class="size-7" />
-                {/if}
-            </div>
-            <div class="flex flex-col gap-0.5 text-center">
-                <span class="text-muted-foreground font-medium">
-                    {#if folderOnly}
-                        {#if isDesktop.current}
-                            Drag 'n' drop a folder here, or click to select one
-                        {:else}
-                            Tap to select a folder
-                        {/if}
-                    {:else if isDesktop.current}
-                        Drag 'n' drop files here, or click to select files
-                    {:else}
-                        Tap to select files
-                    {/if}
-                </span>
-                {#if maxFiles || maxFileSize}
-                    <span class="text-muted-foreground/75 text-sm">
-                        {#if maxFiles}
-                            <span>You can upload {maxFiles} files</span>
-                        {/if}
-                        {#if maxFiles && maxFileSize}
-                            <span>(up to {displaySize(maxFileSize)} each)</span>
-                        {/if}
-                        {#if maxFileSize && !maxFiles}
-                            <span>Maximum size {displaySize(maxFileSize)}</span>
-                        {/if}
-                    </span>
-                {/if}
-                {#if onFolderUpload && !folderOnly && isDesktop.current}
-                    <!-- svelte-ignore a11y_click_events_have_key_events -->
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-                    <label
-                        for={folderId}
-                        onclick={(e) => e.stopPropagation()}
-                        class="text-primary hover:text-primary/80 mt-2 flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
-                    >
-                        <FolderUpIcon class="size-4" />
-                        <span>Or select a folder</span>
-                    </label>
-                {/if}
-            </div>
-        </div>
-    {/if}
-    <input
-        {...rest}
-        disabled={!canUploadFiles}
-        {id}
-        {accept}
-        multiple={maxFiles === undefined || maxFiles - (fileCount ?? 0) > 1}
-        type="file"
-        onchange={change}
-        class="hidden"
-    />
-    {#if onFolderUpload}
-        <input
-            disabled={!canUploadFiles}
-            id={folderId}
-            type="file"
-            onchange={folderChange}
-            class="hidden"
-            webkitdirectory
-        />
-    {/if}
+	{#if children}
+		{@render children()}
+	{:else}
+		<div class="flex flex-col place-items-center justify-center gap-2">
+			<div
+				class="border-border text-muted-foreground flex size-14 place-items-center justify-center rounded-full border border-dashed"
+			>
+				{#if folderOnly}
+					<FolderUpIcon class="size-7" />
+				{:else}
+					<UploadIcon class="size-7" />
+				{/if}
+			</div>
+			<div class="flex flex-col gap-0.5 text-center">
+				<span class="text-muted-foreground font-medium">
+					{#if folderOnly}
+						{#if isDesktop.current}
+							Drag 'n' drop a folder here, or click to select one
+						{:else}
+							Tap to select a folder
+						{/if}
+					{:else if isDesktop.current}
+						Drag 'n' drop files here, or click to select files
+					{:else}
+						Tap to select files
+					{/if}
+				</span>
+				{#if maxFiles || maxFileSize}
+					<span class="text-muted-foreground/75 text-sm">
+						{#if maxFiles}
+							<span>You can upload {maxFiles} files</span>
+						{/if}
+						{#if maxFiles && maxFileSize}
+							<span>(up to {displaySize(maxFileSize)} each)</span>
+						{/if}
+						{#if maxFileSize && !maxFiles}
+							<span>Maximum size {displaySize(maxFileSize)}</span>
+						{/if}
+					</span>
+				{/if}
+				{#if onFolderUpload && !folderOnly && isDesktop.current}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+					<label
+						for={folderId}
+						onclick={(e) => e.stopPropagation()}
+						class="text-primary hover:text-primary/80 mt-2 flex cursor-pointer items-center gap-1 text-sm font-medium transition-colors"
+					>
+						<FolderUpIcon class="size-4" />
+						<span>Or select a folder</span>
+					</label>
+				{/if}
+			</div>
+		</div>
+	{/if}
+	<input
+		{...rest}
+		disabled={!canUploadFiles}
+		{id}
+		{accept}
+		multiple={maxFiles === undefined || maxFiles - (fileCount ?? 0) > 1}
+		type="file"
+		onchange={change}
+		class="hidden"
+	/>
+	{#if onFolderUpload}
+		<input
+			disabled={!canUploadFiles}
+			id={folderId}
+			type="file"
+			onchange={folderChange}
+			class="hidden"
+			webkitdirectory
+		/>
+	{/if}
 </label>

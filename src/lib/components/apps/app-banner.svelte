@@ -36,21 +36,21 @@
 </script>
 
 {#if shown}
-    <div
-        class="bg-primary/10 border-primary/20 flex items-center gap-3 rounded-lg border px-3 py-2 text-sm"
-        role="status"
-    >
-        <SmartphoneIcon class="text-primary size-5 shrink-0" />
-        <p class="min-w-0 flex-1">{m.app_banner_text()}</p>
-        <Button
-            size="sm"
-            onclick={() => {
-                dismiss();
-                appsDialogOpen.set(true);
-            }}
-        >{m.app_banner_action()}</Button>
-        <Button variant="ghost" size="icon" title={m.close()} onclick={dismiss}>
-            <XIcon />
-        </Button>
-    </div>
+	<div
+		class="bg-primary/10 border-primary/20 flex items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+		role="status"
+	>
+		<SmartphoneIcon class="text-primary size-5 shrink-0" />
+		<p class="min-w-0 flex-1">{m.app_banner_text()}</p>
+		<Button
+			size="sm"
+			onclick={() => {
+				dismiss();
+				appsDialogOpen.set(true);
+			}}>{m.app_banner_action()}</Button
+		>
+		<Button variant="ghost" size="icon" title={m.close()} onclick={dismiss}>
+			<XIcon />
+		</Button>
+	</div>
 {/if}

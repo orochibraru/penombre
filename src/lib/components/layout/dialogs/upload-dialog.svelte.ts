@@ -8,8 +8,8 @@
  * step needs. Only the server knows a new folder's path (UUIDs or real names).
  */
 
-import { api, type UploadResult } from "#lib/api/index.js";
 import { page } from "$app/state";
+import { api, type UploadResult } from "#lib/api/index.js";
 
 export type FileWithPath = File & { relativePath?: string };
 

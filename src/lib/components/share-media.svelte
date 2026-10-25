@@ -55,40 +55,40 @@
 </script>
 
 {#if kind && !failed}
-    <div class="border-t">
-        {#if kind === "image"}
-            <!-- Checkerboard-free plain surface: a shared image is the subject
+	<div class="border-t">
+		{#if kind === "image"}
+			<!-- Checkerboard-free plain surface: a shared image is the subject
                  of the page, so it gets the room rather than a thumbnail box. -->
-            <div class="bg-muted/30 flex justify-center">
-                <img
-                    {src}
-                    alt={name ?? ""}
-                    class="max-h-[70vh] w-auto max-w-full object-contain"
-                    onerror={() => (failed = true)}
-                />
-            </div>
-        {:else if kind === "video"}
-            <!-- svelte-ignore a11y_media_has_caption -->
-            <video
-                {src}
-                controls
-                preload="metadata"
-                class="bg-muted/30 max-h-[70vh] w-full"
-                onerror={() => (failed = true)}
-            ></video>
-        {:else}
-            <div class="flex flex-col gap-2 px-6 py-5">
-                <audio
-                    {src}
-                    controls
-                    preload="metadata"
-                    class="w-full"
-                    onerror={() => (failed = true)}
-                ></audio>
-                <p class="text-muted-foreground text-xs">
-                    {m.share_preview_hint()}
-                </p>
-            </div>
-        {/if}
-    </div>
+			<div class="bg-muted/30 flex justify-center">
+				<img
+					{src}
+					alt={name ?? ""}
+					class="max-h-[70vh] w-auto max-w-full object-contain"
+					onerror={() => (failed = true)}
+				/>
+			</div>
+		{:else if kind === "video"}
+			<!-- svelte-ignore a11y_media_has_caption -->
+			<video
+				{src}
+				controls
+				preload="metadata"
+				class="bg-muted/30 max-h-[70vh] w-full"
+				onerror={() => (failed = true)}
+			></video>
+		{:else}
+			<div class="flex flex-col gap-2 px-6 py-5">
+				<audio
+					{src}
+					controls
+					preload="metadata"
+					class="w-full"
+					onerror={() => (failed = true)}
+				></audio>
+				<p class="text-muted-foreground text-xs">
+					{m.share_preview_hint()}
+				</p>
+			</div>
+		{/if}
+	</div>
 {/if}

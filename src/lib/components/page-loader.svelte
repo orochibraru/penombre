@@ -4,6 +4,6 @@
 </script>
 
 <div class="flex w-full flex-col items-center justify-center gap-2">
-    <Spinner size={8} />
-    <p class="text-sm">{m.loading()}</p>
+	<Spinner size={8} />
+	<p class="text-sm">{m.loading()}</p>
 </div>

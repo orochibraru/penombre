@@ -383,9 +383,8 @@ A feature that isn't in `docs/` isn't finished.
 
 ## Linting gotchas (oxlint)
 
-Linting is **oxlint** (`--type-aware`, `.oxlintrc.json`); Biome's linter is off
-and it only formats and sorts imports. Suppress a rule with
-`// oxlint-disable-next-line <rule> -- <reason>`, never a `biome-ignore`.
+Linting is **oxlint** (`--type-aware`, `.oxlintrc.json`). Suppress a rule with
+`// oxlint-disable-next-line <rule> -- <reason>`.
 
 - `no-console` is an **error** in app code — use `Logger` from `#lib/logger`,
   not `console.*`. Console is only allowed in `logger.ts` itself, tests and
@@ -2597,7 +2596,21 @@ native binary in its postinstall. Bun skips install scripts for packages not in
 `code_quality.yaml` runs `bun node_modules/agnix/install.js` before prek.
 `.agnix.toml` disables four rules that score CLAUDE.md as a short prompt
 (length, keyword placement, every "never"); each is commented there.
-`bun pm trust` rewrote `package.json` with spaces: run Biome over it after.
+`bun pm trust` rewrote `package.json` with spaces: run `bun fmt` over it after.
+
+### Formatting is `bun fmt`, type checks are half `bun check`
+
+`bun fmt` (`[fmt]` in `bunfig.toml`) formats and sorts imports in every language
+it knows, Svelte markup included, which Biome never touched. A `.prettierrc` or
+`.oxfmtrc.json` anywhere switches it to that tool's behaviour, Svelte off, so
+the repo must not carry one. `tabWidth = 2` and `newlinesBetween = false` keep
+Biome's line widths and ungrouped imports; without them `.editorconfig`'s
+`indent_size = 4` re-wrapped half the codebase.
+
+`bun check` only replaces `tsc` for `tsconfig.scripts.json`: it reads no
+`.svelte` file and none of Kit's injected load types, so the app stays on
+`svelte-check`. `check:scripts` passes `--no-script`, since `bun check` with a
+`check` script in `package.json` runs that script instead.
 
 ### Type checks run on push, not commit
 
@@ -3433,8 +3446,6 @@ form's own `form?.error` handling is untouched.
   Kit 3 stops writing `.svelte-kit/tsconfig.json`, but an old checkout keeps a
   stale copy, so a config still pointing there passes locally and fails in CI.
   `rm -rf .svelte-kit` before trusting a local `bun run check`.
-- **Do not `!!`-ignore `src/lib/api/v1.d.ts` in Biome**: `gen:api` formats it
-  with Biome and fails on an ignored path.
 - **Nothing may import `$app/stores`.** Kit 3 turns it into a module that throws
   on import, so one dependency still using it (superforms 2.x did) 500s every
   page that loads it — in the built app only; `bun run check` is green.

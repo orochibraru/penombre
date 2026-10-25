@@ -47,39 +47,39 @@
 </script>
 
 <script lang="ts">
-    import type { Snippet } from "svelte";
-    import { MediaQuery } from "svelte/reactivity";
-    import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
-    import { m } from "#lib/paraglide/messages.js";
-    import * as Dialog from "#lib/components/ui/dialog/index.js";
-    import * as Drawer from "#lib/components/ui/drawer/index.js";
-    import { cn } from "#lib/utils.js";
-    import { enhance } from "#lib/forms.js";
+	import type { Snippet } from "svelte";
+	import { MediaQuery } from "svelte/reactivity";
+	import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
+	import * as Dialog from "#lib/components/ui/dialog/index.js";
+	import * as Drawer from "#lib/components/ui/drawer/index.js";
+	import { enhance } from "#lib/forms.js";
+	import { m } from "#lib/paraglide/messages.js";
+	import { cn } from "#lib/utils.js";
 
-    let {
-        open = $bindable(false),
-        loading = $bindable(false),
-        title,
-        description,
-        size = "md",
-        contentClass,
-        submitLabel = "Submit",
-        loadingLabel = "Loading...",
-        submitVariant = "default",
-        submitDisabled = false,
-        onsubmit,
-        cancelLabel,
-        bodyClass,
-        form,
-        children,
-        footer,
-    }: ResponsiveDialogProps & {
-        children: Snippet;
-        /** Optional custom footer snippet. If provided, replaces default buttons. */
-        footer?: Snippet;
-    } = $props();
+	let {
+		open = $bindable(false),
+		loading = $bindable(false),
+		title,
+		description,
+		size = "md",
+		contentClass,
+		submitLabel = "Submit",
+		loadingLabel = "Loading...",
+		submitVariant = "default",
+		submitDisabled = false,
+		onsubmit,
+		cancelLabel,
+		bodyClass,
+		form,
+		children,
+		footer,
+	}: ResponsiveDialogProps & {
+		children: Snippet;
+		/** Optional custom footer snippet. If provided, replaces default buttons. */
+		footer?: Snippet;
+	} = $props();
 
-    const isDesktop = new MediaQuery("(min-width: 768px)");
+	const isDesktop = new MediaQuery("(min-width: 768px)");
 	/**
 	 * Most of these dialogs do their work in the browser and pass no `action`.
 	 * Submitting such a form posts to the current page, which has no form
@@ -100,125 +100,120 @@
 </script>
 
 {#snippet footerButtons()}
-    {#if footer}
-        {@render footer()}
-    {:else if form || onsubmit}
-        <Button
-            type={form ? "submit" : "button"}
-            variant={submitVariant}
-            disabled={submitDisabled}
-            onclick={!form && onsubmit ? onsubmit : undefined}
-            {loading}
-        >
-            {loading ? loadingLabel : submitLabel}
-        </Button>
-    {/if}
-    {#if isDesktop.current}
-        <Dialog.Close
-            disabled={loading}
-            type="button"
-            class={buttonVariants({ variant: "outline" })}
-        >
-            {cancelLabel ?? (form || onsubmit ? m.cancel() : m.close())}
-        </Dialog.Close>
-    {:else}
-        <Drawer.Close
-            disabled={loading}
-            type="button"
-            class={buttonVariants({ variant: "outline" })}
-        >
-            {cancelLabel ?? (form || onsubmit ? m.cancel() : m.close())}
-        </Drawer.Close>
-    {/if}
+	{#if footer}
+		{@render footer()}
+	{:else if form || onsubmit}
+		<Button
+			type={form ? "submit" : "button"}
+			variant={submitVariant}
+			disabled={submitDisabled}
+			onclick={!form && onsubmit ? onsubmit : undefined}
+			{loading}
+		>
+			{loading ? loadingLabel : submitLabel}
+		</Button>
+	{/if}
+	{#if isDesktop.current}
+		<Dialog.Close
+			disabled={loading}
+			type="button"
+			class={buttonVariants({ variant: "outline" })}
+		>
+			{cancelLabel ?? (form || onsubmit ? m.cancel() : m.close())}
+		</Dialog.Close>
+	{:else}
+		<Drawer.Close
+			disabled={loading}
+			type="button"
+			class={buttonVariants({ variant: "outline" })}
+		>
+			{cancelLabel ?? (form || onsubmit ? m.cancel() : m.close())}
+		</Drawer.Close>
+	{/if}
 {/snippet}
 
 <!-- `min-w-0` throughout: the dialog is a grid, and a grid item's automatic
      minimum size is its min-content width — one long unbroken filename in the
      body widened the whole dialog and left it scrolling sideways. -->
 {#snippet formWrapper(content: Snippet)}
-    {#if form}
-        <form
-            class="min-w-0"
-            action={form.action}
-            method={form.method ?? "POST"}
-            enctype={form.enctype}
-            onsubmit={handleSubmit}
-            use:enhanceWhenAction
-        >
-            <fieldset disabled={loading} class="flex min-w-0 flex-col gap-4">
-                <div
-                    class={cn(
-                        "-mx-1 max-h-[40vh] min-w-0 overflow-y-auto px-1 md:max-h-[50vh]",
-                        bodyClass,
-                    )}
-                >
-                    {@render content()}
-                </div>
-                {@render footerButtons()}
-            </fieldset>
-        </form>
-    {:else}
-        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-        <div
-            class="flex min-w-0 flex-col gap-4"
-            role="group"
-            onkeydown={(e) => {
-                if (
-                    e.key === "Enter" &&
-                    onsubmit &&
-                    !submitDisabled &&
-                    !loading
-                ) {
-                    e.preventDefault();
-                    onsubmit();
-                }
-            }}
-        >
-            <div
-                class={cn(
-                    "-mx-1 max-h-[40vh] min-w-0 overflow-y-auto px-1 md:max-h-[50vh]",
-                    bodyClass,
-                )}
-            >
-                {@render content()}
-            </div>
-            {@render footerButtons()}
-        </div>
-    {/if}
+	{#if form}
+		<form
+			class="min-w-0"
+			action={form.action}
+			method={form.method ?? "POST"}
+			enctype={form.enctype}
+			onsubmit={handleSubmit}
+			use:enhanceWhenAction
+		>
+			<fieldset disabled={loading} class="flex min-w-0 flex-col gap-4">
+				<div
+					class={cn(
+						"-mx-1 max-h-[40vh] min-w-0 overflow-y-auto px-1 md:max-h-[50vh]",
+						bodyClass,
+					)}
+				>
+					{@render content()}
+				</div>
+				{@render footerButtons()}
+			</fieldset>
+		</form>
+	{:else}
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<div
+			class="flex min-w-0 flex-col gap-4"
+			role="group"
+			onkeydown={(e) => {
+				if (e.key === "Enter" && onsubmit && !submitDisabled && !loading) {
+					e.preventDefault();
+					onsubmit();
+				}
+			}}
+		>
+			<div
+				class={cn(
+					"-mx-1 max-h-[40vh] min-w-0 overflow-y-auto px-1 md:max-h-[50vh]",
+					bodyClass,
+				)}
+			>
+				{@render content()}
+			</div>
+			{@render footerButtons()}
+		</div>
+	{/if}
 {/snippet}
 
 {#if isDesktop.current}
-    <Dialog.Root bind:open>
-        <Dialog.Content
-            class={cn("max-h-[85%] overflow-y-auto", sizeClasses[size], contentClass)}
-        >
-            <Dialog.Header class="min-w-0">
-                <Dialog.Title class="wrap-break-word">{title}</Dialog.Title>
-                {#if description}
-                    <Dialog.Description class="wrap-break-word">
-                        {description}
-                    </Dialog.Description>
-                {/if}
-            </Dialog.Header>
-            {@render formWrapper(children)}
-        </Dialog.Content>
-    </Dialog.Root>
+	<Dialog.Root bind:open>
+		<Dialog.Content
+			class={cn("max-h-[85%] overflow-y-auto", sizeClasses[size], contentClass)}
+		>
+			<Dialog.Header class="min-w-0">
+				<Dialog.Title class="wrap-break-word">{title}</Dialog.Title>
+				{#if description}
+					<Dialog.Description class="wrap-break-word">
+						{description}
+					</Dialog.Description>
+				{/if}
+			</Dialog.Header>
+			{@render formWrapper(children)}
+		</Dialog.Content>
+	</Dialog.Root>
 {:else}
-    <Drawer.Root bind:open>
-        <Drawer.Content class="z-50">
-            <Drawer.Header class="min-w-0">
-                <Drawer.Title class="text-lg wrap-break-word">{title}</Drawer.Title>
-                {#if description}
-                    <Drawer.Description
-                        class="text-muted-foreground text-sm wrap-break-word"
-                    >
-                        {description}
-                    </Drawer.Description>
-                {/if}
-            </Drawer.Header>
-            <div class="p-4 flex flex-col gap-2">
-                {@render formWrapper(children)}
-            </div>
-        </Drawer.Content>
-    </Drawer.Root>
+	<Drawer.Root bind:open>
+		<Drawer.Content class="z-50">
+			<Drawer.Header class="min-w-0">
+				<Drawer.Title class="text-lg wrap-break-word">{title}</Drawer.Title>
+				{#if description}
+					<Drawer.Description
+						class="text-muted-foreground text-sm wrap-break-word"
+					>
+						{description}
+					</Drawer.Description>
+				{/if}
+			</Drawer.Header>
+			<div class="p-4 flex flex-col gap-2">
+				{@render formWrapper(children)}
+			</div>
+		</Drawer.Content>
+	</Drawer.Root>
 {/if}

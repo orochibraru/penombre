@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { browser } from "$app/env";
+	import { beforeNavigate, refreshAll } from "$app/navigation";
+	import { page } from "$app/state";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import DeckEditor from "#lib/components/editor/deck-editor.svelte";
@@ -23,9 +26,6 @@
 	import { locales } from "#lib/paraglide/runtime.js";
 	import { locationFrom } from "#lib/storage-location.js";
 	import { title } from "#lib/store/title.js";
-	import { browser } from "$app/env";
-	import { beforeNavigate, refreshAll } from "$app/navigation";
-	import { page } from "$app/state";
 
 	const { data } = $props();
 
@@ -251,140 +251,142 @@
 			event.preventDefault();
 		}
 	}}
-></svelte:window>
+/>
 
 <!-- Keyed: comments, presence and the view/edit choice belong to one file,
      and each editor reads its content once. -->
 {#key data.fileId}
-    <EditorShell
-        file={{
-            fileId: data.fileId,
-            path: data.path,
-            name,
-            kind,
-            canWrite: data.canWrite,
-            trackedChanges: data.trackedChanges,
-            canShare: data.canShare,
-        }}
-        status={{
-            saving,
-            failed: saveError,
-            pending: pending !== null,
-            savedAt,
-        }}
-        flush={saveNow}
-        onrename={renameTo}
-        onrestored={() => void reread()}
-        requestSignatures={data.canWrite ? () => void askForSignatures() : undefined}
-        signatures={() => (signaturesOpen = true)}
-    >
-        {#snippet editor(shell)}
-	{#if kind === "document"}
-		<!-- Browser only: ProseKit parses the initial HTML with DOMParser when
+	<EditorShell
+		file={{
+			fileId: data.fileId,
+			path: data.path,
+			name,
+			kind,
+			canWrite: data.canWrite,
+			trackedChanges: data.trackedChanges,
+			canShare: data.canShare,
+		}}
+		status={{
+			saving,
+			failed: saveError,
+			pending: pending !== null,
+			savedAt,
+		}}
+		flush={saveNow}
+		onrename={renameTo}
+		onrestored={() => void reread()}
+		requestSignatures={data.canWrite
+			? () => void askForSignatures()
+			: undefined}
+		signatures={() => (signaturesOpen = true)}
+	>
+		{#snippet editor(shell)}
+			{#if kind === "document"}
+				<!-- Browser only: ProseKit parses the initial HTML with DOMParser when
              the editor is constructed, and there is no DOM on the server. The
              other two editors are plain Svelte and render fine either way. -->
-        {#if browser}
-            {#key generation}
-                <DocumentEditor
-                    content={data.content}
-                    onChange={queue}
-                    menu={shell.menu}
-                    readOnly={shell.readOnly}
-                    suggesting={shell.suggesting}
-                    author={page.data.user
-                        ? { id: page.data.user.id, name: page.data.user.name }
-                        : undefined}
-                    comments={shell.comments}
-                />
-            {/key}
-        {/if}
-    {:else if kind === "sheet"}
-        <!-- Keyed: the grid reads its content once, so a restored
+				{#if browser}
+					{#key generation}
+						<DocumentEditor
+							content={data.content}
+							onChange={queue}
+							menu={shell.menu}
+							readOnly={shell.readOnly}
+							suggesting={shell.suggesting}
+							author={page.data.user
+								? { id: page.data.user.id, name: page.data.user.name }
+								: undefined}
+							comments={shell.comments}
+						/>
+					{/key}
+				{/if}
+			{:else if kind === "sheet"}
+				<!-- Keyed: the grid reads its content once, so a restored
              version needs a new one, not the old cells saved over it. -->
-        {#key generation}
-            <SheetEditor
-                content={data.content}
-                onChange={queue}
-                workbook={data.office}
-                menu={shell.menu}
-                readOnly={shell.readOnly}
-                comments={shell.comments}
-            />
-        {/key}
-    {:else if kind === "presentation"}
-        {#if data.office}
-            <!-- Keyed: the slide editor reads its deck once, so a restored
+				{#key generation}
+					<SheetEditor
+						content={data.content}
+						onChange={queue}
+						workbook={data.office}
+						menu={shell.menu}
+						readOnly={shell.readOnly}
+						comments={shell.comments}
+					/>
+				{/key}
+			{:else if kind === "presentation"}
+				{#if data.office}
+					<!-- Keyed: the slide editor reads its deck once, so a restored
                  version needs a new one. -->
-            {#key `${data.fileId}:${generation}`}
-                <SlidesEditor
-                    content={data.content}
-                    onChange={queue}
-                    fileId={data.fileId}
-                    menu={shell.menu}
-                    readOnly={shell.readOnly}
-                    comments={shell.comments}
-                />
-            {/key}
-        {:else}
-            {#key generation}
-                <DeckEditor
-                    content={data.content}
-                    onChange={queue}
-                    menu={shell.menu}
-                    readOnly={shell.readOnly}
-                    comments={shell.comments}
-                />
-            {/key}
-        {/if}
-    {:else}
-        <Menubar.Root class="mb-2 w-fit">
-            {@render shell.menu({})}
-        </Menubar.Root>
-        {#key generation}
-            <Textarea
-                value={data.content}
-                oninput={(event) => queue(event.currentTarget.value)}
-                readonly={shell.readOnly}
-                spellcheck="false"
-                class="min-h-0 flex-1 resize-none font-mono text-sm"
-            />
-        {/key}
-    {/if}
-        {/snippet}
-    </EditorShell>
+					{#key `${data.fileId}:${generation}`}
+						<SlidesEditor
+							content={data.content}
+							onChange={queue}
+							fileId={data.fileId}
+							menu={shell.menu}
+							readOnly={shell.readOnly}
+							comments={shell.comments}
+						/>
+					{/key}
+				{:else}
+					{#key generation}
+						<DeckEditor
+							content={data.content}
+							onChange={queue}
+							menu={shell.menu}
+							readOnly={shell.readOnly}
+							comments={shell.comments}
+						/>
+					{/key}
+				{/if}
+			{:else}
+				<Menubar.Root class="mb-2 w-fit">
+					{@render shell.menu({})}
+				</Menubar.Root>
+				{#key generation}
+					<Textarea
+						value={data.content}
+						oninput={(event) => queue(event.currentTarget.value)}
+						readonly={shell.readOnly}
+						spellcheck="false"
+						class="min-h-0 flex-1 resize-none font-mono text-sm"
+					/>
+				{/key}
+			{/if}
+		{/snippet}
+	</EditorShell>
 {/key}
 
 <!-- Dismissed means "later": the next save is refused again and asks again. -->
 <ResponsiveDialog
-    bind:open={() => theirs !== null, (open) => !open && (theirs = null)}
-    title={m.editor_conflict_title()}
-    description={name}
+	bind:open={() => theirs !== null, (open) => !open && (theirs = null)}
+	title={m.editor_conflict_title()}
+	description={name}
 >
-    {#snippet footer()}
-        <Button variant="outline" onclick={() => void reread()}>
-            {m.editor_conflict_theirs()}
-        </Button>
-        <Button onclick={() => theirs !== null && keepMine(theirs)}>
-            {m.editor_conflict_mine()}
-        </Button>
-    {/snippet}
-    <p class="text-muted-foreground text-sm">{m.editor_conflict_body()}</p>
+	{#snippet footer()}
+		<Button variant="outline" onclick={() => void reread()}>
+			{m.editor_conflict_theirs()}
+		</Button>
+		<Button onclick={() => theirs !== null && keepMine(theirs)}>
+			{m.editor_conflict_mine()}
+		</Button>
+	{/snippet}
+	<p class="text-muted-foreground text-sm">{m.editor_conflict_body()}</p>
 </ResponsiveDialog>
 
 {#if kind === "document"}
-    <RequestSignaturesDialog
-        bind:open={signOpen}
-        fileId={data.fileId}
-        fileName={name}
-        location={locationFrom(page.params, page.url)}
-        onSent={() => signaturesRefresh++}
-    />
-    <ResponsiveDialog
-        bind:open={signaturesOpen}
-        title={m.sign_menu_status()}
-        description={name}
-        bodyClass="max-h-[70vh]"
-    >
-        <SignaturesPanel fileId={data.fileId} refresh={signaturesRefresh} />
-    </ResponsiveDialog>
+	<RequestSignaturesDialog
+		bind:open={signOpen}
+		fileId={data.fileId}
+		fileName={name}
+		location={locationFrom(page.params, page.url)}
+		onSent={() => signaturesRefresh++}
+	/>
+	<ResponsiveDialog
+		bind:open={signaturesOpen}
+		title={m.sign_menu_status()}
+		description={name}
+		bodyClass="max-h-[70vh]"
+	>
+		<SignaturesPanel fileId={data.fileId} refresh={signaturesRefresh} />
+	</ResponsiveDialog>
 {/if}

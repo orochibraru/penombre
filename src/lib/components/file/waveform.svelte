@@ -116,92 +116,89 @@
 </script>
 
 {#snippet waves(fill: string, clip?: string)}
-    <g fill={fill} clip-path={clip}>
-        {#each bars as bar, index (index)}
-            <rect
-                x={bar.x}
-                y={(HEIGHT - bar.height) / 2}
-                width="1"
-                height={bar.height}
-                rx="0.4"
-            />
-        {/each}
-    </g>
+	<g {fill} clip-path={clip}>
+		{#each bars as bar, index (index)}
+			<rect
+				x={bar.x}
+				y={(HEIGHT - bar.height) / 2}
+				width="1"
+				height={bar.height}
+				rx="0.4"
+			/>
+		{/each}
+	</g>
 {/snippet}
 
 {#snippet svg()}
-    <svg
-        data-slot="waveform"
-        class="h-full w-full"
-        viewBox="0 0 {viewWidth} {HEIGHT}"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        fill="currentColor"
-    >
-        {#if progress === undefined}
-            {@render waves("currentColor")}
-        {:else}
-            <defs>
-                <clipPath id={clipId}>
-                    <rect x="0" y="0" width={clipWidth} height={HEIGHT} />
-                </clipPath>
-            </defs>
-            <!-- Unplayed behind, played on top and clipped to the playhead:
+	<svg
+		data-slot="waveform"
+		class="h-full w-full"
+		viewBox="0 0 {viewWidth} {HEIGHT}"
+		preserveAspectRatio="none"
+		aria-hidden="true"
+		fill="currentColor"
+	>
+		{#if progress === undefined}
+			{@render waves("currentColor")}
+		{:else}
+			<defs>
+				<clipPath id={clipId}>
+					<rect x="0" y="0" width={clipWidth} height={HEIGHT} />
+				</clipPath>
+			</defs>
+			<!-- Unplayed behind, played on top and clipped to the playhead:
                  one pass of bars would need every rect duplicated per frame. -->
-            {@render waves("var(--muted-foreground)")}
-            {@render waves("var(--primary)", `url(#${clipId})`)}
-        {/if}
-    </svg>
+			{@render waves("var(--muted-foreground)")}
+			{@render waves("var(--primary)", `url(#${clipId})`)}
+		{/if}
+	</svg>
 {/snippet}
 
 {#if bars.length > 0}
-    <div class={cn("relative", className)}>
-        {#if onseek}
-            <button
-                type="button"
-                class="block h-full w-full cursor-pointer"
-                aria-label={seekLabel}
-                onclick={(event) => onseek(fractionFrom(event))}
-            >
-                {@render svg()}
-            </button>
-        {:else}
-            {@render svg()}
-        {/if}
+	<div class={cn("relative", className)}>
+		{#if onseek}
+			<button
+				type="button"
+				class="block h-full w-full cursor-pointer"
+				aria-label={seekLabel}
+				onclick={(event) => onseek(fractionFrom(event))}
+			>
+				{@render svg()}
+			</button>
+		{:else}
+			{@render svg()}
+		{/if}
 
-        <!-- Notes live on the track itself, not only in the thread: a dot per
+		<!-- Notes live on the track itself, not only in the thread: a dot per
              timestamped note, its text on hover, a seek on click. The tooltip
              is portalled because the bottom player scrolls its own content and
              would otherwise clip it. -->
-        {#if markers.length > 0}
-            <Tooltip.Provider delayDuration={120}>
-                {#each markers as marker (marker.id)}
-                    <Tooltip.Root>
-                        <Tooltip.Trigger
-                            data-slot="waveform-marker"
-                            class="absolute top-0 z-10 -translate-x-1/2 cursor-pointer p-0.5"
-                            style="left: {marker.at * 100}%"
-                            aria-label={marker.caption}
-                            onclick={() => onmarker?.(marker)}
-                        >
-                            <span
-                                class="bg-primary ring-background block size-2 rounded-full ring-2"
-                            ></span>
-                        </Tooltip.Trigger>
-                        <Tooltip.Content
-                            sideOffset={6}
-                            class="max-w-56 border text-start"
-                        >
-                            <p class="font-mono text-[0.65rem] opacity-80">
-                                {marker.caption}
-                            </p>
-                            <p class="wrap-break-word whitespace-pre-wrap">
-                                {marker.body}
-                            </p>
-                        </Tooltip.Content>
-                    </Tooltip.Root>
-                {/each}
-            </Tooltip.Provider>
-        {/if}
-    </div>
+		{#if markers.length > 0}
+			<Tooltip.Provider delayDuration={120}>
+				{#each markers as marker (marker.id)}
+					<Tooltip.Root>
+						<Tooltip.Trigger
+							data-slot="waveform-marker"
+							class="absolute top-0 z-10 -translate-x-1/2 cursor-pointer p-0.5"
+							style="left: {marker.at * 100}%"
+							aria-label={marker.caption}
+							onclick={() => onmarker?.(marker)}
+						>
+							<span
+								class="bg-primary ring-background block size-2 rounded-full ring-2"
+							></span>
+						</Tooltip.Trigger>
+						<Tooltip.Content sideOffset={6} class="max-w-56 border text-start">
+							<p class="font-mono text-[0.65rem] opacity-80">
+								{marker.caption}
+							</p>
+							<p class="wrap-break-word whitespace-pre-wrap">
+								{marker.body}
+							</p>
+						</Tooltip.Content>
+					</Tooltip.Root>
+				{/each}
+			</Tooltip.Provider>
+		{/if}
+	</div>
 {/if}

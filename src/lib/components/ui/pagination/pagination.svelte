@@ -19,7 +19,7 @@
 	role="navigation"
 	aria-label="pagination"
 	data-slot="pagination"
-	class={cn('mx-auto flex w-full justify-center', className)}
+	class={cn("mx-auto flex w-full justify-center", className)}
 	{count}
 	{perPage}
 	{siblingCount}

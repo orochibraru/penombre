@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import type { ObjectItem } from "#lib/api/index.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { loadVersions, versionsChanged } from "#lib/store/versions.js";
@@ -7,7 +8,6 @@
 		versionItem,
 		versionLabel,
 	} from "#lib/versions.js";
-	import { page } from "$app/state";
 
 	/**
 	 * Switches what the player or a preview shows between a file and its
@@ -52,23 +52,23 @@
 </script>
 
 {#if versions.length > 0}
-    <select
-        aria-label={m.versions_switch()}
-        value={selected ?? ""}
-        onchange={(e) => choose(e.currentTarget.value)}
-        class="border-input bg-background h-8 max-w-44 shrink-0 rounded-md border px-2 text-xs"
-    >
-        <option value="">
-            {versionLabel(
-                naming,
-                (file.metadata.versionSeq ?? 0) + 1,
-                file.updatedAt ?? file.metadata.createdAt,
-            )} · {m.versions_latest()}
-        </option>
-        {#each versions as version (version.id)}
-            <option value={version.id}>
-                {versionLabel(naming, version.seq, version.createdAt)}
-            </option>
-        {/each}
-    </select>
+	<select
+		aria-label={m.versions_switch()}
+		value={selected ?? ""}
+		onchange={(e) => choose(e.currentTarget.value)}
+		class="border-input bg-background h-8 max-w-44 shrink-0 rounded-md border px-2 text-xs"
+	>
+		<option value="">
+			{versionLabel(
+				naming,
+				(file.metadata.versionSeq ?? 0) + 1,
+				file.updatedAt ?? file.metadata.createdAt,
+			)} · {m.versions_latest()}
+		</option>
+		{#each versions as version (version.id)}
+			<option value={version.id}>
+				{versionLabel(naming, version.seq, version.createdAt)}
+			</option>
+		{/each}
+	</select>
 {/if}

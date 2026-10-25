@@ -23,19 +23,19 @@
 </script>
 
 <div class="flex flex-col gap-4">
-    <div class="flex flex-wrap items-center gap-2">
-        <UsersIcon class="text-primary size-4" />
-        <h1 class="text-lg font-semibold tracking-tight">{data.share.name}</h1>
-        <span class="text-muted-foreground text-sm">
-            {m.shared_by({ name: data.share.ownerName })}
-        </span>
-        {#if data.share.readOnly}
-            <Badge variant="secondary">
-                <LockIcon />
-                {m.permission_read()}
-            </Badge>
-        {/if}
-    </div>
+	<div class="flex flex-wrap items-center gap-2">
+		<UsersIcon class="text-primary size-4" />
+		<h1 class="text-lg font-semibold tracking-tight">{data.share.name}</h1>
+		<span class="text-muted-foreground text-sm">
+			{m.shared_by({ name: data.share.ownerName })}
+		</span>
+		{#if data.share.readOnly}
+			<Badge variant="secondary">
+				<LockIcon />
+				{m.permission_read()}
+			</Badge>
+		{/if}
+	</div>
 
-    <FileLayout data={data.files} preferences={data.preferences} />
+	<FileLayout data={data.files} preferences={data.preferences} />
 </div>

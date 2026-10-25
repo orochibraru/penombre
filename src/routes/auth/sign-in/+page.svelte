@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 	import {
 		ArrowRightIcon,
 		FingerprintPatternIcon,
@@ -20,9 +23,6 @@
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
 	import { cn } from "#lib/utils.js";
-	import { goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import { page } from "$app/state";
 
 	let { data } = $props();
 
@@ -387,246 +387,246 @@
 </script>
 
 <form
-    class={cn("flex flex-col gap-6")}
-    onsubmit={(e) => {
-        e.preventDefault();
-        if (otpSent) {
-            void handleOtpSignin();
-        } else if (showPassword) {
-            void handleEmailSignin();
-        } else {
-            void lookupEmail();
-        }
-    }}
-    method="POST"
+	class={cn("flex flex-col gap-6")}
+	onsubmit={(e) => {
+		e.preventDefault();
+		if (otpSent) {
+			void handleOtpSignin();
+		} else if (showPassword) {
+			void handleEmailSignin();
+		} else {
+			void lookupEmail();
+		}
+	}}
+	method="POST"
 >
-    <Field.FieldSet>
-        <Field.Group>
-            <div class="flex flex-col items-center gap-1 text-center">
-                <h1 class="text-2xl font-bold">
-                    {m.sign_in_message()}
-                </h1>
-                {#if data.authConfig.enableEmailSignIn}
-                    <p class="text-muted-foreground text-sm text-balance">
-                        {m.sign_in_email_description()}
-                    </p>
-                {:else if data.authConfig.oauthProviders.length > 0 && data.authConfig.enableOAuthSignIn}
-                    <p class="text-muted-foreground text-sm text-balance">
-                        {m.sign_in_oauth_description()}
-                    </p>
-                {/if}
-            </div>
-            {#if progress}
-                <div
-                    class="text-muted-foreground flex flex-col items-center gap-3 py-8"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <LoaderCircleIcon class="text-primary size-8 animate-spin" />
-                    <p class="text-sm">{progress}</p>
-                </div>
-            {:else}
-            {#if error}
-                <Alert.Root class="mb-2" variant="destructive">
-                    <Alert.Title>{m.error_title()}</Alert.Title>
-                    <Alert.Description>
-                        {errorMessage}
-                    </Alert.Description>
-                </Alert.Root>
-            {/if}
+	<Field.FieldSet>
+		<Field.Group>
+			<div class="flex flex-col items-center gap-1 text-center">
+				<h1 class="text-2xl font-bold">
+					{m.sign_in_message()}
+				</h1>
+				{#if data.authConfig.enableEmailSignIn}
+					<p class="text-muted-foreground text-sm text-balance">
+						{m.sign_in_email_description()}
+					</p>
+				{:else if data.authConfig.oauthProviders.length > 0 && data.authConfig.enableOAuthSignIn}
+					<p class="text-muted-foreground text-sm text-balance">
+						{m.sign_in_oauth_description()}
+					</p>
+				{/if}
+			</div>
+			{#if progress}
+				<div
+					class="text-muted-foreground flex flex-col items-center gap-3 py-8"
+					role="status"
+					aria-live="polite"
+				>
+					<LoaderCircleIcon class="text-primary size-8 animate-spin" />
+					<p class="text-sm">{progress}</p>
+				</div>
+			{:else}
+				{#if error}
+					<Alert.Root class="mb-2" variant="destructive">
+						<Alert.Title>{m.error_title()}</Alert.Title>
+						<Alert.Description>
+							{errorMessage}
+						</Alert.Description>
+					</Alert.Root>
+				{/if}
 
-            {#if data.authConfig.enableEmailSignIn}
-                <Field.Field>
-                    <!-- Once the address is settled it is locked, and the way
+				{#if data.authConfig.enableEmailSignIn}
+					<Field.Field>
+						<!-- Once the address is settled it is locked, and the way
                          back sits on the label row so the two fields stay
                          adjacent instead of being pushed apart by a link. -->
-                    <div class="flex items-center">
-                        <Field.Label for="email">{m.email()}</Field.Label>
-                        {#if knownEmail}
-                            <button
-                                type="button"
-                                class="hover:text-primary ms-auto text-sm underline transition-colors"
-                                onclick={forgetAccount}
-                            >
-                                {m.sign_in_change_email()}
-                            </button>
-                        {/if}
-                    </div>
-                    <Input
-                        id="email"
-                        autocomplete="email webauthn"
-                        type="email"
-                        bind:value={email}
-                        placeholder="m@example.com"
-                        disabled={knownEmail}
-                        required={!knownEmail}
-                    />
-                </Field.Field>
-                {#if !knownEmail}
-                    <Field.Field>
-                        <Button class="w-full" type="submit" {loading}>
-                            {m.continue()}
-                            <ArrowRightIcon />
-                        </Button>
-                    </Field.Field>
-                {/if}
-                <!-- Hidden until the address is known. `required` is bound to
+						<div class="flex items-center">
+							<Field.Label for="email">{m.email()}</Field.Label>
+							{#if knownEmail}
+								<button
+									type="button"
+									class="hover:text-primary ms-auto text-sm underline transition-colors"
+									onclick={forgetAccount}
+								>
+									{m.sign_in_change_email()}
+								</button>
+							{/if}
+						</div>
+						<Input
+							id="email"
+							autocomplete="email webauthn"
+							type="email"
+							bind:value={email}
+							placeholder="m@example.com"
+							disabled={knownEmail}
+							required={!knownEmail}
+						/>
+					</Field.Field>
+					{#if !knownEmail}
+						<Field.Field>
+							<Button class="w-full" type="submit" {loading}>
+								{m.continue()}
+								<ArrowRightIcon />
+							</Button>
+						</Field.Field>
+					{/if}
+					<!-- Hidden until the address is known. `required` is bound to
                      the same flag: a hidden required control blocks submit. -->
-                <Field.Field class={showPassword ? "" : "hidden"}>
-                    <div class="flex items-center">
-                        <Field.Label for="password">{m.password()}</Field.Label>
-                        <a
-                            href={"/auth/forgot-password"}
-                            class="ms-auto text-sm underline hover:text-primary transition-colors"
-                        >
-                            {m.forgot_password()}
-                        </a>
-                    </div>
-                    <Input
-                        id="password"
-                        autocomplete="current-password webauthn"
-                        bind:value={password}
-                        type="password"
-                        required={showPassword}
-                    />
-                </Field.Field>
-                <Field.Field class={showPassword ? "" : "hidden"}>
-                    <Button class="w-full" type="submit" {loading}>
-                        <LogInIcon />
-                        {m.sign_in()}
-                    </Button>
-                </Field.Field>
+					<Field.Field class={showPassword ? "" : "hidden"}>
+						<div class="flex items-center">
+							<Field.Label for="password">{m.password()}</Field.Label>
+							<a
+								href={"/auth/forgot-password"}
+								class="ms-auto text-sm underline hover:text-primary transition-colors"
+							>
+								{m.forgot_password()}
+							</a>
+						</div>
+						<Input
+							id="password"
+							autocomplete="current-password webauthn"
+							bind:value={password}
+							type="password"
+							required={showPassword}
+						/>
+					</Field.Field>
+					<Field.Field class={showPassword ? "" : "hidden"}>
+						<Button class="w-full" type="submit" {loading}>
+							<LogInIcon />
+							{m.sign_in()}
+						</Button>
+					</Field.Field>
 
-                <!-- The emailed code replaces the password step rather than
+					<!-- The emailed code replaces the password step rather than
                      sitting beside it: two submit paths in one form is how the
                      wrong one ends up firing. -->
-                {#if otpSent}
-                    <Field.Field>
-                        <Field.Label for="otp">{m.sign_in_code()}</Field.Label>
-                        <Input
-                            id="otp"
-                            inputmode="numeric"
-                            autocomplete="one-time-code"
-                            bind:value={otp}
-                            placeholder="123456"
-                            required
-                        />
-                        <Field.Description>
-                            {m.sign_in_code_hint({ email })}
-                        </Field.Description>
-                    </Field.Field>
-                    <Field.Field>
-                        <Button class="w-full" type="submit" {loading}>
-                            <LogInIcon />
-                            {m.sign_in()}
-                        </Button>
-                    </Field.Field>
-                {/if}
+					{#if otpSent}
+						<Field.Field>
+							<Field.Label for="otp">{m.sign_in_code()}</Field.Label>
+							<Input
+								id="otp"
+								inputmode="numeric"
+								autocomplete="one-time-code"
+								bind:value={otp}
+								placeholder="123456"
+								required
+							/>
+							<Field.Description>
+								{m.sign_in_code_hint({ email })}
+							</Field.Description>
+						</Field.Field>
+						<Field.Field>
+							<Button class="w-full" type="submit" {loading}>
+								<LogInIcon />
+								{m.sign_in()}
+							</Button>
+						</Field.Field>
+					{/if}
 
-                {#if offers("magicLink") || offers("emailOtp")}
-                    <div class="flex flex-col gap-2">
-                        {#if offers("magicLink")}
-                            <Button
-                                type="button"
-                                variant="outline"
-                                class="w-full"
-                                {loading}
-                                onclick={handleMagicLink}
-                            >
-                                <MailIcon />
-                                {m.sign_in_email_link()}
-                            </Button>
-                        {/if}
-                        {#if offers("emailOtp") && !otpSent}
-                            <Button
-                                type="button"
-                                variant="outline"
-                                class="w-full"
-                                {loading}
-                                onclick={handleSendOtp}
-                            >
-                                <RectangleEllipsisIcon />
-                                {m.sign_in_email_code()}
-                            </Button>
-                        {/if}
-                    </div>
-                {/if}
-                {#if knownEmail && setPassword && !otpSent}
-                    <Button
-                        type="button"
-                        variant="outline"
-                        class="w-full"
-                        {loading}
-                        onclick={requestPasswordLink}
-                    >
-                        <KeyRoundIcon />
-                        {m.sign_in_set_password()}
-                    </Button>
-                {/if}
-                {#if !focused && data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
-                    <Field.Separator>{m.or_continue_with()}</Field.Separator>
-                {/if}
-            {:else}
-                <!-- Hidden fields for passkey sign-in -->
-                <label class="sr-only" for="name">Username:</label>
-                <input
-                    class="sr-only"
-                    type="text"
-                    name="name"
-                    autocomplete="username webauthn"
-                />
-                <label class="sr-only" for="password">Password:</label>
-                <input
-                    class="sr-only"
-                    type="password"
-                    name="password"
-                    autocomplete="current-password webauthn"
-                />
-            {/if}
-            {#if !focused && data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
-                {#each data.authConfig.oauthProviders as provider}
-                    {#if provider.enabled}
-                        <Button
-                            variant="outline"
-                            class="w-full"
-                            {loading}
-                            onclick={() => void handleOauthSignin(provider.name)}
-                        >
-                            <LogInIcon />
-                            {#if !data.authConfig.enableEmailSignIn}
-                                {m.continue_with()}
-                            {/if}
-                            {provider.prettyName ?? provider.name}
-                        </Button>
-                    {/if}
-                {/each}
-            {/if}
-            {#if showPasskey}
-                <Button
-                    variant={focused ? "default" : "outline"}
-                    class="w-full"
-                    {loading}
-                    onclick={handlePasskeySignIn}
-                >
-                    <FingerprintPatternIcon />
-                    {m.sign_in_with_passkey()}
-                </Button>
-            {/if}
-            {#if focused}
-                <button
-                    type="button"
-                    class="hover:text-primary text-sm underline transition-colors"
-                    onclick={() => (showAll = true)}
-                >
-                    {m.sign_in_more_ways()}
-                </button>
-            {/if}
-            {/if}
-        </Field.Group>
-    </Field.FieldSet>
-    <div class="grid gap-6">
-        <div class="text-center text-sm">
-            {m.no_account()}
-        </div>
-    </div>
+					{#if offers("magicLink") || offers("emailOtp")}
+						<div class="flex flex-col gap-2">
+							{#if offers("magicLink")}
+								<Button
+									type="button"
+									variant="outline"
+									class="w-full"
+									{loading}
+									onclick={handleMagicLink}
+								>
+									<MailIcon />
+									{m.sign_in_email_link()}
+								</Button>
+							{/if}
+							{#if offers("emailOtp") && !otpSent}
+								<Button
+									type="button"
+									variant="outline"
+									class="w-full"
+									{loading}
+									onclick={handleSendOtp}
+								>
+									<RectangleEllipsisIcon />
+									{m.sign_in_email_code()}
+								</Button>
+							{/if}
+						</div>
+					{/if}
+					{#if knownEmail && setPassword && !otpSent}
+						<Button
+							type="button"
+							variant="outline"
+							class="w-full"
+							{loading}
+							onclick={requestPasswordLink}
+						>
+							<KeyRoundIcon />
+							{m.sign_in_set_password()}
+						</Button>
+					{/if}
+					{#if !focused && data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
+						<Field.Separator>{m.or_continue_with()}</Field.Separator>
+					{/if}
+				{:else}
+					<!-- Hidden fields for passkey sign-in -->
+					<label class="sr-only" for="name">Username:</label>
+					<input
+						class="sr-only"
+						type="text"
+						name="name"
+						autocomplete="username webauthn"
+					/>
+					<label class="sr-only" for="password">Password:</label>
+					<input
+						class="sr-only"
+						type="password"
+						name="password"
+						autocomplete="current-password webauthn"
+					/>
+				{/if}
+				{#if !focused && data.authConfig.enableOAuthSignIn && data.authConfig.oauthProviders.length > 0}
+					{#each data.authConfig.oauthProviders as provider}
+						{#if provider.enabled}
+							<Button
+								variant="outline"
+								class="w-full"
+								{loading}
+								onclick={() => void handleOauthSignin(provider.name)}
+							>
+								<LogInIcon />
+								{#if !data.authConfig.enableEmailSignIn}
+									{m.continue_with()}
+								{/if}
+								{provider.prettyName ?? provider.name}
+							</Button>
+						{/if}
+					{/each}
+				{/if}
+				{#if showPasskey}
+					<Button
+						variant={focused ? "default" : "outline"}
+						class="w-full"
+						{loading}
+						onclick={handlePasskeySignIn}
+					>
+						<FingerprintPatternIcon />
+						{m.sign_in_with_passkey()}
+					</Button>
+				{/if}
+				{#if focused}
+					<button
+						type="button"
+						class="hover:text-primary text-sm underline transition-colors"
+						onclick={() => (showAll = true)}
+					>
+						{m.sign_in_more_ways()}
+					</button>
+				{/if}
+			{/if}
+		</Field.Group>
+	</Field.FieldSet>
+	<div class="grid gap-6">
+		<div class="text-center text-sm">
+			{m.no_account()}
+		</div>
+	</div>
 </form>

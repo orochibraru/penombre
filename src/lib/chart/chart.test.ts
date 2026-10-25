@@ -19,7 +19,7 @@ import {
 	withColors,
 	withData,
 } from "./edit";
-import { type Chart, canonical, checkChart, checkCharts } from "./model";
+import { canonical, type Chart, checkChart, checkCharts } from "./model";
 import { PRINT_THEME, renderChart } from "./render";
 
 const GRID = [

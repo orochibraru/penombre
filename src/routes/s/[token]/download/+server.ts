@@ -2,13 +2,13 @@ import { error } from "@sveltejs/kit";
 import type { Share } from "#lib/server/db/schema.js";
 import { exportFile } from "#lib/server/office/export/index.js";
 import { ShareService, unlockCookieName } from "#lib/server/services/shares.js";
+import { shareLinkStorage } from "#lib/server/services/storage-for.js";
 import type { StorageService } from "#lib/server/services/storage/index.js";
 import {
 	isActiveContentType,
 	parseRange,
 	rawFileSecurityHeaders,
 } from "#lib/server/services/storage/mappers.js";
-import { shareLinkStorage } from "#lib/server/services/storage-for.js";
 
 const shares = new ShareService();
 

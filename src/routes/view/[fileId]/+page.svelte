@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { beforeNavigate, goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
+	import type { ResolvedPathname } from "$app/types";
 	import {
 		ArrowLeftIcon,
 		DownloadIcon,
@@ -33,10 +37,6 @@
 	import { title } from "#lib/store/title.js";
 	import { cn, readableFileSize, toggleFullscreen } from "#lib/utils.js";
 	import { VideoSource } from "#lib/video-source.svelte.js";
-	import { beforeNavigate, goto } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import { page } from "$app/state";
-	import type { ResolvedPathname } from "$app/types";
 
 	let { data } = $props();
 
@@ -248,239 +248,235 @@
 </script>
 
 <svelte:document
-    onfullscreenchange={() => isFullscreen = !!document.fullscreenElement}
+	onfullscreenchange={() => (isFullscreen = !!document.fullscreenElement)}
 ></svelte:document>
 
 <div class="bg-background flex h-svh w-full flex-col overflow-hidden">
-    <header class="flex shrink-0 items-center gap-2 border-b px-3 py-2">
-        {#if canGoBack}
-            <Button
-                variant="ghost"
-                size="icon"
-                title={m.back()}
-                onclick={() => history.back()}
-            >
-                <ArrowLeftIcon />
-            </Button>
-        {:else}
-            <Button
-                variant="ghost"
-                size="icon"
-                title={m.nav_my_drive()}
-                href={resolve('browse') as ResolvedPathname}
-            ><ArrowLeftIcon /></Button>
-        {/if}
-        <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-medium">{data.name}</p>
-            <p class="text-muted-foreground truncate text-xs">
-                {readableFileSize(data.size)}
-            </p>
-        </div>
+	<header class="flex shrink-0 items-center gap-2 border-b px-3 py-2">
+		{#if canGoBack}
+			<Button
+				variant="ghost"
+				size="icon"
+				title={m.back()}
+				onclick={() => history.back()}
+			>
+				<ArrowLeftIcon />
+			</Button>
+		{:else}
+			<Button
+				variant="ghost"
+				size="icon"
+				title={m.nav_my_drive()}
+				href={resolve("browse") as ResolvedPathname}><ArrowLeftIcon /></Button
+			>
+		{/if}
+		<div class="min-w-0 flex-1">
+			<p class="truncate text-sm font-medium">{data.name}</p>
+			<p class="text-muted-foreground truncate text-xs">
+				{readableFileSize(data.size)}
+			</p>
+		</div>
 
-        <Button
-            variant="outline"
-            size="icon"
-            title={m.download()}
-            href={src as ResolvedPathname}
-            download={data.name}
-        ><DownloadIcon /></Button>
+		<Button
+			variant="outline"
+			size="icon"
+			title={m.download()}
+			href={src as ResolvedPathname}
+			download={data.name}><DownloadIcon /></Button
+		>
 
-        {#if isAudio || isVideo}
-            <Button
-                variant="outline"
-                size="icon"
-                title={m.minimize()}
-                onclick={minimize}
-            >
-                <Minimize2Icon />
-            </Button>
-        {/if}
-        <Button
-            variant={notesOpen ? "default" : "outline"}
-            size="icon"
-            title={m.notes_title()}
-            onclick={() => notesOpen = !notesOpen}
-        ><MessageSquareTextIcon /></Button>
-    </header>
+		{#if isAudio || isVideo}
+			<Button
+				variant="outline"
+				size="icon"
+				title={m.minimize()}
+				onclick={minimize}
+			>
+				<Minimize2Icon />
+			</Button>
+		{/if}
+		<Button
+			variant={notesOpen ? "default" : "outline"}
+			size="icon"
+			title={m.notes_title()}
+			onclick={() => (notesOpen = !notesOpen)}><MessageSquareTextIcon /></Button
+		>
+	</header>
 
-    <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <main
-            bind:this={stage}
-            class={cn(
-                "bg-background flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-4 p-4",
-                // The notes panel takes the screen on a phone rather than
-                // squeezing the media into a strip.
-                notesOpen && "hidden lg:flex",
-            )}
-        >
-            {#if isImage}
-                <ProgressiveImage
-                    thumb={url("thumbnail=true&size=large")}
-                    preview={url("thumbnail=true&size=preview")}
-                    original={src}
-                    alt={data.name}
-                    size={data.size}
-                    class="h-full w-full"
-                />
-            {:else if isVideo}
-                {#if blocked}
-                    <div class="w-full max-w-3xl">
-                        <VideoUnplayable {source} href={src} name={data.name} />
-                    </div>
-                {/if}
-                <!-- svelte-ignore a11y_media_has_caption -->
-                <video
-                    bind:this={player}
-                    bind:paused
-                    bind:currentTime
-                    bind:duration
-                    bind:volume
-                    src={source.src}
-                    playsinline
-                    onloadedmetadata={resume}
-                    onerror={() => refused(player?.error ?? null)}
-                    class={cn(
-                        "max-h-[calc(100%-4rem)] w-full rounded-lg bg-black object-contain",
-                        blocked && "hidden",
-                    )}
-                ></video>
-            {:else if isAudio}
-                <!-- A now-playing screen, not a strip: a track has no picture
+	<div class="flex min-h-0 flex-1 flex-col lg:flex-row">
+		<main
+			bind:this={stage}
+			class={cn(
+				"bg-background flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-4 p-4",
+				// The notes panel takes the screen on a phone rather than
+				// squeezing the media into a strip.
+				notesOpen && "hidden lg:flex",
+			)}
+		>
+			{#if isImage}
+				<ProgressiveImage
+					thumb={url("thumbnail=true&size=large")}
+					preview={url("thumbnail=true&size=preview")}
+					original={src}
+					alt={data.name}
+					size={data.size}
+					class="h-full w-full"
+				/>
+			{:else if isVideo}
+				{#if blocked}
+					<div class="w-full max-w-3xl">
+						<VideoUnplayable {source} href={src} name={data.name} />
+					</div>
+				{/if}
+				<!-- svelte-ignore a11y_media_has_caption -->
+				<video
+					bind:this={player}
+					bind:paused
+					bind:currentTime
+					bind:duration
+					bind:volume
+					src={source.src}
+					playsinline
+					onloadedmetadata={resume}
+					onerror={() => refused(player?.error ?? null)}
+					class={cn(
+						"max-h-[calc(100%-4rem)] w-full rounded-lg bg-black object-contain",
+						blocked && "hidden",
+					)}
+				></video>
+			{:else if isAudio}
+				<!-- A now-playing screen, not a strip: a track has no picture
                      to fill a viewport with, so the waveform is given the room
                      an image would have had. -->
-                <div
-                    class="bg-card/40 flex w-full min-h-0 flex-1 flex-col justify-center gap-8 rounded-xl border p-4 lg:p-10"
-                >
-                    <audio
-                        bind:this={player}
-                        bind:paused
-                        bind:currentTime
-                        bind:duration
-                        bind:volume
-                        src={src}
-                        onloadedmetadata={resume}
-                        class="sr-only"
-                    ></audio>
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="bg-primary/10 text-primary flex size-16 shrink-0 items-center justify-center rounded-xl lg:size-20"
-                        >
-                            <MusicIcon class="size-8 lg:size-10" />
-                        </div>
-                        <div class="min-w-0">
-                            <p class="truncate text-xl font-semibold lg:text-2xl">
-                                {data.name}
-                            </p>
-                            <p class="text-muted-foreground text-sm">
-                                {formatTime(duration)} · {readableFileSize(data.size)}
-                            </p>
-                        </div>
-                    </div>
-                    {#if !peaksFailed}
-                        <Waveform
-                            src={peaks}
-                            class="h-40 w-full lg:h-64"
-                            progress={duration > 0 ? currentTime / duration : 0}
-                            onseek={scrub}
-                            seekLabel={m.seek()}
-                            markers={markers}
-                            onmarker={(marker) => seekTo(marker.seconds)}
-                            onfail={() => peaksFailed = true}
-                        />
-                    {/if}
-                </div>
-            {:else}
-                <embed src={src} title={data.name} class="h-full w-full" />
-            {/if}
+				<div
+					class="bg-card/40 flex w-full min-h-0 flex-1 flex-col justify-center gap-8 rounded-xl border p-4 lg:p-10"
+				>
+					<audio
+						bind:this={player}
+						bind:paused
+						bind:currentTime
+						bind:duration
+						bind:volume
+						{src}
+						onloadedmetadata={resume}
+						class="sr-only"
+					></audio>
+					<div class="flex items-center gap-4">
+						<div
+							class="bg-primary/10 text-primary flex size-16 shrink-0 items-center justify-center rounded-xl lg:size-20"
+						>
+							<MusicIcon class="size-8 lg:size-10" />
+						</div>
+						<div class="min-w-0">
+							<p class="truncate text-xl font-semibold lg:text-2xl">
+								{data.name}
+							</p>
+							<p class="text-muted-foreground text-sm">
+								{formatTime(duration)} · {readableFileSize(data.size)}
+							</p>
+						</div>
+					</div>
+					{#if !peaksFailed}
+						<Waveform
+							src={peaks}
+							class="h-40 w-full lg:h-64"
+							progress={duration > 0 ? currentTime / duration : 0}
+							onseek={scrub}
+							seekLabel={m.seek()}
+							{markers}
+							onmarker={(marker) => seekTo(marker.seconds)}
+							onfail={() => (peaksFailed = true)}
+						/>
+					{/if}
+				</div>
+			{:else}
+				<embed {src} title={data.name} class="h-full w-full" />
+			{/if}
 
-            {#if (isVideo && !blocked) || isAudio}
-                <div
-                    class={cn(
-                        "flex w-full shrink-0 items-center gap-3",
-                        isVideo && "max-w-3xl",
-                    )}
-                >
-                    <Button size="icon" onclick={toggle} title={paused ? m.play() : m.pause()}>
-                        {#if paused}
-                            <PlayIcon />
-                        {:else}
-                            <PauseIcon />
-                        {/if}
-                    </Button>
-                    <span class="text-xs tabular-nums text-nowrap">
-                        {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
-                    {#if isVideo}
-                        <!-- svelte-ignore a11y_no_static_element_interactions -->
-                        <!-- svelte-ignore a11y_click_events_have_key_events -->
-                        <div class="min-w-0 flex-1" onclick={seekFromBar}>
-                            <Progress
-                                value={currentTime}
-                                max={duration || 1}
-                                class="cursor-pointer"
-                            />
-                        </div>
-                    {:else}
-                        <div class="flex-1"></div>
-                    {/if}
-                    {#if isVideo}
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            title={isFullscreen ? m.exit_fullscreen() : m.fullscreen()}
-                            onclick={() =>
-                                toggleFullscreen(
-                                    stage,
-                                    player as HTMLVideoElement | null,
-                                )}
-                        >
-                            {#if isFullscreen}
-                                <MinimizeIcon />
-                            {:else}
-                                <ExpandIcon />
-                            {/if}
-                        </Button>
-                        <VideoQuality {source} onswitch={keepPlayhead} />
-                    {/if}
-                    <div class="flex w-32 items-center gap-2">
-                        {#if volume === 0}
-                            <VolumeXIcon class="size-4 shrink-0" />
-                        {:else if volume < 1}
-                            <Volume1Icon class="size-4 shrink-0" />
-                        {:else}
-                            <Volume2Icon class="size-4 shrink-0" />
-                        {/if}
-                        <Slider
-                            type="single"
-                            bind:value={volume}
-                            max={1}
-                            step={0.01}
-                        />
-                    </div>
-                </div>
-            {/if}
-        </main>
+			{#if (isVideo && !blocked) || isAudio}
+				<div
+					class={cn(
+						"flex w-full shrink-0 items-center gap-3",
+						isVideo && "max-w-3xl",
+					)}
+				>
+					<Button
+						size="icon"
+						onclick={toggle}
+						title={paused ? m.play() : m.pause()}
+					>
+						{#if paused}
+							<PlayIcon />
+						{:else}
+							<PauseIcon />
+						{/if}
+					</Button>
+					<span class="text-xs tabular-nums text-nowrap">
+						{formatTime(currentTime)} / {formatTime(duration)}
+					</span>
+					{#if isVideo}
+						<!-- svelte-ignore a11y_no_static_element_interactions -->
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<div class="min-w-0 flex-1" onclick={seekFromBar}>
+							<Progress
+								value={currentTime}
+								max={duration || 1}
+								class="cursor-pointer"
+							/>
+						</div>
+					{:else}
+						<div class="flex-1"></div>
+					{/if}
+					{#if isVideo}
+						<Button
+							variant="outline"
+							size="icon"
+							title={isFullscreen ? m.exit_fullscreen() : m.fullscreen()}
+							onclick={() =>
+								toggleFullscreen(stage, player as HTMLVideoElement | null)}
+						>
+							{#if isFullscreen}
+								<MinimizeIcon />
+							{:else}
+								<ExpandIcon />
+							{/if}
+						</Button>
+						<VideoQuality {source} onswitch={keepPlayhead} />
+					{/if}
+					<div class="flex w-32 items-center gap-2">
+						{#if volume === 0}
+							<VolumeXIcon class="size-4 shrink-0" />
+						{:else if volume < 1}
+							<Volume1Icon class="size-4 shrink-0" />
+						{:else}
+							<Volume2Icon class="size-4 shrink-0" />
+						{/if}
+						<Slider type="single" bind:value={volume} max={1} step={0.01} />
+					</div>
+				</div>
+			{/if}
+		</main>
 
-        {#if notesOpen}
-            <aside
-                class="flex min-h-0 w-full flex-col border-t p-4 lg:w-96 lg:shrink-0 lg:border-t-0 lg:border-s"
-            >
-                <div class="mb-2 flex items-center justify-end lg:hidden">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        title={m.close()}
-                        onclick={() => notesOpen = false}
-                    ><XIcon /></Button>
-                </div>
-                <NotesPanel
-                    fileId={data.fileId}
-                    position={isVideo || isAudio ? currentTime : undefined}
-                    onSeek={isVideo || isAudio ? seekTo : undefined}
-                    currentUserId={data.userId}
-                    bind:focus={focusNotes}
-                />
-            </aside>
-        {/if}
-    </div>
+		{#if notesOpen}
+			<aside
+				class="flex min-h-0 w-full flex-col border-t p-4 lg:w-96 lg:shrink-0 lg:border-t-0 lg:border-s"
+			>
+				<div class="mb-2 flex items-center justify-end lg:hidden">
+					<Button
+						variant="ghost"
+						size="icon"
+						title={m.close()}
+						onclick={() => (notesOpen = false)}><XIcon /></Button
+					>
+				</div>
+				<NotesPanel
+					fileId={data.fileId}
+					position={isVideo || isAudio ? currentTime : undefined}
+					onSeek={isVideo || isAudio ? seekTo : undefined}
+					currentUserId={data.userId}
+					bind:focus={focusNotes}
+				/>
+			</aside>
+		{/if}
+	</div>
 </div>

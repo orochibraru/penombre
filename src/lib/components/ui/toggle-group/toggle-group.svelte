@@ -11,28 +11,28 @@
 </script>
 
 <script lang="ts">
-    import { ToggleGroup as ToggleGroupPrimitive } from "bits-ui";
-    import { cn } from "#lib/utils.js";
+	import { ToggleGroup as ToggleGroupPrimitive } from "bits-ui";
+	import { cn } from "#lib/utils.js";
 
-    let {
-        ref = $bindable(null),
-        value = $bindable(),
-        class: className,
-        size = "default",
-        variant = "default",
-        ...restProps
-    }: ToggleGroupPrimitive.RootProps & ToggleVariants = $props();
+	let {
+		ref = $bindable(null),
+		value = $bindable(),
+		class: className,
+		size = "default",
+		variant = "default",
+		...restProps
+	}: ToggleGroupPrimitive.RootProps & ToggleVariants = $props();
 
-    // During init: `setContext` in `onMount` is too late, and every item
-    // then crashed reading `variant` off an undefined context.
-    setToggleGroupCtx({
-        get variant() {
-            return variant;
-        },
-        get size() {
-            return size;
-        },
-    });
+	// During init: `setContext` in `onMount` is too late, and every item
+	// then crashed reading `variant` off an undefined context.
+	setToggleGroupCtx({
+		get variant() {
+			return variant;
+		},
+		get size() {
+			return size;
+		},
+	});
 </script>
 
 <!--
@@ -40,14 +40,14 @@ Discriminated Unions + Destructing (required for bindable) do not
 get along, so we shut typescript up by casting `value` to `never`.
 -->
 <ToggleGroupPrimitive.Root
-    bind:value={value as never}
-    bind:ref
-    data-slot="toggle-group"
-    data-variant={variant}
-    data-size={size}
-    class={cn(
-        "group/toggle-group flex w-fit items-center rounded-md data-[variant=outline]:shadow-xs",
-        className,
-    )}
-    {...restProps}
+	bind:value={value as never}
+	bind:ref
+	data-slot="toggle-group"
+	data-variant={variant}
+	data-size={size}
+	class={cn(
+		"group/toggle-group flex w-fit items-center rounded-md data-[variant=outline]:shadow-xs",
+		className,
+	)}
+	{...restProps}
 />

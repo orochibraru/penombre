@@ -5,9 +5,9 @@
 			"code_blocks": false,
 			"headings": false,
 			"line_length": 80,
-			"tables": false
+			"tables": false,
 		},
-		"MD028": false
+		"MD028": false,
 	},
 	"ignores": [
 		"**/node_modules",
@@ -23,6 +23,6 @@
 		"playwright-report-pg",
 		// Agent plans and scratch, not docs.
 		".claude/plans",
-		".superpowers"
-	]
+		".superpowers",
+	],
 }

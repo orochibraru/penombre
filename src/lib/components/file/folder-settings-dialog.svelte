@@ -78,49 +78,49 @@
 </script>
 
 <ResponsiveDialog
-    bind:open
-    title={m.folder_settings_title()}
-    description={folderName}
-    size="sm"
-    submitLabel={m.save_changes()}
-    loading={saving}
-    submitDisabled={!loaded}
-    onsubmit={save}
+	bind:open
+	title={m.folder_settings_title()}
+	description={folderName}
+	size="sm"
+	submitLabel={m.save_changes()}
+	loading={saving}
+	submitDisabled={!loaded}
+	onsubmit={save}
 >
-    {#if loaded}
-        <div class="flex min-w-0 flex-col gap-4">
-            <div class="flex flex-col gap-2">
-                <Label for="folder-versioning">{m.folder_settings_versioning()}</Label>
-                <select
-                    id="folder-versioning"
-                    bind:value={versioning}
-                    class="border-input bg-transparent ring-offset-background focus-visible:ring-ring h-9 rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:outline-hidden"
-                >
-                    <option value="inherit">
-                        {m.folder_settings_inherit({ value: inheritedLabel })}
-                    </option>
-                    <option value="on">{m.folder_settings_on()}</option>
-                    <option value="off">{m.folder_settings_off()}</option>
-                </select>
-                <p class="text-muted-foreground text-xs">
-                    {m.folder_settings_versioning_hint()}
-                </p>
-            </div>
-            <div class="flex flex-col gap-2">
-                <Label for="folder-max-versions">{m.folder_settings_max()}</Label>
-                <Input
-                    id="folder-max-versions"
-                    inputmode="numeric"
-                    placeholder={String(loaded.inherited.max)}
-                    bind:value={maxVersions}
-                    class="w-32"
-                />
-                <p class="text-muted-foreground text-xs">
-                    {m.folder_settings_max_hint({ max: String(loaded.adminMax) })}
-                </p>
-            </div>
-        </div>
-    {:else}
-        <p class="text-muted-foreground text-sm">{m.versions_loading()}</p>
-    {/if}
+	{#if loaded}
+		<div class="flex min-w-0 flex-col gap-4">
+			<div class="flex flex-col gap-2">
+				<Label for="folder-versioning">{m.folder_settings_versioning()}</Label>
+				<select
+					id="folder-versioning"
+					bind:value={versioning}
+					class="border-input bg-transparent ring-offset-background focus-visible:ring-ring h-9 rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:outline-hidden"
+				>
+					<option value="inherit">
+						{m.folder_settings_inherit({ value: inheritedLabel })}
+					</option>
+					<option value="on">{m.folder_settings_on()}</option>
+					<option value="off">{m.folder_settings_off()}</option>
+				</select>
+				<p class="text-muted-foreground text-xs">
+					{m.folder_settings_versioning_hint()}
+				</p>
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label for="folder-max-versions">{m.folder_settings_max()}</Label>
+				<Input
+					id="folder-max-versions"
+					inputmode="numeric"
+					placeholder={String(loaded.inherited.max)}
+					bind:value={maxVersions}
+					class="w-32"
+				/>
+				<p class="text-muted-foreground text-xs">
+					{m.folder_settings_max_hint({ max: String(loaded.adminMax) })}
+				</p>
+			</div>
+		</div>
+	{:else}
+		<p class="text-muted-foreground text-sm">{m.versions_loading()}</p>
+	{/if}
 </ResponsiveDialog>

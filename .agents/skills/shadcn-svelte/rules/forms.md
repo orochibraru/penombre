@@ -59,8 +59,8 @@ Never use raw `Input` or `Textarea` inside an `InputGroup.Root`.
 
 ```svelte
 <script lang="ts">
-  import * as InputGroup from "$lib/components/ui/input-group";
   import { Input } from "$lib/components/ui/input";
+  import * as InputGroup from "$lib/components/ui/input-group";
 </script>
 
 <InputGroup.Root>
@@ -91,8 +91,8 @@ positioning.
 
 ```svelte
 <script lang="ts">
-  import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
+  import { Input } from "$lib/components/ui/input";
   import SearchIcon from "@lucide/svelte/icons/search";
 </script>
 
@@ -108,8 +108,8 @@ positioning.
 
 ```svelte
 <script lang="ts">
-  import * as InputGroup from "$lib/components/ui/input-group";
   import { Button } from "$lib/components/ui/button";
+  import * as InputGroup from "$lib/components/ui/input-group";
   import SearchIcon from "@lucide/svelte/icons/search";
 </script>
 
@@ -191,8 +191,8 @@ switches — not `div` with a heading:
 
 ```svelte
 <script lang="ts">
-  import * as Field from "$lib/components/ui/field";
   import { Checkbox } from "$lib/components/ui/checkbox";
+  import * as Field from "$lib/components/ui/field";
 </script>
 
 <Field.FieldSet>
@@ -201,7 +201,9 @@ switches — not `div` with a heading:
   <Field.FieldGroup class="gap-3">
     <Field.Field orientation="horizontal">
       <Checkbox id="dark" />
-      <Field.FieldLabel for="dark" class="font-normal">Dark mode</Field.FieldLabel>
+      <Field.FieldLabel for="dark" class="font-normal"
+        >Dark mode</Field.FieldLabel
+      >
     </Field.Field>
   </Field.FieldGroup>
 </Field.FieldSet>

@@ -12,9 +12,8 @@
 		// Imported client-side only: swagger-ui-bundle touches
 		// `window`/`document` at call time, which would crash SSR otherwise.
 		void (async () => {
-			const { default: SwaggerUIBundle } = await import(
-				"swagger-ui-dist/swagger-ui-bundle.js"
-			);
+			const { default: SwaggerUIBundle } =
+				await import("swagger-ui-dist/swagger-ui-bundle.js");
 			SwaggerUIBundle({
 				domNode: container,
 				deepLinking: true,
@@ -28,5 +27,5 @@
 <!-- Swagger UI ships its own light styling that doesn't follow the app's theme
      tokens, so it's wrapped in a light card to read correctly in either theme. -->
 <div class="min-h-[60vh] overflow-auto rounded-xl bg-white p-2">
-    <div bind:this={container}></div>
+	<div bind:this={container}></div>
 </div>

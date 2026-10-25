@@ -1,6 +1,6 @@
+import { resolve } from "$app/paths";
 import { redirect } from "@sveltejs/kit";
 import { StatsService } from "#lib/server/services/stats.js";
-import { resolve } from "$app/paths";
 
 const stats = new StatsService();
 

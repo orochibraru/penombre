@@ -4,8 +4,8 @@ import type { Dropdown } from "#lib/sheet/dropdowns.js";
 import { compactStyles } from "#lib/sheet/styles.js";
 import {
 	holdVerbatim,
-	type RulesContext,
 	readRules,
+	type RulesContext,
 	writeRules,
 } from "./xlsx-rules";
 import {

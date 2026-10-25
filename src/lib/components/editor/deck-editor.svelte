@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import {
 		ArrowDownIcon,
 		ArrowUpIcon,
@@ -20,19 +21,18 @@
 		isInverted,
 		isPaginated,
 		parseDeck,
-		type Slide,
 		setInverted,
 		setPaginated,
 		setSlideClass,
 		setTheme,
+		type Slide,
 		slideLooks,
-		THEMES,
 		type ThemeName,
+		THEMES,
 		writeDeck,
 	} from "#lib/deck/format.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { cn, toggleFullscreen } from "#lib/utils.js";
-	import { page } from "$app/state";
 	import Audience from "./deck/audience.svelte";
 	import DeckPrint from "./deck/deck-print.svelte";
 	import MarkdownToolbar from "./deck/markdown-toolbar.svelte";
@@ -206,263 +206,259 @@
 </script>
 
 <svelte:window
-    onbeforeprint={() => flushSync(() => (printing = true))}
-    onafterprint={() => (printing = false)}
+	onbeforeprint={() => flushSync(() => (printing = true))}
+	onafterprint={() => (printing = false)}
 />
 <svelte:document
-    onfullscreenchange={() => {
-        if (!document.fullscreenElement && ownFullscreen && mode === "present") {
-            stopPresenting();
-        }
-    }}
+	onfullscreenchange={() => {
+		if (!document.fullscreenElement && ownFullscreen && mode === "present") {
+			stopPresenting();
+		}
+	}}
 />
 
 {#if audience}
-    <Audience channel={audience} initial={deck} />
+	<Audience channel={audience} initial={deck} />
 {:else}
-    <div
-        bind:this={root}
-        class="flex min-h-0 flex-1 flex-col gap-3 sm:flex-row"
-    >
-        <SlideRail
-            {deck}
-            {looks}
-            {theme}
-            bind:current
-            reorder={!(office || readOnly)}
-            onmove={moveSlide}
-            {marked}
-        />
+	<div bind:this={root} class="flex min-h-0 flex-1 flex-col gap-3 sm:flex-row">
+		<SlideRail
+			{deck}
+			{looks}
+			{theme}
+			bind:current
+			reorder={!(office || readOnly)}
+			onmove={moveSlide}
+			{marked}
+		/>
 
-        <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
-            <div class="flex flex-wrap items-center gap-2">
-                <Menubar.Root class="w-fit max-w-full overflow-x-auto">
-                    {#if menu}
-                        {@render menu({ print: () => void print() })}
-                    {:else}
-                    <Menubar.Menu>
-                        <Menubar.Trigger>{m.deck_menu_file()}</Menubar.Trigger>
-                        <Menubar.Content>
-                            <Menubar.Item onSelect={() => void print()}>
-                                <PrinterIcon class="size-4" />
-                                {m.deck_print()}
-                            </Menubar.Item>
-                        </Menubar.Content>
-                    </Menubar.Menu>
-                    {/if}
-                    {#if !readOnly}
-                    <Menubar.Menu>
-                        <Menubar.Trigger>{m.menu_slide()}</Menubar.Trigger>
-                        <Menubar.Content>
-                            <Menubar.Item
-                                onSelect={() =>
-                                    insertSlide({
-                                        body: `## ${m.deck_new_slide_title()}`,
-                                        notes: "",
-                                        directives: {},
-                                    })}
-                            >
-                                <PlusIcon class="size-4" />
-                                {m.deck_add_slide()}
-                            </Menubar.Item>
-                            <Menubar.Item
-                                onSelect={() =>
-                                    slide && insertSlide($state.snapshot(slide))}
-                            >
-                                <CopyIcon class="size-4" />
-                                {m.deck_duplicate_slide()}
-                            </Menubar.Item>
-                            {#if !office}
-                                <Menubar.Separator />
-                                <Menubar.Item
-                                    disabled={current === 0}
-                                    onSelect={() => moveSlide(current, current - 1)}
-                                >
-                                    <ArrowUpIcon class="size-4" />
-                                    {m.deck_move_up()}
-                                </Menubar.Item>
-                                <Menubar.Item
-                                    disabled={current === deck.slides.length - 1}
-                                    onSelect={() => moveSlide(current, current + 1)}
-                                >
-                                    <ArrowDownIcon class="size-4" />
-                                    {m.deck_move_down()}
-                                </Menubar.Item>
-                                <Menubar.Separator />
-                                <Menubar.CheckboxItem
-                                    checked={lead}
-                                    onCheckedChange={(on) =>
-                                        edit(() => setSlideClass(deck, current, "lead", on))}
-                                >
-                                    {m.deck_title_slide()}
-                                </Menubar.CheckboxItem>
-                            {/if}
-                            <Menubar.Separator />
-                            <Menubar.Item variant="destructive" onSelect={removeSlide}>
-                                <Trash2Icon class="size-4" />
-                                {m.deck_delete_slide()}
-                            </Menubar.Item>
-                        </Menubar.Content>
-                    </Menubar.Menu>
-                    {/if}
-                    <Menubar.Menu>
-                        <Menubar.Trigger>{m.menu_view()}</Menubar.Trigger>
-                        <Menubar.Content>
-                            <Menubar.Item onSelect={present}>
-                                <PlayIcon class="size-4" />
-                                {m.deck_present()}
-                            </Menubar.Item>
-                            <Menubar.Item onSelect={() => (mode = "presenter")}>
-                                <PresentationIcon class="size-4" />
-                                {m.deck_presenter_view()}
-                            </Menubar.Item>
-                            {#if !office}
-                                <Menubar.Separator />
-                                <Menubar.CheckboxItem
-                                    checked={isPaginated(deck)}
-                                    onCheckedChange={(on) =>
-                                        edit(() => setPaginated(deck, on))}
-                                >
-                                    {m.deck_page_numbers()}
-                                </Menubar.CheckboxItem>
-                            {/if}
-                        </Menubar.Content>
-                    </Menubar.Menu>
-                    {#if !(office || readOnly)}
-                        <Menubar.Menu>
-                            <Menubar.Trigger>{m.theme()}</Menubar.Trigger>
-                            <Menubar.Content>
-                                <Menubar.RadioGroup
-                                    value={theme}
-                                    onValueChange={(name) =>
-                                        edit(() =>
-                                            setTheme(
-                                                deck,
-                                                THEMES.find((entry) => entry === name) ??
-                                                    "default",
-                                            ),
-                                        )}
-                                >
-                                    {#each THEMES as name (name)}
-                                        <Menubar.RadioItem value={name}>
-                                            {THEME_LABELS[name]()}
-                                        </Menubar.RadioItem>
-                                    {/each}
-                                </Menubar.RadioGroup>
-                                <Menubar.Separator />
-                                <Menubar.CheckboxItem
-                                    checked={isInverted(deck)}
-                                    onCheckedChange={(on) =>
-                                        edit(() => setInverted(deck, on))}
-                                >
-                                    {m.theme_dark()}
-                                </Menubar.CheckboxItem>
-                            </Menubar.Content>
-                        </Menubar.Menu>
-                    {/if}
-                </Menubar.Root>
-                <div class="ms-auto flex items-center gap-2">
-                    {#if comments}
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            class="size-8"
-                            aria-label={m.shell_add_comment()}
-                            title={m.shell_add_comment()}
-                            onclick={() =>
-                                comments.start({ kind: "slide", index: current })}
-                        >
-                            <MessageSquarePlusIcon class="size-3.5" />
-                        </Button>
-                    {/if}
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        class="size-8"
-                        aria-label={m.deck_presenter_view()}
-                        title={m.deck_presenter_view()}
-                        onclick={() => (mode = "presenter")}
-                    >
-                        <PresentationIcon class="size-3.5" />
-                    </Button>
-                    <Button variant="outline" size="sm" onclick={present}>
-                        <PlayIcon class="size-3.5" />
-                        {m.deck_present()}
-                    </Button>
-                </div>
-            </div>
+		<div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+			<div class="flex flex-wrap items-center gap-2">
+				<Menubar.Root class="w-fit max-w-full overflow-x-auto">
+					{#if menu}
+						{@render menu({ print: () => void print() })}
+					{:else}
+						<Menubar.Menu>
+							<Menubar.Trigger>{m.deck_menu_file()}</Menubar.Trigger>
+							<Menubar.Content>
+								<Menubar.Item onSelect={() => void print()}>
+									<PrinterIcon class="size-4" />
+									{m.deck_print()}
+								</Menubar.Item>
+							</Menubar.Content>
+						</Menubar.Menu>
+					{/if}
+					{#if !readOnly}
+						<Menubar.Menu>
+							<Menubar.Trigger>{m.menu_slide()}</Menubar.Trigger>
+							<Menubar.Content>
+								<Menubar.Item
+									onSelect={() =>
+										insertSlide({
+											body: `## ${m.deck_new_slide_title()}`,
+											notes: "",
+											directives: {},
+										})}
+								>
+									<PlusIcon class="size-4" />
+									{m.deck_add_slide()}
+								</Menubar.Item>
+								<Menubar.Item
+									onSelect={() => slide && insertSlide($state.snapshot(slide))}
+								>
+									<CopyIcon class="size-4" />
+									{m.deck_duplicate_slide()}
+								</Menubar.Item>
+								{#if !office}
+									<Menubar.Separator />
+									<Menubar.Item
+										disabled={current === 0}
+										onSelect={() => moveSlide(current, current - 1)}
+									>
+										<ArrowUpIcon class="size-4" />
+										{m.deck_move_up()}
+									</Menubar.Item>
+									<Menubar.Item
+										disabled={current === deck.slides.length - 1}
+										onSelect={() => moveSlide(current, current + 1)}
+									>
+										<ArrowDownIcon class="size-4" />
+										{m.deck_move_down()}
+									</Menubar.Item>
+									<Menubar.Separator />
+									<Menubar.CheckboxItem
+										checked={lead}
+										onCheckedChange={(on) =>
+											edit(() => setSlideClass(deck, current, "lead", on))}
+									>
+										{m.deck_title_slide()}
+									</Menubar.CheckboxItem>
+								{/if}
+								<Menubar.Separator />
+								<Menubar.Item variant="destructive" onSelect={removeSlide}>
+									<Trash2Icon class="size-4" />
+									{m.deck_delete_slide()}
+								</Menubar.Item>
+							</Menubar.Content>
+						</Menubar.Menu>
+					{/if}
+					<Menubar.Menu>
+						<Menubar.Trigger>{m.menu_view()}</Menubar.Trigger>
+						<Menubar.Content>
+							<Menubar.Item onSelect={present}>
+								<PlayIcon class="size-4" />
+								{m.deck_present()}
+							</Menubar.Item>
+							<Menubar.Item onSelect={() => (mode = "presenter")}>
+								<PresentationIcon class="size-4" />
+								{m.deck_presenter_view()}
+							</Menubar.Item>
+							{#if !office}
+								<Menubar.Separator />
+								<Menubar.CheckboxItem
+									checked={isPaginated(deck)}
+									onCheckedChange={(on) => edit(() => setPaginated(deck, on))}
+								>
+									{m.deck_page_numbers()}
+								</Menubar.CheckboxItem>
+							{/if}
+						</Menubar.Content>
+					</Menubar.Menu>
+					{#if !(office || readOnly)}
+						<Menubar.Menu>
+							<Menubar.Trigger>{m.theme()}</Menubar.Trigger>
+							<Menubar.Content>
+								<Menubar.RadioGroup
+									value={theme}
+									onValueChange={(name) =>
+										edit(() =>
+											setTheme(
+												deck,
+												THEMES.find((entry) => entry === name) ?? "default",
+											),
+										)}
+								>
+									{#each THEMES as name (name)}
+										<Menubar.RadioItem value={name}>
+											{THEME_LABELS[name]()}
+										</Menubar.RadioItem>
+									{/each}
+								</Menubar.RadioGroup>
+								<Menubar.Separator />
+								<Menubar.CheckboxItem
+									checked={isInverted(deck)}
+									onCheckedChange={(on) => edit(() => setInverted(deck, on))}
+								>
+									{m.theme_dark()}
+								</Menubar.CheckboxItem>
+							</Menubar.Content>
+						</Menubar.Menu>
+					{/if}
+				</Menubar.Root>
+				<div class="ms-auto flex items-center gap-2">
+					{#if comments}
+						<Button
+							variant="outline"
+							size="icon"
+							class="size-8"
+							aria-label={m.shell_add_comment()}
+							title={m.shell_add_comment()}
+							onclick={() => comments.start({ kind: "slide", index: current })}
+						>
+							<MessageSquarePlusIcon class="size-3.5" />
+						</Button>
+					{/if}
+					<Button
+						variant="outline"
+						size="icon"
+						class="size-8"
+						aria-label={m.deck_presenter_view()}
+						title={m.deck_presenter_view()}
+						onclick={() => (mode = "presenter")}
+					>
+						<PresentationIcon class="size-3.5" />
+					</Button>
+					<Button variant="outline" size="sm" onclick={present}>
+						<PlayIcon class="size-3.5" />
+						{m.deck_present()}
+					</Button>
+				</div>
+			</div>
 
-            {#if slide}
-                <div
-                    class={cn(
-                        "grid gap-3 lg:min-h-0 lg:flex-1",
-                        !readOnly && "lg:grid-cols-2",
-                    )}
-                >
-                    {#if !readOnly}
-                    <div class="flex flex-col gap-2 lg:min-h-0">
-                        <MarkdownToolbar {textarea} images={!office} />
-                        <Textarea
-                            bind:ref={textarea}
-                            class="min-h-48 flex-1 resize-none font-mono text-xs"
-                            spellcheck="false"
-                            value={slide.body}
-                            oninput={(event: Event) =>
-                                edit(() => {
-                                    slide.body = (event.currentTarget as HTMLTextAreaElement).value;
-                                })}
-                        />
-                        <label class="flex flex-col gap-1">
-                            <span class="text-muted-foreground text-xs">
-                                {m.deck_speaker_notes()}
-                            </span>
-                            <Textarea
-                                class="h-20 text-sm"
-                                placeholder={m.deck_notes_placeholder()}
-                                value={slide.notes}
-                                oninput={(event: Event) =>
-                                    edit(() => {
-                                        slide.notes = (event.currentTarget as HTMLTextAreaElement).value;
-                                    })}
-                            />
-                        </label>
-                    </div>
-                    {/if}
-                    <div class="bg-muted/20 rounded-lg border p-2 lg:min-h-0">
-                        <SlideView
-                            {slide}
-                            look={looks[current]}
-                            {theme}
-                            number={current + 1}
-                            class="aspect-video w-full lg:aspect-auto lg:h-full"
-                        />
-                    </div>
-                </div>
-            {/if}
-        </div>
+			{#if slide}
+				<div
+					class={cn(
+						"grid gap-3 lg:min-h-0 lg:flex-1",
+						!readOnly && "lg:grid-cols-2",
+					)}
+				>
+					{#if !readOnly}
+						<div class="flex flex-col gap-2 lg:min-h-0">
+							<MarkdownToolbar {textarea} images={!office} />
+							<Textarea
+								bind:ref={textarea}
+								class="min-h-48 flex-1 resize-none font-mono text-xs"
+								spellcheck="false"
+								value={slide.body}
+								oninput={(event: Event) =>
+									edit(() => {
+										slide.body = (
+											event.currentTarget as HTMLTextAreaElement
+										).value;
+									})}
+							/>
+							<label class="flex flex-col gap-1">
+								<span class="text-muted-foreground text-xs">
+									{m.deck_speaker_notes()}
+								</span>
+								<Textarea
+									class="h-20 text-sm"
+									placeholder={m.deck_notes_placeholder()}
+									value={slide.notes}
+									oninput={(event: Event) =>
+										edit(() => {
+											slide.notes = (
+												event.currentTarget as HTMLTextAreaElement
+											).value;
+										})}
+								/>
+							</label>
+						</div>
+					{/if}
+					<div class="bg-muted/20 rounded-lg border p-2 lg:min-h-0">
+						<SlideView
+							{slide}
+							look={looks[current]}
+							{theme}
+							number={current + 1}
+							class="aspect-video w-full lg:aspect-auto lg:h-full"
+						/>
+					</div>
+				</div>
+			{/if}
+		</div>
 
-        {#if mode === "present"}
-            <Present
-                {deck}
-                {looks}
-                {theme}
-                index={current}
-                onnavigate={(to) => (current = to)}
-                onexit={stopPresenting}
-                onfullscreen={fullscreen}
-            />
-        {:else if mode === "presenter"}
-            <Presenter
-                {deck}
-                {looks}
-                {theme}
-                bind:index={current}
-                onexit={() => (mode = "edit")}
-            />
-        {/if}
-    </div>
+		{#if mode === "present"}
+			<Present
+				{deck}
+				{looks}
+				{theme}
+				index={current}
+				onnavigate={(to) => (current = to)}
+				onexit={stopPresenting}
+				onfullscreen={fullscreen}
+			/>
+		{:else if mode === "presenter"}
+			<Presenter
+				{deck}
+				{looks}
+				{theme}
+				bind:index={current}
+				onexit={() => (mode = "edit")}
+			/>
+		{/if}
+	</div>
 
-    {#if printing}
-        <DeckPrint {deck} {looks} {theme} />
-    {/if}
+	{#if printing}
+		<DeckPrint {deck} {looks} {theme} />
+	{/if}
 {/if}

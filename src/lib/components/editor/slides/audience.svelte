@@ -47,5 +47,13 @@
 </script>
 
 <div bind:this={root}>
-	<Present {deck} {index} {media} quiet onnavigate={navigate} onexit={() => window.close()} onfullscreen={() => toggleFullscreen(root ?? null)} />
+	<Present
+		{deck}
+		{index}
+		{media}
+		quiet
+		onnavigate={navigate}
+		onexit={() => window.close()}
+		onfullscreen={() => toggleFullscreen(root ?? null)}
+	/>
 </div>

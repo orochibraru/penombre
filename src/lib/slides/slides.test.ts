@@ -31,9 +31,9 @@ import { applyTemplate, relayout, slideFromLayout } from "./layouts";
 import {
 	type Deck,
 	nextElementId,
+	sameValue,
 	type ShapeElement,
 	type SlideElement,
-	sameValue,
 	withFreshIds,
 } from "./model";
 import { renderSlideSvg } from "./render-svg";

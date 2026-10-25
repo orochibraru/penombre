@@ -101,7 +101,7 @@
 	style:top="{pt(element.y - origin.y)}px"
 	style:width="{w}px"
 	style:height="{h}px"
-	style:transform={transform}
+	style:transform
 >
 	{#if element.kind === "shape"}
 		<svg
@@ -116,7 +116,10 @@
 					{#if gradient.radial}
 						<radialGradient id="{uid}-g" cx="50%" cy="50%" r="50%">
 							{#each gradient.stops as stop, index (index)}
-								<stop offset="{stop.pos / 1000}%" stop-color={cssColor(stop.color, context.palette)} />
+								<stop
+									offset="{stop.pos / 1000}%"
+									stop-color={cssColor(stop.color, context.palette)}
+								/>
 							{/each}
 						</radialGradient>
 					{:else}
@@ -129,7 +132,10 @@
 							y2={0.5 + Math.sin(angle) / 2}
 						>
 							{#each gradient.stops as stop, index (index)}
-								<stop offset="{stop.pos / 1000}%" stop-color={cssColor(stop.color, context.palette)} />
+								<stop
+									offset="{stop.pos / 1000}%"
+									stop-color={cssColor(stop.color, context.palette)}
+								/>
 							{/each}
 						</linearGradient>
 					{/if}
@@ -146,10 +152,20 @@
 				{@const color = cssColor(element.line.fill.color, context.palette)}
 				{@const width = pt(element.line.width)}
 				{#if element.line.tail}
-					<path d={arrowHead([w, h], [0, 0], width, element.line.tail)} fill={color} stroke={color} stroke-width={width / 2} />
+					<path
+						d={arrowHead([w, h], [0, 0], width, element.line.tail)}
+						fill={color}
+						stroke={color}
+						stroke-width={width / 2}
+					/>
 				{/if}
 				{#if element.line.head}
-					<path d={arrowHead([0, 0], [w, h], width, element.line.head)} fill={color} stroke={color} stroke-width={width / 2} />
+					<path
+						d={arrowHead([0, 0], [w, h], width, element.line.head)}
+						fill={color}
+						stroke={color}
+						stroke-width={width / 2}
+					/>
 				{/if}
 			{/if}
 		</svg>
@@ -180,7 +196,9 @@
 		{@const crop = element.crop ?? { l: 0, t: 0, r: 0, b: 0 }}
 		{@const fullW = w / Math.max(0.01, 1 - (crop.l + crop.r) / 100_000)}
 		{@const fullH = h / Math.max(0.01, 1 - (crop.t + crop.b) / 100_000)}
-		{@const clip = element.geometry ? outlines(element.geometry, w, h)[0]?.d : undefined}
+		{@const clip = element.geometry
+			? outlines(element.geometry, w, h)[0]?.d
+			: undefined}
 		{@const href = context.media(element.src)}
 		<div
 			class="absolute inset-0 overflow-hidden"
@@ -199,27 +217,53 @@
 					style:height="{fullH}px"
 				/>
 			{:else}
-				<div class="bg-muted text-muted-foreground grid size-full place-items-center">
+				<div
+					class="bg-muted text-muted-foreground grid size-full place-items-center"
+				>
 					<ImageIcon class="size-8" />
 				</div>
 			{/if}
 		</div>
 		{#if element.line && element.line.fill.type === "solid"}
-			<svg class="pointer-events-none absolute inset-0 overflow-visible" width={w} height={h} aria-hidden="true">
+			<svg
+				class="pointer-events-none absolute inset-0 overflow-visible"
+				width={w}
+				height={h}
+				aria-hidden="true"
+			>
 				<rect width={w} height={h} fill="none" {...stroke(element.line)} />
 			</svg>
 		{/if}
 	{:else if element.kind === "group"}
 		<div class="absolute inset-0" style:transform={flip}>
 			{#each element.children as child (child.id)}
-				<ElementView element={child} {context} origin={{ x: element.x, y: element.y }} />
+				<ElementView
+					element={child}
+					{context}
+					origin={{ x: element.x, y: element.y }}
+				/>
 			{/each}
 		</div>
 	{:else if element.preview}
-		<ElementView element={{ ...element.preview, x: element.x, y: element.y, w: element.w, h: element.h, rot: 0 }} {context} origin={{ x: element.x, y: element.y }} />
+		<ElementView
+			element={{
+				...element.preview,
+				x: element.x,
+				y: element.y,
+				w: element.w,
+				h: element.h,
+				rot: 0,
+			}}
+			{context}
+			origin={{ x: element.x, y: element.y }}
+		/>
 	{:else if element.table}
-		{@const total = element.table.columns.reduce((sum, column) => sum + column, 0) || 1}
-		<table class="absolute inset-0 size-full table-fixed border-collapse text-[11px]" style:color={cssColor({ scheme: "tx1" }, context.palette)}>
+		{@const total =
+			element.table.columns.reduce((sum, column) => sum + column, 0) || 1}
+		<table
+			class="absolute inset-0 size-full table-fixed border-collapse text-[11px]"
+			style:color={cssColor({ scheme: "tx1" }, context.palette)}
+		>
 			<colgroup>
 				{#each element.table.columns as column, index (index)}
 					<col style:width="{(column / total) * 100}%" />
@@ -229,14 +273,18 @@
 				{#each element.table.rows as row, r (r)}
 					<tr>
 						{#each row.cells as cell, c (c)}
-							<td class="truncate border border-current/25 px-1.5 py-1">{cell.text}</td>
+							<td class="truncate border border-current/25 px-1.5 py-1"
+								>{cell.text}</td
+							>
 						{/each}
 					</tr>
 				{/each}
 			</tbody>
 		</table>
 	{:else}
-		<div class="border-muted-foreground/40 text-muted-foreground bg-muted/30 grid size-full place-items-center rounded-sm border border-dashed text-xs">
+		<div
+			class="border-muted-foreground/40 text-muted-foreground bg-muted/30 grid size-full place-items-center rounded-sm border border-dashed text-xs"
+		>
 			<span class="flex items-center gap-1.5">
 				<TableIcon class="size-4" />
 				{context.label?.(element.label) ?? element.label}

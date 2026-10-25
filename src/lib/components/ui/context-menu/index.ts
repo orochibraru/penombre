@@ -1,9 +1,8 @@
 import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
-
 import CheckboxItem from "./context-menu-checkbox-item.svelte";
 import Content from "./context-menu-content.svelte";
-import Group from "./context-menu-group.svelte";
 import GroupHeading from "./context-menu-group-heading.svelte";
+import Group from "./context-menu-group.svelte";
 import Item from "./context-menu-item.svelte";
 import Label from "./context-menu-label.svelte";
 import RadioGroup from "./context-menu-radio-group.svelte";

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from "$app/state";
+	import type { ResolvedPathname } from "$app/types";
 	import {
 		FastForwardIcon,
 		GaugeIcon,
@@ -39,16 +41,14 @@
 		type StorageLocation,
 	} from "#lib/storage-location.js";
 	import {
-		type PlaybackCommand,
 		playableMusic,
+		type PlaybackCommand,
 		playbackCommand,
 		playbackDuration,
 		playbackPosition,
 	} from "#lib/store/music.js";
 	import { fileNotes, loadFileNotes, noteMarkers } from "#lib/store/notes.js";
 	import { displayTitle } from "#lib/versions.js";
-	import { page } from "$app/state";
-	import type { ResolvedPathname } from "$app/types";
 
 	function clearCurrent() {
 		$playableMusic = null;
@@ -350,14 +350,19 @@
 </script>
 
 <BottomAction
-    bind:ref={panel}
-    open={$playableMusic !== null}
-    title={$playableMusic?.title ?? ""}
-    callback={() => clearCurrent()}
+	bind:ref={panel}
+	open={$playableMusic !== null}
+	title={$playableMusic?.title ?? ""}
+	callback={() => clearCurrent()}
 >
 	<div class="flex w-full items-center gap-2">
 		<div class="flex items-center justify-between gap-2">
-			<Button variant="ghost" size="icon" title={m.player_restart()} onclick={restart}>
+			<Button
+				variant="ghost"
+				size="icon"
+				title={m.player_restart()}
+				onclick={restart}
+			>
 				<SkipBackIcon />
 			</Button>
 			<Button
@@ -369,18 +374,18 @@
 				<RewindIcon />
 			</Button>
 			{#if loading}
-                <Button disabled title={m.loading()}>
-                    <Spinner />
-                </Button>
+				<Button disabled title={m.loading()}>
+					<Spinner />
+				</Button>
 			{:else if paused}
 				<Button
 					onclick={() => {
 						void playMedia(player).then(setPlaying);
 					}}
 					title={m.play()}
-                >
-                    <PlayIcon />
-                </Button>
+				>
+					<PlayIcon />
+				</Button>
 			{:else}
 				<Button
 					onclick={() => {
@@ -388,9 +393,9 @@
 						setPlaying(false);
 					}}
 					title={m.pause()}
-                >
-                    <PauseIcon />
-                </Button>
+				>
+					<PauseIcon />
+				</Button>
 			{/if}
 			<Button
 				variant="ghost"
@@ -400,9 +405,9 @@
 			>
 				<FastForwardIcon />
 			</Button>
-            <p class="text-xs text-nowrap">
-                {formatTime(currentTime)} / {formatTime(duration)}
-            </p>
+			<p class="text-xs text-nowrap">
+				{formatTime(currentTime)} / {formatTime(duration)}
+			</p>
 			{#if $playableMusic?.item}
 				<VersionSelect
 					file={$playableMusic.item}
@@ -418,9 +423,9 @@
 				progress={duration > 0 ? currentTime / duration : 0}
 				onseek={seekToFraction}
 				seekLabel={m.seek()}
-				markers={markers}
-				onmarker={(marker) => currentTime = marker.seconds}
-				onfail={() => peaksFailed = true}
+				{markers}
+				onmarker={(marker) => (currentTime = marker.seconds)}
+				onfail={() => (peaksFailed = true)}
 			/>
 		{:else}
 			<Progress
@@ -446,9 +451,9 @@
 						focusNotes?.();
 					}
 				}}
-            >
-                <MessageSquareTextIcon />
-            </Button>
+			>
+				<MessageSquareTextIcon />
+			</Button>
 		{/if}
 		<div class="hidden items-center gap-2 lg:flex">
 			<PlaybackTuning bind:speed bind:semitones />
@@ -471,8 +476,8 @@
 		<Button
 			variant="outline"
 			title={m.open_fullscreen()}
-			href={fullscreenHref as ResolvedPathname}
-		><MaximizeIcon /></Button>
+			href={fullscreenHref as ResolvedPathname}><MaximizeIcon /></Button
+		>
 
 		<Popover.Root>
 			<Popover.Trigger>
@@ -507,7 +512,7 @@
 			<NotesPanel
 				fileId={$playableMusic.fileId}
 				position={currentTime}
-				onSeek={(seconds) => currentTime = seconds}
+				onSeek={(seconds) => (currentTime = seconds)}
 				currentUserId={page.data.user?.id}
 				bind:focus={focusNotes}
 			/>

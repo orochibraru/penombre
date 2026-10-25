@@ -1,6 +1,6 @@
+import { resolve } from "$app/paths";
 import { error, redirect } from "@sveltejs/kit";
 import { isAuthBypassed } from "#lib/server/config.js";
-import { resolve } from "$app/paths";
 
 export const load = ({ locals }) => {
 	// Nobody signs in under auth bypass — the shared owner is an admin by

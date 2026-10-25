@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { invalidate } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 	import {
 		EllipsisVerticalIcon,
 		HardDriveIcon,
@@ -19,9 +22,6 @@
 	import type { DriveRole, DriveSummary } from "#lib/drives.js";
 	import { m } from "#lib/paraglide/messages.js";
 	import { title } from "#lib/store/title.js";
-	import { invalidate } from "$app/navigation";
-	import { resolve } from "$app/paths";
-	import { page } from "$app/state";
 
 	const { data } = $props();
 
@@ -111,201 +111,190 @@
 </script>
 
 <div class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-start justify-between gap-2">
-        <div class="flex flex-col gap-1">
-            <h1 class="text-lg font-semibold tracking-tight">
-                {m.drives_title()}
-            </h1>
-            <p class="text-muted-foreground text-sm">
-                {m.drives_description()}
-            </p>
-        </div>
-        <div class="flex gap-2">
-            <Button
-                variant="outline"
-                title={m.layout()}
-                onclick={toggleLayout}
-            >
-                {#if layout === "grid"}
-                    <LayoutGridIcon />
-                    {m.layout_grid()}
-                {:else}
-                    <LayoutListIcon />
-                    {m.layout_list()}
-                {/if}
-            </Button>
-            {#if !page.data.driveOnly}
-                <Button
-                    onclick={() => {
-                        newName = "";
-                        createOpen = true;
-                    }}
-                >
-                    <PlusIcon />
-                    {m.drive_new()}
-                </Button>
-            {/if}
-        </div>
-    </div>
+	<div class="flex flex-wrap items-start justify-between gap-2">
+		<div class="flex flex-col gap-1">
+			<h1 class="text-lg font-semibold tracking-tight">
+				{m.drives_title()}
+			</h1>
+			<p class="text-muted-foreground text-sm">
+				{m.drives_description()}
+			</p>
+		</div>
+		<div class="flex gap-2">
+			<Button variant="outline" title={m.layout()} onclick={toggleLayout}>
+				{#if layout === "grid"}
+					<LayoutGridIcon />
+					{m.layout_grid()}
+				{:else}
+					<LayoutListIcon />
+					{m.layout_list()}
+				{/if}
+			</Button>
+			{#if !page.data.driveOnly}
+				<Button
+					onclick={() => {
+						newName = "";
+						createOpen = true;
+					}}
+				>
+					<PlusIcon />
+					{m.drive_new()}
+				</Button>
+			{/if}
+		</div>
+	</div>
 
-    {#if drives.length === 0}
-        <Card.Root>
-            <Card.Content
-                class="flex flex-col items-center gap-2 py-12 text-center"
-            >
-                <HardDriveIcon class="text-muted-foreground size-6" />
-                <p class="text-lg font-medium">{m.drives_empty()}</p>
-                <p class="text-muted-foreground text-sm">
-                    {page.data.driveOnly
-                        ? m.drives_empty_drive_only()
-                        : m.drives_empty_hint()}
-                </p>
-            </Card.Content>
-        </Card.Root>
-    {:else if layout === "grid"}
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {#each drives as drive (drive.id)}
-                <Card.Root>
-                    <Card.Header>
-                        <Card.Title class="flex min-w-0 items-center gap-2">
-                            <HardDriveIcon class="text-primary size-4 shrink-0" />
-                            {@render link(drive)}
-                        </Card.Title>
-                        <Card.Description>{@render role(drive)}</Card.Description>
-                        <Card.Action>{@render actions(drive)}</Card.Action>
-                    </Card.Header>
-                </Card.Root>
-            {/each}
-        </div>
-    {:else}
-        <Card.Root class="py-0">
-            <ul class="divide-y">
-                {#each drives as drive (drive.id)}
-                    <li class="flex items-center gap-3 px-4 py-2">
-                        <HardDriveIcon class="text-primary size-4 shrink-0" />
-                        <span class="flex min-w-0 flex-1">{@render link(drive)}</span>
-                        {@render role(drive)}
-                        {@render actions(drive)}
-                    </li>
-                {/each}
-            </ul>
-        </Card.Root>
-    {/if}
+	{#if drives.length === 0}
+		<Card.Root>
+			<Card.Content class="flex flex-col items-center gap-2 py-12 text-center">
+				<HardDriveIcon class="text-muted-foreground size-6" />
+				<p class="text-lg font-medium">{m.drives_empty()}</p>
+				<p class="text-muted-foreground text-sm">
+					{page.data.driveOnly
+						? m.drives_empty_drive_only()
+						: m.drives_empty_hint()}
+				</p>
+			</Card.Content>
+		</Card.Root>
+	{:else if layout === "grid"}
+		<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+			{#each drives as drive (drive.id)}
+				<Card.Root>
+					<Card.Header>
+						<Card.Title class="flex min-w-0 items-center gap-2">
+							<HardDriveIcon class="text-primary size-4 shrink-0" />
+							{@render link(drive)}
+						</Card.Title>
+						<Card.Description>{@render role(drive)}</Card.Description>
+						<Card.Action>{@render actions(drive)}</Card.Action>
+					</Card.Header>
+				</Card.Root>
+			{/each}
+		</div>
+	{:else}
+		<Card.Root class="py-0">
+			<ul class="divide-y">
+				{#each drives as drive (drive.id)}
+					<li class="flex items-center gap-3 px-4 py-2">
+						<HardDriveIcon class="text-primary size-4 shrink-0" />
+						<span class="flex min-w-0 flex-1">{@render link(drive)}</span>
+						{@render role(drive)}
+						{@render actions(drive)}
+					</li>
+				{/each}
+			</ul>
+		</Card.Root>
+	{/if}
 </div>
 
 {#snippet link(drive: DriveSummary)}
-    <a
-        class="truncate font-medium hover:underline"
-        href={resolve("/(app)/drives/[drive]", { drive: drive.id })}
-    >
-        {drive.name}
-    </a>
+	<a
+		class="truncate font-medium hover:underline"
+		href={resolve("/(app)/drives/[drive]", { drive: drive.id })}
+	>
+		{drive.name}
+	</a>
 {/snippet}
 
 {#snippet role(drive: DriveSummary)}
-    <Badge variant="secondary">
-        {drive.owner ? m.drive_role_owner() : roleLabels[drive.role]}
-    </Badge>
+	<Badge variant="secondary">
+		{drive.owner ? m.drive_role_owner() : roleLabels[drive.role]}
+	</Badge>
 {/snippet}
 
 {#snippet actions(drive: DriveSummary)}
-    <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-            {#snippet child({ props })}
-                <Button
-                    {...props}
-                    variant="ghost"
-                    size="icon"
-                    aria-label={m.menu()}
-                >
-                    <EllipsisVerticalIcon />
-                </Button>
-            {/snippet}
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content align="end">
-                <DropdownMenu.Item
-                    onclick={() => {
-                        membersDrive = drive;
-                        membersOpen = true;
-                    }}
-                >
-                    <UsersIcon />
-                    {m.drive_members()}
-                </DropdownMenu.Item>
-                {#if drive.role === "manager"}
-                    <DropdownMenu.Item
-                        onclick={() => {
-                            renameTarget = drive;
-                            renameName = drive.name;
-                            renameOpen = true;
-                        }}
-                    >
-                        {m.drive_rename()}
-                    </DropdownMenu.Item>
-                {/if}
-                {#if drive.owner}
-                    <DropdownMenu.Item
-                        variant="destructive"
-                        onclick={() => {
-                            deleteTarget = drive;
-                            deleteOpen = true;
-                        }}
-                    >
-                        {m.drive_delete()}
-                    </DropdownMenu.Item>
-                {/if}
-            </DropdownMenu.Content>
-        </DropdownMenu.Root>
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger>
+			{#snippet child({ props })}
+				<Button {...props} variant="ghost" size="icon" aria-label={m.menu()}>
+					<EllipsisVerticalIcon />
+				</Button>
+			{/snippet}
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content align="end">
+			<DropdownMenu.Item
+				onclick={() => {
+					membersDrive = drive;
+					membersOpen = true;
+				}}
+			>
+				<UsersIcon />
+				{m.drive_members()}
+			</DropdownMenu.Item>
+			{#if drive.role === "manager"}
+				<DropdownMenu.Item
+					onclick={() => {
+						renameTarget = drive;
+						renameName = drive.name;
+						renameOpen = true;
+					}}
+				>
+					{m.drive_rename()}
+				</DropdownMenu.Item>
+			{/if}
+			{#if drive.owner}
+				<DropdownMenu.Item
+					variant="destructive"
+					onclick={() => {
+						deleteTarget = drive;
+						deleteOpen = true;
+					}}
+				>
+					{m.drive_delete()}
+				</DropdownMenu.Item>
+			{/if}
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
 {/snippet}
 
 <ResponsiveDialog
-    bind:open={createOpen}
-    bind:loading={creating}
-    size="sm"
-    title={m.drive_new()}
-    description={m.drives_description()}
-    submitLabel={m.drive_create()}
-    loadingLabel={m.creating()}
-    form={{ onsubmit: create }}
+	bind:open={createOpen}
+	bind:loading={creating}
+	size="sm"
+	title={m.drive_new()}
+	description={m.drives_description()}
+	submitLabel={m.drive_create()}
+	loadingLabel={m.creating()}
+	form={{ onsubmit: create }}
 >
-    <Input
-        required
-        bind:value={newName}
-        placeholder={m.drive_name_placeholder()}
-        aria-label={m.drive_name()}
-    />
+	<Input
+		required
+		bind:value={newName}
+		placeholder={m.drive_name_placeholder()}
+		aria-label={m.drive_name()}
+	/>
 </ResponsiveDialog>
 
 <ResponsiveDialog
-    bind:open={renameOpen}
-    size="sm"
-    title={m.drive_rename()}
-    submitLabel={m.rename()}
-    form={{ onsubmit: rename }}
+	bind:open={renameOpen}
+	size="sm"
+	title={m.drive_rename()}
+	submitLabel={m.rename()}
+	form={{ onsubmit: rename }}
 >
-    <Input
-        required
-        bind:value={renameName}
-        placeholder={m.drive_name_placeholder()}
-        aria-label={m.drive_name()}
-    />
+	<Input
+		required
+		bind:value={renameName}
+		placeholder={m.drive_name_placeholder()}
+		aria-label={m.drive_name()}
+	/>
 </ResponsiveDialog>
 
 <ResponsiveDialog
-    bind:open={deleteOpen}
-    size="sm"
-    title={m.drive_delete()}
-    submitLabel={m.delete()}
-    submitVariant="destructive"
-    onsubmit={remove}
+	bind:open={deleteOpen}
+	size="sm"
+	title={m.drive_delete()}
+	submitLabel={m.delete()}
+	submitVariant="destructive"
+	onsubmit={remove}
 >
-    <p class="text-muted-foreground text-sm">
-        {m.drive_delete_description()}
-    </p>
+	<p class="text-muted-foreground text-sm">
+		{m.drive_delete_description()}
+	</p>
 </ResponsiveDialog>
 
 <DriveMembersDialog
-    bind:open={membersOpen}
-    drive={membersDrive}
-    onchanged={() => invalidate("app:drives")}
+	bind:open={membersOpen}
+	drive={membersDrive}
+	onchanged={() => invalidate("app:drives")}
 />
